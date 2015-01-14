@@ -20,25 +20,12 @@
 struct json_object;
 
 // Types
-#include "VuoBlendMode.h"
 #include "VuoBoolean.h"
 #include "VuoColor.h"
-#include "VuoCountWrapMode.h"
-#include "VuoCurve.h"
-#include "VuoCurveDomain.h"
 #include "VuoFrameRequest.h"
-#include "VuoGradientNoise.h"
 #include "VuoImage.h"
 #include "VuoInteger.h"
-#include "VuoLeapHand.h"
-#include "VuoLeapFrame.h"
-#include "VuoLeapPointable.h"
-#include "VuoLeapPointableType.h"
-#include "VuoMidiController.h"
-#include "VuoMidiDevice.h"
-#include "VuoMidiNote.h"
 #include "VuoMouseButtonAction.h"
-#include "VuoNoise.h"
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
@@ -48,25 +35,14 @@ struct json_object;
 #include "VuoText.h"
 #include "VuoTransform.h"
 #include "VuoVertices.h"
-#include "VuoWave.h"
-
 
 // List Types
-#include "VuoList_VuoBlendMode.h"
 #include "VuoList_VuoBoolean.h"
 #include "VuoList_VuoColor.h"
-#include "VuoList_VuoCountWrapMode.h"
-#include "VuoList_VuoCurve.h"
-#include "VuoList_VuoCurveDomain.h"
 #include "VuoList_VuoFrameRequest.h"
-#include "VuoList_VuoGradientNoise.h"
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoInteger.h"
-#include "VuoList_VuoMidiController.h"
-#include "VuoList_VuoMidiDevice.h"
-#include "VuoList_VuoMidiNote.h"
 #include "VuoList_VuoMouseButtonAction.h"
-#include "VuoList_VuoNoise.h"
 #include "VuoList_VuoPoint2d.h"
 #include "VuoList_VuoPoint3d.h"
 #include "VuoList_VuoPoint4d.h"
@@ -76,10 +52,6 @@ struct json_object;
 #include "VuoList_VuoText.h"
 #include "VuoList_VuoTransform.h"
 #include "VuoList_VuoVertices.h"
-#include "VuoList_VuoLeapPointable.h"
-#include "VuoList_VuoLeapHand.h"
-#include "VuoList_VuoLeapFrame.h"
-#include "VuoList_VuoLeapPointableType.h"
 
 
 /**

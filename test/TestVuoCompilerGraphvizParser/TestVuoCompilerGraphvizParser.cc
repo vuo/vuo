@@ -9,6 +9,7 @@
 
 #include <libgen.h>
 #include <fcntl.h>
+#include <fstream>
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerGraphvizParser.hh"
 #include "VuoPort.hh"
@@ -299,6 +300,49 @@ private slots:
 		string unknownNodeClass = unknownNodeClasses.at(0);
 		QCOMPARE(QString(unknownNodeClass.c_str()), QString("UnknownNodeClass"));
 	}
+
+	void testParsingDescription_data()
+	{
+		QTest::addColumn< QString >("compositionPath");
+		QTest::addColumn< QString >("expectedDescription");
+
+		string descriptionPath = getCompositionPath("Description.vuo");
+		QTest::newRow("Composition with description") << QString::fromStdString(descriptionPath) << "This is the description.";
+
+		string noDescriptionPath = VuoFileUtilities::makeTmpFile("NoDescription", "vuo");
+		ifstream fin(descriptionPath.c_str());
+		ofstream fout(noDescriptionPath.c_str());
+		string line;
+		int lineNum = 0;
+		while (getline(fin, line))
+			if (++lineNum >= 10)
+				fout << line << endl;
+		fin.close();
+		fout.close();
+		QTest::newRow("Composition without Doxygen header") << QString::fromStdString(noDescriptionPath) << "";
+	}
+	void testParsingDescription()
+	{
+		QFETCH(QString, compositionPath);
+		QFETCH(QString, expectedDescription);
+
+		{
+			VuoCompilerGraphvizParser parser(compositionPath.toStdString(), compiler);
+			QCOMPARE(QString::fromStdString( parser.getDescription() ), expectedDescription);
+		}
+
+		{
+			string compositionAsString;
+			ifstream fin(compositionPath.toStdString().c_str());
+			string line;
+			while (getline(fin, line))
+				compositionAsString += line + "\n";
+			FILE *compositionFile = VuoFileUtilities::stringToCFile(compositionAsString.c_str());
+			VuoCompilerGraphvizParser parser(compositionFile, compiler);
+			QCOMPARE(QString::fromStdString( parser.getDescription() ), expectedDescription);
+		}
+	}
+
 };
 
 QTEST_APPLESS_MAIN(TestVuoCompilerGraphvizParser)

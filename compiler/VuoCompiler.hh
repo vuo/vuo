@@ -17,6 +17,7 @@ class VuoCompilerNodeClass;
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerBitcodeGenerator.hh"
 #include "VuoCompilerType.hh"
+#include "VuoFileUtilities.hh"
 #include "VuoRunner.hh"
 
 
@@ -49,6 +50,7 @@ class VuoCompiler
 private:
 	map<string, VuoCompilerNodeClass *> nodeClasses;
 	map<string, VuoCompilerType *> types;
+	map<string, VuoNodeSet *> nodeSetForName;
 	map<string, VuoCompilerModule *> libraryModules;
 	map<string, bool> isNodeClassAndTypeSearchPathLoaded;
 	vector<string> moduleSearchPaths;  ///< Search paths for node classes, types, and library modules.
@@ -72,6 +74,7 @@ private:
 	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib);
 	Module * readModuleFromC(string inputPath);
 	static Module * readModuleFromBitcode(string inputPath);
+	static Module * readModuleFromBitcode(VuoFileUtilities::File *inputFile);
 	static bool writeModuleToBitcode(Module *module, string outputPath);
 	void setTargetForModule(Module *module, string target = "");
 	static vector<string> getCoreVuoDependencies(void);
@@ -105,6 +108,7 @@ public:
 	VuoCompilerNodeClass * getNodeClass(const string &id);
 	map<string, VuoCompilerNodeClass *> getNodeClasses(void);
 	VuoCompilerType * getType(const string &id);
+	VuoNodeSet * getNodeSetForName(const string &name);
 	void listNodeClasses(const string &format = "");
 	void addHeaderSearchPath(const string &path);
 	void addLibrarySearchPath(const string &path);

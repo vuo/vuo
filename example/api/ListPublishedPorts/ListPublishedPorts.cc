@@ -12,7 +12,7 @@
 int main(void)
 {
 	// Compile, link, and run the composition
-	VuoRunner * runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(VUO_COMPOSITION_PATH "/CountWithPublishedPorts.vuo");
+	VuoRunner * runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("CountWithPublishedPorts.vuo");
 	runner->startPaused();
 
 	// Print a list of the published input and output ports

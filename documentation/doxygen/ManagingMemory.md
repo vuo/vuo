@@ -21,11 +21,13 @@ Vuo provides three functions for reference-counting:
   - VuoRetain() increments the data's reference count, informing the Vuo runtime that someone has started using the data. The VuoRegister() function must be called on the data before the first call to VuoRetain(). 
   - VuoRelease() decrements the data's reference count, informing the Vuo runtime that someone has finished using the data. The VuoRetain() function must have been called at least *N* times on the data before the *N*-th call to VuoRelease(). 
 
-The Vuo compiler automatically inserts most of the necessary calls to VuoRegister(), VuoRetain(), and VuoRelease(). If you're implementing a stateless node class, you never need to call these functions. If you're implementing a stateful node class or a port type, read on to learn when to call these functions. 
+When compiling a composition, the Vuo compiler automatically inserts most of the necessary calls to VuoRegister(), VuoRetain(), and VuoRelease(). If you're implementing a stateless node class, you never need to call these functions. If you're implementing a stateful node class or a port type, read on to learn when to call these functions. 
 
 
 
 ## Automatically-inserted calls to the reference-counting functions
+
+The Vuo compiler automatically inserts calls to VuoRetain() and VuoRelease() based on the type of the port or node instance data. (For port data, "type" means its underlying data type, which is `typedef`ed in the port type's header file. For node instance data, "type" means the type returned by nodeInstanceInit().) If the data type is a pointer, then VuoRetain() or VuoRelease() is called on the data itself. If the data type is a struct, then VuoRetain() or VuoRelease() is called on each field of the struct that's a pointer, each field of any struct inside the struct that's a pointer, and so on (a recursive traversal). Note that the Vuo compiler inserts VuoRetain() and VuoRelease() calls for fields inside a struct but *not* for fields inside a *pointer to* a struct. 
 
 In many cases, the Vuo compiler automatically inserts calls to VuoRetain() and VuoRelease() where needed: 
 
@@ -35,7 +37,7 @@ In many cases, the Vuo compiler automatically inserts calls to VuoRetain() and V
    - When port's value changes, the old data is released and the new data is retained. 
    - When a composition is stopped, for each port, the data is released. 
 
-If the port type or instance data type is a pointer, the Vuo compiler calls VuoRetain() or VuoRelease() on the data itself. If the port type or instance data type is a struct, the Vuo compiler recursively traverses the struct and calls VuoRetain() or VuoRelease() on each field that is a pointer. 
+If you're implementing a stateful node class or a port type, then you may need to add some calls to VuoRegister(), VuoRetain(), and VuoRelease(). Read on to learn how. 
 
 
 

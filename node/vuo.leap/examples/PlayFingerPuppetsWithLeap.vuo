@@ -1,0 +1,95 @@
+/**
+ * @file
+ * Lets you move a "puppet" character left, right, forward, and backward, using a finger detected by your <a href="https://www.leapmotion.com/">Leap Motion device</a>. 
+ * 
+ * This composition requires a Leap Motion device. 
+ * 
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ClampX [type="vuo.math.limitToRange.real" version="1.0.0" label="Clamp X|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<limitedValue>limitedValue\r" pos="711,929" _minimum="-0.100000" _maximum="0.300000" _wrapMode="\"saturate\""];
+ClampX2 [type="vuo.math.limitToRange.real" version="1.0.0" label="Clamp Y|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<limitedValue>limitedValue\r" pos="185,840" _minimum="-1.000000" _maximum="1.000000" _wrapMode="\"saturate\""];
+CountWithinRange [type="vuo.math.countWithinRange.real" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="152,-125" _increment="0.001000" _decrement="1" _setCount="0.000000" _minimum="-1.300000" _maximum="1.300000" _wrapMode="\"wrap\""];
+CountWithinRange3 [type="vuo.math.countWithinRange.real" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="147,-250" _increment="0.000500" _decrement="1" _setCount="0.000000" _minimum="-1.300000" _maximum="1.300000" _wrapMode="\"wrap\""];
+DiscardDataFromEvent [type="vuo.type.frameRequest.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="61,635"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-115,-154" fillcolor="green"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="-121,-222" fillcolor="green" _seconds="0.030000"];
+Get3DPointValues [type="vuo.point.get.3d" version="1.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="169,738"];
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<done>done\r|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-49,636" fillcolor="cyan"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Finger Puppet|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="207,214" _imageURL="\"http:\\/\\/softpixel.com\\/~smokris\\/FingerPuppetArt\\/FingerPuppet.png\""];
+GetImage2 [type="vuo.image.get" version="1.0.0" label="Background|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="210,308" _imageURL="\"http:\\/\\/softpixel.com\\/~smokris\\/FingerPuppetArt\\/Background.png\""];
+GetImage3 [type="vuo.image.get" version="1.0.0" label="Foreground|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="217,415" _imageURL="\"http:\\/\\/softpixel.com\\/~smokris\\/FingerPuppetArt\\/Foreground.png\""];
+GetImage4 [type="vuo.image.get" version="1.0.0" label="Cloud B|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="206,123" _imageURL="\"http:\\/\\/softpixel.com\\/~smokris\\/FingerPuppetArt\\/Cloud.png\""];
+GetImage5 [type="vuo.image.get" version="1.0.0" label="Cloud A|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="208,29" _imageURL="\"http:\\/\\/softpixel.com\\/~smokris\\/FingerPuppetArt\\/Cloud.png\""];
+GetItemFromList [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="-42,740" fillcolor="cyan" _which="1"];
+GetPointableValues [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<tipVelocity>tipVelocity\r" pos="-72,816" fillcolor="cyan"];
+HoldValue [type="vuo.hold.VuoPoint3d" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="627,564" _initialValue="{\"x\":0,\"y\":0,\"z\":0}"];
+HoldValue2 [type="vuo.hold.VuoLeapFrame" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="-38,545" fillcolor="cyan" _initialValue=""];
+LimitToRange [type="vuo.math.limitToRange.real" version="1.0.0" label="Clamp X|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<limitedValue>limitedValue\r" pos="484,721" _minimum="-1.000000" _maximum="1.000000" _wrapMode="\"saturate\""];
+Make3DObjectFromImage [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="653,186" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="0.200000"];
+Make3DObjectFromImage2 [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="642,298" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="2.000000"];
+Make3DObjectFromImage3 [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="644,435" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="2.000000"];
+Make3DObjectFromImage4 [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="648,69" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="0.400000"];
+Make3DObjectFromImage5 [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="661,-60" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="0.300000"];
+Make3DPoint [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="719,818"];
+Make3DPoint2 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="431,443" _x="0" _y="-0.100000" _z="0.300000"];
+Make3DPoint3 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="433,309" _x="0" _y="-0.200000" _z="0.000000"];
+Make3DPoint4 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="450,-120" _y="0.300000" _z="-0.100000"];
+Make3DPoint6 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="463,-249" _y="0.400000" _z="-0.100000"];
+MakeList9 [type="vuo.list.make.5.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="929,336"];
+ReceiveLeapFrame [type="vuo.leap" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="-105,482" fillcolor="cyan"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="989,325"];
+Scale [type="vuo.math.scale" version="1.0.0" label="Scale Y|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="481,823" _start="-1.000000" _end="1.000000" _scaledStart="-0.700000" _scaledEnd="-0.400000"];
+Scale2 [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="477,943" _start="-1.600000" _end="1.500000" _scaledStart="-0.100000" _scaledEnd="0.300000"];
+
+ClampX2:limitedValue -> Scale:value;
+ClampX:limitedValue -> Make3DPoint:z;
+CountWithinRange3:count -> Make3DPoint6:x;
+CountWithinRange:count -> Make3DPoint4:x;
+DiscardDataFromEvent:event -> HoldValue2:refresh;
+FireOnStart:started -> GetImage2:refresh;
+FireOnStart:started -> GetImage3:refresh;
+FireOnStart:started -> GetImage4:refresh;
+FireOnStart:started -> GetImage5:refresh;
+FireOnStart:started -> GetImage:refresh;
+FireOnStart:started -> Make3DPoint2:refresh;
+FireOnStart:started -> Make3DPoint3:refresh;
+FirePeriodically:fired -> CountWithinRange3:increment;
+FirePeriodically:fired -> CountWithinRange:increment;
+FirePeriodically:fired -> HoldValue:refresh;
+FirePeriodically:fired -> Make3DPoint3:refresh;
+FirePeriodically:fired -> Make3DPoint4:refresh;
+Get3DPointValues:x -> LimitToRange:value;
+Get3DPointValues:y -> ClampX2:value;
+Get3DPointValues:z -> Scale2:value;
+GetFrameValues:pointables -> GetItemFromList:list;
+GetImage2:image -> Make3DObjectFromImage2:image;
+GetImage3:image -> Make3DObjectFromImage3:image;
+GetImage4:image -> Make3DObjectFromImage4:image;
+GetImage5:image -> Make3DObjectFromImage5:image;
+GetImage:image -> Make3DObjectFromImage:image;
+GetItemFromList:item -> GetPointableValues:pointable;
+GetPointableValues:tipPosition -> Get3DPointValues:point;
+HoldValue2:heldValue -> GetFrameValues:frame;
+HoldValue:heldValue -> Make3DObjectFromImage:center;
+LimitToRange:limitedValue -> Make3DPoint:x;
+Make3DObjectFromImage2:object -> MakeList9:item3;
+Make3DObjectFromImage3:object -> MakeList9:item1;
+Make3DObjectFromImage4:object -> MakeList9:item4;
+Make3DObjectFromImage5:object -> MakeList9:item5;
+Make3DObjectFromImage:object -> MakeList9:item2;
+Make3DPoint2:point -> Make3DObjectFromImage3:center;
+Make3DPoint3:point -> Make3DObjectFromImage2:center;
+Make3DPoint4:point -> Make3DObjectFromImage4:center;
+Make3DPoint6:point -> Make3DObjectFromImage5:center;
+Make3DPoint:point -> HoldValue:newValue;
+MakeList9:list -> RenderSceneToWindow:objects;
+ReceiveLeapFrame:receivedFrame -> HoldValue2:newValue;
+RenderSceneToWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+Scale2:scaledValue -> ClampX:value;
+Scale:scaledValue -> Make3DPoint:y;
+}

@@ -16,7 +16,6 @@
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNodeClass.hh"
-#include "VuoFileUtilities.hh"
 #include "VuoStringUtilities.hh"
 
 
@@ -56,9 +55,11 @@ VuoCompiler::VuoCompiler()
 	}
 	else
 	{
+		addModuleSearchPath(VUO_ROOT "/library");
 		addModuleSearchPath(VUO_ROOT "/node");
 		addModuleSearchPath(VUO_ROOT "/type");
 		addModuleSearchPath(VUO_ROOT "/type/list");
+		addFrameworkSearchPath(SYPHON_ROOT);
 
 		// /usr/local/lib is already in the search path.
 		// Since we don't have Vuo.framework, tell ld where it can find libgvplugin_core.dylib and libgvplugin_dot_layout.dylib.
@@ -109,8 +110,12 @@ void VuoCompiler::loadModulesIfNeeded(void)
 }
 
 /**
- * Loads all node classes, types, and library modules in the directory at @c path, which is recursively searched.
+ * Loads all node classes, types, and library modules in the directory at @c path.
  * Adds @c path to the list of library search paths used in linking.
+ *
+ * The top level of the directory is searched for .vuonode and .bc files.
+ * A .vuonode file may be either a module or an archive containing modules.
+ * In the latter case, the .vuonode archive's top level is searched.
  *
  * If multiple definitions of a node class or type are encountered (either in different folders
  * inside of @c path or in different calls to this function), the most recently encountered
@@ -120,26 +125,52 @@ void VuoCompiler::loadModulesIfNeeded(void)
  */
 void VuoCompiler::loadModules(string path)
 {
-	set<string> fileRelativePaths = VuoFileUtilities::findFilesInDirectory(path, "bc");
-	set<string> nodes = VuoFileUtilities::findFilesInDirectory(path, "vuonode");
-	fileRelativePaths.insert(nodes.begin(), nodes.end());
-	for (set<string>::iterator i = fileRelativePaths.begin(); i != fileRelativePaths.end(); ++i)
-	{
-		string fileFullPath = path + "/" + *i;
+	/// @todo Search recursively - https://b33p.net/kosada/node/2468
 
-		string moduleKey = getModuleNameForPath(fileFullPath);
-		Module *module = readModuleFromBitcode(fileFullPath);
+	set<string> moduleExtensions;
+	moduleExtensions.insert("bc");
+	moduleExtensions.insert("vuonode");
+	set<string> archiveExtensions;
+	archiveExtensions.insert("vuonode");
+	set<VuoFileUtilities::File *> moduleFiles = VuoFileUtilities::findFilesInDirectory(path, moduleExtensions, archiveExtensions);
+	for (set<VuoFileUtilities::File *>::iterator i = moduleFiles.begin(); i != moduleFiles.end(); ++i)
+	{
+		VuoFileUtilities::File *moduleFile = *i;
+
+		string moduleKey = getModuleNameForPath(moduleFile->getRelativePath());
+		Module *module = readModuleFromBitcode(moduleFile);
 		VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
 
 		if (compilerModule)
 		{
 			if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
-				nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
+			{
+				VuoCompilerNodeClass *nodeClass = static_cast<VuoCompilerNodeClass *>(compilerModule);
+				nodeClasses[moduleKey] = nodeClass;
+
+				VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
+				if (nodeSet)
+				{
+					map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
+					if (nodeSetIter == nodeSetForName.end())
+					{
+						nodeSetForName[nodeSet->getName()] = nodeSet;
+					}
+					else
+					{
+						delete nodeSet;
+						nodeSet = nodeSetIter->second;
+					}
+					nodeClass->getBase()->setNodeSet(nodeSet);
+				}
+			}
 			else if (dynamic_cast<VuoCompilerType *>(compilerModule))
 				types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
 			else
 				libraryModules[moduleKey] = compilerModule;
 		}
+
+		delete moduleFile;
 	}
 
 	reifyPortTypes();
@@ -749,29 +780,39 @@ Module * VuoCompiler::readModuleFromC(string inputPath)
 }
 
 /**
- * Returns the LLVM module read from @c inputPath (a .bc file).
+ * Returns the LLVM module read from @a inputPath (an LLVM bitcode file).
  */
 Module * VuoCompiler::readModuleFromBitcode(string inputPath)
 {
-	OwningPtr<MemoryBuffer> mb;
-	error_code err = MemoryBuffer::getFile(inputPath.c_str(), mb);
-	if (err) {
-		printf("Can't open '%s'.\n", inputPath.c_str());
-		return NULL;
-	}
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(inputPath, dir, file, ext);
+	VuoFileUtilities::File inputFile(dir, file + "." + ext);
+	return readModuleFromBitcode(&inputFile);
+}
+
+/**
+ * Returns the LLVM module read from @a inputFile (an LLVM bitcode file).
+ */
+Module * VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile)
+{
+	size_t inputDataBytes;
+	char *inputData = inputFile->getContentsAsRawData(inputDataBytes);
+	StringRef inputDataAsStringRef(inputData, inputDataBytes);
+	MemoryBuffer *mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
 
 	string error;
 	Module *module = ParseBitcodeFile(&(*mb), getGlobalContext(), &error);
-	if (! module) {
-		fprintf(stderr, "Can't parse '%s': %s.\n", inputPath.c_str(), error.c_str());
-		return NULL;
-	}
+	if (! module)
+		fprintf(stderr, "Couldn't parse module '%s': %s.\n", inputFile->getRelativePath().c_str(), error.c_str());
+
+	delete mb;
+	free(inputData);
 
 	return module;
 }
 
 /**
- * Verifies the LLVM module and writes it to @c outputPath (a .bc file).
+ * Verifies the LLVM module and writes it to @a outputPath (an LLVM bitcode file).
  *
  * Returns true if there was a problem verifying or writing the module.
  */
@@ -787,7 +828,7 @@ bool VuoCompiler::writeModuleToBitcode(Module *module, string outputPath)
 	raw_fd_ostream out(outputPath.c_str(), err);
 	if (! err.empty())
 	{
-		fprintf(stderr, "Couldn't open file %s (%s)\n", outputPath.c_str(), err.c_str());
+		fprintf(stderr, "Couldn't open file %s for writing (%s)\n", outputPath.c_str(), err.c_str());
 		return true;
 	}
 	WriteBitcodeToFile(module, out);
@@ -870,6 +911,19 @@ VuoCompilerType * VuoCompiler::getType(const string &id)
 
 	map<string, VuoCompilerType *>::const_iterator i = types.find(id);
 	return (i != types.end() ? i->second : NULL);
+}
+
+/**
+ * Looks up the VuoNodeSet with the given @c name.
+ *
+ * The node class modules are loaded if they haven't been already.
+ */
+VuoNodeSet * VuoCompiler::getNodeSetForName(const string &name)
+{
+	loadModulesIfNeeded();
+
+	map<string, VuoNodeSet *>::const_iterator i = nodeSetForName.find(name);
+	return (i != nodeSetForName.end() ? i->second : NULL);
 }
 
 /**

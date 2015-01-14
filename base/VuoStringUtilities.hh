@@ -23,6 +23,7 @@ public:
 	static string transcodeToIdentifier(string str);
 	static string transcodeToGraphvizIdentifier(const string &originalString);
 	static string transcodeFromGraphvizIdentifier(const string &graphvizIdentifier);
+	static string generateHtmlFromMarkdown(const string &markdownString);
 
 private:
 	static bool isValidCharInIdentifier(char ch);

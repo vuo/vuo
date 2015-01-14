@@ -12,6 +12,7 @@
 
 #include "VuoBase.hh"
 #include "VuoModule.hh"
+#include "VuoNodeSet.hh"
 
 class VuoCompilerNodeClass;
 class VuoPortClass;
@@ -40,11 +41,19 @@ public:
 	VuoNode * newNode(string title="", double x=0, double y=0);
 	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
 
+	string getDescription(void);
+
 	string getClassName(void);
 	bool isTypecastNodeClass(void);
 
 	bool isInterface(void);
 	void setInterface(bool isInterface);
+
+	VuoNodeSet * getNodeSet(void);
+	void setNodeSet(VuoNodeSet *nodeSet);
+
+	vector<string> getExampleCompositionFileNames(void);
+	void setExampleCompositionFileNames(vector<string> exampleCompositionFileNames);
 
 	VuoPortClass * getRefreshPortClass(void);
 	void setRefreshPortClass(VuoPortClass * refreshPortClass);
@@ -61,6 +70,8 @@ public:
 
 private:
 	bool interface;
+	VuoNodeSet *nodeSet;
+	vector<string> exampleCompositionFileNames;
 	VuoPortClass * refreshPortClass;
 	VuoPortClass * donePortClass;
 	vector<VuoPortClass *> inputPortClasses; ///< Includes refresh port.

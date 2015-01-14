@@ -9,6 +9,10 @@
 
 #include "VuoStringUtilities.hh"
 
+extern "C" {
+#include "mkdio.h"
+}
+
 /**
  * Returns true if @c wholeString begins with @c beginning.
  */
@@ -129,4 +133,17 @@ string VuoStringUtilities::transcodeFromGraphvizIdentifier(const string &graphvi
 		unescapedString  += *i;
 	}
 	return unescapedString;
+}
+
+/**
+ * Converts @c markdownString to HTML.
+ */
+string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString)
+{
+	MMIOT *doc = mkd_string(markdownString.c_str(), markdownString.length(), 0);
+	mkd_compile(doc, 0);
+	char *html;
+	mkd_document(doc, &html);
+	string htmlString(html);
+	return htmlString;
 }

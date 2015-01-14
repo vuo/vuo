@@ -10,19 +10,63 @@
 #ifndef VUOFILEUTILITIES_H
 #define VUOFILEUTILITIES_H
 
+#include "miniz.h"
+
 /**
  * Functions for dealing with files.
  */
 class VuoFileUtilities
 {
+private:
+	/**
+	 * An archive of files.
+	 */
+	class Archive
+	{
+	public:
+		mz_zip_archive *zipArchive;  ///< An open zip archive handle, or NULL if the zip archive failed to open.
+		int referenceCount;  ///< Used by callers to keep track of when the zip archive handle should be closed.
+		string path;  ///< The path of the archive file.
+		Archive(string path);
+		~Archive(void);
+	};
+
 public:
+	/**
+	 * A file in either a directory or an archive.
+	 */
+	class File
+	{
+	private:
+		File(Archive *archive, string filePath);
+
+		string filePath;  ///< The path of the file, relative to its directory or archive.
+		string dirPath;  ///< The path of the directory, or empty if the file is in an archive.
+		Archive *archive;  ///< The archive reference, or null if the file is in a directory.
+
+		friend class VuoFileUtilities;
+
+	public:
+		File(string dirPath, string filePath);
+		~File(void);
+		bool isInArchive(void);
+		string getArchivePath(void);
+		string getRelativePath(void);
+		char * getContentsAsRawData(size_t &numBytes);
+		string getContentsAsString(void);
+	};
+
 	static void splitPath(string path, string &dir, string &file, string &extension);
 	static string makeTmpFile(string file, string extension, string directory="/tmp");
 	static string makeTmpDir(string dir);
 	static FILE * stringToCFile(const char *string);
-	static set<string> findFilesInDirectory(string dirPath);
-	static set<string> findFilesInDirectory(string dirPath, string extension);
+	static string cFileToString(FILE *file);
 	static bool fileExists(string path);
+	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>());
+	static set<File *> findFilesInDirectory(string dirPath, set<string> extensions, set<string> archiveExtensions = set<string>());
+	static set<File *> findAllFilesInArchive(string archivePath);
+	static set<File *> findFilesInArchive(string archivePath, string dirPath, set<string> extensions);
+	static string getArchiveFileContentsAsString(string archivePath, string filePath);
 };
 
 #endif

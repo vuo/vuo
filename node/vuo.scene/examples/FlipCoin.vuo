@@ -1,0 +1,70 @@
+/**
+ * @file
+ * Displays a two-sided coin that you can flip by scrolling your mouse or touch pad. Requires an internet connection to download images. 
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+Add2 [type="vuo.math.add.integer" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="1095,603" fillcolor="magenta"];
+AreAllTrue [type="vuo.logic.areAllTrue" version="1.0.0" label="Are All True|<refresh>refresh\l|<terms>terms\l|<done>done\r|<allTrue>allTrue\r" pos="942,191" fillcolor="cyan"];
+ConvertIntegerto3DPoint [type="vuo.type.integer.point3d.x" version="1.0.0" label="Convert Integer to 3D Point|<refresh>refresh\l|<x>x\l|<done>done\r|<point3d>point3d\r" pos="1434,678"];
+ConvertIntegerto3DPoint2 [type="vuo.type.integer.point3d.x" version="1.0.0" label="Convert Integer to 3D Point|<refresh>refresh\l|<x>x\l|<done>done\r|<point3d>point3d\r" pos="1431,790"];
+CountwithinRange [type="vuo.math.countWithinRange.integer" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="1333,-16" fillcolor="magenta" _increment="1" _minimum="0" _maximum="360" _wrapMode="\"wrap\""];
+DiscardDatafromEvent [type="vuo.type.point2d.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="311,247"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="332,163" fillcolor="cyan" _seconds="0.500000"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="59,234"];
+Get2DPointValues [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="351,7" fillcolor="yellow"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="1098,792" fillcolor="magenta" _imageURL="\"http:\\/\\/upload.wikimedia.org\\/wikipedia\\/commons\\/thumb\\/a\\/a4\\/2006_Benjamin_Franklin_Silver_Dollar_%28Reverse%29.png\\/480px-2006_Benjamin_Franklin_Silver_Dollar_%28Reverse%29.png\""];
+GetImage2 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="1099,705" fillcolor="magenta" _imageURL="\"http:\\/\\/upload.wikimedia.org\\/wikipedia\\/commons\\/thumb\\/4\\/4e\\/2006_Benjamin_Franklin_Silver_Dollar_%28Obverse%29.png\\/480px-2006_Benjamin_Franklin_Silver_Dollar_%28Obverse%29.png\""];
+GetMouse [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="60,39"];
+HoldValue2 [type="vuo.hold.VuoInteger" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="459,250" fillcolor="cyan" _initialValue="0"];
+IsGreaterThan2 [type="vuo.math.isGreaterThan.integer" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="700,141" fillcolor="cyan" _b="90"];
+IsLessThan2 [type="vuo.math.isLessThan.integer" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="703,215" fillcolor="cyan" _b="270"];
+Make3DObjectFromImage [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="1335,538" fillcolor="magenta" _center="{\"x\":0,\"y\":0,\"z\":0}" _width="1"];
+Make3DObjectFromImage2 [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="1332,650" fillcolor="magenta" _center="{\"x\":0,\"y\":0,\"z\":0}" _width="1"];
+MakeList [type="vuo.list.make.2.VuoBoolean" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="881,202" fillcolor="cyan"];
+MakeList3 [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1034,614" fillcolor="magenta" _item2="180"];
+MakeList5 [type="vuo.list.make.2.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1586,549" fillcolor="magenta"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="1647,538" fillcolor="magenta"];
+Round [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="972,102"];
+SelectInput [type="vuo.select.in.VuoInteger" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="1082,235" fillcolor="cyan"];
+SelectLatest [type="vuo.select.latest.2.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="1063,-1"];
+Subtract [type="vuo.math.subtract.integer" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="785,301" fillcolor="cyan" _b="180"];
+
+Add2:sum -> ConvertIntegerto3DPoint2:x;
+AreAllTrue:allTrue -> SelectInput:which;
+ConvertIntegerto3DPoint2:point3d -> Make3DObjectFromImage2:rotation;
+ConvertIntegerto3DPoint:point3d -> Make3DObjectFromImage:rotation;
+CountwithinRange:count -> ConvertIntegerto3DPoint:x;
+CountwithinRange:count -> HoldValue2:newValue;
+CountwithinRange:count -> MakeList3:item1;
+DiscardDatafromEvent:event -> FirePeriodically:refresh;
+FirePeriodically:fired -> HoldValue2:refresh;
+FireonStart:started -> Get2DPointValues:point;
+FireonStart:started -> GetImage2:refresh;
+FireonStart:started -> GetImage:refresh;
+Get2DPointValues:y -> Round:real;
+GetImage2:image -> Make3DObjectFromImage:image;
+GetImage:image -> Make3DObjectFromImage2:image;
+GetMouse:scrolled -> DiscardDatafromEvent:dataAndEvent;
+GetMouse:scrolled -> Get2DPointValues:point;
+HoldValue2:heldValue -> IsGreaterThan2:a;
+HoldValue2:heldValue -> IsLessThan2:a;
+HoldValue2:heldValue -> SelectInput:falseOption;
+HoldValue2:heldValue -> Subtract:a;
+IsGreaterThan2:greaterThan -> MakeList:item1;
+IsLessThan2:lessThan -> MakeList:item2;
+Make3DObjectFromImage2:object -> MakeList5:item2;
+Make3DObjectFromImage:object -> MakeList5:item1;
+MakeList3:list -> Add2:terms;
+MakeList5:list -> RenderScenetoWindow:objects;
+MakeList:list -> AreAllTrue:terms;
+Round:roundedInteger -> SelectLatest:option1;
+SelectInput:out -> SelectLatest:option2;
+SelectLatest:latest -> CountwithinRange:decrement;
+Subtract:difference -> SelectInput:trueOption;
+}

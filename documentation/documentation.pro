@@ -1,5 +1,4 @@
-TEMPLATE = lib
-CONFIG += no_link target_predeps staticlib VuoNoLibrary
+TEMPLATE = aux
 
 include(../vuo.pri)
 
@@ -19,43 +18,41 @@ QMAKE_CLEAN += ../doxygen
 OTHER_FILES += Doxyfile
 
 NODE_CLASS_IMAGES += \
-	../node/vuo.math.isLessThan.integer.c \
-	../node/vuo.logic.isOneTrue.c \
-	../node/vuo.console.window.c \
-	../node/vuo.mouse.c \
-	../node/vuo.event.spinOffEvent.c \
-	../node/vuo.event.fireOnStart.c \
-	../node/vuo.hold.VuoInteger.c \
-	../node/vuo.image.get.c \
-	../node/vuo.math.add.integer.c \
-	../node/vuo.math.subtract.integer.c \
-	../node/vuo.math.count.integer.c \
-	../node/vuo.select.in.2.VuoInteger.c \
-	../node/vuo.select.out.2.VuoInteger.c \
-	../node/vuo.select.out.event.c \
-	../node/vuo.select.latest.2.VuoInteger.c \
-	../node/vuo.time.firePeriodically.c
+	../node/vuo.console/vuo.console.window.c \
+	../node/vuo.event/vuo.event.spinOffEvent.c \
+	../node/vuo.event/vuo.event.fireOnStart.c \
+	../node/vuo.hold/vuo.hold.VuoInteger.c \
+	../node/vuo.image/vuo.image.get.c \
+	../node/vuo.logic/vuo.logic.isOneTrue.c \
+	../node/vuo.math/vuo.math.add.integer.c \
+	../node/vuo.math/vuo.math.count.integer.c \
+	../node/vuo.math/vuo.math.isLessThan.integer.c \
+	../node/vuo.math/vuo.math.subtract.integer.c \
+	../node/vuo.mouse/vuo.mouse.c \
+	../node/vuo.select/vuo.select.in.2.VuoInteger.c \
+	../node/vuo.select/vuo.select.latest.2.VuoInteger.c \
+	../node/vuo.select/vuo.select.out.2.VuoInteger.c \
+	../node/vuo.select/vuo.select.out.event.c \
+	../node/vuo.time/vuo.time.firePeriodically.c
 
 COMPOSITION_IMAGES += \
-	composition/CountIsLessThanToConsole.vuo \
+	composition/2Recur.vuo \
 	composition/CalculateBoxVolume.vuo \
+	composition/CountCharactersToConsole.vuo \
+	composition/CountIsLessThanToConsole.vuo \
+	composition/CountScatter.vuo \
+	composition/CountSometimes.vuo \
+	composition/CountWithFeedback.vuo \
+	composition/CountWithInfiniteFeedback.vuo \
+	composition/DiscardDataFromEventToCount.vuo \
 	composition/DisplayImageTwice.vuo \
 	composition/MultipleEventOnlyCables.vuo \
-	composition/2Recur.vuo \
-	composition/CountCharactersToConsole.vuo \
-	composition/CountScatter.vuo \
-	composition/DiscardDataFromEventToCount.vuo \
-	composition/CountWithInfiniteFeedback.vuo \
 	composition/SumAddOne.vuo \
-	../example/composition/Count.vuo \
-	../example/composition/CountAndHold.vuo \
-	../example/composition/CountAndOffset.vuo \
-	../example/composition/CountSometimes.vuo \
-	../example/composition/CountWithFeedback.vuo \
-	../example/composition/CountWithPublishedPorts.vuo \
-	../example/composition/DisplayImage.vuo \
-	../example/composition/LoadImageAsynchronously.vuo \
-	../example/composition/CheckSMSLength.vuo 
+	../node/vuo.event/examples/LoadImageAsynchronously.vuo \
+	../node/vuo.hold/examples/CountAndHold.vuo \
+	../node/vuo.image/examples/DisplayImage.vuo \
+	../node/vuo.math/examples/Count.vuo \
+	../node/vuo.text/examples/CheckSMSLength.vuo 
 
 pandoc.commands = cat VuoManual.txt \
 	| awk \'{sub(/VUO_VERSION/,\"$$VUO_VERSION\");print}\' \

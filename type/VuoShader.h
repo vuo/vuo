@@ -11,16 +11,11 @@
 #define VUOSHADER_H
 
 #include "VuoImage.h"
+#include "VuoInteger.h"
 #include "VuoPoint2d.h"
 #include "VuoReal.h"
-
-/// @{
-typedef void * VuoList_VuoInteger;
-#define VuoList_VuoInteger_TYPE_DEFINED
-
-typedef void * VuoList_VuoImage;
-#define VuoList_VuoImage_TYPE_DEFINED
-/// @}
+#include "VuoList_VuoInteger.h"
+#include "VuoList_VuoImage.h"
 
 /**
  * @ingroup VuoTypes

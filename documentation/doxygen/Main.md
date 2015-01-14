@@ -12,7 +12,7 @@ Vuo comes with several resources for programmers:
    - Example Qt projects for using Vuo inside another application
    - This API documentation
 
-Before you read this API documentation, we recommend that you start by reading the [Vuo Manual](http://vuo.org/support) to become familiar with how Vuo works. If you have questions about programming with Vuo, you can find help on the [Vuo Support](https://vuo.org/support) page. 
+Before you read this API documentation, we recommend that you start by reading the [Vuo Manual](http://vuo.org/manual.pdf) to become familiar with how Vuo works. If you have questions about programming with Vuo, you can find help on the [Vuo Support](https://vuo.org/support) page. 
 
 Here are some good starting points in this API documentation: 
 

@@ -29,6 +29,9 @@ public:
 	void setName(string name);
 	string getName(void);
 
+	void setDescription(string description);
+	string getDescription(void);
+
 	void addNode(VuoNode *node);
 	void removeNode(VuoNode *node);
 	set<VuoNode *> getNodes(void);
@@ -60,6 +63,7 @@ public:
 
 private:
 	string name;
+	string description;
 
 	set<VuoNode *> nodes;
 	set<VuoCable *> cables;

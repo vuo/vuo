@@ -74,7 +74,7 @@ VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation,
 
 	t.translation = translation;
 
-	t.eulerRotation = rotation;
+	t.rotationSource.euler = rotation;
 	// Rotate along the x axis, followed by y, follwed by z.
 	t.rotation[0] = cos(rotation.y)*cos(rotation.z);
 	t.rotation[1] = cos(rotation.y)*sin(rotation.z);
@@ -102,7 +102,7 @@ VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rota
 
 	t.translation = translation;
 
-	t.quaternionRotation = rotation;
+	t.rotationSource.quaternion = rotation;
 	VuoPoint4d q = VuoPoint4d_normalize4d(rotation);
 	t.rotation[0] = 1. - 2.*(q.y*q.y + q.z*q.z);
 	t.rotation[1] =      2.*(q.x*q.y - q.w*q.z);
@@ -205,18 +205,18 @@ json_object * VuoTransform_jsonFromValue(const VuoTransform value)
 	if (value.type == VuoTransformTypeQuaternion)
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.quaternionRotation.x));
-		json_object_array_add(o,json_object_new_double(value.quaternionRotation.y));
-		json_object_array_add(o,json_object_new_double(value.quaternionRotation.z));
-		json_object_array_add(o,json_object_new_double(value.quaternionRotation.w));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.x));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.y));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.z));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.w));
 		json_object_object_add(js, "quaternionRotation", o);
 	}
 	else
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.eulerRotation.x));
-		json_object_array_add(o,json_object_new_double(value.eulerRotation.y));
-		json_object_array_add(o,json_object_new_double(value.eulerRotation.z));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.euler.x));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.euler.y));
+		json_object_array_add(o,json_object_new_double(value.rotationSource.euler.z));
 		json_object_object_add(js, "eulerRotation", o);
 	}
 
@@ -247,14 +247,14 @@ char * VuoTransform_summaryFromValue(const VuoTransform value)
 	if (value.type == VuoTransformTypeQuaternion)
 	{
 		const char *format = "(%g, %g, %g, %g) quaternion";
-		int size = snprintf(NULL, 0, format, value.quaternionRotation.x, value.quaternionRotation.y, value.quaternionRotation.z, value.quaternionRotation.w);
+		int size = snprintf(NULL, 0, format, value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
 		rotation = (char *)malloc(size+1);
-		snprintf(rotation, size+1, format, value.quaternionRotation.x, value.quaternionRotation.y, value.quaternionRotation.z, value.quaternionRotation.w);
+		snprintf(rotation, size+1, format, value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
 	}
 	else
 	{
 		const char *format = "(%g°, %g°, %g°) euler";
-		VuoPoint3d r = VuoPoint3d_multiply(value.eulerRotation, 180./M_PI);
+		VuoPoint3d r = VuoPoint3d_multiply(value.rotationSource.euler, 180./M_PI);
 		int size = snprintf(NULL, 0, format, r.x, r.y, r.z);
 		rotation = (char *)malloc(size+1);
 		snprintf(rotation, size+1, format, r.x, r.y, r.z);

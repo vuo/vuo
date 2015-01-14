@@ -44,6 +44,7 @@ private:
 	VuoNode *publishedOutputNode;
 	vector<VuoCable *> publishedInputCables;
 	vector<VuoCable *> publishedOutputCables;
+	string description;
 
 	void initialize(FILE *file, VuoCompiler *compiler = NULL);
 	void makeDummyPorts(void);
@@ -68,6 +69,8 @@ public:
 	VuoNode * getPublishedOutputNode(void);
 	vector<VuoCable *> getPublishedInputCables(void);
 	vector<VuoCable *> getPublishedOutputCables(void);
+	string getDescription(void);
+	static string parseDescription(string compositionAsString);
 };
 
 #endif

@@ -50,9 +50,9 @@ private:
 		set<string> allFilePaths;
 
 		string frameworkDir = "../../framework/Vuo.framework";
-		set<string> frameworkFiles = VuoFileUtilities::findFilesInDirectory(frameworkDir);
-		foreach (string file, frameworkFiles)
-			allFilePaths.insert(frameworkDir + "/" + file);
+		set<VuoFileUtilities::File *> frameworkFiles = VuoFileUtilities::findAllFilesInDirectory(frameworkDir);
+		foreach (VuoFileUtilities::File *file, frameworkFiles)
+			allFilePaths.insert(frameworkDir + "/" + file->getRelativePath());
 
 		allFilePaths.insert("../../framework/vuo-debug");
 		allFilePaths.insert("../../framework/vuo-compile");
@@ -60,18 +60,29 @@ private:
 		allFilePaths.insert("../../framework/vuo-render");
 
 		string editorDir = "../../editor/VuoEditorApp/Vuo Editor.app";
-		set<string> editorFiles = VuoFileUtilities::findFilesInDirectory(editorDir);
-		foreach (string file, editorFiles)
-			allFilePaths.insert(editorDir + "/" + file);
+		set<VuoFileUtilities::File *> editorFiles = VuoFileUtilities::findAllFilesInDirectory(editorDir);
+		foreach (VuoFileUtilities::File *file, editorFiles)
+			allFilePaths.insert(editorDir + "/" + file->getRelativePath());
 
+		string nodeDir = "../../node";
+		set<VuoFileUtilities::File *> nodeSetDirs = VuoFileUtilities::findAllFilesInDirectory(nodeDir);
+		foreach (VuoFileUtilities::File *nodeSetDir, nodeSetDirs)
 		{
-			string dir = "../../example/composition";
-			set<string> files = VuoFileUtilities::findFilesInDirectory(dir);
-			foreach (string file, files)
-				allFilePaths.insert(dir + "/" + file);
+			if (VuoStringUtilities::beginsWith(nodeSetDir->getRelativePath(), "vuo."))
+			{
+				string exampleDir = nodeDir + "/" + nodeSetDir->getRelativePath() + "/examples";
+				if (VuoFileUtilities::fileExists(exampleDir))
+				{
+					set<VuoFileUtilities::File *> compositionFiles = VuoFileUtilities::findAllFilesInDirectory(exampleDir);
+					foreach (VuoFileUtilities::File *compositionFile, compositionFiles)
+					{
+						allFilePaths.insert(exampleDir + "/" + compositionFile->getRelativePath());
+					}
+				}
+			}
 		}
 
-		/// @todo This is a temporary workaround for VuoFileUtilities::findFilesInDirectory() not searching recursively. - https://b33p.net/kosada/node/2468
+		/// @todo This is a temporary workaround for VuoFileUtilities::findAllFilesInDirectory() not searching recursively. - https://b33p.net/kosada/node/2468
 		vector<string> subDirs;
 		subDirs.push_back(frameworkDir + "/Frameworks/CRuntime.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/ICU.framework");
@@ -92,9 +103,9 @@ private:
 		subDirs.push_back(editorDir + "/Contents/plugins/accessible");
 		foreach (string subDir, subDirs)
 		{
-			set<string> subDirFiles = VuoFileUtilities::findFilesInDirectory(subDir);
-			foreach (string file, subDirFiles)
-				allFilePaths.insert(subDir + "/" + file);
+			set<VuoFileUtilities::File *> subDirFiles = VuoFileUtilities::findAllFilesInDirectory(subDir);
+			foreach (VuoFileUtilities::File *file, subDirFiles)
+				allFilePaths.insert(subDir + "/" + file->getRelativePath());
 		}
 
 		foreach (string path, allFilePaths)

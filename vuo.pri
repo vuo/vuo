@@ -1,4 +1,4 @@
-VUO_VERSION = 0.5.1
+VUO_VERSION = 0.5.2
 DEFINES += VUO_VERSION=$$VUO_VERSION
 DEFINES += VUO_VERSION_STRING=\\\"$$VUO_VERSION\\\"
 
@@ -31,6 +31,7 @@ FREETYPE_ROOT = /usr/local/Cellar/freetype/2.5.0.1
 CURL_ROOT = /usr/local/Cellar/curl/7.30.0
 RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.0.1270
+DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport
@@ -48,9 +49,19 @@ VUOLINK = $$ROOT/framework/vuo-link
 VUORENDER = $$ROOT/framework/vuo-render
 
 WARNING_REMOVE = -W
-WARNING_ADD = -Wno-unused-parameter
+WARNING_ADD = \
+#	-Weverything \
+	-Wno-unused-parameter \
+	-Wno-c++11-extensions \
+	-Wno-variadic-macros \
+	-Wno-disabled-macro-expansion \
+	-Wno-padded \
+	-Wno-non-virtual-dtor \
+	-Wno-shadow \
+	-Wno-missing-variable-declarations \
+	-Wno-missing-prototypes
 QMAKE_CFLAGS_WARN_ON -= $$WARNING_REMOVE
-QMAKE_CFLAGS_WARN_ON += $$WARNING_ADD
+QMAKE_CFLAGS_WARN_ON += -std=c99 $$WARNING_ADD
 QMAKE_CXXFLAGS_WARN_ON -= $$WARNING_REMOVE
 QMAKE_CXXFLAGS_WARN_ON += $$WARNING_ADD
 QMAKE_OBJECTIVE_CFLAGS_WARN_ON -= $$WARNING_REMOVE
@@ -181,6 +192,11 @@ openssl {
 	$${OPENSSL_ROOT}/lib/libcrypto.a \
 	$${OPENSSL_ROOT}/lib/libssl.a
 	INCLUDEPATH += $${OPENSSL_ROOT}/include
+}
+
+discount | VuoBase {
+	LIBS += $$DISCOUNT_ROOT/lib/libmarkdown.a
+	INCLUDEPATH += $$DISCOUNT_ROOT/include
 }
 
 Carbon | VuoCompiler {
@@ -390,24 +406,4 @@ TestCompositionExecution {
 	LIBS += -L$$ROOT/test/TestCompositionExecution -lTestCompositionExecution
 	INCLUDEPATH += $$ROOT/test/TestCompositionExecution
 	PRE_TARGETDEPS += $$ROOT/test/TestCompositionExecution/libTestCompositionExecution.a
-}
-
-# This is in vuo.pri, rather than a specific subproject such as node/node.pro, because multiple subprojects define NODE_SOURCES.
-VUOCOMPILE_NODE_INCLUDEPATH = \
-	$${ROOT}/node \
-	$${ROOT}/type \
-	$${ROOT}/type/list \
-	$${ROOT}/runtime \
-	$${JSONC_ROOT}/include \
-	$${ASSIMP_ROOT}/include
-node.input = NODE_SOURCES
-node.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - $$join(VUOCOMPILE_NODE_INCLUDEPATH, " -I", "-I") ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
-node.output = ${QMAKE_FILE_IN_BASE}.vuonode
-node.commands = $$VUOCOMPILE $$join(VUOCOMPILE_NODE_INCLUDEPATH, " --header-search-path ", "--header-search-path ") --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
-QMAKE_EXTRA_COMPILERS += node
-
-# Hack to prevent qmake from building a static library from this project folder.
-VuoNoLibrary {
-	QMAKE_AR_CMD = @true
-	QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_RANLIB = @true
 }

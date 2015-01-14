@@ -15,7 +15,7 @@
 			{ "port" : "point", "value" : "{\"x\":0, \"y\":0}" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "sorted", "value" : "1, 1, 4, 2" }
+			{ "port" : "sorted", "value" : "List containing elements: <ul><li>1, 1</li><li>4, 2</li></ul>" }
 		]
 	},
 	{
@@ -25,7 +25,7 @@
 			{ "port" : "point", "value" : "{\"x\":5, \"y\":3}" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "sorted", "value" : "4, 2, 1, 1" }
+			{ "port" : "sorted", "value" : "List containing elements: <ul><li>4, 2</li><li>1, 1</li></ul>" }
 		]
 	},
 	{
@@ -35,7 +35,7 @@
 			{ "port" : "point", "value" : "{\"x\":0, \"y\":0}" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "sorted", "value" : "-1, -2, 4, 2" }
+			{ "port" : "sorted", "value" : "List containing elements: <ul><li>-1, -2</li><li>4, 2</li></ul>" }
 		]
 	},
 ]}

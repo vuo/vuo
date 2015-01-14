@@ -36,7 +36,8 @@
  * 						 "macosx" : { "min": "10.7" }
  * 					 },
  * 					 "node": {
- * 						 "isInterface" : true
+ * 						 "isInterface" : true,
+ *						 "exampleCompositions" : [ "HelloWorld.vuo", "CalculateTip.vuo" ]
  * 					 }
  * 				 });
  * }
@@ -46,7 +47,7 @@
  *
  * For any type of module, the keys in the JSON specification may optionally include:
  *   - "title" — A human-readable name for the module. It can be overridden by the user.
- *   - "description" — A description of the module's purpose. It may be formatted as plain text or HTML.
+ *   - "description" — A description of the module's purpose. It may be formatted as plain text, HTML, or <a href="http://daringfireball.net/projects/markdown/">Markdown</a>.
  *   - "keywords" — A list of words related to the module's name. This list is used when searching for node classes in the Vuo Editor's Node Library.
  *   - "version" — A version number for the module. It should use the <a href="http://semver.org/">Semantic Versioning (SemVer)</a> scheme.
  *   - "dependencies" — A list of libraries that this module depends upon.
@@ -57,6 +58,7 @@
  *
  * For node classes, the keys in the JSON specification may optionally include "node". Its keys may optionally include:
  *   - "isInterface" — True if this node class sends data to or receives data from somewhere external to the composition (e.g., input device, file, network). False by default.
+ *   - "exampleCompositions" — A list of example compositions that demonstrate this node class. The example compositions and the node class must be packaged together in a node set.
  *
  * @see DevelopingNodeClasses
  * @see DevelopingTypes

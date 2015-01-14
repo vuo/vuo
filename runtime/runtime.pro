@@ -1,6 +1,5 @@
-TEMPLATE = lib
-CONFIG -= qt
-CONFIG += no_link target_predeps staticlib zmq VuoPCH graphviz json VuoNoLibrary
+TEMPLATE = aux
+CONFIG += zmq VuoPCH graphviz json
 
 include(../vuo.pri)
 
@@ -49,7 +48,7 @@ QMAKE_EXTRA_COMPILERS += runtime_cxx
 
 runtime_loader.input = RUNTIME_LOADER_SOURCES
 runtime_loader.output = ${QMAKE_FILE_IN_BASE}
-runtime_loader.depends = ${QMAKE_PCH_OUTPUT}
+runtime_loader.depends = ${QMAKE_PCH_OUTPUT} $$ROOT/base/VuoTelemetry.o
 runtime_loader.commands = \
 	$$QMAKE_CXX \
 		-Xclang -include-pch -Xclang $$ROOT/runtime/pch/runtime/c++.pch \

@@ -164,8 +164,8 @@ static inline float VuoPoint4d_squaredMagnitude(VuoPoint4d a)
 /**
  * @c a / @c b
  */
-static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, double b) __attribute__((const));
-static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, double b)
+static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, float b) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, float b)
 {
 	VuoPoint4d p =
 	{
@@ -180,8 +180,8 @@ static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, double b)
 /**
  * @c a * @c b
  */
-static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, double b) __attribute__((const));
-static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, double b)
+static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b)
 {
 	VuoPoint4d p =
 	{

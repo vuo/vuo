@@ -22,6 +22,7 @@
 #include "VuoRendererTypecastPort.hh"
 #include "VuoRendererColors.hh"
 #include "VuoRendererFonts.hh"
+#include "VuoStringUtilities.hh"
 
 const qreal VuoRendererNode::subcompositionBulge = VuoRendererFonts::thickPenWidth/3.0;
 const qreal VuoRendererNode::cornerRadius = VuoRendererFonts::thickPenWidth/8.0;
@@ -957,21 +958,36 @@ void VuoRendererNode::setTitle(string title)
 
 /**
  * Generates a descriptive tooltip containing information about the input @c nodeClass.
- * @todo: Move this somewhere more appropriate.
  */
 QString VuoRendererNode::generateNodeClassToolTip(VuoNodeClass *nodeClass)
 {
-	string className = nodeClass->getClassName();
+	return generateNodeClassToolTipTitle(nodeClass).append(generateNodeClassToolTipTextBody(nodeClass));
+}
+
+/**
+ * Generates a formatted title to be incorporated into the tooltip for the input @c nodeClass.
+ */
+QString VuoRendererNode::generateNodeClassToolTipTitle(VuoNodeClass *nodeClass)
+{
 	string humanReadableName = nodeClass->getDefaultTitle();
-	string description = nodeClass->getDescription();
+	return QString("<h2>%1</h2>").arg(humanReadableName.c_str());
+}
+
+/**
+ * Generates a formatted description to be incorporated into the tooltip for the input @c nodeClass.
+ */
+QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass)
+{
+	string className = nodeClass->getClassName();
+	string description = VuoStringUtilities::generateHtmlFromMarkdown(nodeClass->getDescription());
 	string version = nodeClass->getVersion();
 
-	QString tooltip = QString("<b><font size=+2>%1</font></b><br>").arg(humanReadableName.c_str());
-	tooltip.append(QString("<font size=+1 color=\"gray\">%1</font><br><br>").arg(description.c_str()));
-	tooltip.append(QString("<font color=\"gray\">%1</font><br>").arg(className.c_str()));
-	tooltip.append(QString("<font color=\"gray\">Version %1</font>").arg(version.c_str()));
+	QString tooltipBody;
+	tooltipBody.append(QString("<font size=+1 color=\"gray\">%1</font>").arg(description.c_str()));
+	tooltipBody.append(QString("<p><font color=\"gray\">%1</font><br>").arg(className.c_str()));
+	tooltipBody.append(QString("<font color=\"gray\">Version %1</font></p>").arg(version.c_str()));
 
-	return tooltip;
+	return tooltipBody;
 }
 
 /**

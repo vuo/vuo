@@ -69,6 +69,8 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 
 		publishedInputNode = parser->getPublishedInputNode();
 		publishedOutputNode = parser->getPublishedOutputNode();
+
+		getBase()->setDescription(parser->getDescription());
 	}
 }
 

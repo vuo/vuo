@@ -116,13 +116,13 @@ Before you can install your port type, you need to use the Vuo Compiler to compi
 
 If you're using the example Qt project for creating a port type, then you can just build the Qt project (Build > Build All). 
 
-Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](http://vuo.org/support), run `vuo-compile --help`, or look at the `vuo-compile` command in the example Qt project. 
+Otherwise, you need to use the `vuo-compile` command-line tool that comes with the Vuo SDK. To learn how to use `vuo-compile`, see the [Vuo Manual](http://vuo.org/manual.pdf), run `vuo-compile --help`, or look at the `vuo-compile` command in the example Qt project. 
 
 
 
 ## Installing a port type
 
-The final step is to place your compiled port type in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](http://vuo.org/support). 
+The final step is to place your compiled port type in the correct folder, so that it will be detected by the Vuo framework and the Vuo command-line tools. You can place it in either `~/Library/Application Support/Vuo/Modules/` or `/Library/Application Support/Vuo/Modules/`. For more information about these folders, see the [Vuo Manual](http://vuo.org/manual.pdf). 
 
 If you're using the example Qt project for creating a port type, then when you build the project, the compiled port type is automatically placed  in `~/Library/Application Support/Vuo/Modules/`. 
 

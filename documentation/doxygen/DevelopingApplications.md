@@ -1,12 +1,11 @@
 @addtogroup DevelopingApplications
 
-If you're developing an application, library, or other project, your code can build and run Vuo compositions. One way is by invoking the Vuo command-line tools (see the [Vuo Manual](http://vuo.org/support)), but you can also interact with Vuo programmatically through its C++ API. 
+If you're developing an application, library, or other project, your code can build and run Vuo compositions. One way is by invoking the Vuo command-line tools (see the [Vuo Manual](http://vuo.org/manual.pdf)), but you can also interact with Vuo programmatically through its C++ API. 
 
 To learn how to develop an application that uses Vuo, see: 
 
    - This API documentation
-   - The example code under "Modules" below
-   - The example Qt projects for using Vuo inside an application
+   - The example Qt projects (included with the Vuo SDK) for using Vuo inside an application
    - The source code for the Vuo command-line tools
 
 

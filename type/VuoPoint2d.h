@@ -91,8 +91,8 @@ static inline float VuoPoint2d_squaredMagnitude(VuoPoint2d a)
 /**
  * @c a / @c b
  */
-static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, double b) __attribute__((const));
-static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, double b)
+static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, float b) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, float b)
 {
 	VuoPoint2d p =
 	{
@@ -130,8 +130,8 @@ static inline VuoPoint2d VuoPoint2d_normalize(VuoPoint2d a)
 /**
  * @c a * @c b
  */
-static inline VuoPoint2d VuoPoint2d_multiply(VuoPoint2d a, double b) __attribute__((const));
-static inline VuoPoint2d VuoPoint2d_multiply(VuoPoint2d a, double b)
+static inline VuoPoint2d VuoPoint2d_multiply(VuoPoint2d a, float b) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_multiply(VuoPoint2d a, float b)
 {
 	VuoPoint2d p =
 	{

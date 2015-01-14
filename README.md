@@ -84,6 +84,9 @@ Install Qt 5.1.1:
     git apply < qtbug-23062-00.patch
     curl -OL https://bugreports.qt-project.org/secure/attachment/32638/qtbug-31294-00.patch
     git apply < qtbug-31294-00.patch
+    curl -OL https://b33p.net/sites/default/files/qcoretextfontdatabase-fix-10.6-reroll_0.patch
+    # reroll of https://qt.gitorious.org/qt/qtbase/commit/b1bd4021f361b404a9c087622f71006f897d7e52
+    git apply < qcoretextfontdatabase-fix-10.6-reroll_0.patch
     cd ..
     ./configure -prefix /usr/local/Cellar/qt/5.1.1/ -opensource -confirm-license -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples
     make -j9
@@ -232,6 +235,16 @@ Install muParser 2.2.3:
     mkdir -p /usr/local/Cellar/assimp/3.0.1270/{lib,include}
     cp lib/libassimp.a /usr/local/Cellar/assimp/3.0.1270/lib
     cp -R include/assimp/ /usr/local/Cellar/assimp/3.0.1270/include/
+
+### Discount
+
+    cd /tmp
+    curl -OL http://www.pell.portland.or.us/~orc/Code/markdown/discount-2.1.6.tar.bz2
+    tar jxf discount-2.1.6.tar.bz2 
+    cd discount-2.1.6
+    ./configure.sh --prefix=/usr/local/Cellar/discount/2.1.6 --enable-all-features
+    make
+    make install
 
 ### ld64 133.3
 

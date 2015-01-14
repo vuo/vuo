@@ -55,30 +55,75 @@ VuoModuleMetadata({
 void VuoImage_free(void *texture)
 {
 	VuoImage t = (VuoImage)texture;
-//	VLog("Freeing image %p %s",t,VuoImage_stringFromValue(t));
-	VuoGlTexturePool_release(t->glTextureName);
+//	VLog("Freeing image %p %s",t,VuoImage_summaryFromValue(t));
+
+	if (t->freeCallback)
+		t->freeCallback(t);
+	else
+		VuoGlTexturePool_release(t->glTextureName);
+
 	free(t);
 }
 
 /**
- * @ingroup VuoImage
- * Returns a new @c VuoImage structure containing the specified values.
- *
- * The VuoImage takes ownership of @c glTextureName,
- * and will call @c glDeleteTextures() on it when it's no longer needed.
+ * Helper for @c VuoImage_make and @c VuoImage_makeClientOwned.
  */
-VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh)
+VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh)
 {
 	VuoImage t = (VuoImage)malloc(sizeof(struct _VuoImage));
 	VuoRegister(t, VuoImage_free);
 
-	VuoGlTexturePool_retain(glTextureName);
 	t->glTextureName = glTextureName;
 	t->glTextureTarget = GL_TEXTURE_2D;
 	t->pixelsWide = pixelsWide;
 	t->pixelsHigh = pixelsHigh;
 
-//	VLog("Made image %p %s",t,VuoImage_stringFromValue(t));
+	t->freeCallback = NULL;
+	t->freeCallbackContext = NULL;
+
+//	VLog("Made image %p %s",t,VuoImage_summaryFromValue(t));
+	return t;
+}
+
+/**
+ * @ingroup VuoImage
+ * Returns a new @ref VuoImage structure representing the specified @c glTextureName.
+ *
+ * The texture must be of type @c GL_TEXTURE_2D.
+ *
+ * The @ref VuoImage takes ownership of @c glTextureName,
+ * and will call @c glDeleteTextures() on it when it's no longer needed.
+ *
+ * @ref VuoImage is intended to be immutable — do not modify
+ * the contents of the @c glTextureName after passing it to this function.
+ */
+VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh)
+{
+	VuoImage t = VuoImage_make_internal(glTextureName, pixelsWide, pixelsHigh);
+	VuoGlTexturePool_retain(glTextureName);
+	return t;
+}
+
+/**
+ * @ingroup VuoImage
+ * Returns a new @ref VuoImage structure representing the specified @c glTextureName.
+ *
+ * The texture must be of type @c GL_TEXTURE_2D.
+ *
+ * When the VuoImage is no longer needed, @c freeCallback is called.
+ * The @c freeCallback may then activate a GL context and delete the texture, or send it back to a texture pool.
+ *
+ * @c freeCallbackContext is optional data passed to @c freeCallback via the @ref VuoImage struct.
+ * Use @c NULL if you don't need to provide additional data to the callback.
+ *
+ * @ref VuoImage is intended to be immutable — do not modify the contents of the @c glTextureName
+ * between passing it to this function and when @c freeCallback is called.
+ */
+VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
+{
+	VuoImage t = VuoImage_make_internal(glTextureName, pixelsWide, pixelsHigh);
+	t->freeCallback = freeCallback;
+	t->freeCallbackContext = freeCallbackContext;
 	return t;
 }
 
@@ -293,10 +338,12 @@ char * VuoImage_summaryFromValue(const VuoImage value)
 	if (!value)
 		return strdup("(no image)");
 
-	const char * format = "GL Texture (ID %lu)<br>%lux%lu";
+	const char * format = "GL Texture (%sID %u)<br>%lux%lu";
 
-	int size = snprintf(NULL, 0, format, value->glTextureName, value->pixelsWide, value->pixelsHigh);
+	const char *clientOwned = value->freeCallback ? "client-owned " : "";
+
+	int size = snprintf(NULL, 0, format, clientOwned, value->glTextureName, value->pixelsWide, value->pixelsHigh);
 	char * valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString, size+1, format, value->glTextureName, value->pixelsWide, value->pixelsHigh);
+	snprintf(valueAsString, size+1, format, clientOwned, value->glTextureName, value->pixelsWide, value->pixelsHigh);
 	return valueAsString;
 }
