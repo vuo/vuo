@@ -175,7 +175,9 @@ Ports that sometimes block events have a broken semi-circle (like the \vuoPort{o
 
 #### Refresh ports
 
-Every node has a built-in event-only input port called the \term{refresh port}. The purpose of this port is to execute the node without performing any port-specific function. It just transmits the event through the node. 
+Every node has a built-in event-only input port called the \term{refresh port}. The purpose of this port is to execute the node without performing any \term {port-specific function}.
+
+Tip: To determine what is a port-specific function, look at the input port. If the input port uses a present-tense verb phrase, such as \vuoPort{increment} or \vuoPort{writeLine}, then the port has a port-specific function, and the refresh node will not execute that function. If the input is a noun, such as \vuoPort{value}, \vuoPort{channel}, \vuoPort{x}, \vuoPort{y}, etc., then the node will execute using those values when an event arrives via the refresh port. 
 
 \vuoCompositionImageWithAnnotationAndCaption{CountSometimes}{
 	\draw[->,line width=1,green] (5.15,2.75) -- (4.15,1.75); \node[right, green] at (5.15,2.75) {refresh port};

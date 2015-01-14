@@ -68,7 +68,7 @@ void vuo_image_render_window_draw(void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	glClearColor(0,0,0,1);
+	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	dispatch_semaphore_wait(context->scenegraphSemaphore, DISPATCH_TIME_FOREVER);

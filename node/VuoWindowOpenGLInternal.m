@@ -279,8 +279,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	drawCallback(drawContext);
 
 	glFlush();
-	CGLFlushDrawable(CGLGetCurrentContext());
 
+//	CGLFlushDrawable(CGLGetCurrentContext());
 	[glContext flushBuffer];
 
 	[NSOpenGLContext clearCurrentContext];
