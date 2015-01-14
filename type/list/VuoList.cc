@@ -93,25 +93,33 @@ json_object * LIST_TYPE_jsonFromValue(const LIST_TYPE value)
 
 char * LIST_TYPE_summaryFromValue(const LIST_TYPE value)
 {
+	if (!value)
+		return strdup("(empty list)");
+
 	std::string summary;
-	const int maxItems = 3;
+	const int maxItems = 20;
+	const int maxCharacters = 400;
 
 	unsigned long itemCount = VuoListGetCount_ELEMENT_TYPE(value);
 	if (itemCount == 0)
 		return strdup("(empty list)");
 
-	for (unsigned long i = 1; i <= itemCount && i <= maxItems; ++i)
+	unsigned long characterCount = 0;
+
+	summary = "List containing elements: <ul>";
+	for (unsigned long i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValueAtIndex_ELEMENT_TYPE(value, i);
 		char *itemSummary = ELEMENT_TYPE_summaryFromValue(item);
-		summary += itemSummary;
+		summary += std::string("<li>") + itemSummary + "</li>";
+		characterCount += strlen(itemSummary);
 		free(itemSummary);
-		if (i < itemCount)
-			summary += ", ";
 	}
 
-	if (itemCount > maxItems)
-		summary += "...";
+	if (itemCount > maxItems || characterCount > maxCharacters)
+		summary += "<li>...</li>";
+
+	summary += "</ul>";
 
 	return strdup(summary.c_str());
 }

@@ -76,8 +76,10 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	getBase()->setDefaultTitle(compilerNodeClass->getBase()->getDefaultTitle());
 	getBase()->setDescription(compilerNodeClass->getBase()->getDescription());
 	getBase()->setVersion(compilerNodeClass->getBase()->getVersion());
-	getBase()->setInterface(compilerNodeClass->getBase()->isInterface());
 	getBase()->setKeywords(compilerNodeClass->getBase()->getKeywords());
+	getBase()->setInterface(compilerNodeClass->getBase()->isInterface());
+	getBase()->setNodeSet(compilerNodeClass->getBase()->getNodeSet());
+	getBase()->setExampleCompositionFileNames(compilerNodeClass->getBase()->getExampleCompositionFileNames());
 	getBase()->setCompiler(this);
 
 	this->dependencies = compilerNodeClass->dependencies;
@@ -267,6 +269,7 @@ void VuoCompilerNodeClass::parseMetadata(void)
 	if (json_object_object_get_ex(moduleDetails, "node", &nodeDetails))
 	{
 		getBase()->setInterface( parseBool(nodeDetails, "isInterface") );
+		getBase()->setExampleCompositionFileNames( parseArrayOfStrings(nodeDetails, "exampleCompositions") );
 	}
 }
 

@@ -116,6 +116,7 @@ protected:
 	QPainterPath getFunctionPortGlyph(void) const;
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode);
+	string getPointStringForCoords(QList<double>) const;
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.
 };

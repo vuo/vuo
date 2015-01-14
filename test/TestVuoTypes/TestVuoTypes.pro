@@ -1,6 +1,5 @@
-TEMPLATE = lib
-CONFIG -= app_bundle
-CONFIG += no_link target_predeps staticlib VuoPCH json qtCore qtTest testcase VuoNoLibrary
+TEMPLATE = aux
+CONFIG += VuoPCH json qtCore qtTest testcase
 
 include(../../vuo.pri)
 
@@ -28,6 +27,7 @@ TEST_FLAGS += \
 	$(CXXFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 	-I$$ROOT/base \
 	-I$$ROOT/node \
+	-I$$ROOT/node/vuo.midi \
 	-I$$ROOT/runtime \
 	-I$$ROOT/type \
 	-I$$ROOT/type/list \
@@ -45,14 +45,14 @@ TEST_FLAGS += \
 	$$ROOT/base/VuoRuntime.o \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
-	$$ROOT/node/libVuoGlContext.dylib \
-	$$ROOT/node/libVuoGlTexturePool.dylib \
-	$$ROOT/node/VuoImageRenderer.o \
+	$$ROOT/library/libVuoGlContext.dylib \
+	$$ROOT/library/libVuoGlTexturePool.dylib \
+	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoImage.o \
 	$$ROOT/type/VuoInteger.o \
-	$$ROOT/type/VuoMidiNote.o \
+	$$ROOT/node/vuo.midi/VuoMidiNote.o \
 	$$ROOT/type/VuoPoint2d.o \
 	$$ROOT/type/VuoPoint3d.o \
 	$$ROOT/type/VuoPoint4d.o \

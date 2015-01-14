@@ -1,0 +1,3 @@
+These nodes are for doing mathematical calculations with numbers. 
+
+Many of these nodes have an **integer** version and a **real number** version. The integer version is for working with numbers without decimal points, such as 1, 99, 0, or -200. The real number version is for working with numbers with decimal points, such as 1.5 or -0.01. Because of the way that numbers are stored on a computer, the integer version gives exact results whereas the real number version is subject to (usually tiny) rounding errors. For example, the integer version of `Divide` (`vuo.math.divide.integer`) says that 4 divided by 3 equals 1 remainder 1, while the real number version of `Divide` (`vuo.math.divide.real`) says that 4 divided by 3 equals 1.333...3 (slightly less than 1 1/3). 

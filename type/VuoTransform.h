@@ -48,9 +48,9 @@ typedef struct
 	enum VuoTransformType type;
 	union
 	{
-		VuoPoint3d eulerRotation; ///< Radians
-		VuoPoint4d quaternionRotation;
-	};
+		VuoPoint3d euler; ///< Radians
+		VuoPoint4d quaternion;
+	} rotationSource;
 } VuoTransform;
 
 void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
@@ -80,10 +80,10 @@ static inline VuoPoint4d VuoTransform_quaternionFromAxisAngle(VuoPoint3d axis, f
 {
 	VuoPoint4d q;
 	VuoPoint3d axisNormalized = VuoPoint3d_normalize(axis);
-	q.x = axisNormalized.x * sin(angle/2.);
-	q.y = axisNormalized.y * sin(angle/2.);
-	q.z = axisNormalized.z * sin(angle/2.);
-	q.w = cos(angle/2.);
+	q.x = axisNormalized.x * sinf(angle/2.f);
+	q.y = axisNormalized.y * sinf(angle/2.f);
+	q.z = axisNormalized.z * sinf(angle/2.f);
+	q.w = cosf(angle/2.f);
 	return VuoPoint4d_normalize4d(q);
 }
 
@@ -101,12 +101,12 @@ static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, Vuo
 
 	VuoPoint3d 	c = VuoPoint3d_crossProduct(fromNormalized, toNormalized);
 	float		d = VuoPoint3d_dotProduct(fromNormalized, toNormalized);
-	float		s = (float)sqrt( (1+d)*2 );
+	float		s = sqrtf( (1+d)*2 );
 
 	q.x = c.x / s;
 	q.y = c.y / s;
 	q.z = c.z / s;
-	q.w = s / 2.0;
+	q.w = s / 2.f;
 
 	return q;
 }
@@ -116,7 +116,7 @@ static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, Vuo
  */
 static inline bool VuoTransform_isIdentity(const VuoTransform transform)
 {
-	const float tolerance = 0.00001;
+	const float tolerance = 0.00001f;
 	return     fabs(transform.translation.x) < tolerance
 			&& fabs(transform.translation.y) < tolerance
 			&& fabs(transform.translation.z) < tolerance
@@ -125,16 +125,16 @@ static inline bool VuoTransform_isIdentity(const VuoTransform transform)
 			&& fabs(transform.scale.z - 1.) < tolerance
 			&& (
 				(transform.type == VuoTransformTypeEuler
-				 && fabs(transform.eulerRotation.x) < tolerance
-				 && fabs(transform.eulerRotation.y) < tolerance
-				 && fabs(transform.eulerRotation.z) < tolerance
+				 && fabs(transform.rotationSource.euler.x) < tolerance
+				 && fabs(transform.rotationSource.euler.y) < tolerance
+				 && fabs(transform.rotationSource.euler.z) < tolerance
 				)
 				||
 				(transform.type == VuoTransformTypeQuaternion
-				 && fabs(transform.quaternionRotation.x) < tolerance
-				 && fabs(transform.quaternionRotation.y) < tolerance
-				 && fabs(transform.quaternionRotation.z) < tolerance
-				 && (fabs(transform.quaternionRotation.w - 1.) < tolerance || fabs(transform.quaternionRotation.w + 1.) < tolerance)
+				 && fabs(transform.rotationSource.quaternion.x) < tolerance
+				 && fabs(transform.rotationSource.quaternion.y) < tolerance
+				 && fabs(transform.rotationSource.quaternion.z) < tolerance
+				 && (fabs(transform.rotationSource.quaternion.w - 1.) < tolerance || fabs(transform.rotationSource.quaternion.w + 1.) < tolerance)
 				 )
 				);
 }

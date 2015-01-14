@@ -27,7 +27,7 @@ void VuoRendererItem::setDrawBoundingRects(bool drawBoundingRects)
  */
 bool VuoRendererItem::getRenderActivity()
 {
-	VuoRendererComposition *composition = static_cast<VuoRendererComposition *>(scene());
+	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
 	return (composition && composition->getRenderActivity());
 }
 

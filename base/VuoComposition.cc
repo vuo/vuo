@@ -35,6 +35,22 @@ string VuoComposition::getName(void)
 }
 
 /**
+ * Sets the composition's description (documentation).
+ */
+void VuoComposition::setDescription(string description)
+{
+	this->description = description;
+}
+
+/**
+ * Returns the composition's description (documentation).
+ */
+string VuoComposition::getDescription(void)
+{
+	return description;
+}
+
+/**
  * Adds a node to the composition.
  */
 void VuoComposition::addNode(VuoNode *node)

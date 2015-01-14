@@ -24,15 +24,32 @@
  * The struct is typedef'd to a pointer so that VuoImages are reference-counted,
  * enabling us to automatically delete the GL Texture Object when the last reference is released.
  */
-typedef struct _VuoImage
+typedef struct _VuoImage *VuoImage;
+
+/**
+ * A callback to be implemented if non-Vuo code needs to retain ownership of the GL texture
+ * (instead of the default behavior where @ref VuoImage takes ownership of the texture).
+ *
+ * @see VuoImage_makeClientOwned
+ */
+typedef void (*VuoImage_freeCallback)(VuoImage imageToFree);
+
+/**
+ * An image residing in GPU memory (GL Texture Object).
+ */
+struct _VuoImage
 {
-	unsigned int glTextureName;
-	unsigned long int glTextureTarget;	///< Always GL_TEXTURE_2D, unless converting from an IOSurface.
-	unsigned long int pixelsWide; ///< We could @c glGetTexLevelParameteri() but that would require a GPU roundtrip (inefficient).
-	unsigned long int pixelsHigh;
-} *VuoImage;
+	unsigned int glTextureName;	///< The unique OpenGL texture identifier.
+	unsigned long int glTextureTarget;	///< Always @c GL_TEXTURE_2D, unless converting from an @c IOSurface.
+	unsigned long int pixelsWide; ///< The horizontal size of the image, in pixels.
+	unsigned long int pixelsHigh; ///< The vertical size of the image, in pixels.
+
+	VuoImage_freeCallback freeCallback;	///< A callback to be implemented if non-Vuo code needs to retain ownership of the GL texture.  See @ref VuoImage_makeClientOwned.
+	void *freeCallbackContext;	///< User data for @c freeCallback.  See @ref VuoImage_makeClientOwned.
+};
 
 VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh);
+VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
 VuoImage VuoImage_valueFromJson(struct json_object * js);
 struct json_object * VuoImage_jsonFromValue(const VuoImage value);
 struct json_object * VuoImage_interprocessJsonFromValue(const VuoImage value);

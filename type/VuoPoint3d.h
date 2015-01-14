@@ -143,8 +143,8 @@ static inline float VuoPoint3d_squaredMagnitude(VuoPoint3d a)
 /**
  * @c a / @c b
  */
-static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, double b) __attribute__((const));
-static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, double b)
+static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, float b) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, float b)
 {
 	VuoPoint3d p =
 	{
@@ -158,8 +158,8 @@ static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, double b)
 /**
  * @c a * @c b
  */
-static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, double b) __attribute__((const));
-static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, double b)
+static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, float b) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, float b)
 {
 	VuoPoint3d p =
 	{

@@ -41,12 +41,21 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoVertices:2 \
 		VuoWave:0 \
 		VuoLeapPointable:0 \
-		VuoLeapHand:0 \
-		VuoLeapFrame:0 \
+		VuoLeapHand:2 \
+		VuoLeapFrame:2 \
 		VuoLeapPointableType:0 \
+		VuoSyphonServerDescription:0 \
 	)
 
-include(../type.pri)
+TYPE_INCLUDEPATH = \
+	$$ROOT/node/vuo.image \
+	$$ROOT/node/vuo.leap \
+	$$ROOT/node/vuo.math \
+	$$ROOT/node/vuo.midi \
+	$$ROOT/node/vuo.noise \
+	$$ROOT/node/vuo.syphon
+
+include(../../module.pri)
 
 typeList.input = TYPE_LIST_SOURCES
 typeList.output = ${QMAKE_FILE_IN_BASE}.bc

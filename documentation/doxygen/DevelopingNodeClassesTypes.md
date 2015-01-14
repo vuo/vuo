@@ -11,5 +11,6 @@ To learn how to develop node classes, see:
       - @ref ManagingDependencies — How to use libraries and frameworks in node classes, port types, and library modules
       - @ref ManagingMemory — How to prevent memory leaks and corruption in node classes, port types, and library modules
       - @ref ManagingConcurrency — How to be thread-safe in node classes, port types, and library modules
+      - @ref PackagingNodeSets — How to bundle node classes and supporting files into a node set
    - The example Qt projects for creating node classes and port types
    - The source code for Vuo's built-in node classes, port types, and library modules

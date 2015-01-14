@@ -4,6 +4,14 @@ CONFIG_OLD = $$CONFIG
 API_HEADER_LISTS = \
 	../base/base.pro \
 	../compiler/compiler.pro \
+	../library/library.pro \
+	../node/node.pro \
+	../node/vuo.image/vuo.image.pro \
+	../node/vuo.leap/vuo.leap.pro \
+	../node/vuo.math/vuo.math.pro \
+	../node/vuo.midi/vuo.midi.pro \
+	../node/vuo.noise/vuo.noise.pro \
+	../node/vuo.syphon/vuo.syphon.pro \
 	../runtime/runtime.pro \
 	../type/type.pro \
 	../type/list/list.pro
@@ -16,37 +24,13 @@ for(header_list, API_HEADER_LISTS) {
 		MASTER_VUO_HEADER_LIST += $${header}
 	}
 	HEADERS = ""
+	POST_TARGETDEPS -= $$NODE_SET_ZIP
+	QMAKE_EXTRA_TARGETS -= createNodeSetZip
 }
 
 # Add the list headers (which were specified with a wildcard, excluded above).
 FRAMEWORK_VUO_HEADERS.files += ../type/list/VuoList_*.h
 # The list headers get included via node.h, so there's no need to add them to MASTER_VUO_HEADER_LIST.
-
-# Add the node, public node library, and type headers.
-FRAMEWORK_VUO_HEADERS.files += \
-	../node/VuoGradientNoiseCommon.h \
-	../node/VuoImageGet.h \
-	../node/VuoImageRenderer.h \
-	../node/VuoMidi.h \
-	../node/VuoSceneRenderer.h \
-	../node/VuoUrl.h \
-	../node/VuoVerticesParametric.h \
-	../node/VuoWindow.h \
-	../node/module.h \
-	../node/node.h \
-	../type/type.h
-MASTER_VUO_HEADER_LIST += \
-	VuoGradientNoiseCommon.h \
-	VuoImageGet.h \
-	VuoImageRenderer.h \
-	VuoMidi.h \
-	VuoSceneRenderer.h \
-	VuoUrl.h \
-	VuoVerticesParametric.h \
-	VuoWindow.h \
-	module.h \
-	node.h \
-	type.h
 
 FRAMEWORK_VUO_STUB_HEADER = "Vuo.stub.h"
 VUO_PRI_LIBS = $$LIBS
@@ -54,6 +38,7 @@ VUO_PRI_LIBS = $$LIBS
 
 # Build the MODULE_OBJECTS list, containing compiled Vuo Modules to be copied to the Framework.
 MODULE_LISTS = \
+	../library/library.pro \
 	../node/node.pro \
 	../type/type.pro \
 	../type/list/list.pro
@@ -79,12 +64,6 @@ for(module_list, MODULE_LISTS) {
 		MODULE_OBJECTS += $$objectfile
 	}
 
-	for(sourcefile, NODE_SOURCES) {
-		objectfile = $${dirname(module_list)}/$${basename(sourcefile)}
-		objectfile ~= s/\\.cc?$/.vuonode
-		MODULE_OBJECTS += $$objectfile
-	}
-
 	SHARED = $$NODE_LIBRARY_SHARED_SOURCES $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 	for(sourcefile, SHARED) {
 		objectfile = $${dirname(module_list)}/lib$${basename(sourcefile)}
@@ -96,6 +75,27 @@ for(module_list, MODULE_LISTS) {
 		FRAMEWORK_VUO_HEADERS.files += $${dirname(module_list)}/$$headerfile
 		MASTER_VUO_HEADER_LIST += $$headerfile
 	}
+}
+
+# Add node set zips to the list of files to be copied to Modules
+NODE_SETS = $$system(ls -1 ../node/*/*.pro)
+NODE_SETS = $$dirname(NODE_SETS)
+NODE_SETS = $$basename(NODE_SETS)
+NODE_SET_ZIPS = $$join(NODE_SETS,.vuonode ../node/,../node/,.vuonode)
+NODE_SET_ZIPS = $$split(NODE_SET_ZIPS," ")
+MODULE_OBJECTS += $$NODE_SET_ZIPS
+
+# Add each type's objects to the list of files to be linked in to the framework dylib
+for(node_set, NODE_SETS) {
+	TYPE_SOURCES = ""
+	include(../node/$${node_set}/$${node_set}.pro)
+	POST_TARGETDEPS -= $$NODE_SET_ZIP
+	QMAKE_EXTRA_TARGETS -= createNodeSetZip
+
+	TYPE_OBJECTS = $$TYPE_SOURCES
+	TYPE_OBJECTS ~= s/\\.cc?$/.o/g
+	TYPE_OBJECTS = $$join(TYPE_OBJECTS," ../node/$${node_set}/",../node/$${node_set}/,)
+	VUO_PRI_LIBS += $$TYPE_OBJECTS
 }
 
 
@@ -153,7 +153,7 @@ MODULE_OBJECTS += \
 	$$RTMIDI_ROOT/lib/librtmidi.a \
 	$$ASSIMP_ROOT/lib/libassimp.a
 !equals(MAC_VERSION, "10.6") {
-	MODULE_OBJECTS += $$ROOT/node/Leap/libLeap.dylib
+	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
 }
 
 
@@ -166,7 +166,6 @@ createHeadersDir.commands += cp $$FRAMEWORK_VUO_HEADERS.files $${HEADERS_DEST_DI
 createHeadersDir.commands += ./generateFrameworkHeader.pl $${FRAMEWORK_VUO_STUB_HEADER} $${MASTER_VUO_HEADER_LIST} > $${HEADERS_DEST_DIR}/Vuo.h
 createHeadersDir.depends += $$FRAMEWORK_VUO_HEADERS.files $$FRAMEWORK_VUO_STUB_HEADER
 createHeadersDir.target = $${HEADERS_DEST_DIR}
-
 POST_TARGETDEPS += $${HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createHeadersDir
 
@@ -180,7 +179,6 @@ createResourcesDir.commands += | sed '"s/@SHORT_VERSION@/$$VUO_VERSION \\(r`svnv
 createResourcesDir.commands += > $${RESOURCES_DEST_DIR}/Info.plist
 createResourcesDir.depends += Info.plist
 createResourcesDir.target = $${RESOURCES_DEST_DIR}
-
 POST_TARGETDEPS += $${RESOURCES_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createResourcesDir
 
@@ -192,10 +190,8 @@ createLicensesDir.commands += mkdir -p $${LICENSES_DEST_DIR} &&
 createLicensesDir.commands += cp ../license/* $${LICENSES_DEST_DIR}
 createLicensesDir.depends += ../license/*
 createLicensesDir.target = $${LICENSES_DEST_DIR}
-
 POST_TARGETDEPS += $${LICENSES_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createLicensesDir
-
 
 # Create Modules directory.
 # Populate it with Vuo Node Classes, Types, and Libraries.
@@ -214,15 +210,7 @@ POST_TARGETDEPS += $${MODULES_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyModules
 
 
-# Create Frameworks directory
-FRAMEWORKS_DEST_SUBDIR = "Versions/$${QMAKE_FRAMEWORK_VERSION}/Frameworks"
-FRAMEWORKS_DEST_DIR = "Vuo.framework/$$FRAMEWORKS_DEST_SUBDIR"
-createFrameworksDir.commands += rm -rf $${FRAMEWORKS_DEST_DIR} &&
-createFrameworksDir.commands += mkdir -p $${FRAMEWORKS_DEST_DIR}
-createFrameworksDir.target = $${FRAMEWORKS_DEST_DIR}
-POST_TARGETDEPS += $${FRAMEWORKS_DEST_DIR}
-QMAKE_EXTRA_TARGETS += createFrameworksDir
-
+FRAMEWORKS_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Frameworks"
 
 # Copy VuoRuntime files to the Frameworks directory
 VUORUNTIME_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/VuoRuntime.framework"
@@ -236,7 +224,6 @@ copyVuoRuntime.depends += $$ROOT/base/VuoCompositionStub.dylib
 copyVuoRuntime.target = $${VUORUNTIME_DEST_DIR}
 POST_TARGETDEPS += $${VUORUNTIME_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyVuoRuntime
-
 
 # Copy ZeroMQ library to the Frameworks directory
 ZEROMQ_LIBS_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/zmq.framework"
@@ -290,6 +277,17 @@ POST_TARGETDEPS += $${CRUNTIME_LIBS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyCRuntime
 
 
+# Copy Syphon library to the Frameworks directory
+SYPHON_LIBS_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/Syphon.framework"
+copySyphonLibs.commands = \
+	   rm -rf $${SYPHON_LIBS_DEST_DIR} \
+	&& cp -r $$ROOT/node/vuo.syphon/Syphon/Syphon.framework $${FRAMEWORKS_DEST_DIR} \
+	&& install_name_tool -id "@rpath/$$SYPHON_LIBS_DEST_DIR/Syphon" "$$SYPHON_LIBS_DEST_DIR/Syphon"
+copySyphonLibs.target = $${SYPHON_LIBS_DEST_DIR}
+POST_TARGETDEPS += $${SYPHON_LIBS_DEST_DIR}
+QMAKE_EXTRA_TARGETS += copySyphonLibs
+
+
 # Copy fonts, Qt frameworks, and Qt plugins to the resources folder (to be bundled as part of the SDK, but not Vuo.framework)
 RESOURCES_SUBDIR = resources
 
@@ -302,6 +300,7 @@ copyFonts.target = $$RESOURCES_SUBDIR/Signika-Light.otf
 POST_TARGETDEPS += $$RESOURCES_SUBDIR/Signika-Light.otf
 QMAKE_EXTRA_TARGETS += copyFonts
 
+QTPLUGINS_DEST_DIR = "$$RESOURCES_SUBDIR/QtPlugins"
 copyAndCleanQtFrameworks.commands = \
 	mkdir -p $$RESOURCES_SUBDIR \
 	&& cp -a \
@@ -336,24 +335,17 @@ copyAndCleanQtFrameworks.commands = \
 	&& install_name_tool -id "@rpath/QtSvg.framework/QtSvg" "$$RESOURCES_SUBDIR/QtSvg.framework/QtSvg" \
 	&& chmod +wx "$$RESOURCES_SUBDIR/QtXml.framework/Versions/$$QT_MAJOR_VERSION/QtXml" \
 	&& install_name_tool -id "@rpath/QtXml.framework/QtXml" "$$RESOURCES_SUBDIR/QtXml.framework/QtXml" \
+	&& rm -rf $$QTPLUGINS_DEST_DIR \
+	&& mkdir -p $$QTPLUGINS_DEST_DIR \
+	&& cp -R $$QT_ROOT/plugins/accessible $$QTPLUGINS_DEST_DIR/accessible \
+	&& mkdir -p $$QTPLUGINS_DEST_DIR/platforms \
+	&& cp -R $$QT_ROOT/plugins/platforms/libqcocoa.dylib $$QTPLUGINS_DEST_DIR/platforms \
+	&& rm -f "$$QTPLUGINS_DEST_DIR/*/*_debug.dylib" \
 	&& ./fixRpaths.sh $$QT_ROOT $$RESOURCES_SUBDIR $$QT_MAJOR_VERSION \
 	&& ./fixRpaths.sh /usr/local $$RESOURCES_SUBDIR $$QT_MAJOR_VERSION
 copyAndCleanQtFrameworks.target = $$RESOURCES_SUBDIR/QtCore.framework
 POST_TARGETDEPS += $$RESOURCES_SUBDIR/QtCore.framework
 QMAKE_EXTRA_TARGETS += copyAndCleanQtFrameworks
-
-QTPLUGINS_DEST_DIR = "$$RESOURCES_SUBDIR/QtPlugins"
-copyAndCleanQtPlugins.commands += \
-	rm -rf $$QTPLUGINS_DEST_DIR \
-	&& mkdir -p $$QTPLUGINS_DEST_DIR \
-	&& cp -R $$QT_ROOT/plugins/accessible $$QTPLUGINS_DEST_DIR/accessible \
-	&& mkdir -p $$QTPLUGINS_DEST_DIR/platforms \
-	&& cp -R $$QT_ROOT/plugins/platforms/libqcocoa.dylib $$QTPLUGINS_DEST_DIR/platforms \
-	&& rm -f "$$QTPLUGINS_DEST_DIR/*/*_debug.dylib"
-copyAndCleanQtPlugins.target = $$QTPLUGINS_DEST_DIR
-POST_TARGETDEPS += $$QTPLUGINS_DEST_DIR
-QMAKE_EXTRA_TARGETS += copyAndCleanQtPlugins
-
 
 # Link the LIBS from vuo.pri to produce Vuo.framework/Vuo
 LIBS += $$VUO_PRI_LIBS
@@ -361,7 +353,7 @@ LIBS += \
 	-framework CoreFoundation \
 	-framework OpenGL \
 	-framework IOSurface \
-	$$ROOT/node/VuoImageRenderer.o
+	$$ROOT/library/VuoImageRenderer.o
 
 
 # Copy Clang headers to the Frameworks directory
@@ -454,24 +446,15 @@ linkVuoFramework.commands = \
 	&& install_name_tool -change "/usr/local/lib/libxdot.4.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libxdot.4.dylib" "$$VUO_FRAMEWORK_BINARY"
 linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
-	../node/libVuoGlContext.dylib \
-	../node/libVuoGlTexturePool.dylib \
+	../library/libVuoGlContext.dylib \
+	../library/libVuoGlTexturePool.dylib \
 	../base/libVuoBase.a \
 	../compiler/libVuoCompiler.a \
 	../type/libVuoType.a \
 	../type/list/libVuoTypeList.a \
-	../node/VuoImageRenderer.o
+	../library/VuoImageRenderer.o
 POST_TARGETDEPS += $$VUO_FRAMEWORK_BINARY
 QMAKE_EXTRA_TARGETS += linkVuoFramework
-
-
-# Create MacOS directory
-MACOS_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/MacOS"
-createMacOSDir.commands += rm -rf $${MACOS_DEST_DIR} &&
-createMacOSDir.commands += mkdir -p $${MACOS_DEST_DIR}
-createMacOSDir.target = $${MACOS_DEST_DIR}
-POST_TARGETDEPS += $${MACOS_DEST_DIR}
-QMAKE_EXTRA_TARGETS += createMacOSDir
 
 
 # Copy Clang and ld64 binaries to the MacOS directory

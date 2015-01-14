@@ -1,5 +1,4 @@
-TEMPLATE = lib
-CONFIG += no_link target_predeps staticlib VuoNoLibrary
+TEMPLATE = aux
 
 include(../../../vuo.pri)
 
@@ -10,3 +9,5 @@ NODE_SOURCES += \
 	vuo.test.wallTime.c
 
 OTHER_FILES += $$NODE_SOURCES
+
+include(../../../module.pri)

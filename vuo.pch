@@ -19,6 +19,14 @@
 using namespace std;
 
 #ifdef LLVM
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+#pragma clang diagnostic ignored "-Wshorten-64-to-32"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#pragma clang diagnostic ignored "-Wswitch-enum"
+
 #define __STDC_CONSTANT_MACROS
 #define __STDC_FORMAT_MACROS
 #define __STDC_LIMIT_MACROS
@@ -59,6 +67,8 @@ using namespace std;
 #include <llvm/Transforms/Utils/Cloning.h>
 #include <llvm/ValueSymbolTable.h>
 using namespace llvm;
+
+#pragma clang diagnostic pop
 #endif
 
 #ifdef QT_CORE_LIB

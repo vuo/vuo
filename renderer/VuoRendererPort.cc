@@ -258,7 +258,7 @@ VuoRendererMakeListNode * VuoRendererPort::getAttachedInputDrawer(void) const
 
 	VuoNode *fromNode = incomingDataCable->getFromNode();
 
-	if (fromNode->hasRenderer() && dynamic_cast<VuoRendererMakeListNode *>(fromNode->getRenderer()))
+	if (fromNode && fromNode->hasRenderer() && dynamic_cast<VuoRendererMakeListNode *>(fromNode->getRenderer()))
 		return (VuoRendererMakeListNode *)fromNode->getRenderer();
 
 	return NULL;
@@ -888,8 +888,14 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
 			double real = json_object_get_double(js);
 			json_object_put(js);
-			return QString("%1").arg(real).toStdString();
+
+			QString valueAsStringInUserLocale = QLocale::system().toString(real);
+			if (qAbs(real) >= 1000.0)
+				valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
+
+			return valueAsStringInUserLocale.toStdString();
 		}
+
 		if (getDataType()->getModuleKey()=="VuoPoint2d")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -900,7 +906,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			if (json_object_object_get_ex(js, "y", &o))
 				y = json_object_get_double(o);
 			json_object_put(js);
-			return QString("(%1, %2)").arg(x).arg(y).toStdString();
+
+			QList<double> pointList = QList<double>() << x << y;
+			return getPointStringForCoords(pointList);
 		}
 		if (getDataType()->getModuleKey()=="VuoPoint3d")
 		{
@@ -914,7 +922,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			if (json_object_object_get_ex(js, "z", &o))
 				z = json_object_get_double(o);
 			json_object_put(js);
-			return QString("(%1, %2, %3)").arg(x).arg(y).arg(z).toStdString();
+
+			QList<double> pointList = QList<double>() << x << y << z;
+			return getPointStringForCoords(pointList);
 		}
 		if (getDataType()->getModuleKey()=="VuoPoint4d")
 		{
@@ -930,11 +940,38 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			if (json_object_object_get_ex(js, "w", &o))
 				w = json_object_get_double(o);
 			json_object_put(js);
-			return QString("(%1, %2, %3, %4)").arg(x).arg(y).arg(z).arg(w).toStdString();
+
+			QList<double> pointList = QList<double>() << x << y << z << w;
+			return getPointStringForCoords(pointList);
 		}
 	}
 
 	return getConstantAsString();
+}
+
+/**
+  * Given a list of coordinates, returns the string representation of the point
+  * consisting of those coordinate values as it should be rendered within a
+  * constant data flag.
+  *
+  * Helper function for @c VuoRendererPort::getConstantAsStringToRender().
+  */
+string VuoRendererPort::getPointStringForCoords(QList<double> coordList) const
+{
+	const QString coordSeparator = QString(QLocale::system().decimalPoint() != ','? QChar(',') : QChar(';')).append(" ");
+	QStringList coordStringList;
+
+	foreach (double coord, coordList)
+	{
+		QString valueAsStringInUserLocale = QLocale::system().toString(coord);
+		if (qAbs(coord) >= 1000.0)
+			valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
+
+		coordStringList.append(valueAsStringInUserLocale);
+	}
+
+	QString pointString = QString("(").append(coordStringList.join(coordSeparator).append(")"));
+	return pointString.toStdString();
 }
 
 /**

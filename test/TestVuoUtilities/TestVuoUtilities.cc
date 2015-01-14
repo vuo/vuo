@@ -107,7 +107,15 @@ private slots:
 		QFETCH(QString, fileRelativePath);
 		QFETCH(bool, shouldFind);
 
-		set<string> fileRelativePaths = VuoFileUtilities::findFilesInDirectory(dirPath.toUtf8().constData(), extension.toUtf8().constData());
+		set<string> extensions;
+		extensions.insert(extension.toStdString());
+		set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInDirectory(dirPath.toUtf8().constData(), extensions);
+		set<string> fileRelativePaths;
+		foreach (VuoFileUtilities::File *file, files)
+		{
+			fileRelativePaths.insert( file->getRelativePath() );
+			delete file;
+		}
 		QEXPECT_FAIL("File below top level of directory.", "Known bug: findFilesInDirectory does not search recursively", Continue);
 		QVERIFY((fileRelativePaths.find(fileRelativePath.toUtf8().constData()) != fileRelativePaths.end()) == shouldFind);
 	}
@@ -139,6 +147,11 @@ private slots:
 			QCOMPARE(QString::fromStdString(VuoStringUtilities::transcodeToGraphvizIdentifier(originalString.toStdString())), escapedString);
 		if (testUnescaping)
 			QCOMPARE(QString::fromStdString(VuoStringUtilities::transcodeFromGraphvizIdentifier(escapedString.toStdString())), originalString);
+	}
+
+	void testMarkdown()
+	{
+		QCOMPARE(VuoStringUtilities::generateHtmlFromMarkdown("   - ***Ka-pow!***"), string("<ul>\n<li> <strong><em>Ka-pow!</em></strong></li>\n</ul>\n"));
 	}
 };
 

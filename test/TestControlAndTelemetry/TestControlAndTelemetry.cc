@@ -552,9 +552,9 @@ private:
 					expectedIdentifiersAndValues.push_back(countPair);
 					IdentifierAndValue item1Pair = { item1PortIdentifier.c_str(), QString("%1").arg(count) };
 					expectedIdentifiersAndValues.push_back(item1Pair);
-					IdentifierAndValue listPair = { listPortIdentifier.c_str(), QString("%1, 10").arg(count) };
+					IdentifierAndValue listPair = { listPortIdentifier.c_str(), QString("List containing elements: <ul><li>%1</li><li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndValues.push_back(listPair);
-					IdentifierAndValue termsPair = { termsPortIdentifier.c_str(), QString("%1, 10").arg(count) };
+					IdentifierAndValue termsPair = { termsPortIdentifier.c_str(), QString("List containing elements: <ul><li>%1</li><li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndValues.push_back(termsPair);
 					IdentifierAndValue sumPair = { sumPortIdentifier.c_str(), QString("%1").arg(count + 10) };
 					expectedIdentifiersAndValues.push_back(sumPair);

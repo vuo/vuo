@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Animates an image along an organic, wandering path. Requires an internet connection to download the image. 
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="242,122"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="537,181" _imageURL="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
+GetTimestamp [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="407,415"];
+GetTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="406,502"];
+Make3DPoint [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="571,307" _z="0.0"];
+MakeGradientNoise1D [type="vuo.noise.gradient.1d" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="308,305" fillcolor="green" _gradientNoise="\"perlin\""];
+MakeGradientNoise1D2 [type="vuo.noise.gradient.1d" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="307,392" fillcolor="green" _gradientNoise="\"simplex\""];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="961,192"];
+PlaceImageinScene [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="721,181" _rotation="0,0,0" _width="0.500000"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="1021,181"];
+SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<done>done\r|<spunOff>spunOff\r" pos="387,143"];
+
+FireonStart:started -> SpinOffEvent:refresh;
+GetImage:image -> PlaceImageinScene:image;
+GetTimestamp2:timestamp -> MakeGradientNoise1D2:position;
+GetTimestamp:timestamp -> MakeGradientNoise1D:position;
+Make3DPoint:point -> PlaceImageinScene:center;
+MakeGradientNoise1D2:value -> Make3DPoint:y;
+MakeGradientNoise1D:value -> Make3DPoint:x;
+MakeList2:list -> RenderScenetoWindow:objects;
+PlaceImageinScene:object -> MakeList2:item1;
+RenderScenetoWindow:requestedFrame -> GetTimestamp2:frameRequest;
+RenderScenetoWindow:requestedFrame -> GetTimestamp:frameRequest;
+SpinOffEvent:spunOff -> GetImage:refresh;
+}

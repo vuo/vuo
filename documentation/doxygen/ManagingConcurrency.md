@@ -1,6 +1,6 @@
 @addtogroup ManagingConcurrency
 
-Vuo compositions are multithreaded to improve performance. When a composition is compiled, the Vuo compiler (a parallelizing compiler) generates code that allows independent parts of the composition to run concurrently. The creator of a composition can control some of the composition's threading behavior, such as allowing a long-running task to run in the background (see the [Vuo Manual](http://vuo.org/support)). 
+Vuo compositions are multithreaded to improve performance. When a composition is compiled, the Vuo compiler (a parallelizing compiler) generates code that allows independent parts of the composition to run concurrently. The creator of a composition can control some of the composition's threading behavior, such as allowing a long-running task to run in the background (see the [Vuo Manual](http://vuo.org/manual.pdf)). 
 
 The Vuo compiler handles most thread synchronization automatically. It guarantees that each node's functions (@ref VuoNodeMethodsStateless and @ref VuoNodeMethodsStateful) will be called sequentially (one at a time), not concurrently. For example, two calls to nodeEvent(), or a call to nodeInstanceEvent() and a call to nodeInstanceTriggerStop(), will never overlap for a node (although they may overlap for different *instances* of a node *class*). A node class's functions don't need to be mutually thread-safe or re-entrant. 
    

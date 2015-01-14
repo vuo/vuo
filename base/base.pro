@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG -= qt
-CONFIG += staticlib VuoPCH VuoRuntime VuoLLVM graphviz json
+CONFIG += staticlib VuoPCH VuoRuntime VuoLLVM graphviz json discount
 TARGET = VuoBase
 
 include(../vuo.pri)
@@ -10,6 +10,7 @@ SOURCES += \
 	VuoBaseDetail.cc \
 	VuoNodeClass.cc \
 	VuoNode.cc \
+	VuoNodeSet.cc \
 	VuoPort.cc \
 	VuoPortClass.cc \
 	VuoCable.cc \
@@ -24,13 +25,15 @@ SOURCES += \
 	$$ROOT/runtime/VuoHeap.cc \
 	$$ROOT/runtime/VuoRuntime.c \
 	VuoCompositionStub.c \
-	VuoComposition.cc
+	VuoComposition.cc \
+	miniz.c
 
 HEADERS += \
 	VuoBase.hh \
 	VuoBaseDetail.hh \
 	VuoNodeClass.hh \
 	VuoNode.hh \
+	VuoNodeSet.hh \
 	VuoPort.hh \
 	VuoPortClass.hh \
 	VuoCable.hh \
@@ -42,7 +45,8 @@ HEADERS += \
 	VuoModule.hh \
 	VuoType.hh \
 	VuoTimeUtilities.hh \
-	VuoComposition.hh
+	VuoComposition.hh \
+	miniz.h
 
 BASE_STUB_SOURCES += \
 	VuoCompositionStub.c

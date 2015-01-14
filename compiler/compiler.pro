@@ -17,7 +17,7 @@ DEFINES += FREETYPE_ROOT=\\\"$$FREETYPE_ROOT\\\"
 DEFINES += CURL_ROOT=\\\"$$CURL_ROOT\\\"
 DEFINES += RTMIDI_ROOT=\\\"$$RTMIDI_ROOT\\\"
 DEFINES += ASSIMP_ROOT=\\\"$$ASSIMP_ROOT\\\"
-
+DEFINES += SYPHON_ROOT=\\\"$$ROOT/node/vuo.syphon/Syphon\\\"
 
 SOURCES += \
 	VuoCompilerPassiveEdge.cc \

@@ -13,11 +13,9 @@
 #include "VuoVertices.h"
 #include "VuoShader.h"
 #include "VuoTransform.h"
+#include "VuoList_VuoVertices.h"
 
 /// @{
-typedef void * VuoList_VuoVertices;
-#define VuoList_VuoVertices_TYPE_DEFINED
-
 typedef void * VuoList_VuoSceneObject;
 #define VuoList_VuoSceneObject_TYPE_DEFINED
 /// @}

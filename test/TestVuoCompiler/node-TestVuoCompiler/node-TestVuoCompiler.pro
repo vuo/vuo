@@ -1,5 +1,4 @@
-TEMPLATE = lib
-CONFIG += no_link target_predeps staticlib VuoNoLibrary
+TEMPLATE = aux
 
 include(../../../vuo.pri)
 
@@ -25,9 +24,4 @@ TYPE_SOURCES += \
 OTHER_FILES += $$NODE_SOURCES
 OTHER_FILES += $$TYPE_SOURCES
 
-type.input = TYPE_SOURCES
-type.output = ${QMAKE_FILE_IN_BASE}.bc
-type.commands = $$VUOCOMPILE --header-search-path $$ROOT/type --header-search-path $$ROOT/node --header-search-path $$ROOT/runtime --header-search-path $${ICU_ROOT}/include --header-search-path $${JSONC_ROOT}/include --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
-type.variable_out = TYPE_OBJECTS
-type.CONFIG = target_predeps
-QMAKE_EXTRA_COMPILERS += type
+include(../../../module.pri)

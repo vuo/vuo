@@ -8,6 +8,7 @@
  */
 
 #include <sstream>
+#include <stdio.h>
 #include <stdlib.h>
 #include <graphviz/gvc.h>
 #include <graphviz/types.h>
@@ -70,11 +71,13 @@ void VuoCompilerGraphvizParser::initialize(FILE *file, VuoCompiler *compiler)
 	publishedInputNode = NULL;
 	publishedOutputNode = NULL;
 
+	string graphAsString = VuoFileUtilities::cFileToString(file);
+
 	// Use builtin Graphviz plugins, not demand-loaded plugins.
 	bool demandLoading = false;
 	GVC_t *context = gvContextPlugins(lt_preloaded_symbols, demandLoading);
 
-	graph = agread(file);
+	graph = agmemread((char *)graphAsString.c_str());
 	agraphattr(graph, (char *)"rankdir", (char *)"LR");
 	agraphattr(graph, (char *)"ranksep", (char *)"0.75");
 	agnodeattr(graph, (char *)"fontsize", (char *)"18");
@@ -92,6 +95,8 @@ void VuoCompilerGraphvizParser::initialize(FILE *file, VuoCompiler *compiler)
 	gvFreeLayout(context, graph);
 	agclose(graph);
 	gvFreeContext(context);
+
+	description = parseDescription(graphAsString);
 }
 
 /**
@@ -549,6 +554,47 @@ void VuoCompilerGraphvizParser::checkPortClasses(vector<VuoPortClass *> dummy, v
 }
 
 /**
+ * Parses the composition's description from the string.
+ *
+ * The description is assumed to be in the 3rd line starting at the 3rd character,
+ * or at the 4th character if the line has a leading space.
+ */
+string VuoCompilerGraphvizParser::parseDescription(string compositionAsString)
+{
+	string description = "";
+	int charNum = 0;
+
+	for (int lineNum = 1; lineNum <= 3; ++lineNum)
+	{
+		string line;
+
+		while (true)
+		{
+			char c = compositionAsString[charNum++];
+			if (c == '\n')
+				break;
+			if (c == 0)
+				return "";
+			line += c;
+		}
+
+		if ((lineNum == 1 && line.substr(0, 2) != "/*") ||
+			(lineNum > 1 && line.substr(0, 2) != "* " && line.substr(0, 3) != " * "))
+			break;
+
+		if (lineNum == 3)
+		{
+			description = line;
+			if (description.substr(0, 1) == " ")
+				description.erase(0, 1);		// Remove optional leading space.
+			description.erase(0, 2);			// Remove "* ".
+		}
+	}
+
+	return description;
+}
+
+/**
  * Returns a list of all the nodes in this composition in the order they were listed in the .vuo file,
  * excluding any psuedo-nodes of class vuo.in or vuo.out.
  */
@@ -620,4 +666,12 @@ vector<VuoCable *> VuoCompilerGraphvizParser::getPublishedInputCables(void)
 vector<VuoCable *> VuoCompilerGraphvizParser::getPublishedOutputCables(void)
 {
 	return publishedOutputCables;
+}
+
+/**
+ * Returns the composition's description.
+ */
+string VuoCompilerGraphvizParser::getDescription(void)
+{
+	return description;
 }

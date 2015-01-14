@@ -40,7 +40,7 @@ char * VuoColor_summaryFromValue(const VuoColor value);
 static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, VuoReal a) __attribute__((const));
 static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, VuoReal a)
 {
-	VuoColor c = {r,g,b,a};
+	VuoColor c = {(float)r,(float)g,(float)b,(float)a};
 	return c;
 }
 

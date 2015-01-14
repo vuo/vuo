@@ -70,7 +70,10 @@ public:
 	void setTitle(string title);
 
 	QRectF getNodeTitleBoundingRect(void) const;
+
 	static QString generateNodeClassToolTip(VuoNodeClass *nodeClass);
+	static QString generateNodeClassToolTipTitle(VuoNodeClass *nodeClass);
+	static QString generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass);
 
 	void resetTimeLastExecuted();
 	void setExecutionEnded();

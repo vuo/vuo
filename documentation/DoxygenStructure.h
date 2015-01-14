@@ -19,6 +19,7 @@
 /// @defgroup ManagingDependencies Managing Dependencies
 /// @defgroup ManagingMemory Managing Memory
 /// @defgroup ManagingConcurrency Managing Concurrency
+/// @defgroup PackagingNodeSets Packaging a Node Set
 
 /**
  * @}
