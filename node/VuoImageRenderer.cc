@@ -172,8 +172,10 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		glBindFramebuffer(GL_FRAMEBUFFER, outputFramebuffer);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, outputTexture, 0);
 
+		glClearColor(0,0,0,0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		// Execute the shader.
-		glBindFramebuffer(GL_FRAMEBUFFER, outputFramebuffer);
 		{
 			glUseProgram(shader->glProgramName);
 			{

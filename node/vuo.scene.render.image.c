@@ -94,9 +94,8 @@ void nodeInstanceEvent
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTexture, 0);
 
 		// Execute the shader every frame
-		glBindFramebuffer(GL_FRAMEBUFFER, outputFramebuffer);
 		{
-			glClearColor(0,0,0,1);
+			glClearColor(0,0,0,0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			VuoSceneRenderer_draw((*context)->sceneRenderer);
