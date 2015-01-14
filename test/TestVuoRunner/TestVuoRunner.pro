@@ -48,6 +48,8 @@ test_runner.commands = \
 		$${TEST_RUNNER_NATIVE_LIBS} \
 		${QMAKE_FILE_IN_BASE}-linked.bc \
 		$${JSONC_ROOT}/lib/libjson.a \
+		-lobjc \
+		-framework Foundation \
 		-o ${QMAKE_FILE_OUT}
 test_runner.CONFIG += no_link target_predeps
 QMAKE_EXTRA_COMPILERS += test_runner

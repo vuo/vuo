@@ -33,7 +33,7 @@ VuoModuleMetadata({
 /**
  * Creates a window containing a text view.
  *
- * Must be called on the main thread.
+ * @threadMain
  */
 - (id)init
 {

@@ -81,7 +81,7 @@ private:
 
 	VuoRunner * setupRunner(void)
 	{
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath);
+		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, "");
 		return runner;
 	}
 
@@ -115,7 +115,7 @@ private slots:
 			QVERIFY2(ret != -1 || errno == ECHILD, QString("ret=%1 errno=%2").arg(ret).arg(errno).toUtf8().constData());
 		}
 
-		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath);
+		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, "");
 		runner->start();
 		runner->stop();
 

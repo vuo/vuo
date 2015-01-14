@@ -290,7 +290,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
 /**
  * Sets up the MIDI input device to call the trigger functions when it receives an event.
  *
- * Can be called from any thread.
+ * @threadAny
  */
 void VuoMidiIn_enableTriggers
 (
@@ -311,7 +311,7 @@ void VuoMidiIn_enableTriggers
 /**
  * Stops the MIDI input device from calling trigger functions when it receives an event.
  *
- * Can be called from any thread.
+ * @threadAny
  */
 void VuoMidiIn_disableTriggers(VuoMidiIn mi)
 {

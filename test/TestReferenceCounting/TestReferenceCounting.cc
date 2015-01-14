@@ -32,12 +32,14 @@ public:
 	{
 		outEventCount = 0;
 
+		string compositionDir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
 		compiler->compileComposition(compositionPath, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
 		remove(compiledCompositionPath.c_str());
-		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, true);
+		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
 
 		runner->setDelegate(this);
 		runner->start();

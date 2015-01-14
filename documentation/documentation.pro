@@ -7,6 +7,7 @@ doxygen.depends = \
 	../base/*.c* ../base/*.h* \
 	../compiler/*.c* ../compiler/*.h* \
 	../editor/*.c* ../editor/*.h* \
+	../library/*.c* ../library/*.m* ../library/*.h* \
 	../node/*.c* ../node/*.h* \
 	../renderer/*.c* ../renderer/*.h* \
 	../type/*.c* ../type/*.h* \

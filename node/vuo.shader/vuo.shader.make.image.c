@@ -8,11 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
-
-/// @todo After we drop 10.6 support, switch back to gl3.h.
-//#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
 
 VuoModuleMetadata({
 					 "title" : "Shade with Image",
@@ -35,5 +30,11 @@ void nodeEvent
 	*shader = VuoShader_makeImageShader();
 
 	if (image)
-		VuoShader_addTexture(*shader, image, "texture");
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+
+		VuoShader_addTexture(*shader, glContext, "texture", image);
+
+		VuoGlContext_disuse(glContext);
+	}
 }

@@ -23,6 +23,7 @@ VuoModuleMetadata({
 						"hue", "saturation", "color", "luminosity" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
@@ -758,15 +759,21 @@ void nodeInstanceEvent
 		(*instance)->currentBlendMode = blendMode;
 	}
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, background, "background");
-	VuoShader_addTexture((*instance)->shader, foreground, "foreground");
+	{
+		VuoGlContext glContext = VuoGlContext_use();
 
-	VuoShader_setUniformFloat((*instance)->shader, "foregroundOpacity", foregroundOpacity);
+		// Associate the input image with the shader.
+		VuoShader_resetTextures((*instance)->shader);
+		VuoShader_addTexture((*instance)->shader, glContext, "background", background);
+		VuoShader_addTexture((*instance)->shader, glContext, "foreground", foreground);
 
-	// Render.
-	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, background->pixelsWide, background->pixelsHigh);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "foregroundOpacity", foregroundOpacity);
+
+		// Render.
+		*blended = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, background->pixelsWide, background->pixelsHigh);
+
+		VuoGlContext_disuse(glContext);
+	}
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

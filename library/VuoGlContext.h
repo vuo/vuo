@@ -10,6 +10,8 @@
 #ifndef VUOGLCONTEXT_H
 #define VUOGLCONTEXT_H
 
+#include <OpenGL/OpenGL.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -23,11 +25,9 @@ typedef void * VuoGlContext;
 void VuoGlContext_setGlobalRootContext(void *rootContext);
 
 VuoGlContext VuoGlContext_use(void);
-void VuoGlContext_useSpecific(VuoGlContext glContext);
-void VuoGlContext_disuse(void);
-void VuoGlContext_disuseSpecific(VuoGlContext glContext);
+void VuoGlContext_disuse(VuoGlContext glContext);
 
-void _VGL(const char *file, const unsigned int line, const char *func);
+void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func);
 
 /**
  * If there's an OpenGL error, prints info about it.  Useful for debugging.
@@ -35,16 +35,16 @@ void _VGL(const char *file, const unsigned int line, const char *func);
  * \eg{
  * void nodeEvent()
  * {
- *     VuoGlContext_use();
+ *     CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
  *
  *     glEnable(GL_ALPHA);
  *     VGL();
  *
- *     VuoGlContext_disuse();
+ *     VuoGlContext_disuse(cgl_ctx);
  * }
  * }
  */
-#define VGL() _VGL(__FILE__, __LINE__, __func__);
+#define VGL() _VGL(cgl_ctx, __FILE__, __LINE__, __func__);
 
 #ifdef __cplusplus
 }

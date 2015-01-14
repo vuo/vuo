@@ -26,6 +26,7 @@ OTHER_FILES += $$TEST_VUO_TYPES_SOURCES
 TEST_FLAGS += \
 	$(CXXFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 	-I$$ROOT/base \
+	-I$$ROOT/library \
 	-I$$ROOT/node \
 	-I$$ROOT/node/vuo.midi \
 	-I$$ROOT/runtime \
@@ -39,6 +40,8 @@ TEST_FLAGS += \
 	$${GRAPHVIZ_ROOT}/lib/libgraph.dylib \
 	$${GRAPHVIZ_ROOT}/lib/graphviz/libgvplugin_dot_layout.dylib \
 	$${GRAPHVIZ_ROOT}/lib/graphviz/libgvplugin_core.dylib \
+	-lobjc \
+	-framework Foundation \
 	$(INCPATH) \
 	$(DEFINES) \
 	$$ROOT/runtime/VuoHeap.cc \
@@ -46,7 +49,7 @@ TEST_FLAGS += \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
 	$$ROOT/library/libVuoGlContext.dylib \
-	$$ROOT/library/libVuoGlTexturePool.dylib \
+	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoColor.o \
@@ -70,7 +73,7 @@ TEST_FLAGS += \
 	$$QMAKE_LFLAGS $$LIBS $$QMAKE_LIBS \
 	-Xclang -include-pch -Xclang pch/TestVuoTypes/c++.pch \
 	-Wl,-rpath,$$ROOT/framework \
-	$$QMAKE_CFLAGS_WARN_ON \
+	$$QMAKE_CXXFLAGS_WARN_ON \
 	"-framework QtTest" \
 	"-framework QtCore" \
 	"-framework IOSurface" \

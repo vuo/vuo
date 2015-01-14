@@ -22,6 +22,7 @@ class VuoCompilerNodeClass;
 class VuoRendererColors;
 class VuoRendererMakeListNode;
 class VuoRendererPort;
+class VuoRendererTypecastPort;
 class VuoNodeClass;
 class VuoCable;
 
@@ -46,6 +47,7 @@ public:
 
 	virtual QRectF boundingRect(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+	virtual QRectF getNodeTitleBoundingRect(void) const;
 
 	vector<VuoRendererMakeListNode *> getAttachedInputDrawers(void) const;
 	qreal getInputDrawerOffset(unsigned int portIndex) const;
@@ -55,6 +57,7 @@ public:
 
 	void setProxyNode(VuoRendererNode * proxyNode);
 	VuoRendererNode * getProxyNode(void) const;
+	VuoRendererTypecastPort * getProxyCollapsedTypecast(void) const;
 
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 	void updateGeometry(void);
@@ -69,9 +72,6 @@ public:
 	void addInputPort(VuoRendererPort * newPort);
 	void setTitle(string title);
 
-	QRectF getNodeTitleBoundingRect(void) const;
-
-	static QString generateNodeClassToolTip(VuoNodeClass *nodeClass);
 	static QString generateNodeClassToolTipTitle(VuoNodeClass *nodeClass);
 	static QString generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass);
 
@@ -98,7 +98,6 @@ protected:
 	VuoRendererPortList *inputPorts; ///<  The list of input renderer ports belonging to this renderer node.
 	VuoRendererPortList *outputPorts; ///< The list of output renderer ports belonging to this renderer node.
 	qint64 timeLastExecutionEnded; ///< The time at which this node's running counterpart last completed an execution.
-	QString nodeClassToolTip; ///< A descriptive tooltip containing information about this node's class.
 
 private:
 	VuoRendererNode *proxyNode; ///< The optional node that handles the rendering for this node.

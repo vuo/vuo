@@ -24,9 +24,12 @@
  * The way in which an @c elements array should be interpreted during rasterization.
  */
 typedef enum {
-	VuoVertices_IndividualTriangles, ///< GL_TRIANGLES, requires `elementCount % 3 == 0`.
-	VuoVertices_TriangleStrip, ///< GL_TRIANGLE_STRIP, requires `elementCount >= 3`.
-	VuoVertices_TriangleFan ///< GL_TRIANGLE_FAN, requires `elementCount >= 3`.
+	VuoVertices_IndividualTriangles,	///< GL_TRIANGLES, requires `elementCount % 3 == 0`.
+	VuoVertices_TriangleStrip,			///< GL_TRIANGLE_STRIP, requires `elementCount >= 3`.
+	VuoVertices_TriangleFan,			///< GL_TRIANGLE_FAN, requires `elementCount >= 3`.
+	VuoVertices_IndividualLines,		///< GL_LINES, requires `elementCount % 2 == 0`.
+	VuoVertices_LineStrip,				///< GL_LINE_STRIP, requires `elementCount >= 2`.
+	VuoVertices_Points					///< GL_POINTS
 } VuoVertices_ElementAssemblyMethod;
 
 /**

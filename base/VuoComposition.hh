@@ -29,6 +29,9 @@ public:
 	void setName(string name);
 	string getName(void);
 
+	void setDirectory(string directory);
+	string getDirectory(void);
+
 	void setDescription(string description);
 	string getDescription(void);
 
@@ -63,6 +66,7 @@ public:
 
 private:
 	string name;
+	string directory;
 	string description;
 
 	set<VuoNode *> nodes;

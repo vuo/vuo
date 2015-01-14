@@ -16,6 +16,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "twist", "swirl", "spin", "whirl", "pivot", "swivel", "revolve", "rotate", "curl", "coil" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
@@ -87,17 +88,23 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, image, "texture");
+	{
+		VuoGlContext glContext = VuoGlContext_use();
 
-	// Feed parameters to the shader.
-	VuoShader_setUniformPoint2d((*instance)->shader, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
-	VuoShader_setUniformFloat((*instance)->shader, "angle", angle*M_PI/180.);
-	VuoShader_setUniformFloat((*instance)->shader, "cutoffRadius", VuoShader_samplerSizeFromVuoSize(radius));
+		// Associate the input image with the shader.
+		VuoShader_resetTextures((*instance)->shader);
+		VuoShader_addTexture((*instance)->shader, glContext, "texture", image);
 
-	// Render.
-	*twirledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+		// Feed parameters to the shader.
+		VuoShader_setUniformPoint2d((*instance)->shader, glContext, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "angle", angle*M_PI/180.);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "cutoffRadius", VuoShader_samplerSizeFromVuoSize(radius));
+
+		// Render.
+		*twirledImage = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+
+		VuoGlContext_disuse(glContext);
+	}
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

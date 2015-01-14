@@ -9,7 +9,7 @@
 
 digraph G
 {
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="242,122"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="358,138"];
 GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="537,181" _imageURL="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
 GetTimestamp [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="407,415"];
 GetTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="406,502"];
@@ -18,10 +18,9 @@ MakeGradientNoise1D [type="vuo.noise.gradient.1d" version="1.0.0" label="Make Gr
 MakeGradientNoise1D2 [type="vuo.noise.gradient.1d" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="307,392" fillcolor="green" _gradientNoise="\"simplex\""];
 MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="961,192"];
 PlaceImageinScene [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<done>done\r|<object>object\r" pos="721,181" _rotation="0,0,0" _width="0.500000"];
-RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="1021,181"];
-SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<done>done\r|<spunOff>spunOff\r" pos="387,143"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1021,181"];
 
-FireonStart:started -> SpinOffEvent:refresh;
+FireonStart:started -> GetImage:refresh;
 GetImage:image -> PlaceImageinScene:image;
 GetTimestamp2:timestamp -> MakeGradientNoise1D2:position;
 GetTimestamp:timestamp -> MakeGradientNoise1D:position;
@@ -32,5 +31,4 @@ MakeList2:list -> RenderScenetoWindow:objects;
 PlaceImageinScene:object -> MakeList2:item1;
 RenderScenetoWindow:requestedFrame -> GetTimestamp2:frameRequest;
 RenderScenetoWindow:requestedFrame -> GetTimestamp:frameRequest;
-SpinOffEvent:spunOff -> GetImage:refresh;
 }

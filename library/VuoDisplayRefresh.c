@@ -9,6 +9,7 @@
 
 #include "VuoDisplayRefresh.h"
 #include <CoreVideo/CoreVideo.h>
+#include <mach/mach_time.h>
 
 #include "VuoFrameRequest.h"
 
@@ -27,12 +28,17 @@ VuoModuleMetadata({
  */
 typedef struct
 {
-	void (*requestedFrameTrigger)(VuoFrameRequest);	///< The trigger function, to be fired when the display link wants the application to output a frame.
+	void (*requestedFrameTrigger)(VuoFrameRequest);	///< The trigger function to be fired when the display link wants the application to output a frame.  May be @c NULL.
+	void (*requestedFrameTriggerWithContext)(VuoFrameRequest, void *context);	///< The trigger function to be fired when the display link wants the application to output a frame.  May be @c NULL.
+	void *triggerContext;	///< Custom contextual data to be passed to @c requestedFrameTriggerWithContext.
+
 	bool firstRequest;	///< Is this the first time the display link callback has been invoked?
 	int64_t initialTime;	///< The output time for which the display link was first invoked.
 	VuoInteger frameCount;	///< The nubmer of frames requested so far.
 
 	CVDisplayLinkRef displayLink;	///< The display link, created when @c VuoDisplayRefresh_enableTriggers is called.
+	bool displayLinkCancelRequested;	///< True if the displayLink should cancel next refresh.
+	dispatch_semaphore_t displayLinkCanceledAndCompleted;	///< Signaled after the last displayLinkCallback has completed during cancellation.
 } VuoDisplayRefreshInternal;
 
 /**
@@ -43,18 +49,29 @@ static CVReturn VuoDisplayRefresh_displayLinkCallback(CVDisplayLinkRef displayLi
 															CVOptionFlags flagsIn, CVOptionFlags *flagsOut,
 															void *ctx)
 {
+	int64_t plannedFrameTime = inOutputTime->videoTime;
+
 	VuoDisplayRefreshInternal *displayRefresh = (VuoDisplayRefreshInternal *)ctx;
 	if (displayRefresh->firstRequest)
 	{
-		displayRefresh->initialTime = inOutputTime->videoTime;
+		displayRefresh->initialTime = plannedFrameTime;
 		displayRefresh->firstRequest = false;
 	}
 
+	if (displayRefresh->displayLinkCancelRequested)
+		CVDisplayLinkStop(displayRefresh->displayLink);
+
+	double timestamp = (double)(plannedFrameTime - displayRefresh->initialTime)/(double)inOutputTime->videoTimeScale;
+	VuoFrameRequest fr = VuoFrameRequest_make(timestamp, displayRefresh->frameCount++);
+
 	if (displayRefresh->requestedFrameTrigger)
-	{
-		double timestamp = (double)(inOutputTime->videoTime - displayRefresh->initialTime)/(double)inOutputTime->videoTimeScale;
-		displayRefresh->requestedFrameTrigger(VuoFrameRequest_make(timestamp, displayRefresh->frameCount++));
-	}
+		displayRefresh->requestedFrameTrigger(fr);
+
+	if (displayRefresh->requestedFrameTriggerWithContext)
+		displayRefresh->requestedFrameTriggerWithContext(fr, displayRefresh->triggerContext);
+
+	if (displayRefresh->displayLinkCancelRequested)
+		dispatch_semaphore_signal(displayRefresh->displayLinkCanceledAndCompleted);
 
 	return kCVReturnSuccess;
 }
@@ -62,9 +79,11 @@ static CVReturn VuoDisplayRefresh_displayLinkCallback(CVDisplayLinkRef displayLi
 /**
  * Creates a display refresh trigger instance.
  *
- * May be called from any thread.
+ * @threadAny
+ *
+ * @param context Specifies custom contextual data to be passed to the @c requestedFrameSendoff callback (see @ref VuoDisplayRefreshInternal)
  */
-VuoDisplayRefresh VuoDisplayRefresh_make(void)
+VuoDisplayRefresh VuoDisplayRefresh_make(void *context)
 {
 	VuoDisplayRefreshInternal *displayRefresh = (VuoDisplayRefreshInternal *)malloc(sizeof(VuoDisplayRefreshInternal));
 	VuoRegister(displayRefresh, free);
@@ -73,26 +92,34 @@ VuoDisplayRefresh VuoDisplayRefresh_make(void)
 	// displayRefresh->initialTime is initialized by VuoDisplayRefresh_displayLinkCallback().
 	displayRefresh->frameCount = 0;
 
+	displayRefresh->triggerContext = context;
+
 	return (VuoDisplayRefresh)displayRefresh;
 }
 
 /**
  * Starts firing display refresh events.
  *
- * May be called from any thread.
+ * @see VuoDisplayRefreshInternal
+ *
+ * @threadAny
  */
 void VuoDisplayRefresh_enableTriggers
 (
 		VuoDisplayRefresh dr,
-		VuoOutputTrigger(requestedFrame, VuoFrameRequest)
+		void (*requestedFrameTrigger)(VuoFrameRequest),
+		void (*requestedFrameTriggerWithContext)(VuoFrameRequest, void *context)
 )
 {
 	VuoDisplayRefreshInternal *displayRefresh = (VuoDisplayRefreshInternal *)dr;
 
-	displayRefresh->requestedFrameTrigger = requestedFrame;
+	displayRefresh->requestedFrameTrigger = requestedFrameTrigger;
+	displayRefresh->requestedFrameTriggerWithContext = requestedFrameTriggerWithContext;
 
 	if (CVDisplayLinkCreateWithCGDisplay(kCGDirectMainDisplay, &displayRefresh->displayLink) == kCVReturnSuccess)
 	{
+		displayRefresh->displayLinkCancelRequested = false;
+		displayRefresh->displayLinkCanceledAndCompleted = dispatch_semaphore_create(0);
 		CVDisplayLinkSetOutputCallback(displayRefresh->displayLink, VuoDisplayRefresh_displayLinkCallback, displayRefresh);
 		CVDisplayLinkStart(displayRefresh->displayLink);
 	}
@@ -106,11 +133,16 @@ void VuoDisplayRefresh_enableTriggers
 /**
  * After this function returns, this @c VuoDisplayRefresh instance will no longer fire events.
  *
- * May be called from any thread.
+ * @threadAny
  */
 void VuoDisplayRefresh_disableTriggers(VuoDisplayRefresh dr)
 {
 	VuoDisplayRefreshInternal *displayRefresh = (VuoDisplayRefreshInternal *)dr;
 	if (displayRefresh->displayLink)
-		CVDisplayLinkStop(displayRefresh->displayLink);
+	{
+		displayRefresh->displayLinkCancelRequested = true;
+
+		// Wait for the last sendoff to complete.
+		dispatch_semaphore_wait(displayRefresh->displayLinkCanceledAndCompleted, DISPATCH_TIME_FOREVER);
+	}
 }

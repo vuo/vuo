@@ -10,16 +10,11 @@
 #include "node.h"
 #include "VuoGlContext.h"
 
-/// @todo After we drop 10.6 support, switch back to gl3.h.
-//#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
-
 VuoModuleMetadata({
 					 "title" : "Shade with Normal Colors",
 					 "keywords" : [ "mesh", "draw", "opengl", "glsl", "scenegraph", "graphics" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node": {
 						 "isInterface" : false

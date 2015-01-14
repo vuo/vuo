@@ -50,6 +50,7 @@ VuoRendererCable::VuoRendererCable(VuoCable *baseCable)
 	if (toRN)
 		getBase()->getToPort()->getRenderer()->updateGeometry();
 
+	floatingEndpointLoc = QPointF();
 	floatingEndpointPreviousToPort = NULL;
 	isHovered = false;
 
@@ -342,6 +343,15 @@ bool VuoRendererCable::paintingDisabled() const
 	}
 
 	return false;
+}
+
+/**
+ * Returns the coordinates of the cable's floating endpoint, or a NULL
+ * QPointF if none.
+ */
+QPointF VuoRendererCable::getFloatingEndpointLoc()
+{
+	return floatingEndpointLoc;
 }
 
 /**

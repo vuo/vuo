@@ -151,6 +151,13 @@ MODULE_OBJECTS += \
 	$$FREETYPE_ROOT/lib/libfreetype.a \
 	$$CURL_ROOT/lib/libcurl.a \
 	$$RTMIDI_ROOT/lib/librtmidi.a \
+	$$FFMPEG_ROOT/lib/libavcodec.dylib \
+	$$FFMPEG_ROOT/lib/libavdevice.dylib \
+	$$FFMPEG_ROOT/lib/libavfilter.dylib \
+	$$FFMPEG_ROOT/lib/libavformat.dylib \
+	$$FFMPEG_ROOT/lib/libavutil.dylib \
+	$$FFMPEG_ROOT/lib/libswresample.dylib \
+	$$FFMPEG_ROOT/lib/libswscale.dylib \
 	$$ASSIMP_ROOT/lib/libassimp.a
 !equals(MAC_VERSION, "10.6") {
 	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
@@ -200,7 +207,28 @@ MODULES_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Modules"
 copyModules.commands = \
 	   rm -rf $$MODULES_DEST_DIR \
 	&& mkdir -p $$MODULES_DEST_DIR \
-	&& cp $$MODULE_OBJECTS $$MODULES_DEST_DIR
+	&& cp $$MODULE_OBJECTS $$MODULES_DEST_DIR \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavdevice.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavfilter.3.dylib" "@rpath/$$MODULES_DEST_DIR/libavfilter.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavformat.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavcodec.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavfilter.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavformat.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavcodec.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libswresample.0.dylib" "@rpath/$$MODULES_DEST_DIR/libswresample.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libswscale.2.dylib" "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libavfilter.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavformat.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavcodec.55.dylib" "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavformat.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libswresample.dylib" "$$MODULES_DEST_DIR/libswresample.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswresample.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
+	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavutil.dylib"
 !equals(MAC_VERSION, "10.6") {
 	copyModules.commands += && install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib"
 }
@@ -447,7 +475,7 @@ linkVuoFramework.commands = \
 linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
 	../library/libVuoGlContext.dylib \
-	../library/libVuoGlTexturePool.dylib \
+	../library/libVuoGlPool.dylib \
 	../base/libVuoBase.a \
 	../compiler/libVuoCompiler.a \
 	../type/libVuoType.a \

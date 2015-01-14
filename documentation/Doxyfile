@@ -22,6 +22,11 @@ ALIASES               += "vuoPort{1}=<b>\1</b>"
 ALIASES               += "vuoNode{1}=<b>\1</b>"
 ALIASES               += "vuoNodeClass{1}=<b>\1</b>"
 ALIASES               += "vuoNodeImage{1}=@image html \1.png"
+ALIASES               += "threadAny=This function may be called from any thread."
+ALIASES               += "threadAnyGL=This function may be called from any thread.  (However, the caller is responsible for ensuring that the GL context is not used simultaneously on multiple threads.)"
+ALIASES               += "threadMain=This function may only be called on the main thread."
+ALIASES               += "threadNoMain=This function may be called on any thread _except_ the main thread."
+ALIASES               += "threadQueue{1}=This function may only be called on dispatch queue @c \1."
 
 #---------------------------------------------------------------------------
 # Build related configuration options

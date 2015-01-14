@@ -13,15 +13,9 @@
 #include <unistd.h>
 #include <dispatch/dispatch.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <objc/runtime.h>
+#include <objc/message.h>
 #include "VuoTelemetry.h"
-
-extern "C"
-{
-/**
- * Private API function in libdispatch.
- */
-extern void _dispatch_main_queue_callback_4CF(mach_msg_header_t *msg);
-}
 
 void *ZMQLoaderControlContext = NULL;  ///< The context for initializing sockets to control the composition loader.
 void *ZMQLoaderControl = NULL;  ///< The socket for controlling the composition loader.
@@ -184,8 +178,9 @@ int main(int argc, char **argv)
 		isStopped = &isStoppedInitially;
 		while (isReplacing || ! *isStopped)  // Check isReplacing first, since isStopped is invalid for part of the time that isReplacing is true.
 		{
-			_dispatch_main_queue_callback_4CF(0);
-			usleep(10000);
+			id pool = objc_msgSend((id)objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
+			CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
+			objc_msgSend(pool, sel_getUid("drain"));
 		}
 	}
 

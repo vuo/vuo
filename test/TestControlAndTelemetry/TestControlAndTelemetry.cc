@@ -53,7 +53,7 @@ private:
 		delete compiler;
 		remove(bcPath.c_str());
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, true);
+		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, "", true);
 		runner->setDelegate(new TestRunnerDelegate());
 		return runner;
 	}
@@ -66,8 +66,8 @@ private:
 	{
 		VuoCompiler *compiler = initCompiler();
 
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 		string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource", "dylib");
@@ -80,7 +80,7 @@ private:
 		delete compiler;
 		remove(bcPath.c_str());
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, true);
+		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir, true);
 		// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 		return runner;
 	}
@@ -93,8 +93,8 @@ private:
 	{
 		VuoCompiler *compiler = initCompiler();
 
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
@@ -103,7 +103,7 @@ private:
 		delete compiler;
 		remove(bcPath.c_str());
 
-		VuoRunner * runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(dylibPath, true);
+		VuoRunner * runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(dylibPath, compositionDir, true);
 		// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 		return runner;
 	}
@@ -1297,8 +1297,8 @@ private slots:
 
 		VuoCompiler *compiler = initCompiler();
 
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 		vector<string> alreadyLinkedResourcePaths;
@@ -1320,7 +1320,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
@@ -1354,8 +1354,8 @@ private slots:
 
 		VuoCompiler *compiler = initCompiler();
 
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 		vector<string> alreadyLinkedResourcePaths;
@@ -1374,7 +1374,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, true);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, true);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
@@ -1435,8 +1435,8 @@ private slots:
 
 		VuoCompiler *compiler = initCompiler();
 
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
+		string compositionDir, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 		vector<string> alreadyLinkedResourcePaths;
@@ -1466,7 +1466,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, true);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, true);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 

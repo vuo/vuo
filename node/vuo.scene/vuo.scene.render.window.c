@@ -16,10 +16,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <OpenGL/gl.h>
-//#import <OpenGL/gl3.h>
-/// @todo After we drop 10.6 support, switch back to gl3 and remove the below 4 lines.  See also r15430 for shader changes.
-#include <OpenGL/glext.h>
+#include <OpenGL/CGLMacro.h>
 
 #define DEBUG 0
 
@@ -36,7 +33,13 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "DisplayScene.vuo", "DisplaySquare.vuo", "SpinSphere.vuo" ]
+						 "exampleCompositions" : [
+							 "DisplayScene.vuo",
+							 "DisplaySquare.vuo",
+							 "SpinSphere.vuo",
+							 "MoveSpinningSphere.vuo",
+							 "SwitchCameras.vuo"
+						]
 					 }
 				 });
 
@@ -48,14 +51,14 @@ struct nodeInstanceData
 	VuoSceneRenderer *sceneRenderer;
 };
 
-void vuo_scene_render_window_init(void *ctx)
+void vuo_scene_render_window_init(VuoGlContext glContext, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	VuoSceneRenderer_prepareContext(context->sceneRenderer);
+	VuoSceneRenderer_prepareContext(context->sceneRenderer, glContext);
 }
 
-void vuo_scene_render_window_resize(void *ctx, unsigned int width, unsigned int height)
+void vuo_scene_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
 {
 	//fprintf(stderr, "vuo_scene_render_window_resize(%d,%d)\n", width, height);
 	struct nodeInstanceData *context = ctx;
@@ -63,16 +66,17 @@ void vuo_scene_render_window_resize(void *ctx, unsigned int width, unsigned int 
 	VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
 }
 
-void vuo_scene_render_window_draw(void *ctx)
+void vuo_scene_render_window_draw(VuoGlContext glContext, void *ctx)
 {
 	//fprintf(stderr, "vuo_scene_render_window_draw\n");
 	struct nodeInstanceData *context = ctx;
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 	glClearColor(0,0,0,0);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	VuoSceneRenderer_draw(context->sceneRenderer);
+	VuoSceneRenderer_draw(context->sceneRenderer, glContext);
 
 #if DEBUG
 	VuoSceneRenderer_drawElement(context->sceneRenderer, 0, .08f);	// Normals
@@ -86,7 +90,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 
-	context->displayRefresh = VuoDisplayRefresh_make();
+	context->displayRefresh = VuoDisplayRefresh_make(context);
 	VuoRetain(context->displayRefresh);
 
 	context->sceneRenderer = VuoSceneRenderer_make();
@@ -113,17 +117,26 @@ void nodeInstanceTriggerStart
 )
 {
 	VuoWindowOpenGl_enableTriggers((*context)->window, movedMouseTo, scrolledMouse, usedMouseButton);
-	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame);
+	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
 }
 
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoList_VuoSceneObject) objects
+		VuoInputData(VuoList_VuoSceneObject) objects,
+		VuoInputData(VuoText) cameraName
 )
 {
 	VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), objects);
-	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+
+		VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, glContext, rootSceneObject);
+
+		VuoGlContext_disuse(glContext);
+	}
+
+	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName);
 
 	// Schedule a redraw.
 	VuoWindowOpenGl_redraw((*context)->window);

@@ -11,8 +11,7 @@
 #define GLFW_NO_GLU
 #include <GL/glfw.h>
 
-/// @todo After we drop 10.6 support, switch back to GLFW_INCLUDE_GL3 and remove the below 4 lines.  See also r15430 for shader changes.
-#include <OpenGL/glext.h>
+#import <OpenGL/CGLMacro.h>
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
@@ -45,7 +44,7 @@ static const char * fragmentShaderSource = GLSL_STRING(120,
 	}
 );
 
-static GLuint compileShader(GLenum type, const char * source)
+static GLuint compileShader(CGLContextObj cgl_ctx, GLenum type, const char * source)
 {
 	GLint length = strlen(source);
 	GLuint shader = glCreateShader(type);
@@ -82,16 +81,14 @@ int main(void)
 	glfwOpenWindow(640,480,8,8,8,8,8,0,GLFW_WINDOW);
 	glfwSetWindowCloseCallback(windowWillClose);
 
+	CGLContextObj cgl_ctx = CGLGetCurrentContext();
+
 	// Share the GL Context with the Vuo Composition
-	CGLContextObj ctx = CGLGetCurrentContext();
-	VuoGlContext_setGlobalRootContext((void *)ctx);
+	VuoGlContext_setGlobalRootContext((void *)cgl_ctx);
 
 	// Compile, link, and run the composition
 	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(EXAMPLE_PATH "/RippleImage.vuo");
 	runner->start();
-
-	// Restore the context (Vuo node initializations may reset it).
-	CGLSetCurrentContext(ctx);
 
 	// Upload a quad, for rendering the texture later on
 	glGenVertexArrays(1, &vertexArray);
@@ -119,8 +116,8 @@ int main(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
 	// Prepare a shader for displaying the GL Texture onscreen
-	vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
-	fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+	vertexShader = compileShader(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
+	fragmentShader = compileShader(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
 
 	program = glCreateProgram();
 	glAttachShader(program, vertexShader);
@@ -151,9 +148,6 @@ int main(void)
 		VuoImage outputImage = VuoImage_valueFromJson(o);
 		json_object_put(o);
 		VuoRetain(outputImage);
-
-		// Restore the context (Vuo node executions may reset it).
-		CGLSetCurrentContext(ctx);
 
 		// Display the GL Texture onscreen
 		glUseProgram(program);
@@ -187,6 +181,8 @@ int windowWillClose(void)
 {
 	runner->stop();
 	delete runner;
+
+	CGLContextObj cgl_ctx = CGLGetCurrentContext();
 
 	glDetachShader(program, vertexShader);
 	glDetachShader(program, fragmentShader);

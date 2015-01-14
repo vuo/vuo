@@ -6,11 +6,13 @@ To download an image from the internet, copy the image's URL from your browser. 
 
 Currently, URLs that begin with `https` are not supported.
 
-To load an image from a file on the computer running the composition, create a URL from the image file's path. Examples: 
+To load an image from a file on the computer running the composition, create a URL from the file's path. Examples: 
 
    - `file:///System/Library/CoreServices/DefaultDesktop.jpg`
-   - `file:///Users/me/file\ with\ spaces.png` (for a file called `file with spaces.png`)
+   - `/System/Library/CoreServices/DefaultDesktop.jpg`
+   - `DefaultDesktop.jpg` (for a file called "DefaultDesktop.jpg" in the same folder as the composition)
+   - `images/DefaultDesktop.jpg` (for a file called "DefaultDesktop.jpg" in a folder called "images" in the same folder as the composition)
 
-To get a file's path in the correct format, open the Terminal application, drag the file onto the Terminal window, and copy the path that appears in the Terminal window. Add `file://` at the beginning of the path.
+If the file's location doesn't start with `file://` or `/`, then it's treated as a relative path. This is the option you'd typically want when sharing the composition with others. If running the composition on a different computer than it was created on, the file needs to exist in the same location relative to the composition (`.vuo`) file. If running an application exported from the composition, the file needs to exist in the `Contents/Resources` folder inside the application package; see the [Vuo Manual](http://vuo.org/manual.pdf) for details. 
 
-Currently, only absolute file paths are supported. If you run a composition on a different computer than it was created on, then the image files need to be in the same location as on the original computer. 
+If the file's location starts with `file://` or `/`, then it's treated as an absolute path. If running the composition on a different computer than it was created on, the file needs to exist in the same location on that computer. To get the file's path in the correct format, open the TextEdit application, go to Format > Make Plain Text, drag the file onto the TextEdit window, and copy the path that appears in the TextEdit window. 

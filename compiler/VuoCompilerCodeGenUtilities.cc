@@ -57,8 +57,67 @@ void VuoCompilerCodeGenUtilities::generateInitializationForSemaphore(Module *mod
 
 /**
  * Generates code that waits for and claims a dispatch_semaphore_t.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param semaphoreVariable The semaphore.
+ * @param timeoutInNanoseconds The timeout to be turned into a dispatch_time_t and passed to dispatch_semaphore_wait().
+ * @return The return value of dispatch_semaphore_wait().
  */
-void VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, dispatch_time_t timeout)
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, int64_t timeoutInNanoseconds)
+{
+	Type *dispatch_time_t_type = IntegerType::get(module->getContext(), 64);
+
+	vector<Type *> dispatch_time_functionParams;
+	dispatch_time_functionParams.push_back(dispatch_time_t_type);
+	dispatch_time_functionParams.push_back(IntegerType::get(module->getContext(), 64));
+	FunctionType *dispatch_time_functionType = FunctionType::get(dispatch_time_t_type,
+																 dispatch_time_functionParams,
+																 false);
+
+	Function *dispatch_time_function = module->getFunction("dispatch_time");
+	if (! dispatch_time_function) {
+		dispatch_time_function = Function::Create(dispatch_time_functionType,
+												  GlobalValue::ExternalLinkage,
+												  "dispatch_time",
+												  module);
+	}
+
+	ConstantInt *whenValue = ConstantInt::get(module->getContext(), APInt(64, DISPATCH_TIME_NOW));
+	ConstantInt *deltaValue = ConstantInt::get(module->getContext(), APInt(64, timeoutInNanoseconds, true));
+
+	vector<Value *> args;
+	args.push_back(whenValue);
+	args.push_back(deltaValue);
+	CallInst *timeoutValue = CallInst::Create(dispatch_time_function, args, "", block);
+
+	return generateWaitForSemaphore(module, block, semaphoreVariable, timeoutValue);
+}
+
+/**
+ * Generates code that waits for and claims a dispatch_semaphore_t, with a timeout of @c DISPATCH_TIME_FOREVER.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param semaphoreVariable The semaphore.
+ * @return The return value of dispatch_semaphore_wait().
+ */
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable)
+{
+	ConstantInt *timeoutValue = ConstantInt::get(module->getContext(), APInt(64, DISPATCH_TIME_FOREVER));
+	return generateWaitForSemaphore(module, block, semaphoreVariable, timeoutValue);
+}
+
+/**
+ * Generates code that waits for and claims a dispatch_semaphore_t.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param semaphoreVariable The semaphore.
+ * @param timeoutValue A value of type dispatch_time_t to pass to dispatch_semaphore_wait().
+ * @return The return value of dispatch_semaphore_wait().
+ */
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, Value *timeoutValue)
 {
 	PointerType *dispatch_semaphore_t_type = getDispatchSemaphoreType(module);
 
@@ -77,13 +136,11 @@ void VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, Basic
 															module);
 	}
 
-	ConstantInt *timeout_value = ConstantInt::get(module->getContext(), APInt(64, timeout, true));
-
 	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
 	vector<Value*> args;
 	args.push_back(semaphoreValue);
-	args.push_back(timeout_value);
-	CallInst::Create(dispatch_semaphore_wait_function, args, "", block);
+	args.push_back(timeoutValue);
+	return CallInst::Create(dispatch_semaphore_wait_function, args, "", block);
 }
 
 /**
@@ -117,26 +174,21 @@ void VuoCompilerCodeGenUtilities::generateSignalForSemaphore(Module *module, Bas
  * Generates code that allocates a dispatch_group_t.
  *
  * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
  * @param identifier The variable name to use for the dispatch_group_t variable.
  * @return The dispatch_group_t variable.
  */
-GlobalVariable * VuoCompilerCodeGenUtilities::generateAllocationForDispatchGroup(Module *module, string identifier)
+AllocaInst * VuoCompilerCodeGenUtilities::generateAllocationForDispatchGroup(Module *module, BasicBlock *block, string identifier)
 {
 	PointerType *dispatch_group_t_type = getDispatchGroupType(module);
-	ConstantPointerNull *nullValue = ConstantPointerNull::get(dispatch_group_t_type);
-	GlobalVariable *dispatchGroupVariable = new GlobalVariable(*module,
-															   dispatch_group_t_type,
-															   false,
-															   GlobalValue::InternalLinkage,
-															   nullValue,
-															   identifier);
+	AllocaInst *dispatchGroupVariable = new AllocaInst(dispatch_group_t_type, identifier, block);
 	return dispatchGroupVariable;
 }
 
 /**
  * Generates code that initializes a dispatch_group_t.
  */
-void VuoCompilerCodeGenUtilities::generateInitializationForDispatchGroup(Module *module, BasicBlock *block, GlobalVariable *dispatchGroupVariable)
+void VuoCompilerCodeGenUtilities::generateInitializationForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable)
 {
 	PointerType *dispatch_group_t_type = getDispatchGroupType(module);
 
@@ -160,7 +212,7 @@ void VuoCompilerCodeGenUtilities::generateInitializationForDispatchGroup(Module 
  * Generates code that submits a function for asynchronous execution on the global dispatch queue
  * and associates the function with a dispatch_group_t.
  */
-void VuoCompilerCodeGenUtilities::generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, GlobalVariable *dispatchGroupVariable,
+void VuoCompilerCodeGenUtilities::generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable,
 																	 Function *workerFunction, Value *contextValue)
 {
 	PointerType *dispatch_queue_t_type = getDispatchQueueType(module);
@@ -228,7 +280,7 @@ void VuoCompilerCodeGenUtilities::generateSubmissionForDispatchGroup(Module *mod
 /**
  * Generates code that waits on a dispatch_group_t.
  */
-void VuoCompilerCodeGenUtilities::generateWaitForDispatchGroup(Module *module, BasicBlock *block, GlobalVariable *dispatchGroupVariable, dispatch_time_t timeout)
+void VuoCompilerCodeGenUtilities::generateWaitForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable, dispatch_time_t timeout)
 {
 	PointerType *dispatch_group_t_type = getDispatchGroupType(module);
 
@@ -386,14 +438,12 @@ void VuoCompilerCodeGenUtilities::generateSubmissionToDispatchQueue(Module *modu
 }
 
 /**
- * Generates code that finalizes a dispatch_object_t (dispatch_queue_t, dispatch_group_t, dispatch_semaphore_t, etc.).
+ * Converts dispatchObjectVariable to an actual @c dispatch_object_t.
  */
-void VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(Module *module, BasicBlock *block, GlobalVariable *dispatchObjectVariable)
+Value * VuoCompilerCodeGenUtilities::generateConversionToDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable)
 {
-	// Convert dispatchObjectVariable to an actual dispatch_object_t.
-
 	PointerType *pointerToi8Type = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	PointerType *dispatchObjectOriginalType = dispatchObjectVariable->getType();
+	PointerType *dispatchObjectOriginalType = cast<PointerType>(dispatchObjectVariable->getType());
 	StructType *dispatch_object_t_type = getDispatchObjectType(module);
 
 	vector<Type *> llvm_memcpy_p0i8_p0i8_i64_functionParams;
@@ -434,10 +484,43 @@ void VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(Module *
 	gepIndices.push_back(zeroValue32);
 	gepIndices.push_back(zeroValue32);
 	Instruction *dispatchObjectUnionMember = GetElementPtrInst::Create(dispatchObjectUnion, gepIndices, "", block);
-	LoadInst *dispatchObjectValueAsDispatchObject = new LoadInst(dispatchObjectUnionMember, "", false, block);
+	return new LoadInst(dispatchObjectUnionMember, "", false, block);
+}
 
+/**
+ * Generates code that retains a dispatch_object_t (dispatch_queue_t, dispatch_group_t, dispatch_semaphore_t, etc.).
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param dispatchObjectVariable A pointer to the dispatch_object_t (e.g. a @c GlobalVariable or @c AllocaInst).
+ */
+void VuoCompilerCodeGenUtilities::generateRetainForDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable)
+{
+	Value *dispatchObjectValueAsDispatchObject = generateConversionToDispatchObject(module, block, dispatchObjectVariable);
 
-	// Call dispatch_release
+	StructType *dispatch_object_s_type = getDispatchObjectElementType(module);
+	PointerType *pointerTo_dispatch_object_s_type = PointerType::get(dispatch_object_s_type, 0);
+
+	vector<Type*> dispatchRetainFunctionParams;
+	dispatchRetainFunctionParams.push_back(pointerTo_dispatch_object_s_type);
+	FunctionType *dispatchRetainFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), dispatchRetainFunctionParams, false);
+	Function *dispatchRetainFunction = module->getFunction("dispatch_retain");
+	if (! dispatchRetainFunction)
+		dispatchRetainFunction = Function::Create(dispatchRetainFunctionType, GlobalValue::ExternalLinkage, "dispatch_retain", module);
+
+	CallInst::Create(dispatchRetainFunction, dispatchObjectValueAsDispatchObject, "", block);
+}
+
+/**
+ * Generates code that releases a dispatch_object_t (dispatch_queue_t, dispatch_group_t, dispatch_semaphore_t, etc.).
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param dispatchObjectVariable A pointer to the dispatch_object_t (e.g. a @c GlobalVariable or @c AllocaInst).
+ */
+void VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable)
+{
+	Value *dispatchObjectValueAsDispatchObject = generateConversionToDispatchObject(module, block, dispatchObjectVariable);
 
 	StructType *dispatch_object_s_type = getDispatchObjectElementType(module);
 	PointerType *pointerTo_dispatch_object_s_type = PointerType::get(dispatch_object_s_type, 0);

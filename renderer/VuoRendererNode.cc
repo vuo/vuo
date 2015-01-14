@@ -47,7 +47,6 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->getInstanceDataClass();
 	this->nodeIsSubcomposition = false;  /// @todo support subcompositions - https://b33p.net/kosada/node/2639
 	this->nodeIsMissing = !nodeClass->hasCompiler();
-	this->nodeClassToolTip = generateNodeClassToolTip(nodeClass);
 	resetTimeLastExecuted();
 
 	this->setFlags(QGraphicsItem::ItemIsMovable |
@@ -686,6 +685,24 @@ VuoRendererNode * VuoRendererNode::getProxyNode(void) const
 }
 
 /**
+ * Returns the collapsed typecast port rendered in place of this node, or NULL if none.
+ */
+VuoRendererTypecastPort * VuoRendererNode::getProxyCollapsedTypecast(void) const
+{
+	if (!proxyNode)
+		return NULL;
+
+	foreach (VuoPort *p, proxyNode->getBase()->getInputPorts())
+	{
+		VuoRendererTypecastPort *tp = dynamic_cast<VuoRendererTypecastPort *>(p->getRenderer());
+		if (tp && (tp->getUncollapsedTypecastNode()->getBase() == this->getBase()))
+			return tp;
+	}
+
+	return NULL;
+}
+
+/**
  * Updates the node and its connected cables to reflect changes in state.
  */
 QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &value)
@@ -766,19 +783,13 @@ void VuoRendererNode::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
 void VuoRendererNode::hoverMoveEvent(QGraphicsSceneHoverEvent * event)
 {
 	// If the cursor is currently positioned over the node title rectangle,
-	// give the node keyboard focus and display the node class tooltip.
+	// give the node keyboard focus.
 	if (nodeTitleBoundingRect.contains(event->pos()))
-	{
 		setFocus();
-		setToolTip(nodeClassToolTip);
-	}
 
-	// Othewise, release focus and disable the tooltip.
+	// Othewise, release focus.
 	else
-	{
 		clearFocus();
-		setToolTip("");
-	}
 }
 
 /**
@@ -787,7 +798,6 @@ void VuoRendererNode::hoverMoveEvent(QGraphicsSceneHoverEvent * event)
 void VuoRendererNode::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
 {
 	clearFocus();
-	setToolTip("");
 }
 
 /**
@@ -954,14 +964,6 @@ void VuoRendererNode::setTitle(string title)
 	updateGeometry();
 	getBase()->setTitle(title);
 	layoutPorts();
-}
-
-/**
- * Generates a descriptive tooltip containing information about the input @c nodeClass.
- */
-QString VuoRendererNode::generateNodeClassToolTip(VuoNodeClass *nodeClass)
-{
-	return generateNodeClassToolTipTitle(nodeClass).append(generateNodeClassToolTipTextBody(nodeClass));
 }
 
 /**

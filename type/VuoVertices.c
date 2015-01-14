@@ -158,12 +158,18 @@ VuoVertices VuoVertices_getEquilateralTriangle(void)
  */
 VuoVertices_ElementAssemblyMethod VuoVertices_elementAssemblyMethodFromCString(const char * elementAssemblyMethodString)
 {
-	if (strcmp(elementAssemblyMethodString,"IndividualTriangles")==0)
+	if (strcmp(elementAssemblyMethodString,"individualTriangles")==0)
 		return VuoVertices_IndividualTriangles;
-	else if (strcmp(elementAssemblyMethodString,"TriangleStrip")==0)
+	else if (strcmp(elementAssemblyMethodString,"triangleStrip")==0)
 		return VuoVertices_TriangleStrip;
-	else if (strcmp(elementAssemblyMethodString,"TriangleFan")==0)
+	else if (strcmp(elementAssemblyMethodString,"triangleFan")==0)
 		return VuoVertices_TriangleFan;
+	else if (strcmp(elementAssemblyMethodString,"individualLines")==0)
+		return VuoVertices_IndividualLines;
+	else if (strcmp(elementAssemblyMethodString,"lineStrip")==0)
+		return VuoVertices_LineStrip;
+	else if (strcmp(elementAssemblyMethodString,"points")==0)
+		return VuoVertices_Points;
 
 	return VuoVertices_IndividualTriangles;
 }
@@ -177,11 +183,17 @@ const char * VuoVertices_cStringForElementAssemblyMethod(VuoVertices_ElementAsse
 	switch (elementAssemblyMethod)
 	{
 		case VuoVertices_IndividualTriangles:
-			return "IndividualTriangles";
+			return "individualTriangles";
 		case VuoVertices_TriangleStrip:
-			return "TriangleStrip";
+			return "triangleStrip";
 		case VuoVertices_TriangleFan:
-			return "TriangleFan";
+			return "triangleFan";
+		case VuoVertices_IndividualLines:
+			return "individualLines";
+		case VuoVertices_LineStrip:
+			return "lineStrip";
+		case VuoVertices_Points:
+			return "points";
 	}
 	return "(unknown element assembly method)";
 }
@@ -230,7 +242,7 @@ void VuoVertices_verticesWithJsonArray(json_object *js, const char *arrayName, u
  *    - an optional @c tangents array
  *    - an optional @c bitangents array
  *    - an optional @c textureCoordinates array
- *    - an @c elementAssemblyMethod ("IndividualTriangles", "TriangleStrip", or "TriangleFan")
+ *    - an @c elementAssemblyMethod
  *    - an array of @c element indexes into the vertex array.
  *
  * For efficiency, the arrays may have been serialized as pointers to C arrays.
@@ -244,7 +256,7 @@ void VuoVertices_verticesWithJsonArray(json_object *js, const char *arrayName, u
  *			[-0.5,  0.5],
  *			[ 0.5,  0.5]
  *		],
- *		"elementAssemblyMethod": "TriangleFan",
+ *		"elementAssemblyMethod": "triangleFan",
  *		"elements": [
  *			0,
  *			1,
@@ -439,33 +451,55 @@ char * VuoVertices_summaryFromValue(const VuoVertices value)
 		return zero;
 	}
 
-	const char * format = "%lu %s%s%lu %s<br>with first position (%g, %g, %g, %g)";
+	const char * format = "%lu %s%s%lu %s%s<br>with first position (%g, %g, %g, %g)";
 
-	unsigned long triangles = 0;
-	const char * assemblyMethod = "(unknown element assembly method)";
+	unsigned long objectCount = 0;
+	const char * objectString = "";
+	const char * assemblyMethod = " (unknown element assembly method)";
 	if (value.elementAssemblyMethod == VuoVertices_IndividualTriangles)
 	{
-		triangles = value.elementCount/3;
 		assemblyMethod = ", ";
+		objectCount = value.elementCount/3;
+		objectString = "triangle";
 		/// @todo Report if value.elementCount isn't a multiple of 3.
 	}
 	else if (value.elementAssemblyMethod == VuoVertices_TriangleStrip)
 	{
-		triangles = value.elementCount-2;
 		assemblyMethod = " in a strip of ";
+		objectCount = value.elementCount-2;
+		objectString = "triangle";
 	}
 	else if (value.elementAssemblyMethod == VuoVertices_TriangleFan)
 	{
-		triangles = value.elementCount-2;
 		assemblyMethod = " in a fan of ";
+		objectCount = value.elementCount-2;
+		objectString = "triangle";
+	}
+	else if (value.elementAssemblyMethod == VuoVertices_IndividualLines)
+	{
+		assemblyMethod = ", ";
+		objectCount = value.elementCount/2;
+		objectString = "line";
+	}
+	else if (value.elementAssemblyMethod == VuoVertices_LineStrip)
+	{
+		assemblyMethod = " in a strip of ";
+		objectCount = value.elementCount-1;
+		objectString = "line";
+	}
+	else if (value.elementAssemblyMethod == VuoVertices_Points)
+	{
+		assemblyMethod = ", ";
+		objectCount = value.elementCount/2;
+		objectString = "point";
 	}
 
 	const char * vertexCountString = value.vertexCount==1 ? "vertex" : "vertices";
-	const char * triangleString = triangles==1 ? "triangle" : "triangles";
+	const char * objectStringPlural = objectCount==1 ? "" : "s";
 	VuoPoint4d p = value.positions[0];
 
-	int size = snprintf(NULL,0,format,value.vertexCount,vertexCountString,assemblyMethod,triangles,triangleString,p.x,p.y,p.z,p.w);
+	int size = snprintf(NULL,0,format,value.vertexCount,vertexCountString,assemblyMethod,objectCount,objectString,objectStringPlural,p.x,p.y,p.z,p.w);
 	char * valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.vertexCount,vertexCountString,assemblyMethod,triangles,triangleString,p.x,p.y,p.z,p.w);
+	snprintf(valueAsString,size+1,format,value.vertexCount,vertexCountString,assemblyMethod,objectCount,objectString,objectStringPlural,p.x,p.y,p.z,p.w);
 	return valueAsString;
 }

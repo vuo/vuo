@@ -557,9 +557,23 @@ You can run a composition by clicking the Run button. (Or go to \menu{Run > Run}
 
 You can stop a composition by clicking the Stop button. (Or go to \menu{Run > Stop}.) 
 
+
 ## Debugging a composition
 
 Various features of the Editor, described in [Troubleshooting](#troubleshooting), can help you with debugging.
+
+
+## Exporting a composition to an application
+
+Using the `File > Export App...` menu item, you can turn your composition into a Mac application (.app file) that you can distribute to others. You don't need to have Vuo installed to run the application. 
+
+When exporting a composition that refers to files on your computer (such as images, scenes, or movies), you need to make sure that those files also exist on the application user's computer. Typically, you'll want to do this by copying the files into the application package. For example, if your composition uses a \vuoNode{Get Image} node to load a file called `image.png`: 
+
+   - Place `image.png` in the same folder as your composition (.vuo file). 
+   - In the Vuo Editor, edit the \vuoNode{Get Image} node's \vuoPort{imageURL} input port value to *image.png*. 
+   - In the Vuo Editor, go to `File > Export App...` and create `MyApp.app`. 
+   - Right-click on `MyApp.app` and choose `Show Package Contents`. 
+   - In the package contents, go to the `Contents` folder, then the `Resources` folder. Copy `image.png` into that folder. 
 
 
 
@@ -650,6 +664,20 @@ Using the `vuo-debug` command, you can run the composition and get a printout of
 \begin{lstlisting}[language=bash,caption=Running a Vuo composition]
 vuo-debug ./CheckSMSLength
 \end{lstlisting}
+
+
+## Exporting a composition to an application on the command line
+
+Using the `vuo-export` command, you can turn a composition into an application: 
+
+\begin{lstlisting}[language=bash,caption=Exporting a Vuo composition to an application]
+vuo-export --output CheckSMSLength.app CheckSMSLength.vuo
+\end{lstlisting}
+
+If you run into trouble exporting a composition, you can get more information by running `vuo-export` with the `--verbose` flag. 
+
+This command is equivalent to the `File > Export App...` menu item in Vuo Editor. See the section [Exporting a composition to an application](#exporting-a-composition-to-an-application) for more information. 
+
 
 
 # Adding nodes to your Node Library

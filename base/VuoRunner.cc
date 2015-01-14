@@ -12,10 +12,13 @@
 
 #include "VuoHeap.h"
 
+#include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <dlfcn.h>
 #include <sstream>
+#include <objc/runtime.h>
+#include <objc/message.h>
 
 static pthread_t mainThread = NULL;
 static void __attribute__((constructor)) thisFunctionIsCalledAtStartup()
@@ -34,15 +37,18 @@ static bool isMainThread(void)
  * Creates a runner that can run a composition in a new process.
  *
  * @param executablePath A linked composition executable, produced by VuoCompiler::linkCompositionToCreateExecutable().
+ * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
  * @param deleteExecutableWhenFinished True if the runner should delete @c executablePath when it's finished using the file.
  *
  * @see CompileAndRunInNewProcess.cc
  */
-VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executablePath, bool deleteExecutableWhenFinished)
+VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir,
+															  bool deleteExecutableWhenFinished)
 {
 	VuoRunner * vr = new VuoRunner();
 	vr->executablePath = executablePath;
 	vr->shouldDeleteBinariesWhenFinished = deleteExecutableWhenFinished;
+	vr->sourceDir = sourceDir;
 	return vr;
 }
 
@@ -53,16 +59,19 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executableP
  * @param compositionLoaderPath The VuoCompositionLoader executable.
  * @param compositionDylibPath A linked composition dynamic library, produced by VuoCompiler::linkCompositionToCreateDynamicLibraries().
  * @param resourceDylibPath A linked resource dynamic library, produced by the first call to VuoCompiler::linkCompositionToCreateDynamicLibraries() for this runner.
+ * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
  * @param deleteDylibsWhenFinished True if the runner should delete @c compositionDylibPath and @c resourceDylibPath when it's finished using the files.
  */
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath,
-																  string resourceDylibPath, bool deleteDylibsWhenFinished)
+																  string resourceDylibPath, string sourceDir,
+																  bool deleteDylibsWhenFinished)
 {
 	VuoRunner * vr = new VuoRunner();
 	vr->executablePath = compositionLoaderPath;
 	vr->dylibPath = compositionDylibPath;
 	vr->resourceDylibPaths.push_back(resourceDylibPath);
 	vr->shouldDeleteBinariesWhenFinished = deleteDylibsWhenFinished;
+	vr->sourceDir = sourceDir;
 	return vr;
 }
 
@@ -70,15 +79,18 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string composi
  * Creates a runner object that can run a composition in the current process.
  *
  * @param dylibPath A linked composition dynamic library, produced by VuoCompiler::linkCompositionToCreateDynamicLibrary().
+ * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
  * @param deleteDylibWhenFinished True if the runner should delete @c dylibPath when it's finished using the file.
  *
  * @see CompileAndRunInCurrentProcess.cc
  */
-VuoRunner * VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, bool deleteDylibWhenFinished)
+VuoRunner * VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir,
+																 bool deleteDylibWhenFinished)
 {
 	VuoRunner * vr = new VuoRunner();
 	vr->dylibPath = dylibPath;
 	vr->shouldDeleteBinariesWhenFinished = deleteDylibWhenFinished;
+	vr->sourceDir = sourceDir;
 	return vr;
 }
 
@@ -130,6 +142,10 @@ VuoRunner::VuoRunner(void)
  *
  * If running the composition in a separate process, no further calls are needed to run the composition.
  *
+ * If running the composition in the current process, the current working directory is changed to the
+ * composition source directory that was passed to newCurrentProcessRunnerFromDynamicLibrary()
+ * until the composition is stopped.
+ *
  * Assumes the composition is not already running.
  */
 void VuoRunner::start(void)
@@ -148,6 +164,10 @@ void VuoRunner::start(void)
  * in order to run the composition.
  *
  * If running the composition in a separate process, no further calls are needed.
+ *
+ * If running the composition in the current process, the current working directory is changed to the
+ * composition source directory that was passed to newCurrentProcessRunnerFromDynamicLibrary()
+ * until the composition is stopped.
  *
  * Assumes the composition is not already running.
  */
@@ -192,6 +212,14 @@ void VuoRunner::start(bool isPaused)
 
 		ZMQControlURL = "inproc://" + VuoFileUtilities::makeTmpFile("vuo-control", "");
 		ZMQTelemetryURL = "inproc://" + VuoFileUtilities::makeTmpFile("vuo-telemetry", "");
+
+		// Set the current working directory to that of the source .vuo composition so that
+		// relative URL paths are resolved correctly.
+		char buffer[PATH_MAX];
+		getcwd(buffer, PATH_MAX);
+		originalWorkingDir = buffer;
+		if (!sourceDir.empty())
+			chdir(sourceDir.c_str());
 
 		vuoInitInProcess(ZMQContext, ZMQControlURL.c_str(), ZMQTelemetryURL.c_str(), isPaused);
 	}
@@ -247,6 +275,11 @@ void VuoRunner::start(bool isPaused)
 		compositionPid = fork();
 		if (! compositionPid)
 		{
+			// Set the current working directory to that of the source .vuo composition so that
+			// relative URL paths are resolved correctly.
+			if (!sourceDir.empty())
+				chdir(sourceDir.c_str());
+
 			execv(executablePath.c_str(), argv);
 			return;
 		}
@@ -326,14 +359,6 @@ void VuoRunner::setUpConnections(void)
 }
 
 /**
- * Private API function in libdispatch.
- */
-extern "C"
-{
-extern void _dispatch_main_queue_callback_4CF(mach_msg_header_t *msg);
-}
-
-/**
  * For a composition in the current process, runs the composition on the main thread until it stops
  * (either on its own or from a call to stop() on another thread).
  *
@@ -357,8 +382,9 @@ void VuoRunner::runOnMainThread(void)
 
 	while (! stopped)
 	{
-		_dispatch_main_queue_callback_4CF(0);
-		usleep(10000);
+		id pool = objc_msgSend((id)objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
+		CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
+		objc_msgSend(pool, sel_getUid("drain"));
 	}
 }
 
@@ -394,7 +420,9 @@ void VuoRunner::drainMainDispatchQueue(void)
 	if (! isMainThread())
 		throw std::logic_error("This is not the main thread. Only call this function from the main thread.");
 
-	_dispatch_main_queue_callback_4CF(0);
+	id pool = objc_msgSend((id)objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
+	CFRunLoopRunInMode(kCFRunLoopDefaultMode,0,false);
+	objc_msgSend(pool, sel_getUid("drain"));
 }
 
 /**
@@ -522,6 +550,8 @@ void VuoRunner::stop(void)
 
 						  dlclose(dylibHandle);
 						  dylibHandle = NULL;
+
+						  chdir(originalWorkingDir.c_str());
 					  }
 					  else
 					  {
@@ -999,6 +1029,8 @@ void VuoRunner::listen(void)
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryError;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
+		type = VuoTelemetryStopRequested;
+		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 	}
 
 	// Wait for the first VuoTelemetryStats message to arrive, then confirm that we're able to receive messages
@@ -1123,6 +1155,17 @@ void VuoRunner::listen(void)
 										  delegate->receivedTelemetryError( string(message) );
 								  });
 					free(message);
+					break;
+				}
+				case VuoTelemetryStopRequested:
+				{
+					dispatch_sync(delegateQueue, ^{
+									   if (delegate)
+										   delegate->lostContactWithComposition();
+								   });
+					dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+									   stop();
+								   });
 					break;
 				}
 			}

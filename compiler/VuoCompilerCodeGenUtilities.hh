@@ -26,6 +26,10 @@ private:
 	static StructType * getGraphvizGraphType(Module *module);
 	static StructType * getJsonObjectType(Module *module);
 
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, Value *timeoutValue);
+
+	static Value * generateConversionToDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable);
+
 	static Value * generateTypeCastFromIntegerToPointer(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static Value * generateTypeCastFromFloatingPointToPointer(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static Value * generateTypeCastFromPointerToInteger(Module *module, BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
@@ -43,20 +47,22 @@ public:
 
 	static GlobalVariable * generateAllocationForSemaphore(Module *module, string identifier);
 	static void generateInitializationForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, int initialValue=1);
-	static void generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, dispatch_time_t timeout=DISPATCH_TIME_FOREVER);
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable);
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, int64_t timeoutInNanoseconds);
 	static void generateSignalForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable);
 
-	static GlobalVariable * generateAllocationForDispatchGroup(Module *module, string identifier);
-	static void generateInitializationForDispatchGroup(Module *module, BasicBlock *block, GlobalVariable *dispatchGroupVariable);
-	static void generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, GlobalVariable *dispatchGroupVariable, Function *workerFunction, Value *contextValue);
-	static void generateWaitForDispatchGroup(Module *module, BasicBlock *block, GlobalVariable *dispatchGroupVariable, dispatch_time_t timeout=DISPATCH_TIME_FOREVER);
+	static AllocaInst * generateAllocationForDispatchGroup(Module *module, BasicBlock *block, string identifier);
+	static void generateInitializationForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable);
+	static void generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable, Function *workerFunction, Value *contextValue);
+	static void generateWaitForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable, dispatch_time_t timeout=DISPATCH_TIME_FOREVER);
 
 	static GlobalVariable * generateAllocationForDispatchQueue(Module *module, string identifier);
 	static void generateInitializationForDispatchQueue(Module *module, BasicBlock *block, GlobalVariable *dispatchQueueVariable, string dispatchQueueName);
 	static void generateAsynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, GlobalVariable *dispatchQueueVariable, Function *workerFunction, Value *contextValue);
 	static void generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, GlobalVariable *dispatchQueueVariable, Function *workerFunction, Value *contextValue);
 
-	static void generateFinalizationForDispatchObject(Module *module, BasicBlock *block, GlobalVariable *dispatchObjectVariable);
+	static void generateRetainForDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable);
+	static void generateFinalizationForDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable);
 
 	static Value * generatePointerToValue(BasicBlock *block, Value *value);
 	static Constant * generatePointerToConstantString(Module *module, string stringValue, string globalVariableName = "");

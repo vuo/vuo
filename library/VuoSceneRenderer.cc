@@ -11,12 +11,10 @@
 
 #include "VuoSceneRenderer.h"
 #include "VuoSceneObject.h"
+#include "VuoGlPool.h"
 
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
-//#import <OpenGL/gl3.h>
-/// @todo After we drop 10.6 support, switch back to gl3 and remove the below 4 lines.  See also r15430 for shader changes.
-#include <OpenGL/glext.h>
+#include <OpenGL/CGLMacro.h>
 /// @{
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
@@ -44,7 +42,6 @@ VuoModuleMetadata({
  */
 struct VuoSceneRendererInternal_vertices
 {
-	GLuint vertexArray;
 	GLuint positionBuffer;
 	GLuint normalBuffer;
 	GLuint tangentBuffer;
@@ -71,19 +68,23 @@ class VuoSceneRendererInternal
 public:
 	dispatch_semaphore_t scenegraphSemaphore; ///< Serializes access to other data in this structure.
 	bool scenegraphValid;
+	bool needToRegenerateProjectionMatrix;
+	unsigned int viewportWidth;
+	unsigned int viewportHeight;
 
 	VuoSceneObject rootSceneObject;
 	VuoSceneRendererInternal_object rootSceneObjectInternal;
 
 	float projectionMatrix[16]; ///< Column-major 4x4 matrix
+	VuoText cameraName;
 };
 
-void VuoSceneRenderer_destroy(VuoSceneRenderer sceneRenderer);
+void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
 
 /**
  * Creates a reference-counted object for rendering a scenegraph.
  *
- * May be called from any thread (doesn't require a GL Context).
+ * @threadAny
  */
 VuoSceneRenderer VuoSceneRenderer_make(void)
 {
@@ -92,6 +93,8 @@ VuoSceneRenderer VuoSceneRenderer_make(void)
 
 	sceneRenderer->scenegraphSemaphore = dispatch_semaphore_create(1);
 	sceneRenderer->scenegraphValid = false;
+	sceneRenderer->needToRegenerateProjectionMatrix = false;
+	sceneRenderer->cameraName = NULL;
 
 	return (VuoSceneRenderer)sceneRenderer;
 }
@@ -99,10 +102,12 @@ VuoSceneRenderer VuoSceneRenderer_make(void)
 /**
  * Sets up OpenGL state on the current GL Context.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer)
+void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer, VuoGlContext glContext)
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
 	glEnable(GL_MULTISAMPLE);
 
 	glEnable(GL_CULL_FACE);
@@ -114,60 +119,154 @@ void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer);
+
 /**
- * Recalculates the projection matrix based on the specified viewport @c width and @c height.
+ * Using the first camera found in the scene (or VuoSceneObject_makeDefaultCamera() if there is no camera in the scene),
+ * recalculates the projection matrix based on the specified viewport @c width and @c height.
  *
- * May be called from any thread (doesn't require a GL Context).
+ * @threadAny
  */
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sr, unsigned int width, unsigned int height)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
-	float halfFieldOfView = (90.f * (float)M_PI/180.f) / 2.f;
-	float aspectRatio = (float)width/(float)height;
-	/// @todo Where to place clip planes?
-	float nearClipDistance = .1f;
-	float farClipDistance = 10.f;
+	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 
-	sceneRenderer->projectionMatrix[ 0] = 1.f/tanf(halfFieldOfView);
-	sceneRenderer->projectionMatrix[ 1] = 0;
-	sceneRenderer->projectionMatrix[ 2] = 0;
-	sceneRenderer->projectionMatrix[ 3] = 0;
+	// Store the viewport size (in case we need to regenerate the projection matrix later)
+	sceneRenderer->viewportWidth = width;
+	sceneRenderer->viewportHeight = height;
 
-	sceneRenderer->projectionMatrix[ 4] = 0;
-	sceneRenderer->projectionMatrix[ 5] = aspectRatio/tanf(halfFieldOfView);
-	sceneRenderer->projectionMatrix[ 6] = 0;
-	sceneRenderer->projectionMatrix[ 7] = 0;
+	VuoSceneRenderer_regenerateProjectionMatrixInternal(sceneRenderer);
 
-	sceneRenderer->projectionMatrix[ 8] = 0;
-	sceneRenderer->projectionMatrix[ 9] = 0;
-	sceneRenderer->projectionMatrix[10] = (farClipDistance+nearClipDistance)/(nearClipDistance-farClipDistance);
-	sceneRenderer->projectionMatrix[11] = -1.f;
+	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
+}
 
-	sceneRenderer->projectionMatrix[12] = 0;
-	sceneRenderer->projectionMatrix[13] = 0;
-	sceneRenderer->projectionMatrix[14] = 2.f*farClipDistance*nearClipDistance/(nearClipDistance-farClipDistance);
-	sceneRenderer->projectionMatrix[15] = 0;
+/**
+ * Helper for VuoSceneRenderer_regenerateProjectionMatrix and VuoSceneRenderer_draw.
+ *
+ * Must be called while scenegraphSemaphore is locked.
+ */
+void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer)
+{
+	VuoSceneObject camera;
 
-	// Move the camera to (0,0,1) by shifting the scene in the opposite direction.
-	float translationMatrix[4][4];
-	VuoTransform_getMatrix(VuoTransform_makeEuler(VuoPoint3d_make(0,0,-1), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)), (float *)translationMatrix);
+	{
+		if (sceneRenderer->scenegraphValid)
+		{
+			bool foundCamera;
+			camera = VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, sceneRenderer->cameraName, &foundCamera);
+
+			if (!foundCamera)
+				// Search again, and this time just pick the first camera we find.
+				camera = VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, "", &foundCamera);
+		}
+		else
+			camera = VuoSceneObject_makeDefaultCamera();
+	}
+
+
+	// Build a projection matrix for a camera located at the origin, facing along the -z axis.
+	float aspectRatio = (float)sceneRenderer->viewportWidth/(float)sceneRenderer->viewportHeight;
+	if (camera.cameraType == VuoSceneObject_PerspectiveCamera)
+	{
+		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
+
+		// left matrix column
+		sceneRenderer->projectionMatrix[ 0] = 1.f/tanf(halfFieldOfView);
+		sceneRenderer->projectionMatrix[ 1] = 0;
+		sceneRenderer->projectionMatrix[ 2] = 0;
+		sceneRenderer->projectionMatrix[ 3] = 0;
+
+		sceneRenderer->projectionMatrix[ 4] = 0;
+		sceneRenderer->projectionMatrix[ 5] = aspectRatio/tanf(halfFieldOfView);
+		sceneRenderer->projectionMatrix[ 6] = 0;
+		sceneRenderer->projectionMatrix[ 7] = 0;
+
+		sceneRenderer->projectionMatrix[ 8] = 0;
+		sceneRenderer->projectionMatrix[ 9] = 0;
+		sceneRenderer->projectionMatrix[10] = (camera.cameraDistanceMax+camera.cameraDistanceMin)/(camera.cameraDistanceMin-camera.cameraDistanceMax);
+		sceneRenderer->projectionMatrix[11] = -1.f;
+
+		// right matrix column
+		sceneRenderer->projectionMatrix[12] = 0;
+		sceneRenderer->projectionMatrix[13] = 0;
+		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
+		sceneRenderer->projectionMatrix[15] = 0;
+	}
+	else if (camera.cameraType == VuoSceneObject_OrthographicCamera)
+	{
+		float halfWidth = camera.cameraWidth / 2.f;
+
+		// left matrix column
+		sceneRenderer->projectionMatrix[ 0] = 1.f/halfWidth;
+		sceneRenderer->projectionMatrix[ 1] = 0;
+		sceneRenderer->projectionMatrix[ 2] = 0;
+		sceneRenderer->projectionMatrix[ 3] = 0;
+
+		sceneRenderer->projectionMatrix[ 4] = 0;
+		sceneRenderer->projectionMatrix[ 5] = aspectRatio/halfWidth;
+		sceneRenderer->projectionMatrix[ 6] = 0;
+		sceneRenderer->projectionMatrix[ 7] = 0;
+
+		sceneRenderer->projectionMatrix[ 8] = 0;
+		sceneRenderer->projectionMatrix[ 9] = 0;
+		sceneRenderer->projectionMatrix[10] = -2.f / (camera.cameraDistanceMax-camera.cameraDistanceMin);
+		sceneRenderer->projectionMatrix[11] = 0;
+
+		// right matrix column
+		sceneRenderer->projectionMatrix[12] = 0;
+		sceneRenderer->projectionMatrix[13] = 0;
+		sceneRenderer->projectionMatrix[14] = -(camera.cameraDistanceMax+camera.cameraDistanceMin)/(camera.cameraDistanceMax-camera.cameraDistanceMin);
+		sceneRenderer->projectionMatrix[15] = 1;
+	}
+	else
+		VLog("Unknown cameraType %d", camera.cameraType);
+
+
+	// Position the camera (translate then rotate the scene by the inverse of the camera transformation).
+
+	// VuoTransform_getMatrix() performs the transformation in this order: rotate, scale, translate.
+	// So we need to do this in multiple steps, in order to apply the translation first.
+
+	float rotationMatrix[4][4];
+	VuoTransform_getMatrix(VuoTransform_makeEuler(
+							   VuoPoint3d_make(0,0,0),
+							   VuoPoint3d_multiply(camera.transform.rotationSource.euler,-1),
+							   VuoPoint3d_make(1,1,1)),
+						   (float *)rotationMatrix);
+
 	float outputMatrix[4][4];
-	VuoTransform_multiplyMatrices4x4((float *)translationMatrix, sceneRenderer->projectionMatrix, (float *)&outputMatrix);
-	VuoTransform_copyMatrix4x4((float *)outputMatrix, sceneRenderer->projectionMatrix);
+	VuoTransform_multiplyMatrices4x4((float *)rotationMatrix, sceneRenderer->projectionMatrix, (float *)&outputMatrix);
+
+	float translationMatrix[4][4];
+	VuoTransform_getMatrix(VuoTransform_makeEuler(
+							   VuoPoint3d_multiply(camera.transform.translation,-1),
+							   VuoPoint3d_make(0,0,0),
+							   VuoPoint3d_make(1,1,1)),
+						   (float *)translationMatrix);
+
+	float outputMatrix2[4][4];
+	VuoTransform_multiplyMatrices4x4((float *)translationMatrix, (float *)outputMatrix, (float *)&outputMatrix2);
+
+	VuoTransform_copyMatrix4x4((float *)outputMatrix2, sceneRenderer->projectionMatrix);
 }
 
 /**
  * Draws @c so (using the uploaded object names in @c soi).
  * Does not traverse child objects.
  *
- * Must be called from a thread with an active GL Context.
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
  */
-void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16])
+void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoGlContext glContext)
 {
 	if (!so.shader)
 		return;
 
+	dispatch_semaphore_wait(so.shader->lock, DISPATCH_TIME_FOREVER);
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 	glUseProgram(so.shader->glProgramName);
 	{
 		GLint projectionMatrixUniform = glGetUniformLocation(so.shader->glProgramName, "projectionMatrix");
@@ -176,7 +275,7 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 		GLint modelviewMatrixUniform = glGetUniformLocation(so.shader->glProgramName, "modelviewMatrix");
 		glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, modelviewMatrix);
 
-		VuoShader_activateTextures(so.shader);
+		VuoShader_activateTextures(so.shader, cgl_ctx);
 
 		unsigned int i = 1;
 		for (std::list<VuoSceneRendererInternal_vertices>::iterator vi = soi->vertices.begin(); vi != soi->vertices.end(); ++vi, ++i)
@@ -221,14 +320,21 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 			{
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*vi).elementBuffer);
 				VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(so.verticesList, i);
-				GLenum mode;
+				GLenum mode = GL_TRIANGLES;
 				if (vertices.elementAssemblyMethod == VuoVertices_IndividualTriangles)
 					mode = GL_TRIANGLES;
 				else if (vertices.elementAssemblyMethod == VuoVertices_TriangleStrip)
 					mode = GL_TRIANGLE_STRIP;
-				else // if (vertices.elementAssemblyMethod == VuoVertices_TriangleFan)
+				else if (vertices.elementAssemblyMethod == VuoVertices_TriangleFan)
 					mode = GL_TRIANGLE_FAN;
+				else if (vertices.elementAssemblyMethod == VuoVertices_IndividualLines)
+					mode = GL_LINES;
+				else if (vertices.elementAssemblyMethod == VuoVertices_LineStrip)
+					mode = GL_LINE_STRIP;
+				else if (vertices.elementAssemblyMethod == VuoVertices_Points)
+					mode = GL_POINTS;
 				glDrawElements(mode, (GLsizei)vertices.elementCount, GL_UNSIGNED_INT, (void*)0);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
 
 			if (textureCoordinateAttribute >= 0)
@@ -240,41 +346,46 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 			if (normalAttribute >= 0)
 				glDisableVertexAttribArray((GLuint)normalAttribute);
 			glDisableVertexAttribArray((GLuint)positionAttribute);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 
-		VuoShader_deactivateTextures(so.shader);
+		VuoShader_deactivateTextures(so.shader, cgl_ctx);
 	}
 	glUseProgram(0);
+	dispatch_semaphore_signal(so.shader->lock);
 }
 
 /**
  * Draws @c so and its child objects.
  *
- * Must be called from a thread with an active GL Context.
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
  */
-void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16])
+void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoGlContext glContext)
 {
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
 	float compositeModelviewMatrix[16];
 	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix);
+	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix, glContext);
 
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
 	{
 		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
-		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix);
+		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix, glContext);
 	}
 }
 
 /**
  * Renders the scene.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoSceneRenderer_draw(VuoSceneRenderer sr)
+void VuoSceneRenderer_draw(VuoSceneRenderer sr, VuoGlContext glContext)
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
 	if (!sceneRenderer->scenegraphValid)
@@ -282,19 +393,33 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 
+	if (sceneRenderer->needToRegenerateProjectionMatrix)
+	{
+		VuoSceneRenderer_regenerateProjectionMatrixInternal(sceneRenderer);
+		sceneRenderer->needToRegenerateProjectionMatrix = false;
+	}
+
+	// Allocate a single vertex array for all drawing during this pass (since VAOs can't be shared between contexts).
+	GLuint vertexArray;
+	glGenVertexArrays(1, &vertexArray);
+	glBindVertexArray(vertexArray);
+
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
-	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix);
+	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, glContext);
 
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
+
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &vertexArray);
 }
 
 /**
  * Draws all vertex normals in sceneRenderer-rootSceneObject.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, int element, float length)	// TODO Enum type for element to debug
+void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, VuoGlContext glContext, int element, float length)	// TODO Enum type for element to debug
 {
 	/// @todo update VuoSceneRenderer_draw() to call this for each VuoSceneObject when debugging
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
@@ -303,6 +428,7 @@ void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, int element, float length
 		return;
 
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 	unsigned long verticesListCount = VuoListGetCount_VuoVertices(sceneRenderer->rootSceneObject.verticesList);
 
@@ -358,12 +484,16 @@ void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, int element, float length
  * Uploads @c so to the GPU, and stores the uploaded object names in @c soi.
  * Does not traverse child objects.
  *
- * Must be called from a thread with an active GL Context.
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
  */
-void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi)
+void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	if (!so.verticesList)
 		return;
+
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 	unsigned long verticesListCount = VuoListGetCount_VuoVertices(so.verticesList);
 	for (unsigned long i = 1; i <= verticesListCount; ++i)
@@ -371,32 +501,41 @@ void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInter
 		VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(so.verticesList, i);
 		VuoSceneRendererInternal_vertices v;
 
-		glGenVertexArrays(1, &v.vertexArray);
-		glBindVertexArray(v.vertexArray);
-
-		glGenBuffers(1, &v.positionBuffer);
+		v.positionBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, v.positionBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.positions, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.positions, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &v.normalBuffer);
+		v.normalBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, v.normalBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.normals, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.normals, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &v.tangentBuffer);
+		v.tangentBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, v.tangentBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.tangents, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.tangents, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &v.bitangentBuffer);
+		v.bitangentBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, v.bitangentBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.bitangents, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.bitangents, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &v.textureCoordinateBuffer);
+		v.textureCoordinateBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, v.textureCoordinateBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.textureCoordinates, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.textureCoordinates, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &v.elementBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, v.elementBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*vertices.elementCount, vertices.elements, GL_STATIC_DRAW);
+		{
+			GLuint vertexArray;
+			glGenVertexArrays(1, &vertexArray);
+			glBindVertexArray(vertexArray);
+
+			v.elementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, v.elementBuffer);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*vertices.elementCount, vertices.elements, GL_STREAM_DRAW);
+
+			glBindVertexArray(0);
+			glDeleteVertexArrays(1, &vertexArray);
+		}
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		soi->vertices.push_back(v);
 	}
@@ -405,11 +544,13 @@ void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInter
 /**
  * Uploads @c so and its child objects to the GPU, and stores the uploaded object names in @c soi.
  *
- * Must be called from a thread with an active GL Context.
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
  */
-void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi)
+void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
-	VuoSceneRenderer_uploadSceneObject(so, soi);
+	VuoSceneRenderer_uploadSceneObject(so, soi, glContext);
 
 	if (!so.childObjects)
 		return;
@@ -420,7 +561,7 @@ void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneR
 		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
 		VuoSceneRendererInternal_object childObjectInternal;
 
-		VuoSceneRenderer_uploadSceneObjectsRecursively(childObject, &childObjectInternal);
+		VuoSceneRenderer_uploadSceneObjectsRecursively(childObject, &childObjectInternal, glContext);
 
 		soi->childObjects.push_back(childObjectInternal);
 	}
@@ -430,50 +571,58 @@ void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneR
  * Releases the GPU objects created by @c VuoSceneRenderer_uploadSceneObject.
  * Does not traverse child objects.
  *
- * Must be called from a thread with an active GL Context.
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
  */
-void VuoSceneRenderer_releaseSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi)
+void VuoSceneRenderer_releaseSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
 	for (std::list<VuoSceneRendererInternal_vertices>::iterator vi = soi->vertices.begin(); vi != soi->vertices.end(); ++vi)
 	{
-		glDeleteVertexArrays(1, &(*vi).vertexArray);
-		glDeleteBuffers(1, &(*vi).positionBuffer);
-		glDeleteBuffers(1, &(*vi).normalBuffer);
-		glDeleteBuffers(1, &(*vi).tangentBuffer);
-		glDeleteBuffers(1, &(*vi).bitangentBuffer);
-		glDeleteBuffers(1, &(*vi).textureCoordinateBuffer);
-		glDeleteBuffers(1, &(*vi).elementBuffer);
+		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).positionBuffer);
+		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).normalBuffer);
+		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).tangentBuffer);
+		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).bitangentBuffer);
+		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).textureCoordinateBuffer);
+
+		/// @todo https://b33p.net/kosada/node/6752 — Why does this leak if we recycle it?
+		glDeleteBuffers(1,&(*vi).elementBuffer);
+//		VuoGlPool_disuse(VuoGlPool_ElementArrayBuffer, (*vi).elementBuffer);
 	}
 	soi->vertices.clear();
 
-	CGLContextObj cglContext = CGLGetCurrentContext();
 	VuoSceneObject_release(so);
-	CGLSetCurrentContext(cglContext);
 }
 
 /**
  * Releases the GPU objects created by @c VuoSceneRenderer_uploadSceneObjectsRecursively.
  *
- * Must be called from a thread with an active GL Context.
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
  */
-void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi)
+void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
 	{
 		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
-		VuoSceneRenderer_releaseSceneObjectsRecursively(childObject, &(*oi));
+		VuoSceneRenderer_releaseSceneObjectsRecursively(childObject, &(*oi), glContext);
 	}
 
 	soi->childObjects.clear();
 
-	VuoSceneRenderer_releaseSceneObject(so, soi);
+	VuoSceneRenderer_releaseSceneObject(so, soi, glContext);
 }
 
 /**
  * Deeply retains @c so.
  *
- * May be called from any thread (doesn't require a GL Context).
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAny
  */
 void VuoSceneRenderer_retainSceneObjectsRecursively(VuoSceneObject so)
 {
@@ -493,47 +642,76 @@ void VuoSceneRenderer_retainSceneObjectsRecursively(VuoSceneObject so)
 /**
  * Changes the scenegraph to be rendered.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
+ * @threadAnyGL
  */
-void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoSceneObject rootSceneObject)
+void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoGlContext glContext, VuoSceneObject rootSceneObject)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	VuoSceneRenderer_retainSceneObjectsRecursively(rootSceneObject);
 
-	VuoGlContext_use();
-
 	// Release the old scenegraph.
 	if (sceneRenderer->scenegraphValid)
-		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal);
+		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, glContext);
 
 	// Upload the new scenegraph.
 	sceneRenderer->rootSceneObject = rootSceneObject;
-	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal);
-
-	VuoGlContext_disuse();
+	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, glContext);
 
 	sceneRenderer->scenegraphValid = true;
+	sceneRenderer->needToRegenerateProjectionMatrix = true;
+	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
+}
+
+/**
+ * Changes the name of the camera to look for.
+ * The first camera whose name contains @c cameraName will be rendered (next time @c VuoSceneRenderer_draw() is called),
+ * or, if no camera matches, @c VuoSceneObject_makeDefaultCamera() will be used.
+ *
+ * @threadAny
+ */
+void VuoSceneRenderer_setCameraName(VuoSceneRenderer sr, VuoText cameraName)
+{
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+
+	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+	{
+		if (sceneRenderer->cameraName)
+			VuoRelease(sceneRenderer->cameraName);
+
+		sceneRenderer->cameraName = cameraName;
+		VuoRetain(sceneRenderer->cameraName);
+
+		sceneRenderer->needToRegenerateProjectionMatrix = true;
+	}
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 }
 
 /**
  * Destroys and deallocates the scene renderer.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
+ * @threadAny
  */
 void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
-	VuoGlContext_use();
+	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 
 	if (sceneRenderer->scenegraphValid)
-		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal);
+	{
+		VuoGlContext glContext = VuoGlContext_use();
 
-	VuoGlContext_disuse();
+		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, glContext);
 
+		VuoGlContext_disuse(glContext);
+	}
+
+	if (sceneRenderer->cameraName)
+		VuoRelease(sceneRenderer->cameraName);
+
+	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 	dispatch_release(sceneRenderer->scenegraphSemaphore);
 	VuoSceneObject_release(sceneRenderer->rootSceneObject);
 

@@ -38,6 +38,11 @@ private:
 	map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *> triggerActionForTrigger;  // TODO Refactor the above maps as member variables of VuoCompilerTriggerAction
 	Module *module;  ///< The Module in which code is generated.
 	map<VuoCompilerNode *, GlobalVariable *> semaphoreVariableForNode;  ///< A semaphore to wait on while a node's event function is executing.
+	map<VuoCompilerNode *, GlobalVariable *> claimingEventIdVariableForNode;  ///< The ID of the event that has current exclusive claim on the node.
+	ConstantInt *noEventIdConstant;  ///< A dummy ID to represent that no event is claiming a node.
+	GlobalVariable *lastEventIdVariable;  ///< The ID most recently assigned to any event, composition-wide. Used to generate a unique ID for each event.
+	GlobalVariable *lastEventIdSemaphoreVariable;  ///< A semaphore to synchronize access to @ref lastEventIdVariable.
+
 	bool debugMode;
 
 	VuoCompilerBitcodeGenerator(void);
@@ -53,11 +58,13 @@ private:
 	set<VuoCompilerPassiveEdge *> outEdgesThatMayTransmitFromInEdge(VuoCompilerEdge *inEdge);
 	void checkForDeadlockedFeedbackLoops(void);
 	bool isNodeDownstreamOfTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
+	bool isNodeDownstreamOfNode(VuoCompilerNode *node, VuoCompilerNode *upstreamNode);
 	bool edgeExists(VuoCompilerNode *fromNode, VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger);
 	bool isDeadEnd(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	bool isScatter(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	bool isGather(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	set<VuoCompilerTriggerEdge *> getTriggerEdges(void);
+	vector<VuoCompilerNode *> sortNodes(set<VuoCompilerNode *> originalNodes);
 	void generateMetadata(void);
 	void generateAllocation(void);
 	void generateInitializationForReferenceCounts(BasicBlock *block);
@@ -68,7 +75,8 @@ private:
 	void generateFiniFunction(void);
 	void generateCallbackStartFunction(void);
 	void generateCallbackStopFunction(void);
-	void generateWaitForNodes(Module *module, BasicBlock *block, vector<VuoCompilerNode *> nodes);
+	Value * generateGetNextEventID(Module *module, BasicBlock *block);
+	void generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL);
 	void generateSignalForNodes(Module *module, BasicBlock *block, vector<VuoCompilerNode *> nodes);
 	Value * generatePortSerialization(Module *module, BasicBlock *block, VuoCompilerPort *port);
 	Value * generatePortSerializationInterprocess(Module *module, BasicBlock *block, VuoCompilerPort *port);

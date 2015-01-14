@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+PublishedInputs [type="vuo.in" label="PublishedInputs|<start>start\r"];
+TestFirePeriodically1 [type="vuo.test.firePeriodically" label="FirePer1|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<fired>fired\r" _nodeTitle="\"FirePer1\""];
+TestFirePeriodically2 [type="vuo.test.firePeriodically" label="FirePer2|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<fired>fired\r" _nodeTitle="\"FirePer2\""];
+Conductor1 [type="vuo.test.conductor" label="Conductor1|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor1\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2="" _triggerInfoIn3=""];
+Conductor2 [type="vuo.test.conductor" label="Conductor2|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor2\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2="" _triggerInfoIn3=""];
+Conductor3 [type="vuo.test.conductor" label="Conductor3|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _triggerInfoIn3="" _nodeTitle="\"Conductor3\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2=""];
+Conductor4 [type="vuo.test.conductor" label="Conductor4|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _triggerInfoIn3="" _nodeTitle="\"Conductor4\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2=""];
+
+PublishedInputs:start -> TestFirePeriodically1:refresh;
+PublishedInputs:start -> TestFirePeriodically2:refresh;
+TestFirePeriodically1:fired -> Conductor2:triggerInfoIn0;
+Conductor2:triggerInfoOut -> Conductor4:triggerInfoIn0;
+TestFirePeriodically2:fired -> Conductor1:triggerInfoIn0;
+Conductor1:triggerInfoOut -> Conductor2:triggerInfoIn1;
+TestFirePeriodically2:fired -> Conductor3:triggerInfoIn0;
+Conductor3:triggerInfoOut -> Conductor4:triggerInfoIn1;
+}

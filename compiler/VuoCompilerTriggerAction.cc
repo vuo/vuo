@@ -110,6 +110,8 @@ Function * VuoCompilerTriggerAction::generateAsynchronousSubmissionToDispatchQue
 		Value *dataValue = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, dataValueFromArg, portDataType);
 		new StoreInst(dataValue, dataCopyAddress, false, block);
 		dataValueAsVoidPointer = new BitCastInst(dataCopyAddress, voidPointer, "", block);
+
+		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, dataValue);
 	}
 
 	VuoCompilerCodeGenUtilities::generateAsynchronousSubmissionToDispatchQueue(module, block, dispatchQueueVariable, workerFunction, dataValueAsVoidPointer);
@@ -187,7 +189,6 @@ Value * VuoCompilerTriggerAction::generateDataValueDidChange(Module *module, Bas
 		CallInst::Create(freeFunction, dataCopyAsVoidPointer, "", block);
 
 		// The current data becomes the previous data.
-		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, currentDataValue);
 		new StoreInst(currentDataValue, previousDataVariable, block);
 		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, previousDataValue);
 	}

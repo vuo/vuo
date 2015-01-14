@@ -15,9 +15,7 @@
 #include "VuoShader.h"
 #include "VuoGlContext.h"
 
-/// @todo After we drop 10.6 support, switch back to gl3.h.
-//#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/CGLMacro.h>
 
 
 /// @{
@@ -43,26 +41,30 @@ VuoModuleMetadata({
  * Decrements the retain count of the OpenGL Texture Object associated with the specified @c VuoImage,
  * and frees the @c texture VuoImage struct.
  *
- * May be called from any thread (doesn't require an existing GL Context).
+ * @threadAny
  */
 void VuoShader_free(void *shader)
 {
 //	fprintf(stderr, "VuoShader_free(%p)\n", shader);
 	VuoShader s = (VuoShader)shader;
 
-	VuoGlContext_use();
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
 		glDetachShader(s->glProgramName, s->glVertexShaderName);
 		glDetachShader(s->glProgramName, s->glFragmentShaderName);
 		glDeleteShader(s->glVertexShaderName);
 		glDeleteShader(s->glFragmentShaderName);
 		glDeleteProgram(s->glProgramName);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
 
 	free(s->summary);
 	VuoRelease(s->textures);
 	VuoRelease(s->glTextureUniformLocations);
+
+	dispatch_release(s->lock);
 
 	free(s);
 }
@@ -71,9 +73,9 @@ void VuoShader_free(void *shader)
  * @ingroup VuoShader
  * Prints GLSL debug information to the console.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoShader_printShaderInfoLog(GLuint obj)
+void VuoShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 {
 	int infologLength = 0;
 	int charsWritten  = 0;
@@ -94,9 +96,9 @@ void VuoShader_printShaderInfoLog(GLuint obj)
  * @ingroup VuoShader
  * Prints GLSL debug information to the console.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoShader_printProgramInfoLog(GLuint obj)
+void VuoShader_printProgramInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 {
 	int infologLength = 0;
 	int charsWritten  = 0;
@@ -117,15 +119,15 @@ void VuoShader_printProgramInfoLog(GLuint obj)
  * @ingroup VuoShader
  * Compiles the specified shader source.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-static GLuint VuoShader_compileShader(GLenum type, const char * source)
+static GLuint VuoShader_compileShader(CGLContextObj cgl_ctx, GLenum type, const char * source)
 {
 	GLint length = strlen(source);
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, (const GLchar**)&source, &length);
 	glCompileShader(shader);
-	VuoShader_printShaderInfoLog(shader);
+	VuoShader_printShaderInfoLog(cgl_ctx, shader);
 	return shader;
 }
 
@@ -143,7 +145,7 @@ static GLuint VuoShader_compileShader(GLenum type, const char * source)
  *     attribute vec4 bitangent;
  *     attribute vec4 textureCoordinate;
  *
- * May be called from any thread (doesn't require an existing GL Context).
+ * @threadAny
  */
 VuoShader VuoShader_make(const char *summary, const char *vertexShaderSource, const char *fragmentShaderSource)
 {
@@ -153,24 +155,28 @@ VuoShader VuoShader_make(const char *summary, const char *vertexShaderSource, co
 
 	t->summary = strdup(summary);
 
-	VuoGlContext_use();
 	{
-		t->glVertexShaderName = VuoShader_compileShader(GL_VERTEX_SHADER, vertexShaderSource);
-		t->glFragmentShaderName = VuoShader_compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		t->glVertexShaderName = VuoShader_compileShader(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
+		t->glFragmentShaderName = VuoShader_compileShader(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
 
 		t->glProgramName = glCreateProgram();
 		glAttachShader(t->glProgramName, t->glVertexShaderName);
 		glAttachShader(t->glProgramName, t->glFragmentShaderName);
 		glLinkProgram(t->glProgramName);
-		VuoShader_printProgramInfoLog(t->glProgramName);
+		VuoShader_printProgramInfoLog(cgl_ctx, t->glProgramName);
 
 		t->textures = VuoListCreate_VuoImage();
 		t->glTextureUniformLocations = VuoListCreate_VuoInteger();
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
 
 	VuoRetain(t->textures);
 	VuoRetain(t->glTextureUniformLocations);
+
+	t->lock = dispatch_semaphore_create(1);
 
 //	fprintf(stderr, "VuoShader_make() created %p\n", t);
 	return t;
@@ -214,6 +220,8 @@ static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120
 /**
  * @ingroup VuoShader
  * Decodes the JSON object @c js, expected to contain a 64-bit integer (memory address or 0), to create a new @c VuoShader.
+ *
+ * @threadAny
  */
 VuoShader VuoShader_valueFromJson(json_object *js)
 {
@@ -233,6 +241,8 @@ VuoShader VuoShader_valueFromJson(json_object *js)
  * Encodes @c value as a JSON object.
  *
  * Serializes the pointer to the VuoShader object, since we need to preserve its reference count.
+ *
+ * @threadAny
  */
 json_object * VuoShader_jsonFromValue(const VuoShader value)
 {
@@ -243,6 +253,8 @@ json_object * VuoShader_jsonFromValue(const VuoShader value)
  * @ingroup VuoShader
  *
  * Returns a summary of the shader: the text description provided to @c VuoShader_make(), and the number of textures associated with the shader.
+ *
+ * @threadAny
  */
 char * VuoShader_summaryFromValue(const VuoShader value)
 {
@@ -261,45 +273,41 @@ char * VuoShader_summaryFromValue(const VuoShader value)
 /**
  * Sets a @c float uniform value on the specified @c shader.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
+ * @threadAnyGL
  */
-void VuoShader_setUniformFloat(VuoShader shader, const char *uniformIdentifier, float value)
+void VuoShader_setUniformFloat(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, float value)
 {
-	VuoGlContext_use();
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	glUseProgram(shader->glProgramName);
 	{
-		glUseProgram(shader->glProgramName);
-		{
-			GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
-			if (uniform < 0)
-				fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
-			else
-				glUniform1f(uniform, value);
-		}
-		glUseProgram(0);
+		GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
+		if (uniform < 0)
+			fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
+		else
+			glUniform1f(uniform, value);
 	}
-	VuoGlContext_disuse();
+	glUseProgram(0);
 }
 
 /**
  * Sets a @c float uniform value on the specified @c shader.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
+ * @threadAnyGL
  */
-void VuoShader_setUniformPoint2d(VuoShader shader, const char *uniformIdentifier, VuoPoint2d value)
+void VuoShader_setUniformPoint2d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint2d value)
 {
-	VuoGlContext_use();
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	glUseProgram(shader->glProgramName);
 	{
-		glUseProgram(shader->glProgramName);
-		{
-			GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
-			if (uniform < 0)
-				fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
-			else
-				glUniform2f(uniform, value.x, value.y);
-		}
-		glUseProgram(0);
+		GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
+		if (uniform < 0)
+			fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
+		else
+			glUniform2f(uniform, value.x, value.y);
 	}
-	VuoGlContext_disuse();
+	glUseProgram(0);
 }
 
 static const char * imageFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
@@ -318,6 +326,8 @@ static const char * imageFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 /**
  * Returns the default vertex shader, which projects verties and passes through texture coordinates.
+ *
+ * @threadAny
  */
 const char * VuoShader_getDefaultVertexShader(void)
 {
@@ -333,6 +343,8 @@ const char * VuoShader_getDefaultVertexShader(void)
  *
  * If @a image is rendered in a scene, centered at (0,0,0), width 2, at its correct aspect ratio,
  * this function will transform 2D coordinates along the XY plane (at Z=0) into correct sampler coordinates for that image.
+ *
+ * @threadAny
  */
 VuoPoint2d VuoShader_samplerCoordinatesFromVuoCoordinates(VuoPoint2d vuoCoordinates, VuoImage image)
 {
@@ -344,6 +356,8 @@ VuoPoint2d VuoShader_samplerCoordinatesFromVuoCoordinates(VuoPoint2d vuoCoordina
 
 /**
  * Converts an x-axis distance in Vuo Coordinates into GLSL Sampler Coordinates.  (Divides by 2.)
+ *
+ * @threadAny
  */
 VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize)
 {
@@ -352,6 +366,8 @@ VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize)
 
 /**
  * Returns a shader that renders objects with an image (ignoring lighting), specified by uniform @c texture.
+ *
+ * @threadAny
  */
 VuoShader VuoShader_makeImageShader(void)
 {
@@ -360,6 +376,8 @@ VuoShader VuoShader_makeImageShader(void)
 
 /**
  * Empties the list of textures associated with @c shader.
+ *
+ * @threadAny
  */
 void VuoShader_resetTextures(VuoShader shader)
 {
@@ -370,16 +388,17 @@ void VuoShader_resetTextures(VuoShader shader)
 /**
  * Adds to @c shader an association between @c texture and @c uniformIdentifier.
  *
- * May be called from any thread (doesn't require an existing GL Context).
+ * @threadAnyGL
  */
-void VuoShader_addTexture(VuoShader shader, VuoImage texture, const char *uniformIdentifier)
+void VuoShader_addTexture(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoImage texture)
 {
 	GLint textureUniform;
-	VuoGlContext_use();
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+		/// @todo instead of querying this every time an image is added, query once when the shader is compiled, and store it in a dictionary in VuoShader.
 		textureUniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
 	}
-	VuoGlContext_disuse();
 
 	if (textureUniform < 0)
 	{
@@ -394,10 +413,12 @@ void VuoShader_addTexture(VuoShader shader, VuoImage texture, const char *unifor
 /**
  * Assigns each of the shader's textures to a texture unit, and passes the texture unit number along to the shader.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoShader_activateTextures(VuoShader shader)
+void VuoShader_activateTextures(VuoShader shader, VuoGlContext glContext)
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
 	unsigned long textureCount = VuoListGetCount_VuoImage(shader->textures);
 	for (unsigned int i = 0; i < textureCount; ++i)
 	{
@@ -411,10 +432,12 @@ void VuoShader_activateTextures(VuoShader shader)
 /**
  * Unbinds the texture units used by this shader.
  *
- * Must be called from a thread with an active GL Context.
+ * @threadAnyGL
  */
-void VuoShader_deactivateTextures(VuoShader shader)
+void VuoShader_deactivateTextures(VuoShader shader, VuoGlContext glContext)
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
 	unsigned long textureCount = VuoListGetCount_VuoImage(shader->textures);
 	for (unsigned int i = 0; i < textureCount; ++i)
 	{

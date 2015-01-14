@@ -45,10 +45,7 @@ int main(int argc, char **argv)
 	}
 
 	while (! isStopped)
-	{
-		_dispatch_main_queue_callback_4CF(0);
-		usleep(10000);
-	}
+		CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
 	return 0;
 }
 

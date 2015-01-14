@@ -15,6 +15,7 @@
 #include "VuoComposition.hh"
 #include "VuoRendererPublishedPort.hh"
 
+class VuoCompiler;
 class VuoCompilerNode;
 class VuoRendererNode;
 class VuoRendererTypecastPort;
@@ -55,6 +56,17 @@ public:
 
 	static void createAutoreleasePool(void);
 
+	/// Potential outcomes of an app export attempt:
+	enum appExportResult
+	{
+		exportSuccess,
+		exportBuildFailure,
+		exportSaveFailure
+	};
+
+	string takeSnapshot(void);
+	VuoRendererComposition::appExportResult exportApp(const QString &savePath, VuoCompiler *compiler, string &errString);
+
 protected:
 	void setRenderActivity(bool render);
 	void repaintAllComponents();
@@ -72,6 +84,11 @@ private:
 	void updatePublishedInputNode();
 	void updatePublishedOutputNode();
 	bool isPublishedPortNameTaken(string name, bool isInput);
+
+	string createAppBundleDirectoryStructure();
+	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString);
+	void bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension="");
+	void bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath);
 
 	bool renderMissingAsPresent; ///< Should node classes without implementations be rendered as though their implementations are present?
 	bool renderActivity; ///< Should renderings reflect recent component activity (e.g., node executions, event firings)?

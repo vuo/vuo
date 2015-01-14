@@ -64,9 +64,9 @@ class VuoRunner
 {
 public:
 	class Port;
-	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, bool deleteExecutableWhenFinished = false);
-	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, string resourceDylibPath, bool deleteDylibsWhenFinished = false);
-	static VuoRunner * newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, bool deleteDylibWhenFinished = false);
+	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool deleteExecutableWhenFinished = false);
+	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, string resourceDylibPath, string sourceDir, bool deleteDylibsWhenFinished = false);
+	static VuoRunner * newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir, bool deleteDylibWhenFinished = false);
 	~VuoRunner(void);
 	void start(void);
 	void startPaused(void);
@@ -124,6 +124,8 @@ private:
 	void *dylibHandle;  ///< A handle to the linked composition dynamic library.
 	vector<string> resourceDylibPaths;  ///< The paths to the linked composition resource dynamic libraries.
 	bool shouldDeleteBinariesWhenFinished;  ///< True if the composition binary file(s) should be deleted when the runner is finished using them.
+	string sourceDir;  ///< The directory containing the composition's .vuo source file.
+	string originalWorkingDir;  ///< The working directory before the composition was started, if running in the current process.
 	bool stopped;	///< True if the composition is in a stopped state (either never started or started then stopped).
 	bool listenCanceled;  ///< True if the listen() loop should end.
 	dispatch_semaphore_t stoppedSemaphore;  ///< Signaled when the composition stops.

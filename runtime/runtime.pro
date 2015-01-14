@@ -28,6 +28,7 @@ runtime_c.commands = \
 		-emit-llvm \
 		$(CFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 		$(INCPATH) \
+		$$VUO_VERSION_DEFINES \
 		-I$$ROOT/base \
 		-c ${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}
@@ -56,7 +57,9 @@ runtime_loader.commands = \
 		-I$$ROOT/base \
 		$$ROOT/base/VuoTelemetry.o \
 		$${ZMQ_ROOT}/lib/libzmq.a \
+		-lobjc \
 		-framework CoreFoundation \
+		-framework Foundation \
 		-Wl,-rpath,@loader_path/../../../../.. \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}

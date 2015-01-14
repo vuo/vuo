@@ -45,6 +45,9 @@ void VuoVerticesParametric_calculateTangentArray(int vertexCount, const VuoPoint
  */
 VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, VuoText zExp, VuoText uExp, VuoText vExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, bool closeV )
 {
+	if (uSubdivisions==0 || vSubdivisions==0)
+		return VuoListCreate_VuoVertices();
+
 	mu::Parser xParser, yParser, zParser, uParser, vParser;
 
 	xParser.SetExpr(xExp);

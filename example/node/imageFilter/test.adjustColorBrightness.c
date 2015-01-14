@@ -74,17 +74,23 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, image, "texture");
+	{
+		VuoGlContext glContext = VuoGlContext_use();
 
-	// Feed parameters to the shader.
-	VuoShader_setUniformFloat((*instance)->shader, "red", red);
-	VuoShader_setUniformFloat((*instance)->shader, "green", green);
-	VuoShader_setUniformFloat((*instance)->shader, "blue", blue);
+		// Associate the input image with the shader.
+		VuoShader_resetTextures((*instance)->shader);
+		VuoShader_addTexture((*instance)->shader, glContext, "texture", image);
 
-	// Render.
-	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+		// Feed parameters to the shader.
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "red", red);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "green", green);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "blue", blue);
+
+		// Render.
+		*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+
+		VuoGlContext_disuse(glContext);
+	}
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

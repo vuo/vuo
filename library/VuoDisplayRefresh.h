@@ -14,16 +14,19 @@ extern "C"
 
 #include "node.h"
 
+#include <stdint.h>
+
 /**
  * A state object for firing display refresh events.
  */
 typedef void *VuoDisplayRefresh;
 
-VuoDisplayRefresh VuoDisplayRefresh_make(void);
+VuoDisplayRefresh VuoDisplayRefresh_make(void *context);
 void VuoDisplayRefresh_enableTriggers
 (
 		VuoDisplayRefresh dr,
-		VuoOutputTrigger(requestedFrame, VuoFrameRequest)
+		void (*requestedFrameTrigger)(VuoFrameRequest),
+		void (*requestedFrameTriggerWithContext)(VuoFrameRequest, void *context)
 );
 void VuoDisplayRefresh_disableTriggers(VuoDisplayRefresh dr);
 

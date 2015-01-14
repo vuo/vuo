@@ -29,7 +29,7 @@ VuoModuleMetadata({
 /**
  * Creates a VuoWindowApplication instance (if one doesn't already exist).
  *
- * Must be called from the main thread.
+ * @threadMain
  */
 void VuoWindowApplication_init(void)
 {
@@ -50,7 +50,7 @@ void VuoWindowText_destroy(VuoWindowText w);
  *
  * Creates a new QApplication instance if one did not already exist.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 VuoWindowText VuoWindowText_make(void)
 {
@@ -67,7 +67,7 @@ VuoWindowText VuoWindowText_make(void)
 /**
  * Sets up the window to call the trigger functions when its text is edited.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 void VuoWindowText_enableTriggers
 (
@@ -86,7 +86,7 @@ void VuoWindowText_enableTriggers
 /**
  * Stops the window from calling trigger functions when its text is edited.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 void VuoWindowText_disableTriggers(VuoWindowText w)
 {
@@ -99,7 +99,7 @@ void VuoWindowText_disableTriggers(VuoWindowText w)
 /**
  * Appends text and a linebreak to the text edit widget in the window.
  *
- * Can be called from any thread.
+ * @threadAny
  */
 void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
 {
@@ -116,14 +116,14 @@ void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
  *
  * Destroys the current QApplication instance if it no longer contains any widgets.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 void VuoWindowText_destroy(VuoWindowText vw)
 {
 	VuoWindowTextInternal *window = (VuoWindowTextInternal *)vw;
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  [window close];
-					  [window release];
+//					  [window release];
 				  });
 }
 
@@ -135,13 +135,13 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl w);
  *
  * Creates a new QApplication instance if one did not already exist.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
-		void (*initCallback)(void *),
-		void (*resizeCallback)(void *, unsigned int, unsigned int),
-		void (*drawCallback)(void *),
+		void (*initCallback)(VuoGlContext glContext, void *),
+		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
+		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 )
 {
@@ -158,7 +158,7 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 /**
  * Sets up the window to call the trigger functions when events occur.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 void VuoWindowOpenGl_enableTriggers
 (
@@ -180,7 +180,7 @@ void VuoWindowOpenGl_enableTriggers
 /**
  * Stops the window from calling trigger functions when events occur.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w)
 {
@@ -193,7 +193,7 @@ void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w)
 /**
  * Schedules the specified window to be redrawn.
  *
- * Can be called from any thread.
+ * @threadAny
  */
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w)
 {
@@ -220,13 +220,13 @@ void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, 
  *
  * Destroys the current QApplication instance if it no longer contains any widgets.
  *
- * Can be called from any thread but the main thread.
+ * @threadNoMain
  */
 void VuoWindowOpenGl_destroy(VuoWindowOpenGl vw)
 {
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)vw;
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  [window close];
-					  [window release];
+//					  [window release];
 				  });
 }

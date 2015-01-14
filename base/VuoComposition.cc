@@ -16,6 +16,7 @@ VuoComposition::VuoComposition(void)
 	: VuoBase<VuoCompilerComposition,VuoRendererComposition>("VuoComposition")
 {
 	this->name = "VuoComposition";
+	this->directory = "";
 }
 
 /**
@@ -32,6 +33,22 @@ void VuoComposition::setName(string name)
 string VuoComposition::getName(void)
 {
 	return name;
+}
+
+/**
+ * Sets the directory containing the composition's .vuo source file.
+ */
+void VuoComposition::setDirectory(string directory)
+{
+	this->directory = directory;
+}
+
+/**
+ * Returns the directory containing the composition's .vuo source file.
+ */
+string VuoComposition::getDirectory(void)
+{
+	return directory;
 }
 
 /**
