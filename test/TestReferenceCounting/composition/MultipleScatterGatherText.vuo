@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Cut [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="334,198" _text="" _startIndex="1" _characterCount="3"];
+AreEqual [type="vuo.text.areEqual" label="Are Equal|<refresh>refresh\l|<texts>texts\l|<equal>equal\r" pos="1163,240" _texts=""];
+ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="123456"];
+MakeList [type="vuo.list.make.2.VuoText" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="1005,240" _item1="" _item2=""];
+Cut4 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="835,305" _text="" _startIndex="4" _characterCount="3"];
+Cut3 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="331,316" _text="" _startIndex="4" _characterCount="3"];
+Cut2 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="838,187" _text="" _startIndex="1" _characterCount="3"];
+Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="632,248" _texts=""];
+MakeList2 [type="vuo.list.make.2.VuoText" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="498,247" _item1="" _item2=""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+
+MakeList2:list -> Append:texts;
+Append:compositeText -> Cut2:text;
+Append:compositeText -> Cut4:text;
+MakeList:list -> AreEqual:texts;
+Cut2:partialText -> MakeList:item1;
+Cut4:partialText -> MakeList:item2;
+Cut:partialText -> MakeList2:item1;
+ConvertIntegertoText:text -> Cut3:text;
+ConvertIntegertoText:text -> Cut:text;
+Cut3:partialText -> MakeList2:item2;
+PublishedInputs:inEvent -> ConvertIntegertoText:refresh;
+AreEqual:equal -> PublishedOutputs:outEvent;
+}

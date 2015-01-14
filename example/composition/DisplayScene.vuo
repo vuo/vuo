@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Demonstrates how to load a 3D scene from a mesh file and render it in a window.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<done>done\r|<object>object\r" pos="756,210"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="33,350"];
+GetScene [type="vuo.scene.get" version="1.0.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<done>done\r|<scene>scene\r" pos="544,371" fillcolor="cyan" _sceneURL="\"http:\\/\\/softpixel.com\\/~smokris\\/jeep1.3ds\""];
+GetTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="654,647"];
+Make3DPoint [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="382,146" _x="-90.000000" _z="0"];
+Make3DPoint2 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="385,266" _x="0.050000" _y="0.050000" _z="0.050000"];
+MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="126,172" _item2="20.000000"];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="943,221"];
+MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="696,236"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="542,210" _translation="{\"x\":0,\"y\":0,\"z\":0}"];
+Multiply [type="vuo.math.multiply.real" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="186,161"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="1003,210"];
+
+Combine3DObjects:object -> MakeList2:item1;
+FireonStart:started -> GetScene:refresh;
+FireonStart:started -> Make3DPoint2:refresh;
+GetScene:scene -> MakeList6:item1;
+GetTimestamp2:timestamp -> MakeList:item1;
+Make3DPoint2:point -> MakeTransform:scale;
+Make3DPoint:point -> MakeTransform:rotation;
+MakeList2:list -> RenderScenetoWindow:objects;
+MakeList6:list -> Combine3DObjects:childObjects;
+MakeList:list -> Multiply:terms;
+MakeTransform:transform -> Combine3DObjects:transform;
+Multiply:product -> Make3DPoint:y;
+RenderScenetoWindow:requestedFrame -> GetTimestamp2:frameRequest;
+}

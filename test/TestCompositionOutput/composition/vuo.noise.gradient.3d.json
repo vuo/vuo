@@ -1,0 +1,98 @@
+/**
+ * @file
+ * Expected outputs for the vuo.noise.gradient.3d node.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":0,\"y\":0,\"z\":0}" },
+			{ "port" : "gradientNoise", "value" : "\"perlin\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0" }
+		]
+	},
+
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":5,\"y\":5,\"z\":5}" },
+			{ "port" : "gradientNoise", "value" : "\"perlin\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0" }
+		]
+	},
+
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":7.2,\"y\":7.2,\"z\":7.2}" },
+			{ "port" : "gradientNoise", "value" : "\"perlin\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.297591" }
+		]
+	},
+
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":-7.2,\"y\":-7.2,\"z\":-7.2}" },
+			{ "port" : "gradientNoise", "value" : "\"perlin\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.424598" }
+		]
+	},
+
+		{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":0,\"y\":0,\"z\":0}" },
+			{ "port" : "gradientNoise", "value" : "\"simplex\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0" }
+		]
+	},
+
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":5,\"y\":5,\"z\":5}" },
+			{ "port" : "gradientNoise", "value" : "\"simplex\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0" }
+		]
+	},
+
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":7.2,\"y\":7.2,\"z\":7.2}" },
+			{ "port" : "gradientNoise", "value" : "\"simplex\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.907174" }
+		]
+	},
+
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "position", "value" : "{\"x\":-7.2,\"y\":-7.2,\"z\":-7.2}" },
+			{ "port" : "gradientNoise", "value" : "\"simplex\"" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.227696" }
+		]
+	}
+]}

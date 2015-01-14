@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Demo graph.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+ConvertIntegertoText [type="vuo.type.integer.text" version="100" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="15,3"];
+CountCharacters1 [type="vuo.text.countCharacters" version="100" label="Count Characters|<refresh>refresh\l|<text>text\l|<done>done\r|<characterCount>characterCount\r" pos="3,19" _text="\"café\""];
+DisplayConsoleWindow [type="vuo.console.window" version="100" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="261,19"];
+
+ConvertIntegertoText:text -> DisplayConsoleWindow:writeLine;
+CountCharacters1:characterCount -> ConvertIntegertoText:integer;
+}

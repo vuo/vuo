@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Demo graph.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+MakeList [type="vuo.list.make.2.VuoInteger" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="197,50" _item1="0" _item2="1"];
+Add1 [type="vuo.math.add.integer" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="373,54" _terms=""];
+
+MakeList:list -> Add1:terms;
+}

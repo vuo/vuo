@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FirePeriodicallyWithCount [type="vuo.test.firePeriodicallyWithCount" label="Fire Periodically with Count|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" seconds="0.1"];
+}

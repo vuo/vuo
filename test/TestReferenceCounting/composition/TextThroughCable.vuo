@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+ConvertIntegerToText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" _integer="123456"];
+ConvertTextToInteger [type="vuo.type.text.integer" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r"];
+
+PublishedInputs:inEvent -> ConvertIntegerToText:refresh;
+ConvertIntegerToText:text -> ConvertTextToInteger:text;
+ConvertTextToInteger:integer -> PublishedOutputs:outEvent;
+}

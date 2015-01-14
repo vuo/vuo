@@ -1,0 +1,131 @@
+/**
+ * @file
+ * This composition makes a caterpillar walk toward the point where you most recently pressed the left mouse button.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+Add [type="vuo.math.add.real" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="287,646" fillcolor="green"];
+Add2 [type="vuo.math.add.real" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="301,742" fillcolor="green"];
+Add4 [type="vuo.math.add.real" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="2387,98" fillcolor="violet"];
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<done>done\r|<object>object\r" pos="1698,550" fillcolor="green"];
+Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<x>x\r" pos="1807,221"];
+Convert3DPointToReal [type="vuo.type.point3d.real.x" version="1.0.0" label="Convert 3D Point to Real|<refresh>refresh\l|<xyz>xyz\l|<done>done\r|<x>x\r" pos="1807,236"];
+Convert3DPointToReal2 [type="vuo.type.point3d.real.x" version="1.0.0" label="Convert 3D Point to Real|<refresh>refresh\l|<xyz>xyz\l|<done>done\r|<x>x\r" pos="2377,224"];
+Count [type="vuo.math.count.real" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<done>done\r|<count>count\r" pos="284,551" fillcolor="green" _increment="0.100000" _decrement="1"];
+DiscardDataFromEvent [type="vuo.type.frameRequest.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="-32,585"];
+DiscardDataFromEvent2 [type="vuo.type.frameRequest.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="1126,288"];
+FilterMouseButtonAction [type="vuo.mouse.filter.action" version="1.0.0" label="Filter Mouse Button Action|<refresh>refresh\l|<action>action\l|<includeLeftButton>includeLeftButton\l|<includeMiddleButton>includeMiddleButton\l|<includeRightButton>includeRightButton\l|<includePress>includePress\l|<includeRelease>includeRelease\l|<includeSingleClick>includeSingleClick\l|<includeDoubleClick>includeDoubleClick\l|<includeTripleClick>includeTripleClick\l|<done>done\r|<filteredAction>filteredAction\r" pos="1108,-27" fillcolor="magenta" _includeLeftButton="true" _includeMiddleButton="false" _includeRightButton="false" _includePress="true" _includeRelease="false" _includeSingleClick="false" _includeDoubleClick="false" _includeTripleClick="false"];
+FindMaximum3 [type="vuo.math.max.real" version="1.0.0" label="Find Maximum|<refresh>refresh\l|<terms>terms\l|<done>done\r|<max>max\r" pos="1949,-32" fillcolor="violet"];
+FindMinimum3 [type="vuo.math.min.real" version="1.0.0" label="Find Minimum|<refresh>refresh\l|<terms>terms\l|<done>done\r|<min>min\r" pos="1949,29" fillcolor="violet"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="23,426" fillcolor="green"];
+GetMouseButtonActionValues [type="vuo.mouse.get.action" version="1.0.0" label="Get Mouse Button Action Values|<refresh>refresh\l|<action>action\l|<done>done\r|<isLeftButton>isLeftButton\r|<isMiddleButton>isMiddleButton\r|<isRightButton>isRightButton\r|<isPress>isPress\r|<isRelease>isRelease\r|<isSingleClick>isSingleClick\r|<isDoubleClick>isDoubleClick\r|<isTripleClick>isTripleClick\r|<position>position\r" pos="1350,-27" fillcolor="magenta"];
+HoldValue4 [type="vuo.hold.VuoPoint3d" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="1027,198" fillcolor="orange" _initialValue="{\"x\":0,\"y\":0,\"z\":0}"];
+IsGreaterThan [type="vuo.math.isGreaterThan.real" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="1897,109" fillcolor="violet" _b="0.000000"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1419,467" fillcolor="green"];
+Make3DObject2 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1421,580" fillcolor="green"];
+Make3DObject3 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1421,691" fillcolor="green"];
+Make3DPoint2 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="945,612" fillcolor="green" _x="0.080000" _z="0.000000"];
+Make3DPoint3 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="946,702" fillcolor="green" _x="0.160000" _z="0.000000"];
+Make3DPoint5 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="943,520" fillcolor="green" _x="0.000000" _z="0.000000"];
+Make3DPoint6 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="2395,172" fillcolor="violet" _y="0" _z="0"];
+MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="227,657" fillcolor="green" _item2="0.500000"];
+MakeList10 [type="vuo.list.make.3.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="1638,576" fillcolor="green"];
+MakeList12 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="681,554" fillcolor="green" _item2="0.008000"];
+MakeList13 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="683,650" fillcolor="green" _item2="0.010000"];
+MakeList14 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="682,742" fillcolor="green" _item2="0.009000"];
+MakeList16 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1889,40" fillcolor="violet" _item2="0.010000"];
+MakeList17 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1889,-21" fillcolor="violet" _item2="-0.010000"];
+MakeList19 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="2327,109" fillcolor="violet"];
+MakeList3 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="241,753" fillcolor="green" _item2="0.500000"];
+MakeList7 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="1885,561" fillcolor="green"];
+MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="1212,321" fillcolor="green" _rows="16" _columns="16"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1181,521" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform2 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1178,613" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform3 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1181,708" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform5 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1734,413" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+MakeWave [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="517,539" fillcolor="green" _wave="\"sine\"" _period="2.000000"];
+MakeWave2 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="517,635" fillcolor="green" _wave="\"sine\"" _period="2.000000"];
+MakeWave3 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="520,737" fillcolor="green" _wave="\"sine\"" _period="2.000000"];
+Multiply [type="vuo.math.multiply.real" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="741,543" fillcolor="green"];
+Multiply2 [type="vuo.math.multiply.real" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="743,639" fillcolor="green"];
+Multiply3 [type="vuo.math.multiply.real" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="742,731" fillcolor="green"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1945,550" fillcolor="green"];
+Scale3DPoint [type="vuo.point.multiply.scalar.3d" version="1.0.0" label="Scale 3D Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<done>done\r|<scaledPoint>scaledPoint\r" pos="865,429" fillcolor="green" _point="{\"x\":1,\"y\":1,\"z\":1}" _scaleFactor="0.100000"];
+SelectInput [type="vuo.select.in.VuoReal" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="2130,98" fillcolor="violet"];
+ShadewithSolidColor [type="vuo.shader.make.color" version="1.0.0" label="Shade with Solid Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="1194,400" fillcolor="green" _color="{\"r\":0.000000,\"g\":0.786160,\"b\":0.113466,\"a\":1.000000}"];
+Subtract3 [type="vuo.math.subtract.real" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="1708,111" fillcolor="orange"];
+
+Add2:sum -> MakeWave3:time;
+Add4:sum -> Make3DPoint6:x;
+Add:sum -> MakeList3:item1;
+Add:sum -> MakeWave2:time;
+Combine3DObjects:object -> MakeList7:item1;
+Convert2DPointToReal:x -> Subtract3:a;
+Convert3DPointToReal2:x -> MakeList19:item2;
+Convert3DPointToReal:x -> Subtract3:b;
+Count:count -> MakeList:item1;
+Count:count -> MakeWave:time;
+DiscardDataFromEvent2:event -> HoldValue4:refresh;
+DiscardDataFromEvent:event -> Count:increment;
+FilterMouseButtonAction:filteredAction -> GetMouseButtonActionValues:action;
+FindMaximum3:max -> SelectInput:falseOption;
+FindMinimum3:min -> SelectInput:trueOption;
+FireonStart:started -> Count:refresh;
+FireonStart:started -> MakeSphereVertices:refresh;
+FireonStart:started -> Scale3DPoint:refresh;
+FireonStart:started -> ShadewithSolidColor:refresh;
+GetMouseButtonActionValues:position -> Convert2DPointToReal:xy;
+HoldValue4:heldValue -> Convert3DPointToReal2:xyz;
+HoldValue4:heldValue -> Convert3DPointToReal:xyz;
+IsGreaterThan:greaterThan -> SelectInput:which;
+Make3DObject2:object -> MakeList10:item2;
+Make3DObject3:object -> MakeList10:item3;
+Make3DObject:done -> MakeTransform5:refresh;
+Make3DObject:object -> MakeList10:item1;
+Make3DPoint2:point -> MakeTransform2:translation;
+Make3DPoint3:point -> MakeTransform3:translation;
+Make3DPoint5:point -> MakeTransform:translation;
+Make3DPoint6:point -> HoldValue4:newValue;
+Make3DPoint6:point -> MakeTransform5:translation;
+MakeList10:list -> Combine3DObjects:childObjects;
+MakeList12:list -> Multiply:terms;
+MakeList13:list -> Multiply2:terms;
+MakeList14:list -> Multiply3:terms;
+MakeList16:list -> FindMinimum3:terms;
+MakeList17:list -> FindMaximum3:terms;
+MakeList19:list -> Add4:terms;
+MakeList3:list -> Add2:terms;
+MakeList7:list -> RenderScenetoWindow:objects;
+MakeList:list -> Add:terms;
+MakeSphereVertices:vertices -> Make3DObject2:vertices;
+MakeSphereVertices:vertices -> Make3DObject3:vertices;
+MakeSphereVertices:vertices -> Make3DObject:vertices;
+MakeTransform2:transform -> Make3DObject2:transform;
+MakeTransform3:transform -> Make3DObject3:transform;
+MakeTransform5:transform -> Combine3DObjects:transform;
+MakeTransform:transform -> Make3DObject:transform;
+MakeWave2:value -> MakeList13:item1;
+MakeWave3:value -> MakeList14:item1;
+MakeWave:value -> MakeList12:item1;
+Multiply2:product -> Make3DPoint2:y;
+Multiply3:product -> Make3DPoint3:y;
+Multiply:product -> Make3DPoint5:y;
+RenderScenetoWindow:requestedFrame -> DiscardDataFromEvent2:dataAndEvent;
+RenderScenetoWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+RenderScenetoWindow:usedMouseButton -> FilterMouseButtonAction:action;
+Scale3DPoint:scaledPoint -> MakeTransform2:scale;
+Scale3DPoint:scaledPoint -> MakeTransform3:scale;
+Scale3DPoint:scaledPoint -> MakeTransform:scale;
+SelectInput:out -> MakeList19:item1;
+ShadewithSolidColor:shader -> Make3DObject2:shader;
+ShadewithSolidColor:shader -> Make3DObject3:shader;
+ShadewithSolidColor:shader -> Make3DObject:shader;
+Subtract3:difference -> IsGreaterThan:a;
+Subtract3:difference -> MakeList16:item1;
+Subtract3:difference -> MakeList17:item1;
+}

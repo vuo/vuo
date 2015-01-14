@@ -1,0 +1,18 @@
+/**
+* @file
+* Test graph.
+*
+* @copyright Copyright © 2012–2013 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+Get4DPointValues [type="vuo.point.get.4d" label="Get 4D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="424.5,80.5"];
+Make4DPoint [type="vuo.point.make.4d" label="Make 4D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="283.5,80.5" _x="0.0" _y="0.0" _z="0.0" _w="0.0"];
+FireonStart [type="vuo.event.fireOnStart" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="106.5,76.5"];
+
+Make4DPoint:point -> Get4DPointValues:point;
+FireonStart:started -> Make4DPoint:refresh;
+}

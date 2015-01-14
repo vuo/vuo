@@ -1,0 +1,24 @@
+/**
+ * @file
+ * This composition waits for the user to type something and hit Enter. Then it reports whether the text entered is more than 160 characters.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CountCharacters [type="vuo.text.countCharacters" version="100" label="Count Characters|<refresh>refresh\l|<text>text\l|<done>done\r|<characterCount>characterCount\r" pos="370,71"];
+DiscardDatafromEvent [type="vuo.type.text.event" version="100" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="376,202"];
+DisplayConsoleWindow3 [type="vuo.console.window" version="100" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="122,71"];
+IsLessThan [type="vuo.math.isLessThan.integer" version="100" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="568,56" _a="160"];
+SelectInput [type="vuo.select.in.VuoText" version="100" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="648,191" _falseOption="\"That's short enough to text.\"" _trueOption="\"That's too long to text.\""];
+
+CountCharacters:characterCount -> IsLessThan:b;
+DiscardDatafromEvent:event -> SelectInput:refresh;
+DisplayConsoleWindow3:typedLine -> CountCharacters:text;
+DisplayConsoleWindow3:typedLine -> DiscardDatafromEvent:dataAndEvent;
+IsLessThan:lessThan -> SelectInput:which;
+SelectInput:out -> DisplayConsoleWindow3:writeLine;
+}

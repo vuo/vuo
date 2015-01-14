@@ -1,0 +1,146 @@
+/**
+* @file
+* This composition is a game of tennis, similar to a certain well-known game from the 1970s.
+* It pits a human player against a computer player. The human controls a tennis racquet by moving the mouse.
+*
+* @copyright Copyright © 2012—2013 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+Add4 [type="vuo.math.add.real" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="349,1081" fillcolor="green"];
+AreAllTrue [type="vuo.logic.areAllTrue" version="1.0.0" label="Are All True|<refresh>refresh\l|<terms>terms\l|<done>done\r|<allTrue>allTrue\r" pos="297,1231" fillcolor="green"];
+AreAnyTrue [type="vuo.logic.areAnyTrue" version="1.0.0" label="Are Any True|<refresh>refresh\l|<terms>terms\l|<done>done\r|<anyTrue>anyTrue\r" pos="499,1248" fillcolor="green"];
+AreAnyTrue2 [type="vuo.logic.areAnyTrue" version="1.0.0" label="Are Any True|<refresh>refresh\l|<terms>terms\l|<done>done\r|<anyTrue>anyTrue\r" pos="976,1871" fillcolor="cyan"];
+AreEqual [type="vuo.math.areEqual.real" version="1.0.0" label="Are Equal|<refresh>refresh\l|<terms>terms\l|<tolerance>tolerance\l|<done>done\r|<equal>equal\r" pos="1091,1606" fillcolor="magenta" _tolerance="0.200000"];
+ConvertBooleantoInteger2 [type="vuo.type.boolean.integer" version="1.0.0" label="Convert Boolean to Integer|<refresh>refresh\l|<boolean>boolean\l|<done>done\r|<integer>integer\r" pos="867,1348"];
+ConvertBooleantoInteger3 [type="vuo.type.boolean.integer" version="1.0.0" label="Convert Boolean to Integer|<refresh>refresh\l|<boolean>boolean\l|<done>done\r|<integer>integer\r" pos="869,1713"];
+Count2 [type="vuo.math.count.real" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="775,1650" fillcolor="cyan" _increment="0.020000" _decrement="0.020000" _setCount="0"];
+CountwithinRange [type="vuo.math.countWithinRange.integer" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="-258,982" fillcolor="green" _decrement="1" _setCount="0" _minimum="1" _maximum="2" _wrapMode="\"wrap\""];
+CountwithinRange2 [type="vuo.math.countWithinRange.integer" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="365,1632" fillcolor="cyan" _decrement="1" _setCount="0" _minimum="1" _maximum="2" _wrapMode="\"wrap\""];
+DiscardDataFromEvent [type="vuo.type.frameRequest.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="4,489"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="577,580" fillcolor="orange"];
+Get3DPointValues [type="vuo.point.get.3d" version="1.0.0" label="Right|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="1162,278"];
+Get3DPointValues2 [type="vuo.point.get.3d" version="1.0.0" label="Left|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="1034,8"];
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<done>done\r|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="792,128"];
+GetItemFromList [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Left Most|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="768,315" _which="1"];
+GetItemFromList2 [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Right Most|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="754,449"];
+GetPointableValues [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<tipVelocity>tipVelocity\r" pos="1008,104"];
+GetPointableValues2 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<tipVelocity>tipVelocity\r" pos="1036,390"];
+HoldValue3 [type="vuo.hold.VuoReal" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="229,771" fillcolor="green" _initialValue="0.000000"];
+IsGreaterThan [type="vuo.math.isGreaterThan.real" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="46,1246" fillcolor="green" _b="0.800000"];
+IsGreaterThan2 [type="vuo.math.isGreaterThan.real" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="741,1842" fillcolor="cyan" _b="0.600000"];
+IsGreaterThan4 [type="vuo.math.isGreaterThan.real" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="347,971" fillcolor="green" _b="1.000000"];
+IsLessThan [type="vuo.math.isLessThan.real" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="46,1322" fillcolor="green" _b="-0.800000"];
+IsLessThan2 [type="vuo.math.isLessThan.real" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="741,1918" fillcolor="cyan" _b="-0.600000"];
+ListCount [type="vuo.list.count.VuoLeapPointable" version="1.0.0" label="List Count|<refresh>refresh\l|<list>list\l|<done>done\r|<itemCount>itemCount\r" pos="756,388"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Right Person|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1628,687" fillcolor="orange"];
+Make3DObject2 [type="vuo.scene.make" version="1.0.0" label="Sphere|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1484,990" fillcolor="orange"];
+Make3DObject4 [type="vuo.scene.make" version="1.0.0" label="Left Person|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1635,595" fillcolor="orange"];
+Make3DPoint [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="1343,275" _x="0.900000" _z="0"];
+Make3DPoint2 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="1350,380" _x="0.100000" _y="0.400000" _z="1.000000"];
+Make3DPoint3 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="992,1104" _z="0"];
+Make3DPoint4 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="992,1232" _x="0.100000" _y="0.100000" _z="0.100000"];
+Make3DPoint6 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="1314,86" _x="0.100000" _y="0.400000" _z="1.000000"];
+Make3DPoint7 [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="1329,-15" _x="-0.900000" _z="0"];
+MakeList16 [type="vuo.list.make.2.VuoBoolean" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="439,1259" fillcolor="green"];
+MakeList17 [type="vuo.list.make.2.VuoBoolean" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="916,1882" fillcolor="cyan"];
+MakeList2 [type="vuo.list.make.3.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="1863,824" fillcolor="orange"];
+MakeList24 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1012,1617" fillcolor="magenta"];
+MakeList27 [type="vuo.list.make.2.VuoBoolean" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="237,1242" fillcolor="green"];
+MakeList28 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="289,1092" fillcolor="green"];
+MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="1144,986" fillcolor="orange" _rows="16" _columns="16"];
+MakeSquareVertices [type="vuo.vertices.make.square" version="1.0.0" label="Make Square Vertices|<refresh>refresh\l|<done>done\r|<vertices>vertices\r" pos="1279,639" fillcolor="orange"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1571,316" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform2 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1152,1148" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform4 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1558,43" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+ReceiveLeapFrame [type="vuo.leap" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="782,59"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1923,813" fillcolor="orange"];
+SelectInput [type="vuo.select.in.VuoReal" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="527,1012" fillcolor="green" _trueOption="0"];
+SelectInput3 [type="vuo.select.in.2.VuoReal" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="11,982" fillcolor="green" _option1="0.020000" _option2="-0.020000"];
+SelectOutput2 [type="vuo.select.out.2.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<option1>option1\r|<option2>option2\r" pos="580,1632" fillcolor="cyan"];
+ShadewithSolidColor [type="vuo.shader.make.color" version="1.0.0" label="Shade with Solid Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="1248,859" fillcolor="orange" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+SortPointablesByXDistance [type="vuo.leap.pointable.sort.distance.x" version="1.0.0" label="Sort Pointables by X Distance|<refresh>refresh\l|<pointables>pointables\l|<target>target\l|<done>done\r|<sortedPointables>sortedPointables\r" pos="705,235" _point="{\"x\":-10.000000,\"y\":0.000000,\"z\":0.000000}"];
+Subtract [type="vuo.math.subtract.integer" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="-254,293" _a="0" _b="0"];
+
+
+Add4:sum -> SelectInput:falseOption;
+AreAllTrue:allTrue -> MakeList16:item1;
+AreAnyTrue2:anyTrue -> ConvertBooleantoInteger3:boolean;
+AreAnyTrue:anyTrue -> ConvertBooleantoInteger2:boolean;
+AreEqual:equal -> MakeList27:item1;
+ConvertBooleantoInteger2:integer -> CountwithinRange:increment;
+ConvertBooleantoInteger3:integer -> CountwithinRange2:increment;
+Count2:count -> IsGreaterThan2:a;
+Count2:count -> IsLessThan2:a;
+Count2:count -> Make3DPoint3:y;
+Count2:count -> MakeList24:item2;
+CountwithinRange2:count -> SelectOutput2:which;
+CountwithinRange:count -> SelectInput3:which;
+DiscardDataFromEvent:event -> Subtract:refresh;
+FireonStart:started -> Make3DPoint4:refresh;
+FireonStart:started -> Make3DPoint6:refresh;
+FireonStart:started -> Make3DPoint:refresh;
+FireonStart:started -> MakeSphereVertices:refresh;
+FireonStart:started -> MakeSquareVertices:refresh;
+FireonStart:started -> ShadewithSolidColor:refresh;
+Get3DPointValues2:y -> Make3DPoint7:y;
+Get3DPointValues:y -> Make3DPoint:y;
+Get3DPointValues:y -> MakeList24:item1;
+GetFrameValues:pointables -> SortPointablesByXDistance:pointables;
+GetItemFromList2:item -> GetPointableValues2:pointable;
+GetItemFromList:item -> GetPointableValues:pointable;
+GetPointableValues2:tipPosition -> Get3DPointValues:point;
+GetPointableValues:tipPosition -> Get3DPointValues2:point;
+HoldValue3:heldValue -> IsGreaterThan4:a;
+HoldValue3:heldValue -> IsGreaterThan:a;
+HoldValue3:heldValue -> IsLessThan:a;
+HoldValue3:heldValue -> Make3DPoint3:x;
+HoldValue3:heldValue -> MakeList28:item1;
+IsGreaterThan2:greaterThan -> MakeList17:item1;
+IsGreaterThan4:done -> SelectInput:refresh;
+IsGreaterThan4:greaterThan -> SelectInput:which;
+IsGreaterThan:greaterThan -> MakeList27:item2;
+IsLessThan2:lessThan -> MakeList17:item2;
+IsLessThan:lessThan -> MakeList16:item2;
+ListCount:itemCount -> GetItemFromList2:which;
+Make3DObject2:object -> MakeList2:item3;
+Make3DObject4:object -> MakeList2:item2;
+Make3DObject:object -> MakeList2:item1;
+Make3DPoint2:point -> MakeTransform:scale;
+Make3DPoint3:point -> MakeTransform2:translation;
+Make3DPoint4:point -> MakeTransform2:scale;
+Make3DPoint6:point -> MakeTransform4:scale;
+Make3DPoint7:point -> MakeTransform4:translation;
+Make3DPoint:point -> MakeTransform:translation;
+MakeList16:list -> AreAnyTrue:terms;
+MakeList17:list -> AreAnyTrue2:terms;
+MakeList24:list -> AreEqual:terms;
+MakeList27:list -> AreAllTrue:terms;
+MakeList28:list -> Add4:terms;
+MakeList2:list -> RenderScenetoWindow:objects;
+MakeSphereVertices:vertices -> Make3DObject2:vertices;
+MakeSquareVertices:vertices -> Make3DObject4:vertices;
+MakeSquareVertices:vertices -> Make3DObject:vertices;
+MakeTransform2:transform -> Make3DObject2:transform;
+MakeTransform4:transform -> Make3DObject4:transform;
+MakeTransform:transform -> Make3DObject:transform;
+ReceiveLeapFrame:receivedFrame -> GetFrameValues:frame;
+RenderScenetoWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+SelectInput3:out -> MakeList28:item2;
+SelectInput:out -> HoldValue3:newValue;
+SelectOutput2:option1 -> Count2:increment;
+SelectOutput2:option2 -> Count2:decrement;
+ShadewithSolidColor:shader -> Make3DObject2:shader;
+ShadewithSolidColor:shader -> Make3DObject4:shader;
+ShadewithSolidColor:shader -> Make3DObject:shader;
+SortPointablesByXDistance:sortedPointables -> GetItemFromList2:list;
+SortPointablesByXDistance:sortedPointables -> GetItemFromList:list;
+SortPointablesByXDistance:sortedPointables -> ListCount:list;
+Subtract:done -> HoldValue3:refresh;
+Subtract:done -> Make3DPoint2:refresh;
+Subtract:done -> SelectInput3:refresh;
+Subtract:done -> SelectOutput2:in;
+}

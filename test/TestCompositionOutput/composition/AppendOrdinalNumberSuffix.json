@@ -1,0 +1,56 @@
+/**
+ * @file
+ * Expected outputs for AppendOrdinalNumberSuffix.vuo.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPortName" : "number",
+		"valueForInputPortName" : [
+			{ "port" : "number", "value" : "1" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "ordinalNumber", "value" : "1st" }
+		]
+	},
+	{
+		"firingPortName" : "number",
+		"valueForInputPortName" : [
+			{ "port" : "number", "value" : "2" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "ordinalNumber", "value" : "2nd" }
+		]
+	},
+	{
+		"firingPortName" : "number",
+		"valueForInputPortName" : [
+			{ "port" : "number", "value" : "3" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "ordinalNumber", "value" : "3rd" }
+		]
+	},
+	{
+		"firingPortName" : "number",
+		"valueForInputPortName" : [
+			{ "port" : "number", "value" : "4" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "ordinalNumber", "value" : "4th" }
+		]
+	},
+	{
+		"firingPortName" : "number",
+		"valueForInputPortName" : [
+			{ "port" : "number", "value" : "5" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "ordinalNumber", "value" : "5th" }
+		]
+	},
+]}

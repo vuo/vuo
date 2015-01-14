@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedIn0>publishedIn0\r|<publishedIn1>publishedIn1\r"];
+FirePeriodically1 [type="vuo.time.firePeriodically" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" _seconds="0.001"];
+MakeList1 [type="vuo.list.make.2.VuoInteger" label="MakeList1|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" _item1="0" _item2="0"];
+Add1 [type="vuo.math.add.integer" label="Add1|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+MakeList2 [type="vuo.list.make.2.VuoInteger" label="MakeList2|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" _item1="0" _item2="1"];
+Add2 [type="vuo.math.add.integer" label="Add2|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+MakeList3 [type="vuo.list.make.2.VuoInteger" label="MakeList3|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" _item1="0" _item2="0"];
+Add3 [type="vuo.math.add.integer" label="Add3|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedSum>publishedSum\l"];
+
+PublishedInputs:publishedIn0 -> MakeList1:item1;
+PublishedInputs:publishedIn1 -> MakeList1:item2;
+PublishedInputs:publishedIn0 -> MakeList2:item1;
+FirePeriodically1:fired -> MakeList1:refresh;
+FirePeriodically1:fired -> MakeList2:refresh;
+MakeList1:list -> Add1:terms;
+MakeList2:list -> Add2:terms;
+Add1:sum -> MakeList3:item1;
+Add2:sum -> MakeList3:item2;
+MakeList3:list -> Add3:terms;
+Add3:sum -> PublishedOutputs:publishedSum;
+}

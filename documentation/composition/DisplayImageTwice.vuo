@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Renders a square using OpenGL.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="90,372"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="277,278" _imageURL="\"file:///System/Library/CoreServices/DefaultDesktop.jpg\""];
+GetImage2 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="278,457" _imageURL="\"file:///System/Library/CoreServices/DefaultDesktop.jpg\""];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r" pos="435,326"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r" pos="435,418"];
+RenderImageToWindow3 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r" pos="436,505"];
+RenderImagetoWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r" pos="434,239"];
+
+FireonStart:started -> GetImage2:refresh;
+FireonStart:started -> GetImage:refresh;
+GetImage2:image -> RenderImageToWindow2:image;
+GetImage2:image -> RenderImageToWindow3:image;
+GetImage:image -> RenderImageToWindow:image;
+GetImage:image -> RenderImagetoWindow:image;
+}

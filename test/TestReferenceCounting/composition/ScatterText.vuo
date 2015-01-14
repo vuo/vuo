@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+MakeList [type="vuo.list.make.2.VuoInteger" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="429,260" _item1="" _item2=""];
+CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="316,236" _text=""];
+ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="72"];
+CountCharacters2 [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="314,316" _text=""];
+Add [type="vuo.math.add.integer" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="589,263" _terms=""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+
+MakeList:list -> Add:terms;
+ConvertIntegertoText:text -> CountCharacters2:text;
+CountCharacters2:characterCount -> MakeList:item2;
+ConvertIntegertoText:text -> CountCharacters:text;
+CountCharacters:characterCount -> MakeList:item1;
+PublishedInputs:inEvent -> ConvertIntegertoText:refresh;
+Add:sum -> PublishedOutputs:outEvent;
+}

@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Renders a square using OpenGL.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireonStart [type="vuo.event.fireOnStart" version="100" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-22,232"];
+Make3DObject [type="vuo.scene.make" version="100" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="329,253" _shader="" _transform=""];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="100" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="482,264"];
+MakeSquareVertices [type="vuo.vertices.make.square" version="100" label="Make Square Vertices|<refresh>refresh\l|<done>done\r|<vertices>vertices\r" pos="120,253"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="100" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="542,253"];
+
+FireonStart:started -> MakeSquareVertices:refresh;
+Make3DObject:object -> MakeList2:item1;
+MakeList2:list -> RenderScenetoWindow:objects;
+MakeSquareVertices:vertices -> Make3DObject:vertices;
+}

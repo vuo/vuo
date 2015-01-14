@@ -1,0 +1,18 @@
+/**
+ * @file
+ * This graph modifies an image.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inputImage>inputImage\r"];
+RippleImage [type="vuo.image.filter.ripple" label="Ripple Image|<refresh>refresh\l|<image>image\l|<rippledImage>rippledImage\r"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l"];
+
+PublishedInputs:inputImage -> RippleImage:image;
+RippleImage:rippledImage -> PublishedOutputs:outputImage;
+}

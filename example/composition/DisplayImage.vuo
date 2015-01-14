@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Renders a square using OpenGL.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireonStart [type="vuo.event.fireOnStart" version="100" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="123,241"];
+GetImage [type="vuo.image.get" version="100" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="277,278" _imageURL="\"file:///System/Library/CoreServices/DefaultDesktop.jpg\""];
+RenderImagetoWindow [type="vuo.image.render.window" version="100" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r" pos="420,278"];
+
+FireonStart:started -> GetImage:refresh;
+GetImage:image -> RenderImagetoWindow:image;
+}

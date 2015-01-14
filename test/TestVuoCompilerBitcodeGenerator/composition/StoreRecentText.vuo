@@ -1,0 +1,35 @@
+/**
+ * @file
+ * <Graph description>
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="764,303"];
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="CountCharacters|<refresh>refresh\l|<text>text\l|<done>done\r|<characterCount>characterCount\r" pos="750,96"];
+Cut [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<done>done\r|<partialText>partialText\r" pos="1155,305" _characterCount="10"];
+DiscardDatafromEvent [type="vuo.type.text.event" version="1.0.0" label="DiscardDatafromEvent|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="106,128"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="DisplayConsoleWindow|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="1192,504"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="74,53" _seconds="1"];
+Hold2 [type="vuo.hold.VuoText" version="1.0.0" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="132,210" _initialValue="\"recent\"" _newValue=""];
+Hold3 [type="vuo.hold.VuoText" version="1.0.0" label="Hold3|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="424,212" _initialValue=""];
+MakeList [type="vuo.list.make.2.VuoText" version="1.0.0" label="MakeList|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="704,314"];
+Subtract [type="vuo.math.subtract.integer" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="1001,214" _b="9"];
+
+Append:compositeText -> CountCharacters:text;
+Append:compositeText -> Cut:text;
+CountCharacters:characterCount -> Subtract:a;
+Cut:partialText -> DisplayConsoleWindow:writeLine;
+Cut:partialText -> Hold3:newValue;
+DiscardDatafromEvent:event -> Hold3:refresh;
+FirePeriodically:fired -> Hold2:refresh;
+Hold2:heldValue -> DiscardDatafromEvent:dataAndEvent;
+Hold2:heldValue -> MakeList:item2;
+Hold3:heldValue -> MakeList:item1;
+MakeList:list -> Append:texts;
+Subtract:difference -> Cut:startIndex;
+}

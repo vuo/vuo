@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+FireonStart1 [type="vuo.event.fireOnStart" label="FireonStart1|<refresh>refresh\l|<started>started\r" pos="23,58.5"];
+FireonStart2 [type="vuo.event.fireOnStart" label="FireonStart2|<refresh>refresh\l|<started>started\r" pos="21,163.5"];
+FireonStart3 [type="vuo.event.fireOnStart" label="FireonStart3|<refresh>refresh\l|<started>started\r" pos="23,277.5"];
+SelectInput1 [type="vuo.select.in.2.event" label="SelectInput1|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="295,47.5" _which="0"];
+SelectInput2 [type="vuo.select.in.2.event" label="SelectInput2|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="293,152.5" _which="0"];
+SelectInput3 [type="vuo.select.in.2.event" label="SelectInput3|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="291,262.5" _which="0"];
+
+FireonStart1:started -> SelectInput1:refresh;
+FireonStart1:started -> SelectInput1:which;
+FireonStart2:started -> SelectInput2:which;
+FireonStart3:started -> SelectInput3:option1;
+}

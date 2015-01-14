@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Expected outputs for the vuo.point.sort.distance.2d node.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "list", "value" : "[{\"x\":1, \"y\":1}, {\"x\":4, \"y\":2}]" },
+			{ "port" : "point", "value" : "{\"x\":0, \"y\":0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "sorted", "value" : "1, 1, 4, 2" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "list", "value" : "[{\"x\":1, \"y\":1}, {\"x\":4, \"y\":2}]" },
+			{ "port" : "point", "value" : "{\"x\":5, \"y\":3}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "sorted", "value" : "4, 2, 1, 1" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "list", "value" : "[{\"x\":-1, \"y\":-2}, {\"x\":4, \"y\":2}]" },
+			{ "port" : "point", "value" : "{\"x\":0, \"y\":0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "sorted", "value" : "-1, -2, 4, 2" }
+		]
+	},
+]}

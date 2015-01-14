@@ -1,0 +1,85 @@
+/**
+ * @file
+ * Vuo prefix header.
+ *
+ * @copyright Copyright © 2012 Kosada Incorporated. This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
+ */
+
+#ifdef __cplusplus
+
+#include <string>
+#include <vector>
+#include <map>
+#include <list>
+#include <set>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+using namespace std;
+
+#ifdef LLVM
+#define __STDC_CONSTANT_MACROS
+#define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
+#include <clang/Basic/Version.h>
+#include <clang/CodeGen/CodeGenAction.h>
+#include <clang/Driver/ArgList.h>
+#include <clang/Driver/Compilation.h>
+#include <clang/Driver/Driver.h>
+#include <clang/Driver/ToolChain.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/CompilerInvocation.h>
+#include <clang/Frontend/FrontendDiagnostic.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
+#include <llvm/Support/DynamicLibrary.h>
+#include <llvm/Support/Host.h>
+#include <llvm/Support/Program.h>
+#include <llvm/Bitcode/Archive.h>
+#include <llvm/LLVMContext.h>
+#include <llvm/Module.h>
+#include <llvm/DerivedTypes.h>
+#include <llvm/Constants.h>
+#include <llvm/Instructions.h>
+#include <llvm/LinkAllPasses.h>
+#include <llvm/Linker.h>
+#include <llvm/PassManager.h>
+#include <llvm/Analysis/Verifier.h>
+#include <llvm/Analysis/ValueTracking.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/ExecutionEngine/Interpreter.h>
+#include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/system_error.h>
+#include <llvm/Support/IRReader.h>
+#include <llvm/Support/PathV1.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Transforms/Utils/Cloning.h>
+#include <llvm/ValueSymbolTable.h>
+using namespace llvm;
+#endif
+
+#ifdef QT_CORE_LIB
+#include <QtCore>
+#endif
+
+#ifdef QT_GUI_LIB
+#include <QtGui>
+#include <QtWidgets>
+#include <QtPrintSupport>
+#if defined(MAC) && defined(__OBJC__)
+#include <QtMacExtras>
+#endif
+#endif
+
+#ifdef QT_TESTLIB_LIB
+#include <QtTest>
+#endif
+
+#endif
+
+#ifdef ZMQ
+#include <zmq.h>
+#endif

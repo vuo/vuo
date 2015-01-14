@@ -1,0 +1,212 @@
+\usepackage[margin=3cm]{geometry}
+\usepackage{ucs}
+\usepackage{url}
+\usepackage{calc}
+
+\textwidth 13cm
+\setlength{\parskip}{3ex plus 2ex minus 2ex}
+\setlength{\marginparwidth}{4cm}
+
+\usepackage{fancyhdr}
+	\pagestyle{fancy}
+	\fancyhf{}
+	\fancyhead[L]{\color{base1}\bfseries\nouppercase\leftmark}
+	\usepackage{lastpage}
+	\fancyhead[R]{\color{base1}Page \thepage\ of \pageref*{LastPage}}
+	\fancyhfoffset[L]{3em}
+	\renewcommand{\headrule}{\vskip -2mm \color{base1}\rule{\headwidth}{0.5pt}}
+	\fancyfoot[L]{\color{base1}Revised \today}
+	\renewcommand{\footrule}{\vskip 8mm \color{base1}\rule{\headwidth}{0.5pt}\\\vskip -8mm}
+
+\usepackage{titlesec}
+	\titleformat{\section}
+		{\color{blue}\normalfont\huge\bfseries}
+		{\hspace*{-1cm}\thesection}
+		{5mm}
+		{}
+	\titleformat{\subsection}
+		{\color{blue}\normalfont\Large\bfseries}
+		{\thesubsection}
+		{1em}
+		{}
+	\titleformat{\subsubsection}
+		{\color{blue}\normalfont\large\bfseries}
+		{\thesubsubsection}
+		{1em}
+		{}
+
+\usepackage{setspace}
+	\onehalfspacing
+
+\usepackage{tikz}
+	\usetikzlibrary{shapes,snakes}
+	\tikzstyle{sidebox} = [
+		draw=base1,
+		fill=base2,
+		very thick,
+		rectangle,
+		rounded corners,
+		inner sep=10pt,
+		inner ysep=20pt
+	]
+	\tikzstyle{sideboxtitle} =[fill=base1, text=base3]
+
+\newcommand{\noteQCUsers}[1]{
+	\marginpar{
+		\begin{tikzpicture}
+			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[width=7mm,height=7mm]{image/Magic_Wand.eps}} \parbox{31mm}{\footnotesize Note for\\Quartz Composer users}};
+		\end{tikzpicture}%
+	}
+}
+
+\newcommand{\noteTextProgrammers}[1]{
+	\marginpar{
+		\begin{tikzpicture}
+			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\parbox{7mm}{\large \tt ();} \parbox{31mm}{\footnotesize Note for\\text programmers}};
+		\end{tikzpicture}%
+	}
+}
+
+\usepackage[multidot]{grffile}
+\newcommand{\doublequote}{\XeTeXglyph\XeTeXcharglyph"0022\relax}
+\newcommand{\code}[1]{{\tt #1}}
+\newcommand{\key}[1]{{\tt #1}}
+\newcommand{\menu}[1]{{\tt #1}}
+\newcommand{\term}[1]{{\color{green}\bf #1}}
+\newcommand{\vuoPort}[1]{{\bf #1}}
+\newcommand{\vuoNode}[1]{{\bf #1}}
+\newcommand{\vuoNodeClass}[1]{{\tt #1}}
+\newcommand{\vuoNodeClassImage}[1]{\includegraphics[scale=0.75]{image-generated/#1.pdf}}
+\newcommand{\vuoNodeClassImageWithCaption}[2]{
+	\vuoNodeClassImage{#1}\\
+	\nopagebreak
+	\centerline{#2}
+}
+\newcommand{\vuoNodeClassImageWithAnnotation}[2]{
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] at (0,0) {\vuoNodeClassImage{#1}};
+		#2
+	\end{tikzpicture}
+}
+\newcommand{\vuoTypeConverter}[2]{\vuoNode{#1 $\rightarrow$ #2}}
+
+\newlength{\vuoImageWidth}
+\newcommand{\vuoScreenshot}[1]{
+	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.25]{image/#1}}
+	\setlength{\vuoImageWidth}{\minof{\vuoImageWidth}{\textwidth}}
+	\includegraphics[scale=0.25,width=\vuoImageWidth]{image/#1.png}
+}
+\newcommand{\vuoScreenshotWithAnnotation}[2]{
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] at (0,0) {\vuoScreenshot{#1}};
+		#2
+	\end{tikzpicture}
+}
+\newcommand{\vuoCompositionImage}[1]{
+	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.75]{image-generated/#1}}
+	\setlength{\vuoImageWidth}{\minof{\vuoImageWidth}{\textwidth}}
+	\includegraphics[scale=0.75,width=\vuoImageWidth]{image-generated/#1.pdf}
+}
+\newcommand{\vuoCompositionImageWithCaption}[2]{
+	\vuoCompositionImage{#1}\\
+	\nopagebreak
+	\centerline{#2}
+}
+\newcommand{\vuoCompositionImageWithAnnotation}[2]{
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] at (0,0) {\vuoCompositionImage{#1}};
+		#2
+	\end{tikzpicture}
+}
+\newcommand{\vuoCompositionImageWithAnnotationAndCaption}[3]{
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] at (0,0) {\vuoCompositionImage{#1}};
+		#2
+	\end{tikzpicture}\\
+	\nopagebreak
+	\centerline{#3}
+}
+
+
+\usepackage{color}
+	% Solarized color definitions for use in LaTeX
+	% Contributed by: Valentin Haenel <valentin.haenel@gmx.de>
+	\definecolor{base03}{RGB}{0,43,54}
+	\definecolor{base02}{RGB}{7,54,66}
+	\definecolor{base01}{RGB}{88,110,117}
+	\definecolor{base00}{RGB}{101,123,131}
+	\definecolor{base0}{RGB}{131,148,150}
+	\definecolor{base1}{RGB}{147,161,161}
+	\definecolor{base2}{RGB}{238,232,213}
+	\definecolor{base3}{RGB}{253,246,227}
+	\definecolor{yellow}{RGB}{181,137, 0}
+	\definecolor{orange}{RGB}{203,75,22}
+	\definecolor{red}{RGB}{220,50,47}
+	\definecolor{magenta}{RGB}{211,54,130}
+	\definecolor{violet}{RGB}{108,113,196}
+	\definecolor{blue}{RGB}{38,139,210}
+	\definecolor{cyan}{RGB}{42,161,152}
+	%\definecolor{green}{RGB}{133,153,0}
+	\definecolor{green}{RGB}{66,153,0} % This isn't Solarized green.
+	\AtBeginDocument{\color{base01}}
+	\pagecolor{base3}
+
+\hypersetup{linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\usepackage{listings}
+	\lstdefinelanguage{dot}{
+		morekeywords={},
+		morekeywords=[2]{digraph,type,label},
+		sensitive=false,
+		morecomment=[s]{/*}{*/},
+		morestring=[b]",
+		moredelim=[s][\color{orange}\bfseries]{_}{=},
+		otherkeywords={->,:,;},
+	}
+	\lstdefinelanguage[vuo]{c}{
+		morekeywords={const,char,unsigned,int,void,false,true,bool,if,return,sizeof},
+		morekeywords=[2]{
+			VuoModuleDetails,
+			nodeEvent,nodeInstanceInit,nodeInstanceCallbackStart,nodeInstanceEvent,nodeInstanceCallbackStop,nodeInstanceFini,
+			VuoInstanceData,VuoInputData,VuoInputConductor,VuoOutputData,VuoOutputConductor,VuoOutputTrigger
+		},
+		sensitive=true,
+		morecomment=[s]{/*}{*/},
+		morestring=[b]",
+		otherkeywords={*,=,+,;},
+	}
+	\lstset{
+		defaultdialect=[vuo]c,
+		basicstyle=\color{base00}\footnotesize\ttfamily,
+		numbers=left,
+		numberfirstline=false,
+		numberstyle=\color{base1}\tiny,
+		numbersep=5pt,
+		tabsize=4,
+		extendedchars=true,
+		breaklines=true,
+		keywordstyle=[1]\color{base03}\bfseries,
+		keywordstyle=[2]\color{orange}\bfseries,
+		frame=b,
+		columns=fullflexible,
+		stringstyle=\color{base1},
+		commentstyle=\color{green},
+		showspaces=false,
+		showtabs=false,
+		xleftmargin=0mm,
+		framexleftmargin=0mm,
+		framexrightmargin=0mm,
+		framexbottommargin=0mm,
+		showstringspaces=false,
+		abovecaptionskip=5mm,
+	}
+	\DeclareFontShape{OT1}{cmtt}{bx}{n}{<5><6><7><8><9><10><10.95><12><14.4><17.28><20.74><24.88>cmttb10}{}
+
+\usepackage{caption}
+	\DeclareCaptionFormat{listing}{\colorbox{base2}{\parbox{12.8cm}{#1#2#3}}}
+	\captionsetup[lstlisting]{format=listing, singlelinecheck=false, margin=0pt, font={bf,footnotesize}}
+
+\setmainfont[Path=../renderer/font/, BoldFont=Signika-Semibold.ttf, ItalicFont=Signika-Light-Italic.ttf, BoldItalicFont=Signika-Semibold-Italic.ttf]{Signika-Light.ttf}
+\setmonofont{Monaco}

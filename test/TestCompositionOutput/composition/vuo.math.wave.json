@@ -1,0 +1,349 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.wave node.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+
+	// Check sine extrema.
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+			{ "port" : "period", "value" : "1" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-1" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.5" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "1" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "1" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-1" }
+		]
+	},
+
+	// Check continuity at period changes.
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "1" },
+			{ "port" : "period", "value" : "2" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-1" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "2" },
+			{ "port" : "period", "value" : "2" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "1" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "3.5" },
+			{ "port" : "period", "value" : "3" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-1" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "4" },
+			{ "port" : "period", "value" : "0.5" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-1" }
+		]
+	},
+
+	// Check continuity of sine -> triangle (first half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+			{ "port" : "period", "value" : "1" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+
+	// Check continuity of triangle -> sine (first half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+
+	// Check continuity of sine -> triangle (second half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+
+	// Check continuity of triangle -> sine (second half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+
+	// Check continuity of sine -> sawtooth (first half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+
+	// Check scontinuity of awtooth -> sine (first half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.309017" }
+		]
+	},
+
+	// Check continuity of sine -> sawtooth (second half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+
+	// Check continuity of sawtooth -> sine (second half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sine\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.587785" }
+		]
+	},
+
+	// Check continuity of triangle -> sawtooth (first half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.809017" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.809017" }
+		]
+	},
+
+	// Check continuity of sawtooth -> triangle (first half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.809017" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.2" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "-0.809017" }
+		]
+	},
+
+	// Check continuity of triangle -> sawtooth (second half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.990983" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.990983" }
+		]
+	},
+
+	// Check continuity of sawtooth -> triangle (second half of phase).
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"sawtooth\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.990983" }
+		]
+	},
+	{
+		"firingPortName" : "refresh",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "0.65" },
+			{ "port" : "wave", "value" : "\"triangle\"" },
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "value", "value" : "0.990983" }
+		]
+	},
+]}

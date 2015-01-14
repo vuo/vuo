@@ -1,0 +1,22 @@
+/**
+ * @file
+ * This composition outputs a count every second.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertIntegertoText1 [type="vuo.type.integer.text" version="100" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="407,230"];
+Count1 [type="vuo.math.count.integer" version="100" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<done>done\r|<count>count\r" pos="180,50" _increment="1" _decrement="1"];
+DisplayConsoleWindow [type="vuo.console.window" version="100" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="420,50"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="100" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="10,99" _seconds="5"];
+FirePeriodically2 [type="vuo.time.firePeriodically" version="100" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="10,19" _seconds="1"];
+
+ConvertIntegertoText1:text -> DisplayConsoleWindow:writeLine;
+Count1:count -> ConvertIntegertoText1:integer;
+FirePeriodically1:fired -> Count1:increment;
+FirePeriodically2:fired -> Count1:refresh;
+}

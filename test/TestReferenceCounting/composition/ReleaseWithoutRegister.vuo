@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+ReleaseWithoutRegister [type="vuo.test.releaseWithoutRegister" label="Release without Register|<refresh>refresh\l|<outEvent>outEvent\r"];
+
+PublishedInputs:inEvent -> ReleaseWithoutRegister:refresh;
+ReleaseWithoutRegister:outEvent -> PublishedOutputs:outEvent;
+}
