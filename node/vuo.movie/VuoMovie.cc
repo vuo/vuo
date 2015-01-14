@@ -7,7 +7,6 @@
  * For more information, see http://vuo.org/license.
  */
 #include "VuoMovie.h"
-#include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include "VuoGlContext.h"
@@ -19,10 +18,14 @@ extern "C"
 {
 #include "module.h"
 #include <dispatch/dispatch.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
 #include <avcodec.h>
 #include <avformat.h>
 #include <avutil.h>
 #include <swscale.h>
+#pragma clang diagnostic pop
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -31,11 +34,7 @@ VuoModuleMetadata({
 						"avcodec",
 						"avformat",
 						"avutil",
-						"swscale",
-						"VuoGlContext",
-						"VuoGlPool",
-						"OpenGL.framework",
-						"CoreFoundation.framework"
+						"swscale"
 					 ],
 					 "compatibleOperatingSystems": {
 						 "macosx" : { "min": "10.6" }
@@ -44,7 +43,9 @@ VuoModuleMetadata({
 #endif
 }
 
-#define SEC_PER_USEC .000001 ///< Seconds per millisecond. Vuo nodes want information in seconds, where ffmpeg operates in milliseconds.
+#define SEC_PER_USEC .000001	///< Seconds per microsecond. Vuo nodes want information in seconds, where ffmpeg operates in microseconds.
+#define REWIND .1				///< How many seconds behind the requested frame to seek.
+#define REWIND_INCREMENT .2		///< If the REWIND value does not seek far enough, increment by this value.
 
 /**
  * Instance class used to control the playback of video.
@@ -64,9 +65,17 @@ public:
 
 		AVStream *video_st;
 
-		int videoStream;
+		int videoStreamIndex;
 		int64_t startPts;
-		int totalFrames;
+
+		double duration;				// in seconds
+		int packetDuration = 0;			// int time_base units
+
+		int64_t lastTimestamp = 0;		// in microseconds
+		int64_t lastPts = 0;			// in av units
+
+//		int64_t *pts;					// a cache of the frame pts values - used when seeking
+		int64_t firstFrame, lastFrame;
 
 	}  AVContainer;
 
@@ -74,11 +83,6 @@ public:
 	 * Stores instance playback information.
 	 */
 	AVContainer container;
-
-	/**
-	 * The index of the last read frame.
-	 */
-	uint64_t frameCount = 0;
 
 	/**
 	 *	VuoMovieDecoder class destructor.
@@ -112,23 +116,22 @@ public:
 		AVCodec *pCodec = NULL;
 		container.pCodecCtx = NULL;
 
-		container.videoStream = -1;
+		container.videoStreamIndex = -1;
 
 		for(int i = 0; i < (container.pFormatCtx)->nb_streams; i++)
 			if( (container.pFormatCtx)->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 			{
-				container.videoStream = i;
+				container.videoStreamIndex = i;
 				break;
 			}
 
-		if(container.videoStream < 0)
+		if(container.videoStreamIndex < 0)
 		  return -1; // Didn't find a video stream
 
-		container.totalFrames = container.pFormatCtx->streams[container.videoStream]->nb_frames;
-		container.startPts = container.pFormatCtx->start_time;
+		container.startPts = 0;//container.pFormatCtx->start_time;
 
 		// Get a pointer to the codec context for the video stream
-		container.video_st = (container.pFormatCtx)->streams[container.videoStream];
+		container.video_st = (container.pFormatCtx)->streams[container.videoStreamIndex];
 		container.pCodecCtx = container.video_st->codec;
 
 		// Find the decoder for the video stream
@@ -141,66 +144,74 @@ public:
 		if(avcodec_open2(container.pCodecCtx, pCodec, NULL) < 0)
 		  return -1; // Could not open codec
 
+		nextFrame(NULL);
+		container.firstFrame = container.lastPts;	// get the first frame's pts value, since format->start_pts isn't reliable
+
+		container.duration = av_rescale_q ( container.video_st->duration,  container.video_st->time_base, AV_TIME_BASE_Q ) * SEC_PER_USEC;
+
+		// seek function clamps desired frame timestamp to first and last pts, so set it super high on the first run
+		container.lastFrame = INT64_MAX;
+
+		// seek to 1 microsecond before projected duration (if a duration value was available - otherwise we've got to step from start)
+		if(container.duration > 0.)
+			seekToMs( (container.duration * 1000)-1000  );
+
+		while(nextFrame(NULL))
+			;
+
+		container.lastFrame = container.lastPts;
+
+		container.duration = av_rescale_q(container.lastFrame-container.firstFrame, container.video_st->time_base, AV_TIME_BASE_Q ) * SEC_PER_USEC;;
+
+		seekFrame(0);
+
+//		VLog("first frame pts: %lli last frame pts: %lli", container.firstFrame, container.lastFrame);
+//		VLog("packetDuration says: %i", container.packetDuration);
+//		VLog("second duration is %f", container.duration);
+//		int64_t sec = secondToAvTime(container.duration);
+//		VLog("sec %f to pts is %lli", container.duration, sec);
 //		VLog("File: %s\nCodec: %s", path, pCodec->long_name);
 
 		return 0;
 	}
 
+	/**
+	 * Returns the last timestamp in seconds.
+	 */
+	double getCurrentSecond()
+	{
+		return container.lastTimestamp * SEC_PER_USEC;
+	}
 
 	/**
 	 * Attempts to extract the frame image and timestamp for the next full frame in the current stream.
 	 */
-	bool getNextFrame(VuoImage *image, double *nextFrame)
+	bool getNextFrame(VuoImage *image, double *frameTimestampInSeconds)
 	{
-		AVFrame *pFrame = NULL;
+		bool gotNextFrame = nextFrame(image);
 
-		// Allocate video frame
-		pFrame = avcodec_alloc_frame();
+		if(gotNextFrame)
+			*frameTimestampInSeconds = container.lastTimestamp * SEC_PER_USEC;
 
-		int frameFinished = 0;
-		AVPacket packet;
+		return gotNextFrame;
+	}
 
-		// @todo Refactor av_read_frame loop to it's own method, as it is called during a bunch of other tasks
-		while(av_read_frame(container.pFormatCtx, &packet) >= 0)
+	/**
+	 * Attempts to extract chronologically prior frame image and timestamp in the current stream.
+	 */
+	bool getPreviousFrame(VuoImage *image, double *frameTimestampInSeconds)
+	{
+		if( container.lastPts-container.packetDuration <= container.firstFrame || !seekFrame(container.lastPts - container.packetDuration) )
 		{
-			// Is this a packet from the video stream?
-			if(packet.stream_index == container.videoStream)
-			{
-				// Decode video frame
-				avcodec_decode_video2(container.pCodecCtx, pFrame, &frameFinished, &packet);
-
-				// Did we get a video frame?
-				if(frameFinished)
-				{
-					// Get PTS here because formats with I frames can return junk values before a full frame is found
-					int64_t pts = av_frame_get_best_effort_timestamp ( pFrame );
-
-					if( pts == AV_NOPTS_VALUE )
-						pts = frameCount * av_q2d(container.video_st->time_base);	// if no pts, guess using the time base and current frame count.
-					else
-						pts = av_rescale_q ( pts,  container.video_st->time_base, AV_TIME_BASE_Q );  // pts is now in microseconds.
-
-					*image = vuoImageWithAvFrame(container.pCodecCtx, pFrame);
-					*nextFrame = pts * SEC_PER_USEC;
-
-					lastTimestamp = pts;
-
-					av_free_packet(&packet);
-
-					frameCount++;
-					break;
-				}
-			}
-
-			// Free the packet that was allocated by av_read_frame
+			return false;
 		}
 
-		// Free the YUV frame
-		av_free(pFrame);
+		bool gotNextFrame = nextFrame(image);
 
-		lastFrameOk = frameFinished;
+		if(gotNextFrame)
+			*frameTimestampInSeconds = container.lastTimestamp * SEC_PER_USEC;
 
-		return frameFinished != 0;
+		return gotNextFrame;
 	}
 
 	/**
@@ -209,33 +220,10 @@ public:
 	VuoList_VuoReal extractFramePtsValues()
 	{
 		VuoList_VuoReal framePts = VuoListCreate_VuoReal();
-		AVPacket packet;
-		AVFrame *pFrame = NULL;
-		// Allocate video frame
-		pFrame = avcodec_alloc_frame();
-		int frameFinished;
 
-		while(av_read_frame(container.pFormatCtx, &packet) >= 0)
-		{
-			// Is this a packet from the video stream?
-			if(packet.stream_index == container.videoStream)
-			{
-				// Decode video frame
-				avcodec_decode_video2(container.pCodecCtx, pFrame, &frameFinished, &packet);
+		while(nextFrame(NULL))
+			VuoListAppendValue_VuoReal(framePts, container.lastTimestamp);
 
-				if(frameFinished)
-				{
-					int64_t pts = av_frame_get_best_effort_timestamp ( pFrame );
-
-					if( pts == AV_NOPTS_VALUE )
-						pts = frameCount * av_q2d(container.video_st->time_base);	// if no pts, guess using the time base and current frame count.
-					else
-						pts = av_rescale_q ( pts,  container.video_st->time_base, AV_TIME_BASE_Q );  // pts is now in microseconds.
-
-					VuoListAppendValue_VuoReal(framePts, pts * SEC_PER_USEC);
-				}
-			}
-		}
 		return framePts;
 	}
 
@@ -245,10 +233,9 @@ public:
 	 */
 	bool seekToMs(int64_t ms)
 	{
-		ms += container.startPts;	// video start time is not guaranteed to be 0, or so ffmpeg docs say
 		int64_t desiredFrameNumber = av_rescale(ms,
-												container.pFormatCtx->streams[container.videoStream]->time_base.den,
-												container.pFormatCtx->streams[container.videoStream]->time_base.num);
+												container.pFormatCtx->streams[container.videoStreamIndex]->time_base.den,
+												container.pFormatCtx->streams[container.videoStreamIndex]->time_base.num);
 		desiredFrameNumber /= 1000;	// convert to microsecond
 
 		return seekFrame(desiredFrameNumber);
@@ -256,8 +243,14 @@ public:
 
 private:
 
-	int64_t lastTimestamp;
-	bool lastFrameOk;
+	int64_t secondToAvTime(double sec)
+	{
+		int64_t scaled = av_rescale(sec *= 1000,
+									container.pFormatCtx->streams[container.videoStreamIndex]->time_base.den,
+									container.pFormatCtx->streams[container.videoStreamIndex]->time_base.num);
+		scaled /= 1000;	// convert to microsecond
+		return scaled;
+	}
 
 	int img_convert(AVPicture* dst, PixelFormat dst_pix_fmt, AVPicture* src, PixelFormat pix_fmt, int width, int height)
 	{
@@ -286,69 +279,65 @@ private:
 		return result;
 	}
 
+	double rewind = .1;
+	double rewindIncrement = .2;
 	bool seekFrame(int64_t frame)
 	{
+		if(frame > container.lastFrame)
+			frame = container.lastFrame;
+
+		if(frame < container.firstFrame)
+			frame = container.firstFrame;
+
 		avcodec_flush_buffers(container.pCodecCtx);
-		int ret = av_seek_frame(container.pFormatCtx, container.videoStream, frame, AVSEEK_FLAG_ANY);
-		return ret >= 0;
 
+		int64_t seek = frame - secondToAvTime(rewind);
 
-		/// @todo (https://b33p.net/kosada/node/6598)
+		int ret = av_seek_frame(container.pFormatCtx, container.videoStreamIndex, seek, AVSEEK_FLAG_ANY);
 
-	   //printf("**** seekFrame to %d. LLT: %d. LT: %d. LLF: %d. LF: %d. LastFrameOk: %d\n",(int)frame,LastLastFrameTime,LastFrameTime,LastLastFrameNumber,LastFrameNumber,(int)LastFrameOk);
+		container.lastPts = 0;
 
-		// Seek if:
-	   // - we don't know where we are (Ok=false)
-	   // - we know where we are but:
-	   //    - the desired frame is after the last decoded frame (this could be optimized: if the distance is small, calling decodeSeekFrame may be faster than seeking from the last key frame)
-	   //    - the desired frame is smaller or equal than the previous to the last decoded frame. Equal because if frame==LastLastFrameNumber we don't want the LastFrame, but the one before->we need to seek there
-
-		// If last frame was borked, or the desired frame is before the last read frame, seek.
-		if(!lastFrameOk || (lastFrameOk && frame > lastTimestamp))
-		{
-			if(av_seek_frame(container.pFormatCtx, container.videoStream, frame, (frame < lastTimestamp ? AVSEEK_FLAG_BACKWARD : AVSEEK_FLAG_ANY)) < 0)
-				return false;
-			else
-				lastTimestamp = frame-1;
-
-			avcodec_flush_buffers(container.pCodecCtx);
+		if(ret < 0) {
+			VLog("Failed seek - looking for frame pts: %lli", frame);
+			return false;
 		}
 
-		AVPacket packet;
-		AVFrame *pFrame = NULL;
-		pFrame = avcodec_alloc_frame();
+		if(frame <= container.firstFrame)
+			return nextFrame(NULL);
 
-		int frameFinished = 0;
+		bool frameDecoded = false;
 
-		while(av_read_frame(container.pFormatCtx, &packet) >= 0)
+		while(container.lastPts + container.packetDuration < frame)
 		{
-			// Is this a packet from the video stream?
-			if(packet.stream_index == container.videoStream)
+			// don't bail on a null frame in this loop, since nextFrame() can sometimes
+			// decode a junk frame and return false when there are in fact frames still
+			// left.  test with `/System/Library/Compositions/Yosemite.mov` to see this
+			// behavior.
+			if( !nextFrame(NULL) )
 			{
-				// Decode video frame
-				avcodec_decode_video2(container.pCodecCtx, pFrame, &frameFinished, &packet);
+				container.lastPts = frame;
+				if(frameDecoded)
+					frame = container.lastPts;
+			}
+			else
+				frameDecoded = true;
 
-				// Did we get a video frame?
-				if(frameFinished)
-				{
-					// Get PTS here because formats with I frames can return junk values before a full frame is found
-					int64_t pts = av_frame_get_best_effort_timestamp ( pFrame );
-
-					if( pts == AV_NOPTS_VALUE )
-					{
-						/// todo - Remove after testing vuo video
-						continue;
-//						pts = frameCount * av_q2d(container.video_st->time_base);	// if no pts, guess using the time base and current frame count.
-					}
-
-					lastTimestamp = pts;
-
-					 if(lastTimestamp >= frame)
-						 break;
-				}
+			// av_seek_frame can put the index before or after the desired frame.  when it overshoots,
+			// seek to a further back point to guarantee we get a frame before and save the rewind
+			// time used so that in future cycles this won't be necessary.
+			if(container.lastPts >= frame)
+			{
+				avcodec_flush_buffers(container.pCodecCtx);
+				rewind += rewindIncrement;
+				ret = av_seek_frame(container.pFormatCtx, container.videoStreamIndex, frame-secondToAvTime(rewind), AVSEEK_FLAG_ANY);
+				if(ret < 0)	return false;
+				container.lastPts = container.firstFrame;
 			}
 		}
-	   return true;
+
+		return container.lastPts < frame;
+
+		/// @todo (https://b33p.net/kosada/node/6598)
 	}
 
 	VuoImage vuoImageWithAvFrame(AVCodecContext *pCodecCtx, AVFrame* pFrame)
@@ -380,31 +369,64 @@ private:
 		img_convert((AVPicture *)pFrameRGB, pixelFormat, (AVPicture*)pFrame, pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height);
 
 		// Write frame to GL texture and create a VuoImage for it, then break and return.
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-		{
-			GLuint textureid = VuoGlPool_use(VuoGlPool_Texture);
-			glBindTexture(GL_TEXTURE_2D, textureid);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pCodecCtx->width, pCodecCtx->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pFrameRGB->data[0]);
-
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			image = VuoImage_make(textureid, pCodecCtx->width, pCodecCtx->height);
-		}
-
-		VuoGlContext_disuse(cgl_ctx);
+		image = VuoImage_makeFromBuffer(pFrameRGB->data[0], GL_RGBA, pCodecCtx->width, pCodecCtx->height);
 
 		// Free the RGB image
 		av_free(buffer);
 		av_free(pFrameRGB);
 
 		return image;
+	}
+
+	bool nextFrame(VuoImage *image)
+	{
+		AVFrame *pFrame = avcodec_alloc_frame();
+		int frameFinished = 0;
+		AVPacket packet;
+		bool lastFrameOk = false;
+		if (image != NULL)
+			*image = NULL;
+
+		//	@todo Refactor av_read_frame loop to it's own method, as it is called during a bunch of other tasks
+		while(av_read_frame(container.pFormatCtx, &packet) >= 0)
+		{
+			// Is this a packet from the video stream?
+			if(packet.stream_index == container.videoStreamIndex)
+			{
+				avcodec_decode_video2(container.pCodecCtx, pFrame, &frameFinished, &packet);
+
+				// Did we get a video frame?
+				if(frameFinished)
+				{
+					// Duration of this packet in AVStream->time_base units, 0 if unknown.
+					container.packetDuration = packet.duration;
+
+					// Get PTS here because formats with I frames can return junk values before a full frame is found
+					int64_t pts = av_frame_get_best_effort_timestamp ( pFrame );
+					container.lastPts = pts;
+
+//					VLog("pts: %lli", pts);
+
+					if( pts == AV_NOPTS_VALUE )
+						pts = 1;//pts = container.frameCount * av_q2d(container.video_st->time_base);	// if no pts, guess using the time base and current frame count.
+					else
+						pts = av_rescale_q ( pts,  container.video_st->time_base, AV_TIME_BASE_Q );  // pts is now in microseconds.
+
+					container.lastTimestamp = pts;
+
+					if(image != NULL)
+						*image = vuoImageWithAvFrame(container.pCodecCtx, pFrame);
+
+					lastFrameOk = true;
+
+					av_free_packet(&packet);
+
+					break;
+				}
+			}
+		}
+		av_free(pFrame);
+		return lastFrameOk;
 	}
 };
 
@@ -431,35 +453,43 @@ void VuoMovie_free(void *movie)
  * @param path An absolute path to the video file to open.
  * @return A new VuoMovie object, which may be used to control playback of the film.  If the video file fails to open for any reason, this returns NULL.
  */
-VuoMovie * VuoMovie_make(const char *path)
+VuoMovie VuoMovie_make(const char *path)
 {
-	VuoMovieDecoder *movie = new VuoMovieDecoder();
+	VuoMovieDecoder *decoder = new VuoMovieDecoder();
 
-	if(movie->initWithFile(path) != 0 )
+	if (decoder->initWithFile(path) != 0)
 	{
 		VLog("Failed opening movie at path: \"%s\".", path);
-		delete movie;
+		delete decoder;
 		return NULL;
 	}
 	else
 	{
-		VuoRegister(movie, VuoMovie_free);
-		return (VuoMovie*)movie;
+		VuoRegister(decoder, VuoMovie_free);
+		return (VuoMovie)decoder;
 	}
 }
 
 /**
  * VuoMovie_getNextFrame gets the next full frame's image and presentation timestamp (in seconds).  Will return true if next frame is found and false if not.
  */
-bool VuoMovie_getNextFrame(VuoMovie *decoder, VuoImage *image, double *nextFrame)
+bool VuoMovie_getNextFrame(VuoMovie movie, VuoImage *image, double *nextFrame)
 {
-	return ((VuoMovieDecoder*)decoder)->getNextFrame(image, nextFrame);
+	return ((VuoMovieDecoder*)movie)->getNextFrame(image, nextFrame);
+}
+
+/**
+ * Returns the frame prior to the internal currently queued frame, and the presentation timestamp associated.
+ */
+bool VuoMovie_getPreviousFrame(VuoMovie movie, VuoImage *image, double *previousFrame)
+{
+	return ((VuoMovieDecoder*)movie)->getPreviousFrame(image, previousFrame);
 }
 
 /**
  * Seeks the video to the specified second.
  */
-bool VuoMovie_seekToSecond(VuoMovie *movie, double second)
+bool VuoMovie_seekToSecond(VuoMovie movie, double second)
 {
 	// Accept a second to keep in tabs with rest of VuoMovie i/o, but convert to millisecond for use in ffmpeg (which will convert this to microsecond after applying time-base conversion)
 	int64_t ms = second * 1000;	// now in milliseconds
@@ -467,18 +497,35 @@ bool VuoMovie_seekToSecond(VuoMovie *movie, double second)
 }
 
 /**
+ * Returns the last successfully decoded timestamp.
+ */
+double VuoMovie_getCurrentSecond(VuoMovie movie)
+{
+	return ((VuoMovieDecoder*)movie)->getCurrentSecond();
+}
+
+/**
+ * Returns the duration of the movie in seconds.
+ */
+double VuoMovie_getDuration(VuoMovie movie)
+{
+	return ((VuoMovieDecoder*)movie)->container.duration;
+}
+
+/**
  * Given a @a path, this will open and close a video stream and return the duration.
  */
 bool VuoMovie_getInfo(const char *path, double *duration)
 {
-	VuoMovie *decoder = VuoMovie_make(path);
-	if(decoder == NULL)
+	VuoMovie movie = VuoMovie_make(path);
+	if(movie == NULL)
 		return false;
 
-	double dur = ((VuoMovieDecoder*)decoder)->container.pFormatCtx->duration * SEC_PER_USEC;
+	double dur = ((VuoMovieDecoder*)movie)->container.pFormatCtx->duration * SEC_PER_USEC;
 	*duration = dur > 0. ? dur : 0.;
 
-	VuoMovie_free(decoder);
+	VuoRetain(movie);
+	VuoRelease(movie);
 
 	return true;
 }

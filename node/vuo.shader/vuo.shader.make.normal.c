@@ -34,7 +34,7 @@ static const char * vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		vertexNormal = normal;
+		vertexNormal = vec4(normalize(mat3(modelviewMatrix) * vec3(normal)), 1.);
 
 		gl_Position = projectionMatrix * modelviewMatrix * position;
 	}

@@ -49,6 +49,9 @@ char * getOutputPortSummary(char *portIdentifier)
 void setInputPortValue(char *portIdentifier, char *valueAsString, int shouldUpdateCallbacks)
 {
 }
+void fireTriggerPortEvent(char *portIdentifier)
+{
+}
 unsigned int getPublishedInputPortCount(void)
 {
 	return 0;

@@ -86,6 +86,7 @@ public:
 	Port * getPublishedInputPortWithName(string name);
 	Port * getPublishedOutputPortWithName(string name);
 	void setInputPortValue(string portIdentifier, json_object *value);
+	void fireTriggerPortEvent(string portIdentifier);
 	json_object * getInputPortValue(string portIdentifier);
 	json_object * getOutputPortValue(string portIdentifier);
 	string getInputPortSummary(string portIdentifier);

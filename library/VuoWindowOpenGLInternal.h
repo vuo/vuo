@@ -23,13 +23,13 @@
 {
 	void (*initCallback)(VuoGlContext glContext, void *);  ///< Initializes the OpenGL context.
 	void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int width, unsigned int height);  ///< Updates the OpenGL context when the view is resized.
+	void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *);  ///< Allows the caller to free resources on the old GL context and initialize the new GL context.
 	void (*drawCallback)(VuoGlContext glContext, void *);  ///< Draws onto the OpenGL context.
 	void *drawContext;  ///< Argument to pass to callbacks (e.g. node instance data).
 
 	bool callerRequestedRedraw;	///< True if an external caller (i.e., not resize or toggleFullScreen) requested that the GL view be redrawn.
 	VuoDisplayRefresh displayRefresh;	///< Handles redrawing at the display refresh rate.  Only draws if @c callerRequestedRedraw.
 
-	dispatch_queue_t drawQueue;	///< Queue to ensure that multiple threads don't attempt to draw to the same window simultaneously.
 	bool togglingFullScreen;	///< If true, code that requires drawQueue will be skipped (to avoid deadlock).
 
 	void (*movedMouseTo)(VuoPoint2d);	///< Trigger function, fired when the mouse moves.
@@ -40,10 +40,11 @@
 }
 
 - (id)initWithFrame:(NSRect)frame
-	   initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
-	 resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
-	   drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
-		drawContext:(void *)_drawContext;
+		 initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+	   resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
+switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))switchContextCallback
+		 drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
+		  drawContext:(void *)_drawContext;
 
 - (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))movedMouseTo
 						 scrolledMouse:(void (*)(VuoPoint2d))scrolledMouse
@@ -55,6 +56,7 @@
 
 @property(retain) VuoWindowOpenGLInternal *glWindow;  ///< The parent window; allows the view to access it while full-screen.
 @property(retain) NSOpenGLContext *windowedGlContext;  ///< The OpenGL context from Vuo's context pool; allows the windw to access it while the view is full-screen.
+@property dispatch_queue_t drawQueue;	///< Queue to ensure that multiple threads don't attempt to draw to the same window simultaneously.
 
 @end
 
@@ -74,9 +76,12 @@
 }
 
 @property(retain) VuoWindowOpenGLView *glView;  ///< The OpenGL view inside this window.
+@property BOOL depthBuffer;  ///< Was a depth buffer requested?
 
-- (id)initWithInitCallback:(void (*)(VuoGlContext glContext, void *))initCallback
+- (id)initWithDepthBuffer:(BOOL)depthBuffer
+			  initCallback:(void (*)(VuoGlContext glContext, void *))initCallback
 			resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))resizeCallback
+	 switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))switchContextCallback
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))drawCallback
 			   drawContext:(void *)drawContext;
 - (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))movedMouseTo
@@ -84,6 +89,7 @@
 					   usedMouseButton:(void (*)(VuoMouseButtonAction))usedMouseButton;
 - (void)disableTriggers;
 - (void)scheduleRedraw;
+- (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute;
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh;
 - (void)toggleFullScreen;
 

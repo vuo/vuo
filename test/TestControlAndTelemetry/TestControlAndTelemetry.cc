@@ -872,6 +872,100 @@ private slots:
 		delegate.runComposition();
 	}
 
+private:
+
+	class TestFiringTriggerPortEventsRunnerDelegate : public TestRunnerDelegate
+	{
+	private:
+		VuoRunner *runner;
+		int timesSumChanged;
+		string startedPortIdentifier;
+		string spunOffPortIdentifier;
+		string sumPortIdentifier;
+
+	public:
+		TestFiringTriggerPortEventsRunnerDelegate()
+		{
+			runner = NULL;
+			timesSumChanged = 0;
+		}
+
+		~TestFiringTriggerPortEventsRunnerDelegate()
+		{
+			delete runner;
+		}
+
+		void runComposition()
+		{
+			string compositionPath = TestCompositionExecution::getCompositionPath("SpinOffWithCount.vuo");
+			VuoCompilerBitcodeGenerator *generator = NULL;
+			runner = createRunnerInNewProcess(compositionPath, &generator);
+
+			foreach (VuoNode *node, generator->composition->getBase()->getNodes())
+			{
+				if (node->getNodeClass()->getClassName() == "vuo.event.fireOnStart")
+				{
+					VuoPort *basePort = node->getOutputPortWithName("started");
+					startedPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
+				}
+				else if (node->getNodeClass()->getClassName() == "vuo.test.spinOffWithCount")
+				{
+					VuoPort *basePort = node->getOutputPortWithName("spunOff");
+					spunOffPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
+				}
+				else if (node->getNodeClass()->getClassName() == "vuo.math.add.integer")
+				{
+					VuoPort *basePort = node->getOutputPortWithName("sum");
+					sumPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
+				}
+			}
+			delete generator;
+
+			runner->setDelegate(this);
+
+			runner->start();
+			runner->fireTriggerPortEvent(startedPortIdentifier);
+			runner->waitUntilStopped();
+		}
+
+		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		{
+			if (portIdentifier != sumPortIdentifier)
+				return;
+
+			if (timesSumChanged == 0)
+			{
+				if (dataSummary == "1")
+					return;  // In the unlikely event that the delegate sees the initial 'Fire on Start' event, ignore it.
+
+				QCOMPARE(QString(dataSummary.c_str()), QString("2"));
+				runner->fireTriggerPortEvent(startedPortIdentifier);
+			}
+			else if (timesSumChanged == 1)
+			{
+				QCOMPARE(QString(dataSummary.c_str()), QString("3"));
+				runner->fireTriggerPortEvent(spunOffPortIdentifier);
+			}
+			else if (timesSumChanged == 2)
+			{
+				QCOMPARE(QString(dataSummary.c_str()), QString("3"));
+				dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+				dispatch_async(queue, ^{
+								   runner->stop();
+							   });
+			}
+			++timesSumChanged;
+		}
+	};
+
+private slots:
+
+	void testFiringTriggerPortEvents()
+	{
+		TestFiringTriggerPortEventsRunnerDelegate delegate;
+		delegate.runComposition();
+	}
+
 	void testGettingPublishedPorts_data()
 	{
 		QTest::addColumn< QString >("compositionFile");

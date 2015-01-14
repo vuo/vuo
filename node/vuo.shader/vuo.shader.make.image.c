@@ -8,6 +8,7 @@
  */
 
 #include "node.h"
+#include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
 					 "title" : "Shade with Image",
@@ -24,6 +25,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
 		VuoOutputData(VuoShader) shader
 )
 {
@@ -34,6 +36,15 @@ void nodeEvent
 		VuoGlContext glContext = VuoGlContext_use();
 
 		VuoShader_addTexture(*shader, glContext, "texture", image);
+
+		VuoShader_setUniformFloat(*shader, glContext, "alpha", alpha);
+
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		{
+			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+			glFlushRenderAPPLE();
+		}
 
 		VuoGlContext_disuse(glContext);
 	}

@@ -225,7 +225,7 @@ void VuoGlContext_disuse(VuoGlContext glContext)
 
 // Prior to https://b33p.net/kosada/node/6536.  Pretty sure there are no longer needed (FBOs should take care of their own glFlushRendererAPPLE() calls; visible contexts should take care of their own CGLFlushDrawable() calls).
 //	glFlush();
-//	CGLFlushDrawable(cglContext);
+//	CGLFlushDrawable(cgl_ctx);
 
 #if 0
 	VGL();

@@ -623,8 +623,9 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	frameRect = getNodeFrameRect();
 	drawBoundingRect(painter);
 
+	VuoRendererColors::SelectionType selectionType = (isSelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
 	qint64 timeOfLastActivity = (getRenderActivity()? timeLastExecutionEnded : VuoRendererItem::notTrackingActivity);
-	VuoRendererColors *colors = new VuoRendererColors(getBase()->getTintColor(), isSelected(), false, false, timeOfLastActivity);
+	VuoRendererColors *colors = new VuoRendererColors(getBase()->getTintColor(), selectionType, false, VuoRendererColors::noHighlight, timeOfLastActivity);
 	drawNodeFrame(painter, frameRect, colors);
 
 
@@ -759,11 +760,13 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 
 	if (change == QGraphicsItem::ItemSelectedHasChanged)
 	{
-		// When the node is (de)selected, repaint all ports (since they also reflect selection status).
+		// When the node is (de)selected, repaint all ports and cables (since they also reflect selection status).
 		foreach (VuoRendererPort *p, inputPorts->childItems())
 			p->updateGeometry();
 		foreach (VuoRendererPort *p, outputPorts->childItems())
 			p->updateGeometry();
+
+		updateConnectedCableGeometry();
 	}
 
 	return QGraphicsItem::itemChange(change, newValue);

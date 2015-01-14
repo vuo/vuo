@@ -8,6 +8,4 @@ NODE_SOURCES += \
 	vuo.mouse.filter.action.c \
 	vuo.mouse.get.action.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../module.pri)

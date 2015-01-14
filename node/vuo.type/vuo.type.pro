@@ -65,8 +65,6 @@ NODE_SOURCES += \
 	vuo.type.transform.event.c \
 	vuo.type.vertices.event.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 NODE_INCLUDEPATH += \
 	../vuo.leap \
 	../vuo.midi \

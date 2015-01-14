@@ -73,6 +73,122 @@ VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader s
 }
 
 /**
+ * Returns a scene object with the specified @c image.
+ *
+ * @threadAnyGL
+ */
+VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha)
+{
+	if (!image)
+		return VuoSceneObject_makeEmpty();
+
+	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
+	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
+	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuadWithoutNormals());
+	VuoSceneObject object = VuoSceneObject_make(
+				verticesList,
+				VuoShader_makeImageShader(),
+				VuoTransform_makeEuler(
+					center,
+					VuoPoint3d_multiply(rotation, M_PI/180.),
+					VuoPoint3d_make(width,image->pixelsHigh * width/image->pixelsWide,1)
+				),
+				NULL
+			);
+
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+
+		VuoShader_addTexture(object.shader, glContext, "texture", image);
+
+		VuoShader_setUniformFloat(object.shader, glContext, "alpha", alpha);
+
+		VuoGlContext_disuse(glContext);
+	}
+
+	return object;
+}
+
+/**
+ * Returns a scene object consisting of 6 child objects (square quads), each with its own shader.
+ */
+VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader)
+{
+	VuoList_VuoSceneObject cubeChildObjects = VuoListCreate_VuoSceneObject();
+
+	VuoList_VuoVertices quadVertices = VuoListCreate_VuoVertices();
+	VuoListAppendValue_VuoVertices(quadVertices, VuoVertices_getQuad());
+
+	// Front Face
+	{
+		VuoSceneObject so = VuoSceneObject_make(
+					quadVertices,
+					frontShader,
+					VuoTransform_makeEuler(VuoPoint3d_make(0,0,.5), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
+					NULL
+					);
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Left Face
+	{
+		VuoSceneObject so = VuoSceneObject_make(
+					quadVertices,
+					leftShader,
+					VuoTransform_makeEuler(VuoPoint3d_make(-.5,0,0), VuoPoint3d_make(0,-M_PI/2.,0), VuoPoint3d_make(1,1,1)),
+					NULL
+					);
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Right Face
+	{
+		VuoSceneObject so = VuoSceneObject_make(
+					quadVertices,
+					rightShader,
+					VuoTransform_makeEuler(VuoPoint3d_make(.5,0,0), VuoPoint3d_make(0,M_PI/2.,0), VuoPoint3d_make(1,1,1)),
+					NULL
+					);
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Back Face
+	{
+		VuoSceneObject so = VuoSceneObject_make(
+					quadVertices,
+					backShader,
+					VuoTransform_makeEuler(VuoPoint3d_make(0,0,-.5), VuoPoint3d_make(0,M_PI,0), VuoPoint3d_make(1,1,1)),
+					NULL
+					);
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Top Face
+	{
+		VuoSceneObject so = VuoSceneObject_make(
+					quadVertices,
+					topShader,
+					VuoTransform_makeEuler(VuoPoint3d_make(0,.5,0), VuoPoint3d_make(-M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
+					NULL
+					);
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	// Bottom Face
+	{
+		VuoSceneObject so = VuoSceneObject_make(
+					quadVertices,
+					bottomShader,
+					VuoTransform_makeEuler(VuoPoint3d_make(0,-.5,0), VuoPoint3d_make(M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
+					NULL
+					);
+		VuoListAppendValue_VuoSceneObject(cubeChildObjects, so);
+	}
+
+	return VuoSceneObject_make(NULL, NULL, transform, cubeChildObjects);
+}
+
+/**
  * Returns a perspective camera.
  */
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float fieldOfView, float distanceMin, float distanceMax)
@@ -461,4 +577,27 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		free(shader);
 
 	return valueAsString;
+}
+
+static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int level)
+{
+	for (unsigned int i=0; i<level; ++i)
+		fprintf(stderr, "\t");
+
+	fprintf(stderr, "object: %lu vertices, %lu elements\n", VuoSceneObject_getVertexCount(so), VuoSceneObject_getElementCount(so));
+
+	if (so.childObjects)
+	{
+		unsigned int childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
+		for (unsigned int i=1; i<=childObjectCount; ++i)
+			VuoSceneObject_dump_internal(VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i), level+1);
+	}
+}
+
+/**
+ * Outputs information about the sceneobject (and its descendants).
+ */
+void VuoSceneObject_dump(const VuoSceneObject so)
+{
+	VuoSceneObject_dump_internal(so,0);
 }

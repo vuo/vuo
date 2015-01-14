@@ -56,6 +56,7 @@ private:
 	QPointF getStartPoint(void) const;
 	QPointF getEndPoint(void) const;
 	QPainterPath getCablePath(void) const;
+	bool isConnectedToSelectedNode(void);
 };
 
 #endif // VUORENDERERCABLE_HH

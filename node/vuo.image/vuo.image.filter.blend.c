@@ -633,6 +633,7 @@ static const char * fragmentShaderSource_blendLuminosity = BLEND_FILTERS(
 struct nodeInstanceData
 {
 	VuoShader shader;
+	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 	VuoInteger currentBlendMode;
 };
@@ -641,6 +642,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
+
+	instance->glContext = VuoGlContext_use();
 
 	instance->currentBlendMode = -1;	// set this to a negative value on initialization, forcing shader init on first event.
 
@@ -666,7 +669,7 @@ void nodeInstanceEvent
 		// if this is the first time initializing, need to init the imagerenderer too
 		if( (*instance)->currentBlendMode < 0 )
 		{
-			(*instance)->imageRenderer = VuoImageRenderer_make();
+			(*instance)->imageRenderer = VuoImageRenderer_make((*instance)->glContext);
 			VuoRetain((*instance)->imageRenderer);
 		}
 
@@ -759,21 +762,15 @@ void nodeInstanceEvent
 		(*instance)->currentBlendMode = blendMode;
 	}
 
-	{
-		VuoGlContext glContext = VuoGlContext_use();
+	// Associate the input image with the shader.
+	VuoShader_resetTextures((*instance)->shader);
+	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "background", background);
+	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "foreground", foreground);
 
-		// Associate the input image with the shader.
-		VuoShader_resetTextures((*instance)->shader);
-		VuoShader_addTexture((*instance)->shader, glContext, "background", background);
-		VuoShader_addTexture((*instance)->shader, glContext, "foreground", foreground);
+	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "foregroundOpacity", foregroundOpacity);
 
-		VuoShader_setUniformFloat((*instance)->shader, glContext, "foregroundOpacity", foregroundOpacity);
-
-		// Render.
-		*blended = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, background->pixelsWide, background->pixelsHigh);
-
-		VuoGlContext_disuse(glContext);
-	}
+	// Render.
+	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, background->pixelsWide, background->pixelsHigh);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
@@ -783,4 +780,6 @@ void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 		VuoRelease((*instance)->shader);
 		VuoRelease((*instance)->imageRenderer);
 	}
+
+	VuoGlContext_disuse((*instance)->glContext);
 }

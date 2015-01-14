@@ -8,6 +8,4 @@ NODE_SOURCES += \
 	vuo.test.mouse.c \
 	vuo.test.wallTime.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../../module.pri)

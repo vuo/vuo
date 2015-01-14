@@ -20,10 +20,13 @@ extern "C"
  */
 typedef void * VuoMovie;
 
-VuoMovie * VuoMovie_make(const char *path);
+VuoMovie VuoMovie_make(const char *path);
 
-bool VuoMovie_getNextFrame(VuoMovie *decoder, VuoImage *image, double *nextFrame);
-bool VuoMovie_seekToSecond(VuoMovie *movie, double second);
+bool VuoMovie_getNextFrame(VuoMovie movie, VuoImage *image, double *nextFrame);
+bool VuoMovie_getPreviousFrame(VuoMovie movie, VuoImage *image, double *nextFrame);
+bool VuoMovie_seekToSecond(VuoMovie movie, double second);
+double VuoMovie_getCurrentSecond(VuoMovie movie);
+double VuoMovie_getDuration(VuoMovie movie);
 bool VuoMovie_getInfo(const char *path, double *duration);
 
 #ifdef __cplusplus

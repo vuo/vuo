@@ -7,5 +7,6 @@ example.commands += \
 	$$VUOCOMPILE --output ${QMAKE_FILE_IN_BASE}.bc ${QMAKE_FILE_IN} && \
 	$$VUOLINK $$VUOLINK_FLAGS --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN_BASE}.bc
 QMAKE_EXTRA_COMPILERS += example
+OTHER_FILES += $$EXAMPLE_SOURCES
 
 QMAKE_CLEAN += *.bc

@@ -26,6 +26,7 @@ public:
 	string getDescriptionForModule(VuoModule *module);
 	vector<string> getExampleCompositionFileNames(void);
 	string getExampleCompositionContents(string exampleCompositionFileName);
+	void extractExampleCompositionResources(string destinationDir);
 
 private:
 	VuoNodeSet(string archivePath);

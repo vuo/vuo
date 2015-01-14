@@ -42,12 +42,13 @@ VuoModuleMetadata({
  */
 struct VuoSceneRendererInternal_vertices
 {
-	GLuint positionBuffer;
-	GLuint normalBuffer;
-	GLuint tangentBuffer;
-	GLuint bitangentBuffer;
-	GLuint textureCoordinateBuffer;
+	GLuint vertexArray;
+
+	GLuint combinedBuffer;
+	GLuint combinedBufferSize;
+
 	GLuint elementBuffer;
+	GLuint elementBufferSize;
 };
 
 /**
@@ -77,6 +78,8 @@ public:
 
 	float projectionMatrix[16]; ///< Column-major 4x4 matrix
 	VuoText cameraName;
+
+	VuoGlContext glContext;
 };
 
 void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
@@ -86,7 +89,7 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
  *
  * @threadAny
  */
-VuoSceneRenderer VuoSceneRenderer_make(void)
+VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext)
 {
 	VuoSceneRendererInternal *sceneRenderer = new VuoSceneRendererInternal;
 	VuoRegister(sceneRenderer, VuoSceneRenderer_destroy);
@@ -95,6 +98,7 @@ VuoSceneRenderer VuoSceneRenderer_make(void)
 	sceneRenderer->scenegraphValid = false;
 	sceneRenderer->needToRegenerateProjectionMatrix = false;
 	sceneRenderer->cameraName = NULL;
+	sceneRenderer->glContext = glContext;
 
 	return (VuoSceneRenderer)sceneRenderer;
 }
@@ -104,9 +108,11 @@ VuoSceneRenderer VuoSceneRenderer_make(void)
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer, VuoGlContext glContext)
+void VuoSceneRenderer_prepareContext(VuoSceneRenderer sr)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+
+	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
 	glEnable(GL_MULTISAMPLE);
 
@@ -267,6 +273,7 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 
 	dispatch_semaphore_wait(so.shader->lock, DISPATCH_TIME_FOREVER);
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
 	glUseProgram(so.shader->glProgramName);
 	{
 		GLint projectionMatrixUniform = glGetUniformLocation(so.shader->glProgramName, "projectionMatrix");
@@ -280,73 +287,25 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 		unsigned int i = 1;
 		for (std::list<VuoSceneRendererInternal_vertices>::iterator vi = soi->vertices.begin(); vi != soi->vertices.end(); ++vi, ++i)
 		{
-			GLint positionAttribute = glGetAttribLocation(so.shader->glProgramName, "position");
-			glBindBuffer(GL_ARRAY_BUFFER, (*vi).positionBuffer);
-			glVertexAttribPointer((GLuint)positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)0);
-			glEnableVertexAttribArray((GLuint)positionAttribute);
+			glBindVertexArray((*vi).vertexArray);
 
-			GLint normalAttribute = glGetAttribLocation(so.shader->glProgramName, "normal");
-			if (normalAttribute >= 0)
-			{
-				glBindBuffer(GL_ARRAY_BUFFER, (*vi).normalBuffer);
-				glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)0);
-				glEnableVertexAttribArray((GLuint)normalAttribute);
-			}
+			VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(so.verticesList, i);
+			GLenum mode = GL_TRIANGLES;
+			if (vertices.elementAssemblyMethod == VuoVertices_IndividualTriangles)
+				mode = GL_TRIANGLES;
+			else if (vertices.elementAssemblyMethod == VuoVertices_TriangleStrip)
+				mode = GL_TRIANGLE_STRIP;
+			else if (vertices.elementAssemblyMethod == VuoVertices_TriangleFan)
+				mode = GL_TRIANGLE_FAN;
+			else if (vertices.elementAssemblyMethod == VuoVertices_IndividualLines)
+				mode = GL_LINES;
+			else if (vertices.elementAssemblyMethod == VuoVertices_LineStrip)
+				mode = GL_LINE_STRIP;
+			else if (vertices.elementAssemblyMethod == VuoVertices_Points)
+				mode = GL_POINTS;
+			glDrawElements(mode, (GLsizei)vertices.elementCount, GL_UNSIGNED_INT, (void*)0);
 
-			GLint tangentAttribute = glGetAttribLocation(so.shader->glProgramName, "tangent");
-			if (tangentAttribute >= 0)
-			{
-				glBindBuffer(GL_ARRAY_BUFFER, (*vi).tangentBuffer);
-				glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)0);
-				glEnableVertexAttribArray((GLuint)tangentAttribute);
-			}
-
-			GLint bitangentAttribute = glGetAttribLocation(so.shader->glProgramName, "bitangent");
-			if (bitangentAttribute >= 0)
-			{
-				glBindBuffer(GL_ARRAY_BUFFER, (*vi).bitangentBuffer);
-				glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)0);
-				glEnableVertexAttribArray((GLuint)bitangentAttribute);
-			}
-
-			GLint textureCoordinateAttribute = glGetAttribLocation(so.shader->glProgramName, "textureCoordinate");
-			if (textureCoordinateAttribute >= 0)
-			{
-				glBindBuffer(GL_ARRAY_BUFFER, (*vi).textureCoordinateBuffer);
-				glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)0);
-				glEnableVertexAttribArray((GLuint)textureCoordinateAttribute);
-			}
-
-			{
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*vi).elementBuffer);
-				VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(so.verticesList, i);
-				GLenum mode = GL_TRIANGLES;
-				if (vertices.elementAssemblyMethod == VuoVertices_IndividualTriangles)
-					mode = GL_TRIANGLES;
-				else if (vertices.elementAssemblyMethod == VuoVertices_TriangleStrip)
-					mode = GL_TRIANGLE_STRIP;
-				else if (vertices.elementAssemblyMethod == VuoVertices_TriangleFan)
-					mode = GL_TRIANGLE_FAN;
-				else if (vertices.elementAssemblyMethod == VuoVertices_IndividualLines)
-					mode = GL_LINES;
-				else if (vertices.elementAssemblyMethod == VuoVertices_LineStrip)
-					mode = GL_LINE_STRIP;
-				else if (vertices.elementAssemblyMethod == VuoVertices_Points)
-					mode = GL_POINTS;
-				glDrawElements(mode, (GLsizei)vertices.elementCount, GL_UNSIGNED_INT, (void*)0);
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-			}
-
-			if (textureCoordinateAttribute >= 0)
-				glDisableVertexAttribArray((GLuint)textureCoordinateAttribute);
-			if (bitangentAttribute >= 0)
-				glDisableVertexAttribArray((GLuint)bitangentAttribute);
-			if (tangentAttribute >= 0)
-				glDisableVertexAttribArray((GLuint)tangentAttribute);
-			if (normalAttribute >= 0)
-				glDisableVertexAttribArray((GLuint)normalAttribute);
-			glDisableVertexAttribArray((GLuint)positionAttribute);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
 		}
 
 		VuoShader_deactivateTextures(so.shader, cgl_ctx);
@@ -354,6 +313,8 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 	glUseProgram(0);
 	dispatch_semaphore_signal(so.shader->lock);
 }
+
+void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length);
 
 /**
  * Draws @c so and its child objects.
@@ -369,6 +330,9 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
 	float compositeModelviewMatrix[16];
 	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
 	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix, glContext);
+//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 0, .08f);	// Normals
+//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 1, .08f);	// Tangents
+//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 2, .08f);	// Bitangents
 
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
@@ -383,10 +347,10 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_draw(VuoSceneRenderer sr, VuoGlContext glContext)
+void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
 	if (!sceneRenderer->scenegraphValid)
 		return;
@@ -399,55 +363,45 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr, VuoGlContext glContext)
 		sceneRenderer->needToRegenerateProjectionMatrix = false;
 	}
 
-	// Allocate a single vertex array for all drawing during this pass (since VAOs can't be shared between contexts).
-	GLuint vertexArray;
-	glGenVertexArrays(1, &vertexArray);
-	glBindVertexArray(vertexArray);
-
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
-	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, glContext);
+	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, sceneRenderer->glContext);
+
+	// Make sure the render commands actually execute before we release the semaphore,
+	// since the textures we're using might immediately be recycled (if the rootSceneObject is released).
+	glFlushRenderAPPLE();
 
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
-
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &vertexArray);
 }
 
 /**
- * Draws all vertex normals in sceneRenderer-rootSceneObject.
+ * Draws all vertex normals in @c so.
+ *
+ * Must be called while scenegraphSemaphore is locked.
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, VuoGlContext glContext, int element, float length)	// TODO Enum type for element to debug
+void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length)	// TODO Enum type for element to debug
 {
-	/// @todo update VuoSceneRenderer_draw() to call this for each VuoSceneObject when debugging
-	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
-
-	if (!sceneRenderer->scenegraphValid)
+	if (!so.verticesList)
 		return;
 
-	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
-	unsigned long verticesListCount = VuoListGetCount_VuoVertices(sceneRenderer->rootSceneObject.verticesList);
+	unsigned long verticesListCount = VuoListGetCount_VuoVertices(so.verticesList);
 
 	glLoadIdentity();
 
 	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(sceneRenderer->projectionMatrix);
-
+	glLoadMatrixf(projectionMatrix);
 
 	glMatrixMode(GL_MODELVIEW);
-
-	float modelViewMatrix[16];
-	VuoTransform_getMatrix(sceneRenderer->rootSceneObject.transform, modelViewMatrix);
-	glLoadMatrixf(modelViewMatrix);
+	glLoadMatrixf(compositeModelviewMatrix);
 
 	glBegin(GL_LINES);
 	for (unsigned int i = 1; i <= verticesListCount; i++)
 	{
-		VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(sceneRenderer->rootSceneObject.verticesList, i);
+		VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(so.verticesList, i);
 
 		for(unsigned int m = 0; m < vertices.vertexCount; m++)
 		{
@@ -467,7 +421,7 @@ void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, VuoGlContext glContext, i
 					break;
 			}
 
-			n = VuoPoint4d_subtract(v, VuoPoint4d_multiply(n, length));
+			n = VuoPoint4d_add(v, VuoPoint4d_multiply(n, length));
 
 			glVertex3d(v.x, v.y, v.z);
 			glVertex3d(n.x, n.y, n.z);
@@ -476,8 +430,6 @@ void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, VuoGlContext glContext, i
 	glEnd();
 
 	glLoadIdentity();
-
-	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 }
 
 /**
@@ -490,52 +442,135 @@ void VuoSceneRenderer_drawElement(VuoSceneRenderer sr, VuoGlContext glContext, i
  */
 void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
-	if (!so.verticesList)
+	if (!so.verticesList || !so.shader)
 		return;
 
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
+	// Fetch the shader's attribute locations
+	dispatch_semaphore_wait(so.shader->lock, DISPATCH_TIME_FOREVER);
+	glUseProgram(so.shader->glProgramName);
+	GLint positionAttribute = glGetAttribLocation(so.shader->glProgramName, "position");
+	GLint normalAttribute = glGetAttribLocation(so.shader->glProgramName, "normal");
+	GLint tangentAttribute = glGetAttribLocation(so.shader->glProgramName, "tangent");
+	GLint bitangentAttribute = glGetAttribLocation(so.shader->glProgramName, "bitangent");
+	GLint textureCoordinateAttribute = glGetAttribLocation(so.shader->glProgramName, "textureCoordinate");
+	glUseProgram(0);
+	dispatch_semaphore_signal(so.shader->lock);
+
+	// For each VuoVertices in the sceneobject...
 	unsigned long verticesListCount = VuoListGetCount_VuoVertices(so.verticesList);
 	for (unsigned long i = 1; i <= verticesListCount; ++i)
 	{
 		VuoVertices vertices = VuoListGetValueAtIndex_VuoVertices(so.verticesList, i);
 		VuoSceneRendererInternal_vertices v;
 
-		v.positionBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, v.positionBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.positions, GL_STREAM_DRAW);
 
-		v.normalBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, v.normalBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.normals, GL_STREAM_DRAW);
+		// Combine the vertex attribute buffers together, so we only have to upload a single buffer:
 
-		v.tangentBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, v.tangentBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.tangents, GL_STREAM_DRAW);
 
-		v.bitangentBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, v.bitangentBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.bitangents, GL_STREAM_DRAW);
+		// Allocate client-side buffer
+		unsigned int bufferCount = 0;
+		++bufferCount; // positions
+		if (vertices.normals && normalAttribute>=0)
+			++bufferCount;
+		if (vertices.tangents && tangentAttribute>=0)
+			++bufferCount;
+		if (vertices.bitangents && bitangentAttribute>=0)
+			++bufferCount;
+		if (vertices.textureCoordinates && textureCoordinateAttribute>=0)
+			++bufferCount;
+		unsigned long singleBufferSize = sizeof(VuoPoint4d)*vertices.vertexCount;
+		VuoPoint4d *combinedData = (VuoPoint4d *)malloc(singleBufferSize*bufferCount);
 
-		v.textureCoordinateBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, v.textureCoordinateBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(VuoPoint4d)*vertices.vertexCount, vertices.textureCoordinates, GL_STREAM_DRAW);
 
+		// Combine vertex attributes into the client-side buffer
+		unsigned long combinedDataOffset = 0;
+		memcpy(combinedData + singleBufferSize*(combinedDataOffset++), vertices.positions, singleBufferSize);
+
+		void *normalOffset=0;
+		if (vertices.normals && normalAttribute>=0)
 		{
-			GLuint vertexArray;
-			glGenVertexArrays(1, &vertexArray);
-			glBindVertexArray(vertexArray);
-
-			v.elementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, v.elementBuffer);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*vertices.elementCount, vertices.elements, GL_STREAM_DRAW);
-
-			glBindVertexArray(0);
-			glDeleteVertexArrays(1, &vertexArray);
+			normalOffset = (void *)(singleBufferSize*combinedDataOffset);
+			memcpy((char *)combinedData + singleBufferSize*(combinedDataOffset++), vertices.normals, singleBufferSize);
 		}
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		void *tangentOffset=0;
+		if (vertices.tangents && tangentAttribute>=0)
+		{
+			tangentOffset = (void *)(singleBufferSize*combinedDataOffset);
+			memcpy((char *)combinedData + singleBufferSize*(combinedDataOffset++), vertices.tangents, singleBufferSize);
+		}
+
+		void *bitangentOffset=0;
+		if (vertices.bitangents && bitangentAttribute>=0)
+		{
+			bitangentOffset = (void *)(singleBufferSize*combinedDataOffset);
+			memcpy((char *)combinedData + singleBufferSize*(combinedDataOffset++), vertices.bitangents, singleBufferSize);
+		}
+
+		void *textureCoordinateOffset=0;
+		if (vertices.textureCoordinates && textureCoordinateAttribute>=0)
+		{
+			textureCoordinateOffset = (void *)(singleBufferSize*combinedDataOffset);
+			memcpy((char *)combinedData + singleBufferSize*(combinedDataOffset++), vertices.textureCoordinates, singleBufferSize);
+		}
+
+
+		// Create a Vertex Array Object, to store this sceneobject's vertex array bindings.
+		glGenVertexArrays(1, &v.vertexArray);
+		glBindVertexArray(v.vertexArray);
+
+
+		// Upload the combined buffer.
+		v.combinedBufferSize = singleBufferSize*bufferCount;
+		v.combinedBuffer = VuoGlPool_use(glContext, VuoGlPool_ArrayBuffer, v.combinedBufferSize);
+		glBindBuffer(GL_ARRAY_BUFFER, v.combinedBuffer);
+		glBufferData(GL_ARRAY_BUFFER, singleBufferSize*bufferCount, combinedData, GL_STREAM_DRAW);
+/// @todo https://b33p.net/kosada/node/6901
+//		glBufferSubData(GL_ARRAY_BUFFER, 0, v.combinedBufferSize, combinedData);
+		free(combinedData);
+
+
+		// Populate the Vertes Array Object with the various vertex attributes.
+		glEnableVertexAttribArray((GLuint)positionAttribute);
+		glVertexAttribPointer((GLuint)positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)0);
+
+		if (vertices.normals && normalAttribute>=0)
+		{
+			glEnableVertexAttribArray((GLuint)normalAttribute);
+			glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)normalOffset);
+		}
+
+		if (vertices.tangents && tangentAttribute>=0)
+		{
+			glEnableVertexAttribArray((GLuint)tangentAttribute);
+			glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)tangentOffset);
+		}
+
+		if (vertices.bitangents && bitangentAttribute>=0)
+		{
+			glEnableVertexAttribArray((GLuint)bitangentAttribute);
+			glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)bitangentOffset);
+		}
+
+		if (vertices.textureCoordinates && textureCoordinateAttribute>=0)
+		{
+			glEnableVertexAttribArray((GLuint)textureCoordinateAttribute);
+			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d), (void*)textureCoordinateOffset);
+		}
+
+
+		// Upload the Element Buffer and add it to the Vertex Array Object
+		v.elementBufferSize = sizeof(unsigned int)*vertices.elementCount;
+		v.elementBuffer = VuoGlPool_use(glContext, VuoGlPool_ElementArrayBuffer, v.elementBufferSize);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, v.elementBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*vertices.elementCount, vertices.elements, GL_STREAM_DRAW);
+/// @todo https://b33p.net/kosada/node/6901
+//		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, v.elementBufferSize, vertices.elements);
+
+
+		glBindVertexArray(0);
 
 		soi->vertices.push_back(v);
 	}
@@ -575,25 +610,22 @@ void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneR
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_releaseSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+void VuoSceneRenderer_cleanupSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 	for (std::list<VuoSceneRendererInternal_vertices>::iterator vi = soi->vertices.begin(); vi != soi->vertices.end(); ++vi)
 	{
-		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).positionBuffer);
-		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).normalBuffer);
-		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).tangentBuffer);
-		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).bitangentBuffer);
-		VuoGlPool_disuse(VuoGlPool_ArrayBuffer, (*vi).textureCoordinateBuffer);
+		VuoGlPool_disuse(glContext, VuoGlPool_ArrayBuffer, (*vi).combinedBufferSize, (*vi).combinedBuffer);
+		(*vi).combinedBuffer = 0;
 
-		/// @todo https://b33p.net/kosada/node/6752 — Why does this leak if we recycle it?
-		glDeleteBuffers(1,&(*vi).elementBuffer);
-//		VuoGlPool_disuse(VuoGlPool_ElementArrayBuffer, (*vi).elementBuffer);
+		VuoGlPool_disuse(glContext, VuoGlPool_ElementArrayBuffer, (*vi).elementBufferSize, (*vi).elementBuffer);
+		(*vi).elementBuffer = 0;
+
+		glDeleteVertexArrays(1, &(*vi).vertexArray);
+		(*vi).vertexArray = 0;
 	}
 	soi->vertices.clear();
-
-	VuoSceneObject_release(so);
 }
 
 /**
@@ -603,18 +635,40 @@ void VuoSceneRenderer_releaseSceneObject(VuoSceneObject so, VuoSceneRendererInte
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
 	{
 		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
-		VuoSceneRenderer_releaseSceneObjectsRecursively(childObject, &(*oi), glContext);
+		VuoSceneRenderer_cleanupSceneObjectsRecursively(childObject, &(*oi), glContext);
 	}
 
-	soi->childObjects.clear();
+	VuoSceneRenderer_cleanupSceneObject(so, soi, glContext);
 
-	VuoSceneRenderer_releaseSceneObject(so, soi, glContext);
+	soi->childObjects.clear();
+}
+
+/**
+ * Releases the Vuo objects related to this scenegraph.
+ *
+ * Must be called while scenegraphSemaphore is locked.
+ *
+ * @threadAnyGL
+ */
+void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so)
+{
+	if (so.childObjects)
+	{
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+			VuoSceneRenderer_releaseSceneObjectsRecursively(childObject);
+		}
+	}
+
+	VuoSceneObject_release(so);
 }
 
 /**
@@ -644,7 +698,7 @@ void VuoSceneRenderer_retainSceneObjectsRecursively(VuoSceneObject so)
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoGlContext glContext, VuoSceneObject rootSceneObject)
+void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoSceneObject rootSceneObject)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
@@ -653,14 +707,46 @@ void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoGlContext glCon
 
 	// Release the old scenegraph.
 	if (sceneRenderer->scenegraphValid)
-		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, glContext);
+	{
+		VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject);
+	}
 
 	// Upload the new scenegraph.
 	sceneRenderer->rootSceneObject = rootSceneObject;
-	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, glContext);
+	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
 
 	sceneRenderer->scenegraphValid = true;
 	sceneRenderer->needToRegenerateProjectionMatrix = true;
+	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
+}
+
+/**
+ * Changes the OpenGL context on which the scenegraph can be rendered.
+ *
+ * Requires use of both the old and new OpenGL contexts.
+ *
+ * @threadAnyGL
+ */
+void VuoSceneRenderer_switchContext(VuoSceneRenderer sr, VuoGlContext newGlContext)
+{
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+
+	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+
+	// Clean up the scenegraph on the old context.
+	if (sceneRenderer->scenegraphValid)
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+		VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+		glFlushRenderAPPLE();
+	}
+
+	// Upload the scenegraph on the new context.
+	sceneRenderer->glContext = newGlContext;
+	if (sceneRenderer->scenegraphValid)
+		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 }
 
@@ -701,11 +787,8 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 
 	if (sceneRenderer->scenegraphValid)
 	{
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, glContext);
-
-		VuoGlContext_disuse(glContext);
+		VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject);
 	}
 
 	if (sceneRenderer->cameraName)
@@ -716,4 +799,46 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 	VuoSceneObject_release(sceneRenderer->rootSceneObject);
 
 	free(sceneRenderer);
+}
+
+/**
+ * Creates an OpenGL Framebuffer Object, and uses it to render the scene to @c image and @c depthImage.
+ */
+void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoImage *depthImage)
+{
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+
+	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+
+	// Create a new GL Texture Object and Framebuffer Object.
+	GLuint outputTexture = VuoGlTexturePool_use(sceneRenderer->glContext, GL_RGBA, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_RGBA);
+
+	GLuint outputDepthTexture=0;
+	if (depthImage)
+		outputDepthTexture = VuoGlTexturePool_use(sceneRenderer->glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
+
+	GLuint outputFramebuffer;
+	glGenFramebuffers(1, &outputFramebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, outputFramebuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTexture, 0);
+	if (depthImage)
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, outputDepthTexture, 0);
+
+	{
+		glViewport(0, 0, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
+		glClearColor(0,0,0,0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		VuoSceneRenderer_draw(sceneRenderer);
+	}
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+	if (depthImage)
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDeleteFramebuffers(1, &outputFramebuffer);
+
+	*image = VuoImage_make(outputTexture, GL_RGBA, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
+	if (depthImage)
+		*depthImage = VuoImage_make(outputDepthTexture, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 }

@@ -195,6 +195,27 @@ VuoNode::TintColor VuoRendererCable::getTintColor(void)
 }
 
 /**
+ * Returns a boolean indicating whether this cable is connected to or from a node that is currently selected,
+ * either directly or by way of a collapsed typecast.
+ */
+bool VuoRendererCable::isConnectedToSelectedNode(void)
+{
+	VuoNode *fromNode = getBase()->getFromNode();
+	VuoNode *toNode = getBase()->getToNode();
+
+	bool fromNodeIsSelected = (fromNode && fromNode->hasRenderer() && fromNode->getRenderer()->isSelected());
+	bool toNodeIsSelected = (toNode && toNode->hasRenderer() && toNode->getRenderer()->isSelected());
+	bool toNodeViaTypeconverterIsSelected = toNode && toNode->hasRenderer() && toNode->getRenderer()->getProxyNode() && toNode->getRenderer()->getProxyNode()->isSelected();
+	bool toNodeViaDrawerIsSelected = toNode && toNode->hasRenderer() &&
+			dynamic_cast<VuoRendererMakeListNode *>(toNode->getRenderer()) &&
+			((VuoRendererMakeListNode *)(toNode->getRenderer()))->getHostInputPort() &&
+			((VuoRendererMakeListNode *)(toNode->getRenderer()))->getHostInputPort()->getRenderedParentNode() &&
+			((VuoRendererMakeListNode *)(toNode->getRenderer()))->getHostInputPort()->getRenderedParentNode()->isSelected();
+
+	return (fromNodeIsSelected || toNodeIsSelected || toNodeViaTypeconverterIsSelected || toNodeViaDrawerIsSelected);
+}
+
+/**
  * Draws the cable on @c painter.
  */
 void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -207,19 +228,22 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 	drawBoundingRect(painter);
 
 	VuoNode::TintColor tintColor = getTintColor();
+	VuoRendererColors::SelectionType selectionType =	(isSelected()?					VuoRendererColors::directSelection :
+														(isConnectedToSelectedNode()?	VuoRendererColors::indirectSelection :
+																						VuoRendererColors::noSelection));
 
 	qint64 timeOfLastActivity = (getRenderActivity()? timeLastEventPropagated : VuoRendererItem::notTrackingActivity);
 	VuoRendererColors *colors = new VuoRendererColors(tintColor,
-													  isSelected(),
-													  isSelected() ? false : hoverHighlightingEnabled,
-													  false,
+													  selectionType,
+													  (selectionType != VuoRendererColors::noSelection? false : hoverHighlightingEnabled),
+													  VuoRendererColors::noHighlight,
 													  timeOfLastActivity
 													  );
 
 	VuoRendererColors *yankZoneColors = new VuoRendererColors(tintColor,
+															  VuoRendererColors::noSelection,
 															  false,
-															  false,
-															  true,
+															  VuoRendererColors::standardHighlight,
 															  timeOfLastActivity);
 
 	QPainterPath cablePath = getCablePath();

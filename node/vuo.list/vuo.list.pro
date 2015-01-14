@@ -7,10 +7,6 @@ NODE_SOURCES += \
 	vuo.list.count.VuoLeapHand.c \
 	vuo.list.count.VuoLeapPointable.c \
 	vuo.list.count.VuoSyphonServerDescription.c \
-	vuo.list.get.VuoLeapFrame.c \
-	vuo.list.get.VuoLeapHand.c \
-	vuo.list.get.VuoLeapPointable.c \
-	vuo.list.get.VuoLeapPointableType.c \
 	vuo.list.get.VuoBlendMode.c \
 	vuo.list.get.VuoBoolean.c \
 	vuo.list.get.VuoColor.c \
@@ -21,6 +17,12 @@ NODE_SOURCES += \
 	vuo.list.get.VuoGradientNoise.c \
 	vuo.list.get.VuoImage.c \
 	vuo.list.get.VuoInteger.c \
+	vuo.list.get.VuoLayer.c \
+	vuo.list.get.VuoLeapFrame.c \
+	vuo.list.get.VuoLeapHand.c \
+	vuo.list.get.VuoLeapPointable.c \
+	vuo.list.get.VuoLeapPointableType.c \
+	vuo.list.get.VuoLoopType.c \
 	vuo.list.get.VuoMidiController.c \
 	vuo.list.get.VuoMidiDevice.c \
 	vuo.list.get.VuoMidiNote.c \
@@ -35,15 +37,17 @@ NODE_SOURCES += \
 	vuo.list.get.VuoSyphonServerDescription.c \
 	vuo.list.get.VuoText.c \
 	vuo.list.get.VuoTransform.c \
-	vuo.list.get.VuoVertices.c
-
-OTHER_FILES += $$NODE_SOURCES
+	vuo.list.get.VuoTransform2d.c \
+	vuo.list.get.VuoVertices.c \
+	vuo.list.get.VuoWave.c
 
 NODE_INCLUDEPATH += \
 	../vuo.image \
+	../vuo.layer \
 	../vuo.leap \
 	../vuo.math \
 	../vuo.midi \
+	../vuo.movie \
 	../vuo.noise \
 	../vuo.syphon
 

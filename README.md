@@ -33,14 +33,25 @@ Install Command Line Tools for Xcode:
 
 Install Homebrew:
 
-    ruby <(curl -fsSk https://raw.github.com/mxcl/homebrew/go)
+    ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go/install)"
     brew doctor
 
 Review the results of `brew doctor` and fix any problems it finds.
 
 ### LLVM and Clang
 
-Install LLVM and Clang 3.2:
+If you're running Mac OS 10.8 or earlier:
+
+    export CC=gcc
+    export CXX=g++
+
+If you're running Mac OS 10.9:
+
+    brew install apple-gcc42
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
 
     cd /tmp
     curl -OL http://llvm.org/releases/3.2/llvm-3.2.src.tar.gz
@@ -50,7 +61,7 @@ Install LLVM and Clang 3.2:
     tar zxf ../../clang-3.2.src.tar.gz
     mv clang-3.2.src clang
     cd ..
-    CC=gcc CXX=g++ CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --disable-bindings --enable-targets=host
+    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --disable-bindings --enable-targets=host
     make install -j9
     cd tools/clang
     make install -j9
@@ -104,16 +115,14 @@ Install Qt 5.1.1:
 
 ### ICU
 
-Install ICU 4.8.1.1:
-
     cd /tmp
-    curl -OL http://download.icu-project.org/files/icu4c/4.8.1/icu4c-4_8_1-src.tgz
-    tar zxf icu4c-4_8_1-src.tgz
+    curl -OL http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz
+    tar zxf icu4c-52_1-src.tgz
     cd icu/source/data/in
-    # Go to https://ssl.icu-project.org/datacustom/ICUData48.html, uncheck all except "Break Iterator", and download it into icu/source/data/in.
-    unzip -o icudt48l.zip
+    # Go to http://apps.icu-project.org/datacustom/, uncheck all except "Break Iterator", and download it into icu/source/data/in.
+    unzip -o icudt52l.zip
     cd ../..
-    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" ./configure --prefix=/usr/local/Cellar/icu4c/4.8.1.1/ --with-library-bits=64 --enable-static --disable-samples --disable-tests --disable-extras
+    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" ./configure --prefix=/usr/local/Cellar/icu4c/52.1/ --with-library-bits=64 --enable-static --disable-samples --disable-tests --disable-extras
     make install -j9
 
 ### JSON-C
@@ -124,16 +133,26 @@ Install JSON-C 0.10:
     curl -OL https://github.com/downloads/json-c/json-c/json-c-0.10.tar.gz
     tar zxf json-c-0.10.tar.gz
     cd json-c-0.10
-    ./configure --prefix=/usr/local/Cellar/json-c/0.10
+    CFLAGS="-Wno-error" ./configure --prefix=/usr/local/Cellar/json-c/0.10
     make install -j9
     cp json_object_iterator.h /usr/local/Cellar/json-c/0.10/include/json/
 
 ### ØMQ
 
-Install ØMQ 2.2.0:
+If you're running Mac OS 10.9:
 
-    (cd /usr/local && git checkout 1f32fa4 Library/Formula/zeromq.rb)
-    brew install zmq
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
+
+    cd /tmp
+    curl -OL http://download.zeromq.org/zeromq-2.2.0.tar.gz
+    tar zxf zeromq-2.2.0.tar.gz
+    cd zeromq-2.2.0
+    ./configure --prefix=/usr/local/Cellar/zeromq/2.2.0
+    make -j9
+    make install
 
 ### libffi
 
@@ -150,7 +169,12 @@ Install zlib 1.2.8:
 
 ### muParser
 
-Install muParser 2.2.3:
+If you're running Mac OS 10.9:
+
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
 
     cd /tmp
     curl -OL http://downloads.sourceforge.net/project/muparser/muparser/Version%202.2.3/muparser_v2_2_3.zip
@@ -168,7 +192,7 @@ Install muParser 2.2.3:
     cd freetype-2.5.0.1
     ./configure --prefix=/usr/local/Cellar/freetype/2.5.0.1 --enable-shared=no --without-bzip2
     make -j9
-    make install
+    make -k install
 
 ### FreeImage
 
@@ -176,8 +200,19 @@ Install muParser 2.2.3:
     curl -OL http://downloads.sourceforge.net/freeimage/FreeImage3154.zip
     unzip FreeImage3154.zip
     cd FreeImage
+
+If you're running Mac OS 10.8 or earlier:
+
     curl -OL http://sourceforge.net/p/freeimage/bugs/228/attachment/Makefile.osx2
     make -f Makefile.osx2
+
+If you're running Mac OS 10.9:
+
+    curl -OL http://sourceforge.net/p/freeimage/bugs/228/attachment/Makefile.osx-10.9
+    make -f Makefile.osx-10.9
+
+If you're running any version of Mac OS X:
+
     mkdir -p /usr/local/Cellar/freeimage/3.15.4/{lib,include}
     cp libfreeimage.a-x86_64 /usr/local/Cellar/freeimage/3.15.4/lib/libfreeimage.a
     cp Source/FreeImage.h /usr/local/Cellar/freeimage/3.15.4/include/
@@ -194,9 +229,16 @@ Install muParser 2.2.3:
 
 ### RtMidi
 
+If you're running Mac OS 10.9:
+
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
+
     cd /tmp
     curl -OL http://www.music.mcgill.ca/~gary/rtmidi/release/rtmidi-2.0.1.tar.gz
-    tar zxvf rtmidi-2.0.1.tar.gz
+    tar zxf rtmidi-2.0.1.tar.gz
     cd rtmidi-2.0.1
     ./configure
     make
@@ -217,6 +259,13 @@ Install muParser 2.2.3:
     make install
 
 ### Open Asset Import
+
+If you're running Mac OS 10.9:
+
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
 
     cd /tmp
     curl -OL http://downloads.sourceforge.net/project/assimp/assimp-3.0/assimp--3.0.1270-source-only.zip
@@ -263,6 +312,27 @@ Install muParser 2.2.3:
     make -j9
     make install
 
+### libusb
+
+    cd /tmp
+    curl -OL http://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
+    tar jxf libusb-1.0.9.tar.bz2
+    cd libusb-1.0.9
+    ./configure LDFLAGS='-framework IOKit -framework CoreFoundation' --prefix=/usr/local/Cellar/libusb/1.0.9
+    make -j9
+    make install
+    ln -s libusb-1.0.0.dylib /usr/local/Cellar/libusb/1.0.9/lib/libusb.dylib
+
+### libfreenect
+
+    cd /tmp
+    git clone git://github.com/OpenKinect/libfreenect.git
+    cd libfreenect
+    git checkout c4505ccacd # v0.2.0
+    LDFLAGS='-framework IOKit -framework CoreFoundation -lobjc' cmake -DLIBUSB_1_INCLUDE_DIR='/usr/local/Cellar/libusb/1.0.9/include;/usr/local/Cellar/libusb/1.0.9/include/libusb-1.0' -DLIBUSB_1_LIBRARY=/usr/local/Cellar/libusb/1.0.9/lib/libusb.dylib -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/Cellar/libfreenect/0.2.0 .
+    make -j9
+    make install
+
 ### ld64 133.3
 
 In the instructions below, `$ROOT` is the location of the top-level Vuo source code directory. 
@@ -274,7 +344,7 @@ Create a symbolic link to ld64 133.3 in the same directory as Clang (to force Cl
 ### OpenSSL 1.0.1c (unnecessary for Vuo end users)
 
     cd /tmp
-    curl -OL http://openssl.org/source/openssl-1.0.1c.tar.gz
+    curl -OL http://www.openssl.org/source/openssl-1.0.1c.tar.gz
     tar zxf openssl-1.0.1c.tar.gz
     cd openssl-1.0.1c
     ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1c --openssldir=/usr/local/etc/openssl no-zlib no-shared darwin64-x86_64-cc

@@ -31,6 +31,7 @@ NODE_CLASS_IMAGES += \
 	../node/vuo.math/vuo.math.subtract.integer.c \
 	../node/vuo.mouse/vuo.mouse.c \
 	../node/vuo.select/vuo.select.in.2.VuoInteger.c \
+        ../node/vuo.select/vuo.select.in.VuoInteger.c \
 	../node/vuo.select/vuo.select.latest.2.VuoInteger.c \
 	../node/vuo.select/vuo.select.out.2.VuoInteger.c \
 	../node/vuo.select/vuo.select.out.event.c \

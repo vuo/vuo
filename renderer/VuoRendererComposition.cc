@@ -765,13 +765,15 @@ void VuoRendererComposition::clearInternalPortEligibilityHighlighting()
 		for(vector<VuoPort *>::iterator inputPort = inputPorts.begin(); inputPort != inputPorts.end(); ++inputPort)
 		{
 			(*inputPort)->getRenderer()->updateGeometry();
-			(*inputPort)->getRenderer()->setEligibleForConnection(false);
+			(*inputPort)->getRenderer()->setEligibleForDirectConnection(false);
+			(*inputPort)->getRenderer()->setEligibleForConnectionViaTypecast(false);
 
 			VuoRendererTypecastPort *typecastPort = dynamic_cast<VuoRendererTypecastPort *>((*inputPort)->getRenderer());
 			if (typecastPort)
 			{
 				typecastPort->getChildPort()->updateGeometry();
-				typecastPort->getChildPort()->setEligibleForConnection(false);
+				typecastPort->getChildPort()->setEligibleForDirectConnection(false);
+				typecastPort->getChildPort()->setEligibleForConnectionViaTypecast(false);
 			}
 		}
 
@@ -779,7 +781,8 @@ void VuoRendererComposition::clearInternalPortEligibilityHighlighting()
 		for(vector<VuoPort *>::iterator outputPort = outputPorts.begin(); outputPort != outputPorts.end(); ++outputPort)
 		{
 			(*outputPort)->getRenderer()->updateGeometry();
-			(*outputPort)->getRenderer()->setEligibleForConnection(false);
+			(*outputPort)->getRenderer()->setEligibleForDirectConnection(false);
+			(*outputPort)->getRenderer()->setEligibleForConnectionViaTypecast(false);
 		}
 	}
 }

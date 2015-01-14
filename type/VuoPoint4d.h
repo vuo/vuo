@@ -194,6 +194,15 @@ static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b)
 }
 
 /**
+ *	Distance between @c a and @c b.
+ */
+static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
+static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b)
+{
+	return sqrtf((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) + (a.z-b.z)*(a.z-b.z) + (a.w-b.w)*(a.w-b.w));
+}
+
+/**
  * @}
  */
 

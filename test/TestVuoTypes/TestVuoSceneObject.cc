@@ -10,6 +10,8 @@
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoSceneObject.h"
+#include "VuoSceneRenderer.h"
+#include "VuoVerticesParametric.h"
 #include "VuoList_VuoSceneObject.h"
 #include "VuoList_VuoVertices.h"
 }
@@ -23,6 +25,21 @@ Q_DECLARE_METATYPE(VuoSceneObject);
 class TestVuoSceneObject : public QObject
 {
 	Q_OBJECT
+
+	VuoSceneObject makeCube(void)
+	{
+		VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
+		VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_makeCube(
+			VuoTransform_makeIdentity(),
+			VuoShader_makeImageShader(),
+			VuoShader_makeImageShader(),
+			VuoShader_makeImageShader(),
+			VuoShader_makeImageShader(),
+			VuoShader_makeImageShader(),
+			VuoShader_makeImageShader()));
+		VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), childObjects);
+		return rootSceneObject;
+	}
 
 private slots:
 	void initTestCase()
@@ -61,7 +78,7 @@ private slots:
 			VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuad());
 
 			VuoShader s = VuoShader_makeImageShader();
-			VuoImage image = VuoImage_make(42,640,480);
+			VuoImage image = VuoImage_make(42,0,640,480);
 			VuoShader_addTexture(s, glContext, "texture", image);
 
 			VuoSceneObject o = VuoSceneObject_make(
@@ -184,6 +201,193 @@ private slots:
 			QCOMPARE(QString::fromUtf8(VuoSceneObject_stringFromValue(value)), json);
 			QCOMPARE(QString::fromUtf8(VuoSceneObject_stringFromValue(VuoSceneObject_valueFromString(json.toUtf8().data()))), json);
 		}
+	}
+
+	/**
+	 * Make sure we don't crash when switching contexts.
+	 */
+	void testSwitchContext()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoRetain(sr);
+
+		// Copied from vuo.scene.render.window.
+
+		// vuo_scene_render_window_init
+		VuoSceneRenderer_prepareContext(sr);
+
+		// vuo_scene_render_window_resize
+		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
+
+		// nodeInstanceEvent
+		VuoSceneObject rootSceneObject = makeCube();
+		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+		VuoSceneRenderer_setCameraName(sr, "");
+
+		// vuo_scene_render_window_draw (kinda)
+		VuoImage i;
+		VuoSceneRenderer_renderToImage(sr, &i, NULL);
+		VuoRetain(i);
+		VuoRelease(i);
+
+		// vuo_scene_render_window_switchContext
+		VuoGlContext newGlContext = VuoGlContext_use();
+		VuoSceneRenderer_switchContext(sr, newGlContext);
+		VuoGlContext_disuse(glContext);
+
+		// vuo_scene_render_window_draw (kinda)
+		VuoSceneRenderer_renderToImage(sr, &i, NULL);
+		VuoRetain(i);
+		VuoRelease(i);
+
+		// vuo_scene_render_window_switchContext
+		VuoGlContext newGlContext2 = VuoGlContext_use();
+		VuoSceneRenderer_switchContext(sr, newGlContext2);
+
+		// vuo_scene_render_window_draw (kinda)
+		VuoSceneRenderer_renderToImage(sr, &i, NULL);
+		VuoRetain(i);
+		VuoRelease(i);
+
+		// nodeInstanceFini
+		VuoRelease(sr);
+
+		VuoGlContext_disuse(newGlContext);
+		VuoGlContext_disuse(newGlContext2);
+	}
+
+	void testRenderEmptySceneToImagePerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoRetain(sr);
+
+		QBENCHMARK {
+			// Copied from vuo.scene.render.image.
+
+			VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), VuoListCreate_VuoSceneObject());
+			VuoSceneObject_retain(rootSceneObject);
+
+			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+			VuoSceneRenderer_setCameraName(sr, "");
+			VuoSceneRenderer_prepareContext(sr);
+			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
+			VuoImage i;
+			VuoSceneRenderer_renderToImage(sr, &i, NULL);
+
+			VuoRetain(i);
+			VuoRelease(i);
+
+			VuoSceneObject_release(rootSceneObject);
+		}
+
+		VuoRelease(sr);
+		VuoGlContext_disuse(glContext);
+	}
+
+	void testRenderSphereToImagePerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoRetain(sr);
+
+		QBENCHMARK {
+			VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
+
+			// Copied from vuo.vertices.make.sphere
+			const char *xExp = "sin(DEG2RAD*((u-.5)*360)) * cos(DEG2RAD*((v-.5)*180)) / 2.";
+			const char *yExp = "sin(DEG2RAD*((v-.5)*180)) / 2.";
+			const char *zExp = "cos(DEG2RAD*((u-.5)*360)) * cos(DEG2RAD*((v-.5)*180)) / 2.";
+			const char *uExp = "u";
+			const char *vExp = "v";
+			VuoList_VuoVertices v = VuoVerticesParametric_generate( xExp, yExp, zExp, uExp, vExp,
+															 16, 16,
+															 false,		// close u
+															 false);	// close v
+			VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_make(v, VuoShader_makeImageShader(), VuoTransform_makeIdentity(), NULL));
+
+			VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), childObjects);
+			VuoSceneObject_retain(rootSceneObject);
+
+			// Copied from vuo.scene.render.image.
+			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+			VuoSceneRenderer_setCameraName(sr, "");
+			VuoSceneRenderer_prepareContext(sr);
+			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
+			VuoImage i;
+			VuoSceneRenderer_renderToImage(sr, &i, NULL);
+
+			VuoRetain(i);
+			VuoRelease(i);
+
+			VuoSceneObject_release(rootSceneObject);
+		}
+
+		VuoRelease(sr);
+		VuoGlContext_disuse(glContext);
+	}
+
+	/**
+	 * Tests generating, uploading, and rendering a cube (similar to what "Render Scene to Image" does when it receives an event).
+	 */
+	void testRenderCubeToImagePerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoRetain(sr);
+
+		QBENCHMARK {
+			VuoSceneObject rootSceneObject = makeCube();
+			VuoSceneObject_retain(rootSceneObject);
+
+			// Copied from vuo.scene.render.image.
+			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+			VuoSceneRenderer_setCameraName(sr, "");
+			VuoSceneRenderer_prepareContext(sr);
+			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
+			VuoImage i;
+			VuoSceneRenderer_renderToImage(sr, &i, NULL);
+
+			VuoRetain(i);
+			VuoRelease(i);
+
+			VuoSceneObject_release(rootSceneObject);
+		}
+
+		VuoRelease(sr);
+		VuoGlContext_disuse(glContext);
+	}
+
+	/**
+	 * Pregenerates and uploads a cube, then just tests rendering the cube.
+	 */
+	void testRenderStaticCubeToImagePerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoRetain(sr);
+
+		VuoSceneObject rootSceneObject = makeCube();
+		VuoSceneObject_retain(rootSceneObject);
+
+		// Copied from vuo.scene.render.image.
+		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+		VuoSceneRenderer_setCameraName(sr, "");
+		VuoSceneRenderer_prepareContext(sr);
+		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
+
+		QBENCHMARK {
+			VuoImage i;
+			VuoSceneRenderer_renderToImage(sr, &i, NULL);
+
+			VuoRetain(i);
+			VuoRelease(i);
+		}
+
+		VuoGlContext_disuse(glContext);
+		VuoSceneObject_release(rootSceneObject);
+		VuoRelease(sr);
 	}
 };
 

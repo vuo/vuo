@@ -19,6 +19,7 @@
 #include <mach-o/dyld.h> // for _NSGetExecutablePath()
 #include <libgen.h> // for dirname()
 #include <dirent.h>
+#include <fcntl.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -88,6 +89,7 @@ extern void nodeInstanceFini(void);
 extern void nodeInstanceTriggerStart(void);
 extern void nodeInstanceTriggerStop(void);
 extern void setInputPortValue(char *portIdentifier, char *valueAsString, int shouldUpdateCallbacks);
+extern void fireTriggerPortEvent(char *portIdentifier);
 extern char * getInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
 extern char * getOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
 extern char * getInputPortSummary(char *portIdentifier);
@@ -443,6 +445,14 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 					vuoControlReplySend(VuoControlReplyOutputPortSummaryRetrieved,messages,1);
 					break;
 				}
+				case VuoControlRequestTriggerPortFireEvent:
+				{
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					fireTriggerPortEvent(portIdentifier);
+					free(portIdentifier);
+					vuoControlReplySend(VuoControlReplyTriggerPortFiredEvent,NULL,0);
+					break;
+				}
 				case VuoControlRequestInputPortValueModify:
 				{
 					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
@@ -603,11 +613,17 @@ void sendOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataS
 	vuoTelemetrySend(VuoTelemetryOutputPortsUpdated, messages, 3);
 }
 
+void vuoStopComposition();
+
 /**
  * Constructs and sends a message on the telemetry socket, indicating that an uncaught error has occurred.
  */
 void sendError(const char *message)
 {
+	/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
+	if (strcmp(message, "Out of video RAM.") == 0)
+		vuoStopComposition();
+
 	zmq_msg_t messages[1];
 	vuoInitMessageWithString(&messages[0], message);
 

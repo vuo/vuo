@@ -114,6 +114,51 @@ VuoVertices VuoVertices_getQuad(void)
 }
 
 /**
+ * Returns a quad with dimensions 1x1, on the XY plane, centered at the origin.
+ *
+ * The quad consists of only positions and texture coordinates (without normals, tangents, or bitangents).
+ */
+VuoVertices VuoVertices_getQuadWithoutNormals(void)
+{
+	VuoVertices v;
+
+	v.vertexCount = 4;
+
+	v.positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*v.vertexCount);
+	VuoRegister(v.positions, free);
+	{
+		v.positions[0] = VuoPoint4d_make(-.5,-.5,0,1);
+		v.positions[1] = VuoPoint4d_make( .5,-.5,0,1);
+		v.positions[2] = VuoPoint4d_make(-.5, .5,0,1);
+		v.positions[3] = VuoPoint4d_make( .5, .5,0,1);
+	}
+
+	v.normals = NULL;
+	v.tangents = NULL;
+	v.bitangents = NULL;
+
+	v.textureCoordinates = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*v.vertexCount);
+	VuoRegister(v.textureCoordinates, free);
+	{
+		v.textureCoordinates[0] = VuoPoint4d_make(0,0,0,1);
+		v.textureCoordinates[1] = VuoPoint4d_make(1,0,0,1);
+		v.textureCoordinates[2] = VuoPoint4d_make(0,1,0,1);
+		v.textureCoordinates[3] = VuoPoint4d_make(1,1,0,1);
+	}
+
+	v.elementCount = 4;
+	v.elements = (unsigned int *)malloc(sizeof(unsigned int)*v.elementCount);
+	VuoRegister(v.elements, free);
+	v.elementAssemblyMethod = VuoVertices_TriangleStrip;
+	v.elements[0] = 0;
+	v.elements[1] = 1;
+	v.elements[2] = 2;
+	v.elements[3] = 3;
+
+	return v;
+}
+
+/**
  * Returns an equilateral triangle with bottom edge length 1, pointing upward on the XY plane, centered at the origin.
  */
 VuoVertices VuoVertices_getEquilateralTriangle(void)
@@ -148,6 +193,74 @@ VuoVertices VuoVertices_getEquilateralTriangle(void)
 	vertices.elements[0] = 0;
 	vertices.elements[1] = 1;
 	vertices.elements[2] = 2;
+
+	return vertices;
+}
+
+/**
+ * Returns a VuoVertices consisting of the given positions and element assembly method.
+ * Its normals, tangents, bitangents, and texture coordinates are all null.
+ */
+VuoVertices VuoVertices_makeFrom2dPoints(VuoList_VuoPoint2d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod)
+{
+	unsigned long count = VuoListGetCount_VuoPoint2d(positions);
+	VuoVertices vertices;
+
+	vertices.vertexCount = count;
+	vertices.positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*count);
+	VuoRegister(vertices.positions, free);
+
+	vertices.elementCount = count;
+	vertices.elements = (unsigned int *)malloc(sizeof(unsigned int)*count);
+	VuoRegister(vertices.elements, free);
+
+	for (unsigned long i = 0; i < count; ++i)
+	{
+		VuoPoint2d xy = VuoListGetValueAtIndex_VuoPoint2d(positions, i+1);
+		vertices.positions[i] = VuoPoint4d_make(xy.x, xy.y, 0, 1);
+		vertices.elements[i] = i;
+	}
+
+	vertices.elementAssemblyMethod = elementAssemblyMethod;
+
+	vertices.normals = NULL;
+	vertices.tangents = NULL;
+	vertices.bitangents = NULL;
+	vertices.textureCoordinates = NULL;
+
+	return vertices;
+}
+
+/**
+ * Returns a VuoVertices consisting of the given positions and element assembly method.
+ * Its normals, tangents, bitangents, and texture coordinates are all null.
+ */
+VuoVertices VuoVertices_makeFrom3dPoints(VuoList_VuoPoint3d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod)
+{
+	unsigned long count = VuoListGetCount_VuoPoint3d(positions);
+	VuoVertices vertices;
+
+	vertices.vertexCount = count;
+	vertices.positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*count);
+	VuoRegister(vertices.positions, free);
+
+	vertices.elementCount = count;
+	vertices.elements = (unsigned int *)malloc(sizeof(unsigned int)*count);
+	VuoRegister(vertices.elements, free);
+
+	for (unsigned long i = 0; i < count; ++i)
+	{
+		VuoPoint3d xyz = VuoListGetValueAtIndex_VuoPoint3d(positions, i+1);
+		vertices.positions[i] = VuoPoint4d_make(xyz.x, xyz.y, xyz.z, 1);
+		vertices.elements[i] = i;
+	}
+
+	vertices.elementAssemblyMethod = elementAssemblyMethod;
+
+	vertices.normals = NULL;
+	vertices.tangents = NULL;
+	vertices.bitangents = NULL;
+	vertices.textureCoordinates = NULL;
 
 	return vertices;
 }
@@ -293,17 +406,11 @@ VuoVertices VuoVertices_valueFromJson(json_object * js)
 			if (json_object_object_get_ex(js, "vertexCount", &o))
 				v.vertexCount = json_object_get_int64(o);
 			else
-			{
-				fprintf(stderr, "VuoVertices_valueFromJson() Error: I can't figure out how many vertices there are.\n");
 				return v;
-			}
 		}
 	}
 	else
-	{
-		fprintf(stderr, "VuoVertices_valueFromJson() Error: JSON object lacks a 'positions' array.\n");
 		return v;
-	}
 
 	if (json_object_object_get_ex(js, "elements", &o))
 	{
@@ -314,16 +421,8 @@ VuoVertices VuoVertices_valueFromJson(json_object * js)
 			if (json_object_object_get_ex(js, "elementCount", &o))
 				v.elementCount = json_object_get_int64(o);
 			else
-			{
-				fprintf(stderr, "VuoVertices_valueFromJson() Error: I can't figure out how many elements there are.\n");
 				return v;
-			}
 		}
-	}
-	else
-	{
-		fprintf(stderr, "VuoVertices_valueFromJson() Error: JSON object lacks an 'elements' array.\n");
-		return v;
 	}
 
 	// If "elements" is a JSON array, assume all other values are JSON arrays.
@@ -490,7 +589,7 @@ char * VuoVertices_summaryFromValue(const VuoVertices value)
 	else if (value.elementAssemblyMethod == VuoVertices_Points)
 	{
 		assemblyMethod = ", ";
-		objectCount = value.elementCount/2;
+		objectCount = value.elementCount;
 		objectString = "point";
 	}
 

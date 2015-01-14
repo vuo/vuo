@@ -86,6 +86,7 @@ private:
 	void generateGetPortValueOrSummaryFunction(bool isSummary, bool isInput, bool isThreadSafe);
 	void generateSetInputPortValueFunction(void);
 	void generateInitializationForPorts(BasicBlock *block, bool input);
+	void generateFireTriggerPortEventFunction(void);
 	void generatePublishedPortGetters(void);
 	void generateGetPublishedPortCountFunction(bool input);
 	void generateGetPublishedPortNamesFunction(bool input);

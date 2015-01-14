@@ -1,0 +1,53 @@
+/**
+ * @file
+ * Displays interactive gears using layers.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Count [type="vuo.math.count.real" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="62,296" fillcolor="yellow" _decrement="1.000000" _setCount="0.000000"];
+Divide2 [type="vuo.math.divide.real" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="100,565" fillcolor="orange" _b="-1.500000"];
+Divide3 [type="vuo.math.divide.real" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="83,439" fillcolor="cyan" _b="-2.000000"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-390,19"];
+Get2DPointValues [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="707,70"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="-84,243" fillcolor="yellow" _imageURL="\"Gear 8.png\""];
+GetImage2 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="-83,368" fillcolor="cyan" _imageURL="\"Gear 16.png\""];
+GetImage3 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="-84,40" _imageURL="\"Background Gradient.png\""];
+GetImage4 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="-79,681" _imageURL="\"Instructions.png\""];
+GetImage5 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="-72,494" fillcolor="orange" _imageURL="\"Gear 24.png\""];
+MakeLayer [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="247,243" fillcolor="yellow" _center="{\"x\":-0.550000,\"y\":-0.000000}" _width="0.700000" _alpha="1.000000"];
+MakeLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="248,368" fillcolor="cyan" _center="{\"x\":0.060000,\"y\":0.260000}" _width="0.700000" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="247,40" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _alpha="1.000000"];
+MakeLayer4 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="252,681" _center="{\"x\":0.000000,\"y\":-0.500000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
+MakeLayer5 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="259,494" fillcolor="orange" _center="{\"x\":0.600000,\"y\":-0.140000}" _width="0.700000" _alpha="1.000000"];
+MakeList5 [type="vuo.list.make.5.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="419,51" fillcolor="green"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="479,40" fillcolor="green"];
+
+Count:count -> Divide3:a;
+Count:count -> MakeLayer:rotation;
+Divide2:quotient -> MakeLayer5:rotation;
+Divide3:quotient -> Divide2:a;
+Divide3:quotient -> MakeLayer2:rotation;
+FireonStart:started -> GetImage2:refresh;
+FireonStart:started -> GetImage3:refresh;
+FireonStart:started -> GetImage4:refresh;
+FireonStart:started -> GetImage5:refresh;
+FireonStart:started -> GetImage:refresh;
+Get2DPointValues:y -> Count:increment;
+GetImage2:image -> MakeLayer2:image;
+GetImage3:image -> MakeLayer3:image;
+GetImage4:image -> MakeLayer4:image;
+GetImage5:image -> MakeLayer5:image;
+GetImage:image -> MakeLayer:image;
+MakeLayer2:layer -> MakeList5:item3;
+MakeLayer3:layer -> MakeList5:item1;
+MakeLayer4:layer -> MakeList5:item5;
+MakeLayer5:layer -> MakeList5:item4;
+MakeLayer:layer -> MakeList5:item2;
+MakeList5:list -> RenderLayersToWindow:layers;
+RenderLayersToWindow:scrolledMouse -> Get2DPointValues:point;
+}

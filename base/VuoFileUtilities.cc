@@ -92,6 +92,14 @@ string VuoFileUtilities::makeTmpDir(string dir)
 }
 
 /**
+ * Returns the path of the default temporary directory.
+ */
+string VuoFileUtilities::getTmpDir(void)
+{
+	return "/tmp";
+}
+
+/**
  * Writes the contents of the input @c string to a C file.
  */
 FILE * VuoFileUtilities::stringToCFile(const char *string)
@@ -124,6 +132,18 @@ string VuoFileUtilities::cFileToString(FILE *file)
 	}
 
 	return fileContents;
+}
+
+/**
+ * Writes the array of bytes to the file.
+ *
+ * If the file already exists, it gets overwritten.
+ */
+void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, string file)
+{
+	FILE *f = fopen(file.c_str(), "wb");
+	fwrite(data, sizeof(char *), numBytes, f);
+	fclose(f);
 }
 
 /**

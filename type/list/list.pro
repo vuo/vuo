@@ -25,6 +25,12 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoGradientNoise:0 \
 		VuoImage:1 \
 		VuoInteger:0 \
+		VuoLayer:2 \
+		VuoLeapFrame:2 \
+		VuoLeapHand:2 \
+		VuoLeapPointable:0 \
+		VuoLeapPointableType:0 \
+		VuoLoopType:0 \
 		VuoMidiController:0 \
 		VuoMidiDevice:2 \
 		VuoMidiNote:0 \
@@ -36,22 +42,21 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoReal:0 \
 		VuoSceneObject:2 \
 		VuoShader:1 \
+		VuoSyphonServerDescription:0 \
 		VuoText:1 \
 		VuoTransform:0 \
+		VuoTransform2d:0 \
 		VuoVertices:2 \
 		VuoWave:0 \
-		VuoLeapPointable:0 \
-		VuoLeapHand:2 \
-		VuoLeapFrame:2 \
-		VuoLeapPointableType:0 \
-		VuoSyphonServerDescription:0 \
 	)
 
 TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.image \
+	$$ROOT/node/vuo.layer \
 	$$ROOT/node/vuo.leap \
 	$$ROOT/node/vuo.math \
 	$$ROOT/node/vuo.midi \
+	$$ROOT/node/vuo.movie \
 	$$ROOT/node/vuo.noise \
 	$$ROOT/node/vuo.syphon
 

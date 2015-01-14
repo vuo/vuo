@@ -179,7 +179,7 @@ Value * VuoCompilerTriggerAction::generateDataValueDidChange(Module *module, Bas
 		// Load the current data.
 		//
 		// PortDataType *dataCopy = (PortDataType *)workerArg;
-		// PortDataType *data = *dataCopy;
+		// PortDataType data = *dataCopy;
 		// free(dataCopy);
 		PointerType *dataCopyPointerType = PointerType::get(portDataType, 0);
 		Value *dataCopyAsVoidPointer = triggerWorker->arg_begin();

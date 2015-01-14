@@ -28,7 +28,7 @@ typedef struct
 } sortable_pointValue;
 
 
-int compare (const void * a, const void * b)
+static int compare (const void * a, const void * b)
 {
 	sortable_pointValue *x = (sortable_pointValue*)a;
 	sortable_pointValue *y = (sortable_pointValue*)b;

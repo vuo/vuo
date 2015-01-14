@@ -1,4 +1,4 @@
-VUO_VERSION = 0.5.3
+VUO_VERSION = 0.5.4
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -15,7 +15,7 @@ QMAKE_CLEAN += -R
 QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a $${TARGET}.app
 
 LLVM_ROOT = /usr/local/Cellar/llvm/3.2
-ICU_ROOT = /usr/local/Cellar/icu4c/4.8.1.1
+ICU_ROOT = /usr/local/Cellar/icu4c/52.1
 JSONC_ROOT = /usr/local/Cellar/json-c/0.10
 GRAPHVIZ_ROOT = /usr/local/Cellar/graphviz/2.28.0
 QT_ROOT = /usr/local/Cellar/qt/5.1.1
@@ -31,6 +31,8 @@ RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.0.1270
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
 FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
+LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.9
+LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.2.0
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport

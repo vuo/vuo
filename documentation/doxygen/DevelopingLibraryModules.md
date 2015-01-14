@@ -6,7 +6,7 @@ A Vuo library module is a special kind of library. Although node classes can lin
 
 A library module can be implemented in C, C++, Objective-C, or another language, as long as it exports C symbols. 
 
-A library module can be used to manage global resources. For example, the @ref VuoGlTexturePool library module manages the pool of available OpenGL textures across node classes and port types. 
+A library module can be used to manage global resources. For example, the @ref VuoGlPool.cc library module manages the pool of available OpenGL objects across node classes and port types. 
 
 
 

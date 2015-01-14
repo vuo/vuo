@@ -60,7 +60,8 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	VuoCompilerType *listType = compiler->getType(listTypeNamePrefix + itemTypeStr);
 	Type *pointerToListType = PointerType::get(listType->getType(), 0);
 
-	Type *itemParamType = itemType->getFunctionParameterType();
+	Type *itemParamSecondType = NULL;
+	Type *itemParamType = itemType->getFunctionParameterType(&itemParamSecondType);
 	Attributes itemParamAttributes = itemType->getFunctionParameterAttributes();
 
 	Module *module = new Module("", getGlobalContext());
@@ -86,13 +87,22 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 
 	vector<Type *> eventFunctionParams;
 	for (unsigned long i = 0; i < itemCount; ++i)
+	{
 		eventFunctionParams.push_back(itemParamType);
+		if (itemParamSecondType)
+			eventFunctionParams.push_back(itemParamSecondType);
+	}
 	eventFunctionParams.push_back(pointerToListType);
 	FunctionType *eventFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), eventFunctionParams, false);
 	Function *eventFunction = Function::Create(eventFunctionType, GlobalValue::ExternalLinkage, "nodeEvent", module);
 
 	for (unsigned long i = 0; i < itemCount; ++i)
-		eventFunction->addAttribute(i + 1, itemParamAttributes);
+	{
+		int attributeIndex = (itemParamSecondType ? 2*i + 1 : i + 1);
+		eventFunction->addAttribute(attributeIndex, itemParamAttributes);
+		if (itemParamSecondType)
+			eventFunction->addAttribute(attributeIndex + 1, itemParamAttributes);
+	}
 
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", eventFunction, 0);
 	Function::arg_iterator argIter = eventFunction->arg_begin();
@@ -106,6 +116,13 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 
 		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoType:" + itemType->getBase()->getModuleKey(), "", 0);
 		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoInputData", "", 0);
+
+		if (itemParamSecondType)
+		{
+			arg = argIter++;
+			argName += ".1";
+			arg->setName(argName);
+		}
 	}
 	{
 		Value *arg = argIter++;
@@ -142,6 +159,8 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 		vector<Type *> functionParams;
 		functionParams.push_back(voidPointerType);
 		functionParams.push_back(itemParamType);
+		if (itemParamSecondType)
+			functionParams.push_back(itemParamSecondType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		listAppendFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listAppendFunctionName, module);
 
@@ -151,7 +170,11 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	argIter = eventFunction->arg_begin();
 	vector<Value *> itemValues;
 	for (unsigned long i = 0; i < itemCount; ++i)
+	{
 		itemValues.push_back(argIter++);
+		if (itemParamSecondType)
+			itemValues.push_back(argIter++);
+	}
 	Value *listVariable = argIter++;
 
 	CallInst *listValue = CallInst::Create(listCreateFunction, "", block);
@@ -159,9 +182,12 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 
 	for (unsigned long i = 0; i < itemCount; ++i)
 	{
+		int itemValuesIndex = (itemParamSecondType ? 2*i : i);
 		vector<Value *> listAppendParams;
 		listAppendParams.push_back(listValue);
-		listAppendParams.push_back(itemValues[i]);
+		listAppendParams.push_back(itemValues[itemValuesIndex]);
+		if (itemParamSecondType)
+			listAppendParams.push_back(itemValues[itemValuesIndex + 1]);
 		CallInst::Create(listAppendFunction, listAppendParams, "", block);
 	}
 

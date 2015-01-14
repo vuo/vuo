@@ -13,7 +13,10 @@
 #include "VuoGlContext.h"
 
 #include <vector>
+#include <utility>	///< for pair
+#include <queue>
 #include <map>
+#include <locale>
 using namespace std;
 
 #include <dispatch/dispatch.h>
@@ -21,7 +24,22 @@ using namespace std;
 #include <OpenGL/CGLMacro.h>
 
 
-static map<VuoGlPoolType,vector<GLuint> > VuoGlPool;
+
+/// @todo remove after https://b33p.net/kosada/node/6909
+static unsigned long long totalGLMemory = 256*1024*1024;	///< https://b33p.net/kosada/node/6908#comment-23731
+static unsigned long long totalGLMemoryAllocated = 0;  ///< https://b33p.net/kosada/node/6908
+typedef void (*sendErrorType)(const char *message);  ///< https://b33p.net/kosada/node/6908
+static sendErrorType sendError;
+static void __attribute__((constructor)) VuoGlPoolError_init(void)
+{
+	sendError = (sendErrorType) dlsym(RTLD_SELF, "sendError");  // for running composition in separate process as executable or in current process
+	if (! sendError)
+		sendError = (sendErrorType) dlsym(RTLD_DEFAULT, "sendError");  // for running composition in separate process as dynamic libraries
+}
+
+
+
+static map<VuoGlContext, map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > > VuoGlPool;
 static dispatch_semaphore_t VuoGlPool_semaphore;
 static void __attribute__((constructor)) VuoGlPool_init(void)
 {
@@ -29,39 +47,53 @@ static void __attribute__((constructor)) VuoGlPool_init(void)
 }
 
 /**
- * Returns an OpenGL object of type @c type.
+ * Returns an OpenGL Buffer Object of type @c type.
  *
- * If an existing, unused object is available, it is returned.
- * Otherwise, a new object is created.
+ * If an existing, unused buffer of the specified @c type and @c size is available, it is returned.
+ * Otherwise, a new buffer is created.
  *
- * @threadAny
+ * @todo https://b33p.net/kosada/node/6901 The returned buffer's storage ~~is~~ will be preallocated (so the caller can efficiently upload data using [glBufferSubData](http://www.opengl.org/sdk/docs/man/xhtml/glBufferSubData.xml)),
+ *
+ * @threadAnyGL
  */
-GLuint VuoGlPool_use(VuoGlPoolType type)
+GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long size)
 {
 	GLuint name = 0;
 
 	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		if (VuoGlPool[type].size())
+		if (VuoGlPool[glContext][type][size].size())
 		{
-			name = VuoGlPool[type].back();
-			VuoGlPool[type].pop_back();
+			name = VuoGlPool[glContext][type][size].back();
+			VuoGlPool[glContext][type][size].pop_back();
 		}
 		else
 		{
 //			VLog("allocating %d",type);
-			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 			if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
+			{
+				/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
+				totalGLMemoryAllocated += size;
+				if (totalGLMemoryAllocated > totalGLMemory)
+				{
+					sendError("Out of video RAM.");
+					goto error;
+				}
+
 				glGenBuffers(1, &name);
-			else if (type == VuoGlPool_Texture)
-				glGenTextures(1, &name);
+/// @todo https://b33p.net/kosada/node/6901
+//				GLenum bufferType = type == VuoGlPool_ArrayBuffer ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+//				glBindBuffer(bufferType, name);
+//				glBufferData(bufferType, size, NULL, GL_STREAM_DRAW);
+//				glBindBuffer(bufferType, 0);
+			}
 			else
 				VLog("Unknown pool type %d.", type);
-
-			VuoGlContext_disuse(cgl_ctx);
 		}
 	}
+error:
 	dispatch_semaphore_signal(VuoGlPool_semaphore);
 
 	return name;
@@ -73,30 +105,14 @@ GLuint VuoGlPool_use(VuoGlPoolType type)
  * The object is returned to the pool, so other callers can use it
  * (which is more efficient than deleting and re-generating objects).
  *
- * @threadAny
+ * @threadAnyGL
  */
-void VuoGlPool_disuse(VuoGlPoolType type, GLuint name)
+void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long size, GLuint name)
 {
 	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
-		{
-			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-			glDeleteBuffers(1, &name);
-			VuoGlContext_disuse(cgl_ctx);
-
-			/// @todo https://b33p.net/kosada/node/6752
-//			VuoGlPool[type].push_back(name);
-		}
-		else if (type == VuoGlPool_Texture)
-		{
-			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-			glDeleteTextures(1, &name);
-			VuoGlContext_disuse(cgl_ctx);
-
-			/// @todo https://b33p.net/kosada/node/5937
-//			VuoGlPool[type].push_back(name);
-		}
+			VuoGlPool[glContext][type][size].push_back(name);
 		else
 			VLog("Unknown pool type %d.", type);
 	}
@@ -105,16 +121,144 @@ void VuoGlPool_disuse(VuoGlPoolType type, GLuint name)
 
 
 
-typedef map<GLuint, unsigned int> VuoGlTexturePool;	///< The number of times each glTextureName is retained.
-VuoGlTexturePool VuoGlTexturePool_referenceCounts;  ///< The reference count for each OpenGL Texture Object.
-dispatch_semaphore_t VuoGlTexturePool_referenceCountsSemaphore = NULL;  ///< Synchronizes access to @c VuoGlTexturePool_referenceCounts.
+
+typedef pair<unsigned short,unsigned short> VuoGlTextureDimensionsType;	///< Texture width and height.
+typedef map<GLenum, map<VuoGlTextureDimensionsType, queue<GLuint> > > VuoGlTexturePoolType;	///< VuoGlTexturePool[internalformat][size] gives a list of unused textures.
+static VuoGlTexturePoolType VuoGlTexturePool;
+static dispatch_semaphore_t VuoGlTexturePool_semaphore;
+
+#if 0
+static void VuoGlTexturePool_dump(void *blah)
+{
+	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		VLog("pool (%llu MB allocated)", totalGLMemoryAllocated/1024);
+		for (VuoGlTexturePoolType::const_iterator internalformat = VuoGlTexturePool.begin(); internalformat != VuoGlTexturePool.end(); ++internalformat)
+		{
+			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
+			for (map<VuoGlTextureDimensionsType, queue<GLuint> >::const_iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); ++dimensions)
+				VLog("\t\t%dx%d: %lu unused textures",dimensions->first.first,dimensions->first.second, dimensions->second.size());
+		}
+	}
+	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
+}
+static void __attribute__((constructor)) VuoGlTexturePool_initDump(void)
+{
+	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*2, NSEC_PER_SEC*2);
+	dispatch_source_set_event_handler_f(timer, VuoGlTexturePool_dump);
+	dispatch_resume(timer);
+}
+#endif
+
+static void __attribute__((constructor)) VuoGlTexturePool_init(void)
+{
+	VuoGlTexturePool_semaphore = dispatch_semaphore_create(1);
+}
 
 /**
- * Initializes @c VuoGlTexturePool_referenceCountsSemaphore.
+ * Returns an OpenGL texture.
+ *
+ * If an existing, unused texture matching the specified @c internalformat, @c width, and @c height is available, it is returned.
+ * Otherwise, a new texture is created.
+ *
+ * The returned texture's storage is preallocated (so the caller can efficiently upload data using [glTexSubImage2D](http://www.opengl.org/sdk/docs/man/xhtml/glTexSubImage2D.xml)),
+ * and its texturing properties are set to the defaults:
+ *
+ *    - wrapping: clamp to border
+ *    - filtering: linear
+ *
+ * See [glTexImage2D](http://www.opengl.org/sdk/docs/man/xhtml/glTexImage2D.xml) for information about @c internalformat and @c format.
+ *
+ * @threadAnyGL
  */
-__attribute__((constructor)) static void VuoGlTexturePool_init(void)
+GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format)
 {
-	VuoGlTexturePool_referenceCountsSemaphore = dispatch_semaphore_create(1);
+//	VLog("want (%s %dx%d)", VuoGl_stringForConstant(internalformat), width, height);
+
+	GLuint name = 0;
+	VuoGlTextureDimensionsType dimensions(width,height);
+	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
+	if (VuoGlTexturePool[internalformat][dimensions].size())
+	{
+		name = VuoGlTexturePool[internalformat][dimensions].front();
+		VuoGlTexturePool[internalformat][dimensions].pop();
+//		if (name) VLog("using recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
+	}
+	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
+
+
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	if (name == 0)
+	{
+		/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
+		totalGLMemoryAllocated += width*height*4;
+		if (totalGLMemoryAllocated > totalGLMemory)
+		{
+			sendError("Out of video RAM.");
+			return 0;
+		}
+
+		glGenTextures(1, &name);
+		glBindTexture(GL_TEXTURE_2D, name);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_UNSIGNED_BYTE, NULL);
+//		VLog("allocated %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
+	}
+	else
+		glBindTexture(GL_TEXTURE_2D, name);
+
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return name;
+}
+
+/**
+ * Indicates that the caller is done using the OpenGL texture @c name.
+ *
+ * The texture is returned to the pool, so other callers can use it
+ * (which is more efficient than deleting and re-generating textures).
+ *
+ * @threadAnyGL
+ */
+static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLuint name)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	if (internalformat == 0)
+	{
+		VLog("Error:  Can't recycle texture %d since we don't know its internalformat.  Deleting.", name);
+		glDeleteTextures(1, &name);
+		return;
+	}
+
+	VuoGlTextureDimensionsType dimensions(width,height);
+	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		VuoGlTexturePool[internalformat][dimensions].push(name);
+	}
+	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
+
+//	VLog("recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
+}
+
+
+
+
+
+typedef map<GLuint, unsigned int> VuoGlTextureReferenceCounts;	///< The number of times each glTextureName is retained..
+static VuoGlTextureReferenceCounts VuoGlTexture_referenceCounts;  ///< The reference count for each OpenGL Texture Object.
+static dispatch_semaphore_t VuoGlTexture_referenceCountsSemaphore = NULL;  ///< Synchronizes access to @c VuoGlTexture_referenceCounts.
+static void __attribute__((constructor)) VuoGlTexture_init(void)
+{
+	VuoGlTexture_referenceCountsSemaphore = dispatch_semaphore_create(1);
 }
 
 /**
@@ -127,15 +271,15 @@ void VuoGlTexture_retain(GLuint glTextureName)
 	if (glTextureName == 0)
 		return;
 
-	dispatch_semaphore_wait(VuoGlTexturePool_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait(VuoGlTexture_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
 
-	VuoGlTexturePool::iterator it = VuoGlTexturePool_referenceCounts.find(glTextureName);
-	if (it == VuoGlTexturePool_referenceCounts.end())
-		VuoGlTexturePool_referenceCounts[glTextureName] = 1;
+	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
+	if (it == VuoGlTexture_referenceCounts.end())
+		VuoGlTexture_referenceCounts[glTextureName] = 1;
 	else
-		++VuoGlTexturePool_referenceCounts[glTextureName];
+		++VuoGlTexture_referenceCounts[glTextureName];
 
-	dispatch_semaphore_signal(VuoGlTexturePool_referenceCountsSemaphore);
+	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
 }
 
 /**
@@ -143,21 +287,117 @@ void VuoGlTexture_retain(GLuint glTextureName)
  *
  * @threadAny
  */
-void VuoGlTexture_release(GLuint glTextureName)
+void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName)
 {
 	if (glTextureName == 0)
 		return;
 
-	dispatch_semaphore_wait(VuoGlTexturePool_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait(VuoGlTexture_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
 
-	VuoGlTexturePool::iterator it = VuoGlTexturePool_referenceCounts.find(glTextureName);
-	if (it == VuoGlTexturePool_referenceCounts.end())
+	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
+	if (it == VuoGlTexture_referenceCounts.end())
 		fprintf(stderr, "Error: VuoGlTexture_release() was called with OpenGL Texture Object %d, which was never retained.\n", glTextureName);
 	else
 	{
-		if (--VuoGlTexturePool_referenceCounts[glTextureName] == 0)
-			VuoGlPool_disuse(VuoGlPool_Texture, glTextureName);
+		if (--VuoGlTexture_referenceCounts[glTextureName] == 0)
+		{
+			VuoGlContext glContext = VuoGlContext_use();
+			VuoGlTexurePool_disuse(glContext, internalformat, width, height, glTextureName);
+			VuoGlContext_disuse(glContext);
+		}
 	}
 
-	dispatch_semaphore_signal(VuoGlTexturePool_referenceCountsSemaphore);
+	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
+}
+
+
+/**
+ * Prints GLSL debug information to the console.
+ *
+ * @threadAnyGL
+ */
+void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
+{
+	int infologLength = 0;
+	int charsWritten  = 0;
+	char *infoLog;
+
+	glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+	if (infologLength > 0)
+	{
+		infoLog = (char *)malloc(infologLength);
+		glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+		fprintf(stderr,"%s\n",infoLog);
+		free(infoLog);
+	}
+}
+
+map<GLenum, map<long, GLuint> > VuoGlShaderPool;	///< Shaders, keyed by type (vertex, fragment, ...) and source code hash.
+dispatch_semaphore_t VuoGlShaderPool_semaphore = NULL;  ///< Synchronizes access to @c VuoGlShaderPool.
+
+/**
+ * Initializes @c VuoGlShaderPool_semaphore.
+ */
+__attribute__((constructor)) static void VuoGlShaderPool_init(void)
+{
+	VuoGlShaderPool_semaphore = dispatch_semaphore_create(1);
+}
+
+/**
+ * Returns an OpenGL Shader Object representing the specified @c source.
+ *
+ * To improve performance, this function keeps a cache of precompiled shaders.
+ * If a precompiled shader exists for the specified @c source, that shader is returned.
+ * Otherwise, @c source is passed off to OpenGL to be compiled.
+ */
+GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
+{
+	GLint length = strlen(source);
+
+	std::locale loc;
+	const std::collate<char> &coll = std::use_facet<std::collate<char> >(loc);
+	long hash = coll.hash(source, source+length);
+
+	dispatch_semaphore_wait(VuoGlShaderPool_semaphore, DISPATCH_TIME_FOREVER);
+
+	GLuint shader;
+	if (VuoGlShaderPool[type].find(hash) != VuoGlShaderPool[type].end())
+		shader = VuoGlShaderPool[type][hash];
+	else
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+		shader = glCreateShader(type);
+		glShaderSource(shader, 1, (const GLchar**)&source, &length);
+		glCompileShader(shader);
+		VuoGlShader_printShaderInfoLog(cgl_ctx, shader);
+
+		VuoGlShaderPool[type][hash] = shader;
+	}
+
+	dispatch_semaphore_signal(VuoGlShaderPool_semaphore);
+
+	return shader;
+}
+
+/**
+ * Returns a string for the specified OpenGL constant.
+ *
+ * Don't free the string returned by this function.
+ */
+const char * VuoGl_stringForConstant(GLenum constant)
+{
+	if (constant == GL_RGB)
+		return "GL_RGB";
+	if (constant == GL_RGBA)
+		return "GL_RGBA";
+	if (constant == GL_LUMINANCE8)
+		return "GL_LUMINANCE8";
+	if (constant == GL_LUMINANCE8_ALPHA8)
+		return "GL_LUMINANCE8_ALPHA8";
+	if (constant == GL_DEPTH_COMPONENT)
+		return "GL_DEPTH_COMPONENT";
+
+	return "(unknown)";
 }

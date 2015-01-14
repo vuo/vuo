@@ -10,7 +10,11 @@
 #ifndef VuoVertices_H
 #define VuoVertices_H
 
+#include "VuoPoint2d.h"
+#include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
+#include "VuoList_VuoPoint2d.h"
+#include "VuoList_VuoPoint3d.h"
 
 /**
  * @ingroup VuoTypes
@@ -40,10 +44,10 @@ typedef struct
 	unsigned int vertexCount; ///< Number of vertices in @c positions, @c normals, @c tangents, @c bitangents, and @c textureCoordinates.
 	/// @todo Change to `VuoDictionary_VuoPoint4D vertexAttributes;` once dictionaries exist: a string-keyed list of equal-size arrays of points (vertex attributes).  Typically contains at least 'positions', 'normals', and 'textureCoordinates'.
 	VuoPoint4d * positions; ///< XYZW vertex positions
-	VuoPoint4d * normals; ///< Vertex normals
-	VuoPoint4d * tangents; ///< Vertex tangents
-	VuoPoint4d * bitangents; ///< Vertex bitangents
-	VuoPoint4d * textureCoordinates; ///< STRQ texture coordinates
+	VuoPoint4d * normals; ///< Vertex normals.  May be @c NULL.
+	VuoPoint4d * tangents; ///< Vertex tangents.  May be @c NULL.
+	VuoPoint4d * bitangents; ///< Vertex bitangents.  May be @c NULL.
+	VuoPoint4d * textureCoordinates; ///< STRQ texture coordinates.  May be @c NULL.
 
 	unsigned int elementCount; ///< Number of elements in @c elements.
 	/**
@@ -58,7 +62,10 @@ typedef struct
 
 VuoVertices VuoVertices_alloc(unsigned int vertexCount, unsigned int elementCount);
 VuoVertices VuoVertices_getQuad(void);
+VuoVertices VuoVertices_getQuadWithoutNormals(void);
 VuoVertices VuoVertices_getEquilateralTriangle(void);
+VuoVertices VuoVertices_makeFrom2dPoints(VuoList_VuoPoint2d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod);
+VuoVertices VuoVertices_makeFrom3dPoints(VuoList_VuoPoint3d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod);
 
 VuoVertices VuoVertices_valueFromJson(struct json_object * js);
 struct json_object * VuoVertices_jsonFromValue(const VuoVertices value);

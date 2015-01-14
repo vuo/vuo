@@ -1,5 +1,5 @@
-Vuo is built and maintained by [Team Vuo](/about) and the Vuo Community.
-Everyone is encouraged to [contribute](/contribute) toward improving Vuo.
+Vuo is built and maintained by [Team Vuo](https://vuo.org/about) and the Vuo Community.
+Everyone is encouraged to [contribute](https://vuo.org/contribute) toward improving Vuo.
 
 ## Contributors
 
@@ -51,15 +51,24 @@ Thanks be to our contributors!
 ## Software Vuo uses
 
 [Clang](http://clang.llvm.org)  
+[Discount](http://www.pell.portland.or.us/~orc/Code/discount/)  
 [Doxygen](http://doxygen.org)  
+[FFmpeg](http://ffmpeg.org/)  
+[FreeImage](http://freeimage.sourceforge.net/)  
 [Graphviz](http://graphviz.org)  
 [ICU](http://icu-project.org)  
+[JSON-C](https://github.com/json-c/json-c/wiki)  
+[libcurl](http://curl.haxx.se/libcurl/)  
 [LLVM](http://llvm.org)  
 [LaTeX](http://tug.org)  
+[muParser](http://muparser.beltoforion.de)  
+[Open Asset Import](http://assimp.sourceforge.net)  
+[OpenSSL](http://www.openssl.org)  
 [Pandoc](http://johnmacfarlane.net/pandoc)  
+[RtMidi](http://www.music.mcgill.ca/~gary/rtmidi/)  
 [Qt](http://qt-project.org)  
 [ØMQ](http://zeromq.org)  
 
 ## Resources Vuo uses
 
-[Signika](http://ancymonic.com/Projects/signika.html)
+[Signika](http://ancymonic.com/projects/Signika)

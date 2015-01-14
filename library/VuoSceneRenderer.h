@@ -20,13 +20,16 @@ extern "C"
  */
 typedef void * VuoSceneRenderer;
 
-VuoSceneRenderer VuoSceneRenderer_make(void);
-void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer, VuoGlContext glContext);
+VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext);
+void VuoSceneRenderer_switchContext(VuoSceneRenderer sceneRenderer, VuoGlContext newGlContext);
+void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer);
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sceneRenderer, unsigned int width, unsigned int height);
-void VuoSceneRenderer_draw(VuoSceneRenderer sceneRenderer, VuoGlContext glContext);
-void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sceneRenderer, VuoGlContext glContext, VuoSceneObject rootSceneObject);
+
+void VuoSceneRenderer_draw(VuoSceneRenderer sceneRenderer);
+void VuoSceneRenderer_renderToImage(VuoSceneRenderer sceneRenderer, VuoImage *image, VuoImage *depthImage);
+
+void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sceneRenderer, VuoSceneObject rootSceneObject);
 void VuoSceneRenderer_setCameraName(VuoSceneRenderer sceneRenderer, VuoText cameraName);
-void VuoSceneRenderer_drawElement(VuoSceneRenderer sceneRenderer, VuoGlContext glContext, int element, float length);
 
 #ifdef __cplusplus
 }

@@ -40,6 +40,7 @@ typedef void (*VuoImage_freeCallback)(VuoImage imageToFree);
 struct _VuoImage
 {
 	unsigned int glTextureName;	///< The unique OpenGL texture identifier.
+	unsigned int glInternalFormat;	///< The OpenGL internal texture format (as provided to @c glTexImage2D).
 	unsigned long int glTextureTarget;	///< Always @c GL_TEXTURE_2D, unless converting from an @c IOSurface.
 	unsigned long int pixelsWide; ///< The horizontal size of the image, in pixels.
 	unsigned long int pixelsHigh; ///< The vertical size of the image, in pixels.
@@ -48,8 +49,10 @@ struct _VuoImage
 	void *freeCallbackContext;	///< User data for @c freeCallback.  See @ref VuoImage_makeClientOwned.
 };
 
-VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh);
+VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh);
 VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
+VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh);
+
 VuoImage VuoImage_valueFromJson(struct json_object * js);
 struct json_object * VuoImage_jsonFromValue(const VuoImage value);
 struct json_object * VuoImage_interprocessJsonFromValue(const VuoImage value);

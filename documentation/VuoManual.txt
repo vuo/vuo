@@ -138,7 +138,15 @@ Either right click, hit \key{Delete} or use the Editor's menu \menu{Edit > Cut s
 
 Now draw a new cable from the \vuoPort{Fired} port to the \vuoPort{decrement} port. Notice how the composition resumes and starts decrementing the count, all while the composition is running. 
 
-You can change data, rearrange cables, and even add nodes while a composition is running. 
+You can change data, rearrange cables, and even add nodes while a composition is running.
+
+## Viewing example compositions
+
+One way to learn how nodes work is to view Vuo's example compositions. To find the example compositions, use \menu{File > Open Example} to see a list of node sets. You can then hover over a node set to see relevant examples. Hovering over vuo.console, for example, will display the example compositions CalculateTip.vuo and HelloWorld.vuo. Clicking on an example composition will open it in the Vuo Editor. 
+
+To learn more about an example composition, open the composition and go to \menu{Edit > Composition Information}. This displays the composition's description, which includes instructions on how you can interact with it. 
+
+To see a list of descriptions for all example compositions for a node set, look in the node set documentation. In the Editor's Node Library (\menu{Window > Show Node Library}), find a node that belongs to that node set. For example, to learn more about the vuo.math example compositions, use the keyword "math" in the Node Library search window to find the nodes in that node set, or click on a node in the library that contains "math" in its class name. Clicking on any node in the node set will bring up a node popover that will contain a link to the node set documentation. Using that link will display some general information about that node set, as well as descriptions of the associated example compositions. 
 
 # Controlling the Flow of Events
 
@@ -271,19 +279,25 @@ Tip: With a type converter node, True can be converted to "1" and False can be c
 
 ### Routing data with select nodes
 
-A \vuoNode{Select Input} node lets you select a value from different input ports and route it to the output. When the \vuoNode{Select Input} node executes, it looks at what is present at the \vuoPort{which} port and outputs the value found at the corresponding port below it. For example, if the value "1" is present at the \vuoPort{which} port, whatever value is present at the \vuoPort{option1} port will be output. 
+A \vuoNode{Select Input} node lets you select a value from different input ports and route it to the output. A \vuoNode{Select Output} node lets you select an input value to route to different output ports.  There are two different classes of Select nodes. The first uses the values 1 and 2 to control how the node functions, while the second uses Boolean true or false values. The first set uses a class name beginning with "vuo.select.in.2.Vuo" or "vuo.select.out.2.Vuo" while the second set uses a class name beginning with "vuo.select.in.Vuo" or vuo.select.out.Vuo." With these two different classes, you can control your composition based on what makes sense with respect to the rest of your composition. 
+
+\noteQCUsers{Vuo's \vuoNode{Select Input} node is similar to Quartz Composer's Multiplexer patch. Vuo's \vuoNode{Select Output} node is similar to Quartz Composer's Demultiplexer patch.}
+
+\noteTextProgrammers{Vuo's \vuoNode{Select Input} and \vuoNode{Select Output} are similar to \code{if}/\code{else} or \code{switch}/\code{case} statements.}
+
+When the \vuoNode{Select Input} node executes, it looks at what is present at the \vuoPort{which} port and outputs the value found at the corresponding port below it. For example, if the value "1" is present at the \vuoPort{which} port, whatever value is present at the \vuoPort{option1} port will be output. 
 
 \vuoNodeClassImage{vuo.select.in.2.VuoInteger}
 
 Notice that the \vuoPort{which} port has an event wall, as shown by the solid semi-circle. In order to get the node to output an event, you need to send an event to the selected input port or the refresh port. It won't work if you just send an event to the \vuoPort{which} port. 
 
+Here is an example of the node using Boolean values to control how it functions:
+
+\vuoNodeClassImage{vuo.select.in.VuoInteger}
+
 Here is a composition using both a logic node and a \vuoNode{Select Input} node. The composition will write "The count is less than five" four times, before "The count is 5 or more" begins to be written. 
 
 \vuoCompositionImage{CountIsLessThanToConsole}
-
-\noteQCUsers{Vuo's \vuoNode{Select Input} node is similar to Quartz Composer's Multiplexer patch. Vuo's \vuoNode{Select Output} node is similar to Quartz Composer's Demultiplexer patch.}
-
-\noteTextProgrammers{Vuo's \vuoNode{Select Input} and \vuoNode{Select Output} are similar to \code{if}/\code{else} or \code{switch}/\code{case} statements.}
 
 A \vuoNode{Select Output} node lets you route an input value to one of several outputs. Similar to the \vuoNode{Select Input}, you pick an output port using the \vuoPort{which} input port. Here "1" will send the information from the \vuoPort{in} to \vuoPort{option1}, while an input of "2" will send the information to \vuoPort{option2}. You can see here that it is important to notice if the \vuoPort{which} is expecting a Boolean "True" or "False," or if it is expecting a number "1" or "2." Vuo provides switches that use both numbers and Boolean values. 
 
@@ -406,7 +420,7 @@ The Vuo Editor will help you by adding some type converters automatically. If yo
 
 Vuo has a special set of type converters for data-and-event cables to remove (discard) the data from an event. If you want to convert a data-and-event cable to an event-only cable, use a \vuoNode{Discard Data from Event} type converter.
 
-\noteQCUsers{The Quartz Composer equivalent to a \term{type-converter} is represented as a darker red line in QC.  The benefit of exposing these conversions is greater control over how your data is interpreted.}}
+\noteQCUsers{The Quartz Composer equivalent to a \term{type-converter} is represented as a darker red line in QC.  The benefit of exposing these conversions is greater control over how your data is interpreted.}
 
 \vuoCompositionImageWithCaption{CheckSMSLength}{A composition, Check SMS Length, showing a type converter discarding data from an event}
 
@@ -469,11 +483,11 @@ If you are interested in exploring new opportunities, this is an ideal way to ca
 
 ### Finding Nodes
 
-In the top of the Node Library there is a search bar. You can type in part of a node name or a keyword and matching nodes will show up in the Library. If you delete your search, the entire library will appear again. 
+In the top of the Node Library there is a search bar. You can type in part of a node name or a keyword and matching nodes will show up in the Library. Pressing \key{Esc} while in the search bar will clear out your selection and show the entire library, as will deleting your search term.
 
 Your search terms will match not only against the names of relevant nodes, but also against keywords that we have specifically assigned to each node to help facilitate the transition for any of you who might have previous experience with other multimedia environments or programming languages.
 
-For example, users familiar with multiplexers might type "multiplex" into the Vuo Node Library search field to discover Vuo's "Select Input" family of nodes with the equivalent functionality; users with a background in textual programming might search for the term "string" and discover the Vuo "Text" node family.
+For example, users familiar with multiplexers might type "multiplex" into the Vuo Node Library search field to discover Vuo's "Select Input" family of nodes with the equivalent functionality; users with a background in textual programming might search for the term "string" and discover the Vuo "Text" node family. Users don't have to know the exact node title or port name. To find a node with a trigger port, for example, go to the Node library and type in the keywords "events," "trigger," or "fire."
 
 If you do not see a node, particularly if you have received it from someone else, review the procedures under [Installing a node](#installing-a-node).
 
@@ -551,16 +565,28 @@ Special copy/paste behavior to note:
             If you copy a node with a published port, that port will be published under the same name (if possible) in whatever composition you paste it into. The published port will be created if it does not already exist, merged if an existing published port of the same name and compatible type does exist, or renamed if an identically-named published port already exists but has an incompatible type.
 
 
-## Running and stopping a composition
+
+## Running a composition
+
+After you've built your composition (or while you're building it), you can run it to see it in action. 
+
+
+### Starting and stopping a composition
 
 You can run a composition by clicking the Run button. (Or go to \menu{Run > Run}.) 
 
 You can stop a composition by clicking the Stop button. (Or go to \menu{Run > Stop}.) 
 
 
-## Debugging a composition
+### Firing an event manually
 
-Various features of the Editor, described in [Troubleshooting](#troubleshooting), can help you with debugging.
+As you're editing your running composition, you may want to fire extra events so that your changes become immediately visible, rather than waiting for the next time a trigger port happens to fire. You can cause a trigger port to fire an event by right-clicking on the trigger port to pop up a menu, then choosing \menu{Fire Event}. Or you can hold down \key{Command} while left-clicking on the trigger port. If the trigger port carries data, it outputs its most recent data along with the event. 
+
+
+### Troubleshooting a running composition
+
+In case your composition isn't working correctly, the Vuo Editor provides features that can help you see exactly what events and data are flowing through your composition. For more information, see the section on [Troubleshooting](#troubleshooting). 
+
 
 
 ## Exporting a composition to an application

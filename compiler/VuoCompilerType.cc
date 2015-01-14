@@ -286,7 +286,13 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 
 	if (! function)
 	{
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), getFunctionParameterType(), false);
+		Type *secondParamType = NULL;
+		Type *firstParamType = getFunctionParameterType(&secondParamType);
+		vector<Type *> functionParams;
+		functionParams.push_back(firstParamType);
+		if (secondParamType)
+			functionParams.push_back(secondParamType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 		function->addAttribute(1, getFunctionParameterAttributes());
 	}
@@ -419,8 +425,9 @@ Type * VuoCompilerType::getType(void)
  *
  * This is needed, for example, for struct parameters with the "byval" attribute.
  */
-Type * VuoCompilerType::getFunctionParameterType(void)
+Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
 {
+	*secondType = (jsonFromValueFunction->getFunctionType()->getNumParams() == 2 ? jsonFromValueFunction->getFunctionType()->getParamType(1) : NULL);
 	return jsonFromValueFunction->getFunctionType()->getParamType(0);
 }
 

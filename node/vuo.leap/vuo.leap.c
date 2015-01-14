@@ -18,7 +18,7 @@ VuoModuleMetadata({
 						  "VuoLeap"
 					  ],
 					  "node": {
-						  "isInterface" : false,
+						  "isInterface" : true,
 						  "exampleCompositions" : [ "CountLeapObjects.vuo", "TwirlImageWithLeap.vuo" ]
 					  }
 				 });

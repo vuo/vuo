@@ -15,18 +15,18 @@ VuoModuleMetadata({
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false,
-						 "exampleCompositions" : [ "SwitchCameras.vuo" ]
+						 "exampleCompositions" : [ "Compare4Cameras.vuo", "SwitchCameras.vuo" ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":"camera"}) name,
-		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":1.0}}) position,
-		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}}) rotation,
-		VuoInputData(VuoReal, {"default":90.0,"suggestedMin":0.01,"suggestedMax":179.9}) fieldOfView,
-		VuoInputData(VuoReal, {"default":0.1,"suggestedMin":0.01}) distanceMin,
-		VuoInputData(VuoReal, {"default":10.0,"suggestedMin":0.01}) distanceMax,
+		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":1.0}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) position,
+		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMin":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMax":{"x":360.0,"y":360.0,"z":360.0}, "suggestedStep":{"x":1.0,"y":1.0,"z":1.0}}) rotation,
+		VuoInputData(VuoReal, {"default":90.0, "suggestedMin":0.01, "suggestedMax":179.9, "suggestedStep":1.0}) fieldOfView,
+		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0.01, "suggestedStep":1.0}) distanceMin,
+		VuoInputData(VuoReal, {"default":10.0, "suggestedMin":0.01, "suggestedStep":1.0}) distanceMax,
 		VuoOutputData(VuoSceneObject) object
 )
 {

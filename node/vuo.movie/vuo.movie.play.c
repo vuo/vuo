@@ -27,7 +27,12 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "PlayMovie.vuo" ]
+						  "exampleCompositions" : [
+							  "PlayMovie.vuo",
+							  "PlayMoviesOnCube.vuo",
+							  "PlayMovieWithButton.vuo",
+							  "SimulateFilmProjector.vuo"
+						  ]
 					  },
 					  "dependencies" : [
 						"VuoMovie"
@@ -37,7 +42,7 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	VuoMovie *movie;
+	VuoMovie movie;
 	bool isPlaying;
 
 	dispatch_time_t movieStartTime;
@@ -45,8 +50,13 @@ struct nodeInstanceData
 
 	VuoLoopType loop;
 
+	VuoReal playbackRate;
+	VuoReal moviePtsStart;
+
 	dispatch_source_t timer;
 	dispatch_semaphore_t timerCanceled;
+
+	double duration;
 };
 
 
@@ -76,7 +86,10 @@ static void playNextFrame(struct nodeInstanceData *context, VuoOutputTrigger(dec
 
 	// Decode next frame
 	double presentationRelativeSeconds = 0;
-	bool gotFrame = VuoMovie_getNextFrame(context->movie, &context->lastImage, &presentationRelativeSeconds);
+
+	bool gotFrame = (context->playbackRate) > 0 ?
+			VuoMovie_getNextFrame(context->movie, &context->lastImage, &presentationRelativeSeconds) :
+			VuoMovie_getPreviousFrame(context->movie, &context->lastImage, &presentationRelativeSeconds);
 
 	VuoRetain(context->lastImage);
 
@@ -90,23 +103,35 @@ static void playNextFrame(struct nodeInstanceData *context, VuoOutputTrigger(dec
 				break;
 
 			case VuoLoopType_Loop:
-				VuoMovie_seekToSecond( context->movie, 0.);
+
+				presentationRelativeSeconds = context->playbackRate > 0 ? 0 : context->duration;
+				VuoMovie_seekToSecond(context->movie, presentationRelativeSeconds);
 				context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);
-				presentationRelativeSeconds = 0;
+				context->moviePtsStart = VuoMovie_getCurrentSecond(context->movie);
+
 				break;
 
 			case VuoLoopType_Mirror:
+
+				context->playbackRate = -context->playbackRate;
+				context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);
+				context->moviePtsStart = VuoMovie_getCurrentSecond(context->movie);
+
+				presentationRelativeSeconds = context->playbackRate > 0 ? 0 : context->duration;
+
 				/// @todo (https://b33p.net/kosada/node/6601)
 				break;
 		}
 	}
+
+	presentationRelativeSeconds = ( (presentationRelativeSeconds-context->moviePtsStart) / context->playbackRate );
 
 	// Schedule next frame
 	uint64_t presentationTime = (shouldContinue ?
 									 dispatch_time(context->movieStartTime, presentationRelativeSeconds * NSEC_PER_SEC) :
 									 DISPATCH_TIME_FOREVER);
 
-	dispatch_source_set_timer(context->timer, presentationTime, 1, NSEC_PER_SEC / 1000);
+	dispatch_source_set_timer(context->timer, presentationTime, DISPATCH_TIME_FOREVER, NSEC_PER_SEC / 1000);
 }
 
 static void playMovie(struct nodeInstanceData *context, VuoOutputTrigger(decodedImage, VuoImage))
@@ -117,10 +142,10 @@ static void playMovie(struct nodeInstanceData *context, VuoOutputTrigger(decoded
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	context->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
 
-	context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);
-//	context->debugFrameCount = 0;
+	context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);//, - ((VuoMovie_getCurrentSecond(context->movie) * (1./context->playbackRate)) * NSEC_PER_SEC));
+	context->moviePtsStart = VuoMovie_getCurrentSecond(context->movie);
 
-	dispatch_source_set_timer(context->timer, DISPATCH_TIME_NOW, 1, 0);
+	dispatch_source_set_timer(context->timer, DISPATCH_TIME_NOW, DISPATCH_TIME_FOREVER, 0);
 	dispatch_source_set_event_handler(context->timer, ^{
 										  playNextFrame(context, decodedImage);
 									  });
@@ -132,7 +157,7 @@ static void playMovie(struct nodeInstanceData *context, VuoOutputTrigger(decoded
 
 static void setMovie(struct nodeInstanceData *context, const char *movieURL)
 {
-	VuoMovie *newMovie = VuoMovie_make(movieURL);
+	VuoMovie newMovie = VuoMovie_make(movieURL);
 
 	// If VuoMovie_make fails to initialize properly, it cleans up after itself.
 	// No need to call VuoMovie_free()
@@ -142,20 +167,26 @@ static void setMovie(struct nodeInstanceData *context, const char *movieURL)
 	VuoRetain(newMovie);
 	VuoRelease(context->movie);
 	context->movie = newMovie;
+	context->duration = VuoMovie_getDuration(context->movie);
 }
-
 
 struct nodeInstanceData * nodeInstanceInit
 (
 		VuoInputData(VuoText) movieURL,
-		VuoInputData(VuoLoopType) loop
+		VuoInputData(VuoReal) playbackRate,
+		VuoInputData(VuoLoopType) loop,
+		VuoInputData(VuoReal) setTime
 )
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *) calloc(1, sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 	context->timerCanceled = dispatch_semaphore_create(0);
 	context->loop = loop;
+	context->playbackRate = playbackRate;
 	setMovie(context, movieURL);
+
+	if(context->movie != NULL)
+		VuoMovie_seekToSecond(context->movie, setTime);
 
 	return context;
 }
@@ -174,10 +205,15 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoText, {"default":""}) movieURL,
-		VuoInputEvent(VuoPortEventBlocking_Wall, movieURL) movieURLEvent,
+		VuoInputEvent(VuoPortEventBlocking_None, movieURL) movieURLEvent,
 		VuoInputEvent(VuoPortEventBlocking_None,) play,
+		VuoInputEvent(VuoPortEventBlocking_None,) pause,
 		VuoInputData(VuoLoopType, {"default":"loop"}) loop,
-//		VuoInputData(VuoReal, {"default":1., "suggestedMin":-2., "suggestedMax":2.}) playbackRate,   /// @todo (https://b33p.net/kosada/node/6596, https://b33p.net/kosada/node/6597)
+		VuoInputData(VuoReal, {"default":1., "suggestedMin":-2., "suggestedMax":2.}) playbackRate,   /// @todo (https://b33p.net/kosada/node/6596, https://b33p.net/kosada/node/6597)
+
+		VuoInputData(VuoReal, {"default":""}) setTime,
+		VuoInputEvent(VuoPortEventBlocking_None, setTime) setTimeEvent,
+
 		VuoOutputTrigger(decodedImage, VuoImage)
 )
 {
@@ -192,12 +228,40 @@ void nodeInstanceEvent
 			playMovie(*context, decodedImage);
 	}
 
+	if((*context)->playbackRate != playbackRate)
+	{
+		if((*context)->isPlaying && (*context)->playbackRate != 0)
+			pauseMovie(*context);
+
+		(*context)->playbackRate = playbackRate;
+
+		if( (*context)->isPlaying && playbackRate != 0)
+			playMovie(*context, decodedImage);
+	}
+
+	if(setTimeEvent && (*context)->movie != NULL)
+	{
+		if ((*context)->isPlaying)
+			pauseMovie((*context));
+
+		VuoMovie_seekToSecond( (*context)->movie, setTime );
+
+		if ((*context)->isPlaying)
+			playMovie((*context), decodedImage);
+	}
+
 	(*context)->loop = loop;
 
 	if (play && ! (*context)->isPlaying)
 	{
 		(*context)->isPlaying = true;
 		playMovie(*context, decodedImage);
+	}
+
+	if( pause && (*context)->isPlaying)
+	{
+		(*context)->isPlaying = false;
+		pauseMovie(*context);
 	}
 }
 

@@ -22,36 +22,12 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoPoint3d, {"default":{"x":0,"y":0,"z":0}}) center,
-		VuoInputData(VuoPoint3d, {"default":{"x":0,"y":0,"z":0}}) rotation,
-		VuoInputData(VuoReal, {"default":1.0}) width,
+		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
+		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMin":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMax":{"x":360.0,"y":360.0,"z":360.0}, "suggestedStep":{"x":1.0,"y":1.0,"z":1.0}}) rotation,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) alpha,
 		VuoOutputData(VuoSceneObject) object
 )
 {
-	if (!image)
-	{
-		*object = VuoSceneObject_makeEmpty();
-		return;
-	}
-
-	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
-	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuad());
-	*object = VuoSceneObject_make(
-				verticesList,
-				VuoShader_makeImageShader(),
-				VuoTransform_makeEuler(
-					center,
-					VuoPoint3d_multiply(rotation, M_PI/180.),
-					VuoPoint3d_make(width,image->pixelsHigh * width/image->pixelsWide,1)
-				),
-				NULL
-			);
-
-	{
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoShader_addTexture(object->shader, glContext, "texture", image);
-
-		VuoGlContext_disuse(glContext);
-	}
+	*object = VuoSceneObject_makeImage(image, center, rotation, width, alpha);
 }

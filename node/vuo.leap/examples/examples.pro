@@ -10,7 +10,6 @@ EXAMPLE_SOURCES += \
 	PlayFingerPuppetsWithLeap.vuo \
 	PlayTennisWithLeap.vuo \
 	TwirlImageWithLeap.vuo
-OTHER_FILES += $$EXAMPLE_SOURCES
 
 }
 

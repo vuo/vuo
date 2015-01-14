@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Plays a movie, and applies filters to make it look like an old-fashioned film projection.
+ *
+ * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImages [type="vuo.image.filter.blend" version="1.0.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<done>done\r|<blended>blended\r" pos="413,92" _blendMode="\"luminosity\"" _foregroundOpacity="1.000000"];
+BlendImages2 [type="vuo.image.filter.blend" version="1.0.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<done>done\r|<blended>blended\r" pos="423,268" _blendMode="\"multiply\"" _foregroundOpacity="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-84,69"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="161,9" _imageURL="\"black.png\""];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="163,107" _movieURL="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\""];
+PlayMovie3 [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="160,283" _movieURL="\"16mm.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\""];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="413,424"];
+
+
+BlendImages2:blended -> RenderImageToWindow:image;
+BlendImages:blended -> BlendImages2:background;
+FireOnStart:started -> GetImage:refresh;
+FireOnStart:started -> PlayMovie3:play;
+FireOnStart:started -> PlayMovie:play;
+GetImage:image -> BlendImages:background;
+PlayMovie3:decodedImage -> BlendImages2:foreground;
+PlayMovie:decodedImage -> BlendImages:foreground;
+}

@@ -18,9 +18,6 @@
 
 #include <OpenGL/CGLMacro.h>
 
-#define DEBUG 0
-
-
 VuoModuleMetadata({
 					 "title" : "Render Scene to Window",
 					 "keywords" : [ "frame", "draw", "opengl", "scenegraph", "graphics", "display", "view", "object",
@@ -55,7 +52,13 @@ void vuo_scene_render_window_init(VuoGlContext glContext, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	VuoSceneRenderer_prepareContext(context->sceneRenderer, glContext);
+	if (!context->sceneRenderer)
+	{
+		context->sceneRenderer = VuoSceneRenderer_make(glContext);
+		VuoRetain(context->sceneRenderer);
+	}
+
+	VuoSceneRenderer_prepareContext(context->sceneRenderer);
 }
 
 void vuo_scene_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
@@ -64,6 +67,13 @@ void vuo_scene_render_window_resize(VuoGlContext glContext, void *ctx, unsigned 
 	struct nodeInstanceData *context = ctx;
 
 	VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
+}
+
+void vuo_scene_render_window_switchContext(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *ctx)
+{
+//	VLog("old=%p  new=%p",oldGlContext,newGlContext);
+	struct nodeInstanceData *context = ctx;
+	VuoSceneRenderer_switchContext(context->sceneRenderer, newGlContext);
 }
 
 void vuo_scene_render_window_draw(VuoGlContext glContext, void *ctx)
@@ -76,13 +86,7 @@ void vuo_scene_render_window_draw(VuoGlContext glContext, void *ctx)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	VuoSceneRenderer_draw(context->sceneRenderer, glContext);
-
-#if DEBUG
-	VuoSceneRenderer_drawElement(context->sceneRenderer, 0, .08f);	// Normals
-	VuoSceneRenderer_drawElement(context->sceneRenderer, 1, .08f);	// Tangents
-	VuoSceneRenderer_drawElement(context->sceneRenderer, 2, .08f);	// Bitangents
-#endif
+	VuoSceneRenderer_draw(context->sceneRenderer);
 }
 
 struct nodeInstanceData *nodeInstanceInit(void)
@@ -90,15 +94,16 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 
+	context->sceneRenderer = NULL;
+
 	context->displayRefresh = VuoDisplayRefresh_make(context);
 	VuoRetain(context->displayRefresh);
 
-	context->sceneRenderer = VuoSceneRenderer_make();
-	VuoRetain(context->sceneRenderer);
-
 	context->window = VuoWindowOpenGl_make(
+				true,
 				vuo_scene_render_window_init,
 				vuo_scene_render_window_resize,
+				vuo_scene_render_window_switchContext,
 				vuo_scene_render_window_draw,
 				(void *)context
 			);
@@ -128,13 +133,10 @@ void nodeInstanceEvent
 )
 {
 	VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), objects);
-	{
-		VuoGlContext glContext = VuoGlContext_use();
 
-		VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, glContext, rootSceneObject);
-
-		VuoGlContext_disuse(glContext);
-	}
+	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
+												 VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
+											 });
 
 	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName);
 
@@ -156,7 +158,9 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
+												 VuoRelease((*context)->sceneRenderer);
+											 });
 	VuoRelease((*context)->window);
-	VuoRelease((*context)->sceneRenderer);
 	VuoRelease((*context)->displayRefresh);
 }

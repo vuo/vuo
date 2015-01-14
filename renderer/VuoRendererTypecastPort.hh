@@ -29,6 +29,7 @@ public:
 	qreal getChildPortXOffset(void) const;
 
 	QPainterPath getPortPath(bool includeNormalPort, bool includeFlag, QPainterPath *outsetPath) const;
+	static QString getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort);
 
 private:
 	QString sourceType;

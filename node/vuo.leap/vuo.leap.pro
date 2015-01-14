@@ -3,7 +3,6 @@ CONFIG += VuoNodeSet
 
 include(../../vuo.pri)
 
-
 NODE_SOURCES += \
 	vuo.leap.c \
 	vuo.leap.get.frame.c \
@@ -21,20 +20,15 @@ NODE_SOURCES += \
 	vuo.leap.pointable.sort.distance.y.c \
 	vuo.leap.pointable.sort.distance.z.c
 
-OTHER_FILES += $$NODE_SOURCES
-
-
 NODE_LIBRARY_SOURCES += \
 	VuoLeap.cc
 
-OTHER_FILES += $$NODE_LIBRARY_SOURCES
-
+# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
 OTHER_FILES += \
 	VuoLeap.h
 
 NODE_LIBRARY_INCLUDEPATH = \
 	Leap
-
 
 TYPE_SOURCES += \
 	VuoLeapFrame.c \
@@ -42,13 +36,10 @@ TYPE_SOURCES += \
 	VuoLeapPointable.c \
 	VuoLeapPointableType.c
 
-OTHER_FILES += $$TYPE_SOURCES
-
 HEADERS += \
 	VuoLeapFrame.h \
 	VuoLeapHand.h \
 	VuoLeapPointable.h \
 	VuoLeapPointableType.h
-
 
 include(../../module.pri)

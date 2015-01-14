@@ -65,6 +65,9 @@ typedef struct VuoSceneObject
 
 VuoSceneObject VuoSceneObject_makeEmpty(void);
 VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects);
+VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
+VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
+
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float fieldOfView, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float width, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeDefaultCamera(void);
@@ -74,6 +77,8 @@ VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch,
 VuoSceneObject VuoSceneObject_valueFromJson(struct json_object * js);
 struct json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value);
 char * VuoSceneObject_summaryFromValue(const VuoSceneObject value);
+
+void VuoSceneObject_dump(const VuoSceneObject so);
 
 ///@{
 /**
