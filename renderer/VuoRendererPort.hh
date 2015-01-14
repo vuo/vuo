@@ -41,7 +41,8 @@ public:
 	void setProxyPublishedSidebarPort(VuoRendererPublishedPort *proxyPort);
 
 	bool getEligibleForSelection();
-	void setEligibleForConnection(bool eligible);
+	void setEligibleForDirectConnection(bool eligible);
+	void setEligibleForConnectionViaTypecast(bool eligible);
 	void extendedHoverEnterEvent(bool cableDragUnderway=false);
 	void extendedHoverMoveEvent(bool cableDragUnderway=false);
 	void extendedHoverLeaveEvent();
@@ -93,7 +94,8 @@ private:
 	// Port attributes affecting drawing
 	bool isOutput;
 	bool isFunctionPort;
-	bool isEligibleForConnection;
+	bool isEligibleForDirectConnection;
+	bool isEligibleForConnectionViaTypecast;
 	bool isEligibleForSelection;
 	bool isAnimated;
 	VuoRendererPort *typecastParentPort;

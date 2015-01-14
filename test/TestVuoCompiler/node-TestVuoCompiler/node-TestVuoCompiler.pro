@@ -21,7 +21,4 @@ HEADERS += \
 TYPE_SOURCES += \
 	VuoTestFloat.c
 
-OTHER_FILES += $$NODE_SOURCES
-OTHER_FILES += $$TYPE_SOURCES
-
 include(../../../module.pri)

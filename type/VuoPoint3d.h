@@ -170,6 +170,14 @@ static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, float b)
 	return p;
 }
 
+/**
+ *	Distance between @c a and @c b.
+ */
+static inline float VuoPoint3d_distance(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
+static inline float VuoPoint3d_distance(VuoPoint3d a, VuoPoint3d b)
+{
+	return sqrtf((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) + (a.z-b.z)*(a.z-b.z));
+}
 
 /**
  * @}

@@ -757,6 +757,7 @@ Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 	}
 
 	generateSetInputPortValueFunction();
+	generateFireTriggerPortEventFunction();
 	generateFirePublishedInputPortEventFunction();
 
 	/// @todo These should only be generated for stateful compositions - https://b33p.net/kosada/node/2639
@@ -1660,6 +1661,85 @@ void VuoCompilerBitcodeGenerator::generateInitializationForPorts(BasicBlock *blo
 }
 
 /**
+ * Generates the fireTriggerPortEvent function.
+ *
+ * Assumes the trigger function has been set for each trigger port.
+ *
+ * @eg{
+ * void fireTriggerPortEvent(char *portIdentifier)
+ * {
+ *   if (! strcmp(portIdentifier, "vuo_time_firePeriodically__FirePeriodically__fired"))
+ *   {
+ *     vuo_time_firePeriodically__FirePeriodically__fired();
+ *   }
+ *   else if (! strcmp(portIdentifier, "vuo_console_window__DisplayConsoleWindow__typedLine"))
+ *   {
+ *     waitForNodeSemaphore(vuo_console_window__DisplayConsoleWindow);
+ *     vuo_console_window__DisplayConsoleWindow__typedLine( vuo_console_window__DisplayConsoleWindow__typedLine__previous );
+ *     signalNodeSemaphore(vuo_console_window__DisplayConsoleWindow);
+ *   }
+ * }
+ * }
+ */
+void VuoCompilerBitcodeGenerator::generateFireTriggerPortEventFunction(void)
+{
+	string functionName = "fireTriggerPortEvent";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		vector<Type *> functionParams;
+		functionParams.push_back(PointerType::get(IntegerType::get(module->getContext(), 8), 0));
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	Function::arg_iterator args = function->arg_begin();
+	Value *portIdentifierValue = args++;
+	portIdentifierValue->setName("portIdentifier");
+
+	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
+
+	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
+	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
+	{
+		VuoCompilerTriggerPort *port = i->first;
+		VuoCompilerTriggerAction *triggerAction = i->second;
+		string currentPortIdentifier = port->getIdentifier();
+		Function *triggerFunction = port->getFunction();
+		VuoCompilerNode *triggerNode = nodeForTrigger[port];
+
+		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentPortIdentifier, function, 0);
+
+		vector<Value *> triggerArgs;
+		GlobalVariable *dataVariable = triggerAction->getPreviousDataVariable();
+		if (dataVariable)
+		{
+			generateWaitForNodes(module, function, currentBlock, vector<VuoCompilerNode *>(1, triggerNode));
+
+			Value *arg = new LoadInst(dataVariable, "", false, currentBlock);
+			Value *secondArg = NULL;
+			Value **secondArgIfNeeded = (triggerFunction->getFunctionType()->getNumParams() == 2 ? &secondArg : NULL);
+			arg = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, triggerFunction, 0, secondArgIfNeeded, module, currentBlock);
+			triggerArgs.push_back(arg);
+			if (secondArg)
+				triggerArgs.push_back(secondArg);
+		}
+
+		CallInst::Create(triggerFunction, triggerArgs, "", currentBlock);
+
+		if (dataVariable)
+			generateSignalForNodes(module, currentBlock, vector<VuoCompilerNode *>(1, triggerNode));
+
+		blocksForString[currentPortIdentifier] = make_pair(currentBlock, currentBlock);
+	}
+
+	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
+	ReturnInst::Create(module->getContext(), finalBlock);
+
+	VuoCompilerCodeGenUtilities::generateStringMatchingCode(module, function, initialBlock, finalBlock, portIdentifierValue, blocksForString);
+}
+
+/**
  * Generates functions for retrieving information about published ports.
  */
 void VuoCompilerBitcodeGenerator::generatePublishedPortGetters(void)
@@ -2371,6 +2451,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerFunctionHeader(VuoCompile
  *   unsigned long eventId = getNextEventId();
  *
  *   // Wait for the nodes directly downstream of the trigger port.
+ *   waitForNodeSemaphore(PlayMovie, eventId);
  *   waitForNodeSemaphore(TwirlImage, eventId);
  *   waitForNodeSemaphore(RippleImage, eventId);
  *
@@ -2378,6 +2459,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerFunctionHeader(VuoCompile
  *   VuoRelease(PlayMovie_decodedImage__previousData);
  *   PlayMovie_decodedImage__previousData = (VuoImage)(*context);
  *   free(context);
+ *   signalNodeSemaphore(PlayMovie);
  *
  *   // Send telemetry indicating that the trigger port value may have changed.
  *   sendTelemetry(PortHadEvent, PlayMovie_decodedImage, TwirlImage_image);
@@ -2507,30 +2589,37 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 		if (isNodeDownstreamOfTrigger(*i, trigger) && isGather(*i, trigger))
 			isGatherDownstreamOfTrigger = true;
 
-	// Wait for the nodes directly downstream of the trigger port —
+	// Wait for the node containing the trigger port and the nodes directly downstream of the trigger —
 	// or, if the trigger scatters the event and there's a gather downstream, wait for all nodes downstream.
-	vector<VuoCompilerNode *> orderedTriggerOutputNodes;
+	set<VuoCompilerNode *> triggerOutputNodes;
 	set<VuoCompilerTriggerEdge *> triggerEdges = triggerEdgesForTrigger[trigger];
 	if (! (isGatherDownstreamOfTrigger && triggerEdges.size() > 1))
 	{
-		set<VuoCompilerNode *> triggerOutputNodes;
 		for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
 		{
 			VuoCompilerTriggerEdge *edge = *i;
 			triggerOutputNodes.insert( edge->getToNode() );
 		}
-		orderedTriggerOutputNodes = sortNodes(triggerOutputNodes);
 	}
 	else
 	{
 		for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
 			if (isNodeDownstreamOfTrigger(*i, trigger))
-				orderedTriggerOutputNodes.push_back(*i);
+				triggerOutputNodes.insert(*i);
 	}
+	VuoCompilerNode *triggerNode = nodeForTrigger[trigger];
+	bool isTriggerWaitNeeded = ((triggerNode->getBase() != composition->getPublishedInputNode()) &&
+								(triggerNode->getBase() != composition->getPublishedOutputNode()) &&
+								(triggerOutputNodes.find(triggerNode) == triggerOutputNodes.end()));
+	if (isTriggerWaitNeeded)
+		triggerOutputNodes.insert(triggerNode);
+	vector<VuoCompilerNode *> orderedTriggerOutputNodes = sortNodes(triggerOutputNodes);
 	generateWaitForNodes(module, triggerWorker, triggerBlock, orderedTriggerOutputNodes, eventIdValueInTriggerWorker);
 
 	// Handle the trigger port value having changed.
 	Value *triggerDataValue = triggerAction->generateDataValueDidChange(module, triggerBlock, triggerWorker);
+	if (isTriggerWaitNeeded)
+		generateSignalForNodes(module, triggerBlock, vector<VuoCompilerNode *>(1, triggerNode));
 
 	// Send telemetry indicating that the trigger port value may have changed.
 	generateSendTriggerPortValueChangedCall(triggerBlock, trigger, triggerDataValue);

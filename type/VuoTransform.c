@@ -17,7 +17,7 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "Transform",
+					 "title" : "3D Transform",
 					 "description" : "A 3D transformation (scale, rotation, translation).",
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
@@ -29,6 +29,7 @@ VuoModuleMetadata({
 /// @}
 
 /**
+ * @ingroup VuoTransform
  * Converts @c value into a column-major matrix of 16 values,
  * composed as a rotation followed by a scale followed by a translation.
  */
@@ -56,6 +57,7 @@ void VuoTransform_getMatrix(const VuoTransform value, float *matrix)
 }
 
 /**
+ * @ingroup VuoTransform
  * Creates a @c VuoTransform with no effect.
  */
 VuoTransform VuoTransform_makeIdentity(void)
@@ -64,6 +66,7 @@ VuoTransform VuoTransform_makeIdentity(void)
 }
 
 /**
+ * @ingroup VuoTransform
  * Creates a @c VuoTransform from translation, rotation (Euler angles, in radians), and scale values.
  */
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale)
@@ -92,6 +95,7 @@ VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation,
 }
 
 /**
+ * @ingroup VuoTransform
  * Creates a @c VuoTransform from translation, rotation (quaternion), and scale values.
  */
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale)
@@ -117,6 +121,17 @@ VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rota
 	t.scale = scale;
 
 	return t;
+}
+
+/**
+ * Creates a 3D transform from a 2D transform.
+ */
+VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d)
+{
+	VuoPoint3d center3d = VuoPoint3d_make(transform2d.translation.x, transform2d.translation.y, 0);
+	VuoPoint3d rotation3d = VuoPoint3d_make(0, 0, transform2d.rotation);
+	VuoPoint3d scale3d = VuoPoint3d_make(transform2d.scale.x, transform2d.scale.y, 1);
+	return VuoTransform_makeEuler(center3d, rotation3d, scale3d);
 }
 
 /**

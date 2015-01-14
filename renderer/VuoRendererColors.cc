@@ -14,23 +14,25 @@ const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
 const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = 0.75;
 const qreal VuoRendererColors::defaultCableUpperAndMainAlpha = 0.5;
 const qreal VuoRendererColors::defaultPortFillAlpha = 3./8.;
+const int VuoRendererColors::subtleHighlightingLighteningFactor = 100; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
 const int VuoRendererColors::activityFadeDuration = 400;
 const int VuoRendererColors::activityAnimationFadeDuration = 950;
 
 /**
  * Creates a new color scheme provider, optionally tinted with @c tintColor.
- * If @c isSelected is true, the colors are also tinted dark blue to indicate selection.
+ * If @c selectionType is anything other than @c VuoRendererColors::noSelection, the colors are also tinted slightly blue and have their opacity increased to indicate selection.
  * If @c isHovered is true, the colors are also slightly tinted dark blue to indicate potential for selection.
- * If @c isHighlighed is true, the colors are also tinted with light blue (more easily visible at a distance) to indicate potential for cable connection.
+ * If @c highlightType is anything other than @c VuoRendererColors::noHighlight, the colors are also tinted with light blue
+ * (more easily visible at a distance) to indicate potential for cable connection.
  * If @c timeOfLastActivity is anything other than VuoRendererItem::notTrackingActivity, the alpha level
  * is modified to reflect the amount of time that has passed since the @c timeOfLastActivity (e.g., a node execution or event firing), in ms since epoch.
  */
-VuoRendererColors::VuoRendererColors(VuoNode::TintColor tintColor, bool isSelected, bool isHovered, bool isHighlighted, qint64 timeOfLastActivity)
+VuoRendererColors::VuoRendererColors(VuoNode::TintColor tintColor, VuoRendererColors::SelectionType selectionType, bool isHovered, VuoRendererColors::HighlightType highlightType, qint64 timeOfLastActivity)
 {
 	this->tintColor = tintColor;
-	this->isSelected = isSelected;
+	this->selectionType = selectionType;
 	this->isHovered = isHovered;
-	this->isHighlighted = isHighlighted;
+	this->highlightType = highlightType;
 
 	// Turn composition components opaque as they execute or fire events, then fade them back to their minimum transparency.
 	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
@@ -71,7 +73,8 @@ QColor VuoRendererColors::canvasFill(void)
 QColor VuoRendererColors::nodeFill(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha)));
+	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
+	QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
 
 	return nodeFillColor;
 }
@@ -110,7 +113,10 @@ QColor VuoRendererColors::nodeClass(void)
 QColor VuoRendererColors::portFill(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortFillAlpha);
-	return tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha));
+	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
+	QColor color = tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor);
+
+	return color;
 }
 
 /**
@@ -130,7 +136,14 @@ QColor VuoRendererColors::animatedPortFill(void)
  */
 QColor VuoRendererColors::portTitlebarFill(void)
 {
-	return nodeFrame();
+	// If any type of highlighting is to be applied, use the same color scheme
+	// as is used for ports in the main body of the node.
+	// Disabling for now. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
+	//if (highlightType != VuoRendererColors::noHighlight)
+	//	return portFill();
+
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
+	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
 }
 
 /**
@@ -207,8 +220,11 @@ QColor VuoRendererColors::lerpColor(QColor v0, QColor v1, float t)
  * Tints the specified color by @c tintColor.
  * @c amount is used to tint cables more strongly, since their small size makes the tint less apparent.
  * If @c amount is greater than 1 (the default), a lighter color is also used for highlighting.
+ * @c lighteningFactor is used to lighten the color of highlighted components by the specified factor. This
+ * should be supplied, e.g., when in VuoRendererColors::subtleHighlight mode, for components that
+ * respect the subtle highlighting suggestion.
  */
-QColor VuoRendererColors::tint(QColor color, qreal amount)
+QColor VuoRendererColors::tint(QColor color, qreal amount, int lighteningFactor)
 {
 	qreal h,s,l,a;
 	color.getHslF(&h,&s,&l,&a);
@@ -240,17 +256,31 @@ QColor VuoRendererColors::tint(QColor color, qreal amount)
 
 	color = QColor::fromHslF(h,s,l,a);
 
+	bool isHighlighted = (highlightType != VuoRendererColors::noHighlight);
 	if (isHighlighted)
 	{
 		QColor highlight = QColor::fromHslF(235./360., 1., .7, 1.); // Light Blue
 		QColor extraHighlight = QColor::fromHslF(235./360., 1., .8, 1.); // Lighter Blue
+
 		color = lerpColor(color, (amount<=1? highlight:extraHighlight), 7./8. * amount);
+		color = color.lighter(lighteningFactor);
 	}
 
+	bool isSelected = (selectionType != VuoRendererColors::noSelection);
+	bool isDirectlySelected = (selectionType == VuoRendererColors::directSelection);
 	if (isSelected || isHovered)
 	{
 		QColor selection = QColor::fromHslF(235./360., 1., .3, 1.); // Dark Blue
-		color = lerpColor(color, selection, (isSelected * 4./8. + isHovered * 3./8.) * amount);
+		color = lerpColor(color, selection, (isDirectlySelected * 1./8. + isHovered * 3./8.) * amount);
+
+		if (isSelected)
+		{
+			qreal selectionOpacityFactor = 1.7;
+			if (selectionType == VuoRendererColors::indirectSelection)
+				selectionOpacityFactor = 1 + (selectionOpacityFactor - 1) * 0.75;
+
+			color.setAlphaF(fmin(selectionOpacityFactor*color.alphaF(), 1.));
+		}
 	}
 
 	return color;

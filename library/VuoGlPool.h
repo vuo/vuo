@@ -15,7 +15,7 @@ extern "C"
 {
 #endif
 
-#include <OpenGL/OpenGL.h>
+#include "VuoGlContext.h"
 
 /**
  * Types of OpenGL objects supported by Vuo's GL object pool.
@@ -23,17 +23,23 @@ extern "C"
 typedef enum
 {
 	VuoGlPool_ArrayBuffer,
-	VuoGlPool_ElementArrayBuffer,
-	VuoGlPool_Texture
-//	VuoGlPool_Framebuffer	// Cannot be shared between contexts
-//	VuoGlPool_VertexArray	// Cannot be shared between contexts
+	VuoGlPool_ElementArrayBuffer
+//	VuoGlPool_Texture		///< @see VuoGlTexturePool_use
+//	VuoGlPool_Framebuffer	///< Cannot be shared between contexts
+//	VuoGlPool_VertexArray	///< Cannot be shared between contexts
 } VuoGlPoolType;
 
-GLuint VuoGlPool_use(VuoGlPoolType type);
-void VuoGlPool_disuse(VuoGlPoolType type, GLuint name);
+GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long size);
+void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long size, GLuint name);
+
+GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format);
 
 void VuoGlTexture_retain(GLuint glTextureName);
-void VuoGlTexture_release(GLuint glTextureName);
+void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName);
+
+GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source);
+
+const char *VuoGl_stringForConstant(GLenum constant);
 
 #ifdef __cplusplus
 }

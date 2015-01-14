@@ -8,6 +8,4 @@ NODE_SOURCES += \
 	vuo.shader.make.image.c \
 	vuo.shader.make.normal.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../module.pri)

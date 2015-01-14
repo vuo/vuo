@@ -7,6 +7,4 @@ NODE_SOURCES += \
 	vuo.test.firePeriodically.c \
 	vuo.test.semiconductor.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../../module.pri)

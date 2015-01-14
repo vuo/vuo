@@ -6,5 +6,5 @@ The Vuo compiler handles most thread synchronization automatically. It guarantee
    
 There are some cases where you need to handle synchronization when implementing node classes, port types, and library modules: 
 
-   - If resources are shared between multiple nodes, they need to be thread-safe. (For example, see @ref VuoGlTexturePool.) 
+   - If resources are shared between multiple nodes, they need to be thread-safe. (For example, see @ref VuoGlPool.cc.) 
    - If a node class fires events on a background thread or timer, it may only do so between the time when nodeInstanceTriggerStart() is called and the time when nodeInstanceTriggerStop() returns. 

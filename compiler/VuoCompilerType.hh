@@ -49,7 +49,7 @@ public:
 	Value * generateInterprocessStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Value * generateSummaryFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Type * getType(void);
-	Type * getFunctionParameterType(void);
+	Type * getFunctionParameterType(Type **secondType);
 	Attributes getFunctionParameterAttributes(void);
 };
 

@@ -51,7 +51,8 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 	this->isRefreshPort = isRefreshPort;
 	this->isDonePort = isDonePort;
 	this->isFunctionPort = isFunctionPort;
-	this->isEligibleForConnection = false;
+	this->isEligibleForDirectConnection = false;
+	this->isEligibleForConnectionViaTypecast = false;
 	this->isEligibleForSelection = false;
 	setAnimated(false);
 	this->typecastParentPort = NULL;
@@ -448,9 +449,15 @@ void VuoRendererPort::paintWithOptions(QPainter *painter, bool sidebarPaintMode)
 
 	bool isColorInverted = isRefreshPort || isDonePort || isFunctionPort;
 
-	bool isSelected = (renderedParentNode && renderedParentNode->isSelected() && (! sidebarPaintMode));
+	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isSelected() && !sidebarPaintMode)?
+														  VuoRendererColors::directSelection :
+														  VuoRendererColors::noSelection);
+
 	bool isHovered = (isEligibleForSelection && (! sidebarPaintMode));
-	bool isHighlighted = (isEligibleForConnection && (! sidebarPaintMode));
+	VuoRendererColors::HighlightType highlightType = (sidebarPaintMode? VuoRendererColors::noHighlight :
+												(isEligibleForDirectConnection? VuoRendererColors::standardHighlight :
+												(isEligibleForConnectionViaTypecast? VuoRendererColors::subtleHighlight :
+																					 VuoRendererColors::noHighlight)));
 
 	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
 	bool isTriggerPort = (type == VuoPortClass::triggerPort);
@@ -461,15 +468,15 @@ void VuoRendererPort::paintWithOptions(QPainter *painter, bool sidebarPaintMode)
 									VuoRendererItem::notTrackingActivity)));
 
 	VuoRendererColors *colors = new VuoRendererColors((renderedParentNode? renderedParentNode->getBase()->getTintColor() : VuoNode::TintNone),
-													  isSelected,
+													  selectionType,
 													  isHovered,
-													  isHighlighted,
+													  highlightType,
 													  timeOfLastActivity);
 
 	VuoRendererColors *untintedColors = new VuoRendererColors(VuoNode::TintNone,
-													  isSelected,
+													  selectionType,
 													  isHovered,
-													  isHighlighted,
+													  highlightType,
 													  timeOfLastActivity);
 
 	// Draw the port circle / constant flag
@@ -624,11 +631,20 @@ bool VuoRendererPort::getEligibleForSelection()
 
 /**
  * Sets the boolean indicating whether this port is eligible
- * for connection to the cable currently being dragged between ports.
+ * for direct connection to the cable currently being dragged between ports.
  */
-void VuoRendererPort::setEligibleForConnection(bool eligible)
+void VuoRendererPort::setEligibleForDirectConnection(bool eligible)
 {
-	this->isEligibleForConnection = eligible;
+	this->isEligibleForDirectConnection = eligible;
+}
+
+/**
+ * Sets the boolean indicating whether this port is eligible
+ * for typecast-assisted connection to the cable currently being dragged between ports.
+ */
+void VuoRendererPort::setEligibleForConnectionViaTypecast(bool eligible)
+{
+	this->isEligibleForConnectionViaTypecast = eligible;
 }
 
 /**
@@ -647,7 +663,7 @@ void VuoRendererPort::extendedHoverEnterEvent(bool cableDragUnderway)
 void VuoRendererPort::extendedHoverMoveEvent(bool cableDragUnderway)
 {
 	prepareGeometryChange();
-	isEligibleForSelection = (cableDragUnderway? isEligibleForConnection : true);
+	isEligibleForSelection = (cableDragUnderway? (isEligibleForDirectConnection || isEligibleForConnectionViaTypecast) : true);
 
 	setFocus();
 

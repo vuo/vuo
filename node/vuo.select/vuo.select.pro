@@ -14,9 +14,12 @@ NODE_SOURCES += \
 	vuo.select.in.2.VuoGradientNoise.c \
 	vuo.select.in.2.VuoImage.c \
 	vuo.select.in.2.VuoInteger.c \
+	vuo.select.in.2.VuoLayer.c \
 	vuo.select.in.2.VuoLeapFrame.c \
 	vuo.select.in.2.VuoLeapHand.c \
 	vuo.select.in.2.VuoLeapPointable.c \
+	vuo.select.in.2.VuoLeapPointableType.c \
+	vuo.select.in.2.VuoLoopType.c \
 	vuo.select.in.2.VuoMidiController.c \
 	vuo.select.in.2.VuoMidiDevice.c \
 	vuo.select.in.2.VuoMidiNote.c \
@@ -31,6 +34,7 @@ NODE_SOURCES += \
 	vuo.select.in.2.VuoSyphonServerDescription.c \
 	vuo.select.in.2.VuoText.c \
 	vuo.select.in.2.VuoTransform.c \
+	vuo.select.in.2.VuoTransform2d.c \
 	vuo.select.in.2.VuoVertices.c \
 	vuo.select.in.2.VuoWave.c \
 	vuo.select.in.2.event.c \
@@ -44,9 +48,12 @@ NODE_SOURCES += \
 	vuo.select.in.VuoGradientNoise.c \
 	vuo.select.in.VuoImage.c \
 	vuo.select.in.VuoInteger.c \
+	vuo.select.in.VuoLayer.c \
 	vuo.select.in.VuoLeapFrame.c \
 	vuo.select.in.VuoLeapHand.c \
 	vuo.select.in.VuoLeapPointable.c \
+	vuo.select.in.VuoLeapPointableType.c \
+	vuo.select.in.VuoLoopType.c \
 	vuo.select.in.VuoMidiController.c \
 	vuo.select.in.VuoMidiDevice.c \
 	vuo.select.in.VuoMidiNote.c \
@@ -61,6 +68,7 @@ NODE_SOURCES += \
 	vuo.select.in.VuoSyphonServerDescription.c \
 	vuo.select.in.VuoText.c \
 	vuo.select.in.VuoTransform.c \
+	vuo.select.in.VuoTransform2d.c \
 	vuo.select.in.VuoVertices.c \
 	vuo.select.in.VuoWave.c \
 	vuo.select.in.event.c \
@@ -74,9 +82,12 @@ NODE_SOURCES += \
 	vuo.select.latest.2.VuoGradientNoise.c \
 	vuo.select.latest.2.VuoImage.c \
 	vuo.select.latest.2.VuoInteger.c \
+	vuo.select.latest.2.VuoLayer.c \
 	vuo.select.latest.2.VuoLeapFrame.c \
 	vuo.select.latest.2.VuoLeapHand.c \
 	vuo.select.latest.2.VuoLeapPointable.c \
+	vuo.select.latest.2.VuoLeapPointableType.c \
+	vuo.select.latest.2.VuoLoopType.c \
 	vuo.select.latest.2.VuoMidiController.c \
 	vuo.select.latest.2.VuoMidiDevice.c \
 	vuo.select.latest.2.VuoMidiNote.c \
@@ -91,6 +102,7 @@ NODE_SOURCES += \
 	vuo.select.latest.2.VuoSyphonServerDescription.c \
 	vuo.select.latest.2.VuoText.c \
 	vuo.select.latest.2.VuoTransform.c \
+	vuo.select.latest.2.VuoTransform2d.c \
 	vuo.select.latest.2.VuoVertices.c \
 	vuo.select.latest.2.VuoWave.c \
 	vuo.select.out.2.VuoBlendMode.c \
@@ -103,9 +115,12 @@ NODE_SOURCES += \
 	vuo.select.out.2.VuoGradientNoise.c \
 	vuo.select.out.2.VuoImage.c \
 	vuo.select.out.2.VuoInteger.c \
+	vuo.select.out.2.VuoLayer.c \
 	vuo.select.out.2.VuoLeapFrame.c \
 	vuo.select.out.2.VuoLeapHand.c \
 	vuo.select.out.2.VuoLeapPointable.c \
+	vuo.select.out.2.VuoLeapPointableType.c \
+	vuo.select.out.2.VuoLoopType.c \
 	vuo.select.out.2.VuoMidiController.c \
 	vuo.select.out.2.VuoMidiDevice.c \
 	vuo.select.out.2.VuoMidiNote.c \
@@ -120,14 +135,31 @@ NODE_SOURCES += \
 	vuo.select.out.2.VuoSyphonServerDescription.c \
 	vuo.select.out.2.VuoText.c \
 	vuo.select.out.2.VuoTransform.c \
+	vuo.select.out.2.VuoTransform2d.c \
 	vuo.select.out.2.VuoVertices.c \
 	vuo.select.out.2.VuoWave.c \
 	vuo.select.out.2.event.c \
+	vuo.select.out.VuoBlendMode.c \
+	vuo.select.out.VuoBoolean.c \
+	vuo.select.out.VuoColor.c \
+	vuo.select.out.VuoCountWrapMode.c \
+	vuo.select.out.VuoCurve.c \
+	vuo.select.out.VuoCurveDomain.c \
+	vuo.select.out.VuoFrameRequest.c \
+	vuo.select.out.VuoGradientNoise.c \
 	vuo.select.out.VuoImage.c \
 	vuo.select.out.VuoInteger.c \
+	vuo.select.out.VuoLayer.c \
 	vuo.select.out.VuoLeapFrame.c \
 	vuo.select.out.VuoLeapHand.c \
 	vuo.select.out.VuoLeapPointable.c \
+	vuo.select.out.VuoLeapPointableType.c \
+	vuo.select.out.VuoLoopType.c \
+	vuo.select.out.VuoMidiController.c \
+	vuo.select.out.VuoMidiDevice.c \
+	vuo.select.out.VuoMidiNote.c \
+	vuo.select.out.VuoMouseButtonAction.c \
+	vuo.select.out.VuoNoise.c \
 	vuo.select.out.VuoPoint2d.c \
 	vuo.select.out.VuoPoint3d.c \
 	vuo.select.out.VuoPoint4d.c \
@@ -136,16 +168,19 @@ NODE_SOURCES += \
 	vuo.select.out.VuoShader.c \
 	vuo.select.out.VuoSyphonServerDescription.c \
 	vuo.select.out.VuoText.c \
+	vuo.select.out.VuoTransform.c \
+	vuo.select.out.VuoTransform2d.c \
 	vuo.select.out.VuoVertices.c \
+	vuo.select.out.VuoWave.c \
 	vuo.select.out.event.c
-
-OTHER_FILES += $$NODE_SOURCES
 
 NODE_INCLUDEPATH += \
 	../vuo.image \
+	../vuo.layer \
 	../vuo.leap \
 	../vuo.math \
 	../vuo.midi \
+	../vuo.movie \
 	../vuo.noise \
 	../vuo.syphon
 

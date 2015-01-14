@@ -75,6 +75,14 @@ enum VuoControlRequest
 	VuoControlRequestOutputPortSummaryRetrieve,
 
 	/**
+	 * Request that an event be fired from the trigger port.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier;
+	 */
+	VuoControlRequestTriggerPortFireEvent,
+
+	/**
 	 * Request that the published input ports' names be looked up and returned.
 	 */
 	VuoControlRequestPublishedInputPortNamesRetrieve,
@@ -175,6 +183,11 @@ enum VuoControlReply
 	 *		@arg @c char *summary;
 	 */
 	VuoControlReplyOutputPortSummaryRetrieved,
+
+	/**
+	 * An event has been fired from the trigger port.
+	 */
+	VuoControlReplyTriggerPortFiredEvent,
 
 	/**
 	 * The list of published input ports' names has been retrieved.

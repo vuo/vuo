@@ -2,6 +2,7 @@ TEMPLATE = aux
 CONFIG += VuoPCH json qtCore qtTest testcase
 
 include(../../vuo.pri)
+include(../test.pri)
 
 HEADERS += TestVuoTypes.h
 
@@ -19,72 +20,22 @@ TEST_VUO_TYPES_SOURCES += \
 	TestVuoSceneObject.cc \
 	TestVuoShader.cc \
 	TestVuoText.cc \
-	TestVuoTransform.cc
+	TestVuoTransform.cc \
+	TestVuoTransform2d.cc
 
 OTHER_FILES += $$TEST_VUO_TYPES_SOURCES
-
-TEST_FLAGS += \
-	$(CXXFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
-	-I$$ROOT/base \
-	-I$$ROOT/library \
-	-I$$ROOT/node \
-	-I$$ROOT/node/vuo.midi \
-	-I$$ROOT/runtime \
-	-I$$ROOT/type \
-	-I$$ROOT/type/list \
-	-I$$ICU_ROOT/include \
-	$$ICU_ROOT/lib/libicuuc.a \
-	$$ICU_ROOT/lib/libicudata.a \
-	$$ZMQ_ROOT/lib/libzmq.a \
-	$${GRAPHVIZ_ROOT}/lib/libgvc.dylib \
-	$${GRAPHVIZ_ROOT}/lib/libgraph.dylib \
-	$${GRAPHVIZ_ROOT}/lib/graphviz/libgvplugin_dot_layout.dylib \
-	$${GRAPHVIZ_ROOT}/lib/graphviz/libgvplugin_core.dylib \
-	-lobjc \
-	-framework Foundation \
-	$(INCPATH) \
-	$(DEFINES) \
-	$$ROOT/runtime/VuoHeap.cc \
-	$$ROOT/base/VuoRuntime.o \
-	$$ROOT/base/VuoCompositionStub.o \
-	$$ROOT/base/VuoTelemetry.o \
-	$$ROOT/library/libVuoGlContext.dylib \
-	$$ROOT/library/libVuoGlPool.dylib \
-	$$ROOT/library/VuoImageRenderer.o \
-	$$ROOT/type/VuoBoolean.o \
-	$$ROOT/type/VuoColor.o \
-	$$ROOT/type/VuoImage.o \
-	$$ROOT/type/VuoInteger.o \
-	$$ROOT/node/vuo.midi/VuoMidiNote.o \
-	$$ROOT/type/VuoPoint2d.o \
-	$$ROOT/type/VuoPoint3d.o \
-	$$ROOT/type/VuoPoint4d.o \
-	$$ROOT/type/VuoReal.o \
-	$$ROOT/type/VuoSceneObject.o \
-	$$ROOT/type/VuoShader.o \
-	$$ROOT/type/VuoText.o \
-	$$ROOT/type/VuoTransform.o \
-	$$ROOT/type/VuoVertices.o \
-	$$ROOT/type/list/VuoList_VuoImage.o \
-	$$ROOT/type/list/VuoList_VuoInteger.o \
-	$$ROOT/type/list/VuoList_VuoSceneObject.o \
-	$$ROOT/type/list/VuoList_VuoText.o \
-	$$ROOT/type/list/VuoList_VuoVertices.o \
-	$$QMAKE_LFLAGS $$LIBS $$QMAKE_LIBS \
-	-Xclang -include-pch -Xclang pch/TestVuoTypes/c++.pch \
-	-Wl,-rpath,$$ROOT/framework \
-	$$QMAKE_CXXFLAGS_WARN_ON \
-	"-framework QtTest" \
-	"-framework QtCore" \
-	"-framework IOSurface" \
-	"-framework OpenGL"
 
 # Independently compile multiple tests in this folder
 testVuoTypes.input = TEST_VUO_TYPES_SOURCES
 testVuoTypes.output = ${QMAKE_FILE_IN_BASE}
 testVuoTypes.depends = $$ROOT/type/*.c
 testVuoTypes.commands  = $$QT_ROOT/bin/moc $(DEFINES) $(INCPATH) -o ${QMAKE_FILE_IN_BASE}.moc ${QMAKE_FILE_IN}
-testVuoTypes.commands += && $$QMAKE_CXX $$TEST_FLAGS -o ${QMAKE_FILE_IN_BASE} ${QMAKE_FILE_IN}
+testVuoTypes.commands += && $$QMAKE_CXX \
+	-Xclang -include-pch -Xclang pch/TestVuoTypes/c++.pch \
+	$(CXXFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
+	$$QMAKE_LFLAGS \
+	-o ${QMAKE_FILE_IN_BASE} \
+	${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += testVuoTypes
 
 QMAKE_CLEAN += -R *.moc *.dSYM

@@ -25,9 +25,23 @@ When compiling a composition, the Vuo compiler automatically inserts most of the
 
 
 
-## Automatically-inserted calls to the reference-counting functions
+## When memory is managed for you
 
-The Vuo compiler automatically inserts calls to VuoRetain() and VuoRelease() based on the type of the port or node instance data. (For port data, "type" means its underlying data type, which is `typedef`ed in the port type's header file. For node instance data, "type" means the type returned by nodeInstanceInit().) If the data type is a pointer, then VuoRetain() or VuoRelease() is called on the data itself. If the data type is a struct, then VuoRetain() or VuoRelease() is called on each field of the struct that's a pointer, each field of any struct inside the struct that's a pointer, and so on (a recursive traversal). Note that the Vuo compiler inserts VuoRetain() and VuoRelease() calls for fields inside a struct but *not* for fields inside a *pointer to* a struct. 
+In many cases, you can rely on the port types and the Vuo compiler to handle all the memory management. 
+
+
+### Memory management by port types
+
+By convention, a port type function that constructs port data is responsible for registering that data. For example, when you call VuoText_make(), it allocates memory for the @ref VuoText value and calls VuoRegister() on it. 
+
+
+### Memory management by the Vuo compiler
+
+The Vuo compiler automatically inserts calls to VuoRetain() and VuoRelease() based on the type of the port or node instance data. For port data, "type" means its underlying data type, which is `typedef`ed in the port type's header file. For node instance data, "type" means the type returned by nodeInstanceInit(). 
+
+If the data type is a pointer, then VuoRetain() or VuoRelease() is called on the data itself. If the data type is a struct, then VuoRetain() or VuoRelease() is called on each field of the struct that's a pointer, each field of any struct inside the struct that's a pointer, and so on (a recursive traversal). 
+
+Note that the Vuo compiler inserts VuoRetain() and VuoRelease() calls for fields inside a struct but *not* for fields inside a *pointer to* a struct. 
 
 In many cases, the Vuo compiler automatically inserts calls to VuoRetain() and VuoRelease() where needed: 
 
@@ -37,13 +51,46 @@ In many cases, the Vuo compiler automatically inserts calls to VuoRetain() and V
    - When port's value changes, the old data is released and the new data is retained. 
    - When a composition is stopped, for each port, the data is released. 
 
-If you're implementing a stateful node class or a port type, then you may need to add some calls to VuoRegister(), VuoRetain(), and VuoRelease(). Read on to learn how. 
+
+### Example: Sending data through an output port
+
+If you're sending data through an output port, then the memory management is handled by the port type and the Vuo compiler. You don't need to call VuoRegister(), VuoRetain(), or VuoRelease(). 
+
+In the example below, VuoText_make() allocates a new @ref VuoText value, copies `textAsCString` into it, registers it, and returns it. The nodeEvent() function sends this VuoText value through the output port. After the nodeEvent() function returns, the Vuo compiler handles all calls to VuoRetain() and VuoRelease() for the VuoText value. (However, you do have to free `textAsCString`, since it's just a temporary value that never leaves the node.) 
+
+@code{.cc}
+void nodeEvent
+(
+	VuoInputData(VuoInteger, {"default":0}) integer,
+	VuoOutputData(VuoText) text
+)
+{
+	char *textAsCString = VuoInteger_stringFromValue(integer);
+	*text = VuoText_make(textAsCString);
+	free(textAsCString);
+}
+@endcode
+
+The example below is almost the same, except that the output port is a trigger port. 
+
+@code{.cc}
+void nodeEvent
+(
+	VuoInputData(VuoInteger, {"default":0}) integer,
+	VuoOutputTrigger(fireText, VuoText)
+)
+{
+	char *textAsCString = VuoInteger_stringFromValue(integer);
+	fireText( VuoText_make(textAsCString) );
+	free(textAsCString);
+}
+@endcode
 
 
 
 ## Managing memory for a port type
 
-This section describes how to use reference-counting for port types that use heap-allocated data in various ways. 
+If you're implementing a port type, then you may need to add some calls to VuoRegister(), VuoRetain(), and VuoRelease(), depending on how your port type uses heap-allocated data. 
 
 
 ### Port type is a heap-allocated type

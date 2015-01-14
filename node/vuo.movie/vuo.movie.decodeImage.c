@@ -25,7 +25,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "SkimMovie.vuo" ]
 					  },
 					  "dependencies" : [
 						"VuoMovie"
@@ -35,15 +35,38 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	int blah; /// @todo
+	VuoMovie movie;
+	VuoReal duration;
 };
 
-struct nodeInstanceData * nodeInstanceInit(void)
+static void setMovie(struct nodeInstanceData *context, const char *movieURL)
+{
+	VuoMovie newMovie = VuoMovie_make(movieURL);
+
+	// If VuoMovie_make fails to initialize properly, it cleans up after itself.
+	// No need to call VuoMovie_free()
+	if(newMovie == NULL)
+		return;
+
+	VuoRetain(newMovie);
+	VuoRelease(context->movie);
+	context->movie = newMovie;
+	context->duration = VuoMovie_getDuration(context->movie);
+}
+
+struct nodeInstanceData * nodeInstanceInit
+(
+		VuoInputData(VuoText) movieURL,
+		VuoInputData(VuoReal) frameTime
+)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 
-	/// @todo
+	setMovie(context, movieURL);
+
+	if(context->movie != NULL)
+		VuoMovie_seekToSecond(context->movie, frameTime);
 
 	return context;
 }
@@ -54,16 +77,23 @@ void nodeInstanceEvent
 		VuoInputData(VuoText) movieURL,
 		VuoInputEvent(VuoPortEventBlocking_Wall, movieURL) movieURLEvent,
 		VuoInputData(VuoReal, {"suggestedMin":0.}) frameTime,
-//		VuoInputData(VuoLoopType) loop /// @todo
 		VuoOutputData(VuoImage) image
 )
 {
 	if (movieURLEvent)
 	{
-		/// @todo switch to another movie
+		setMovie((*context), movieURL);
 	}
 
-	/// @todo decode frame
+	if((*context)->movie != NULL)
+	{
+		VuoMovie_seekToSecond((*context)->movie, frameTime);
+		double nextFrameTime;
+		VuoImage img;
+		// will fail if frameTime is out of bounds
+		if( VuoMovie_getNextFrame((*context)->movie, &img, &nextFrameTime) )
+			*image = img;
+	}
 }
 
 void nodeInstanceFini
@@ -71,5 +101,5 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	/// @todo
+	VuoRelease((*context)->movie);
 }

@@ -150,6 +150,14 @@ static inline float VuoPoint2d_dotProduct(VuoPoint2d u, VuoPoint2d v)
 	return u.x*v.x+u.y*v.y;
 }
 
+/**
+ *	Distance between @c a and @c b.
+ */
+static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
+static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b)
+{
+	return sqrtf( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) );
+}
 
 /**
  * @}

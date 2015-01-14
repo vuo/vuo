@@ -9,6 +9,4 @@ NODE_SOURCES += \
 	vuo.text.countCharacters.c \
 	vuo.text.cut.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../module.pri)

@@ -59,8 +59,10 @@ public:
 	static void splitPath(string path, string &dir, string &file, string &extension);
 	static string makeTmpFile(string file, string extension, string directory="/tmp");
 	static string makeTmpDir(string dir);
+	static string getTmpDir(void);
 	static FILE * stringToCFile(const char *string);
 	static string cFileToString(FILE *file);
+	static void writeRawDataToFile(const char *data, size_t numBytes, string file);
 	static bool fileExists(string path);
 	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>());
 	static set<File *> findFilesInDirectory(string dirPath, set<string> extensions, set<string> archiveExtensions = set<string>());

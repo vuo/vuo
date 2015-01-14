@@ -139,8 +139,10 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl w);
  */
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
+		bool useDepthBuffer,
 		void (*initCallback)(VuoGlContext glContext, void *),
 		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
+		void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *),
 		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 )
@@ -148,7 +150,12 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 	__block VuoWindowOpenGLInternal *window = NULL;
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VuoWindowApplication_init();
-					  window = [[VuoWindowOpenGLInternal alloc] initWithInitCallback:initCallback resizeCallback:resizeCallback drawCallback:drawCallback drawContext:context];
+					  window = [[VuoWindowOpenGLInternal alloc] initWithDepthBuffer:useDepthBuffer
+						  initCallback:initCallback
+						  resizeCallback:resizeCallback
+						  switchContextCallback:switchContextCallback
+						  drawCallback:drawCallback
+						  drawContext:context];
 					  [window makeKeyAndOrderFront:nil];
 				  });
 	VuoRegister(window, VuoWindowOpenGl_destroy);
@@ -199,6 +206,19 @@ void VuoWindowOpenGl_redraw(VuoWindowOpenGl w)
 {
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
 	[window scheduleRedraw];
+}
+
+/**
+ * Executes the specifed block on the window's OpenGL context, then returns.
+ * Ensures that nobody else is using the OpenGL context at that time
+ * (by synchronizing with the window's @c drawQueue).
+ *
+ * @threadAny
+ */
+void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToExecute)(VuoGlContext glContext))
+{
+	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	[window executeWithWindowContext:blockToExecute];
 }
 
 /**

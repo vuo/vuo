@@ -59,6 +59,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
+	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
 
@@ -69,7 +70,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->shader = VuoShader_make("Twirl Image", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
 	VuoRetain(instance->shader);
-	instance->imageRenderer = VuoImageRenderer_make();
+
+	instance->glContext = VuoGlContext_use();
+
+	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
 	return instance;
@@ -88,27 +92,22 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	{
-		VuoGlContext glContext = VuoGlContext_use();
+	// Associate the input image with the shader.
+	VuoShader_resetTextures((*instance)->shader);
+	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "texture", image);
 
-		// Associate the input image with the shader.
-		VuoShader_resetTextures((*instance)->shader);
-		VuoShader_addTexture((*instance)->shader, glContext, "texture", image);
+	// Feed parameters to the shader.
+	VuoShader_setUniformPoint2d((*instance)->shader, (*instance)->glContext, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
+	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "angle", angle*M_PI/180.);
+	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "cutoffRadius", VuoShader_samplerSizeFromVuoSize(radius));
 
-		// Feed parameters to the shader.
-		VuoShader_setUniformPoint2d((*instance)->shader, glContext, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
-		VuoShader_setUniformFloat((*instance)->shader, glContext, "angle", angle*M_PI/180.);
-		VuoShader_setUniformFloat((*instance)->shader, glContext, "cutoffRadius", VuoShader_samplerSizeFromVuoSize(radius));
-
-		// Render.
-		*twirledImage = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
-
-		VuoGlContext_disuse(glContext);
-	}
+	// Render.
+	*twirledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
+	VuoGlContext_disuse((*instance)->glContext);
 }

@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.integer" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="589,197"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="121,177"];
+MakeList2 [type="vuo.list.make.1.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="529,208"];
+SpinOffWithCount [type="vuo.test.spinOffWithCount" version="1.0.0" label="Spin Off with Count|<refresh>refresh\l|<done>done\r|<spunOff>spunOff\r" pos="323,197"];
+
+FireOnStart:started -> SpinOffWithCount:refresh;
+MakeList2:list -> Add:terms;
+SpinOffWithCount:spunOff -> MakeList2:item1;
+}

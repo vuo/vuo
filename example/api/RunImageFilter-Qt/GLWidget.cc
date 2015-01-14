@@ -91,7 +91,8 @@ void GLWidget::initializeGL()
 
 	// Load an image from disk into a GL Texture
 	QPixmap image(QCoreApplication::applicationDirPath() + "/../Resources/OttoOperatesTheRoller.jpg");
-	inputTexture = bindTexture(image, GL_TEXTURE_2D);
+	GLenum internalformat = GL_RGBA;
+	inputTexture = bindTexture(image, GL_TEXTURE_2D, internalformat);
 
 	// Prepare a shader for displaying the GL Texture onscreen
 	vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
@@ -107,7 +108,7 @@ void GLWidget::initializeGL()
 
 	// Pass the GL Texture to the Vuo Composition
 	inputImagePort = runner->getPublishedInputPortWithName("inputImage");
-	VuoImage t = VuoImage_make(inputTexture, image.width(), image.height());
+	VuoImage t = VuoImage_make(inputTexture, internalformat, image.width(), image.height());
 	VuoRetain(t);
 	json_object *o = VuoImage_jsonFromValue(t);
 	runner->setPublishedInputPortValue(inputImagePort, o);

@@ -9,8 +9,6 @@
 
 #include "VuoImageGet.h"
 #include "VuoUrl.h"
-#include "VuoGlContext.h"
-#include "VuoGlPool.h"
 
 #include <string.h>
 
@@ -33,10 +31,7 @@ VuoModuleMetadata({
 						 "c",
 						 "json",
 						 "VuoUrl",
-						 "FreeImage",
-						 "VuoGlContext",
-						 "VuoGlPool",
-						 "OpenGL.framework"
+						 "FreeImage"
 					 ]
 				 });
 #endif
@@ -117,28 +112,10 @@ VuoImage VuoImage_get(const char *imageURL)
 	unsigned long pixelsWide = FreeImage_GetWidth(dib);
 	unsigned long pixelsHigh = FreeImage_GetHeight(dib);
 
-	// Upload the texture to GPU memory
-	GLuint glTextureName;
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		glTextureName = VuoGlPool_use(VuoGlPool_Texture);
-		glBindTexture(GL_TEXTURE_2D, glTextureName);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pixelsWide, pixelsHigh, 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)pixels);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-//		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
+	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, GL_BGRA, pixelsWide, pixelsHigh);
 
 	FreeImage_Unload(dib);
 	free(data);
 
-	return VuoImage_make(glTextureName, pixelsWide, pixelsHigh);
+	return vuoImage;
 }

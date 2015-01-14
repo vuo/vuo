@@ -179,9 +179,9 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 					VuoRetain(shader);
 					VuoShader_addTexture(shader, cgl_ctx, "texture", image);
 					VuoShader_setUniformPoint2d(shader, cgl_ctx, "textureSize", VuoPoint2d_make(image->pixelsWide, image->pixelsHigh));
-					VuoImageRenderer *ren = VuoImageRenderer_make();
+					VuoImageRenderer *ren = VuoImageRenderer_make(cgl_ctx);
 					VuoRetain(ren);
-					callback( VuoImageRenderer_draw(ren, cgl_ctx, shader, image->pixelsWide, image->pixelsHigh) );
+					callback( VuoImageRenderer_draw(ren, shader, image->pixelsWide, image->pixelsHigh) );
 					VuoRelease(ren);
 					VuoRelease(shader);
 					VuoRelease(image);

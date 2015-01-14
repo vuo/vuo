@@ -20,6 +20,4 @@ NODE_SOURCES += \
 	vuo.test.outputList.c \
 	vuo.test.makeListOfSceneObjects.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../../module.pri)

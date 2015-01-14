@@ -34,6 +34,7 @@ struct json_object;
 #include "VuoShader.h"
 #include "VuoText.h"
 #include "VuoTransform.h"
+#include "VuoTransform2d.h"
 #include "VuoVertices.h"
 
 // List Types

@@ -116,7 +116,16 @@ qreal VuoRendererTypecastPort::getChildPortXOffset(void) const
  */
 QString VuoRendererTypecastPort::getTypecastTitle(void) const
 {
-	return sourceType + QString::fromUtf8(" → ") + destinationType;
+	return getTypecastTitleForPorts(sourceType, destinationType);
+}
+
+/**
+ * Returns the title string for a typecast node having the provided @c typecastSourceType and
+ * @c typecastDestinationType port class names.
+ */
+QString VuoRendererTypecastPort::getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort)
+{
+	return typecastSourcePort + QString::fromUtf8(" → ") + typecastDestinationPort;
 }
 
 /**
@@ -176,13 +185,14 @@ void VuoRendererTypecastPort::paint(QPainter *painter, const QStyleOptionGraphic
 
 	drawBoundingRect(painter);
 
+	VuoRendererColors::SelectionType selectionType = (getRenderedParentNode()->isSelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
 	qint64 timeOfLastActivity =	((! getRenderActivity())?	VuoRendererItem::notTrackingActivity :
 															getUncollapsedTypecastNode()->getTimeLastExecutionEnded());
 
 	VuoRendererColors *colors = new VuoRendererColors(getRenderedParentNode()->getBase()->getTintColor(),
-													  getRenderedParentNode()->isSelected(),
+													  selectionType,
 													  false,
-													  false,
+													  VuoRendererColors::noHighlight,
 													  timeOfLastActivity);
 
 	// Fill

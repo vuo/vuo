@@ -151,17 +151,18 @@ void VuoRendererMakeListNode::paint(QPainter *painter, const QStyleOptionGraphic
 
 	drawBoundingRect(painter);
 
+	VuoRendererColors::SelectionType selectionType = (isSelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
 	qint64 timeOfLastActivity = (getRenderActivity()? timeLastExecutionEnded : VuoRendererItem::notTrackingActivity);
 	VuoRendererColors *drawerColors = new VuoRendererColors(getBase()->getTintColor(),
-													  isSelected(),
+													  selectionType,
 													  false,
-													  false,
+													  VuoRendererColors::noHighlight,
 													  timeOfLastActivity);
 
 	VuoRendererColors *dragHandleColors = new VuoRendererColors(getBase()->getTintColor(),
-													  isSelected(),
+													  selectionType,
 													  dragHandleIsHovered,
-													  false,
+													  VuoRendererColors::noHighlight,
 													  timeOfLastActivity);
 
 	// Drawer frame

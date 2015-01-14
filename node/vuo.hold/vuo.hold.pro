@@ -14,9 +14,12 @@ NODE_SOURCES += \
 	vuo.hold.VuoGradientNoise.c \
 	vuo.hold.VuoImage.c \
 	vuo.hold.VuoInteger.c \
+	vuo.hold.VuoLayer.c \
 	vuo.hold.VuoLeapFrame.c \
 	vuo.hold.VuoLeapHand.c \
 	vuo.hold.VuoLeapPointable.c \
+	vuo.hold.VuoLeapPointableType.c \
+	vuo.hold.VuoLoopType.c \
 	vuo.hold.VuoMidiController.c \
 	vuo.hold.VuoMidiDevice.c \
 	vuo.hold.VuoMidiNote.c \
@@ -31,16 +34,17 @@ NODE_SOURCES += \
 	vuo.hold.VuoSyphonServerDescription.c \
 	vuo.hold.VuoText.c \
 	vuo.hold.VuoTransform.c \
+	vuo.hold.VuoTransform2d.c \
 	vuo.hold.VuoVertices.c \
 	vuo.hold.VuoWave.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 NODE_INCLUDEPATH += \
 	../vuo.image \
+	../vuo.layer \
 	../vuo.leap \
 	../vuo.math \
 	../vuo.midi \
+	../vuo.movie \
 	../vuo.noise \
 	../vuo.syphon
 

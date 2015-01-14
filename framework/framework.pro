@@ -158,6 +158,8 @@ MODULE_OBJECTS += \
 	$$FFMPEG_ROOT/lib/libavutil.dylib \
 	$$FFMPEG_ROOT/lib/libswresample.dylib \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
+	$$LIBUSB_ROOT/lib/libusb.dylib \
+	$$LIBFREENECT_ROOT/lib/libfreenect.dylib \
 	$$ASSIMP_ROOT/lib/libassimp.a
 !equals(MAC_VERSION, "10.6") {
 	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
@@ -208,6 +210,9 @@ copyModules.commands = \
 	   rm -rf $$MODULES_DEST_DIR \
 	&& mkdir -p $$MODULES_DEST_DIR \
 	&& cp $$MODULE_OBJECTS $$MODULES_DEST_DIR \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libfreenect.dylib" "$$MODULES_DEST_DIR/libfreenect.dylib" \
+	&& install_name_tool -change "$$LIBUSB_ROOT/lib/libusb-1.0.0.dylib" "@rpath/$$MODULES_DEST_DIR/libusb.dylib" "$$MODULES_DEST_DIR/libfreenect.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libusb.dylib" "$$MODULES_DEST_DIR/libusb.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavcodec.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
 	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavcodec.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavdevice.dylib" "$$MODULES_DEST_DIR/libavdevice.dylib" \

@@ -17,6 +17,7 @@ node.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - $$VUOCOMPILE_NODE_DEP
 node.output = ${QMAKE_FILE_IN_BASE}.vuonode
 node.commands = $$VUOCOMPILE $$VUOCOMPILE_NODE_FLAGS --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += node
+OTHER_FILES += $$NODE_SOURCES
 
 
 VUOCOMPILE_TYPE_INCLUDEPATH = \
@@ -35,6 +36,7 @@ type.commands = $$VUOCOMPILE $$VUOCOMPILE_TYPE_FLAGS --output ${QMAKE_FILE_OUT} 
 type.variable_out = TYPE_BITCODE
 type.CONFIG = target_predeps
 QMAKE_EXTRA_COMPILERS += type
+OTHER_FILES += $$TYPE_SOURCES
 
 typeObjects.input = TYPE_BITCODE
 typeObjects.output = ${QMAKE_FILE_IN_BASE}.o
@@ -58,6 +60,7 @@ node_library.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - -emit-llvm $$
 node_library.output = ${QMAKE_FILE_IN_BASE}.bc
 node_library.commands = $$QMAKE_CC -cc1 -triple x86_64-apple-macosx10.6.0 -fblocks -fcxx-exceptions -emit-llvm-bc $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += node_library
+OTHER_FILES += $$NODE_LIBRARY_SOURCES
 
 
 VuoNodeSet {
@@ -81,7 +84,12 @@ VuoNodeSet {
 	createNodeSetZip.commands = \
 		( [ -f $$NODE_SET_ZIP ] && rm $$NODE_SET_ZIP ) ; \
 		zip --quiet $$NODE_SET_ZIP $$NODE_SET_ZIP_CONTENTS && \
-		( ( [ -d $$NODE_SET_DIR/examples ] && zip --quiet -r $$NODE_SET_ZIP examples --include *.vuo) || true ) && \
+		( ( [ -d $$NODE_SET_DIR/examples ] && zip --quiet -r $$NODE_SET_ZIP examples \
+			--include *.vuo \
+			--include *.png \
+			--include *.jpg \
+			--include *.mov \
+			) || true ) && \
 		( ( [ -d $$NODE_SET_DIR/descriptions ] && zip --quiet -r $$NODE_SET_ZIP descriptions) || true )
 	createNodeSetZip.depends = $$NODE_SET_ZIP_CONTENTS
 	createNodeSetZip.target = $$NODE_SET_ZIP
@@ -90,3 +98,17 @@ VuoNodeSet {
 
 	QMAKE_CLEAN += $$NODE_SET_ZIP
 }
+
+# Enable Qt Creator to open and autocomplete 3rd-party headers
+INCLUDEPATH += \
+	$$NODE_INCLUDEPATH \
+	$$TYPE_INCLUDEPATH \
+	$$NODE_LIBRARY_INCLUDEPATH
+
+# Enable building libraries as normal machine code (by adding them to SOURCES)
+INCLUDEPATH += \
+	$$ROOT/library \
+	$$ROOT/node \
+	$$ROOT/runtime \
+	$$ROOT/type \
+	$$ROOT/type/list

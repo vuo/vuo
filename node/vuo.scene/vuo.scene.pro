@@ -16,8 +16,6 @@ NODE_SOURCES += \
 	vuo.scene.render.image.c \
 	vuo.scene.render.window.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 NODE_INCLUDEPATH += \
 	$${ASSIMP_ROOT}/include
 

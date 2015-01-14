@@ -34,6 +34,7 @@ struct nodeInstanceData
 	CFRunLoopSourceRef source;
 
 	dispatch_queue_t clickQueue;
+	dispatch_group_t clickGroup;
 	int pendingClickCount;
 
 	void (*movedTo)(VuoPoint2d);
@@ -126,34 +127,40 @@ CGEventRef vuoDeviceMouseCGEventTapCallback(CGEventTapProxy proxy, CGEventType t
 			if (clickCount == 1)
 			{
 				buttonEvent = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_SingleClick, position);
+				dispatch_group_enter(context->clickGroup);
 				dispatch_after(clickInterval, context->clickQueue, ^{
 								   if (context->pendingClickCount == clickCount)
 								   {
 									   context->usedButton(buttonEvent);
 									   context->pendingClickCount = 0;
 								   }
+								   dispatch_group_leave(context->clickGroup);
 							   });
 			}
 			else if (clickCount == 2)
 			{
 				buttonEvent = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_DoubleClick, position);
+				dispatch_group_enter(context->clickGroup);
 				dispatch_after(clickInterval, context->clickQueue, ^{
 								   if (context->pendingClickCount == clickCount)
 								   {
 									   context->usedButton(buttonEvent);
 									   context->pendingClickCount = 0;
 								   }
+								   dispatch_group_leave(context->clickGroup);
 							   });
 			}
 			else if (clickCount == 3)
 			{
 				buttonEvent = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_TripleClick, position);
+				dispatch_group_enter(context->clickGroup);
 				dispatch_sync(context->clickQueue, ^{
 								  if (context->pendingClickCount == clickCount)
 								  {
 									  context->usedButton(buttonEvent);
 									  context->pendingClickCount = 0;
 								  }
+								  dispatch_group_leave(context->clickGroup);
 							  });
 			}
 			break;
@@ -170,6 +177,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	context->pendingClickCount = 0;
 	context->clickQueue = dispatch_queue_create("vuo.mouse.click", 0);
+	context->clickGroup = dispatch_group_create();
 
 	return context;
 }
@@ -224,7 +232,7 @@ void nodeInstanceTriggerStop
 	CGEventTapEnable((*context)->tap, false);
 	CFRelease((*context)->tap);
 
-	dispatch_sync((*context)->clickQueue, ^{});  // wait for any pending click events to complete
+	dispatch_group_wait((*context)->clickGroup, DISPATCH_TIME_FOREVER);  // wait for any pending click events to complete
 }
 
 void nodeInstanceFini
@@ -233,4 +241,5 @@ void nodeInstanceFini
 )
 {
 	dispatch_release((*context)->clickQueue);
+	dispatch_release((*context)->clickGroup);
 }

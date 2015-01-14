@@ -19,9 +19,8 @@ TYPE_SOURCES += \
 	VuoVertices.c \
 	VuoShader.c \
 	VuoText.c \
-	VuoTransform.c
-
-OTHER_FILES += $$TYPE_SOURCES
+	VuoTransform.c \
+	VuoTransform2d.c
 
 HEADERS += \
 	VuoBoolean.h \
@@ -38,7 +37,8 @@ HEADERS += \
 	VuoVertices.h \
 	VuoShader.h \
 	VuoText.h \
-	VuoTransform.h
+	VuoTransform.h \
+	VuoTransform2d.h
 
 INCLUDEPATH += \
 	$$ROOT/library \

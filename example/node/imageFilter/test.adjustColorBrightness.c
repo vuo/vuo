@@ -45,6 +45,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
+	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
 
@@ -53,9 +54,12 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
 
+	instance->glContext = VuoGlContext_use();
+
 	instance->shader = VuoShader_make("Swap Color Channels", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
 	VuoRetain(instance->shader);
-	instance->imageRenderer = VuoImageRenderer_make();
+
+	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
 	return instance;
@@ -74,27 +78,22 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	{
-		VuoGlContext glContext = VuoGlContext_use();
+	// Associate the input image with the shader.
+	VuoShader_resetTextures((*instance)->shader);
+	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "texture", image);
 
-		// Associate the input image with the shader.
-		VuoShader_resetTextures((*instance)->shader);
-		VuoShader_addTexture((*instance)->shader, glContext, "texture", image);
+	// Feed parameters to the shader.
+	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "red", red);
+	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "green", green);
+	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "blue", blue);
 
-		// Feed parameters to the shader.
-		VuoShader_setUniformFloat((*instance)->shader, glContext, "red", red);
-		VuoShader_setUniformFloat((*instance)->shader, glContext, "green", green);
-		VuoShader_setUniformFloat((*instance)->shader, glContext, "blue", blue);
-
-		// Render.
-		*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
-
-		VuoGlContext_disuse(glContext);
-	}
+	// Render.
+	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
+	VuoGlContext_disuse((*instance)->glContext);
 }

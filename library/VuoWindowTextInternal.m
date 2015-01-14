@@ -109,7 +109,6 @@ VuoModuleMetadata({
 		// Fire event for character.
 		VuoText charTypedAsText = VuoText_make([[NSString stringWithCharacters:&charTyped length:1] UTF8String]);
 		typedCharacter(charTypedAsText);
-		VuoRelease(charTypedAsText);
 
 		// If user typed whitespace...
 		if ([[NSCharacterSet whitespaceAndNewlineCharacterSet] characterIsMember:charTyped])
@@ -125,7 +124,6 @@ VuoModuleMetadata({
 				NSString *wordTyped = [[textView string] substringFromIndex:previousWordStart];
 				VuoText wordTypedAsText = VuoText_make([wordTyped UTF8String]);
 				typedWord(wordTypedAsText);
-				VuoRelease(wordTypedAsText);
 			}
 		}
 
@@ -143,7 +141,6 @@ VuoModuleMetadata({
 				NSString *lineTyped = [[textView string] substringFromIndex:previousLineStart];
 				VuoText lineTypedAsText = VuoText_make([lineTyped UTF8String]);
 				typedLine(lineTypedAsText);
-				VuoRelease(lineTypedAsText);
 			}
 		}
 	}

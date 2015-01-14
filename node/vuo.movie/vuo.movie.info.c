@@ -28,7 +28,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ ]
+						 "exampleCompositions" : [ "PlayMovieWithButton.vuo" ]
 					 }
 				 });
 

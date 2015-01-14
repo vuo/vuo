@@ -129,7 +129,7 @@ int main(void)
 
 	// Pass the GL Texture to the Vuo Composition
 	VuoRunner::Port * inputImagePort = runner->getPublishedInputPortWithName("inputImage");
-	VuoImage t = VuoImage_make(inputTexture, glfwi.Width, glfwi.Height);
+	VuoImage t = VuoImage_make(inputTexture, glfwi.Format, glfwi.Width, glfwi.Height);
 	VuoRetain(t);
 	json_object *o = VuoImage_jsonFromValue(t);
 	runner->setPublishedInputPortValue(inputImagePort, o);

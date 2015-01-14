@@ -64,9 +64,11 @@ VuoModuleMetadata({
 
 The @ref VuoModuleMetadata macro takes a [JSON-formatted](http://www.json.org/) argument. The argument includes the default title for nodes of this node class, a description to help users understand how to use the node class, an array of keywords used when searching the Node Library, and a version number to help users upgrade and manage their node classes. 
 
-Node classes are not the only files in Vuo that can define module details. You'll see this in @ref DevelopingTypes and @ref DevelopingLibraryModules. The title, description, keywords, and version can be defined in other types of files as well. 
+Node classes are not the only files in Vuo that can define module metadata. You'll see this in @ref DevelopingTypes and @ref DevelopingLibraryModules. The title, description, keywords, and version can be defined in other types of files as well. 
 
-But some module details are specific to node classes. The module details above include whether the node class is an interface, which affects how the node is rendered in a composition. 
+But some module metadata are specific to node classes. The module metadata above include whether the node class is an interface, which affects how the node is rendered in a composition. 
+
+When deciding which keywords to put in the module metadata, be aware that some are added automatically, so you don't have to add them. Each word in the node's title and class name is automatically used in searches of the Node Library. If your node class has trigger ports, then the keywords "events", "trigger", and "fire" are automatically added. 
 
 For more information, see the documentation for @ref VuoModuleMetadata. 
 

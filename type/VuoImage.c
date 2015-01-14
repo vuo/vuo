@@ -62,7 +62,7 @@ void VuoImage_free(void *texture)
 	if (t->freeCallback)
 		t->freeCallback(t);
 	else
-		VuoGlTexture_release(t->glTextureName);
+		VuoGlTexture_release(t->glInternalFormat, t->pixelsWide, t->pixelsHigh, t->glTextureName);
 
 	free(t);
 }
@@ -70,13 +70,14 @@ void VuoImage_free(void *texture)
 /**
  * Helper for @c VuoImage_make and @c VuoImage_makeClientOwned.
  */
-VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh)
+VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh)
 {
 	VuoImage t = (VuoImage)malloc(sizeof(struct _VuoImage));
 	VuoRegister(t, VuoImage_free);
 
 	t->glTextureName = glTextureName;
 	t->glTextureTarget = GL_TEXTURE_2D;
+	t->glInternalFormat = glInternalFormat;
 	t->pixelsWide = pixelsWide;
 	t->pixelsHigh = pixelsHigh;
 
@@ -101,9 +102,9 @@ VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned long int pi
  *
  * @threadAny
  */
-VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh)
+VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh)
 {
-	VuoImage t = VuoImage_make_internal(glTextureName, pixelsWide, pixelsHigh);
+	VuoImage t = VuoImage_make_internal(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
 	VuoGlTexture_retain(glTextureName);
 	return t;
 }
@@ -127,10 +128,63 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide,
  */
 VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
 {
-	VuoImage t = VuoImage_make_internal(glTextureName, pixelsWide, pixelsHigh);
+	VuoImage t = VuoImage_make_internal(glTextureName, 0, pixelsWide, pixelsHigh);
 	t->freeCallback = freeCallback;
 	t->freeCallbackContext = freeCallbackContext;
 	return t;
+}
+
+/**
+ * @ingroup VuoImage
+ * Uploads the specified pixel data to the GPU and returns a new @ref VuoImage referencing it.
+ *
+ * @threadAny
+ *
+ * @param pixels Pointer the a buffer of pixel data.  8 bits per channel.  Row-major, starting at the bottom (flipped).  Zero stride.
+ * @param format An OpenGL format constant.  Supported formats include:
+ *    - @c GL_RGB (24 bits per pixel)
+ *    - @c GL_RGBA (32 bits per pixel)
+ *    - @c GL_BGRA (32 bits per pixel)
+ *    - @c GL_LUMINANCE (8 bits per pixel)
+ *    - @c GL_LUMINANCE_ALPHA (16 bits per pixel)
+ * @param pixelsWide Width in pixels
+ * @param pixelsHigh Height in pixels
+ */
+VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh)
+{
+	VuoGlContext glContext = VuoGlContext_use();
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	GLenum internalformat = GL_RGBA;
+	if (format == GL_RGB)
+		internalformat = GL_RGB;
+	else if (format == GL_LUMINANCE)
+		internalformat = GL_LUMINANCE8;
+	else if (format == GL_LUMINANCE_ALPHA)
+		internalformat = GL_LUMINANCE8_ALPHA8;
+
+	GLuint glTextureName = VuoGlTexturePool_use(glContext, internalformat, pixelsWide, pixelsHigh, format);
+
+	glBindTexture(GL_TEXTURE_2D, glTextureName);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixelsWide, pixelsHigh, format, GL_UNSIGNED_BYTE, (GLvoid *)pixels);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Since returning from this function implies that the texture is ready to use,
+	// flush before returning, to ensure that the enqueued commands to create the texture actually get executed
+	// before it gets used on a different context.
+	glFlushRenderAPPLE();
+//	glFinish();
+
+	VuoGlContext_disuse(glContext);
+
+	return VuoImage_make(glTextureName, internalformat, pixelsWide, pixelsHigh);
+}
+
+static void VuoImage_deleteImage(VuoImage image)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	glDeleteTextures(1, &image->glTextureName);
+	VuoGlContext_disuse(cgl_ctx);
 }
 
 /**
@@ -148,6 +202,7 @@ VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int 
  * @eg{
  *	{
  *		"glTextureName": 42,
+ *		"glInternalFormat": 6407,
  *		"pixelsWide": 640,
  *		"pixelsHigh": 480
  *	}
@@ -167,6 +222,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 		return NULL;
 
 	unsigned int glTextureName;
+	unsigned int glInternalFormat = 0;
 	unsigned long int pixelsWide;
 	unsigned long int pixelsHigh;
 
@@ -187,7 +243,11 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 	{
 		json_object * o;
 		if (json_object_object_get_ex(js, "glTextureName", &o))
+		{
 			glTextureName = json_object_get_int64(o);
+			if (json_object_object_get_ex(js, "glInternalFormat", &o))
+				glInternalFormat = json_object_get_int64(o);
+		}
 		else if (json_object_object_get_ex(js, "ioSurface", &o))
 		{
 			IOSurfaceID surfID = json_object_get_int(o);
@@ -195,10 +255,11 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 
 			// Read the IOSurface into a GL_TEXTURE_RECTANGLE_ARB (the only texture type IOSurface supports).
 			GLuint textureRect;
-			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			VuoGlContext glContext = VuoGlContext_use();
+			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 			{
 				{
-					textureRect = VuoGlPool_use(VuoGlPool_Texture);
+					glGenTextures(1, &textureRect);
 					glEnable(GL_TEXTURE_RECTANGLE_ARB); //?
 					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, textureRect);
 
@@ -209,7 +270,13 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 //					glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 					IOSurfaceRef surf = IOSurfaceLookup(surfID);
-					CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
+					if (!surf)
+					{
+						VLog("IOSurfaceLookup(%d) failed.", surfID);
+						return NULL;
+					}
+					glInternalFormat = GL_RGB;
+					CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, glInternalFormat, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
 					// IOSurfaceDecrementUseCount(surf); ?
 					CFRelease(surf);
 					if(err != kCGLNoError)
@@ -225,7 +292,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 			// Convert the GL_TEXTURE_RECTANGLE_ARB into GL_TEXTURE_2D.
 			VuoImage image2d;
 			{
-				VuoImage imageRect = VuoImage_make(textureRect, pixelsWide, pixelsHigh);
+				VuoImage imageRect = VuoImage_makeClientOwned(textureRect, pixelsWide, pixelsHigh, VuoImage_deleteImage, NULL);
 				imageRect->glTextureTarget = GL_TEXTURE_RECTANGLE_ARB;
 
 				const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
@@ -244,23 +311,23 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 				VuoShader_addTexture(shader, cgl_ctx, "texture", imageRect);
 				VuoShader_setUniformPoint2d(shader, cgl_ctx, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
 
-				VuoImageRenderer ir = VuoImageRenderer_make();
+				VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
 				VuoRetain(ir);
-				image2d = VuoImageRenderer_draw(ir, cgl_ctx, shader, pixelsWide, pixelsHigh);
+				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh);
 				VuoRelease(ir);
 
 				VuoImage_free(imageRect); // deletes textureRect
 			}
 
 			json_object_put(js);
-			VuoGlContext_disuse(cgl_ctx);
+			VuoGlContext_disuse(glContext);
 			return image2d;
 		}
 		else
 			goto error;
 	}
 
-	return VuoImage_make(glTextureName, pixelsWide, pixelsHigh);
+	return VuoImage_make(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
 
 error:
 	json_object_put(js);
@@ -282,6 +349,10 @@ json_object * VuoImage_jsonFromValue(const VuoImage value)
 	{
 		json_object * o = json_object_new_int64(value->glTextureName);
 		json_object_object_add(js, "glTextureName", o);
+	}
+	{
+		json_object * o = json_object_new_int64(value->glInternalFormat);
+		json_object_object_add(js, "glInternalFormat", o);
 	}
 	{
 		json_object * o = json_object_new_int64(value->pixelsWide);
@@ -314,16 +385,21 @@ json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
 		VuoShader shader = VuoShader_makeImageShader();
 		VuoRetain(shader);
 		VuoShader_addTexture(shader, cgl_ctx, "texture", value);
+		VuoShader_setUniformFloat(shader, cgl_ctx, "alpha", 1);
 
-		VuoImageRenderer ir = VuoImageRenderer_make();
+		VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
 		VuoRetain(ir);
-		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir,cgl_ctx,shader,value->pixelsWide,value->pixelsHigh,true);
+		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir,shader,value->pixelsWide,value->pixelsHigh,true);
 		VuoRelease(shader);
 		VuoRelease(ir);
 //		VLog("Created IOSurfaceID %d",surfID);
 
 		json_object * o = json_object_new_int(surfID);
 		json_object_object_add(js, "ioSurface", o);
+
+		// Ensure the command queue gets executed before we return,
+		// since the IOSurface might immediately be used on another context.
+		glFlushRenderAPPLE();
 
 		VuoGlContext_disuse(cgl_ctx);
 	}

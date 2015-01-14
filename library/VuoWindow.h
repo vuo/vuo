@@ -40,8 +40,10 @@ void VuoWindowText_appendLine(VuoWindowText w, const char *text);
 
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
+		bool useDepthBuffer,
 		void (*initCallback)(VuoGlContext glContext, void *),
 		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
+		void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *),
 		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 );
@@ -54,6 +56,7 @@ void VuoWindowOpenGl_enableTriggers
 );
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w);
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w);
+void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToExecute)(VuoGlContext glContext));
 void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, unsigned int pixelsHigh);
 
 #ifdef __cplusplus

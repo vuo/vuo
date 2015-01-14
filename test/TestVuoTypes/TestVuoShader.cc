@@ -56,6 +56,24 @@ private slots:
 		QVERIFY(value != NULL);
 		QCOMPARE(QString(value->summary), summary);
 	}
+
+	void testMakeDefaultShaderPerformance()
+	{
+		QBENCHMARK {
+			VuoShader s = VuoShader_valueFromString("");
+			VuoRetain(s);
+			VuoRelease(s);
+		}
+	}
+
+	void testMakeImageShaderPerformance()
+	{
+		QBENCHMARK {
+			VuoShader s = VuoShader_makeImageShader();
+			VuoRetain(s);
+			VuoRelease(s);
+		}
+	}
 };
 
 QTEST_APPLESS_MAIN(TestVuoShader)

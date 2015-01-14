@@ -18,6 +18,7 @@ SUBDIRS += \
 	test_TestVuoCompilerComposition \
 	test_TestVuoCompilerGraphvizParser \
 	test_TestVuoCompilerBitcodeGenerator \
+	test_TestVuoMovie \
 	test_TestVuoRenderer \
 	test_TestVuoTypes \
 	test_TestCompositionExecution \
@@ -87,6 +88,9 @@ test_TestVuoCompilerNodeClass.depends = test_TestVuoCompiler
 
 test_TestVuoCompilerType.subdir = TestVuoCompilerType
 test_TestVuoCompilerType.depends = test_TestVuoCompiler
+
+test_TestVuoMovie.subdir = TestVuoMovie
+test_TestVuoMovie.depends =
 
 test_TestVuoRenderer.subdir = TestVuoRenderer
 test_TestVuoRenderer.depends =

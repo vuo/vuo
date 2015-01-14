@@ -642,6 +642,28 @@ void VuoRunner::setInputPortValue(string portIdentifier, json_object *value)
 }
 
 /**
+ * Sends a control request to the composition telling it to fire an event from the trigger port.
+ * If the trigger port carries data, its most recent data is fired along with the event.
+ *
+ * Upon return, the event will have been fired.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ *
+ * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
+ */
+void VuoRunner::fireTriggerPortEvent(string portIdentifier)
+{
+	dispatch_sync(controlQueue, ^{
+					  vuoMemoryBarrier();
+
+					  zmq_msg_t messages[1];
+					  vuoInitMessageWithString(&messages[0], portIdentifier.c_str());
+					  vuoControlRequestSend(VuoControlRequestTriggerPortFireEvent, messages, 1);
+					  vuoControlReplyReceive(VuoControlReplyTriggerPortFiredEvent);
+				  });
+}
+
+/**
  * Sends a control request to the composition telling it to retrieve an input port's value.
  *
  * Assumes the composition has been started and has not been stopped.
@@ -745,7 +767,7 @@ string VuoRunner::getOutputPortSummary(string portIdentifier)
 					  vuoControlRequestSend(VuoControlRequestOutputPortSummaryRetrieve, messages, 1);
 					  vuoControlReplyReceive(VuoControlReplyOutputPortSummaryRetrieved);
 					  char *s = vuoReceiveAndCopyString(ZMQControl);
-					  string summary = s;
+					  summary = s;
 					  free(s);
 				  });
 	return summary;

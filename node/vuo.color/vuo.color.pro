@@ -9,6 +9,4 @@ NODE_SOURCES += \
 	vuo.color.make.hsl.c \
 	vuo.color.make.rgb.c
 
-OTHER_FILES += $$NODE_SOURCES
-
 include(../../module.pri)

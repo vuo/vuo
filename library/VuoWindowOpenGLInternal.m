@@ -31,6 +31,7 @@ VuoModuleMetadata({
 
 @synthesize glWindow;
 @synthesize windowedGlContext;
+@synthesize drawQueue;
 
 /**
  * Creates an OpenGL view that calls the given callbacks for rendering.
@@ -38,15 +39,17 @@ VuoModuleMetadata({
  * @threadMain
  */
 - (id)initWithFrame:(NSRect)frame
-	   initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
-	 resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
-	   drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
-			   drawContext:(void *)_drawContext
+		   initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+		 resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
+  switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))_switchContextCallback
+		   drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
+			drawContext:(void *)_drawContext
 {
 	if (self = [super initWithFrame:frame pixelFormat:[NSOpenGLView defaultPixelFormat]])
 	{
 		initCallback = _initCallback;
 		resizeCallback = _resizeCallback;
+		switchContextCallback = _switchContextCallback;
 		drawCallback = _drawCallback;
 		drawContext = _drawContext;
 
@@ -142,7 +145,9 @@ void VuoWindowOpenGLView_draw(VuoFrameRequest frameRequest, void *context)
 	VuoDisplayRefresh_disableTriggers(displayRefresh);
 	movedMouseTo = NULL;
 	scrolledMouse = NULL;
-	usedMouseButton = NULL;
+	dispatch_sync(clickQueue, ^{
+					  usedMouseButton = NULL;
+				  });
 }
 
 /**
@@ -188,7 +193,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	{
 		VuoMouseButtonAction buttonAction = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_SingleClick, position);
 		dispatch_after(clickInterval, clickQueue, ^{
-						   if (pendingClickCount == clickCount)
+						   if (usedMouseButton && pendingClickCount == clickCount)
 						   {
 							   usedMouseButton(buttonAction);
 							   pendingClickCount = 0;
@@ -199,7 +204,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	{
 		VuoMouseButtonAction buttonAction = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_DoubleClick, position);
 		dispatch_after(clickInterval, clickQueue, ^{
-						   if (pendingClickCount == clickCount)
+						   if (usedMouseButton && pendingClickCount == clickCount)
 						   {
 							   usedMouseButton(buttonAction);
 							   pendingClickCount = 0;
@@ -210,7 +215,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	{
 		VuoMouseButtonAction buttonAction = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_TripleClick, position);
 		dispatch_sync(clickQueue, ^{
-						  if (pendingClickCount == clickCount)
+						  if (usedMouseButton && pendingClickCount == clickCount)
 						  {
 							  usedMouseButton(buttonAction);
 							  pendingClickCount = 0;
@@ -330,8 +335,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 					  CGLContextObj cgl_ctx = [glContext CGLContextObj];
 					  NSRect frame = [self frame];
 					  glViewport(0, 0, frame.size.width, frame.size.height);
-					  resizeCallback([glContext CGLContextObj], drawContext, frame.size.width, frame.size.height);
-					  drawCallback([glContext CGLContextObj], drawContext);
+					  resizeCallback(cgl_ctx, drawContext, frame.size.width, frame.size.height);
+					  drawCallback(cgl_ctx, drawContext);
 					  [glContext flushBuffer];
 				  });
 }
@@ -382,7 +387,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 			kCGLPFANoRecovery,
 			kCGLPFADoubleBuffer,
 			kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
-			kCGLPFADepthSize, (CGLPixelFormatAttribute) 16,
+			kCGLPFADepthSize, (CGLPixelFormatAttribute) glWindow.depthBuffer ? 16 : 0,
 			kCGLPFAMultisample,
 			kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
 			kCGLPFASamples, (CGLPixelFormatAttribute) 4,
@@ -415,6 +420,9 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 		int swapInterval=1;
 		[fullScreenContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 		togglingFullScreen = true;
+		dispatch_sync(drawQueue, ^{
+						  switchContextCallback([windowedGlContext CGLContextObj], fullScreenContextCGL, drawContext);
+					  });
 		[self setOpenGLContext:fullScreenContext];
 		[fullScreenContext setView:self];
 
@@ -436,6 +444,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	else
 	{
 		dispatch_sync(drawQueue, ^{
+						  switchContextCallback([[self openGLContext] CGLContextObj], [windowedGlContext CGLContextObj], drawContext);
+
 						  [self setOpenGLContext:windowedGlContext];
 						  togglingFullScreen = true;
 						  [windowedGlContext setView:self];
@@ -458,14 +468,17 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 @implementation VuoWindowOpenGLInternal
 
 @synthesize glView;
+@synthesize depthBuffer;
 
 /**
  * Creates a window containing an OpenGL view.
  *
  * @threadMain
  */
-- (id)initWithInitCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+- (id)initWithDepthBuffer:(BOOL)_depthBuffer
+			  initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
 			resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
+	 switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))_switchContextCallback
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 			   drawContext:(void *)_drawContext
 {
@@ -478,6 +491,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 								  backing:NSBackingStoreBuffered
 									defer:NO])
 	{
+		self.depthBuffer = _depthBuffer;
 		self.delegate = self;
 
 		callbacksEnabled = NO;
@@ -492,13 +506,46 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 		VuoWindowOpenGLView *_glView = [[VuoWindowOpenGLView alloc] initWithFrame:[[self contentView] frame]
 																	 initCallback:_initCallback
 																   resizeCallback:_resizeCallback
+															switchContextCallback:_switchContextCallback
 																	 drawCallback:_drawCallback
 																	  drawContext:_drawContext];
 		self.glView = _glView;
 		[_glView release];
 
 		// 1. Set the GL context for the view.
-		VuoGlContext vuoGlContext = VuoGlContext_use();
+		CGLContextObj vuoGlContext;
+		{
+			VuoGlContext vuoSharedGlContext = VuoGlContext_use();
+
+			CGLPixelFormatAttribute pixelFormatAttributes[] =
+			{
+				kCGLPFAWindow,
+
+				// copied from VuoGlContext
+				kCGLPFAAccelerated,
+				kCGLPFANoRecovery,
+				kCGLPFADoubleBuffer,
+				kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
+				kCGLPFADepthSize, (CGLPixelFormatAttribute) depthBuffer? 16 : 0,
+				kCGLPFAMultisample,
+				kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
+				kCGLPFASamples, (CGLPixelFormatAttribute) 4,
+				(CGLPixelFormatAttribute) 0
+			};
+			CGLPixelFormatObj pixelFormat;
+			GLint numPixelFormats;
+			CGLError error = CGLChoosePixelFormat(pixelFormatAttributes, &pixelFormat, &numPixelFormats);
+			if (error != kCGLNoError)
+			{
+				fprintf(stderr, "Error: Couldn't create windowed pixel format: %s\n", CGLErrorString(error));
+				return nil;
+			}
+
+			error = CGLCreateContext(pixelFormat, vuoSharedGlContext, &vuoGlContext);
+			VuoGlContext_disuse(vuoSharedGlContext);
+			CGLDestroyPixelFormat(pixelFormat);
+		}
+
 		glView.windowedGlContext = [[NSOpenGLContext alloc] initWithCGLContextObj:vuoGlContext];
 		int swapInterval=1;
 		[glView.windowedGlContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
@@ -568,6 +615,20 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 - (void)scheduleRedraw
 {
 	[glView scheduleRedraw];
+}
+
+/**
+ * Executes the specifed block on the window's OpenGL context, then returns.
+ * Ensures that nobody else is using the OpenGL context at that time
+ * (by synchronizing with the window's @c drawQueue).
+ *
+ * @threadAny
+ */
+- (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute
+{
+	dispatch_sync([glView drawQueue], ^{
+					  blockToExecute([[glView openGLContext] CGLContextObj]);
+				  });
 }
 
 /**

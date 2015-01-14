@@ -63,6 +63,10 @@ void nodeEvent
 		}
 		glUseProgram(0);
 
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		glFlushRenderAPPLE();
+
 		VuoGlContext_disuse(cgl_ctx);
 	}
 }

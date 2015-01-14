@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Displays two images using layers.
+ *
+ * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-128,203"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="36,243" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/4.jpg\""];
+GetImage2 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="37,368" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/5.jpg\""];
+MakeLayer [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="247,243" fillcolor="green" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
+MakeLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="248,368" fillcolor="green" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="435,302" fillcolor="orange"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="495,291" fillcolor="orange"];
+
+FireonStart:started -> GetImage2:refresh;
+FireonStart:started -> GetImage:refresh;
+GetImage2:image -> MakeLayer2:image;
+GetImage:image -> MakeLayer:image;
+MakeLayer2:layer -> MakeList:item2;
+MakeLayer:layer -> MakeList:item1;
+MakeList:list -> RenderLayersToWindow:layers;
+}

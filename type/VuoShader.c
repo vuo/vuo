@@ -14,6 +14,7 @@
 #include "type.h"
 #include "VuoShader.h"
 #include "VuoGlContext.h"
+#include "VuoGlPool.h"
 
 #include <OpenGL/CGLMacro.h>
 
@@ -51,10 +52,10 @@ void VuoShader_free(void *shader)
 	{
 		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 
-		glDetachShader(s->glProgramName, s->glVertexShaderName);
-		glDetachShader(s->glProgramName, s->glFragmentShaderName);
-		glDeleteShader(s->glVertexShaderName);
-		glDeleteShader(s->glFragmentShaderName);
+//		glDetachShader(s->glProgramName, s->glVertexShaderName);
+//		glDetachShader(s->glProgramName, s->glFragmentShaderName);
+//		glDeleteShader(s->glVertexShaderName);
+//		glDeleteShader(s->glFragmentShaderName);
 		glDeleteProgram(s->glProgramName);
 
 		VuoGlContext_disuse(cgl_ctx);
@@ -67,29 +68,6 @@ void VuoShader_free(void *shader)
 	dispatch_release(s->lock);
 
 	free(s);
-}
-
-/**
- * @ingroup VuoShader
- * Prints GLSL debug information to the console.
- *
- * @threadAnyGL
- */
-void VuoShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
-{
-	int infologLength = 0;
-	int charsWritten  = 0;
-	char *infoLog;
-
-	glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-	if (infologLength > 0)
-	{
-		infoLog = (char *)malloc(infologLength);
-		glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
-		fprintf(stderr,"%s\n",infoLog);
-		free(infoLog);
-	}
 }
 
 /**
@@ -113,22 +91,6 @@ void VuoShader_printProgramInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 		fprintf(stderr,"%s\n",infoLog);
 		free(infoLog);
 	}
-}
-
-/**
- * @ingroup VuoShader
- * Compiles the specified shader source.
- *
- * @threadAnyGL
- */
-static GLuint VuoShader_compileShader(CGLContextObj cgl_ctx, GLenum type, const char * source)
-{
-	GLint length = strlen(source);
-	GLuint shader = glCreateShader(type);
-	glShaderSource(shader, 1, (const GLchar**)&source, &length);
-	glCompileShader(shader);
-	VuoShader_printShaderInfoLog(cgl_ctx, shader);
-	return shader;
 }
 
 /**
@@ -158,8 +120,8 @@ VuoShader VuoShader_make(const char *summary, const char *vertexShaderSource, co
 	{
 		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 
-		t->glVertexShaderName = VuoShader_compileShader(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
-		t->glFragmentShaderName = VuoShader_compileShader(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
+		t->glVertexShaderName = VuoGlShader_use(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
+		t->glFragmentShaderName = VuoGlShader_use(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
 
 		t->glProgramName = glCreateProgram();
 		glAttachShader(t->glProgramName, t->glVertexShaderName);
@@ -169,6 +131,10 @@ VuoShader VuoShader_make(const char *summary, const char *vertexShaderSource, co
 
 		t->textures = VuoListCreate_VuoImage();
 		t->glTextureUniformLocations = VuoListCreate_VuoInteger();
+
+		// Ensure the command queue gets executed before we return,
+		// since the shader might immediately be used on another context.
+		glFlushRenderAPPLE();
 
 		VuoGlContext_disuse(cgl_ctx);
 	}
@@ -313,11 +279,13 @@ void VuoShader_setUniformPoint2d(VuoShader shader, VuoGlContext glContext, const
 static const char * imageFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	uniform sampler2D texture;
+	uniform float alpha;
 	varying vec4 fragmentTextureCoordinate;
 
 	void main()
 	{
 		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
+		color.a *= alpha;
 		if (color.a < 1./255.)
 			discard;
 		gl_FragColor = color;

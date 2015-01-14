@@ -7,8 +7,7 @@ NODE_SOURCES += \
 	vuo.logic.areAllTrue.c \
 	vuo.logic.areAnyTrue.c \
 	vuo.logic.isOneTrue.c \
-	vuo.logic.negate.c
-
-OTHER_FILES += $$NODE_SOURCES
+	vuo.logic.negate.c \
+	vuo.logic.toggle.c
 
 include(../../module.pri)

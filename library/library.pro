@@ -16,10 +16,10 @@ NODE_LIBRARY_SOURCES += \
 	VuoWindowTextInternal.m \
 	VuoNSRunLoop.m
 
-OTHER_FILES += $$NODE_LIBRARY_SOURCES
-
 SOURCES += \
-	VuoImageRenderer.cc
+	VuoImageRenderer.cc \
+	VuoSceneRenderer.cc \
+	VuoVerticesParametric.cc
 
 HEADERS += \
 	VuoDisplayRefresh.h \
@@ -84,6 +84,7 @@ OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_FLAGS \
+	-headerpad_max_install_names \
 	-L . \
 	-lVuoGlContext
 node_library_shared_dependent_on_context.input = NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT

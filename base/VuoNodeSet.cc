@@ -115,3 +115,33 @@ string VuoNodeSet::getExampleCompositionContents(string exampleCompositionFileNa
 {
 	return VuoFileUtilities::getArchiveFileContentsAsString(archivePath, "examples/" + exampleCompositionFileName);
 }
+
+/**
+ * Extracts the resources (images, etc.) for the example compositions from the node set archive.
+ */
+void VuoNodeSet::extractExampleCompositionResources(string destinationDir)
+{
+	set<string> extensions;
+	extensions.insert("png");
+	extensions.insert("jpg");
+	extensions.insert("mov");
+	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "examples", extensions);
+
+	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
+	{
+		VuoFileUtilities::File *f = *i;
+
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(f->getRelativePath(), dir, file, ext);
+		string destinationFile = destinationDir + "/" + file + "." + ext;
+
+		if (! VuoFileUtilities::fileExists(destinationFile))
+		{
+			size_t numBytes = 0;
+			char *data = f->getContentsAsRawData(numBytes);
+			VuoFileUtilities::writeRawDataToFile(data, numBytes, destinationFile);
+		}
+
+		delete f;
+	}
+}

@@ -75,6 +75,8 @@ VuoCompiler::VuoCompiler()
 		addLibrarySearchPath(RTMIDI_ROOT "/lib/");
 		addLibrarySearchPath(ASSIMP_ROOT "/lib/");
 		addLibrarySearchPath(FFMPEG_ROOT "/lib/");
+		addLibrarySearchPath(LIBUSB_ROOT "/lib/");
+		addLibrarySearchPath(LIBFREENECT_ROOT "/lib/");
 		addLibrarySearchPath(VUO_ROOT "/runtime");
 
 		clangPath = llvm::sys::Path(StringRef(LLVM_ROOT "/bin/clang"));

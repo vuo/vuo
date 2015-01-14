@@ -137,7 +137,8 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	[ni drawInRect:NSMakeRect(0,0,[ni size].width,[ni size].height) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 	[niFlipped unlockFocus];
 	NSBitmapImageRep * nbir = [NSBitmapImageRep imageRepWithData:[niFlipped TIFFRepresentation]];
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, [ni size].width*scale, [ni size].height*scale, 0, GL_RGBA, GL_UNSIGNED_BYTE, [nbir bitmapData]);
+	GLenum internalformat = GL_RGBA;
+	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, [ni size].width*scale, [ni size].height*scale, 0, GL_RGBA, GL_UNSIGNED_BYTE, [nbir bitmapData]);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -160,7 +161,7 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 	// Pass the GL Texture to the Vuo Composition
 	inputImagePort = runner->getPublishedInputPortWithName("inputImage");
-	VuoImage t = VuoImage_make(inputTexture, [ni size].width, [ni size].height);
+	VuoImage t = VuoImage_make(inputTexture, internalformat, [ni size].width, [ni size].height);
 	VuoRetain(t);
 	json_object *o = VuoImage_jsonFromValue(t);
 	runner->setPublishedInputPortValue(inputImagePort, o);

@@ -12,6 +12,7 @@
 
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
+#include "VuoTransform2d.h"
 
 #include <stdio.h>
 
@@ -57,6 +58,7 @@ void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale);
+VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d);
 
 /**
  * Returns the composite of quaternion @c a with quaternion @c b (i.e., the rotation described by @c a followed by the rotation described by @c b).

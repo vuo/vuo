@@ -7,6 +7,9 @@ NODE_SOURCES += \
 	vuo.point.add.2d.c \
 	vuo.point.add.3d.c \
 	vuo.point.add.4d.c \
+	vuo.point.distance.2d.c \
+	vuo.point.distance.3d.c \
+	vuo.point.distance.4d.c \
 	vuo.point.get.2d.c \
 	vuo.point.get.3d.c \
 	vuo.point.get.4d.c \
@@ -35,7 +38,5 @@ NODE_SOURCES += \
 	vuo.point.subtract.2d.c \
 	vuo.point.subtract.3d.c \
 	vuo.point.subtract.4d.c
-
-OTHER_FILES += $$NODE_SOURCES
 
 include(../../module.pri)

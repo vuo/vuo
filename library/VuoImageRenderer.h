@@ -20,10 +20,10 @@ extern "C"
  */
 typedef void * VuoImageRenderer;
 
-VuoImageRenderer VuoImageRenderer_make(void);
-VuoImage VuoImageRenderer_draw(VuoImageRenderer imageRenderer, VuoGlContext glContext, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh);
+VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext);
+VuoImage VuoImageRenderer_draw(VuoImageRenderer imageRenderer, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh);
 
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoGlContext glContext, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, bool outputToIOSurface);
+unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, bool outputToIOSurface);
 
 #ifdef __cplusplus
 }

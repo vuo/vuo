@@ -3,7 +3,6 @@ CONFIG += VuoNodeSet
 
 include(../../vuo.pri)
 
-
 NODE_SOURCES += \
 	vuo.math.add.integer.c \
 	vuo.math.add.real.c \
@@ -19,6 +18,8 @@ NODE_SOURCES += \
 	vuo.math.isGreaterThan.real.c \
 	vuo.math.isLessThan.integer.c \
 	vuo.math.isLessThan.real.c \
+	vuo.math.isWithinRange.integer.c \
+	vuo.math.isWithinRange.real.c \
 	vuo.math.limitToRange.integer.c \
 	vuo.math.limitToRange.real.c \
 	vuo.math.max.integer.c \
@@ -35,22 +36,16 @@ NODE_SOURCES += \
 	vuo.math.subtract.real.c \
 	vuo.math.wave.c
 
-OTHER_FILES += $$NODE_SOURCES
-
-
 TYPE_SOURCES += \
 	VuoCountWrapMode.c \
 	VuoCurve.c \
 	VuoCurveDomain.c \
 	VuoWave.c
 
-OTHER_FILES += $$TYPE_SOURCES
-
 HEADERS += \
 	VuoCountWrapMode.h \
 	VuoCurve.h \
 	VuoCurveDomain.h \
 	VuoWave.h
-
 
 include(../../module.pri)
