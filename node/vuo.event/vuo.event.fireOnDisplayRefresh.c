@@ -25,7 +25,7 @@ VuoModuleMetadata({
 
 VuoDisplayRefresh nodeInstanceInit(void)
 {
-	return VuoDisplayRefresh_make();
+	return VuoDisplayRefresh_make(NULL);
 }
 
 void nodeInstanceTriggerStart
@@ -34,7 +34,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedFrame, VuoFrameRequest)
 )
 {
-	VuoDisplayRefresh_enableTriggers(*context, requestedFrame);
+	VuoDisplayRefresh_enableTriggers(*context, requestedFrame, NULL);
 }
 
 void nodeInstanceEvent

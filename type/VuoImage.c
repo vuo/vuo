@@ -15,14 +15,14 @@
 #include "VuoImage.h"
 #include "VuoImageRenderer.h"
 #include "VuoGlContext.h"
-#include "VuoGlTexturePool.h"
+#include "VuoGlPool.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 
 #include <IOSurface/IOSurfaceAPI.h>
 
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/CGLMacro.h>
 #include <OpenGL/CGLIOSurface.h>
 
 
@@ -37,7 +37,7 @@ VuoModuleMetadata({
 						 "c",
 						 "json",
 						 "VuoGlContext",
-						 "VuoGlTexturePool",
+						 "VuoGlPool",
 						 "VuoImageRenderer",
 						 "CoreFoundation.framework",
 						 "IOSurface.framework"
@@ -51,6 +51,8 @@ VuoModuleMetadata({
  * @ingroup VuoImage
  * Decrements the retain count of the OpenGL Texture Object associated with the specified @c VuoImage,
  * and frees the @c texture VuoImage struct.
+ *
+ * @threadAny
  */
 void VuoImage_free(void *texture)
 {
@@ -60,7 +62,7 @@ void VuoImage_free(void *texture)
 	if (t->freeCallback)
 		t->freeCallback(t);
 	else
-		VuoGlTexturePool_release(t->glTextureName);
+		VuoGlTexture_release(t->glTextureName);
 
 	free(t);
 }
@@ -96,11 +98,13 @@ VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned long int pi
  *
  * @ref VuoImage is intended to be immutable — do not modify
  * the contents of the @c glTextureName after passing it to this function.
+ *
+ * @threadAny
  */
 VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh)
 {
 	VuoImage t = VuoImage_make_internal(glTextureName, pixelsWide, pixelsHigh);
-	VuoGlTexturePool_retain(glTextureName);
+	VuoGlTexture_retain(glTextureName);
 	return t;
 }
 
@@ -118,6 +122,8 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned long int pixelsWide,
  *
  * @ref VuoImage is intended to be immutable — do not modify the contents of the @c glTextureName
  * between passing it to this function and when @c freeCallback is called.
+ *
+ * @threadAny
  */
 VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
 {
@@ -132,6 +138,8 @@ VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int 
  * Decodes the JSON object @c js to create a new value.
  *
  * Automatically activates and deactivates a GL Context (if needed to dereference an IOSurface).
+ *
+ * @threadAny
  *
  * @return If @c js contains valid data, returns a pointer to the VuoImage.  If not, returns NULL.
  *
@@ -187,11 +195,10 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 
 			// Read the IOSurface into a GL_TEXTURE_RECTANGLE_ARB (the only texture type IOSurface supports).
 			GLuint textureRect;
-			CGLContextObj ctx = (CGLContextObj)VuoGlContext_use();
-			VGL();
+			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 			{
 				{
-					glGenTextures(1, &textureRect);
+					textureRect = VuoGlPool_use(VuoGlPool_Texture);
 					glEnable(GL_TEXTURE_RECTANGLE_ARB); //?
 					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, textureRect);
 
@@ -199,10 +206,10 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 					glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//					glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 					IOSurfaceRef surf = IOSurfaceLookup(surfID);
-					CGLError err = CGLTexImageIOSurface2D(ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
+					CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
 					// IOSurfaceDecrementUseCount(surf); ?
 					CFRelease(surf);
 					if(err != kCGLNoError)
@@ -210,10 +217,10 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 						fprintf(stderr,"VuoImageRenderer_draw_internal() Error in CGLTexImageIOSurface2D(): %s\n", CGLErrorString(err));
 						return NULL;
 					}
+					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 				}
 			}
 			glFlushRenderAPPLE();
-			VuoGlContext_disuse();
 
 			// Convert the GL_TEXTURE_RECTANGLE_ARB into GL_TEXTURE_2D.
 			VuoImage image2d;
@@ -234,18 +241,19 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 				);
 
 				VuoShader shader = VuoShader_make("convert IOSurface GL_TEXTURE_RECTANGLE_ARB to GL_TEXTURE_2D", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
-				VuoShader_addTexture(shader, imageRect, "texture");
-				VuoShader_setUniformPoint2d(shader, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
+				VuoShader_addTexture(shader, cgl_ctx, "texture", imageRect);
+				VuoShader_setUniformPoint2d(shader, cgl_ctx, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
 
 				VuoImageRenderer ir = VuoImageRenderer_make();
 				VuoRetain(ir);
-				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh);
+				image2d = VuoImageRenderer_draw(ir, cgl_ctx, shader, pixelsWide, pixelsHigh);
 				VuoRelease(ir);
 
 				VuoImage_free(imageRect); // deletes textureRect
 			}
 
 			json_object_put(js);
+			VuoGlContext_disuse(cgl_ctx);
 			return image2d;
 		}
 		else
@@ -262,6 +270,8 @@ error:
 /**
  * @ingroup VuoImage
  * Encodes @c value as a JSON object.
+ *
+ * @threadAny
  */
 json_object * VuoImage_jsonFromValue(const VuoImage value)
 {
@@ -289,7 +299,7 @@ json_object * VuoImage_jsonFromValue(const VuoImage value)
  * @ingroup VuoImage
  * Returns a JSON object containing an interprocess handle for the specified texture.
  *
- * Automatically activates and deactivates a GL Context.
+ * @threadAny
  */
 json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
 {
@@ -298,21 +308,24 @@ json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
 		return js;
 
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 //		VLog("Creating an IOSurface from glTextureName %d on target %lu",value->glTextureName,value->glTextureTarget);
 
 		VuoShader shader = VuoShader_makeImageShader();
 		VuoRetain(shader);
-		VuoShader_addTexture(shader, value, "texture");
+		VuoShader_addTexture(shader, cgl_ctx, "texture", value);
 
 		VuoImageRenderer ir = VuoImageRenderer_make();
 		VuoRetain(ir);
-		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir,shader,value->pixelsWide,value->pixelsHigh,true);
+		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir,cgl_ctx,shader,value->pixelsWide,value->pixelsHigh,true);
 		VuoRelease(shader);
 		VuoRelease(ir);
 //		VLog("Created IOSurfaceID %d",surfID);
 
 		json_object * o = json_object_new_int(surfID);
 		json_object_object_add(js, "ioSurface", o);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
 	{
 		json_object * o = json_object_new_int64(value->pixelsWide);
@@ -329,6 +342,8 @@ json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
 /**
  * @ingroup VuoImage
  * A brief summary of the contents of this texture.
+ *
+ * @threadAny
  *
  * @eg{GL Texture (ID 42)
  * 640x480}

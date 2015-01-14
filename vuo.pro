@@ -22,6 +22,7 @@ SUBDIRS += \
 	node_math \
 	node_midi \
 	node_mouse \
+	node_movie \
 	node_noise \
 	node_point \
 	node_quaternion \
@@ -35,6 +36,7 @@ SUBDIRS += \
 	node_type \
 	node_vertices \
 	renderer \
+	renderer_vuo_export \
 	renderer_vuo_render \
 	runtime \
 	type_list \
@@ -76,6 +78,7 @@ framework.depends = base compiler renderer runtime node type type_list library \
 	node_math \
 	node_midi \
 	node_mouse \
+	node_movie \
 	node_noise \
 	node_point \
 	node_quaternion \
@@ -124,6 +127,9 @@ node_midi.depends = node
 node_mouse.subdir = node/vuo.mouse
 node_mouse.depends = node
 
+node_movie.subdir = node/vuo.movie
+node_movie.depends = node
+
 node_noise.subdir = node/vuo.noise
 node_noise.depends = node
 
@@ -162,6 +168,9 @@ node_vertices.depends = node
 
 renderer.depends = base compiler
 
+renderer_vuo_export.subdir = renderer/vuo-export
+renderer_vuo_export.depends = framework
+
 renderer_vuo_render.subdir = renderer/vuo-render
 renderer_vuo_render.depends = framework
 
@@ -192,6 +201,7 @@ exists(editor) {
 		editor_InputEditors_VuoInputEditorReal \
 		editor_InputEditors_VuoInputEditorText \
 		editor_InputEditors_VuoInputEditorWave \
+		editor_InputEditors_VuoInputEditorLoopType \
 		editor_VuoEditor
 
 	editor.depends = compiler renderer
@@ -244,6 +254,9 @@ exists(editor) {
 	editor_InputEditors_VuoInputEditorWave.subdir = editor/InputEditors/VuoInputEditorWave
 	editor_InputEditors_VuoInputEditorWave.depends = editor
 
+	editor_InputEditors_VuoInputEditorLoopType.subdir = editor/InputEditors/VuoInputEditorLoopType
+	editor_InputEditors_VuoInputEditorLoopType.depends = editor
+
 	editor_VuoEditor.subdir = editor/VuoEditorApp
 	editor_VuoEditor.depends = \
 		editor \
@@ -263,6 +276,7 @@ exists(editor) {
 		editor_InputEditors_VuoInputEditorReal \
 		editor_InputEditors_VuoInputEditorText \
 		editor_InputEditors_VuoInputEditorWave \
+		editor_InputEditors_VuoInputEditorLoopType \
 		framework
 }
 

@@ -30,6 +30,7 @@ public:
 	QRectF boundingRect(void) const;
 	QPainterPath shape(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+	QPointF getFloatingEndpointLoc();
 	void setFloatingEndpointLoc(QPointF loc);
 	void removeFromScene();
 	void extendedHoverEnterEvent();

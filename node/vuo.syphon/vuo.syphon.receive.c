@@ -19,7 +19,7 @@ VuoModuleMetadata({
 					  "node": {
 						  "isInterface" : true,
 						  "exampleCompositions" : [
-							  "ReceiveImages.vuo.",
+							  "ReceiveImages.vuo",
 							  "ReceiveImagesPreferablyFromVuo.vuo",
 							  "ReceiveImagesOnlyFromVuo.vuo"
 						  ]

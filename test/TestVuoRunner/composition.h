@@ -11,11 +11,6 @@
 
 extern bool isStopped;
 
-/**
- * Private API function in libdispatch.
- */
-extern void _dispatch_main_queue_callback_4CF(mach_msg_header_t *msg);
-
 //@{
 /**
  * Normally defined in the composition's generated code. Defined here to prevent link errors.

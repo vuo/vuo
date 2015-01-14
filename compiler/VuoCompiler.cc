@@ -74,6 +74,7 @@ VuoCompiler::VuoCompiler()
 		addLibrarySearchPath(CURL_ROOT "/lib/");
 		addLibrarySearchPath(RTMIDI_ROOT "/lib/");
 		addLibrarySearchPath(ASSIMP_ROOT "/lib/");
+		addLibrarySearchPath(FFMPEG_ROOT "/lib/");
 		addLibrarySearchPath(VUO_ROOT "/runtime");
 
 		clangPath = llvm::sys::Path(StringRef(LLVM_ROOT "/bin/clang"));
@@ -307,10 +308,11 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
  *
  * @param inputPath Path to the compiled composition (an LLVM bitcode file).
  * @param outputPath Path where the resulting executable should be placed.
+ * @param rPath An optional @c -rpath argument to be passed to clang.
  */
-void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath)
+void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, string rPath)
 {
-	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, false);
+	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, false, rPath);
 }
 
 /**
@@ -333,8 +335,9 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
  * @param compiledCompositionPath Path to the compiled composition (n LLVM bitcode file).
  * @param linkedCompositionPath Path where the resulting executable or dynamic library should be placed.
  * @param isDylib True if creating a dynamic library, false if creating an executable.
+ * @param rPath An optional @c -rpath argument to be passed to clang.
  */
-void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib)
+void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib, string rPath)
 {
 	if (isVerbose)
 		print();
@@ -350,7 +353,7 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
 
 	libraries.insert(compiledCompositionPath);
 
-	link(linkedCompositionPath, modules, libraries, frameworks, isDylib);
+	link(linkedCompositionPath, modules, libraries, frameworks, isDylib, rPath);
 }
 
 /**
@@ -601,8 +604,9 @@ void VuoCompiler::getLinkerInputs(const set<string> &dependencies,
  * @param libraries The libraries to link in. If building an executable, one of them should contain a main function.
  * @param frameworks The frameworks to link in.
  * @param isDylib If true, the output file will be a dynamic library. Otherwise, it will be an executable.
+ * @param rPath The @c -rpath argument to be passed to clang. If empty, the folder containing the Vuo framework on the build system will be used.
  */
-void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib)
+void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath)
 {
 	// http://stackoverflow.com/questions/11657529/how-to-generate-an-executable-from-an-llvmmodule
 
@@ -700,7 +704,8 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	// Tell the built dylib/executable where to find Vuo.framework
 	/// @todo Once we can build app bundles (https://b33p.net/kosada/node/3362), copy only the needed dynamic dependencies into the app bundle, and change the rpath accordingly
 	args.push_back("-rpath");
-	args.push_back(vuoFrameworkContainingFolder.c_str());
+	string rPathArg = (!rPath.empty()? rPath : vuoFrameworkContainingFolder);
+	args.push_back(rPathArg.c_str());
 
 	// Allow clang to print meaningful error messages.
 	clang::DiagnosticOptions *diagOptions = new clang::DiagnosticOptions();
@@ -982,6 +987,9 @@ vector<string> VuoCompiler::getCoreVuoDependencies(void)
 	dependencies.push_back("gvplugin_dot_layout");
 	dependencies.push_back("gvplugin_core");
 	dependencies.push_back("json");
+	dependencies.push_back("objc");
+	dependencies.push_back("CoreFoundation.framework");
+	dependencies.push_back("Foundation.framework");
 	return dependencies;
 }
 
@@ -1256,13 +1264,16 @@ VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionFile(string comp
 	compiler.compileComposition(compositionFilePath, compiledCompositionPath);
 	compiler.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
 	remove(compiledCompositionPath.c_str());
-	return VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, true);
+	return VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, directory, true);
 }
 
 /**
  * Creates a runner object that can run the composition in string @a composition in a new process.
+ *
+ * @param composition A serialized composition.
+ * @param workingDirectory The directory used by nodes in the composition to resolve relative paths.
  */
-VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionString(string composition)
+VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionString(string composition, string workingDirectory)
 {
 	VuoCompiler compiler;
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
@@ -1270,7 +1281,7 @@ VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionString(string co
 	compiler.compileCompositionString(composition, compiledCompositionPath);
 	compiler.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
 	remove(compiledCompositionPath.c_str());
-	return VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, true);
+	return VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, workingDirectory, true);
 }
 
 /**
@@ -1286,13 +1297,16 @@ VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionFile(string compo
 	string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 	compiler.linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath);
 	remove(compiledCompositionPath.c_str());
-	return VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, true);
+	return VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, directory, true);
 }
 
 /**
  * Creates a runner object that can run the composition in string @a composition in this process.
+ *
+ * @param composition A serialized composition.
+ * @param workingDirectory The directory used by nodes in the composition to resolve relative paths.
  */
-VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionString(string composition)
+VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionString(string composition, string workingDirectory)
 {
 	VuoCompiler compiler;
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
@@ -1300,5 +1314,5 @@ VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionString(string com
 	string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "dylib");
 	compiler.linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath);
 	remove(compiledCompositionPath.c_str());
-	return VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, true);
+	return VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, workingDirectory, true);
 }

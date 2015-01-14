@@ -10,9 +10,7 @@
 #include "node.h"
 #include "VuoGlContext.h"
 
-/// @todo After we drop 10.6 support, switch back to gl3.h.
-//#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
 					 "title" : "Shade with Solid Color",
@@ -55,14 +53,16 @@ void nodeEvent
 {
 	*shader = VuoShader_make("solid color shader", vertexShaderSource, fragmentShaderSource);
 
-	VuoGlContext_use();
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
 		glUseProgram((*shader)->glProgramName);
 		{
 			GLint colorUniform = glGetUniformLocation((*shader)->glProgramName, "color");
 			glUniform4f(colorUniform, color.r, color.g, color.b, color.a);
 		}
 		glUseProgram(0);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
 }

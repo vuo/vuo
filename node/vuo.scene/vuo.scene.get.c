@@ -13,7 +13,7 @@
 #include "VuoGlContext.h"
 
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/CGLMacro.h>
 
 #include <cimport.h>
 #include <config.h>
@@ -23,7 +23,7 @@
 VuoModuleMetadata({
 					 "title" : "Get Scene",
 					 "keywords" : [
-						 "download", "open", "load", "import", "http",
+						 "download", "open", "load", "import", "http", "url", "file",
 						 "mesh", "model", "object", "3D", "opengl", "scenegraph", "graphics",
 						 "3ds", "Studio",
 						 "Wavefront",
@@ -53,6 +53,7 @@ VuoModuleMetadata({
 					 ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						 "VuoGlContext",
 						 "VuoUrl",
 						 "assimp",
 						 "z"
@@ -194,8 +195,9 @@ void nodeEvent
 	}
 
 	struct aiPropertyStore *props = aiCreatePropertyStore();
-	VuoGlContext_use();
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
 		GLint maxIndices;
 		glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &maxIndices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, maxIndices/3);
@@ -203,8 +205,9 @@ void nodeEvent
 		GLint maxVertices;
 		glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &maxVertices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_VERTEX_LIMIT, maxVertices);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
 
 	const struct aiScene *ais = aiImportFileFromMemoryWithProperties(
 				data,

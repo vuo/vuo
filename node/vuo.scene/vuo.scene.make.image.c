@@ -46,5 +46,12 @@ void nodeEvent
 				),
 				NULL
 			);
-	VuoShader_addTexture(object->shader, image, "texture");
+
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+
+		VuoShader_addTexture(object->shader, glContext, "texture", image);
+
+		VuoGlContext_disuse(glContext);
+	}
 }

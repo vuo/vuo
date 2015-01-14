@@ -1,0 +1,54 @@
+/**
+* @file
+* Displays a cube alternately with a custom camera and the default camera. Click to switch cameras. Scroll to zoom the custom camera. 
+*
+* @copyright Copyright © 2012—2013 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<y>y\r" pos="88,136"];
+CountWithinRange [type="vuo.math.countWithinRange.real" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="55,160" fillcolor="yellow" _decrement="1.000000" _setCount="0.000000" _minimum="0.250000" _maximum="12.000000" _wrapMode="\"saturate\""];
+DiscardDataFromEvent [type="vuo.type.boolean.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="854,379"];
+DiscardDataFromEvent2 [type="vuo.type.mouseButtonAction.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="586,433"];
+FilterMouseButtonAction [type="vuo.mouse.filter.action" version="1.0.0" label="Filter Mouse Button Action|<refresh>refresh\l|<action>action\l|<includeLeftButton>includeLeftButton\l|<includeMiddleButton>includeMiddleButton\l|<includeRightButton>includeRightButton\l|<includePress>includePress\l|<includeRelease>includeRelease\l|<includeSingleClick>includeSingleClick\l|<includeDoubleClick>includeDoubleClick\l|<includeTripleClick>includeTripleClick\l|<done>done\r|<filteredAction>filteredAction\r" pos="194,307" fillcolor="green" _includeLeftButton="true" _includeMiddleButton="false" _includeRightButton="false" _includePress="false" _includeRelease="true" _includeSingleClick="false" _includeDoubleClick="false" _includeTripleClick="false"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-150,13" fillcolor="cyan"];
+GetMouse [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="-386,199" fillcolor="magenta"];
+HoldValue [type="vuo.hold.VuoBoolean" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="554,343" fillcolor="green" _initialValue="false"];
+Make3DPoint [type="vuo.point.make.3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="298,152" fillcolor="yellow" _x="0.300000" _y="-0.400000"];
+MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<done>done\r|<cube>cube\r" pos="525,10" fillcolor="cyan" _frontShader="" _leftShader="" _rightShader="" _backShader="" _topShader="" _bottomShader=""];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="946,177" fillcolor="magenta"];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="-173,159" fillcolor="yellow" _item1="0.010000"];
+MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<done>done\r|<object>object\r" pos="499,187" fillcolor="yellow" _name="\"zoom\"" _rotation="{\"x\":10.000000,\"y\":30.000000,\"z\":0.000000}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="352,10" fillcolor="cyan" _translation="{\"x\":0,\"y\":0,\"z\":0}" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+Multiply [type="vuo.math.multiply.real" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="-113,148" fillcolor="yellow"];
+Negate [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<done>done\r|<notValue>notValue\r" pos="566,455" fillcolor="green"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1010,166" fillcolor="magenta" _cameraName=""];
+Scale3DPoint [type="vuo.point.multiply.scalar.3d" version="1.0.0" label="Scale 3D Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<done>done\r|<scaledPoint>scaledPoint\r" pos="139,34" fillcolor="cyan" _point="{\"x\":1,\"y\":1,\"z\":1}" _scaleFactor="0.500000"];
+SelectInput2 [type="vuo.select.in.VuoSceneObject" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="895,331" fillcolor="green" _falseOption=""];
+
+Convert2DPointToReal2:y -> MakeList4:item2;
+CountWithinRange:count -> Make3DPoint:z;
+DiscardDataFromEvent2:event -> HoldValue:refresh;
+DiscardDataFromEvent:event -> SelectInput2:refresh;
+FilterMouseButtonAction:filteredAction -> DiscardDataFromEvent2:dataAndEvent;
+FireOnStart:started -> CountWithinRange:refresh;
+FireOnStart:started -> Scale3DPoint:refresh;
+GetMouse:scrolled -> Convert2DPointToReal2:xy;
+GetMouse:usedButton -> FilterMouseButtonAction:action;
+HoldValue:heldValue -> Negate:value;
+Make3DPoint:point -> MakePerspectiveCamera:position;
+MakeCube:cube -> MakeList3:item1;
+MakeList3:list -> RenderSceneToWindow:objects;
+MakeList4:list -> Multiply:terms;
+MakePerspectiveCamera:object -> SelectInput2:trueOption;
+MakeTransform:transform -> MakeCube:transform;
+Multiply:product -> CountWithinRange:increment;
+Negate:notValue -> DiscardDataFromEvent:dataAndEvent;
+Negate:notValue -> HoldValue:newValue;
+Negate:notValue -> SelectInput2:which;
+Scale3DPoint:scaledPoint -> MakeTransform:scale;
+SelectInput2:out -> MakeList3:item2;
+}

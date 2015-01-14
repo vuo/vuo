@@ -16,6 +16,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "wave", "sinusoidal", "sine", "cosine", "undulate", "ruffle", "swish", "swing", "wag", "flap", "sway", "billow", "water" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
@@ -75,18 +76,24 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, image, "texture");
+	{
+		VuoGlContext glContext = VuoGlContext_use();
 
-	// Feed parameters to the shader.
-	VuoShader_setUniformFloat((*instance)->shader, "angle", angle*M_PI/180.);
-	VuoShader_setUniformFloat((*instance)->shader, "amplitude", amplitude);
-	VuoShader_setUniformFloat((*instance)->shader, "wavelength", wavelength*M_PI*2.);
-	VuoShader_setUniformFloat((*instance)->shader, "phase", phase*M_PI*2.);
+		// Associate the input image with the shader.
+		VuoShader_resetTextures((*instance)->shader);
+		VuoShader_addTexture((*instance)->shader, glContext, "texture", image);
 
-	// Render.
-	*rippledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+		// Feed parameters to the shader.
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "angle", angle*M_PI/180.);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "amplitude", amplitude);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "wavelength", wavelength*M_PI*2.);
+		VuoShader_setUniformFloat((*instance)->shader, glContext, "phase", phase*M_PI*2.);
+
+		// Render.
+		*rippledImage = VuoImageRenderer_draw((*instance)->imageRenderer, glContext, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+
+		VuoGlContext_disuse(glContext);
+	}
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

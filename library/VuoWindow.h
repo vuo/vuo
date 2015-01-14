@@ -13,6 +13,9 @@ extern "C"
 #endif
 
 #include "node.h"
+#include "VuoGlContext.h"
+
+#include <stdint.h>
 
 /**
  * A window containing a text edit widget.
@@ -37,9 +40,9 @@ void VuoWindowText_appendLine(VuoWindowText w, const char *text);
 
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
-		void (*initCallback)(void *),
-		void (*resizeCallback)(void *, unsigned int, unsigned int),
-		void (*drawCallback)(void *),
+		void (*initCallback)(VuoGlContext glContext, void *),
+		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
+		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 );
 void VuoWindowOpenGl_enableTriggers

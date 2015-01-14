@@ -341,7 +341,12 @@ enum VuoTelemetry
 	 * Includes data message-parts:
 	 *		@arg @c char *message;
 	 */
-	VuoTelemetryError
+	VuoTelemetryError,
+
+	/**
+	 * Published when a node in the composition requests that the composition stop.
+	 */
+	VuoTelemetryStopRequested
 };
 
 

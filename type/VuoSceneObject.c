@@ -20,7 +20,7 @@
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "Scene Object",
-					 "description" : "A renderable 3D Object.",
+					 "description" : "A 3D Object: visible (mesh), or virtual (group, light, camera).",
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -38,24 +38,158 @@ VuoModuleMetadata({
 VuoSceneObject VuoSceneObject_makeEmpty(void)
 {
 	VuoSceneObject o;
+
 	o.verticesList = NULL;
 	o.shader = NULL;
-	o.transform = VuoTransform_valueFromJson(NULL);
+
 	o.childObjects = NULL;
+
+	o.cameraType = VuoSceneObject_NotACamera;
+
+	o.name = NULL;
+	o.transform = VuoTransform_valueFromJson(NULL);
+
 	return o;
 }
 
 /**
- * Creates a scene object.
+ * Creates a visible (mesh) scene object.
  */
 VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects)
 {
 	VuoSceneObject o;
+
 	o.verticesList = verticesList;
 	o.shader = shader;
-	o.transform = transform;
+
 	o.childObjects = childObjects;
+
+	o.cameraType = VuoSceneObject_NotACamera;
+
+	o.name = NULL;
+	o.transform = transform;
+
 	return o;
+}
+
+/**
+ * Returns a perspective camera.
+ */
+VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float fieldOfView, float distanceMin, float distanceMax)
+{
+	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.name = name;
+	o.transform = VuoTransform_makeEuler(
+				position,
+				rotation,
+				VuoPoint3d_make(1,1,1)
+				);
+	o.cameraType = VuoSceneObject_PerspectiveCamera;
+	o.cameraFieldOfView = fieldOfView;
+	o.cameraDistanceMin = distanceMin;
+	o.cameraDistanceMax = distanceMax;
+	return o;
+}
+
+/**
+ * Returns an orthographic camera.
+ */
+VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float width, float distanceMin, float distanceMax)
+{
+	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.name = name;
+	o.transform = VuoTransform_makeEuler(
+				position,
+				rotation,
+				VuoPoint3d_make(1,1,1)
+				);
+	o.cameraType = VuoSceneObject_OrthographicCamera;
+	o.cameraWidth = width;
+	o.cameraDistanceMin = distanceMin;
+	o.cameraDistanceMax = distanceMax;
+	return o;
+}
+
+/**
+ * Returns a perspective camera at (0,0,1), facing along -z, 90 degree FOV, and clip planes at 0.1 and 10.0.
+ */
+VuoSceneObject VuoSceneObject_makeDefaultCamera(void)
+{
+	return VuoSceneObject_makePerspectiveCamera(
+				VuoText_make("default camera"),
+				VuoPoint3d_make(0,0,1),
+				VuoPoint3d_make(0,0,0),
+				90,
+				0.1,
+				10.0
+				);
+}
+
+/**
+ * Performs a depth-first search of the scenegraph.
+ * Returns the first camera whose name contains @c nameToMatch (or, if @c nameToMatch is emptystring, just returns the first camera).
+ * Output paramater @c foundCamera indicates whether a camera was found.
+ * If no camera was found, returns VuoSceneObject_makeDefaultCamera().
+ *
+ * @todo apply hierarchical transformations
+ */
+VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera)
+{
+	if (so.cameraType != VuoSceneObject_NotACamera && strstr(so.name,nameToMatch))
+	{
+		*foundCamera = true;
+		return so;
+	}
+
+	if (so.childObjects)
+	{
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+			bool foundChildCamera;
+			VuoSceneObject childCamera = VuoSceneObject_findCamera(childObject, nameToMatch, &foundChildCamera);
+			if (foundChildCamera)
+			{
+				*foundCamera = true;
+				return childCamera;
+			}
+		}
+	}
+
+	*foundCamera = false;
+	return VuoSceneObject_makeDefaultCamera();
+}
+
+/**
+ * @ingroup VuoSceneObject
+ * Returns the @c VuoSceneObject_CameraType corresponding with the string @c cameraTypeString.  If none matches, returns VuoSceneObject_NotACamera.
+ */
+VuoSceneObject_CameraType VuoSceneObject_cameraTypeFromCString(const char *cameraTypeString)
+{
+	if (strcmp(cameraTypeString,"perspective")==0)
+		return VuoSceneObject_PerspectiveCamera;
+	else if (strcmp(cameraTypeString,"orthographic")==0)
+		return VuoSceneObject_OrthographicCamera;
+
+	return VuoSceneObject_NotACamera;
+}
+
+/**
+ * @ingroup VuoSceneObject
+ * Returns a string constant representing @c cameraType.
+ */
+const char * VuoSceneObject_cStringForCameraType(VuoSceneObject_CameraType cameraType)
+{
+	switch (cameraType)
+	{
+		case VuoSceneObject_PerspectiveCamera:
+			return "perspective";
+		case VuoSceneObject_OrthographicCamera:
+			return "orthographic";
+		default:
+			return "notACamera";
+	}
 }
 
 /**
@@ -66,8 +200,19 @@ VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader s
  *   {
  *     "verticesList" : ... ,
  *     "shader" : ... ,
- *     "transform" : ... ,
- *     "childObjects" : ...
+ *     "childObjects" : ...,
+ *     "transform" : ...
+ *   }
+ * }
+ *
+ * @eg{
+ *   {
+ *     "cameraType" : "perspective",
+ *     "cameraFieldOfView" : 90.0,
+ *     "cameraDistanceMin" : 0.1,
+ *     "cameraDistanceMax" : 10.0,
+ *     "name" : ...,
+ *     "transform" : ...
  *   }
  * }
  */
@@ -83,14 +228,58 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "shader", &o))
 		shader = VuoShader_valueFromJson(o);
 
-	json_object_object_get_ex(js, "transform", &o);
-	VuoTransform transform = VuoTransform_valueFromJson(o);
-
 	VuoList_VuoSceneObject childObjects = NULL;
 	if (json_object_object_get_ex(js, "childObjects", &o))
 		childObjects = VuoList_VuoSceneObject_valueFromJson(o);
 
-	return VuoSceneObject_make(verticesList, shader, transform, childObjects);
+	VuoSceneObject_CameraType cameraType = VuoSceneObject_NotACamera;
+	if (json_object_object_get_ex(js, "cameraType", &o))
+		cameraType = VuoSceneObject_cameraTypeFromCString(json_object_get_string(o));
+
+	float cameraFieldOfView;
+	if (json_object_object_get_ex(js, "cameraFieldOfView", &o))
+		cameraFieldOfView = json_object_get_double(o);
+
+	float cameraWidth;
+	if (json_object_object_get_ex(js, "cameraWidth", &o))
+		cameraWidth = json_object_get_double(o);
+
+	float cameraDistanceMin;
+	if (json_object_object_get_ex(js, "cameraDistanceMin", &o))
+		cameraDistanceMin = json_object_get_double(o);
+
+	float cameraDistanceMax;
+	if (json_object_object_get_ex(js, "cameraDistanceMax", &o))
+		cameraDistanceMax = json_object_get_double(o);
+
+	VuoText name = NULL;
+	if (json_object_object_get_ex(js, "name", &o))
+		name = VuoText_valueFromJson(o);
+
+	json_object_object_get_ex(js, "transform", &o);
+	VuoTransform transform = VuoTransform_valueFromJson(o);
+
+
+	if (cameraType == VuoSceneObject_PerspectiveCamera)
+		return VuoSceneObject_makePerspectiveCamera(
+					name,
+					transform.translation,
+					transform.rotationSource.euler,
+					cameraFieldOfView,
+					cameraDistanceMin,
+					cameraDistanceMax
+					);
+	else if (cameraType == VuoSceneObject_OrthographicCamera)
+		return VuoSceneObject_makeOrthographicCamera(
+					name,
+					transform.translation,
+					transform.rotationSource.euler,
+					cameraWidth,
+					cameraDistanceMin,
+					cameraDistanceMax
+					);
+	else
+		return VuoSceneObject_make(verticesList, shader, transform, childObjects);
 }
 
 /**
@@ -101,26 +290,46 @@ json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
 {
 	json_object *js = json_object_new_object();
 
-	if (value.verticesList)
+	if (value.cameraType != VuoSceneObject_NotACamera)
 	{
-		json_object *verticesListObject = VuoList_VuoVertices_jsonFromValue(value.verticesList);
-		json_object_object_add(js, "verticesList", verticesListObject);
+		json_object_object_add(js, "cameraType", json_object_new_string(VuoSceneObject_cStringForCameraType(value.cameraType)));
+		json_object_object_add(js, "cameraDistanceMin", json_object_new_double(value.cameraDistanceMin));
+		json_object_object_add(js, "cameraDistanceMax", json_object_new_double(value.cameraDistanceMax));
 	}
 
-	if (value.shader)
+	if (value.cameraType == VuoSceneObject_PerspectiveCamera)
+		json_object_object_add(js, "cameraFieldOfView", json_object_new_double(value.cameraFieldOfView));
+	else if (value.cameraType == VuoSceneObject_OrthographicCamera)
+		json_object_object_add(js, "cameraWidth", json_object_new_double(value.cameraWidth));
+	else // visible or group scene object
 	{
-		json_object *shaderObject = VuoShader_jsonFromValue(value.shader);
-		json_object_object_add(js, "shader", shaderObject);
+		if (value.verticesList)
+		{
+			json_object *verticesListObject = VuoList_VuoVertices_jsonFromValue(value.verticesList);
+			json_object_object_add(js, "verticesList", verticesListObject);
+		}
+
+		if (value.shader)
+		{
+			json_object *shaderObject = VuoShader_jsonFromValue(value.shader);
+			json_object_object_add(js, "shader", shaderObject);
+		}
+
+		if (value.childObjects)
+		{
+			json_object *childObjectsObject = VuoList_VuoSceneObject_jsonFromValue(value.childObjects);
+			json_object_object_add(js, "childObjects", childObjectsObject);
+		}
+	}
+
+	if (value.name)
+	{
+		json_object *nameObject = VuoText_jsonFromValue(value.name);
+		json_object_object_add(js, "name", nameObject);
 	}
 
 	json_object *transformObject = VuoTransform_jsonFromValue(value.transform);
 	json_object_object_add(js, "transform", transformObject);
-
-	if (value.childObjects)
-	{
-		json_object *childObjectsObject = VuoList_VuoSceneObject_jsonFromValue(value.childObjects);
-		json_object_object_add(js, "childObjects", childObjectsObject);
-	}
 
 	return js;
 }
@@ -181,6 +390,33 @@ void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *des
  */
 char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 {
+	if (value.cameraType != VuoSceneObject_NotACamera)
+	{
+		const char *format = "%s camera<br>at (%s)<br>rotated (%s)<br>%g%s<br>shows objects between depth %g and %g";
+
+		const char *cameraType = VuoSceneObject_cStringForCameraType(value.cameraType);
+
+		float cameraViewValue = 0;
+		const char *cameraViewString = "";
+		if (value.cameraType == VuoSceneObject_PerspectiveCamera)
+		{
+			cameraViewValue = value.cameraFieldOfView;
+			cameraViewString = "° field of view";
+		}
+		else if (value.cameraType == VuoSceneObject_OrthographicCamera)
+		{
+			cameraViewValue = value.cameraWidth;
+			cameraViewString = " unit width";
+		}
+
+		const char *translationString = VuoPoint3d_summaryFromValue(value.transform.translation);
+		const char *rotationString = VuoPoint3d_summaryFromValue(VuoPoint3d_multiply(value.transform.rotationSource.euler,180./M_PI));
+		int size = snprintf(NULL, 0, format, cameraType, translationString, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
+		char *valueAsString = (char *)malloc(size+1);
+		snprintf(valueAsString, size+1, format, cameraType, translationString, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
+		return valueAsString;
+	}
+
 	const char *format = "%d vertices, %d elements<br><br>%s<br><br>%s<br><br>%d child object%s%s";
 
 	unsigned long vertexCount = VuoSceneObject_getVertexCount(value);

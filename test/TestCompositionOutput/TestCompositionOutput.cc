@@ -21,6 +21,7 @@ class TestCompositionOutputRunnerDelegate : public TestRunnerDelegate
 private:
 	VuoRunner *runner;  ///< The runner created and used by this TestCompositionOutputRunnerDelegate.
 	list<PortConfiguration *> portConfigurations;  ///< The sequence of PortConfiguration objects to apply to the running composition.
+	dispatch_semaphore_t portConfigurationsSemaphore;
 
 	/**
 	 * Applies each PortConfiguration in the list until it has applied one with a
@@ -28,6 +29,7 @@ private:
 	 */
 	void setInputValuesAndFireEventsUntilCheckIsNeeded(void)
 	{
+		dispatch_semaphore_wait(portConfigurationsSemaphore, DISPATCH_TIME_FOREVER);
 		while (true)
 		{
 			PortConfiguration *currentPortConfiguration = portConfigurations.front();
@@ -38,6 +40,7 @@ private:
 
 			QVERIFY2(! portConfigurations.empty(), "The last PortConfiguration should have expected output port values.");
 		}
+		dispatch_semaphore_signal(portConfigurationsSemaphore);
 	}
 
 public:
@@ -46,17 +49,18 @@ public:
 	 * Creates a TestCompositionOutputRunnerDelegate, starts the composition, fires the first event,
 	 * and waits until the composition stops.
 	 */
-	TestCompositionOutputRunnerDelegate(string composition, list<PortConfiguration *> portConfigurations, VuoCompiler *compiler)
+	TestCompositionOutputRunnerDelegate(string composition, string compositionDir, list<PortConfiguration *> portConfigurations, VuoCompiler *compiler)
 	{
 		runner = NULL;
 		this->portConfigurations = portConfigurations;
+		portConfigurationsSemaphore = dispatch_semaphore_create(1);
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
 		compiler->compileCompositionString(composition, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
 		remove(compiledCompositionPath.c_str());
-		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, true);
+		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
 
 		runner->setDelegate(this);
 
@@ -77,6 +81,7 @@ public:
 		if (! sentData)
 			return;
 
+		dispatch_semaphore_wait(portConfigurationsSemaphore, DISPATCH_TIME_FOREVER);
 		QVERIFY(! portConfigurations.empty());
 		PortConfiguration *currentPortConfiguration = portConfigurations.front();
 		currentPortConfiguration->checkOutputValue(port, dataSummary);
@@ -85,7 +90,9 @@ public:
 		{
 			portConfigurations.pop_front();
 
-			if (portConfigurations.empty())
+			bool empty = portConfigurations.empty();
+			dispatch_semaphore_signal(portConfigurationsSemaphore);
+			if (empty)
 			{
 				// runner->stop() has to be called asynchronously because it waits for this function to return.
 				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -96,6 +103,10 @@ public:
 			{
 				setInputValuesAndFireEventsUntilCheckIsNeeded();
 			}
+		}
+		else
+		{
+			dispatch_semaphore_signal(portConfigurationsSemaphore);
 		}
 	}
 
@@ -261,7 +272,6 @@ private slots:
 
 	void testPublishedOutputsForPublishedInputs_data()
 	{
-		QTest::addColumn< string >("sourcePath");
 		QTest::addColumn< string >("portConfigurationPath");
 		QTest::addColumn< string >("composition");
 
@@ -276,36 +286,32 @@ private slots:
 			VuoFileUtilities::splitPath(portConfigurationPath, dir, name, extension);
 			string compositionPath = getCompositionPath(name + ".vuo");
 
-			string sourcePath;
 			string composition;
 			if (QFile(compositionPath.c_str()).exists())
 			{
-				sourcePath = compositionPath;
 				ifstream fin(compositionPath.c_str());
 				composition.append( (istreambuf_iterator<char>(fin)), (istreambuf_iterator<char>()) );
 				fin.close();
 			}
 			else
 			{
-				sourcePath = name;
 				composition = wrapNodeInComposition(name);
 			}
 
-			QTest::newRow(name.c_str()) << sourcePath << portConfigurationPath << composition;
+			QTest::newRow(name.c_str()) << portConfigurationPath << composition;
 		}
 	}
 	void testPublishedOutputsForPublishedInputs()
 	{
-		QFETCH(string, sourcePath);
 		QFETCH(string, portConfigurationPath);
 		QFETCH(string, composition);
 
 		list<PortConfiguration *> portConfigurations;
 		PortConfiguration::readListFromJSONFile(portConfigurationPath, portConfigurations);
 
-		fprintf(stderr, "	%s\n", sourcePath.c_str());
-		QVERIFY2(! composition.empty(), sourcePath.c_str());
-		TestCompositionOutputRunnerDelegate delegate(composition, portConfigurations, compiler);
+		QVERIFY(! composition.empty());
+		string compositionDir = getCompositionDir().path().toStdString();
+		TestCompositionOutputRunnerDelegate delegate(composition, compositionDir, portConfigurations, compiler);
 	}
 
 };

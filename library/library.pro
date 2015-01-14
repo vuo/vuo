@@ -1,4 +1,5 @@
 TEMPLATE = aux
+CONFIG += VuoPCH
 
 include(../vuo.pri)
 
@@ -23,6 +24,7 @@ SOURCES += \
 HEADERS += \
 	VuoDisplayRefresh.h \
 	VuoGlContext.h \
+	VuoGlPool.h \
 	VuoImageGet.h \
 	VuoImageRenderer.h \
 	VuoSceneRenderer.h \
@@ -76,7 +78,7 @@ QMAKE_EXTRA_COMPILERS += node_library_shared
 
 
 NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT += \
-	VuoGlTexturePool.cc
+	VuoGlPool.cc
 
 OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 

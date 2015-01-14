@@ -42,13 +42,15 @@ public:
 	{
 		isStopping = false;
 
+		string compositionDir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
 		compiler->compileComposition(generator, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
 		remove(compiledCompositionPath.c_str());
-		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, true);
+		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
 
 		runner->setDelegate(this);
 		runner->start();
@@ -181,43 +183,31 @@ protected:
 	{
 		try
 		{
-			map<string, int> eventCountForTrigger;
-			map<string, vector<nodeExecution_t> > nodeExecutionsInProgress;
-
+			// For each node, check that the events that executed it did so in order (i.e., one event didn't overtake another).
+			map<string, map<string, unsigned int> > currentEventCountForTriggerIDAndNodeID;
 			for (vector<nodeExecution_t>::const_iterator i = nodeExecutions.begin(); i != nodeExecutions.end(); ++i)
 			{
 				nodeExecution_t nodeExecution = *i;
 
-				sequencesForTriggerMapping_t::const_iterator expectedSequencesIter = sequencesForTrigger.find(nodeExecution.triggerID);
-				if (expectedSequencesIter == sequencesForTrigger.end())
-					throw QString("%1: unknown trigger")
-						.arg(nodeExecution.triggerID.c_str());
-				set<sequence_t> expectedSequences = expectedSequencesIter->second;
-
-				unsigned int prevEventCount = eventCountForTrigger[nodeExecution.triggerID];
-				eventCountForTrigger[nodeExecution.triggerID] = nodeExecution.eventCount;
-
-				// Check the previous event, since nodeExecution begins a new event for this trigger.
-				if (nodeExecution.eventCount != prevEventCount)
-				{
-					if (nodeExecution.eventCount != prevEventCount + 1)
-						throw QString("%1: found %2, expected %3")
-							.arg(nodeExecution.triggerID.c_str())
-							.arg(nodeExecution.eventCount)
-							.arg(prevEventCount + 1);
-
-					checkSequence(expectedSequences, nodeExecutionsInProgress[nodeExecution.triggerID]);
-
-					nodeExecutionsInProgress[nodeExecution.triggerID].clear();
-				}
-
-				nodeExecutionsInProgress[nodeExecution.triggerID].push_back(nodeExecution);
+				if (nodeExecution.eventCount <= currentEventCountForTriggerIDAndNodeID[ nodeExecution.triggerID ][ nodeExecution.nodeID ])
+					throw QString("%1: found %2 after %3")
+						.arg(nodeExecution.triggerID.c_str())
+						.arg(nodeExecution.eventCount)
+						.arg(currentEventCountForTriggerIDAndNodeID[ nodeExecution.triggerID ][ nodeExecution.nodeID ]);
+				currentEventCountForTriggerIDAndNodeID[ nodeExecution.triggerID ][ nodeExecution.nodeID ] = nodeExecution.eventCount;
 			}
 
-			// Check any remaining events.
-			for (map<string, vector<nodeExecution_t> >::iterator i = nodeExecutionsInProgress.begin(); i != nodeExecutionsInProgress.end(); ++i)
+			// For each event, check that it executed its nodes in order.
+			map<string, map<unsigned int, vector<nodeExecution_t> > > nodeExecutionsForTriggerIDAndEventCount;
+			for (vector<nodeExecution_t>::const_iterator i = nodeExecutions.begin(); i != nodeExecutions.end(); ++i)
+			{
+				nodeExecution_t nodeExecution = *i;
+				nodeExecutionsForTriggerIDAndEventCount[ nodeExecution.triggerID ][ nodeExecution.eventCount ].push_back( nodeExecution );
+			}
+			for (map<string, map<unsigned int, vector<nodeExecution_t> > >::iterator i = nodeExecutionsForTriggerIDAndEventCount.begin(); i != nodeExecutionsForTriggerIDAndEventCount.end(); ++i)
 			{
 				string triggerID = i->first;
+				map<unsigned int, vector<nodeExecution_t> > nodeExecutionsForEventCount = i->second;
 
 				sequencesForTriggerMapping_t::const_iterator expectedSequencesIter = sequencesForTrigger.find(triggerID);
 				if (expectedSequencesIter == sequencesForTrigger.end())
@@ -225,7 +215,11 @@ protected:
 						.arg(triggerID.c_str());
 				set<sequence_t> expectedSequences = expectedSequencesIter->second;
 
-				checkSequence(expectedSequences, i->second);
+				for (map<unsigned int, vector<nodeExecution_t> >::iterator j = nodeExecutionsForEventCount.begin(); j != nodeExecutionsForEventCount.end(); ++j)
+				{
+					vector<nodeExecution_t> currentNodeExecutions = j->second;
+					checkSequence(expectedSequences, currentNodeExecutions);
+				}
 			}
 		}
 		catch (QString message)
@@ -291,133 +285,6 @@ protected:
 				}
 
 				prevIndexInNodeExecutions = currIndexInNodeExecutions;
-			}
-		}
-	}
-
-	/**
-	 * Checks that the actual sequence of nodes executed respects the critical sections defined in @c criticalSections.
-	 * Any linear chain of nodes that may be triggered by more than one trigger is a critical section, since only one
-	 * trigger's event should be inside that linear chain of nodes at any given time.
-	 */
-	void checkCriticalSections(const set<sequence_t> &criticalSections, const vector<nodeExecution_t> &nodeExecutions)
-	{
-		try
-		{
-			map<string, unsigned int> eventCountForTrigger;
-			map<string, vector<nodeExecution_t> > nodeExecutionsInProgress;
-
-			for (vector<nodeExecution_t>::const_iterator i = nodeExecutions.begin(); i != nodeExecutions.end(); ++i)
-			{
-				nodeExecution_t nodeExecution = *i;
-
-				unsigned int prevEventCount = eventCountForTrigger[nodeExecution.triggerID];
-				eventCountForTrigger[nodeExecution.triggerID] = nodeExecution.eventCount;
-
-				if (nodeExecution.eventCount > prevEventCount)
-				{
-					// Check that when the trigger finished the previous event, it wasn't in the middle of a critical section.
-					vector<nodeExecution_t> nodeExecutionsForPrevEvent = nodeExecutionsInProgress[nodeExecution.triggerID];
-					for (set<sequence_t>::const_iterator j = criticalSections.begin(); j != criticalSections.end(); ++j)
-					{
-						sequence_t criticalSection = *j;
-						string firstNode = criticalSection.at(0);
-						string lastNode = criticalSection.at(criticalSection.size() - 1);
-
-						// Search for the first and last node of the critical section in nodeExecutionsForPrevEvent.
-						bool foundFirstNode = false;
-						bool foundLastNode = false;
-						for (vector<nodeExecution_t>::iterator k = nodeExecutionsForPrevEvent.begin(); k != nodeExecutionsForPrevEvent.end(); ++k)
-						{
-							if (k->nodeID == firstNode)
-								foundFirstNode = true;
-							if (k->nodeID == lastNode)
-								foundLastNode = true;
-						}
-
-						if (foundFirstNode && !foundLastNode)
-							throw QString("%1:%2:%3: overlaps critical section of %4:%5")
-								.arg(nodeExecution.triggerID.c_str())
-								.arg(nodeExecution.eventCount)
-								.arg(nodeExecution.nodeID.c_str())
-								.arg(nodeExecution.triggerID.c_str())
-								.arg(prevEventCount);
-					}
-
-					nodeExecutionsInProgress[nodeExecution.triggerID].clear();
-				}
-
-				nodeExecutionsInProgress[nodeExecution.triggerID].push_back(nodeExecution);
-
-				// Check that nodeExecution doesn't overlap with any critical sections in nodeExecutionsInProgress.
-				checkCriticalSection(criticalSections, nodeExecutionsInProgress, nodeExecution);
-			}
-		}
-		catch (QString message)
-		{
-			// EXPECT_FAIL tests need this function to make just one assertion, since EXPECT_FAIL only applies to the subsequent assertion.
-			QVERIFY2(false, qPrintable(message));
-		}
-	}
-
-	/**
-	 * Helper function for @c checkCriticalSections.
-	 *
-	 * Checks that the event for @c nodeExecution is the only event inside of @c nodeExecution's critical sections right now.
-	 */
-	void checkCriticalSection(const set<sequence_t> &criticalSections,
-							  const map<string, vector<nodeExecution_t> > &nodeExecutionsInProgress,
-							  nodeExecution_t nodeExecution)
-	{
-		for (set<sequence_t>::const_iterator i = criticalSections.begin(); i != criticalSections.end(); ++i)
-		{
-			sequence_t criticalSection = *i;
-
-			// Does the critical section contain the node?
-			if (find(criticalSection.begin(), criticalSection.end(), nodeExecution.nodeID) == criticalSection.end())
-				break;
-
-			// Is any other trigger inside the critical section right now?
-			string lastNodeInCriticalSection = criticalSection.at(criticalSection.size() - 1);
-			for (map<string, vector<nodeExecution_t> >::const_iterator j = nodeExecutionsInProgress.begin(); j != nodeExecutionsInProgress.end(); ++j)
-			{
-				vector<nodeExecution_t> nodeExecutions = j->second;
-
-				if (nodeExecutions.empty() || nodeExecutions.at(0).triggerID == nodeExecution.triggerID)
-					continue;
-
-				// Search for nodeExecution.nodeID in nodeExecutionsInProgress for the current trigger.
-				bool foundCurrNode = false;
-				vector<nodeExecution_t>::iterator k;
-				for (k = nodeExecutions.begin(); k != nodeExecutions.end(); ++k)
-				{
-					if (k->nodeID == nodeExecution.nodeID)
-					{
-						foundCurrNode = true;
-						break;
-					}
-				}
-				if (! foundCurrNode)
-					continue;
-
-				// Search for lastNodeInCriticalSection in nodeExecutionsInProgress for the current trigger.
-				bool foundLastNode = false;
-				for ( ; k != nodeExecutions.end(); ++k)
-				{
-					if (k->nodeID == lastNodeInCriticalSection)
-					{
-						foundLastNode = true;
-						break;
-					}
-				}
-
-				if (! foundLastNode)
-					throw QString("%1:%2:%3 overlaps critical section of %4:%5\n")
-						.arg(nodeExecution.triggerID.c_str())
-						.arg(nodeExecution.eventCount)
-						.arg(nodeExecution.nodeID.c_str())
-						.arg(nodeExecutions.at(0).triggerID.c_str())
-						.arg(nodeExecutions.at(0).eventCount);
 			}
 		}
 	}
@@ -518,7 +385,20 @@ private slots:
 			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "C"});
 			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "D"});
 
-			QTest::newRow("valid node executions for 1 event from Gen1 and 1 event from Gen2") << sequencesForTrigger << nodeExecutions;
+			QTest::newRow("valid node executions for 1 event from Gen1 and 1 event from Gen2 (1)") << sequencesForTrigger << nodeExecutions;
+		}
+
+
+		{
+			vector<nodeExecution_t> nodeExecutions;
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "A"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "B"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "D"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "D"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "C"});
+
+			QTest::newRow("valid node executions for 1 event from Gen1 and 1 event from Gen2 (2)") << sequencesForTrigger << nodeExecutions;
 		}
 
 		{
@@ -529,6 +409,20 @@ private slots:
 			nodeExecutions.push_back((nodeExecution_t){"Gen2", 2, "D"});
 
 			QTest::newRow("valid node executions for 2 events from Gen2") << sequencesForTrigger << nodeExecutions;
+		}
+
+		{
+			vector<nodeExecution_t> nodeExecutions;
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "A"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "C"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "A"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "C"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "D"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "B"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "D"});
+
+			QTest::newRow("valid node executions for 2 events from Gen1") << sequencesForTrigger << nodeExecutions;
 		}
 
 		{
@@ -557,28 +451,10 @@ private slots:
 
 		{
 			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 2, "B"});  // wrong
+			nodeExecutions.push_back((nodeExecution_t){"Gen2", 2, "B"});
+			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "B"});  // wrong
 
 			QTest::newRow("SHOULD FAIL - event 2 before 1") << sequencesForTrigger << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "D"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "A"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 3, "B"});  // wrong
-
-			QTest::newRow("SHOULD FAIL - event 3 before 2") << sequencesForTrigger << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "A"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "A"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "C"});  // wrong
-
-			QTest::newRow("SHOULD FAIL - event 1 after 2") << sequencesForTrigger << nodeExecutions;
 		}
 
 		{
@@ -603,101 +479,16 @@ private slots:
 		QEXPECT_FAIL("SHOULD FAIL - D before B in event 1", "", Continue);
 		QEXPECT_FAIL("SHOULD FAIL - D before B in event 2", "", Continue);
 		QEXPECT_FAIL("SHOULD FAIL - event 2 before 1", "", Continue);
-		QEXPECT_FAIL("SHOULD FAIL - event 3 before 2", "", Continue);
-		QEXPECT_FAIL("SHOULD FAIL - event 1 after 2", "", Continue);
 		QEXPECT_FAIL("SHOULD FAIL - no such trigger", "", Continue);
 		QEXPECT_FAIL("SHOULD FAIL - A triggered by Gen2", "", Continue);
 
 		checkSequences(sequencesForTrigger, nodeExecutions);
 	}
 
-	void testCheckCriticalSections_data()
-	{
-		QTest::addColumn< set<sequence_t> >("criticalSections");
-		QTest::addColumn< vector<nodeExecution_t> >("nodeExecutions");
-
-		set<vector<string> > criticalSections;
-		vector<string> sec;
-		sec.push_back("B");
-		sec.push_back("D");
-		criticalSections.insert(sec);
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "D"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "D"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "A"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "C"});
-
-			QTest::newRow("valid node executions (1)") << criticalSections << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "D"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "A"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "D"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "C"});
-
-			QTest::newRow("valid node executions (2)") << criticalSections << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "D"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "D"});
-
-			QTest::newRow("valid node executions (3)") << criticalSections << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
-
-			QTest::newRow("valid node executions (4)") << criticalSections << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen2", 1, "B"});  // wrong
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "D"});
-
-			QTest::newRow("SHOULD FAIL - Gen2 interleaves with Gen1's critical section") << criticalSections << nodeExecutions;
-		}
-
-		{
-			vector<nodeExecution_t> nodeExecutions;
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 1, "B"});
-			nodeExecutions.push_back((nodeExecution_t){"Gen1", 2, "B"});  // wrong
-
-			QTest::newRow("SHOULD FAIL - Gen1:2 interleaves with Gen1:1's critical section") << criticalSections << nodeExecutions;
-		}
-	}
-	void testCheckCriticalSections()
-	{
-		QFETCH(set<sequence_t>, criticalSections);
-		QFETCH(vector<nodeExecution_t>, nodeExecutions);
-
-		QEXPECT_FAIL("SHOULD FAIL - Gen2 interleaves with Gen1's critical section", "", Continue);
-		QEXPECT_FAIL("SHOULD FAIL - Gen1:2 interleaves with Gen1:1's critical section", "", Continue);
-
-		checkCriticalSections(criticalSections, nodeExecutions);
-	}
-
 	void testNodeExecutionOrder_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
 		QTest::addColumn< sequencesForTriggerMapping_t >("sequencesForTrigger");
-		QTest::addColumn< set<sequence_t> >("criticalSections");
-
-		set<sequence_t> noCriticalSections;
 
 		{
 			sequencesForTriggerMapping_t sequencesForTrigger;
@@ -706,7 +497,7 @@ private slots:
 			s.push_back("Conductor2");
 			sequencesForTrigger["FirePer1"].insert(s);
 
-			QTest::newRow("Linear chain of nodes") << "LinearChain.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Linear chain of nodes") << "LinearChain.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -730,7 +521,7 @@ private slots:
 				sequencesForTrigger["FirePer1"].insert(s);
 			}
 
-			QTest::newRow("Z-shaped scatter and gather") << "Z.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Z-shaped scatter and gather") << "Z.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -760,7 +551,7 @@ private slots:
 				sequencesForTrigger["FirePer1"].insert(s);
 			}
 
-			QTest::newRow("X-shaped scatter and gather") << "X.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("X-shaped scatter and gather") << "X.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -770,7 +561,7 @@ private slots:
 			s.push_back("Conductor2");
 			sequencesForTrigger["FirePer1"].insert(s);
 
-			QTest::newRow("Scatter to 2 nodes and gather at the 2nd node") << "Bypass.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Scatter to 2 nodes and gather at the 2nd node") << "Bypass.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -800,7 +591,7 @@ private slots:
 				sequencesForTrigger["FirePer1"].insert(s);
 			}
 
-			QTest::newRow("Scatter, then gather, then scatter") << "ScatterGatherScatter.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Scatter, then gather, then scatter") << "ScatterGatherScatter.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -840,7 +631,7 @@ private slots:
 				sequencesForTrigger["FirePer1"].insert(s);
 			}
 
-			QTest::newRow("Scatter, then gather, then scatter, with linear sequences of nodes in between") << "ScatterGatherScatterExtended.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Scatter, then gather, then scatter, with linear sequences of nodes in between") << "ScatterGatherScatterExtended.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -866,7 +657,7 @@ private slots:
 				sequencesForTrigger["FirePer1"].insert(s);
 			}
 
-			QTest::newRow("Scatter, then scatter, then gather") << "ScatterScatterGather.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Scatter, then scatter, then gather") << "ScatterScatterGather.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -877,7 +668,7 @@ private slots:
 			s.push_back("Conductor2");
 			sequencesForTrigger["FirePer1"].insert(s);
 
-			QTest::newRow("Feedback loop of 3 nodes.") << "FeedbackIntoSemiconductor.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Feedback loop of 3 nodes.") << "FeedbackIntoSemiconductor.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -886,7 +677,7 @@ private slots:
 			s.push_back("Conductor1");
 			sequencesForTrigger["FirePer1"].insert(s);
 
-			QTest::newRow("Feedback loop between a trigger node and a conductor node.") << "FeedbackIntoTrigger.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("Feedback loop between a trigger node and a conductor node.") << "FeedbackIntoTrigger.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -906,16 +697,7 @@ private slots:
 				sequencesForTrigger["FirePer2"].insert(s);
 			}
 
-			set<sequence_t> criticalSections;
-			{
-				sequence_t s;
-				s.push_back("Conductor1");
-				s.push_back("Conductor2");
-				s.push_back("Conductor3");
-				criticalSections.insert(s);
-			}
-
-			QTest::newRow("2 triggers pushing events along the same linear path") << "LinearChainTwoTriggers.vuo" << sequencesForTrigger << criticalSections;
+			QTest::newRow("2 triggers pushing events along the same linear path") << "LinearChainTwoTriggers.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -939,21 +721,7 @@ private slots:
 				sequencesForTrigger["FirePer2"].insert(s);
 			}
 
-			set<sequence_t> criticalSections;
-			{
-				sequence_t s;
-				s.push_back("Conductor1");
-				s.push_back("Conductor2");
-				criticalSections.insert(s);
-			}
-			{
-				sequence_t s;
-				s.push_back("Conductor3");
-				s.push_back("Conductor4");
-				criticalSections.insert(s);
-			}
-
-			QTest::newRow("2 triggers pushing events along overlapping paths") << "LinearChainsTwoOverlappingTriggers.vuo" << sequencesForTrigger << criticalSections;
+			QTest::newRow("2 triggers pushing events along overlapping paths") << "LinearChainsTwoOverlappingTriggers.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -970,7 +738,7 @@ private slots:
 				sequencesForTrigger["FirePer2"].insert(s);
 			}
 
-			QTest::newRow("1 trigger pushing a conductive port and 1 trigger pushing a non-conductive port") << "SemiconductorCoordinatingTwoTriggers.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("1 trigger pushing a conductive port and 1 trigger pushing a non-conductive port") << "SemiconductorCoordinatingTwoTriggers.vuo" << sequencesForTrigger;
 		}
 
 		{
@@ -994,14 +762,38 @@ private slots:
 				sequencesForTrigger["FirePer1"].insert(s);
 			}
 
-			QTest::newRow("2 event cables into an input port from 1 trigger") << "MultipleEventCablesFrom1Trigger.vuo" << sequencesForTrigger << noCriticalSections;
+			QTest::newRow("2 event cables into an input port from 1 trigger") << "MultipleEventCablesFrom1Trigger.vuo" << sequencesForTrigger;
+		}
+
+		{
+			sequencesForTriggerMapping_t sequencesForTrigger;
+			{
+				sequence_t s;
+				s.push_back("Conductor2");
+				s.push_back("Conductor4");
+				sequencesForTrigger["FirePer1"].insert(s);
+			}
+			{
+				sequence_t s;
+				s.push_back("Conductor1");
+				s.push_back("Conductor2");
+				s.push_back("Conductor4");
+				sequencesForTrigger["FirePer2"].insert(s);
+			}
+			{
+				sequence_t s;
+				s.push_back("Conductor3");
+				s.push_back("Conductor4");
+				sequencesForTrigger["FirePer2"].insert(s);
+			}
+
+			QTest::newRow("Trigger that could interrupt another trigger's gather") << "GatherWithOverlappingTriggers.vuo" << sequencesForTrigger;
 		}
 	}
 	void testNodeExecutionOrder()
 	{
 		QFETCH(QString, compositionFile);
 		QFETCH(sequencesForTriggerMapping_t, sequencesForTrigger);
-		QFETCH(set<sequence_t>, criticalSections);
 
 		printf("    %s\n", compositionFile.toUtf8().constData());
 
@@ -1012,7 +804,6 @@ private slots:
 		vector<nodeExecution_t> nodeExecutions = delegate.nodeExecutions;
 		checkCoverage(sequencesForTrigger, nodeExecutions);
 		checkSequences(sequencesForTrigger, nodeExecutions);
-		checkCriticalSections(criticalSections, nodeExecutions);
 	}
 
 };

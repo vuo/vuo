@@ -43,7 +43,8 @@ VuoRendererTypecastPort::VuoRendererTypecastPort(VuoRendererNode *uncollapsedTyp
  */
 void VuoRendererTypecastPort::setUncollapsedTypecastNode(VuoRendererNode *uncollapsedTypecastNode)
 {
-	setToolTip(uncollapsedTypecastNode->generateNodeClassToolTip(uncollapsedTypecastNode->getBase()->getNodeClass()));
+	// @todo: Handle this elsewhere.
+	//setToolTip(uncollapsedTypecastNode->generateNodeClassToolTip(uncollapsedTypecastNode->getBase()->getNodeClass()));
 
 	VuoPort *typecastInPort = uncollapsedTypecastNode->getBase()->getInputPorts()[VuoNodeClass::unreservedInputPortStartIndex];
 	VuoPort *typecastOutPort = uncollapsedTypecastNode->getBase()->getOutputPorts()[VuoNodeClass::unreservedOutputPortStartIndex];

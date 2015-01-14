@@ -44,12 +44,10 @@ VuoModuleMetadata({
  */
 - (void) publishFrame:(VuoImage)image
 {
-	if ([syphonServer hasClients])
+	if ([syphonServer hasClients] && image)
 	{
-		if (image->pixelsWide < 1 || image->pixelsHigh< 1)
+		if (image->pixelsWide < 1 || image->pixelsHigh < 1)
 			return;
-
-		if(syphonServer.context == nil) VLog("Context is null!");
 
 		CGLLockContext(syphonServer.context);
 

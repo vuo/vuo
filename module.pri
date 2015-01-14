@@ -51,6 +51,7 @@ CLANG_NODE_LIBRARY_FLAGS = \
 	$$QMAKE_CXXFLAGS_WARN_ON \
 	$$join(CLANG_NODE_LIBRARY_INCLUDEPATH, " -I", "-I") \
 	$$join(DEFINES, " -D", "-D") \
+	$$VUO_VERSION_DEFINES \
 	-DVUO_COMPILER=1
 node_library.input = NODE_LIBRARY_SOURCES
 node_library.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - -emit-llvm $$QMAKE_CFLAGS_X86_64 $${CLANG_NODE_LIBRARY_FLAGS} ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"

@@ -84,5 +84,5 @@ void nodeInstanceFini
 {
 	VuoRelease((*context)->syphonServer);
 
-	VuoGlContext_disuseSpecific((*context)->glContext);
+	VuoGlContext_disuse((*context)->glContext);
 }

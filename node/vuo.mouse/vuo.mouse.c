@@ -71,7 +71,8 @@ CGEventRef vuoDeviceMouseCGEventTapCallback(CGEventTapProxy proxy, CGEventType t
 		case kCGEventScrollWheel:
 			distance.x = -CGEventGetIntegerValueField(event,kCGScrollWheelEventDeltaAxis2);
 			distance.y = CGEventGetIntegerValueField(event,kCGScrollWheelEventDeltaAxis1);
-			context->scrolled(distance);
+			if (distance.x || distance.y)
+				context->scrolled(distance);
 			break;
 		case kCGEventLeftMouseDown:
 			buttonEvent = VuoMouseButtonAction_make(VuoMouseButton_Left, VuoMouseButtonActionType_Press, position);

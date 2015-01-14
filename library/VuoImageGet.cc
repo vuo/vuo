@@ -10,6 +10,7 @@
 #include "VuoImageGet.h"
 #include "VuoUrl.h"
 #include "VuoGlContext.h"
+#include "VuoGlPool.h"
 
 #include <string.h>
 
@@ -18,9 +19,7 @@
 #include <FreeImage.h>
 #pragma clang diagnostic pop
 
-/// @todo After we drop 10.6 support, switch back to gl3.h.
-//#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/CGLMacro.h>
 
 
 extern "C"
@@ -36,7 +35,7 @@ VuoModuleMetadata({
 						 "VuoUrl",
 						 "FreeImage",
 						 "VuoGlContext",
-						 "VuoGlTexturePool",
+						 "VuoGlPool",
 						 "OpenGL.framework"
 					 ]
 				 });
@@ -56,7 +55,7 @@ __attribute__((constructor)) static void VuoImageGet_init(void)
  * @ingroup VuoImage
  * Retrieves the image at the specified @c imageURL, and creates a @c VuoImage from it.
  *
- * Automatically activates and deactivates a GL Context (if it makes it that far in the loading process).
+ * @threadAny
  */
 VuoImage VuoImage_get(const char *imageURL)
 {
@@ -118,20 +117,12 @@ VuoImage VuoImage_get(const char *imageURL)
 	unsigned long pixelsWide = FreeImage_GetWidth(dib);
 	unsigned long pixelsHigh = FreeImage_GetHeight(dib);
 
-	// Premultiply alpha
-	for (unsigned int i = 0; i < pixelsWide*pixelsHigh*4; i += 4)
-	{
-		unsigned int a = pixels[i+3];
-		pixels[i  ] = ((unsigned int)pixels[i  ] * a) / 255;
-		pixels[i+1] = ((unsigned int)pixels[i+1] * a) / 255;
-		pixels[i+2] = ((unsigned int)pixels[i+2] * a) / 255;
-	}
-
 	// Upload the texture to GPU memory
 	GLuint glTextureName;
-	VuoGlContext_use();
 	{
-		glGenTextures(1, &glTextureName);
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		glTextureName = VuoGlPool_use(VuoGlPool_Texture);
 		glBindTexture(GL_TEXTURE_2D, glTextureName);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pixelsWide, pixelsHigh, 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)pixels);
 
@@ -139,9 +130,12 @@ VuoImage VuoImage_get(const char *imageURL)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+//		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
 
 	FreeImage_Unload(dib);
 	free(data);

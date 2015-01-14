@@ -11,20 +11,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <dispatch/dispatch.h>
 #include <graphviz/gvc.h>
+#include <objc/runtime.h>
+#include <objc/message.h>
+#include <mach-o/dyld.h> // for _NSGetExecutablePath()
+#include <libgen.h> // for dirname()
+#include <dirent.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 #include <json/json.h>
 #pragma clang diagnostic pop
 
-/**
- * Private API function in libdispatch.
- */
-extern void _dispatch_main_queue_callback_4CF(mach_msg_header_t *msg);
-
 #include "VuoRuntime.h"
+
+bool hasZMQConnection = false;   ///< True if the @ref ZMQControl and @ref ZMQTelemetry sockets are connected to something.
 
 dispatch_queue_t VuoControlQueue;	///< Dispatch queue for protecting access to the @c ZMQControl socket.
 dispatch_queue_t VuoTelemetryQueue;	///< Dispatch queue for protecting access to the @c ZMQTelemetry socket.
@@ -50,7 +53,7 @@ extern gvplugin_library_t gvplugin_core_LTX_library; ///< Reference to the stati
 
 
 /**
- * Must be called on VuoControlQueue.
+ * @threadQueue{VuoControlQueue}
  */
 void vuoControlReplySend(enum VuoControlReply reply, zmq_msg_t *messages, unsigned int messageCount)
 {
@@ -58,7 +61,7 @@ void vuoControlReplySend(enum VuoControlReply reply, zmq_msg_t *messages, unsign
 }
 
 /**
- * Safe to call from any thread.
+ * @threadAny
  */
 void vuoTelemetrySend(enum VuoTelemetry type, zmq_msg_t *messages, unsigned int messageCount)
 {
@@ -111,14 +114,18 @@ void vuoInit(int argc, char **argv)
 	char *controlURL = NULL;
 	char *telemetryURL = NULL;
 	bool _isPaused = false;
+	bool doPrintHelp = false;
+	bool doPrintLicenses = false;
 
 	// parse commandline arguments
 	{
 		static struct option options[] = {
+			{"help", no_argument, NULL, 0},
 			{"vuo-control", required_argument, NULL, 0},
 			{"vuo-telemetry", required_argument, NULL, 0},
 			{"vuo-pause", no_argument, NULL, 0},
 			{"vuo-loader", required_argument, NULL, 0},
+			{"vuo-licenses", no_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -126,21 +133,108 @@ void vuoInit(int argc, char **argv)
 		{
 			switch(optionIndex)
 			{
-				case 0:	// "vuo-control"
+				case 0:  // --help
+					doPrintHelp = true;
+					break;
+				case 1:	// "vuo-control"
 					controlURL = (char *)malloc(strlen(optarg) + 1);
 					strcpy(controlURL, optarg);
 					break;
-				case 1:	// "vuo-telemetry"
+				case 2:	// "vuo-telemetry"
 					telemetryURL = (char *)malloc(strlen(optarg) + 1);
 					strcpy(telemetryURL, optarg);
 					break;
-				case 2: // "vuo-pause"
+				case 3: // "vuo-pause"
 					_isPaused = true;
 					break;
-				case 3: // "vuo-laoder" (ignored, but added here to avoid "unrecognized option" warning)
+				case 4: // "vuo-loader" (ignored, but added here to avoid "unrecognized option" warning)
+					break;
+				case 5:  // --vuo-licenses
+					doPrintLicenses = true;
 					break;
 			}
 		}
+	}
+
+	if (doPrintHelp)
+	{
+		printf("Usage: %s [options]\n"
+			   "Options:\n"
+			   "  --help                                   Display this information.\n"
+			   "  --vuo-licenses                           Display license information.\n"
+			   "\n"
+			   "  Remote control:\n"
+			   "    --vuo-control=<transport://address>    Listen for control signals at the\n"
+			   "                                           specified address. Supported\n"
+			   "                                           protocols include 'ipc' and 'tcp'.\n"
+			   "    --vuo-telemetry=<transport://address>  Send status updates to the specified\n"
+			   "                                           address. Supported protocols include\n"
+			   "                                           'ipc', 'tcp', 'pgm', and 'epgm'.\n"
+			   "    --vuo-pause                            If specified, the composition starts\n"
+			   "                                           paused (awaiting a vuo-control signal\n"
+			   "                                           to begin execution).\n",
+			   argv[0]);
+
+		exit(0);
+	}
+	else if (doPrintLicenses)
+	{
+		printf("This composition may include software licensed under the following terms:\n\n");
+
+		// Get the exported executable path.
+		char rawExecutablePath[PATH_MAX+1];
+		uint32_t size = sizeof(rawExecutablePath);
+		_NSGetExecutablePath(rawExecutablePath, &size);
+
+		char cleanedExecutablePath[PATH_MAX+1];
+		realpath(rawExecutablePath, cleanedExecutablePath);
+
+		// Derive the path of the app bundle's "Licenses" directory from its executable path.
+		char executableDir[PATH_MAX+1];
+		strcpy(executableDir, dirname(cleanedExecutablePath));
+
+		const char *licensesPathFromExecutable = "/../Frameworks/Vuo.framework/Versions/" VUO_VERSION_STRING "/Licenses";
+		char rawLicensesPath[strlen(executableDir)+strlen(licensesPathFromExecutable)+1];
+		strcpy(rawLicensesPath, executableDir);
+		strcat(rawLicensesPath, licensesPathFromExecutable);
+
+		char cleanedLicensesPath[PATH_MAX+1];
+		realpath(rawLicensesPath, cleanedLicensesPath);
+
+		bool foundLicenses = false;
+		if (access(cleanedLicensesPath, 0) == 0)
+		{
+			DIR *dirp = opendir(cleanedLicensesPath);
+			struct dirent *dp;
+			while ((dp = readdir(dirp)) != NULL)
+			{
+				if (dp->d_name[0] == '.')
+					continue;
+
+				printf("=== %s =====================================================\n\n",dp->d_name);
+
+				char licensePath[strlen(cleanedLicensesPath) + dp->d_namlen + 2];
+				strcpy(licensePath, cleanedLicensesPath);
+				strcat(licensePath, "/");
+				strcat(licensePath, dp->d_name);
+
+				int fd = open(licensePath, O_RDONLY);
+				char data[1024];
+				int bytesRead;
+				while((bytesRead = read(fd, data, 1024)) > 0)
+					write(1, data, bytesRead);
+				close(fd);
+
+				printf("\n\n\n");
+				foundLicenses = true;
+			}
+			closedir(dirp);
+		}
+
+		if (!foundLicenses)
+			printf("(No license information found.)\n");
+
+		exit(0);
 	}
 
 	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused);
@@ -153,25 +247,27 @@ void vuoInit(int argc, char **argv)
 void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused)
 {
 //	fprintf(stderr, "\n\n# vuoInitInProcess()\n");
-	ZMQContext = (_ZMQContext ? _ZMQContext : zmq_init(1));
+	if (controlURL && telemetryURL)
+	{
+		hasZMQConnection = true;
+		ZMQContext = (_ZMQContext ? _ZMQContext : zmq_init(1));
 
-	ZMQControl = zmq_socket(ZMQContext,ZMQ_REP);
-	ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_PUB);
+		ZMQControl = zmq_socket(ZMQContext,ZMQ_REP);
+		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_PUB);
 
-	if (controlURL)
 		if(zmq_bind(ZMQControl,controlURL))
 			fprintf(stderr, "VuoControl: bind failed (%s).\n", controlURL);
 
-	if (telemetryURL)
 		if(zmq_bind(ZMQTelemetry,telemetryURL))
 			fprintf(stderr, "VuoTelemetry: bind failed (%s).\n", telemetryURL);
+
+		VuoTelemetryQueue = dispatch_queue_create("org.vuo.runtime.telemetry", NULL);
+		VuoControlQueue = dispatch_queue_create("org.vuo.runtime.control", NULL);
+	}
 
 	hasBeenUnpaused = false;
 	isPaused = _isPaused;
 	isStopped = false;
-
-	VuoTelemetryQueue = dispatch_queue_create("org.vuo.runtime.telemetry", NULL);
-	VuoControlQueue = dispatch_queue_create("org.vuo.runtime.control", NULL);
 
 
 	// set up composition
@@ -193,14 +289,16 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 						   });
 			while (! initDone)
 			{
-				_dispatch_main_queue_callback_4CF(0);
-				usleep(10000);
+				id pool = objc_msgSend((id)objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
+				CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
+				objc_msgSend(pool, sel_getUid("drain"));
 			}
 		}
 	}
 
 
 	// launch VuoTelemetryStats probe
+	if (hasZMQConnection)
 	{
 		telemetryCanceledSemaphore = dispatch_semaphore_create(0);
 		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -237,6 +335,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 
 
 	// launch control responder
+	if (hasZMQConnection)
 	{
 		controlCanceledSemaphore = dispatch_semaphore_create(0);
 		controlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,VuoControlQueue);
@@ -670,11 +769,44 @@ const char * getConstantValueFromGraphviz(graph_t * graph, const char *node, con
 
 
 /**
+ * Cleanly stops the composition.
+ */
+void vuoStopComposition(void)
+{
+	if (hasZMQConnection)
+	{
+		vuoTelemetrySend(VuoTelemetryStopRequested, NULL, 0);
+	}
+	else
+	{
+		dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+						  if (hasBeenUnpaused)
+						  {
+							  if (!isPaused)
+							  {
+								  isPaused = true;
+								  nodeInstanceTriggerStop();
+							  }
+
+							  nodeInstanceFini();
+						  }
+					  });
+		cleanup();
+
+		isStopped = true;
+	}
+}
+
+
+/**
  * Cleans up composition execution: closes the ZMQ sockets and dispatch source and queues.
  * Assumes the composition has received and replied to a @c VuoControlRequestCompositionStop message.
  */
 void vuoFini(void)
 {
+	if (! hasZMQConnection)
+		return;
+
 	vuoMemoryBarrier();
 
 	// Cancel telemetryTimer, wait for it to stop, and clean up.

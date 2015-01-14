@@ -1,6 +1,4 @@
-VUO_VERSION = 0.5.2
-DEFINES += VUO_VERSION=$$VUO_VERSION
-DEFINES += VUO_VERSION_STRING=\\\"$$VUO_VERSION\\\"
+VUO_VERSION = 0.5.3
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -32,6 +30,7 @@ CURL_ROOT = /usr/local/Cellar/curl/7.30.0
 RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.0.1270
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
+FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport
@@ -308,8 +307,16 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 	QMAKE_CLEAN += pch
 	PRECOMPILED_DIR = pch
 	QMAKE_PCH_OUTPUT_EXT = .pch
+
 	QMAKE_CFLAGS_PRECOMPILE += $$QMAKE_CFLAGS_X86_64
 	QMAKE_CFLAGS_USE_PRECOMPILE = -Xclang -include-pch -Xclang ${QMAKE_PCH_OUTPUT}
+
+	# Since VUO_VERSION changes frequently, define it when compiling source files, but not when precompiling headers.
+	VUO_VERSION_DEFINES += \
+		-DVUO_VERSION=$$VUO_VERSION \
+		-DVUO_VERSION_STRING=\\\"$$VUO_VERSION\\\"
+	QMAKE_CFLAGS_USE_PRECOMPILE += $$VUO_VERSION_DEFINES
+
 	QMAKE_CXXFLAGS_PRECOMPILE += $$QMAKE_CXXFLAGS_X86_64
 	QMAKE_CXXFLAGS_USE_PRECOMPILE = $$QMAKE_CFLAGS_USE_PRECOMPILE
 
@@ -318,7 +325,7 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 }
 
 VuoBase {
-	LIBS += -L$$ROOT/base -lVuoBase
+	LIBS += -L$$ROOT/base -lVuoBase -lobjc -framework Foundation
 	INCLUDEPATH += $$ROOT/base
 	DEPENDPATH += $$ROOT/base
 	PRE_TARGETDEPS += $$ROOT/base/libVuoBase.a

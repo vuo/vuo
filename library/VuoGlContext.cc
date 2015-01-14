@@ -11,10 +11,10 @@
 #include <algorithm>
 using namespace std;
 
+#include "module.h"
 #include "VuoGlContext.h"
 
-#include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/CGLMacro.h>
 
 #include <dispatch/dispatch.h>
 
@@ -39,9 +39,9 @@ public:
 
 	/**
 	 * Finds an unused GL context in the process-wide shared context pool (or creates one if none is available),
-	 * marks it used, activates it on the current thread, and returns it.
+	 * marks it used, and returns it.
 	 *
-	 * Can be called from any thread.
+	 * @threadAny
 	 */
 	CGLContextObj use(void)
 	{
@@ -69,15 +69,13 @@ public:
 		}
 		dispatch_semaphore_signal(poolSemaphore);
 
-		CGLSetCurrentContext(context);
-
 		return context;
 	}
 
 	/**
 	 * Throws the specified context back in the pool.
 	 *
-	 * Can be called from any thread.
+	 * @threadAny
 	 */
 	void disuse(CGLContextObj context)
 	{
@@ -166,6 +164,8 @@ CGLContextObj VuoGlContextPool::rootContext = NULL;
  * On Mac, this should be a @c CGLContext.
  *
  * Must be called before any Vuo composition is loaded, and before any other @c VuoGlContext_* methods.
+ *
+ * @threadAny
  */
 void VuoGlContext_setGlobalRootContext(void *rootContext)
 {
@@ -180,9 +180,9 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 
 /**
  * Finds an unused GL context in the process-wide shared context pool (or creates one if none is available),
- * marks it used, activates it on the current thread, and returns it.
+ * marks it used, and returns it.
  *
- * Can be called from any thread.
+ * @threadAny
  */
 VuoGlContext VuoGlContext_use(void)
 {
@@ -191,49 +191,95 @@ VuoGlContext VuoGlContext_use(void)
 }
 
 /**
- * Activates the specified @c VuoGlContext on the current thread.
- *
- * Can be called from any thread.
+ * Check whether the specified attachment point @c pname is still bound.
+ * (This is defined as a macro in order to stringify the argument.)
  */
-void VuoGlContext_useSpecific(VuoGlContext glContext)
-{
-	CGLSetCurrentContext((CGLContextObj)glContext);
+#define VuoGlCheckBinding(pname)																						\
+{																														\
+	GLint value;																										\
+	glGetIntegerv(pname, &value);																						\
+	if (value)																											\
+		VLog(#pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
 }
 
 /**
- * Deactivates the current thread's GL context, and throws it back in the pool.
+ * Check whether the specified attachment point @c pname is still bound.
+ * (This is defined as a macro in order to stringify the argument.)
  */
-void VuoGlContext_disuse(void)
-{
-	VuoGlContextPool *p = VuoGlContextPool::getPool();
-	CGLContextObj cglContext = (CGLContextObj)CGLGetCurrentContext();
-	glFlush();
-	CGLFlushDrawable(cglContext);
-	CGLSetCurrentContext(NULL);
-	p->disuse(cglContext);
+#define VuoGlCheckTextureBinding(pname, unit)																								\
+{																																			\
+	GLint value;																															\
+	glGetIntegerv(pname, &value);																											\
+	if (value)																																\
+		VLog(#pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
 }
 
 /**
  * Throws the specified @c VuoGlContext back in the pool.
  *
- * Can be called from any thread.
+ * @threadAny
  */
-void VuoGlContext_disuseSpecific(VuoGlContext glContext)
+void VuoGlContext_disuse(VuoGlContext glContext)
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+// Prior to https://b33p.net/kosada/node/6536.  Pretty sure there are no longer needed (FBOs should take care of their own glFlushRendererAPPLE() calls; visible contexts should take care of their own CGLFlushDrawable() calls).
+//	glFlush();
+//	CGLFlushDrawable(cglContext);
+
+#if 0
+	VGL();
+
+	// Check whether there are any stale bindings (to help identify leaks).
+	// (Some checks are commented because they aren't available in OpenGL 2.1.)
+	VuoGlCheckBinding(GL_ARRAY_BUFFER_BINDING);
+//	VuoGlCheckBinding(GL_ATOMIC_COUNTER_BUFFER_BINDING);
+//	VuoGlCheckBinding(GL_COPY_READ_BUFFER_BINDING);
+//	VuoGlCheckBinding(GL_COPY_WRITE_BUFFER_BINDING);
+//	VuoGlCheckBinding(GL_DRAW_INDIRECT_BUFFER_BINDING);
+//	VuoGlCheckBinding(GL_DISPATCH_INDIRECT_BUFFER_BINDING);
+	VuoGlCheckBinding(GL_DRAW_FRAMEBUFFER_BINDING);
+	VuoGlCheckBinding(GL_ELEMENT_ARRAY_BUFFER_BINDING);
+	VuoGlCheckBinding(GL_FRAMEBUFFER_BINDING);
+	VuoGlCheckBinding(GL_PIXEL_PACK_BUFFER_BINDING);
+	VuoGlCheckBinding(GL_PIXEL_UNPACK_BUFFER_BINDING);
+//	VuoGlCheckBinding(GL_PROGRAM_PIPELINE_BINDING);
+	VuoGlCheckBinding(GL_READ_FRAMEBUFFER_BINDING);
+	VuoGlCheckBinding(GL_RENDERBUFFER_BINDING);
+//	VuoGlCheckBinding(GL_SAMPLER_BINDING);
+//	VuoGlCheckBinding(GL_SHADER_STORAGE_BUFFER_BINDING);
+
+	GLint textureUnits;
+	glGetIntegerv(GL_MAX_TEXTURE_UNITS, &textureUnits);
+	for (GLuint i=0; i<textureUnits; ++i)
+	{
+		glActiveTexture(GL_TEXTURE0+i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_1D,i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_1D_ARRAY_EXT,i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_2D,i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_2D_ARRAY_EXT,i);
+//		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_2D_MULTISAMPLE,i);
+//		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY,i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_3D,i);
+//		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_BUFFER,i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_CUBE_MAP,i);
+		VuoGlCheckTextureBinding(GL_TEXTURE_BINDING_RECTANGLE_ARB,i);
+	}
+
+	VuoGlCheckBinding(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING_EXT);
+	VuoGlCheckBinding(GL_UNIFORM_BUFFER_BINDING_EXT);
+	VuoGlCheckBinding(GL_VERTEX_ARRAY_BINDING_APPLE);
+#endif
+
 	VuoGlContextPool *p = VuoGlContextPool::getPool();
-	CGLContextObj cglContext = (CGLContextObj)glContext;
-	CGLContextObj cglContextCurrent = CGLGetCurrentContext();
-	CGLSetCurrentContext(cglContext);
-	glFlush();
-	CGLFlushDrawable(cglContext);
-	CGLSetCurrentContext(cglContextCurrent);
-	p->disuse(cglContext);
+	// Acquire semaphore and add the context to the pool.
+	p->disuse(cgl_ctx);
 }
 
 /**
  * Helper for @c VGL().
  */
-void _VGL(const char *file, const unsigned int line, const char *func)
+void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func)
 {
 	GLenum error = glGetError();
 	if (error == GL_NO_ERROR)

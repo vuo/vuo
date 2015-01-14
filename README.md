@@ -246,6 +246,23 @@ Install muParser 2.2.3:
     make
     make install
 
+### yasm
+
+(Required to build FFmpeg, below.)
+
+    (cd /usr/local && git checkout 8f626e6 /usr/local/Library/Formula/yasm.rb)
+    brew install yasm
+
+### FFmpeg
+
+    cd /tmp
+    curl -OL http://www.ffmpeg.org/releases/ffmpeg-2.1.tar.bz2
+    tar jxf ffmpeg-2.1.tar.bz2
+    cd ffmpeg-2.1
+    ./configure --prefix=/usr/local/Cellar/ffmpeg/2.1 --disable-programs --disable-doc --disable-runtime-cpudetect --disable-ssse3 --disable-sse4 --disable-sse42 --disable-avx --enable-shared --disable-stripping --disable-static --enable-pthreads --enable-yasm --disable-debug --enable-demuxer=mpegts --enable-demuxer=mpegtsraw --extra-cflags='-arch x86_64' --extra-ldflags='-arch x86_64 -Xlinker -no_function_starts -Xlinker -no_version_load_command' --cc=clang
+    make -j9
+    make install
+
 ### ld64 133.3
 
 In the instructions below, `$ROOT` is the location of the top-level Vuo source code directory. 

@@ -11,10 +11,7 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreVideo/CoreVideo.h>
 
-#import <OpenGL/gl.h>
-//#import <OpenGL/gl3.h>
-/// @todo After we drop 10.6 support, switch back to gl3 and remove the below 4 lines.  See also r15430 for shader changes.
-#include <OpenGL/glext.h>
+#import <OpenGL/CGLMacro.h>
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
@@ -47,7 +44,7 @@ static const char * fragmentShaderSource = GLSL_STRING(120,
 	}
 );
 
-static GLuint compileShader(GLenum type, const char * source)
+static GLuint compileShader(CGLContextObj cgl_ctx, GLenum type, const char * source)
 {
 	GLint length = strlen(source);
 	GLuint shader = glCreateShader(type);
@@ -103,17 +100,15 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 - (void)prepareOpenGL
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)[[self openGLContext] CGLContextObj];
+
 	// Share the GL Context with the Vuo Composition
-	CGLContextObj ctx = CGLGetCurrentContext();
-	VuoGlContext_setGlobalRootContext((void *)ctx);
+	VuoGlContext_setGlobalRootContext((void *)cgl_ctx);
 
 	// Compile, link, and run the composition
 	const char *compositionFile = [[[NSBundle mainBundle] pathForResource:@"RippleImage" ofType:@"vuo"] UTF8String];
 	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionFile);
 	runner->start();
-
-	// Restore the context (Vuo node initializations may reset it).
-	CGLSetCurrentContext(ctx);
 
 	// Upload a quad, for rendering the texture later on
 	glGenVertexArrays(1, &vertexArray);
@@ -152,8 +147,8 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	[niFlipped release];
 
 	// Prepare a shader for displaying the GL Texture onscreen
-	vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
-	fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+	vertexShader = compileShader(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
+	fragmentShader = compileShader(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
 
 	program = glCreateProgram();
 	glAttachShader(program, vertexShader);
@@ -190,6 +185,8 @@ CVReturn RunImageFilterViewDisplayCallback(CVDisplayLinkRef displayLink, const C
 
 - (void)drawRect:(NSRect)dirtyRect
 {
+	CGLContextObj cgl_ctx = (CGLContextObj)[[self openGLContext] CGLContextObj];
+
 	// Execute the Vuo Composition
 	runner->firePublishedInputPortEvent(inputImagePort);
 	runner->waitForAnyPublishedOutputPortEvent();
@@ -219,7 +216,7 @@ CVReturn RunImageFilterViewDisplayCallback(CVDisplayLinkRef displayLink, const C
 	}
 	glUseProgram(0);
 
-	CGLFlushDrawable(CGLGetCurrentContext());
+	[[self openGLContext] flushBuffer];
 
 	VuoRelease(outputImage);
 }

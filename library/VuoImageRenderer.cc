@@ -9,6 +9,7 @@
 
 #include "VuoImageRenderer.h"
 #include "VuoGlContext.h"
+#include "VuoGlPool.h"
 
 #include <stdlib.h>
 
@@ -16,16 +17,13 @@
 #include <IOSurface/IOSurfaceAPI.h>
 
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
-//#import <OpenGL/gl3.h>
-/// @todo After we drop 10.6 support, switch back to gl3 and remove the below 4 lines.  See also r15430 for shader changes.
-#include <OpenGL/glext.h>
+#include <OpenGL/CGLMacro.h>
+#include <OpenGL/CGLIOSurface.h>
 /// @{
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 /// @}
-#include <OpenGL/CGLIOSurface.h>
 
 extern "C"
 {
@@ -35,6 +33,8 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoImageRenderer",
 					 "dependencies" : [
+						 "VuoGlContext",
+						 "VuoGlPool",
 						 "OpenGL.framework"
 					 ]
 				 });
@@ -78,28 +78,42 @@ void VuoImageRenderer_destroy(VuoImageRenderer ir);
 /**
  * Creates a reference-counted object for rendering a @ref VuoImage.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
+ * @threadAny
  */
 VuoImageRenderer VuoImageRenderer_make(void)
 {
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)malloc(sizeof(struct VuoImageRendererInternal));
 	VuoRegister(imageRenderer, VuoImageRenderer_destroy);
 
-	VuoGlContext_use();
 	{
-		glGenBuffers(1, &imageRenderer->quadPositionBuffer);
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		imageRenderer->quadPositionBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadPositionBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadPositions), quadPositions, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadPositions), quadPositions, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &imageRenderer->quadTextureCoordinateBuffer);
+		imageRenderer->quadTextureCoordinateBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadTextureCoordinateBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadTextureCoordinates), quadTextureCoordinates, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadTextureCoordinates), quadTextureCoordinates, GL_STREAM_DRAW);
 
-		glGenBuffers(1, &imageRenderer->quadElementBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->quadElementBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadElements), quadElements, GL_STATIC_DRAW);
+		{
+			GLuint vertexArray;
+			glGenVertexArrays(1, &vertexArray);
+			glBindVertexArray(vertexArray);
+
+			imageRenderer->quadElementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->quadElementBuffer);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadElements), quadElements, GL_STREAM_DRAW);
+
+			glBindVertexArray(0);
+			glDeleteVertexArrays(1, &vertexArray);
+		}
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
 
 	return (VuoImageRenderer)imageRenderer;
 }
@@ -107,30 +121,36 @@ VuoImageRenderer VuoImageRenderer_make(void)
 /**
  * Produces a new @c VuoImage by rendering @c shader.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
- * However, it's not safe to use the same @c VuoImageRenderer instance from multiple threads simultaneously.
+ * @threadAnyGL
+ * (Additionally, the caller is responsible for ensuring that the same @c VuoImageRenderer is not used simultaneously on multiple threads.)
  */
-VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh)
+VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoGlContext glContext, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh)
 {
-	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,false), pixelsWide, pixelsHigh);
+	return VuoImage_make(VuoImageRenderer_draw_internal(ir,glContext,shader,pixelsWide,pixelsHigh,false), pixelsWide, pixelsHigh);
 }
 
 /**
  * Helper for VuoImageRenderer_draw().
  */
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, bool outputToIOSurface)
+unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoGlContext glContext, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, bool outputToIOSurface)
 {
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
 
 	GLuint outputTexture;
 	IOSurfaceID surfID;
-	CGLContextObj ctx = (CGLContextObj)VuoGlContext_use();
 	{
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+		// Allocate a single vertex array for all drawing during this pass (since VAOs can't be shared between contexts).
+		GLuint vertexArray;
+		glGenVertexArrays(1, &vertexArray);
+		glBindVertexArray(vertexArray);
+
 		glViewport(0, 0, pixelsWide, pixelsHigh);
 
 		// Create a new GL Texture Object.
 		GLuint textureTarget = outputToIOSurface ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
-		glGenTextures(1, &outputTexture);
+		outputTexture = VuoGlPool_use(VuoGlPool_Texture);
 		if (outputToIOSurface)
 			glEnable(GL_TEXTURE_RECTANGLE_ARB);
 		glBindTexture(textureTarget, outputTexture);
@@ -139,7 +159,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 		glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		if (outputToIOSurface)
 		{
@@ -153,7 +173,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 			CFDictionaryAddValue(properties, kIOSurfaceBytesPerElement, CFNumberCreate(NULL, kCFNumberLongLongType, &bytesPerElement));
 
 			IOSurfaceRef surf = IOSurfaceCreate(properties);
-			CGLError err = CGLTexImageIOSurface2D(ctx, textureTarget, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
+			CGLError err = CGLTexImageIOSurface2D(cgl_ctx, textureTarget, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
 			surfID = IOSurfaceGetID(surf);
 			// IOSurfaceDecrementUseCount(surf); ?
 			CFRelease(surf);
@@ -165,6 +185,8 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		}
 		else
 			glTexImage2D(textureTarget, 0, GL_RGBA, pixelsWide, pixelsHigh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+		glBindTexture(textureTarget, 0);
 
 		// Create a new GL Framebuffer Object, backed by the above GL Texture Object.
 		GLuint outputFramebuffer;
@@ -179,7 +201,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		{
 			glUseProgram(shader->glProgramName);
 			{
-				VuoShader_activateTextures(shader);
+				VuoShader_activateTextures(shader, cgl_ctx);
 				{
 					GLint projectionMatrixUniform = glGetUniformLocation(shader->glProgramName, "projectionMatrix");
 					glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, unityMatrix);
@@ -200,22 +222,30 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 					{
 						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->quadElementBuffer);
 						glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
+						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 					}
 
 					glDisableVertexAttribArray(textureCoordinateAttribute);
 					glDisableVertexAttribArray(positionAttribute);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
 				}
-				VuoShader_deactivateTextures(shader);
+				VuoShader_deactivateTextures(shader, cgl_ctx);
 			}
 			glUseProgram(0);
 		}
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, 0, 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDeleteFramebuffers(1, &outputFramebuffer);
 
 		if (outputToIOSurface)
-			glDeleteTextures(1, &outputTexture);
+			VuoGlPool_disuse(VuoGlPool_Texture, outputTexture);
+
+		glBindVertexArray(0);
+		glDeleteVertexArrays(1, &vertexArray);
+
+		glFlushRenderAPPLE();
 	}
-	VuoGlContext_disuse();
 
 	if (outputToIOSurface)
 		return surfID;
@@ -226,19 +256,24 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 /**
  * Destroys and deallocates the image renderer.
  *
- * May be called from any thread (automatically uses and disuses a GL Context).
+ * @threadAny
  */
 void VuoImageRenderer_destroy(VuoImageRenderer ir)
 {
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
 
-	VuoGlContext_use();
 	{
-		glDeleteBuffers(1, &imageRenderer->quadElementBuffer);
-		glDeleteBuffers(1, &imageRenderer->quadTextureCoordinateBuffer);
-		glDeleteBuffers(1, &imageRenderer->quadPositionBuffer);
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		/// @todo https://b33p.net/kosada/node/6752 — Why does this leak if we recycle it?
+		glDeleteBuffers(1,&imageRenderer->quadElementBuffer);
+//		VuoGlPool_disuse(VuoGlPool_ElementArrayBuffer, imageRenderer->quadElementBuffer);
+
+		VuoGlContext_disuse(cgl_ctx);
 	}
-	VuoGlContext_disuse();
+
+	VuoGlPool_disuse(VuoGlPool_ArrayBuffer, imageRenderer->quadTextureCoordinateBuffer);
+	VuoGlPool_disuse(VuoGlPool_ArrayBuffer, imageRenderer->quadPositionBuffer);
 
 	free(imageRenderer);
 }

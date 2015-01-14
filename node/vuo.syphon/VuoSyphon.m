@@ -12,7 +12,6 @@
 #include "VuoSyphon.h"
 #include "VuoImageRenderer.h"
 #include <Syphon.h>
-#include <OpenGL/gl.h>
 #include "VuoSyphonListener.h"
 #include "VuoSyphonSender.h"
 

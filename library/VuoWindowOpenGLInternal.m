@@ -11,6 +11,7 @@
 #import "VuoWindowApplication.h"
 
 #include <OpenGL/OpenGL.h>
+#include <OpenGL/CGLMacro.h>
 
 #include "module.h"
 
@@ -19,6 +20,7 @@ VuoModuleMetadata({
 					 "title" : "VuoWindowOpenGLInternal",
 					 "dependencies" : [
 						 "AppKit.framework",
+						 "VuoDisplayRefresh",
 						 "VuoGLContext"
 					 ]
 				 });
@@ -28,14 +30,17 @@ VuoModuleMetadata({
 @implementation VuoWindowOpenGLView
 
 @synthesize glWindow;
+@synthesize windowedGlContext;
 
 /**
  * Creates an OpenGL view that calls the given callbacks for rendering.
+ *
+ * @threadMain
  */
 - (id)initWithFrame:(NSRect)frame
-	   initCallback:(void (*)(void *))_initCallback
-	 resizeCallback:(void (*)(void *, unsigned int width, unsigned int height))_resizeCallback
-	   drawCallback:(void (*)(void *))_drawCallback
+	   initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+	 resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
+	   drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 			   drawContext:(void *)_drawContext
 {
 	if (self = [super initWithFrame:frame pixelFormat:[NSOpenGLView defaultPixelFormat]])
@@ -47,6 +52,9 @@ VuoModuleMetadata({
 
 		drawQueue = dispatch_queue_create("vuo.window.opengl.internal.draw", 0);
 
+		displayRefresh = VuoDisplayRefresh_make(self);
+		VuoRetain(displayRefresh);
+
 		pendingClickCount = 0;
 		clickQueue = dispatch_queue_create("vuo.window.opengl.internal.click", 0);
 	}
@@ -54,28 +62,65 @@ VuoModuleMetadata({
 }
 
 /**
+ * Releases instance variables.
+ */
+- (void)dealloc
+{
+	VuoRelease(displayRefresh);
+	[super dealloc];
+}
+
+/**
  * Handles this view being added to the @c VuoWindowOpenGLInternal, or switched between that
  * and full-screen, by calling @initCallback.
+ *
+ * @threadMain
  */
 - (void)viewDidMoveToWindow
 {
 	if ([[self window] isKindOfClass:[VuoWindowOpenGLInternal class]])
 		self.glWindow = (VuoWindowOpenGLInternal *)[self window];
 
+	if (togglingFullScreen)
+		return;
+
 	dispatch_sync(drawQueue, ^{
 					  NSOpenGLContext *glContext = [self openGLContext];
-					  [glContext makeCurrentContext];
-
-					  initCallback(drawContext);
-
+					  initCallback([glContext CGLContextObj], drawContext);
 					  [glContext flushBuffer];
-
-					  [NSOpenGLContext clearCurrentContext];
 				  });
 }
 
 /**
+ * Redraws this view by calling @c drawCallback.
+ *
+ * @threadAny
+ */
+void VuoWindowOpenGLView_draw(VuoFrameRequest frameRequest, void *context)
+{
+	VuoWindowOpenGLView *glView = (VuoWindowOpenGLView *)context;
+	if (glView->callerRequestedRedraw)
+	{
+		glView->callerRequestedRedraw = false;
+
+		if (glView->togglingFullScreen)
+			return;
+
+		dispatch_sync(glView->drawQueue, ^{
+						  NSOpenGLContext *glContext = [glView openGLContext];
+						  glView->drawCallback([glContext CGLContextObj], glView->drawContext);
+	//					  glFlush();
+	//					  CGLFlushDrawable(CGLGetCurrentContext());
+						  [glContext flushBuffer];
+					  });
+
+	}
+}
+
+/**
  * Sets up the view to call trigger functions.
+ *
+ * @threadAny
  */
 - (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))_movedMouseTo
 						 scrolledMouse:(void (*)(VuoPoint2d))_scrolledMouse
@@ -84,13 +129,17 @@ VuoModuleMetadata({
 	movedMouseTo = _movedMouseTo;
 	scrolledMouse = _scrolledMouse;
 	usedMouseButton = _usedMouseButton;
+	VuoDisplayRefresh_enableTriggers(displayRefresh, NULL, VuoWindowOpenGLView_draw);
 }
 
 /**
  * Stops the view from calling trigger functions.
+ *
+ * @threadAny
  */
 - (void)disableTriggers
 {
+	VuoDisplayRefresh_disableTriggers(displayRefresh);
 	movedMouseTo = NULL;
 	scrolledMouse = NULL;
 	usedMouseButton = NULL;
@@ -98,6 +147,8 @@ VuoModuleMetadata({
 
 /**
  * Specifies that this view should accept mouseMoved and key events.
+ *
+ * @threadMain
  */
 - (BOOL)acceptsFirstResponder
 {
@@ -111,6 +162,8 @@ VuoModuleMetadata({
 
 /**
  * Converts @c point (relative to @c view) to default scene coordinates (-1 to 1 in X, proportional in Y).
+ *
+ * @threadAny
  */
 VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSView *view)
 {
@@ -225,6 +278,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Handles the mouse moving by calling the trigger function.
+ *
+ * @threadMain
  */
 - (void)mouseMoved:(NSEvent *)event
 {
@@ -236,6 +291,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Handles the mouse scrolling by calling the trigger function.
+ *
+ * @threadMain
  */
 - (void)scrollWheel:(NSEvent *)event
 {
@@ -260,48 +317,138 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Handles resizing of this view by calling @c resizeCallback.
+ *
+ * @threadMain
  */
 - (void)reshape
 {
+	if (togglingFullScreen)
+		return;
+
 	dispatch_sync(drawQueue, ^{
 					  NSOpenGLContext *glContext = [self openGLContext];
-					  [glContext makeCurrentContext];
+					  CGLContextObj cgl_ctx = [glContext CGLContextObj];
 					  NSRect frame = [self frame];
 					  glViewport(0, 0, frame.size.width, frame.size.height);
-					  resizeCallback(drawContext, frame.size.width, frame.size.height);
-					  [NSOpenGLContext clearCurrentContext];
+					  resizeCallback([glContext CGLContextObj], drawContext, frame.size.width, frame.size.height);
+					  drawCallback([glContext CGLContextObj], drawContext);
+					  [glContext flushBuffer];
 				  });
 }
 
 /**
- * Redraws this view by calling @c drawCallback.
+ * Schedules the OpenGL view to be redrawn. This can be used in both windowed and full-screen mode.
  *
- * Can be called from any thread.
+ * @threadAny
  */
-- (void)drawRect:(NSRect)bounds
+- (void)scheduleRedraw
 {
-	dispatch_sync(drawQueue, ^{
-					  NSOpenGLContext *glContext = [self openGLContext];
-					  [glContext makeCurrentContext];
-
-					  drawCallback(drawContext);
-
-					  glFlush();
-
-//					  CGLFlushDrawable(CGLGetCurrentContext());
-					  [glContext flushBuffer];
-
-					  [NSOpenGLContext clearCurrentContext];
-				  });
+	callerRequestedRedraw = true;
 }
 
 /**
  * Makes Escape and Command-. exit full-screen mode.
+ *
+ * @threadMain
  */
 - (void)cancelOperation:(id)sender
 {
 	if ([self isInFullScreenMode])
-		[[self glWindow] toggleFullScreen];
+		[self toggleFullScreen];
+}
+
+/**
+ * Switches between full-screen and windowed mode.
+ *
+ * @threadMain
+ */
+- (void)toggleFullScreen
+{
+	if (! [self isInFullScreenMode])
+	{
+		// Pick the screen that shows the most of the the window's area.
+		NSScreen *fullScreenScreen = [glWindow screen];
+
+		// Create a GL context that can be used in full-screen mode.
+		__block CGLError error;
+		CGDirectDisplayID fullScreenDisplay = [[[fullScreenScreen deviceDescription] objectForKey:@"NSScreenNumber"] unsignedIntValue];  // http://www.cocoabuilder.com/archive/cocoa/133873-how-to-get-the-cgdirectdisplayid.html
+		CGLPixelFormatAttribute fullScreenAttributes[] =
+		{
+			kCGLPFAFullScreen,
+			kCGLPFADisplayMask, (CGLPixelFormatAttribute) CGDisplayIDToOpenGLDisplayMask(fullScreenDisplay),
+
+			// copied from VuoGlContext
+			kCGLPFAAccelerated,
+			kCGLPFANoRecovery,
+			kCGLPFADoubleBuffer,
+			kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
+			kCGLPFADepthSize, (CGLPixelFormatAttribute) 16,
+			kCGLPFAMultisample,
+			kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
+			kCGLPFASamples, (CGLPixelFormatAttribute) 4,
+			(CGLPixelFormatAttribute) 0
+		};
+		CGLPixelFormatObj fullScreenPixelFormat;
+		GLint numPixelFormats;
+		error = CGLChoosePixelFormat(fullScreenAttributes, &fullScreenPixelFormat, &numPixelFormats);
+		if (error != kCGLNoError)
+		{
+			fprintf(stderr, "Error: Couldn't create full-screen pixel format: %s\n", CGLErrorString(error));
+			return;
+		}
+
+		__block CGLContextObj fullScreenContextCGL;
+		dispatch_sync(drawQueue, ^{
+						  CGLContextObj windowedGlContextCGL = [windowedGlContext CGLContextObj];
+						  error = CGLCreateContext(fullScreenPixelFormat, windowedGlContextCGL, &fullScreenContextCGL);
+					  });
+
+		CGLDestroyPixelFormat(fullScreenPixelFormat);
+
+		if (error != kCGLNoError)
+		{
+			fprintf(stderr, "Error: Couldn't create full-screen context: %s\n", CGLErrorString(error));
+			return;
+		}
+
+		NSOpenGLContext *fullScreenContext = [[NSOpenGLContext alloc] initWithCGLContextObj:fullScreenContextCGL];
+		int swapInterval=1;
+		[fullScreenContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+		togglingFullScreen = true;
+		[self setOpenGLContext:fullScreenContext];
+		[fullScreenContext setView:self];
+
+		NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+								 [NSNumber numberWithBool:NO], NSFullScreenModeAllScreens,  // Don't turn other screens black.
+								 nil];
+
+		[glWindow setAlphaValue:0];  // Hide the window on other screens. Unlike -[self orderOut:nil], this preserves the position.
+
+		dispatch_sync(drawQueue, ^{
+							   [self enterFullScreenMode:fullScreenScreen withOptions:options];
+							   togglingFullScreen = false;
+					  });
+
+		// Since the setup and draw were omitted during -enterFullScreenMode above (to prevent deadlock), invoke them manually now.
+		[self viewDidMoveToWindow];
+		[self reshape];
+	}
+	else
+	{
+		dispatch_sync(drawQueue, ^{
+						  [self setOpenGLContext:windowedGlContext];
+						  togglingFullScreen = true;
+						  [windowedGlContext setView:self];
+						  [self exitFullScreenModeWithOptions:nil];
+						  togglingFullScreen = false;
+					  });
+
+		[glWindow setAlphaValue:1];  // Un-hide the window on other screens.
+
+		// Since the setup and draw were omitted during -exitFullScreenMode above (to prevent deadlock), invoke them manually now.
+		[self viewDidMoveToWindow];
+		[self reshape];
+	}
 }
 
 @end
@@ -311,16 +458,15 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 @implementation VuoWindowOpenGLInternal
 
 @synthesize glView;
-@synthesize windowedGlContext;
 
 /**
  * Creates a window containing an OpenGL view.
  *
- * Must be called on the main thread.
+ * @threadMain
  */
-- (id)initWithInitCallback:(void (*)(void *))_initCallback
-			resizeCallback:(void (*)(void *, unsigned int width, unsigned int height))_resizeCallback
-			  drawCallback:(void (*)(void *))_drawCallback
+- (id)initWithInitCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+			resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
+			  drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 			   drawContext:(void *)_drawContext
 {
 	NSRect frame = NSMakeRect(0, 0, 1024, 768);
@@ -353,20 +499,24 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 		// 1. Set the GL context for the view.
 		VuoGlContext vuoGlContext = VuoGlContext_use();
-		self.windowedGlContext = [[NSOpenGLContext alloc] initWithCGLContextObj:vuoGlContext];
-		[glView setOpenGLContext:windowedGlContext];
+		glView.windowedGlContext = [[NSOpenGLContext alloc] initWithCGLContextObj:vuoGlContext];
+		int swapInterval=1;
+		[glView.windowedGlContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+		[glView setOpenGLContext:glView.windowedGlContext];
 
 		// 2. Add the view to the window. Do after (1) to have the desired GL context in -viewDidMoveToWindow.
 		[self setContentView:glView];
 
 		// 3. Set the view for the GL context. Do after (2) to avoid an "invalid drawable" warning.
-		[windowedGlContext setView:glView];
+		[glView.windowedGlContext setView:glView];
 	}
 	return self;
 }
 
 /**
  * Updates the menu bar with this window's menus (View > Full Screen).
+ *
+ * @threadMain
  */
 - (void)becomeMainWindow
 {
@@ -383,6 +533,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Sets up the window to call trigger functions.
+ *
+ * @threadAny
  */
 - (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))_movedMouseTo
 						 scrolledMouse:(void (*)(VuoPoint2d))_scrolledMouse
@@ -398,6 +550,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Stops the window from calling trigger functions.
+ *
+ * @threadAny
  */
 - (void)disableTriggers
 {
@@ -409,11 +563,11 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 /**
  * Schedules the OpenGL view to be redrawn. This can be used in both windowed and full-screen mode.
  *
- * Can be called from any thread.
+ * @threadAny
  */
 - (void)scheduleRedraw
 {
-	[glView drawRect:CGRectNull];
+	[glView scheduleRedraw];
 }
 
 /**
@@ -421,6 +575,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
  * window to @c pixelsWide by @c pixelsHigh, unless the user has manually resized the
  * window (in which case the width is preserved) or the requested size is larger than the
  * window's screen (in which case the window is scaled to fit the screen).
+ *
+ * @threadAny
  */
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh
 {
@@ -472,6 +628,8 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Keeps track of whether the user has manually resized the window.
+ *
+ * @threadMain
  */
 - (void)windowDidResize:(NSNotification *)notification
 {
@@ -481,71 +639,12 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 
 /**
  * Switches between full-screen and windowed mode.
+ *
+ * @threadMain
  */
 - (void)toggleFullScreen
 {
-	if (! [glView isInFullScreenMode])
-	{
-		// Pick the screen that shows the most of the the window's area.
-		NSScreen *fullScreenScreen = [self screen];
-
-		// Create a GL context that can be used in full-screen mode.
-		CGLError error;
-		CGDirectDisplayID fullScreenDisplay = [[[fullScreenScreen deviceDescription] objectForKey:@"NSScreenNumber"] unsignedIntValue];  // http://www.cocoabuilder.com/archive/cocoa/133873-how-to-get-the-cgdirectdisplayid.html
-		CGLPixelFormatAttribute fullScreenAttributes[] =
-		{
-			kCGLPFAFullScreen,
-			kCGLPFADisplayMask, (CGLPixelFormatAttribute) CGDisplayIDToOpenGLDisplayMask(fullScreenDisplay),
-
-			// copied from VuoGlContext
-			kCGLPFAAccelerated,
-			kCGLPFANoRecovery,
-			kCGLPFADoubleBuffer,
-			kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
-			kCGLPFADepthSize, (CGLPixelFormatAttribute) 16,
-			kCGLPFAMultisample,
-			kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
-			kCGLPFASamples, (CGLPixelFormatAttribute) 4,
-			(CGLPixelFormatAttribute) 0
-		};
-		CGLPixelFormatObj fullScreenPixelFormat;
-		GLint numPixelFormats;
-		error = CGLChoosePixelFormat(fullScreenAttributes, &fullScreenPixelFormat, &numPixelFormats);
-		if (error != kCGLNoError)
-		{
-			fprintf(stderr, "Error: Couldn't create full-screen pixel format: %s\n", CGLErrorString(error));
-			return;
-		}
-		CGLContextObj windowedGlContextCGL = [windowedGlContext CGLContextObj];
-		CGLContextObj fullScreenContextCGL;
-		error = CGLCreateContext(fullScreenPixelFormat, windowedGlContextCGL, &fullScreenContextCGL);
-		CGLDestroyPixelFormat(fullScreenPixelFormat);
-		if (error != kCGLNoError)
-		{
-			fprintf(stderr, "Error: Couldn't create full-screen context: %s\n", CGLErrorString(error));
-			return;
-		}
-		NSOpenGLContext *fullScreenContext = [[NSOpenGLContext alloc] initWithCGLContextObj:fullScreenContextCGL];
-		[glView setOpenGLContext:fullScreenContext];
-		[fullScreenContext setView:glView];
-
-		NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-								 [NSNumber numberWithBool:NO], NSFullScreenModeAllScreens,  // Don't turn other screens black.
-								 nil];
-
-		[self setAlphaValue:0];  // Hide the window on other screens. Unlike -[self orderOut:nil], this preserves the position.
-
-		[glView enterFullScreenMode:fullScreenScreen withOptions:options];
-	}
-	else
-	{
-		[glView setOpenGLContext:windowedGlContext];
-		[windowedGlContext setView:glView];
-
-		[glView exitFullScreenModeWithOptions:nil];
-
-		[self setAlphaValue:1];  // Un-hide the window on other screens.
-	}
+	[glView toggleFullScreen];
 }
 
 @end

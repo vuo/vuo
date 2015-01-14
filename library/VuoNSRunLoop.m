@@ -29,7 +29,7 @@ dispatch_source_t VuoNSRunLoop_timer;	///< Process-wide libdispatch timer for pr
 /**
  * Indicates that the caller needs an NSRunLoop on the main thread.
  *
- * May be called from any thread.
+ * @threadAny
  */
 void VuoNSRunLoop_use(void)
 {
@@ -58,7 +58,7 @@ void VuoNSRunLoop_use(void)
  *
  * (The NSRunLoop may continue running, if other callers still need it.)
  *
- * May be called from any thread.
+ * @threadAny
  */
 void VuoNSRunLoop_disuse(void)
 {

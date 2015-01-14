@@ -22,15 +22,18 @@ class VuoCompilerChain
 private:
 	vector<VuoCompilerNode *> nodes;
 	bool isLastNodeInLoop;
-	GlobalVariable *dispatchGroupVariable;
+	AllocaInst *dispatchGroupVariable;
+	int numUpstreamChains;
 
 public:
 	VuoCompilerChain(vector<VuoCompilerNode *> nodes, bool isLastNodeInLoop);
-	void generateAllocationForDispatchGroup(Module *module, string triggerIdentifier);
+	void generateAllocationForDispatchGroup(Module *module, BasicBlock *block, string triggerIdentifier);
 	void generateInitializationForDispatchGroup(Module *module, BasicBlock *block);
 	void generateFinalizationForDispatchGroup(Module *module, BasicBlock *block);
-	Function * generateSubmissionForDispatchGroup(Module *module, BasicBlock *block);
+	Function * generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, Value *eventIdValue, vector<VuoCompilerChain *> upstreamChains);
 	void generateWaitForDispatchGroup(Module *module, BasicBlock *block);
+	static Value * getEventIdValue(Module *module, Function *workerFunction, BasicBlock *block);
+	void generateWaitForUpstreamChains(Module *module, Function *workerFunction, BasicBlock *block);
 	vector<VuoCompilerNode *> getNodes(void);
 };
 

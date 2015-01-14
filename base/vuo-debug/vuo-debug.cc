@@ -71,6 +71,7 @@ int main (int argc, char * const argv[])
 	if (doPrintHelp)
 	{
 		printf("Tool for debugging compositions. Runs the given composition executable file and logs telemetry data to the console.\n\n"
+			   "Nodes in the composition use the directory containing the composition executable file to resolve relative paths.\n\n"
 			   "Usage: %s [options] file\n\n"
 			   "Options:\n"
 			   "  --help                       Display this information.\n",
@@ -85,7 +86,10 @@ int main (int argc, char * const argv[])
 		}
 		executablePath = argv[optind];
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath);
+		string file, executableDir, ext;
+		VuoFileUtilities::splitPath(executablePath, executableDir, file, ext);
+
+		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, executableDir);
 
 		TelemetryLogger *logger = new TelemetryLogger();
 		runner->setDelegate(logger);

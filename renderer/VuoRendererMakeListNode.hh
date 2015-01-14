@@ -26,6 +26,7 @@ public:
 	VuoRendererMakeListNode(VuoNode *baseNode, VuoRendererSignaler *signaler);
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	QRectF boundingRect(void) const;
+	QRectF getNodeTitleBoundingRect() const;
 	QPainterPath shape() const;
 
 	vector<VuoRendererPort *> getDrawerPorts(void) const;

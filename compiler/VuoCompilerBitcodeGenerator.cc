@@ -585,6 +585,36 @@ bool VuoCompilerBitcodeGenerator::isNodeDownstreamOfTrigger(VuoCompilerNode *nod
 }
 
 /**
+ * Returns true if at least one of @a node's in-edges is reachable from @a upstreamNode.
+ *
+ * Assumes the list of downstream edges for each edge has been created.
+ */
+bool VuoCompilerBitcodeGenerator::isNodeDownstreamOfNode(VuoCompilerNode *node, VuoCompilerNode *upstreamNode)
+{
+	set<VuoCompilerPassiveEdge *> nodeOutEdges = passiveOutEdgesForNode[upstreamNode];
+	set<VuoCompilerPassiveEdge *> nodeInEdges = passiveInEdgesForNode[node];
+
+	for (set<VuoCompilerPassiveEdge *>::iterator i = nodeOutEdges.begin(); i != nodeOutEdges.end(); ++i)
+	{
+		VuoCompilerPassiveEdge *nodeOutEdge = *i;
+
+		// Is the node directly connected to upstreamNode?
+		if (nodeOutEdge->getToNode() == node)
+			return true;
+
+		// Is the node further downstream of upstreamNode?
+		for (set<VuoCompilerPassiveEdge *>::iterator j = nodeInEdges.begin(); j != nodeInEdges.end(); ++j)
+		{
+			VuoCompilerPassiveEdge *nodeInEdge = *j;
+			if (downstreamEdgesForEdge[nodeOutEdge].find(nodeInEdge) != downstreamEdgesForEdge[nodeOutEdge].end())
+				return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * Returns true if there is a passive edge from fromNode to toNode that may be pushed by the trigger.
  *
  * Assumes the list of edges reachable from each trigger has been created.
@@ -675,6 +705,21 @@ set<VuoCompilerTriggerEdge *> VuoCompilerBitcodeGenerator::getTriggerEdges(void)
 	return edges;
 }
 
+/**
+ * Puts the nodes into the same order as they appear in @ref orderedNodes.
+ */
+vector<VuoCompilerNode *> VuoCompilerBitcodeGenerator::sortNodes(set<VuoCompilerNode *> originalNodes)
+{
+	vector<VuoCompilerNode *> sortedNodes;
+	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
+	{
+		VuoCompilerNode *node = *i;
+		if (originalNodes.find(node) != originalNodes.end())
+			sortedNodes.push_back(node);
+	}
+	return sortedNodes;
+}
+
 
 /**
  * Generates bitcode that can be read in as a node class.
@@ -758,6 +803,15 @@ void VuoCompilerBitcodeGenerator::generateMetadata(void)
  */
 void VuoCompilerBitcodeGenerator::generateAllocation(void)
 {
+	noEventIdConstant = ConstantInt::get(module->getContext(), APInt(64, 0));
+	lastEventIdVariable = new GlobalVariable(*module,
+											 IntegerType::get(module->getContext(), 64),
+											 false,
+											 GlobalValue::InternalLinkage,
+											 noEventIdConstant,
+											 "lastEventId");
+	lastEventIdSemaphoreVariable = VuoCompilerCodeGenUtilities::generateAllocationForSemaphore(module, "lastEventId__semaphore");
+
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
@@ -767,14 +821,19 @@ void VuoCompilerBitcodeGenerator::generateAllocation(void)
 		string semaphoreIdentifier = node->getIdentifier() + "__semaphore";
 		GlobalVariable *semaphoreVariable = VuoCompilerCodeGenUtilities::generateAllocationForSemaphore(module, semaphoreIdentifier);
 		semaphoreVariableForNode[node] = semaphoreVariable;
+
+		string claimingEventIdIdentifier = node->getIdentifier() + "__claimingEventId";
+		GlobalVariable *claimingEventIdVariable = new GlobalVariable(*module,
+																	 IntegerType::get(module->getContext(), 64),
+																	 false,
+																	 GlobalValue::InternalLinkage,
+																	 noEventIdConstant,
+																	 claimingEventIdIdentifier);
+		claimingEventIdVariableForNode[node] = claimingEventIdVariable;
 	}
 
 	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
 		i->second->generateAllocation(module);
-
-	for (map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
-		for (vector<VuoCompilerChain *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			(*j)->generateAllocationForDispatchGroup(module, i->first->getIdentifier());
 }
 
 /**
@@ -792,6 +851,8 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 
 	generateInitializationForReferenceCounts(block);
 
+	VuoCompilerCodeGenUtilities::generateInitializationForSemaphore(module, block, lastEventIdSemaphoreVariable);
+
 	for (map<VuoCompilerNode *, GlobalVariable *>::iterator i = semaphoreVariableForNode.begin(); i != semaphoreVariableForNode.end(); ++i)
 		VuoCompilerCodeGenUtilities::generateInitializationForSemaphore(module, block, i->second);
 
@@ -800,10 +861,6 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 
 	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
 		i->second->generateInitialization(module, block);
-
-	for (map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
-		for (vector<VuoCompilerChain *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			(*j)->generateInitializationForDispatchGroup(module, block);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -824,12 +881,10 @@ void VuoCompilerBitcodeGenerator::generateCleanupFunction(void)
 
 	generateFinalizationForReferenceCounts(block);
 
+	VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, lastEventIdSemaphoreVariable);
+
 	for (map<VuoCompilerNode *, GlobalVariable *>::iterator i = semaphoreVariableForNode.begin(); i != semaphoreVariableForNode.end(); ++i)
 		VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, i->second);
-
-	for (map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
-		for (vector<VuoCompilerChain *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			(*j)->generateFinalizationForDispatchGroup(module, block);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -940,7 +995,7 @@ void VuoCompilerBitcodeGenerator::generateCallbackStartFunction(void)
 
 	// Since a node's nodeInstanceTriggerStart() function can generate an event,
 	// make sure trigger functions wait until all nodes' init functions have completed.
-	generateWaitForNodes(module, block, orderedNodes);
+	generateWaitForNodes(module, function, block, orderedNodes);
 
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
@@ -969,7 +1024,7 @@ void VuoCompilerBitcodeGenerator::generateCallbackStopFunction(void)
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
 	// Wait for any in-progress events to complete.
-	generateWaitForNodes(module, block, orderedNodes);
+	generateWaitForNodes(module, function, block, orderedNodes);
 
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
@@ -994,6 +1049,8 @@ void VuoCompilerBitcodeGenerator::generateCallbackStopFunction(void)
 		BasicBlock *barrierBlock = BasicBlock::Create(module->getContext(), "", barrierWorkerFunction, NULL);
 		ReturnInst::Create(module->getContext(), barrierBlock);
 	}
+	generateWaitForNodes(module, function, block, orderedNodes);
+	generateSignalForNodes(module, block, orderedNodes);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -1025,26 +1082,102 @@ void VuoCompilerBitcodeGenerator::generateFinalizationForReferenceCounts(BasicBl
 }
 
 /**
- * Generates a call to wait on the semaphore of each of the given nodes.
+ * Generates code to get a unique event ID.
+ *
+ * @eg{
+ * dispatch_semaphore_wait(lastEventIdSemaphore, DISPATCH_TIME_FOREVER);
+ * unsigned long eventId = ++lastEventId;
+ * dispatch_semaphore_signal(lastEventIdSemaphore);
+ * }
  */
-void VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, BasicBlock *block, vector<VuoCompilerNode *> nodes)
+Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, BasicBlock *block)
 {
+	VuoCompilerCodeGenUtilities::generateWaitForSemaphore(module, block, lastEventIdSemaphoreVariable);
+
+	LoadInst *lastEventIdValue = new LoadInst(lastEventIdVariable, "", false, block);
+	ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(64, 1));
+	Value *incrementedLastEventIdValue = BinaryOperator::Create(Instruction::Add, lastEventIdValue, oneValue, "", block);
+	new StoreInst(incrementedLastEventIdValue, lastEventIdVariable, false, block);
+
+	VuoCompilerCodeGenUtilities::generateSignalForSemaphore(module, block, lastEventIdSemaphoreVariable);
+
+	return incrementedLastEventIdValue;
+}
+
+/**
+ * Generates a call to wait on the semaphore of each of the given nodes.
+ *
+ * Assumes the list of nodes is in the same order as @ref orderedNodes (to avoid deadlock).
+ *
+ * @eg{
+ * // When an event reaches a node through just one edge into the node, this code is generated just once.
+ * // When an event reaches a node through multiple edges (i.e., the node is at the hub of a feedback loop
+ * // or at a gather), this code is generated for each of those edges. When one of those edges claims the
+ * // semaphore, the rest of the edges for the same event need to recognize this and also stop waiting.
+ * // Hence the checking of event IDs and the limited-time wait.
+ *
+ * // For each node:
+ * while (vuo_math_count__Count__eventIDClaimingSemaphore != eventId)
+ * {
+ *    int ret = dispatch_semaphore_wait(vuo_math_count__Count__semaphore, WAIT_TIME);
+ *    if (ret == 0)  // got semaphore
+ *       vuo_math_count__Count__eventIDClaimingSemaphore = eventId;
+ * }
+ */
+void VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Function *function, BasicBlock *&block,
+													   vector<VuoCompilerNode *> nodes, Value *eventIdValue)
+{
+	if (! eventIdValue)
+		eventIdValue = generateGetNextEventID(module, block);
+
 	for (vector<VuoCompilerNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoCompilerNode *node = *i;
+
+		BasicBlock *checkEventIdBlock = BasicBlock::Create(module->getContext(), "checkEventId", function);
+		BranchInst::Create(checkEventIdBlock, block);
+
+		GlobalVariable *claimingEventIdVariable = claimingEventIdVariableForNode[node];
+		Value *claimingEventIdValue = new LoadInst(claimingEventIdVariable, "", false, checkEventIdBlock);
+		ICmpInst *claimingEventIdNotEqualsEventId = new ICmpInst(*checkEventIdBlock, ICmpInst::ICMP_NE, claimingEventIdValue, eventIdValue, "");
+		BasicBlock *waitBlock = BasicBlock::Create(module->getContext(), "waitNodeSemaphore", function);
+		BasicBlock *nextBlock = BasicBlock::Create(module->getContext(), "gotNodeSemaphore", function);
+		BranchInst::Create(waitBlock, nextBlock, claimingEventIdNotEqualsEventId, checkEventIdBlock);
+
 		GlobalVariable *semaphoreVariable = semaphoreVariableForNode[node];
-		VuoCompilerCodeGenUtilities::generateWaitForSemaphore(module, block, semaphoreVariable);
+		int64_t timeoutInNanoseconds = NSEC_PER_SEC / 1000;  /// @todo (https://b33p.net/kosada/node/6682)
+		Value *retValue = VuoCompilerCodeGenUtilities::generateWaitForSemaphore(module, waitBlock, semaphoreVariable, timeoutInNanoseconds);
+
+		ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(64, 0));
+		ICmpInst *retEqualsZero = new ICmpInst(*waitBlock, ICmpInst::ICMP_EQ, retValue, zeroValue, "");
+		BasicBlock *setEventIdBlock = BasicBlock::Create(module->getContext(), "setEventId", function);
+		BranchInst::Create(setEventIdBlock, checkEventIdBlock, retEqualsZero, waitBlock);
+
+		new StoreInst(eventIdValue, claimingEventIdVariable, false, setEventIdBlock);
+
+		BranchInst::Create(checkEventIdBlock, setEventIdBlock);
+		block = nextBlock;
 	}
 }
 
 /**
  * Generates a call to signal the semaphore of each of the given nodes.
+ *
+ * @eg{
+ * // For each node:
+ * vuo_math_count__Count__eventClaimingSemaphore = NO_EVENT_ID;
+ * dispatch_semaphore_signal(vuo_math_count__Count__semaphore);
+ * }
  */
 void VuoCompilerBitcodeGenerator::generateSignalForNodes(Module *module, BasicBlock *block, vector<VuoCompilerNode *> nodes)
 {
 	for (vector<VuoCompilerNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoCompilerNode *node = *i;
+
+		GlobalVariable *claimingEventIdVariable = claimingEventIdVariableForNode[node];
+		new StoreInst(noEventIdConstant, claimingEventIdVariable, false, block);
+
 		GlobalVariable *semaphoreVariable = semaphoreVariableForNode[node];
 		VuoCompilerCodeGenUtilities::generateSignalForSemaphore(module, block, semaphoreVariable);
 	}
@@ -1297,7 +1430,7 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueOrSummaryFunction(bool isS
 				if (isThreadSafe)
 				{
 					// dispatch_semaphore_wait(currentBlock, DISPATCH_TIME_FOREVER);
-					generateWaitForNodes(module, currentBlock, nodeList);
+					generateWaitForNodes(module, function, currentBlock, nodeList);
 				}
 
 				// <Type>_summaryFromValue(data) or <Type>_stringFromValue(data) or <Type>_interprocessStringFromValue(data)
@@ -2212,6 +2345,135 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerFunctionHeader(VuoCompile
  * The function schedules downstream nodes for execution.
  *
  * Assumes the header of the function has already been set as the function for @c trigger.
+ *
+ * @eg{
+ * // PlayMovie:decodedImage -> TwirlImage:image
+ * // PlayMovie:decodedImage -> RippleImage:image
+ * // TwirlImage:image -> BlendImages:background
+ * // RippleImage:image -> BlendImages:foreground
+ *
+ * void PlayMovie_decodedImage(VuoImage image)
+ * {
+ *   VuoRetain(image);
+ *   void *context = malloc(sizeof(VuoImage));
+ *   *context = image;
+ *   dispatch_async_f(PlayMovie_decodedImage_queue, PlayMovie_decodedImage_worker(), context);
+ * }
+ *
+ * void PlayMovie_decodedImage_worker(void *context)
+ * {
+ *   // If paused, ignore this event.
+ *   if (isPaused)
+ *     return;
+ *   // Otherwise...
+ *
+ *   // Get a unique ID for this event.
+ *   unsigned long eventId = getNextEventId();
+ *
+ *   // Wait for the nodes directly downstream of the trigger port.
+ *   waitForNodeSemaphore(TwirlImage, eventId);
+ *   waitForNodeSemaphore(RippleImage, eventId);
+ *
+ *   // Handle the trigger port value having changed.
+ *   VuoRelease(PlayMovie_decodedImage__previousData);
+ *   PlayMovie_decodedImage__previousData = (VuoImage)(*context);
+ *   free(context);
+ *
+ *   // Send telemetry indicating that the trigger port value may have changed.
+ *   sendTelemetry(PortHadEvent, PlayMovie_decodedImage, TwirlImage_image);
+ *
+ *   // Transmit data and events along each of the trigger's cables.
+ *   transmitDataAndEvent(PlayMovie_decodedImage__previousData, TwirlImage_image);  // retains new TwirlImage_image, releases old
+ *
+ *
+ *   // Schedule each chain downstream of the trigger.
+ *
+ *   dispatch_group_t TwirlImage_chain_group = dispatch_group_create();
+ *   dispatch_group_t RippleImage_chain_group = dispatch_group_create();
+ *   dispatch_group_t BlendImages_chain_group = dispatch_group_create();
+ *
+ *   dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+ *
+ *   void **TwirlImage_chain_context = (void **)malloc(sizeof(void *));
+ *   unsigned long *eventIdPtr = (unsigned long *)malloc(sizeof(unsigned long);
+ *   *eventIdPtr = eventId;
+ *   TwirlImage_chain_context[0] = (void *)eventIdPtr;
+ *   dispatch_group_async_f(globalQueue, TwirlImage_chain_group, TwirlImage_chain_worker, (void *)TwirlImage_chain_context);
+ *
+ *   void **RippleImage_chain_context = (void **)malloc(sizeof(void *));
+ *   unsigned long *eventIdPtr = (unsigned long *)malloc(sizeof(unsigned long);
+ *   *eventIdPtr = eventId;
+ *   RippleImage_chain_context[0] = (void *)eventIdPtr;
+ *   dispatch_group_async_f(globalQueue, RippleImage_chain_group, RippleImage_chain_worker, (void *)RippleImage_chain_context);
+ *
+ *   void **BlendImages_chain_context = (void **)malloc(3 * sizeof(void *));
+ *   unsigned long *eventIdPtr = (unsigned long *)malloc(sizeof(unsigned long);
+ *   *eventIdPtr = eventId;
+ *   BlendImages_chain_context[0] = (void *)eventIdPtr;
+ *   *BlendImages_chain_context[1] = TwirlImage_chain_group;
+ *   dispatch_retain(TwirlImage_chain_group);
+ *   *BlendImages_chain_context[2] = RippleImage_chain_group;
+ *   dispatch_retain(RippleImage_chain_group);
+ *   dispatch_group_async_f(globalQueue, BlendImages_chain_group, BlendImages_chain_worker, (void *)BlendImages_chain_context);
+ *
+ *   dispatch_release(TwirlImage_chain_group);
+ *   dispatch_release(RippleImage_chain_group);
+ *   dispatch_release(BlendImages_chain_group);
+ * }
+ *
+ * void TwirlImage_chain_worker(void *context)
+ * {
+ *   unsigned long eventId = (unsigned long)(*context[0]);
+ *   free(context[0]);
+ *
+ *   // For each node in the chain...
+ *   // If the node received an event, then...
+ *   if (nodeReceivedEvent(TwirlImage))
+ *   {
+ *      // Send telemetry indicating that the node's execution has started.
+ *      sendTelemetry(NodeExecutionStarted, TwirlImage);
+ *
+ *      // Call the node's event function.
+ *      TwirlImage_nodeEvent(...);
+ *
+ *      // Send telemetry indicating that the node's execution has finished.
+ *      sendTelemetry(NodeExecutionEnded, TwirlImage);
+ *
+ *      // Wait for the nodes directly downstream of the current node that may receive an event from it.
+ *      waitForNodeSemaphore(BlendImages, eventId);
+ *
+ *      // Send telemetry indicating that the node's output port values, and any connected input port values, may have changed.
+ *      sendTelemetry(PortHadEvent, TwirlImage_image, BlendImages_background);
+ *
+ *      // Transmit data and events along the node's output cables.
+ *      transmitDataAndEvent(TwirlImage_image, BlendImages_background);  // retains new BlendImages_background, releases old
+ *
+ *      // If this was the last time the node could receive a push from this event, signal the node's semaphore.
+ *      signalNodeSemaphore(BlendImages);
+ *   }
+ * }
+ *
+ * void RippleImage_chain_worker(void *context)
+ * {
+ *   ...
+ * }
+ *
+ * void BlendImages_chain_worker(void *context)
+ * {
+ *   unsigned long eventId = (unsigned long)(*context[0]);
+ *   free(context[0]);
+ *
+ *   // Wait for any chains directly upstream to complete.
+ *   dispatch_group_t TwirlImage_chain_group = (dispatch_group_t)context[1];
+ *   dispatch_group_t RippleImage_chain_group = (dispatch_group_t)context[2];
+ *   dispatch_group_wait(TwirlImage_chain_group);
+ *   dispatch_group_wait(RippleImage_chain_group);
+ *   dispatch_group_release(TwirlImage_chain_group);
+ *   dispatch_group_release(RippleImage_chain_group);
+ *
+ *   ...
+ * }
+ * }
  */
 void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTriggerPort *trigger)
 {
@@ -2225,27 +2487,47 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 
 	BasicBlock *isPausedComparisonBlock = BasicBlock::Create(module->getContext(), "isPausedComparisonBlock", triggerWorker, NULL);
 	BasicBlock *triggerBlock = BasicBlock::Create(module->getContext(), "triggerBlock", triggerWorker, NULL);
-	BasicBlock *noTriggerBlock = BasicBlock::Create(module->getContext(), "noTriggerBlock", triggerWorker, NULL);;
 	BasicBlock *triggerReturnBlock = BasicBlock::Create(module->getContext(), "triggerReturnBlock", triggerWorker, NULL);
 
 
-	// Wait for any previous events from this trigger, or triggers that share downstream nodes
-	// with this trigger, to complete.
-	vector<VuoCompilerNode *> downstreamNodes;
-	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
-	{
-		VuoCompilerNode *node = *i;
-		if (isNodeDownstreamOfTrigger(node, trigger))
-			downstreamNodes.push_back(node);
-	}
-	generateWaitForNodes(module, isPausedComparisonBlock, downstreamNodes);
-
 	// If paused, ignore this event.
 	ICmpInst *isPausedValueIsTrue = VuoCompilerCodeGenUtilities::generateIsPausedComparison(module, isPausedComparisonBlock);
-	BranchInst::Create(noTriggerBlock, triggerBlock, isPausedValueIsTrue, isPausedComparisonBlock);
-	generateSignalForNodes(module, noTriggerBlock, downstreamNodes);
-	BranchInst::Create(triggerReturnBlock, noTriggerBlock);
+	BranchInst::Create(triggerReturnBlock, triggerBlock, isPausedValueIsTrue, isPausedComparisonBlock);
 	// Otherwise...
+
+	// Get a unique ID for this event.
+	Value *eventIdValueInTriggerWorker = generateGetNextEventID(module, triggerBlock);
+
+	// Does the trigger port have a gather somewhere downstream of it?
+	// If so, then when the event reaches its first scatter, all downstream nodes will be locked before the event can proceed.
+	// This is an (imprecise) way to prevent deadlock in the situation where one trigger port has scatter and a gather,
+	// and another trigger port overlaps with some branches of the scatter but not others (https://b33p.net/kosada/node/6696).
+	bool isGatherDownstreamOfTrigger = false;
+	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end() && ! isGatherDownstreamOfTrigger; ++i)
+		if (isNodeDownstreamOfTrigger(*i, trigger) && isGather(*i, trigger))
+			isGatherDownstreamOfTrigger = true;
+
+	// Wait for the nodes directly downstream of the trigger port —
+	// or, if the trigger scatters the event and there's a gather downstream, wait for all nodes downstream.
+	vector<VuoCompilerNode *> orderedTriggerOutputNodes;
+	set<VuoCompilerTriggerEdge *> triggerEdges = triggerEdgesForTrigger[trigger];
+	if (! (isGatherDownstreamOfTrigger && triggerEdges.size() > 1))
+	{
+		set<VuoCompilerNode *> triggerOutputNodes;
+		for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
+		{
+			VuoCompilerTriggerEdge *edge = *i;
+			triggerOutputNodes.insert( edge->getToNode() );
+		}
+		orderedTriggerOutputNodes = sortNodes(triggerOutputNodes);
+	}
+	else
+	{
+		for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
+			if (isNodeDownstreamOfTrigger(*i, trigger))
+				orderedTriggerOutputNodes.push_back(*i);
+	}
+	generateWaitForNodes(module, triggerWorker, triggerBlock, orderedTriggerOutputNodes, eventIdValueInTriggerWorker);
 
 	// Handle the trigger port value having changed.
 	Value *triggerDataValue = triggerAction->generateDataValueDidChange(module, triggerBlock, triggerWorker);
@@ -2254,7 +2536,6 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 	generateSendTriggerPortValueChangedCall(triggerBlock, trigger, triggerDataValue);
 
 	// Transmit data and events along each of the trigger's cables.
-	set<VuoCompilerTriggerEdge *> triggerEdges = triggerEdgesForTrigger[trigger];
 	for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
 	{
 		VuoCompilerTriggerEdge *edge = *i;
@@ -2264,16 +2545,21 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 
 	// For each chain downstream of the trigger...
 	vector<VuoCompilerChain *> chains = chainsForTrigger[trigger];
+
+	// Create a dispatch group for the chain.
+	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+		chain->generateAllocationForDispatchGroup(module, triggerBlock, trigger->getIdentifier());
+		chain->generateInitializationForDispatchGroup(module, triggerBlock);
+	}
+
 	set<VuoCompilerNode *> scheduledNodes;
 	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
 	{
 		VuoCompilerChain *chain = *i;
 
-		// Schedule the following:
-		Function *chainWorker = chain->generateSubmissionForDispatchGroup(module, triggerBlock);
-		BasicBlock *chainSetupBlock = BasicBlock::Create(module->getContext(), "chainSetupBlock", chainWorker, 0);
-
-		// Wait for any chains directly upstream to complete.
+		vector<VuoCompilerChain *> upstreamChains;
 		vector<VuoCompilerNode *> chainNodes = chain->getNodes();
 		VuoCompilerNode *firstNodeInThisChain = chainNodes.front();
 		for (vector<VuoCompilerChain *>::iterator j = chains.begin(); j != chains.end(); ++j)
@@ -2285,48 +2571,97 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 
 			VuoCompilerNode *lastNodeInOtherChain = otherChain->getNodes().back();
 			if (edgeExists(lastNodeInOtherChain, firstNodeInThisChain, trigger))
-				otherChain->generateWaitForDispatchGroup(module, chainSetupBlock);
+				upstreamChains.push_back(otherChain);
 		}
 
+
+		// Schedule the following:
+		Function *chainWorker = chain->generateSubmissionForDispatchGroup(module, triggerBlock, eventIdValueInTriggerWorker, upstreamChains);
+		BasicBlock *chainSetupBlock = BasicBlock::Create(module->getContext(), "chainSetupBlock", chainWorker, 0);
+
+
+		// Wait for any chains directly upstream to complete.
+		chain->generateWaitForUpstreamChains(module, chainWorker, chainSetupBlock);
+
 		// For each node in the chain...
+		Value *eventIdValueInChainWorker = chain->getEventIdValue(module, chainWorker, chainSetupBlock);
 		BasicBlock *prevBlock = chainSetupBlock;
 		for (vector<VuoCompilerNode *>::iterator j = chainNodes.begin(); j != chainNodes.end(); ++j)
 		{
 			VuoCompilerNode *node = *j;
 
-			// If the node was pushed, then...
-			BasicBlock *nodePushedBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			BasicBlock *nodeNotPushedBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			// If the node received an event, then...
+			BasicBlock *nodeExecutionBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			BasicBlock *downstreamWaitBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			BasicBlock *transmissionBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			BasicBlock *signalBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
 			Value *nodePushedCondition = node->generateReceivedEventCondition(prevBlock);
-			BranchInst::Create(nodePushedBlock, nodeNotPushedBlock, nodePushedCondition, prevBlock);
+			BranchInst::Create(nodeExecutionBlock, downstreamWaitBlock, nodePushedCondition, prevBlock);
 
 			// Send telemetry indicating that the node's execution has started.
 			Constant *nodeIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, node->getIdentifier());
 			Function *sendNodeExecutionStartedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionStartedFunction(module);
-			CallInst::Create(sendNodeExecutionStartedFunction, nodeIdentifierValue, "", nodePushedBlock);
+			CallInst::Create(sendNodeExecutionStartedFunction, nodeIdentifierValue, "", nodeExecutionBlock);
 
 			// Call the node's event function.
 			if (debugMode)
-				VuoCompilerCodeGenUtilities::generatePrint(module, nodePushedBlock, node->getBase()->getTitle() + "\n");
+				VuoCompilerCodeGenUtilities::generatePrint(module, nodeExecutionBlock, node->getBase()->getTitle() + "\n");
 			BasicBlock *nodeEventFinalBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			node->generateEventFunctionCall(module, chainWorker, nodePushedBlock, nodeEventFinalBlock);
-			nodePushedBlock = nodeEventFinalBlock;
+			node->generateEventFunctionCall(module, chainWorker, nodeExecutionBlock, nodeEventFinalBlock);
+			nodeExecutionBlock = nodeEventFinalBlock;
 
 			// Send telemetry indicating that the node's execution has finished.
 			Function *sendNodeExecutionFinishedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionFinishedFunction(module);
-			CallInst::Create(sendNodeExecutionFinishedFunction, nodeIdentifierValue, "", nodePushedBlock);
+			CallInst::Create(sendNodeExecutionFinishedFunction, nodeIdentifierValue, "", nodeExecutionBlock);
+
+
+			// Regardless of whether the node received an event...
+			BranchInst::Create(downstreamWaitBlock, nodeExecutionBlock);
+
+			// Wait for the nodes directly downstream of the current node —
+			// or, if the node scatters the event and there's a gather downstream, wait for all nodes downstream.
+			set<VuoCompilerPassiveEdge *> passiveOutEdges = passiveOutEdgesForNode[node];
+			set<VuoCompilerPassiveEdge *> passiveEdgesForCurrentTrigger = passiveEdgesForTrigger[trigger];
+			if (loopEndNodes.find(node) == loopEndNodes.end() || scheduledNodes.find(node) == scheduledNodes.end())
+			{
+				vector<VuoCompilerNode *> orderedOutputNodes;
+				if (! (isGatherDownstreamOfTrigger && isScatter(node, trigger)))
+				{
+					set<VuoCompilerNode *> outputNodes;
+					for (set<VuoCompilerPassiveEdge *>::iterator j = passiveOutEdges.begin(); j != passiveOutEdges.end(); ++j)
+					{
+						VuoCompilerPassiveEdge *edge = *j;
+						if (passiveEdgesForCurrentTrigger.find(edge) == passiveEdgesForCurrentTrigger.end())
+							continue;
+						outputNodes.insert( edge->getToNode() );
+					}
+					orderedOutputNodes = sortNodes(outputNodes);
+				}
+				else
+				{
+					for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
+						if (isNodeDownstreamOfNode(*i, node))
+							orderedOutputNodes.push_back(*i);
+				}
+				generateWaitForNodes(module, chainWorker, downstreamWaitBlock, orderedOutputNodes, eventIdValueInChainWorker);
+			}
+
+
+			// If the node received an event, then...
+			BranchInst::Create(transmissionBlock, signalBlock, nodePushedCondition, downstreamWaitBlock);
 
 			// Send telemetry indicating that the node's output port values, and any connected input port values, may have changed.
-			BasicBlock *nextNodePushedBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			generateSendPortsUpdatedCall(nodePushedBlock, nextNodePushedBlock, node);
-			nodePushedBlock = nextNodePushedBlock;
+			BasicBlock *nextnodePushedBlock2 = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			generateSendPortsUpdatedCall(transmissionBlock, nextnodePushedBlock2, node);
+			transmissionBlock = nextnodePushedBlock2;
 
 			// Transmit data and events along the node's output cables.
-			set<VuoCompilerPassiveEdge *> passiveOutEdges = passiveOutEdgesForNode[node];
 			set <VuoCompilerPort * > outputPortsInPassiveEdges;
 			for (set<VuoCompilerPassiveEdge *>::iterator j = passiveOutEdges.begin(); j != passiveOutEdges.end(); ++j)
 			{
 				VuoCompilerPassiveEdge *edge = *j;
+				if (passiveEdgesForCurrentTrigger.find(edge) == passiveEdgesForCurrentTrigger.end())
+					continue;
 				set <VuoCompilerOutputEventPort * > outputPortsInThisEdge = edge->getOutputPorts();
 				for (set<VuoCompilerOutputEventPort * >::iterator k = outputPortsInThisEdge.begin(); k != outputPortsInThisEdge.end(); ++k)
 				{
@@ -2334,29 +2669,38 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 					outputPortsInPassiveEdges.insert(outputPort);
 				}
 
-				BasicBlock *nextNodePushedBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-				edge->generateTransmission(module, nodePushedBlock, nextNodePushedBlock);
-				nodePushedBlock = nextNodePushedBlock;
+				BasicBlock *nextnodePushedBlock2 = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+				edge->generateTransmission(module, transmissionBlock, nextnodePushedBlock2);
+				transmissionBlock = nextnodePushedBlock2;
 			}
 
 			// Reset the node's event inputs.
-			node->generatePushedReset(nodePushedBlock);
+			node->generatePushedReset(transmissionBlock);
 
-			BranchInst::Create(nodeNotPushedBlock, nodePushedBlock);
 
-			// If this was the last time the node could receive a push from this event, signal the node's semaphore.
+			// Regardless of whether the node received an event...
+			BranchInst::Create(signalBlock, transmissionBlock);
+
+			// If this was the last time this event could reach the node, signal the node's semaphore.
 			if (loopEndNodes.find(node) == loopEndNodes.end() || scheduledNodes.find(node) != scheduledNodes.end())
 			{
 				vector<VuoCompilerNode *> nodeList;
 				nodeList.push_back(node);
-				generateSignalForNodes(module, nodeNotPushedBlock, nodeList);
+				generateSignalForNodes(module, signalBlock, nodeList);
 			}
 			scheduledNodes.insert(node);
 
-			prevBlock = nodeNotPushedBlock;
+			prevBlock = signalBlock;
 		}
 
 		ReturnInst::Create(module->getContext(), prevBlock);
+	}
+
+	// Release the dispatch group for each chain.
+	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+		chain->generateFinalizationForDispatchGroup(module, triggerBlock);
 	}
 
 	BranchInst::Create(triggerReturnBlock, triggerBlock);

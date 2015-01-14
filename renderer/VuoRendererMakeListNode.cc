@@ -26,8 +26,6 @@ const qreal VuoRendererMakeListNode::drawerInteriorHorizontalPadding = VuoRender
 VuoRendererMakeListNode::VuoRendererMakeListNode(VuoNode *baseNode, VuoRendererSignaler *signaler)
 	: VuoRendererNode(baseNode, signaler)
 {
-	setToolTip(nodeClassToolTip);
-
 	vector<VuoPort *> inputPorts = this->getBase()->getInputPorts();
 	for (int i = VuoNodeClass::unreservedInputPortStartIndex; i < inputPorts.size(); ++i)
 		drawerPorts.push_back(inputPorts[i]->getRenderer());
@@ -485,4 +483,14 @@ void VuoRendererMakeListNode::triggerPortCountAdjustment(int portCountDelta, QGr
 
 	if (signaler)
 		signaler->signalInputPortCountAdjustmentRequested(this, portCountDelta, true);
+}
+
+/**
+ * Returns the bounding rect for the node title box.
+ * Since MakeList nodes don't display their titles, return the
+ * entire node boundingRect instead.
+ */
+QRectF VuoRendererMakeListNode::getNodeTitleBoundingRect() const
+{
+	return boundingRect();
 }

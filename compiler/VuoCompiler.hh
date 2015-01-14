@@ -67,11 +67,11 @@ private:
 	void loadModulesIfNeeded(void);
 	void loadModules(string path);
 	void reifyPortTypes(void);
-	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib);
+	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib, string rPath="");
 	set<string> getDependenciesForComposition(const string &compiledCompositionPath);
 	void getDependenciesRecursively(const string &dependency, set<string> &dependencies);
 	void getLinkerInputs(const set<string> &dependencies, set<Module *> &modules, set<string> &libraries, set<string> &frameworks);
-	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib);
+	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="");
 	Module * readModuleFromC(string inputPath);
 	static Module * readModuleFromBitcode(string inputPath);
 	static Module * readModuleFromBitcode(VuoFileUtilities::File *inputFile);
@@ -102,7 +102,7 @@ public:
 	void compileComposition(string inputPath, string outputPath);
 	void compileCompositionString(const string &compositionString, string outputPath);
 	void compileModule(string inputPath, string outputPath);
-	void linkCompositionToCreateExecutable(string inputPath, string outputPath);
+	void linkCompositionToCreateExecutable(string inputPath, string outputPath, string rPath="");
 	void linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath);
 	void linkCompositionToCreateDynamicLibraries(string compiledCompositionPath, string linkedCompositionPath, string &newLinkedResourcePath, vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources);
 	VuoCompilerNodeClass * getNodeClass(const string &id);
@@ -124,9 +124,9 @@ public:
 	void print(void);
 
 	static VuoRunner * newSeparateProcessRunnerFromCompositionFile(string compositionFilePath);
-	static VuoRunner * newSeparateProcessRunnerFromCompositionString(string composition);
+	static VuoRunner * newSeparateProcessRunnerFromCompositionString(string composition, string workingDirectory);
 	static VuoRunner * newCurrentProcessRunnerFromCompositionFile(string compositionFilePath);
-	static VuoRunner * newCurrentProcessRunnerFromCompositionString(string composition);
+	static VuoRunner * newCurrentProcessRunnerFromCompositionString(string composition, string workingDirectory);
 };
 
 

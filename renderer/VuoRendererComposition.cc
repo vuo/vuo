@@ -11,6 +11,7 @@
 
 #include "VuoRendererComposition.hh"
 
+#include "VuoCompiler.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerGraphvizParser.hh"
@@ -30,6 +31,8 @@
 #include "VuoRendererFonts.hh"
 
 #include "VuoPort.hh"
+
+#include <sys/stat.h>
 
 #ifdef MAC
 #include <QtMacExtras/QMacFunctions>
@@ -883,4 +886,202 @@ void VuoRendererComposition::createAutoreleasePool(void)
 	IMP poolNew = method_getImplementation(poolNewMethod);
 	poolNew((id)poolClass, method_getName(poolNewMethod));
 #endif
+}
+
+/**
+ * Returns a string representation of the composition (to save its current state).
+ */
+string VuoRendererComposition::takeSnapshot(void)
+{
+	return (getBase()->hasCompiler()? getBase()->getCompiler()->getGraphvizDeclaration() : NULL);
+}
+
+/**
+ * Exports the composition as an OS X .app bundle.
+ *
+ * @param[in] savePath The path where the .app is to be saved.
+ * @param[in] compiler The compiler to be used to generate the composition executable.
+ * @param[out] errString The error message resulting from the export process, if any.
+ * @return An @c appExportResult value detailing the outcome of the export attempt.
+ */
+VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const QString &savePath, VuoCompiler *compiler, string &errString)
+{
+	// Set up the directory structure for the app bundle in a temporary location.
+	string tmpAppPath = createAppBundleDirectoryStructure();
+
+	// Generate and bundle the composition executable.
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(savePath.toUtf8().constData(), dir, file, ext);
+	string buildErrString = "";
+	if (!bundleExecutable(compiler, tmpAppPath + "/Contents/MacOS/" + file, buildErrString))
+	{
+		errString = buildErrString;
+		return exportBuildFailure;
+	}
+
+	// Bundle the essential components of Vuo.framework.
+	string sourceVuoFrameworkPath = compiler->getVuoFrameworkPath().c_str();
+	string targetVuoFrameworkPath = tmpAppPath + "/Contents/Frameworks/Vuo.framework/Versions/" + VUO_VERSION_STRING;
+	bundleVuoSubframeworks(sourceVuoFrameworkPath, targetVuoFrameworkPath);
+	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Modules", targetVuoFrameworkPath + "/Modules", "dylib");
+	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Licenses", targetVuoFrameworkPath + "/Licenses");
+
+	// Move the generated app bundle to the desired save path.
+	bool saveSucceeded = (! rename(tmpAppPath.c_str(), savePath.toUtf8().constData()));
+	if (!saveSucceeded)
+		return exportSaveFailure;
+
+	return exportSuccess;
+}
+
+/**
+ * Sets up the directory structure for an .app bundle in a temporary location.
+ *
+ * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ * @return The path of the temporary .app bundle.
+ */
+string VuoRendererComposition::createAppBundleDirectoryStructure()
+{
+	string appPath = VuoFileUtilities::makeTmpDir("VuoExportedApp");
+
+	string contentsPath = appPath + "/Contents";
+	mkdir(contentsPath.c_str(), 0755);
+
+	string macOSPath = contentsPath + "/MacOS";
+	mkdir(macOSPath.c_str(), 0755);
+
+	string resourcesPath = contentsPath + "/Resources";
+	mkdir(resourcesPath.c_str(), 0755);
+
+	string frameworksPath = contentsPath + "/Frameworks";
+	mkdir(frameworksPath.c_str(), 0755);
+
+	string vuoFrameworkPath = frameworksPath + "/Vuo.framework";
+	mkdir(vuoFrameworkPath.c_str(), 0755);
+
+	string vuoFrameworksPathVersions = vuoFrameworkPath + "/Versions";
+	mkdir(vuoFrameworksPathVersions.c_str(), 0755);
+
+	string vuoFrameworksPathVersionsCurrent = vuoFrameworksPathVersions + "/" + VUO_VERSION_STRING;
+	mkdir(vuoFrameworksPathVersionsCurrent.c_str(), 0755);
+
+	string vuoFrameworksPathVersionsCurrentFrameworks = vuoFrameworksPathVersionsCurrent + "/Frameworks";
+	mkdir(vuoFrameworksPathVersionsCurrentFrameworks.c_str(), 0755);
+
+	string vuoFrameworksPathVersionsCurrentModules = vuoFrameworksPathVersionsCurrent + "/Modules";
+	mkdir(vuoFrameworksPathVersionsCurrentModules.c_str(), 0755);
+
+	string vuoFrameworksPathVersionsCurrentLicenses = vuoFrameworksPathVersionsCurrent + "/Licenses";
+	mkdir(vuoFrameworksPathVersionsCurrentLicenses.c_str(), 0755);
+
+	return appPath;
+}
+
+/**
+ * Compiles and links this composition to create an executable.
+ *
+ * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ * @param[in] targetExecutablePath The path where the executable is to be saved.
+ * @param[out] errString The error message resulting from the build process, if any.
+ * @return @c true on success, @c false on failure.
+ */
+bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString)
+{
+	// Generate the executable.
+	try
+	{
+		VuoCompilerComposition *compiledCompositionToExport = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(takeSnapshot(), compiler);
+		string pathOfCompiledCompositionToExport = VuoFileUtilities::makeTmpFile(compiledCompositionToExport->getBase()->getName(), "bc");
+
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(compiledCompositionToExport, compiler);
+		compiler->compileComposition(generator, pathOfCompiledCompositionToExport);
+
+		string rPath = "@loader_path/../Frameworks";
+		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, rPath);
+		remove(pathOfCompiledCompositionToExport.c_str());
+	}
+
+	catch (const runtime_error &e)
+	{
+		errString = e.what();
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Copies the contents of the directory from the Vuo framework located at @c sourceVuoFrameworkPath
+ * to the directory within the Vuo framework located at @c targetVuoFrameworkPath.
+ * Assumes that these directories exist already.
+ *
+ * If @c onlyCopyExtension is emptystring, all files are copied.
+ * Otherwise, only files with the specified extension are copied.
+ *
+ * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ */
+void VuoRendererComposition::bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension)
+{
+	QDir sourceVuoFrameworkDir(sourceVuoFrameworkPath.c_str());
+	QDir targetVuoFrameworkDir(targetVuoFrameworkPath.c_str());
+
+	if (sourceVuoFrameworkDir.exists())
+	{
+		QStringList vuoFrameworkModulesList(sourceVuoFrameworkDir.entryList(QDir::Files|QDir::Readable));
+
+		// Vuo.framework/Modules/<topLevelFiles>
+		foreach (QString vuoFrameworkModuleName, vuoFrameworkModulesList)
+		{
+			string dir, file, extension;
+			VuoFileUtilities::splitPath(vuoFrameworkModuleName.toUtf8().constData(), dir, file, extension);
+
+			if (!onlyCopyExtension.length() || extension == onlyCopyExtension)
+				QFile::copy(sourceVuoFrameworkDir.filePath(vuoFrameworkModuleName),
+							targetVuoFrameworkDir.filePath(vuoFrameworkModuleName));
+		}
+	}
+}
+
+/**
+ * Copies the essential contents of the Vuo subframeworks from the Vuo framework located at
+ * @c sourceVuoFrameworkPath to the Vuo framework located at @c targetVuoFrameworkPath.
+ * Assumes that the "Frameworks" directory exists within the source and target directories already.
+ *
+ * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ */
+void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath)
+{
+	QDir sourceVuoSubframeworksPath((sourceVuoFrameworkPath + "/Frameworks").c_str());
+	QDir targetVuoSubframeworksPath((targetVuoFrameworkPath + "/Frameworks").c_str());
+
+	set<string> subframeworksToExclude;
+	subframeworksToExclude.insert("CRuntime.framework");
+	subframeworksToExclude.insert("VuoRuntime.framework");
+	subframeworksToExclude.insert("clang.framework");
+	subframeworksToExclude.insert("llvm.framework");
+	subframeworksToExclude.insert("zmq.framework");
+
+	if (sourceVuoSubframeworksPath.exists())
+	{
+		QStringList subframeworkDirList(sourceVuoSubframeworksPath.entryList(QDir::Dirs|QDir::Readable|QDir::NoDotAndDotDot));
+		foreach (QString subframeworkDirName, subframeworkDirList)
+		{
+			if (subframeworksToExclude.find(subframeworkDirName.toUtf8().constData()) == subframeworksToExclude.end())
+			{
+				// Vuo.framework/Frameworks/<x>.framework
+				QDir targetVuoSubframeworkPath(targetVuoSubframeworksPath.filePath(subframeworkDirName));
+				mkdir(targetVuoSubframeworkPath.absolutePath().toUtf8().constData(), 0755);
+
+				QDir sourceVuoSubframeworkPath(sourceVuoSubframeworksPath.filePath(subframeworkDirName));
+				QStringList subframeworkDirContentsList(sourceVuoSubframeworkPath.entryList(QDir::Files|QDir::Readable));
+
+				// Vuo.framework/Frameworks/<x>.framework/<topLevelFiles>
+				foreach (QString subframeworkTopLevelFile, subframeworkDirContentsList)
+				{
+					QFile::copy(sourceVuoSubframeworkPath.filePath(subframeworkTopLevelFile),
+								targetVuoSubframeworkPath.filePath(subframeworkTopLevelFile));
+				}
+			}
+		}
+	}
 }
