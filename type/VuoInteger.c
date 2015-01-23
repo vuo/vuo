@@ -2,16 +2,14 @@
  * @file
  * VuoInteger implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "type.h"
 #include "VuoInteger.h"
+#include <limits.h>
 
 /// @{
 #ifdef VUO_COMPILER
@@ -52,4 +50,34 @@ json_object * VuoInteger_jsonFromValue(const VuoInteger value)
 char * VuoInteger_summaryFromValue(const VuoInteger value)
 {
 	return VuoInteger_stringFromValue(value);
+}
+
+/**
+ * Returns the minimum of an array of terms, or 0 if the array is empty.
+ */
+VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount)
+{
+	if (termsCount == 0)
+		return 0;
+
+	VuoInteger min = LONG_MAX;
+	for (unsigned long i = 0; i < termsCount; ++i)
+		min = MIN(min, terms[i]);
+
+	return min;
+}
+
+/**
+ * Returns the maximum of an array of terms, or 0 if the array is empty.
+ */
+VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount)
+{
+	if (termsCount == 0)
+		return 0;
+
+	VuoInteger max = LONG_MIN;
+	for (unsigned long i = 0; i < termsCount; ++i)
+		max = MAX(max, terms[i]);
+
+	return max;
 }

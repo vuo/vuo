@@ -2,7 +2,7 @@
  * @file
  * VuoRendererComposition implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -618,6 +618,10 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 	VuoPort * typecastInPort = rn->getBase()->getInputPorts()[VuoNodeClass::unreservedInputPortStartIndex];
 	VuoPort * typecastOutPort = rn->getBase()->getOutputPorts()[VuoNodeClass::unreservedOutputPortStartIndex];
 
+	// Don't try to collapse nodes that don't qualify as typecasts.
+	if (!rn->getBase()->isTypecastNode())
+		return NULL;
+
 	// Don't try to re-collapse typecasts that are already collapsed.
 	VuoRendererPort *typecastParent = typecastInPort->getRenderer()->getTypecastParentPort();
 	if (typecastParent)
@@ -922,6 +926,10 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 		return exportBuildFailure;
 	}
 
+	// Generate and bundle the Info.plist.
+	string plist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>NSHighResolutionCapable</key><true/></dict></plist>";
+	VuoFileUtilities::writeStringToFile(plist, tmpAppPath + "/Contents/Info.plist");
+
 	// Bundle the essential components of Vuo.framework.
 	string sourceVuoFrameworkPath = compiler->getVuoFrameworkPath().c_str();
 	string targetVuoFrameworkPath = tmpAppPath + "/Contents/Frameworks/Vuo.framework/Versions/" + VUO_VERSION_STRING;
@@ -996,8 +1004,7 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 		VuoCompilerComposition *compiledCompositionToExport = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(takeSnapshot(), compiler);
 		string pathOfCompiledCompositionToExport = VuoFileUtilities::makeTmpFile(compiledCompositionToExport->getBase()->getName(), "bc");
 
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(compiledCompositionToExport, compiler);
-		compiler->compileComposition(generator, pathOfCompiledCompositionToExport);
+		compiler->compileComposition(compiledCompositionToExport, pathOfCompiledCompositionToExport);
 
 		string rPath = "@loader_path/../Frameworks";
 		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, rPath);

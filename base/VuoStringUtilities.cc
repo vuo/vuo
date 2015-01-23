@@ -2,11 +2,12 @@
  * @file
  * VuoStringUtilities implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
+#include <sstream>
 #include "VuoStringUtilities.hh"
 
 extern "C" {
@@ -58,6 +59,52 @@ string VuoStringUtilities::replaceAll(string wholeString, char originalChar, cha
 		pos = pos + 1;
 	}
 	return outString;
+}
+
+/**
+ * Replaces all instances of @a originalSubstring with @a replacementSubstring in @a wholeString.
+ *
+ * Returns the number of instances replaced.
+ */
+size_t VuoStringUtilities::replaceAll(string &wholeString, string originalSubstring, string replacementSubstring)
+{
+	size_t replacementCount = 0;
+	size_t startPos = 0;
+	while ((startPos = wholeString.find(originalSubstring, startPos)) != string::npos)
+	{
+		wholeString.replace(startPos, originalSubstring.length(), replacementSubstring);
+		startPos += replacementSubstring.length();
+		++replacementCount;
+	}
+	return replacementCount;
+}
+
+/**
+ * Splits @a wholeString into parts, as separated by @a delimiter.
+ */
+vector<string> VuoStringUtilities::split(string wholeString, char delimiter)
+{
+	vector<string> tokens;
+	istringstream iss(wholeString);
+	string token;
+	while( getline(iss, token, delimiter) )
+		tokens.push_back(token);
+	return tokens;
+}
+
+/**
+ * Combines @a partialStrings, separated by @a delimiter, into one string.
+ */
+string VuoStringUtilities::join(vector<string> partialStrings, char delimiter)
+{
+	string wholeString;
+	for (vector<string>::iterator i = partialStrings.begin(); i != partialStrings.end(); )
+	{
+		wholeString += *i;
+		if (++i != partialStrings.end())
+			wholeString += delimiter;
+	}
+	return wholeString;
 }
 
 /**
@@ -136,7 +183,9 @@ string VuoStringUtilities::transcodeFromGraphvizIdentifier(const string &graphvi
 }
 
 /**
- * Converts @c markdownString to HTML.
+ * Converts @c markdownString (a Markdown document) to HTML.
+ *
+ * The returned HTML includes a paragraph wrapper around each line of text.
  */
 string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString)
 {
@@ -144,6 +193,19 @@ string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString
 	mkd_compile(doc, 0);
 	char *html;
 	mkd_document(doc, &html);
+	string htmlString(html);
+	return htmlString;
+}
+
+/**
+ * Converts @c markdownString (a single line of Markdown text) to HTML.
+ *
+ * The returned HTML does not include a paragraph wrapper.
+ */
+string VuoStringUtilities::generateHtmlFromMarkdownLine(const string &markdownString)
+{
+	char *html;
+	mkd_line((char *)markdownString.c_str(), markdownString.length(), &html, 0);
 	string htmlString(html);
 	return htmlString;
 }

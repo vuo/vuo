@@ -1,0 +1,27 @@
+/**
+* @file
+* This composition does...
+*
+* @copyright Copyright © 2014 [jmcc](https://vuo.org/user/14)
+* @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+*/
+
+digraph G
+{
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="65,238"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="277,278" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/6.jpg\""];
+GetImage3 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="279,403" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/2.jpg\""];
+ReceiveImageViaSyphon2 [type="vuo.syphon.receive" version="1.0.0" label="Receive Image via Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="131,539" _serverDescription=""];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="425,397"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="424,507"];
+RenderImageToWindow3 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="424,624"];
+RenderImagetoWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="420,278"];
+
+FireonStart:started -> GetImage3:refresh;
+FireonStart:started -> GetImage:refresh;
+FireonStart:started -> ReceiveImageViaSyphon2:refresh;
+GetImage3:image -> RenderImageToWindow:image;
+GetImage:image -> RenderImagetoWindow:image;
+ReceiveImageViaSyphon2:receivedImage -> RenderImageToWindow2:image;
+ReceiveImageViaSyphon2:receivedImage -> RenderImageToWindow3:image;
+}

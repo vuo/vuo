@@ -148,7 +148,6 @@ MODULE_OBJECTS += \
 	$$JSONC_ROOT/lib/libjson.a \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
 	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
-	$$FREETYPE_ROOT/lib/libfreetype.a \
 	$$CURL_ROOT/lib/libcurl.a \
 	$$RTMIDI_ROOT/lib/librtmidi.a \
 	$$FFMPEG_ROOT/lib/libavcodec.dylib \
@@ -160,6 +159,7 @@ MODULE_OBJECTS += \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
 	$$LIBUSB_ROOT/lib/libusb.dylib \
 	$$LIBFREENECT_ROOT/lib/libfreenect.dylib \
+	$$OSCPACK_ROOT/lib/liboscpack.a \
 	$$ASSIMP_ROOT/lib/libassimp.a
 !equals(MAC_VERSION, "10.6") {
 	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib

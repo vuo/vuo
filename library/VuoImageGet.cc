@@ -2,7 +2,7 @@
  * @file
  * VuoImageGet implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -60,10 +60,7 @@ VuoImage VuoImage_get(const char *imageURL)
 	void *data;
 	unsigned int dataLength;
 	if (!VuoUrl_get(imageURL, &data, &dataLength))
-	{
-		fprintf(stderr, "VuoImage_get() Error: Didn't get any image data.\n");
 		return NULL;
-	}
 
 	// Decode the memory buffer into a straightforward array of BGRA pixels
 	FIBITMAP *dib;

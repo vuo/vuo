@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerModule interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -34,12 +34,12 @@ private slots:
 
 	void testModuleSymbolsRenamed()
 	{
-		string testClassID = "vuo.math.add.integer";
+		string testClassID = "vuo.math.round";
 		VuoCompilerNodeClass *testClass = compiler->getNodeClass(testClassID);
 		Module *module = testClass->getModule();
 		string nodeEventFuncName = testClass->nameForGlobal("nodeEvent");
 		Function *functionByNameFromNodeClass = module->getFunction(nodeEventFuncName);
-		Function *functionByLiteralName = module->getFunction("vuo_math_add_integer__nodeEvent");
+		Function *functionByLiteralName = module->getFunction("vuo_math_round__nodeEvent");
 		QVERIFY(functionByNameFromNodeClass != NULL);
 		QVERIFY(functionByNameFromNodeClass == functionByLiteralName);
 	}
@@ -51,7 +51,7 @@ private slots:
 
 		{
 			vector<string> dependencies;
-			QTest::newRow("Add does not have dependencies.") << "vuo.math.add.integer" << dependencies;
+			QTest::newRow("Add does not have dependencies.") << "vuo.math.add.VuoInteger" << dependencies;
 		}
 
 		{
@@ -120,7 +120,7 @@ private slots:
 		QTest::addColumn< bool >("shouldBeCompatibleWith108");
 		QTest::addColumn< bool >("shouldBeCompatibleWith109");
 
-		QTest::newRow("any") << "vuo.math.add.integer" << true << true << true << true << true;
+		QTest::newRow("any") << "vuo.math.add.VuoInteger" << true << true << true << true << true;
 		QTest::newRow("Mac OS X 10.6") << "vuo.test.compatibleWith106" << false << true << false << false << false;
 		QTest::newRow("Mac OS X 10.7 and 10.8") << "vuo.test.compatibleWith107And108" << false << false << true << true << false;
 		QTest::newRow("Mac OS X 10.7 and up") << "vuo.test.compatibleWith107AndUp" << false << false << true << true << true;

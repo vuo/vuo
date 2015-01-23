@@ -3,11 +3,8 @@ CONFIG += VuoNodeSet
 
 include(../../vuo.pri)
 
-NODE_SOURCES += \
-	vuo.noise.gradient.1d.c \
-	vuo.noise.gradient.2d.c \
-	vuo.noise.gradient.3d.c \
-	vuo.noise.gradient.4d.c
+GENERIC_NODE_SOURCES += \
+	vuo.noise.gradient.c
 
 NODE_LIBRARY_SOURCES += \
 	VuoGradientNoiseCommon.c

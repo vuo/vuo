@@ -2,7 +2,7 @@
  * @file
  * VuoImage implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -140,7 +140,7 @@ VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int 
  *
  * @threadAny
  *
- * @param pixels Pointer the a buffer of pixel data.  8 bits per channel.  Row-major, starting at the bottom (flipped).  Zero stride.
+ * @param pixels Pointer the a buffer of pixel data.  8 bits per channel.  Row-major, starting at the bottom (flipped).  Zero stride.  Premultiplied alpha.
  * @param format An OpenGL format constant.  Supported formats include:
  *    - @c GL_RGB (24 bits per pixel)
  *    - @c GL_RGBA (32 bits per pixel)

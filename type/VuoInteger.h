@@ -2,7 +2,7 @@
  * @file
  * vuo.integer C type definition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -26,6 +26,9 @@ typedef signed long VuoInteger;
 VuoInteger VuoInteger_valueFromJson(struct json_object * js);
 struct json_object * VuoInteger_jsonFromValue(const VuoInteger value);
 char * VuoInteger_summaryFromValue(const VuoInteger value);
+
+VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount);
+VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount);
 
 /// @{
 /**

@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -46,7 +46,9 @@ public:
 	void extendedHoverEnterEvent(bool cableDragUnderway=false);
 	void extendedHoverMoveEvent(bool cableDragUnderway=false);
 	void extendedHoverLeaveEvent();
-	bool canConnectDirectlyTo(VuoRendererPort *toPort);
+	bool canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort);
+	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort);
+	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, VuoRendererPort **portToSpecialize, string &specializedTypeName);
 	bool isConnectedTo(VuoRendererPort *toPort);
 	bool getInput(void) const;
 	bool getOutput(void) const;

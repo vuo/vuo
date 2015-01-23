@@ -4,6 +4,7 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/base \
 	-I$$ROOT/library \
 	-I$$ROOT/node \
+	-I$$ROOT/node/vuo.font \
 	-I$$ROOT/node/vuo.midi \
 	-I$$ROOT/node/vuo.movie \
 	-I$$ROOT/runtime \
@@ -40,6 +41,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoImage.o \
 	$$ROOT/type/VuoInteger.o \
+	$$ROOT/node/vuo.font/VuoFont.o \
 	$$ROOT/node/vuo.midi/VuoMidiNote.o \
 	$$ROOT/node/vuo.movie/VuoMovie.o \
 	$$ROOT/type/VuoPoint2d.o \

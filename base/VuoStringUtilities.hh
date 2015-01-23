@@ -2,7 +2,7 @@
  * @file
  * VuoStringUtilities interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -20,13 +20,15 @@ public:
 	static bool endsWith(string wholeString, string ending);
 	static string substrAfter(string wholeString, string beginning);
 	static string replaceAll(string wholeString, char originalChar, char replacementChar);
+	static size_t replaceAll(string &wholeString, string originalSubstring, string replacementSubstring);
+	static vector<string> split(string wholeString, char delimiter);
+	static string join(vector<string> partialStrings, char delimiter);
+	static bool isValidCharInIdentifier(char ch);
 	static string transcodeToIdentifier(string str);
 	static string transcodeToGraphvizIdentifier(const string &originalString);
 	static string transcodeFromGraphvizIdentifier(const string &graphvizIdentifier);
 	static string generateHtmlFromMarkdown(const string &markdownString);
-
-private:
-	static bool isValidCharInIdentifier(char ch);
+	static string generateHtmlFromMarkdownLine(const string &markdownString);
 };
 
 

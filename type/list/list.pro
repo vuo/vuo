@@ -18,9 +18,9 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoBlendMode:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
-		VuoCountWrapMode:0 \
 		VuoCurve:0 \
 		VuoCurveDomain:0 \
+		VuoFont:2 \
 		VuoFrameRequest:0 \
 		VuoGradientNoise:0 \
 		VuoImage:1 \
@@ -36,6 +36,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoMidiNote:0 \
 		VuoMouseButtonAction:0 \
 		VuoNoise:0 \
+		VuoOscMessage:2 \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \
@@ -48,9 +49,11 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoTransform2d:0 \
 		VuoVertices:2 \
 		VuoWave:0 \
+		VuoWrapMode:0 \
 	)
 
 TYPE_INCLUDEPATH = \
+	$$ROOT/node/vuo.font \
 	$$ROOT/node/vuo.image \
 	$$ROOT/node/vuo.layer \
 	$$ROOT/node/vuo.leap \
@@ -58,6 +61,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.midi \
 	$$ROOT/node/vuo.movie \
 	$$ROOT/node/vuo.noise \
+	$$ROOT/node/vuo.osc \
 	$$ROOT/node/vuo.syphon
 
 include(../../module.pri)

@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerNodeClass interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -12,11 +12,14 @@
 #include "VuoCompiler.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
 
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(vector<string>);
+Q_DECLARE_METATYPE(set<string>);
 Q_DECLARE_METATYPE(VuoPortClass::EventBlocking);
+Q_DECLARE_METATYPE(VuoGenericType::Compatibility);
 
 
 /**
@@ -63,7 +66,7 @@ private slots:
 			vector<string> outputNames;
 			outputNames.push_back("done");
 			outputNames.push_back("difference");
-			QTest::newRow("Node class without explicit event blocking") << "vuo.math.subtract.integer" << inputNames << outputNames;
+			QTest::newRow("Node class without explicit event blocking") << "vuo.math.subtract.VuoInteger" << inputNames << outputNames;
 		}
 
 		{
@@ -121,7 +124,7 @@ private slots:
 		QTest::addColumn< QString >("inputPortName");
 		QTest::addColumn< QString >("expectedDefaultValue");
 
-		QTest::newRow("non-zero integer") << "vuo.math.divide.integer" << "b" << "1";
+		QTest::newRow("non-zero integer") << "vuo.math.divide.VuoInteger" << "b" << "1";
 		QTest::newRow("UTF-8 string") << "vuo.test.unicodeDefaultString" << "string" << "\"画\"";
 		QTest::newRow("JSON object") << "vuo.color.get.hsl" << "color" << "{\"r\":1,\"g\":1,\"b\":1,\"a\":1}";
 	}
@@ -172,11 +175,11 @@ private slots:
 		QTest::addColumn< bool >("isInputPort");
 		QTest::addColumn< bool >("isLoweredToTwoParameters");
 
-		QTest::newRow("Not a struct port") << "vuo.point.make.2d" << "x" << "VuoReal" << true << false;
-		QTest::newRow("VuoPoint2d output port") << "vuo.point.make.2d" << "point" << "VuoPoint2d" << false << false;
-		QTest::newRow("VuoPoint2d input port") << "vuo.point.get.2d" << "point" << "VuoPoint2d" << true << false;
-		QTest::newRow("VuoPoint3d input port") << "vuo.point.get.3d" << "point" << "VuoPoint3d" << true << true;
-		QTest::newRow("VuoPoint4d input port") << "vuo.point.get.4d" << "point" << "VuoPoint4d" << true << true;
+		QTest::newRow("Not a struct port") << "vuo.point.make.VuoPoint2d" << "x" << "VuoReal" << true << false;
+		QTest::newRow("VuoPoint2d output port") << "vuo.point.make.VuoPoint2d" << "point" << "VuoPoint2d" << false << false;
+		QTest::newRow("VuoPoint2d input port") << "vuo.point.get.VuoPoint2d" << "point" << "VuoPoint2d" << true << false;
+		QTest::newRow("VuoPoint3d input port") << "vuo.point.get.VuoPoint3d" << "point" << "VuoPoint3d" << true << true;
+		QTest::newRow("VuoPoint4d input port") << "vuo.point.get.VuoPoint4d" << "point" << "VuoPoint4d" << true << true;
 	}
 	void testStructPorts()
 	{
@@ -204,6 +207,141 @@ private slots:
 			QVERIFY(dataClass->isLoweredToTwoParameters() == isLoweredToTwoParameters);
 		}
 	}
+
+	void testGenericPorts_data()
+	{
+		QTest::addColumn< QString >("nodeClassName");
+		QTest::addColumn< vector<string> >("expectedUniqueGenericTypes");
+		QTest::addColumn< vector<string> >("expectedPortTypes");
+
+		{
+			vector<string> expectedUniqueGenericTypes;
+			QTest::newRow("0 generic types") << "vuo.image.filter.blend" << expectedUniqueGenericTypes;
+		}
+
+		{
+			vector<string> expectedUniqueGenericTypes;
+			expectedUniqueGenericTypes.push_back("VuoGenericType1");
+			QTest::newRow("1 generic type in multiple ports") << "vuo.hold" << expectedUniqueGenericTypes;
+		}
+
+		{
+			vector<string> expectedUniqueGenericTypes;
+			expectedUniqueGenericTypes.push_back("VuoGenericType1");
+			QTest::newRow("VuoList and singleton of generic type") << "vuo.list.get" << expectedUniqueGenericTypes;
+		}
+
+		{
+			vector<string> expectedUniqueGenericTypes;
+			expectedUniqueGenericTypes.push_back("VuoGenericType1");
+			QTest::newRow("VuoList of generic type (without singleton)") << "vuo.list.count" << expectedUniqueGenericTypes;
+		}
+
+		{
+			vector<string> expectedUniqueGenericTypes;
+			expectedUniqueGenericTypes.push_back("VuoGenericType1");
+			expectedUniqueGenericTypes.push_back("VuoGenericType2");
+			QTest::newRow("2 generic types") << "vuo.osc.message.get.2" << expectedUniqueGenericTypes;
+		}
+
+		{
+			vector<string> expectedUniqueGenericTypes;
+			expectedUniqueGenericTypes.push_back("VuoGenericType9");
+			expectedUniqueGenericTypes.push_back("VuoGenericType10");
+			QTest::newRow("Generic type with multiple digits in its suffix") << "vuo.test.multiDigitGenericTypes" << expectedUniqueGenericTypes;
+		}
+	}
+	void testGenericPorts()
+	{
+		QFETCH(QString, nodeClassName);
+		QFETCH(vector<string>, expectedUniqueGenericTypes);
+
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+
+		vector<string> actualGenericTypeNames = VuoCompilerSpecializedNodeClass::getGenericTypeNamesFromPorts(nodeClass);
+		for (size_t i = 0; i < expectedUniqueGenericTypes.size(); ++i)
+		{
+			QVERIFY(i < actualGenericTypeNames.size());
+			QCOMPARE(QString::fromStdString(expectedUniqueGenericTypes[i]), QString::fromStdString(actualGenericTypeNames[i]));
+		}
+		QCOMPARE(expectedUniqueGenericTypes.size(), actualGenericTypeNames.size());
+	}
+
+	void testGenericPortCompatibility_data()
+	{
+		QTest::addColumn< QString >("nodeClassName");
+		QTest::addColumn< QString >("portName");
+		QTest::addColumn< QString >("expectedType");
+		QTest::addColumn< VuoGenericType::Compatibility >("expectedCompatibility");
+		QTest::addColumn< set<string> >("expectedCompatibleTypes");
+
+		{
+			set<string> expectedCompatibleTypes;
+			QTest::newRow("Generic singleton compatible with any") << "vuo.list.get" << "item" << "VuoGenericType1" << VuoGenericType::anyType << expectedCompatibleTypes;
+		}
+
+		{
+			set<string> expectedCompatibleTypes;
+			QTest::newRow("Generic list compatible with any") << "vuo.list.get" << "list" << "VuoList_VuoGenericType1" << VuoGenericType::anyListType << expectedCompatibleTypes;
+		}
+
+		{
+			set<string> expectedCompatibleTypes;
+			expectedCompatibleTypes.insert("VuoInteger");
+			expectedCompatibleTypes.insert("VuoReal");
+			QTest::newRow("Generic singleton compatible with numeric") << "vuo.math.add" << "sum" << "VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
+		}
+
+		{
+			set<string> expectedCompatibleTypes;
+			expectedCompatibleTypes.insert("VuoList_VuoInteger");
+			expectedCompatibleTypes.insert("VuoList_VuoReal");
+			QTest::newRow("Generic list compatible with numeric") << "vuo.math.add" << "terms" << "VuoList_VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
+		}
+	}
+	void testGenericPortCompatibility()
+	{
+		QFETCH(QString, nodeClassName);
+		QFETCH(QString, portName);
+		QFETCH(QString, expectedType);
+		QFETCH(VuoGenericType::Compatibility, expectedCompatibility);
+		QFETCH(set<string>, expectedCompatibleTypes);
+
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+
+		bool foundPort = false;
+		vector<VuoPortClass *> inputPortClasses = nodeClass->getBase()->getInputPortClasses();
+		vector<VuoPortClass *> outputPortClasses = nodeClass->getBase()->getOutputPortClasses();
+		vector<VuoPortClass *> portClasses;
+		portClasses.insert(portClasses.end(), inputPortClasses.begin(), inputPortClasses.end());
+		portClasses.insert(portClasses.end(), outputPortClasses.begin(), outputPortClasses.end());
+		for (vector<VuoPortClass *>::iterator i = portClasses.begin(); i != portClasses.end(); ++i)
+		{
+			VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>((*i)->getCompiler());
+			if (portClass->getBase()->getName() != portName.toStdString())
+				continue;
+
+			foundPort = true;
+
+			VuoGenericType *type = dynamic_cast<VuoGenericType *>(portClass->getDataVuoType());
+			QCOMPARE(QString::fromStdString(type->getModuleKey()), expectedType);
+
+			VuoGenericType::Compatibility compatibility;
+			set<string> compatibleTypes = type->getCompatibleSpecializedTypes(compatibility);
+
+			QCOMPARE(compatibility, expectedCompatibility);
+
+			for (set<string>::iterator j = compatibleTypes.begin(); j != compatibleTypes.end(); ++j)
+			{
+				string compatibleType = *j;
+				QVERIFY2(expectedCompatibleTypes.find(compatibleType) != expectedCompatibleTypes.end(), compatibleType.c_str());
+			}
+			QCOMPARE(compatibleTypes.size(), expectedCompatibleTypes.size());
+		}
+
+		QVERIFY(foundPort);
+	}
+
 };
 
 QTEST_APPLESS_MAIN(TestVuoCompilerNodeClass)

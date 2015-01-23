@@ -2,23 +2,23 @@
  * @file
  * This composition outputs a count every second.
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-FirePeriodically1 [type="vuo.time.firePeriodically" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-73,82" _seconds="1"];
-Count1 [type="vuo.math.count.integer" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="119,13" _increment="1"];
-ConvertIntegertoText1 [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="459,118" _integer="0"];
-DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="377,82" _writeLine=""];
+ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="459,118"];
+Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="119,13" _increment="1" _setCount="0.000000"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="377,82"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="-73,82" _seconds="1"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedDecrement>publishedDecrement\r" _publishedDecrement="1"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedCount>publishedCount\l"];
 
-FirePeriodically1:fired -> Count1:increment;
 ConvertIntegertoText1:text -> DisplayConsoleWindow:writeLine;
 Count1:count -> ConvertIntegertoText1:integer;
+FirePeriodically1:fired -> Count1:increment;
 PublishedInputs:publishedDecrement -> Count1:decrement;
 Count1:count -> PublishedOutputs:publishedCount;
 }

@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012-2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,7 +10,7 @@
 digraph G
 {
 Hold5 [type="vuo.hold.VuoInteger" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="306.5,150" _initialValue="0" _newValue="0"];
-Subtract2 [type="vuo.math.subtract.integer" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="295.5,249" _a="1" _b="0"];
+Subtract2 [type="vuo.math.subtract.VuoInteger" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="295.5,249" _a="1" _b="0"];
 
 PublishedInputs [type="vuo.in" label="PublishedInputs|<toggle>toggle\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<toggledValue>toggledValue\l"];

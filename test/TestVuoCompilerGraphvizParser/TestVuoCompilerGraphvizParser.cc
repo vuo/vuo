@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerGraphvizParser interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -131,7 +131,7 @@ private slots:
 			vector<string> outputs;
 			outputs.push_back("done");
 			outputs.push_back("count");
-			QTest::newRow("Count node") << "Count1" << "vuo.math.count.integer" << inputs << outputs;
+			QTest::newRow("Count node") << "Count1" << "vuo.math.count.VuoInteger" << inputs << outputs;
 		}
 	}
 	void testDummyNodes()
@@ -224,7 +224,7 @@ private slots:
 				{
 					VuoPort *port = node->getInputPortWithName("b");
 					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(port->getCompiler());
-					QCOMPARE(QString::fromStdString(eventPort->getData()->getInitialValue()), QString("0"));
+					QCOMPARE(QString::fromStdString(eventPort->getData()->getInitialValue()), QString("0.000000"));
 				}
 			}
 		}

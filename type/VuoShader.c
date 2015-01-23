@@ -2,7 +2,7 @@
  * @file
  * VuoShader implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -257,7 +257,7 @@ void VuoShader_setUniformFloat(VuoShader shader, VuoGlContext glContext, const c
 }
 
 /**
- * Sets a @c float uniform value on the specified @c shader.
+ * Sets a @c vec2 uniform value on the specified @c shader.
  *
  * @threadAnyGL
  */
@@ -276,6 +276,46 @@ void VuoShader_setUniformPoint2d(VuoShader shader, VuoGlContext glContext, const
 	glUseProgram(0);
 }
 
+/**
+ * Sets a @c vec3 uniform value on the specified @c shader.
+ *
+ * @threadAnyGL
+ */
+void VuoShader_setUniformPoint3d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint3d value)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	glUseProgram(shader->glProgramName);
+	{
+		GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
+		if (uniform < 0)
+			fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
+		else
+			glUniform3f(uniform, value.x , value.y, value.z);
+	}
+	glUseProgram(0);
+}
+
+/**
+ * Sets a @c vec4 uniform value on the specified @c shader.
+ *
+ * @threadAnyGL
+ */
+void VuoShader_setUniformPoint4d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint4d value)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	glUseProgram(shader->glProgramName);
+	{
+		GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
+		if (uniform < 0)
+			fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
+		else
+			glUniform4f(uniform, value.x , value.y, value.z, value.w);
+	}
+	glUseProgram(0);
+}
+
 static const char * imageFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	uniform sampler2D texture;
@@ -285,6 +325,7 @@ static const char * imageFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	void main()
 	{
 		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
+		color.rgb /= color.a;	// un-premultiply
 		color.a *= alpha;
 		if (color.a < 1./255.)
 			discard;
@@ -413,4 +454,51 @@ void VuoShader_deactivateTextures(VuoShader shader, VuoGlContext glContext)
 		VuoImage image = VuoListGetValueAtIndex_VuoImage(shader->textures, i+1);
 		glBindTexture(image->glTextureTarget, 0);
 	}
+}
+
+/**
+ * Returns a shader that renders a solid @c color.
+ */
+VuoShader VuoShader_makeColorShader(VuoColor color)
+{
+	const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		uniform mat4 projectionMatrix;
+		uniform mat4 modelviewMatrix;
+		attribute vec4 position;
+
+		void main()
+		{
+			gl_Position = projectionMatrix * modelviewMatrix * position;
+		}
+	);
+
+	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		uniform vec4 color;
+
+		void main()
+		{
+			gl_FragColor = color;
+		}
+	);
+
+	VuoShader shader = VuoShader_make("solid color shader", vertexShaderSource, fragmentShaderSource);
+
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		glUseProgram(shader->glProgramName);
+		{
+			GLint colorUniform = glGetUniformLocation(shader->glProgramName, "color");
+			glUniform4f(colorUniform, color.r, color.g, color.b, color.a);
+		}
+		glUseProgram(0);
+
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		glFlushRenderAPPLE();
+
+		VuoGlContext_disuse(cgl_ctx);
+	}
+
+	return shader;
 }

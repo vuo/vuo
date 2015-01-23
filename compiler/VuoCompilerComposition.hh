@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerComposition interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -23,6 +23,9 @@ class VuoCompilerComposition : public VuoBaseDetail<VuoComposition>
 public:
 	VuoCompilerComposition(VuoComposition *baseComposition, VuoCompilerGraphvizParser *parser);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
+	void updateGenericPortTypes(void);
+	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
+	void createReplacementsToUnspecializePort(VuoPort *port, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete);
 	VuoNode * getPublishedInputNode(void);
 	VuoNode * getPublishedOutputNode(void);
 	void setPublishedInputNode(VuoNode *node);
@@ -36,6 +39,10 @@ public:
 private:
 	VuoNode *publishedInputNode;
 	VuoNode *publishedOutputNode;
+	map<unsigned int, bool> genericTypeSuffixUsed;
+
+	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
+	string createFreshGenericTypeName(void);
 	static bool compareGraphvizIdentifiersOfNodes(VuoNode *lhs, VuoNode *rhs);
 	static bool compareGraphvizIdentifiersOfCables(VuoCable *lhs, VuoCable *rhs);
 };

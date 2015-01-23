@@ -2,7 +2,7 @@
  * @file
  * VuoGlContext implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -18,6 +18,9 @@ using namespace std;
 
 #include <dispatch/dispatch.h>
 
+
+static dispatch_once_t VuoGlContextPoolCreated;
+
 /**
  * A process-wide set of mutually-shared OpenGL contexts.
  */
@@ -29,11 +32,9 @@ public:
 	 */
 	static VuoGlContextPool *getPool()
 	{
-		// This will first be called by a nodeInstanceInit() method.
-		// Since those methods are invoked serially, we don't need to worry about
-		// the possibility of multiple threads initializing the singleton simultaneously.
-		if (!singletonInstance)
-			singletonInstance = new VuoGlContextPool();
+		dispatch_once(&VuoGlContextPoolCreated, ^{
+						   singletonInstance = new VuoGlContextPool();
+					   });
 		return singletonInstance;
 	}
 

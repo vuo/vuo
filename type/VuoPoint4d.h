@@ -2,7 +2,7 @@
  * @file
  * VuoPoint4d C type definition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -105,8 +105,8 @@ static inline VuoPoint4d VuoPoint4d_normalize3d(VuoPoint4d a)
 /**
  * Returns the 4D normalization of @c a.
  */
-static inline VuoPoint4d VuoPoint4d_normalize4d(VuoPoint4d a) __attribute__((const));
-static inline VuoPoint4d VuoPoint4d_normalize4d(VuoPoint4d a)
+static inline VuoPoint4d VuoPoint4d_normalize(VuoPoint4d a) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_normalize(VuoPoint4d a)
 {
 	float length = sqrtf(a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
 	VuoPoint4d p =

@@ -2,7 +2,7 @@
  * @file
  * Test graph.
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -15,7 +15,7 @@ Conductor1 [type="vuo.test.conductor" label="Conductor1|<refresh>refresh\l|<trig
 Conductor2 [type="vuo.test.conductor" label="Conductor2|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _triggerInfoIn3="" _nodeTitle="\"Conductor2\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2=""];
 Conductor3 [type="vuo.test.conductor" label="Conductor3|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _triggerInfoIn3="" _nodeTitle="\"Conductor3\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2=""];
 Conductor4 [type="vuo.test.conductor" label="Conductor4|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _triggerInfoIn3="" _nodeTitle="\"Conductor4\"" _triggerInfoIn0="" _triggerInfoIn1="" _triggerInfoIn2=""];
-DiscardDatafromEvent [type="vuo.type.text.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" _dataAndEvent=""];
+DiscardDatafromEvent [type="vuo.type.discardData.VuoText" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" _dataAndEvent=""];
 
 PublishedInputs:start -> TestFirePeriodically1:refresh;
 TestFirePeriodically1:fired -> Conductor1:triggerInfoIn0

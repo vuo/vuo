@@ -1,10 +1,12 @@
 MODULE_INCLUDEPATH = \
+	$$JSONC_ROOT/include \
 	$${ROOT}/library \
 	$${ROOT}/node \
 	$${ROOT}/type \
 	$${ROOT}/type/list \
 	$${ROOT}/runtime
 
+NODE_SOURCES += $$GENERIC_NODE_SOURCES
 VUOCOMPILE_NODE_INCLUDEPATH = \
 	$$MODULE_INCLUDEPATH \
 	$$NODE_INCLUDEPATH
@@ -50,6 +52,10 @@ CLANG_NODE_LIBRARY_INCLUDEPATH = \
 	$$MODULE_INCLUDEPATH \
 	$$NODE_LIBRARY_INCLUDEPATH
 CLANG_NODE_LIBRARY_FLAGS = \
+	-target x86_64-apple-macosx10.6.0 \
+	-fblocks \
+	-fexceptions \
+	-emit-llvm \
 	$$QMAKE_CXXFLAGS_WARN_ON \
 	$$join(CLANG_NODE_LIBRARY_INCLUDEPATH, " -I", "-I") \
 	$$join(DEFINES, " -D", "-D") \
@@ -58,7 +64,16 @@ CLANG_NODE_LIBRARY_FLAGS = \
 node_library.input = NODE_LIBRARY_SOURCES
 node_library.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - -emit-llvm $$QMAKE_CFLAGS_X86_64 $${CLANG_NODE_LIBRARY_FLAGS} ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
 node_library.output = ${QMAKE_FILE_IN_BASE}.bc
-node_library.commands = $$QMAKE_CC -cc1 -triple x86_64-apple-macosx10.6.0 -fblocks -fcxx-exceptions -emit-llvm-bc $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
+node_library.commands = \
+	@if [ "${QMAKE_FILE_EXT}" == ".c" -o "${QMAKE_FILE_EXT}" == ".m" ]; then \
+		echo $$QMAKE_CC $$CLANG_NODE_LIBRARY_FLAGS -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} ; \
+		$$QMAKE_CC $$CLANG_NODE_LIBRARY_FLAGS -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} ; \
+	elif [ "${QMAKE_FILE_EXT}" == ".cc" -o "${QMAKE_FILE_EXT}" == ".mm" ]; then \
+		echo $$QMAKE_CXX $$CLANG_NODE_LIBRARY_FLAGS -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} ; \
+		$$QMAKE_CXX $$CLANG_NODE_LIBRARY_FLAGS -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} ; \
+	else \
+		echo "Error: Unknown file type: ${QMAKE_FILE_IN}" ; \
+	fi
 QMAKE_EXTRA_COMPILERS += node_library
 OTHER_FILES += $$NODE_LIBRARY_SOURCES
 
@@ -79,7 +94,7 @@ VuoNodeSet {
 	NODE_LIBRARY_OBJECTS ~= s/\\.cc?$/.bc/g
 	NODE_LIBRARY_OBJECTS ~= s/\\.mm?$/.bc/g
 
-	NODE_SET_ZIP_CONTENTS = $$NODE_OBJECTS $$TYPE_OBJECTS $$NODE_LIBRARY_OBJECTS
+	NODE_SET_ZIP_CONTENTS = $$NODE_OBJECTS $$TYPE_OBJECTS $$NODE_LIBRARY_OBJECTS $$GENERIC_NODE_SOURCES $$HEADERS $$OTHER_FILES
 
 	createNodeSetZip.commands = \
 		( [ -f $$NODE_SET_ZIP ] && rm $$NODE_SET_ZIP ) ; \

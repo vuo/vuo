@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -13,14 +13,14 @@ PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
 ConvertIntegerToText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="1075,261" _integer="1"];
 ConvertTextToInteger [type="vuo.type.text.integer" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="1118,258" _text=""];
-DiscardDatafromEvent [type="vuo.type.integer.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="1214,155" _dataAndEvent="0"];
-DiscardDatafromEvent2 [type="vuo.type.integer.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="50,161" _dataAndEvent="0"];
-Count [type="vuo.math.count.integer" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="1544,172" _increment="1" _decrement="1"];
-Count2 [type="vuo.math.count.integer" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="325,175" _increment="1" _decrement="1"];
-Divide [type="vuo.math.divide.integer" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="500,165" _a="0" _b="2"];
+DiscardDatafromEvent [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="1214,155" _dataAndEvent="0"];
+DiscardDatafromEvent2 [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="50,161" _dataAndEvent="0"];
+Count [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="1544,172" _increment="1" _decrement="1"];
+Count2 [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="325,175" _increment="1" _decrement="1"];
+Divide [type="vuo.math.divide.VuoInteger" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="500,165" _a="0" _b="2"];
 SelectOutput [type="vuo.select.out.2.event" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="879,171" _index="0"];
 ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="1193,419" _integer="1"];
-DiscardDatafromEvent3 [type="vuo.type.integer.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="645,229" _dataAndEvent="0"];
+DiscardDatafromEvent3 [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="645,229" _dataAndEvent="0"];
 
 PublishedInputs:inEvent -> DiscardDatafromEvent:dataAndEvent;
 DiscardDatafromEvent2:event -> Count2:increment;

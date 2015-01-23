@@ -1,0 +1,119 @@
+/**
+ * @file
+ * Expected outputs for the vuo.time.measureTime node. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 1.0, \"frameCount\": 0}" }
+		]
+	},
+	{
+		"firingPortName" : "start",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 2.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 0" }
+		]
+	},
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 3.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 1" }
+		]
+	},
+	{
+		"firingPortName" : "pause",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 4.0}" }
+		]
+	},
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 5.0}" }
+		]
+	},
+	{
+		"firingPortName" : "start",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 6.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 2" }
+		]
+	},
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 7.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 3" }
+		]
+	},
+	{
+		"firingPortName" : "reset",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 8.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 0" }
+		]
+	},
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 9.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 1" }
+		]
+	},
+	{
+		"firingPortName" : "pause",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 10.0}" }
+		]
+	},
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 11.0}" }
+		]
+	},
+	{
+		"firingPortName" : "reset",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 12.0}" }
+		]
+	},
+	{
+		"firingPortName" : "start",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 13.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 0" }
+		]
+	},
+	{
+		"firingPortName" : "time",
+		"valueForInputPortName" : [
+			{ "port" : "time", "value" : "{\"timestamp\": 14.0}" }
+		],
+		"valueForOutputPortName" : [
+			{ "port" : "elapsedTime", "value" : "Frame #0 @ 1" }
+		]
+	},
+]}

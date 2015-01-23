@@ -2,7 +2,7 @@
  * @file
  * vuo.midi.make.note node implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false,
-						 "exampleCompositions" : [ "SendMIDINotes.vuo" ]
+						 "exampleCompositions" : [ "SendMidiNotes.vuo" ]
 					 }
 				 });
 

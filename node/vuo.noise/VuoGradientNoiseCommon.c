@@ -2,7 +2,7 @@
  * @file
  * VuoGradientNoiseCommon implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -89,7 +89,7 @@ static inline VuoReal lerp(VuoReal t, VuoReal a, VuoReal b);
 /**
  * Returns the value for Perlin noise at a 1D location.
  */
-VuoReal VuoGradientNoise_perlin1D(VuoReal x)
+VuoReal VuoGradientNoise_perlin_VuoReal(VuoReal x)
 {
 	VuoInteger X;
 	VuoReal u;
@@ -110,8 +110,11 @@ VuoReal VuoGradientNoise_perlin1D(VuoReal x)
 /**
  * Returns the value for Perlin noise at a 2D location.
  */
-VuoReal VuoGradientNoise_perlin2D(VuoReal x, VuoReal y)
+VuoReal VuoGradientNoise_perlin_VuoPoint2d(VuoPoint2d point)
 {
+	VuoReal x = point.x;
+	VuoReal y = point.y;
+
 	VuoInteger X, Y;
 	VuoReal u, v;
 	VuoInteger A, AA, AB, B, BA, BB;
@@ -144,8 +147,12 @@ VuoReal VuoGradientNoise_perlin2D(VuoReal x, VuoReal y)
 /**
  * Returns the value for Perlin noise at a 3D location.
  */
-VuoReal VuoGradientNoise_perlin3D(VuoReal x, VuoReal y, VuoReal z)
+VuoReal VuoGradientNoise_perlin_VuoPoint3d(VuoPoint3d point)
 {
+	VuoReal x = point.x;
+	VuoReal y = point.y;
+	VuoReal z = point.z;
+
 	VuoInteger X, Y, Z;
 	VuoReal u, v, w;
 	VuoInteger A, AA, AB, B, BA, BB;
@@ -188,8 +195,13 @@ VuoReal VuoGradientNoise_perlin3D(VuoReal x, VuoReal y, VuoReal z)
 /**
  * Returns the value for Perlin noise at a 4D location.
  */
-VuoReal VuoGradientNoise_perlin4D(VuoReal x, VuoReal y, VuoReal z, VuoReal w)
+VuoReal VuoGradientNoise_perlin_VuoPoint4d(VuoPoint4d point)
 {
+	VuoReal x = point.x;
+	VuoReal y = point.y;
+	VuoReal z = point.z;
+	VuoReal w = point.w;
+
 	VuoInteger X, Y, Z, W;
 	VuoReal a, b, c, d;
 	VuoInteger A, B,
@@ -263,7 +275,7 @@ VuoReal VuoGradientNoise_perlin4D(VuoReal x, VuoReal y, VuoReal z, VuoReal w)
 /**
  * Returns the value for Simplex noise at a 1D location.
  */
-VuoReal VuoGradientNoise_simplex1D(VuoReal x)
+VuoReal VuoGradientNoise_simplex_VuoReal(VuoReal x)
 {
 	VuoInteger i0 = (int)floor(x);
 	VuoInteger i1 = i0 + 1;
@@ -285,8 +297,11 @@ VuoReal VuoGradientNoise_simplex1D(VuoReal x)
 /**
  * Returns the value for Simplex noise at a 2D location.
  */
-VuoReal VuoGradientNoise_simplex2D(VuoReal x, VuoReal y)
+VuoReal VuoGradientNoise_simplex_VuoPoint2d(VuoPoint2d point)
 {
+	VuoReal x = point.x;
+	VuoReal y = point.y;
+
 	VuoReal f2 = 0.366025403; // 0.5 * (sqrt(3.0) - 1.0)
 	VuoReal g2 = 0.211324865; // (3.0 - sqrt(3.0)) / 6.0
 
@@ -374,8 +389,12 @@ VuoReal VuoGradientNoise_simplex2D(VuoReal x, VuoReal y)
 /**
  * Returns the value for Simplex noise at a 3D location.
  */
-VuoReal VuoGradientNoise_simplex3D(VuoReal x, VuoReal y, VuoReal z)
+VuoReal VuoGradientNoise_simplex_VuoPoint3d(VuoPoint3d point)
 {
+	VuoReal x = point.x;
+	VuoReal y = point.y;
+	VuoReal z = point.z;
+
 	// Simple skewing factors for the 3D case
 	VuoReal F3 = 0.333333333;
 	VuoReal G3 = 0.166666667;
@@ -529,8 +548,13 @@ VuoReal VuoGradientNoise_simplex3D(VuoReal x, VuoReal y, VuoReal z)
 /**
  * Returns the value for Simplex noise at a 4D location.
  */
-VuoReal VuoGradientNoise_simplex4D(VuoReal x, VuoReal y, VuoReal z, VuoReal w)
+VuoReal VuoGradientNoise_simplex_VuoPoint4d(VuoPoint4d point)
 {
+	VuoReal x = point.x;
+	VuoReal y = point.y;
+	VuoReal z = point.z;
+	VuoReal w = point.w;
+
 	// The skewing and unskewing factors are hairy again for the 4D case
 	VuoReal F4 = 0.309016994; // F4 = (Math.sqrt(5.0)-1.0)/4.0
 	VuoReal G4 = 0.138196601; // G4 = (5.0-Math.sqrt(5.0))/20.0

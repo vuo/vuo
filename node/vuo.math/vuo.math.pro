@@ -3,47 +3,41 @@ CONFIG += VuoNodeSet
 
 include(../../vuo.pri)
 
+GENERIC_NODE_SOURCES += \
+	vuo.math.absolute.c \
+	vuo.math.add.c \
+	vuo.math.areEqual.c \
+	vuo.math.cos.c \
+	vuo.math.count.c \
+	vuo.math.isGreaterThan.c \
+	vuo.math.isLessThan.c \
+	vuo.math.isWithinRange.c \
+	vuo.math.max.c \
+	vuo.math.min.c \
+	vuo.math.multiply.c \
+	vuo.math.sin.c \
+	vuo.math.subtract.c \
+	vuo.math.tan.c
+
 NODE_SOURCES += \
-	vuo.math.add.integer.c \
-	vuo.math.add.real.c \
-	vuo.math.areEqual.integer.c \
-	vuo.math.areEqual.real.c \
-	vuo.math.count.integer.c \
-	vuo.math.count.real.c \
-	vuo.math.countWithinRange.integer.c \
-	vuo.math.countWithinRange.real.c \
-	vuo.math.divide.integer.c \
-	vuo.math.divide.real.c \
-	vuo.math.isGreaterThan.integer.c \
-	vuo.math.isGreaterThan.real.c \
-	vuo.math.isLessThan.integer.c \
-	vuo.math.isLessThan.real.c \
-	vuo.math.isWithinRange.integer.c \
-	vuo.math.isWithinRange.real.c \
-	vuo.math.limitToRange.integer.c \
-	vuo.math.limitToRange.real.c \
-	vuo.math.max.integer.c \
-	vuo.math.max.real.c \
-	vuo.math.min.integer.c \
-	vuo.math.min.real.c \
-	vuo.math.multiply.integer.c \
-	vuo.math.multiply.real.c \
+	vuo.math.countWithinRange.VuoInteger.c \
+	vuo.math.countWithinRange.VuoReal.c \
+	vuo.math.divide.VuoInteger.c \
+	vuo.math.divide.VuoReal.c \
+	vuo.math.limitToRange.VuoInteger.c \
+	vuo.math.limitToRange.VuoReal.c \
 	vuo.math.round.c \
 	vuo.math.roundDown.c \
 	vuo.math.roundUp.c \
 	vuo.math.scale.c \
-	vuo.math.subtract.integer.c \
-	vuo.math.subtract.real.c \
 	vuo.math.wave.c
 
 TYPE_SOURCES += \
-	VuoCountWrapMode.c \
 	VuoCurve.c \
 	VuoCurveDomain.c \
 	VuoWave.c
 
 HEADERS += \
-	VuoCountWrapMode.h \
 	VuoCurve.h \
 	VuoCurveDomain.h \
 	VuoWave.h

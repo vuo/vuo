@@ -2,7 +2,7 @@
  * @file
  * VuoModule interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -13,6 +13,7 @@
 #include "VuoBase.hh"
 #include "VuoModule.hh"
 
+class VuoNodeSet;
 class VuoCompilerModule;
 
 /**
@@ -24,6 +25,7 @@ public:
 	VuoModule(string moduleKey);
 
 	string getModuleKey(void);
+	void setModuleKey(string moduleKey);
 
 	string getDefaultTitle(void);
 	void setDefaultTitle(string defaultTitle);
@@ -37,12 +39,16 @@ public:
 	vector<string> getKeywords(void);
 	void setKeywords(vector<string> keywords);
 
+	VuoNodeSet * getNodeSet(void);
+	void setNodeSet(VuoNodeSet *nodeSet);
+
 private:
 	string moduleKey;
 	string defaultTitle;
 	string description;
 	string version;
 	vector<string> keywords;
+	VuoNodeSet *nodeSet;
 
 };
 

@@ -6,6 +6,7 @@ Everyone is encouraged to [contribute](https://vuo.org/contribute) toward improv
 Below is an alphabetical list of the people who have contributed to bringing Vuo to fruition.
 
 [3lab_tv](https://twitter.com/3lab_tv)  
+[bLackburst](http://vuo.org/user/364)  
 [bmellen](http://bradleymellen.com/)  
 [Bonemap](http://bonemap.com)  
 [cwright](http://perpendiculo.us/)  
@@ -36,8 +37,10 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
 [rmercuri](http://www.notablesoftware.com/rmercuri.html)  
 [ryandmonk](http://www.ryandombrowski.net)  
 [sala28](http://facebook.com/sala28)  
+[SimHacker](http://vuo.org/user/1116)  
 [smokris](http://kineme.net/users/smokris)  
 [Steamboy](http://vuo.org/user/924)  
+[stromqvist](http://vuo.org/user/916)  
 [synnack](http://vuo.org/user/669)  
 [teaportation](http://vuo.org/user/559)  
 [tfrank](http://vuo.org/user/484)  
@@ -61,6 +64,8 @@ Thanks be to our contributors!
 [libcurl](http://curl.haxx.se/libcurl/)  
 [LLVM](http://llvm.org)  
 [LaTeX](http://tug.org)  
+[libfreenect](https://github.com/OpenKinect/libfreenect)  
+[libusb](http://www.libusb.org/)  
 [muParser](http://muparser.beltoforion.de)  
 [Open Asset Import](http://assimp.sourceforge.net)  
 [OpenSSL](http://www.openssl.org)  

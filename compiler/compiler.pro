@@ -13,13 +13,13 @@ DEFINES += ZMQ_ROOT=\\\"$$ZMQ_ROOT\\\"
 DEFINES += LEAP_ROOT=\\\"$$ROOT/node/Leap\\\"
 DEFINES += MUPARSER_ROOT=\\\"$$MUPARSER_ROOT\\\"
 DEFINES += FREEIMAGE_ROOT=\\\"$$FREEIMAGE_ROOT\\\"
-DEFINES += FREETYPE_ROOT=\\\"$$FREETYPE_ROOT\\\"
 DEFINES += CURL_ROOT=\\\"$$CURL_ROOT\\\"
 DEFINES += RTMIDI_ROOT=\\\"$$RTMIDI_ROOT\\\"
 DEFINES += ASSIMP_ROOT=\\\"$$ASSIMP_ROOT\\\"
 DEFINES += FFMPEG_ROOT=\\\"$$FFMPEG_ROOT\\\"
 DEFINES += LIBUSB_ROOT=\\\"$$LIBUSB_ROOT\\\"
 DEFINES += LIBFREENECT_ROOT=\\\"$$LIBFREENECT_ROOT\\\"
+DEFINES += OSCPACK_ROOT=\\\"$$OSCPACK_ROOT\\\"
 DEFINES += SYPHON_ROOT=\\\"$$ROOT/node/vuo.syphon/Syphon\\\"
 
 SOURCES += \
@@ -63,8 +63,10 @@ SOURCES += \
 	VuoCompilerCodeGenUtilities.cc \
 	VuoCompilerModule.cc \
 	VuoCompilerType.cc \
+	VuoCompilerGenericType.cc \
 	VuoCompilerComposition.cc \
 	VuoCompilerMakeListNodeClass.cc \
+	VuoCompilerSpecializedNodeClass.cc \
 	VuoCompilerTargetSet.cc
 
 HEADERS += \
@@ -108,6 +110,8 @@ HEADERS += \
 	VuoCompilerCodeGenUtilities.hh \
 	VuoCompilerModule.hh \
 	VuoCompilerType.hh \
+	VuoCompilerGenericType.hh \
 	VuoCompilerComposition.hh \
 	VuoCompilerMakeListNodeClass.hh \
+	VuoCompilerSpecializedNodeClass.hh \
 	VuoCompilerTargetSet.hh

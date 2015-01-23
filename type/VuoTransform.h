@@ -2,7 +2,7 @@
  * @file
  * VuoTransform C type definition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -71,7 +71,7 @@ static inline VuoPoint4d VuoTransform_quaternionComposite(VuoPoint4d a, VuoPoint
 	q.y = a.w*b.y + a.y*b.w + a.z*b.x - a.x*b.z;
 	q.z = a.w*b.z + a.z*b.w + a.x*b.y - a.y*b.x;
 	q.w = a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z;
-	return VuoPoint4d_normalize4d(q);
+	return VuoPoint4d_normalize(q);
 }
 
 /**
@@ -86,7 +86,7 @@ static inline VuoPoint4d VuoTransform_quaternionFromAxisAngle(VuoPoint3d axis, f
 	q.y = axisNormalized.y * sinf(angle/2.f);
 	q.z = axisNormalized.z * sinf(angle/2.f);
 	q.w = cosf(angle/2.f);
-	return VuoPoint4d_normalize4d(q);
+	return VuoPoint4d_normalize(q);
 }
 
 /**

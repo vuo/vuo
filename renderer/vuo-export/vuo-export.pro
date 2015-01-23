@@ -1,10 +1,13 @@
 TEMPLATE = app
 CONFIG -= app_bundle
-CONFIG += console VuoFramework qtGuiIncludes VuoBase VuoRenderer
+CONFIG += console VuoFramework qtGuiIncludes VuoRenderer
 
 include(../../vuo.pri)
 
 SOURCES += vuo-export.cc
+
+INCLUDEPATH += $$ROOT/base
+HEADERS += $$ROOT/base/*.hh
 
 LIBS += \
 	-rpath @loader_path/. \

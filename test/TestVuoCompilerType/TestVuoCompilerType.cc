@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerType interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -68,7 +68,7 @@ private slots:
 		QTest::addColumn< bool >("isInputPort");
 		QTest::addColumn< QString >("typeName");
 
-		QTest::newRow("VuoInteger output port") << "vuo.math.add.integer" << "sum" << false << "VuoInteger";
+		QTest::newRow("VuoInteger output port") << "vuo.math.round" << "roundedInteger" << false << "VuoInteger";
 		QTest::newRow("VuoText input port") << "vuo.text.cut" << "text" << true << "VuoText";
 		QTest::newRow("event-only trigger port defined in event function") << "vuo.time.firePeriodically" << "fired" << false << "void";
 		QTest::newRow("VuoInteger trigger port defined in callback start function") << "vuo.test.triggerCarryingInteger" << "fired" << false << "VuoInteger";

@@ -2,22 +2,22 @@
  * @file
  * <Graph description>
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-Add [type="vuo.math.add.integer" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="897,301"];
+Add [type="vuo.math.add.VuoInteger" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="897,301"];
 Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="421,259"];
 CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<done>done\r|<characterCount>characterCount\r" pos="412,339"];
 Cut [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<done>done\r|<partialText>partialText\r" pos="1049,234"];
-DiscardDatafromEvent [type="vuo.type.text.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="235,89"];
+DiscardDatafromEvent [type="vuo.type.discardData.VuoText" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="235,89"];
 Hold [type="vuo.hold.VuoText" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="604,28" _initialValue=""];
 MakeList [type="vuo.list.make.2.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="361,270"];
 MakeList2 [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="837,312" _item2="1"];
-Subtract [type="vuo.math.subtract.integer" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="679,240"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="679,240"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<currentText>currentText\r|<characterLimit>characterLimit\r" _currentText="\"\"" _characterLimit="0"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<recentText>recentText\l"];
 

@@ -2,7 +2,7 @@
  * @file
  * VuoNodeClass interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -12,7 +12,6 @@
 
 #include "VuoBase.hh"
 #include "VuoModule.hh"
-#include "VuoNodeSet.hh"
 
 class VuoCompilerNodeClass;
 class VuoPortClass;
@@ -41,16 +40,11 @@ public:
 	VuoNode * newNode(string title="", double x=0, double y=0);
 	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
 
-	string getDescription(void);
-
 	string getClassName(void);
 	bool isTypecastNodeClass(void);
 
 	bool isInterface(void);
 	void setInterface(bool isInterface);
-
-	VuoNodeSet * getNodeSet(void);
-	void setNodeSet(VuoNodeSet *nodeSet);
 
 	vector<string> getExampleCompositionFileNames(void);
 	void setExampleCompositionFileNames(vector<string> exampleCompositionFileNames);
@@ -70,7 +64,6 @@ public:
 
 private:
 	bool interface;
-	VuoNodeSet *nodeSet;
 	vector<string> exampleCompositionFileNames;
 	VuoPortClass * refreshPortClass;
 	VuoPortClass * donePortClass;

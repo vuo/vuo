@@ -1,7 +1,7 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	CheckSMSLength.vuo \
+	CheckSmsLength.vuo \
 	RevealWord.vuo
 
 include(../../../example.pri)

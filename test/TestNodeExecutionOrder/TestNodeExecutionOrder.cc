@@ -2,7 +2,7 @@
  * @file
  * TestNodeExecutionOrder interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -46,8 +46,7 @@ public:
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, ext);
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
-		compiler->compileComposition(generator, compiledCompositionPath);
+		compiler->compileComposition(compositionPath, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
@@ -61,6 +60,9 @@ public:
 		runner->waitUntilStopped();
 
 		const size_t NUM_EVENTS = 100;
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 		size_t maxNumNodeExecutions = generator->composition->getBase()->getNodes().size() * 2 * NUM_EVENTS;  // For each event, each node can be executed at most twice (feedback).
 		QVERIFY2(NUM_EVENTS <= nodeExecutions.size() && nodeExecutions.size() <= maxNumNodeExecutions,
 				 QString("%1 <= %2 <= %3").arg(NUM_EVENTS).arg(nodeExecutions.size()).arg(maxNumNodeExecutions).toUtf8().constData());

@@ -2,7 +2,7 @@
  * @file
  * VuoMidi implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -76,14 +76,6 @@ VuoMidiOut VuoMidiOut_make(VuoMidiDevice md)
 
 	RtMidiOut *midiout = new RtMidiOut();
 	VuoRegister(midiout, VuoMidiOut_destroy);
-	if (!midiout->getPortCount())
-	{
-		/// @todo Temporary workaround until https://b33p.net/kosada/node/6307 is fixed.
-		/// @todo https://b33p.net/kosada/node/4724
-		fprintf(stderr, "VuoMidi: No MIDI output devices available.\n");
-		delete midiout;
-		return NULL;
-	}
 	try
 	{
 		if (md.id == -1 && strlen(md.name) == 0)
@@ -235,14 +227,6 @@ VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
 
 	struct VuoMidiIn_internal *mii;
 	RtMidiIn *midiin = new RtMidiIn();
-	if (!midiin->getPortCount())
-	{
-		/// @todo Temporary workaround until https://b33p.net/kosada/node/6307 is fixed.
-		/// @todo https://b33p.net/kosada/node/4724
-		fprintf(stderr, "VuoMidi: No MIDI input devices available.\n");
-		delete midiin;
-		return NULL;
-	}
 	try
 	{
 		if (md.id == -1 && strlen(md.name) == 0)

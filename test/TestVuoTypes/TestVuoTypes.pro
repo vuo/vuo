@@ -8,6 +8,7 @@ HEADERS += TestVuoTypes.h
 
 TEST_VUO_TYPES_SOURCES += \
 	TestVuoColor.cc \
+	TestVuoFont.cc \
 	TestVuoInteger.cc \
 	TestVuoImage.cc \
 	TestVuoList.cc \

@@ -10,6 +10,7 @@ SUBDIRS += \
 	vuo.color \
 	vuo.console \
 	vuo.event \
+	vuo.font \
 	vuo.hold \
 	vuo.image \
 	vuo.kinect \
@@ -22,6 +23,7 @@ SUBDIRS += \
 	vuo.mouse \
 	vuo.movie \
 	vuo.noise \
+	vuo.osc \
 	vuo.point \
 	vuo.quaternion \
 	vuo.scene \

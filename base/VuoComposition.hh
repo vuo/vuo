@@ -2,7 +2,7 @@
  * @file
  * VuoComposition interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -37,6 +37,7 @@ public:
 
 	void addNode(VuoNode *node);
 	void removeNode(VuoNode *node);
+	void replaceNode(VuoNode *oldNode, VuoNode *newNode);
 	set<VuoNode *> getNodes(void);
 
 	void addCable(VuoCable *cable);

@@ -2,12 +2,14 @@
  * @file
  * VuoComposition implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoComposition.hh"
+#include "VuoPort.hh"
+#include "VuoPortClass.hh"
 
 /**
  * Creates an empty composition.
@@ -317,4 +319,47 @@ set<pair<VuoPublishedPort *, VuoPort *> > VuoComposition::getPublishedOutputPort
 		}
 	}
 	return publishedPortsConnectedToNode;
+}
+
+/**
+ * Replaces @a oldNode with @a newNode in the composition, transferring all cable and published port
+ * connections from @a oldNode to @a newNode.
+ */
+void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
+{
+	removeNode(oldNode);
+	addNode(newNode);
+
+	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	{
+		VuoCable *cable = *i;
+		if (cable->getFromNode() == oldNode)
+		{
+			VuoPort *oldPort = cable->getFromPort();
+			VuoPort *newPort = newNode->getOutputPortWithName( oldPort->getClass()->getName() );
+			cable->setFrom(newNode, newPort);
+		}
+		if (cable->getToNode() == oldNode)
+		{
+			VuoPort *oldPort = cable->getToPort();
+			VuoPort *newPort = newNode->getInputPortWithName( oldPort->getClass()->getName() );
+			cable->setTo(newNode, newPort);
+		}
+	}
+
+	set<pair<VuoPublishedPort *, VuoPort *> > publishedPorts;
+	set<pair<VuoPublishedPort *, VuoPort *> > publishedInputPortsForNode = getPublishedInputPortsConnectedToNode(oldNode);
+	set<pair<VuoPublishedPort *, VuoPort *> > publishedOutputPortsForNode = getPublishedOutputPortsConnectedToNode(oldNode);
+	publishedPorts.insert(publishedInputPortsForNode.begin(), publishedInputPortsForNode.end());
+	publishedPorts.insert(publishedOutputPortsForNode.begin(), publishedOutputPortsForNode.end());
+	for (set<pair<VuoPublishedPort *, VuoPort *> >::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
+	{
+		VuoPublishedPort *publishedPort = i->first;
+		VuoPort *oldPort = i->second;
+		VuoPort *newPort = publishedPort->getInput() ?
+							   newNode->getInputPortWithName( oldPort->getClass()->getName() ) :
+							   newNode->getOutputPortWithName( oldPort->getClass()->getName() );
+		publishedPort->removeConnectedPort(oldPort);
+		publishedPort->addConnectedPort(newPort);
+	}
 }

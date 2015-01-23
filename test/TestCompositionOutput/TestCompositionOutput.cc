@@ -2,7 +2,7 @@
  * @file
  * TestCompositionOutput interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -222,10 +222,10 @@ private slots:
 		nodeClassNames.append("vuo.image.filter.twirl");
 		nodeClassNames.append("vuo.image.get");
 		nodeClassNames.append("vuo.image.render.window");
-		nodeClassNames.append("vuo.noise.gradient.1d");
-		nodeClassNames.append("vuo.noise.gradient.2d");
-		nodeClassNames.append("vuo.noise.gradient.3d");
-		nodeClassNames.append("vuo.noise.gradient.4d");
+		nodeClassNames.append("vuo.noise.gradient.VuoReal");
+		nodeClassNames.append("vuo.noise.gradient.VuoPoint2d");
+		nodeClassNames.append("vuo.noise.gradient.VuoPoint3d");
+		nodeClassNames.append("vuo.noise.gradient.VuoPoint4d");
 		nodeClassNames.append("vuo.midi.listDevices");
 		nodeClassNames.append("vuo.midi.receive");
 		nodeClassNames.append("vuo.midi.send");

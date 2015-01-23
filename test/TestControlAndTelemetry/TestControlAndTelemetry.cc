@@ -2,7 +2,7 @@
  * @file
  * TestControlAndTelemetry interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -31,7 +31,7 @@ private:
 	 * Builds the composition at @c compositionPath into an executable and returns a newly allocated
 	 * @c VuoRunner for that executable.
 	 */
-	static VuoRunner * createRunnerInNewProcess(const string &compositionPath, VuoCompilerBitcodeGenerator **generator = NULL)
+	static VuoRunner * createRunnerInNewProcess(const string &compositionPath, VuoCompilerComposition **composition = NULL)
 	{
 		VuoCompiler *compiler = initCompiler();
 
@@ -40,10 +40,11 @@ private:
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
 		string exePath = VuoFileUtilities::makeTmpFile(file, "");
 
-		if (generator)
+		if (composition)
 		{
-			*generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
-			compiler->compileComposition(*generator, bcPath);
+			VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(compositionPath, compiler);
+			*composition = new VuoCompilerComposition(new VuoComposition, parser);
+			compiler->compileComposition(*composition, bcPath);
 		}
 		else
 		{
@@ -477,8 +478,8 @@ private:
 		void runComposition()
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("Recur_Count_Add.vuo");
-			VuoCompilerBitcodeGenerator *generator = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &generator);
+			VuoCompilerComposition *composition = NULL;
+			runner = createRunnerInNewProcess(compositionPath, &composition);
 
 			string incrementPortIdentifier;
 			string countPortIdentifier;
@@ -486,7 +487,7 @@ private:
 			string listPortIdentifier;
 			string termsPortIdentifier;
 			string sumPortIdentifier;
-			foreach (VuoNode *node, generator->composition->getBase()->getNodes())
+			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
 				if (node->getNodeClass()->getClassName() == "vuo.test.firePeriodicallyWithCount")
 				{
@@ -495,7 +496,7 @@ private:
 						firedPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 					}
 				}
-				else if (node->getNodeClass()->getClassName() == "vuo.math.count.integer")
+				else if (node->getNodeClass()->getClassName() == "vuo.math.count.VuoInteger")
 				{
 					{
 						VuoPort *basePort = node->getInputPortWithName("increment");
@@ -517,7 +518,7 @@ private:
 						listPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 					}
 				}
-				else if (node->getNodeClass()->getClassName() == "vuo.math.add.integer")
+				else if (node->getNodeClass()->getClassName() == "vuo.math.add.VuoInteger")
 				{
 					{
 						VuoPort *basePort = node->getInputPortWithName("terms");
@@ -530,7 +531,7 @@ private:
 				}
 			}
 
-			delete generator;
+			delete composition;
 
 			runner->setDelegate(this);
 
@@ -649,12 +650,12 @@ private:
 		void runComposition()
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("Recur_Count.vuo");
-			VuoCompilerBitcodeGenerator *generator = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &generator);
+			VuoCompilerComposition *composition = NULL;
+			runner = createRunnerInNewProcess(compositionPath, &composition);
 
-			foreach (VuoNode *node, generator->composition->getBase()->getNodes())
+			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
-				if (node->getNodeClass()->getClassName() == "vuo.math.count.integer")
+				if (node->getNodeClass()->getClassName() == "vuo.math.count.VuoInteger")
 				{
 					{
 						VuoPort *basePort = node->getInputPortWithName("increment");
@@ -674,7 +675,7 @@ private:
 				}
 			}
 
-			delete generator;
+			delete composition;
 
 			incrementPortValue = 2;
 
@@ -805,10 +806,10 @@ private:
 		void runComposition()
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("FirePeriodicallyWithCount.vuo");
-			VuoCompilerBitcodeGenerator *generator = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &generator);
+			VuoCompilerComposition *composition = NULL;
+			runner = createRunnerInNewProcess(compositionPath, &composition);
 
-			foreach (VuoNode *node, generator->composition->getBase()->getNodes())
+			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
 				if (node->getNodeClass()->getClassName() == "vuo.test.firePeriodicallyWithCount")
 				{
@@ -816,7 +817,7 @@ private:
 					firedPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 				}
 			}
-			delete generator;
+			delete composition;
 
 			runner->setDelegate(this);
 
@@ -898,10 +899,10 @@ private:
 		void runComposition()
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("SpinOffWithCount.vuo");
-			VuoCompilerBitcodeGenerator *generator = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &generator);
+			VuoCompilerComposition *composition = NULL;
+			runner = createRunnerInNewProcess(compositionPath, &composition);
 
-			foreach (VuoNode *node, generator->composition->getBase()->getNodes())
+			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
 				if (node->getNodeClass()->getClassName() == "vuo.event.fireOnStart")
 				{
@@ -913,13 +914,13 @@ private:
 					VuoPort *basePort = node->getOutputPortWithName("spunOff");
 					spunOffPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 				}
-				else if (node->getNodeClass()->getClassName() == "vuo.math.add.integer")
+				else if (node->getNodeClass()->getClassName() == "vuo.math.add.VuoInteger")
 				{
 					VuoPort *basePort = node->getOutputPortWithName("sum");
 					sumPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 				}
 			}
-			delete generator;
+			delete composition;
 
 			runner->setDelegate(this);
 
@@ -1408,8 +1409,7 @@ private slots:
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1421,8 +1421,7 @@ private slots:
 
 		// Replace the composition with itself.
 		{
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1462,8 +1461,7 @@ private slots:
 		{
 			composition = new VuoCompilerComposition(new VuoComposition(), NULL);
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1484,8 +1482,7 @@ private slots:
 			VuoNode *fireOnStartNode = fireOnStartNodeClass->newNode("FireOnStart1");
 			composition->getBase()->addNode(fireOnStartNode);
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1503,8 +1500,7 @@ private slots:
 			VuoNode *displayConsoleWindowNode = displayConsoleWindowNodeClass->newNode("DisplayConsoleWindow1");
 			composition->getBase()->addNode(displayConsoleWindowNode);
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource2", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1554,8 +1550,7 @@ private slots:
 
 			originalCompositionGraphviz = composition->getGraphvizDeclaration();
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1578,8 +1573,7 @@ private slots:
 
 		// Replace the composition with an identical one.
 		{
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1625,8 +1619,7 @@ private slots:
 			QVERIFY(count1NodeCountPort != NULL);
 			cableToModify->setFrom(count1Node, count1NodeCountPort);
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource2", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1674,8 +1667,7 @@ private slots:
 																	   makeList1Node->getCompiler(), makeList1NodeItem2Port);
 			composition->getBase()->addCable(count3ToAdd1Cable->getBase());
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(composition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource3", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
@@ -1706,8 +1698,7 @@ private slots:
 
 			VuoCompilerComposition *originalComposition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(originalCompositionGraphviz, compiler);
 
-			VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(originalComposition, compiler);
-			compiler->compileComposition(generator, bcPath);
+			compiler->compileComposition(originalComposition, bcPath);
 			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource4", "dylib");
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());

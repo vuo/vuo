@@ -43,7 +43,7 @@ To implement a node class, you need to:
 
 ### The file name
 
-When you implement a node class, the first thing you have to decide is the class name. Every node class has two names: a class name (like @vuoNodeClass{vuo.math.add.integer}) and a title (like @vuoNode{Add}). In the Vuo Editor, you can see the difference between titles and class names by switching between the "Titles" view and the "Class names" view of the Node Library. After a node has been added to a composition, its title can be changed, but its class name always stays the same. When you create a node class, the file name is the node class name. For example, the node class with name @vuoNodeClass{vuo.math.add.integer} is implemented in a file called `vuo.math.add.integer.c`. 
+When you implement a node class, the first thing you have to decide is the class name. Every node class has two names: a class name (like @vuoNodeClass{vuo.math.add}) and a title (like @vuoNode{Add}). In the Vuo Editor, you can see the difference between titles and class names by switching between the "Titles" view and the "Class names" view of the Node Library. After a node has been added to a composition, its title can be changed, but its class name always stays the same. When you create a node class, the file name is the node class name. For example, the node class with name @vuoNodeClass{vuo.math.add} is implemented in a file called `vuo.math.add.c`. 
 
 
 ### The metadata
@@ -84,27 +84,26 @@ A stateless node class (like @vuoNode{Add}) is simpler. It just has input ports 
 
 For a stateless node class, you just need to implement one function: @ref nodeEvent. The @ref nodeEvent function is called each time a node of your node class receives an event through any input port. (If the same event is received through multiple input ports, the @ref nodeEvent function is  called just one time.) Its arguments represent input and output ports of the node. 
 
-As a simple example, here's the @ref nodeEvent function for the @vuoNodeClass{vuo.math.subtract.integer} node class: 
+As a simple example, here's the @ref nodeEvent function for the @vuoNodeClass{vuo.logic.negate} node class: 
 
 @code{.cc}
 void nodeEvent
 (
-		VuoInputData(VuoInteger, {"default":0}) a,
-		VuoInputData(VuoInteger, {"default":0}) b,
-		VuoOutputData(VuoInteger) difference
+		VuoInputData(VuoBoolean, {"default":false}) value,
+		VuoOutputData(VuoBoolean) notValue
 )
 {
-	*difference = a - b;
+	*notValue = !value;
 }
 @endcode
 
-The above @ref nodeEvent function has a @ref VuoInputData parameter for each input port and a @ref VuoOutputData parameter for each output port. (The refresh port and done port are added to each node automatically.) Both @ref VuoInputData and @ref VuoOutputData define data-and-event ports. The parameter name (@vuoPort{a}, @vuoPort{b}, or @vuoPort{difference}) is the port name that appears on the node. 
+The above @ref nodeEvent function has a @ref VuoInputData parameter for each input port and a @ref VuoOutputData parameter for each output port. (The refresh port and done port are added to each node automatically.) Both @ref VuoInputData and @ref VuoOutputData define data-and-event ports. The parameter name (@vuoPort{value} or @vuoPort{notValue}) is the port name that appears on the node. 
 
 The first argument of @ref VuoInputData or @ref VuoOutputData is the port type. Vuo comes with many built-in port types (see @ref VuoTypes), and you can also define your own (see @ref DevelopingTypes). 
 
 The second argument of @ref VuoInputData defines details about the input port in JSON format. In this case, it specifies the default value for the input port when a node is first added to a composition. 
 
-The body of @ref nodeEvent defines what happens when a node receives an event. In this case, it subtracts the two input port values and sets the output port value. Notice that @c difference is a *pointer* to the @ref VuoOutputData type (@ref VuoInteger). 
+The body of @ref nodeEvent defines what happens when a node receives an event. In this case, it negates the input port value and sets the output port value. Notice that @c notValue is a *pointer* to the @ref VuoOutputData type (@ref VuoBoolean). 
 
 
 #### A stateful node class
@@ -117,7 +116,7 @@ You also need to implement the @ref nodeInstanceInit function and the @ref nodeI
 
 If your node class has trigger ports, you may also need to implement the @ref nodeInstanceTriggerStart function, the @ref nodeInstanceTriggerUpdate function, and the @ref nodeInstanceTriggerStop function. 
 
-As an example, let's look at a simplified version of the @vuoNodeClass{vuo.math.count.real} node class. Its only input port is @vuoPort{increment}. Here are the functions for that node class: 
+As an example, let's look at a simplified version of the @vuoNodeClass{vuo.math.count} node class. Its only input port is @vuoPort{increment}. Here are the functions for that node class: 
 
 @code{.c}
 VuoReal * nodeInstanceInit()
@@ -204,6 +203,19 @@ If you want to share functions between multiple node classes, or use C++ or Obje
 A node class *should not* define any global variables. 
 
 
+#### Generic port types
+
+If a node class can work with multiple different types of data, then rather than implementing a version of the node class for each data type, you can use @term{generic types} as placeholders for the actual data types. When a node with generic types is added to a composition, each of its generic types has the potential to be specialized (replaced) with an actual data type. Some examples of node classes that use generic types are @vuoNode{Hold Value}, @vuoNode{Select Latest}, and @vuoNode{Add}. 
+
+To use a generic type in a node class, use @c VuoGenericType1 in place of the data type. For example, you can define a generic input port as `VuoInputData(VuoGenericType1) value`. You can define a list-of-generics input port as `VuoInputData(VuoList_VuoGenericType1) list`. You can append a value of generic type to a list by calling `VuoListAppend_VuoGenericType1(list, value)`. 
+
+To use more than one generic type in a node class, you can use @c VuoGenericType2, @c VuoGenericType3, and so on. 
+
+For a node class to use generic types, it must be part of a node set. The source code for the node class and its included header files must be packaged into the node set. See @ref PackagingNodeSets. 
+
+For more information about using generic port types in a node class — including how to restrict the types that a generic type can be specialized with — see @ref VuoModuleMetadata. 
+
+
 ### Advanced topics
 
 For more information about the parameters that can be passed to the @ref nodeEvent, @ref nodeInstanceEvent, and other node class functions — including how to create a trigger port — see @ref VuoNodeParameters. 
@@ -263,9 +275,9 @@ Built-in Vuo nodes follow a set of naming conventions. If you develop node class
          - The first part is the creator ("vuo" in @vuoNodeClass{vuo.math.wave}, "mycompany" in @vuoNodeClass{mycompany.image.frobnicate}). 
          - If the node class belongs to a set of related node classes, the next part is the node set name ("math" in @vuoNodeClass{vuo.math.wave}). 
          - The next part is the action performed by the node class, usually similar to the title ("wave" in @vuoNodeClass{vuo.math.wave}).
-         - If there are details about the action performed, such as the data type acted on, these come last ("integer" in @vuoNodeClass{vuo.math.add.integer}, "cube" in @vuoNodeClass{vuo.scene.make.cube}). 
+         - If there are details about the action performed, such as the data type acted on, these come last ("rgb" in @vuoNodeClass{vuo.color.make.rgb}). 
          - In summmary, the format is: @vuoNodeClass{[creator].[optional node set].[action].[optional details]}. 
-      - Use lower camel case (@vuoNodeClass{vuo.math.isLessThan.integer}). 
+      - Use lower camel case (@vuoNodeClass{vuo.math.isLessThan}). 
    - A port's name should:
       - Consist of full words or phrases, not abbreviations (@vuoPort{increment}, not @vuoPort{incr}). 
       - If the port is a trigger port, consist of a past-tense verb phrase (@vuoPort{started}, @vuoPort{receivedNote}, @vuoPort{requestedFrame}). 

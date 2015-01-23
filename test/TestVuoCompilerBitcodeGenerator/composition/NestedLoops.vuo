@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,11 +10,11 @@
 digraph G 
 {
 FirePeriodically1 [type="vuo.time.firePeriodically" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="57,141" _seconds="1"];
-DiscardDatafromEvent2 [type="vuo.type.text.event" label="DiscardDatafromEvent2|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="597,206" _dataAndEvent="0"];
+DiscardDatafromEvent2 [type="vuo.type.discardData.VuoText" label="DiscardDatafromEvent2|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="597,206" _dataAndEvent="0"];
 Hold1 [type="vuo.hold.VuoInteger" label="Hold1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="336,170" _initialValue="11" _newValue="0"];
 Hold2 [type="vuo.hold.VuoInteger" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="434,381" _initialValue="11" _newValue="0"];
-Subtract1 [type="vuo.math.subtract.integer" label="Subtract1|<refresh>refresh\l|<a>b\l|<a>b\l|<difference>difference\r" pos="403,367" _a="0" _b="5"];
-Subtract2 [type="vuo.math.subtract.integer" label="Subtract2|<refresh>refresh\l|<a>b\l|<a>b\l|<difference>difference\r" pos="188,383" _a="0" _b="7"];
+Subtract1 [type="vuo.math.subtract.VuoInteger" label="Subtract1|<refresh>refresh\l|<a>b\l|<a>b\l|<difference>difference\r" pos="403,367" _a="0" _b="5"];
+Subtract2 [type="vuo.math.subtract.VuoInteger" label="Subtract2|<refresh>refresh\l|<a>b\l|<a>b\l|<difference>difference\r" pos="188,383" _a="0" _b="7"];
 ConvertIntegertoText1 [type="vuo.type.integer.text" label="ConvertIntegertoText1|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="351,343" _integer="0"];
 DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="784,15" _writeLine=""];
 

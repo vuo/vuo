@@ -2,35 +2,35 @@
  * @file
  * Reveals a word one letter at a time. Hidden letters are replaced by dots. 
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-IsGreaterThan [type="vuo.math.isGreaterThan.integer" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="408,194" _b="6"];
-Cut1 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="982,140" _text="\"secret\"" _startIndex="1" _characterCount="0"];
-Cut2 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="994,251" _text="\"......\"" _startIndex="1" _characterCount="0"];
-MakeList2 [type="vuo.list.make.2.VuoText" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="1139,204" _item1="" _item2=""];
-Append1 [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="1286,207" _texts=""];
-Subtract [type="vuo.math.subtract.integer" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="796,266" _a="6" _b="0"];
-Count1 [type="vuo.math.count.integer" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="46,214" _increment="1" _decrement="1"];
-SelectInput1 [type="vuo.select.in.VuoInteger" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="608,243" _which="0" _falseOption="0" _trueOption="0"];
-FirePeriodically1 [type="vuo.time.firePeriodically" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-33,101" _seconds="1"];
-DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="1448,204" _writeLine=""];
-Subtract2 [type="vuo.math.subtract.integer" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="213,213" _a="0" _b="1"];
+Append1 [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="1156,180" fillcolor="violet"];
+Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="95,257" _increment="1" _decrement="1" _setCount="0.000000"];
+Cut1 [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<done>done\r|<partialText>partialText\r" pos="948,129" fillcolor="violet" _text="\"secret\"" _startIndex="1"];
+Cut2 [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<done>done\r|<partialText>partialText\r" pos="949,236" fillcolor="violet" _text="\"......\"" _startIndex="1"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="1307,180"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="-73,226" _seconds="1"];
+IsGreaterThan [type="vuo.math.isGreaterThan.VuoInteger" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="457,220" _b="6"];
+MakeList2 [type="vuo.list.make.2.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1096,191" fillcolor="violet"];
+SelectInput1 [type="vuo.select.in.VuoInteger" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="617,242" _trueOption="0"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="796,266" fillcolor="violet" _a="6"];
+Subtract2 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="263,257" _b="1"];
 
-Subtract2:difference -> IsGreaterThan:a;
-Cut1:partialText -> MakeList2:item1;
-IsGreaterThan:greaterThan -> SelectInput1:which;
-SelectInput1:out -> Cut1:characterCount;
-Cut2:partialText -> MakeList2:item2;
-Subtract:difference -> Cut2:characterCount;
-MakeList2:list -> Append1:texts;
 Append1:compositeText -> DisplayConsoleWindow:writeLine;
-SelectInput1:out -> Subtract:b;
-FirePeriodically1:fired -> Count1:increment;
 Count1:count -> Subtract2:a;
+Cut1:partialText -> MakeList2:item1;
+Cut2:partialText -> MakeList2:item2;
+FirePeriodically1:fired -> Count1:increment;
+IsGreaterThan:greaterThan -> SelectInput1:which;
+MakeList2:list -> Append1:texts;
+SelectInput1:out -> Cut1:characterCount;
+SelectInput1:out -> Subtract:b;
+Subtract2:difference -> IsGreaterThan:a;
 Subtract2:difference -> SelectInput1:falseOption;
+Subtract:difference -> Cut2:characterCount;
 }

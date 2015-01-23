@@ -2,17 +2,17 @@
  * @file
  * This graph modifies an image.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-RippleImage [type="vuo.image.filter.ripple" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="601,119" _image="" _angle="135" _amplitude="0.1" _wavelength="0.05" _phase="0"];
-Count [type="vuo.math.count.real" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="440,204" _increment="0.01" _decrement="1"];
-DiscardDatafromEvent [type="vuo.type.image.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="209,176" _dataAndEvent=""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<inputImage>inputImage\r"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="440,204" _increment="0.01" _decrement="1" _setCount="0.000000"];
+DiscardDatafromEvent [type="vuo.type.discardData.VuoImage" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="209,176"];
+RippleImage [type="vuo.image.filter.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<done>done\r|<rippledImage>rippledImage\r" pos="601,119" _angle="135" _amplitude="0.1" _wavelength="0.05"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inputImage>inputImage\r" _inputImage=""];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l"];
 
 Count:count -> RippleImage:phase;

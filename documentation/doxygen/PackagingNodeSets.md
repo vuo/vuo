@@ -16,6 +16,8 @@ To package files into a node set:
 
 Place the compiled node class (`.vuonode`) files and compiled port type and library module (`.bc`) files in the top level of the node set folder. 
 
+If any node class uses generic types, place the node class's source code (`.c`) file and any included header files (except for header files like @c node.h provided in Vuo.framework) in the top level of the node set folder. 
+
 
 ## Node set description
 

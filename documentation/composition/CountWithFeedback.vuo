@@ -2,19 +2,19 @@
  * @file
  * This composition outputs a count every second.
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-Add1 [type="vuo.math.add.integer" version="100" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="214,126"];
-ConvertIntegertoText1 [type="vuo.type.integer.text" version="100" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="521,176"];
-DisplayConsoleWindow [type="vuo.console.window" version="100" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="447,126"];
-FirePeriodically1 [type="vuo.time.firePeriodically" version="100" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="11,-21" _seconds="1"];
-Hold1 [type="vuo.hold.VuoInteger" version="100" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="180,0" _initialValue="0"];
-MakeList [type="vuo.list.make.2.VuoInteger" version="100" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="153,137" _item2="1"];
+Add1 [type="vuo.math.add.VuoInteger" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="214,126"];
+ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="521,176"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="447,126"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="11,-21" _seconds="1"];
+Hold1 [type="vuo.hold.VuoInteger" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="180,0" _initialValue="0"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="154,137" _item2="1"];
 
 Add1:sum -> ConvertIntegertoText1:integer;
 Add1:sum -> Hold1:newValue;

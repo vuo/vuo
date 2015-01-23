@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerType implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -15,6 +15,7 @@
 
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerType.hh"
+
 
 /**
  * Creates a type from an LLVM module, and creates its corresponding base @c VuoType.
