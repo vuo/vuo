@@ -2,29 +2,29 @@
 * @file
 * Plays a movie with a play/pause button and progress bar. 
 *
-* @copyright Copyright © 2012–2013 Kosada Incorporated.
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
 * For more information, see http://vuo.org/license.
 */
 
 digraph G
 {
-Add2 [type="vuo.math.add.real" version="1.0.0" label="Play Button X|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="193,745" fillcolor="magenta"];
-Add4 [type="vuo.math.add.real" version="1.0.0" label="Play Button Y|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="187,808" fillcolor="magenta"];
-Add5 [type="vuo.math.add.real" version="1.0.0" label="Play Button Width|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="180,878" fillcolor="magenta"];
+Add2 [type="vuo.math.add.VuoReal" version="1.0.0" label="Play Button X|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="193,745" fillcolor="magenta"];
+Add4 [type="vuo.math.add.VuoReal" version="1.0.0" label="Play Button Y|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="187,808" fillcolor="magenta"];
+Add5 [type="vuo.math.add.VuoReal" version="1.0.0" label="Play Button Width|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="180,878" fillcolor="magenta"];
 Append [type="vuo.text.append" version="1.0.0" label="Movie URL|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="-248,82" fillcolor="yellow"];
 AreAllTrue [type="vuo.logic.areAllTrue" version="1.0.0" label="Are All True|<refresh>refresh\l|<terms>terms\l|<done>done\r|<allTrue>allTrue\r" pos="1253,899" fillcolor="magenta"];
-AreEqual [type="vuo.math.areEqual.real" version="1.0.0" label="Are Equal|<refresh>refresh\l|<terms>terms\l|<tolerance>tolerance\l|<done>done\r|<equal>equal\r" pos="1023,944" fillcolor="magenta"];
-AreEqual2 [type="vuo.math.areEqual.real" version="1.0.0" label="Are Equal|<refresh>refresh\l|<terms>terms\l|<tolerance>tolerance\l|<done>done\r|<equal>equal\r" pos="1027,866" fillcolor="magenta"];
+AreEqual [type="vuo.math.areEqual.VuoReal" version="1.0.0" label="Are Equal|<refresh>refresh\l|<terms>terms\l|<tolerance>tolerance\l|<done>done\r|<equal>equal\r" pos="1023,944" fillcolor="magenta"];
+AreEqual2 [type="vuo.math.areEqual.VuoReal" version="1.0.0" label="Are Equal|<refresh>refresh\l|<terms>terms\l|<tolerance>tolerance\l|<done>done\r|<equal>equal\r" pos="1027,866" fillcolor="magenta"];
 BecameFalse [type="vuo.event.becameFalse" version="1.0.0" label="Reached End|<refresh>refresh\l|<value>value\l|<done>done\r|<becameFalse>becameFalse\r" pos="231,1455" fillcolor="violet"];
 Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<x>x\r" pos="632,834"];
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<y>y\r" pos="628,912"];
 DecodeMovieImage2 [type="vuo.movie.decodeImage" version="1.0.0" label="Decode Movie Image|<refresh>refresh\l|<movieURL>movieURL\l|<frameTime>frameTime\l|<done>done\r|<image>image\r" pos="176,276" fillcolor="yellow" _frameTime=""];
-DiscardDataFromEvent [type="vuo.type.boolean.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="1490,901"];
-DiscardDataFromEvent2 [type="vuo.type.boolean.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="57,333"];
-DiscardDataFromEvent3 [type="vuo.type.boolean.event" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="548,560"];
-Divide [type="vuo.math.divide.real" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="361,947" fillcolor="magenta" _b="2.000000"];
-Divide2 [type="vuo.math.divide.real" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="-36,1806" fillcolor="violet" _b="2.000000"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoBoolean" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="1490,901"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoBoolean" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="57,333"];
+DiscardDataFromEvent3 [type="vuo.type.discardData.VuoBoolean" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="548,560"];
+Divide [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="361,947" fillcolor="magenta" _b="2.000000"];
+Divide2 [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="-36,1806" fillcolor="violet" _b="2.000000"];
 FilterMouseButtonAction [type="vuo.mouse.filter.action" version="1.0.0" label="Filter Mouse Button Action|<refresh>refresh\l|<action>action\l|<includeLeftButton>includeLeftButton\l|<includeMiddleButton>includeMiddleButton\l|<includeRightButton>includeRightButton\l|<includePress>includePress\l|<includeRelease>includeRelease\l|<includeSingleClick>includeSingleClick\l|<includeDoubleClick>includeDoubleClick\l|<includeTripleClick>includeTripleClick\l|<done>done\r|<filteredAction>filteredAction\r" pos="310,1034" fillcolor="magenta" _includeLeftButton="true" _includeMiddleButton="false" _includeRightButton="false" _includePress="false" _includeRelease="true" _includeSingleClick="false" _includeDoubleClick="false" _includeTripleClick="false"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-343,366"];
 GetFrameRequestTimestamp [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Frame Request Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="108,1564"];
@@ -35,14 +35,14 @@ GetImage3 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refres
 GetImage4 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="760,1510" fillcolor="violet" _imageURL="\"head.png\""];
 GetMouseButtonActionValues [type="vuo.mouse.get.action" version="1.0.0" label="Get Mouse Button Action Values|<refresh>refresh\l|<action>action\l|<done>done\r|<isLeftButton>isLeftButton\r|<isMiddleButton>isMiddleButton\r|<isRightButton>isRightButton\r|<isPress>isPress\r|<isRelease>isRelease\r|<isSingleClick>isSingleClick\r|<isDoubleClick>isDoubleClick\r|<isTripleClick>isTripleClick\r|<position>position\r" pos="565,1040" fillcolor="magenta"];
 GetMovieInfo [type="vuo.movie.info" version="1.0.0" label="Get Movie Info|<refresh>refresh\l|<movieURL>movieURL\l|<done>done\r|<duration>duration\r" pos="-302,1622" fillcolor="violet"];
-IsLessThan [type="vuo.math.isLessThan.real" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="70,1446" fillcolor="violet"];
-Make2DPoint [type="vuo.point.make.2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="672,518" fillcolor="magenta"];
-Make2DPoint2 [type="vuo.point.make.2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="747,1381" fillcolor="violet"];
-Make2DPoint3 [type="vuo.point.make.2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="754,1598" fillcolor="violet"];
-MakeLayer [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="592,132" fillcolor="yellow" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _alpha="1.000000"];
-MakeLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="914,462" fillcolor="magenta" _rotation="0.000000" _alpha="1.000000"];
-MakeLayer5 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="946,1356" fillcolor="violet" _rotation="0.000000" _alpha="1.000000"];
-MakeLayer6 [type="vuo.layer.make" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="953,1573" fillcolor="violet" _rotation="0.000000" _alpha="1.000000"];
+IsLessThan [type="vuo.math.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="70,1446" fillcolor="violet"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="672,518" fillcolor="magenta"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="747,1381" fillcolor="violet"];
+Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="754,1598" fillcolor="violet"];
+MakeLayer [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="592,132" fillcolor="yellow" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _alpha="1.000000"];
+MakeLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="914,462" fillcolor="magenta" _rotation="0.000000" _alpha="1.000000"];
+MakeLayer5 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="946,1356" fillcolor="violet" _rotation="0.000000" _alpha="1.000000"];
+MakeLayer6 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="953,1573" fillcolor="violet" _rotation="0.000000" _alpha="1.000000"];
 MakeList10 [type="vuo.list.make.1.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="120,889" fillcolor="magenta" _item1="0.100000"];
 MakeList13 [type="vuo.list.make.1.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="-308,93" fillcolor="yellow" _item1="\"\\/System\\/Library\\/Compositions\\/Fish.mov\""];
 MakeList15 [type="vuo.list.make.4.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="1193,310"];
@@ -56,18 +56,18 @@ MakeList6 [type="vuo.list.make.2.VuoBoolean" version="1.0.0" label="Make List|<r
 MakeList8 [type="vuo.list.make.1.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="133,756" fillcolor="magenta" _item1=""];
 MakeList9 [type="vuo.list.make.1.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="127,819" fillcolor="magenta" _item1="-0.450000"];
 MeasureTime [type="vuo.time.measureTime" version="1.0.0" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<done>done\r|<elapsedTime>elapsedTime\r" pos="-243,1506" fillcolor="violet"];
-PlayButtonX [type="vuo.math.add.real" version="1.0.0" label="Progress Bar X|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="505,1335" fillcolor="violet"];
+PlayButtonX [type="vuo.math.add.VuoReal" version="1.0.0" label="Progress Bar X|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="505,1335" fillcolor="violet"];
 PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="177,97" fillcolor="yellow" _loop="\"none\"" _playbackRate="1.000000" _setTime="\"\""];
-PlayheadX [type="vuo.math.add.real" version="1.0.0" label="Progress Bar Y|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="508,1410" fillcolor="violet"];
-PlayheadY [type="vuo.math.add.real" version="1.0.0" label="Progress Bar Width|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="484,1483" fillcolor="violet"];
-ProgressBarWidth [type="vuo.math.add.real" version="1.0.0" label="Playhead Width|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="580,1657" fillcolor="violet"];
+PlayheadX [type="vuo.math.add.VuoReal" version="1.0.0" label="Progress Bar Y|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="508,1410" fillcolor="violet"];
+PlayheadY [type="vuo.math.add.VuoReal" version="1.0.0" label="Progress Bar Width|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="484,1483" fillcolor="violet"];
+ProgressBarWidth [type="vuo.math.add.VuoReal" version="1.0.0" label="Playhead Width|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="580,1657" fillcolor="violet"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1253,299"];
 Scale [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="324,1613" fillcolor="violet" _start=""];
 SelectInput [type="vuo.select.in.VuoImage" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="449,470" fillcolor="magenta"];
 SelectLatest [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="375,179" fillcolor="yellow"];
 SelectOutput3 [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1510,904" fillcolor="magenta"];
 SelectOutput4 [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-33,177" fillcolor="yellow"];
-Subtract [type="vuo.math.subtract.real" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="92,1714" fillcolor="violet" _a="0.000000"];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="92,1714" fillcolor="violet" _a="0.000000"];
 Toggle [type="vuo.logic.toggle" version="1.0.0" label="Is Playing|<refresh>refresh\l|<toggle>toggle\l|<done>done\r|<value>value\r" pos="-270,450"];
 
 Add2:sum -> Make2DPoint:x;

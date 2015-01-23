@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNodeClass interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -37,6 +37,7 @@ private:
 	Function *callbackUpdateFunction;
 	Function *callbackStopFunction;
 	VuoCompilerInstanceDataClass *instanceDataClass;
+	map<string, set<string> > compatibleSpecializedForGenericTypeName;
 
 	static bool isNodeClass(Module *module, string moduleKey);
 	void parse(void);
@@ -50,8 +51,6 @@ private:
 	void parseCallbackStopFunction(void);
 	void parseParameters(Function *function, unsigned long acceptanceFlags);
 	void instantiateCompilerNode(VuoNode *node);
-	VuoPortClass * getInputPortClassWithName(string portName);
-	VuoPortClass * getOutputPortClassWithName(string portName);
 
 	VuoCompilerInputDataClass * parseInputDataParameter(string annotation, Argument *a);
 	VuoCompilerOutputDataClass * parseOutputDataParameter(string annotation, Argument *a);
@@ -70,6 +69,12 @@ private:
 protected:
 	VuoCompilerNodeClass(string className, Module * module);
 	VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeClass);
+	VuoPortClass * getInputPortClassWithName(string portName);
+	VuoPortClass * getOutputPortClassWithName(string portName);
+
+	map<string, string> defaultSpecializedForGenericTypeName;  ///< If this node class is generic, use these specialized types when creating an instance.
+
+	static void parseGenericTypes(json_object *moduleDetails, map<string, string> &defaultSpecializedForGenericTypeName, map<string, set<string> > &compatibleSpecializedForGenericTypeName);
 
 public:
 	VuoNode * newNode(string title = "", double x = 0, double y = 0);
@@ -86,6 +91,7 @@ public:
 	Function * getCallbackStopFunction(void);
 	VuoCompilerInstanceDataClass * getInstanceDataClass(void);
 	string getDoxygenDocumentation(void);
+	string getDefaultSpecializedTypeName(string genericTypeName);
 };
 
 #endif

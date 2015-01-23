@@ -2,7 +2,7 @@
  * @file
  * VuoGlPool implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -123,37 +123,94 @@ void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long 
 
 
 typedef pair<unsigned short,unsigned short> VuoGlTextureDimensionsType;	///< Texture width and height.
-typedef map<GLenum, map<VuoGlTextureDimensionsType, queue<GLuint> > > VuoGlTexturePoolType;	///< VuoGlTexturePool[internalformat][size] gives a list of unused textures.
+typedef pair<queue<GLuint>,double> VuoGlTextureLastUsed;	///< A queue of textures of a given format and size, including the last time any of the textures were used.
+typedef map<GLenum, map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed > > VuoGlTexturePoolType;	///< VuoGlTexturePool[internalformat][size] gives a list of unused textures.
 static VuoGlTexturePoolType VuoGlTexturePool;
 static dispatch_semaphore_t VuoGlTexturePool_semaphore;
+static double textureTimeout = 0.1;	///< Seconds a texture can remain in the pool unused, before it gets purged.
+
+static double VuoGlTexturePool_getTime(void)
+{
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	return t.tv_sec + t.tv_usec / 1000000.;
+}
 
 #if 0
 static void VuoGlTexturePool_dump(void *blah)
 {
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		VLog("pool (%llu MB allocated)", totalGLMemoryAllocated/1024);
+		double now = VuoGlTexturePool_getTime();
+		VLog("pool (%llu MB allocated)", totalGLMemoryAllocated/1024/1024);
 		for (VuoGlTexturePoolType::const_iterator internalformat = VuoGlTexturePool.begin(); internalformat != VuoGlTexturePool.end(); ++internalformat)
 		{
 			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
-			for (map<VuoGlTextureDimensionsType, queue<GLuint> >::const_iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); ++dimensions)
-				VLog("\t\t%dx%d: %lu unused textures",dimensions->first.first,dimensions->first.second, dimensions->second.size());
+			for (map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed >::const_iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); ++dimensions)
+				VLog("\t\t%dx%d: %lu unused textures (last used %gs ago)",dimensions->first.first,dimensions->first.second, dimensions->second.first.size(), now - dimensions->second.second);
 		}
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 }
 static void __attribute__((constructor)) VuoGlTexturePool_initDump(void)
 {
-	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*2, NSEC_PER_SEC*2);
-	dispatch_source_set_event_handler_f(timer, VuoGlTexturePool_dump);
-	dispatch_resume(timer);
+	dispatch_async(dispatch_get_main_queue(), ^{
+					   dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+					   dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*2, NSEC_PER_SEC*2);
+					   dispatch_source_set_event_handler_f(timer, VuoGlTexturePool_dump);
+					   dispatch_resume(timer);
+				   });
 }
 #endif
 
+static void VuoGlTexturePool_cleanup(void *blah)
+{
+	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		double now = VuoGlTexturePool_getTime();
+		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool.begin(); internalformat != VuoGlTexturePool.end(); ++internalformat)
+		{
+			for (map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed >::iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); )
+				if (now - dimensions->second.second > textureTimeout)
+				{
+					unsigned short width = dimensions->first.first;
+					unsigned short height = dimensions->first.second;
+					unsigned long textureCount = dimensions->second.first.size();
+					if (textureCount)
+					{
+//						VLog("purging %lu expired textures (%s: %dx%d)", textureCount, VuoGl_stringForConstant(internalformat->first), width, height);
+						CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+						while (!dimensions->second.first.empty())
+						{
+							GLuint textureName = dimensions->second.first.front();
+							dimensions->second.first.pop();
+
+							glDeleteTextures(1, &textureName);
+
+							/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
+							totalGLMemoryAllocated -= width*height*4;
+						}
+						VuoGlContext_disuse(cgl_ctx);
+					}
+
+					internalformat->second.erase(dimensions++);
+				}
+				else
+					++dimensions;
+		}
+	}
+	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
+}
 static void __attribute__((constructor)) VuoGlTexturePool_init(void)
 {
 	VuoGlTexturePool_semaphore = dispatch_semaphore_create(1);
+
+	dispatch_async(dispatch_get_main_queue(), ^{
+					   dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+					   dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*textureTimeout, NSEC_PER_SEC*textureTimeout);
+					   dispatch_source_set_event_handler_f(timer, VuoGlTexturePool_cleanup);
+					   dispatch_resume(timer);
+				   });
 }
 
 /**
@@ -179,12 +236,13 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 	GLuint name = 0;
 	VuoGlTextureDimensionsType dimensions(width,height);
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
-	if (VuoGlTexturePool[internalformat][dimensions].size())
+	if (VuoGlTexturePool[internalformat][dimensions].first.size())
 	{
-		name = VuoGlTexturePool[internalformat][dimensions].front();
-		VuoGlTexturePool[internalformat][dimensions].pop();
+		name = VuoGlTexturePool[internalformat][dimensions].first.front();
+		VuoGlTexturePool[internalformat][dimensions].first.pop();
 //		if (name) VLog("using recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
 	}
+	VuoGlTexturePool[internalformat][dimensions].second = VuoGlTexturePool_getTime();
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
 
@@ -242,7 +300,8 @@ static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat
 	VuoGlTextureDimensionsType dimensions(width,height);
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		VuoGlTexturePool[internalformat][dimensions].push(name);
+		VuoGlTexturePool[internalformat][dimensions].first.push(name);
+		VuoGlTexturePool[internalformat][dimensions].second = VuoGlTexturePool_getTime();
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 

@@ -1,4 +1,4 @@
-VUO_VERSION = 0.5.4
+VUO_VERSION = 0.5.5
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -25,7 +25,6 @@ ZMQ_ROOT = /usr/local/Cellar/zeromq/2.2.0
 OPENSSL_ROOT = /usr/local/Cellar/openssl/1.0.1c
 MUPARSER_ROOT = /usr/local/Cellar/muparser/2.2.3
 FREEIMAGE_ROOT = /usr/local/Cellar/freeimage/3.15.4
-FREETYPE_ROOT = /usr/local/Cellar/freetype/2.5.0.1
 CURL_ROOT = /usr/local/Cellar/curl/7.30.0
 RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.0.1270
@@ -33,6 +32,7 @@ DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
 FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
 LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.9
 LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.2.0
+OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport

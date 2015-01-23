@@ -1,8 +1,8 @@
 /**
 * @file
-* Acts as a Syphon client, receiving images from another Vuo composition if available. Try running this composition at the same time as SendImages.vuo or <a href="http://syphon.v002.info/">Simple Server</a>. 
+* Acts as a Syphon client, receiving images from another Vuo composition if available. Try running this composition at the same time as [SendImages.vuo](vuo-example://vuo.syphon/SendImages.vuo) or [Simple Server](http://syphon.v002.info/). 
 *
-* @copyright Copyright © 2012—2013 Kosada Incorporated.
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
 * For more information, see http://vuo.org/license.
 */
@@ -10,7 +10,7 @@
 digraph G
 {
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="134,91"];
-MakeServerDescription [type="vuo.syphon.make.serverDescription" version="1.0.0" label="Make Server Description|<refresh>refresh\l|<serverName>serverName\l|<applicationName>applicationName\l|<done>done\r|<serverDescription>serverDescription\r" pos="131,225" _serverName="" _applicationName="\"Vuo\""];
+MakeServerDescription [type="vuo.syphon.make.serverDescription" version="1.0.0" label="Make Server Description|<refresh>refresh\l|<serverName>serverName\l|<applicationName>applicationName\l|<done>done\r|<serverDescription>serverDescription\r" pos="131,225" fillcolor="violet" _serverName="" _applicationName="\"Vuo\""];
 ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="363,226"];
 RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="609,226"];
 

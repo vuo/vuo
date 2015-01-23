@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,7 +10,7 @@
 digraph G 
 {
 GetMouse [type="vuo.mouse" version="100" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="76.5,93.5"];
-Get2DPointValues3 [type="vuo.point.get.2d" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="525.5,163.5" _point="0,0"];
+Get2DPointValues3 [type="vuo.point.get.VuoPoint2d" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="525.5,163.5" _point="0,0"];
 
 GetMouse:movedTo -> Get2DPointValues3:point;
 }

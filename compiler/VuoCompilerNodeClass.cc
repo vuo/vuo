@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerNodeClass implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -16,8 +16,10 @@
 #include "VuoCompiler.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
 
+#include "VuoGenericType.hh"
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
 #include "VuoStringUtilities.hh"
@@ -90,6 +92,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	this->callbackUpdateFunction = compilerNodeClass->callbackUpdateFunction;
 	this->callbackStopFunction = compilerNodeClass->callbackStopFunction;
 	this->instanceDataClass = compilerNodeClass->instanceDataClass;
+	this->defaultSpecializedForGenericTypeName = compilerNodeClass->defaultSpecializedForGenericTypeName;
 }
 
 /**
@@ -124,18 +127,16 @@ void VuoCompilerNodeClass::instantiateCompilerNode(VuoNode *node)
 {
 	// Instantiate compiler ports.
 	vector<VuoPort *> inputPorts = node->getInputPorts();
-	vector<VuoPort*> outputPorts = node->getOutputPorts();
+	vector<VuoPort *> outputPorts = node->getOutputPorts();
+	vector<VuoPort *> ports;
+	ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
+	ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
 
-	for (vector<VuoPort *>::iterator port = inputPorts.begin(); port != inputPorts.end(); ++port)
+	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
 	{
-		VuoCompilerPortClass *portClass = (VuoCompilerPortClass *)((*port)->getClass()->getCompiler());
-		(*port)->setCompiler(portClass->newPort(*port));
-	}
-
-	for (vector<VuoPort *>::iterator port = outputPorts.begin(); port != outputPorts.end(); ++port)
-	{
-		VuoCompilerPortClass *portClass = (VuoCompilerPortClass *)((*port)->getClass()->getCompiler());
-		(*port)->setCompiler(portClass->newPort(*port));
+		VuoPort *basePort = *i;
+		VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(basePort->getClass()->getCompiler());
+		basePort->setCompiler(portClass->newPort(basePort));
 	}
 
 	// Instantiate compiler node.
@@ -270,6 +271,33 @@ void VuoCompilerNodeClass::parseMetadata(void)
 	{
 		getBase()->setInterface( parseBool(nodeDetails, "isInterface") );
 		getBase()->setExampleCompositionFileNames( parseArrayOfStrings(nodeDetails, "exampleCompositions") );
+	}
+
+	parseGenericTypes(moduleDetails, defaultSpecializedForGenericTypeName, compatibleSpecializedForGenericTypeName);
+}
+
+/**
+ * Parses the "genericTypes" portion of a node class's metadata.
+ *
+ * @see VuoModuleMetadata
+ */
+void VuoCompilerNodeClass::parseGenericTypes(json_object *moduleDetails,
+											 map<string, string> &defaultSpecializedForGenericTypeName,
+											 map<string, set<string> > &compatibleSpecializedForGenericTypeName)
+{
+	json_object *genericTypeDetails = NULL;
+	if (json_object_object_get_ex(moduleDetails, "genericTypes", &genericTypeDetails))
+	{
+		json_object_object_foreach(genericTypeDetails, genericTypeName, genericTypeDetailsForOneType)
+		{
+			string defaultType = parseString(genericTypeDetailsForOneType, "defaultType");
+			if (! defaultType.empty())
+				defaultSpecializedForGenericTypeName[genericTypeName] = defaultType;
+
+			vector<string> compatibleTypes = parseArrayOfStrings(genericTypeDetailsForOneType, "compatibleTypes");
+			if (! compatibleTypes.empty())
+				compatibleSpecializedForGenericTypeName[genericTypeName].insert(compatibleTypes.begin(), compatibleTypes.end());
+		}
 	}
 }
 
@@ -826,7 +854,31 @@ VuoType * VuoCompilerNodeClass::parseTypeParameter(string annotation)
 		return NULL;
 
 	string typeName = VuoStringUtilities::substrAfter(annotation, "vuoType:");
-	VuoType *type = (typeName == "void" ? NULL : new VuoType(typeName));
+
+	VuoType *type;
+	if (typeName == "void")
+	{
+		type = NULL;
+	}
+	else if (VuoGenericType::isGenericTypeName(typeName))
+	{
+		string innermostTypeName = VuoType::extractInnermostTypeName(typeName);
+		set<string> compatibleTypes;
+		map<string, set<string> >::iterator compatibleTypesIter = compatibleSpecializedForGenericTypeName.find(innermostTypeName);
+		if (compatibleTypesIter != compatibleSpecializedForGenericTypeName.end())
+		{
+			string prefix = (VuoType::isListTypeName(typeName) ? VuoType::listTypeNamePrefix : "");
+			set<string> innermostCompatibleTypes = compatibleTypesIter->second;
+			for (set<string>::iterator i = innermostCompatibleTypes.begin(); i != innermostCompatibleTypes.end(); ++i)
+				compatibleTypes.insert(prefix + *i);
+		}
+
+		type = new VuoGenericType(typeName, compatibleTypes);
+	}
+	else
+	{
+		type = new VuoType(typeName);
+	}
 	return type;
 }
 
@@ -1030,4 +1082,17 @@ string VuoCompilerNodeClass::getDoxygenDocumentation(void)
 	documentation << " */";
 
 	return documentation.str();
+}
+
+/**
+ * If this node class is generic, returns the default specialized types to replace the generic type with
+ * when creating an instance.
+ */
+string VuoCompilerNodeClass::getDefaultSpecializedTypeName(string genericTypeName)
+{
+	map<string, string>::iterator typeNameIter = defaultSpecializedForGenericTypeName.find(genericTypeName);
+	if (typeNameIter != defaultSpecializedForGenericTypeName.end())
+		return typeNameIter->second;
+
+	return "";
 }

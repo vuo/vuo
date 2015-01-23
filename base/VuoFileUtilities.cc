@@ -2,7 +2,7 @@
  * @file
  * VuoFileUtilities implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -142,8 +142,18 @@ string VuoFileUtilities::cFileToString(FILE *file)
 void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, string file)
 {
 	FILE *f = fopen(file.c_str(), "wb");
-	fwrite(data, sizeof(char *), numBytes, f);
+	fwrite(data, sizeof(char), numBytes, f);
 	fclose(f);
+}
+
+/**
+ * Writes the string to the file.
+ *
+ * If the file already exists, it gets overwritten.
+ */
+void VuoFileUtilities::writeStringToFile(string s, string file)
+{
+	writeRawDataToFile(s.data(), s.length(), file);
 }
 
 /**

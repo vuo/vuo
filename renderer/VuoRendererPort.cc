@@ -2,10 +2,12 @@
  * @file
  * VuoRendererPort implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
+
+#include "VuoStringUtilities.hh"
 
 #include "VuoRendererComposition.hh"
 #include "VuoRendererCable.hh"
@@ -23,6 +25,8 @@
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerTriggerPort.hh"
+
+#include "VuoGenericType.hh"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -703,28 +707,116 @@ void VuoRendererPort::extendedHoverLeaveEvent()
  * attached directly from this port to @c toPort, taking into account
  * the respective port types (input vs. output; event-only vs.
  * event+data; respective data types).
+ *
+ * If the connection would require one or both ports to be specialized, returns false.
+ * (But see @c VuoRendererPort::canConnectDirectlyWithSpecializationTo(...).)
  */
-bool VuoRendererPort::canConnectDirectlyTo(VuoRendererPort *toPort)
+bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort)
 {
 	bool fromPortIsOutput = (this->getOutput());
 	bool toPortIsInput = (toPort->getInput());
 
 	if (fromPortIsOutput && toPortIsInput)
 	{
-		// OK: Event-only to event+data.
-		if ((! this->getDataType()) && (toPort->getDataType()))
-		{
-			return true;
-		}
+		VuoType *fromDataType = this->getDataType();
+		VuoType *toDataType = toPort->getDataType();
 
+		// OK: Event-only to event+data.
 		// OK: Event-only to event-only.
-		// OK: Event+data to event+data, if data types match.
+		if (!fromDataType)
+			return true;
+
 		// NOT OK (without a typeconverter): Event+data to event-only.
+		else if (fromDataType && !toDataType)
+			return false;
+
+		// OK: Event+data to event+data, if types are non-generic and identical.
 		else
-		{
-			return (this->getDataType() == toPort->getDataType());
-		}
+			return (! dynamic_cast<VuoGenericType *>(fromDataType) && (fromDataType == toDataType));
 	}
+	return false;
+}
+
+/**
+ * Returns a boolean indicating whether there may be a cable
+ * attached directly from this port to @c toPort, taking into account
+ * the respective port types (input vs. output; event-only vs.
+ * event+data; respective data types), and the possibility that one
+ * port may be specialized in preparation for the connection.
+ *
+ * Convenience function for VuoRendererPort::canConnectDirectlyWithSpecializationTo(const VuoRendererPort *toPort,
+ * VuoRendererPort **portToSpecialize, string &specializedTypeName), for use
+ * when only the returned boolean and none of the other output parameter values are needed.
+ */
+bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort)
+{
+	VuoRendererPort *portToSpecialize = NULL;
+	string specializedTypeName = "";
+
+	return (this->canConnectDirectlyWithSpecializationTo(toPort, &portToSpecialize, specializedTypeName));
+}
+
+/**
+ * Returns a boolean indicating whether there may be a cable
+ * attached directly from this port to @c toPort, taking into account
+ * the respective port types (input vs. output; event-only vs.
+ * event+data; respective data types), and the possibility that one
+ * port may be specialized in preparation for the connection.
+ *
+ * @param[out] toPort The port to consider connecting to.
+ * @param[out] portToSpecialize The port, either this port or @c toPort, that will require specialization in order for the connection to be completed.
+ *                              Does not account for potential cascade effects. May be NULL, if the connection may be completed without specialization.
+ * @param[out] specializedTypeName The name of the specialized port type with which the generic port type is to be replaced.
+ */
+bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, VuoRendererPort **portToSpecialize, string &specializedTypeName)
+{
+	*portToSpecialize = NULL;
+	specializedTypeName = "";
+
+	if (this->canConnectDirectlyWithoutSpecializationTo(toPort))
+		return true;
+
+	bool fromPortIsOutput = (this->getOutput());
+	bool toPortIsInput = (toPort->getInput());
+
+	VuoType *originalFromDataType = ((VuoCompilerPortClass *)(this->getBase()->getClass()->getCompiler()))->getDataVuoType();
+	VuoType *originalToDataType = ((VuoCompilerPortClass *)(toPort->getBase()->getClass()->getCompiler()))->getDataVuoType();
+
+	VuoType *currentFromDataType = this->getDataType();
+	VuoType *currentToDataType = toPort->getDataType();
+
+	if (!(fromPortIsOutput && toPortIsInput && originalFromDataType && originalToDataType && currentFromDataType && currentToDataType))
+		return false;
+
+	VuoGenericType *currentFromGenericType = dynamic_cast<VuoGenericType *>(currentFromDataType);
+	VuoGenericType *currentToGenericType = dynamic_cast<VuoGenericType *>(currentToDataType);
+
+	/// @todo (https://b33p.net/kosada/node/7032)
+	if (VuoType::isListTypeName(currentFromDataType->getModuleKey()) != VuoType::isListTypeName(currentToDataType->getModuleKey()))
+		return false;
+
+	// Case: The 'From' and 'To' ports are both generics.
+	if (currentFromGenericType && currentToGenericType)
+		return (currentFromGenericType->isGenericTypeCompatible(currentToGenericType));
+
+	// Case: The 'From' port is generic and can be specialized to match the concrete type of the 'To' port.
+	if (currentFromGenericType && currentFromGenericType->isSpecializedTypeCompatible(originalToDataType->getModuleKey()))
+	{
+		*portToSpecialize = this;
+		specializedTypeName = originalToDataType->getModuleKey();
+
+		return true;
+	}
+
+	// Case: The 'To' port is generic and can be specialized to match the concrete type of the 'From' port.
+	else if (currentToGenericType && currentToGenericType->isSpecializedTypeCompatible(originalFromDataType->getModuleKey()))
+	{
+		*portToSpecialize = toPort;
+		specializedTypeName = originalFromDataType->getModuleKey();
+
+		return true;
+	}
+
 	return false;
 }
 
@@ -846,11 +938,11 @@ QVariant VuoRendererPort::itemChange(GraphicsItemChange change, const QVariant &
  */
 VuoType * VuoRendererPort::getDataType(void) const
 {
-	if (!getBase()->getClass()->hasCompiler())
+	if (!getBase()->hasCompiler())
 		return NULL;
 
-	VuoCompilerPortClass *portClassCompiler = static_cast<VuoCompilerPortClass *>(getBase()->getClass()->getCompiler());
-	return portClassCompiler->getDataVuoType();
+	VuoCompilerPort *compilerPort = static_cast<VuoCompilerPort *>(getBase()->getCompiler());
+	return compilerPort->getDataVuoType();
 }
 
 /**
@@ -886,6 +978,10 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 	// @todo: Implement this properly.  See https://b33p.net/kosada/node/5700
 	if (getDataType())
 	{
+		// Don't display constant input values for generic ports.
+		if (dynamic_cast<VuoGenericType *>(getDataType()))
+			return "";
+
 		if (getDataType()->getModuleKey()=="VuoColor")
 		{
 			return "  ";
@@ -959,6 +1055,32 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			QList<double> pointList = QList<double>() << x << y << z << w;
 			return getPointStringForCoords(pointList);
+		}
+		if (getDataType()->getModuleKey()=="VuoFont")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *fontName = NULL;
+			if (json_object_object_get_ex(js, "fontName", &o))
+				fontName = json_object_get_string(o);
+
+			double pointSize = 0;
+			if (json_object_object_get_ex(js, "pointSize", &o))
+				pointSize = json_object_get_double(o);
+
+			bool underline = false;
+			if (json_object_object_get_ex(js, "underline", &o))
+				underline = json_object_get_boolean(o);
+			const char *underlineString = underline ? " [U]" : "";
+
+			const char *outputString = "";
+			if (fontName)
+				outputString = QString("%1 %2pt%3").arg(fontName).arg(pointSize).arg(underlineString).toUtf8().data();
+
+			json_object_put(js);
+
+			return outputString;
 		}
 	}
 

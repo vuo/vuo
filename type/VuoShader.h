@@ -2,7 +2,7 @@
  * @file
  * VuoShader C type definition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #ifndef VUOSHADER_H
 #define VUOSHADER_H
 
+#include "VuoColor.h"
 #include "VuoImage.h"
 #include "VuoInteger.h"
 #include "VuoPoint2d.h"
@@ -69,6 +70,8 @@ void VuoShader_resetTextures(VuoShader shader);
 void VuoShader_addTexture(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoImage texture);
 void VuoShader_activateTextures(VuoShader shader, VuoGlContext glContext);
 void VuoShader_deactivateTextures(VuoShader shader, VuoGlContext glContext);
+
+VuoShader VuoShader_makeColorShader(VuoColor color);
 
 /// @{
 /**

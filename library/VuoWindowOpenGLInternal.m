@@ -2,7 +2,7 @@
  * @file
  * VuoWindowOpenGLInternal implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -60,6 +60,13 @@ VuoModuleMetadata({
 
 		pendingClickCount = 0;
 		clickQueue = dispatch_queue_create("vuo.window.opengl.internal.click", 0);
+
+		if ([self respondsToSelector:@selector(setWantsBestResolutionOpenGLSurface:)])
+		{
+			typedef void (*funcType)(id receiver, SEL selector, BOOL wants);
+			funcType setWantsBestResolutionOpenGLSurface = (funcType)[[self class] instanceMethodForSelector:@selector(setWantsBestResolutionOpenGLSurface:)];
+			setWantsBestResolutionOpenGLSurface(self, @selector(setWantsBestResolutionOpenGLSurface:), YES);
+		}
 	}
 	return self;
 }
@@ -333,7 +340,13 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	dispatch_sync(drawQueue, ^{
 					  NSOpenGLContext *glContext = [self openGLContext];
 					  CGLContextObj cgl_ctx = [glContext CGLContextObj];
-					  NSRect frame = [self frame];
+					  NSRect frame = [self bounds];
+					  if ([self respondsToSelector:@selector(convertRectToBacking:)])
+					  {
+						  typedef NSRect (*funcType)(id receiver, SEL selector, NSRect rect);
+						  funcType convertRectToBacking = (funcType)[[self class] instanceMethodForSelector:@selector(convertRectToBacking:)];
+						  frame = convertRectToBacking(self, @selector(convertRectToBacking:), frame);
+					  }
 					  glViewport(0, 0, frame.size.width, frame.size.height);
 					  resizeCallback(cgl_ctx, drawContext, frame.size.width, frame.size.height);
 					  drawCallback(cgl_ctx, drawContext);

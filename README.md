@@ -184,16 +184,6 @@ If you're running any version of Mac OS X:
     make -j9
     make install
 
-### freetype
-
-    cd /tmp
-    curl -OL http://download.savannah.gnu.org/releases/freetype/freetype-2.5.0.1.tar.gz
-    tar zxf freetype-2.5.0.1.tar.gz
-    cd freetype-2.5.0.1
-    ./configure --prefix=/usr/local/Cellar/freetype/2.5.0.1 --enable-shared=no --without-bzip2
-    make -j9
-    make -k install
-
 ### FreeImage
 
     cd /tmp
@@ -332,6 +322,23 @@ If you're running any version of Mac OS X:
     LDFLAGS='-framework IOKit -framework CoreFoundation -lobjc' cmake -DLIBUSB_1_INCLUDE_DIR='/usr/local/Cellar/libusb/1.0.9/include;/usr/local/Cellar/libusb/1.0.9/include/libusb-1.0' -DLIBUSB_1_LIBRARY=/usr/local/Cellar/libusb/1.0.9/lib/libusb.dylib -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/Cellar/libfreenect/0.2.0 .
     make -j9
     make install
+
+### oscpack
+
+    cd /tmp
+    curl -OL https://oscpack.googlecode.com/files/oscpack_1_1_0.zip
+    unzip oscpack_1_1_0.zip
+    cd oscpack_1_1_0
+    # https://code.google.com/p/oscpack/issues/detail?id=15
+    curl -OL https://b33p.net/sites/default/files/udpsocket-get-port-1_1_0_0.patch
+    patch -p0 < udpsocket-get-port-1_1_0_0.patch
+    mkdir -p /usr/local/Cellar/oscpack/1.1.0/{lib,include}
+    make install PREFIX=/usr/local/Cellar/oscpack/1.1.0
+    ar -r liboscpack.a `find . -name *.o`  # ... if liboscpack.a doesn't already exist
+    cp liboscpack.a /usr/local/Cellar/oscpack/1.1.0/lib
+    mkdir -p /usr/local/Cellar/oscpack/1.1.0/include/oscpack/{osc,ip}
+    cp osc/*.h /usr/local/Cellar/oscpack/1.1.0/include/oscpack/osc
+    cp ip/*.h /usr/local/Cellar/oscpack/1.1.0/include/oscpack/ip
 
 ### ld64 133.3
 

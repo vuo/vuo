@@ -2,7 +2,7 @@
  * @file
  * Prototypes for node class, type, and library module implementations.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -37,9 +37,26 @@
  * 					 },
  * 					 "node": {
  * 						 "isInterface" : true,
- *						 "exampleCompositions" : [ "HelloWorld.vuo", "CalculateTip.vuo" ]
+ * 						 "exampleCompositions" : [ "HelloWorld.vuo", "CalculateTip.vuo" ]
  * 					 }
  * 				 });
+ * }
+ *
+ * \eg{
+ * VuoModuleMetadata({
+ * 					 "title" : "Add",
+ *					 "keywords" : [ "sum", "plus", "total", "+", "arithmetic", "calculate" ],
+ *					 "version" : "1.0.0",
+ *					 "genericTypes" : {
+ *						 "VuoGenericType1" : {
+ *							"defaultType" : "VuoReal",
+ *							"compatibleTypes" : [ "VuoInteger", "VuoReal" ]
+ *						 }
+ *					 },
+ *					 "node": {
+ *						 "isInterface" : false
+ *					 }
+ *				 });
  * }
  *
  * Pass a <a href="http://www.json.org/">JSON</a> specification that contains metadata about the node class,
@@ -55,6 +72,14 @@
  *      This object contains keys for operating system names and values for the range of versions supported. Each range may specify "min", "max", or both.
  *      The operating systems and versions currently supported are:
  *      - "macosx" — "10.6", "10.7", "10.8", "10.9"
+ *   - "genericTypes" — Information about generic types used by this module.
+ *      (This key is optional even if the module uses generic types. Currently, this key is only supported for node classes.)
+ *      This object contains keys for generic type names and values for details about those types.
+ *      For each generic type name, the details may optionally include:
+ *      - "compatibleTypes" — A list of data types that the generic type is allowed be specialized (replaced) with.
+ *        If none are given, the generic type is allowed be specialized with any data type.
+ *      - "defaultType" — A data type that the generic type should be specialized with when this node class is instantiated in the Vuo Editor.
+ *        If none is given, the node class is instantiated with the generic type.
  *
  * For node classes, the keys in the JSON specification may optionally include "node". Its keys may optionally include:
  *   - "isInterface" — True if this node class sends data to or receives data from somewhere external to the composition (e.g., input device, file, network). False by default.

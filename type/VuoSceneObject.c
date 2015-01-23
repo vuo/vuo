@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -15,6 +15,7 @@
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoVertices.h"
 #include "VuoList_VuoSceneObject.h"
+#include "VuoBoolean.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -41,6 +42,7 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 
 	o.verticesList = NULL;
 	o.shader = NULL;
+	o.isRealSize = false;
 
 	o.childObjects = NULL;
 
@@ -61,6 +63,7 @@ VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader s
 
 	o.verticesList = verticesList;
 	o.shader = shader;
+	o.isRealSize = false;
 
 	o.childObjects = childObjects;
 
@@ -73,6 +76,36 @@ VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader s
 }
 
 /**
+ * Returns a scene object that renders a quad with the specified shader.
+ *
+ * The quad does not include normals, tangents, or bitangents.
+ *
+ * @param shader The shader used to render the object.
+ * @param center The object's center, specified in scene coordinates.
+ * @param rotation The object's rotation, specified in degrees.
+ * @param width The object's width, specified in scene coordinates.
+ * @param height The object's height, specified in scene coordinates.
+ * @return The quad scene object.
+ *
+ * @threadAnyGL
+ */
+VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height)
+{
+	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
+	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuadWithoutNormals());
+	return VuoSceneObject_make(
+				verticesList,
+				shader,
+				VuoTransform_makeEuler(
+					center,
+					VuoPoint3d_multiply(rotation, M_PI/180.),
+					VuoPoint3d_make(width,height,1)
+				),
+				NULL
+			);
+}
+
+/**
  * Returns a scene object with the specified @c image.
  *
  * @threadAnyGL
@@ -82,18 +115,12 @@ VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPo
 	if (!image)
 		return VuoSceneObject_makeEmpty();
 
-	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
-	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
-	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuadWithoutNormals());
-	VuoSceneObject object = VuoSceneObject_make(
-				verticesList,
+	VuoSceneObject object = VuoSceneObject_makeQuad(
 				VuoShader_makeImageShader(),
-				VuoTransform_makeEuler(
-					center,
-					VuoPoint3d_multiply(rotation, M_PI/180.),
-					VuoPoint3d_make(width,image->pixelsHigh * width/image->pixelsWide,1)
-				),
-				NULL
+				center,
+				rotation,
+				width,
+				image->pixelsHigh * width/image->pixelsWide
 			);
 
 	{
@@ -316,6 +343,7 @@ const char * VuoSceneObject_cStringForCameraType(VuoSceneObject_CameraType camer
  *   {
  *     "verticesList" : ... ,
  *     "shader" : ... ,
+ *     "isRealSize" : false,
  *     "childObjects" : ...,
  *     "transform" : ...
  *   }
@@ -343,6 +371,10 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	VuoShader shader = NULL;
 	if (json_object_object_get_ex(js, "shader", &o))
 		shader = VuoShader_valueFromJson(o);
+
+	bool isRealSize = false;
+	if (json_object_object_get_ex(js, "isRealSize", &o))
+		isRealSize = VuoBoolean_valueFromJson(o);
 
 	VuoList_VuoSceneObject childObjects = NULL;
 	if (json_object_object_get_ex(js, "childObjects", &o))
@@ -395,7 +427,11 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 					cameraDistanceMax
 					);
 	else
-		return VuoSceneObject_make(verticesList, shader, transform, childObjects);
+	{
+		VuoSceneObject o = VuoSceneObject_make(verticesList, shader, transform, childObjects);
+		o.isRealSize = isRealSize;
+		return o;
+	}
 }
 
 /**
@@ -430,6 +466,9 @@ json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
 			json_object *shaderObject = VuoShader_jsonFromValue(value.shader);
 			json_object_object_add(js, "shader", shaderObject);
 		}
+
+		json_object *isRealSizeObject = VuoBoolean_jsonFromValue(value.isRealSize);
+		json_object_object_add(js, "isRealSize", isRealSizeObject);
 
 		if (value.childObjects)
 		{

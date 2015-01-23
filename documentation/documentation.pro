@@ -22,18 +22,19 @@ NODE_CLASS_IMAGES += \
 	../node/vuo.console/vuo.console.window.c \
 	../node/vuo.event/vuo.event.spinOffEvent.c \
 	../node/vuo.event/vuo.event.fireOnStart.c \
-	../node/vuo.hold/vuo.hold.VuoInteger.c \
+	../node/vuo.hold/vuo.hold.c \
 	../node/vuo.image/vuo.image.get.c \
 	../node/vuo.logic/vuo.logic.isOneTrue.c \
-	../node/vuo.math/vuo.math.add.integer.c \
-	../node/vuo.math/vuo.math.count.integer.c \
-	../node/vuo.math/vuo.math.isLessThan.integer.c \
-	../node/vuo.math/vuo.math.subtract.integer.c \
+	../node/vuo.math/vuo.math.add.c \
+	../node/vuo.math/vuo.math.count.c \
+	../node/vuo.math/vuo.math.divide.VuoInteger.c \
+	../node/vuo.math/vuo.math.isLessThan.c \
+	../node/vuo.math/vuo.math.subtract.c \
 	../node/vuo.mouse/vuo.mouse.c \
-	../node/vuo.select/vuo.select.in.2.VuoInteger.c \
-        ../node/vuo.select/vuo.select.in.VuoInteger.c \
-	../node/vuo.select/vuo.select.latest.2.VuoInteger.c \
-	../node/vuo.select/vuo.select.out.2.VuoInteger.c \
+	../node/vuo.select/vuo.select.in.2.c \
+	../node/vuo.select/vuo.select.in.c \
+	../node/vuo.select/vuo.select.latest.2.c \
+	../node/vuo.select/vuo.select.out.2.c \
 	../node/vuo.select/vuo.select.out.event.c \
 	../node/vuo.time/vuo.time.firePeriodically.c
 
@@ -47,14 +48,14 @@ COMPOSITION_IMAGES += \
 	composition/CountWithFeedback.vuo \
 	composition/CountWithInfiniteFeedback.vuo \
 	composition/DiscardDataFromEventToCount.vuo \
-	composition/DisplayImageTwice.vuo \
+	composition/DisplayMultipleWindows.vuo \
 	composition/MultipleEventOnlyCables.vuo \
 	composition/SumAddOne.vuo \
 	../node/vuo.event/examples/LoadImageAsynchronously.vuo \
 	../node/vuo.hold/examples/CountAndHold.vuo \
 	../node/vuo.image/examples/DisplayImage.vuo \
 	../node/vuo.math/examples/Count.vuo \
-	../node/vuo.text/examples/CheckSMSLength.vuo 
+	../node/vuo.text/examples/CheckSmsLength.vuo 
 
 pandoc.commands = cat VuoManual.txt \
 	| awk \'{sub(/VUO_VERSION/,\"$$VUO_VERSION\");print}\' \
@@ -63,6 +64,7 @@ pandoc.commands = cat VuoManual.txt \
 	--table-of-contents \
 	--number-sections \
 	--smart \
+	--template=VuoManualTemplate.tex \
 	--include-in-header=VuoManualHeader.tex \
 	--from=markdown-yaml_metadata_block \
 	-o VuoManual.pdf \

@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject C type definition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -47,6 +47,7 @@ typedef struct VuoSceneObject
 	// Data for visible (mesh) scene objects
 	VuoList_VuoVertices verticesList;
 	VuoShader shader;
+	bool isRealSize;	///< If the object is real-size, it ignores rotations and scales, and is sized to match the shader's first image.
 
 	// Data for group scene objects
 	VuoList_VuoSceneObject childObjects;
@@ -65,6 +66,7 @@ typedef struct VuoSceneObject
 
 VuoSceneObject VuoSceneObject_makeEmpty(void);
 VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects);
+VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
 VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
 VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
 

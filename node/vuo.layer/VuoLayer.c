@@ -2,7 +2,7 @@
  * @file
  * VuoLayer implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -50,6 +50,34 @@ VuoLayer VuoLayer_make(VuoImage image, VuoPoint2d center, VuoReal rotation, VuoR
 	VuoPoint3d center3d = VuoPoint3d_make(center.x, center.y, 0);
 	VuoPoint3d rotation3d = VuoPoint3d_make(0, 0, rotation);
 	o.sceneObject = VuoSceneObject_makeImage(image, center3d, rotation3d, width, alpha);
+	return o;
+}
+
+/**
+ * Creates a visible (image) layer.
+ * The layer is the exact pixel-perfect size of the image (regardless of transform),
+ * and the position is quantized so edges land on whole pixels.
+ */
+VuoLayer VuoLayer_makeRealSize(VuoImage image, VuoPoint2d center, VuoReal alpha)
+{
+	VuoLayer l = VuoLayer_make(image,center,0,0,alpha);
+	l.sceneObject.isRealSize = true;
+	return l;
+}
+
+/**
+ * Creates a visible layer with the specified color
+ */
+VuoLayer VuoLayer_makeColor(VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height)
+{
+	VuoLayer o;
+	o.sceneObject = VuoSceneObject_makeQuad(
+				VuoShader_makeColorShader(color),
+				VuoPoint3d_make(center.x, center.y, 0),
+				VuoPoint3d_make(0, 0, rotation),
+				width,
+				height
+			);
 	return o;
 }
 

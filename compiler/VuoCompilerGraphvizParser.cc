@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerGraphvizParser implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -217,7 +217,7 @@ void VuoCompilerGraphvizParser::makeNodeClasses(void)
 		else if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(dummyNodeClassName))
 		{
 			if (compiler)
-				nodeClassForName[dummyNodeClassName] = VuoCompilerMakeListNodeClass::getNodeClass(dummyNodeClassName, compiler)->getBase();
+				nodeClassForName[dummyNodeClassName] = compiler->getNodeClass(dummyNodeClassName)->getBase();
 			else
 				nodeClassForName[dummyNodeClassName] = dummyNodeClass;
 		}

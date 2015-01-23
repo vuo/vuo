@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerModule interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -40,10 +40,10 @@ protected:
 
 	virtual void parse(void);
 	virtual void parseMetadata(void);
-	string parseString(json_object *o, string key);
-	int parseInt(json_object *o, string key);
-	bool parseBool(json_object *o, string key);
-	vector<string> parseArrayOfStrings(json_object *o, string key);
+	static string parseString(json_object *o, string key);
+	static int parseInt(json_object *o, string key);
+	static bool parseBool(json_object *o, string key);
+	static vector<string> parseArrayOfStrings(json_object *o, string key);
 	virtual set<string> globalsToRename(void);
 	string nameForGlobal(string genericGlobalVarOrFuncName);
 	static string nameForGlobal(string nameBeforeCompilation, string moduleKey);
@@ -61,6 +61,7 @@ public:
 	vector<string> getDependencies(void);
 	VuoCompilerTargetSet getCompatibleTargets(void);
 	Module * getModule(void);
+	VuoModule * getPseudoBase(void);
 };
 
 #endif // VUOCOMPILERMODULE_HH

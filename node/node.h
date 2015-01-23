@@ -2,7 +2,7 @@
  * @file
  * Prototypes for node class implementations.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -36,6 +36,7 @@ struct json_object;
 #include "VuoTransform.h"
 #include "VuoTransform2d.h"
 #include "VuoVertices.h"
+#include "VuoWrapMode.h"
 
 // List Types
 #include "VuoList_VuoBoolean.h"
@@ -59,7 +60,6 @@ struct json_object;
  * @addtogroup DevelopingNodeClasses
  * @{
  */
-
 
 
 /**

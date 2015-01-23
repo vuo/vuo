@@ -21,6 +21,7 @@ SOURCES += \
 	VuoPublishedPort.cc \
 	VuoModule.cc \
 	VuoType.cc \
+	VuoGenericType.cc \
 	VuoTimeUtilities.cc \
 	$$ROOT/runtime/VuoHeap.cc \
 	$$ROOT/runtime/VuoRuntime.c \
@@ -44,6 +45,7 @@ HEADERS += \
 	VuoPublishedPort.hh \
 	VuoModule.hh \
 	VuoType.hh \
+	VuoGenericType.hh \
 	VuoTimeUtilities.hh \
 	VuoComposition.hh \
 	miniz.h

@@ -2,7 +2,7 @@
  * @file
  * VuoNodeClass implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -45,7 +45,6 @@ VuoNodeClass::VuoNodeClass(string className, vector<string> inputPortClassNames,
 	this->donePortClass = new VuoPortClass("done", VuoPortClass::eventOnlyPort);
 	outputPortClasses.push_back(this->donePortClass);
 	this->interface = false;
-	this->nodeSet = NULL;
 
 	for (vector<string>::iterator i = inputPortClassNames.begin(); i != inputPortClassNames.end(); ++i)
 	{
@@ -128,22 +127,6 @@ VuoNode * VuoNodeClass::newNode(VuoNode *nodeToCopyMetadataFrom)
 }
 
 /**
- * Returns the description given in the node class's metadata, or if none is given,
- * the description found in a separate file in the node class's node set.
- *
- * If this node class doesn't have a description, returns an empty string.
- *
- * @see VuoModuleMetadata
- */
-string VuoNodeClass::getDescription(void)
-{
-	string description = VuoModule::getDescription();
-	if (description.empty() && nodeSet)
-		description = nodeSet->getDescriptionForModule(this);
-	return description;
-}
-
-/**
  * The unique class name for this node class.  Matches the @c .vuonode filename, minus the extension.
  *
  * Possible characters: @c [A-Za-z0-9.]
@@ -201,22 +184,6 @@ bool VuoNodeClass::isInterface(void)
 void VuoNodeClass::setInterface(bool isInterface)
 {
 	this->interface = isInterface;
-}
-
-/**
- * Returns the node set containing this node class.
- */
-VuoNodeSet * VuoNodeClass::getNodeSet(void)
-{
-	return nodeSet;
-}
-
-/**
- * Sets the node set containing this node class.
- */
-void VuoNodeClass::setNodeSet(VuoNodeSet *nodeSet)
-{
-	this->nodeSet = nodeSet;
 }
 
 /**

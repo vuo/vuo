@@ -5,6 +5,8 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.layer.make.c \
+	vuo.layer.make.color.c \
+	vuo.layer.make.realSize.c \
 	vuo.layer.combine.c \
 	vuo.layer.render.window.c \
 	vuo.layer.render.image.c

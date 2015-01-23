@@ -2,7 +2,7 @@ Outputs the frames of a movie in sequence.
 
 The `decodedImage` trigger port fires an event whenever it's time to display the next frame in the movie. It outputs that frame as an image. 
 
-When the composition starts or this node is added to a running composition, the movie is paused at the beginning. It starts playing when the `play` input port receives an event. 
+When the composition starts or this node is added to a running composition, the movie is paused at `setTime` seconds from the beginning. It starts playing when the `play` input port receives an event. 
 
    - `movieURL` — The movie to play. When this port receives an event, the movie is loaded (or reloaded, if `movieURL` has not changed), and the playhead goes to the time specified by the `setTime` input port. If the movie was playing, it continues playing. If it was paused, it stays paused. 
    - `play` — When this port receives an event, the movie starts playing from the current playhead time. If it was already playing, it continues. 

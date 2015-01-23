@@ -2,17 +2,17 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012-2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G 
 {
-Divide [type="vuo.math.divide.real" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="535,144" _a="0.0" _b="9"];
-Subtract [type="vuo.math.subtract.real" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="63,140" _a="0.0" _b="32"];
+Divide [type="vuo.math.divide.VuoReal" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="535,144" _a="0.0" _b="9"];
+Subtract [type="vuo.math.subtract.VuoReal" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="63,140" _a="0.0" _b="32"];
 MakeList [type="vuo.list.make.2.VuoReal" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="228,143" _item1="" _item2="5"];
-Multiply [type="vuo.math.multiply.real" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="378,143" _terms=""];
+Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="378,143" _terms=""];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<degreesFahrenheit>degreesFahrenheit\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<degreesCelsius>degreesCelsius\l"];
 

@@ -2,7 +2,7 @@
  * @file
  * VuoTransform implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -107,7 +107,7 @@ VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rota
 	t.translation = translation;
 
 	t.rotationSource.quaternion = rotation;
-	VuoPoint4d q = VuoPoint4d_normalize4d(rotation);
+	VuoPoint4d q = VuoPoint4d_normalize(rotation);
 	t.rotation[0] = 1. - 2.*(q.y*q.y + q.z*q.z);
 	t.rotation[1] =      2.*(q.x*q.y - q.w*q.z);
 	t.rotation[2] =      2.*(q.x*q.z + q.w*q.y);

@@ -2,7 +2,7 @@
  * @file
  * This composition writes to console a series of right triangles, making the shape of a sawtooth wave.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,7 +11,7 @@ digraph G
 {
 FirePeriodically [type="vuo.time.firePeriodically" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="38,59" _seconds="1"];
 Hold [type="vuo.hold.VuoInteger" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="207.5,152.5" _initialValue="0" _newValue="0"];
-Subtract [type="vuo.math.subtract.integer" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="350.5,255" _a="0" _b="5"];
+Subtract [type="vuo.math.subtract.VuoInteger" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="350.5,255" _a="0" _b="5"];
 ConvertIntegertoText [type="vuo.type.integer.text" label="ConvertIntegertoText|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="564.5,152" _integer="0"];
 DisplayConsoleWindow [type="vuo.console.window" label="DisplayConsoleWindow|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="498.5,76.5" _writeLine=""];
 SelectInput [type="vuo.select.in.2.event" label="SelectInput|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="237,31.5" _which="0"];

@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -11,11 +11,16 @@
 #include <mach-o/dyld.h>
 #include <limits.h>			/* PATH_MAX */
 #include <string.h>
+#include <sstream>
 #include "VuoCompiler.hh"
 #include "VuoCompilerBitcodeGenerator.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerGenericType.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
+#include "VuoNodeSet.hh"
+#include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
 
 
@@ -51,6 +56,8 @@ VuoCompiler::VuoCompiler()
 
 		addPreferredFrameworkSearchPath(vuoFrameworkPath + "/Frameworks/");
 
+		addHeaderSearchPath(vuoFrameworkPath + "/Headers/");
+
 		clangPath = vuoFrameworkPath + "/MacOS/Clang/bin/clang";
 	}
 	else
@@ -59,10 +66,8 @@ VuoCompiler::VuoCompiler()
 		addModuleSearchPath(VUO_ROOT "/node");
 		addModuleSearchPath(VUO_ROOT "/type");
 		addModuleSearchPath(VUO_ROOT "/type/list");
-		addFrameworkSearchPath(SYPHON_ROOT);
+		addLibrarySearchPath(VUO_ROOT "/runtime");
 
-		// /usr/local/lib is already in the search path.
-		// Since we don't have Vuo.framework, tell ld where it can find libgvplugin_core.dylib and libgvplugin_dot_layout.dylib.
 		addLibrarySearchPath(GRAPHVIZ_ROOT "/lib/graphviz/");
 		addLibrarySearchPath(ICU_ROOT "/lib/");
 		addLibrarySearchPath(JSONC_ROOT "/lib/");
@@ -70,14 +75,21 @@ VuoCompiler::VuoCompiler()
 		addLibrarySearchPath(LEAP_ROOT);
 		addLibrarySearchPath(MUPARSER_ROOT "/lib/");
 		addLibrarySearchPath(FREEIMAGE_ROOT "/lib/");
-		addLibrarySearchPath(FREETYPE_ROOT "/lib/");
 		addLibrarySearchPath(CURL_ROOT "/lib/");
 		addLibrarySearchPath(RTMIDI_ROOT "/lib/");
 		addLibrarySearchPath(ASSIMP_ROOT "/lib/");
 		addLibrarySearchPath(FFMPEG_ROOT "/lib/");
 		addLibrarySearchPath(LIBUSB_ROOT "/lib/");
 		addLibrarySearchPath(LIBFREENECT_ROOT "/lib/");
+		addFrameworkSearchPath(SYPHON_ROOT);
+		addLibrarySearchPath(OSCPACK_ROOT "/lib/");
 		addLibrarySearchPath(VUO_ROOT "/runtime");
+
+		addHeaderSearchPath(VUO_ROOT "/library");
+		addHeaderSearchPath(VUO_ROOT "/node");
+		addHeaderSearchPath(VUO_ROOT "/type");
+		addHeaderSearchPath(VUO_ROOT "/type/list");
+		addHeaderSearchPath(VUO_ROOT "/runtime");
 
 		clangPath = llvm::sys::Path(StringRef(LLVM_ROOT "/bin/clang"));
 	}
@@ -147,30 +159,28 @@ void VuoCompiler::loadModules(string path)
 		if (compilerModule)
 		{
 			if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
-			{
-				VuoCompilerNodeClass *nodeClass = static_cast<VuoCompilerNodeClass *>(compilerModule);
-				nodeClasses[moduleKey] = nodeClass;
-
-				VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
-				if (nodeSet)
-				{
-					map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
-					if (nodeSetIter == nodeSetForName.end())
-					{
-						nodeSetForName[nodeSet->getName()] = nodeSet;
-					}
-					else
-					{
-						delete nodeSet;
-						nodeSet = nodeSetIter->second;
-					}
-					nodeClass->getBase()->setNodeSet(nodeSet);
-				}
-			}
+				nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
 			else if (dynamic_cast<VuoCompilerType *>(compilerModule))
 				types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
 			else
 				libraryModules[moduleKey] = compilerModule;
+
+			VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
+			if (nodeSet)
+			{
+				map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
+				if (nodeSetIter == nodeSetForName.end())
+				{
+					nodeSetForName[nodeSet->getName()] = nodeSet;
+				}
+				else
+				{
+					delete nodeSet;
+					nodeSet = nodeSetIter->second;
+				}
+				compilerModule->getPseudoBase()->setNodeSet(nodeSet);
+			}
+
 		}
 
 		delete moduleFile;
@@ -218,12 +228,89 @@ void VuoCompiler::reifyPortTypes(void)
 
 			if (baseType && ! baseType->hasCompiler())
 			{
-				map<string, VuoCompilerType *>::iterator compilerTypeIter = types.find(baseType->getModuleKey());
-				if (compilerTypeIter != types.end())
+				string typeName = baseType->getModuleKey();
+				VuoCompilerType *reifiedType = NULL;
+
+				VuoGenericType *genericType = dynamic_cast<VuoGenericType *>(baseType);
+				if (genericType)
 				{
-					VuoCompilerType *compilerType = compilerTypeIter->second;
-					portClass->setDataVuoType(compilerType->getBase());
+					reifiedType = VuoCompilerGenericType::newGenericType(genericType, this->types);
 				}
+				else
+				{
+					map<string, VuoCompilerType *>::iterator reifiedTypeIter = types.find(typeName);
+					if (reifiedTypeIter != types.end())
+						reifiedType = reifiedTypeIter->second;
+				}
+
+				if (reifiedType)
+					portClass->setDataVuoType(reifiedType->getBase());
+			}
+		}
+	}
+}
+
+/**
+ * Updates the nodes and ports of the composition to have the correct backing types for generic types.
+ *
+ * Generic nodes in the composition may be replaced by equivalent nodes (keeping their node class name,
+ * node title, and other metadata, but using a node class that has a different LLVM module).
+ */
+void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
+{
+	// For any node that needs a different backing type than its node class was compiled with,
+	// recompile the node class with the desired backing type, instantiate a replacement node
+	// from the new node class, and substitute the replacement node into the composition.
+	set<VuoNode *> nodes = composition->getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoNode *node = *i;
+
+		VuoCompilerSpecializedNodeClass *nodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
+		if (! nodeClass)
+			continue;
+
+		bool doBackingTypesMatch = true;
+		map<string, string> backingTypesForNodeClass = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node->getNodeClass());
+		map<string, string> backingTypesForNode = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node);
+		for (map<string, string>::iterator j = backingTypesForNode.begin(); j != backingTypesForNode.end(); ++j)
+			if (backingTypesForNodeClass[j->first] != j->second)
+				doBackingTypesMatch = false;
+
+		if (! doBackingTypesMatch)
+		{
+			VuoNodeClass *replacementNodeClass =
+					(dynamic_cast<VuoCompilerMakeListNodeClass *>(nodeClass) ?
+						 VuoCompilerMakeListNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node) :
+						 VuoCompilerSpecializedNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node));
+			VuoNode *replacementNode = replacementNodeClass->getCompiler()->newNode(node->getCompiler());
+			composition->getBase()->replaceNode(node, replacementNode);
+		}
+	}
+
+	// Update the generic type for each generic port to have the desired backing type.
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoNode *node = *i;
+
+		vector<VuoPort *> inputPorts = node->getInputPorts();
+		vector<VuoPort *> outputPorts = node->getOutputPorts();
+		vector<VuoPort *> ports;
+		ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
+		ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
+
+		for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
+		{
+			VuoCompilerPort *port = static_cast<VuoCompilerPort *>((*j)->getCompiler());
+			VuoGenericType *genericType = dynamic_cast<VuoGenericType *>(port->getDataVuoType());
+			if (! genericType)
+				continue;
+
+			if (! genericType->hasCompiler())
+			{
+				VuoCompilerGenericType *reifiedType = VuoCompilerGenericType::newGenericType(genericType, this);
+				if (reifiedType)
+					port->setDataVuoType(reifiedType->getBase());
 			}
 		}
 	}
@@ -237,10 +324,39 @@ void VuoCompiler::reifyPortTypes(void)
  */
 void VuoCompiler::compileModule(string inputPath, string outputPath)
 {
+	compileModule(inputPath, outputPath, vector<string>());
+}
+
+/**
+ * Compiles a node class, port type, or library module to LLVM bitcode.
+ *
+ * @param inputPath The file to compile, containing a C implementation of the node class, port type, or library module.
+ * @param outputPath The file in which to save the compiled LLVM bitcode.
+ * @param extraArgs Extra arguments to pass to Clang.
+ */
+void VuoCompiler::compileModule(string inputPath, string outputPath, const vector<string> &extraArgs)
+{
 	if (isVerbose)
 		print();
 
-	Module *module = readModuleFromC(inputPath);
+	string preprocessedInputPath;
+	string dir, file, ext;
+	VuoFileUtilities::splitPath(inputPath, dir, file, ext);
+	if (ext == "c")
+	{
+		preprocessedInputPath = VuoFileUtilities::makeTmpFile(file, ext, dir);
+		FILE *inputFile = fopen(inputPath.c_str(), "rb");
+		string inputContents = VuoFileUtilities::cFileToString(inputFile);
+		VuoCompilerSpecializedNodeClass::replaceGenericTypesWithBacking(inputContents);
+		VuoFileUtilities::writeStringToFile(inputContents, preprocessedInputPath);
+		fclose(inputFile);
+	}
+	else
+		preprocessedInputPath = inputPath;
+
+	Module *module = readModuleFromC(preprocessedInputPath, extraArgs);
+	if (preprocessedInputPath != inputPath)
+		remove(preprocessedInputPath.c_str());
 	if (! module)
 	{
 		fprintf(stderr, "Couldn't compile %s to LLVM bitcode.\n", inputPath.c_str());
@@ -262,17 +378,25 @@ void VuoCompiler::compileModule(string inputPath, string outputPath)
 /**
  * Compiles a composition to LLVM bitcode.
  *
- * @param generator A bitcode generator for the composition.
+ * If the composition contains generic nodes, then it may be modified to allow these generic nodes to be compiled.
+ * See reifyGenericPortTypes() for more information.
+ *
+ * @param composition The composition to compile.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
  */
-void VuoCompiler::compileComposition(VuoCompilerBitcodeGenerator *generator, string outputPath)
+void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string outputPath)
 {
+	reifyGenericPortTypes(composition);
+
+	VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, this);
 	if (telemetry == "console")
 		generator->setDebugMode(true);
 
 	Module *module = generator->generateBitcode();
 	setTargetForModule(module, target);
 	writeModuleToBitcode(module, outputPath);
+
+	delete generator;
 }
 
 /**
@@ -286,9 +410,10 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath)
 	if (isVerbose)
 		print();
 
-	VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(inputPath, this);
-	compileComposition(generator, outputPath);
-	delete generator;
+	FILE *inputFile = fopen(inputPath.c_str(), "rb");
+	string compositionString = VuoFileUtilities::cFileToString(inputFile);
+	return compileCompositionString(compositionString, outputPath);
+	fclose(inputFile);
 }
 
 /**
@@ -299,9 +424,9 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath)
  */
 void VuoCompiler::compileCompositionString(const string &compositionString, string outputPath)
 {
-	VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionString(compositionString, this);
-	compileComposition(generator, outputPath);
-	delete generator;
+	VuoCompilerComposition *composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, this);
+	compileComposition(composition, outputPath);
+	delete composition;
 }
 
 /**
@@ -495,8 +620,7 @@ void VuoCompiler::getDependenciesRecursively(const string &dependency, set<strin
 
 	// If the composition was compiled with a different VuoCompiler instance, then node classes
 	// that were generated at compile time need to be re-generated for this VuoCompiler instance.
-	if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(dependency))
-		VuoCompilerMakeListNodeClass::getNodeClass(dependency, this);
+	getNodeClass(dependency);
 
 	// Add the dependency itself.
 	dependencies.insert(dependency);
@@ -740,19 +864,32 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
  */
 Module * VuoCompiler::readModuleFromC(string inputPath)
 {
+	return readModuleFromC(inputPath, vector<string>());
+}
+
+/**
+ * Returns the LLVM module read from the node class, type, or library implementation at @c inputPath (a .c file).
+ */
+Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &extraArgs)
+{
 	// llvm-3.1/llvm/tools/clang/examples/clang-interpreter/main.cpp
 
 	vector<const char *> args;
 	args.push_back(inputPath.c_str());
 	args.push_back("-DVUO_COMPILER");
 	args.push_back("-fblocks");
+
 	for (vector<string>::iterator i = headerSearchPaths.begin(); i != headerSearchPaths.end(); ++i)
 	{
 		args.push_back("-I");
 		args.push_back(i->c_str());
 	}
+
 	if (isVerbose)
 		args.push_back("-v");
+
+	for (vector<string>::const_iterator i = extraArgs.begin(); i != extraArgs.end(); ++i)
+		args.push_back(i->c_str());
 
 	clang::DiagnosticOptions * diagOptions = new clang::DiagnosticOptions();
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
@@ -877,13 +1014,42 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
 }
 
 /**
+ * Instantiates a node for the given node class.
+ *
+ * If the node class is a generic template (e.g. vuo.hold), then the node is instantiated with the specialized
+ * version of the node class (e.g. vuo.hold.VuoGenericType1).
+ *
+ * @param nodeClass The node class from which to create the node.
+ * @param title The node's title.
+ * @param x The node's x-coordinate within the composition.
+ * @param y The node's y-coordinate within the composition.
+ */
+VuoNode * VuoCompiler::createNode(VuoCompilerNodeClass *nodeClass, string title, double x, double y)
+{
+	vector<string> genericTypes = VuoCompilerSpecializedNodeClass::getGenericTypeNamesFromPorts(nodeClass);
+
+	if (genericTypes.empty() || dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass))
+		return nodeClass->newNode(title, x, y);
+	else
+	{
+		string genericNodeClassName = nodeClass->getBase()->getClassName();
+		string genericNodeClassNameWithSuffixes = VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(genericNodeClassName, genericTypes);
+		VuoCompilerNodeClass *genericNodeClass = getNodeClass(genericNodeClassNameWithSuffixes);
+		VuoCompilerSpecializedNodeClass *genericNodeClassAsSpecialized = static_cast<VuoCompilerSpecializedNodeClass *>(genericNodeClass);
+		string specializedNodeClassName = genericNodeClassAsSpecialized->createDefaultSpecializedNodeClassName();
+		VuoCompilerNodeClass *specializedNodeClass = getNodeClass(specializedNodeClassName);
+		return specializedNodeClass->newNode(title, x, y);
+	}
+}
+
+/**
  * Looks up the VuoCompilerNodeClass for the node class specified by @a id.
  *
- * The node class module is loaded if it hasn't been already.
+ * The node class module is loaded or generated if it hasn't been already.
  *
  * @eg{
  *		VuoCompiler *compiler = new VuoCompiler();
- *		VuoCompilerNodeClass *nc = compiler->getNodeClass("vuo.math.add.integer");
+ *		VuoCompilerNodeClass *nc = compiler->getNodeClass("vuo.math.add.VuoInteger");
  *		[...]
  *		delete compiler;
  * }
@@ -892,8 +1058,27 @@ VuoCompilerNodeClass * VuoCompiler::getNodeClass(const string &id)
 {
 	loadModulesIfNeeded();
 
-	map<string, VuoCompilerNodeClass *>::const_iterator i = nodeClasses.find(id);
-	return (i != nodeClasses.end() ? i->second : NULL);
+	VuoCompilerNodeClass *nodeClass = NULL;
+
+	map<string, VuoCompilerNodeClass *>::iterator nodeClassIter = nodeClasses.find(id);
+	if (nodeClassIter != nodeClasses.end())
+	{
+		nodeClass = nodeClassIter->second;
+	}
+	else
+	{
+		VuoNodeClass *baseNodeClass = VuoCompilerMakeListNodeClass::newNodeClass(id, this);
+		if (! baseNodeClass)
+			baseNodeClass = VuoCompilerSpecializedNodeClass::newNodeClass(id, this);
+
+		if (baseNodeClass)
+		{
+			nodeClass = baseNodeClass->getCompiler();
+			addNodeClass(nodeClass);
+		}
+	}
+
+	return nodeClass;
 }
 
 /**
@@ -910,14 +1095,37 @@ map<string, VuoCompilerNodeClass *> VuoCompiler::getNodeClasses()
 /**
  * Looks up the VuoCompilerType for the port type specified by @a id.
  *
- * The port type module is loaded if it haven't been already.
+ * The port type module is loaded or generated if it haven't been already.
  */
 VuoCompilerType * VuoCompiler::getType(const string &id)
 {
 	loadModulesIfNeeded();
 
-	map<string, VuoCompilerType *>::const_iterator i = types.find(id);
-	return (i != types.end() ? i->second : NULL);
+	VuoCompilerType *type = NULL;
+
+	map<string, VuoCompilerType *>::const_iterator typeIter = types.find(id);
+	if (typeIter != types.end())
+	{
+		type = typeIter->second;
+	}
+	else if (VuoGenericType::isGenericTypeName(id))
+	{
+		VuoGenericType *genericType = new VuoGenericType(id, set<string>());
+		type = VuoCompilerGenericType::newGenericType(genericType, this);
+	}
+
+	return type;
+}
+
+/**
+ * Returns a map linking a string representation of a type's id to its VuoCompilerType instance.
+ *
+ * The type modules are loaded if they haven't been already.
+ */
+map<string, VuoCompilerType *> VuoCompiler::getTypes()
+{
+	loadModulesIfNeeded();
+	return types;
 }
 
 /**
@@ -939,7 +1147,7 @@ VuoNodeSet * VuoCompiler::getNodeSetForName(const string &name)
  * The node class modules are loaded if they haven't been already.
  *
  * @param format The format for printing the node classes.
- *	- If "", prints each class name (e.g. vuo.math.count.integer), one per line.
+ *	- If "", prints each class name (e.g. vuo.math.count.VuoInteger), one per line.
  *	- If "path", prints the absolute path of each node class, one per line.
  *	- If "dot", prints the declaration of a node as it would appear in a .vuo (DOT format) file,
  *		with a constant value set for each data+event input port

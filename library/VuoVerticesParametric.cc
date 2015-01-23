@@ -2,7 +2,7 @@
  * @file
  * VuoVerticesParametric implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -60,16 +60,19 @@ VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, 
 	mu::value_type uVar = 0;
 	mu::value_type vVar = 0;
 
+	mu::value_type uv_uVar = 0;
+	mu::value_type uv_vVar = 0;
+
 	xParser.DefineVar("u", &uVar);
 	yParser.DefineVar("u", &uVar);
 	zParser.DefineVar("u", &uVar);
-	uParser.DefineVar("u", &uVar);
-	vParser.DefineVar("u", &uVar);
+	uParser.DefineVar("u", &uv_uVar);
+	vParser.DefineVar("u", &uv_uVar);
 	xParser.DefineVar("v", &vVar);
 	yParser.DefineVar("v", &vVar);
 	zParser.DefineVar("v", &vVar);
-	uParser.DefineVar("v", &vVar);
-	vParser.DefineVar("v", &vVar);
+	uParser.DefineVar("v", &uv_vVar);
+	vParser.DefineVar("v", &uv_vVar);
 
 	xParser.DefineConst("DEG2RAD", (double)DEG2RAD);
 	yParser.DefineConst("DEG2RAD", (double)DEG2RAD);
@@ -94,26 +97,28 @@ VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, 
 
 	float u = 0., v = 0., ustep = 1./(width-1.), vstep = 1./(height-1.);
 
-	if(closeU) width--;
-	if(closeV) height--;
-
 	int vertexCount = width * height;
 
-	VuoPoint4d *positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
-	VuoPoint4d *normals = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
-	VuoPoint4d *tangents = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
-	VuoPoint4d *bitangents = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
-	VuoPoint4d *textures = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+	VuoPoint4d *positions 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+	VuoPoint4d *normals 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+	VuoPoint4d *tangents 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+	VuoPoint4d *bitangents 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+	VuoPoint4d *textures 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
+
 
 	try
 	{
 		int i = 0;
 		for(int y = 0; y < height; y++)
 		{
-			vVar = v;
+
+			vVar = closeV && y==height-1 ? 0 : v;
+			uv_vVar = v;
 			for(int x = 0; x < width; x++)
 			{
-				uVar = u;
+				uv_uVar = u;
+				uVar = closeU && x==width-1 ? 0: u;
+
 				positions[i].x = xParser.Eval();
 				positions[i].y = yParser.Eval();
 				positions[i].z = zParser.Eval();
@@ -161,41 +166,16 @@ VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, 
 	int row = 0;
 	index = 0;
 
-	int stride = closeU ? width : width+1;
+	int stride = width+1;
 
 	for(int y=0;y<height;++y)
 	{
 		for(int x=0;x<width;++x)
 		{
-			if(closeU && closeV && x==width-1 && y==height-1)
-			{
-				one = x + row;
-				two = row;
-				three = x;
-				four = 0;
-			}
-			else
-			if(x == width-1 && closeU) // close x
-			{
-				one = x + row;
-				two = row;
-				three = x+row+stride;
-				four = row + stride;
-			}
-			else if(y == height-1 && closeV) // close y
-			{
-				one = x+row;
-				two = x+row+1;
-				three = x;
-				four = x+1;
-			}
-			else // normal
-			{
-				one = x + row;
-				two = x+row+1;
-				three = x+row+stride;
-				four = x+row+stride+1;
-			}
+			one = x + row;
+			two = x+row+1;
+			three = x+row+stride;
+			four = x+row+stride+1;
 
 			// calculate face normal, add to normals, augment normalCount for subsequent averaging
 			VuoPoint4d faceNormal = VuoVerticesParametric_faceNormal(positions[one], positions[two], positions[three]);
@@ -209,6 +189,38 @@ VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, 
 			normalCount[two]++;
 			normalCount[three]++;
 			normalCount[four]++;
+
+			if(closeU && x == width-1)
+			{
+				// Add the first face in row normal to right-most vertices
+				VuoPoint4d uNrm = VuoVerticesParametric_faceNormal( positions[row], positions[row+1], positions[row+stride] );
+
+				normals[two] 		= VuoPoint4d_add(normals[two], uNrm);
+				normals[four] 		= VuoPoint4d_add(normals[four], uNrm);
+				// And add the current face normal to the origin row vertex normals
+				normals[row] 		= VuoPoint4d_add(normals[row], faceNormal);
+				normals[row+stride] = VuoPoint4d_add(normals[row+stride], faceNormal);
+
+				normalCount[two]++;
+				normalCount[four]++;
+				normalCount[row]++;
+				normalCount[row+stride]++;
+			}
+
+			if(closeV && y==height-1)
+			{
+				VuoPoint4d vNrm = VuoVerticesParametric_faceNormal( positions[x], positions[x+1], positions[x+stride] );
+
+				normals[three] 	= VuoPoint4d_add(normals[three], vNrm);
+				normals[four] 	= VuoPoint4d_add(normals[four], vNrm);
+				normals[x] 		= VuoPoint4d_add(normals[x], faceNormal);
+				normals[x+1] 	= VuoPoint4d_add(normals[x+1], faceNormal);
+
+				normalCount[three]++;
+				normalCount[four]++;
+				normalCount[x]++;
+				normalCount[x+1]++;
+			}
 
 			// if right handed
 			triangles[index+0] = one;

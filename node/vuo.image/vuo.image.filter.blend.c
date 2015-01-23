@@ -2,7 +2,7 @@
  * @file
  * vuo.image.filter.blend node implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -329,6 +329,7 @@ static const char * fragmentShaderSource_blendColorDodge = BLEND_FILTERS(
 							base.g / (1-blend.g),
 							base.b / (1-blend.b) );
 
+		result = clamp(result, 0., 1.);
 
 		result = mix(base.rgb, result, blend.a);
 		result = mix(blend.rgb, result, base.a);

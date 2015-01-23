@@ -2,7 +2,7 @@
  * @file
  * VuoSceneRenderer implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -266,13 +266,13 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoGlContext glContext)
+void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
 {
 	if (!so.shader)
 		return;
 
 	dispatch_semaphore_wait(so.shader->lock, DISPATCH_TIME_FOREVER);
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
 	glUseProgram(so.shader->glProgramName);
 	{
@@ -280,7 +280,35 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 		glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, projectionMatrix);
 
 		GLint modelviewMatrixUniform = glGetUniformLocation(so.shader->glProgramName, "modelviewMatrix");
-		glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, modelviewMatrix);
+
+		if (so.isRealSize)
+		{
+			VuoImage image = VuoListGetValueAtIndex_VuoImage(so.shader->textures,1);
+
+			float billboardMatrix[16];
+			VuoTransform_getMatrix(VuoTransform_makeIdentity(), billboardMatrix);
+
+			// Apply scale to make the image appear at real size (1:1).
+			billboardMatrix[0] = 2. * image->pixelsWide/sceneRenderer->viewportWidth;
+			billboardMatrix[5] = billboardMatrix[0] * image->pixelsHigh/image->pixelsWide;
+
+			// Apply existing 2D translation.
+				// Align the translation to pixel boundaries
+				billboardMatrix[12] = floor((modelviewMatrix[12]+1.)/2.*sceneRenderer->viewportWidth) / ((float)sceneRenderer->viewportWidth) * 2. - 1.;
+				billboardMatrix[13] = floor((modelviewMatrix[13]+1.)/2.*sceneRenderer->viewportWidth) / ((float)sceneRenderer->viewportWidth) * 2. - 1.;
+
+				// Account for odd-dimensioned image
+				billboardMatrix[12] += (image->pixelsWide % 2 ? (1./sceneRenderer->viewportWidth) : 0);
+				billboardMatrix[13] -= (image->pixelsHigh % 2 ? (1./sceneRenderer->viewportWidth) : 0);
+
+				// Account for odd-dimensioned viewport
+				billboardMatrix[13] += (sceneRenderer->viewportWidth  % 2 ? (1./sceneRenderer->viewportWidth) : 0);
+				billboardMatrix[13] -= (sceneRenderer->viewportHeight % 2 ? (1./sceneRenderer->viewportWidth) : 0);
+
+			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, billboardMatrix);
+		}
+		else
+			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, modelviewMatrix);
 
 		VuoShader_activateTextures(so.shader, cgl_ctx);
 
@@ -323,13 +351,13 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoGlContext glContext)
+void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
 {
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
 	float compositeModelviewMatrix[16];
 	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix, glContext);
+	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix, sceneRenderer);
 //	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 0, .08f);	// Normals
 //	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 1, .08f);	// Tangents
 //	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 2, .08f);	// Bitangents
@@ -338,7 +366,7 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
 	{
 		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
-		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix, glContext);
+		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix, sceneRenderer);
 	}
 }
 
@@ -365,7 +393,7 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
-	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, sceneRenderer->glContext);
+	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, sceneRenderer);
 
 	// Make sure the render commands actually execute before we release the semaphore,
 	// since the textures we're using might immediately be recycled (if the rootSceneObject is released).

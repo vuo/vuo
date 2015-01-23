@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012-2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -15,7 +15,7 @@ GetWallTime [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refr
 GetWallTime2 [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<done>done\r|<seconds>seconds\r" pos="904,558"];
 GetWallTime3 [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<done>done\r|<seconds>seconds\r" pos="916,215"];
 GetWallTime4 [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<done>done\r|<seconds>seconds\r" pos="764,272"];
-IsLessThan [type="vuo.math.isLessThan.real" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="1268,385"];
+IsLessThan [type="vuo.math.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="1268,385"];
 Negate [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<done>done\r|<notValue>notValue\r" pos="263,417"];
 Negate2 [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<done>done\r|<notValue>notValue\r" pos="444,289"];
 SelectInput3 [type="vuo.select.in.VuoReal" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="1092,303"];

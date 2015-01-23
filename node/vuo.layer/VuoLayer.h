@@ -2,7 +2,7 @@
  * @file
  * VuoLayer C type definition.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,6 +10,7 @@
 #ifndef VUOLAYER_H
 #define VUOLAYER_H
 
+#include "VuoColor.h"
 #include "VuoTransform2d.h"
 #include "VuoSceneObject.h"
 
@@ -35,6 +36,8 @@ typedef struct VuoLayer
 
 VuoLayer VuoLayer_makeEmpty(void);
 VuoLayer VuoLayer_make(VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha);
+VuoLayer VuoLayer_makeRealSize(VuoImage image, VuoPoint2d center, VuoReal alpha);
+VuoLayer VuoLayer_makeColor(VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height);
 VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transform);
 
 VuoLayer VuoLayer_valueFromJson(struct json_object * js);

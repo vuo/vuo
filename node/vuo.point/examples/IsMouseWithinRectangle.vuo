@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Displays a rectangle, and highlights it when the mouse is within it.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="105,131"];
+IsWithinRectangle [type="vuo.point.within.rectangle" version="1.0.0" label="Is within Rectangle|<refresh>refresh\l|<point>point\l|<center>center\l|<width>width\l|<height>height\l|<done>done\r|<withinRectangle>withinRectangle\r" pos="53,218" fillcolor="violet" _center="{\"x\":0,\"y\":0}" _width="0.500000" _height="0.500000"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="420,218" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="601,263"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="661,252"];
+SelectInput4 [type="vuo.select.in.VuoColor" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="262,218" _falseOption="{\"r\":0.527398,\"g\":0.449775,\"b\":0.741070,\"a\":1.000000}" _trueOption="{\"r\":0.758984,\"g\":0.717266,\"b\":0.868086,\"a\":1.000000}"];
+
+FireOnStart:started -> SelectInput4:refresh;
+IsWithinRectangle:done -> SelectInput4:refresh;
+IsWithinRectangle:withinRectangle -> SelectInput4:which;
+MakeColorLayer:layer -> MakeList2:item1;
+MakeList2:list -> RenderLayersToWindow:layers;
+RenderLayersToWindow:movedMouseTo -> IsWithinRectangle:point;
+SelectInput4:out -> MakeColorLayer:color;
+}

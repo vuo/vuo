@@ -2,7 +2,7 @@
 * @file
 * Skims through a movie when you move the mouse left or right. 
 *
-* @copyright Copyright © 2012–2013 Kosada Incorporated.
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
 * For more information, see http://vuo.org/license.
 */
@@ -11,7 +11,7 @@ digraph G
 {
 DecodeMovieImage [type="vuo.movie.decodeImage" version="1.0.0" label="Decode Movie Image|<refresh>refresh\l|<movieURL>movieURL\l|<frameTime>frameTime\l|<done>done\r|<image>image\r" pos="732,226"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="212,52"];
-Get2DPointValues [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="290,255"];
+Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="290,255"];
 GetMovieInfo [type="vuo.movie.info" version="1.0.0" label="Get Movie Info|<refresh>refresh\l|<movieURL>movieURL\l|<done>done\r|<duration>duration\r" pos="529,21"];
 HoldValue [type="vuo.hold.VuoText" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="373,78" _initialValue="\"chess.mov\"" _newValue="\"\""];
 Make3DObjectFromImage [type="vuo.scene.make.image" version="1.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="958,337" _center="{\"x\":0,\"y\":0,\"z\":0}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _width="2.000000" _alpha="1.000000"];

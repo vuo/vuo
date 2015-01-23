@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012-2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,11 +11,11 @@ digraph G
 {
 MakeList [type="vuo.list.make.2.VuoReal" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="955,200" _item1="" _item2=""];
 MakeList2 [type="vuo.list.make.2.VuoReal" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="630,123" _item1="1" _item2=""];
-Add [type="vuo.math.add.real" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="794,121" _terms=""];
-DiscardDatafromEvent [type="vuo.type.integer.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="536,91" _dataAndEvent="0"];
+Add [type="vuo.math.add.VuoReal" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="794,121" _terms=""];
+DiscardDatafromEvent [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="536,91" _dataAndEvent="0"];
 Hold [type="vuo.hold.VuoInteger" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="344,214" _initialValue="0" _newValue="0"];
 ConvertIntegertoRealNumber [type="vuo.type.integer.real" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="684,254" _integer="0"];
-Multiply [type="vuo.math.multiply.real" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="1100,204" _terms=""];
+Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="1100,204" _terms=""];
 RoundDown [type="vuo.math.roundDown" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDownInteger>roundedDownInteger\r" pos="1262,206" _real="0.0"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<initialBalance>initialBalance\r|<apply>apply\r|<interestRate>interestRate\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<balance>balance\l"];

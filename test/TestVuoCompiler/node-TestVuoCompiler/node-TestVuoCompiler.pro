@@ -8,6 +8,7 @@ NODE_SOURCES += \
 	vuo.test.compatibleWith107AndUp.c \
 	vuo.test.inputDataPortOrder.c \
 	vuo.test.keywords.c \
+	vuo.test.multiDigitGenericTypes.c \
 	vuo.test.triggerCarryingFloat.c \
 	vuo.test.triggerCarryingInteger.c \
 	vuo.test.triggerCarryingPoint3d.c \

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerModule implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -326,4 +326,12 @@ VuoCompilerTargetSet VuoCompilerModule::getCompatibleTargets(void)
 Module * VuoCompilerModule::getModule(void)
 {
 	return module;
+}
+
+/**
+ * Returns the (psuedo) base for this (psuedo) compiler detail class.
+ */
+VuoModule * VuoCompilerModule::getPseudoBase(void)
+{
+	return base;
 }

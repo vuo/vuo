@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerBitcodeGenerator implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -26,32 +26,6 @@ VuoCompilerBitcodeGenerator * VuoCompilerBitcodeGenerator::newBitcodeGeneratorFr
 	VuoCompilerBitcodeGenerator * cg = new VuoCompilerBitcodeGenerator;
 	cg->compiler = compiler;
 	cg->composition = composition;
-	cg->initialize();
-	return cg;
-}
-
-/**
- * Creates a bitcode generator from the specified composition string @c composition.
- */
-VuoCompilerBitcodeGenerator * VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionString(const string &composition, VuoCompiler *compiler)
-{
-	VuoCompilerBitcodeGenerator * cg = new VuoCompilerBitcodeGenerator;
-	cg->compiler = compiler;
-	cg->composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(composition, compiler);
-	cg->initialize();
-	return cg;
-}
-
-/**
- * Creates a bitcode generator from the specified .vuo file @c compositionPath.
- */
-VuoCompilerBitcodeGenerator * VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(const string &compositionPath, VuoCompiler *compiler)
-{
-	VuoCompilerBitcodeGenerator * cg = new VuoCompilerBitcodeGenerator;
-	cg->compiler = compiler;
-	VuoCompilerGraphvizParser * parser = new VuoCompilerGraphvizParser(compositionPath, compiler);
-	cg->composition = new VuoCompilerComposition(new VuoComposition(), parser);
-	delete parser;
 	cg->initialize();
 	return cg;
 }

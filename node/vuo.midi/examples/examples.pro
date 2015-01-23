@@ -1,6 +1,6 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	SendMIDINotes.vuo
+	SendMidiNotes.vuo
 
 include(../../../example.pri)

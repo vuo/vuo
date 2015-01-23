@@ -1,0 +1,19 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertRealToText [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<done>done\r|<text>text\r" pos="653,209"];
+ConvertTextToReal [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<done>done\r|<real>real\r" pos="651,144"];
+GetMessageValues [type="vuo.osc.message.get.2.VuoGenericType1.VuoReal" version="1.0.0" label="Get Message Values|<refresh>refresh\l|<message>message\l|<done>done\r|<address>address\r|<data1>data1\r|<data2>data2\r" pos="345,149"];
+ReceiveOSCMessages [type="vuo.osc.receive" version="1.0.0" label="Receive OSC Messages|<refresh>refresh\l|<udpPort>udpPort\l|<done>done\r|<receivedMessage>receivedMessage\r" pos="117,148" _udpPort="0"];
+
+GetMessageValues:data2 -> ConvertRealToText:real;
+ReceiveOSCMessages:receivedMessage -> GetMessageValues:message;
+}

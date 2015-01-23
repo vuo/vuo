@@ -8,6 +8,8 @@ NODE_SOURCES += \
 	vuo.image.filter.ripple.c \
 	vuo.image.filter.twirl.c \
 	vuo.image.get.c \
+	vuo.image.make.color.c \
+	vuo.image.make.text.c \
 	vuo.image.render.window.c
 
 TYPE_SOURCES += \
@@ -15,5 +17,8 @@ TYPE_SOURCES += \
 
 HEADERS += \
 	VuoBlendMode.h
+
+NODE_INCLUDEPATH += \
+	../vuo.font
 
 include(../../module.pri)

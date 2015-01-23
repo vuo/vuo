@@ -2,7 +2,7 @@
  * @file
  * VuoRendererNode implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -19,10 +19,12 @@
 #include "VuoPort.hh"
 #include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerTriggerPort.hh"
+#include "VuoGenericType.hh"
 #include "VuoRendererTypecastPort.hh"
 #include "VuoRendererColors.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoStringUtilities.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
 
 const qreal VuoRendererNode::subcompositionBulge = VuoRendererFonts::thickPenWidth/3.0;
 const qreal VuoRendererNode::cornerRadius = VuoRendererFonts::thickPenWidth/8.0;
@@ -43,7 +45,13 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 	VuoNodeClass * nodeClass = baseNode->getNodeClass();
 	this->proxyNode = NULL;
 	this->nodeType = VuoRendererNode::node;
-	this->nodeClass = QString::fromUtf8(nodeClass->getClassName().c_str());
+
+	VuoCompilerSpecializedNodeClass *specialized = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass->getCompiler());
+	if (specialized)
+		this->nodeClass = QString::fromUtf8(specialized->getOriginalGenericNodeClassName().c_str());
+	else
+		this->nodeClass = QString::fromUtf8(nodeClass->getClassName().c_str());
+
 	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->getInstanceDataClass();
 	this->nodeIsSubcomposition = false;  /// @todo support subcompositions - https://b33p.net/kosada/node/2639
 	this->nodeIsMissing = !nodeClass->hasCompiler();
@@ -79,7 +87,7 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 		setOutputPorts(outputs);
 	}
 
-	this->frameRect = getNodeFrameRect();
+	updateNodeFrameRect();
 	setPos(baseNode->getX(), baseNode->getY());
 	layoutPorts();
 
@@ -485,13 +493,13 @@ vector<VuoRendererMakeListNode *> VuoRendererNode::getAttachedInputDrawers(void)
 }
 
 /**
- * Determines and returns the size of the inner frame of a node having the specified attributes.
+ * Calculates and updates the cached inner frame of a node based on its current attributes.
  *
  * The "inner frame" is the light grey rect in the middle of the node.  It doesn't include the node's header or footer.
  */
-QRectF VuoRendererNode::getNodeFrameRect(void) const
+void VuoRendererNode::updateNodeFrameRect(void)
 {
-	QRectF frameRect;
+	QRectF updatedFrameRect;
 	QString nodeTitle = QString::fromUtf8(getBase()->getTitle().c_str());
 
 	// Width is the longest string or combined input+output port row.
@@ -516,7 +524,7 @@ QRectF VuoRendererNode::getNodeFrameRect(void) const
 
 	qreal nodeTitleWidth = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodeTitleFont()).boundingRect(nodeTitle).width();
 	qreal nodeClassWidth = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodeClassFont()).boundingRect(nodeClass).width();
-	frameRect.setWidth(
+	updatedFrameRect.setWidth(
 		floor(max(
 			max(
 				nodeTitleWidth + VuoRendererFonts::thickPenWidth,
@@ -527,7 +535,7 @@ QRectF VuoRendererNode::getNodeFrameRect(void) const
 	);
 
 	// Height depends only on the number of input/output ports.
-	frameRect.setHeight(
+	updatedFrameRect.setHeight(
 		floor(
 			max(
 				inputPorts->childItems().size() - VuoNodeClass::unreservedInputPortStartIndex,	// don't count the refresh port
@@ -537,7 +545,7 @@ QRectF VuoRendererNode::getNodeFrameRect(void) const
 		)
 	);
 
-	return frameRect;
+	this->frameRect = updatedFrameRect;
 }
 
 /**
@@ -548,7 +556,7 @@ QRectF VuoRendererNode::boundingRect(void) const
 	if (proxyNode)
 		return QRectF();
 
-	QRectF r = getNodeFrameRect();
+	QRectF r = frameRect;
 
 	// Header
 	r.adjust(0, -nodeTitleHeight - nodeClassHeight, 0, 0);
@@ -578,7 +586,7 @@ QRectF VuoRendererNode::boundingRect(void) const
  */
 QPointF VuoRendererNode::getPortPoint(VuoRendererPort *port, unsigned int portIndex) const
 {
-	qreal x = (port->getOutput() ? getNodeFrameRect().width()+1. : -1.);
+	qreal x = (port->getOutput() ? frameRect.width()+1. : -1.);
 	qreal y;
 
 	if (port->getRefreshPort() || port->getDonePort())
@@ -620,7 +628,6 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	if (proxyNode)
 		return;
 
-	frameRect = getNodeFrameRect();
 	drawBoundingRect(painter);
 
 	VuoRendererColors::SelectionType selectionType = (isSelected()? VuoRendererColors::directSelection : VuoRendererColors::noSelection);
@@ -960,12 +967,35 @@ void VuoRendererNode::addInputPort(VuoRendererPort * newPort)
 }
 
 /**
+ * Returns a boolean indicating whether this node has any ports with generic data types.
+ */
+bool VuoRendererNode::hasGenericPort(void)
+{
+	foreach (VuoPort *port, getBase()->getInputPorts())
+	{
+		VuoCompilerPort *compilerPort = static_cast<VuoCompilerPort *>(port->getCompiler());
+		if (dynamic_cast<VuoGenericType *>(compilerPort->getDataVuoType()))
+			return true;
+	}
+
+	foreach (VuoPort *port, getBase()->getOutputPorts())
+	{
+		VuoCompilerPort *compilerPort = static_cast<VuoCompilerPort *>(port->getCompiler());
+		if (dynamic_cast<VuoGenericType *>(compilerPort->getDataVuoType()))
+			return true;
+	}
+
+	return false;
+}
+
+/**
  * Sets the @c title for this node; re-lays-out its ports to accommodate the new name.
  */
 void VuoRendererNode::setTitle(string title)
 {
 	updateGeometry();
 	getBase()->setTitle(title);
+	updateNodeFrameRect();
 	layoutPorts();
 }
 
@@ -983,8 +1013,21 @@ QString VuoRendererNode::generateNodeClassToolTipTitle(VuoNodeClass *nodeClass)
  */
 QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass)
 {
-	string className = nodeClass->getClassName();
-	string description = VuoStringUtilities::generateHtmlFromMarkdown(nodeClass->getDescription());
+	string className;
+	string description;
+	VuoCompilerSpecializedNodeClass *specialized = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass->getCompiler());
+	if (specialized)
+	{
+		className = specialized->getOriginalGenericNodeClassName();
+		description = specialized->getOriginalGenericNodeClassDescription();
+	}
+	else
+	{
+		className = nodeClass->getClassName();
+		description = nodeClass->getDescription();
+	}
+
+	description = VuoStringUtilities::generateHtmlFromMarkdown(description);
 	string version = nodeClass->getVersion();
 
 	QString tooltipBody;

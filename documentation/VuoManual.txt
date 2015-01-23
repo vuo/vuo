@@ -11,7 +11,7 @@ Vuo is a realtime visual programming environment designed to be both incredibly 
 
 This manual will guide you through the process of installing Vuo and creating your first composition. Then it will show you the details of all the pieces of a composition and how to put them together. It will explain how to create and run compositions with the Vuo Editor and, as an alternative, the command-line tools. It will show you how to make Vuo do even more by adding nodes to your Node Library. 
 
-Many of the compositions in this manual are in a Vuo "Sample Compositions" folder. You can download this folder from the same place you downloaded Vuo. It may help to open these sample compositions in the Vuo Editor and run them as you work through the manual. 
+Many of the compositions in this manual are available from the within the Vuo Editor (\menu{File->Open Example}). It may help to open these example compositions in the Vuo Editor and run them as you work through the manual. 
 
 For more resources to help you learn Vuo, see our [support page](http://vuo.org/support) on vuo.org. 
 
@@ -64,7 +64,15 @@ The trigger port has spikes on its left side, to indicate that it _fires_ events
 
 One example of a trigger port is the \vuoNode{Fire Periodically} node's \vuoPort{fired} port. Another is the \vuoNode{Fire on Start} node's \vuoPort{started} port. 
 
-\vuoNodeClassImage{vuo.time.firePeriodically} \hfill \vuoNodeClassImageWithCaption{vuo.event.fireOnStart}{Nodes with trigger ports}
+\vuoNodeClassImageWithAnnotation{vuo.time.firePeriodically}{
+	\draw[->,line width=1,green] (5.1,.35) -- (4.6,.35); \node[right, green] at (5.1,.35) {trigger port};
+}
+\hfill
+\vuoNodeClassImageWithAnnotation{vuo.event.fireOnStart}{
+	\draw[->,line width=1,green] (4.1,.35) -- (3.6,.35); \node[right, green] at (4.1,.35) {trigger port};
+}
+\nopagebreak
+\centerline{Nodes with trigger ports}
 
 See the chapter [Controlling the Flow of Events](#controlling-the-flow-of-events) for more detail on event flow.
 
@@ -80,7 +88,7 @@ Nodes talk to each other by sending data and events through \term{cables} plugge
 
 \noteTextProgrammers{A \term{node} in Vuo is analogous to a \term{class instance method} that takes a list of inputs and returns a list of outputs.}
 
-\vuoCompositionImageWithCaption{DisplayImage}{A sample composition, DisplayImage.vuo, with three \term{nodes} and two \term{cables}}
+\vuoCompositionImageWithCaption{DisplayImage}{An example composition, DisplayImage.vuo (under vuo.image), with three \term{nodes} and two \term{cables}}
 
 In the composition above, an event from the  \vuoNode{Fire on Start} node travels to the \vuoNode{Get Image} node, which fetches the image from a specific URL. The image data and event then travel to the input port \vuoPort{image} of the \vuoNode{Render Image to Window} node. This node will display the image in a window. 
 
@@ -90,13 +98,13 @@ All cables carry events. In the composition above, an example of a cable that ca
 
 \term{Event-only cables} are thin. \term{Data-and-event cables} are thicker than event-only cables.
 
-\vuoCompositionImageWithCaption{DisplayImageTwice}{Multiple data-and-event and event-only cables can be connected to an output port.}
+\vuoCompositionImageWithCaption{DisplayMultipleWindows}{Multiple data-and-event and event-only cables can be connected to an output port.}
 
-\noteQCUsers{Unlike Quartz Composer, you may create as many or few windows as you like.  This composition will create 4 separate windows all rendering an image of the system default Desktop.}
+\noteQCUsers{Unlike Quartz Composer, you may create as many or few windows as you like.  This composition will create 4 separate windows.}
 
 \vuoCompositionImageWithCaption{MultipleEventOnlyCables}{Multiple event-only cables, but only one data-and-event cable, can be connected to an input port.}
 
-You can connect a data-and-event output port to a data-and-event input port, but you can't directly connect a data-and-event output port to an event-only input port without a special type converter. See the section [Types of information and type converters](#types-of-information-and-type-converters). You *can* connect an event-only output port to any type of data-and-event input port.
+You can connect a data-and-event output port to a data-and-event input port, but you can't directly connect a data-and-event output port to an event-only input port without a special type converter. See the section [Types of information](#types-of-information). You *can* connect an event-only output port to any type of data-and-event input port.
 
 ## Creating a composition
 
@@ -104,7 +112,7 @@ The easiest way to make a composition is in the Vuo Editor. Once you've installe
 
 See the chapter [The Vuo Editor](#the-vuo-editor) for more information on the Vuo Editor.
 
-\vuoCompositionImageWithCaption{Count}{The sample composition, Count.vuo}
+\vuoCompositionImageWithCaption{Count}{The example composition, Count.vuo, under the vuo.math examples}
 
 Above is a composition that counts. It displays a blank window, then, every one second, it writes a number upon the window: 1, 2, 3, 4, … etc. Let's take a closer look. 
 
@@ -132,7 +140,7 @@ In summary:
 
 ## Live coding
 
-In Vuo you can change your composition while it's running. We'll use the sample composition, Count.vuo, explained above. Start the composition again. While it's running, click on the cable from the \vuoPort{fired} port to the \vuoNode{Count} node's \vuoPort{increment} port. This will highlight it. 
+In Vuo you can change your composition while it's running. We'll use the example composition, Count.vuo, explained above. Start the composition again. While it's running, click on the cable from the \vuoPort{fired} port to the \vuoNode{Count} node's \vuoPort{increment} port. This will highlight it. 
 
 Either right click, hit \key{Delete} or use the Editor's menu \menu{Edit > Cut selected cable} or \menu{Edit > Delete selected cable} to delete the cable. Notice how the composition stops outputting the count, since there are no events going into the \vuoNode{Count} node. 
 
@@ -156,7 +164,7 @@ To understand how to control what happens in your composition, you first need to
 
 ### Input ports
 
-\vuoNodeClassImageWithAnnotation{vuo.math.subtract.integer}{
+\vuoNodeClassImageWithAnnotation{vuo.math.divide.VuoInteger}{
 	\draw[->,line width=1,green] (0,1.9) -- (.5,1.4); \node[left, green] at (0,1.9) {input port};
 	\draw[->,line width=1,green] (0,1.35) -- (.5,.85); \node[left, green] at (0,1.35) {input port};
 	\draw[->,line width=1,green] (0,-.35) -- (.5,0.15); \node[left, green] at (0,-.35) {input port};
@@ -166,12 +174,12 @@ An \term{input port} is the location on the left side of the node where you can 
 
 Some nodes, like the two nodes shown below, have input ports that block an event. This means the node will execute, but the event associated with that data won't travel any farther. This is useful when you want part of your composition to execute in response to events from one trigger port but not events from another trigger port, or when you're creating a feedback loop. (See later in this chapter, [Controlling when nodes execute](#controlling-when-nodes-execute), for more information.) 
 
-\vuoNodeClassImageWithAnnotation{vuo.select.in.2.VuoInteger}{
+\vuoNodeClassImageWithAnnotation{vuo.select.in.2}{
 	\draw[->,line width=1,green] (2.15,-.25) -- (.9,1); \node[right, green] at (2.15,-.25) {event wall};
 	\draw[->,line width=1,green] (2.15,-.75) -- (.9,.5); \node[right, green] at (2.15,-.75) {event door};
 }
 \hfill
-\vuoNodeClassImage{vuo.hold.VuoInteger}
+\vuoNodeClassImage{vuo.hold}
 
 Ports that always block events have a solid semi-circle (like the \vuoPort{which} port above).  This solid semi-circle is called an \term{event wall}. The node must receive an event from another port without an event wall for the results of the node's execution to be available to other nodes. 
 
@@ -189,13 +197,13 @@ Tip: To determine what is a port-specific function, look at the input port. If t
 
 \vuoCompositionImageWithAnnotationAndCaption{CountSometimes}{
 	\draw[->,line width=1,green] (5.15,2.75) -- (4.15,1.75); \node[right, green] at (5.15,2.75) {refresh port};
-}{A sample composition, CountSometimes.vuo, using a \term{refresh port}}
+}{A composition, CountSometimes.vuo, using a \term{refresh port}}
 
 For example, this composition above shows how you can use the refresh port to get the \vuoNode{Count} node's current count without incrementing or decrementing it. When the lower \vuoNode{Fire Periodically} node fires an event, \vuoNode{Display Console Window} writes the incremented count. When the upper \vuoNode{Fire Periodically} node --- which is connected to the \vuoNode{Count} node's refresh port --- fires an event, the count stays the same. \vuoNode{Display Console Window} writes the same count as before. 
 
 ---
 
-\vuoCompositionImageWithCaption{CountAndHold}{A sample composition, CountandHold.vuo, using a \vuoNode{Hold Value} node}
+\vuoCompositionImageWithCaption{CountAndHold}{An example composition, CountandHold.vuo (under vuo.hold), using a \vuoNode{Hold Value} node}
 
 On other nodes, like \vuoNode{Hold Value}, the refresh port is the only input port that transmits events to any output ports. The \vuoNode{Hold Value} node lets you store a value during one event and use it during later events. This composition shows how you can use a \vuoNode{Hold Value} node to update a value every 1 second and write it every 5 seconds. 
 
@@ -271,7 +279,7 @@ Vuo has nodes that can evaluate whether a statement is \term{True} or \term{Fals
 
 The following is an example of a node that outputs a Boolean value, by determining if "a" is less than "b."
 
-\vuoNodeClassImage{vuo.math.isLessThan.integer} 
+\vuoNodeClassImage{vuo.math.isLessThan} 
 
 You can execute downstream nodes based on whether an output is true or false. Logic nodes are often used with nodes that route data, where the logic node acts as an "if" and the node that routes data as a "then do this, or if not, do that." 
 
@@ -287,13 +295,13 @@ A \vuoNode{Select Input} node lets you select a value from different input ports
 
 When the \vuoNode{Select Input} node executes, it looks at what is present at the \vuoPort{which} port and outputs the value found at the corresponding port below it. For example, if the value "1" is present at the \vuoPort{which} port, whatever value is present at the \vuoPort{option1} port will be output. 
 
-\vuoNodeClassImage{vuo.select.in.2.VuoInteger}
+\vuoNodeClassImage{vuo.select.in.2}
 
 Notice that the \vuoPort{which} port has an event wall, as shown by the solid semi-circle. In order to get the node to output an event, you need to send an event to the selected input port or the refresh port. It won't work if you just send an event to the \vuoPort{which} port. 
 
 Here is an example of the node using Boolean values to control how it functions:
 
-\vuoNodeClassImage{vuo.select.in.VuoInteger}
+\vuoNodeClassImage{vuo.select.in}
 
 Here is a composition using both a logic node and a \vuoNode{Select Input} node. The composition will write "The count is less than five" four times, before "The count is 5 or more" begins to be written. 
 
@@ -301,11 +309,11 @@ Here is a composition using both a logic node and a \vuoNode{Select Input} node.
 
 A \vuoNode{Select Output} node lets you route an input value to one of several outputs. Similar to the \vuoNode{Select Input}, you pick an output port using the \vuoPort{which} input port. Here "1" will send the information from the \vuoPort{in} to \vuoPort{option1}, while an input of "2" will send the information to \vuoPort{option2}. You can see here that it is important to notice if the \vuoPort{which} is expecting a Boolean "True" or "False," or if it is expecting a number "1" or "2." Vuo provides switches that use both numbers and Boolean values. 
 
-\vuoNodeClassImage{vuo.select.out.2.VuoInteger}
+\vuoNodeClassImage{vuo.select.out.2}
 
 A \vuoNode{Select Latest} node lets you select the latest data and event to arrive at the node. If an event comes into both \vuoPort{option1} and \vuoPort{option2}, then \vuoPort{option1} is used. 
 
-\vuoNodeClassImage{vuo.select.latest.2.VuoInteger}
+\vuoNodeClassImage{vuo.select.latest.2}
 
 
 ### Executing nodes in parallel
@@ -330,7 +338,7 @@ If the two \vuoNode{Fire Periodically} nodes fire an event at nearly the same ti
 
 ### Executing nodes in the background
 
-\vuoCompositionImageWithCaption{LoadImageAsynchronously}{A composition, LoadImagesAsynchronously.vuo, has nodes execute in the background}
+\vuoCompositionImageWithCaption{LoadImageAsynchronously}{An example composition, LoadImagesAsynchronously.vuo (under vuo.event), has nodes execute in the background}
 
 This example shows how a composition can do some work in the background (asynchronously). It displays one image while downloading another image from the internet, then displays the second image. 
 
@@ -340,7 +348,7 @@ Let's take a more detailed look. When the \vuoNode{Fire on Start} node fires an 
 
 ### Executing nodes at a steady rate
 
-\vuoCompositionImageWithCaption{CountAndHold}{A composition, Count and Hold, showing nodes executing at different rates}
+\vuoCompositionImageWithCaption{CountAndHold}{An example composition, Count and Hold (under vuo.hold), showing nodes executing at different rates}
 
 This composition writes a count upon the console window every 5 seconds. The count updates every 1 second.
 
@@ -379,7 +387,7 @@ When you add a node to a composition, each input port has a preset constant valu
 
 If you disconnect a data-and-event cable to a port that previously had a constant value, then the port goes back to its previous value. If you did not set a constant value, it goes back to its default value.
 
-\vuoNodeClassImage{vuo.math.count.integer}
+\vuoNodeClassImage{vuo.math.count}
 
 ## Using drawers
 
@@ -398,7 +406,7 @@ Like a node, a drawer will only execute if it has an event coming into one of it
 
 Some nodes have \term{state}. They remember information from previous times they were executed. An example of a \term{stateful} node is \vuoNode{Count}. If a \vuoNode{Count} node is told to increment, its state (the count) changes. 
 
-\vuoNodeClassImageWithAnnotation{vuo.math.count.integer}{
+\vuoNodeClassImageWithAnnotation{vuo.math.count}{
 	\draw[->,line width=1,green] (2.25,-.5) -- (2.25,0); \node[below, green, align=center] at (2.25,-.5) {upside-down cable\\indicating stateful node};
 }
 
@@ -408,23 +416,51 @@ Stateful nodes have a thick bar along the bottom that looks like an upside-down 
 
 A \term{stateless} node doesn't remember anything about previous times it was executed. If you give it the same inputs, it'll always give you the same outputs.
 
-\vuoNodeClassImage{vuo.math.subtract.integer}
+\vuoNodeClassImage{vuo.math.subtract}
 
 \term{Stateless} nodes have a thin bottom border.
 
-## Types of information and type converters
+## Types of information
 
-Nodes are sensitive to \term{data type}. Vuo works with various types of data, such as integer (whole) numbers, real (decimal) numbers, Boolean (logical) values, text, 3D points, and images. When you connect two ports with a data-and-event cable, the data types of the ports have to match. You can connect an integer port to an integer port, or a text port to a text port, but you can't directly connect an integer port to a text port. You need to use nodes that work with the type of data you are manipulating. Vuo has separate math nodes for working with integer and real numbers, for example. Vuo has specific \vuoNode{Hold Value} and \vuoNode{Select} nodes for different data types.
+Nodes are sensitive to \term{data type}. Vuo works with various types of data, such as integer (whole) numbers, real (decimal) numbers, Boolean (logical) values, text, 3D points, images, and more. 
 
-The Vuo Editor will help you by adding some type converters automatically. If you start a cable, all the ports in your composition where that cable could connect to are highlighted. If the port you want to connect to is not of the same type, the Editor will put a type converter in for you (if one exists for the types you're trying to connect). If you want to convert an integer to text, then the Editor will insert a  \vuoNode{Convert Integer to Text} node in a collapsed form for you. Sometimes, though, you'll have to insert the correct type converter yourself. You can see type converters used in previous compositions in this manual, such as in the section [Creating a composition](#creating-a-composition) with the Count composition.
+For example, the \vuoNode{Count Characters} node's \vuoPort{text} input port has data type text, and its \vuoPort{characterCount} output port has data type integer. If you see a \vuoNode{Count Characters} node that has a cable connected to its \vuoPort{characterCount} port, then you can know that the port at the other end of the cable must also have type integer. 
 
-Vuo has a special set of type converters for data-and-event cables to remove (discard) the data from an event. If you want to convert a data-and-event cable to an event-only cable, use a \vuoNode{Discard Data from Event} type converter.
+### Converting between types
+
+What if you want to connect the \vuoNode{Count Character} node's integer output port to a text input port? If you start to drag a cable from the \vuoPort{characterCount} port, any ports in the composition that the cable can connect to are highlighted. This includes not just ports of type integer, but also ports of type text. If you drag the cable to a text input port and release the mouse, then a type converter node will be automatically added to convert the integer data to text data. 
 
 \noteQCUsers{The Quartz Composer equivalent to a \term{type-converter} is represented as a darker red line in QC.  The benefit of exposing these conversions is greater control over how your data is interpreted.}
 
-\vuoCompositionImageWithCaption{CheckSMSLength}{A composition, Check SMS Length, showing a type converter discarding data from an event}
+A \term{type converter node} is just a node that happens to have a single input port of one data type and a single output port of another data type. Whenever you want to connect a port of one data type to a port of another data type, you can try drawing the cable to find out if any type converters can be inserted automatically. Or you can search the Node Library for a node that has an input port of the type that you want to convert from and an output port of the type that you want to convert to. 
 
-In Vuo you can often do the same thing in different ways. You might want to compare this composition with a similar example composition in the [Routing data with select nodes section](#routing-data-with-select-nodes). 
+For some types, there's more than one way to do the conversion. For example, if you want to convert from a real number to an integer, you can round the real number to the nearest integer, round it down to the integer below, or round it up to the integer above. If you try to connect a cable from a real-number output port to an integer input port, a menu will pop up allowing you to pick the conversion you want to use. 
+
+Vuo has a special set of type converters for data-and-event cables to remove (discard) the data from an event. If you want to convert a data-and-event cable to an event-only cable, use a \vuoNode{Discard Data from Event} type converter. 
+
+You can see type converters used in previous compositions in this manual, such as in the section [Creating a composition](#creating-a-composition) with the Count composition. 
+
+\vuoCompositionImageWithCaption{CheckSmsLength}{An example composition, Check Sms Length (under vuo.text), showing a type converter discarding data from an event}
+
+### Using generic types
+
+Some nodes can work with many different types of data. For example, a \vuoNode{Hold Value} node could hold an integer, an image, a 3D point... or really, any type of data. Rather than cluttering up the Node Library with a separate \vuoNode{Hold Value} node for each data type, Vuo lists a single \vuoNode{Hold Value} node that can be made to work with any type. 
+
+When you drag a \vuoNode{Hold Value} node from the Node Library onto the canvas, each of the node's ports has a \term{generic data type}. This means that the data type for these ports hasn't been decided yet. Right now, each of the \vuoNode{Hold Value} node's ports has the potential to connect to any type of port in the composition. You can see that a port is generic by hovering over it with the mouse and reading the port popover that pops up. 
+
+When you connect one of the \vuoNode{Hold Value} node's ports to a non-generic port, then all of the \vuoNode{Hold Value} node's generic ports change to non-generic ports with the same type as the connected port. For example, if you connect the \vuoNode{Hold Value} node's \vuoPort{heldValue} port to a \vuoNode{Count Character} node's \vuoPort{text} port, then all of the \vuoNode{Hold Value} node's generic ports change to text ports, matching the \vuoPort{text} port. 
+
+Another way to change a generic port to a non-generic port is to right-click on the port, go to the \menu{Set Data Type} menu that pops up, and choose a data type. 
+
+If you want to change the port back to generic, you can right-click on the port and select the \menu{Revert to Generic Data Type} menu item. (This will delete any cables between non-generic ports and ports changed back to generic.) 
+
+Some generic nodes can work with several different types of data, but not all types. For example, the \vuoNode{Add Points} node can work with with 2d points, 3d points, and 4d points, but not text or images. When you drag an \vuoNode{Add Points} node from the Node Library onto the canvas, its \vuoPort{sum} port is generic, but it can only connect to a port of type 2d point, 3d point, or 4d point. You can see the list of compatible types for a generic port by looking at the port popover. 
+
+Some generic nodes are automatically turned into non-generic nodes when first created. For example, when you drag an \vuoNode{Add} node from the Node Library onto the canvas, its ports are automatically changed from generic to real numbers, because real numbers are usually a suitable choice for the \vuoNode{Add} node. But if you want to work with integers instead, you can use the \menu{Revert to Generic Data Type} menu and then the \menu{Set Data Type} to change the ports to integers. 
+
+You can connect a generic port to another generic port, as long as they work with compatible types of data. For example, you can connect a \vuoNode{Hold Value} node to an \vuoNode{Add} node, since the \vuoNode{Hold Value} node is compatible with any type. However, you can't connect an \vuoNode{Add} node to an \vuoNode{Add Points} node, since the \vuoNode{Add} node is only compatible with integers and reals while the \vuoNode{Add Points} nodes is only compatible with 2d points, 3d points, and 4d points. 
+
+A generic node can have ports that each work with a different generic type. For example, the \vuoNode{Get Message Values} node in the \vuoNode{vuo.osc} node set has several output ports with independent generic types. You can change one output port's generic type to integer and another output port's generic type to text, for example. You can see if a node's generic ports use the same generic type or different generic types by looking at the port popover. The port popover displays a name for the port's generic type, such as "generic #1" or "generic #2". If two generic ports have the same name for their type (including if they're on separate nodes connected by cables), then changing the generic type of one port will also change the other port. If two generic ports have different names for their type, then changing one will not affect the other. 
 
 ## Interacting with the environment
 
@@ -437,6 +473,8 @@ Nodes that bring information into the composition from the outside world and/or 
 \noteQCUsers{Instead of Vuo's interface and non-interface nodes, Quartz Composer has an execution mode for each patch: provider, consumer, or processor. A patch's execution mode not only indicates how it interacts with the outside world, but also controls when it executes and whether it can be embedded in macro patches.} 
 
 Interface nodes have three radio arcs along the bottom edge, symbolizing that they send or receive data with the world outside your composition.
+
+
 
 # The Vuo Editor
 
@@ -464,14 +502,14 @@ Whether you have left your library docked or undocked, visible or hidden, your p
 
 Each node has two names: a title and a class name. The \term{title} is a quick description of a node's function; it's the most prominent name written on a node. The \term{class name} is a categorical name that reveals specific information about a node; it appears directly below the node's title.
 
-\vuoNodeClassImageWithAnnotation{vuo.math.count.integer}{
-	\draw[->,line width=1,green] (4.5,2.0) -- (2.25,2.0); \node[right, green] at (4.5,2.0) {title};
-	\draw[->,line width=1,green] (4.5,1.65) -- (3.9,1.65); \node[right, green] at (4.5,1.65) {class name};
+\vuoNodeClassImageWithAnnotation{vuo.math.count}{
+	\draw[->,line width=1,green] (5,2.0) -- (3.25,2.0); \node[right, green] at (5,2.0) {title};
+	\draw[->,line width=1,green] (5,1.65) -- (4,1.65); \node[right, green] at (5,1.65) {class name};
 }
 
-Let's use the \vuoNode{Count} node as an example. "Count" is the node's title, which reveals that the node performs the function of counting. The class name is "vuo.math.count.integer". The class name reveals the following: Team Vuo created it, "math" is the category, "count" is the specific function (and title name), and "integer" is the type of information it works with.
+Let's use the \vuoNode{Count} node as an example. "Count" is the node's title, which reveals that the node performs the function of counting. The class name is "vuo.math.count". The class name reveals the following: Team Vuo created it, "math" is the category, and "count" is the specific function (and title name).
 
-Depending on your level of familiarity with Vuo's node sets and your personal preference, you might wish to browse nodes by their fully qualified family ("class") name (e.g., "vuo.math.add.integer") or by their more natural human-readable names ("Add").
+Depending on your level of familiarity with Vuo's node sets and your personal preference, you might wish to browse nodes by their fully qualified family ("class") name (e.g., "vuo.math.add") or by their more natural human-readable names ("Add").
 
 You may select whichever display mode you prefer, and switch between the modes at your convenience; the editor will remember your preference between sessions. You can toggle between node titles and node class names by using the buttons at the bottom of the Node Library or by \menu{View>Node Library> Display by class} or \menu{Display by name}.
 
@@ -603,6 +641,56 @@ When exporting a composition that refers to files on your computer (such as imag
 
 
 
+# The Built-in Nodes
+
+Right out of the box, Vuo lets you create multimedia compositions that animate graphics, display video, communicate with network devices, provide user interaction, and more. Now that you know the basics of creating Vuo compositions and using the Vuo Editor, you're ready to explore what you can create. 
+
+This section gives an overview of some of Vuo's built-in nodes. Much more information about the built-in nodes is available through the Vuo Editor. Remember that you can search for a node by name or keyword in the Node Library, and you can see the details about any node by clicking on it. 
+
+
+## Rendering graphics and video
+
+For working with 3D graphics, models, and meshes, the \vuoNodeClass{vuo.scene} node set is your starting point. It lets you put 3D objects into a scene, which you can render in a window or image. 
+
+For working with 2D graphics, designs, and animations, the \vuoNodeClass{vuo.image} and \vuoNodeClass{vuo.layer} node sets are your starting point. These let you arrange and manipulate 2D images and render them in a window or composite image. 
+
+Several node sets let you work with video in different ways. For playing movie files, use the \vuoNodeClass{vuo.movie} node set. For sending and receiving video between Vuo compositions and other applications, use the \vuoNodeClass{vuo.syphon} node set. For importing video from a [Kinect](http://en.wikipedia.org/wiki/Kinect) camera, use the \vuoNodeClass{vuo.kinect} node set. 
+
+### Vuo Coordinates
+
+When drawing graphics to a window or image, you need to understand the \term{coordinate system} of the area you're drawing to. For example, when you use the `Render Scene to Window` node to display a 3D scene in a window, typically the point in your 3D scene with coordinates (0,0,0) will be drawn at the center of the window. (If you're not familiar with the concept of 2D and 3D coordinates, see [http://simple.wikipedia.org/wiki/Cartesian_coordinate_system](http://simple.wikipedia.org/wiki/Cartesian_coordinate_system) and other references to learn more.) 
+
+All of the built-in nodes that work with graphics use \term{Vuo Coordinates}: 
+
+\includegraphics[scale=0.55]{image/vuo-coordinates.pdf}
+
+Typically, as illustrated above, the position (0,0) for 2D graphics or (0,0,0) for 3D graphics is at the center of the rendering area. The x-coordinate -1 is along the left edge of the rendering area, and the x-coordinate 1 is along the right edge. The rendering area's height depends on the aspect ratio of the graphics being rendered, with the y-coordinate increasing from bottom to top. In 3D graphics, the z-coordinate increases from back to front. 
+
+When working with 3D graphics, you can change the center and bounds of the rendering area by using a `Make Perspective Camera` or `Make Orthogonal Camera` node. For example, you can use a camera to zoom out, so that the rendering area shows a larger range of x- and y-coordinates. 
+
+
+## Communicating over a network
+
+Several node sets let you connect with other devices such as iPhones and iPads, Android phones and tablets, musical synthesizers and sequencers, and stage lighting. 
+
+For working with MIDI devices, use the \vuoNodeClass{vuo.midi} node set. 
+
+For working with OSC devices, use the \vuoNodeClass{vuo.osc} node set. 
+
+
+## Controlling compositions with devices
+
+Several node sets let users interact with your compositions using an input device. 
+
+For controlling a composition with a mouse or trackpad, use the \vuoNodeClass{vuo.mouse} node set. 
+
+For controlling a composition with your hand and finger movements using a [Leap Motion](https://www.leapmotion.com/) device, use the \vuoNodeClass{vuo.leap} node set. 
+
+For controlling a composition with your body movements using a [Kinect](http://en.wikipedia.org/wiki/Kinect), use the \vuoNodeClass{vuo.kinect} node set. 
+
+
+
+
 # The Command-Line Tools
 
 As an alternative to using the Vuo Editor, you can use command-line tools to work with Vuo compositions. Although most Vuo users will only need the Vuo Editor, you might want to use the command-line tools if: 
@@ -644,7 +732,7 @@ To see the command-line options available, you can run each command-line tool wi
 Using the `vuo-render` command, you can render a picture of your composition:
 
 \begin{lstlisting}[language=bash,caption=Rendering a composition]
-vuo-render --output-format=pdf --output CheckSMSLength.pdf CheckSMSLength.vuo
+vuo-render --output-format=pdf --output CheckSmsLength.pdf CheckSmsLength.vuo
 \end{lstlisting}
 
 `vuo-render` can output either PNG (raster) or PDF (vector) files.  The command `vuo-render --help` provides a complete list of parameters.
@@ -652,7 +740,7 @@ vuo-render --output-format=pdf --output CheckSMSLength.pdf CheckSMSLength.vuo
 Since composition files are in DOT format, you can also render them without Vuo styling using Graphviz: 
 
 \begin{lstlisting}[language=bash,caption=Rendering a Vuo composition using Graphviz]
-dot -Grankdir=LR -Nshape=Mrecord -Nstyle=filled -Tpng -oSMSLength.png CheckSMSLength.vuo
+dot -Grankdir=LR -Nshape=Mrecord -Nstyle=filled -Tpng -oSmsLength.png CheckSmsLength.vuo
 \end{lstlisting}
 
 
@@ -663,13 +751,13 @@ You can turn a .vuo file into an executable in two steps.
 First, compile the .vuo file to a .bc file (LLVM bitcode): 
 
 \begin{lstlisting}[language=bash,caption=Compiling a Vuo composition]
-vuo-compile --output CheckSMSLength.bc CheckSMSLength.vuo
+vuo-compile --output CheckSmsLength.bc CheckSmsLength.vuo
 \end{lstlisting}
 
 Then, turn the .bc file into an executable:
 
 \begin{lstlisting}[language=bash,caption=Linking a Vuo composition into an executable]
-vuo-link --output CheckSMSLength CheckSMSLength.bc
+vuo-link --output CheckSmsLength CheckSmsLength.bc
 \end{lstlisting}
 
 If you run into trouble building a composition, you can get more information by running the above commands with the `--verbose` flag. 
@@ -682,13 +770,13 @@ If you're editing a composition in a text editor, the `--list-node-classes=dot` 
 You can run the executable you created just like any other executable:
 
 \begin{lstlisting}[language=bash,caption=Running a Vuo composition]
-./CheckSMSLength
+./CheckSmsLength
 \end{lstlisting}
 
 Using the `vuo-debug` command, you can run the composition and get a printout of node executions and other debugging information:
 
 \begin{lstlisting}[language=bash,caption=Running a Vuo composition]
-vuo-debug ./CheckSMSLength
+vuo-debug ./CheckSmsLength
 \end{lstlisting}
 
 
@@ -697,7 +785,7 @@ vuo-debug ./CheckSMSLength
 Using the `vuo-export` command, you can turn a composition into an application: 
 
 \begin{lstlisting}[language=bash,caption=Exporting a Vuo composition to an application]
-vuo-export --output CheckSMSLength.app CheckSMSLength.vuo
+vuo-export --output CheckSmsLength.app CheckSmsLength.vuo
 \end{lstlisting}
 
 If you run into trouble exporting a composition, you can get more information by running `vuo-export` with the `--verbose` flag. 
@@ -706,7 +794,7 @@ This command is equivalent to the `File > Export App...` menu item in Vuo Editor
 
 
 
-# Adding nodes to your Node Library
+# Adding Nodes to Your Node Library
 
 You can expand the things that Vuo can do, or save yourself the work of creating the same composition pieces over and over, by adding nodes to the Vuo Editor's Node Library. 
 

@@ -2,12 +2,13 @@
  * @file
  * VuoModule implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoModule.hh"
+#include "VuoNodeSet.hh"
 
 /**
  * Creates a module.
@@ -17,6 +18,7 @@
 VuoModule::VuoModule(string moduleKey)
 {
 	this->moduleKey = moduleKey;
+	this->nodeSet = NULL;
 }
 
 /**
@@ -25,6 +27,14 @@ VuoModule::VuoModule(string moduleKey)
 string VuoModule::getModuleKey(void)
 {
 	return moduleKey;
+}
+
+/**
+ * Sets this module's unique name.
+ */
+void VuoModule::setModuleKey(string moduleKey)
+{
+	this->moduleKey = moduleKey;
 }
 
 /**
@@ -56,13 +66,22 @@ void VuoModule::setDefaultTitle(string defaultTitle)
 }
 
 /**
- * Returns the description of this module provided as documentation.
+ * Returns the description given in the module's metadata, or if none is given,
+ * the description found in a separate file in the module's node set.
+ *
+ * If this module doesn't have a description, returns an empty string.
  *
  * @see VuoModuleMetadata
  */
 string VuoModule::getDescription(void)
 {
-	return description;
+	if (! description.empty())
+		return description;
+
+	if (nodeSet)
+		return nodeSet->getDescriptionForModule(this);
+
+	return "";
 }
 
 /**
@@ -113,4 +132,20 @@ vector<string> VuoModule::getKeywords(void)
 void VuoModule::setKeywords(vector<string> keywords)
 {
 	this->keywords = keywords;
+}
+
+/**
+ * Returns the node set containing this module.
+ */
+VuoNodeSet * VuoModule::getNodeSet(void)
+{
+	return nodeSet;
+}
+
+/**
+ * Sets the node set containing this module.
+ */
+void VuoModule::setNodeSet(VuoNodeSet *nodeSet)
+{
+	this->nodeSet = nodeSet;
 }

@@ -20,7 +20,8 @@ TYPE_SOURCES += \
 	VuoShader.c \
 	VuoText.c \
 	VuoTransform.c \
-	VuoTransform2d.c
+	VuoTransform2d.c \
+	VuoWrapMode.c
 
 HEADERS += \
 	VuoBoolean.h \
@@ -38,7 +39,8 @@ HEADERS += \
 	VuoShader.h \
 	VuoText.h \
 	VuoTransform.h \
-	VuoTransform2d.h
+	VuoTransform2d.h \
+	VuoWrapMode.h
 
 INCLUDEPATH += \
 	$$ROOT/library \

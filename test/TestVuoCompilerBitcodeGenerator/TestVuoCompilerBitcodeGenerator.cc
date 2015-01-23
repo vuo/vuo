@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerBitcodeGenerator interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -74,7 +74,9 @@ private slots:
 		QFETCH(size_t, passiveOutEdgeCount);
 
 		string compositionPath = getCompositionPath("Recur_Count_Write.vuo");
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(generator->composition->getBase()->getNodes());
 		VuoCompilerNode *node = nodeForTitle[nodeTitle.toUtf8().constData()]->getCompiler();
@@ -104,7 +106,9 @@ private slots:
 		QFETCH(bool, mayTransmitThroughNode);
 
 		string compositionPath = getCompositionPath("Semiconductor.vuo");
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(generator->composition->getBase()->getNodes());
 		VuoNode *toNode = nodeForTitle[toNodeTitle.toUtf8().constData()];
@@ -142,7 +146,9 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 		set<VuoNode *> expectedNodes = generator->composition->getBase()->getNodes();
 		vector<VuoCompilerNode *> orderedNodes = generator->orderedNodes;
 		set<VuoCompilerNode *> loopEndNodes = generator->loopEndNodes;
@@ -357,7 +363,9 @@ private slots:
 		QFETCH(chainsMap, expectedChains);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = generator->nodeForTrigger;
 
 		map<string, set<string> > actualChains;
@@ -421,7 +429,9 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		QEXPECT_FAIL("No feedback loops.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
 		QVERIFY(generator->downstreamEdgesForEdge.empty());
@@ -445,7 +455,9 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromCompositionFile(compositionPath, compiler);
+		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		QEXPECT_FAIL("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
 		QEXPECT_FAIL("Trigger unambiguously pushing 2 nested feedback loops.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
@@ -474,6 +486,7 @@ private slots:
 		QTest::newRow("Passive cable carrying a struct coerced to a struct containing a vector and a singleton.") << "CableCarryingVuoPoint3d";
 		QTest::newRow("Passive cable carrying a struct coerced to a struct containing two vectors.") << "CableCarryingVuoPoint4d";
 		QTest::newRow("Node with an input port and output port whose types are pointers to structs.") << "StructPointerPorts";
+		QTest::newRow("Make List node with 0 items.") << "AddNoTerms";
 	}
 	void testCompilingWithoutCrashing()
 	{
@@ -555,6 +568,41 @@ private slots:
 			remove(bcPath.c_str());
 			remove(exePath.c_str());
 		}
+	}
+
+	void testCompilingAndLinkingWithGenericNodes_data()
+	{
+		QTest::addColumn< QString >("compositionName");
+
+		QTest::newRow("Generic node specialized with the type that replaces VuoGenericType (VuoInteger)") << "Recur_Hold_Add_Write_loop";
+		QTest::newRow("Generic node specialized with a type included by all node classes (VuoText)") << "StoreRecentText";
+		QTest::newRow("Generic node specialized with a type defined within a node set (VuoBlendMode)") << "HoldBlendMode";
+		QTest::newRow("Generic node specialized with a list type (VuoList_VuoBlendMode)") << "HoldListOfBlendModes";
+		QTest::newRow("Generic node specialized with a list type (VuoList_VuoText)") << "HoldListOfTexts";
+		QTest::newRow("Generic node specialized with 2 different types") << "ReceiveOscTextAndReal";
+		QTest::newRow("Generic node, not specialized") << "HoldAnyType";
+		QTest::newRow("Generic node, 1st of 2 types not specialized") << "ReceiveOscReal";
+		QTest::newRow("Generic node, 2nd of 2 types not specialized") << "ReceiveOscText";
+		QTest::newRow("More unique generic types in the composition than in any one node class") << "HoldAnyTypeX2";
+		QTest::newRow("Generic 'Make List' node") << "AddAnyType";
+		QTest::newRow("Generic node, not specialized, incompatible with the default backing type") << "AddPoints";
+	}
+	void testCompilingAndLinkingWithGenericNodes()
+	{
+		QFETCH(QString, compositionName);
+
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "");
+
+		compiler->compileComposition(compositionPath, compiledCompositionPath);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
+		QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
+
+		remove(compiledCompositionPath.c_str());
+		remove(linkedCompositionPath.c_str());
 	}
 
 	void testPublishedPortGetters()

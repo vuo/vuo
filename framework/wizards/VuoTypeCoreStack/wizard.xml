@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard version="1" kind="class" id="A.VuoTypeCoreStack" category="C.Vuo">
+    <description>Creates a stack-based Vuo Type.</description>
+    <displayname>Vuo Core Type (stack)</displayname>;
+    <displaycategory>Vuo</displaycategory>
+    <files>
+        <file source="type.c" target="%TypeName%.c" openeditor="true"/>
+        <file source="type.h" target="%TypeName%.h" openeditor="true"/>
+    </files>
+    <fieldpagetitle>Type parameters</fieldpagetitle>
+    <fields>
+        <field name="TypeName">
+            <fieldcontrol class="QLineEdit" validator="^Vuo[A-Z][a-zA-Z0-9_]+$" defaulttext="VuoPairOfReals" placeholdertext="This type's C identifier"/>
+            <fielddescription>Machine name:</fielddescription>
+        </field>
+        <field name="TypeDisplayName">
+            <fieldcontrol class="QLineEdit" defaulttext="Pair of Reals" placeholdertext="This type's descriptive name"/>
+            <fielddescription>Display name:</fielddescription>
+        </field>
+        <field name="TypeDescription">
+            <fieldcontrol class="QLineEdit" defaulttext="A pair of real numbers." placeholdertext="Enter a one-sentence description of the type"/>
+            <fielddescription>Description:</fielddescription>
+        </field>
+    </fields>
+</wizard>

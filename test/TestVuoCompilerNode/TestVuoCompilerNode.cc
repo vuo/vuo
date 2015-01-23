@@ -2,7 +2,7 @@
  * @file
  * TestVuoCompilerNode interface and implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -59,13 +59,13 @@ private slots:
 
 	void testGlobalVariableIdentifiers()
 	{
-		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.math.add.integer");
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.math.round");
 		VuoCompilerNode *nodeWithDefaultName1 = nodeClass->newNode()->getCompiler();
-		nodeWithDefaultName1->setGraphvizIdentifier("Add");
+		nodeWithDefaultName1->setGraphvizIdentifier("Round");
 		VuoCompilerNode *nodeWithDefaultName2 = nodeClass->newNode()->getCompiler();
-		nodeWithDefaultName2->setGraphvizIdentifier("Add2");
+		nodeWithDefaultName2->setGraphvizIdentifier("Round2");
 		VuoCompilerNode *nodeWithDefaultName3 = nodeClass->newNode()->getCompiler();
-		nodeWithDefaultName3->setGraphvizIdentifier("Add3");
+		nodeWithDefaultName3->setGraphvizIdentifier("Round3");
 		VuoCompilerNode *nodeWithOverriddenName = nodeClass->newNode("Overridden")->getCompiler();
 
 		Module module("TestGlobalVariableIdentifiers", getGlobalContext());
@@ -74,10 +74,10 @@ private slots:
 		nodeWithDefaultName3->generateAllocation(&module);
 		nodeWithOverriddenName->generateAllocation(&module);
 
-		QVERIFY(NULL != module.getGlobalVariable("vuo_math_add_integer__Add__runtime__refresh_event", true));
-		QVERIFY(NULL != module.getGlobalVariable("vuo_math_add_integer__Add2__runtime__refresh_event", true));
-		QVERIFY(NULL != module.getGlobalVariable("vuo_math_add_integer__Add3__runtime__refresh_event", true));
-		QVERIFY(NULL != module.getGlobalVariable("vuo_math_add_integer__Overridden__runtime__refresh_event", true));
+		QVERIFY(NULL != module.getGlobalVariable("vuo_math_round__Round__runtime__refresh_event", true));
+		QVERIFY(NULL != module.getGlobalVariable("vuo_math_round__Round2__runtime__refresh_event", true));
+		QVERIFY(NULL != module.getGlobalVariable("vuo_math_round__Round3__runtime__refresh_event", true));
+		QVERIFY(NULL != module.getGlobalVariable("vuo_math_round__Overridden__runtime__refresh_event", true));
 	}
 
 	void testPortInitialValue_data()
@@ -86,7 +86,7 @@ private slots:
 		QTest::addColumn< QString >("inputPortName");
 		QTest::addColumn< QString >("expectedDefaultValue");
 
-		QTest::newRow("non-zero integer") << "vuo.math.divide.integer" << "b" << "1";
+		QTest::newRow("non-zero integer") << "vuo.math.divide.VuoInteger" << "b" << "1";
 		QTest::newRow("UTF-8 string") << "vuo.test.unicodeDefaultString" << "string" << "\"画\"";
 		QTest::newRow("JSON object") << "vuo.color.get.hsl" << "color" << "{\"r\":1,\"g\":1,\"b\":1,\"a\":1}";
 	}
@@ -119,7 +119,7 @@ private slots:
 		QFETCH(QString, title);
 		QFETCH(QString, graphvizIdentifierPrefix);
 
-		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.math.divide.integer");
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.math.divide.VuoInteger");
 		VuoNode *node = nodeClass->newNode(title.toStdString());
 		QCOMPARE(QString(node->getCompiler()->getGraphvizIdentifierPrefix().c_str()), graphvizIdentifierPrefix);
 	}

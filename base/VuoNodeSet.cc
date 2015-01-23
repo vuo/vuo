@@ -2,7 +2,7 @@
  * @file
  * VuoNodeSet implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -83,6 +83,52 @@ string VuoNodeSet::getDescriptionForModule(VuoModule *module)
 }
 
 /**
+ * Returns the names of the node classes within this node set, in lexicographic order.
+ */
+vector<string> VuoNodeSet::getNodeClassNames(void)
+{
+	set<string> extensions;
+	extensions.insert("vuonode");
+	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "", extensions);
+
+	vector<string> classNames;
+	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
+	{
+		VuoFileUtilities::File *f = *i;
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(f->getRelativePath(), dir, file, ext);
+		classNames.push_back(file);
+		delete f;
+	}
+
+	std::sort(classNames.begin(), classNames.end());
+
+	return classNames;
+}
+
+/**
+ * Returns the file names of the header files within this node set.
+ */
+vector<string> VuoNodeSet::getHeaderFileNames(void)
+{
+	set<string> extensions;
+	extensions.insert("h");
+	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "", extensions);
+
+	vector<string> headerFileNames;
+	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
+	{
+		VuoFileUtilities::File *f = *i;
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(f->getRelativePath(), dir, file, ext);
+		headerFileNames.push_back(file + "." + ext);
+		delete f;
+	}
+
+	return headerFileNames;
+}
+
+/**
  * Returns the file names of the example compositions within this node set, in lexicographic order.
  */
 vector<string> VuoNodeSet::getExampleCompositionFileNames(void)
@@ -107,6 +153,26 @@ vector<string> VuoNodeSet::getExampleCompositionFileNames(void)
 }
 
 /**
+ * Returns the contents of a node class source file within this node set.
+ *
+ * If the file doesn't exist, returns an empty string.
+ */
+string VuoNodeSet::getNodeClassContents(string nodeClassName)
+{
+	return VuoFileUtilities::getArchiveFileContentsAsString(archivePath, nodeClassName + ".c");
+}
+
+/**
+ * Returns the contents of a port type header file within this node set.
+ *
+ * If the file doesn't exist, returns an empty string.
+ */
+string VuoNodeSet::getHeaderContents(string headerName)
+{
+	return VuoFileUtilities::getArchiveFileContentsAsString(archivePath, headerName);
+}
+
+/**
  * Returns the contents of an example composition within this node set.
  *
  * If the example composition doesn't exist, returns an empty string.
@@ -121,11 +187,31 @@ string VuoNodeSet::getExampleCompositionContents(string exampleCompositionFileNa
  */
 void VuoNodeSet::extractExampleCompositionResources(string destinationDir)
 {
+	extractResourcesFromSubdirectory("examples", destinationDir);
+}
+
+/**
+ * Extracts the resources (images, etc.) for the documentation from the node set archive.
+ */
+void VuoNodeSet::extractDocumentationResources(string destinationDir)
+{
+	extractResourcesFromSubdirectory("descriptions", destinationDir);
+}
+
+/**
+ * Extracts the resources (images, etc.) from the provided @c archiveSubdir of the node set archive
+ * into the provided @c destinationDir.
+ *
+ * Helper function for VuoNodeSet::extractExampleCompositionResources(string destinationDir) and
+ * VuoNodeSet::extractDocumentationResources(string destinationDir).
+ */
+void VuoNodeSet::extractResourcesFromSubdirectory(string archiveSubdir, string destinationDir)
+{
 	set<string> extensions;
 	extensions.insert("png");
 	extensions.insert("jpg");
 	extensions.insert("mov");
-	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "examples", extensions);
+	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, archiveSubdir, extensions);
 
 	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)
 	{

@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -193,14 +193,21 @@ bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, VuoUrl_curlCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&buffer);
 
-	free(resolvedUrl);
-
 	res = curl_easy_perform(curl);
 	if(res != CURLE_OK)
 	{
-		fprintf(stderr, "VuoUrl_get() Error: cURL request failed: %s\n", curl_easy_strerror(res));
+		if (res == CURLE_FILE_COULDNT_READ_FILE)
+		{
+			VLog("Error: Could not read path: \"%s\"", resolvedUrl);
+		}
+		else
+		{
+			VLog("Error: cURL request failed: %s (%d)\n", curl_easy_strerror(res), res);
+		}
 		return false;
 	}
+
+	free(resolvedUrl);
 
 	curl_easy_cleanup(curl);
 

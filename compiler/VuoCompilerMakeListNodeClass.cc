@@ -2,39 +2,42 @@
  * @file
  * VuoCompilerMakeListNodeClass implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
 #include <sstream>
 
+#include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
 
 #include "VuoCompiler.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerGenericType.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 
 
 /// The common beginning of all "Make List" node class names (before the item count and item type).
 const string VuoCompilerMakeListNodeClass::makeListNodeClassNamePrefix = "vuo.list.make.";
-/// The common beginning of all VuoList type names (before the item type name).
-const string VuoCompilerMakeListNodeClass::listTypeNamePrefix = "VuoList_";
+
+/// The common description of all "Make List" node classes.
+const string VuoCompilerMakeListNodeClass::makeListNodeClassDescription = "Creates a list from the given items.";
 
 
 /**
  * Creates a Make List node class implementation from an LLVM module, and creates its corresponding base @c VuoNodeClass.
  */
 VuoCompilerMakeListNodeClass::VuoCompilerMakeListNodeClass(string nodeClassName, Module *module) :
-	VuoCompilerNodeClass(nodeClassName, module)
+	VuoCompilerSpecializedNodeClass(nodeClassName, module)
 {
 }
 
 /**
  * Creates a new compiler node class and creates a new base @c VuoNodeClass, both from @c compilerNodeClass.
  */
-VuoCompilerMakeListNodeClass::VuoCompilerMakeListNodeClass(VuoCompilerMakeListNodeClass *compilerNodeClass) :
-	VuoCompilerNodeClass(compilerNodeClass)
+VuoCompilerMakeListNodeClass::VuoCompilerMakeListNodeClass(VuoCompilerMakeListNodeClass *compilerNodeClass, VuoNode *nodeToBack) :
+	VuoCompilerSpecializedNodeClass(compilerNodeClass, nodeToBack)
 {
 }
 
@@ -44,9 +47,10 @@ VuoCompilerMakeListNodeClass::VuoCompilerMakeListNodeClass(VuoCompilerMakeListNo
  *
  * @param nodeClassName The name of the node class to generate. It should have the format "vuo.list.make.<item count>.<item type>" (e.g. "vuo.list.make.3.VuoInteger").
  * @param compiler The compiler to use for looking up types.
+ * @param nodeToBack Optionally, a 'Make List' node whose generic types should be used to determine this node class's backing types.
  * @return The generated node class, or null if the node class name does not have the correct format.
  */
-VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler)
+VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack)
 {
 	string itemCountAndType = VuoStringUtilities::substrAfter(nodeClassName, makeListNodeClassNamePrefix);
 	size_t dotPos = itemCountAndType.find(".");
@@ -56,8 +60,20 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	string itemCountStr = itemCountAndType.substr(0, dotPos);
 	unsigned long itemCount = atol(itemCountStr.c_str());
 	string itemTypeStr = itemCountAndType.substr(dotPos + 1);
-	VuoCompilerType *itemType = compiler->getType(itemTypeStr);
-	VuoCompilerType *listType = compiler->getType(listTypeNamePrefix + itemTypeStr);
+	VuoCompilerType *itemType;
+	VuoCompilerType *listType;
+	if (nodeToBack)
+	{
+		VuoCompilerPort *itemPort = static_cast<VuoCompilerPort *>(nodeToBack->getInputPorts().back()->getCompiler());
+		itemType = itemPort->getDataVuoType()->getCompiler();
+		VuoCompilerPort *listPort = static_cast<VuoCompilerPort *>(nodeToBack->getOutputPorts().back()->getCompiler());
+		listType = listPort->getDataVuoType()->getCompiler();
+	}
+	else
+	{
+		itemType = compiler->getType(itemTypeStr);
+		listType = compiler->getType(VuoType::listTypeNamePrefix + itemTypeStr);
+	}
 	Type *pointerToListType = PointerType::get(listType->getType(), 0);
 
 	Type *itemParamSecondType = NULL;
@@ -70,7 +86,7 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	// const char *moduleDetails = ...;
 	string moduleDetails =
 			"{ \"title\" : \"Make List\", "
-			"\"description\" : \"Creates a list from the given items\", "
+			"\"description\" : \"" + makeListNodeClassDescription + "\", "
 			"\"version\" : \"1.0.0\" }";
 	Constant *moduleDetailsValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, moduleDetails, ".str");  // VuoCompilerBitcodeParser::resolveGlobalToConst requires that the variable have a name
 	GlobalVariable *moduleDetailsVariable = new GlobalVariable(*module, pointerToCharType, false, GlobalValue::ExternalLinkage, 0, "moduleDetails");
@@ -143,7 +159,15 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 
 	PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
-	string listCreateFunctionName = "VuoListCreate_" + itemType->getBase()->getModuleKey();
+	string itemBackingTypeName;
+	if (nodeToBack)
+		itemBackingTypeName = static_cast<VuoCompilerGenericType *>(itemType)->getBackingTypeName();
+	else if (VuoGenericType::isGenericTypeName(itemTypeStr))
+		itemBackingTypeName = VuoCompilerGenericType::chooseBackingTypeName(itemTypeStr, set<string>());
+	else
+		itemBackingTypeName = itemTypeStr;
+
+	string listCreateFunctionName = "VuoListCreate_" + itemBackingTypeName;
 	Function *listCreateFunction = module->getFunction(listCreateFunctionName);
 	if (! listCreateFunction)
 	{
@@ -152,7 +176,7 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 		listCreateFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listCreateFunctionName, module);
 	}
 
-	string listAppendFunctionName = "VuoListAppendValue_" + itemType->getBase()->getModuleKey();
+	string listAppendFunctionName = "VuoListAppendValue_" + itemBackingTypeName;
 	Function *listAppendFunction = module->getFunction(listAppendFunctionName);
 	if (! listAppendFunction)
 	{
@@ -188,7 +212,9 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 		listAppendParams.push_back(itemValues[itemValuesIndex]);
 		if (itemParamSecondType)
 			listAppendParams.push_back(itemValues[itemValuesIndex + 1]);
-		CallInst::Create(listAppendFunction, listAppendParams, "", block);
+		CallInst *call = CallInst::Create(listAppendFunction, listAppendParams, "", block);
+
+		call->addAttribute(2, itemType->getFunctionParameterAttributes());
 	}
 
 	ReturnInst::Create(module->getContext(), block);
@@ -197,33 +223,14 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	VuoCompilerMakeListNodeClass *dummyNodeClass = new VuoCompilerMakeListNodeClass(nodeClassName, module);
 
 	// Reconstruct, this time with a base VuoNodeClass containing actual (non-dummy) ports.
-	VuoCompilerMakeListNodeClass *nodeClass = new VuoCompilerMakeListNodeClass(dummyNodeClass);
+	VuoCompilerMakeListNodeClass *nodeClass = new VuoCompilerMakeListNodeClass(dummyNodeClass, nodeToBack);
 	delete dummyNodeClass;
 
 	nodeClass->itemCount = itemCount;
 	nodeClass->listType = listType;
+	nodeClass->specializedForGenericTypeName[ VuoGenericType::createGenericTypeName(1) ] = itemTypeStr;
 
 	return nodeClass->getBase();
-}
-
-/**
- * Retrieves the VuoCompilerMakeListNodeClass with the given name if the compiler already has it,
- * or else creates a new VuoCompilerMakeListNodeClass and adds it to the compiler.
- *
- * @param nodeClassName The name of the node class. It should have the format "vuo.list.make.<item count>.<item type>" (e.g. "vuo.list.make.3.VuoInteger").
- * @param compiler The compiler to use for looking up node classes.
- * @return The retrieved or created node class, or null if the node class name does not have the correct format.
- */
-VuoCompilerMakeListNodeClass * VuoCompilerMakeListNodeClass::getNodeClass(string nodeClassName, VuoCompiler *compiler)
-{
-	VuoCompilerMakeListNodeClass *nodeClass = dynamic_cast<VuoCompilerMakeListNodeClass *>(compiler->getNodeClass(nodeClassName));
-	if (! nodeClass)
-	{
-		nodeClass = static_cast<VuoCompilerMakeListNodeClass *>(newNodeClass(nodeClassName, compiler)->getCompiler());
-		if (nodeClass)
-			compiler->addNodeClass(nodeClass);
-	}
-	return nodeClass;
 }
 
 /**
@@ -243,7 +250,7 @@ bool VuoCompilerMakeListNodeClass::isListType(VuoCompilerType *type)
 	if (! type)
 		return false;
 
-	return VuoStringUtilities::beginsWith(type->getBase()->getModuleKey(), listTypeNamePrefix);
+	return VuoStringUtilities::beginsWith(type->getBase()->getModuleKey(), VuoType::listTypeNamePrefix);
 }
 
 /**
@@ -256,7 +263,7 @@ string VuoCompilerMakeListNodeClass::getNodeClassName(unsigned long itemCount, V
 	oss << itemCount;
 	string itemCountStr = oss.str();
 
-	string itemTypeStr = VuoStringUtilities::substrAfter(listType->getBase()->getModuleKey(), listTypeNamePrefix);
+	string itemTypeStr = VuoStringUtilities::substrAfter(listType->getBase()->getModuleKey(), VuoType::listTypeNamePrefix);
 
 	return makeListNodeClassNamePrefix + itemCountStr + "." + itemTypeStr;
 }
@@ -275,4 +282,59 @@ unsigned long VuoCompilerMakeListNodeClass::getItemCount(void)
 VuoCompilerType * VuoCompilerMakeListNodeClass::getListType(void)
 {
 	return listType;
+}
+
+/**
+ * Returns this port's type in the (hypothetical) unspecialized Make List node class.
+ */
+VuoType * VuoCompilerMakeListNodeClass::getOriginalPortType(VuoPortClass *portClass)
+{
+	if (portClass->getPortType() != VuoPortClass::dataAndEventPort)
+		return NULL;
+
+	string typeName = VuoGenericType::createGenericTypeName(1);
+	return new VuoGenericType(typeName, set<string>());
+}
+
+/**
+ * Returns the original node's class name (without any type suffixes).
+ */
+string VuoCompilerMakeListNodeClass::getOriginalGenericNodeClassName(void)
+{
+	return "vuo.list.make";
+}
+
+/**
+ * Returns the original node's class description.
+ */
+string VuoCompilerMakeListNodeClass::getOriginalGenericNodeClassDescription(void)
+{
+	return makeListNodeClassDescription;
+}
+
+/**
+ * Returns the original node's node set.
+ */
+VuoNodeSet *VuoCompilerMakeListNodeClass::getOriginalGenericNodeSet(void)
+{
+	/// @todo somehow return the vuo.list node set
+	return NULL;
+}
+
+/**
+ * Returns the name for the Make List node class that would result if the given port were changed back to its original type.
+ */
+string VuoCompilerMakeListNodeClass::createUnspecializedNodeClassName(set<VuoPortClass *> portClassesToUnspecialize)
+{
+	bool foundDataAndEvent = false;
+	for (set<VuoPortClass *>::iterator i = portClassesToUnspecialize.begin(); i != portClassesToUnspecialize.end(); ++i)
+		if ((*i)->getPortType() == VuoPortClass::dataAndEventPort)
+			foundDataAndEvent = true;
+
+	if (! foundDataAndEvent)
+		return getBase()->getClassName();
+
+	ostringstream unspecializedNodeClassName;
+	unspecializedNodeClassName << makeListNodeClassNamePrefix << itemCount << "." << VuoGenericType::createGenericTypeName(1);
+	return unspecializedNodeClassName.str();
 }

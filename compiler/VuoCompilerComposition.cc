@@ -2,13 +2,17 @@
  * @file
  * VuoCompilerComposition implementation.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
 
 #include "VuoCompilerComposition.hh"
+#include "VuoCompiler.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerGenericType.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
+#include "VuoCompilerType.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
@@ -71,6 +75,8 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 		publishedOutputNode = parser->getPublishedOutputNode();
 
 		getBase()->setDescription(parser->getDescription());
+
+		updateGenericPortTypes();
 	}
 }
 
@@ -83,6 +89,339 @@ VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDecla
 	VuoCompilerGraphvizParser parser(file, compiler);
 	fclose(file);
 	return new VuoCompilerComposition(new VuoComposition(), &parser);
+}
+
+/**
+ * Puts the generic ports in the composition into sets, where all ports in a set have the same generic type.
+ *
+ * @param useOriginalType If true, considers a port generic if it's currently generic or if it's specialized
+ *		from a generic. If false, only looks at ports that are currently generic.
+ */
+set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bool useOriginalType)
+{
+	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts;
+
+	// Group each node's generic ports into sets by generic type.
+	set<VuoNode *> nodes = getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoNode *node = *i;
+		vector<VuoPort *> inputPorts = node->getInputPorts();
+		vector<VuoPort *> outputPorts = node->getOutputPorts();
+		vector<VuoPort *> ports;
+		ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
+		ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
+
+		map<string, set<VuoCompilerPort *> > genericPortsForType;
+		for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
+		{
+			VuoCompilerPort *port = static_cast<VuoCompilerPort *>((*j)->getCompiler());
+			VuoGenericType *genericType = NULL;
+			if (useOriginalType)
+			{
+				VuoCompilerNodeClass *nodeClass = node->getNodeClass()->getCompiler();
+				VuoCompilerSpecializedNodeClass *specializedNodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass);
+				if (specializedNodeClass)
+				{
+					VuoPortClass *portClass = port->getBase()->getClass();
+					genericType = dynamic_cast<VuoGenericType *>( specializedNodeClass->getOriginalPortType(portClass) );
+				}
+			}
+			else
+			{
+				genericType = dynamic_cast<VuoGenericType *>(port->getDataVuoType());
+			}
+
+			if (genericType)
+			{
+				string innermostGenericTypeName = VuoType::extractInnermostTypeName(genericType->getModuleKey());
+				genericPortsForType[innermostGenericTypeName].insert(port);
+			}
+		}
+
+		for (map<string, set<VuoCompilerPort *> >::iterator j = genericPortsForType.begin(); j != genericPortsForType.end(); ++j)
+		{
+			set<VuoCompilerPort *> genericPorts = j->second;
+			setsOfConnectedGenericPorts.insert(genericPorts);
+		}
+	}
+
+	// Merge sets of generic ports from different nodes that are connected through a data-carrying cable.
+	set<VuoCable *> cables = getBase()->getCables();
+	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	{
+		VuoCable *cable = *i;
+
+		if (!(cable->getFromPort() && cable->getToPort()))
+			continue;
+
+		VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>(cable->getFromPort()->getCompiler());
+		VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>(cable->getToPort()->getCompiler());
+		set< set<VuoCompilerPort *> >::iterator fromSetIter = setsOfConnectedGenericPorts.end();  // the set containing fromPort
+		set< set<VuoCompilerPort *> >::iterator toSetIter = setsOfConnectedGenericPorts.end();  // the set containing toPort
+		for (set< set<VuoCompilerPort *> >::iterator j = setsOfConnectedGenericPorts.begin(); j != setsOfConnectedGenericPorts.end(); ++j)
+		{
+			if (j->find(fromPort) != j->end())
+				fromSetIter = j;
+			if (j->find(toPort) != j->end())
+				toSetIter = j;
+		}
+		if (fromSetIter != setsOfConnectedGenericPorts.end() && toSetIter != setsOfConnectedGenericPorts.end() &&
+				fromSetIter != toSetIter)
+		{
+			set<VuoCompilerPort *> mergedSet;
+			mergedSet.insert(fromSetIter->begin(), fromSetIter->end());
+			mergedSet.insert(toSetIter->begin(), toSetIter->end());
+			setsOfConnectedGenericPorts.insert(mergedSet);
+			setsOfConnectedGenericPorts.erase(fromSetIter);
+			setsOfConnectedGenericPorts.erase(toSetIter);
+		}
+	}
+
+	return setsOfConnectedGenericPorts;
+}
+
+/**
+ * Gives each group/network of connected generic ports a unique generic type.
+ *
+ * This does not update the backing types for the generic types. Before compiling the composition,
+ * VuoCompiler::reifyGenericPortTypes() needs to be called to update them.
+ */
+void VuoCompilerComposition::updateGenericPortTypes(void)
+{
+	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts = groupGenericPortsByType(false);
+
+	// Give each set of connected generic ports a unique generic type.
+	set<string> usedTypeNames;
+	for (set< set<VuoCompilerPort *> >::iterator i = setsOfConnectedGenericPorts.begin(); i != setsOfConnectedGenericPorts.end(); ++i)
+	{
+		set<VuoCompilerPort *> connectedGenericPorts = *i;
+
+		// Find the smallest-numbered generic type within the set that isn't already used by another set.
+		// If no such type exists, create a fresh type.
+
+		vector<string> sortedTypeNames;
+		for (set<VuoCompilerPort *>::iterator j = connectedGenericPorts.begin(); j != connectedGenericPorts.end(); ++j)
+		{
+			VuoCompilerPort *port = *j;
+			VuoGenericType *genericTypeFromPort = static_cast<VuoGenericType *>(port->getDataVuoType());
+			VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(port->getBase()->getClass()->getCompiler());
+			VuoGenericType *genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
+			if (genericTypeFromPort != genericTypeFromPortClass)
+			{
+				string typeName = VuoGenericType::extractInnermostTypeName( genericTypeFromPort->getModuleKey() );
+				sortedTypeNames.push_back(typeName);
+			}
+		}
+		VuoGenericType::sortGenericTypeNames(sortedTypeNames);
+
+		string commonTypeName;
+		for (vector<string>::iterator j = sortedTypeNames.begin(); j != sortedTypeNames.end(); ++j)
+		{
+			string portType = *j;
+			if (usedTypeNames.find(portType) == usedTypeNames.end())
+			{
+				commonTypeName = portType;
+				break;
+			}
+		}
+
+		if (commonTypeName.empty())
+			commonTypeName = createFreshGenericTypeName();
+
+		usedTypeNames.insert(commonTypeName);
+
+		// Form the set of compatible types for each composition-level generic type by finding the intersection of
+		// the sets of compatible types for each node-class-level generic type.
+		set<string> compatibleTypeNames;
+		for (set<VuoCompilerPort *>::iterator j = connectedGenericPorts.begin(); j != connectedGenericPorts.end(); ++j)
+		{
+			VuoCompilerPort *port = *j;
+			VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(port->getBase()->getClass()->getCompiler());
+			VuoGenericType *genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
+			VuoGenericType::Compatibility compatibility;
+			set<string> compatibleTypeNamesForPort = genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibility);
+			set<string> innermostCompatibleTypeNamesForPort;
+			for (set<string>::iterator k = compatibleTypeNamesForPort.begin(); k != compatibleTypeNamesForPort.end(); ++k)
+				innermostCompatibleTypeNamesForPort.insert( VuoType::extractInnermostTypeName(*k) );
+
+			if (! innermostCompatibleTypeNamesForPort.empty())
+			{
+				if (compatibleTypeNames.empty())
+					compatibleTypeNames = innermostCompatibleTypeNamesForPort;
+				else
+				{
+					set<string> intersectingCompatibleTypeNames;
+					set_intersection(compatibleTypeNames.begin(), compatibleTypeNames.end(),
+									 innermostCompatibleTypeNamesForPort.begin(), innermostCompatibleTypeNamesForPort.end(),
+									 std::insert_iterator<set<string> >(intersectingCompatibleTypeNames, intersectingCompatibleTypeNames.begin() ));
+					compatibleTypeNames = intersectingCompatibleTypeNames;
+				}
+			}
+		}
+
+		// Apply the composition-level generic type name to each port.
+		for (set<VuoCompilerPort *>::iterator j = connectedGenericPorts.begin(); j != connectedGenericPorts.end(); ++j)
+		{
+			VuoCompilerPort *port = *j;
+			VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(port->getBase()->getClass()->getCompiler());
+			VuoGenericType *genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
+
+			string typeNameForPort = VuoGenericType::replaceInnermostGenericTypeName(genericTypeFromPortClass->getModuleKey(), commonTypeName);
+			set<string> compatibleTypeNamesForPort;
+			string prefix = (VuoType::isListTypeName(typeNameForPort) ? VuoType::listTypeNamePrefix : "");
+			for (set<string>::iterator k = compatibleTypeNames.begin(); k != compatibleTypeNames.end(); ++k)
+				compatibleTypeNamesForPort.insert(prefix + *k);
+
+			VuoGenericType *commonTypeForPort = new VuoGenericType(typeNameForPort, compatibleTypeNamesForPort);
+			port->setDataVuoType(commonTypeForPort);
+		}
+	}
+
+	// Update the list of type suffixes that can't currently be used when creating fresh types.
+	for (map<unsigned int, bool>::iterator i = genericTypeSuffixUsed.begin(); i != genericTypeSuffixUsed.end(); ++i)
+	{
+		unsigned int suffix = i->first;
+		bool used = (usedTypeNames.find( VuoGenericType::createGenericTypeName(suffix) ) != usedTypeNames.end());
+		genericTypeSuffixUsed[suffix] = used;
+	}
+}
+
+/**
+ * Returns a generic type name that is currently not used within this composition.
+ */
+string VuoCompilerComposition::createFreshGenericTypeName(void)
+{
+	for (unsigned int i = 1; ; ++i)
+	{
+		if (! genericTypeSuffixUsed[i])
+		{
+			genericTypeSuffixUsed[i] = true;
+			return VuoGenericType::createGenericTypeName(i);
+		}
+	}
+}
+
+/**
+ * Returns the set of ports that have the same innermost generic type as the given port.
+ *
+ * Assumes that updateGenericPortTypes() has been called since any changes affecting the groups/networks
+ * of connected generic ports have been made to the composition.
+ */
+set<VuoPort *> VuoCompilerComposition::getConnectedGenericPorts(VuoPort *port)
+{
+	set< set<VuoCompilerPort *> > setsOfConnectedGenericPorts = groupGenericPortsByType(false);
+
+	set<VuoCompilerPort *> connectedPorts;
+	for (set< set<VuoCompilerPort *> >::iterator i = setsOfConnectedGenericPorts.begin(); i != setsOfConnectedGenericPorts.end(); ++i)
+	{
+		if ((*i).find(static_cast<VuoCompilerPort *>(port->getCompiler())) != (*i).end())
+		{
+			connectedPorts = *i;
+			break;
+		}
+	}
+
+	set<VuoPort *> connectedBasePorts;
+	for (set<VuoCompilerPort *>::iterator i = connectedPorts.begin(); i != connectedPorts.end(); ++i)
+		connectedBasePorts.insert((*i)->getBase());
+
+	return connectedBasePorts;
+}
+
+/**
+ * Returns the set of nodes that would need to be replaced in order to unspecialize the given port, and the
+ * names of the less-specialized node classes that they would be replaced with.
+ */
+void VuoCompilerComposition::createReplacementsToUnspecializePort(VuoPort *portToUnspecialize, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete)
+{
+	// Be able to look up the node for a port.
+	map<VuoPort *, VuoNode *> nodeForPort;
+	set<VuoNode *> nodes = getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoNode *node = *i;
+		vector<VuoPort *> inputPorts = node->getInputPorts();
+		vector<VuoPort *> outputPorts = node->getOutputPorts();
+		vector<VuoPort *> ports;
+		ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
+		ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
+
+		for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
+		{
+			VuoPort *port = *j;
+			nodeForPort[port] = node;
+		}
+	}
+
+	// Be able to look up the cables for a port.
+	map<VuoPort *, set<VuoCable *> > cablesForPort;
+	set<VuoCable *> cables = getBase()->getCables();
+	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	{
+		VuoCable *cable = *i;
+		cablesForPort[ cable->getFromPort() ].insert(cable);
+		cablesForPort[ cable->getToPort() ].insert(cable);
+	}
+
+	// Find the ports that will share the same generic type as portToUnspecialize, and organize them by node.
+	set< set<VuoCompilerPort *> > setsOfConnectedPotentiallyGenericPorts = groupGenericPortsByType(true);
+	map<VuoNode *, set<VuoPort *> > portsToUnspecializeForNode;
+	VuoCompilerPort *compilerPortToUnspecialize = static_cast<VuoCompilerPort *>(portToUnspecialize->getCompiler());
+	for (set< set<VuoCompilerPort *> >::iterator i = setsOfConnectedPotentiallyGenericPorts.begin(); i != setsOfConnectedPotentiallyGenericPorts.end(); ++i)
+	{
+		set<VuoCompilerPort *> connectedPorts = *i;
+		if (connectedPorts.find(compilerPortToUnspecialize) != connectedPorts.end())
+		{
+			for (set<VuoCompilerPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
+			{
+				VuoPort *connectedPort = (*j)->getBase();
+				VuoNode *node = nodeForPort[connectedPort];
+				portsToUnspecializeForNode[node].insert(connectedPort);
+			}
+		}
+	}
+
+	for (map<VuoNode *, set<VuoPort *> >::iterator i = portsToUnspecializeForNode.begin(); i != portsToUnspecializeForNode.end(); ++i)
+	{
+		VuoNode *node = i->first;
+		set<VuoPort *> ports = i->second;
+
+		// Create the unspecialized node class name for each node to unspecialize.
+		set<VuoPortClass *> portClasses;
+		for (set<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
+			portClasses.insert((*j)->getClass());
+		VuoCompilerSpecializedNodeClass *nodeClass = static_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
+		string unspecializedNodeClassName = nodeClass->createUnspecializedNodeClassName(portClasses);
+		nodesToReplace[node] = unspecializedNodeClassName;
+
+		// Identify the cables that will become invalid (generic port at one end, non-generic port at the other end)
+		// when the node is unspecialized.
+		for (set<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
+		{
+			VuoPort *port = *j;
+			set<VuoCable *> connectedCables = cablesForPort[port];
+			for (set<VuoCable *>::iterator k = connectedCables.begin(); k != connectedCables.end(); ++k)
+			{
+				VuoCable *cable = *k;
+
+				bool areEndsCompatible = false;
+				VuoPort *portOnOtherEnd = (cable->getFromPort() == port ? cable->getToPort() : cable->getFromPort());
+				VuoNode *nodeOnOtherEnd = nodeForPort[portOnOtherEnd];
+				VuoCompilerNodeClass *nodeClassOnOtherEnd = nodeOnOtherEnd->getNodeClass()->getCompiler();
+				VuoCompilerSpecializedNodeClass *specializedNodeClassOnOtherEnd = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClassOnOtherEnd);
+				if (specializedNodeClassOnOtherEnd)
+				{
+					VuoType *typeOnOtherEnd = specializedNodeClassOnOtherEnd->getOriginalPortType( portOnOtherEnd->getClass() );
+					if (! typeOnOtherEnd || dynamic_cast<VuoGenericType *>(typeOnOtherEnd))
+						areEndsCompatible = true;
+				}
+
+				if (! areEndsCompatible)
+					cablesToDelete.insert(cable);
+			}
+		}
+	}
 }
 
 /**

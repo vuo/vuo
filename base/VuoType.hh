@@ -2,7 +2,7 @@
  * @file
  * VuoType interface.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -22,6 +22,11 @@ class VuoType : public VuoBase<VuoCompilerType,void>, public VuoModule
 {
 public:
 	VuoType(string typeName);
+	virtual ~VuoType(void);  ///< to make this class dynamic_cast-able
+
+	static const string listTypeNamePrefix;
+	static bool isListTypeName(string typeName);
+	static string extractInnermostTypeName(string typeName);
 };
 
 #endif // VUOTYPE_HH

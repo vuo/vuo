@@ -2,7 +2,7 @@
  * @file
  * Test graph.
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -13,7 +13,7 @@ graph [rankdir=LR];
 node [shape=Mrecord];
 
 FirePeriodically1 [type="vuo.time.firePeriodically" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" _seconds="1"];
-Count1 [type="vuo.math.count.integer" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1" _decrement="1"];
+Count1 [type="vuo.math.count.VuoInteger" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1" _decrement="1"];
 
 FirePeriodically1:fired -> Count1:increment;
 Count1:count -> Count1:decrement;

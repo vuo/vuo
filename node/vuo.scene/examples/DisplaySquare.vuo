@@ -2,18 +2,18 @@
  * @file
  * Displays a square. 
  *
- * @copyright Copyright © 2012—2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-FireonStart [type="vuo.event.fireOnStart" version="100" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-22,232"];
-Make3DObject [type="vuo.scene.make" version="100" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="329,253" _shader="" _transform=""];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="100" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="482,264"];
-MakeSquareVertices [type="vuo.vertices.make.square" version="100" label="Make Square Vertices|<refresh>refresh\l|<done>done\r|<vertices>vertices\r" pos="120,253"];
-RenderScenetoWindow [type="vuo.scene.render.window" version="100" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="542,253"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-22,232"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="329,253" fillcolor="violet" _shader="" _transform=""];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="478,264"];
+MakeSquareVertices [type="vuo.vertices.make.square" version="1.0.0" label="Make Square Vertices|<refresh>refresh\l|<done>done\r|<vertices>vertices\r" pos="120,253" fillcolor="violet"];
+RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="542,253" _cameraName=""];
 
 FireonStart:started -> MakeSquareVertices:refresh;
 Make3DObject:object -> MakeList2:item1;

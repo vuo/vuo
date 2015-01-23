@@ -5,7 +5,7 @@
  * See http://www.mikeash.com/pyblog/friday-qa-2010-07-02-background-timers.html and
  * http://www.fieryrobot.com/blog/2010/07/10/a-watchdog-timer-in-gcd/
  *
- * @copyright Copyright © 2012–2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */

@@ -2,7 +2,7 @@
  * @file
  * Test composition.
  *
- * @copyright Copyright © 2012-2013 Kosada Incorporated.
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,13 +10,13 @@
 digraph G 
 {
 SelectOutput [type="vuo.select.out.2.event" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="53,244"];
-DiscardDatafromEvent [type="vuo.type.integer.event" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="156,630" _dataAndEvent="0"];
+DiscardDatafromEvent [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="156,630" _dataAndEvent="0"];
 ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="276,226" _integer="0"];
 ConvertIntegertoText2 [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="273,326" _integer="0"];
 MakeList [type="vuo.list.make.4.VuoText" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<list>list\r" pos="496,223" _item1="\"Red Team \"" _item2="" _item3="\", Blue Team \"" _item4=""];
 Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="652,223" _texts=""];
-Count2 [type="vuo.math.count.integer" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="241,318" _increment="1" _decrement="1"];
-Count [type="vuo.math.count.integer" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="242,219" _increment="1" _decrement="1"];
+Count2 [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="241,318" _increment="1" _decrement="1"];
+Count [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="242,219" _increment="1" _decrement="1"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<whichTeam>whichTeam\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<scoreboard>scoreboard\l"];
 
