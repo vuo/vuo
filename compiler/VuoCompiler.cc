@@ -888,6 +888,11 @@ Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &ex
 	if (isVerbose)
 		args.push_back("-v");
 
+	// System headers installed by Xcode Command Line Tools
+	string macosHeaderSearchPath = getVuoFrameworkPath().str() + "/Frameworks/MacOS.framework/Headers";
+	args.push_back("-I");
+	args.push_back(macosHeaderSearchPath.c_str());
+
 	for (vector<string>::const_iterator i = extraArgs.begin(); i != extraArgs.end(); ++i)
 		args.push_back(i->c_str());
 

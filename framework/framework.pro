@@ -310,6 +310,27 @@ POST_TARGETDEPS += $${CRUNTIME_LIBS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyCRuntime
 
 
+# Copy system headers installed by XCode Command Line Tools to the Frameworks directory
+MACOS_HEADERS_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/MacOS.framework/Headers"
+copyMacOsHeaders.commands += rm -rf $${MACOS_HEADERS_DEST_DIR} &&
+copyMacOsHeaders.commands += mkdir -p $${MACOS_HEADERS_DEST_DIR}/OpenGL &&
+copyMacOsHeaders.commands += cp /usr/include/*.h $${MACOS_HEADERS_DEST_DIR} &&
+#copyMacOsHeaders.commands += cp -r /usr/include/_types $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/architecture $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/dispatch $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/i386 $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/libkern $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/mach $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/machine $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/os $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/secure $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp -r /usr/include/sys $${MACOS_HEADERS_DEST_DIR}/ ;
+copyMacOsHeaders.commands += cp /System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/*.h $${MACOS_HEADERS_DEST_DIR}/OpenGL
+copyMacOsHeaders.target = $${MACOS_HEADERS_DEST_DIR}
+POST_TARGETDEPS += $${MACOS_HEADERS_DEST_DIR}
+QMAKE_EXTRA_TARGETS += copyMacOsHeaders
+
+
 # Copy Syphon library to the Frameworks directory
 SYPHON_LIBS_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/Syphon.framework"
 copySyphonLibs.commands = \

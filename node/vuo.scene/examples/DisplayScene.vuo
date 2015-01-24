@@ -11,7 +11,7 @@ digraph G
 {
 Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<done>done\r|<object>object\r" pos="756,210"];
 FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="33,350"];
-GetScene [type="vuo.scene.get" version="1.0.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<done>done\r|<scene>scene\r" pos="544,371" fillcolor="cyan" _sceneURL="\"http:\\/\\/softpixel.com\\/~smokris\\/jeep1.VuoPoint3ds\""];
+GetScene [type="vuo.scene.get" version="1.0.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<done>done\r|<scene>scene\r" pos="544,371" fillcolor="cyan" _sceneURL="\"http:\\/\\/softpixel.com\\/~smokris\\/jeep1.3ds\""];
 GetTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="654,647"];
 Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="382,146" _x="-90.000000" _z="0"];
 Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="385,266" _x="0.050000" _y="0.050000" _z="0.050000"];

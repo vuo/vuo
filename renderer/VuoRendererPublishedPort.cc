@@ -8,6 +8,7 @@
  */
 
 #include "VuoPortClass.hh"
+#include "VuoGenericType.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoRendererPublishedPort.hh"
 #include "VuoRendererPort.hh"
@@ -81,21 +82,44 @@ bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *inter
 bool VuoRendererPublishedPort::isCompatibleAliasForInternalPort(VuoRendererPort *internalPort)
 {
 	// For now, simply check whether the types of the internal and
-	// external ports match exactly.
-	// @todo: Implement more sophisticated type compatibility checks.
+	// external ports match exactly, or are compatible generics.
+	// @todo: Implement more sophisticated type compatibility checks and specialize when necessary.
 	// See https://b33p.net/kosada/node/4695
 
-	// Case: Assigning a published input port alias to an internal input port
-	if (getBase()->getInput() && internalPort->getInput())
-		return (this->getBase()->getType() == internalPort->getDataType());
+	bool inputOutputCompatible = ((getBase()->getInput() && internalPort->getInput()) ||
+									   (getBase()->getOutput() && internalPort->getOutput()));
 
-	// Case: Assigning a published output port alias to an internal output port
-	else if (getBase()->getOutput() && internalPort->getOutput())
-		return (this->getBase()->getType() == internalPort->getDataType());
-
-	// Case: Published port alias and internal port have incompatible input/output types
-	else
+	if (!inputOutputCompatible)
 		return false;
+
+	VuoType *currentInternalDataType = internalPort->getDataType();
+	VuoType *currentExternalDataType = this->getBase()->getType();
+
+	VuoGenericType *currentInternalGenericType = dynamic_cast<VuoGenericType *>(currentInternalDataType);
+	VuoGenericType *currentExternalGenericType = dynamic_cast<VuoGenericType *>(currentExternalDataType);
+
+	// Case: Neither port is generic.
+	if ((currentInternalDataType == currentExternalDataType) && !currentInternalGenericType)
+		return true;
+
+	/// @todo (https://b33p.net/kosada/node/7032)
+	if (VuoType::isListTypeName(currentInternalDataType->getModuleKey()) != VuoType::isListTypeName(currentExternalDataType->getModuleKey()))
+		return false;
+
+	// Case: Both ports are generic.
+	if (currentInternalGenericType && currentExternalGenericType)
+		return (currentInternalGenericType->isGenericTypeCompatible(currentExternalGenericType));
+
+	// Case: The internal port is generic and can be specialized to match the concrete type of the external port.
+	if (currentInternalGenericType && currentInternalGenericType->isSpecializedTypeCompatible(currentExternalDataType->getModuleKey()))
+		return true;
+
+	// Case: The external port is generic and can be specialized to match the concrete type of the internal port.
+	else if (currentExternalGenericType && currentExternalGenericType->isSpecializedTypeCompatible(currentInternalDataType->getModuleKey()))
+		return true;
+
+	// Case: Published port alias and internal port have incompatible input/output types.
+	return false;
 }
 
 /**
