@@ -67,8 +67,6 @@ private:
 	vector<VuoCompilerNode *> sortNodes(set<VuoCompilerNode *> originalNodes);
 	void generateMetadata(void);
 	void generateAllocation(void);
-	void generateInitializationForReferenceCounts(BasicBlock *block);
-	void generateFinalizationForReferenceCounts(BasicBlock *block);
 	void generateSetupFunction(void);
 	void generateCleanupFunction(void);
 	void generateInitFunction(void);

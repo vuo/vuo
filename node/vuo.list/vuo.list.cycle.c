@@ -41,9 +41,6 @@ void nodeInstanceEvent
 {
 	int len = VuoListGetCount_VuoGenericType1(list);
 
-	if (listEvent)
-		**index = 0;
-
 	if(goForward)
 	{
 		(**index)++;
@@ -83,7 +80,7 @@ void nodeInstanceEvent
 	}
 
 	if (goToFirst)
-		**index = 0;
+		**index = 1;
 
 	*item = VuoListGetValueAtIndex_VuoGenericType1(list, **index);
 }

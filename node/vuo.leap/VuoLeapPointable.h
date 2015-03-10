@@ -13,6 +13,7 @@
 #include "VuoInteger.h"
 #include "VuoPoint3d.h"
 #include "VuoLeapPointableType.h"
+#include "VuoLeapTouchZone.h"
 #include "VuoReal.h"
 
 /**
@@ -37,14 +38,30 @@ typedef struct
 	VuoPoint3d direction;
 
 	VuoPoint3d tipPosition;
+	VuoPoint3d stabilizedTipPosition;
 	VuoPoint3d tipVelocity;
+
+	VuoReal timeVisible;
+	VuoReal touchDistance;
+
+	VuoLeapTouchZone touchZone;
 } VuoLeapPointable;
 
 VuoLeapPointable VuoLeapPointable_valueFromJson(struct json_object * js);
 struct json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value);
 char * VuoLeapPointable_summaryFromValue(const VuoLeapPointable value);
 
-VuoLeapPointable VuoLeapPointable_make(VuoInteger id, VuoLeapPointableType type, VuoReal length, VuoReal width, VuoPoint3d direction, VuoPoint3d tipPosition, VuoPoint3d tipVelocity);
+VuoLeapPointable VuoLeapPointable_make(VuoInteger id,
+	VuoLeapPointableType type,
+	VuoReal length,
+	VuoReal width,
+	VuoPoint3d direction,
+	VuoPoint3d tipPosition,
+	VuoPoint3d tipVelocity,
+	VuoPoint3d stabilizedTipPosition,
+	VuoReal timeVisible,
+	VuoReal touchDistance,
+	VuoLeapTouchZone touchZone);
 
 /// @{
 /**

@@ -18,3 +18,5 @@ type.commands = $${VUO_FRAMEWORK_PATH}/vuo-compile --output ${QMAKE_FILE_OUT} ${
 	&& mkdir -p "$${VUO_USER_MODULES_PATH}" \
 	&& cp ${QMAKE_FILE_OUT} "$${VUO_USER_MODULES_PATH}"
 QMAKE_EXTRA_COMPILERS += type
+
+QMAKE_CLEAN = *.bc

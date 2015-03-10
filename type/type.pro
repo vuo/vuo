@@ -6,11 +6,11 @@ include(../vuo.pri)
 
 TYPE_SOURCES += \
 	VuoBoolean.c \
+	VuoBlendMode.c \
 	VuoColor.c \
-	VuoFrameRequest.c \
 	VuoInteger.c \
 	VuoImage.c \
-	VuoMouseButtonAction.c \
+	VuoImageWrapMode.c \
 	VuoPoint2d.c \
 	VuoPoint3d.c \
 	VuoPoint4d.c \
@@ -18,18 +18,20 @@ TYPE_SOURCES += \
 	VuoSceneObject.c \
 	VuoVertices.c \
 	VuoShader.c \
+	VuoSizingMode.c \
 	VuoText.c \
 	VuoTransform.c \
 	VuoTransform2d.c \
+	VuoWindowReference.c \
 	VuoWrapMode.c
 
 HEADERS += \
 	VuoBoolean.h \
+	VuoBlendMode.h \
 	VuoColor.h \
-	VuoFrameRequest.h \
 	VuoInteger.h \
 	VuoImage.h \
-	VuoMouseButtonAction.h \
+	VuoImageWrapMode.h \
 	VuoPoint2d.h \
 	VuoPoint3d.h \
 	VuoPoint4d.h \
@@ -37,9 +39,11 @@ HEADERS += \
 	VuoSceneObject.h \
 	VuoVertices.h \
 	VuoShader.h \
+	VuoSizingMode.h \
 	VuoText.h \
 	VuoTransform.h \
 	VuoTransform2d.h \
+	VuoWindowReference.h \
 	VuoWrapMode.h
 
 INCLUDEPATH += \
@@ -51,7 +55,5 @@ INCLUDEPATH += \
 
 HEADERS += \
 	type.h
-
-QMAKE_CLEAN += *.bc
 
 include(../module.pri)

@@ -27,7 +27,7 @@ protected:
 	VuoCompilerPublishedPort(string name, bool isOutput, const set<VuoCompilerPort *> &connectedPorts=set<VuoCompilerPort *>());
 
 private:
-	static VuoType * getTypeForPort(VuoCompilerPort *connectedPort);
+	static VuoType * getTypeForPort(string name, const set<VuoCompilerPort *> &connectedPorts);
 	static set<VuoPort *> getBasePorts(set<VuoCompilerPort *>list);
 };
 

@@ -71,6 +71,10 @@ public:
 	string getTintColorGraphvizName(void);
 	void setTintColor(enum TintColor tintColor);
 
+	void setRawGraphvizDeclaration(string declaration);
+	string getRawGraphvizDeclaration(void);
+	string getRawGraphvizIdentifier(void);
+
 	void print(void);
 
 private:
@@ -83,6 +87,7 @@ private:
 	int x,y;
 	bool collapsed;
 	enum TintColor tintColor;
+	string rawGraphvizDeclaration;
 };
 
 #endif // VUONODE_HH

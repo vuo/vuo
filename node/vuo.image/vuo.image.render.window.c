@@ -42,6 +42,7 @@ struct nodeInstanceData
 	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer sceneRenderer;
+	bool hasShown;
 
 	dispatch_semaphore_t scenegraphSemaphore; ///< Serializes access to @c rootSceneObject.
 	VuoSceneObject rootSceneObject;
@@ -51,11 +52,8 @@ void vuo_image_render_window_init(VuoGlContext glContext, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	if (!context->sceneRenderer)
-	{
-		context->sceneRenderer = VuoSceneRenderer_make(glContext);
-		VuoRetain(context->sceneRenderer);
-	}
+	context->sceneRenderer = VuoSceneRenderer_make(glContext);
+	VuoRetain(context->sceneRenderer);
 
 	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
 	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
@@ -71,8 +69,6 @@ void vuo_image_render_window_init(VuoGlContext glContext, void *ctx)
 	VuoShader_setUniformFloat(context->rootSceneObject.shader, glContext, "alpha", 1);
 
 	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
-
-	VuoSceneRenderer_prepareContext(context->sceneRenderer);
 }
 
 void vuo_image_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
@@ -124,17 +120,26 @@ struct nodeInstanceData *nodeInstanceInit(void)
 			);
 	VuoRetain(context->window);
 
+	context->hasShown = false;
+
 	return context;
 }
 
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(requestedFrame, VuoFrameRequest)
+		VuoOutputTrigger(showedWindow, VuoWindowReference),
+		VuoOutputTrigger(requestedFrame, VuoReal)
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window, NULL, NULL, NULL);
+	VuoWindowOpenGl_enableTriggers((*context)->window);
 	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
+
+	if (! (*context)->hasShown)
+	{
+		showedWindow( VuoWindowReference_make((*context)->window) );
+		(*context)->hasShown = true;
+	}
 }
 
 void nodeInstanceEvent
@@ -143,7 +148,6 @@ void nodeInstanceEvent
 		VuoInputData(VuoImage) image
 )
 {
-
 	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
 												 dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 

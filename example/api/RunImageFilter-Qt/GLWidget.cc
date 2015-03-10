@@ -93,6 +93,11 @@ void GLWidget::initializeGL()
 	QPixmap image(QCoreApplication::applicationDirPath() + "/../Resources/OttoOperatesTheRoller.jpg");
 	GLenum internalformat = GL_RGBA;
 	inputTexture = bindTexture(image, GL_TEXTURE_2D, internalformat);
+	// Update the texture parameters to match VuoImage_make()'s requirements
+	glBindTexture(GL_TEXTURE_2D, inputTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Prepare a shader for displaying the GL Texture onscreen
 	vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);

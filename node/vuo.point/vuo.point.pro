@@ -21,7 +21,6 @@ NODE_SOURCES += \
 	vuo.point.make.VuoPoint2d.c \
 	vuo.point.make.VuoPoint3d.c \
 	vuo.point.make.VuoPoint4d.c \
-	vuo.point.multiply.quaternion.c \
 	vuo.point.sort.distance.w.VuoPoint4d.c \
 	vuo.point.within.box.c \
 	vuo.point.within.circle.c \

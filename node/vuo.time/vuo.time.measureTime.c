@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Measure Time",
-					  "keywords" : [ "animate", "frame", "stopwatch", "start", "pause", "elapsed" ],
+					  "keywords" : [ "animate", "frame", "stopwatch", "start", "pause", "elapsed", "count" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "isInterface" : false
@@ -21,9 +21,9 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	VuoFrameRequest lastStartOrResetTime;
-	VuoFrameRequest lastPauseTime;
-	VuoFrameRequest totalPauseTime;
+	VuoReal lastStartOrResetTime;
+	VuoReal lastPauseTime;
+	VuoReal totalPauseTime;
 
 	bool hasStarted;
 	bool isRunning;
@@ -38,12 +38,12 @@ struct nodeInstanceData * nodeInstanceInit(void)
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoFrameRequest,) time,
+		VuoInputData(VuoReal, {"default":0.0}) time,
 		VuoInputEvent(VuoPortEventBlocking_Door, time) timeEvent,
 		VuoInputEvent(VuoPortEventBlocking_Wall,) start,
 		VuoInputEvent(VuoPortEventBlocking_Wall,) pause,
 		VuoInputEvent(VuoPortEventBlocking_Wall,) reset,
-		VuoOutputData(VuoFrameRequest) elapsedTime,
+		VuoOutputData(VuoReal) elapsedTime,
 		VuoOutputEvent(elapsedTime) elapsedTimeEvent
 )
 {
@@ -51,14 +51,13 @@ void nodeInstanceEvent
 	{
 		(*context)->lastStartOrResetTime = time;
 		(*context)->lastPauseTime = time;
-		(*context)->totalPauseTime = VuoFrameRequest_make(0, 0);
+		(*context)->totalPauseTime = 0;
 	}
 
 	if (start)
 	{
 		if (! (*context)->isRunning && (*context)->hasStarted && ! reset)  // this event unpauses it
-			(*context)->totalPauseTime = VuoFrameRequest_make((*context)->totalPauseTime.timestamp + time.timestamp - (*context)->lastPauseTime.timestamp,
-															  (*context)->totalPauseTime.frameCount + time.frameCount - (*context)->lastPauseTime.frameCount);
+			(*context)->totalPauseTime = (*context)->totalPauseTime + time - (*context)->lastPauseTime;
 
 		(*context)->isRunning = true;
 		(*context)->hasStarted = true;
@@ -74,8 +73,7 @@ void nodeInstanceEvent
 
 	if ((*context)->isRunning)
 	{
-		*elapsedTime = VuoFrameRequest_make(time.timestamp - (*context)->lastStartOrResetTime.timestamp - (*context)->totalPauseTime.timestamp,
-											time.frameCount - (*context)->lastStartOrResetTime.frameCount - (*context)->totalPauseTime.frameCount);
+		*elapsedTime = time - (*context)->lastStartOrResetTime - (*context)->totalPauseTime;
 		*elapsedTimeEvent = true;
 	}
 }

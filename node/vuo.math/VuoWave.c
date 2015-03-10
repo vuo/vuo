@@ -78,5 +78,19 @@ json_object * VuoWave_jsonFromValue(const VuoWave value)
  */
 char * VuoWave_summaryFromValue(const VuoWave value)
 {
-	return VuoWave_stringFromValue(value);
+	char *valueAsString = "";
+
+	switch (value) {
+		case VuoWave_Sine:
+			valueAsString = "Sine";
+			break;
+		case VuoWave_Triangle:
+			valueAsString = "Triangle";
+			break;
+		case VuoWave_Sawtooth:
+			valueAsString = "Sawtooth";
+			break;
+	}
+
+	return strdup(valueAsString);
 }

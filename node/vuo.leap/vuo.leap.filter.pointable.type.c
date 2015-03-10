@@ -31,7 +31,8 @@ void nodeEvent
 {
 	*filteredPointables = VuoListCreate_VuoLeapPointable();
 
-	for(int i = 0; i < VuoListGetCount_VuoLeapPointable(pointables); i++)
+	unsigned long count = VuoListGetCount_VuoLeapPointable(pointables);
+	for(unsigned long i = 1; i <= count; i++)
 	{
 		VuoLeapPointable pointable = VuoListGetValueAtIndex_VuoLeapPointable(pointables, i);
 		if (pointable.type == type)

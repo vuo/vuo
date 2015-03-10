@@ -29,6 +29,47 @@ VuoModuleMetadata({
 /// @}
 
 /**
+ * Returns the intersecting area of @c rectangleA and @c rectangleB.
+ *
+ * Edges that touch (but don't overlap) are not considered to be overlapping.
+ *
+ * If the rectangles do not intersect, returns rectangle @c {{0,0},{0,0}}.
+ */
+VuoRectangle VuoPoint2d_rectangleIntersection(VuoRectangle rectangleA, VuoRectangle rectangleB)
+{
+	float rectangleALeft   = rectangleA.center.x - rectangleA.size.x/2.;
+	float rectangleARight  = rectangleA.center.x + rectangleA.size.x/2.;
+	float rectangleABottom = rectangleA.center.y - rectangleA.size.y/2.;
+	float rectangleATop    = rectangleA.center.y + rectangleA.size.y/2.;
+
+	float rectangleBLeft   = rectangleB.center.x - rectangleB.size.x/2.;
+	float rectangleBRight  = rectangleB.center.x + rectangleB.size.x/2.;
+	float rectangleBBottom = rectangleB.center.y - rectangleB.size.y/2.;
+	float rectangleBTop    = rectangleB.center.y + rectangleB.size.y/2.;
+
+	float tolerance = 0.00001;
+
+	if (       rectangleARight < rectangleBLeft   + tolerance
+			|| rectangleBRight < rectangleALeft   + tolerance
+			|| rectangleATop   < rectangleBBottom + tolerance
+			|| rectangleBTop   < rectangleABottom + tolerance)
+		return VuoRectangle_make(0,0,0,0);
+	else
+	{
+		float intersectionLeft   = MAX(rectangleALeft,   rectangleBLeft);
+		float intersectionRight  = MIN(rectangleARight,  rectangleBRight);
+		float intersectionBottom = MAX(rectangleABottom, rectangleBBottom);
+		float intersectionTop    = MIN(rectangleATop,    rectangleBTop);
+
+		return VuoRectangle_make(
+					(intersectionLeft   + intersectionRight)/2.,
+					(intersectionBottom + intersectionTop)/2.,
+					intersectionRight   - intersectionLeft,
+					intersectionTop     - intersectionBottom);
+	}
+}
+
+/**
  * @ingroup VuoPoint2d
  * Decodes the JSON object @c js to create a new value.
  *

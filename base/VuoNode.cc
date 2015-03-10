@@ -11,6 +11,7 @@
 
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
+#include "VuoStringUtilities.hh"
 
 #include <stdio.h>
 
@@ -217,6 +218,35 @@ string VuoNode::getTintColorGraphvizName(void)
 void VuoNode::setTintColor(enum VuoNode::TintColor tintColor)
 {
 	this->tintColor = tintColor;
+}
+
+/**
+ * Stores the node's original declaration found when parsing it from a Graphviz-formatted composition string.
+ */
+void VuoNode::setRawGraphvizDeclaration(string declaration)
+{
+	this->rawGraphvizDeclaration = declaration;
+}
+
+/**
+ * Returns the node's original declaration found when parsing it from a Graphviz-formatted composition string.
+ * This is useful when a Graphviz declaration for this node is needed but this node lacks a VuoCompilerNode.
+ */
+string VuoNode::getRawGraphvizDeclaration(void)
+{
+	return rawGraphvizDeclaration;
+}
+
+/**
+ * Returns the node's original identifier found when parsing it from a Graphviz-formatted composition string.
+ * This is useful when a Graphviz identifier for this node is needed but this node lacks a VuoCompilerNode.
+ */
+string VuoNode::getRawGraphvizIdentifier(void)
+{
+	string identifier;
+	for (int j = 0; j < rawGraphvizDeclaration.length() && VuoStringUtilities::isValidCharInIdentifier(rawGraphvizDeclaration[j]); ++j)
+		identifier += rawGraphvizDeclaration[j];
+	return identifier;
 }
 
 /**

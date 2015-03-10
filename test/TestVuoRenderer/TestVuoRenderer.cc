@@ -12,6 +12,7 @@
 #include "VuoPort.hh"
 #include "VuoCompiler.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerPublishedInputNodeClass.hh"
 #include "VuoRendererComposition.hh"
 #include "VuoRendererNode.hh"
 #include "VuoRendererCable.hh"
@@ -210,9 +211,10 @@ private slots:
 
 		// A cable from the published input port pseudo-node should be untinted.
 		{
-			vector<VuoPortClass *> publishedInputs;
-			publishedInputs.push_back(new VuoPortClass("text", VuoPortClass::triggerPort));
-			VuoNodeClass *publishedInputNodeClass = VuoCompilerNodeClass::createPublishedInputNodeClass(publishedInputs);
+			vector<string> publishedInputs;
+			publishedInputs.push_back("text");
+			VuoNodeClass dummyNodeClass(VuoNodeClass::publishedInputNodeClassName, vector<string>(), publishedInputs);
+			VuoNodeClass *publishedInputNodeClass = VuoCompilerPublishedInputNodeClass::newNodeClass(&dummyNodeClass);
 			VuoNode *publishedInputNode = publishedInputNodeClass->getCompiler()->newNode(VuoNodeClass::publishedInputNodeIdentifier, 0, 0);
 			VuoPort *publishedInputNodePort = publishedInputNode->getOutputPortWithName("text");
 

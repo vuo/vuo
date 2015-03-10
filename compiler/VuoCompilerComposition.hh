@@ -23,6 +23,8 @@ class VuoCompilerComposition : public VuoBaseDetail<VuoComposition>
 public:
 	VuoCompilerComposition(VuoComposition *baseComposition, VuoCompilerGraphvizParser *parser);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
+	void check(void);
+	void checkForMissingNodeClasses(void);
 	void updateGenericPortTypes(void);
 	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
 	void createReplacementsToUnspecializePort(VuoPort *port, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete);
@@ -30,6 +32,7 @@ public:
 	VuoNode * getPublishedOutputNode(void);
 	void setPublishedInputNode(VuoNode *node);
 	void setPublishedOutputNode(VuoNode *node);
+	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
 	string getGraphvizDeclaration(string header = "", string footer = "");
 	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
 	string diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler);
@@ -40,6 +43,7 @@ private:
 	VuoNode *publishedInputNode;
 	VuoNode *publishedOutputNode;
 	map<unsigned int, bool> genericTypeSuffixUsed;
+	map<string, VuoNode *> nodeGraphvizIdentifierUsed;
 
 	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
 	string createFreshGenericTypeName(void);

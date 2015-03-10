@@ -11,8 +11,7 @@ digraph G
 {
 CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="324,198" fillcolor="violet" _wrapMode="\"wrap\""];
 CycleThroughList6 [type="vuo.list.cycle.VuoColor" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="320,37" fillcolor="violet" _wrapMode="\"wrap\""];
-DiscardDataFromEvent2 [type="vuo.type.discardData.VuoMouseButtonAction" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="71,341" fillcolor="cyan"];
-FilterMouseButtonAction [type="vuo.mouse.filter.action" version="1.0.0" label="Filter Mouse Button Action|<refresh>refresh\l|<action>action\l|<includeLeftButton>includeLeftButton\l|<includeMiddleButton>includeMiddleButton\l|<includeRightButton>includeRightButton\l|<includePress>includePress\l|<includeRelease>includeRelease\l|<includeSingleClick>includeSingleClick\l|<includeDoubleClick>includeDoubleClick\l|<includeTripleClick>includeTripleClick\l|<done>done\r|<filteredAction>filteredAction\r" pos="922,374" fillcolor="cyan" _includeLeftButton="true" _includeMiddleButton="false" _includeRightButton="false" _includePress="true" _includeRelease="false" _includeSingleClick="false" _includeDoubleClick="false" _includeTripleClick="false"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="71,341" fillcolor="cyan"];
 FireOnStart5 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="22,26" fillcolor="yellow"];
 MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="574,37" fillcolor="green" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
 MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="773,198" fillcolor="green" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
@@ -22,23 +21,24 @@ MakeList4 [type="vuo.list.make.4.VuoText" version="1.0.0" label="Make List|<refr
 MakeList9 [type="vuo.list.make.4.VuoColor" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="225,48" fillcolor="violet" _item1="{\"r\":0.501961,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _item2="{\"r\":1.000000,\"g\":1.000000,\"b\":0.400000,\"a\":1.000000}" _item3="{\"r\":1.000000,\"g\":0.800000,\"b\":0.400000,\"a\":1.000000}" _item4="{\"r\":0.901961,\"g\":0.901961,\"b\":0.901961,\"a\":1.000000}"];
 MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="568,198" fillcolor="green" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":72.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
 MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="564,-65" fillcolor="green" _text="\"Click to change the season.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1025,37" fillcolor="green"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="922,374" fillcolor="cyan" _button="\"left\"" _modifierKey="\"any\""];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1025,37" fillcolor="green"];
 
 CycleThroughList2:item -> MakeTextImage:text;
 CycleThroughList6:item -> MakeColorLayer:color;
-DiscardDataFromEvent2:event -> CycleThroughList2:goForward;
-DiscardDataFromEvent2:event -> CycleThroughList6:goForward;
-FilterMouseButtonAction:filteredAction -> DiscardDataFromEvent2:dataAndEvent;
+DiscardDataFromEvent:event -> CycleThroughList2:goForward;
+DiscardDataFromEvent:event -> CycleThroughList6:goForward;
 FireOnStart5:started -> MakeList4:item1;
 FireOnStart5:started -> MakeList9:item1;
 FireOnStart5:started -> MakeTextImage2:refresh;
 MakeColorLayer:layer -> MakeList10:item2;
 MakeLayer2:layer -> MakeList10:item1;
 MakeLayer:layer -> MakeList10:item3;
-MakeList10:list -> RenderLayersToWindow:layers;
+MakeList10:list -> RenderLayersToWindow2:layers;
 MakeList4:list -> CycleThroughList2:list;
 MakeList9:list -> CycleThroughList6:list;
 MakeTextImage2:image -> MakeLayer2:image;
 MakeTextImage:image -> MakeLayer:image;
-RenderLayersToWindow:usedMouseButton -> FilterMouseButtonAction:action;
+ReceiveMouseButtons:pressed -> DiscardDataFromEvent:dataAndEvent;
+RenderLayersToWindow2:showedWindow -> ReceiveMouseButtons:window;
 }

@@ -15,12 +15,17 @@
 #include <vector>
 #include <utility>	///< for pair
 #include <queue>
+#include <deque>
 #include <map>
 #include <locale>
 using namespace std;
 
 #include <dispatch/dispatch.h>
 
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOSurface/IOSurface.h>
+
+#include <OpenGL/CGLIOSurface.h>
 #include <OpenGL/CGLMacro.h>
 
 
@@ -39,7 +44,7 @@ static void __attribute__((constructor)) VuoGlPoolError_init(void)
 
 
 
-static map<VuoGlContext, map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > > VuoGlPool;
+static map<VuoGlContext, map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > > VuoGlPool __attribute__((init_priority(101)));
 static dispatch_semaphore_t VuoGlPool_semaphore;
 static void __attribute__((constructor)) VuoGlPool_init(void)
 {
@@ -125,8 +130,10 @@ void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long 
 typedef pair<unsigned short,unsigned short> VuoGlTextureDimensionsType;	///< Texture width and height.
 typedef pair<queue<GLuint>,double> VuoGlTextureLastUsed;	///< A queue of textures of a given format and size, including the last time any of the textures were used.
 typedef map<GLenum, map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed > > VuoGlTexturePoolType;	///< VuoGlTexturePool[internalformat][size] gives a list of unused textures.
-static VuoGlTexturePoolType VuoGlTexturePool;
+static VuoGlTexturePoolType *VuoGlTexturePool;
 static dispatch_semaphore_t VuoGlTexturePool_semaphore;
+static dispatch_semaphore_t VuoGlTexturePool_canceledAndCompleted;
+static dispatch_source_t VuoGlTexturePool_timer;
 static double textureTimeout = 0.1;	///< Seconds a texture can remain in the pool unused, before it gets purged.
 
 static double VuoGlTexturePool_getTime(void)
@@ -136,41 +143,18 @@ static double VuoGlTexturePool_getTime(void)
 	return t.tv_sec + t.tv_usec / 1000000.;
 }
 
-#if 0
-static void VuoGlTexturePool_dump(void *blah)
-{
-	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
-	{
-		double now = VuoGlTexturePool_getTime();
-		VLog("pool (%llu MB allocated)", totalGLMemoryAllocated/1024/1024);
-		for (VuoGlTexturePoolType::const_iterator internalformat = VuoGlTexturePool.begin(); internalformat != VuoGlTexturePool.end(); ++internalformat)
-		{
-			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
-			for (map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed >::const_iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); ++dimensions)
-				VLog("\t\t%dx%d: %lu unused textures (last used %gs ago)",dimensions->first.first,dimensions->first.second, dimensions->second.first.size(), now - dimensions->second.second);
-		}
-	}
-	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
-}
-static void __attribute__((constructor)) VuoGlTexturePool_initDump(void)
-{
-	dispatch_async(dispatch_get_main_queue(), ^{
-					   dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-					   dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*2, NSEC_PER_SEC*2);
-					   dispatch_source_set_event_handler_f(timer, VuoGlTexturePool_dump);
-					   dispatch_resume(timer);
-				   });
-}
-#endif
-
 static void VuoGlTexturePool_cleanup(void *blah)
 {
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		double now = VuoGlTexturePool_getTime();
-		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool.begin(); internalformat != VuoGlTexturePool.end(); ++internalformat)
+//		VLog("pool (%llu MB allocated)", totalGLMemoryAllocated/1024/1024);
+		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool->begin(); internalformat != VuoGlTexturePool->end(); ++internalformat)
 		{
+//			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
 			for (map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed >::iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); )
+			{
+//				VLog("\t\t%dx%d: %lu unused textures (last used %gs ago)",dimensions->first.first,dimensions->first.second, dimensions->second.first.size(), now - dimensions->second.second);
 				if (now - dimensions->second.second > textureTimeout)
 				{
 					unsigned short width = dimensions->first.first;
@@ -178,7 +162,7 @@ static void VuoGlTexturePool_cleanup(void *blah)
 					unsigned long textureCount = dimensions->second.first.size();
 					if (textureCount)
 					{
-//						VLog("purging %lu expired textures (%s: %dx%d)", textureCount, VuoGl_stringForConstant(internalformat->first), width, height);
+//						VLog("\t\t\tpurging %lu expired textures", textureCount);
 						CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 						while (!dimensions->second.first.empty())
 						{
@@ -197,6 +181,7 @@ static void VuoGlTexturePool_cleanup(void *blah)
 				}
 				else
 					++dimensions;
+			}
 		}
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
@@ -204,13 +189,25 @@ static void VuoGlTexturePool_cleanup(void *blah)
 static void __attribute__((constructor)) VuoGlTexturePool_init(void)
 {
 	VuoGlTexturePool_semaphore = dispatch_semaphore_create(1);
+	VuoGlTexturePool_canceledAndCompleted = dispatch_semaphore_create(0);
+	VuoGlTexturePool = new VuoGlTexturePoolType;
 
-	dispatch_async(dispatch_get_main_queue(), ^{
-					   dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-					   dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*textureTimeout, NSEC_PER_SEC*textureTimeout);
-					   dispatch_source_set_event_handler_f(timer, VuoGlTexturePool_cleanup);
-					   dispatch_resume(timer);
-				   });
+	VuoGlTexturePool_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_set_timer(VuoGlTexturePool_timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*textureTimeout, NSEC_PER_SEC*textureTimeout);
+	dispatch_source_set_event_handler_f(VuoGlTexturePool_timer, VuoGlTexturePool_cleanup);
+	dispatch_source_set_cancel_handler(VuoGlTexturePool_timer, ^{
+										   dispatch_semaphore_signal(VuoGlTexturePool_canceledAndCompleted);
+									   });
+	dispatch_resume(VuoGlTexturePool_timer);
+}
+static void __attribute__((destructor)) VuoGlTexturePool_fini(void)
+{
+	dispatch_source_cancel(VuoGlTexturePool_timer);
+
+	// Wait for the last cleanup to complete.
+	dispatch_semaphore_wait(VuoGlTexturePool_canceledAndCompleted, DISPATCH_TIME_FOREVER);
+
+	delete VuoGlTexturePool;
 }
 
 /**
@@ -236,13 +233,13 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 	GLuint name = 0;
 	VuoGlTextureDimensionsType dimensions(width,height);
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
-	if (VuoGlTexturePool[internalformat][dimensions].first.size())
+	if ((*VuoGlTexturePool)[internalformat][dimensions].first.size())
 	{
-		name = VuoGlTexturePool[internalformat][dimensions].first.front();
-		VuoGlTexturePool[internalformat][dimensions].first.pop();
+		name = (*VuoGlTexturePool)[internalformat][dimensions].first.front();
+		(*VuoGlTexturePool)[internalformat][dimensions].first.pop();
 //		if (name) VLog("using recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
 	}
-	VuoGlTexturePool[internalformat][dimensions].second = VuoGlTexturePool_getTime();
+	(*VuoGlTexturePool)[internalformat][dimensions].second = VuoGlTexturePool_getTime();
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
 
@@ -300,8 +297,8 @@ static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat
 	VuoGlTextureDimensionsType dimensions(width,height);
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		VuoGlTexturePool[internalformat][dimensions].first.push(name);
-		VuoGlTexturePool[internalformat][dimensions].second = VuoGlTexturePool_getTime();
+		(*VuoGlTexturePool)[internalformat][dimensions].first.push(name);
+		(*VuoGlTexturePool)[internalformat][dimensions].second = VuoGlTexturePool_getTime();
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
@@ -313,7 +310,7 @@ static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat
 
 
 typedef map<GLuint, unsigned int> VuoGlTextureReferenceCounts;	///< The number of times each glTextureName is retained..
-static VuoGlTextureReferenceCounts VuoGlTexture_referenceCounts;  ///< The reference count for each OpenGL Texture Object.
+static VuoGlTextureReferenceCounts VuoGlTexture_referenceCounts __attribute__((init_priority(101)));  ///< The reference count for each OpenGL Texture Object.
 static dispatch_semaphore_t VuoGlTexture_referenceCountsSemaphore = NULL;  ///< Synchronizes access to @c VuoGlTexture_referenceCounts.
 static void __attribute__((constructor)) VuoGlTexture_init(void)
 {
@@ -370,6 +367,208 @@ void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned 
 }
 
 
+
+/**
+ * An entry in the IOSurface pool.
+ */
+typedef struct
+{
+	VuoIoSurface ioSurface;
+	GLuint texture;
+	double lastUsedTime;
+} VuoIoSurfacePoolEntryType;
+typedef map<VuoGlTextureDimensionsType, deque<VuoIoSurfacePoolEntryType> > VuoIoSurfacePoolType;	///< VuoIoSurfacePoolType[size] gives a list of IOSurfaces.
+static VuoIoSurfacePoolType *VuoIoSurfacePool;	///< Unused IOSurfaces.
+static VuoIoSurfacePoolType *VuoIoSurfaceQuarantine;	///< IOSurfaces which might still be in use by the receiver.
+static dispatch_semaphore_t VuoIoSurfacePool_semaphore;
+static dispatch_semaphore_t VuoIoSurfacePool_canceledAndCompleted;
+static dispatch_source_t VuoIoSurfacePool_timer;
+static CFStringRef receiverFinishedWithIoSurfaceKey = CFSTR("VuoReceiverFinished");
+
+static double ioSurfaceCleanupInterval = 0.1;	///< Interval (in seconds) to promote IOSurfaces from the quarantine to the pool, and to clean old IOSurfaces from the pool.
+
+static void VuoIoSurfacePool_cleanup(void *blah)
+{
+	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		// Promote IOSurfaces from the quarantine to the pool, if the receiver has finished using them.
+		for (VuoIoSurfacePoolType::iterator quarantinedQueue = VuoIoSurfaceQuarantine->begin(); quarantinedQueue != VuoIoSurfaceQuarantine->end(); ++quarantinedQueue)
+		{
+			for (deque<VuoIoSurfacePoolEntryType>::iterator quarantinedIoSurfaceEntry = quarantinedQueue->second.begin(); quarantinedIoSurfaceEntry != quarantinedQueue->second.end();)
+			{
+				VuoIoSurfacePoolEntryType e = *quarantinedIoSurfaceEntry;
+				IOSurfaceRef s = (IOSurfaceRef)e.ioSurface;
+				CFBooleanRef finished = (CFBooleanRef)IOSurfaceCopyValue(s, receiverFinishedWithIoSurfaceKey);
+				if (finished)
+				{
+					IOSurfaceRemoveValue(s, receiverFinishedWithIoSurfaceKey);
+
+					(*VuoIoSurfacePool)[quarantinedQueue->first].push_back(e);
+					quarantinedIoSurfaceEntry = quarantinedQueue->second.erase(quarantinedIoSurfaceEntry);
+
+//					VLog("Promoted IOSurface %d + GL Texture %d (%dx%d) from quarantine to pool", IOSurfaceGetID(s), e.texture, quarantinedQueue->first.first, quarantinedQueue->first.second);
+				}
+				else
+					++quarantinedIoSurfaceEntry;
+			}
+		}
+
+
+		double now = VuoGlTexturePool_getTime();
+		for (VuoIoSurfacePoolType::iterator poolQueue = VuoIoSurfacePool->begin(); poolQueue != VuoIoSurfacePool->end(); ++poolQueue)
+		{
+			for (deque<VuoIoSurfacePoolEntryType>::iterator poolIoSurfaceEntry = poolQueue->second.begin(); poolIoSurfaceEntry != poolQueue->second.end();)
+			{
+				VuoIoSurfacePoolEntryType e = *poolIoSurfaceEntry;
+				if (now - e.lastUsedTime > ioSurfaceCleanupInterval*2.)
+				{
+					IOSurfaceRef s = (IOSurfaceRef)e.ioSurface;
+//					VLog("Purging expired IOSurface %d + GL Texture %d (%dx%d) — it's %gs old", IOSurfaceGetID(s), e.texture, poolQueue->first.first, poolQueue->first.second, now - e.lastUsedTime);
+
+					CFRelease(s);
+
+					CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+					glDeleteTextures(1, &e.texture);
+					VuoGlContext_disuse(cgl_ctx);
+
+					poolIoSurfaceEntry = poolQueue->second.erase(poolIoSurfaceEntry);
+				}
+				else
+					++poolIoSurfaceEntry;
+			}
+		}
+	}
+	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
+}
+static void __attribute__((constructor)) VuoIoSurfacePool_init(void)
+{
+	VuoIoSurfacePool_semaphore = dispatch_semaphore_create(1);
+	VuoIoSurfacePool_canceledAndCompleted = dispatch_semaphore_create(0);
+
+	VuoIoSurfacePool = new VuoIoSurfacePoolType;
+	VuoIoSurfaceQuarantine = new VuoIoSurfacePoolType;
+
+	VuoIoSurfacePool_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_set_timer(VuoIoSurfacePool_timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*ioSurfaceCleanupInterval, NSEC_PER_SEC*ioSurfaceCleanupInterval);
+	dispatch_source_set_event_handler_f(VuoIoSurfacePool_timer, VuoIoSurfacePool_cleanup);
+	dispatch_source_set_cancel_handler(VuoIoSurfacePool_timer, ^{
+										   dispatch_semaphore_signal(VuoIoSurfacePool_canceledAndCompleted);
+									   });
+	dispatch_resume(VuoIoSurfacePool_timer);
+}
+static void __attribute__((destructor)) VuoIoSurfacePool_fini(void)
+{
+	dispatch_source_cancel(VuoIoSurfacePool_timer);
+
+	// Wait for the last cleanup to complete.
+	dispatch_semaphore_wait(VuoIoSurfacePool_canceledAndCompleted, DISPATCH_TIME_FOREVER);
+
+	delete VuoIoSurfacePool;
+	delete VuoIoSurfaceQuarantine;
+}
+
+/**
+ * Returns an IOSurface (backed by @c outputTexture) with the specified dimensions.
+ * Uses an IOSurface from the pool, if possible.  If not, creates a new IOSurface.
+ */
+VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, GLuint *outputTexture)
+{
+	VuoIoSurface ioSurface = NULL;
+	VuoGlTextureDimensionsType dimensions(pixelsWide,pixelsHigh);
+
+	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		if ((*VuoIoSurfacePool)[dimensions].size())
+		{
+			VuoIoSurfacePoolEntryType e = (*VuoIoSurfacePool)[dimensions].front();
+			ioSurface = e.ioSurface;
+			*outputTexture = e.texture;
+			(*VuoIoSurfacePool)[dimensions].pop_front();
+//			VLog("Using recycled IOSurface %d + GL Texture %d (%dx%d) from pool", IOSurfaceGetID((IOSurfaceRef)ioSurface), *outputTexture, pixelsWide, pixelsHigh);
+		}
+	}
+	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
+
+	if (!ioSurface)
+	{
+		CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+		CFDictionaryAddValue(properties, kIOSurfaceIsGlobal, kCFBooleanTrue);
+		long long pixelsWideLL = pixelsWide;
+		CFDictionaryAddValue(properties, kIOSurfaceWidth, CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsWideLL));
+		long long pixelsHighLL = pixelsHigh;
+		CFDictionaryAddValue(properties, kIOSurfaceHeight, CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsHighLL));
+		long long bytesPerElement = 4;
+		CFDictionaryAddValue(properties, kIOSurfaceBytesPerElement, CFNumberCreate(NULL, kCFNumberLongLongType, &bytesPerElement));
+
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+		glGenTextures(1, outputTexture);
+		glEnable(GL_TEXTURE_RECTANGLE_ARB);
+		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, *outputTexture);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+		glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		ioSurface = (VuoIoSurface)IOSurfaceCreate(properties);
+		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)ioSurface, 0);
+		if (err != kCGLNoError)
+		{
+			VLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
+			return NULL;
+		}
+
+		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+
+//		VLog("Couldn't find a viable IOSurface to recycle; created IOSurface %d (%dx%d)", IOSurfaceGetID((IOSurfaceRef)ioSurface), pixelsWide, pixelsHigh);
+	}
+
+	return ioSurface;
+}
+
+/**
+ * Returns the IOSurface's interprocess ID.
+ */
+uint32_t VuoIoSurfacePool_getId(VuoIoSurface ioSurface)
+{
+	IOSurfaceRef surf = (IOSurfaceRef)ioSurface;
+	return IOSurfaceGetID(surf);
+}
+
+/**
+ * Called by the sending end of an IOSurface texture transfer to indicate that it is finished using the IOSurface's texture.
+ * This enables the IOSurface to be reused for another texture transfer (once the receiving end indicates it is done with it, via VuoIoSurfacePool_signal()).
+ */
+void VuoIoSurfacePool_disuse(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, VuoIoSurface ioSurface, GLuint texture)
+{
+	VuoGlTextureDimensionsType dimensions(pixelsWide,pixelsHigh);
+
+	VuoIoSurfacePoolEntryType e;
+	e.ioSurface = ioSurface;
+	e.texture = texture;
+	e.lastUsedTime = VuoGlTexturePool_getTime();
+
+	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		(*VuoIoSurfaceQuarantine)[dimensions].push_back(e);
+	}
+	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
+}
+
+/**
+ * Called by the receiving end of an IOSurface texture transfer to indicate that it is finished using the IOSurface's texture.
+ * This enables the sender to reuse the IOSurface for another texture transfer.
+ */
+void VuoIoSurfacePool_signal(VuoIoSurface ioSurface)
+{
+	IOSurfaceRef surf = (IOSurfaceRef)ioSurface;
+	IOSurfaceSetValue(surf, receiverFinishedWithIoSurfaceKey, kCFBooleanTrue);
+}
+
+
+
 /**
  * Prints GLSL debug information to the console.
  *
@@ -392,7 +591,7 @@ void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 	}
 }
 
-map<GLenum, map<long, GLuint> > VuoGlShaderPool;	///< Shaders, keyed by type (vertex, fragment, ...) and source code hash.
+map<GLenum, map<long, GLuint> > VuoGlShaderPool __attribute__((init_priority(101)));	///< Shaders, keyed by type (vertex, fragment, ...) and source code hash.
 dispatch_semaphore_t VuoGlShaderPool_semaphore = NULL;  ///< Synchronizes access to @c VuoGlShaderPool.
 
 /**

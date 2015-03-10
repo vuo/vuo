@@ -13,7 +13,6 @@
 #include <dispatch/dispatch.h>
 #include <stdexcept>
 #include "VuoTelemetry.h"
-#include "VuoType.hh"
 class VuoRunnerDelegate;
 
 #pragma clang diagnostic push
@@ -79,6 +78,7 @@ public:
 	void waitUntilStopped(void);
 	void setPublishedInputPortValue(Port *port, json_object *value);
 	void firePublishedInputPortEvent(Port *port);
+	void firePublishedInputPortEvent(void);
 	void waitForAnyPublishedOutputPortEvent(void);
 	json_object * getPublishedOutputPortValue(Port *port);
 	vector<Port *> getPublishedInputPorts(void);
@@ -104,9 +104,9 @@ public:
 	class Port
 	{
 	public:
-		Port(string name, VuoType *type);
+		Port(string name, string type);
 		string getName(void);
-		VuoType * getType(void);
+		string getType(void);
 
 		friend class VuoRunner;
 
@@ -115,7 +115,7 @@ public:
 		void setConnectedPortIdentifiers(set<string> connectedPortIdentifiers);
 
 		string name;
-		VuoType *type;
+		string type;
 		set<string> connectedPortIdentifiers;
 	};
 
@@ -174,6 +174,7 @@ private:
 	bool isUsingCompositionLoader(void);
 
 	friend class TestVuoRunner;
+	friend class VuoRunner32;
 };
 
 

@@ -58,9 +58,6 @@ VuoModuleMetadata({
 		displayRefresh = VuoDisplayRefresh_make(self);
 		VuoRetain(displayRefresh);
 
-		pendingClickCount = 0;
-		clickQueue = dispatch_queue_create("vuo.window.opengl.internal.click", 0);
-
 		if ([self respondsToSelector:@selector(setWantsBestResolutionOpenGLSurface:)])
 		{
 			typedef void (*funcType)(id receiver, SEL selector, BOOL wants);
@@ -94,11 +91,18 @@ VuoModuleMetadata({
 	if (togglingFullScreen)
 		return;
 
-	dispatch_sync(drawQueue, ^{
-					  NSOpenGLContext *glContext = [self openGLContext];
-					  initCallback([glContext CGLContextObj], drawContext);
-					  [glContext flushBuffer];
-				  });
+	if (!initCallbackCalled)
+	{
+		dispatch_sync(drawQueue, ^{
+						  NSOpenGLContext *glContext = [self openGLContext];
+						  CGLContextObj cgl_ctx = [glContext CGLContextObj];
+						  CGLLockContext(cgl_ctx);
+						  initCallback(cgl_ctx, drawContext);
+						  [glContext flushBuffer];
+						  CGLUnlockContext(cgl_ctx);
+					  });
+		initCallbackCalled = true;
+	}
 }
 
 /**
@@ -106,7 +110,7 @@ VuoModuleMetadata({
  *
  * @threadAny
  */
-void VuoWindowOpenGLView_draw(VuoFrameRequest frameRequest, void *context)
+void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
 {
 	VuoWindowOpenGLView *glView = (VuoWindowOpenGLView *)context;
 	if (glView->callerRequestedRedraw)
@@ -118,10 +122,13 @@ void VuoWindowOpenGLView_draw(VuoFrameRequest frameRequest, void *context)
 
 		dispatch_sync(glView->drawQueue, ^{
 						  NSOpenGLContext *glContext = [glView openGLContext];
-						  glView->drawCallback([glContext CGLContextObj], glView->drawContext);
+						  CGLContextObj cgl_ctx = [glContext CGLContextObj];
+						  CGLLockContext(cgl_ctx);
+						  glView->drawCallback(cgl_ctx, glView->drawContext);
 	//					  glFlush();
 	//					  CGLFlushDrawable(CGLGetCurrentContext());
 						  [glContext flushBuffer];
+						  CGLUnlockContext(cgl_ctx);
 					  });
 
 	}
@@ -132,13 +139,8 @@ void VuoWindowOpenGLView_draw(VuoFrameRequest frameRequest, void *context)
  *
  * @threadAny
  */
-- (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))_movedMouseTo
-						 scrolledMouse:(void (*)(VuoPoint2d))_scrolledMouse
-					   usedMouseButton:(void (*)(VuoMouseButtonAction))_usedMouseButton
+- (void)enableTriggers
 {
-	movedMouseTo = _movedMouseTo;
-	scrolledMouse = _scrolledMouse;
-	usedMouseButton = _usedMouseButton;
 	VuoDisplayRefresh_enableTriggers(displayRefresh, NULL, VuoWindowOpenGLView_draw);
 }
 
@@ -150,11 +152,6 @@ void VuoWindowOpenGLView_draw(VuoFrameRequest frameRequest, void *context)
 - (void)disableTriggers
 {
 	VuoDisplayRefresh_disableTriggers(displayRefresh);
-	movedMouseTo = NULL;
-	scrolledMouse = NULL;
-	dispatch_sync(clickQueue, ^{
-					  usedMouseButton = NULL;
-				  });
 }
 
 /**
@@ -188,145 +185,6 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	return VuoPoint2d_make(point.x,point.y);
 }
 
-- (void)processClicksForEvent:(NSEvent *)event atPosition:(VuoPoint2d)position withButton:(VuoMouseButton)button
-{
-	double clickIntervalSeconds = [NSEvent doubleClickInterval];
-	dispatch_time_t clickInterval = dispatch_time(DISPATCH_TIME_NOW, clickIntervalSeconds * NSEC_PER_SEC);
-
-	int clickCount = [event clickCount];
-	pendingClickCount = clickCount;
-
-	if (clickCount == 1)
-	{
-		VuoMouseButtonAction buttonAction = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_SingleClick, position);
-		dispatch_after(clickInterval, clickQueue, ^{
-						   if (usedMouseButton && pendingClickCount == clickCount)
-						   {
-							   usedMouseButton(buttonAction);
-							   pendingClickCount = 0;
-						   }
-					   });
-	}
-	else if (clickCount == 2)
-	{
-		VuoMouseButtonAction buttonAction = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_DoubleClick, position);
-		dispatch_after(clickInterval, clickQueue, ^{
-						   if (usedMouseButton && pendingClickCount == clickCount)
-						   {
-							   usedMouseButton(buttonAction);
-							   pendingClickCount = 0;
-						   }
-					   });
-	}
-	else if (clickCount == 3)
-	{
-		VuoMouseButtonAction buttonAction = VuoMouseButtonAction_make(button, VuoMouseButtonActionType_TripleClick, position);
-		dispatch_sync(clickQueue, ^{
-						  if (usedMouseButton && pendingClickCount == clickCount)
-						  {
-							  usedMouseButton(buttonAction);
-							  pendingClickCount = 0;
-						  }
-					  });
-	}
-}
-
-- (void)mouseDown:(NSEvent *)event
-{
-	if (!usedMouseButton)
-		return;
-
-	usedMouseButton(VuoMouseButtonAction_make(VuoMouseButton_Left, VuoMouseButtonActionType_Press,
-											  VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self)));
-}
-
-- (void)mouseUp:(NSEvent *)event
-{
-	if (!usedMouseButton)
-		return;
-
-	VuoPoint2d position = VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self);
-	usedMouseButton(VuoMouseButtonAction_make(VuoMouseButton_Left, VuoMouseButtonActionType_Release, position));
-	[self processClicksForEvent:event atPosition:position withButton:VuoMouseButton_Left];
-}
-
-- (void)rightMouseDown:(NSEvent *)event
-{
-	if (!usedMouseButton)
-		return;
-
-	usedMouseButton(VuoMouseButtonAction_make(VuoMouseButton_Right, VuoMouseButtonActionType_Press,
-											  VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self)));
-}
-
-- (void)rightMouseUp:(NSEvent *)event
-{
-	if (!usedMouseButton)
-		return;
-
-	VuoPoint2d position = VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self);
-	usedMouseButton(VuoMouseButtonAction_make(VuoMouseButton_Right, VuoMouseButtonActionType_Release, position));
-	[self processClicksForEvent:event atPosition:position withButton:VuoMouseButton_Right];
-}
-
-- (void)otherMouseDown:(NSEvent *)event
-{
-	if (!usedMouseButton)
-		return;
-
-	usedMouseButton(VuoMouseButtonAction_make(VuoMouseButton_Middle, VuoMouseButtonActionType_Press,
-											  VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self)));
-}
-
-- (void)otherMouseUp:(NSEvent *)event
-{
-	if (!usedMouseButton)
-		return;
-
-	VuoPoint2d position = VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self);
-	usedMouseButton(VuoMouseButtonAction_make(VuoMouseButton_Middle, VuoMouseButtonActionType_Release, position));
-	[self processClicksForEvent:event atPosition:position withButton:VuoMouseButton_Middle];
-}
-
-/**
- * Handles the mouse moving by calling the trigger function.
- *
- * @threadMain
- */
-- (void)mouseMoved:(NSEvent *)event
-{
-	if (!movedMouseTo)
-		return;
-
-	movedMouseTo(VuoWindowOpenGLInternal_mapEventToSceneCoordinates([event locationInWindow], self));
-}
-
-/**
- * Handles the mouse scrolling by calling the trigger function.
- *
- * @threadMain
- */
-- (void)scrollWheel:(NSEvent *)event
-{
-	if (!scrolledMouse)
-		return;
-
-	// On 10.8, [event deltaX] emits a console warning saying it's deprecated,
-	// yet scrollingDeltaX doesn't exist before 10.7,
-	// so do this dance to try to satisfy both OS versions.
-	if ([event respondsToSelector:@selector(scrollingDeltaX)])
-	{
-		typedef CGFloat (*ScrollingDelta)(id receiver, SEL selector);
-		ScrollingDelta scrollingDeltaXFunction = (ScrollingDelta)[NSEvent instanceMethodForSelector:@selector(scrollingDeltaX)];
-		ScrollingDelta scrollingDeltaYFunction = (ScrollingDelta)[NSEvent instanceMethodForSelector:@selector(scrollingDeltaY)];
-		float x = scrollingDeltaXFunction(event, @selector(scrollingDeltaX));
-		float y = scrollingDeltaYFunction(event, @selector(scrollingDeltaY));
-		scrolledMouse(VuoPoint2d_make(x,y));
-	}
-	else
-		scrolledMouse(VuoPoint2d_make([event deltaX], [event deltaY]));
-}
-
 /**
  * Handles resizing of this view by calling @c resizeCallback.
  *
@@ -340,6 +198,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	dispatch_sync(drawQueue, ^{
 					  NSOpenGLContext *glContext = [self openGLContext];
 					  CGLContextObj cgl_ctx = [glContext CGLContextObj];
+					  CGLLockContext(cgl_ctx);
 					  NSRect frame = [self bounds];
 					  if ([self respondsToSelector:@selector(convertRectToBacking:)])
 					  {
@@ -351,6 +210,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 					  resizeCallback(cgl_ctx, drawContext, frame.size.width, frame.size.height);
 					  drawCallback(cgl_ctx, drawContext);
 					  [glContext flushBuffer];
+					  CGLUnlockContext(cgl_ctx);
 				  });
 }
 
@@ -418,7 +278,9 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 		__block CGLContextObj fullScreenContextCGL;
 		dispatch_sync(drawQueue, ^{
 						  CGLContextObj windowedGlContextCGL = [windowedGlContext CGLContextObj];
+						  CGLLockContext(windowedGlContextCGL);
 						  error = CGLCreateContext(fullScreenPixelFormat, windowedGlContextCGL, &fullScreenContextCGL);
+						  CGLUnlockContext(windowedGlContextCGL);
 					  });
 
 		CGLDestroyPixelFormat(fullScreenPixelFormat);
@@ -434,7 +296,10 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 		[fullScreenContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 		togglingFullScreen = true;
 		dispatch_sync(drawQueue, ^{
-						  switchContextCallback([windowedGlContext CGLContextObj], fullScreenContextCGL, drawContext);
+						  CGLContextObj cgl_ctx = [windowedGlContext CGLContextObj];
+						  CGLLockContext(cgl_ctx);
+						  switchContextCallback(cgl_ctx, fullScreenContextCGL, drawContext);
+						  CGLUnlockContext(cgl_ctx);
 					  });
 		[self setOpenGLContext:fullScreenContext];
 		[fullScreenContext setView:self];
@@ -446,8 +311,11 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 		[glWindow setAlphaValue:0];  // Hide the window on other screens. Unlike -[self orderOut:nil], this preserves the position.
 
 		dispatch_sync(drawQueue, ^{
-							   [self enterFullScreenMode:fullScreenScreen withOptions:options];
-							   togglingFullScreen = false;
+						  CGLContextObj cgl_ctx = [windowedGlContext CGLContextObj];
+						  CGLLockContext(cgl_ctx);
+						  [self enterFullScreenMode:fullScreenScreen withOptions:options];
+						  CGLUnlockContext(cgl_ctx);
+						  togglingFullScreen = false;
 					  });
 
 		// Since the setup and draw were omitted during -enterFullScreenMode above (to prevent deadlock), invoke them manually now.
@@ -457,13 +325,17 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 	else
 	{
 		dispatch_sync(drawQueue, ^{
-						  switchContextCallback([[self openGLContext] CGLContextObj], [windowedGlContext CGLContextObj], drawContext);
+						  CGLContextObj cgl_ctx = [windowedGlContext CGLContextObj];
+						  CGLLockContext(cgl_ctx);
+						  switchContextCallback([[self openGLContext] CGLContextObj], cgl_ctx, drawContext);
 
 						  [self setOpenGLContext:windowedGlContext];
 						  togglingFullScreen = true;
 						  [windowedGlContext setView:self];
 						  [self exitFullScreenModeWithOptions:nil];
+						  [self.window makeKeyWindow];
 						  togglingFullScreen = false;
+						  CGLUnlockContext(cgl_ctx);
 					  });
 
 		[glWindow setAlphaValue:1];  // Un-hide the window on other screens.
@@ -596,16 +468,11 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
  *
  * @threadAny
  */
-- (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))_movedMouseTo
-						 scrolledMouse:(void (*)(VuoPoint2d))_scrolledMouse
-					   usedMouseButton:(void (*)(VuoMouseButtonAction))_usedMouseButton
+- (void)enableTriggers
 {
 	callbacksEnabled = YES;
 
-
-	[glView enableTriggersWithMovedMouseTo:_movedMouseTo
-							 scrolledMouse:_scrolledMouse
-						   usedMouseButton:_usedMouseButton];
+	[glView enableTriggers];
 }
 
 /**
@@ -640,7 +507,10 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 - (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute
 {
 	dispatch_sync([glView drawQueue], ^{
-					  blockToExecute([[glView openGLContext] CGLContextObj]);
+					  CGLContextObj cgl_ctx = [[glView openGLContext] CGLContextObj];
+					  CGLLockContext(cgl_ctx);
+					  blockToExecute(cgl_ctx);
+					  CGLUnlockContext(cgl_ctx);
 				  });
 }
 

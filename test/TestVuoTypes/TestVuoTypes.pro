@@ -39,8 +39,6 @@ testVuoTypes.commands += && $$QMAKE_CXX \
 	${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += testVuoTypes
 
-QMAKE_CLEAN += -R *.moc *.dSYM
-
 # Execute each of the independently-compiled tests in this folder
 check.commands = (find * -perm +1 -type f -exec ./{} `echo '$(TESTARGS)' | perl -pe 's/test.xml/test-{}.xml/g'` \\;)
 # Discard the default check command which gets unconditionally appended

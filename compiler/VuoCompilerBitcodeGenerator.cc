@@ -7,15 +7,15 @@
  * For more information, see http://vuo.org/license.
  */
 
-#include <queue>
 #include <stack>
-#include "VuoCompilerBitcodeGenerator.hh"
-#include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompiler.hh"
+#include "VuoCompilerBitcodeGenerator.hh"
+#include "VuoCompilerCable.hh"
+#include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerOutputEventPort.hh"
+#include "VuoCompilerPublishedInputNodeClass.hh"
 #include "VuoCompilerPublishedInputPort.hh"
 #include "VuoFileUtilities.hh"
-
 #include "VuoPort.hh"
 
 /**
@@ -73,9 +73,26 @@ void VuoCompilerBitcodeGenerator::makeEdgesForNode(void)
 	map<pair<nodePair, VuoCompilerTriggerPort *>, set<VuoCompilerInputEventPort *> > triggerEdgeParts;
 	map<nodePair, set<portPair> > passiveEdgeParts;
 
+	// Add cables for the trigger port that can fire an event for all published input ports simultaneously.
+	set<VuoCable *> publishedInputCables = composition->getBase()->getPublishedInputCables();
+	VuoNode *publishedInputNode = composition->getPublishedInputNode();
+	if (publishedInputNode)
+	{
+		string triggerName = VuoNodeClass::publishedInputNodeSimultaneousTriggerName;
+		VuoCompilerNodeArgument *triggerArg = publishedInputNode->getOutputPortWithName(triggerName)->getCompiler();
+		VuoCompilerTriggerPort *triggerPort = static_cast<VuoCompilerTriggerPort *>(triggerArg);
+		for (set<VuoCable *>::iterator i = publishedInputCables.begin(); i != publishedInputCables.end(); ++i)
+		{
+			VuoCable *origCable = *i;
+			VuoCompilerNode *toNode = origCable->getToNode()->getCompiler();
+			VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>( origCable->getToPort()->getCompiler() );
+			VuoCompilerCable *copyCable = new VuoCompilerCable(publishedInputNode->getCompiler(), triggerPort, toNode, toPort);
+			publishedInputCables.insert( copyCable->getBase() );
+		}
+	}
+
 	// Collect cables into edge-like structures.
 	set<VuoCable *> cables = composition->getBase()->getCables();
-	set<VuoCable *> publishedInputCables = composition->getBase()->getPublishedInputCables();
 	cables.insert(publishedInputCables.begin(), publishedInputCables.end());
 	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
 	{
@@ -824,8 +841,6 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 	Function *function = Function::Create(functionType, GlobalValue::ExternalLinkage, "setup", module);
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
-	generateInitializationForReferenceCounts(block);
-
 	VuoCompilerCodeGenUtilities::generateInitializationForSemaphore(module, block, lastEventIdSemaphoreVariable);
 
 	for (map<VuoCompilerNode *, GlobalVariable *>::iterator i = semaphoreVariableForNode.begin(); i != semaphoreVariableForNode.end(); ++i)
@@ -853,8 +868,6 @@ void VuoCompilerBitcodeGenerator::generateCleanupFunction(void)
 
 	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
 		i->second->generateFinalization(module, block);
-
-	generateFinalizationForReferenceCounts(block);
 
 	VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, lastEventIdSemaphoreVariable);
 
@@ -1028,32 +1041,6 @@ void VuoCompilerBitcodeGenerator::generateCallbackStopFunction(void)
 	generateSignalForNodes(module, block, orderedNodes);
 
 	ReturnInst::Create(module->getContext(), block);
-}
-
-/**
- * Generate the initialization of the referenceCounts map.
- *
- * @eg{
- * VuoHeap_init();
- * }
- */
-void VuoCompilerBitcodeGenerator::generateInitializationForReferenceCounts(BasicBlock *block)
-{
-	Function *initFunction = VuoCompilerCodeGenUtilities::getInitializeReferenceCountsFunction(module);
-	CallInst::Create(initFunction, "", block);
-}
-
-/**
- * Generate the finalization of the referenceCounts map.
- *
- * @eg{
- * VuoHeap_fini();
- * }
- */
-void VuoCompilerBitcodeGenerator::generateFinalizationForReferenceCounts(BasicBlock *block)
-{
-	Function *finiFunction = VuoCompilerCodeGenUtilities::getFinalizeReferenceCountsFunction(module);
-	CallInst::Create(finiFunction, "", block);
 }
 
 /**
@@ -1317,14 +1304,14 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueOrSummaryFunctions(void)
  *     ret = VuoPoint2d_stringFromValue(vuo_mouse__GetMouse__leftPressed__previous);
  *     dispatch_semaphore_signal(vuo_mouse__GetMouse__semaphore);  // not in getOutputPortValueThreadUnsafe()
  *   }
- *   else if (! strcmp(portIdentifier, "vuo_image_filter_ripple__RippleImage__rippledImage"))
+ *   else if (! strcmp(portIdentifier, "vuo_image_ripple__RippleImage__rippledImage"))
  *   {
- *     dispatch_semaphore_wait(vuo_image_filter_ripple__RippleImage__semaphore, DISPATCH_TIME_FOREVER);  // not in getOutputPortValueThreadUnsafe()
+ *     dispatch_semaphore_wait(vuo_image_ripple__RippleImage__semaphore, DISPATCH_TIME_FOREVER);  // not in getOutputPortValueThreadUnsafe()
  *     if (shouldUseInterprocessSerialization)
- *       ret = VuoImage_interprocessStringFromValue(vuo_image_filter_ripple__RippleImage__rippledImage);
+ *       ret = VuoImage_interprocessStringFromValue(vuo_image_ripple__RippleImage__rippledImage);
  *     else
- *       ret = VuoImage_stringFromValue(vuo_image_filter_ripple__RippleImage__rippledImage);
- *     dispatch_semaphore_signal(vuo_image_filter_ripple__RippleImage__semaphore);  // not in getOutputPortValueThreadUnsafe()
+ *       ret = VuoImage_stringFromValue(vuo_image_ripple__RippleImage__rippledImage);
+ *     dispatch_semaphore_signal(vuo_image_ripple__RippleImage__semaphore);  // not in getOutputPortValueThreadUnsafe()
  *   }
  *   return ret;
  * }
@@ -2075,6 +2062,20 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
 		VuoCompilerPublishedInputPort *publishedInputPort = static_cast<VuoCompilerPublishedInputPort *>((*i)->getCompiler());
 		string currentName = publishedInputPort->getBase()->getName();
 		Function *triggerFunction = publishedInputPort->getTriggerPort()->getFunction();
+
+		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentName, function, 0);
+		CallInst::Create(triggerFunction, "", currentBlock);
+
+		blocksForString[currentName] = make_pair(currentBlock, currentBlock);
+	}
+
+	VuoNode *publishedInputNode = composition->getPublishedInputNode();
+	if (publishedInputNode)
+	{
+		string currentName = VuoNodeClass::publishedInputNodeSimultaneousTriggerName;
+		VuoPort *triggerBasePort = publishedInputNode->getOutputPortWithName(currentName);
+		VuoCompilerTriggerPort *triggerPort = static_cast<VuoCompilerTriggerPort *>(triggerBasePort->getCompiler());
+		Function *triggerFunction = triggerPort->getFunction();
 
 		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentName, function, 0);
 		CallInst::Create(triggerFunction, "", currentBlock);

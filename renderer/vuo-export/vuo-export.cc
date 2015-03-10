@@ -20,7 +20,7 @@ int main (int argc, char * argv[])
 	qputenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1");
 
 	// Tell Qt where to find its plugins.
-	QApplication::setLibraryPaths(QStringList((VuoCompiler::getVuoFrameworkPath().str() + "/../resources/QtPlugins").c_str()));
+	QApplication::setLibraryPaths(QStringList((VuoFileUtilities::getVuoFrameworkPath() + "/../resources/QtPlugins").c_str()));
 
 	QApplication app(argc, argv);
 
@@ -130,7 +130,7 @@ int main (int argc, char * argv[])
 		if (! target.empty())
 			compiler.setTarget(target);
 
-		VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(inputPath, &compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(inputPath, &compiler);
 		VuoComposition *baseComposition = new VuoComposition();
 		VuoCompilerComposition *compilerComposition = new VuoCompilerComposition(baseComposition, parser);
 		VuoRendererComposition *rendererComposition = new VuoRendererComposition(baseComposition);

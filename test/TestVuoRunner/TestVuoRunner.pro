@@ -26,10 +26,12 @@ TEST_RUNNER_NATIVE_LIBS = \
 	$${GRAPHVIZ_ROOT}/lib/libgvc.dylib \
 	$${GRAPHVIZ_ROOT}/lib/libgraph.dylib"
 
-test_runner.depends = $${ROOT}/runtime/*.bc
+test_runner.depends = $${ROOT}/runtime/*.bc $${ROOT}/runtime/*.dylib
 test_runner.input = TEST_RUNNER_SOURCES
 test_runner.output = ${QMAKE_FILE_IN_BASE}
 test_runner.commands = \
+	cp $$ROOT/runtime/libVuoHeap.dylib . && \
+	install_name_tool -id libVuoHeap.dylib libVuoHeap.dylib && \
 	$$QMAKE_CC \
 		-g \
 		-I$$ROOT/runtime \
@@ -47,6 +49,7 @@ test_runner.commands = \
 	$$QMAKE_CC \
 		$${TEST_RUNNER_NATIVE_LIBS} \
 		${QMAKE_FILE_IN_BASE}-linked.bc \
+		libVuoHeap.dylib \
 		$${JSONC_ROOT}/lib/libjson.a \
 		-lobjc \
 		-framework Foundation \

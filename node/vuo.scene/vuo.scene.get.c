@@ -11,6 +11,7 @@
 
 #include "VuoUrl.h"
 #include "VuoGlContext.h"
+#include "VuoImageGet.h"
 
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
@@ -35,7 +36,7 @@ VuoModuleMetadata({
 						 "DirectX",
 						 "AC3D",
 						 "Milkshape 3D", "ms3d",
-						 "TrueSpace", "cob", "scn",
+						 /* TrueSpace */ "cob", "scn",
 						 "Ogre", "xml",
 						 "Irrlicht", "irrmesh",
 						 "Quake", "Doom", "mdl", "md2", "md3", "pk3", "mdc", "md5",
@@ -54,6 +55,7 @@ VuoModuleMetadata({
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoGlContext",
+						 "VuoImageGet",
 						 "VuoUrl",
 						 "assimp",
 						 "z"
@@ -68,7 +70,7 @@ VuoModuleMetadata({
 /**
  * Converts @c node and its children to @c VuoSceneObjects.
  */
-void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *scene, const struct aiNode *node, VuoSceneObject *sceneObject)
+void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *scene, const struct aiNode *node, VuoList_VuoShader shaders, VuoSceneObject *sceneObject)
 {
 	// Copy the node's transform into our VuoSceneObject.
 	{
@@ -89,8 +91,10 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 	{
 		sceneObject->verticesList = VuoListCreate_VuoVertices();
 
-		/// @todo handle materials
-		sceneObject->shader = VuoShader_valueFromString("");
+		/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
+		int materialIndex = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
+		sceneObject->shader = VuoListGetValueAtIndex_VuoShader(shaders, materialIndex+1);
+		VuoRetain(sceneObject->shader);
 	}
 	for (unsigned int mesh = 0; mesh < node->mNumMeshes; ++mesh)
 	{
@@ -160,8 +164,6 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 			}
 		}
 
-		/// @todo handle materials
-
 		VuoListAppendValue_VuoVertices(sceneObject->verticesList, v);
 	}
 
@@ -170,7 +172,7 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 	for (unsigned int child = 0; child < node->mNumChildren; ++child)
 	{
 		VuoSceneObject childSceneObject = VuoSceneObject_makeEmpty();
-		vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], &childSceneObject);
+		vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], shaders, &childSceneObject);
 		VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, childSceneObject);
 	}
 }
@@ -194,10 +196,9 @@ void nodeEvent
 		return;
 	}
 
+	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 	struct aiPropertyStore *props = aiCreatePropertyStore();
 	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
 		GLint maxIndices;
 		glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &maxIndices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, maxIndices/3);
@@ -205,8 +206,6 @@ void nodeEvent
 		GLint maxVertices;
 		glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &maxVertices);
 		aiSetImportPropertyInteger(props, AI_CONFIG_PP_SLM_VERTEX_LIMIT, maxVertices);
-
-		VuoGlContext_disuse(cgl_ctx);
 	}
 
 	const struct aiScene *ais = aiImportFileFromMemoryWithProperties(
@@ -229,7 +228,186 @@ void nodeEvent
 		return;
 	}
 
-	vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, scene);
+	char *normalizedSceneURL = VuoUrl_normalize(sceneURL);
+	size_t lastSlashInSceneURL = VuoText_getIndexOfLastCharacter(normalizedSceneURL, "/");
+	VuoText sceneURLWithoutFilename = VuoText_substring(normalizedSceneURL, 1, lastSlashInSceneURL);
+	VuoRetain(sceneURLWithoutFilename);
+
+	VuoList_VuoShader shaders = VuoListCreate_VuoShader();
+	VuoRetain(shaders);
+
+	for (int i=0; i<ais->mNumMaterials; ++i)
+	{
+		struct aiMaterial *m = ais->mMaterials[i];
+
+//		struct aiString name;
+//		aiGetMaterialString(m, AI_MATKEY_NAME, &name);
+//		VLog("material %d: %s",i,name.data);
+
+		VuoShader shader = NULL;
+
+		struct aiColor4D diffuseColorAI = {1,1,1,1};
+		aiGetMaterialColor(m, AI_MATKEY_COLOR_DIFFUSE, &diffuseColorAI);
+		VuoColor diffuseColor = VuoColor_makeWithRGBA(diffuseColorAI.r, diffuseColorAI.g, diffuseColorAI.b, diffuseColorAI.a);
+//		VLog("\tdiffuseColor: %s",VuoColor_summaryFromValue(diffuseColor));
+
+		struct aiColor4D specularColorAI = {1,1,1,1};
+		aiGetMaterialColor(m, AI_MATKEY_COLOR_SPECULAR, &specularColorAI);
+		VuoColor specularColor = VuoColor_makeWithRGBA(specularColorAI.r, specularColorAI.g, specularColorAI.b, specularColorAI.a);
+//		VLog("\tspecularColor: %s",VuoColor_summaryFromValue(specularColor));
+
+		float shininess = 10;
+		aiGetMaterialFloatArray(m, AI_MATKEY_SHININESS, &shininess, NULL);
+		if (shininess)
+			shininess = MAX(1.0001 - 1./shininess, 0);
+//		VLog("\tshininess: %g",shininess);
+
+		int diffuseTextures = aiGetMaterialTextureCount(m, aiTextureType_DIFFUSE);
+		VuoImage diffuseImage = NULL;
+		/// @todo load and blend multiple diffuse textures
+		if (diffuseTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_DIFFUSE, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+
+			VuoText urlParts[2] = {sceneURLWithoutFilename, path.data};
+			VuoText textureURL = VuoText_append(urlParts, 2);
+			VuoRetain(textureURL);
+//			VLog("\tdiffuse: %s",textureURL);
+
+			diffuseImage = VuoImage_get(textureURL);
+
+			VuoRelease(textureURL);
+		}
+
+		int normalTextures = aiGetMaterialTextureCount(m, aiTextureType_NORMALS);
+		VuoImage normalImage = NULL;
+		if (normalTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_NORMALS, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+
+			VuoText urlParts[2] = {sceneURLWithoutFilename, path.data};
+			VuoText textureURL = VuoText_append(urlParts, 2);
+			VuoRetain(textureURL);
+//			VLog("\tnormal: %s",textureURL);
+
+			normalImage = VuoImage_get(textureURL);
+
+			VuoRelease(textureURL);
+		}
+
+		int specularTextures = aiGetMaterialTextureCount(m, aiTextureType_SPECULAR);
+		VuoImage specularImage = NULL;
+		if (specularTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_SPECULAR, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+
+			VuoText urlParts[2] = {sceneURLWithoutFilename, path.data};
+			VuoText textureURL = VuoText_append(urlParts, 2);
+			VuoRetain(textureURL);
+//			VLog("\tspecular: %s",textureURL);
+
+			VuoImage specularImage = VuoImage_get(textureURL);
+
+			VuoRelease(textureURL);
+		}
+
+// Other texture types to consider supporting eventually...
+#if 0
+		int ambientTextures = aiGetMaterialTextureCount(m, aiTextureType_AMBIENT);
+		if (ambientTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_AMBIENT, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\tambient: %s",path.data);
+		}
+
+		int emissiveTextures = aiGetMaterialTextureCount(m, aiTextureType_EMISSIVE);
+		if (emissiveTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_EMISSIVE, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\temissive: %s",path.data);
+		}
+
+		int opacityTextures = aiGetMaterialTextureCount(m, aiTextureType_OPACITY);
+		if (opacityTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_OPACITY, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\topacity: %s",path.data);
+		}
+
+		int lightmapTextures = aiGetMaterialTextureCount(m, aiTextureType_LIGHTMAP);
+		if (lightmapTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_LIGHTMAP, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\tlightmap: %s",path.data);
+		}
+
+		int reflectionTextures = aiGetMaterialTextureCount(m, aiTextureType_REFLECTION);
+		if (reflectionTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_REFLECTION, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\treflection: %s",path.data);
+		}
+
+		int displacementTextures = aiGetMaterialTextureCount(m, aiTextureType_DISPLACEMENT);
+		if (displacementTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_DISPLACEMENT, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\tdisplacement: %s",path.data);
+		}
+
+		int heightTextures = aiGetMaterialTextureCount(m, aiTextureType_HEIGHT);
+		if (heightTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_HEIGHT, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\theight: %s",path.data);
+		}
+
+		int unknownTextures = aiGetMaterialTextureCount(m, aiTextureType_UNKNOWN);
+		if (unknownTextures)
+		{
+			struct aiString path;
+			aiGetMaterialTexture(m, aiTextureType_UNKNOWN, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
+			VLog("\tunknown: %s",path.data);
+		}
+#endif
+
+		if (normalImage || specularImage)
+		{
+			if (!diffuseImage)
+				diffuseImage = VuoImage_makeColorImage(diffuseColor, 1, 1);
+
+			if (!normalImage)
+				normalImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(0.5,0.5,1,1), 1, 1);
+
+			if (!specularImage)
+				specularImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,.9), 1, 1);
+
+			shader = VuoShader_makeLitImageDetailsShader(diffuseImage, 1, normalImage, specularImage);
+		}
+		else if (diffuseImage)
+			shader = VuoShader_makeLitImageShader(diffuseImage, 1, specularColor, shininess);
+		else
+			shader = VuoShader_makeLitColorShader(diffuseColor, specularColor, shininess);
+
+//		VLog("\tshader: %s",VuoShader_summaryFromValue(shader));
+
+		VuoListAppendValue_VuoShader(shaders, shader);
+	}
+	VuoRelease(sceneURLWithoutFilename);
+	VuoGlContext_disuse(cgl_ctx);
+
+	vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, shaders, scene);
+	VuoRelease(shaders);
 
 	aiReleaseImport(ais);
 }

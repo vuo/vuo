@@ -1,1 +1,3 @@
-When the display is ready for the next frame, this node fires an event with information about the frame (including the time at which the frame will be rendered, and the total number of frames rendered so far).
+Fires an event when the display is ready for the next frame.
+
+Along with the event, this node fires data: the time at which the frame will be rendered.

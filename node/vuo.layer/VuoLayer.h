@@ -13,6 +13,8 @@
 #include "VuoColor.h"
 #include "VuoTransform2d.h"
 #include "VuoSceneObject.h"
+#include "VuoList_VuoColor.h"
+#include "VuoPoint2d.h"
 
 /**
  * @ingroup VuoTypes
@@ -38,6 +40,8 @@ VuoLayer VuoLayer_makeEmpty(void);
 VuoLayer VuoLayer_make(VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha);
 VuoLayer VuoLayer_makeRealSize(VuoImage image, VuoPoint2d center, VuoReal alpha);
 VuoLayer VuoLayer_makeColor(VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height);
+VuoLayer VuoLayer_makeLinearGradient(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height);
+VuoLayer VuoLayer_makeRadialGradient(VuoList_VuoColor colors, VuoPoint2d gradientCenter, VuoReal radius, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height);
 VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transform);
 
 VuoLayer VuoLayer_valueFromJson(struct json_object * js);

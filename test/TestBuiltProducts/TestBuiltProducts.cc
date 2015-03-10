@@ -8,7 +8,7 @@
  */
 
 #include <stdio.h>
-#include <QtTest>
+#include <QtTest/QtTest>
 #include "VuoFileUtilities.hh"
 #include "VuoStringUtilities.hh"
 
@@ -94,7 +94,6 @@ private:
 		subDirs.push_back(frameworkDir + "/Frameworks/QtCore.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/QtWidgets.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/QtMacExtras.framework");
-		subDirs.push_back(frameworkDir + "/Frameworks/QtSvg.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/QtXml.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/QtPrintSupport.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/QtOpenGL.framework");

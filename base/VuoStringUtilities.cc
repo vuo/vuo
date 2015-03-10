@@ -10,9 +10,11 @@
 #include <sstream>
 #include "VuoStringUtilities.hh"
 
+#if defined(__x86_64__) || defined(DOXYGEN)
 extern "C" {
 #include "mkdio.h"
 }
+#endif
 
 /**
  * Returns true if @c wholeString begins with @c beginning.
@@ -43,6 +45,18 @@ string VuoStringUtilities::substrAfter(string wholeString, string beginning)
 		return "";
 
 	return wholeString.substr(beginning.length());
+}
+
+/**
+ * Returns the substring of @c wholeString that precedes @c ending,
+ * or an empty string if @c wholeString does not end with @c ending.
+ */
+string VuoStringUtilities::substrBefore(string wholeString, string ending)
+{
+	if (! endsWith(wholeString, ending))
+		return "";
+
+	return wholeString.substr(0, wholeString.length()-ending.length());
 }
 
 /**
@@ -82,7 +96,7 @@ size_t VuoStringUtilities::replaceAll(string &wholeString, string originalSubstr
 /**
  * Splits @a wholeString into parts, as separated by @a delimiter.
  */
-vector<string> VuoStringUtilities::split(string wholeString, char delimiter)
+vector<string> VuoStringUtilities::split(const string &wholeString, char delimiter)
 {
 	vector<string> tokens;
 	istringstream iss(wholeString);
@@ -182,6 +196,7 @@ string VuoStringUtilities::transcodeFromGraphvizIdentifier(const string &graphvi
 	return unescapedString;
 }
 
+#if defined(__x86_64__) || defined(DOXYGEN)
 /**
  * Converts @c markdownString (a Markdown document) to HTML.
  *
@@ -189,7 +204,7 @@ string VuoStringUtilities::transcodeFromGraphvizIdentifier(const string &graphvi
  */
 string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString)
 {
-	MMIOT *doc = mkd_string(markdownString.c_str(), markdownString.length(), 0);
+	MMIOT *doc = mkd_string(markdownString.c_str(), markdownString.length(), MKD_NOPANTS);
 	mkd_compile(doc, 0);
 	char *html;
 	mkd_document(doc, &html);
@@ -205,7 +220,8 @@ string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString
 string VuoStringUtilities::generateHtmlFromMarkdownLine(const string &markdownString)
 {
 	char *html;
-	mkd_line((char *)markdownString.c_str(), markdownString.length(), &html, 0);
+	mkd_line((char *)markdownString.c_str(), markdownString.length(), &html, MKD_NOPANTS);
 	string htmlString(html);
 	return htmlString;
 }
+#endif

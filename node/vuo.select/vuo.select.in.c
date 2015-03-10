@@ -12,7 +12,8 @@
 VuoModuleMetadata({
 					 "title" : "Select Input",
 					 "keywords" : [ "switch", "multiplexer", "if", "else", "case", "route", "condition", "control flow",
-						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door" ],
+						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door",
+						"boolean", "0", "1", "true", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

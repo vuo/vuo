@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find Maximum",
-					  "keywords" : [ "great", "large", "big", "high", "more", "most", ">", "top", "upper", "peak", "limit", "bound", "range" ],
+					  "keywords" : [ "greatest", "large", "big", "high", "more", "most", ">", "top", "upper", "peak", "limit", "bound", "range" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

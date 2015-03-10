@@ -10,6 +10,9 @@
 #include <libgen.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <fstream>
+#include <iostream>
+#include <mach-o/dyld.h>
 #include "VuoFileUtilities.hh"
 #include "VuoStringUtilities.hh"
 
@@ -100,38 +103,101 @@ string VuoFileUtilities::getTmpDir(void)
 }
 
 /**
- * Writes the contents of the input @c string to a C file.
+ * Returns the path of Vuo.framework, or an empty string if Vuo.framework cannot be located.
  */
-FILE * VuoFileUtilities::stringToCFile(const char *string)
+string VuoFileUtilities::getVuoFrameworkPath(void)
 {
-	// Write memory buffer to a pipe
-	int p[2];
-	pipe(p);
-	write(p[1], string, strlen(string)+1);
-	close(p[1]);
+	// First check whether Vuo.framework is in the list of loaded dynamic libraries.
+	const char *frameworkDylibRelativePath = "Vuo.framework/Versions/" VUO_VERSION_STRING "/Vuo";
+	for(unsigned int i=0; i<_dyld_image_count(); ++i)
+	{
+		const char *dylibPath = _dyld_get_image_name(i);
+		if (VuoStringUtilities::endsWith(dylibPath, frameworkDylibRelativePath))
+		{
+			string path = dylibPath;
+			string dir, file, ext;
+			splitPath(path, dir, file, ext);		// remove "Vuo"
+			path = dir.substr(0, dir.length() - 1);	// remove "/"
+			splitPath(path, dir, file, ext);		// remove VUO_VERSION_STRING
+			path = dir.substr(0, dir.length() - 1);	// remove "/"
+			splitPath(path, dir, file, ext);		// remove "Versions"
+			path = dir.substr(0, dir.length() - 1);	// remove "/"
+			if (fileExists(path))
+				return path;
+		}
+	}
 
-	// Create a C file pointer from the pipe;
-	return fdopen(p[0], "r");
+	// Failing that, check for a Vuo.framework bundled with the executable app.
+	char executablePath[PATH_MAX + 1];
+	uint32_t size = sizeof(executablePath);
+
+	if (! _NSGetExecutablePath(executablePath, &size))
+	{
+		char cleanedExecutablePath[PATH_MAX + 1];
+
+		realpath(executablePath, cleanedExecutablePath);  // remove extra references (e.g., "/./")
+		string path = cleanedExecutablePath;
+		string dir, file, ext;
+		splitPath(path, dir, file, ext);		// remove executable name
+		path = dir.substr(0, dir.length() - 1);	// remove "/"
+		splitPath(path, dir, file, ext);		// remove "MacOS"
+		path = dir.substr(0, dir.length() - 1);	// remove "/"
+		path += "/Frameworks/Vuo.framework";
+
+		if (fileExists(path))
+			return path;
+	}
+
+	// Failing that, check for ~/Library/Frameworks/Vuo.framework.
+	string userFrameworkPath = string(getenv("HOME")) + "/Library/Frameworks/Vuo.framework";
+	if (fileExists(userFrameworkPath))
+		return userFrameworkPath;
+
+	// Failing that, check for /Library/Frameworks/Vuo.framework.
+	string systemFrameworkPath = "/Library/Frameworks/Vuo.framework";
+	if (fileExists(systemFrameworkPath))
+		return systemFrameworkPath;
+
+	// Give up.
+	return "";
 }
 
 /**
- * Reads from the file handle into a string.
- *
- * @param file An open file handle. It may be a regular file or a pipe.
- * @return The characters read from the file handle until the end of file was reached.
+ * Reads from standard input into a string until the end-of-file is reached.
  */
-string VuoFileUtilities::cFileToString(FILE *file)
+string VuoFileUtilities::readStdinToString(void)
 {
-	string fileContents;
-	while (true)
+	// http://stackoverflow.com/questions/201992/how-to-read-until-eof-from-cin-in-c
+
+	string contents;
+	string line;
+	while (getline(cin, line))
+	   contents += line;
+
+	return contents;
+}
+
+/**
+ * Reads the whole contents of the file into a string.
+ */
+string VuoFileUtilities::readFileToString(string path)
+{
+	// http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+
+	ifstream in(path.c_str(), ios::in | ios::binary);
+	if (! in)
 	{
-		char c = getc(file);
-		if (c == EOF)
-			break;
-		fileContents += c;
+		fprintf(stderr, "Couldn't read file at path %s\n", path.c_str());
+		return "";
 	}
 
-	return fileContents;
+	string contents;
+	in.seekg(0, ios::end);
+	contents.resize(in.tellg());
+	in.seekg(0, ios::beg);
+	in.read(&contents[0], contents.size());
+	in.close();
+	return contents;
 }
 
 /**
@@ -459,7 +525,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 
 		// obtain file size:
 		fseek (pFile , 0 , SEEK_END);
-		long lSize = ftell (pFile);
+		size_t lSize = ftell (pFile);
 		rewind (pFile);
 
 		// allocate memory to contain the whole file:

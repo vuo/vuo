@@ -64,13 +64,6 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 		for (int index = 0; index < publishedOutputPorts.size(); ++index)
 			getBase()->addPublishedOutputPort(publishedOutputPorts.at(index)->getBase(), index);
 
-		vector<string> unknownNodeClasses = parser->getUnknownNodeClasses();
-		if (! unknownNodeClasses.empty())
-		{
-			for (vector<string>::iterator i = unknownNodeClasses.begin(), e = unknownNodeClasses.end(); i != e; ++i)
-				fprintf(stderr, "Couldn't find implementation for node class %s\n", (*i).c_str());
-		}
-
 		publishedInputNode = parser->getPublishedInputNode();
 		publishedOutputNode = parser->getPublishedOutputNode();
 
@@ -81,14 +74,50 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 }
 
 /**
+ * Checks that the composition is valid (able to be compiled).
+ *
+ * @throw std::runtime_error The composition is invalid.
+ */
+void VuoCompilerComposition::check(void)
+{
+	checkForMissingNodeClasses();
+}
+
+/**
+ * Checks that all of the nodes in the composition have a node class known to the compiler.
+ *
+ * @throw std::runtime_error One or more nodes have an unknown node class.
+ */
+void VuoCompilerComposition::checkForMissingNodeClasses(void)
+{
+	set<string> missingNodeClasses;
+	set<VuoNode *> nodes = getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoNode *node = *i;
+		if (! node->getNodeClass()->hasCompiler())
+			missingNodeClasses.insert(node->getNodeClass()->getClassName() + " (" + node->getTitle() + ")");
+	}
+	if (! missingNodeClasses.empty())
+	{
+		vector<string> sortedList(missingNodeClasses.begin(), missingNodeClasses.end());
+		sort(sortedList.begin(), sortedList.end());
+		string sortedString;
+		for (vector<string>::iterator i = sortedList.begin(); i != sortedList.end(); ++i)
+			sortedString += "\n" + *i;
+		throw std::runtime_error("This composition contains nodes that are neither built in to this version of Vuo nor installed on this computer: " + sortedString);
+	}
+}
+
+/**
  * Creates a composition from the Graphviz-formatted string representation of a composition.
  */
 VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler)
 {
-	FILE *file = VuoFileUtilities::stringToCFile(compositionGraphvizDeclaration.c_str());
-	VuoCompilerGraphvizParser parser(file, compiler);
-	fclose(file);
-	return new VuoCompilerComposition(new VuoComposition(), &parser);
+	VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionGraphvizDeclaration, compiler);
+	VuoCompilerComposition *composition = new VuoCompilerComposition(new VuoComposition(), parser);
+	delete parser;
+	return composition;
 }
 
 /**
@@ -106,6 +135,9 @@ set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bo
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
+		if (! node->hasCompiler())
+			continue;
+
 		vector<VuoPort *> inputPorts = node->getInputPorts();
 		vector<VuoPort *> outputPorts = node->getOutputPorts();
 		vector<VuoPort *> ports;
@@ -457,6 +489,35 @@ void VuoCompilerComposition::setPublishedOutputNode(VuoNode *node)
 }
 
 /**
+ * If the given node has the same Graphviz identifier as some other node currently in the composition,
+ * or a node that was previously passed through this function, changes the given node's Graphviz identifier
+ * to one that has never been used by this composition.
+ */
+void VuoCompilerComposition::setUniqueGraphvizIdentifierForNode(VuoNode *node)
+{
+	if (! node->hasCompiler())
+		return;
+
+	set<VuoNode *> nodes = getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+		if (*i != node && (*i)->hasCompiler())
+			nodeGraphvizIdentifierUsed[ (*i)->getCompiler()->getGraphvizIdentifier() ] = *i;
+
+	string uniqueIdentifier = node->getCompiler()->getGraphvizIdentifier();
+	string prefix = node->getCompiler()->getGraphvizIdentifierPrefix();
+	int suffix = 1;
+	while (nodeGraphvizIdentifierUsed[uniqueIdentifier] != NULL && nodeGraphvizIdentifierUsed[uniqueIdentifier] != node)
+	{
+		ostringstream oss;
+		oss << ++suffix;
+		uniqueIdentifier = prefix + oss.str();
+	}
+
+	nodeGraphvizIdentifierUsed[uniqueIdentifier] = node;
+	node->getCompiler()->setGraphvizIdentifier(uniqueIdentifier);
+}
+
+/**
  * Returns the .vuo (Graphviz dot format) representation of this composition.
  */
 string VuoCompilerComposition::getGraphvizDeclaration(string header, string footer)
@@ -513,7 +574,12 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 
 	// Print nodes
 	for (vector<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-		output << (*i)->getCompiler()->getGraphvizDeclaration(true, xPositionOffset, yPositionOffset) << endl;
+	{
+		string nodeDeclaration = ((*i)->hasCompiler() ?
+									  (*i)->getCompiler()->getGraphvizDeclaration(true, xPositionOffset, yPositionOffset) :
+									  (*i)->getRawGraphvizDeclaration());
+		output << nodeDeclaration << endl;
+	}
 
 	// Print psuedo-nodes for published ports
 	if (! subcompositionPublishedInputPorts.empty())
@@ -663,8 +729,8 @@ string VuoCompilerComposition::diffAgainstOlderComposition(string oldComposition
  */
 bool VuoCompilerComposition::compareGraphvizIdentifiersOfNodes(VuoNode *lhs, VuoNode *rhs)
 {
-	string lhsIdentifier = (lhs->hasCompiler() ? lhs->getCompiler()->getGraphvizIdentifier() : "");
-	string rhsIdentifier = (rhs->hasCompiler() ? rhs->getCompiler()->getGraphvizIdentifier() : "");
+	string lhsIdentifier = (lhs->hasCompiler() ? lhs->getCompiler()->getGraphvizIdentifier() : lhs->getRawGraphvizIdentifier());
+	string rhsIdentifier = (rhs->hasCompiler() ? rhs->getCompiler()->getGraphvizIdentifier() : rhs->getRawGraphvizIdentifier());
 	return lhsIdentifier.compare(rhsIdentifier) < 0;
 }
 

@@ -21,13 +21,13 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Text Image",
-					 "keywords" : [ "font", "glyph", "line", "string" ],
+					 "keywords" : [ "font", "glyph", "line", "string", "typeface" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "ApplicationServices.framework"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "RenderText.vuo" ]
+						 "exampleCompositions" : [ "RenderText.vuo", "CompareImageGenerators.vuo" ]
 					 }
 				 });
 

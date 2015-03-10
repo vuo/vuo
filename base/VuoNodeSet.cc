@@ -69,7 +69,10 @@ string VuoNodeSet::getDescriptionFromFile(string fileName)
  */
 string VuoNodeSet::getDescription(void)
 {
-	return getDescriptionFromFile("index.md");
+	if (getName() == "vuo.hold")  // special case for node set that contains a node class of the same name
+		return "";
+
+	return getDescriptionFromFile(getName() + ".md");
 }
 
 /**

@@ -24,6 +24,7 @@ VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublish
 	getBase()->setRenderer(this);
 	this->globalPos = QPointF();
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
+	updateNameRect();
 }
 
 /**
@@ -48,6 +49,15 @@ QRectF VuoRendererPublishedPort::boundingRect(void) const
 		return QRectF();
 
 	return firstConnectedPort->getRenderer()->boundingRectWithOptions(true);
+}
+
+/**
+ * Sets the published port's name.
+ */
+void VuoRendererPublishedPort::setName(string name)
+{
+	getBase()->setName(name);
+	updateNameRect();
 }
 
 /**
@@ -167,6 +177,24 @@ bool VuoRendererPublishedPort::canBeMergedWith(VuoPublishedPort *otherExternalPo
 }
 
 /**
+ * Adds the specified @c port to the list of internal ports for which this published port is an alias.
+ */
+void VuoRendererPublishedPort::addConnectedPort(VuoPort *port)
+{
+	getBase()->addConnectedPort(port);
+	updateNameRect();
+}
+
+/**
+ * Removes the specified @c port from the list of internal ports for which this published port is an alias.
+ */
+void VuoRendererPublishedPort::removeConnectedPort(VuoPort *port)
+{
+	getBase()->removeConnectedPort(port);
+	updateNameRect();
+}
+
+/**
  * Returns the location of the published port within the published port sidebar,
  * in global coordinates.
  */
@@ -182,4 +210,14 @@ QPointF VuoRendererPublishedPort::getGlobalPos(void) const
 void VuoRendererPublishedPort::setGlobalPos(QPointF pos)
 {
 	this->globalPos = pos;
+}
+
+/**
+ * Updates the cached bounding box of the published port's label within the published port sidebar.
+ */
+void VuoRendererPublishedPort::updateNameRect()
+{
+	VuoPort *firstConnectedPort = (*(getBase()->getConnectedPorts().begin()));
+	if (firstConnectedPort)
+		firstConnectedPort->getRenderer()->updateNameRect(true);
 }

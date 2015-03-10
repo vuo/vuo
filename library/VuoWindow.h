@@ -47,13 +47,7 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 );
-void VuoWindowOpenGl_enableTriggers
-(
-		VuoWindowOpenGl w,
-		VuoOutputTrigger(movedMouseTo, VuoPoint2d),
-		VuoOutputTrigger(scrolledMouse, VuoPoint2d),
-		VuoOutputTrigger(usedMouseButton, VuoMouseButtonAction)
-);
+void VuoWindowOpenGl_enableTriggers(VuoWindowOpenGl w);
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w);
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w);
 void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToExecute)(VuoGlContext glContext));

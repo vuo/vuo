@@ -106,8 +106,9 @@ private slots:
 	void testGenericPortTypes()
 	{
 		string compositionPath = getCompositionPath("Generics.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		delete parser;
 
 		map<QString, QString> typeForNodeAndPort;
 		set<VuoNode *> nodes = composition.getBase()->getNodes();
@@ -210,8 +211,9 @@ private slots:
 		QFETCH(set<string>, compatibleTypeNames);
 
 		string compositionPath = getCompositionPath("Generics.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		delete parser;
 
 		bool foundType = false;
 		set<VuoNode *> nodes = composition.getBase()->getNodes();
@@ -336,8 +338,9 @@ private slots:
 		QFETCH(set<string>, expectedCablesToDelete);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString() + ".vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		delete parser;
 
 		VuoPort *portToUnspecialize = NULL;
 		set<VuoNode *> nodes = composition.getBase()->getNodes();

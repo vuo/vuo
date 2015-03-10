@@ -97,8 +97,6 @@ public:
 	static Function * getJsonTokenerParseFunction(Module *module);
 	static Function * getCallbackStartFunction(Module *module);
 	static Function * getCallbackStopFunction(Module *module);
-	static Function * getInitializeReferenceCountsFunction(Module *module);
-	static Function * getFinalizeReferenceCountsFunction(Module *module);
 	static Function * getGetInputPortValueFunction(Module *module);
 	static Function * getGetInputPortValueThreadUnsafeFunction(Module *module);
 	static Function * getGetOutputPortValueFunction(Module *module);

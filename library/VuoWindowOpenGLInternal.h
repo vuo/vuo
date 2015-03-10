@@ -22,6 +22,7 @@
 @interface VuoWindowOpenGLView : NSOpenGLView
 {
 	void (*initCallback)(VuoGlContext glContext, void *);  ///< Initializes the OpenGL context.
+	bool initCallbackCalled;
 	void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int width, unsigned int height);  ///< Updates the OpenGL context when the view is resized.
 	void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *);  ///< Allows the caller to free resources on the old GL context and initialize the new GL context.
 	void (*drawCallback)(VuoGlContext glContext, void *);  ///< Draws onto the OpenGL context.
@@ -31,12 +32,6 @@
 	VuoDisplayRefresh displayRefresh;	///< Handles redrawing at the display refresh rate.  Only draws if @c callerRequestedRedraw.
 
 	bool togglingFullScreen;	///< If true, code that requires drawQueue will be skipped (to avoid deadlock).
-
-	void (*movedMouseTo)(VuoPoint2d);	///< Trigger function, fired when the mouse moves.
-	void (*scrolledMouse)(VuoPoint2d);	///< Trigger function, fired when the mouse is scrolled.
-	void (*usedMouseButton)(VuoMouseButtonAction);	///< Trigger function, fired when a mouse button is used.
-	dispatch_queue_t clickQueue;	///< Queue for processing mouse button clicks.
-	int pendingClickCount;	///< The number of clicks elapsed so far.
 }
 
 - (id)initWithFrame:(NSRect)frame
@@ -46,9 +41,7 @@ switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlCon
 		 drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 		  drawContext:(void *)_drawContext;
 
-- (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))movedMouseTo
-						 scrolledMouse:(void (*)(VuoPoint2d))scrolledMouse
-					   usedMouseButton:(void (*)(VuoMouseButtonAction))usedMouseButton;
+- (void)enableTriggers;
 - (void)disableTriggers;
 
 - (void)toggleFullScreen;
@@ -84,9 +77,7 @@ switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlCon
 	 switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))switchContextCallback
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))drawCallback
 			   drawContext:(void *)drawContext;
-- (void)enableTriggersWithMovedMouseTo:(void (*)(VuoPoint2d))movedMouseTo
-						 scrolledMouse:(void (*)(VuoPoint2d))scrolledMouse
-					   usedMouseButton:(void (*)(VuoMouseButtonAction))usedMouseButton;
+- (void)enableTriggers;
 - (void)disableTriggers;
 - (void)scheduleRedraw;
 - (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute;

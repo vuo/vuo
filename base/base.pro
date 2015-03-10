@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG -= qt
-CONFIG += staticlib VuoPCH VuoRuntime VuoLLVM graphviz json discount
+CONFIG += staticlib VuoPCH VuoRuntime graphviz json discount
 TARGET = VuoBase
 
 include(../vuo.pri)
@@ -23,8 +23,6 @@ SOURCES += \
 	VuoType.cc \
 	VuoGenericType.cc \
 	VuoTimeUtilities.cc \
-	$$ROOT/runtime/VuoHeap.cc \
-	$$ROOT/runtime/VuoRuntime.c \
 	VuoCompositionStub.c \
 	VuoComposition.cc \
 	miniz.c
@@ -52,8 +50,6 @@ HEADERS += \
 
 BASE_STUB_SOURCES += \
 	VuoCompositionStub.c
-
-QMAKE_CLEAN += *.dylib
 
 base_stub.input = BASE_STUB_SOURCES
 base_stub.output = ${QMAKE_FILE_IN_BASE}.dylib

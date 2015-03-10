@@ -60,8 +60,9 @@ public:
 	static string makeTmpFile(string file, string extension, string directory="/tmp");
 	static string makeTmpDir(string dir);
 	static string getTmpDir(void);
-	static FILE * stringToCFile(const char *string);
-	static string cFileToString(FILE *file);
+	static string getVuoFrameworkPath(void);
+	static string readStdinToString(void);
+	static string readFileToString(string path);
 	static void writeRawDataToFile(const char *data, size_t numBytes, string file);
 	static void writeStringToFile(string s, string file);
 	static bool fileExists(string path);

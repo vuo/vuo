@@ -26,6 +26,7 @@ char *telemetryURL = NULL;  ///< The URL that the composition will use to initia
 bool *isStopped = NULL;  ///< True if the composition has stopped.
 bool *isPaused = NULL;  ///< True if the composition is paused.
 bool isReplacing = false;  ///< True if the composition is in the process of being replaced.
+bool isReferenceCountingInitialized = false;  ///< True if VuoHeap_init() has been called.
 void *dylibHandle = NULL;  ///< A handle to the running composition.
 void **resourceDylibHandles = NULL;  ///< A list of handles to the running composition's resources.
 size_t resourceDylibHandlesSize = 0;  ///< The number of items in @c resourceDylibHandles.
@@ -355,7 +356,10 @@ void stopComposition(void)
 {
 	vuoMemoryBarrier();
 
-	vuoControlRequestSend(VuoControlRequestCompositionStop,NULL,0);
+	const int timeoutInSeconds = -1;
+	zmq_msg_t messages[1];
+	vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
+	vuoControlRequestSend(VuoControlRequestCompositionStop,messages,1);
 	vuoControlReplyReceive(VuoControlReplyCompositionStopping);
 }
 
@@ -414,6 +418,20 @@ void loadResourceDylib(const char *resourceDylibPath)
 	}
 
 	resourceDylibHandles[resourceDylibHandlesSize++] = resourceDylibHandle;
+
+	if (! isReferenceCountingInitialized)
+	{
+		typedef void (*initType)(void);
+		initType VuoHeap_init = (initType) dlsym(resourceDylibHandle, "VuoHeap_init");
+		if (! VuoHeap_init)
+		{
+			fprintf(stderr, "VuoCompositionLoader: couldn't find function 'VuoHeap_init': %s\n", dlerror());
+			return;
+		}
+		VuoHeap_init();
+
+		isReferenceCountingInitialized = true;
+	}
 }
 
 /**

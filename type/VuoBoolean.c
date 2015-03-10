@@ -47,10 +47,9 @@ json_object * VuoBoolean_jsonFromValue(const VuoBoolean value)
 
 /**
  * @ingroup VuoBoolean
- * Same as @c %VuoBoolean_stringFromValue() — always shows the full value, since it's guaranteed to be pretty short.
+ * Always shows the full value, since it's guaranteed to be pretty short.
  */
 char * VuoBoolean_summaryFromValue(const VuoBoolean value)
 {
-	// Always show the full value, since it's guaranteed to be pretty short.
-	return VuoBoolean_stringFromValue(value);
+	return strdup(value ? "true" : "false");
 }

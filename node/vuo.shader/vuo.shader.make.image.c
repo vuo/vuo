@@ -12,40 +12,21 @@
 
 VuoModuleMetadata({
 					 "title" : "Shade with Image",
-					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "lighting", "Blinn", "Phong", "Lambert" ],
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
-					 "node": {
-						 "isInterface" : false
-					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
+		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeImageShader();
-
-	if (image)
-	{
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoShader_addTexture(*shader, glContext, "texture", image);
-
-		VuoShader_setUniformFloat(*shader, glContext, "alpha", alpha);
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		{
-			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-			glFlushRenderAPPLE();
-		}
-
-		VuoGlContext_disuse(glContext);
-	}
+	*shader = VuoShader_makeLitImageShader(image, alpha, highlightColor, shininess);
 }

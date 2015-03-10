@@ -34,6 +34,7 @@ char * VuoText_summaryFromValue(const VuoText value);
 
 VuoText VuoText_make(const char * unquotedString);
 size_t VuoText_length(const VuoText string);
+size_t VuoText_getIndexOfLastCharacter(const VuoText string, const VuoText character);
 VuoText VuoText_substring(const VuoText string, int startIndex, int length);
 VuoText VuoText_append(VuoText *texts, unsigned long textsCount);
 

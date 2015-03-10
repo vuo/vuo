@@ -66,6 +66,7 @@ SOURCES += \
 	VuoCompilerGenericType.cc \
 	VuoCompilerComposition.cc \
 	VuoCompilerMakeListNodeClass.cc \
+	VuoCompilerPublishedInputNodeClass.cc \
 	VuoCompilerSpecializedNodeClass.cc \
 	VuoCompilerTargetSet.cc
 
@@ -113,5 +114,6 @@ HEADERS += \
 	VuoCompilerGenericType.hh \
 	VuoCompilerComposition.hh \
 	VuoCompilerMakeListNodeClass.hh \
+	VuoCompilerPublishedInputNodeClass.hh \
 	VuoCompilerSpecializedNodeClass.hh \
 	VuoCompilerTargetSet.hh

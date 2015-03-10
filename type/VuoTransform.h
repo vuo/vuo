@@ -30,7 +30,8 @@
 enum VuoTransformType
 {
 	VuoTransformTypeEuler,
-	VuoTransformTypeQuaternion
+	VuoTransformTypeQuaternion,
+	VuoTransformTypeTargeted
 };
 
 /**
@@ -51,14 +52,21 @@ typedef struct
 	{
 		VuoPoint3d euler; ///< Radians
 		VuoPoint4d quaternion;
+		struct
+		{
+			VuoPoint3d target;
+			VuoPoint3d upDirection;
+		};
 	} rotationSource;
 } VuoTransform;
 
 void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
+VuoPoint3d VuoTransform_getDirection(const VuoTransform transform);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale);
 VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d);
+VuoTransform VuoTransform_makeFromTarget(VuoPoint3d position, VuoPoint3d target, VuoPoint3d upDirection);
 
 /**
  * Returns the composite of quaternion @c a with quaternion @c b (i.e., the rotation described by @c a followed by the rotation described by @c b).
@@ -138,6 +146,12 @@ static inline bool VuoTransform_isIdentity(const VuoTransform transform)
 				 && fabs(transform.rotationSource.quaternion.z) < tolerance
 				 && (fabs(transform.rotationSource.quaternion.w - 1.) < tolerance || fabs(transform.rotationSource.quaternion.w + 1.) < tolerance)
 				 )
+				||
+				(transform.type == VuoTransformTypeTargeted
+				 && fabs(transform.rotationSource.target.x - 1.) < tolerance
+				 && fabs(transform.rotationSource.target.y) < tolerance
+				 && fabs(transform.rotationSource.target.z) < tolerance
+				 )
 				);
 }
 
@@ -181,6 +195,8 @@ static inline void VuoTransform_printMatrix4x4(const float *matrix)
 	for (int i=0; i<4; ++i)
 		fprintf(stderr, "[\t%.4g\t%.4g\t%.4g\t%.4g\t]\n",matrix[i+0*4],matrix[i+1*4],matrix[i+2*4],matrix[i+3*4]);
 }
+
+VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point);
 
 VuoTransform VuoTransform_valueFromJson(struct json_object *js);
 struct json_object * VuoTransform_jsonFromValue(const VuoTransform value);

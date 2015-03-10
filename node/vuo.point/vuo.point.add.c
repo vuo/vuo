@@ -32,6 +32,6 @@ void nodeEvent
 	VuoGenericType1 tmp = {0};
 	*sum = tmp;
 	unsigned long termsCount = VuoListGetCount_VuoGenericType1(terms);
-	for (unsigned long i = 0; i < termsCount; ++i)
+	for (unsigned long i = 1; i <= termsCount; ++i)
 		*sum = VuoGenericType1_add(*sum, (VuoGenericType1)VuoListGetValueAtIndex_VuoGenericType1(terms, i));
 }

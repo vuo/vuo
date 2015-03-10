@@ -95,7 +95,6 @@ protected:
 
 public:
 	VuoCompiler(void);
-	static llvm::sys::Path getVuoFrameworkPath();
 	static string getUserModulesPath();
 	static string getSystemModulesPath();
 	static Module * readModuleFromBitcode(string inputPath);

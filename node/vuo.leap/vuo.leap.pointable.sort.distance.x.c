@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Sort Pointables by X Distance",
-					  "keywords" : [ "organize", "sort", "distance", "nearest", "filter", "shuffle", "point", "x" ],
+					  "keywords" : [ "organize", "order", "nearest", "point" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "isInterface" : false,

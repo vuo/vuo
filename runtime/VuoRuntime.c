@@ -105,6 +105,8 @@ extern int getPublishedOutputPortConnectedIdentifierCount(char *name);
 extern char ** getPublishedInputPortConnectedIdentifiers(char *name);
 extern char ** getPublishedOutputPortConnectedIdentifiers(char *name);
 extern void firePublishedInputPortEvent(char *name);
+extern void VuoHeap_init();
+extern void VuoHeap_fini();
 //@}
 
 
@@ -239,6 +241,7 @@ void vuoInit(int argc, char **argv)
 		exit(0);
 	}
 
+	VuoHeap_init();
 	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused);
 }
 
@@ -315,13 +318,13 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 			zmq_msg_t messages[2];
 
 			{
-				unsigned long utime = r.ru_utime.tv_sec*USEC_PER_SEC+r.ru_utime.tv_usec;
+				uint64_t utime = r.ru_utime.tv_sec*USEC_PER_SEC+r.ru_utime.tv_usec;
 				zmq_msg_init_size(&messages[0], sizeof utime);
 				memcpy(zmq_msg_data(&messages[0]), &utime, sizeof utime);
 			}
 
 			{
-				unsigned long stime = r.ru_stime.tv_sec*USEC_PER_SEC+r.ru_stime.tv_usec;
+				uint64_t stime = r.ru_stime.tv_sec*USEC_PER_SEC+r.ru_stime.tv_usec;
 				zmq_msg_init_size(&messages[1], sizeof stime);
 				memcpy(zmq_msg_data(&messages[1]), &stime, sizeof stime);
 			}
@@ -362,6 +365,19 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 			{
 				case VuoControlRequestCompositionStop:
 				{
+					int timeoutInSeconds = vuoReceiveInt(ZMQControl);
+
+					if (timeoutInSeconds >= 0)
+					{
+						// If the composition is not stopped within the timeout, kill its process.
+						dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC),
+									   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+							vuoControlReplySend(VuoControlReplyCompositionStopping,NULL,0);
+							zmq_close(ZMQControl);  // wait until message fully sends
+							kill(getpid(), SIGKILL);
+						});
+					}
+
 					dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 						if (hasBeenUnpaused)
 						{
@@ -375,6 +391,11 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 						}
 					});
 					cleanup();
+
+					if (timeoutInSeconds >= 0)
+					{
+						VuoHeap_fini();
+					}
 
 					dispatch_source_cancel(controlTimer);
 

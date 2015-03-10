@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Combine Layers",
-					 "keywords" : [ "group", "join", "together" ],
+					 "keywords" : [ "group", "join", "together", "merge" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions" : [ ]

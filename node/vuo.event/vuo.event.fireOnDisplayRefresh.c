@@ -31,7 +31,7 @@ VuoDisplayRefresh nodeInstanceInit(void)
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(VuoDisplayRefresh) context,
-		VuoOutputTrigger(requestedFrame, VuoFrameRequest)
+		VuoOutputTrigger(requestedFrame, VuoReal)
 )
 {
 	VuoDisplayRefresh_enableTriggers(*context, requestedFrame, NULL);

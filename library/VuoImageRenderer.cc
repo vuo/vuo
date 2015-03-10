@@ -13,12 +13,10 @@
 
 #include <stdlib.h>
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <IOSurface/IOSurfaceAPI.h>
+#include <IOSurface/IOSurface.h>
 
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
-#include <OpenGL/CGLIOSurface.h>
 /// @{
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
@@ -108,9 +106,6 @@ VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
 	}
 	glBindVertexArray(0);
 
-	/// @todo https://b33p.net/kosada/node/6920
-	VuoGlContext_disuse(VuoGlContext_use());
-
 	glGenFramebuffers(1, &imageRenderer->outputFramebuffer);
 
 	return (VuoImageRenderer)imageRenderer;
@@ -124,6 +119,9 @@ VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
  */
 VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh)
 {
+	if (pixelsWide < 1 || pixelsHigh < 1)
+		return NULL;
+
 	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,false), GL_RGBA, pixelsWide, pixelsHigh);
 }
 
@@ -144,40 +142,9 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		// Create a new GL Texture Object.
 		GLuint textureTarget = outputToIOSurface ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
 
+		VuoIoSurface ioSurface;
 		if (outputToIOSurface)
-		{
-			glGenTextures(1, &outputTexture);
-			glEnable(GL_TEXTURE_RECTANGLE_ARB);
-			glBindTexture(textureTarget, outputTexture);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-			glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
-			CFDictionaryAddValue(properties, kIOSurfaceIsGlobal, kCFBooleanTrue);
-			long long pixelsWideLL = pixelsWide;
-			CFDictionaryAddValue(properties, kIOSurfaceWidth, CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsWideLL));
-			long long pixelsHighLL = pixelsHigh;
-			CFDictionaryAddValue(properties, kIOSurfaceHeight, CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsHighLL));
-			long long bytesPerElement = 4;
-			CFDictionaryAddValue(properties, kIOSurfaceBytesPerElement, CFNumberCreate(NULL, kCFNumberLongLongType, &bytesPerElement));
-
-			IOSurfaceRef surf = IOSurfaceCreate(properties);
-			CGLError err = CGLTexImageIOSurface2D(cgl_ctx, textureTarget, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
-			surfID = IOSurfaceGetID(surf);
-			// IOSurfaceDecrementUseCount(surf); ?
-			CFRelease(surf);
-			if(err != kCGLNoError)
-			{
-				fprintf(stderr,"VuoImageRenderer_draw_internal() Error in CGLTexImageIOSurface2D(): %s\n", CGLErrorString(err));
-				return 0;
-			}
-
-			glBindTexture(textureTarget, 0);
-		}
+			ioSurface = VuoIoSurfacePool_use(cgl_ctx, pixelsWide, pixelsHigh, &outputTexture);
 		else
 			outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, GL_RGBA, pixelsWide, pixelsHigh, GL_RGBA);
 
@@ -227,7 +194,10 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (outputToIOSurface)
-			glDeleteTextures(1, &outputTexture);
+		{
+			surfID = VuoIoSurfacePool_getId(ioSurface);
+			VuoIoSurfacePool_disuse(cgl_ctx, pixelsWide, pixelsHigh, ioSurface, outputTexture);
+		}
 
 		glFlushRenderAPPLE();
 	}

@@ -36,6 +36,7 @@ public:
 	static const string publishedOutputNodeClassName;
 	static const string publishedInputNodeIdentifier;
 	static const string publishedOutputNodeIdentifier;
+	static const string publishedInputNodeSimultaneousTriggerName;
 
 	VuoNode * newNode(string title="", double x=0, double y=0);
 	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
@@ -59,6 +60,8 @@ public:
 
 	vector<VuoPortClass *> getOutputPortClasses(void);
 	void setOutputPortClasses(vector<VuoPortClass *> outputPortClasses);
+
+	vector<string> getAutomaticKeywords(void);
 
 	void print(void);
 

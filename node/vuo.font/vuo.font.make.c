@@ -12,6 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Font",
+					 "keywords" : [ "glyph", "typeface", "leading", "pica", "boldface", "italic", "oblique", "slanted", "color", "size", "typographic", "family", "spacing" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions": [ "RenderMovieTrailer.vuo" ]

@@ -43,6 +43,7 @@ using namespace std;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #include <clang/Basic/Version.h>
 #include <clang/CodeGen/CodeGenAction.h>
 #include <clang/Driver/ArgList.h>

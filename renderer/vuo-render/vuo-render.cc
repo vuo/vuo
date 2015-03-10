@@ -23,7 +23,7 @@ int main (int argc, char * argv[])
 	qputenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1");
 
 	// Tell Qt where to find its plugins.
-	QApplication::setLibraryPaths(QStringList((VuoCompiler::getVuoFrameworkPath().str() + "/../resources/QtPlugins").c_str()));
+	QApplication::setLibraryPaths(QStringList((VuoFileUtilities::getVuoFrameworkPath() + "/../resources/QtPlugins").c_str()));
 
 	QApplication app(argc, argv);
 
@@ -100,13 +100,14 @@ int main (int argc, char * argv[])
 		VuoCompilerComposition *compilerComposition;
 		if (inputExtension == "vuo")
 		{
-			VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(inputPath, &compiler);
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(inputPath, &compiler);
 			compilerComposition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 		}
 		else if (inputPath == "-")
 		{
-			VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(stdin, &compiler);
+			string compositionAsString = VuoFileUtilities::readStdinToString();
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionAsString, &compiler);
 			compilerComposition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
 		}
@@ -115,7 +116,7 @@ int main (int argc, char * argv[])
 			compilerComposition = new VuoCompilerComposition(baseComposition, NULL);
 		}
 		VuoRendererComposition *composition = new VuoRendererComposition(baseComposition, doRenderMissingAsPresent);
-		if (! (inputExtension == "vuo" || inputExtension == "-"))
+		if (! (inputExtension == "vuo" || inputPath == "-"))
 		{
 			VuoCompilerNodeClass *nodeClass;
 			if (!(nodeClass = compiler.getNodeClass(inputPath)))

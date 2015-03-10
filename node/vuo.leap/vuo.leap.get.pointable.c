@@ -32,7 +32,11 @@ void nodeEvent
 		VuoOutputData(VuoReal) width,
 		VuoOutputData(VuoPoint3d) direction,
 		VuoOutputData(VuoPoint3d) tipPosition,
-		VuoOutputData(VuoPoint3d) tipVelocity
+		VuoOutputData(VuoPoint3d) stabilizedTipPosition,
+		VuoOutputData(VuoPoint3d) tipVelocity,
+		VuoOutputData(VuoLeapTouchZone) touchZone,
+		VuoOutputData(VuoReal) touchDistance,
+		VuoOutputData(VuoReal) timeVisible
 )
 {
 	*id = pointable.id;
@@ -42,4 +46,8 @@ void nodeEvent
 	*direction	= pointable.direction;
 	*tipPosition = pointable.tipPosition;
 	*tipVelocity = pointable.tipVelocity;
+	*stabilizedTipPosition = pointable.stabilizedTipPosition;
+	*timeVisible = pointable.timeVisible;
+	*touchDistance = pointable.touchDistance;
+	*touchZone = pointable.touchZone;
 }

@@ -180,6 +180,24 @@ static inline float VuoPoint3d_distance(VuoPoint3d a, VuoPoint3d b)
 }
 
 /**
+ *	Returns a linearly interpolated value between @a and @b using time @t.  @t is between 0 and 1.
+ */
+static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t)
+{
+	return VuoPoint3d_add( VuoPoint3d_multiply(a, (1-t)), VuoPoint3d_multiply(b, t) );
+}
+
+/**
+ *	Returns component-wise multiplication of two VuoPoint3d vectors.
+ */
+static inline VuoPoint3d VuoPoint3d_scale(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_scale(VuoPoint3d a, VuoPoint3d b)
+{
+	return (VuoPoint3d) { a.x*b.x, a.y*b.y, a.z*b.z };
+}
+
+/**
  * @}
  */
 

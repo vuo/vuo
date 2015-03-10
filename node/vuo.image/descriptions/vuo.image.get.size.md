@@ -1,1 +1,1 @@
-Gets the width and height in pixels of the image.
+Gives the image's dimensions in pixels. 

@@ -17,6 +17,11 @@
 #include "VuoBaseDetail.hh"
 #include "VuoNode.hh"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+	#include "json/json.h"
+#pragma clang diagnostic pop
+
 class VuoCompilerNode;
 class VuoCompilerNodeClass;
 class VuoRendererColors;
@@ -68,12 +73,13 @@ public:
 	set<VuoCable *> getConnectedOutputCables(bool includePublishedCables);
 	VuoRendererPortList * getInputPorts(void);
 	VuoRendererPortList * getOutputPorts(void);
+	map<QString, json_object *> getConstantPortValues();
 	void replaceInputPort(VuoRendererPort * oldPort, VuoRendererPort * newPort);
 	void addInputPort(VuoRendererPort * newPort);
 	bool hasGenericPort(void);
 	void setTitle(string title);
 
-	static QString generateNodeClassToolTipTitle(VuoNodeClass *nodeClass);
+	static QString generateNodeClassToolTipTitle(VuoNodeClass *nodeClass, VuoNode *node);
 	static QString generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass);
 
 	void resetTimeLastExecuted();
@@ -82,6 +88,8 @@ public:
 	qint64 getTimeLastExecutionEnded();
 	void layoutConnectedInputDrawers(void);
 	void layoutConnectedInputDrawersAtAndAbovePort(VuoRendererPort *port);
+	void setCacheModeForNodeAndPorts(QGraphicsItem::CacheMode mode);
+	void setCacheModeForConnectedCables(QGraphicsItem::CacheMode mode);
 
 	// Drawing configuration
 	static const qreal nodeTitleHeight;
@@ -93,6 +101,8 @@ protected:
 	void mouseDoubleClickEvent (QGraphicsSceneMouseEvent *event);
 	void keyPressEvent(QKeyEvent *event);
 
+	// Drawing configuration
+	static const qreal cornerRadius;
 	virtual void layoutPorts(void);
 
 	VuoRendererSignaler *signaler; ///< The object that sends signals on behalf of this renderer node.
@@ -105,8 +115,8 @@ private:
 
 	// Drawing configuration
 	static const qreal subcompositionBulge;
-	static const qreal cornerRadius;
 	static const qreal nodeClassHeight;
+	static const qreal antennaIconWidth;
 
 	QRectF frameRect;
 	QRectF nodeTitleBoundingRect;
@@ -127,8 +137,6 @@ private:
 	void setOutputPorts(vector<VuoRendererPort *> outputPorts = vector<VuoRendererPort *>());
 
 	void drawNodeFrame(QPainter *painter, QRectF nodeInnerFrameRect, VuoRendererColors *colors) const;
-	static void addRoundedCorner(QPainterPath &path, bool drawLine, QPointF sharpCornerPoint, qreal radius, bool isTop, bool isLeft);
-
 	void layoutConnectedInputDrawer(unsigned int i);
 
 	QPointF getPortPoint(VuoRendererPort *port, unsigned int portIndex) const;

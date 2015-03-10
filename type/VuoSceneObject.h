@@ -40,6 +40,17 @@ typedef enum
 } VuoSceneObject_CameraType;
 
 /**
+ * The type of light
+ */
+typedef enum
+{
+	VuoSceneObject_NotALight,
+	VuoSceneObject_AmbientLight,
+	VuoSceneObject_PointLight,
+	VuoSceneObject_Spotlight
+} VuoSceneObject_LightType;
+
+/**
  * A 3D Object: visible (mesh), or virtual (group, light, camera).
  */
 typedef struct VuoSceneObject
@@ -59,6 +70,14 @@ typedef struct VuoSceneObject
 	float cameraDistanceMin;	///< Distance from camera to near clip plane.
 	float cameraDistanceMax;	///< Distance from camera to far clip plane.
 
+	// Data for light scene objects
+	VuoSceneObject_LightType lightType;
+	VuoColor lightColor;
+	float lightBrightness;
+	float lightRange;	///< Distance (in local coordinates) the light reaches.  Affects point lights and spotlights.
+	float lightCone;	///< Size (in radians) of the light's cone.  Affects spotlights.
+	float lightSharpness;	///< Sharpness of the light's distance/cone falloff.  0 means the light starts fading at distance/angle 0 and ends at 2*lightRange or 2*lightCone.  1 means the falloff is instant.
+
 	// Data for all scene objects
 	VuoText name;
 	VuoTransform transform;
@@ -67,14 +86,22 @@ typedef struct VuoSceneObject
 VuoSceneObject VuoSceneObject_makeEmpty(void);
 VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects);
 VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
+VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
 VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
+VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
 
-VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float fieldOfView, float distanceMin, float distanceMax);
-VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoPoint3d position, VuoPoint3d rotation, float width, float distanceMin, float distanceMax);
+VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax);
+VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeDefaultCamera(void);
 
 VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera);
+
+VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness);
+VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, VuoPoint3d position, float range, float sharpness);
+VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, VuoTransform transform, float cone, float range, float sharpness);
+
+void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float *ambientBrightness, VuoList_VuoSceneObject *pointLights, VuoList_VuoSceneObject *spotLights);
 
 VuoSceneObject VuoSceneObject_valueFromJson(struct json_object * js);
 struct json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value);

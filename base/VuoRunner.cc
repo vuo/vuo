@@ -7,10 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include "VuoNodeClass.hh"
 #include "VuoRunner.hh"
 #include "VuoFileUtilities.hh"
-
-#include "VuoHeap.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
@@ -25,8 +24,12 @@ static void __attribute__((constructor)) thisFunctionIsCalledAtStartup()
 {
 	mainThread = pthread_self();
 
-	// Processes using VuoRunner are also likely to use Vuo Types, which need reference counting support
-	VuoHeap_init();
+	// Processes using VuoRunner are also likely to use Vuo Types, which need reference counting support.
+	// If the code using VuoRunner links to libVuoHeap.dylib, initialize the reference counting system.
+	typedef void (*initType)(void);
+	initType VuoHeap_init = (initType) dlsym(RTLD_SELF, "VuoHeap_init");
+	if (VuoHeap_init)
+		VuoHeap_init();
 }
 static bool isMainThread(void)
 {
@@ -265,7 +268,7 @@ void VuoRunner::start(bool isPaused)
 		}
 
 		char * argv[7];
-		for (int i = 0; i < args.size(); ++i)
+		for (size_t i = 0; i < args.size(); ++i)
 		{
 			argv[i] = (char *) malloc(args[i].length() + 1);
 			strcpy(argv[i], args[i].c_str());
@@ -524,7 +527,10 @@ void VuoRunner::stop(void)
 					  // Only tell the composition to stop if it hasn't already ended on its own.
 					  if (! listenCanceled)
 					  {
-						  vuoControlRequestSend(VuoControlRequestCompositionStop,NULL,0);
+						  int timeoutInSeconds = (isInCurrentProcess() ? -1 : 5);
+						  zmq_msg_t messages[1];
+						  vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
+						  vuoControlRequestSend(VuoControlRequestCompositionStop,messages,1);
 						  vuoControlReplyReceive(VuoControlReplyCompositionStopping);
 					  }
 
@@ -816,6 +822,20 @@ void VuoRunner::firePublishedInputPortEvent(VuoRunner::Port *port)
 }
 
 /**
+ * Sends a control request to the composition telling it to fire an event into all published input ports.
+ * This is a single event that goes to all published input ports simultaneously.
+ *
+ * Upon return, the event will have been fired.
+ *
+ * Assumes the composition has been started, is not paused, and has not been stopped.
+ */
+void VuoRunner::firePublishedInputPortEvent(void)
+{
+	Port port(VuoNodeClass::publishedInputNodeSimultaneousTriggerName, "");
+	firePublishedInputPortEvent(&port);
+}
+
+/**
  * Waits until the first event following a call to firePublishedInputPortEvent() comes out of
  * any published output port.
  *
@@ -949,7 +969,7 @@ vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
 	}
 
 	vector<VuoRunner::Port *> ports;
-	for (int i = 0; i < names.size() && i < types.size(); ++i)
+	for (size_t i = 0; i < names.size() && i < types.size(); ++i)
 	{
 		zmq_msg_t messages[1];
 		vuoInitMessageWithString(&messages[0], names[i].c_str());
@@ -958,7 +978,7 @@ vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
 		vector<string> messageStrings = receiveListOfStrings(ZMQControl);
 		set<string> identifiers( messageStrings.begin(), messageStrings.end() );
 
-		VuoRunner::Port *port = new Port(names[i], new VuoType(types[i]));
+		VuoRunner::Port *port = new Port(names[i], types[i]);
 		port->setConnectedPortIdentifiers(identifiers);
 		ports.push_back(port);
 	}
@@ -1081,8 +1101,8 @@ void VuoRunner::listen(void)
 			{
 				case VuoTelemetryStats:
 				{
-					unsigned long utime = vuoReceiveUnsignedLong(ZMQTelemetry);
-					unsigned long stime = vuoReceiveUnsignedLong(ZMQTelemetry);
+					unsigned long utime = vuoReceiveUnsignedInt64(ZMQTelemetry);
+					unsigned long stime = vuoReceiveUnsignedInt64(ZMQTelemetry);
 					dispatch_sync(delegateQueue, ^{
 									  if (delegate)
 										  delegate->receivedTelemetryStats(utime, stime);
@@ -1359,9 +1379,9 @@ void VuoRunner::setDelegate(VuoRunnerDelegate *delegate)
  * Creates a dummy published port that is not yet connected to any port in a running composition.
  *
  * @param name The published port's name.
- * @param type The published port's data type, or null if the port is event-only.
+ * @param type The published port's data type name, or an empty string if the port is event-only.
  */
-VuoRunner::Port::Port(string name, VuoType *type)
+VuoRunner::Port::Port(string name, string type)
 {
 	this->name = name;
 	this->type = type;
@@ -1376,9 +1396,9 @@ string VuoRunner::Port::getName(void)
 }
 
 /**
- * Returns the published port's type, or null if the port is event-only.
+ * Returns the published port's type name, or an empty string if the port is event-only.
  */
-VuoType * VuoRunner::Port::getType(void)
+string VuoRunner::Port::getType(void)
 {
 	return type;
 }

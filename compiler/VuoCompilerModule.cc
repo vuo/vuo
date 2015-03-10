@@ -26,7 +26,8 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 	this->base = base;
 	this->module = module;
 
-	parse();
+	if (module)
+		parse();
 }
 
 /**

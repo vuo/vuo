@@ -18,6 +18,8 @@ QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.6
 QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH
 QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
 
+QMAKE_CLEAN = $$TARGET
+
 # Rebuild this example when Vuo.framework's headers change.
 DEPENDPATH += $$VUO_FRAMEWORK_PATH/Vuo.framework/Headers
 

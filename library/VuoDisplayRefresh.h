@@ -25,8 +25,8 @@ VuoDisplayRefresh VuoDisplayRefresh_make(void *context);
 void VuoDisplayRefresh_enableTriggers
 (
 		VuoDisplayRefresh dr,
-		void (*requestedFrameTrigger)(VuoFrameRequest),
-		void (*requestedFrameTriggerWithContext)(VuoFrameRequest, void *context)
+		void (*requestedFrameTrigger)(VuoReal),
+		void (*requestedFrameTriggerWithContext)(VuoReal, void *context)
 );
 void VuoDisplayRefresh_disableTriggers(VuoDisplayRefresh dr);
 

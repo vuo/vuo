@@ -11,7 +11,7 @@
 #define TESTCOMPOSITIONEXECUTION_H
 
 #include <fstream>
-#include <QtTest>
+#include <QtTest/QtTest>
 #include <Vuo/Vuo.h>
 
 /**

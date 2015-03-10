@@ -17,6 +17,8 @@ extern "C"
 
 #include "VuoGlContext.h"
 
+#include <stdint.h>
+
 /**
  * Types of OpenGL objects supported by Vuo's GL object pool.
  */
@@ -36,6 +38,12 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 
 void VuoGlTexture_retain(GLuint glTextureName);
 void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName);
+
+typedef void * VuoIoSurface;	///< A Mac OS X IOSurface.
+VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, GLuint *outputTexture);
+uint32_t VuoIoSurfacePool_getId(VuoIoSurface ioSurface);
+void VuoIoSurfacePool_disuse(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, VuoIoSurface ioSurface, GLuint texture);
+void VuoIoSurfacePool_signal(VuoIoSurface ioSurface);
 
 GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source);
 

@@ -8,4 +8,5 @@ When the user resizes the window, the window's aspect ratio is kept the same as 
 
 The window provides a menu option to toggle between windowed and full-screen mode.
 
-When the display is ready for the next frame, this node fires an event with information about the frame (including the time at which the frame will be rendered, and the total number of frames rendered so far).
+   - `showedWindow` — When the window is displayed, fires an event with a reference to the window. It can be sent to user interaction nodes (such as `Receive Mouse Clicks`) to limit their scope to this window. 
+   - `requestedFrame` — When the display is ready for the next frame, fires an event with the time at which the frame will be rendered.

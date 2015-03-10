@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="12F45" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment defaultVersion="1060" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="Document">
+            <connections>
+                <outlet property="imageLabel" destination="dCI-YG-NgK" id="KaY-Ha-Bxc"/>
+                <outlet property="imageTextField" destination="sXb-Ub-rKr" id="4DN-OZ-lHk"/>
+                <outlet property="outputImageLabel" destination="OaE-Id-zel" id="Kfd-ZU-yn6"/>
+                <outlet property="outputImageTextField" destination="OaE-Id-zel" id="LbR-U2-NeO"/>
+                <outlet property="outputImageView" destination="Dgw-jg-Gl7" id="Ydc-I8-zT4"/>
+                <outlet property="runButton" destination="6vn-EI-uM4" id="L0y-MD-duJ"/>
+                <outlet property="setImageButton" destination="oKx-e2-97R" id="GWS-kO-2rF"/>
+                <outlet property="stopButton" destination="zuC-Gx-NdB" id="m5e-Sr-htC"/>
+                <outlet property="timeLabel" destination="ZSp-Ju-UbK" id="HM6-5O-DN9"/>
+                <outlet property="timeSlider" destination="J2k-P7-r8M" id="Dst-U9-Jkt"/>
+                <outlet property="timeTextField" destination="ZSp-Ju-UbK" id="tUX-fZ-wId"/>
+                <outlet property="window" destination="5" id="18"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" wantsToBeColor="NO" visibleAtLaunch="NO" animationBehavior="default" id="5" userLabel="Window">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="133" y="235" width="506" height="507"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
+            <value key="minSize" type="size" width="94" height="86"/>
+            <view key="contentView" id="6">
+                <rect key="frame" x="0.0" y="0.0" width="506" height="507"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField verticalHuggingPriority="750" id="sXb-Ub-rKr">
+                        <rect key="frame" x="67" y="387" width="323" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="n8Y-Cc-wny">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <action selector="imageUpdatedFromUI:" target="-2" id="GHi-da-LoK"/>
+                        </connections>
+                    </textField>
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="Dgw-jg-Gl7">
+                        <rect key="frame" x="105" y="28" width="288" height="216"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="SXK-BJ-FUG"/>
+                    </imageView>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dCI-YG-NgK">
+                        <rect key="frame" x="19" y="390" width="43" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="image" id="2hp-Cq-Jq0">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <outlet property="delegate" destination="-2" id="0wh-7p-2qY"/>
+                        </connections>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ZSp-Ju-UbK">
+                        <rect key="frame" x="30" y="349" width="32" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="time" id="gIC-Bs-pYr">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="OaE-Id-zel">
+                        <rect key="frame" x="202" y="249" width="94" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="outputImage" id="VdM-OY-wLi">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="I1y-12-Uzy">
+                        <rect key="frame" x="187" y="440" width="124" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Published Inputs" id="wJg-xa-iVd">
+                            <font key="font" size="13" name="LucidaGrande-Bold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="KpU-eS-xQF">
+                        <rect key="frame" x="187" y="295" width="144" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Published Outputs" id="q5X-h0-Ai2">
+                            <font key="font" size="13" name="LucidaGrande-Bold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="6vn-EI-uM4">
+                        <rect key="frame" x="21" y="478" width="212" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="roundRect" title="Run" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bkV-cA-jAQ">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="cellTitle"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="startRunningComposition:" target="-2" id="IGf-HT-hRY"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" id="zuC-Gx-NdB">
+                        <rect key="frame" x="266" y="478" width="212" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="roundRect" title="Stop" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="BSP-WC-FpZ">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="cellTitle"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="stopRunningComposition:" target="-2" id="Mp3-JI-KWg"/>
+                        </connections>
+                    </button>
+                    <slider verticalHuggingPriority="750" id="J2k-P7-r8M">
+                        <rect key="frame" x="65" y="347" width="327" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <sliderCell key="cell" continuous="YES" alignment="left" maxValue="6.2800000000000002" doubleValue="5.0498395833333332" tickMarkPosition="above" sliderType="linear" id="J1O-v2-kfu"/>
+                        <connections>
+                            <action selector="timeUpdatedFromUI:" target="-2" id="KlD-nl-sWJ"/>
+                        </connections>
+                    </slider>
+                    <button verticalHuggingPriority="750" id="oKx-e2-97R">
+                        <rect key="frame" x="407" y="388" width="71" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="roundRect" title="Set Image" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RcY-7n-Yf4">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="cellTitle"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="setImageButtonClicked:" target="-2" id="BcL-3u-sCs"/>
+                        </connections>
+                    </button>
+                </subviews>
+            </view>
+            <connections>
+                <outlet property="delegate" destination="-2" id="17"/>
+            </connections>
+        </window>
+        <customObject id="-3" userLabel="Application"/>
+    </objects>
+</document>

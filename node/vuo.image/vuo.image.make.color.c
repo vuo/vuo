@@ -11,9 +11,12 @@
 #include "VuoImageRenderer.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Color Image",
-					 "keywords" : [ "backdrop", "background", "solid", "fill" ],
-					 "version" : "1.0.0",
+					  "title" : "Make Color Image",
+					  "keywords" : [ "backdrop", "background", "solid", "fill", "tone", "chroma" ],
+					  "version" : "1.0.0",
+					  "node": {
+						  "exampleCompositions" : [ "CompareImageGenerators.vuo" ]
+					  }
 				 });
 
 struct nodeInstanceData
@@ -45,9 +48,6 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	if (! image)
-		return;
-
 	VuoShader shader = VuoShader_makeColorShader(color);
 	VuoRetain(shader);
 

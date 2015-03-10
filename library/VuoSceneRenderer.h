@@ -22,7 +22,6 @@ typedef void * VuoSceneRenderer;
 
 VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext);
 void VuoSceneRenderer_switchContext(VuoSceneRenderer sceneRenderer, VuoGlContext newGlContext);
-void VuoSceneRenderer_prepareContext(VuoSceneRenderer sceneRenderer);
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sceneRenderer, unsigned int width, unsigned int height);
 
 void VuoSceneRenderer_draw(VuoSceneRenderer sceneRenderer);

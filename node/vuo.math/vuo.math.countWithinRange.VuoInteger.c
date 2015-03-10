@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Count within Range",
 					 "keywords" : [ "count", "add", "sum", "total", "tally", "integrator", "increment", "decrement", "increase", "decrease",
-						"wrap", "saturate", "loop", "modulus", "clock", "clamp" ],
+						"wrap", "saturate", "limit", "loop", "modulus", "clock", "clamp" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

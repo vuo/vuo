@@ -13,6 +13,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoColor.h"
+#include "VuoList_VuoColor.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -161,4 +162,32 @@ void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoRea
 			*h = (r - g) / d + 4.f;
 		*h /= 6.f;
 	}
+}
+
+/**
+ * Returns the weighted (by alpha) average of @c colors.
+ *
+ * If there are no colors in the list, returns transparent black.
+ */
+VuoColor VuoColor_average(VuoList_VuoColor colors)
+{
+	VuoColor result = VuoColor_makeWithRGBA(0,0,0,0);
+	unsigned long colorCount = VuoListGetCount_VuoColor(colors);
+	for (unsigned long i = 1; i <= colorCount; ++i)
+	{
+		VuoColor color = VuoListGetValueAtIndex_VuoColor(colors, i);
+		result.r += color.r * color.a;
+		result.g += color.g * color.a;
+		result.b += color.b * color.a;
+		result.a += color.a;
+	}
+
+	if (result.a < 0.00001)
+		return VuoColor_makeWithRGBA(0,0,0,0);
+
+	result.r /= result.a;
+	result.g /= result.a;
+	result.b /= result.a;
+	result.a /= colorCount;
+	return result;
 }

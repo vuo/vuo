@@ -12,25 +12,25 @@ digraph G
 Convert2DPointTo3DPoint [type="vuo.type.point2d.point3d.xy" version="1.0.0" label="Convert 2D Point to 3D Point|<refresh>refresh\l|<xy>xy\l|<done>done\r|<xyz>xyz\r" pos="559,594"];
 ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="559,609"];
 FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-5,228" fillcolor="green"];
-GetTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="364,730"];
 Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="362,248" fillcolor="green" _shader=""];
-MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="163,510" fillcolor="yellow" _item2="20.000000"];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="511,259" fillcolor="green"];
+MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="160,510" fillcolor="yellow" _item2="20.000000"];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="509,259" fillcolor="green"];
 MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="155,248" fillcolor="green" _rows="16" _columns="16"];
 MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="460,484" fillcolor="yellow" _scale="{\"x\":0.250000,\"y\":0.250000,\"z\":0.250000}"];
 Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="223,499" fillcolor="yellow"];
-RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="575,248" fillcolor="green" _cameraName=""];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="816,248" fillcolor="green" _modifierKey="\"any\""];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="575,248" fillcolor="green" _cameraName=""];
 
 Convert2DPointTo3DPoint:xyz -> MakeTransform:translation;
 ConvertRealTo3DPoint2:point3d -> MakeTransform:rotation;
 FireonStart:started -> MakeSphereVertices:refresh;
-GetTimestamp2:timestamp -> MakeList:item1;
 Make3DObject:object -> MakeList2:item1;
-MakeList2:list -> RenderScenetoWindow:objects;
+MakeList2:list -> RenderSceneToWindow2:objects;
 MakeList:list -> Multiply:terms;
 MakeSphereVertices:vertices -> Make3DObject:vertices;
 MakeTransform:transform -> Make3DObject:transform;
 Multiply:product -> ConvertRealTo3DPoint2:y;
-RenderScenetoWindow:movedMouseTo -> Convert2DPointTo3DPoint:xy;
-RenderScenetoWindow:requestedFrame -> GetTimestamp2:frameRequest;
+ReceiveMouseMoves:movedTo -> Convert2DPointTo3DPoint:xy;
+RenderSceneToWindow2:requestedFrame -> MakeList:item1;
+RenderSceneToWindow2:showedWindow -> ReceiveMouseMoves:window;
 }

@@ -28,9 +28,12 @@ QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
 QMAKE_CXXFLAGS += -F$$VUO_FRAMEWORK_PATH
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-private-field
 QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.6 \
+	$$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/VuoRuntime.framework/libVuoHeap.dylib \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoGlContext.dylib
 QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH
 QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
+
+QMAKE_CLEAN = -r $${TARGET}.app
 
 # Rebuild this example when Vuo.framework's headers change.
 DEPENDPATH += $$VUO_FRAMEWORK_PATH/Vuo.framework/Headers
