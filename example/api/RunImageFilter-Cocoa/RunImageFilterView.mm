@@ -128,10 +128,13 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	NSImage * ni = [NSImage imageNamed:@"OttoOperatesTheRoller.jpg"];
 	NSImage * niFlipped = [[NSImage alloc] initWithSize:[ni size]];
 	float scale = 1;
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_6
-	// If we're building on 10.7 or later, we need to check whether we're running on a retina display, and scale accordingly if so.
-	scale = [niFlipped recommendedLayerContentsScale:0];
-#endif
+	if ([niFlipped respondsToSelector:@selector(recommendedLayerContentsScale:)])
+	{
+		// If we're on 10.7 or later, we need to check whether we're running on a retina display, and scale accordingly if so.
+		typedef CGFloat (*funcType)(id receiver, SEL selector, CGFloat);
+		funcType recommendedLayerContentsScale = (funcType)[[niFlipped class] instanceMethodForSelector:@selector(recommendedLayerContentsScale:)];
+		scale = recommendedLayerContentsScale(niFlipped, @selector(recommendedLayerContentsScale:), 0);
+	}
 	[niFlipped setFlipped:YES];
 	[niFlipped lockFocus];
 	[ni drawInRect:NSMakeRect(0,0,[ni size].width,[ni size].height) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];

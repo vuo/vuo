@@ -6,9 +6,11 @@ Everyone is encouraged to [contribute](https://vuo.org/contribute) toward improv
 Below is an alphabetical list of the people who have contributed to bringing Vuo to fruition.
 
 [3lab_tv](https://twitter.com/3lab_tv)  
+[architek1](http://vuo.org/user/1603)  
 [bLackburst](http://vuo.org/user/364)  
 [bmellen](http://bradleymellen.com/)  
 [Bonemap](http://bonemap.com)  
+[cremaschi](http://vuo.org/user/599)  
 [cwright](http://perpendiculo.us/)  
 [destroythings](http://www.destroythingsbeautiful.com)  
 [eganpc](http://vuo.org/user/920)  

@@ -169,18 +169,12 @@ VuoWindowOpenGl VuoWindowOpenGl_make
  */
 void VuoWindowOpenGl_enableTriggers
 (
-		VuoWindowOpenGl w,
-		VuoOutputTrigger(movedMouseTo, VuoPoint2d),
-		VuoOutputTrigger(scrolledMouse, VuoPoint2d),
-		VuoOutputTrigger(usedMouseButton, VuoMouseButtonAction)
+		VuoWindowOpenGl w
 )
 {
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  [window enableTriggersWithMovedMouseTo:movedMouseTo
-					  scrolledMouse:scrolledMouse
-					  usedMouseButton:usedMouseButton
-					  ];
+					  [window enableTriggers];
 				  });
 }
 

@@ -427,8 +427,13 @@ void VuoRendererCable::extendedHoverEnterEvent()
  */
 void VuoRendererCable::extendedHoverMoveEvent()
 {
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	setCacheMode(QGraphicsItem::NoCache);
+
 	prepareGeometryChange();
 	isHovered = true;
+
+	setCacheMode(normalCacheMode);
 }
 
 /**
@@ -436,8 +441,13 @@ void VuoRendererCable::extendedHoverMoveEvent()
  */
 void VuoRendererCable::extendedHoverLeaveEvent()
 {
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	setCacheMode(QGraphicsItem::NoCache);
+
 	prepareGeometryChange();
 	isHovered = false;
+
+	setCacheMode(normalCacheMode);
 }
 
 /**

@@ -12,7 +12,7 @@
 /**
  * Wrapper function to adapt VuoVertices functions for generic types.
  */
-VuoVertices VuoMakeVerticesFromPositions_VuoPoint2d(VuoList_VuoPoint2d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod)
+static VuoVertices VuoMakeVerticesFromPositions_VuoPoint2d(VuoList_VuoPoint2d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod)
 {
 	return VuoVertices_makeFrom2dPoints(positions, elementAssemblyMethod);
 }
@@ -20,7 +20,7 @@ VuoVertices VuoMakeVerticesFromPositions_VuoPoint2d(VuoList_VuoPoint2d positions
 /**
  * Wrapper function to adapt VuoVertices functions for generic types.
  */
-VuoVertices VuoMakeVerticesFromPositions_VuoPoint3d(VuoList_VuoPoint3d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod)
+static VuoVertices VuoMakeVerticesFromPositions_VuoPoint3d(VuoList_VuoPoint3d positions, VuoVertices_ElementAssemblyMethod elementAssemblyMethod)
 {
 	return VuoVertices_makeFrom3dPoints(positions, elementAssemblyMethod);
 }

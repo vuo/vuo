@@ -26,13 +26,18 @@ public:
 
 	QRectF boundingRect(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+	void setName(string name);
 	bool canAccommodateInternalPort(VuoRendererPort *internalPort);
 	bool isCompatibleAliasForInternalPort(VuoRendererPort *port);
 	bool canBeMergedWith(VuoPublishedPort *otherExternalPort);
+	void addConnectedPort(VuoPort *port);
+	void removeConnectedPort(VuoPort *port);
 	QPointF getGlobalPos(void) const;
 	void setGlobalPos(QPointF pos);
 
 private:
+	void updateNameRect();
+
 	QPointF globalPos;
 
 };

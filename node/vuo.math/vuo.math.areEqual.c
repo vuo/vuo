@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Are Equal",
-					  "keywords" : [ "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "conditional" ],
+					  "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "conditional" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

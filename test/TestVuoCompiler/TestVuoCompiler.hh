@@ -10,8 +10,8 @@
 #ifndef TESTVUOCOMPILER_H
 #define TESTVUOCOMPILER_H
 
-#include <QString>
-#include <QtTest>
+#include <QtCore/QString>
+#include <QtTest/QtTest>
 
 #include <libgen.h>
 #include <fcntl.h>

@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make HSL Color",
-					 "keywords" : [ "hue", "saturation", "lightness", "alpha", "opacity", "transparent", "channel" ],
+					 "keywords" : [ "hue", "saturation", "lightness", "alpha", "opacity", "transparent", "channel", "tone", "chroma" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false,

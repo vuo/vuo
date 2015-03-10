@@ -19,7 +19,6 @@ node.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - $$VUOCOMPILE_NODE_DEP
 node.output = ${QMAKE_FILE_IN_BASE}.vuonode
 node.commands = $$VUOCOMPILE $$VUOCOMPILE_NODE_FLAGS --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += node
-OTHER_FILES += $$NODE_SOURCES
 
 
 VUOCOMPILE_TYPE_INCLUDEPATH = \
@@ -38,7 +37,6 @@ type.commands = $$VUOCOMPILE $$VUOCOMPILE_TYPE_FLAGS --output ${QMAKE_FILE_OUT} 
 type.variable_out = TYPE_BITCODE
 type.CONFIG = target_predeps
 QMAKE_EXTRA_COMPILERS += type
-OTHER_FILES += $$TYPE_SOURCES
 
 typeObjects.input = TYPE_BITCODE
 typeObjects.output = ${QMAKE_FILE_IN_BASE}.o
@@ -75,7 +73,6 @@ node_library.commands = \
 		echo "Error: Unknown file type: ${QMAKE_FILE_IN}" ; \
 	fi
 QMAKE_EXTRA_COMPILERS += node_library
-OTHER_FILES += $$NODE_LIBRARY_SOURCES
 
 
 VuoNodeSet {
@@ -94,18 +91,23 @@ VuoNodeSet {
 	NODE_LIBRARY_OBJECTS ~= s/\\.cc?$/.bc/g
 	NODE_LIBRARY_OBJECTS ~= s/\\.mm?$/.bc/g
 
-	NODE_SET_ZIP_CONTENTS = $$NODE_OBJECTS $$TYPE_OBJECTS $$NODE_LIBRARY_OBJECTS $$GENERIC_NODE_SOURCES $$HEADERS $$OTHER_FILES
+	NODE_SET_ZIP_CONTENTS = \
+		$$NODE_OBJECTS \
+		$$TYPE_OBJECTS \
+		$$NODE_LIBRARY_OBJECTS \
+		$$GENERIC_NODE_SOURCES \
+		$$HEADERS \
+		$$OTHER_FILES \
+		descriptions/*
+
+	exists($$NODE_SET_DIR/examples/*.vuo) { NODE_SET_ZIP_CONTENTS += examples/*.vuo }
+	exists($$NODE_SET_DIR/examples/*.png) { NODE_SET_ZIP_CONTENTS += examples/*.png }
+	exists($$NODE_SET_DIR/examples/*.jpg) { NODE_SET_ZIP_CONTENTS += examples/*.jpg }
+	exists($$NODE_SET_DIR/examples/*.mov) { NODE_SET_ZIP_CONTENTS += examples/*.mov }
 
 	createNodeSetZip.commands = \
 		( [ -f $$NODE_SET_ZIP ] && rm $$NODE_SET_ZIP ) ; \
-		zip --quiet $$NODE_SET_ZIP $$NODE_SET_ZIP_CONTENTS && \
-		( ( [ -d $$NODE_SET_DIR/examples ] && zip --quiet -r $$NODE_SET_ZIP examples \
-			--include *.vuo \
-			--include *.png \
-			--include *.jpg \
-			--include *.mov \
-			) || true ) && \
-		( ( [ -d $$NODE_SET_DIR/descriptions ] && zip --quiet -r $$NODE_SET_ZIP descriptions) || true )
+		zip --quiet $$NODE_SET_ZIP $$NODE_SET_ZIP_CONTENTS
 	createNodeSetZip.depends = $$NODE_SET_ZIP_CONTENTS
 	createNodeSetZip.target = $$NODE_SET_ZIP
 	POST_TARGETDEPS += $$NODE_SET_ZIP
@@ -127,3 +129,9 @@ INCLUDEPATH += \
 	$$ROOT/runtime \
 	$$ROOT/type \
 	$$ROOT/type/list
+
+# Enable Qt Creator to see these other source files.
+OTHER_FILES += \
+	$$NODE_SOURCES \
+	$$TYPE_SOURCES \
+	$$NODE_LIBRARY_SOURCES

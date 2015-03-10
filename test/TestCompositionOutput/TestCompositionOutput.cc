@@ -154,18 +154,23 @@ private:
 		for (int i = 0; i < inputPorts.size(); ++i)
 		{
 			VuoPort *port = inputPorts.at(i);
+			string portName = port->getClass()->getName();
 			set<VuoPort *> connectedPorts;
 			connectedPorts.insert(port);
-			VuoPublishedPort *publishedPort = new VuoPublishedPort(port->getClass()->getName(), NULL, false, connectedPorts);
+			VuoPublishedPort *publishedPort = new VuoPublishedPort(portName, NULL, false, connectedPorts);
 			baseComposition.addPublishedInputPort(publishedPort, i);
 		}
 		for (int i = 0; i < outputPorts.size(); ++i)
 		{
 			VuoPort *port = outputPorts.at(i);
+			string portName = port->getClass()->getName();
+			if (portName == "done")
+				continue;
+
 			set<VuoPort *> connectedPorts;
 			connectedPorts.insert(port);
-			VuoPublishedPort *publishedPort = new VuoPublishedPort(port->getClass()->getName(), NULL, true, connectedPorts);
-			baseComposition.addPublishedOutputPort(publishedPort, i);
+			VuoPublishedPort *publishedPort = new VuoPublishedPort(portName, NULL, true, connectedPorts);
+			baseComposition.addPublishedOutputPort(publishedPort, i-1);
 		}
 
 		return composition.getGraphvizDeclaration();
@@ -218,8 +223,8 @@ private slots:
 
 		QList<QString> nodeClassNames;
 		nodeClassNames.append("vuo.console.window");
-		nodeClassNames.append("vuo.image.filter.ripple");
-		nodeClassNames.append("vuo.image.filter.twirl");
+		nodeClassNames.append("vuo.image.ripple");
+		nodeClassNames.append("vuo.image.twirl");
 		nodeClassNames.append("vuo.image.get");
 		nodeClassNames.append("vuo.image.render.window");
 		nodeClassNames.append("vuo.noise.gradient.VuoReal");
@@ -229,7 +234,13 @@ private slots:
 		nodeClassNames.append("vuo.midi.listDevices");
 		nodeClassNames.append("vuo.midi.receive");
 		nodeClassNames.append("vuo.midi.send");
-		nodeClassNames.append("vuo.mouse");
+		nodeClassNames.append("vuo.mouse.button");
+		nodeClassNames.append("vuo.mouse.click");
+		nodeClassNames.append("vuo.mouse.delta");
+		nodeClassNames.append("vuo.mouse.drag");
+		nodeClassNames.append("vuo.mouse.move");
+		nodeClassNames.append("vuo.mouse.scroll");
+		nodeClassNames.append("vuo.mouse.status");
 		nodeClassNames.append("vuo.scene.get");
 		nodeClassNames.append("vuo.scene.make");
 		nodeClassNames.append("vuo.scene.make.cube");

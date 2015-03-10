@@ -74,5 +74,16 @@ json_object * VuoGradientNoise_jsonFromValue(const VuoGradientNoise value)
  */
 char * VuoGradientNoise_summaryFromValue(const VuoGradientNoise value)
 {
-	return VuoGradientNoise_stringFromValue(value);
+	char * valueAsString = "";
+
+	switch (value) {
+		case VuoGradientNoise_Perlin:
+			valueAsString = "Perlin";
+			break;
+		case VuoGradientNoise_Simplex:
+			valueAsString = "Simplex";
+			break;
+	}
+
+	return strdup(valueAsString);
 }

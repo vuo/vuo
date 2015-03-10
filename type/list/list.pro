@@ -21,7 +21,6 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoCurve:0 \
 		VuoCurveDomain:0 \
 		VuoFont:2 \
-		VuoFrameRequest:0 \
 		VuoGradientNoise:0 \
 		VuoImage:1 \
 		VuoInteger:0 \
@@ -34,7 +33,8 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoMidiController:0 \
 		VuoMidiDevice:2 \
 		VuoMidiNote:0 \
-		VuoMouseButtonAction:0 \
+		VuoModifierKey:0 \
+		VuoMouseButton:0 \
 		VuoNoise:0 \
 		VuoOscMessage:2 \
 		VuoPoint2d:0 \
@@ -49,6 +49,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoTransform2d:0 \
 		VuoVertices:2 \
 		VuoWave:0 \
+		VuoWindowReference:0 \
 		VuoWrapMode:0 \
 	)
 
@@ -59,6 +60,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.leap \
 	$$ROOT/node/vuo.math \
 	$$ROOT/node/vuo.midi \
+	$$ROOT/node/vuo.mouse \
 	$$ROOT/node/vuo.movie \
 	$$ROOT/node/vuo.noise \
 	$$ROOT/node/vuo.osc \
@@ -89,4 +91,4 @@ INCLUDEPATH += \
 	$$ROOT/type \
 	$$ROOT/runtime
 
-QMAKE_CLEAN += VuoList_*.cc VuoList_*.h *.bc
+QMAKE_CLEAN += VuoList_*.cc VuoList_*.h

@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Are Equal",
-					 "keywords" : [ "same", "identical", "equivalent", "match", "compare", "strcmp", "string" ],
+					 "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "strcmp", "string" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

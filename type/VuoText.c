@@ -167,6 +167,23 @@ size_t VuoText_length(const VuoText string)
 
 /**
  * @ingroup VuoText
+ * Returns the index (starting at 1) of the last instance of @c character in @c string.
+ * Returns 0 if the character is not found.
+ */
+size_t VuoText_getIndexOfLastCharacter(const VuoText string, const VuoText character)
+{
+	/// @todo handle unicode
+
+	size_t l = strlen(string);
+	for (int i = l-1; i>=0; --i)
+		if (string[i] == character[0])
+			return i+1;
+
+	return 0;
+}
+
+/**
+ * @ingroup VuoText
  * Returns the substring of @c string starting at index @c startIndex and spanning @c length UTF-8 characters.
  *
  * @c startIndex is indexed from 1, not 0.

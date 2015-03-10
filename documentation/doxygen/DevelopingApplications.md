@@ -20,31 +20,35 @@ To use Vuo, your application needs to link to Vuo.framework, which comes with th
 See the example Qt projects for using Vuo inside an application. 
 
 
-### Xcode 4
+### Xcode 4 / 5
 
   - Create a new project:
     - Choose template OS X > Application > Cocoa Application. 
   - Modify the target's Build Phases: 
     - Link Binary With Libraries
       - Use the + button and "Add Other..." to add Vuo.framework. 
-    - Add Build Phase > Add Copy Files
+    - Editor > Add Build Phase > Add Copy Files
       - Destination: Frameworks
       - Uncheck "Copy only when installing"
       - Drag Vuo.framework from the Project Navigator to this Build Phase. (The + button doesn't work.) 
   - Modify the target's Build Settings: 
-    - C++ Language Dialect: C++98
-    - C++ Standard Library: libstdc++
-    - Runpath Search Paths: `@loader_path/../Frameworks`
+    - All > Apple LLVM 4.2 (5.0 for Xcode 5) - Language - C++ > C++ Language Dialect: C++98
+    - All > Apple LLVM 4.2 (5.0 for Xcode 5) - Language - C++ > C++ Standard Library: libstdc++
+    - All > Linking > Runpath Search Paths: `@loader_path/../Frameworks`
   - Modify &lt;your project&gt;-Prefix.pch: 
-    - Just before @code #import <Cocoa/Cocoa.h> @endcode add @code #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0 @endcode (This is a workaround for a bug in one of Vuo's dependencies that prevents Cocoa projects from compiling.)
+    - Just before @code{cpp} #import <Cocoa/Cocoa.h> @endcode add @code{cpp}#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0 @endcode (This is a workaround for a bug in one of Vuo's dependencies that prevents Cocoa projects from compiling.)
   - Set up one or more of your project's source files to be able to call Vuo API functions: 
     - Name the source file with extension ".mm" (for Objective-C++) instead of ".m". 
-    - Add @code #include <Vuo/Vuo.h> @endcode
+    - Add @code{cpp} #include <Vuo/Vuo.h> @endcode
 
+### Extra libraries
 
-### Xcode 5
+Vuo.framework includes the basic functions you need to build and run a Vuo composition. For additional functionality, you can optionally link in these dynamic libraries: 
 
-@todo (https://b33p.net/kosada/node/6211)
+   - For @ref ManagingMemory "memory management" when working with port types, use the functions declared in VuoHeap.h and defined in `Vuo.framework/Frameworks/VuoRuntime.framework/libVuoHeap.dylib`. 
+   - For working with OpenGL contexts, use the functions declared in VuoGlContext.h and defined in `Vuo.framework/Modules/libVuoGlContext.dylib`. 
+
+See the RunImageFilter example projects (included with the Vuo SDK) for examples of using these libraries. 
 
 
 ## Compiling and linking a Vuo composition

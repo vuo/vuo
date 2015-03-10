@@ -9,35 +9,33 @@
 
 digraph G
 {
+CheckMouseStatus [type="vuo.mouse.status" version="1.0.0" label="Check Mouse Status|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<position>position\r|<isPressed>isPressed\r" pos="-98,327" fillcolor="cyan" _window="" _button="\"left\"" _modifierKey="\"any\""];
 ConvertRealto3DPoint [type="vuo.type.real.point3d.x" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<done>done\r|<point3d>point3d\r" pos="885,440"];
-DiscardDataFromEvent [type="vuo.type.discardData.VuoFrameRequest" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="44,417"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="44,417"];
 Divide [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="278,354" fillcolor="cyan" _b="100.000000"];
 FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="234,41" fillcolor="orange"];
 Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="88,327" fillcolor="cyan"];
-GetMouse [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="-55,327" fillcolor="cyan"];
-GetTimestamp [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="651,311"];
 Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make Scene Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="792,64" fillcolor="orange" _shader=""];
 Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="526,360" fillcolor="orange" _x="0.250000" _y="0.250000" _z="0.250000"];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="964,75"];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="962,75"];
 MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="416,61" fillcolor="orange" _rows="16" _columns="16"];
 MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="786,330" fillcolor="orange" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
 MakeWave [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="552,201" fillcolor="green" _wave="\"sine\""];
-RenderScenetoWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="1028,64" _cameraName=""];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1028,64" _cameraName=""];
 
+CheckMouseStatus:position -> Get2DPointValues:point;
 ConvertRealto3DPoint:point3d -> MakeTransform:translation;
-DiscardDataFromEvent:event -> GetMouse:refresh;
+DiscardDataFromEvent:event -> CheckMouseStatus:refresh;
 Divide:quotient -> MakeWave:period;
 FireonStart:started -> Make3DPoint2:refresh;
 FireonStart:started -> MakeSphereVertices:refresh;
 Get2DPointValues:y -> Divide:a;
-GetMouse:position -> Get2DPointValues:point;
-GetTimestamp:timestamp -> MakeWave:time;
 Make3DObject:object -> MakeList2:item1;
 Make3DPoint2:point -> MakeTransform:scale;
-MakeList2:list -> RenderScenetoWindow:objects;
+MakeList2:list -> RenderSceneToWindow2:objects;
 MakeSphereVertices:vertices -> Make3DObject:vertices;
 MakeTransform:transform -> Make3DObject:transform;
 MakeWave:value -> ConvertRealto3DPoint:x;
-RenderScenetoWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
-RenderScenetoWindow:requestedFrame -> GetTimestamp:frameRequest;
+RenderSceneToWindow2:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+RenderSceneToWindow2:requestedFrame -> MakeWave:time;
 }

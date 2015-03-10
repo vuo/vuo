@@ -92,7 +92,11 @@ VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned int glInter
  * @ingroup VuoImage
  * Returns a new @ref VuoImage structure representing the specified @c glTextureName.
  *
- * The texture must be of type @c GL_TEXTURE_2D.
+ * The texture must:
+ *
+ *    - be of type @c GL_TEXTURE_2D.
+ *    - use wrap mode GL_CLAMP_TO_BORDER on the S and T axes
+ *    - use minifying and magnification filter GL_LINEAR
  *
  * The @ref VuoImage takes ownership of @c glTextureName,
  * and will call @c glDeleteTextures() on it when it's no longer needed.
@@ -113,7 +117,11 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat
  * @ingroup VuoImage
  * Returns a new @ref VuoImage structure representing the specified @c glTextureName.
  *
- * The texture must be of type @c GL_TEXTURE_2D.
+ * The texture must:
+ *
+ *    - be of type @c GL_TEXTURE_2D
+ *    - use wrap mode GL_CLAMP_TO_BORDER on the S and T axes
+ *    - use minifying and magnification filter GL_LINEAR
  *
  * When the VuoImage is no longer needed, @c freeCallback is called.
  * The @c freeCallback may then activate a GL context and delete the texture, or send it back to a texture pool.
@@ -188,6 +196,31 @@ static void VuoImage_deleteImage(VuoImage image)
 }
 
 /**
+ * Makes a solid-color image.
+ */
+VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh)
+{
+	VuoGlContext glContext = VuoGlContext_use();
+	VuoImageRenderer imageRenderer = VuoImageRenderer_make(glContext);
+	VuoRetain(imageRenderer);
+	VuoShader shader = VuoShader_makeColorShader(color);
+	VuoRetain(shader);
+	VuoImage image = VuoImageRenderer_draw(imageRenderer, shader, pixelsWide, pixelsHigh);
+	VuoRelease(shader);
+	VuoRelease(imageRenderer);
+	VuoGlContext_disuse(glContext);
+	return image;
+}
+
+/**
+ * Returns a rectangle (in Vuo Coordinates) at the origin, with width 2 and height matching the image's aspect ratio.
+ */
+VuoRectangle VuoImage_getRectangle(const VuoImage image)
+{
+	return VuoRectangle_make(0, 0, 2, 2. * image->pixelsHigh / image->pixelsWide);
+}
+
+/**
  * @ingroup VuoImage
  * Decodes the JSON object @c js to create a new value.
  *
@@ -254,6 +287,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 //			VLog("Converting IOSurfaceID %d",surfID);
 
 			// Read the IOSurface into a GL_TEXTURE_RECTANGLE_ARB (the only texture type IOSurface supports).
+			IOSurfaceRef surf;
 			GLuint textureRect;
 			VuoGlContext glContext = VuoGlContext_use();
 			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
@@ -269,7 +303,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 					glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 //					glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-					IOSurfaceRef surf = IOSurfaceLookup(surfID);
+					surf = IOSurfaceLookup(surfID);
 					if (!surf)
 					{
 						VLog("IOSurfaceLookup(%d) failed.", surfID);
@@ -277,8 +311,6 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 					}
 					glInternalFormat = GL_RGB;
 					CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, glInternalFormat, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
-					// IOSurfaceDecrementUseCount(surf); ?
-					CFRelease(surf);
 					if(err != kCGLNoError)
 					{
 						fprintf(stderr,"VuoImageRenderer_draw_internal() Error in CGLTexImageIOSurface2D(): %s\n", CGLErrorString(err));
@@ -293,6 +325,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 			VuoImage image2d;
 			{
 				VuoImage imageRect = VuoImage_makeClientOwned(textureRect, pixelsWide, pixelsHigh, VuoImage_deleteImage, NULL);
+				VuoRetain(imageRect);
 				imageRect->glTextureTarget = GL_TEXTURE_RECTANGLE_ARB;
 
 				const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
@@ -308,6 +341,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 				);
 
 				VuoShader shader = VuoShader_make("convert IOSurface GL_TEXTURE_RECTANGLE_ARB to GL_TEXTURE_2D", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+				VuoRetain(shader);
 				VuoShader_addTexture(shader, cgl_ctx, "texture", imageRect);
 				VuoShader_setUniformPoint2d(shader, cgl_ctx, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
 
@@ -316,8 +350,12 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh);
 				VuoRelease(ir);
 
-				VuoImage_free(imageRect); // deletes textureRect
+				VuoRelease(shader);
+				VuoRelease(imageRect);
 			}
+
+			VuoIoSurfacePool_signal(surf);
+			CFRelease(surf);
 
 			json_object_put(js);
 			VuoGlContext_disuse(glContext);

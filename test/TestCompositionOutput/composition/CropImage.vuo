@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CropImage [type="vuo.image.crop" version="1.0.0" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<done>done\r|<croppedImage>croppedImage\r" pos="251,37"];
+GetImageSize [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<done>done\r|<width>width\r|<height>height\r" pos="411,37"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<done>done\r|<image>image\r" pos="79,-12" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="640" _height="480"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<center>center\r|<width>width\r|<go>go\r|<height>height\r" _center="{\"x\":0.000000,\"y\":0.000000}" _width="1" _height="1"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<height>height\l|<width>width\l"];
+
+CropImage:croppedImage -> GetImageSize:image;
+MakeColorImage:image -> CropImage:image;
+PublishedInputs:center -> CropImage:center;
+PublishedInputs:width -> CropImage:width;
+PublishedInputs:go -> MakeColorImage:refresh;
+PublishedInputs:height -> CropImage:height;
+GetImageSize:height -> PublishedOutputs:height;
+GetImageSize:width -> PublishedOutputs:width;
+}

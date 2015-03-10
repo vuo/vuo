@@ -1,0 +1,44 @@
+/**
+ * @file
+ * Applies a brightness mask to a movie.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Convert2DPointToReal3 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<x>x\r" pos="1084,1183"];
+Convert2DPointToReal4 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<y>y\r" pos="1084,1213"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="375,612" fillcolor="yellow"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1156,950" fillcolor="green" _center="{\"x\":0.000000,\"y\":0.100000}" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="904,658" _center="{\"x\":0.000000,\"y\":-0.550000}" _alpha="1.000000"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="738,485" fillcolor="green" _item1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _item2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeList3 [type="vuo.list.make.3.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="1068,728" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<done>done\r|<layer>layer\r" pos="837,474" fillcolor="green" _gradientCenter="{\"x\":0.000000,\"y\":0.700000}" _gradientRadius="2.000000" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="744,633" _text="\"The \\\"Mask Image by Brightness\\\" node outputs pixels brighter than the threshold value.\\nOther pixels are made transparent.\\n \\nMove the mouse horizontally to control the threshold.\\nMove the mouse vertically to control the sharpness.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":16.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"center\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MaskImageByBrightness [type="vuo.image.color.mask.brightness" version="1.0.0" label="Mask Image by Brightness|<refresh>refresh\l|<image>image\l|<threshold>threshold\l|<thresholdType>thresholdType\l|<sharpness>sharpness\l|<done>done\r|<maskedImage>maskedImage\r" pos="905,950" fillcolor="violet" _thresholdType="\"luminance\""];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="573,724" fillcolor="yellow" _movieURL="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\""];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="442,965" fillcolor="yellow" _modifierKey="\"any\""];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1131,717" fillcolor="green"];
+SubtractPoints4 [type="vuo.point.subtract.VuoPoint2d" version="1.0.0" label="Subtract Points|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="679,965" _b="{\"x\":-0.500000,\"y\":-0.500000}"];
+
+Convert2DPointToReal3:x -> MaskImageByBrightness:threshold;
+Convert2DPointToReal4:y -> MaskImageByBrightness:sharpness;
+FireOnStart:started -> MakeList2:item1;
+FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> PlayMovie:play;
+MakeLayer3:layer -> MakeList3:item2;
+MakeLayer:layer -> MakeList3:item3;
+MakeList2:list -> MakeRadialGradientLayer:colors;
+MakeList3:list -> RenderLayersToWindow2:layers;
+MakeRadialGradientLayer:layer -> MakeList3:item1;
+MakeTextImage3:image -> MakeLayer3:image;
+MaskImageByBrightness:maskedImage -> MakeLayer:image;
+PlayMovie:decodedImage -> MaskImageByBrightness:image;
+ReceiveMouseMoves:movedTo -> SubtractPoints4:a;
+RenderLayersToWindow2:showedWindow -> ReceiveMouseMoves:window;
+SubtractPoints4:difference -> Convert2DPointToReal3:xy;
+SubtractPoints4:difference -> Convert2DPointToReal4:xy;
+}

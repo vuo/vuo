@@ -78,11 +78,30 @@ public:
 
 	float projectionMatrix[16]; ///< Column-major 4x4 matrix
 	VuoText cameraName;
+	VuoSceneObject camera;
+
+	VuoColor ambientColor;
+	float ambientBrightness;
+	VuoList_VuoSceneObject pointLights;
+	VuoList_VuoSceneObject spotLights;
 
 	VuoGlContext glContext;
 };
 
 void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
+
+static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
+{
+	glEnable(GL_MULTISAMPLE);
+
+	glEnable(GL_CULL_FACE);
+
+	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_BLEND);
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
 
 /**
  * Creates a reference-counted object for rendering a scenegraph.
@@ -100,29 +119,9 @@ VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext)
 	sceneRenderer->cameraName = NULL;
 	sceneRenderer->glContext = glContext;
 
+	VuoSceneRenderer_prepareContext((CGLContextObj)glContext);
+
 	return (VuoSceneRenderer)sceneRenderer;
-}
-
-/**
- * Sets up OpenGL state on the current GL Context.
- *
- * @threadAnyGL
- */
-void VuoSceneRenderer_prepareContext(VuoSceneRenderer sr)
-{
-	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
-
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
-
-	glEnable(GL_MULTISAMPLE);
-
-	glEnable(GL_CULL_FACE);
-
-	glEnable(GL_DEPTH_TEST);
-
-	glEnable(GL_BLEND);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer);
@@ -164,8 +163,13 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 			camera = VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, sceneRenderer->cameraName, &foundCamera);
 
 			if (!foundCamera)
+			{
+				VuoSceneObject_retain(camera);
+				VuoSceneObject_release(camera);
+
 				// Search again, and this time just pick the first camera we find.
 				camera = VuoSceneObject_findCamera(sceneRenderer->rootSceneObject, "", &foundCamera);
+			}
 		}
 		else
 			camera = VuoSceneObject_makeDefaultCamera();
@@ -235,27 +239,29 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 	// VuoTransform_getMatrix() performs the transformation in this order: rotate, scale, translate.
 	// So we need to do this in multiple steps, in order to apply the translation first.
 
-	float rotationMatrix[4][4];
-	VuoTransform_getMatrix(VuoTransform_makeEuler(
-							   VuoPoint3d_make(0,0,0),
-							   VuoPoint3d_multiply(camera.transform.rotationSource.euler,-1),
-							   VuoPoint3d_make(1,1,1)),
-						   (float *)rotationMatrix);
+	float rotationMatrix[16];
+	VuoTransform_getMatrix(camera.transform, (float *)rotationMatrix);
+	// Remove the translation.
+	rotationMatrix[12] = rotationMatrix[13] = rotationMatrix[14] = 0;
 
-	float outputMatrix[4][4];
+	float outputMatrix[16];
 	VuoTransform_multiplyMatrices4x4((float *)rotationMatrix, sceneRenderer->projectionMatrix, (float *)&outputMatrix);
 
-	float translationMatrix[4][4];
+	float translationMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeEuler(
 							   VuoPoint3d_multiply(camera.transform.translation,-1),
 							   VuoPoint3d_make(0,0,0),
 							   VuoPoint3d_make(1,1,1)),
 						   (float *)translationMatrix);
 
-	float outputMatrix2[4][4];
+	float outputMatrix2[16];
 	VuoTransform_multiplyMatrices4x4((float *)translationMatrix, (float *)outputMatrix, (float *)&outputMatrix2);
 
 	VuoTransform_copyMatrix4x4((float *)outputMatrix2, sceneRenderer->projectionMatrix);
+
+	VuoSceneObject_release(sceneRenderer->camera);
+	sceneRenderer->camera = camera;
+	VuoSceneObject_retain(sceneRenderer->camera);
 }
 
 /**
@@ -310,6 +316,96 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 		else
 			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, modelviewMatrix);
 
+		GLint cameraPositionUniform = glGetUniformLocation(so.shader->glProgramName, "cameraPosition");
+		if (cameraPositionUniform)
+			glUniform3f(cameraPositionUniform, sceneRenderer->camera.transform.translation.x, sceneRenderer->camera.transform.translation.y, sceneRenderer->camera.transform.translation.z);
+
+		GLint ambientColorUniform = glGetUniformLocation(so.shader->glProgramName, "ambientColor");
+		if (ambientColorUniform != -1)
+			glUniform4f(ambientColorUniform, sceneRenderer->ambientColor.r, sceneRenderer->ambientColor.g, sceneRenderer->ambientColor.b, sceneRenderer->ambientColor.a);
+		GLint ambientBrightnessUniform = glGetUniformLocation(so.shader->glProgramName, "ambientBrightness");
+		if (ambientBrightnessUniform != -1)
+			glUniform1f(ambientBrightnessUniform, sceneRenderer->ambientBrightness);
+
+		int pointLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->pointLights);
+		GLint pointLightCountUniform = glGetUniformLocation(so.shader->glProgramName, "pointLightCount");
+		if (pointLightCountUniform != -1)
+		{
+			glUniform1i(pointLightCountUniform, pointLightCount);
+
+			for (int i=1; i<=pointLightCount; ++i)
+			{
+				VuoSceneObject pointLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->pointLights, i);
+
+				int uniformNameMaxLength = strlen("pointLights[15].brightness")+1;
+				char *uniformName = (char *)malloc(uniformNameMaxLength);
+
+				snprintf(uniformName, uniformNameMaxLength, "pointLights[%d].color", i-1);
+				GLint colorUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform4f(colorUniform, pointLight.lightColor.r, pointLight.lightColor.g, pointLight.lightColor.b, pointLight.lightColor.a);
+
+				snprintf(uniformName, uniformNameMaxLength, "pointLights[%d].brightness", i-1);
+				GLint brightnessUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(brightnessUniform, pointLight.lightBrightness);
+
+				snprintf(uniformName, uniformNameMaxLength, "pointLights[%d].position", i-1);
+				GLint positionUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform3f(positionUniform, pointLight.transform.translation.x, pointLight.transform.translation.y, pointLight.transform.translation.z);
+
+				snprintf(uniformName, uniformNameMaxLength, "pointLights[%d].range", i-1);
+				GLint rangeUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(rangeUniform, pointLight.lightRange);
+
+				snprintf(uniformName, uniformNameMaxLength, "pointLights[%d].sharpness", i-1);
+				GLint sharpnessUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(sharpnessUniform, pointLight.lightSharpness);
+			}
+		}
+
+		int spotLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->spotLights);
+		GLint spotLightCountUniform = glGetUniformLocation(so.shader->glProgramName, "spotLightCount");
+		if (spotLightCountUniform != -1)
+		{
+			glUniform1i(spotLightCountUniform, spotLightCount);
+
+			for (int i=1; i<=spotLightCount; ++i)
+			{
+				VuoSceneObject spotLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->spotLights, i);
+
+				int uniformNameMaxLength = strlen("spotLights[15].brightness")+1;
+				char *uniformName = (char *)malloc(uniformNameMaxLength);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].color", i-1);
+				GLint colorUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform4f(colorUniform, spotLight.lightColor.r, spotLight.lightColor.g, spotLight.lightColor.b, spotLight.lightColor.a);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].brightness", i-1);
+				GLint brightnessUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(brightnessUniform, spotLight.lightBrightness);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].position", i-1);
+				GLint positionUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform3f(positionUniform, spotLight.transform.translation.x, spotLight.transform.translation.y, spotLight.transform.translation.z);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].direction", i-1);
+				GLint directionUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				VuoPoint3d direction = VuoTransform_getDirection(spotLight.transform);
+				glUniform3f(directionUniform, direction.x, direction.y, direction.z);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].cone", i-1);
+				GLint coneUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(coneUniform, spotLight.lightCone);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].range", i-1);
+				GLint rangeUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(rangeUniform, spotLight.lightRange);
+
+				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].sharpness", i-1);
+				GLint sharpnessUniform = glGetUniformLocation(so.shader->glProgramName, uniformName);
+				glUniform1f(sharpnessUniform, spotLight.lightSharpness);
+			}
+		}
+
 		VuoShader_activateTextures(so.shader, cgl_ctx);
 
 		unsigned int i = 1;
@@ -358,9 +454,9 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
 	float compositeModelviewMatrix[16];
 	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
 	VuoSceneRenderer_drawSceneObject(so, soi, projectionMatrix, compositeModelviewMatrix, sceneRenderer);
-//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 0, .08f);	// Normals
-//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 1, .08f);	// Tangents
-//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, glContext, 2, .08f);	// Bitangents
+//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, sceneRenderer->glContext, 0, .08f);	// Normals
+//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, sceneRenderer->glContext, 1, .08f);	// Tangents
+//	VuoSceneRenderer_drawElement(so, projectionMatrix, compositeModelviewMatrix, sceneRenderer->glContext, 2, .08f);	// Bitangents
 
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
@@ -369,6 +465,8 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
 		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix, sceneRenderer);
 	}
 }
+
+void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer);
 
 /**
  * Renders the scene.
@@ -394,6 +492,8 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
 	VuoSceneRenderer_drawSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->projectionMatrix, localModelviewMatrix, sceneRenderer);
+
+//	VuoSceneRenderer_drawLights(sceneRenderer);
 
 	// Make sure the render commands actually execute before we release the semaphore,
 	// since the textures we're using might immediately be recycled (if the rootSceneObject is released).
@@ -458,6 +558,132 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
 	glEnd();
 
 	glLoadIdentity();
+}
+
+static void drawCircle(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal)
+{
+	glPushMatrix();
+	VuoTransform t = VuoTransform_makeQuaternion(
+				center,
+				VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), normal),
+				VuoPoint3d_make(1,1,1));
+	float m[16];
+	VuoTransform_getMatrix(t, m);
+	glLoadMatrixf(m);
+
+	glBegin(GL_LINE_LOOP);
+	const int segments = 32;
+	for (int i=0; i<segments; ++i)
+		glVertex3f(
+					0,
+					cos(2.*M_PI*i/segments)*radius,
+					sin(2.*M_PI*i/segments)*radius);
+	glEnd();
+
+	glPopMatrix();
+}
+
+static void drawCone(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal, float height)
+{
+	glPushMatrix();
+	VuoTransform t = VuoTransform_makeQuaternion(
+				center,
+				VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), normal),
+				VuoPoint3d_make(1,1,1));
+	float m[16];
+	VuoTransform_getMatrix(t, m);
+	glLoadMatrixf(m);
+
+	glBegin(GL_LINE_LOOP);
+	const int segments = 32;
+	for (int i=0; i<segments; ++i)
+		glVertex3f(
+					0,
+					cos(2.*M_PI*i/segments)*radius,
+					sin(2.*M_PI*i/segments)*radius);
+	glEnd();
+	glBegin(GL_LINES);
+		glVertex3f(-height, 0, 0);	glVertex3f(0,  radius,       0);
+		glVertex3f(-height, 0, 0);	glVertex3f(0,       0,  radius);
+		glVertex3f(-height, 0, 0);	glVertex3f(0, -radius,       0);
+		glVertex3f(-height, 0, 0);	glVertex3f(0,       0, -radius);
+	glEnd();
+
+	glPopMatrix();
+}
+
+/**
+ * Draws the scene's point and spot lights.
+ */
+void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+
+	glPointSize(20);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf(sceneRenderer->projectionMatrix);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	int pointLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->pointLights);
+	for (int i=1; i<=pointLightCount; ++i)
+	{
+		VuoSceneObject pointLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->pointLights, i);
+		VuoPoint3d position = pointLight.transform.translation;
+		glBegin(GL_POINTS);
+			glVertex3f(position.x, position.y, position.z);
+		glEnd();
+
+		// Draw a pair of concentric sphere outlines illustrating the light's range.
+		{
+			float innerRange = pointLight.lightRange*pointLight.lightSharpness;
+			float outerRange = pointLight.lightRange*(2-pointLight.lightSharpness);
+
+			// XY plane
+			drawCircle(cgl_ctx, position, innerRange, VuoPoint3d_make(0,0,1));
+			drawCircle(cgl_ctx, position, outerRange, VuoPoint3d_make(0,0,1));
+			// XZ plane
+			drawCircle(cgl_ctx, position, innerRange, VuoPoint3d_make(0,1,0));
+			drawCircle(cgl_ctx, position, outerRange, VuoPoint3d_make(0,1,0));
+			// YZ plane
+			drawCircle(cgl_ctx, position, innerRange, VuoPoint3d_make(1,0,0));
+			drawCircle(cgl_ctx, position, outerRange, VuoPoint3d_make(1,0,0));
+		}
+	}
+
+	int spotLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->spotLights);
+	for (int i=1; i<=spotLightCount; ++i)
+	{
+		VuoSceneObject spotLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->spotLights, i);
+		VuoPoint3d position = spotLight.transform.translation;
+		glBegin(GL_POINTS);
+			glVertex3f(position.x, position.y, position.z);
+		glEnd();
+
+		VuoPoint3d direction = VuoTransform_getDirection(spotLight.transform);
+		float innerRange = spotLight.lightRange*spotLight.lightSharpness;
+		float outerRange = spotLight.lightRange*(2-spotLight.lightSharpness);
+
+		// Draw a pair of cones (whose bases are the intersection of a plane and a spherical shell) to illustrate the light's range.
+		{
+			float innerConeAngle = spotLight.lightCone*spotLight.lightSharpness;
+			float outerConeAngle = spotLight.lightCone*(2-spotLight.lightSharpness);
+
+			float innerIntersectionDistance = innerRange*cos(innerConeAngle/2.);
+			float outerIntersectionDistance = outerRange*cos(outerConeAngle/2.);
+
+			float innerIntersectionRadius = innerRange*sin(innerConeAngle/2.);
+			float outerIntersectionRadius = outerRange*sin(outerConeAngle/2.);
+
+			VuoPoint3d innerEndpoint = VuoPoint3d_add(position, VuoPoint3d_multiply(direction, innerIntersectionDistance));
+			VuoPoint3d outerEndpoint = VuoPoint3d_add(position, VuoPoint3d_multiply(direction, outerIntersectionDistance));
+
+			drawCone(cgl_ctx, innerEndpoint, innerIntersectionRadius, direction, innerIntersectionDistance);
+			drawCone(cgl_ctx, outerEndpoint, outerIntersectionRadius, direction, outerIntersectionDistance);
+		}
+	}
 }
 
 /**
@@ -738,11 +964,17 @@ void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoSceneObject roo
 	{
 		VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
 		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject);
+		VuoRelease(sceneRenderer->pointLights);
+		VuoRelease(sceneRenderer->spotLights);
 	}
 
 	// Upload the new scenegraph.
 	sceneRenderer->rootSceneObject = rootSceneObject;
 	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+
+	VuoSceneObject_findLights(sceneRenderer->rootSceneObject, &sceneRenderer->ambientColor, &sceneRenderer->ambientBrightness, &sceneRenderer->pointLights, &sceneRenderer->spotLights);
+	VuoRetain(sceneRenderer->pointLights);
+	VuoRetain(sceneRenderer->spotLights);
 
 	sceneRenderer->scenegraphValid = true;
 	sceneRenderer->needToRegenerateProjectionMatrix = true;
@@ -770,8 +1002,10 @@ void VuoSceneRenderer_switchContext(VuoSceneRenderer sr, VuoGlContext newGlConte
 		glFlushRenderAPPLE();
 	}
 
-	// Upload the scenegraph on the new context.
 	sceneRenderer->glContext = newGlContext;
+	VuoSceneRenderer_prepareContext((CGLContextObj)newGlContext);
+
+	// Upload the scenegraph on the new context.
 	if (sceneRenderer->scenegraphValid)
 		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
 

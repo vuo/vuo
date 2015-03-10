@@ -61,11 +61,12 @@ public:
 	static QPainterPath getPortConstantPath(QRectF innerPortRect, QString text, QPainterPath *outsetPath, bool isTypecast=false);
 	static QRectF getPortRect(void);
 	VuoRendererMakeListNode * getAttachedInputDrawer(void) const;
-	QRectF getPortConstantTextRect(void) const;
+	virtual QRectF getPortConstantTextRect(void) const;
 	VuoType * getDataType(void) const;
 	bool isConstant(void) const;
 	string getConstantAsString(void) const;
 	string getConstantAsStringToRender(void) const;
+	void setConstant(string constantValue);
 	VuoRendererPublishedPort * getPublishedPort() const;
 
 	VuoRendererNode * getUnderlyingParentNode(void) const;
@@ -78,14 +79,17 @@ public:
 	void resetTimeLastEventFired();
 	void setFiredEvent();
 	void setFadePercentageSinceEventFired(qreal percentage);
+	void setCacheModeForPortAndChildren(QGraphicsItem::CacheMode mode);
 
 	vector<QGraphicsItemAnimation *> getAnimations();
 	void setAnimated(bool animated);
 
 	// Drawing configuration
+	static const qreal portRadius; ///< Radius, in pixels at 1:1 zoom, of a circular port.
 	static const qreal portSpacing; ///< Vertical distance, in pixels at 1:1 zoom, between the center points of two ports.
 	static const qreal portContainerMargin;	///< Vertical distance, in pixels at 1:1 zoom, between the outer edge of the first/last port and the node frame rect.
 	static const qreal portInset; ///< The vertical and horizontal inset used when rendering a port shape within its outer port rect.
+	static const qreal constantFlagHeight; ///< Height, in pixels at 1:1 zoom, of a constant flag.
 
 protected:
 	void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
@@ -112,14 +116,22 @@ protected:
 	bool isRefreshPort; ///< Is this port a refresh port?
 	bool isDonePort; ///< Is this port a done port?
 
+	QRectF nameRect; ///< The bounding box of the port's label when rendered on the canvas.
+	QRectF nameRectForSidebarMode; ///< The bounding box of the port's label when rendered in the "Published Port" sidebar.
+
 	void paintWithOptions(QPainter *painter, bool sidebarPaintMode);
 	QRectF boundingRectWithOptions(bool sidebarPaintMode) const;
+	bool portNameRenderingEnabled(bool sidebarPaintMode) const;
 	QRectF getNameRect(bool sidebarPaintMode=false) const;
+	void updateNameRect(bool sidebarPaintMode);
+	bool isOnDrawer(void) const;
+	void updateEnabledStatus();
 
 	static QRectF getPortConstantTextRectForText(QString text);
 	QPainterPath getFunctionPortGlyph(void) const;
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode);
+	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode);
 	string getPointStringForCoords(QList<double>) const;
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.

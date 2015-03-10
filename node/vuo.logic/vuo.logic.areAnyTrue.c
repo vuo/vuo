@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Are Any True",
-					 "keywords" : [ "boolean", "condition", "test", "check", "gate", "or", "|" ],
+					 "keywords" : [ "boolean", "condition", "test", "check", "gate", "or", "||", "0", "1", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

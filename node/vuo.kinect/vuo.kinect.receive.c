@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					  ],
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "DisplayKinectImages.vuo" ]
+						  "exampleCompositions" : [ "DisplayKinectImages.vuo", "RideRollercoaster.vuo" ]
 					  }
 				 });
 

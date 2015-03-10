@@ -69,6 +69,7 @@ private:
 protected:
 	VuoCompilerNodeClass(string className, Module * module);
 	VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeClass);
+	VuoCompilerNodeClass(VuoNodeClass *baseNodeClass);
 	VuoPortClass * getInputPortClassWithName(string portName);
 	VuoPortClass * getOutputPortClassWithName(string portName);
 
@@ -78,9 +79,9 @@ protected:
 
 public:
 	VuoNode * newNode(string title = "", double x = 0, double y = 0);
-	VuoNode * newNode(VuoCompilerNode *nodeToCopyMetadataFrom);
+	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
 	static VuoNodeClass * newNodeClass(string nodeClassName, Module * module);
-	static VuoNodeClass * createPublishedInputNodeClass(vector<VuoPortClass *> outputPortClasses);
+	static VuoNodeClass * newNodeClassWithoutImplementation(VuoNodeClass *baseNodeClass);
 
 	string getClassIdentifier(void);
 	Function * getEventFunction(void);

@@ -19,6 +19,9 @@ enum VuoControlRequest
 {
 	/**
 	 * Request that the composition stop executing (without serialization).
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c int timeoutInSeconds;
 	 */
 	VuoControlRequestCompositionStop,
 
@@ -369,9 +372,10 @@ extern "C" {
 
 char * vuoCopyStringFromMessage(zmq_msg_t *message);
 void vuoInitMessageWithString(zmq_msg_t *message, const char *string);
+void vuoInitMessageWithInt(zmq_msg_t *message, int value);
 void vuoInitMessageWithBool(zmq_msg_t *message, bool value);
 char * vuoReceiveAndCopyString(void *socket);
-unsigned long vuoReceiveUnsignedLong(void *socket);
+unsigned long vuoReceiveUnsignedInt64(void *socket);
 int vuoReceiveInt(void *socket);
 bool vuoReceiveBool(void *socket);
 void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsigned int messageCount, bool isNonBlocking);

@@ -7,8 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
-#include <QString>
-#include <QtTest>
+#include <QtCore/QString>
+#include <QtTest/QtTest>
 
 #include "VuoFileUtilities.hh"
 #include "VuoStringUtilities.hh"

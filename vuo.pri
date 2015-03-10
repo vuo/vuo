@@ -1,4 +1,4 @@
-VUO_VERSION = 0.5.6
+VUO_VERSION = 0.6.0
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -12,13 +12,13 @@ CONFIG += debug
 CONFIG -= depend_includepath
 
 QMAKE_CLEAN += -R
-QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a $${TARGET}.app
+QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a $${TARGET}.app pch *.dSYM *.o *.dylib moc_* *.moc *.vuonode *.bc
 
 LLVM_ROOT = /usr/local/Cellar/llvm/3.2
 ICU_ROOT = /usr/local/Cellar/icu4c/52.1
 JSONC_ROOT = /usr/local/Cellar/json-c/0.10
 GRAPHVIZ_ROOT = /usr/local/Cellar/graphviz/2.28.0
-QT_ROOT = /usr/local/Cellar/qt/5.1.1
+QT_ROOT = /usr/local/Cellar/qt/5.2.1
 LIBFFI_ROOT = /usr/local/Cellar/libffi/3.0.11
 ZLIB_ROOT = /usr/local/Cellar/zlib/1.2.8
 ZMQ_ROOT = /usr/local/Cellar/zeromq/2.2.0
@@ -74,6 +74,8 @@ mac {
 	MAC_VERSION = $$system(sw_vers -productVersion | cut -d. -f "1,2")
 
 	# Avoid "malformed object" / "unknown load command" errors.
+	QMAKE_LFLAGS_I386 += -Wl,-no_function_starts
+	QMAKE_LFLAGS_I386 += -Wl,-no_version_load_command
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_function_starts
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_version_load_command
 
@@ -87,7 +89,19 @@ QMAKE_CFLAGS_X86_64 += $$FLAGS64
 QMAKE_CXXFLAGS_X86_64 += $$FLAGS64
 QMAKE_LFLAGS_X86_64 += $$FLAGS64
 
-FLAGS = $$FLAGS64 -fvisibility-inlines-hidden -Wdocumentation -Wno-documentation-deprecated-sync
+FLAGS32 = -m32
+QMAKE_CFLAGS_I386 += $$FLAGS32
+QMAKE_CXXFLAGS_I386 += $$FLAGS32
+QMAKE_LFLAGS_I386 += $$FLAGS32
+
+Vuo32 {
+	FLAGS_ARCH = $$FLAGS32
+}
+else {
+	FLAGS_ARCH = $$FLAGS64
+}
+
+FLAGS = $$FLAGS_ARCH -fvisibility-inlines-hidden -Wdocumentation -Wno-documentation-deprecated-sync
 QMAKE_CFLAGS_RELEASE += $$FLAGS
 QMAKE_CFLAGS_DEBUG += $$FLAGS
 QMAKE_CXXFLAGS_RELEASE += $$FLAGS
@@ -216,9 +230,7 @@ qtCore {
 		-framework CoreFoundation \
 		-framework Security \
 		-framework QtCore
-	INCLUDEPATH += \
-		$${QT_ROOT}/include \
-		$${QT_ROOT}/include/QtCore
+	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
 	DEFINES += QT_CORE_LIB
 }
 
@@ -242,15 +254,7 @@ qtGui {
 	}
 }
 qtGuiIncludes {
-	INCLUDEPATH += \
-		$${QT_ROOT}/include \
-		$${QT_ROOT}/include/QtCore \
-		$${QT_ROOT}/include/QtGui \
-		$${QT_ROOT}/include/QtWidgets \
-		$${QT_ROOT}/include/QtPrintSupport
-	mac {
-		INCLUDEPATH += $${QT_ROOT}/include/QtMacExtras
-	}
+	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
 	DEFINES += QT_GUI_LIB
 }
 
@@ -271,16 +275,8 @@ qtOpenGL {
 		-framework QtWidgets \
 		-framework QtPrintSupport \
 		-framework QtOpenGL
-	INCLUDEPATH += \
-		$${QT_ROOT}/include \
-		$${QT_ROOT}/include/QtCore \
-		$${QT_ROOT}/include/QtGui \
-		$${QT_ROOT}/include/QtWidgets \
-		$${QT_ROOT}/include/QtPrintSupport \
-		$${QT_ROOT}/include/QtOpenGL
 	mac {
 		LIBS += -framework QtMacExtras
-		INCLUDEPATH += $${QT_ROOT}/include/QtMacExtras
 	}
 	DEFINES += QT_OPENGL_LIB
 }
@@ -296,11 +292,12 @@ qtTest {
 		-F$${QT_ROOT}/lib/ \
 		-framework QtCore \
 		-framework QtTest
-	INCLUDEPATH += \
-		$${QT_ROOT}/include \
-		$${QT_ROOT}/include/QtCore \
-		$${QT_ROOT}/include/QtTest
+	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
 	DEFINES += QT_TESTLIB_LIB
+}
+
+VuoInputEditor {
+	CONFIG += VuoPCH_objcxx
 }
 
 VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
@@ -310,7 +307,7 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 	PRECOMPILED_DIR = pch
 	QMAKE_PCH_OUTPUT_EXT = .pch
 
-	QMAKE_CFLAGS_PRECOMPILE += $$QMAKE_CFLAGS_X86_64
+	QMAKE_CFLAGS_PRECOMPILE += $$FLAGS_ARCH
 	QMAKE_CFLAGS_USE_PRECOMPILE = -Xclang -include-pch -Xclang ${QMAKE_PCH_OUTPUT}
 
 	# Since VUO_VERSION changes frequently, define it when compiling source files, but not when precompiling headers.
@@ -319,10 +316,28 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 		-DVUO_VERSION_STRING=\\\"$$VUO_VERSION\\\"
 	QMAKE_CFLAGS_USE_PRECOMPILE += $$VUO_VERSION_DEFINES
 
-	QMAKE_CXXFLAGS_PRECOMPILE += $$QMAKE_CXXFLAGS_X86_64
+	QMAKE_CXXFLAGS_PRECOMPILE += $$FLAGS_ARCH
 	QMAKE_CXXFLAGS_USE_PRECOMPILE = $$QMAKE_CFLAGS_USE_PRECOMPILE
 
-	# Don't bother building precompiled headers for Objective-C++ (we only want C++)
+	VuoPCH_objc {
+		QMAKE_OBJCFLAGS_PRECOMPILE += $$FLAGS_ARCH
+		QMAKE_OBJCFLAGS_USE_PRECOMPILE = $$QMAKE_CFLAGS_USE_PRECOMPILE
+	} else {
+		QMAKE_OBJCFLAGS_PRECOMPILE =
+	}
+
+	VuoPCH_objcxx {
+		QMAKE_EXT_CPP += .mm
+		QMAKE_OBJCXXFLAGS_PRECOMPILE += $$FLAGS_ARCH
+		QMAKE_OBJCXXFLAGS_USE_PRECOMPILE = $$QMAKE_CFLAGS_USE_PRECOMPILE
+		QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_CXXFLAGS_X86_64 -Xclang -include-pch -Xclang pch/$$TARGET/objective-c++.pch
+	} else {
+		QMAKE_OBJCXXFLAGS_PRECOMPILE =
+	}
+} else {
+	QMAKE_CFLAGS_PRECOMPILE =
+	QMAKE_CXXFLAGS_PRECOMPILE =
+	QMAKE_OBJCFLAGS_PRECOMPILE =
 	QMAKE_OBJCXXFLAGS_PRECOMPILE =
 }
 
@@ -376,35 +391,18 @@ VuoType {
 		$$ROOT/type	\
 		$$ROOT/type/list
 }
+VuoInputEditorWidget | VuoInputEditor {
+	INCLUDEPATH += $$ROOT/type/inputEditor/widget
+	DEPENDPATH += $$ROOT/type/inputEditor/widget
+	LIBS += -L$$ROOT/type/inputEditor/widget -lwidget
+	PRE_TARGETDEPS += $$ROOT/type/inputEditor/widget/libwidget.a
+}
 VuoInputEditor {
-	SOURCES += \
-		$$ROOT/editor/VuoInputEditor.cc
-	HEADERS += \
-		$$ROOT/editor/VuoInputEditor.hh
 	INCLUDEPATH += \
-		$$ROOT/type \
-		$$ROOT/editor
+		$$ROOT/type
 	QMAKE_LFLAGS += \
 		-Wl,-no_function_starts \
 		-Wl,-no_version_load_command
-}
-VuoInputEditorWithLineEdit {
-	SOURCES += \
-		$$ROOT/editor/VuoInputEditorWithLineEdit.cc \
-		$$ROOT/editor/VuoInputEditorWithDialog.cc \
-		$$ROOT/editor/VuoDialogForInputEditor.cc
-	HEADERS += \
-		$$ROOT/editor/VuoInputEditorWithLineEdit.hh \
-		$$ROOT/editor/VuoInputEditorWithDialog.hh \
-		$$ROOT/editor/VuoDialogForInputEditor.hh
-}
-VuoInputEditorWithMenu {
-	SOURCES += \
-		$$ROOT/editor/VuoInputEditorWithMenu.cc \
-		$$ROOT/editor/VuoMenu.cc
-	HEADERS += \
-		$$ROOT/editor/VuoInputEditorWithMenu.hh \
-		$$ROOT/editor/VuoMenu.hh
 }
 TestVuoCompiler {
 	LIBS += -L$$ROOT/test/TestVuoCompiler -lTestVuoCompiler

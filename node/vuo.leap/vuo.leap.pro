@@ -4,11 +4,12 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 NODE_SOURCES += \
-	vuo.leap.c \
+	vuo.leap.receive.c \
 	vuo.leap.get.frame.c \
 	vuo.leap.get.hand.c \
 	vuo.leap.get.pointable.c \
 	vuo.leap.filter.hand.id.c \
+	vuo.leap.filter.pointable.touchZone.c \
 	vuo.leap.filter.pointable.type.c \
 	vuo.leap.filter.pointable.id.c \
 	vuo.leap.hand.sort.distance.c \
@@ -34,12 +35,14 @@ TYPE_SOURCES += \
 	VuoLeapFrame.c \
 	VuoLeapHand.c \
 	VuoLeapPointable.c \
-	VuoLeapPointableType.c
+	VuoLeapPointableType.c \
+	VuoLeapTouchZone.c
 
 HEADERS += \
 	VuoLeapFrame.h \
 	VuoLeapHand.h \
 	VuoLeapPointable.h \
-	VuoLeapPointableType.h
+	VuoLeapPointableType.h \
+	VuoLeapTouchZone.h
 
 include(../../module.pri)

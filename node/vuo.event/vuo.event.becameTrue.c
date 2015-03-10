@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Became True",
-					 "keywords" : [ "pulse", "watcher", "change" ],
+					 "keywords" : [ "pulse", "watcher", "change", "boolean", "0", "1", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

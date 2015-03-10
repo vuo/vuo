@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Combine 3D Objects",
-					 "keywords" : [ "scenegraph", "group", "join", "together" ],
+					 "keywords" : [ "scenegraph", "group", "join", "together", "merge" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false,

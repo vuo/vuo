@@ -19,9 +19,10 @@ public:
 	static bool beginsWith(string wholeString, string beginning);
 	static bool endsWith(string wholeString, string ending);
 	static string substrAfter(string wholeString, string beginning);
+	static string substrBefore(string wholeString, string ending);
 	static string replaceAll(string wholeString, char originalChar, char replacementChar);
 	static size_t replaceAll(string &wholeString, string originalSubstring, string replacementSubstring);
-	static vector<string> split(string wholeString, char delimiter);
+	static vector<string> split(const string &wholeString, char delimiter);
 	static string join(vector<string> partialStrings, char delimiter);
 	static bool isValidCharInIdentifier(char ch);
 	static string transcodeToIdentifier(string str);

@@ -181,15 +181,12 @@ void VuoRendererMakeListNode::paint(QPainter *painter, const QStyleOptionGraphic
 	layoutPorts();
 
 	// Drag handle grip
-	QRectF hostPortRect = VuoRendererPort::getPortRect();
-	vector<VuoRendererPort *> drawerPorts = getDrawerPorts();
 	qreal drawerBottomExtensionWidth = getMaxDrawerLabelWidth();
 	qreal handleGripLength = VuoRendererFonts::thickPenWidth/2.0;
-	qreal handleGripVerticalOffset = 4.5;
 
 	QPointF handleGripLeft(
 				0.5*drawerBottomExtensionWidth - 0.5*handleGripLength,
-				0.5*hostPortRect.height() + drawerBottomExtensionHeight + handleGripVerticalOffset
+				getDragHandleRect().center().y()
 				);
 	painter->setPen(QColor(0,0,0,32));
 	painter->drawLine(
@@ -218,8 +215,12 @@ QPainterPath VuoRendererMakeListNode::getMakeListNodePath() const
  */
 QPainterPath VuoRendererMakeListNode::getMakeListDrawerPath() const
 {
+	// Create a hybrid rect having the width of the port's inset rect and the customized
+	// height of a constant flag, so that the "Make List" arm has the desired height but
+	// directly adjoins the inset port shape.
 	QRectF hostPortRect = VuoRendererPort::getPortRect();
 	vector<VuoRendererPort *> drawerPorts = getDrawerPorts();
+	QRectF hostPortHybridRect = QRectF(hostPortRect.x(), -0.5*VuoRendererPort::constantFlagHeight, hostPortRect.width(), VuoRendererPort::constantFlagHeight);
 
 	qreal hostPortContactPointX = horizontalDrawerOffset -0.5*hostPortRect.width() + VuoRendererPort::portInset;
 	qreal drawerBottomExtensionWidth = getMaxDrawerLabelWidth();
@@ -227,18 +228,18 @@ QPainterPath VuoRendererMakeListNode::getMakeListDrawerPath() const
 	QPainterPath p;
 
 	// Drawer top left
-	p.moveTo(0, -0.5*hostPortRect.height());
+	p.moveTo(0, -0.5*hostPortHybridRect.height());
 	// Arm top edge
-	p.lineTo(hostPortContactPointX-0.5*hostPortRect.height(), -0.5*hostPortRect.height());
+	p.lineTo(hostPortContactPointX-0.5*hostPortHybridRect.height(), -0.5*hostPortHybridRect.height());
 	// Arm right triangular point
 	p.lineTo(hostPortContactPointX, 0);
-	p.lineTo(hostPortContactPointX-0.5*hostPortRect.height(), 0.5*hostPortRect.height());
+	p.lineTo(hostPortContactPointX-0.5*hostPortHybridRect.height(), 0.5*hostPortHybridRect.height());
 	// Arm bottom edge
-	p.lineTo(drawerBottomExtensionWidth, 0.5*hostPortRect.height());
+	p.lineTo(drawerBottomExtensionWidth, 0.5*hostPortHybridRect.height());
 	// Right drawer wall
-	p.lineTo(drawerBottomExtensionWidth, 0.5*hostPortRect.height() + drawerBottomExtensionHeight);
+	p.lineTo(drawerBottomExtensionWidth, 0.5*hostPortHybridRect.height() + drawerBottomExtensionHeight);
 	// Far drawer bottom
-	p.lineTo(0, 0.5*hostPortRect.height() + drawerBottomExtensionHeight);
+	p.lineTo(0, 0.5*hostPortHybridRect.height() + drawerBottomExtensionHeight);
 	p.closeSubpath();
 
 	// Carve the input child ports out of the frame.
@@ -269,7 +270,14 @@ QPainterPath VuoRendererMakeListNode::getMakeListDrawerPath() const
 QPainterPath VuoRendererMakeListNode::getMakeListDragHandlePath() const
 {
 	QPainterPath p;
-	p.addRect(getDragHandleRect());
+	QRectF dragHandleRect = getDragHandleRect();
+
+	p.moveTo(dragHandleRect.topLeft());
+	p.lineTo(dragHandleRect.topRight());
+	addRoundedCorner(p, true, dragHandleRect.bottomRight(), VuoRendererNode::cornerRadius, false, false);
+	addRoundedCorner(p, true, dragHandleRect.bottomLeft(), VuoRendererNode::cornerRadius, false, true);
+	p.lineTo(dragHandleRect.topLeft());
+
 	return p;
 }
 
@@ -346,11 +354,10 @@ QRectF VuoRendererMakeListNode::getDragHandleRect() const
 {
 	const qreal handleVerticalOffset = 2.5;
 	const qreal handleHeight = 4;
-	QRectF hostPortRect = VuoRendererPort::getPortRect();
 	qreal drawerBottomExtensionWidth = getMaxDrawerLabelWidth();
 
 	return QRectF(0,
-				  0.5*hostPortRect.height() + drawerBottomExtensionHeight + handleVerticalOffset,
+				  0.5*VuoRendererPort::constantFlagHeight + drawerBottomExtensionHeight + handleVerticalOffset,
 				  drawerBottomExtensionWidth,
 				  handleHeight);
 }

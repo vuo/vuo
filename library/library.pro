@@ -44,8 +44,6 @@ INCLUDEPATH += \
 	../type \
 	../type/list
 
-QMAKE_CLEAN += *.vuonode *.bc
-
 NODE_LIBRARY_INCLUDEPATH = \
 	$${FREEIMAGE_ROOT}/include \
 	$${ICU_ROOT}/include \
@@ -85,6 +83,8 @@ OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_FLAGS \
 	-headerpad_max_install_names \
+	-framework CoreFoundation \
+	-framework IOSurface \
 	-L . \
 	-lVuoGlContext
 node_library_shared_dependent_on_context.input = NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT

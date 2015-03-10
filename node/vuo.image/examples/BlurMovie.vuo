@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Displays blurred frames in a movie.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlurImage [type="vuo.image.blur" version="1.0.0" label="Blur Image|<refresh>refresh\l|<image>image\l|<radius>radius\l|<done>done\r|<blurredImage>blurredImage\r" pos="986,940" fillcolor="violet"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<y>y\r" pos="1017,1285"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="375,612" fillcolor="yellow"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1177,940" fillcolor="green" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="904,658" _center="{\"x\":0.000000,\"y\":-0.500000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1063,710" fillcolor="green"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="744,633" _text="\"Move the mouse up and down to change the amount of blur.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":16.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="571,716" fillcolor="yellow" _movieURL="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\""];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="363,955" fillcolor="yellow" _modifierKey="\"any\""];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1126,699" fillcolor="green"];
+ScalePoint2 [type="vuo.point.multiply.scalar.VuoPoint2d" version="1.0.0" label="Scale Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<done>done\r|<scaledPoint>scaledPoint\r" pos="763,955" _scaleFactor="10.000000"];
+SubtractPoints4 [type="vuo.point.subtract.VuoPoint2d" version="1.0.0" label="Subtract Points|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="600,955" _b="{\"x\":0.000000,\"y\":-0.500000}"];
+
+BlurImage:blurredImage -> MakeLayer:image;
+Convert2DPointToReal:y -> BlurImage:radius;
+FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> PlayMovie:play;
+MakeLayer3:layer -> MakeList:item1;
+MakeLayer:layer -> MakeList:item2;
+MakeList:list -> RenderLayersToWindow2:layers;
+MakeTextImage3:image -> MakeLayer3:image;
+PlayMovie:decodedImage -> BlurImage:image;
+ReceiveMouseMoves:movedTo -> SubtractPoints4:a;
+RenderLayersToWindow2:showedWindow -> ReceiveMouseMoves:window;
+ScalePoint2:scaledPoint -> Convert2DPointToReal:xy;
+SubtractPoints4:difference -> ScalePoint2:point;
+}

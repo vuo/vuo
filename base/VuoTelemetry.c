@@ -7,6 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +34,16 @@ void vuoInitMessageWithString(zmq_msg_t *message, const char *string)
 	size_t messageSize = (string != NULL ? (strlen(string) + 1) : 0);
 	zmq_msg_init_size(message, messageSize);
 	memcpy(zmq_msg_data(message), string, messageSize);
+}
+
+/**
+ * Copies the int value into the message data.
+ */
+void vuoInitMessageWithInt(zmq_msg_t *message, int value)
+{
+	size_t messageSize = sizeof(int);
+	zmq_msg_init_size(message, messageSize);
+	memcpy(zmq_msg_data(message), &value, messageSize);
 }
 
 /**
@@ -79,9 +90,9 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
 /**
  * Receives the next message on the socket and copies it into an unsigned long.
  */
-unsigned long vuoReceiveUnsignedLong(void *socket)
+unsigned long vuoReceiveUnsignedInt64(void *socket)
 {
-	unsigned long number;
+	uint64_t number;
 	vuoReceiveBlocking(socket, (void *)&number, sizeof(number));
 	return number;
 }
@@ -124,7 +135,7 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 	}
 
 	// send the data message-parts
-	for(int i=0; i<messageCount; ++i)
+	for(unsigned int i=0; i<messageCount; ++i)
 	{
 		int flags = (i<messageCount-1 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
 		if(zmq_send(socket, &messages[i], flags))

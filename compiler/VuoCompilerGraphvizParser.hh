@@ -34,7 +34,6 @@ private:
 	map<string, set<string> > dummyOutputNamesForNodeClassName;
 	map<string, VuoNodeClass *> dummyNodeClassForName;
 	map<string, VuoNodeClass *> nodeClassForName;
-	vector<string> unknownNodeClasses;
 	map<string, VuoNode *> nodeForName;
 	vector<VuoNode *> orderedNodes;
 	vector<VuoCable *> orderedCables;
@@ -46,22 +45,24 @@ private:
 	vector<VuoCable *> publishedOutputCables;
 	string description;
 
-	void initialize(FILE *file, VuoCompiler *compiler = NULL);
+	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler, set<VuoCompilerNodeClass *> extraNodeClasses);
 	void makeDummyPorts(void);
 	void makeDummyNodeClasses(void);
-	void makeNodeClasses(void);
+	void makeNodeClasses(set<VuoCompilerNodeClass *> extraNodeClasses);
 	void makeNodes(void);
 	void makeCables(void);
 	void makePublishedPorts(void);
 	void setInputPortConstantValues(void);
 	map<string, string> parsePortConstantValues(Agnode_t *n);
 	void checkPortClasses(vector<VuoPortClass *> dummy, vector<VuoPortClass *> actual);
+	void saveNodeDeclarations(const string &compositionAsString);
 
 public:
-	VuoCompilerGraphvizParser(const string &path, VuoCompiler *compiler = NULL);
-	VuoCompilerGraphvizParser(FILE *file, VuoCompiler *compiler = NULL);
+	static VuoCompilerGraphvizParser * newParserFromCompositionFile(string path, VuoCompiler *compiler = NULL,
+																	set<VuoCompilerNodeClass *> extraNodeClasses = set<VuoCompilerNodeClass *>());
+	static VuoCompilerGraphvizParser * newParserFromCompositionString(const string &composition, VuoCompiler *compiler = NULL,
+																	  set<VuoCompilerNodeClass *> extraNodeClasses = set<VuoCompilerNodeClass *>());
 	vector<VuoNode *> getNodes(void);
-	vector<string> getUnknownNodeClasses(void);
 	vector<VuoCable *> getCables(void);
 	vector<VuoCompilerPublishedPort *> getPublishedInputPorts(void);
 	vector<VuoCompilerPublishedPort *> getPublishedOutputPorts(void);
@@ -70,7 +71,7 @@ public:
 	vector<VuoCable *> getPublishedInputCables(void);
 	vector<VuoCable *> getPublishedOutputCables(void);
 	string getDescription(void);
-	static string parseDescription(string compositionAsString);
+	static string parseDescription(const string &compositionAsString);
 };
 
 #endif

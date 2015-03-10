@@ -24,7 +24,7 @@ VuoModuleMetadata({
 					 "title" : "Render Layers to Window",
 					 "keywords" : [ "frame", "draw", "opengl", "graphics", "display", "view", "object",
 						 "mouse", "trackpad", "touchpad", "wheel", "scroll", "click", "tap", "cursor", "pointer"],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoSceneRenderer",
@@ -45,19 +45,15 @@ struct nodeInstanceData
 	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer *sceneRenderer;
+	bool hasShown;
 };
 
 void vuo_layer_render_window_init(VuoGlContext glContext, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	if (!context->sceneRenderer)
-	{
-		context->sceneRenderer = VuoSceneRenderer_make(glContext);
-		VuoRetain(context->sceneRenderer);
-	}
-
-	VuoSceneRenderer_prepareContext(context->sceneRenderer);
+	context->sceneRenderer = VuoSceneRenderer_make(glContext);
+	VuoRetain(context->sceneRenderer);
 }
 
 void vuo_layer_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
@@ -106,20 +102,26 @@ struct nodeInstanceData *nodeInstanceInit(void)
 			);
 	VuoRetain(context->window);
 
+	context->hasShown = false;
+
 	return context;
 }
 
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(requestedFrame, VuoFrameRequest),
-		VuoOutputTrigger(movedMouseTo, VuoPoint2d),
-		VuoOutputTrigger(scrolledMouse, VuoPoint2d),
-		VuoOutputTrigger(usedMouseButton, VuoMouseButtonAction)
+		VuoOutputTrigger(showedWindow, VuoWindowReference),
+		VuoOutputTrigger(requestedFrame, VuoReal)
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window, movedMouseTo, scrolledMouse, usedMouseButton);
+	VuoWindowOpenGl_enableTriggers((*context)->window);
 	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
+
+	if (! (*context)->hasShown)
+	{
+		showedWindow( VuoWindowReference_make((*context)->window) );
+		(*context)->hasShown = true;
+	}
 }
 
 void nodeInstanceEvent

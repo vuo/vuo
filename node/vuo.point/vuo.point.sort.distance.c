@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Sort Points by Distance",
-					  "keywords" : [ "organize", "nearest", "filter", "shuffle" ],
+					  "keywords" : [ "organize", "order", "nearest" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

@@ -12,7 +12,7 @@
 digraph G
 {
 Convert3DPointTo2DPoint [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<done>done\r|<xy>xy\r" pos="847,536"];
-DiscardDataFromEvent [type="vuo.type.discardData.VuoFrameRequest" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="143,341"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="143,341"];
 FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="-210,172" fillcolor="yellow"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="490,235" fillcolor="yellow"];
 Get3DPointValues [type="vuo.point.get.VuoPoint3d" version="1.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="286,354" fillcolor="green"];
@@ -21,10 +21,10 @@ GetHandValues [type="vuo.leap.get.hand" version="1.0.0" label="Get Hand Values|<
 GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="637,274" fillcolor="green" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/6.jpg\""];
 GetItemFromList [type="vuo.list.get.VuoLeapHand" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="28,433" fillcolor="violet" _which="1"];
 HoldValue [type="vuo.hold.VuoLeapFrame" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="44,251" fillcolor="violet" _initialValue=""];
-ReceiveLeapFrame [type="vuo.leap" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="29,172" fillcolor="violet"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="580,635" fillcolor="green"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="29,172" fillcolor="violet"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="580,635" fillcolor="green"];
 Scale2 [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="327,448" fillcolor="green" _start="-1.000000" _end="1.000000" _scaledStart="-180.000000" _scaledEnd="180.000000"];
-TwirlImage [type="vuo.image.filter.twirl" version="1.0.0" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<done>done\r|<twirledImage>twirledImage\r" pos="629,418" fillcolor="green"];
+TwirlImage [type="vuo.image.twirl" version="1.0.0" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<done>done\r|<twirledImage>twirledImage\r" pos="629,418" fillcolor="green"];
 
 Convert3DPointTo2DPoint:xy -> TwirlImage:center;
 DiscardDataFromEvent:event -> HoldValue:refresh;

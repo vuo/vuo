@@ -41,10 +41,11 @@ public:
 	void removeCable(VuoRendererCable *rc);
 	void removePublishedInputCable(VuoRendererCable *rc);
 	void removePublishedOutputCable(VuoRendererCable *rc);
+	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
 	VuoRendererPublishedPort * publishPort(VuoPort *port, string name="", bool attemptMerge=false);
 	VuoCable * createPublishedCable(VuoPort *vuoPseudoPort, VuoPort *internalPort);
-	void registerExternalPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
-	int unregisterExternalPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
+	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
+	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name);
 	string getUniquePublishedPortName(string baseName, bool isInput);
 	vector<VuoRendererNode *> collapseTypecastNodes(void);
@@ -53,6 +54,7 @@ public:
 	VuoRendererNode * uncollapseTypecastNode(VuoRendererTypecastPort *typecast);
 	void clearInternalPortEligibilityHighlighting(void);
 	bool getRenderActivity(void);
+	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
 
 	static void createAutoreleasePool(void);
 
@@ -69,10 +71,10 @@ public:
 
 protected:
 	void setRenderActivity(bool render);
+	void updateComponentCaching();
 	void repaintAllComponents();
 
 	VuoCompilerGraphvizParser *parser; ///< The Graphviz parser instance used by this composition.
-	map<string, VuoRendererNode *> nodeNameTaken; ///< An index of every node in the composition, keyed by the node's Graphviz identifier.
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this composition.
 	bool cachingEnabled; ///< Should item renderings be cached?
 

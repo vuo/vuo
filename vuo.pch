@@ -72,20 +72,17 @@ using namespace llvm;
 #endif
 
 #ifdef QT_CORE_LIB
-#include <QtCore>
+#include <QtCore/QtCore>
 #endif
 
 #ifdef QT_GUI_LIB
-#include <QtGui>
-#include <QtWidgets>
-#include <QtPrintSupport>
-#if defined(MAC) && defined(__OBJC__)
-#include <QtMacExtras>
-#endif
+#include <QtGui/QtGui>
+#include <QtWidgets/QtWidgets>
+#include <QtPrintSupport/QtPrintSupport>
 #endif
 
 #ifdef QT_TESTLIB_LIB
-#include <QtTest>
+#include <QtTest/QtTest>
 #endif
 
 #endif

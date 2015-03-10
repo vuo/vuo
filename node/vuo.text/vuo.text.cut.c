@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Cut",
-					 "keywords" : [ "character", "letter", "substring", "part", "piece", "string", "truncate" ],
+					 "keywords" : [ "character", "letter", "substring", "part", "piece", "string", "truncate", "trim" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false,

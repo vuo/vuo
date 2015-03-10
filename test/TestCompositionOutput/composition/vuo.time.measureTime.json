@@ -11,109 +11,109 @@
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 1.0, \"frameCount\": 0}" }
+			{ "port" : "time", "value" : "1.0" }
 		]
 	},
 	{
 		"firingPortName" : "start",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 2.0}" }
+			{ "port" : "time", "value" : "2.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 0" }
+			{ "port" : "elapsedTime", "value" : "0" }
 		]
 	},
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 3.0}" }
+			{ "port" : "time", "value" : "3.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 1" }
+			{ "port" : "elapsedTime", "value" : "1" }
 		]
 	},
 	{
 		"firingPortName" : "pause",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 4.0}" }
+			{ "port" : "time", "value" : "4.0" }
 		]
 	},
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 5.0}" }
+			{ "port" : "time", "value" : "5.0" }
 		]
 	},
 	{
 		"firingPortName" : "start",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 6.0}" }
+			{ "port" : "time", "value" : "6.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 2" }
+			{ "port" : "elapsedTime", "value" : "2" }
 		]
 	},
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 7.0}" }
+			{ "port" : "time", "value" : "7.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 3" }
+			{ "port" : "elapsedTime", "value" : "3" }
 		]
 	},
 	{
 		"firingPortName" : "reset",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 8.0}" }
+			{ "port" : "time", "value" : "8.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 0" }
+			{ "port" : "elapsedTime", "value" : "0" }
 		]
 	},
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 9.0}" }
+			{ "port" : "time", "value" : "9.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 1" }
+			{ "port" : "elapsedTime", "value" : "1" }
 		]
 	},
 	{
 		"firingPortName" : "pause",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 10.0}" }
+			{ "port" : "time", "value" : "10.0" }
 		]
 	},
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 11.0}" }
+			{ "port" : "time", "value" : "11.0" }
 		]
 	},
 	{
 		"firingPortName" : "reset",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 12.0}" }
+			{ "port" : "time", "value" : "12.0" }
 		]
 	},
 	{
 		"firingPortName" : "start",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 13.0}" }
+			{ "port" : "time", "value" : "13.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 0" }
+			{ "port" : "elapsedTime", "value" : "0" }
 		]
 	},
 	{
 		"firingPortName" : "time",
 		"valueForInputPortName" : [
-			{ "port" : "time", "value" : "{\"timestamp\": 14.0}" }
+			{ "port" : "time", "value" : "14.0" }
 		],
 		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "Frame #0 @ 1" }
+			{ "port" : "elapsedTime", "value" : "1" }
 		]
 	},
 ]}

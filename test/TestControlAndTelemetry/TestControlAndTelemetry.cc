@@ -42,9 +42,10 @@ private:
 
 		if (composition)
 		{
-			VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(compositionPath, compiler);
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 			*composition = new VuoCompilerComposition(new VuoComposition, parser);
 			compiler->compileComposition(*composition, bcPath);
+			delete parser;
 		}
 		else
 		{
@@ -975,10 +976,10 @@ private slots:
 
 		{
 			vector<VuoRunner::Port *> inputs;
-			inputs.push_back( new VuoRunner::Port("publishedIn0", new VuoType("VuoInteger")) );
-			inputs.push_back( new VuoRunner::Port("publishedIn1", new VuoType("VuoInteger")) );
+			inputs.push_back( new VuoRunner::Port("publishedIn0", "VuoInteger") );
+			inputs.push_back( new VuoRunner::Port("publishedIn1", "VuoInteger") );
 			vector<VuoRunner::Port *> outputs;
-			outputs.push_back( new VuoRunner::Port("publishedSum", new VuoType("VuoInteger")) );
+			outputs.push_back( new VuoRunner::Port("publishedSum", "VuoInteger") );
 			QTest::newRow("some published input and output ports") << "Recur_Add_published.vuo" << inputs << outputs;
 		}
 
@@ -1007,14 +1008,14 @@ private slots:
 		for (int i = 0; i < expectedInputs.size(); ++i)
 		{
 			QCOMPARE(actualInputs.at(i)->getName(), expectedInputs.at(i)->getName());
-			QCOMPARE(actualInputs.at(i)->getType()->getModuleKey(), expectedInputs.at(i)->getType()->getModuleKey());
+			QCOMPARE(actualInputs.at(i)->getType(), expectedInputs.at(i)->getType());
 		}
 
 		QCOMPARE(actualOutputs.size(), expectedOutputs.size());
 		for (int i = 0; i < expectedOutputs.size(); ++i)
 		{
 			QCOMPARE(actualOutputs.at(i)->getName(), expectedOutputs.at(i)->getName());
-			QCOMPARE(actualOutputs.at(i)->getType()->getModuleKey(), expectedOutputs.at(i)->getType()->getModuleKey());
+			QCOMPARE(actualOutputs.at(i)->getType(), expectedOutputs.at(i)->getType());
 		}
 
 		delete runner;
@@ -1204,22 +1205,23 @@ private slots:
 
 private:
 
-	class TestGeneratingEventOnPublishedInputPortRunnerDelegate : public TestRunnerDelegate
+	class TestFiringPublishedInputPortEventsRunnerDelegate : public TestRunnerDelegate
 	{
 	private:
 		VuoRunner *runner;
+		VuoRunner::Port *publishedIncrementOne;
 		VuoRunner::Port *publishedDecrementBoth;
 		int timesSumChanged;
 
 	public:
-		TestGeneratingEventOnPublishedInputPortRunnerDelegate()
+		TestFiringPublishedInputPortEventsRunnerDelegate()
 		{
 			runner = NULL;
 			publishedDecrementBoth = NULL;
 			timesSumChanged = 0;
 		}
 
-		~TestGeneratingEventOnPublishedInputPortRunnerDelegate()
+		~TestFiringPublishedInputPortEventsRunnerDelegate()
 		{
 			delete runner;
 		}
@@ -1232,7 +1234,7 @@ private:
 
 			runner->start();
 
-			VuoRunner::Port *publishedIncrementOne = runner->getPublishedInputPortWithName("publishedIncrementOne");
+			publishedIncrementOne = runner->getPublishedInputPortWithName("publishedIncrementOne");
 			publishedDecrementBoth = runner->getPublishedInputPortWithName("publishedDecrementBoth");
 			QVERIFY(publishedIncrementOne != NULL);
 			QVERIFY(publishedDecrementBoth != NULL);
@@ -1258,6 +1260,14 @@ private:
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("36"));
 
+				runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(1));
+				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_jsonFromValue(5));
+				runner->firePublishedInputPortEvent();
+			}
+			else if (timesSumChanged == 3)
+			{
+				QCOMPARE(QString(dataSummary.c_str()), QString("27"));
+
 				dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 				dispatch_async(queue, ^{
 								   runner->stop();
@@ -1268,9 +1278,9 @@ private:
 
 private slots:
 
-	void testGeneratingEventOnPublishedInputPort()
+	void testFiringPublishedInputPortEvents()
 	{
-		TestGeneratingEventOnPublishedInputPortRunnerDelegate delegate;
+		TestFiringPublishedInputPortEventsRunnerDelegate delegate;
 		delegate.runComposition();
 	}
 
@@ -1404,7 +1414,7 @@ private slots:
 
 		// Build and run the composition.
 		{
-			VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(compositionPath, compiler);
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 			VuoComposition *baseComposition = new VuoComposition();
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;
@@ -1543,7 +1553,7 @@ private slots:
 
 		// Build and run the original composition.
 		{
-			VuoCompilerGraphvizParser *parser = new VuoCompilerGraphvizParser(compositionPath, compiler);
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 			VuoComposition *baseComposition = new VuoComposition();
 			composition = new VuoCompilerComposition(baseComposition, parser);
 			delete parser;

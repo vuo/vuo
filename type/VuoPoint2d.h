@@ -41,6 +41,15 @@ char * VuoPoint2d_stringFromValue(const VuoPoint2d value);
 /// @}
 
 /**
+ * A rectangular area.
+ */
+typedef struct
+{
+	VuoPoint2d center;
+	VuoPoint2d size;
+} VuoRectangle;
+
+/**
  * Returns a point with the specified coordinates.
  */
 static inline VuoPoint2d VuoPoint2d_make(float x, float y) __attribute__((const));
@@ -48,6 +57,16 @@ static inline VuoPoint2d VuoPoint2d_make(float x, float y)
 {
 	VuoPoint2d p = {x,y};
 	return p;
+}
+
+/**
+ * Returns a rectangle with the specified coordinates.
+ */
+static inline VuoRectangle VuoRectangle_make(float centerX, float centerY, float width, float height) __attribute__((const));
+static inline VuoRectangle VuoRectangle_make(float centerX, float centerY, float width, float height)
+{
+	VuoRectangle r = {{centerX,centerY},{width,height}};
+	return r;
 }
 
 /**
@@ -158,6 +177,26 @@ static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b)
 {
 	return sqrtf( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) );
 }
+
+/**
+ *	Returns a linearly interpolated value between @a and @b using time @t.  @t is between 0 and 1.
+ */
+static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t)
+{
+	return VuoPoint2d_add( VuoPoint2d_multiply(a, (1-t)), VuoPoint2d_multiply(b, t) );
+}
+
+/**
+ *	Returns component-wise multiplication of two VuoPoint2d vectors.
+ */
+static inline VuoPoint2d VuoPoint2d_scale(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_scale(VuoPoint2d a, VuoPoint2d b)
+{
+	return (VuoPoint2d) { a.x*b.x, a.y*b.y };
+}
+
+VuoRectangle VuoPoint2d_rectangleIntersection(VuoRectangle rectangleA, VuoRectangle rectangleB);
 
 /**
  * @}

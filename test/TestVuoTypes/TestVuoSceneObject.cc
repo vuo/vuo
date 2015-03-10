@@ -19,6 +19,8 @@ extern "C" {
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoSceneObject);
 
+#define QUOTE(...) #__VA_ARGS__
+
 /**
  * Tests the VuoVertices type.
  */
@@ -162,31 +164,112 @@ private slots:
 		}
 
 		{
+			VuoTransform transform = VuoTransform_makeEuler(
+						VuoPoint3d_make(42,43,44),
+						VuoPoint3d_multiply(VuoPoint3d_make(1,2,3), -M_PI/180.f),
+						VuoPoint3d_make(1,1,1)
+					);
 			VuoSceneObject o = VuoSceneObject_makePerspectiveCamera(
 						"vuocam",
-						VuoPoint3d_make(42,43,44),
-						VuoPoint3d_multiply(VuoPoint3d_make(1,2,3),M_PI/180.),
+						transform,
 						42.0,
 						1.0,
 						20.0
 					);
 			QTest::newRow("perspective camera")		<< o
 													<< "perspective camera<br>at (42, 43, 44)<br>rotated (1, 2, 3)<br>42° field of view<br>shows objects between depth 1 and 20"
-													<< "{\"cameraType\":\"perspective\",\"cameraDistanceMin\":1.000000,\"cameraDistanceMax\":20.000000,\"cameraFieldOfView\":42.000000,\"name\":\"vuocam\",\"transform\":{\"translation\":[42.000000,43.000000,44.000000],\"eulerRotation\":[0.017453,0.034907,0.052360],\"scale\":[1.000000,1.000000,1.000000]}}";
+													<< "{\"cameraType\":\"perspective\",\"cameraDistanceMin\":1.000000,\"cameraDistanceMax\":20.000000,\"cameraFieldOfView\":42.000000,\"name\":\"vuocam\",\"transform\":{\"translation\":[42.000000,43.000000,44.000000],\"eulerRotation\":[-0.017453,-0.034907,-0.052360],\"scale\":[1.000000,1.000000,1.000000]}}";
 		}
 
 		{
+			VuoTransform transform = VuoTransform_makeFromTarget(
+						VuoPoint3d_make(42,43,44),
+						VuoPoint3d_make(45,46,47),
+						VuoPoint3d_make(0,1,0)
+					);
+			VuoSceneObject o = VuoSceneObject_makePerspectiveCamera(
+						"vuocam",
+						transform,
+						42.0,
+						1.0,
+						20.0
+					);
+			QTest::newRow("targeted perspective camera")	<< o
+															<< "perspective camera<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
+															<< QUOTE({"cameraType":"perspective","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+		}
+
+		{
+			VuoTransform transform = VuoTransform_makeEuler(
+						VuoPoint3d_make(52,53,54),
+						VuoPoint3d_multiply(VuoPoint3d_make(4,5,6), -M_PI/180.f),
+						VuoPoint3d_make(1,1,1)
+					);
 			VuoSceneObject o = VuoSceneObject_makeOrthographicCamera(
 						"vuocam ortho",
-						VuoPoint3d_make(52,53,54),
-						VuoPoint3d_multiply(VuoPoint3d_make(4,5,6),M_PI/180.),
+						transform,
 						2.0,
 						3.0,
 						22.0
 					);
 			QTest::newRow("orthographic camera")	<< o
 													<< "orthographic camera<br>at (52, 53, 54)<br>rotated (4, 5, 6)<br>2 unit width<br>shows objects between depth 3 and 22"
-													<< "{\"cameraType\":\"orthographic\",\"cameraDistanceMin\":3.000000,\"cameraDistanceMax\":22.000000,\"cameraWidth\":2.000000,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52.000000,53.000000,54.000000],\"eulerRotation\":[0.069813,0.087266,0.104720],\"scale\":[1.000000,1.000000,1.000000]}}";
+													<< "{\"cameraType\":\"orthographic\",\"cameraDistanceMin\":3.000000,\"cameraDistanceMax\":22.000000,\"cameraWidth\":2.000000,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52.000000,53.000000,54.000000],\"eulerRotation\":[-0.069813,-0.087266,-0.104720],\"scale\":[1.000000,1.000000,1.000000]}}";
+		}
+
+		{
+			VuoSceneObject o = VuoSceneObject_makeAmbientLight(
+						VuoColor_makeWithRGBA(0.1,0.2,0.3,0.4),
+						0.5
+					);
+			QTest::newRow("ambient light")	<< o
+											<< "ambient light<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5"
+											<< QUOTE({"lightType":"ambient","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000});
+		}
+
+		{
+			VuoSceneObject o = VuoSceneObject_makePointLight(
+						VuoColor_makeWithRGBA(0.1,0.2,0.3,0.4),
+						0.5,
+						VuoPoint3d_make(1,2,3),
+						2.5,
+						0.5
+					);
+			QTest::newRow("point light")	<< o
+											<< "point light<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
+											<< QUOTE({"lightType":"point","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
+		}
+
+		{
+			VuoSceneObject o = VuoSceneObject_makeSpotlight(
+						VuoColor_makeWithRGBA(0.1,0.2,0.3,0.4),
+						0.5,
+						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0, 0, 0), VuoPoint3d_make(1,1,1)),
+						45 * M_PI/180.,
+						2.5,
+						0.5
+					);
+			QTest::newRow("spotlight")	<< o
+											<< "spotlight<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
+											<< QUOTE({"lightType":"spot","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"lightCone":0.785398,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
+		}
+
+		{
+			VuoTransform transform = VuoTransform_makeFromTarget(
+						VuoPoint3d_make(52,53,54),
+						VuoPoint3d_make(55,56,57),
+						VuoPoint3d_make(0,1,0)
+					);
+			VuoSceneObject o = VuoSceneObject_makeOrthographicCamera(
+						"vuocam ortho",
+						transform,
+						2.0,
+						3.0,
+						22.0
+					);
+			QTest::newRow("targeted orthographic camera")	<< o
+															<< "orthographic camera<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
+															<< QUOTE({"cameraType":"orthographic","cameraDistanceMin":3.000000,"cameraDistanceMax":22.000000,"cameraWidth":2.000000,"name":"vuocam ortho","transform":{"translation":[52.000000,53.000000,54.000000],"target":[55.000000,56.000000,57.000000],"upDirection":[0.000000,1.000000,0.000000]}});
 		}
 	}
 	void testMakeAndSummaryAndSerialization()
@@ -213,9 +296,6 @@ private slots:
 		VuoRetain(sr);
 
 		// Copied from vuo.scene.render.window.
-
-		// vuo_scene_render_window_init
-		VuoSceneRenderer_prepareContext(sr);
 
 		// vuo_scene_render_window_resize
 		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
@@ -271,7 +351,6 @@ private slots:
 
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
 			VuoSceneRenderer_setCameraName(sr, "");
-			VuoSceneRenderer_prepareContext(sr);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
 			VuoSceneRenderer_renderToImage(sr, &i, NULL);
@@ -313,7 +392,6 @@ private slots:
 			// Copied from vuo.scene.render.image.
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
 			VuoSceneRenderer_setCameraName(sr, "");
-			VuoSceneRenderer_prepareContext(sr);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
 			VuoSceneRenderer_renderToImage(sr, &i, NULL);
@@ -344,7 +422,6 @@ private slots:
 			// Copied from vuo.scene.render.image.
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
 			VuoSceneRenderer_setCameraName(sr, "");
-			VuoSceneRenderer_prepareContext(sr);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
 			VuoSceneRenderer_renderToImage(sr, &i, NULL);
@@ -374,7 +451,6 @@ private slots:
 		// Copied from vuo.scene.render.image.
 		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
 		VuoSceneRenderer_setCameraName(sr, "");
-		VuoSceneRenderer_prepareContext(sr);
 		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 
 		QBENCHMARK {

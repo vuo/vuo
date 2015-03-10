@@ -21,7 +21,7 @@ If any node class uses generic types, place the node class's source code (`.c`) 
 
 ## Node set description
 
-If you'd like to provide documentation that gives an overview of the node set, create a folder called `descriptions` in the top level of the node set folder, and create a file called `index.md` in the top level of that folder. Write the documentation in `index.md` using [Markdown formatting](http://daringfireball.net/projects/markdown/). 
+If you'd like to provide documentation that gives an overview of the node set, create a folder called `descriptions` in the top level of the node set folder, and create a file with the node set name plus the `.md` extension (e.g. `mycompany.speechSynthesis.md`) in the top level of that folder. Write the documentation in that file using [Markdown formatting](http://daringfireball.net/projects/markdown/). 
 
 The Vuo Editor displays a link to to the node set description in the node class documentation that pops up when you click on a node class in the Node Library. 
 

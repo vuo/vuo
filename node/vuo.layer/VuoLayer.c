@@ -82,6 +82,38 @@ VuoLayer VuoLayer_makeColor(VuoColor color, VuoPoint2d center, VuoReal rotation,
 }
 
 /**
+ * Creates a visible layer with a gradient.
+ */
+VuoLayer VuoLayer_makeLinearGradient(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height)
+{
+	VuoLayer o;
+	o.sceneObject = VuoSceneObject_makeQuad(
+				VuoShader_makeLinearGradientShader(colors, start, end),
+				VuoPoint3d_make(center.x, center.y, 0),
+				VuoPoint3d_make(0, 0, rotation),
+				width,
+				height
+			);
+	return o;
+}
+
+/**
+ * Creates a visible layer with a gradient.
+ */
+VuoLayer VuoLayer_makeRadialGradient(VuoList_VuoColor colors, VuoPoint2d gradientCenter, VuoReal radius, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height)
+{
+	VuoLayer o;
+	o.sceneObject = VuoSceneObject_makeQuad(
+				VuoShader_makeRadialGradientShader(colors, gradientCenter, radius, width, height),
+				VuoPoint3d_make(center.x, center.y, 0),
+				VuoPoint3d_make(0, 0, rotation),
+				width,
+				height
+			);
+	return o;
+}
+
+/**
  * Creates a layer with a group of child layers.
  */
 VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transform)

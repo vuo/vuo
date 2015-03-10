@@ -12,6 +12,7 @@ extern "C"
 {
 #endif
 
+char *VuoUrl_normalize(const char *url);
 bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength);
 
 #ifdef __cplusplus

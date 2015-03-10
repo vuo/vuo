@@ -74,12 +74,11 @@ QPainterPath VuoRendererTypecastPort::getPortPath(bool includeNormalPort, bool i
 	// ...and add a constant flag to it (since typecast ports look basically like constant flags).
 	if (includeFlag)
 	{
-		// Create a hybrid rect having the width of the port's inset rect and the height
-		// of its outer rect, so that the collapsed typecast has the full height of the
-		// outer rect but directly adjoins the inset port shape.
-		QRectF normalPortOuterRect = getPortRect();
+		// Create a hybrid rect having the width of the port's inset rect and the customized
+		// height of a constant flag, so that the collapsed typecast has the desired height but
+		// directly adjoins the inset port shape.
 		QRectF normalPortInnerRect = VuoRendererPort::getPortPath(VuoRendererPort::portInset).boundingRect();
-		QRectF normalPortHybridRect = QRectF(normalPortInnerRect.x(), normalPortOuterRect.y(), normalPortInnerRect.width(), normalPortOuterRect.height());
+		QRectF normalPortHybridRect = QRectF(normalPortInnerRect.x(), -0.5*VuoRendererPort::constantFlagHeight, normalPortInnerRect.width(), VuoRendererPort::constantFlagHeight);
 
 		QPainterPath outsetPathTemp;
 		p += getPortConstantPath(normalPortHybridRect, getTypecastTitle(), &outsetPathTemp, true);
@@ -104,11 +103,19 @@ QPainterPath VuoRendererTypecastPort::getPortPath(bool includeNormalPort, bool i
 }
 
 /**
+ * Returns a rect enclosing the string representation of the port's typecast title.
+ */
+QRectF VuoRendererTypecastPort::getPortConstantTextRect(void) const
+{
+	return getPortConstantTextRectForText(getTypecastTitle());
+}
+
+/**
  * Returns the number of pixels between the center of @c basePort and @c childPort.
  */
 qreal VuoRendererTypecastPort::getChildPortXOffset(void) const
 {
-	return getPortConstantTextRectForText(getTypecastTitle()).width() + VuoRendererFonts::thickPenWidth*17./20.;
+	return getPortConstantTextRectForText(getTypecastTitle()).width() + VuoRendererFonts::thickPenWidth + 2;
 }
 
 /**
@@ -203,7 +210,7 @@ void VuoRendererTypecastPort::paint(QPainter *painter, const QStyleOptionGraphic
 	painter->fillPath(outerTypecastPath, colors->nodeFrame());
 
 	// Typecast description
-	QRectF textRect = getPortConstantTextRectForText(getTypecastTitle()).adjusted(2.,0.,2.,0.);
+	QRectF textRect = getPortConstantTextRectForText(getTypecastTitle());
 	painter->setPen(colors->portTitle());
 	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
 	painter->drawText(textRect, Qt::AlignLeft, getTypecastTitle());

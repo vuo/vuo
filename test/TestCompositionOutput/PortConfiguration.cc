@@ -8,7 +8,7 @@
  */
 
 #include <fstream>
-#include <QTest>
+#include <QtTest/QTest>
 
 #include "PortConfiguration.hh"
 

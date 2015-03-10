@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Make Server Description",
-					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "receive", "send", "server", "share", "video" ],
+					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "isInterface" : false,

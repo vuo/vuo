@@ -10,6 +10,7 @@
 #include "type.h"
 #include "VuoInteger.h"
 #include <limits.h>
+#include <string.h>
 
 /// @{
 #ifdef VUO_COMPILER
@@ -45,11 +46,14 @@ json_object * VuoInteger_jsonFromValue(const VuoInteger value)
 
 /**
  * @ingroup VuoInteger
- * Same as @c %VuoInteger_stringFromValue() — always shows the full value, since it's guaranteed to be pretty short.
+ * Always shows the full value, since it's guaranteed to be pretty short.
  */
 char * VuoInteger_summaryFromValue(const VuoInteger value)
 {
-	return VuoInteger_stringFromValue(value);
+	json_object *js = VuoInteger_jsonFromValue(value);
+	char *summary = strdup(json_object_to_json_string_ext(js,JSON_C_TO_STRING_PLAIN));
+	json_object_put(js);
+	return summary;
 }
 
 /**

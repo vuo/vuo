@@ -10,7 +10,7 @@
 digraph G
 {
 PublishedInputs [type="vuo.in" label="PublishedInputs|<inputImage>inputImage\r"];
-RippleImage [type="vuo.image.filter.ripple" label="Ripple Image|<refresh>refresh\l|<image>image\l|<rippledImage>rippledImage\r"];
+RippleImage [type="vuo.image.ripple" label="Ripple Image|<refresh>refresh\l|<image>image\l|<rippledImage>rippledImage\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l"];
 
 PublishedInputs:inputImage -> RippleImage:image;

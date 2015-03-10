@@ -13,7 +13,9 @@ extern "C" {
 }
 
 // Be able to use these types in QTest::addColumn()
+Q_DECLARE_METATYPE(VuoPoint3d);
 Q_DECLARE_METATYPE(VuoPoint4d);
+Q_DECLARE_METATYPE(VuoTransform);
 
 /**
  * Tests the VuoTransform type.
@@ -75,6 +77,155 @@ private slots:
 		QCOMPARE(vector1.w+10.f, vector2.w+10.f);
 	}
 
+	void testTransformPoint_data()
+	{
+		QTest::addColumn<VuoTransform>("transform");
+		QTest::addColumn<VuoPoint3d>("point");
+		QTest::addColumn<VuoPoint3d>("expectedPoint");
+
+		QTest::newRow("identity 0") << VuoTransform_makeIdentity() << VuoPoint3d_make(0,0,0) << VuoPoint3d_make(0,0,0);
+		QTest::newRow("identity 1") << VuoTransform_makeIdentity() << VuoPoint3d_make(1,1,1) << VuoPoint3d_make(1,1,1);
+
+		{
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0, M_PI/2., 0), VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° CCW around y axis (euler)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0, M_PI/4., 0), VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 45° CCW around y axis (euler)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(cos(M_PI/4),0,-sin(M_PI/4));
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(1,0,0), VuoPoint3d_make(0, M_PI/2., 0), VuoPoint3d_make(2,2,2));
+			QTest::newRow("rotate, scale, translate") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(1,0,-2);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(
+				VuoPoint3d_make(0,0,0),
+				VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/4),
+				VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 45° CCW around y axis (VuoTransform_quaternionFromAxisAngle)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(cos(M_PI/4),0,-sin(M_PI/4));
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(
+				VuoPoint3d_make(0,0,0),
+				VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2),
+				VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° CCW around y axis (VuoTransform_quaternionFromAxisAngle)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(
+				VuoPoint3d_make(0,0,0),
+				VuoTransform_quaternionFromVectors(VuoPoint3d_make(0,0,1), VuoPoint3d_make(0,-1,0)),
+				VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° CCW around x axis (VuoTransform_quaternionFromVectors)") << t << VuoPoint3d_make(0,0,1) << VuoPoint3d_make(0,-1,0);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(
+				VuoPoint3d_make(0,0,0),
+				VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_make(cos(M_PI/4),0,-sin(M_PI/4))),
+				VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 45° CCW around y axis (VuoTransform_quaternionFromVectors)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(cos(M_PI/4),0,-sin(M_PI/4));
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(
+				VuoPoint3d_make(0,0,0),
+				VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_make(0,0,-1)),
+				VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° CCW around y axis (VuoTransform_quaternionFromVectors)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(
+				VuoPoint3d_make(0,0,0),
+				VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_make(0,1,0)),
+				VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° CCW around z axis (VuoTransform_quaternionFromVectors)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,1,0);
+		}
+	}
+	void testTransformPoint()
+	{
+		QFETCH(VuoTransform, transform);
+		QFETCH(VuoPoint3d, point);
+		QFETCH(VuoPoint3d, expectedPoint);
+
+		float matrix[16];
+		VuoTransform_getMatrix(transform, matrix);
+		VuoPoint3d actualPoint = VuoTransform_transformPoint(matrix, point);
+
+		// "In the case of comparing floats and doubles, qFuzzyCompare() is used for comparing. This means that comparing to 0 will likely fail."
+		QCOMPARE(actualPoint.x+10.f, expectedPoint.x+10.f);
+		QCOMPARE(actualPoint.y+10.f, expectedPoint.y+10.f);
+		QCOMPARE(actualPoint.z+10.f, expectedPoint.z+10.f);
+	}
+
+	void testDirection_data()
+	{
+		QTest::addColumn<VuoTransform>("transform");
+		QTest::addColumn<VuoPoint3d>("expectedDirection");
+
+		QTest::newRow("identity") << VuoTransform_makeIdentity() << VuoPoint3d_make(1,0,0);
+
+		{
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0, M_PI/2., 0), VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° around y axis (euler)") << t << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0, M_PI/2., 0), VuoPoint3d_make(4,5,6));
+			QTest::newRow("rotate 90° around y axis (euler), scale, transform") << t << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0), VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.), VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° around y axis (quaternion)") << t << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(1,2,3), VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.), VuoPoint3d_make(4,5,6));
+			QTest::newRow("rotate 90° around y axis (quaternion), scale, transform") << t << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoPoint3d lightPosition = VuoPoint3d_make(0,0,1);
+			VuoPoint3d lightTarget = VuoPoint3d_make(0,0,0);
+			VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_subtract(lightTarget, lightPosition));
+			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
+			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(0,0,-1);
+		}
+
+		{
+			VuoPoint3d lightPosition = VuoPoint3d_make(-1,0,1);
+			VuoPoint3d lightTarget = VuoPoint3d_make(0,0,0);
+			VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_subtract(lightTarget, lightPosition));
+			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
+			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4));
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,-1),VuoPoint3d_make(0,1,0));
+			QTest::newRow("targeted rotation") << t << VuoPoint3d_make(-1,0,0);
+		}
+	}
+	void testDirection()
+	{
+		QFETCH(VuoTransform, transform);
+		QFETCH(VuoPoint3d, expectedDirection);
+
+		VuoPoint3d actualDirection = VuoTransform_getDirection(transform);
+
+		// "In the case of comparing floats and doubles, qFuzzyCompare() is used for comparing. This means that comparing to 0 will likely fail."
+		QCOMPARE(actualDirection.x+10.f, expectedDirection.x+10.f);
+		QCOMPARE(actualDirection.y+10.f, expectedDirection.y+10.f);
+		QCOMPARE(actualDirection.z+10.f, expectedDirection.z+10.f);
+	}
+
 	void testSerializationAndSummary_data()
 	{
 		QTest::addColumn<QString>("value");
@@ -93,6 +244,10 @@ private slots:
 												<< true
 												<< "identity transform (no change)";
 
+		QTest::newRow("Targeted identity")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,0,0),VuoPoint3d_make(0,1,0)))
+											<< true
+											<< "identity transform (no change)";
+
 		QTest::newRow("Euler transform")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeEuler(VuoPoint3d_make(1,1,1),VuoPoint3d_make(0,M_PI/2.,2.*M_PI),VuoPoint3d_make(2,2,2)))
 											<< true
 											<< "translation (1, 1, 1)<br>rotation (0°, 90°, 360°) euler<br>scale (2, 2, 2)";
@@ -100,6 +255,10 @@ private slots:
 		QTest::newRow("Quaternion transform")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeQuaternion(VuoPoint3d_make(1,1,1),VuoPoint4d_make(.5,.5,.5,.5),VuoPoint3d_make(2,2,2)))
 												<< true
 												<< "translation (1, 1, 1)<br>rotation (0.5, 0.5, 0.5, 0.5) quaternion<br>scale (2, 2, 2)";
+
+		QTest::newRow("Targeted transform")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeFromTarget(VuoPoint3d_make(1,2,3),VuoPoint3d_make(4,5,6),VuoPoint3d_make(0,1,0)))
+											<< true
+											<< "position (1, 2, 3)<br>target (4, 5, 6)<br>up (0, 1, 0)";
 	}
 	void testSerializationAndSummary()
 	{

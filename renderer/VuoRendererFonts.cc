@@ -16,6 +16,8 @@ VuoRendererFonts *VuoRendererFonts::sharedFonts = NULL;
 const qreal VuoRendererFonts::thickPenWidth = 20;
 const qreal VuoRendererFonts::midPenWidth = VuoRendererFonts::thickPenWidth/10.0;
 
+const qreal VuoRendererFonts::nodeTitleFontSize = thickPenWidth*12.0/16.0;
+
 /**
  * Returns a shared font provider.
  *
@@ -74,7 +76,7 @@ void VuoRendererFonts::addFont(QString font)
  */
 QFont VuoRendererFonts::nodeTitleFont(void)
 {
-	return QFont("Signika", thickPenWidth*7.0/8.0, QFont::Bold, false);
+	return QFont("Signika", nodeTitleFontSize, QFont::Bold, false);
 }
 
 /**
@@ -99,4 +101,18 @@ QFont VuoRendererFonts::nodePortTitleFont(void)
 QFont VuoRendererFonts::portPopoverFont(void)
 {
 	return QFont("Signika", thickPenWidth*9.0/16.0, QFont::Normal, false);
+}
+
+/**
+ * Returns the horizontal distance between the left side of the bounding box and the left side of the first glyph in @c text,
+ * to compensate for the empty space left of the first glyph that causes multiple lines of text to appear misaligned.
+ */
+double VuoRendererFonts::getHorizontalOffset(const QFont font, const QString text)
+{
+	if (text.length() == 0)
+		return 0;
+
+	QPainterPath p;
+	p.addText(0, 0, font, text[0]);
+	return p.boundingRect().x();
 }

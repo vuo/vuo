@@ -23,7 +23,6 @@ find $FRAMEWORKS_DEST_DIR -type f -perm +111 -print0 | while read -d $'\0' i ; d
 		fix QtMacExtras    "$i"
 		fix QtPrintSupport "$i"
 		fix QtOpenGL       "$i"
-		fix QtSvg          "$i"
 		fix QtXml          "$i"
 	fi
 done

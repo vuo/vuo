@@ -22,7 +22,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoPoint3d, {"default":{"x":0,"y":0,"z":0},"suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) translation,
-		VuoInputData(VuoPoint3d, {"default":{"x":0,"y":0,"z":0},"suggestedMin":{"x":0,"y":0,"z":0},"suggestedMax":{"x":360,"y":360,"z":360},"suggestedStep":{"x":1,"y":1,"z":1}}) rotation,
+		VuoInputData(VuoPoint3d, {"default":{"x":0,"y":0,"z":0},"suggestedMin":{"x":0,"y":0,"z":0},"suggestedMax":{"x":360,"y":360,"z":360},"suggestedStep":{"x":15,"y":15,"z":15}}) rotation,
 		VuoInputData(VuoPoint3d, {"default":{"x":1,"y":1,"z":1},"suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) scale,
 		VuoOutputData(VuoTransform) transform
 )

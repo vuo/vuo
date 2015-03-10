@@ -74,5 +74,16 @@ json_object * VuoWrapMode_jsonFromValue(const VuoWrapMode value)
  */
 char * VuoWrapMode_summaryFromValue(const VuoWrapMode value)
 {
-	return VuoWrapMode_stringFromValue(value);
+	char *valueAsString = "";
+
+	switch (value) {
+		case VuoWrapMode_Wrap:
+			valueAsString = "Wrap";
+			break;
+		case VuoWrapMode_Saturate:
+			valueAsString = "Saturate";
+			break;
+	}
+
+	return strdup(valueAsString);
 }

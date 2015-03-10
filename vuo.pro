@@ -15,8 +15,9 @@ SUBDIRS += \
 	renderer_vuo_export \
 	renderer_vuo_render \
 	runtime \
-	type_list \
-	type
+	type \
+	type_input_editor \
+	type_list
 
 OTHER_FILES += \
 	module.pri \
@@ -42,7 +43,7 @@ compiler_vuo_link.subdir = compiler/vuo-link
 compiler_vuo_link.depends = framework
 
 framework.subdir = framework
-framework.depends = base compiler renderer runtime node type type_list library
+framework.depends = base compiler renderer runtime node type type_input_editor type_list library
 
 node.depends = compiler_vuo_compile type type_list
 
@@ -58,6 +59,9 @@ runtime.depends = base
 
 type.depends = compiler_vuo_compile
 
+type_input_editor.subdir = type/inputEditor
+type_input_editor.depends = type node
+
 type_list.subdir = type/list
 type_list.depends = type
 
@@ -65,18 +69,16 @@ type_list.depends = type
 exists(editor) {
 	SUBDIRS += \
 		editor \
-		editor_InputEditors \
 		editor_VuoEditor
 
-	editor.depends = compiler renderer
-
-	editor_InputEditors.subdir = editor/InputEditors
-	editor_InputEditors.depends = editor
+	editor.depends = \
+		compiler \
+		renderer \
+		type_input_editor
 
 	editor_VuoEditor.subdir = editor/VuoEditorApp
 	editor_VuoEditor.depends = \
 		editor \
-		editor_InputEditors \
 		framework
 }
 
@@ -99,11 +101,18 @@ QMAKE_EXTRA_TARGETS += docs
 tests.commands = (cd test && ([ -f Makefile ] || qmake) && make -j9 && make check);
 QMAKE_EXTRA_TARGETS += tests
 
+# Provide "make vuo32" so we don't need to build the 32-bit portion of Vuo.framework during development
+vuo32.commands = (cd compiler/vuo-compile-for-framework32 && ([ -f Makefile ] || qmake) && make -j9)
+vuo32.commands += && (cd compiler/vuo-link-for-framework32 && ([ -f Makefile ] || qmake) && make -j9)
+vuo32.commands += && (cd framework32 && ([ -f Makefile ] || qmake) && make -j9)
+QMAKE_EXTRA_TARGETS += vuo32
+
 # Provide "make cleanall", which cleans the main project and all external subprojects
 cleanall.commands = make clean
 cleanall.commands += ; (for i in example/api/* example/node/* example/type/* ; do (cd $${DOLLAR}$${DOLLAR}i ; make clean ; rm -Rf Makefile pch *.app); done)
 cleanall.commands += ; (for i in node/vuo.*/examples; do (cd $${DOLLAR}$${DOLLAR}i && make clean); done)
 cleanall.commands += ; (cd documentation && make clean)
 cleanall.commands += ; (cd test && make clean)
+cleanall.commands += ; rm -f .qmake.cache .qmake.stash
 cleanall.commands += ; true
 QMAKE_EXTRA_TARGETS += cleanall

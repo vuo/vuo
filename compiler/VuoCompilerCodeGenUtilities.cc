@@ -1431,32 +1431,6 @@ Function * VuoCompilerCodeGenUtilities::getCallbackStopFunction(Module *module)
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getInitializeReferenceCountsFunction(Module *module)
-{
-	const char *functionName = "VuoHeap_init";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		vector<Type *> functionParams;
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getFinalizeReferenceCountsFunction(Module *module)
-{
-	const char *functionName = "VuoHeap_fini";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		vector<Type *> functionParams;
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
 Function * VuoCompilerCodeGenUtilities::getVuoRetainFunction(Module *module)
 {
 	const char *functionName = "VuoRetain";

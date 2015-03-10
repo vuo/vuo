@@ -172,20 +172,22 @@ To understand how to control what happens in your composition, you first need to
 
 An \term{input port} is the location on the left side of the node where you can enter data directly, connect a data-and-event cable, or connect an event-only cable. When an event arrives at an input port, it causes the node to execute and perform its function based on the data present at the node's input ports. 
 
-Some nodes, like the two nodes shown below, have input ports that block an event. This means the node will execute, but the event associated with that data won't travel any farther. This is useful when you want part of your composition to execute in response to events from one trigger port but not events from another trigger port, or when you're creating a feedback loop. (See later in this chapter, [Controlling when nodes execute](#controlling-when-nodes-execute), for more information.) 
+Some nodes, like the two nodes shown below, have input ports that block an event. This means the node will execute, but the event associated with that data won't travel through any output ports, with the exception of the \term{done port}. Done ports are explained in the [Output ports](#output-ports) section. Event blocking is useful when you want part of your composition to execute in response to events from one trigger port but not events from another trigger port, or when you're creating a feedback loop. (See later in this chapter, [Controlling when nodes execute](#controlling-when-nodes-execute), for more information.) 
 
 \vuoNodeClassImageWithAnnotation{vuo.select.in.2}{
 	\draw[->,line width=1,green] (2.15,-.25) -- (.9,1); \node[right, green] at (2.15,-.25) {event wall};
 	\draw[->,line width=1,green] (2.15,-.75) -- (.9,.5); \node[right, green] at (2.15,-.75) {event door};
 }
 \hfill
-\vuoNodeClassImage{vuo.hold}
+\vuoNodeClassImageWithAnnotation{vuo.time.measureTime}{
+	\draw[->,line width=1,green] (2,-.25) -- (.75,1); \node[right, green] at (2,-.25) {event wall};
+}
 
-Ports that always block events have a solid semi-circle (like the \vuoPort{which} port above).  This solid semi-circle is called an \term{event wall}. The node must receive an event from another port without an event wall for the results of the node's execution to be available to other nodes. 
+Ports that always block events have a solid semi-circle (like the \vuoPort{which} port above) or a solid chevron (like the \vuoPort{start} port above).  This is called an \term{event wall}. The node must receive an event from another port without an event wall for the results of the node's execution to be available to other nodes. The event itself, even it arrives via an input port with an event wall, is available via the \term{done port}. 
 
 Tip: The event wall is visually placed inside the node to indicate that the event gets blocked inside the node (as it executes) --- rather than getting blocked before it reaches the node. 
 
-Ports that sometimes block events have a broken semi-circle (like the \vuoPort{option1} port above).  This broken semi-circle is called an \term{event door}. Event doors are useful when you want to take events from a trigger port and filter some of them out or route them to different parts of the composition. For example, in the 
+Ports that sometimes block events have a broken semi-circle (like the \vuoPort{option1} port above) or chevron.  This is called an \term{event door}. Event doors are useful when you want to take events from a trigger port and filter some of them out or route them to different parts of the composition. For example, in the 
 \vuoNode{Select Input} node, the value at the \vuoPort{which} port will determine whether the data or data-and-event at \vuoPort{option1} or \vuoPort{option2} will be transmitted to the \vuoPort{out} port. 
 
 
@@ -225,13 +227,15 @@ When an event executes a node, the event can travel to downstream nodes using th
 
 #### Trigger ports
 
-A \term{trigger port} is a special kind of output port. Trigger ports can fire (originate) events. However, they never transmit events that came into the node through an input port, nor do they cause any other output ports to emit events. 
+A \term{trigger port} is a special kind of output port. Trigger ports can fire (originate) events. However, trigger ports never transmit events that came into the node through an input port, nor do they cause any other output ports to emit events. When a trigger port fires, no event comes out the done port. 
 
 \vuoNodeClassImageWithAnnotation{vuo.event.fireOnStart}{
 	\draw[->,line width=1,green] (4.1,.35) -- (3.6,.35); \node[right, green] at (4.1,.35) {trigger port};
 }
 
 (Note: A trigger port can fire an event *in response to* an event that came into the node, but this is a *different* event. For more information, see the section on [Executing nodes in the background](#executing-nodes-in-the-background).) 
+
+Nodes that contain trigger ports will execute as described in the [Input ports](#input-ports) section when they receive an event, including transmitting events through the \term{done port}.
 
 #### Done ports
 
@@ -297,7 +301,7 @@ When the \vuoNode{Select Input} node executes, it looks at what is present at th
 
 \vuoNodeClassImage{vuo.select.in.2}
 
-Notice that the \vuoPort{which} port has an event wall, as shown by the solid semi-circle. In order to get the node to output an event, you need to send an event to the selected input port or the refresh port. It won't work if you just send an event to the \vuoPort{which} port. 
+Notice that the \vuoPort{which} port has an event wall, as shown by the solid semi-circle. In order to get the node to output an event through the \vuoPort{out} port, you need to send an event to the selected input port or the refresh port. It won't work if you just send an event to the \vuoPort{which} port. 
 
 Here is an example of the node using Boolean values to control how it functions:
 
@@ -387,7 +391,7 @@ When you add a node to a composition, each input port has a preset constant valu
 
 If you disconnect a data-and-event cable to a port that previously had a constant value, then the port goes back to its previous value. If you did not set a constant value, it goes back to its default value.
 
-\vuoNodeClassImage{vuo.math.count}
+\vuoNodeClassImage{vuo.math.count.VuoReal}
 
 ## Using drawers
 
@@ -406,7 +410,7 @@ Like a node, a drawer will only execute if it has an event coming into one of it
 
 Some nodes have \term{state}. They remember information from previous times they were executed. An example of a \term{stateful} node is \vuoNode{Count}. If a \vuoNode{Count} node is told to increment, its state (the count) changes. 
 
-\vuoNodeClassImageWithAnnotation{vuo.math.count}{
+\vuoNodeClassImageWithAnnotation{vuo.math.count.VuoReal}{
 	\draw[->,line width=1,green] (2.25,-.5) -- (2.25,0); \node[below, green, align=center] at (2.25,-.5) {upside-down cable\\indicating stateful node};
 }
 
@@ -466,9 +470,9 @@ A generic node can have ports that each work with a different generic type. For 
 
 Some nodes interact with the world outside the composition --- such as windows, files, networks, and devices. 
 
-Nodes that bring information into the composition from the outside world and/or affect the outside world are called \term{interface} nodes. An example of an interface node is the \vuoNode{Get Mouse} node, which outputs the position and clicks of the mouse. Another example is the \vuoNode{Display Console Window} node, which reads text typed in a console window and writes text to that window. 
+Nodes that bring information into the composition from the outside world and/or affect the outside world are called \term{interface} nodes. An example of an interface node is the \vuoNode{Check Mouse Status} node, which outputs information about the mouse's position and buttons. Another example is the \vuoNode{Display Console Window} node, which reads text typed in a console window and writes text to that window. 
 
-\vuoNodeClassImage{vuo.mouse} \hfill \vuoNodeClassImage{vuo.console.window}
+\vuoNodeClassImage{vuo.mouse.status} \hfill \vuoNodeClassImage{vuo.console.window}
 
 \noteQCUsers{Instead of Vuo's interface and non-interface nodes, Quartz Composer has an execution mode for each patch: provider, consumer, or processor. A patch's execution mode not only indicates how it interacts with the outside world, but also controls when it executes and whether it can be embedded in macro patches.} 
 
@@ -502,7 +506,7 @@ Whether you have left your library docked or undocked, visible or hidden, your p
 
 Each node has two names: a title and a class name. The \term{title} is a quick description of a node's function; it's the most prominent name written on a node. The \term{class name} is a categorical name that reveals specific information about a node; it appears directly below the node's title.
 
-\vuoNodeClassImageWithAnnotation{vuo.math.count}{
+\vuoNodeClassImageWithAnnotation{vuo.math.count.VuoReal}{
 	\draw[->,line width=1,green] (5,2.0) -- (3.25,2.0); \node[right, green] at (5,2.0) {title};
 	\draw[->,line width=1,green] (5,1.65) -- (4,1.65); \node[right, green] at (5,1.65) {class name};
 }

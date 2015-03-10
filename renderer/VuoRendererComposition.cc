@@ -18,6 +18,7 @@
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
+#include "VuoCompilerPublishedInputNodeClass.hh"
 #include "VuoCompilerPublishedInputPort.hh"
 #include "VuoCompilerPublishedOutputPort.hh"
 
@@ -35,7 +36,6 @@
 #include <sys/stat.h>
 
 #ifdef MAC
-#include <QtMacExtras/QMacFunctions>
 #include <objc/runtime.h>
 #endif
 
@@ -115,15 +115,7 @@ VuoRendererNode * VuoRendererComposition::createRendererNode(VuoNode *baseNode)
 		rn = new VuoRendererMakeListNode(baseNode, signaler);
 
 	else
-	{
 		rn = new VuoRendererNode(baseNode, signaler);
-
-		// Performance optimizations
-		// Caching is currently disabled for VuoRendererMakeListNodes; see
-		// https://b33p.net/kosada/node/6286 and https://b33p.net/kosada/node/6064 .
-		if (cachingEnabled && !renderActivity)
-			rn->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-	}
 
 	return rn;
 }
@@ -157,27 +149,13 @@ void VuoRendererComposition::addNodeInCompositionToCanvas(VuoNode *n)
 	if (renderMissingAsPresent)
 		rn->setMissingImplementation(false);
 
-	if (rn->getBase()->hasCompiler())
-	{
-		string uniqueNodeName = rn->getBase()->getCompiler()->getGraphvizIdentifier();
-		if (nodeNameTaken[uniqueNodeName] != NULL && nodeNameTaken[uniqueNodeName] != rn)
-		{
-			uniqueNodeName = rn->getBase()->getCompiler()->getGraphvizIdentifierPrefix();
-			string uniqueNodeNamePrefix = uniqueNodeName;
-			int nodeNameInstanceNum = 1;
-			while (nodeNameTaken[uniqueNodeName])
-			{
-				ostringstream oss;
-				oss << ++nodeNameInstanceNum;
-				uniqueNodeName = uniqueNodeNamePrefix + oss.str();
-			}
-			rn->getBase()->getCompiler()->setGraphvizIdentifier(uniqueNodeName);
-		}
-		nodeNameTaken[uniqueNodeName] = rn;
-	}
+	if (getBase()->hasCompiler())
+		getBase()->getCompiler()->setUniqueGraphvizIdentifierForNode(n);
 
 	rn->layoutConnectedInputDrawers();
 	addItem(rn);
+
+	rn->setCacheModeForNodeAndPorts(getCurrentDefaultCacheMode());
 }
 
 /**
@@ -203,6 +181,9 @@ void VuoRendererComposition::addCableInCompositionToCanvas(VuoCable *c)
 	// Render cables behind nodes.
 	rc->setZValue(-1);
 	addItem(rc);
+
+	// Performance optimizations
+	rc->setCacheMode(getCurrentDefaultCacheMode());
 }
 
 /**
@@ -272,6 +253,66 @@ void VuoRendererComposition::removePublishedOutputCable(VuoRendererCable *rc)
 }
 
 /**
+ * Creates a "Make List" node, and creates a cable from the "Make List" node to the given input port.
+ *
+ * @param toNode The node that contains @c toPort.
+ * @param toPort The input port. Assumed to be a data-and-event input port carrying list data.
+ * @param compiler A compiler used to get the "Make List" node class.
+ * @param[out] rendererCable The created cable.
+ * @return The created "Make List" node.
+ */
+VuoRendererNode * VuoRendererComposition::createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler,
+																	   VuoRendererCable *&rendererCable)
+{
+	VuoRendererNode *makeListRendererNode = NULL;
+	rendererCable = NULL;
+
+	VuoCompilerInputEventPort *inputEventPort = static_cast<VuoCompilerInputEventPort *>(toPort->getCompiler());
+	VuoCompilerType *type = inputEventPort->getDataType();
+
+	vector<string> itemInitialValues;
+	if (inputEventPort->getData())
+	{
+		string listInitialValue = inputEventPort->getData()->getInitialValue();
+		json_object *js = json_tokener_parse(listInitialValue.c_str());
+		if (json_object_get_type(js) == json_type_array)
+		{
+			int itemCount = json_object_array_length(js);
+			for (int i = 0; i < itemCount; ++i)
+			{
+				json_object *itemObject = json_object_array_get_idx(js, i);
+				string itemString = json_object_to_json_string_ext(itemObject, JSON_C_TO_STRING_PLAIN);
+				itemInitialValues.push_back(itemString);
+			}
+		}
+		json_object_put(js);
+	}
+
+	unsigned long itemCount = (itemInitialValues.empty() ? 2 : itemInitialValues.size());
+	string nodeClassName = VuoCompilerMakeListNodeClass::getNodeClassName(itemCount, type);
+	VuoCompilerNodeClass *makeListNodeClass = compiler->getNodeClass(nodeClassName);
+
+	VuoNode *makeListNode = makeListNodeClass->newNode();
+	makeListRendererNode = createRendererNode(makeListNode);
+
+	vector<VuoPort *> itemPorts = makeListNode->getInputPorts();
+	for (size_t i = 0; i < itemInitialValues.size(); ++i)
+	{
+		int portIndex = i + VuoNodeClass::unreservedInputPortStartIndex;
+		VuoCompilerInputEventPort *itemPort = static_cast<VuoCompilerInputEventPort *>( itemPorts[portIndex]->getCompiler() );
+		itemPort->getData()->setInitialValue( itemInitialValues[i] );
+	}
+
+	VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPort *>(makeListNode->getOutputPorts().back()->getCompiler());
+	VuoCompilerPort *toCompilerPort = static_cast<VuoCompilerPort *>(toPort->getCompiler());
+	VuoCompilerCable *compilerCable = new VuoCompilerCable(makeListNode->getCompiler(), fromCompilerPort,
+														   toNode->getCompiler(), toCompilerPort);
+	rendererCable = new VuoRendererCable(compilerCable->getBase());
+
+	return makeListRendererNode;
+}
+
+/**
  * Creates a renderer detail for the pre-existing @c publishedPort, on the assumption that
  * the published port provided already exists in the base composition and has an associated compiler detail.
  */
@@ -316,7 +357,7 @@ VuoRendererPublishedPort * VuoRendererComposition::publishPort(VuoPort *port, st
 
 		if (publishedPort && publishedPort->getRenderer()->canAccommodateInternalPort(port->getRenderer()))
 		{
-			publishedPort->addConnectedPort(port);
+			publishedPort->getRenderer()->addConnectedPort(port);
 			performedMerge = true;
 		}
 	}
@@ -335,7 +376,7 @@ VuoRendererPublishedPort * VuoRendererComposition::publishPort(VuoPort *port, st
 							);
 	}
 
-	registerExternalPublishedPort(publishedPort, isInput);
+	addPublishedPort(publishedPort, isInput);
 
 	VuoRendererPublishedPort *rendererPublishedPort = (publishedPort->hasRenderer()?
 															  publishedPort->getRenderer() :
@@ -397,10 +438,9 @@ VuoCable * VuoRendererComposition::createPublishedCable(VuoPort *vuoPseudoPort, 
 
 
 /**
- * Registers a previously existing VuoPublishedPort as one of this composition's
- * published ports.
+ * Adds an existing VuoPublishedPort as one of this composition's published ports.
  */
-void VuoRendererComposition::registerExternalPublishedPort(VuoPublishedPort *publishedPort, bool isInput)
+void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, bool isInput)
 {
 	string name = publishedPort->getName();
 	if (isInput)
@@ -435,7 +475,7 @@ void VuoRendererComposition::registerExternalPublishedPort(VuoPublishedPort *pub
  *
  * @return The index within the list of published input port output ports at which the port was located, or -1 if not located.
  */
-int VuoRendererComposition::unregisterExternalPublishedPort(VuoPublishedPort *publishedPort, bool isInput)
+int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort, bool isInput)
 {
 	if (isInput)
 	{
@@ -466,7 +506,7 @@ int VuoRendererComposition::unregisterExternalPublishedPort(VuoPublishedPort *pu
 void VuoRendererComposition::setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name)
 {
 	bool isInput = publishedPort->getBase()->getInput();
-	publishedPort->getBase()->setName(getUniquePublishedPortName(name, isInput));
+	publishedPort->setName(getUniquePublishedPortName(name, isInput));
 	isInput? updatePublishedInputNode() : updatePublishedOutputNode();
 }
 
@@ -484,7 +524,7 @@ void VuoRendererComposition::updatePublishedInputNode()
 		publishedInputNodeOutputPortNames.push_back(publishedPort->getName());
 
 	VuoNodeClass *dummyVuoInNodeClass = new VuoNodeClass(VuoNodeClass::publishedInputNodeClassName, vector<string>(), publishedInputNodeOutputPortNames);
-	VuoNodeClass *newVuoInNodeClass = VuoCompilerNodeClass::createPublishedInputNodeClass(dummyVuoInNodeClass->getOutputPortClasses());
+	VuoNodeClass *newVuoInNodeClass = VuoCompilerPublishedInputNodeClass::newNodeClass(dummyVuoInNodeClass);
 
 	// Create the new published input node.
 	VuoNode *newVuoInNode = newVuoInNodeClass->getCompiler()->newNode(VuoNodeClass::publishedInputNodeIdentifier, 0, 0);
@@ -582,6 +622,9 @@ string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool 
  */
 bool VuoRendererComposition::isPublishedPortNameTaken(string name, bool isInput)
 {
+	if (name == "refresh" || name == "done")
+		return true;
+
 	VuoPublishedPort *publishedPort = (isInput ?
 										   getBase()->getPublishedInputPortWithName(name) :
 										   getBase()->getPublishedOutputPortWithName(name));
@@ -694,9 +737,22 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 	VuoRendererTypecastPort *tp = new VuoRendererTypecastPort(rn,
 															  oldToRP,
 															  signaler);
-	tp->updateGeometry();
+	
+	foreach (VuoCable *cable, inCables)
+	{
+		if (cable->hasRenderer())
+			cable->getRenderer()->updateGeometry();
+	}
 
+	foreach (VuoCable *cable, outCables)
+	{
+		if (cable->hasRenderer())
+			cable->getRenderer()->updateGeometry();
+	}
+	
+	tp->updateGeometry();
 	toRN->replaceInputPort(oldToRP, tp);
+	toRN->setCacheModeForNodeAndPorts(getCurrentDefaultCacheMode());
 	typecastInPort->getRenderer()->setTypecastParentPort(tp);
 	typecastInPort->getRenderer()->setParentItem(toRN);
 
@@ -736,6 +792,18 @@ VuoRendererNode * VuoRendererComposition::uncollapseTypecastNode(VuoRendererType
 	VuoRendererPort *uncollapsedToRP = typecast->getReplacedPort();
 	VuoRendererNode *toRN = outCable->getToNode()->getRenderer();
 
+	foreach (VuoCable *cable, typecastInPort->getConnectedCables(true))
+	{
+		if (cable->hasRenderer())
+			cable->getRenderer()->updateGeometry();
+	}
+
+	foreach (VuoCable *cable, typecastOutPort->getConnectedCables(true))
+	{
+		if (cable->hasRenderer())
+			cable->getRenderer()->updateGeometry();
+	}
+	
 	typecast->updateGeometry();
 	uncollapsedNode->updateGeometry();
 
@@ -747,7 +815,8 @@ VuoRendererNode * VuoRendererComposition::uncollapseTypecastNode(VuoRendererType
 
 	toRN->updateGeometry();
 	toRN->replaceInputPort(typecast, uncollapsedToRP);
-
+	toRN->setCacheModeForNodeAndPorts(getCurrentDefaultCacheMode());
+	
 	// Notify the base port of the change in renderer port, to reverse
 	// the change made within the VuoRendererPort constructor on behalf of any
 	// renderer port previously initialized for this base port.
@@ -768,25 +837,40 @@ void VuoRendererComposition::clearInternalPortEligibilityHighlighting()
 		vector<VuoPort *> inputPorts = node->getInputPorts();
 		for(vector<VuoPort *>::iterator inputPort = inputPorts.begin(); inputPort != inputPorts.end(); ++inputPort)
 		{
+			QGraphicsItem::CacheMode normalCacheMode = (*inputPort)->getRenderer()->cacheMode();
+			(*inputPort)->getRenderer()->setCacheMode(QGraphicsItem::NoCache);
+
 			(*inputPort)->getRenderer()->updateGeometry();
 			(*inputPort)->getRenderer()->setEligibleForDirectConnection(false);
 			(*inputPort)->getRenderer()->setEligibleForConnectionViaTypecast(false);
 
+			(*inputPort)->getRenderer()->setCacheMode(normalCacheMode);
+
 			VuoRendererTypecastPort *typecastPort = dynamic_cast<VuoRendererTypecastPort *>((*inputPort)->getRenderer());
 			if (typecastPort)
 			{
+				QGraphicsItem::CacheMode normalCacheMode = typecastPort->getChildPort()->cacheMode();
+				typecastPort->getChildPort()->setCacheMode(QGraphicsItem::NoCache);
+
 				typecastPort->getChildPort()->updateGeometry();
 				typecastPort->getChildPort()->setEligibleForDirectConnection(false);
 				typecastPort->getChildPort()->setEligibleForConnectionViaTypecast(false);
+
+				typecastPort->getChildPort()->setCacheMode(normalCacheMode);
 			}
 		}
 
 		vector<VuoPort *> outputPorts = node->getOutputPorts();
 		for(vector<VuoPort *>::iterator outputPort = outputPorts.begin(); outputPort != outputPorts.end(); ++outputPort)
 		{
+			QGraphicsItem::CacheMode normalCacheMode = (*outputPort)->getRenderer()->cacheMode();
+			(*outputPort)->getRenderer()->setCacheMode(QGraphicsItem::NoCache);
+
 			(*outputPort)->getRenderer()->updateGeometry();
 			(*outputPort)->getRenderer()->setEligibleForDirectConnection(false);
 			(*outputPort)->getRenderer()->setEligibleForConnectionViaTypecast(false);
+
+			(*outputPort)->getRenderer()->setCacheMode(normalCacheMode);
 		}
 	}
 }
@@ -877,6 +961,52 @@ void VuoRendererComposition::setRenderActivity(bool render)
 	}
 
 	repaintAllComponents();
+	updateComponentCaching();
+}
+
+/**
+ * Suspends or resumes caching for each applicable graphics item within the
+ * composition, as determined by the current default cache mode returned by
+ * VuoRendererComposition::getCurrentDefaultCacheMode().
+ */
+void VuoRendererComposition::updateComponentCaching()
+{
+	QGraphicsItem::CacheMode currentDefaultCacheMode = getCurrentDefaultCacheMode();
+
+	// Nodes and ports
+	foreach (VuoNode *node, getBase()->getNodes())
+	{
+		VuoRendererNode *rn = node->getRenderer();
+		if (rn)
+			rn->setCacheModeForNodeAndPorts(currentDefaultCacheMode);
+	}
+
+	// Cables
+	set<VuoCable *> internalCables = getBase()->getCables();
+	set<VuoCable *> publishedInputCables = getBase()->getPublishedInputCables();
+	set<VuoCable *> publishedOutputCables = getBase()->getPublishedOutputCables();
+
+	set<VuoCable *> allCables;
+	allCables.insert(internalCables.begin(), internalCables.end());
+	allCables.insert(publishedInputCables.begin(), publishedInputCables.end());
+	allCables.insert(publishedOutputCables.begin(), publishedOutputCables.end());
+
+	foreach (VuoCable *cable, allCables)
+	{
+		VuoRendererCable *rc = cable->getRenderer();
+		if (rc)
+			rc->setCacheMode(currentDefaultCacheMode);
+	}
+}
+
+/**
+ * Returns the current default cache mode for components of this composition, dependent
+ * on whether caching is enabled for this composition in general and on whether
+ * running composition activity is currently being reflected in the composition rendering.
+ */
+QGraphicsItem::CacheMode VuoRendererComposition::getCurrentDefaultCacheMode()
+{
+	return ((cachingEnabled && !renderActivity)? QGraphicsItem::DeviceCoordinateCache : QGraphicsItem::NoCache);
 }
 
 /**
@@ -931,7 +1061,7 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	VuoFileUtilities::writeStringToFile(plist, tmpAppPath + "/Contents/Info.plist");
 
 	// Bundle the essential components of Vuo.framework.
-	string sourceVuoFrameworkPath = compiler->getVuoFrameworkPath().c_str();
+	string sourceVuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	string targetVuoFrameworkPath = tmpAppPath + "/Contents/Frameworks/Vuo.framework/Versions/" + VUO_VERSION_STRING;
 	bundleVuoSubframeworks(sourceVuoFrameworkPath, targetVuoFrameworkPath);
 	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Modules", targetVuoFrameworkPath + "/Modules", "dylib");

@@ -8,7 +8,7 @@
  */
 
 #include <stdio.h>
-#include <QtTest>
+#include <QtTest/QtTest>
 
 extern "C" {
 #include "VuoMovie.h"
@@ -60,6 +60,56 @@ private slots:
 		double duration = VuoMovie_getDuration(m);
 		// QuickTime Player says Fish.mov is 30 FPS (maybe we should provide a VuoMovie function to get average framerate).
 		unsigned int frames = duration * 30;
+
+		double pts;
+		VuoImage i;
+		QBENCHMARK {
+			while (frames--)
+			{
+				double frameTime = duration * (double)rand()/(double)RAND_MAX;
+				QVERIFY(VuoMovie_seekToSecond(m, frameTime));
+				QVERIFY(VuoMovie_getNextFrame(m, &i, &pts));
+				VuoRetain(i);
+				VuoRelease(i);
+			}
+		}
+	}
+
+	void testCountMovieInfoPerformance()
+	{
+		double duration;
+		QBENCHMARK {
+			QVERIFY(VuoMovie_getInfo("count.gif", &duration));
+		}
+	}
+
+	void testCountMovieDecodePerformance()
+	{
+		VuoMovie m = VuoMovie_make("count.gif");
+		QVERIFY(m != NULL);
+
+		unsigned int frames = 0;
+		double pts;
+		VuoImage i;
+		QBENCHMARK {
+			while (VuoMovie_getNextFrame(m, &i, &pts))
+			{
+				VuoRetain(i);
+				VuoRelease(i);
+				++frames;
+			}
+		}
+
+		QVERIFY(frames == 86);
+	}
+
+	void testCountMovieFramesDecodeRandomPerformance()
+	{
+		VuoMovie m = VuoMovie_make("count.gif");
+		QVERIFY(m != NULL);
+
+		double duration = VuoMovie_getDuration(m);
+		unsigned int frames = 120;	// more than frames available
 
 		double pts;
 		VuoImage i;

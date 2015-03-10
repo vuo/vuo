@@ -21,11 +21,11 @@ int main(void)
 
 	printf("Published input ports:\n");
 	for (vector<VuoRunner::Port *>::iterator i = inputs.begin(); i != inputs.end(); ++i)
-		printf("\t%s (%s)\n", (*i)->getName().c_str(), (*i)->getType()->getModuleKey().c_str());
+		printf("\t%s (%s)\n", (*i)->getName().c_str(), (*i)->getType().c_str());
 
 	printf("Published output ports:\n");
 	for (vector<VuoRunner::Port *>::iterator i = outputs.begin(); i != outputs.end(); ++i)
-		printf("\t%s (%s)\n", (*i)->getName().c_str(), (*i)->getType()->getModuleKey().c_str());
+		printf("\t%s (%s)\n", (*i)->getName().c_str(), (*i)->getType().c_str());
 
 	runner->stop();
 

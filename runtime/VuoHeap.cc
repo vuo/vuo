@@ -38,6 +38,28 @@ void VuoHeap_init(void)
 {
 	if (! referenceCountsSemaphore)
 		referenceCountsSemaphore = dispatch_semaphore_create(1);
+
+#if 0
+	// Periodically dump the referenceCounts table, to help find leaks.
+	const double dumpInterval = 5.0; // seconds
+	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*dumpInterval, NSEC_PER_SEC*dumpInterval);
+	dispatch_source_set_event_handler(timer, ^{
+										  fprintf(stderr, "\n\n\n\n\nreferenceCounts:\n");
+										  dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+										  for (map<const void *, int>::iterator i = referenceCounts.begin(); i != referenceCounts.end(); ++i)
+										  {
+											  const void *heapPointer = i->first;
+											  int referenceCount = i->second;
+											  string description = descriptions[heapPointer];
+											  char *z = (char *)heapPointer;
+											  fprintf(stderr, "\t%p @ \"%s\" (%d refs) — \"%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\"\n", heapPointer, description.c_str(), referenceCount,
+												  z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8],z[9],z[10],z[11],z[12],z[13],z[14],z[15]);
+										  }
+										  dispatch_semaphore_signal(referenceCountsSemaphore);
+									  });
+	dispatch_resume(timer);
+#endif
 }
 
 /**
@@ -89,15 +111,22 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	ostringstream sout;
 	sout << file << ":" << line << " :: " << func << "() :: " << pointerName;
 	string description = sout.str();
+	string previousDescription;
 
 	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
 	{
 
 		isAlreadyReferenceCounted = (referenceCounts.find(heapPointer) != referenceCounts.end());
 		if (! isAlreadyReferenceCounted)
+		{
 			deallocateFunctions[heapPointer] = deallocate;
+			descriptions[heapPointer] = description;
+		}
+		else
+		{
+			previousDescription = descriptions[heapPointer];
+		}
 		updatedCount = referenceCounts[heapPointer];
-		descriptions[heapPointer] = description;
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
@@ -105,7 +134,8 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRegister was called more than once for " << heapPointer << " " << description;
+		errorMessage << "VuoRegister was called more than once for " << heapPointer << " " <<
+						previousDescription << " (previous call), " << description << " (current call)";
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -172,6 +202,7 @@ int VuoRelease(const void *heapPointer)
 		map<const void *, int>::iterator i = referenceCounts.find(heapPointer);
 		if (i != referenceCounts.end())
 		{
+			description = descriptions[heapPointer];
 			if (referenceCounts[heapPointer] == 0)
 			{
 				isRegisteredWithoutRetain = true;
@@ -185,10 +216,10 @@ int VuoRelease(const void *heapPointer)
 					referenceCounts.erase(heapPointer);
 					deallocate = deallocateFunctions[heapPointer];
 					deallocateFunctions.erase(heapPointer);
+					descriptions.erase(heapPointer);
 				}
 			}
 		}
-		description = descriptions[heapPointer];
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);

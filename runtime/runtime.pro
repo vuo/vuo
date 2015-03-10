@@ -17,7 +17,7 @@ HEADERS += \
 	VuoHeap.h \
 	VuoRuntime.h
 
-QMAKE_CLEAN += *.bc VuoCompositionLoader
+QMAKE_CLEAN += VuoCompositionLoader
 
 runtime_c.input = RUNTIME_C_SOURCES
 runtime_c.output = lib${QMAKE_FILE_IN_BASE}.bc
@@ -35,16 +35,20 @@ runtime_c.commands = \
 QMAKE_EXTRA_COMPILERS += runtime_c
 
 runtime_cxx.input = RUNTIME_CXX_SOURCES
-runtime_cxx.output = lib${QMAKE_FILE_IN_BASE}.bc
+runtime_cxx.output = lib${QMAKE_FILE_IN_BASE}.dylib
 runtime_cxx.depends = ${QMAKE_PCH_OUTPUT}
 runtime_cxx.commands = \
 	$$QMAKE_CXX \
 		-Xclang -include-pch -Xclang pch/runtime/c++.pch \
-		-emit-llvm \
 		$(CXXFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CXXFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 		-I$$ROOT/base \
-		-c ${QMAKE_FILE_IN} \
-		-o ${QMAKE_FILE_OUT}
+		-dynamiclib \
+		-headerpad_max_install_names \
+		-Wl,-no_function_starts \
+		-Wl,-no_version_load_command \
+		${QMAKE_FILE_IN} \
+		-o ${QMAKE_FILE_OUT} && \
+	install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Frameworks/VuoRuntime.framework/libVuoHeap.dylib ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_cxx
 
 runtime_loader.input = RUNTIME_LOADER_SOURCES

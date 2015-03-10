@@ -8,8 +8,6 @@
  */
 
 #include <fcntl.h>
-#include <mach-o/dyld.h>
-#include <limits.h>			/* PATH_MAX */
 #include <string.h>
 #include <sstream>
 #include "VuoCompiler.hh"
@@ -42,7 +40,7 @@ VuoCompiler::VuoCompiler()
 	Module module("", getGlobalContext());
 	VuoCompilerCodeGenUtilities::getDispatchObjectType(&module);
 
-	string vuoFrameworkPath = getVuoFrameworkPath().str();
+	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	if (! vuoFrameworkPath.empty())
 	{
 		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Frameworks/graphviz.framework/");
@@ -283,7 +281,7 @@ void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
 					(dynamic_cast<VuoCompilerMakeListNodeClass *>(nodeClass) ?
 						 VuoCompilerMakeListNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node) :
 						 VuoCompilerSpecializedNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node));
-			VuoNode *replacementNode = replacementNodeClass->getCompiler()->newNode(node->getCompiler());
+			VuoNode *replacementNode = replacementNodeClass->getCompiler()->newNode(node);
 			composition->getBase()->replaceNode(node, replacementNode);
 		}
 	}
@@ -345,11 +343,9 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 	if (ext == "c")
 	{
 		preprocessedInputPath = VuoFileUtilities::makeTmpFile(file, ext, dir);
-		FILE *inputFile = fopen(inputPath.c_str(), "rb");
-		string inputContents = VuoFileUtilities::cFileToString(inputFile);
+		string inputContents = VuoFileUtilities::readFileToString(inputPath);
 		VuoCompilerSpecializedNodeClass::replaceGenericTypesWithBacking(inputContents);
 		VuoFileUtilities::writeStringToFile(inputContents, preprocessedInputPath);
-		fclose(inputFile);
 	}
 	else
 		preprocessedInputPath = inputPath;
@@ -386,6 +382,8 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
  */
 void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string outputPath)
 {
+	composition->check();
+
 	reifyGenericPortTypes(composition);
 
 	VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition, this);
@@ -410,10 +408,8 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath)
 	if (isVerbose)
 		print();
 
-	FILE *inputFile = fopen(inputPath.c_str(), "rb");
-	string compositionString = VuoFileUtilities::cFileToString(inputFile);
+	string compositionString = VuoFileUtilities::readFileToString(inputPath);
 	return compileCompositionString(compositionString, outputPath);
-	fclose(inputFile);
 }
 
 /**
@@ -793,7 +789,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	// Check for C Runtime path within Vuo.framework
 	llvm::sys::Path cRuntimePath;
 	llvm::sys::Path crt1Path;
-	string vuoFrameworkPath = getVuoFrameworkPath().str();
+	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	string vuoFrameworkContainingFolder = vuoFrameworkPath + "/..";
 	if (! vuoFrameworkPath.empty())
 	{
@@ -889,7 +885,7 @@ Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &ex
 		args.push_back("-v");
 
 	// System headers installed by Xcode Command Line Tools
-	string macosHeaderSearchPath = getVuoFrameworkPath().str() + "/Frameworks/MacOS.framework/Headers";
+	string macosHeaderSearchPath = VuoFileUtilities::getVuoFrameworkPath() + "/Frameworks/MacOS.framework/Headers";
 	args.push_back("-I");
 	args.push_back(macosHeaderSearchPath.c_str());
 
@@ -1191,7 +1187,7 @@ void VuoCompiler::listNodeClasses(const string &format)
 vector<string> VuoCompiler::getCoreVuoDependencies(void)
 {
 	vector<string> dependencies;
-	dependencies.push_back("VuoHeap.bc");
+	dependencies.push_back("VuoHeap");
 	dependencies.push_back("VuoTelemetry.bc");
 	dependencies.push_back("zmq");
 	dependencies.push_back("gvc");
@@ -1230,70 +1226,6 @@ string VuoCompiler::getRuntimeDependency(void)
 llvm::sys::Path VuoCompiler::getClangPath(void)
 {
 	return clangPath;
-}
-
-
-/**
- * Returns the path to Vuo.framework, or an empty path if the framework cannot be located.
- */
-llvm::sys::Path VuoCompiler::getVuoFrameworkPath()
-{
-	// Partially cloned in VuoWindow.cc's VuoWindowGetVuoFrameworkPath().
-
-	// First check whether Vuo.framework is in the list of loaded dynamic libraries.
-	for(unsigned int i=0; i<_dyld_image_count(); ++i)
-	{
-		const char *name = _dyld_get_image_name(i);
-		const char *frameworkName = "Vuo.framework/Versions/" VUO_VERSION_STRING "/Vuo";
-		if(strcmp(name+strlen(name)-strlen(frameworkName),frameworkName)==0)
-		{
-			llvm::sys::Path path = llvm::sys::Path(StringRef(name));
-			path.eraseComponent(); // remove "Vuo"
-			path.eraseComponent(); // remove VUO_VERSION_STRING
-			path.eraseComponent(); // remove "Versions"
-			if (path.canRead())
-				return path;
-		}
-	}
-
-
-	// Failing that, check for a Vuo.framework bundled with the executable app.
-	char executablePath[PATH_MAX + 1];
-	uint32_t size = sizeof(executablePath);
-
-	if (! _NSGetExecutablePath(executablePath, &size))
-	{
-		char cleanedExecutablePath[PATH_MAX + 1];
-
-		// Remove extra references (e.g., "/./") from the path before manipulating.
-		realpath(executablePath, cleanedExecutablePath);
-		llvm::sys::Path bundledVuoFrameworkDir = llvm::sys::Path(StringRef(cleanedExecutablePath));
-		bundledVuoFrameworkDir.eraseComponent(); // remove executable name from path
-		bundledVuoFrameworkDir.eraseComponent(); // remove "MacOS" subdirectory from path
-		bundledVuoFrameworkDir.appendComponent("Frameworks");
-		bundledVuoFrameworkDir.appendComponent("Vuo.framework");
-
-		if (bundledVuoFrameworkDir.canRead())
-			return bundledVuoFrameworkDir;
-	}
-
-	// Failing that, check for ~/Library/Frameworks/Vuo.framework
-	llvm::sys::Path userVuoLibraryDir = llvm::sys::Path::GetUserHomeDirectory();
-	userVuoLibraryDir.appendComponent("Library");
-	userVuoLibraryDir.appendComponent("Frameworks");
-	userVuoLibraryDir.appendComponent("Vuo.framework");
-
-	if (userVuoLibraryDir.canRead())
-		return userVuoLibraryDir;
-
-	// Failing that, check for /Library/Frameworks/Vuo.framework
-	llvm::sys::Path systemVuoLibraryDir = llvm::sys::Path("/Library/Frameworks/Vuo.framework");
-
-	if (systemVuoLibraryDir.canRead())
-		return systemVuoLibraryDir;
-
-	// Give up.
-	return llvm::sys::Path("");
 }
 
 /**
@@ -1418,7 +1350,7 @@ void VuoCompiler::setClangPath(const string &clangPath)
  */
 string VuoCompiler::getCompositionLoaderPath(void)
 {
-	string vuoFrameworkPath = getVuoFrameworkPath().str();
+	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	return (vuoFrameworkPath.empty() ?
 				VUO_ROOT "/runtime/VuoCompositionLoader" :
 				vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/VuoCompositionLoader");
@@ -1429,7 +1361,7 @@ string VuoCompiler::getCompositionLoaderPath(void)
  */
 string VuoCompiler::getCompositionStubPath(void)
 {
-	string vuoFrameworkPath = getVuoFrameworkPath().str();
+	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	return (vuoFrameworkPath.empty() ?
 				VUO_ROOT "/base/VuoCompositionStub.dylib" :
 				vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/VuoCompositionStub.dylib");
@@ -1459,8 +1391,8 @@ void VuoCompiler::print(void)
 	for (vector<string>::iterator i = frameworkSearchPaths.begin(); i != frameworkSearchPaths.end(); ++i)
 		fprintf(stderr, " %s\n", (*i).c_str());
 	fprintf(stderr, "Framework path:\n");
-	if (! getVuoFrameworkPath().str().empty())
-		fprintf(stderr, " %s\n", getVuoFrameworkPath().c_str());
+	if (! VuoFileUtilities::getVuoFrameworkPath().empty())
+		fprintf(stderr, " %s\n", VuoFileUtilities::getVuoFrameworkPath().c_str());
 	fprintf(stderr, "Clang path:\n");
 	if (! getClangPath().str().empty())
 		fprintf(stderr, " %s\n", getClangPath().c_str());

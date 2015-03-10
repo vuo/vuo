@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Toggle",
-					 "keywords" : [ "boolean", "gate", "not", "!", "flip", "inverse", "reverse", "opposite", "switch" ],
+					 "keywords" : [ "boolean", "gate", "not", "!", "flip", "inverse", "reverse", "opposite", "switch", "0", "1", "true", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

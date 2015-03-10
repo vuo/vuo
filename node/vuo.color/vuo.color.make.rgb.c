@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make RGB Color",
-					 "keywords" : [ "red", "green", "blue", "alpha", "opacity", "transparent", "channel" ],
+					 "keywords" : [ "red", "green", "blue", "alpha", "opacity", "transparent", "channel", "tone", "chroma" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

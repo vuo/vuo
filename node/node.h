@@ -22,10 +22,8 @@ struct json_object;
 // Types
 #include "VuoBoolean.h"
 #include "VuoColor.h"
-#include "VuoFrameRequest.h"
 #include "VuoImage.h"
 #include "VuoInteger.h"
-#include "VuoMouseButtonAction.h"
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
@@ -36,15 +34,14 @@ struct json_object;
 #include "VuoTransform.h"
 #include "VuoTransform2d.h"
 #include "VuoVertices.h"
+#include "VuoWindowReference.h"
 #include "VuoWrapMode.h"
 
 // List Types
 #include "VuoList_VuoBoolean.h"
 #include "VuoList_VuoColor.h"
-#include "VuoList_VuoFrameRequest.h"
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoInteger.h"
-#include "VuoList_VuoMouseButtonAction.h"
 #include "VuoList_VuoPoint2d.h"
 #include "VuoList_VuoPoint3d.h"
 #include "VuoList_VuoPoint4d.h"
@@ -53,7 +50,10 @@ struct json_object;
 #include "VuoList_VuoShader.h"
 #include "VuoList_VuoText.h"
 #include "VuoList_VuoTransform.h"
+#include "VuoList_VuoTransform2d.h"
 #include "VuoList_VuoVertices.h"
+#include "VuoList_VuoWindowReference.h"
+#include "VuoList_VuoWrapMode.h"
 
 
 /**

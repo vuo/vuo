@@ -216,7 +216,7 @@ private slots:
 
 		{
 			vector<string> expectedUniqueGenericTypes;
-			QTest::newRow("0 generic types") << "vuo.image.filter.blend" << expectedUniqueGenericTypes;
+			QTest::newRow("0 generic types") << "vuo.image.blend" << expectedUniqueGenericTypes;
 		}
 
 		{

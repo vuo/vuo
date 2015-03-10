@@ -69,7 +69,7 @@ int main (int argc, char * const argv[])
 	bool hasInputFile = (optind < argc);
 
 #ifdef USING_VUO_FRAMEWORK
-	compiler.addHeaderSearchPath(VuoCompiler::getVuoFrameworkPath().str() + "/Headers");
+	compiler.addHeaderSearchPath(VuoFileUtilities::getVuoFrameworkPath() + "/Headers");
 #endif
 
 	for (vector<char *>::iterator i = headerSearchPaths.begin(); i != headerSearchPaths.end(); ++i)

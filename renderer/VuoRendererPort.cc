@@ -36,9 +36,11 @@
 
 #include "VuoPort.hh"
 
+const qreal VuoRendererPort::portRadius = VuoRendererFonts::thickPenWidth*0.3625;
 const qreal VuoRendererPort::portSpacing = VuoRendererFonts::thickPenWidth*3.0/4.0;
 const qreal VuoRendererPort::portContainerMargin = VuoRendererFonts::thickPenWidth / 6.;
 const qreal VuoRendererPort::portInset = 1;
+const qreal VuoRendererPort::constantFlagHeight = VuoRendererFonts::thickPenWidth*0.6;
 
 /**
  * Creates a renderer detail for the specified base port.
@@ -77,6 +79,8 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 
 	setFlag(QGraphicsItem::ItemIsFocusable, true);  // allow delivery of key events
 	setAcceptHoverEvents(true);  // allow delivery of mouse-hover events
+	updateNameRect(false);
+	updateEnabledStatus();
 }
 
 /**
@@ -85,35 +89,41 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
  */
 QPainterPath VuoRendererPort::getPortConstantPath(QRectF innerPortRect, QString text, QPainterPath *outsetPath, bool isTypecast)
 {
-	qreal portConstantTextMargin = VuoRendererFonts::thickPenWidth*3./20.;
+	qreal portConstantTextMargin = VuoRendererFonts::thickPenWidth*3./20. + (isTypecast ? 2 : 0);
 	qreal innerOffsetForTypecast = isTypecast ? 1. : 0.;
+	qreal outerCornerRadius = VuoRendererFonts::thickPenWidth/8.0;
+	qreal innerCornerRadius = outerCornerRadius - 1;
 
 	QPainterPath p;
 	QRectF textRect = getPortConstantTextRectForText(text);
 
-	p.moveTo(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.), innerPortRect.y() + innerOffsetForTypecast);
-	// Top
-	p.lineTo(innerPortRect.x() - innerPortRect.width()/2 - portInset, innerPortRect.y() + innerOffsetForTypecast);
-	// Right point
-	p.lineTo(innerPortRect.x() - portInset, innerPortRect.center().y());
-	p.lineTo(innerPortRect.x() - innerPortRect.width()/2. - portInset, innerPortRect.bottom() - innerOffsetForTypecast);
-	// Bottom
-	p.lineTo(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.), innerPortRect.bottom() - innerOffsetForTypecast);
-	// Left
-	p.closeSubpath();
+	QPointF topLeftCorner(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.), innerPortRect.y() + innerOffsetForTypecast);
+	QPointF topRightCorner(innerPortRect.x() - innerPortRect.width()/2 - portInset, innerPortRect.y() + innerOffsetForTypecast);
+	QPointF rightPoint(innerPortRect.x() - portInset, innerPortRect.center().y());
+	QPointF bottomRightCorner(innerPortRect.x() - innerPortRect.width()/2. - portInset, innerPortRect.bottom() - innerOffsetForTypecast);
+	QPointF bottomLeftCorner(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.), innerPortRect.bottom() - innerOffsetForTypecast);
+
+	p.moveTo(topRightCorner);
+	p.lineTo(rightPoint);
+	p.lineTo(bottomRightCorner);
+	addRoundedCorner(p, true, bottomLeftCorner, innerCornerRadius, false, true);
+	addRoundedCorner(p, true, topLeftCorner, innerCornerRadius, true, true);
+	p.lineTo(topRightCorner);
 
 	if (outsetPath)
 	{
-		outsetPath->moveTo(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.) - 1., innerPortRect.y() - 1.);
-		// Top
-		outsetPath->lineTo(innerPortRect.x() - innerPortRect.width()/2. - portInset + .2, innerPortRect.y() - 1.);
-		// Right point
-		outsetPath->lineTo(innerPortRect.x() + .2, innerPortRect.center().y());
-		outsetPath->lineTo(innerPortRect.x() - innerPortRect.width()/2. - portInset + .2, innerPortRect.bottom() + 1.);
-		// Bottom
-		outsetPath->lineTo(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.) - 1., innerPortRect.bottom() + 1.);
-		// Left
-		outsetPath->closeSubpath();
+		QPointF outsetTopLeftCorner(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.) - 1., innerPortRect.y() - 1.);
+		QPointF outsetTopRightCorner(innerPortRect.x() - innerPortRect.width()/2. - portInset + .2, innerPortRect.y() - 1.);
+		QPointF outsetRightPoint(innerPortRect.x() + .2, innerPortRect.center().y());
+		QPointF outsetBottomRightCorner(innerPortRect.x() - innerPortRect.width()/2. - portInset + .2, innerPortRect.bottom() + 1.);
+		QPointF outsetBottomLeftCorner(textRect.x() - portConstantTextMargin - (isTypecast ? 1. : 0.) - 1., innerPortRect.bottom() + 1.);
+
+		outsetPath->moveTo(outsetTopRightCorner);
+		outsetPath->lineTo(outsetRightPoint);
+		outsetPath->lineTo(outsetBottomRightCorner);
+		addRoundedCorner(*outsetPath, true, outsetBottomLeftCorner, outerCornerRadius, false, true);
+		addRoundedCorner(*outsetPath, true, outsetTopLeftCorner, outerCornerRadius, true, true);
+		outsetPath->lineTo(outsetTopRightCorner);
 	}
 
 	return p;
@@ -139,6 +149,13 @@ QPainterPath VuoRendererPort::getPortPath(qreal inset) const
 		case VuoPortClass::eventOnlyPort:
 		{
 			// Triangle.
+
+			// Align the port rect to integer pixels, so lines are sharp.
+			outerPortRect = outerPortRect.toRect();
+
+			// Move right 1 pixel, so the triangle's center-of-gravity better matches circular ports.
+			outerPortRect = outerPortRect.adjusted(1,0,1,0);
+
 			// Adjust the inset so that the amount of whitespace padding the triangle's
 			// vertical left edge matches the amount of whitespace padding its diagonal edges.
 			qreal h = outerPortRect.height();
@@ -234,12 +251,11 @@ QPainterPath VuoRendererPort::getFunctionPortGlyph(void) const
  */
 QRectF VuoRendererPort::getPortRect(void)
 {
-	qreal radius = VuoRendererFonts::thickPenWidth*3./10.;
 	return QRectF(
-		-radius,
-		-radius,
-		radius*2.0,
-		radius*2.0
+		-portRadius,
+		-portRadius,
+		portRadius*2.0,
+		portRadius*2.0
 	);
 }
 
@@ -298,14 +314,35 @@ QRectF VuoRendererPort::getPortConstantTextRectForText(QString text)
 
 
 /**
- * Returns the bounding box of the port's label.
+ * Returns the cached bounding box of the port's label.
  */
 QRectF VuoRendererPort::getNameRect(bool sidebarPaintMode) const
 {
-	QSizeF textSize = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortTitleFont()).size(0,QString::fromUtf8(sidebarPaintMode? getPublishedPort()->getBase()->getName().c_str() :
-																								  getBase()->getClass()->getName().c_str()));
-	return QRectF(
-		((isOutput ^ sidebarPaintMode) ? -VuoRendererFonts::thickPenWidth/2.0-textSize.width() : VuoRendererFonts::thickPenWidth/2.0),
+	return (sidebarPaintMode? nameRectForSidebarMode : nameRect);
+}
+
+/**
+ * Updates the cached bounding box of the port's label.
+ */
+void VuoRendererPort::updateNameRect(bool sidebarPaintMode)
+{	
+	if (sidebarPaintMode && !getPublishedPort())
+	{
+		this->nameRectForSidebarMode = QRectF();
+		return;
+	}
+
+	QString text = QString::fromUtf8(sidebarPaintMode? getPublishedPort()->getBase()->getName().c_str() :
+													   getBase()->getClass()->getName().c_str());
+	QFont font = VuoRendererFonts::getSharedFonts()->nodePortTitleFont();
+	QSizeF textSize = QFontMetricsF(font).size(0,text);
+
+	(sidebarPaintMode? this->nameRectForSidebarMode : this->nameRect) = QRectF(
+		((isOutput ^ sidebarPaintMode) ? -VuoRendererFonts::thickPenWidth/2.0 - textSize.width() - 2. :
+										 VuoRendererFonts::thickPenWidth/2.0
+											 - VuoRendererFonts::getHorizontalOffset(font, text)
+											 + (isOnDrawer() ? 1. : 3.)
+										 ),
 		-VuoRendererFonts::thickPenWidth/3.0,
 		textSize.width(),
 		textSize.height()
@@ -351,6 +388,17 @@ VuoRendererNode * VuoRendererPort::getRenderedParentNode(void) const
 }
 
 /**
+ * Returns true if this port is part of a drawer (a collapsed Make List node).
+ */
+bool VuoRendererPort::isOnDrawer(void) const
+{
+	if (!parentItem() || !parentItem()->parentItem())
+		return false;
+
+	return (dynamic_cast<VuoRendererMakeListNode *>(parentItem()->parentItem()));
+}
+
+/**
  * Returns this port's typecast parent port, or NULL if it has none.
  */
 VuoRendererPort * VuoRendererPort::getTypecastParentPort() const
@@ -387,8 +435,7 @@ QRectF VuoRendererPort::boundingRectWithOptions(bool sidebarPaintMode) const
 
 	QRectF r = getPortPath(1.5).boundingRect();
 
-	string name = (sidebarPaintMode? getPublishedPort()->getBase()->getName() : getBase()->getClass()->getName());
-	if(!isRefreshPort && !isDonePort && !isFunctionPort && !(typecastParentPort || sidebarPaintMode) && !name.empty())
+	if (portNameRenderingEnabled(sidebarPaintMode))
 		r = r.united(getNameRect(sidebarPaintMode));
 
 	if (isConstant())
@@ -416,14 +463,87 @@ QPainterPath VuoRendererPort::shape() const
 }
 
 /**
+ * Paints the port's event wall or door.
+ */
+void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode)
+{
+	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
+	VuoPortClass::EventBlocking eventBlocking = getBase()->getClass()->getEventBlocking();
+
+	if (
+			!isAnimated &&
+			((!isOutput && !sidebarPaintMode && eventBlocking != VuoPortClass::EventBlocking_None)
+			|| (isOutput && type == VuoPortClass::triggerPort))
+			)
+	{
+		QColor eventBlockingBarrierColor = (isAnimated? colors->animatedeventBlockingBarrier() : colors->eventBlockingBarrier());
+		painter->setPen(QPen(eventBlockingBarrierColor, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+		if (type == VuoPortClass::dataAndEventPort)
+		{
+			// Circular port
+			QRectF barrierRect = getPortRect().adjusted(-1.5,-1.5,1.5,1.5);
+
+			if (eventBlocking == VuoPortClass::EventBlocking_Wall)
+				painter->drawArc(barrierRect,45*16,-90*16);
+			else // VuoPortClass::EventBlocking_Door
+			{
+				painter->drawArc(barrierRect,45*16,-20*16);
+				painter->drawArc(barrierRect,-45*16,20*16);
+			}
+		}
+		else if (type == VuoPortClass::eventOnlyPort)
+		{
+			// Triangular port
+			QRectF barrierRect = getPortRect().adjusted(-3.5,-3.5,3.5,3.5);
+			QLineF topLine = QLineF(barrierRect.topLeft(),QPointF(barrierRect.right(),barrierRect.center().y()));
+			QLineF bottomLine = QLineF(barrierRect.bottomLeft(),QPointF(barrierRect.right(),barrierRect.center().y()));
+
+			if (eventBlocking == VuoPortClass::EventBlocking_Wall)
+			{
+				QPainterPath p;
+				p.moveTo(topLine.pointAt(0.65));
+				p.lineTo(topLine.p2());
+				p.lineTo(bottomLine.pointAt(0.65));
+				painter->drawPath(p);
+			}
+			else // VuoPortClass::EventBlocking_Door
+			{
+				QPainterPath p;
+				p.moveTo(topLine.pointAt(0.65));
+				p.lineTo(topLine.pointAt(0.75));
+				p.moveTo(bottomLine.pointAt(0.75));
+				p.lineTo(bottomLine.pointAt(0.65));
+				painter->drawPath(p);
+			}
+		}
+		else if (type == VuoPortClass::triggerPort)
+		{
+			// Exploding port
+			QRectF barrierRect = getPortRect().adjusted(-3,-3,3,3);
+			painter->drawArc(barrierRect,135*16,90*16);
+		}
+	}
+
+	if(0)//isFunctionPort)
+	{
+		// Draw the function port's glyph
+		painter->save();
+		painter->scale(.6,.6);
+		painter->fillPath(getFunctionPortGlyph(), colors->nodeTitle());
+		painter->restore();
+	}
+}
+
+/**
  * Paints the port's label.
  */
 void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode)
 {
-	string name = (sidebarPaintMode? getPublishedPort()->getBase()->getName() : getBase()->getClass()->getName());
-
-	if(isRefreshPort || isDonePort || isFunctionPort || (typecastParentPort && !sidebarPaintMode) || isAnimated || name.empty())
+	if (!portNameRenderingEnabled(sidebarPaintMode))
 		return;
+
+	string name = (sidebarPaintMode? getPublishedPort()->getBase()->getName() : getBase()->getClass()->getName());
 
 	painter->setPen(sidebarPaintMode && getPublishedPort()->isSelected()? Qt::white : colors->portTitle());
 	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
@@ -499,12 +619,11 @@ void VuoRendererPort::paintWithOptions(QPainter *painter, bool sidebarPaintMode)
 
 	if(isConstant())
 	{
-		// Create a hybrid rect having the width of the port's inset rect and the height
-		// of its outer rect, so that the constant flag has the full height of the
-		// outer rect but directly adjoins the inset port shape.
-		QRectF portOuterRect = getPortRect();
+		// Create a hybrid rect having the width of the port's inset rect and the customized
+		// height of a constant flag, so that the constant flag has the desired height but
+		// directly adjoins the inset port shape.
 		QRectF portInnerRect = VuoRendererPort::getPortPath(portInset).boundingRect();
-		QRectF portHybridRect = QRectF(portInnerRect.x(), portOuterRect.y(), portInnerRect.width(), portOuterRect.height());
+		QRectF portHybridRect = QRectF(portInnerRect.x(), -0.5*constantFlagHeight, portInnerRect.width(), constantFlagHeight);
 
 		QPainterPath outsetPath;
 
@@ -512,8 +631,9 @@ void VuoRendererPort::paintWithOptions(QPainter *painter, bool sidebarPaintMode)
 		QColor constantFlagBorderColor = colors->nodeFill();
 
 		// Display a color swatch for VuoColor data.
-		// @todo: Implement this properly.  See https://b33p.net/kosada/node/5700
-		if (getDataType() && getDataType()->getModuleKey()=="VuoColor")
+		/// @todo Implement with input viewers (https://b33p.net/kosada/node/5700)
+		bool isColorPort = getDataType() && getDataType()->getModuleKey()=="VuoColor";
+		if (isColorPort)
 		{
 			double r=0, g=0, b=0, a=0;
 			json_object *o = NULL;
@@ -542,6 +662,42 @@ void VuoRendererPort::paintWithOptions(QPainter *painter, bool sidebarPaintMode)
 
 		QPainterPath p = getPortConstantPath(portHybridRect, constantText, &outsetPath);
 
+		if (isColorPort)
+		{
+			// Provide an opaque background, so transparent colors can be distinguished from opaque colors.
+
+			// getPortConstantPath() is assumed to give us points in this order:
+			QPointF topRight = p.elementAt(0);
+			QPointF rightTip = p.elementAt(1);
+			QPointF bottomRight = p.elementAt(2);
+			QPointF bottomLeftRoundedCornerBegin = p.elementAt(3);
+			QPointF bottomLeftRoundedCornerEnd = p.elementAt(6);
+			QPointF topLeftRoundedCornerBegin = p.elementAt(7);
+			QPointF topLeftRoundedCornerEnd = p.elementAt(10);
+
+			QPointF topLeftSharpEdge(topLeftRoundedCornerBegin.x(), topLeftRoundedCornerEnd.y());
+			QPointF bottomLeftSharpEdge(bottomLeftRoundedCornerEnd.x(), bottomLeftRoundedCornerBegin.y());
+
+			QPainterPath topHalf;
+			topHalf.moveTo(bottomLeftSharpEdge);
+			topHalf.lineTo(topLeftSharpEdge);
+			topHalf.lineTo(topRight);
+			topHalf.closeSubpath();
+			painter->setClipPath(p);
+			painter->fillPath(topHalf, Qt::black);
+
+			QPainterPath bottomHalf;
+			bottomHalf.moveTo(bottomLeftSharpEdge);
+			bottomHalf.lineTo(topRight);
+			bottomHalf.lineTo(rightTip);
+			bottomHalf.lineTo(bottomRight);
+			bottomHalf.closeSubpath();
+			painter->setClipPath(p);
+			painter->fillPath(bottomHalf, Qt::white);
+
+			painter->setClipping(false);
+		}
+
 		// Constant flag
 		painter->fillPath(p, portBrush);
 		outsetPath -= p;
@@ -554,71 +710,7 @@ void VuoRendererPort::paintWithOptions(QPainter *painter, bool sidebarPaintMode)
 		painter->drawText(textRect, Qt::AlignLeft, constantText);
 	}
 
-	// Event wall or door
-	VuoPortClass::EventBlocking eventBlocking = getBase()->getClass()->getEventBlocking();
-	if (
-			(!isOutput && !sidebarPaintMode && eventBlocking != VuoPortClass::EventBlocking_None)
-			|| (isOutput && type == VuoPortClass::triggerPort)
-	)
-	{
-		QColor eventBlockingBarrierColor = (isAnimated? colors->animatedeventBlockingBarrier() : colors->eventBlockingBarrier());
-		painter->setPen(QPen(eventBlockingBarrierColor, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-
-		if (type == VuoPortClass::dataAndEventPort)
-		{
-			// Circular port
-			QRectF barrierRect = getPortRect().adjusted(-2,-2,2,2);
-
-			if (eventBlocking == VuoPortClass::EventBlocking_Wall)
-				painter->drawArc(barrierRect,45*16,-90*16);
-			else // VuoPortClass::EventBlocking_Door
-			{
-				painter->drawArc(barrierRect,45*16,-20*16);
-				painter->drawArc(barrierRect,-45*16,20*16);
-			}
-		}
-		else if (type == VuoPortClass::eventOnlyPort)
-		{
-			// Triangular port
-			QRectF barrierRect = getPortRect().adjusted(-5,-5,5,5);
-			QLineF topLine = QLineF(barrierRect.topLeft(),QPointF(barrierRect.right(),barrierRect.center().y()));
-			QLineF bottomLine = QLineF(barrierRect.bottomLeft(),QPointF(barrierRect.right(),barrierRect.center().y()));
-
-			if (eventBlocking == VuoPortClass::EventBlocking_Wall)
-			{
-				QPainterPath p;
-				p.moveTo(topLine.pointAt(0.65));
-				p.lineTo(topLine.p2());
-				p.lineTo(bottomLine.pointAt(0.65));
-				painter->drawPath(p);
-			}
-			else // VuoPortClass::EventBlocking_Door
-			{
-				QPainterPath p;
-				p.moveTo(topLine.pointAt(0.65));
-				p.lineTo(topLine.pointAt(0.75));
-				p.moveTo(bottomLine.pointAt(0.75));
-				p.lineTo(bottomLine.pointAt(0.65));
-				painter->drawPath(p);
-			}
-		}
-		else if (type == VuoPortClass::triggerPort)
-		{
-			// Exploding port
-			QRectF barrierRect = getPortRect().adjusted(-3,-3,3,3);
-			painter->drawArc(barrierRect,135*16,90*16);
-		}
-	}
-
-	if(0)//isFunctionPort)
-	{
-		// Draw the function port's glyph
-		painter->save();
-		painter->scale(.6,.6);
-		painter->fillPath(getFunctionPortGlyph(), colors->nodeTitle());
-		painter->restore();
-	}
-
+	paintEventBarrier(painter, colors, sidebarPaintMode);
 	paintPortName(painter, colors, sidebarPaintMode);
 
 	delete colors;
@@ -666,8 +758,13 @@ void VuoRendererPort::extendedHoverEnterEvent(bool cableDragUnderway)
  */
 void VuoRendererPort::extendedHoverMoveEvent(bool cableDragUnderway)
 {
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	setCacheMode(QGraphicsItem::NoCache);
+
 	prepareGeometryChange();
 	isEligibleForSelection = (cableDragUnderway? (isEligibleForDirectConnection || isEligibleForConnectionViaTypecast) : true);
+
+	setCacheMode(normalCacheMode);
 
 	setFocus();
 
@@ -688,8 +785,13 @@ void VuoRendererPort::extendedHoverMoveEvent(bool cableDragUnderway)
  */
 void VuoRendererPort::extendedHoverLeaveEvent()
 {
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	setCacheMode(QGraphicsItem::NoCache);
+
 	prepareGeometryChange();
 	isEligibleForSelection = false;
+
+	setCacheMode(normalCacheMode);
 
 	clearFocus();
 
@@ -713,10 +815,10 @@ void VuoRendererPort::extendedHoverLeaveEvent()
  */
 bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort)
 {
-	bool fromPortIsOutput = (this->getOutput());
-	bool toPortIsInput = (toPort->getInput());
+	bool fromPortIsEnabledOutput = (this->getOutput() && this->isEnabled());
+	bool toPortIsEnabledInput = (toPort->getInput() && toPort->isEnabled());
 
-	if (fromPortIsOutput && toPortIsInput)
+	if (fromPortIsEnabledOutput && toPortIsEnabledInput)
 	{
 		VuoType *fromDataType = this->getDataType();
 		VuoType *toDataType = toPort->getDataType();
@@ -776,8 +878,11 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 	if (this->canConnectDirectlyWithoutSpecializationTo(toPort))
 		return true;
 
-	bool fromPortIsOutput = (this->getOutput());
-	bool toPortIsInput = (toPort->getInput());
+	bool fromPortIsEnabledOutput = (this->getOutput() && this->isEnabled());
+	bool toPortIsEnabledInput = (toPort->getInput() && toPort->isEnabled());
+
+	if (!(fromPortIsEnabledOutput && toPortIsEnabledInput))
+		return false;
 
 	VuoType *originalFromDataType = ((VuoCompilerPortClass *)(this->getBase()->getClass()->getCompiler()))->getDataVuoType();
 	VuoType *originalToDataType = ((VuoCompilerPortClass *)(toPort->getBase()->getClass()->getCompiler()))->getDataVuoType();
@@ -785,7 +890,7 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 	VuoType *currentFromDataType = this->getDataType();
 	VuoType *currentToDataType = toPort->getDataType();
 
-	if (!(fromPortIsOutput && toPortIsInput && originalFromDataType && originalToDataType && currentFromDataType && currentToDataType))
+	if (!(originalFromDataType && originalToDataType && currentFromDataType && currentToDataType))
 		return false;
 
 	VuoGenericType *currentFromGenericType = dynamic_cast<VuoGenericType *>(currentFromDataType);
@@ -912,7 +1017,7 @@ bool VuoRendererPort::getFunctionPort(void) const
  * Schedules a redraw of this port.
  */
 void VuoRendererPort::updateGeometry()
-{
+{	
 	this->prepareGeometryChange();
 }
 
@@ -975,7 +1080,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 	if (! isConstant())
 		return "";
 
-	// @todo: Implement this properly.  See https://b33p.net/kosada/node/5700
+	/// @todo Implement with input viewers (https://b33p.net/kosada/node/5700)
 	if (getDataType())
 	{
 		// Don't display constant input values for generic ports.
@@ -984,7 +1089,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 		if (getDataType()->getModuleKey()=="VuoColor")
 		{
-			return "  ";
+			return "   ";
 		}
 		if (getDataType()->getModuleKey()=="VuoText")
 		{
@@ -993,6 +1098,11 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			if (json_object_get_type(js) == json_type_string)
 				textWithoutQuotes = json_object_get_string(js);
 			json_object_put(js);
+			
+			// Abbreviate long VuoText data with an ellipsis.
+			if (textWithoutQuotes.length() > 30)
+				textWithoutQuotes = textWithoutQuotes.substr(0, 27) + "...";
+			
 			return textWithoutQuotes;
 		}
 		if (getDataType()->getModuleKey()=="VuoReal")
@@ -1085,6 +1195,45 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 	}
 
 	return getConstantAsString();
+}
+
+/**
+ * Sets this port's constant data value to that represented by the provided @c constantValue string.
+ */
+void VuoRendererPort::setConstant(string constantValue)
+{
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	setCacheMode(QGraphicsItem::NoCache);
+
+	updateGeometry();
+	VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getCompiler());
+	eventPort->getData()->setInitialValue(constantValue);
+
+	// @todo
+	// updatePortConstantPath();
+
+	setCacheMode(normalCacheMode);
+
+	getRenderedParentNode()->layoutConnectedInputDrawersAtAndAbovePort(eventPort->getBase()->getRenderer());
+}
+
+/**
+  * Returns a boolean indicating whether the port name should be rendered along with this port,
+  * taking into account the port's own attributes as well as whether the port will be
+  * rendered within a published port sidebar, as indicated by @c sidebarPaintMode.
+  */
+bool VuoRendererPort::portNameRenderingEnabled(bool sidebarPaintMode) const
+{
+	string name = (sidebarPaintMode? getPublishedPort()->getBase()->getName() : getBase()->getClass()->getName());
+
+	if (name.empty() || isAnimated)
+		return false;
+	else if (sidebarPaintMode)
+		return true;
+	else if (isRefreshPort || isDonePort || isFunctionPort || typecastParentPort)
+		return false;
+
+	return true;
 }
 
 /**
@@ -1201,7 +1350,27 @@ vector<QGraphicsItemAnimation *> VuoRendererPort::getAnimations()
 void VuoRendererPort::setAnimated(bool animated)
 {
 	this->isAnimated = animated;
+	updateEnabledStatus();
+}
 
-	// Port animations shouldn't accept mouse events.
-	setEnabled(!animated);
+/**
+ * Sets the cache mode of this port, and any child ports, to @c mode.
+ */
+void VuoRendererPort::setCacheModeForPortAndChildren(QGraphicsItem::CacheMode mode)
+{
+	this->setCacheMode(mode);
+
+	VuoRendererTypecastPort *typecastPort = dynamic_cast<VuoRendererTypecastPort *>(this);
+	if (typecastPort)
+		typecastPort->getChildPort()->setCacheMode(mode);
+}
+
+/**
+ * Determines whether this port will accept mouse events based on
+ * the port's current attributes.
+ */
+void VuoRendererPort::updateEnabledStatus()
+{
+	// Port animations, and ports without compilers, shouldn't accept mouse events.
+	setEnabled(!isAnimated && getBase()->hasCompiler() && getBase()->getClass()->hasCompiler());
 }

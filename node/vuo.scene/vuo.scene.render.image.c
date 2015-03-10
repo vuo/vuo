@@ -65,7 +65,6 @@ void nodeInstanceEvent
 
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName);
-	VuoSceneRenderer_prepareContext((*context)->sceneRenderer);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
 	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, depthImage);
 }

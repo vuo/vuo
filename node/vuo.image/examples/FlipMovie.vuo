@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Displays flipped frames in a movie.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="375,612" fillcolor="yellow"];
+FlipImageHorizontally [type="vuo.image.flip.horizontal" version="1.0.0" label="Flip Image Horizontally|<refresh>refresh\l|<image>image\l|<done>done\r|<flippedImage>flippedImage\r" pos="663,673" fillcolor="violet"];
+FlipImageVertically [type="vuo.image.flip.vertical" version="1.0.0" label="Flip Image Vertically|<refresh>refresh\l|<image>image\l|<done>done\r|<flippedImage>flippedImage\r" pos="683,969" fillcolor="violet"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="868,584" _center="{\"x\":-0.500000,\"y\":-0.500000}" _alpha="1.000000"];
+MakeLayer4 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="869,878" _center="{\"x\":0.500000,\"y\":-0.500000}" _alpha="1.000000"];
+MakeList3 [type="vuo.list.make.4.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="1063,710" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="860,690" fillcolor="green" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.750000" _alpha="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="863,984" fillcolor="green" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.750000" _alpha="1.000000"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="709,853" _text="\"A movie, flipped vertically.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":16.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="708,559" _text="\"A movie, flipped horizontally.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":16.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="386,776" fillcolor="yellow" _movieURL="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\""];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1126,699" fillcolor="green"];
+
+FireOnStart:started -> MakeTextImage2:refresh;
+FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> PlayMovie:play;
+FlipImageHorizontally:flippedImage -> MakeScaledLayer:image;
+FlipImageVertically:flippedImage -> MakeScaledLayer2:image;
+MakeLayer3:layer -> MakeList3:item1;
+MakeLayer4:layer -> MakeList3:item3;
+MakeList3:list -> RenderLayersToWindow:layers;
+MakeScaledLayer2:layer -> MakeList3:item4;
+MakeScaledLayer:layer -> MakeList3:item2;
+MakeTextImage2:image -> MakeLayer4:image;
+MakeTextImage3:image -> MakeLayer3:image;
+PlayMovie:decodedImage -> FlipImageHorizontally:image;
+PlayMovie:decodedImage -> FlipImageVertically:image;
+}

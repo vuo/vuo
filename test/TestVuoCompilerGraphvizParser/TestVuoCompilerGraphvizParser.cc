@@ -45,36 +45,40 @@ private slots:
 	void testParsingConstants()
 	{
 		string compositionPath = getCompositionPath("DifferenceOfConstants.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		VuoNode * n = parser.getNodes()[0];
+		VuoNode * n = parser->getNodes()[0];
 		QCOMPARE(n->getInputPorts().size(), (size_t)3);
 
 		VuoCompilerInputEventPort *a = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("a")->getCompiler());
 		QCOMPARE(a->getData()->getInitialValue().c_str(), "4444");
 		VuoCompilerInputEventPort *b = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("b")->getCompiler());
 		QCOMPARE(b->getData()->getInitialValue().c_str(), "5555");
+
+		delete parser;
 	}
 
 	void testParsingUnicodeConstant()
 	{
 		string compositionPath = getCompositionPath("LengthOfConstantString.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		VuoNode * n = parser.getNodes()[0];
+		VuoNode * n = parser->getNodes()[0];
 		VuoCompilerInputEventPort *stringPort = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("text")->getCompiler());
 
 		string valueAsString = stringPort->getData()->getInitialValue();
 		QCOMPARE(valueAsString.c_str(), "流");
+
+		delete parser;
 	}
 
 	void testParsingRendererAttributes()
 	{
 		string compositionPath = getCompositionPath("RenderingAttributes.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
 		{
-			VuoNode * n = parser.getNodes()[0];
+			VuoNode * n = parser->getNodes()[0];
 			QCOMPARE(QString::fromStdString(n->getTitle()), QString("AddTinted"));
 			QCOMPARE(n->getX(), 22);
 			QCOMPARE(n->getY(), 42);
@@ -83,27 +87,31 @@ private slots:
 		}
 
 		{
-			VuoNode * n = parser.getNodes()[1];
+			VuoNode * n = parser->getNodes()[1];
 			QCOMPARE(QString::fromStdString(n->getTitle()), QString("AddCollapsed"));
 			QVERIFY(n->isCollapsed());
 		}
 
 		{
-			VuoNode * n = parser.getNodes()[2];
+			VuoNode * n = parser->getNodes()[2];
 			QCOMPARE(QString::fromStdString(n->getTitle()), QString("AddUncollapsed"));
 			QVERIFY(!n->isCollapsed());
 		}
+
+		delete parser;
 	}
 
 	void testEmptyStringConstantOverridingNonEmptyDefaultInputPortValue()
 	{
 		string compositionPath = getCompositionPath("NonEmptyDefaultString.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		VuoNode *n = parser.getNodes()[0];
+		VuoNode *n = parser->getNodes()[0];
 		VuoCompilerInputEventPort *port = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("string")->getCompiler());
 //		QEXPECT_FAIL("", "Known bug: https://b33p.net/kosada/node/3175", Continue);  /// @todo Is this bug fixed?
 		QCOMPARE(port->getData()->getInitialValue().c_str(), "");
+
+		delete parser;
 	}
 
 	void testDummyNodes_data()
@@ -143,9 +151,9 @@ private slots:
 
 		// Instantiate parser _without_ a compiler.
 		string compositionPath = getCompositionPath("Recur_Count.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath);
 
-		vector<VuoNode *> nodes = parser.getNodes();
+		vector<VuoNode *> nodes = parser->getNodes();
 		QCOMPARE(nodes.size(), (size_t)2);
 
 		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(nodes);
@@ -175,14 +183,16 @@ private slots:
 
 		QVERIFY(node->getRefreshPort() != NULL);
 		QVERIFY(node->getDonePort() != NULL);
+
+		delete parser;
 	}
 
 	void testPublishedPorts()
 	{
 		string compositionPath = getCompositionPath("Recur_Subtract_published.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		vector<VuoCompilerPublishedPort *> publishedInputs = parser.getPublishedInputPorts();
+		vector<VuoCompilerPublishedPort *> publishedInputs = parser->getPublishedInputPorts();
 		QCOMPARE(publishedInputs.size(), (size_t)2);
 		foreach (VuoCompilerPublishedPort *input, publishedInputs)
 		{
@@ -192,24 +202,27 @@ private slots:
 			QCOMPARE(QString(input->getBase()->getType()->getModuleKey().c_str()), QString("VuoInteger"));
 		}
 
-		vector<VuoCompilerPublishedPort *> publishedOutputs = parser.getPublishedOutputPorts();
+		vector<VuoCompilerPublishedPort *> publishedOutputs = parser->getPublishedOutputPorts();
 		QCOMPARE(publishedOutputs.size(), (size_t)1);
 		QCOMPARE(QString(publishedOutputs.at(0)->getBase()->getName().c_str()), QString("publishedSum"));
 		QCOMPARE(QString(publishedOutputs.at(0)->getBase()->getType()->getModuleKey().c_str()), QString("VuoInteger"));
 
-		VuoNode *publishedInputNode = parser.getPublishedInputNode();
-		QCOMPARE(publishedInputNode->getOutputPorts().size(), (size_t)3);
+		VuoNode *publishedInputNode = parser->getPublishedInputNode();
+		QCOMPARE(publishedInputNode->getOutputPorts().size(), (size_t)4);
 		QVERIFY(publishedInputNode->getOutputPortWithName("publishedA") != NULL);
 		QVERIFY(publishedInputNode->getOutputPortWithName("publishedB") != NULL);
+		QVERIFY(publishedInputNode->getOutputPortWithName(VuoNodeClass::publishedInputNodeSimultaneousTriggerName) != NULL);
+
+		delete parser;
 	}
 
 	void testParsingConstantsForPublishedPorts()
 	{
 		string compositionPath = getCompositionPath("Recur_Subtract_published.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
 		bool foundNode = false;
-		foreach (VuoNode *node, parser.getNodes())
+		foreach (VuoNode *node, parser->getNodes())
 		{
 			if (node->getTitle() == "Subtract1")
 			{
@@ -229,15 +242,17 @@ private slots:
 			}
 		}
 		QVERIFY(foundNode);
+
+		delete parser;
 	}
 
 	void testMakeListNodes()
 	{
 		string compositionPath = getCompositionPath("MakeList.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
 		int makeListNodeCount = 0;
-		foreach (VuoNode *node, parser.getNodes())
+		foreach (VuoNode *node, parser->getNodes())
 		{
 			if (node->getTitle() == "Make List")
 			{
@@ -287,18 +302,29 @@ private slots:
 			}
 		}
 		QCOMPARE(makeListNodeCount, 1);
+
+		delete parser;
 	}
 
 	void testUnknownNodeClass()
 	{
 		string compositionPath = getCompositionPath("UnknownNodeClass.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		vector<string> unknownNodeClasses = parser.getUnknownNodeClasses();
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		QCOMPARE(unknownNodeClasses.size(), (size_t)1);
+		int numUnknownNodeClasses = 0;
+		foreach (VuoNode *node, parser->getNodes())
+		{
+			if (! node->hasCompiler())
+			{
+				QCOMPARE(QString::fromStdString(node->getTitle()), QString("FirePeriodically1"));
+				QCOMPARE(QString::fromStdString(node->getNodeClass()->getClassName()), QString("UnknownNodeClass"));
+				++numUnknownNodeClasses;
+			}
+		}
 
-		string unknownNodeClass = unknownNodeClasses.at(0);
-		QCOMPARE(QString(unknownNodeClass.c_str()), QString("UnknownNodeClass"));
+		QCOMPARE(numUnknownNodeClasses, 1);
+
+		delete parser;
 	}
 
 	void testParsingDescription_data()
@@ -327,8 +353,9 @@ private slots:
 		QFETCH(QString, expectedDescription);
 
 		{
-			VuoCompilerGraphvizParser parser(compositionPath.toStdString(), compiler);
-			QCOMPARE(QString::fromStdString( parser.getDescription() ), expectedDescription);
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath.toStdString(), compiler);
+			QCOMPARE(QString::fromStdString( parser->getDescription() ), expectedDescription);
+			delete parser;
 		}
 
 		{
@@ -337,9 +364,9 @@ private slots:
 			string line;
 			while (getline(fin, line))
 				compositionAsString += line + "\n";
-			FILE *compositionFile = VuoFileUtilities::stringToCFile(compositionAsString.c_str());
-			VuoCompilerGraphvizParser parser(compositionFile, compiler);
-			QCOMPARE(QString::fromStdString( parser.getDescription() ), expectedDescription);
+			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionAsString, compiler);
+			QCOMPARE(QString::fromStdString( parser->getDescription() ), expectedDescription);
+			delete parser;
 		}
 	}
 

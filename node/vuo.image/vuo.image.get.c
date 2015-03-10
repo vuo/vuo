@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "title" : "Get Image",
 					 "keywords" : [
 						 "download", "open", "load", "import", "http", "url", "file",
-						 "photo", "picture", "bitmap", "texture", "icon",
+						 "photograph", "picture", "bitmap", "texture", "icon",
 						 "png",
 						 "jpeg", "jpg",
 						 "gif",
@@ -32,7 +32,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "DisplayImage.vuo" ]
+						 "exampleCompositions" : [ "DisplayImage.vuo", "CompareImageGenerators.vuo" ]
 					 }
 				 });
 

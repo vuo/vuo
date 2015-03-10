@@ -35,7 +35,9 @@ private:
 
 protected:
 	void drawBoundingRect(QPainter *painter);
+	static void addRoundedCorner(QPainterPath &path, bool drawLine, QPointF sharpCornerPoint, qreal radius, bool isTop, bool isLeft);
 	bool getRenderActivity();
+	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
 };
 
 #endif // VUORENDERERITEM_HH

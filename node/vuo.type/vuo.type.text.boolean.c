@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Convert Text to Boolean",
-					 "keywords" : [ ],
+					 "keywords" : [ "0", "1", "true", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

@@ -74,8 +74,8 @@ private slots:
 		QFETCH(size_t, passiveOutEdgeCount);
 
 		string compositionPath = getCompositionPath("Recur_Count_Write.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(generator->composition->getBase()->getNodes());
@@ -86,6 +86,7 @@ private slots:
 		QCOMPARE(generator->passiveInEdgesForNode[node].size(), passiveInEdgeCount);
 		QCOMPARE(generator->passiveOutEdgesForNode[node].size(), passiveOutEdgeCount);
 
+		delete parser;
 		delete generator;
 	}
 
@@ -106,8 +107,8 @@ private slots:
 		QFETCH(bool, mayTransmitThroughNode);
 
 		string compositionPath = getCompositionPath("Semiconductor.vuo");
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(generator->composition->getBase()->getNodes());
@@ -122,6 +123,7 @@ private slots:
 		QCOMPARE(QString(edge->getToNode()->getBase()->getTitle().c_str()), toNodeTitle);
 		QVERIFY(edge->mayTransmitThroughNode() == mayTransmitThroughNode);
 
+		delete parser;
 		delete generator;
 	}
 
@@ -146,8 +148,8 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 		set<VuoNode *> expectedNodes = generator->composition->getBase()->getNodes();
 		vector<VuoCompilerNode *> orderedNodes = generator->orderedNodes;
@@ -200,6 +202,7 @@ private slots:
 			}
 		}
 
+		delete parser;
 		delete generator;
 	}
 
@@ -354,6 +357,9 @@ private slots:
 			chains[VuoNodeClass::publishedInputNodeIdentifier + ":publishedIn0"].insert("Subtract2");
 			chains[VuoNodeClass::publishedInputNodeIdentifier + ":publishedIn0"].insert("Subtract3");
 			chains[VuoNodeClass::publishedInputNodeIdentifier + ":publishedIn1"].insert("Subtract1 Subtract3");
+			chains[VuoNodeClass::publishedInputNodeIdentifier + ":vuoSimultaneous"].insert("Subtract1");
+			chains[VuoNodeClass::publishedInputNodeIdentifier + ":vuoSimultaneous"].insert("Subtract2");
+			chains[VuoNodeClass::publishedInputNodeIdentifier + ":vuoSimultaneous"].insert("Subtract3");
 			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published.vuo" << chains;
 		}
 	}
@@ -363,8 +369,8 @@ private slots:
 		QFETCH(chainsMap, expectedChains);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = generator->nodeForTrigger;
 
@@ -413,6 +419,7 @@ private slots:
 			}
 		}
 
+		delete parser;
 		delete generator;
 	}
 
@@ -429,13 +436,14 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		QEXPECT_FAIL("No feedback loops.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
 		QVERIFY(generator->downstreamEdgesForEdge.empty());
 
+		delete parser;
 		delete generator;
 	}
 
@@ -455,8 +463,8 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
-		VuoCompilerGraphvizParser parser(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), &parser);
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
 		QEXPECT_FAIL("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
@@ -464,6 +472,7 @@ private slots:
 		QEXPECT_FAIL("Trigger unambiguously pushing nodes not in a feedback loop.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
 		QVERIFY(generator->downstreamEdgesForEdge.empty());
 
+		delete parser;
 		delete generator;
 	}
 
@@ -479,7 +488,6 @@ private slots:
 		QTest::newRow("Trigger port carrying a VuoPoint2d.") << "TriggerCarryingPoint2d";
 		QTest::newRow("Trigger port carrying a VuoPoint3d.") << "TriggerCarryingPoint3d";
 		QTest::newRow("Trigger port carrying a VuoMidiNote.") << "TriggerCarryingMIDINote";
-		QTest::newRow("Trigger port carrying a VuoFrameRequest.") << "TriggerCarryingFrameRequest";
 		QTest::newRow("Passive output port carrying a VuoMidiNote.") << "OutputCarryingMIDINote";
 		QTest::newRow("Passive cable carrying a struct passed by value.") << "CableCarryingStructByValue";
 		QTest::newRow("Passive cable carrying a struct coerced to a vector.") << "CableCarryingVuoPoint2d";

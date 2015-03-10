@@ -93,12 +93,12 @@ static bool VuoUrl_urlIsAbsoluteFilePath(const char *url)
 }
 
 /**
- * Receives the data at the specified @c url.
+ * Resolves @c url (which could be an absolute URL, an absolute Unix file path, or a relative Unix file path)
+ * into an absolure URL.
  *
- * @return true upon success, false upon failure.
- * @todo Better error handling per https://b33p.net/kosada/node/4724
+ * The caller is responsible for freeing the returned string.
  */
-bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
+char *VuoUrl_normalize(const char *url)
 {
 	const char *fileScheme = "file://";
 	char *resolvedUrl;
@@ -174,6 +174,19 @@ bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 			strcat(resolvedUrl, url);
 		}
 	}
+
+	return resolvedUrl;
+}
+
+/**
+ * Receives the data at the specified @c url.
+ *
+ * @return true upon success, false upon failure.
+ * @todo Better error handling per https://b33p.net/kosada/node/4724
+ */
+bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
+{
+	char *resolvedUrl = VuoUrl_normalize(url);
 
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};
 	CURL *curl;

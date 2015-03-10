@@ -13,22 +13,21 @@
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Solid Color",
-					 "keywords" : [ "paint", "draw", "opengl", "glsl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
+					 "title" : "Shade with Color",
+					 "keywords" : [ "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "lighting", "Blinn", "Phong", "Lambert", "tone", "chroma" ],
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
-					 "node": {
-						 "isInterface" : false
-					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoColor,{"default":{"r":1,"g":1,"b":1,"a":1}}) color,
+		VuoInputData(VuoColor,{"default":{"r":1.,"g":0.8,"b":0.6,"a":1}}) color,
+		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
+		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeColorShader(color);
+	*shader = VuoShader_makeLitColorShader(color, highlightColor, shininess);
 }

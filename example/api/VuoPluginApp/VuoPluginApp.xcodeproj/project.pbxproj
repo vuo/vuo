@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2BF911CC18CA8A6D004220F3 /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BF911CA18CA8A6D004220F3 /* Document.xib */; };
+		2BF911CD18CA8A6D004220F3 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BF911CB18CA8A6D004220F3 /* MainMenu.xib */; };
+		44203B1E18C905F000E1BFC2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44203B1D18C905F000E1BFC2 /* QuartzCore.framework */; };
+		4426606018C9AF3F0085ABAD /* Vuo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4426605F18C9AF3F0085ABAD /* Vuo.framework */; };
+		4426606218C9AF6E0085ABAD /* libVuoGlContext.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4426606118C9AF6E0085ABAD /* libVuoGlContext.dylib */; };
+		4426606418C9AF8C0085ABAD /* libVuoHeap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4426606318C9AF8C0085ABAD /* libVuoHeap.dylib */; };
+		4426606518C9AFDC0085ABAD /* Vuo.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 4426605F18C9AF3F0085ABAD /* Vuo.framework */; };
+		44B81AA118AD510000F27816 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44B81AA018AD510000F27816 /* Cocoa.framework */; };
+		44B81AAB18AD510000F27816 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 44B81AA918AD510000F27816 /* InfoPlist.strings */; };
+		44B81AAD18AD510000F27816 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B81AAC18AD510000F27816 /* main.mm */; };
+		44B81AB118AD510000F27816 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 44B81AAF18AD510000F27816 /* Credits.rtf */; };
+		44B81AB418AD510000F27816 /* Document.mm in Sources */ = {isa = PBXBuildFile; fileRef = 44B81AB318AD510000F27816 /* Document.mm */; };
+		44B81ABC18AD510000F27816 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44B81ABB18AD510000F27816 /* Images.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		44B81AD918AD5FCB00F27816 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4426606518C9AFDC0085ABAD /* Vuo.framework in Copy Files */,
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2B2F257818CBA02000381773 /* main.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = main.hh; sourceTree = "<group>"; };
+		2BF911CA18CA8A6D004220F3 /* Document.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Document.xib; sourceTree = "<group>"; };
+		2BF911CB18CA8A6D004220F3 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
+		44203B1D18C905F000E1BFC2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		4426605F18C9AF3F0085ABAD /* Vuo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vuo.framework; path = ../../../framework/Vuo.framework; sourceTree = SOURCE_ROOT; };
+		4426606118C9AF6E0085ABAD /* libVuoGlContext.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVuoGlContext.dylib; path = ../../../framework/Vuo.framework/Modules/libVuoGlContext.dylib; sourceTree = SOURCE_ROOT; };
+		4426606318C9AF8C0085ABAD /* libVuoHeap.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVuoHeap.dylib; path = ../../../framework/Vuo.framework/Frameworks/VuoRuntime.framework/libVuoHeap.dylib; sourceTree = SOURCE_ROOT; };
+		44B81A9D18AD510000F27816 /* VuoPluginApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VuoPluginApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		44B81AA018AD510000F27816 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		44B81AA318AD510000F27816 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		44B81AA418AD510000F27816 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		44B81AA518AD510000F27816 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		44B81AA818AD510000F27816 /* VuoPluginApp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "VuoPluginApp-Info.plist"; sourceTree = "<group>"; };
+		44B81AAA18AD510000F27816 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		44B81AAC18AD510000F27816 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		44B81AAE18AD510000F27816 /* VuoPluginApp-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VuoPluginApp-Prefix.pch"; sourceTree = "<group>"; };
+		44B81AB018AD510000F27816 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		44B81AB218AD510000F27816 /* Document.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Document.hh; sourceTree = "<group>"; };
+		44B81AB318AD510000F27816 /* Document.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Document.mm; sourceTree = "<group>"; };
+		44B81ABB18AD510000F27816 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		44B81A9A18AD510000F27816 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4426606418C9AF8C0085ABAD /* libVuoHeap.dylib in Frameworks */,
+				4426606218C9AF6E0085ABAD /* libVuoGlContext.dylib in Frameworks */,
+				4426606018C9AF3F0085ABAD /* Vuo.framework in Frameworks */,
+				44203B1E18C905F000E1BFC2 /* QuartzCore.framework in Frameworks */,
+				44B81AA118AD510000F27816 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		44B81A9418AD510000F27816 = {
+			isa = PBXGroup;
+			children = (
+				44B81AA618AD510000F27816 /* VuoPluginApp */,
+				44B81A9F18AD510000F27816 /* Frameworks */,
+				44B81A9E18AD510000F27816 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		44B81A9E18AD510000F27816 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				44B81A9D18AD510000F27816 /* VuoPluginApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		44B81A9F18AD510000F27816 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4426606318C9AF8C0085ABAD /* libVuoHeap.dylib */,
+				4426606118C9AF6E0085ABAD /* libVuoGlContext.dylib */,
+				4426605F18C9AF3F0085ABAD /* Vuo.framework */,
+				44203B1D18C905F000E1BFC2 /* QuartzCore.framework */,
+				44B81AA018AD510000F27816 /* Cocoa.framework */,
+				44B81AA218AD510000F27816 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		44B81AA218AD510000F27816 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				44B81AA318AD510000F27816 /* AppKit.framework */,
+				44B81AA418AD510000F27816 /* CoreData.framework */,
+				44B81AA518AD510000F27816 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		44B81AA618AD510000F27816 /* VuoPluginApp */ = {
+			isa = PBXGroup;
+			children = (
+				44B81AB218AD510000F27816 /* Document.hh */,
+				44B81AB318AD510000F27816 /* Document.mm */,
+				2BF911CA18CA8A6D004220F3 /* Document.xib */,
+				2BF911CB18CA8A6D004220F3 /* MainMenu.xib */,
+				44B81ABB18AD510000F27816 /* Images.xcassets */,
+				44B81AA718AD510000F27816 /* Supporting Files */,
+			);
+			path = VuoPluginApp;
+			sourceTree = "<group>";
+		};
+		44B81AA718AD510000F27816 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				44B81AA818AD510000F27816 /* VuoPluginApp-Info.plist */,
+				44B81AA918AD510000F27816 /* InfoPlist.strings */,
+				2B2F257818CBA02000381773 /* main.hh */,
+				44B81AAC18AD510000F27816 /* main.mm */,
+				44B81AAE18AD510000F27816 /* VuoPluginApp-Prefix.pch */,
+				44B81AAF18AD510000F27816 /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		44B81A9C18AD510000F27816 /* VuoPluginApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 44B81AD118AD510000F27816 /* Build configuration list for PBXNativeTarget "VuoPluginApp" */;
+			buildPhases = (
+				44B81A9918AD510000F27816 /* Sources */,
+				44B81A9A18AD510000F27816 /* Frameworks */,
+				44B81A9B18AD510000F27816 /* Resources */,
+				44B81AD918AD5FCB00F27816 /* Copy Files */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VuoPluginApp;
+			productName = VuoPluginApp;
+			productReference = 44B81A9D18AD510000F27816 /* VuoPluginApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		44B81A9518AD510000F27816 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = Kosada;
+			};
+			buildConfigurationList = 44B81A9818AD510000F27816 /* Build configuration list for PBXProject "VuoPluginApp" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 44B81A9418AD510000F27816;
+			productRefGroup = 44B81A9E18AD510000F27816 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				44B81A9C18AD510000F27816 /* VuoPluginApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		44B81A9B18AD510000F27816 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BF911CC18CA8A6D004220F3 /* Document.xib in Resources */,
+				2BF911CD18CA8A6D004220F3 /* MainMenu.xib in Resources */,
+				44B81ABC18AD510000F27816 /* Images.xcassets in Resources */,
+				44B81AAB18AD510000F27816 /* InfoPlist.strings in Resources */,
+				44B81AB118AD510000F27816 /* Credits.rtf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		44B81A9918AD510000F27816 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44B81AB418AD510000F27816 /* Document.mm in Sources */,
+				44B81AAD18AD510000F27816 /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		44B81AA918AD510000F27816 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				44B81AAA18AD510000F27816 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		44B81AAF18AD510000F27816 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				44B81AB018AD510000F27816 /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		44B81ACF18AD510000F27816 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		44B81AD018AD510000F27816 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		44B81AD218AD510000F27816 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../framework,
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "VuoPluginApp/VuoPluginApp-Prefix.pch";
+				INFOPLIST_FILE = "VuoPluginApp/VuoPluginApp-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../framework/Vuo.framework/Modules,
+					../../../framework/Vuo.framework/Frameworks/VuoRuntime.framework,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		44B81AD318AD510000F27816 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../framework,
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "VuoPluginApp/VuoPluginApp-Prefix.pch";
+				INFOPLIST_FILE = "VuoPluginApp/VuoPluginApp-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					../../../framework/Vuo.framework/Modules,
+					../../../framework/Vuo.framework/Frameworks/VuoRuntime.framework,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		44B81A9818AD510000F27816 /* Build configuration list for PBXProject "VuoPluginApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44B81ACF18AD510000F27816 /* Debug */,
+				44B81AD018AD510000F27816 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		44B81AD118AD510000F27816 /* Build configuration list for PBXNativeTarget "VuoPluginApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44B81AD218AD510000F27816 /* Debug */,
+				44B81AD318AD510000F27816 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 44B81A9518AD510000F27816 /* Project object */;
+}

@@ -30,13 +30,14 @@ NODE_CLASS_IMAGES += \
 	../node/vuo.math/vuo.math.divide.VuoInteger.c \
 	../node/vuo.math/vuo.math.isLessThan.c \
 	../node/vuo.math/vuo.math.subtract.c \
-	../node/vuo.mouse/vuo.mouse.c \
+	../node/vuo.mouse/vuo.mouse.status.c \
 	../node/vuo.select/vuo.select.in.2.c \
 	../node/vuo.select/vuo.select.in.c \
 	../node/vuo.select/vuo.select.latest.2.c \
 	../node/vuo.select/vuo.select.out.2.c \
 	../node/vuo.select/vuo.select.out.event.c \
-	../node/vuo.time/vuo.time.firePeriodically.c
+	../node/vuo.time/vuo.time.firePeriodically.c \
+	../node/vuo.time/vuo.time.measureTime.c
 
 COMPOSITION_IMAGES += \
 	composition/2Recur.vuo \
@@ -77,15 +78,15 @@ for(i,COMPOSITION_IMAGE_BASENAMES): pandoc.depends += image-generated/$$replace(
 pandoc.target = VuoManual.pdf
 QMAKE_EXTRA_TARGETS += pandoc
 POST_TARGETDEPS += VuoManual.pdf
-QMAKE_CLEAN += VuoManual.pdf
+QMAKE_CLEAN += VuoManual.pdf image/Magic_Wand-eps-converted-to.pdf
 OTHER_FILES += VuoManual.txt
 OTHER_FILES += VuoManualHeader.tex
 
 node_class_image.input = NODE_CLASS_IMAGES
 node_class_image.output = image-generated/${QMAKE_FILE_IN_BASE}.pdf
-node_class_image.commands  = $$VUORENDER --output-format=pdf --output image-generated/${QMAKE_FILE_OUT_BASE}.pdf ${QMAKE_FILE_IN_BASE} ;
-node_class_image.commands += $$VUORENDER --output-format=png --output image-generated/${QMAKE_FILE_OUT_BASE}.png ${QMAKE_FILE_IN_BASE} ;
+node_class_image.commands = $$ROOT/documentation/renderNodeClassImages.sh "$$VUORENDER" "${QMAKE_FILE_OUT_BASE}"
 QMAKE_EXTRA_COMPILERS += node_class_image
+QMAKE_CLEAN += image-generated/*.png
 
 composition_image.input = COMPOSITION_IMAGES
 composition_image.output = image-generated/${QMAKE_FILE_IN_BASE}.pdf

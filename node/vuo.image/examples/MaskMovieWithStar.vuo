@@ -1,0 +1,45 @@
+/**
+ * @file
+ * Applies an image mask to a movie.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ApplyMask [type="vuo.image.apply.mask" version="1.0.0" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<done>done\r|<maskedImage>maskedImage\r" pos="715,947" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="375,612" fillcolor="yellow"];
+GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="568,851" fillcolor="green" _imageURL="\"star.png\""];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="904,658" _center="{\"x\":-0.500000,\"y\":-0.500000}" _alpha="1.000000"];
+MakeLayer4 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="906,758" _center="{\"x\":0.500000,\"y\":-0.500000}" _alpha="1.000000"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="738,485" fillcolor="green" _item1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _item2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeList4 [type="vuo.list.make.5.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="1069,739" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<done>done\r|<layer>layer\r" pos="837,474" fillcolor="green" _gradientCenter="{\"x\":0.000000,\"y\":0.700000}" _gradientRadius="2.000000" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
+MakeScaledLayer [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="894,851" fillcolor="green" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.900000" _alpha="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="901,977" fillcolor="green" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.900000" _alpha="1.000000"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="736,733" _text="\"Where the mask image is bright,\\nit takes the colors from another image,\\nand makes the rest transparent.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":16.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"center\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="744,633" _text="\"The \\\"Apply Mask\\\" node uses a greyscale mask image like this.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":16.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"center\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r" pos="508,947" fillcolor="yellow" _movieURL="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\""];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1132,728" fillcolor="green"];
+
+ApplyMask:maskedImage -> MakeScaledLayer2:image;
+FireOnStart:started -> GetImage:refresh;
+FireOnStart:started -> MakeList2:item1;
+FireOnStart:started -> MakeTextImage2:refresh;
+FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> PlayMovie:play;
+GetImage:image -> ApplyMask:mask;
+GetImage:image -> MakeScaledLayer:image;
+MakeLayer3:layer -> MakeList4:item2;
+MakeLayer4:layer -> MakeList4:item3;
+MakeList2:list -> MakeRadialGradientLayer:colors;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeRadialGradientLayer:layer -> MakeList4:item1;
+MakeScaledLayer2:layer -> MakeList4:item5;
+MakeScaledLayer:layer -> MakeList4:item4;
+MakeTextImage2:image -> MakeLayer4:image;
+MakeTextImage3:image -> MakeLayer3:image;
+PlayMovie:decodedImage -> ApplyMask:image;
+}

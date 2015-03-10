@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Filter Server Descriptions by App",
-					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "name", "output", "receive", "send", "server", "share", "video" ],
+					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "name", "output", "share", "video" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "isInterface" : false,

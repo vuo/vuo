@@ -28,8 +28,8 @@ QMAKE_LFLAGS += \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
 	-lobjc \
 	-framework Foundation \
-	$$ROOT/runtime/VuoHeap.cc \
-	$$ROOT/base/VuoRuntime.o \
+	$$ROOT/runtime/libVuoHeap.dylib \
+	$$ROOT/runtime/libVuoRuntime.bc \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
 	$$ROOT/library/libVuoGlContext.dylib \
@@ -54,6 +54,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoTransform.o \
 	$$ROOT/type/VuoTransform2d.o \
 	$$ROOT/type/VuoVertices.o \
+	$$ROOT/type/list/VuoList_VuoColor.o \
 	$$ROOT/type/list/VuoList_VuoImage.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoPoint2d.o \

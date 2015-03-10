@@ -84,5 +84,22 @@ json_object * VuoCurveDomain_jsonFromValue(const VuoCurveDomain value)
  */
 char * VuoCurveDomain_summaryFromValue(const VuoCurveDomain value)
 {
-	return VuoCurveDomain_stringFromValue(value);
+	char * valueAsString = "";
+
+	switch (value) {
+		case VuoCurveDomain_Clamp:
+			valueAsString = "Clamp";
+			break;
+		case VuoCurveDomain_Infinite:
+			valueAsString = "Infinite";
+			break;
+		case VuoCurveDomain_Wrap:
+			valueAsString = "Wrap";
+			break;
+		case VuoCurveDomain_Mirror:
+			valueAsString = "Mirror";
+			break;
+	}
+
+	return valueAsString;
 }

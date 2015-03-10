@@ -128,7 +128,7 @@ QColor VuoRendererColors::animatedPortFill(void)
 	qreal maxAlpha = getMaxAlphaForDefault(defaultPortFillAlpha);
 	qreal adjustedAlpha = maxAlpha-currentFadePercentage*(maxAlpha-minAlpha);
 
-	return tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha));
+	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
 }
 
 /**

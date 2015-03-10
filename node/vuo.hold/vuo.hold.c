@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Hold Value",
-					 "keywords" : [ "store", "sample", "feedback", "loop", "control flow", "block", "wall" ],
+					 "keywords" : [ "store", "retain", "keep", "sample", "feedback", "loop", "control flow", "block", "wall" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

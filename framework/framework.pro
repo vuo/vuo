@@ -249,9 +249,10 @@ FRAMEWORKS_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Framew
 VUORUNTIME_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/VuoRuntime.framework"
 copyVuoRuntime.commands += rm -Rf $${VUORUNTIME_DEST_DIR} &&
 copyVuoRuntime.commands += mkdir -p $${VUORUNTIME_DEST_DIR} &&
-copyVuoRuntime.commands += cp $$ROOT/runtime/*\\.bc $$ROOT/runtime/VuoCompositionLoader $${VUORUNTIME_DEST_DIR} &&
+copyVuoRuntime.commands += cp $$ROOT/runtime/*\\.bc $$ROOT/runtime/libVuoHeap.dylib $$ROOT/runtime/VuoCompositionLoader $${VUORUNTIME_DEST_DIR} &&
 copyVuoRuntime.commands += cp $$ROOT/base/VuoCompositionStub.dylib $${VUORUNTIME_DEST_DIR}
 copyVuoRuntime.depends += $$ROOT/runtime/*.bc
+copyVuoRuntime.depends += $$ROOT/runtime/libVuoHeap.dylib
 copyVuoRuntime.depends += $$ROOT/runtime/VuoCompositionLoader
 copyVuoRuntime.depends += $$ROOT/base/VuoCompositionStub.dylib
 copyVuoRuntime.target = $${VUORUNTIME_DEST_DIR}
@@ -342,8 +343,21 @@ POST_TARGETDEPS += $${SYPHON_LIBS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copySyphonLibs
 
 
-# Copy fonts, Qt frameworks, and Qt plugins to the resources folder (to be bundled as part of the SDK, but not Vuo.framework)
+# Copy input editor SDK, fonts, Qt frameworks, and Qt plugins to the resources folder (to be bundled as part of the SDK, but not Vuo.framework)
 RESOURCES_SUBDIR = resources
+
+INPUT_EDITOR_WIDGETS_SRC_DIR = $$ROOT/type/inputEditor/widget
+INPUT_EDITOR_WIDGETS_DEST_DIR = $$RESOURCES_SUBDIR/inputEditorWidgets
+copyInputEditorWidgets.commands = \
+	mkdir -p $$INPUT_EDITOR_WIDGETS_DEST_DIR \
+	&& cp -a \
+		$$INPUT_EDITOR_WIDGETS_SRC_DIR/*.hh \
+		$$INPUT_EDITOR_WIDGETS_SRC_DIR/*.a \
+		$$INPUT_EDITOR_WIDGETS_SRC_DIR/*.pch \
+		$$INPUT_EDITOR_WIDGETS_DEST_DIR
+copyInputEditorWidgets.target = $$INPUT_EDITOR_WIDGETS_DEST_DIR/libwidget.a
+POST_TARGETDEPS += $$INPUT_EDITOR_WIDGETS_DEST_DIR/libwidget.a
+QMAKE_EXTRA_TARGETS += copyInputEditorWidgets
 
 copyFonts.commands = \
 	mkdir -p $$RESOURCES_SUBDIR \
@@ -364,7 +378,6 @@ copyAndCleanQtFrameworks.commands = \
 		$${QT_ROOT}/lib/QtMacExtras.framework \
 		$${QT_ROOT}/lib/QtPrintSupport.framework \
 		$${QT_ROOT}/lib/QtOpenGL.framework \
-		$${QT_ROOT}/lib/QtSvg.framework \
 		$${QT_ROOT}/lib/QtXml.framework \
 		$$RESOURCES_SUBDIR \
 	&& rm -Rf "$$RESOURCES_SUBDIR/Qt*.framework/Contents" \
@@ -385,8 +398,6 @@ copyAndCleanQtFrameworks.commands = \
 	&& install_name_tool -id "@rpath/QtPrintSupport.framework/QtPrintSupport" "$$RESOURCES_SUBDIR/QtPrintSupport.framework/QtPrintSupport" \
 	&& chmod +wx "$$RESOURCES_SUBDIR/QtOpenGL.framework/Versions/$$QT_MAJOR_VERSION/QtOpenGL" \
 	&& install_name_tool -id "@rpath/QtOpenGL.framework/QtOpenGL" "$$RESOURCES_SUBDIR/QtOpenGL.framework/QtOpenGL" \
-	&& chmod +wx "$$RESOURCES_SUBDIR/QtSvg.framework/Versions/$$QT_MAJOR_VERSION/QtSvg" \
-	&& install_name_tool -id "@rpath/QtSvg.framework/QtSvg" "$$RESOURCES_SUBDIR/QtSvg.framework/QtSvg" \
 	&& chmod +wx "$$RESOURCES_SUBDIR/QtXml.framework/Versions/$$QT_MAJOR_VERSION/QtXml" \
 	&& install_name_tool -id "@rpath/QtXml.framework/QtXml" "$$RESOURCES_SUBDIR/QtXml.framework/QtXml" \
 	&& rm -rf $$QTPLUGINS_DEST_DIR \
@@ -407,7 +418,8 @@ LIBS += \
 	-framework CoreFoundation \
 	-framework OpenGL \
 	-framework IOSurface \
-	$$ROOT/library/VuoImageRenderer.o
+	$$ROOT/library/VuoImageRenderer.o \
+	$$ROOT/runtime/libVuoHeap.dylib
 
 
 # Copy Clang headers to the Frameworks directory
@@ -483,6 +495,7 @@ QMAKE_EXTRA_TARGETS += copyGraphvizLibs
 # Link Vuo.framework's main shared library
 # (Link via an extra target instead of using qmake's TEMPLATE=lib, so that we have finer control over its dependencies.)
 VUO_FRAMEWORK_BINARY = Vuo.framework/Versions/$$VUO_VERSION/Vuo
+CURRENT_LINK = Vuo.framework/Versions/Current
 linkVuoFramework.commands = \
 	$$QMAKE_LINK \
 		$$QMAKE_LFLAGS \
@@ -497,7 +510,8 @@ linkVuoFramework.commands = \
 	&& install_name_tool -change "/usr/local/lib/libgraph.5.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libgraph.5.dylib" "$$VUO_FRAMEWORK_BINARY" \
 	&& install_name_tool -change "/usr/local/lib/libgvc.6.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libgvc.6.dylib" "$$VUO_FRAMEWORK_BINARY" \
 	&& install_name_tool -change "/usr/local/lib/libpathplan.4.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libpathplan.4.dylib" "$$VUO_FRAMEWORK_BINARY" \
-	&& install_name_tool -change "/usr/local/lib/libxdot.4.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libxdot.4.dylib" "$$VUO_FRAMEWORK_BINARY"
+	&& install_name_tool -change "/usr/local/lib/libxdot.4.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libxdot.4.dylib" "$$VUO_FRAMEWORK_BINARY" \
+	&& rm -f $$CURRENT_LINK
 linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
 	../library/libVuoGlContext.dylib \
@@ -506,7 +520,8 @@ linkVuoFramework.depends = \
 	../compiler/libVuoCompiler.a \
 	../type/libVuoType.a \
 	../type/list/libVuoTypeList.a \
-	../library/VuoImageRenderer.o
+	../library/VuoImageRenderer.o \
+	../runtime/libVuoHeap.dylib
 POST_TARGETDEPS += $$VUO_FRAMEWORK_BINARY
 QMAKE_EXTRA_TARGETS += linkVuoFramework
 
@@ -533,8 +548,13 @@ copyClangSysHeaders.target = $${CLANG_SYS_HEADERS_DEST_DIR}
 POST_TARGETDEPS += $${CLANG_SYS_HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyClangSysHeaders
 
-createLinks.commands +=    ln -sf $$VUO_VERSION Vuo.framework/Versions/Current
-createLinks.commands += && ln -sf Versions/Current/Vuo Vuo.framework/
+createCurrentLink.commands = ln -sf $$VUO_VERSION $$CURRENT_LINK
+createCurrentLink.target = $$CURRENT_LINK
+createCurrentLink.depends = $$VUO_FRAMEWORK_BINARY
+POST_TARGETDEPS += $$CURRENT_LINK
+QMAKE_EXTRA_TARGETS += createCurrentLink
+
+createLinks.commands  =    ln -sf Versions/Current/Vuo Vuo.framework/
 createLinks.commands += && ln -sf Versions/Current/Headers Vuo.framework/
 createLinks.commands += && ln -sf Versions/Current/Resources Vuo.framework/
 createLinks.commands += && ln -sf Versions/Current/Licenses Vuo.framework/

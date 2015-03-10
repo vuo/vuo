@@ -58,7 +58,7 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 
 
-@interface RunImageFilterView : NSOpenGLView
+@interface RunImageFilterView : NSOpenGLView <NSApplicationDelegate>
 {
 	VuoRunner * runner;
 	GLuint vertexArray;
@@ -71,6 +71,8 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	VuoRunner::Port * inputImagePort;
 	GLint positionAttribute;
 	GLint textureUniform;
+	CVDisplayLinkRef displayLink;
+	bool isStopping;
 }
 @end
 
@@ -96,6 +98,9 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	NSOpenGLContext *context = [[[NSOpenGLContext alloc] initWithFormat:pf shareContext:nil] autorelease];
 	[self setPixelFormat:pf];
 	[self setOpenGLContext:context];
+
+	[NSApp setDelegate:self];
+	isStopping = NO;
 }
 
 - (void)prepareOpenGL
@@ -129,10 +134,13 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	NSImage * ni = [NSImage imageNamed:@"OttoOperatesTheRoller.jpg"];
 	NSImage * niFlipped = [[NSImage alloc] initWithSize:[ni size]];
 	float scale = 1;
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_6
-	// If we're building on 10.7 or later, we need to check whether we're running on a retina display, and scale accordingly if so.
-	scale = [niFlipped recommendedLayerContentsScale:0];
-#endif
+	if ([niFlipped respondsToSelector:@selector(recommendedLayerContentsScale:)])
+	{
+		// If we're on 10.7 or later, we need to check whether we're running on a retina display, and scale accordingly if so.
+		typedef CGFloat (*funcType)(id receiver, SEL selector, CGFloat);
+		funcType recommendedLayerContentsScale = (funcType)[[niFlipped class] instanceMethodForSelector:@selector(recommendedLayerContentsScale:)];
+		scale = recommendedLayerContentsScale(niFlipped, @selector(recommendedLayerContentsScale:), 0);
+	}
 	[niFlipped setFlipped:YES];
 	[niFlipped lockFocus];
 	[ni drawInRect:NSMakeRect(0,0,[ni size].width,[ni size].height) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
@@ -171,7 +179,6 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	json_object_put(o);
 
 	// Call RunImageFilterViewDisplayCallback every vertical refresh
-	CVDisplayLinkRef displayLink;
 	CVDisplayLinkCreateWithCGDisplay(CGMainDisplayID(), &displayLink);
 	CVDisplayLinkSetOutputCallback(displayLink, RunImageFilterViewDisplayCallback, self);
 	CVDisplayLinkStart(displayLink);
@@ -189,6 +196,9 @@ CVReturn RunImageFilterViewDisplayCallback(CVDisplayLinkRef displayLink, const C
 
 - (void)drawRect:(NSRect)dirtyRect
 {
+	if (isStopping)
+		return;
+
 	CGLContextObj cgl_ctx = (CGLContextObj)[[self openGLContext] CGLContextObj];
 
 	// Execute the Vuo Composition
@@ -229,6 +239,14 @@ CVReturn RunImageFilterViewDisplayCallback(CVDisplayLinkRef displayLink, const C
 	[[self openGLContext] flushBuffer];
 
 	VuoRelease(outputImage);
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+{
+	CVDisplayLinkStop(displayLink);
+	isStopping = YES;
+	runner->stop();
+	return NSTerminateNow;
 }
 
 @end

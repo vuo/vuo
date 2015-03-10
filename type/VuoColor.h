@@ -12,6 +12,11 @@
 
 #include "VuoReal.h"
 
+/// @{
+typedef void * VuoList_VuoColor;
+#define VuoList_VuoColor_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoColor VuoColor
@@ -59,6 +64,8 @@ static inline void VuoColor_getRGBA(VuoColor color, VuoReal *r, VuoReal *g, VuoR
 
 VuoColor VuoColor_makeWithHSLA(VuoReal h, VuoReal s, VuoReal l, VuoReal a);
 void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoReal *a);
+
+VuoColor VuoColor_average(VuoList_VuoColor colors);
 
 /// @{
 /**

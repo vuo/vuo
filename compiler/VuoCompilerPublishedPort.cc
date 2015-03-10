@@ -21,7 +21,7 @@
 VuoCompilerPublishedPort::VuoCompilerPublishedPort(string name, bool isOutput, const set<VuoCompilerPort *> &connectedPorts)
 	: VuoBaseDetail<VuoPublishedPort>("VuoCompilerPublishedPort",
 									  new VuoPublishedPort(	name,
-															getTypeForPort(*connectedPorts.begin()),
+															getTypeForPort(name, connectedPorts),
 															isOutput,
 															getBasePorts(connectedPorts)))
 {
@@ -51,8 +51,12 @@ set<string> VuoCompilerPublishedPort::getConnectedPortIdentifiers(void)
 /**
  * Returns this published port's data type, or null if the port is event-only.
  */
-VuoType * VuoCompilerPublishedPort::getTypeForPort(VuoCompilerPort *connectedPort)
+VuoType * VuoCompilerPublishedPort::getTypeForPort(string name, const set<VuoCompilerPort *> &connectedPorts)
 {
+	if (name == "refresh")
+		return NULL;
+
+	VuoCompilerPort *connectedPort = *connectedPorts.begin();
 	VuoCompilerPortClass *connectedPortClass = static_cast<VuoCompilerPortClass *>(connectedPort->getBase()->getClass()->getCompiler());
 	return connectedPortClass->getDataVuoType();
 }

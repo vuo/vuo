@@ -18,8 +18,12 @@ class VuoRendererFonts
 public:
 	static VuoRendererFonts * getSharedFonts(void);
 
+	static double getHorizontalOffset(const QFont font, const QString text);
+
 	static const qreal thickPenWidth;  ///< Width, in pixels at 1:1 zoom, of the top and bottom node edges.  Many other drawing metrics are based on this value.
 	static const qreal midPenWidth;  ///< Width, in pixels at 1:1 zoom, of stateful indicator bars and typecast port edges.
+
+	static const qreal nodeTitleFontSize;  ///< Size, in typographic points, of the node's title.
 
 	QFont nodeTitleFont(void);
 	QFont nodeClassFont(void);

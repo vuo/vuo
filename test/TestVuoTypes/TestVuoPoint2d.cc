@@ -14,6 +14,7 @@ extern "C" {
 
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoPoint2d);
+Q_DECLARE_METATYPE(VuoRectangle);
 
 /**
  * Tests the VuoPoint2d type.
@@ -88,6 +89,43 @@ private slots:
 
 		if (testStringFromValue)
 			QCOMPARE(VuoPoint2d_stringFromValue(p), initializer.toUtf8().constData());
+	}
+
+	void testRectangleIntersection_data()
+	{
+		QTest::addColumn<VuoRectangle>("rectangleA");
+		QTest::addColumn<VuoRectangle>("rectangleB");
+		QTest::addColumn<VuoRectangle>("expectedIntersection");
+
+		QTest::newRow("nonintersecting horizontal AB")          << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(2,0,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting horizontal AB touching") << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(1,0,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting horizontal BA")          << VuoRectangle_make(2,0,1,1) << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting horizontal BA touching") << VuoRectangle_make(1,0,1,1) << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting vertical AB")            << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(0,2,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting vertical AB touching")   << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(0,1,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting vertical BA")            << VuoRectangle_make(0,2,1,1) << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(0,0,0,0);
+		QTest::newRow("nonintersecting vertical BA touching")   << VuoRectangle_make(0,1,1,1) << VuoRectangle_make(0,0,1,1) << VuoRectangle_make(0,0,0,0);
+
+		QTest::newRow("intersecting horizontal AB")             << VuoRectangle_make(0  ,0  ,1,1) << VuoRectangle_make(0.5,0  ,1,1) << VuoRectangle_make(0.25,0   ,0.5,1  );
+		QTest::newRow("intersecting horizontal BA")             << VuoRectangle_make(0.5,0  ,1,1) << VuoRectangle_make(0  ,0  ,1,1) << VuoRectangle_make(0.25,0   ,0.5,1  );
+		QTest::newRow("intersecting vertical AB")               << VuoRectangle_make(0  ,0  ,1,1) << VuoRectangle_make(0  ,0.5,1,1) << VuoRectangle_make(0   ,0.25,1  ,0.5);
+		QTest::newRow("intersecting vertical BA")               << VuoRectangle_make(0  ,0.5,1,1) << VuoRectangle_make(0  ,0  ,1,1) << VuoRectangle_make(0   ,0.25,1  ,0.5);
+		QTest::newRow("intersecting diagonal AB")               << VuoRectangle_make(0  ,0  ,1,1) << VuoRectangle_make(0.5,0.5,1,1) << VuoRectangle_make(0.25,0.25,0.5,0.5);
+		QTest::newRow("intersecting diagonal BA")               << VuoRectangle_make(0.5,0.5,1,1) << VuoRectangle_make(0  ,0  ,1,1) << VuoRectangle_make(0.25,0.25,0.5,0.5);
+	}
+	void testRectangleIntersection()
+	{
+		QFETCH(VuoRectangle, rectangleA);
+		QFETCH(VuoRectangle, rectangleB);
+		QFETCH(VuoRectangle, expectedIntersection);
+
+		VuoRectangle actualIntersection = VuoPoint2d_rectangleIntersection(rectangleA, rectangleB);
+
+		// "In the case of comparing floats and doubles, qFuzzyCompare() is used for comparing. This means that comparing to 0 will likely fail."
+		QCOMPARE(actualIntersection.center.x + 10.f, expectedIntersection.center.x + 10.f);
+		QCOMPARE(actualIntersection.center.y + 10.f, expectedIntersection.center.y + 10.f);
+		QCOMPARE(actualIntersection.size.x   + 10.f, expectedIntersection.size.x   + 10.f);
+		QCOMPARE(actualIntersection.size.y   + 10.f, expectedIntersection.size.y   + 10.f);
 	}
 };
 

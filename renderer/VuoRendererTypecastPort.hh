@@ -30,6 +30,7 @@ public:
 
 	QPainterPath getPortPath(bool includeNormalPort, bool includeFlag, QPainterPath *outsetPath) const;
 	static QString getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort);
+	QRectF getPortConstantTextRect(void) const;
 
 private:
 	QString sourceType;

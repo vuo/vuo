@@ -1,0 +1,66 @@
+/**
+ * @file
+ * VuoInputEditorColor implementation.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+#include "VuoInputEditorColor.hh"
+
+/**
+ * Constructs a VuoInputEditorColor object.
+ */
+VuoInputEditor * VuoInputEditorColorFactory::newInputEditor()
+{
+	return new VuoInputEditorColor();
+}
+
+/**
+ * Returns a VuoColor JSON object representing the specified @ref qtColor.
+ */
+VuoColor VuoInputEditorColor::vuoColorFromQColor(const QColor &qtColor)
+{
+	return VuoColor_makeWithRGBA(qtColor.redF(), qtColor.greenF(), qtColor.blueF(), qtColor.alphaF());
+}
+
+/**
+ * Displays a color-picker dialog.
+ */
+json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
+{
+	QColorDialog dialog;
+
+	VuoColor colorVuo = VuoColor_valueFromJson(originalValue);
+	QColor colorQt;
+	colorQt.setRedF(colorVuo.r);
+	colorQt.setGreenF(colorVuo.g);
+	colorQt.setBlueF(colorVuo.b);
+	colorQt.setAlphaF(colorVuo.a);
+	dialog.setCurrentColor(colorQt);
+	dialog.setOption(QColorDialog::ShowAlphaChannel);
+
+	// Position the right center of the dialog at the left center of the port.
+	QPoint dialogTopLeft = portLeftCenter - QPoint(dialog.childrenRect().width(), dialog.childrenRect().height()/2.);
+	dialog.move(dialogTopLeft);
+
+	connect(&dialog, SIGNAL(currentColorChanged(const QColor &)), this, SLOT(currentColorChanged(const QColor &)));
+
+	dialog.exec();
+
+	if (dialog.result() == QDialog::Accepted)
+		return VuoColor_jsonFromValue(vuoColorFromQColor(dialog.selectedColor()));
+
+	return originalValue;
+}
+
+/**
+ * Fired when the user changes the color in the color dialog.
+ */
+void VuoInputEditorColor::currentColorChanged(const QColor &color)
+{
+	json_object *valueAsJson = VuoColor_jsonFromValue(vuoColorFromQColor(color));
+	emit valueChanged(valueAsJson);
+	json_object_put(valueAsJson);
+}

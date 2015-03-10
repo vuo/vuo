@@ -84,34 +84,21 @@ Install Graphviz 2.28.0:
 
 ### Qt
 
-Install Qt 5.1.1:
+Install Qt 5.2.1:
 
     cd /tmp
-    curl -OL http://download.qt-project.org/official_releases/qt/5.1/5.1.1/single/qt-everywhere-opensource-src-5.1.1.tar.gz
-    tar xzf qt-everywhere-opensource-src-5.1.1.tar.gz
-    cd qt-everywhere-opensource-src-5.1.1
+    curl -OL http://download.qt-project.org/official_releases/qt/5.2/5.2.1/single/qt-everywhere-opensource-src-5.2.1.tar.gz
+    tar xzf qt-everywhere-opensource-src-5.2.1.tar.gz
+    cd qt-everywhere-opensource-src-5.2.1
     cd qtbase
-    curl -OL https://bugreports.qt-project.org/secure/attachment/32616/qtbug-23062-00.patch
-    git apply < qtbug-23062-00.patch
-    curl -OL https://bugreports.qt-project.org/secure/attachment/32638/qtbug-31294-00.patch
-    git apply < qtbug-31294-00.patch
-    curl -OL https://b33p.net/sites/default/files/qcoretextfontdatabase-fix-10.6-reroll_0.patch
-    # reroll of https://qt.gitorious.org/qt/qtbase/commit/b1bd4021f361b404a9c087622f71006f897d7e52
-    git apply < qcoretextfontdatabase-fix-10.6-reroll_0.patch
+    # https://bugreports.qt-project.org/browse/QTBUG-36575
+    curl -OL https://bugreports.qt-project.org/secure/attachment/37834/qmake-objcxx-cxxflags.patch
+    patch -p1 < qmake-objcxx-cxxflags.patch
     cd ..
-    ./configure -prefix /usr/local/Cellar/qt/5.1.1/ -opensource -confirm-license -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples
+    ./configure -prefix /usr/local/Cellar/qt/5.2.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit
     make -j9
     make install
-    ln -s /usr/local/Cellar/qt/5.1.1/bin/qmake /usr/local/bin/qmake
-    cd /tmp
-    git clone git://gitorious.org/qt/qtmacextras.git
-    cd qtmacextras
-    git checkout 4303cf981aad09950d3e50c408b69caac32f3321
-    # In the qtmacextras source code, comment out each line that contains QT_NAMESPACE_ALIAS_OBJC_CLASS.
-    # https://bugreports.qt-project.org/browse/QTBUG-33343
-    qmake
-    make -j9
-    make install
+    ln -s /usr/local/Cellar/qt/5.2.1/bin/qmake /usr/local/bin/qmake
 
 ### ICU
 
@@ -122,7 +109,11 @@ Install Qt 5.1.1:
     # Go to http://apps.icu-project.org/datacustom/, uncheck all except "Break Iterator", and download it into icu/source/data/in.
     unzip -o icudt52l.zip
     cd ../..
+    # On OS X 10.6, do: `export CC=gcc ; export CXX=g++`
     CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" ./configure --prefix=/usr/local/Cellar/icu4c/52.1/ --with-library-bits=64 --enable-static --disable-samples --disable-tests --disable-extras
+    make install -j9
+    make clean
+    CFLAGS="-m32" CXXFLAGS="-m32" ./configure --prefix=/usr/local/Cellar/icu4c/52.1-32/ --with-library-bits=32 --enable-static --disable-samples --disable-tests --disable-extras
     make install -j9
 
 ### JSON-C
@@ -136,6 +127,10 @@ Install JSON-C 0.10:
     CFLAGS="-Wno-error" ./configure --prefix=/usr/local/Cellar/json-c/0.10
     make install -j9
     cp json_object_iterator.h /usr/local/Cellar/json-c/0.10/include/json/
+    make clean
+    CFLAGS="-Wno-error -m32" ./configure --prefix=/usr/local/Cellar/json-c/0.10-32
+    make install -j9
+    cp json_object_iterator.h /usr/local/Cellar/json-c/0.10-32/include/json/
 
 ### ØMQ
 
@@ -151,6 +146,10 @@ If you're running any version of Mac OS X:
     tar zxf zeromq-2.2.0.tar.gz
     cd zeromq-2.2.0
     ./configure --prefix=/usr/local/Cellar/zeromq/2.2.0
+    make -j9
+    make install
+    make clean
+    CXXFLAGS="-m32" ./configure --prefix=/usr/local/Cellar/zeromq/2.2.0-32
     make -j9
     make install
 

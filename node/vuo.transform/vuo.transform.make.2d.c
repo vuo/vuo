@@ -19,7 +19,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0},"suggestedStep":{"x":0.1,"y":0.1}}) translation,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0.0,"suggestedMax":360.0,"suggestedStep":1.0}) rotation,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0.0,"suggestedMax":360.0,"suggestedStep":15.0}) rotation,
 		VuoInputData(VuoPoint2d, {"default":{"x":1.0,"y":1.0},"suggestedStep":{"x":0.1,"y":0.1}}) scale,
 		VuoOutputData(VuoTransform2d) transform
 )

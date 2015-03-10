@@ -1,5 +1,4 @@
 TEMPLATE = subdirs
-QMAKE_CLEAN = Makefile
 
 include(../vuo.pri)
 

@@ -31,6 +31,18 @@ bool VuoRendererItem::getRenderActivity()
 	return (composition && composition->getRenderActivity());
 }
 
+/**
+ * Returns the current default cache mode for components of this composition.
+ */
+QGraphicsItem::CacheMode VuoRendererItem::getCurrentDefaultCacheMode()
+{
+	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
+	if (composition)
+		return composition->getCurrentDefaultCacheMode();
+	else
+		return QGraphicsItem::NoCache;
+}
+
 VuoRendererItem::VuoRendererItem()
 {
 }
@@ -54,4 +66,30 @@ void VuoRendererItem::drawRect(QPainter *painter, QRectF rect)
 void VuoRendererItem::drawBoundingRect(QPainter *painter)
 {
 	drawRect(painter, boundingRect());
+}
+
+/**
+ * Appends a line (or move) and curve to @c path, to produce a clockwise-wound rounded corner near @c sharpCornerPoint.
+ */
+void VuoRendererItem::addRoundedCorner(QPainterPath &path, bool drawLine, QPointF sharpCornerPoint, qreal radius, bool isTop, bool isLeft)
+{
+	QPointF p(
+				sharpCornerPoint.x() + (isTop ? (isLeft ? 0 : -radius) : (isLeft ? radius : 0)),
+				sharpCornerPoint.y() + (isTop ? (isLeft ? radius : 0) : (isLeft ? 0 : -radius))
+				);
+	if (drawLine)
+		path.lineTo(p);
+	else
+		path.moveTo(p);
+
+	path.cubicTo(
+				sharpCornerPoint.x() + (isTop ? (isLeft ? 0 : -radius/2.) : (isLeft ? radius/2. : 0)),
+				sharpCornerPoint.y() + (isTop ? (isLeft ? radius/2. : 0) : (isLeft ? 0 : -radius/2.)),
+
+				sharpCornerPoint.x() + (isTop ? (isLeft ? radius/2. : 0) : (isLeft ? 0 : -radius/2.)),
+				sharpCornerPoint.y() + (isTop ? (isLeft ? 0 : radius/2.) : (isLeft ? -radius/2. : 0)),
+
+				sharpCornerPoint.x() + (isTop ? (isLeft ? radius : 0) : (isLeft ? 0 : -radius)),
+				sharpCornerPoint.y() + (isTop ? (isLeft ? 0 : radius) : (isLeft ? -radius : 0))
+				);
 }

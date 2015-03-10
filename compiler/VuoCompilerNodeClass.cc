@@ -17,7 +17,6 @@
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
-#include "VuoCompilerCodeGenUtilities.hh"
 
 #include "VuoGenericType.hh"
 #include "VuoPort.hh"
@@ -96,6 +95,24 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 }
 
 /**
+ * Creates a new implementation-less compiler node class, using the given node class for its base VuoNodeClass.
+ */
+VuoCompilerNodeClass::VuoCompilerNodeClass(VuoNodeClass *baseNodeClass)
+	: VuoBaseDetail<VuoNodeClass>("VuoCompilerNodeClass with existing base", baseNodeClass),
+	  VuoCompilerModule(baseNodeClass, NULL)
+{
+	getBase()->setCompiler(this);
+
+	instanceDataClass = NULL;
+	eventFunction = NULL;
+	initFunction = NULL;
+	finiFunction = NULL;
+	callbackStartFunction = NULL;
+	callbackUpdateFunction = NULL;
+	callbackStopFunction = NULL;
+}
+
+/**
  * Creates a substantial base node instance from this node class.
  */
 VuoNode * VuoCompilerNodeClass::newNode(string title, double x, double y)
@@ -111,9 +128,9 @@ VuoNode * VuoCompilerNodeClass::newNode(string title, double x, double y)
 /**
  * Creates a substantial base node instance with its metadata copied from the existing @c nodeToCopyMetadataFrom.
  */
-VuoNode * VuoCompilerNodeClass::newNode(VuoCompilerNode *nodeToCopyMetadataFrom)
+VuoNode * VuoCompilerNodeClass::newNode(VuoNode *nodeToCopyMetadataFrom)
 {
-	VuoNode *n = getBase()->newNode(nodeToCopyMetadataFrom->getBase());
+	VuoNode *n = getBase()->newNode(nodeToCopyMetadataFrom);
 	instantiateCompilerNode(n);
 	return n;
 }
@@ -144,6 +161,14 @@ void VuoCompilerNodeClass::instantiateCompilerNode(VuoNode *node)
 }
 
 /**
+ * Creates a new implementation-less compiler node class, using the given node class for its base VuoNodeClass.
+ */
+VuoNodeClass * VuoCompilerNodeClass::newNodeClassWithoutImplementation(VuoNodeClass *baseNodeClass)
+{
+	return (new VuoCompilerNodeClass(baseNodeClass))->getBase();
+}
+
+/**
  * Creates a new substantial @c VuoNodeClass from the node class definition in the module.
  * If the module does not contain a node class definition, returns NULL.
  */
@@ -158,61 +183,6 @@ VuoNodeClass * VuoCompilerNodeClass::newNodeClass(string nodeClassName, Module *
 	VuoCompilerNodeClass * cnc2 = new VuoCompilerNodeClass(cnc);
 	delete cnc;
 	return cnc2->getBase();
-}
-
-
-/**
- * Generates a node class for the "vuo.in" node in the current composition. The node class has a trigger output
- * port for each published input port.
- */
-VuoNodeClass * VuoCompilerNodeClass::createPublishedInputNodeClass(vector<VuoPortClass *> outputPortClasses)
-{
-	Module *module = new Module("", getGlobalContext());
-	Type *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-	// const char *moduleDetails = ...;
-	string moduleDetails = "{ \"title\" : \"Published Input Ports\" }";
-	Constant *moduleDetailsValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, moduleDetails, ".str");  // VuoCompilerBitcodeParser::resolveGlobalToConst requires that the variable have a name
-	GlobalVariable *moduleDetailsVariable = new GlobalVariable(*module, pointerToCharType, false, GlobalValue::ExternalLinkage, 0, "moduleDetails");
-	moduleDetailsVariable->setInitializer(moduleDetailsValue);
-
-	// void publishedInput...(void);
-	vector<Type *> triggerFunctionParams;
-	FunctionType *triggerFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), triggerFunctionParams, false);
-	PointerType *pointerToTriggerFunctionType = PointerType::get(triggerFunctionType, 0);
-
-	// void nodeEvent
-	// (
-	//  VuoOutputTrigger(publishedInput0,void),
-	//  VuoOutputTrigger(publishedInput1,void),
-	//  ...
-	// ) { }
-
-	vector<Type *> eventFunctionParams;
-	for (vector<VuoPortClass *>::iterator i = outputPortClasses.begin(); i != outputPortClasses.end(); ++i)
-		eventFunctionParams.push_back(pointerToTriggerFunctionType);
-	FunctionType *eventFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), eventFunctionParams, false);
-	Function *eventFunction = Function::Create(eventFunctionType, GlobalValue::ExternalLinkage, "nodeEvent", module);
-
-	BasicBlock *block = BasicBlock::Create(module->getContext(), "", eventFunction, 0);
-	Function::arg_iterator argIter = eventFunction->arg_begin();
-	for (vector<VuoPortClass *>::iterator i = outputPortClasses.begin(); i != outputPortClasses.end(); ++i)
-	{
-		VuoPortClass *outputPortClass = *i;
-
-		if (outputPortClass->getName() == "done")
-			continue;
-
-		Value *arg = argIter++;
-		string argName = outputPortClass->getName();
-		arg->setName(argName);
-
-		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoType:void", "", 0);
-		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoOutputTrigger:" + outputPortClass->getName(), "", 0);
-	}
-	ReturnInst::Create(module->getContext(), block);
-
-	return VuoCompilerNodeClass::newNodeClass(VuoNodeClass::publishedInputNodeClassName, module);
 }
 
 /**
@@ -922,7 +892,8 @@ int VuoCompilerNodeClass::parseEventBlockingParameter(string annotation)
 }
 
 /**
- * Returns true if a port class with the same name as @c argumentClass already exists in this node class.
+ * If a port class with the same name as @a argumentClass already exists in this node class, returns that port class.
+ * Otherwise, returns null.
  */
 VuoPortClass * VuoCompilerNodeClass::getExistingPortClass(VuoCompilerNodeArgumentClass *argumentClass, bool isInput)
 {
@@ -931,7 +902,12 @@ VuoPortClass * VuoCompilerNodeClass::getExistingPortClass(VuoCompilerNodeArgumen
 	VuoPortClass *existingOutputPortClass = getOutputPortClassWithName(argumentName);
 	if (existingInputPortClass || existingOutputPortClass)
 	{
-		if ((isInput && existingOutputPortClass) || (! isInput && existingInputPortClass))
+		if (! isInput && getBase()->getClassName() == VuoNodeClass::publishedInputNodeClassName)
+		{
+			if (! existingOutputPortClass)
+				return NULL;
+		}
+		else if ((isInput && existingOutputPortClass) || (! isInput && existingInputPortClass))
 		{
 			fprintf(stderr, "Port %s is declared as an input port in one function and an output port in another function.\n", argumentName.c_str());
 			return NULL;
