@@ -45,7 +45,7 @@ See the example Qt projects for using Vuo inside an application.
 
 Vuo.framework includes the basic functions you need to build and run a Vuo composition. For additional functionality, you can optionally link in these dynamic libraries: 
 
-   - For @ref ManagingMemory "memory management" when working with port types, use the functions declared in VuoHeap.h and defined in `Vuo.framework/Frameworks/VuoRuntime.framework/libVuoHeap.dylib`. 
+   - For @ref ManagingMemory "memory management" when working with port types, use the functions declared in VuoHeap.h and defined in `Vuo.framework/Modules/libVuoHeap.dylib`. 
    - For working with OpenGL contexts, use the functions declared in VuoGlContext.h and defined in `Vuo.framework/Modules/libVuoGlContext.dylib`. 
 
 See the RunImageFilter example projects (included with the Vuo SDK) for examples of using these libraries. 
