@@ -16,7 +16,7 @@ QMAKE_LINK = $$QMAKE_CXX
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
 QMAKE_CXXFLAGS += -F $$VUO_FRAMEWORK_PATH -DEXAMPLE_PATH=\\\"$$system(pwd)\\\"
 QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.6 -Xlinker -no_function_starts -Xlinker -no_version_load_command \
-	$$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/VuoRuntime.framework/libVuoHeap.dylib \
+	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoHeap.dylib \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoGlContext.dylib
 
 QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH

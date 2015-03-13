@@ -7,6 +7,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
 
 [3lab_tv](https://twitter.com/3lab_tv)  
 [architek1](http://vuo.org/user/1603)  
+[bareimage1](http://www.bareimage.com)  
 [bLackburst](http://vuo.org/user/364)  
 [bmellen](http://bradleymellen.com/)  
 [Bonemap](http://bonemap.com)  

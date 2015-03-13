@@ -27,7 +27,7 @@ QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
 QMAKE_OBJECTIVE_CFLAGS += -F $$VUO_FRAMEWORK_PATH
 QMAKE_OBJECTIVE_CFLAGS_WARN_ON += -Wno-unused-parameter
 QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.6 \
-	$$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/VuoRuntime.framework/libVuoHeap.dylib \
+	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoHeap.dylib \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoGlContext.dylib
 QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH
 QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE

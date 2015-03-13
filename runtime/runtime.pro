@@ -48,7 +48,7 @@ runtime_cxx.commands = \
 		-Wl,-no_version_load_command \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT} && \
-	install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Frameworks/VuoRuntime.framework/libVuoHeap.dylib ${QMAKE_FILE_OUT}
+	install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Modules/libVuoHeap.dylib ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_cxx
 
 runtime_loader.input = RUNTIME_LOADER_SOURCES

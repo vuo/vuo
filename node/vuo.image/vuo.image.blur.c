@@ -95,8 +95,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	return instance;
 }
-const float offset[] = { 0.0, 1.3846153846, 3.2307692308 };
-const float weight[] = { 0.2270270270, 0.3162162162, 0.0702702703 };
+static const float offset[] = { 0.0, 1.3846153846, 3.2307692308 };
+static const float weight[] = { 0.2270270270, 0.3162162162, 0.0702702703 };
 
 void nodeInstanceEvent
 (
@@ -119,7 +119,7 @@ void nodeInstanceEvent
 	VuoShader horizontalPassShader = VuoShader_make("Gaussian Horizontal Pass Shader", VuoShader_getDefaultVertexShader(), horizontalPassFragmentShader);
 	VuoRetain(verticalPassShader);
 	VuoRetain(horizontalPassShader);
-	
+
 	VuoShader_setUniformFloat(verticalPassShader, (*instance)->glContext, "height", h);
 	VuoShader_setUniformFloat(horizontalPassShader, (*instance)->glContext, "width", w);
 
