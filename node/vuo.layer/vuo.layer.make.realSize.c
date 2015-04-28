@@ -18,11 +18,12 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
+		VuoInputData(VuoText) name,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) alpha,
 		VuoOutputData(VuoLayer) layer
 )
 {
-	*layer = VuoLayer_makeRealSize(image, center, alpha);
+	*layer = VuoLayer_makeRealSize(name, image, center, alpha);
 }

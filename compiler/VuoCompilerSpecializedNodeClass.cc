@@ -122,6 +122,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 
 	string tmpNodeClassImplementationFile = tmpDir + "/" + nodeClassName + ".c";
 	string tmpNodeClassCompiledFile = tmpDir + "/" + nodeClassName + ".vuonode";
+	VuoCompiler::preserveOriginalFileName(genericImplementation, genericNodeClassName + ".c");
 	VuoFileUtilities::writeStringToFile(genericImplementation, tmpNodeClassImplementationFile);
 
 	set<VuoNodeSet *> nodeSetDependencies;
@@ -153,11 +154,10 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 			VuoFileUtilities::writeStringToFile(header, tmpHeaderFile);
 		}
 	}
-	vector<string> extraArgs;
-	extraArgs.push_back("-I");
-	extraArgs.push_back(tmpDir);
+	vector<string> includeDirs;
+	includeDirs.push_back(tmpDir);
 
-	compiler->compileModule(tmpNodeClassImplementationFile, tmpNodeClassCompiledFile, extraArgs);
+	compiler->compileModule(tmpNodeClassImplementationFile, tmpNodeClassCompiledFile, includeDirs);
 	Module *module = compiler->readModuleFromBitcode(tmpNodeClassCompiledFile);
 	remove(tmpDir.c_str());
 

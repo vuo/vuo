@@ -4,18 +4,16 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/base \
 	-I$$ROOT/library \
 	-I$$ROOT/node \
+	-I$$ROOT/node/vuo.audio \
 	-I$$ROOT/node/vuo.font \
 	-I$$ROOT/node/vuo.midi \
 	-I$$ROOT/node/vuo.movie \
 	-I$$ROOT/runtime \
 	-I$$ROOT/type \
 	-I$$ROOT/type/list \
-	-I$$ICU_ROOT/include \
 	$$QMAKE_CXXFLAGS_WARN_ON
 
 QMAKE_LFLAGS += \
-	$$ICU_ROOT/lib/libicuuc.a \
-	$$ICU_ROOT/lib/libicudata.a \
 	$$ZMQ_ROOT/lib/libzmq.a \
 	$${GRAPHVIZ_ROOT}/lib/libgvc.dylib \
 	$${GRAPHVIZ_ROOT}/lib/libgraph.dylib \
@@ -28,15 +26,17 @@ QMAKE_LFLAGS += \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
 	-lobjc \
 	-framework Foundation \
-	$$ROOT/runtime/libVuoHeap.dylib \
 	$$ROOT/runtime/libVuoRuntime.bc \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/library/VuoImageBlur.bc \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoSceneRenderer.o \
 	$$ROOT/library/VuoVerticesParametric.o \
+	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoImage.o \
@@ -54,6 +54,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoTransform.o \
 	$$ROOT/type/VuoTransform2d.o \
 	$$ROOT/type/VuoVertices.o \
+	$$ROOT/type/list/VuoList_VuoAudioSamples.o \
 	$$ROOT/type/list/VuoList_VuoColor.o \
 	$$ROOT/type/list/VuoList_VuoImage.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \

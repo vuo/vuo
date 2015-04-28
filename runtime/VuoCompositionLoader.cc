@@ -62,7 +62,7 @@ void vuoControlReplyReceive(enum VuoControlReply expectedReply)
 {
 	int reply = vuoReceiveInt(ZMQControl);
 	if (reply != expectedReply)
-		fprintf(stderr, "VuoControl message received unexpected reply (received %u, expected %u)\n", reply, expectedReply);
+		fprintf(stderr, "VuoControl message received unexpected reply (received %d, expected %d)\n", reply, expectedReply);
 }
 
 /**
@@ -158,11 +158,6 @@ int main(int argc, char **argv)
 													  free(compositionDiff);
 
 													  vuoLoaderControlReplySend(VuoLoaderControlReplyCompositionReplaced,NULL,0);
-													  break;
-												  }
-												  default:
-												  {
-													  fprintf(stderr, "VuoLoaderControl: got unknown request %d\n", control);
 													  break;
 												  }
 											  }

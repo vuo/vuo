@@ -12,20 +12,10 @@
 /**
  * Creates a published port that is not connected to any port in a composition.
  */
-VuoCompilerPublishedOutputPort::VuoCompilerPublishedOutputPort(string name, VuoCompilerPort *connectedPort, VuoPort *vuoOutPort)
-	: VuoCompilerPublishedPort(name, true, wrapInSet(connectedPort))
+VuoCompilerPublishedOutputPort::VuoCompilerPublishedOutputPort(string name, VuoType *type, set<VuoCompilerPort *> connectedPorts, VuoPort *vuoOutPort)
+	: VuoCompilerPublishedPort(name, type, true, connectedPorts)
 {
 	this->vuoOutPort = vuoOutPort;
-}
-
-/**
- * Returns a set containing the @c VuoCompilerData object as its single member.
- */
-set<VuoCompilerPort *> VuoCompilerPublishedOutputPort::wrapInSet(VuoCompilerPort *port)
-{
-	set<VuoCompilerPort *> portSet;
-	portSet.insert(port);
-	return portSet;
 }
 
 /**

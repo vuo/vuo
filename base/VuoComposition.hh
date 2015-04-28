@@ -60,10 +60,11 @@ public:
 	vector<VuoPublishedPort *> getPublishedOutputPorts(void);
 	VuoPublishedPort * getPublishedInputPortWithName(string name);
 	VuoPublishedPort * getPublishedOutputPortWithName(string name);
-	VuoPublishedPort * getPublishedInputPortConnectedToPort(VuoPort *port);
+	set<VuoPublishedPort *> getPublishedInputPortsConnectedToPort(VuoPort *port);
 	set<VuoPublishedPort *> getPublishedOutputPortsConnectedToPort(VuoPort *port);
 	set<pair<VuoPublishedPort *, VuoPort *> > getPublishedInputPortsConnectedToNode(VuoNode *node);
 	set<pair<VuoPublishedPort *, VuoPort *> > getPublishedOutputPortsConnectedToNode(VuoNode *node);
+	int getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput);
 
 private:
 	string name;

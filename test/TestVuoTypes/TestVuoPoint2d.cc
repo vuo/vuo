@@ -127,6 +127,30 @@ private slots:
 		QCOMPARE(actualIntersection.size.x   + 10.f, expectedIntersection.size.x   + 10.f);
 		QCOMPARE(actualIntersection.size.y   + 10.f, expectedIntersection.size.y   + 10.f);
 	}
+
+	void testRectangleUnion_data()
+	{
+		QTest::addColumn<VuoRectangle>("rectangleA");
+		QTest::addColumn<VuoRectangle>("rectangleB");
+		QTest::addColumn<VuoRectangle>("expectedUnion");
+
+		QTest::newRow("A left/below B")		<< VuoRectangle_make(0.5,0.5,1,1) << VuoRectangle_make(1.5,1.5,1,1) << VuoRectangle_make(1,1,2,2);
+		QTest::newRow("A right/above B")	<< VuoRectangle_make(1.5,1.5,1,1) << VuoRectangle_make(0.5,0.5,1,1) << VuoRectangle_make(1,1,2,2);
+	}
+	void testRectangleUnion()
+	{
+		QFETCH(VuoRectangle, rectangleA);
+		QFETCH(VuoRectangle, rectangleB);
+		QFETCH(VuoRectangle, expectedUnion);
+
+		VuoRectangle actualUnion = VuoPoint2d_rectangleUnion(rectangleA, rectangleB);
+
+		// "In the case of comparing floats and doubles, qFuzzyCompare() is used for comparing. This means that comparing to 0 will likely fail."
+		QCOMPARE(actualUnion.center.x + 10.f, expectedUnion.center.x + 10.f);
+		QCOMPARE(actualUnion.center.y + 10.f, expectedUnion.center.y + 10.f);
+		QCOMPARE(actualUnion.size.x   + 10.f, expectedUnion.size.x   + 10.f);
+		QCOMPARE(actualUnion.size.y   + 10.f, expectedUnion.size.y   + 10.f);
+	}
 };
 
 QTEST_APPLESS_MAIN(TestVuoPoint2d)

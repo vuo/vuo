@@ -726,6 +726,8 @@ Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 	generateGetPortValueOrSummaryFunctions();
 
 	generatePublishedPortGetters();
+	generateGetPublishedOutputPortValueFunction();
+	generateSetPublishedInputPortValueFunction();
 
 	generateSerializeFunction();
 	generateUnserializeFunction();
@@ -1067,7 +1069,13 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
 }
 
 /**
- * Generates a call to wait on the semaphore of each of the given nodes.
+ * Generates code to wait on the semaphore of each of the given nodes.
+ *
+ * If @a shouldBlock is true, the generated code waits indefinitely for each semaphore.
+ * Otherwise, if any of the semaphores is not immediately available, the generated code signals any
+ * semaphores claimed so far and returns.
+ *
+ * Returns a value that is true if all semaphore were successfully claimed and false if none were claimed.
  *
  * Assumes the list of nodes is in the same order as @ref orderedNodes (to avoid deadlock).
  *
@@ -1078,19 +1086,54 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
  * // semaphore, the rest of the edges for the same event need to recognize this and also stop waiting.
  * // Hence the checking of event IDs and the limited-time wait.
  *
- * // For each node:
- * while (vuo_math_count__Count__eventIDClaimingSemaphore != eventId)
+ * int64_t timeoutDelta = (shouldBlock ? ... : 0);
+ * dispatch_time_t timeout = dispatch_time(DISPATCH_TIME_NOW, timeoutDelta);
+ * bool keepTrying = true;
+ *
+ * while (vuo_math_count__Count__eventIDClaimingSemaphore != eventId && keepTrying)
  * {
- *    int ret = dispatch_semaphore_wait(vuo_math_count__Count__semaphore, WAIT_TIME);
- *    if (ret == 0)  // got semaphore
+ *    int ret = dispatch_semaphore_wait(vuo_math_count__Count__semaphore, timeout);
+ *    if (ret == 0)
  *       vuo_math_count__Count__eventIDClaimingSemaphore = eventId;
+ *    else if (! shouldBlock)
+ *       keepTrying = false;
+ * }
+ * if (! keepTrying)
+ * {
+ *    goto END;
+ * }
+ *
+ * while (vuo_math_add__Add__eventIDClaimingSemaphore != eventId && keepTrying)
+ * {
+ *    int ret = dispatch_semaphore_wait(vuo_math_add__Add__semaphore, timeout);
+ *    if (ret == 0)
+ *       vuo_math_add__Add__eventIDClaimingSemaphore = eventId;
+ *    else if (! shouldBlock)
+ *       keepTrying = false;
+ * }
+ * if (! keepTrying)
+ * {
+ *    dispatch_semaphore_signal(vuo_math_count__Count__semaphore);
+ *    goto END;
  * }
  */
-void VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Function *function, BasicBlock *&block,
-													   vector<VuoCompilerNode *> nodes, Value *eventIdValue)
+Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Function *function, BasicBlock *&block,
+														  vector<VuoCompilerNode *> nodes, Value *eventIdValue, bool shouldBlock)
 {
 	if (! eventIdValue)
 		eventIdValue = generateGetNextEventID(module, block);
+
+	int64_t timeoutInNanoseconds = (shouldBlock ? NSEC_PER_SEC / 1000 : 0);  /// @todo (https://b33p.net/kosada/node/6682)
+	ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(64, 0));
+	ConstantInt *falseValue = ConstantInt::get(module->getContext(), APInt(1, 0));
+	ConstantInt *trueValue = ConstantInt::get(module->getContext(), APInt(1, 1));
+
+	AllocaInst *keepTryingVariable = new AllocaInst(IntegerType::get(module->getContext(), 1), "keepTrying", block);
+	new StoreInst(trueValue, keepTryingVariable, block);
+
+	BasicBlock *getKeepTryingBlock = BasicBlock::Create(module->getContext(), "getKeepTrying", function);
+
+	vector<VuoCompilerNode *> waitedNodes;
 
 	for (vector<VuoCompilerNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
@@ -1102,24 +1145,54 @@ void VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Function 
 		GlobalVariable *claimingEventIdVariable = claimingEventIdVariableForNode[node];
 		Value *claimingEventIdValue = new LoadInst(claimingEventIdVariable, "", false, checkEventIdBlock);
 		ICmpInst *claimingEventIdNotEqualsEventId = new ICmpInst(*checkEventIdBlock, ICmpInst::ICMP_NE, claimingEventIdValue, eventIdValue, "");
+		BasicBlock *checkKeepTryingBlock = BasicBlock::Create(module->getContext(), "checkKeepTrying", function);
+		BasicBlock *doneWaitingBlock = BasicBlock::Create(module->getContext(), "doneWaitingNodeSemaphore", function);
+		BranchInst::Create(checkKeepTryingBlock, doneWaitingBlock, claimingEventIdNotEqualsEventId, checkEventIdBlock);
+
+		Value *keepTryingValue = new LoadInst(keepTryingVariable, "", false, checkKeepTryingBlock);
+		ICmpInst *keepTryingIsTrue = new ICmpInst(*checkKeepTryingBlock, ICmpInst::ICMP_EQ, keepTryingValue, trueValue);
 		BasicBlock *waitBlock = BasicBlock::Create(module->getContext(), "waitNodeSemaphore", function);
-		BasicBlock *nextBlock = BasicBlock::Create(module->getContext(), "gotNodeSemaphore", function);
-		BranchInst::Create(waitBlock, nextBlock, claimingEventIdNotEqualsEventId, checkEventIdBlock);
+		BranchInst::Create(waitBlock, doneWaitingBlock, keepTryingIsTrue, checkKeepTryingBlock);
 
 		GlobalVariable *semaphoreVariable = semaphoreVariableForNode[node];
-		int64_t timeoutInNanoseconds = NSEC_PER_SEC / 1000;  /// @todo (https://b33p.net/kosada/node/6682)
 		Value *retValue = VuoCompilerCodeGenUtilities::generateWaitForSemaphore(module, waitBlock, semaphoreVariable, timeoutInNanoseconds);
 
-		ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(64, 0));
 		ICmpInst *retEqualsZero = new ICmpInst(*waitBlock, ICmpInst::ICMP_EQ, retValue, zeroValue, "");
 		BasicBlock *setEventIdBlock = BasicBlock::Create(module->getContext(), "setEventId", function);
-		BranchInst::Create(setEventIdBlock, checkEventIdBlock, retEqualsZero, waitBlock);
+		BasicBlock *setKeepTryingBlock = BasicBlock::Create(module->getContext(), "setKeepTrying", function);
+		BasicBlock *endWhileBlock = BasicBlock::Create(module->getContext(), "endWhile", function);
+		BranchInst::Create(setEventIdBlock, setKeepTryingBlock, retEqualsZero, waitBlock);
 
 		new StoreInst(eventIdValue, claimingEventIdVariable, false, setEventIdBlock);
+		BranchInst::Create(endWhileBlock, setEventIdBlock);
 
-		BranchInst::Create(checkEventIdBlock, setEventIdBlock);
-		block = nextBlock;
+		if (! shouldBlock)
+			new StoreInst(falseValue, keepTryingVariable, setKeepTryingBlock);
+		BranchInst::Create(endWhileBlock, setKeepTryingBlock);
+
+		BranchInst::Create(checkEventIdBlock, endWhileBlock);
+
+		keepTryingValue = new LoadInst(keepTryingVariable, "", false, doneWaitingBlock);
+		ICmpInst *keepTryingIsFalse = new ICmpInst(*doneWaitingBlock, ICmpInst::ICMP_EQ, keepTryingValue, falseValue);
+		BasicBlock *cleanUpBlock = BasicBlock::Create(module->getContext(), "cleanUp", function);
+		BasicBlock *endNodeBlock = BasicBlock::Create(module->getContext(), "endNode", function);
+		BranchInst::Create(cleanUpBlock, endNodeBlock, keepTryingIsFalse, doneWaitingBlock);
+
+		generateSignalForNodes(module, cleanUpBlock, waitedNodes);
+		waitedNodes.push_back(node);
+		BranchInst::Create(getKeepTryingBlock, cleanUpBlock);
+
+		block = endNodeBlock;
 	}
+
+	BranchInst::Create(getKeepTryingBlock, block);
+
+	Value *keepTryingValue = new LoadInst(keepTryingVariable, "", false, getKeepTryingBlock);
+	BasicBlock *endBlock = BasicBlock::Create(module->getContext(), "endWaitForNodes", function);
+	BranchInst::Create(endBlock, getKeepTryingBlock);
+
+	block = endBlock;
+	return keepTryingValue;
 }
 
 /**
@@ -1542,8 +1615,7 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
 					data->generateStore(dataValue, currentBlock);
 
 					// VuoRetain((void *)data);
-					LoadInst *dataValueAfter = data->generateLoad(currentBlock);
-					VuoCompilerCodeGenUtilities::generateRetainCall(module, currentBlock, dataValueAfter);
+					VuoCompilerCodeGenUtilities::generateRetainCall(module, currentBlock, dataValue);
 
 					// if (shouldUpdateCallbacks)
 					//   <Node>_nodeInstanceCallbackUpdate(...);  // if this function exists
@@ -2090,6 +2162,145 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
 }
 
 /**
+ * Generates the getPublishedOutputPortValue() function.
+ *
+ * @eg{
+ * char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
+ * {
+ *	 char *ret = NULL;
+ *   if (! strcmp(portIdentifier, ""))
+ *   {
+ *     ret = getOutputPortValue("", shouldUseInterprocessSerialization);
+ *   }
+ *   else if (! strcmp(portIdentifier, ""))
+ *   {
+ *     // no incoming data-and-event cable
+ *   }
+ *   return ret;
+ * }
+ * }
+ */
+void VuoCompilerBitcodeGenerator::generateGetPublishedOutputPortValueFunction(void)
+{
+	Function *function = VuoCompilerCodeGenUtilities::getGetPublishedOutputPortValueFunction(module);
+
+	Function::arg_iterator args = function->arg_begin();
+	Value *portIdentifierValue = args++;
+	portIdentifierValue->setName("portIdentifier");
+	Value *shouldUseInterprocessSerializationValue = args++;
+	shouldUseInterprocessSerializationValue->setName("shouldUseInterprocessSerialization");
+
+	Function *getValueFunction = VuoCompilerCodeGenUtilities::getGetOutputPortValueFunction(module);
+
+	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
+	PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+	AllocaInst *retVariable = new AllocaInst(pointerToChar, "ret", initialBlock);
+	ConstantPointerNull *nullValue = ConstantPointerNull::get(pointerToChar);
+	new StoreInst(nullValue, retVariable, false, initialBlock);
+
+	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
+	vector<VuoPublishedPort *> publishedPorts = composition->getBase()->getPublishedOutputPorts();
+	for (vector<VuoPublishedPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
+	{
+		VuoPublishedPort *publishedPort = *i;
+		string currentName = publishedPort->getName();
+		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentName, function, 0);
+
+		set<VuoPort *> connectedPorts = publishedPort->getConnectedPorts();
+		for (set<VuoPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
+		{
+			VuoPort *port = *j;
+			if (port->getClass()->getPortType() == VuoPortClass::dataAndEventPort)
+			{
+				string connectedPortIdentifier = static_cast<VuoCompilerEventPort *>(port->getCompiler())->getIdentifier();
+				Constant *connectedPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, connectedPortIdentifier);
+
+				vector<Value *> args;
+				args.push_back(connectedPortIdentifierValue);
+				args.push_back(shouldUseInterprocessSerializationValue);
+				CallInst *getValueResult = CallInst::Create(getValueFunction, args, "", currentBlock);
+				new StoreInst(getValueResult, retVariable, currentBlock);
+
+				break;
+			}
+		}
+		blocksForString[currentName] = make_pair(currentBlock, currentBlock);
+	}
+
+	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
+	LoadInst *retValue = new LoadInst(retVariable, "", false, finalBlock);
+	ReturnInst::Create(module->getContext(), retValue, finalBlock);
+
+	VuoCompilerCodeGenUtilities::generateStringMatchingCode(module, function, initialBlock, finalBlock, portIdentifierValue, blocksForString);
+}
+
+/**
+ * Generates the generateSetPublishedInputPortValue() function.
+ *
+ * @eg{
+ * void setPublishedInputPortValue(char *portIdentifier, char *valueAsString)
+ * {
+ *   if (! strcmp(portIdentifier, ""))
+ *   {
+ *     setInputPortValue("", valueAsString, true);
+ *   }
+ *   else if (! strcmp(portIdentifier, ""))
+ *   {
+ *     setInputPortValue("", valueAsString, true);
+ *     setInputPortValue("", valueAsString, true);
+ *   }
+ * }
+ * }
+ */
+void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(void)
+{
+	Function *function = VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(module);
+
+	Function::arg_iterator args = function->arg_begin();
+	Value *portIdentifierValue = args++;
+	portIdentifierValue->setName("portIdentifier");
+	Value *valueAsStringValue = args++;
+	valueAsStringValue->setName("valueAsString");
+
+	Function *setValueFunction = VuoCompilerCodeGenUtilities::getSetInputPortValueFunction(module);
+	ConstantInt *trueValue = ConstantInt::get(module->getContext(), APInt(32, 1));
+
+	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
+
+	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
+	vector<VuoPublishedPort *> publishedPorts = composition->getBase()->getPublishedInputPorts();
+	for (vector<VuoPublishedPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
+	{
+		VuoPublishedPort *publishedPort = *i;
+		string currentName = publishedPort->getName();
+		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentName, function, 0);
+
+		set<VuoPort *> connectedPorts = publishedPort->getConnectedPorts();
+		for (set<VuoPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
+		{
+			VuoPort *port = *j;
+			if (port->getClass()->getPortType() == VuoPortClass::dataAndEventPort)
+			{
+				string connectedPortIdentifier = static_cast<VuoCompilerEventPort *>(port->getCompiler())->getIdentifier();
+				Constant *connectedPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, connectedPortIdentifier);
+
+				vector<Value *> args;
+				args.push_back(connectedPortIdentifierValue);
+				args.push_back(valueAsStringValue);
+				args.push_back(trueValue);
+				CallInst::Create(setValueFunction, args, "", currentBlock);
+			}
+		}
+		blocksForString[currentName] = make_pair(currentBlock, currentBlock);
+	}
+
+	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
+	ReturnInst::Create(module->getContext(), finalBlock);
+
+	VuoCompilerCodeGenUtilities::generateStringMatchingCode(module, function, initialBlock, finalBlock, portIdentifierValue, blocksForString);
+}
+
+/**
  * Generates a call to sendOutputPortsUpdated() for each output port that is transmitting an event and data,
  * and a call to sendInputPortsUpdated() for each input port that is receiving an event and data.
  *
@@ -2564,11 +2775,40 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 		if (isNodeDownstreamOfTrigger(*i, trigger) && isGather(*i, trigger))
 			isGatherDownstreamOfTrigger = true;
 
+	// Does the trigger port have out-of-topological-order nodes somewhere downstream of it?
+	// If so, then all downstream nodes will be locked before the event can proceed.
+	// This prevents deadlock where the events from two different trigger ports reach the downstream nodes in a different order
+	// (https://b33p.net/kosada/node/7924).
+	bool hasOutOfOrderDownstreamNodes = false;
+	vector<VuoCompilerChain *> chains = chainsForTrigger[trigger];
+	vector<VuoCompilerNode *> firstNodeInEachChain;
+	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+		vector<VuoCompilerNode *> chainNodes = chain->getNodes();
+		set<VuoCompilerNode *> chainNodeSet(chainNodes.begin(), chainNodes.end());
+		vector<VuoCompilerNode *> sortedChainNodes = sortNodes(chainNodeSet);
+		if (chainNodes != sortedChainNodes)
+		{
+			hasOutOfOrderDownstreamNodes = true;
+			break;
+		}
+		firstNodeInEachChain.push_back(*chainNodes.begin());
+	}
+	if (! hasOutOfOrderDownstreamNodes)
+	{
+		set<VuoCompilerNode *> firstNodeSet(firstNodeInEachChain.begin(), firstNodeInEachChain.end());
+		vector<VuoCompilerNode *> sortedFirstNodes = sortNodes(firstNodeSet);
+		if (firstNodeInEachChain != sortedFirstNodes)
+			hasOutOfOrderDownstreamNodes = true;
+	}
+
 	// Wait for the node containing the trigger port and the nodes directly downstream of the trigger —
-	// or, if the trigger scatters the event and there's a gather downstream, wait for all nodes downstream.
+	// or, if the trigger scatters the event and there's a gather downstream
+	// or the trigger has out-of-topological-order downstream nodes, wait for all nodes downstream.
 	set<VuoCompilerNode *> triggerOutputNodes;
 	set<VuoCompilerTriggerEdge *> triggerEdges = triggerEdgesForTrigger[trigger];
-	if (! (isGatherDownstreamOfTrigger && triggerEdges.size() > 1))
+	if (! (isGatherDownstreamOfTrigger && triggerEdges.size() > 1) && ! hasOutOfOrderDownstreamNodes)
 	{
 		for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
 		{
@@ -2589,10 +2829,25 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 	if (isTriggerWaitNeeded)
 		triggerOutputNodes.insert(triggerNode);
 	vector<VuoCompilerNode *> orderedTriggerOutputNodes = sortNodes(triggerOutputNodes);
-	generateWaitForNodes(module, triggerWorker, triggerBlock, orderedTriggerOutputNodes, eventIdValueInTriggerWorker);
+	bool canDropEvents = (trigger->getBase()->getEventThrottling() == VuoPortClass::EventThrottling_Drop);
+	Value *didClaimNodes = generateWaitForNodes(module, triggerWorker, triggerBlock, orderedTriggerOutputNodes, eventIdValueInTriggerWorker, ! canDropEvents);
 
-	// Handle the trigger port value having changed.
-	Value *triggerDataValue = triggerAction->generateDataValueDidChange(module, triggerBlock, triggerWorker);
+	// If this trigger can drop events and the downstream nodes are not immediately available, then drop this event.
+	if (canDropEvents)
+	{
+		ConstantInt *trueValue = ConstantInt::get(module->getContext(), APInt(1, 1));
+		ICmpInst *claimedNodesIsTrue = new ICmpInst(*triggerBlock, ICmpInst::ICMP_EQ, didClaimNodes, trueValue, "");
+		BasicBlock *nextTriggerBlock = BasicBlock::Create(module->getContext(), "triggerBlock2", triggerWorker, NULL);
+		BasicBlock *dropEventBlock = BasicBlock::Create(module->getContext(), "dropEvent", triggerWorker, NULL);
+		BranchInst::Create(nextTriggerBlock, dropEventBlock, claimedNodesIsTrue, triggerBlock);
+		triggerBlock = nextTriggerBlock;
+
+		triggerAction->generateDataValueDiscard(module, dropEventBlock, triggerWorker);
+		BranchInst::Create(triggerReturnBlock, dropEventBlock);
+	}
+
+	// Update the stored trigger port value.
+	Value *triggerDataValue = triggerAction->generateDataValueUpdate(module, triggerBlock, triggerWorker);
 	if (isTriggerWaitNeeded)
 		generateSignalForNodes(module, triggerBlock, vector<VuoCompilerNode *>(1, triggerNode));
 
@@ -2608,7 +2863,6 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 
 
 	// For each chain downstream of the trigger...
-	vector<VuoCompilerChain *> chains = chainsForTrigger[trigger];
 
 	// Create a dispatch group for the chain.
 	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)

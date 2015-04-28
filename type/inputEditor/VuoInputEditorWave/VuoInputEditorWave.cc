@@ -14,6 +14,8 @@ extern "C"
 	#include "VuoWave.h"
 }
 
+#include "../VuoInputEditorCurve/VuoInputEditorCurveRenderer.hh"
+
 /**
  * Constructs a VuoInputEditorWave object.
  */
@@ -29,23 +31,9 @@ VuoInputEditorMenuItem * VuoInputEditorWave::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *waveTree = new VuoInputEditorMenuItem("root");
 
-	json_object *sineAsJson = VuoWave_jsonFromValue(VuoWave_Sine);
-	const char *sineSummary = VuoWave_summaryFromValue(VuoWave_Sine);
-
-	json_object *triangleAsJson = VuoWave_jsonFromValue(VuoWave_Triangle);
-	const char *triangleSummary = VuoWave_summaryFromValue(VuoWave_Triangle);
-
-	json_object *sawtoothAsJson = VuoWave_jsonFromValue(VuoWave_Sawtooth);
-	const char *sawtoothSummary = VuoWave_summaryFromValue(VuoWave_Sawtooth);
-
-
-	VuoInputEditorMenuItem *sine = new VuoInputEditorMenuItem(sineSummary, sineAsJson);
-	VuoInputEditorMenuItem *triangle = new VuoInputEditorMenuItem(triangleSummary, triangleAsJson);
-	VuoInputEditorMenuItem *sawtooth = new VuoInputEditorMenuItem(sawtoothSummary, sawtoothAsJson);
-
-	waveTree->addItem(sine);
-	waveTree->addItem(triangle);
-	waveTree->addItem(sawtooth);
+	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_summaryFromValue(VuoWave_Sine),		VuoWave_jsonFromValue(VuoWave_Sine),		renderMenuIconWithWave(VuoWave_Sine)));
+	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_summaryFromValue(VuoWave_Triangle),	VuoWave_jsonFromValue(VuoWave_Triangle),	renderMenuIconWithWave(VuoWave_Triangle)));
+	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_summaryFromValue(VuoWave_Sawtooth),	VuoWave_jsonFromValue(VuoWave_Sawtooth),	renderMenuIconWithWave(VuoWave_Sawtooth)));
 
 	return waveTree;
 }

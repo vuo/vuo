@@ -96,10 +96,19 @@ void nodeInstanceEvent
 	VuoInputData(VuoText, {"default":""}) triggerInfoIn,
 	VuoInputData(VuoText, {"default":""}) in0,
 	VuoInputData(VuoText, {"default":""}) in1,
-	VuoInputData(VuoText, {"default":""}) nodeTitle
+	VuoInputData(VuoText, {"default":""}) nodeTitle,
+	VuoOutputData(VuoText) triggerInfoOut,
+	VuoOutputData(VuoText) nodeInfo
 )
 {
 	setRepeatingTimer(*ctx, milliseconds, fired, maxEventCount, nodeTitle);
+
+	*triggerInfoOut = triggerInfoIn;
+
+	char *ni = (char *)malloc(strlen(*triggerInfoOut) + strlen(nodeTitle) + 2);
+	sprintf(ni, "%s %s", *triggerInfoOut, nodeTitle);
+	*nodeInfo = VuoText_make(ni);
+	free(ni);
 }
 
 void nodeInstanceTriggerStop

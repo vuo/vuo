@@ -76,7 +76,15 @@ string VuoCompilerInputDataClass::getDefaultValue(void)
 	{
 		json_object *value = NULL;
 		if (json_object_object_get_ex(details, "default", &value))
+		{
 			return json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
+		}
+		else if (json_object_object_get_ex(details, "defaults", &value))
+		{
+			json_object *valueForType = NULL;
+			if (json_object_object_get_ex(value, getVuoType()->getModuleKey().c_str(), &valueForType))
+				return json_object_to_json_string_ext(valueForType, JSON_C_TO_STRING_PLAIN);
+		}
 	}
 
 	return "";

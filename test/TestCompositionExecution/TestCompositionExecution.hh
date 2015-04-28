@@ -11,7 +11,12 @@
 #define TESTCOMPOSITIONEXECUTION_H
 
 #include <fstream>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
 #include <QtTest/QtTest>
+#pragma clang diagnostic pop
+
 #include <Vuo/Vuo.h>
 
 /**

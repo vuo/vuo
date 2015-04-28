@@ -53,9 +53,12 @@ private:
 	void makeCables(void);
 	void makePublishedPorts(void);
 	void setInputPortConstantValues(void);
+	void setTriggerPortEventThrottling(void);
 	map<string, string> parsePortConstantValues(Agnode_t *n);
+	bool parseAttributeOfPort(Agnode_t *n, string portName, string suffix, string &attributeValue);
 	void checkPortClasses(vector<VuoPortClass *> dummy, vector<VuoPortClass *> actual);
 	void saveNodeDeclarations(const string &compositionAsString);
+	static VuoType * inferTypeForPublishedPort(string name, const set<VuoCompilerPort *> &connectedPorts);
 
 public:
 	static VuoCompilerGraphvizParser * newParserFromCompositionFile(string path, VuoCompiler *compiler = NULL,

@@ -1,0 +1,121 @@
+/**
+ * @file
+ * Compares different easing curves used to control an animated object's speed as it moves from one point to another. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="773,237" fillcolor="green"];
+CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="779,414" fillcolor="green"];
+CombineLayers3 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="781,586" fillcolor="green"];
+CombineLayers4 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="782,750" fillcolor="green"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="1.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<done>done\r|<value>value\r" pos="-123,-451" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"in\"" _loop="\"none\""];
+Curve3 [type="vuo.motion.curve.VuoReal" version="1.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<done>done\r|<value>value\r" pos="-125,-304" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"out\"" _loop="\"none\""];
+Curve4 [type="vuo.motion.curve.VuoReal" version="1.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<done>done\r|<value>value\r" pos="-124,-155" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"in+out\"" _loop="\"none\""];
+Curve5 [type="vuo.motion.curve.VuoReal" version="1.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<done>done\r|<value>value\r" pos="-126,-5" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"middle\"" _loop="\"none\""];
+CycleThroughList2 [type="vuo.list.cycle.VuoCurve" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="-695,-408" fillcolor="cyan" _wrapMode="\"wrap\""];
+CycleThroughList5 [type="vuo.list.cycle.VuoText" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="-703,-254" fillcolor="cyan" _wrapMode="\"wrap\""];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="-471,-281"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="-604,-128"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="54,138" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-1114,-375" fillcolor="yellow" _started_eventThrottling="enqueue"];
+LimitToRange2 [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<limitedValue>limitedValue\r" pos="-449,-208" fillcolor="cyan" _minimum="0.000000" _maximum="4.000000" _wrapMode="\"wrap\""];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="42,-463" fillcolor="green" _x="-0.600000"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="47,-312" fillcolor="green" _x="-0.200000"];
+Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="47,-171" fillcolor="green" _x="0.200000"];
+Make2DPoint4 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="45,-21" fillcolor="green" _x="0.600000"];
+Make2DTransform [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="257,-462" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+Make2DTransform2 [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="262,-311" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+Make2DTransform3 [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="262,-170" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+Make2DTransform4 [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="260,-20" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="424,157" fillcolor="green" _name="" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.300000" _height="0.100000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="534,297" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="540,474" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="542,646" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer4 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="543,810" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer5 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="542,969" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.650000}" _alpha="1.000000"];
+MakeLayer6 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="542,1081" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":-0.650000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="710,263" fillcolor="green"];
+MakeList13 [type="vuo.list.make.5.VuoCurve" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="-881,-397" fillcolor="cyan" _item1="\"quadratic\"" _item2="\"cubic\"" _item3="\"circular\"" _item4="\"exponential\"" _item5="\"linear\""];
+MakeList16 [type="vuo.list.make.5.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="-889,-243" fillcolor="cyan" _item1="\"Quadratic\"" _item2="\"Cubic\"" _item3="\"Circular\"" _item4="\"Exponential\"" _item5="\"Linear\""];
+MakeList22 [type="vuo.list.make.6.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<item6>item6\l|<done>done\r|<list>list\r" pos="985,248" fillcolor="green"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="719,776" fillcolor="green"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="716,440" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="718,612" fillcolor="green"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="337,309" fillcolor="green" _text="\"In\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="346,822" fillcolor="green" _text="\"Middle\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="343,486" fillcolor="green" _text="\"Out\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage4 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="345,658" fillcolor="green" _text="\"In+Out\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage5 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="345,981" fillcolor="green" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage6 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="345,1093" fillcolor="green" _text="\"Click to change the curve.\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="-1112,-466" fillcolor="yellow" _window="" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1048,237" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+CombineLayers2:layer -> MakeList22:item2;
+CombineLayers3:layer -> MakeList22:item3;
+CombineLayers4:layer -> MakeList22:item4;
+CombineLayers:layer -> MakeList22:item1;
+Curve2:value -> Make2DPoint:y;
+Curve3:value -> Make2DPoint2:y;
+Curve4:value -> Make2DPoint3:y;
+Curve5:value -> Make2DPoint4:y;
+CycleThroughList2:item -> Curve2:curve;
+CycleThroughList2:item -> Curve3:curve;
+CycleThroughList2:item -> Curve4:curve;
+CycleThroughList2:item -> Curve5:curve;
+CycleThroughList5:item -> MakeTextImage5:text;
+DiscardDataFromEvent2:event -> CycleThroughList5:goForward;
+DiscardDataFromEvent:event -> CycleThroughList2:goForward;
+FireOnStart2:started -> DiscardDataFromEvent2:dataAndEvent;
+FireOnStart2:started -> DiscardDataFromEvent:dataAndEvent;
+FireOnStart2:started -> MakeList13:item1;
+FireOnStart2:started -> MakeList16:item1;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> MakeTextImage2:refresh;
+FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> MakeTextImage4:refresh;
+FireOnStart:started -> MakeTextImage6:refresh;
+FireOnStart:started -> MakeTextImage:refresh;
+LimitToRange2:limitedValue -> Curve2:time;
+LimitToRange2:limitedValue -> Curve3:time;
+LimitToRange2:limitedValue -> Curve4:time;
+LimitToRange2:limitedValue -> Curve5:time;
+Make2DPoint2:point -> Make2DTransform2:translation;
+Make2DPoint3:point -> Make2DTransform3:translation;
+Make2DPoint4:point -> Make2DTransform4:translation;
+Make2DPoint:point -> Make2DTransform:translation;
+Make2DTransform2:transform -> CombineLayers2:transform;
+Make2DTransform3:transform -> CombineLayers3:transform;
+Make2DTransform4:transform -> CombineLayers4:transform;
+Make2DTransform:transform -> CombineLayers:transform;
+MakeColorLayer:layer -> MakeList3:item1;
+MakeColorLayer:layer -> MakeList4:item1;
+MakeColorLayer:layer -> MakeList5:item1;
+MakeColorLayer:layer -> MakeList:item1;
+MakeLayer2:layer -> MakeList4:item2;
+MakeLayer3:layer -> MakeList5:item2;
+MakeLayer4:layer -> MakeList3:item2;
+MakeLayer5:layer -> MakeList22:item5;
+MakeLayer6:layer -> MakeList22:item6;
+MakeLayer:layer -> MakeList:item2;
+MakeList13:list -> CycleThroughList2:list;
+MakeList16:list -> CycleThroughList5:list;
+MakeList22:list -> RenderLayersToWindow:layers;
+MakeList3:list -> CombineLayers4:layers;
+MakeList4:list -> CombineLayers2:layers;
+MakeList5:list -> CombineLayers3:layers;
+MakeList:list -> CombineLayers:layers;
+MakeTextImage2:image -> MakeLayer4:image;
+MakeTextImage3:image -> MakeLayer2:image;
+MakeTextImage4:image -> MakeLayer3:image;
+MakeTextImage5:image -> MakeLayer5:image;
+MakeTextImage6:image -> MakeLayer6:image;
+MakeTextImage:image -> MakeLayer:image;
+ReceiveMouseButtons:released -> DiscardDataFromEvent2:dataAndEvent;
+ReceiveMouseButtons:released -> DiscardDataFromEvent:dataAndEvent;
+RenderLayersToWindow:requestedFrame -> LimitToRange2:value;
+}

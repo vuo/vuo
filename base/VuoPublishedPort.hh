@@ -34,17 +34,21 @@ public:
 	VuoType * getType(void);
 	bool getInput(void) const;
 	bool getOutput(void) const;
+	string getInitialValue(void) const;
 	set<VuoPort *> getConnectedPorts(void);
 	bool hasConnectedPort(VuoPort *port);
 	void addConnectedPort(VuoPort *port);
 	void removeConnectedPort(VuoPort *port);
 	void setName(string name);
+	void setType(VuoType *type);
+	void setInitialValue(string initialValueAsString);
 
 private:
 	string name;
 	VuoType *type;
 	bool isOutput;
 	set<VuoPort *> connectedPorts;
+	string initialValueAsString;
 };
 
 #endif // VUOPUBLISHEDPORT_HH

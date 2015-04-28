@@ -30,6 +30,15 @@ char * VuoInteger_summaryFromValue(const VuoInteger value);
 VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount);
 VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount);
 
+/**
+ *	Returns a snapped value using a center point and snap value.
+ */
+static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInteger snap) __attribute__((const));
+static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInteger snap)
+{
+	return center + snap * ((a-center) / snap);
+}
+
 /// @{
 /**
  * Automatically generated function.

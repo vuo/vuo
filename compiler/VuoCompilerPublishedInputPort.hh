@@ -22,7 +22,7 @@ private:
 	VuoCompilerTriggerPort *triggerPort;
 
 public:
-	VuoCompilerPublishedInputPort(string name, const set<VuoCompilerPort *> &connectedPorts, VuoCompilerTriggerPort *triggerPort);
+	VuoCompilerPublishedInputPort(string name, VuoType *type, const set<VuoCompilerPort *> &connectedPorts, VuoCompilerTriggerPort *triggerPort);
 	VuoPort * getVuoPseudoPort(void);
 	VuoCompilerTriggerPort * getTriggerPort(void);
 	void setTriggerPort(VuoCompilerTriggerPort *port);

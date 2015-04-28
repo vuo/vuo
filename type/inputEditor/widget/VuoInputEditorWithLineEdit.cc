@@ -15,7 +15,10 @@
 VuoInputEditorWithLineEdit::VuoInputEditorWithLineEdit(void)
 	: VuoInputEditorWithDialog()
 {
-	this->width = 0;
+	lineEdit = NULL;
+	width = 0;
+	firstWidgetInTabOrder = NULL;
+	lastWidgetInTabOrder = NULL;
 }
 
 /**

@@ -163,6 +163,29 @@ string VuoFileUtilities::getVuoFrameworkPath(void)
 }
 
 /**
+ * Returns the first index at which content can be inserted into a string that was read from a file.
+ * This comes after the Unicode BOM, if present.
+ */
+size_t VuoFileUtilities::getFirstInsertionIndex(string s)
+{
+	char bomUtf8[] = { 0xEF, 0xBB, 0xBF };
+	char bomUtf16Be[] = { 0xFE, 0xFF };
+	char bomUtf16Le[] = { 0xFF, 0xFE };
+	string boms[] = { bomUtf8, bomUtf16Be, bomUtf16Le };
+	for (int i = 0; i < 3; ++i)
+	{
+		bool isMatch = true;
+		for (int j = 0; j < boms[i].length(); ++j)
+			if (boms[i][j] != s[j])
+				isMatch = false;
+
+		if (isMatch)
+			return boms[i].length();
+	}
+	return 0;
+}
+
+/**
  * Reads from standard input into a string until the end-of-file is reached.
  */
 string VuoFileUtilities::readStdinToString(void)

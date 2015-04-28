@@ -60,7 +60,7 @@ runtime.depends = base
 type.depends = compiler_vuo_compile
 
 type_input_editor.subdir = type/inputEditor
-type_input_editor.depends = type node
+type_input_editor.depends = type node library
 
 type_list.subdir = type/list
 type_list.depends = type
@@ -112,6 +112,7 @@ cleanall.commands = make clean
 cleanall.commands += ; (for i in example/api/* example/node/* example/type/* ; do (cd $${DOLLAR}$${DOLLAR}i ; make clean ; rm -Rf Makefile pch *.app); done)
 cleanall.commands += ; (for i in node/vuo.*/examples; do (cd $${DOLLAR}$${DOLLAR}i && make clean); done)
 cleanall.commands += ; (cd documentation && make clean)
+cleanall.commands += ; (cd framework32 && make clean)
 cleanall.commands += ; (cd test && make clean)
 cleanall.commands += ; rm -f .qmake.cache .qmake.stash
 cleanall.commands += ; true

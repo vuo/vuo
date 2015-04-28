@@ -13,5 +13,4 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorWave.json
 
-INCLUDEPATH += $$ROOT/node/vuo.math
-LIBS += $$ROOT/node/vuo.math/VuoWave.o
+LIBS += $$ROOT/type/VuoWave.o

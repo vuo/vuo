@@ -1,4 +1,4 @@
-VUO_VERSION = 0.6.1
+VUO_VERSION = 0.7.0
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -15,18 +15,19 @@ QMAKE_CLEAN += -R
 QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a $${TARGET}.app pch *.dSYM *.o *.dylib moc_* *.moc *.vuonode *.bc
 
 LLVM_ROOT = /usr/local/Cellar/llvm/3.2
-ICU_ROOT = /usr/local/Cellar/icu4c/52.1
 JSONC_ROOT = /usr/local/Cellar/json-c/0.10
 GRAPHVIZ_ROOT = /usr/local/Cellar/graphviz/2.28.0
 QT_ROOT = /usr/local/Cellar/qt/5.2.1
 LIBFFI_ROOT = /usr/local/Cellar/libffi/3.0.11
 ZLIB_ROOT = /usr/local/Cellar/zlib/1.2.8
 ZMQ_ROOT = /usr/local/Cellar/zeromq/2.2.0
-OPENSSL_ROOT = /usr/local/Cellar/openssl/1.0.1c
+OPENSSL_ROOT = /usr/local/Cellar/openssl/1.0.1g
 MUPARSER_ROOT = /usr/local/Cellar/muparser/2.2.3
 FREEIMAGE_ROOT = /usr/local/Cellar/freeimage/3.15.4
 CURL_ROOT = /usr/local/Cellar/curl/7.30.0
 RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
+RTAUDIO_ROOT = /usr/local/Cellar/rtaudio/4.0.12
+GAMMA_ROOT = /usr/local/Cellar/gamma/0.9.5
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.0.1270
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
 FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
@@ -52,6 +53,7 @@ VUORENDER = $$ROOT/framework/vuo-render
 WARNING_REMOVE = -W
 WARNING_ADD = \
 #	-Weverything \
+	-Wunreachable-code \
 	-Wno-unused-parameter \
 	-Wno-c++11-extensions \
 	-Wno-variadic-macros \
@@ -101,11 +103,18 @@ else {
 	FLAGS_ARCH = $$FLAGS64
 }
 
-FLAGS = $$FLAGS_ARCH -fvisibility-inlines-hidden -Wdocumentation -Wno-documentation-deprecated-sync
+FLAGS = $$FLAGS_ARCH \
+	-fvisibility-inlines-hidden \
+	-Wdocumentation \
+	-Wno-documentation-deprecated-sync \
+	-Oz
 QMAKE_CFLAGS_RELEASE += $$FLAGS
 QMAKE_CFLAGS_DEBUG += $$FLAGS
 QMAKE_CXXFLAGS_RELEASE += $$FLAGS
 QMAKE_CXXFLAGS_DEBUG += $$FLAGS
+QMAKE_OBJECTIVE_CFLAGS_RELEASE += $$FLAGS
+QMAKE_OBJECTIVE_CFLAGS_DEBUG += $$FLAGS
+QMAKE_LFLAGS += -Oz
 
 CONFIG(debug, debug|release) {
 	DEFINES += DEBUG
@@ -190,10 +199,6 @@ graphviz {
 json | VuoBase {
 	LIBS += $${JSONC_ROOT}/lib/libjson.a
 	INCLUDEPATH += $$JSONC_ROOT/include
-}
-
-icu {
-	INCLUDEPATH += $$ICU_ROOT/include
 }
 
 zmq | VuoRuntime {

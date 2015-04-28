@@ -95,6 +95,7 @@ VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform t
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeDefaultCamera(void);
 
+bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoSceneObject parentObjects, VuoSceneObject *foundObject);
 VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera);
 
 VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness);

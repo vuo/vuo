@@ -18,6 +18,9 @@
  * @{
  */
 
+#include "VuoInteger.h"
+#include "VuoReal.h"
+
 /**
  * A unique ID for a window being displayed by the composition.
  */
@@ -28,6 +31,9 @@ VuoWindowReference VuoWindowReference_make(void *window);
 VuoWindowReference VuoWindowReference_valueFromJson(struct json_object * js);
 struct json_object * VuoWindowReference_jsonFromValue(const VuoWindowReference value);
 char * VuoWindowReference_summaryFromValue(const VuoWindowReference value);
+
+VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value);
+void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height);
 
 /**
  * @}

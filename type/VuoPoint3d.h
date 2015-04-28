@@ -10,6 +10,7 @@
 #ifndef VUOPOINT3D_H
 #define VUOPOINT3D_H
 
+#include "VuoReal.h"
 #include <math.h>
 
 /**
@@ -50,7 +51,6 @@ static inline VuoPoint3d VuoPoint3d_make(float x, float y, float z)
 	return p;
 }
 
-/// @todo add divide / multiply etc
 /**
  * Returns the cross-product of @c u and @c v.
  */
@@ -180,7 +180,7 @@ static inline float VuoPoint3d_distance(VuoPoint3d a, VuoPoint3d b)
 }
 
 /**
- *	Returns a linearly interpolated value between @a and @b using time @t.  @t is between 0 and 1.
+ * Returns a linearly interpolated value between @c a and @c b using time @c t.  @c t is between 0 and 1.
  */
 static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t) __attribute__((const));
 static inline VuoPoint3d VuoPoint3d_lerp(VuoPoint3d a, VuoPoint3d b, float t)
@@ -196,6 +196,61 @@ static inline VuoPoint3d VuoPoint3d_scale(VuoPoint3d a, VuoPoint3d b)
 {
 	return (VuoPoint3d) { a.x*b.x, a.y*b.y, a.z*b.z };
 }
+
+/**
+ * Calculates a position along the path of an oscillating spring.
+ */
+static inline VuoPoint3d VuoPoint3d_spring(VuoReal timeSinceDrop, VuoPoint3d dropPosition, VuoPoint3d restingPosition, VuoReal period, VuoReal damping)
+{
+	VuoPoint3d p;
+	p.x = VuoReal_spring(timeSinceDrop, dropPosition.x, restingPosition.x, period, damping);
+	p.y = VuoReal_spring(timeSinceDrop, dropPosition.y, restingPosition.y, period, damping);
+	p.z = VuoReal_spring(timeSinceDrop, dropPosition.z, restingPosition.z, period, damping);
+	return p;
+}
+
+/**
+ * Limits @c point to values between @c min and @c max, inclusive.
+ */
+static inline VuoPoint3d VuoPoint3d_clamp(VuoPoint3d point, VuoReal min, VuoReal max)
+{
+	return (VuoPoint3d) {
+		fmin(fmax(point.x,min),max),
+		fmin(fmax(point.y,min),max),
+		fmin(fmax(point.z,min),max)
+	};
+}
+
+/**
+ * Calculates a position along a cubic bezier curve.
+ *
+ * @param p0	The curve's starting position.
+ * @param p1	The control point for the curve's starting position.
+ * @param p2	The control point for the curve's ending position.
+ * @param p3	The curve's ending position.
+ * @param time	Which value along the curve should be returned. 0 = starting position, 1 = ending position.
+ */
+static inline VuoPoint3d VuoPoint3d_bezier3(VuoPoint3d p0, VuoPoint3d p1, VuoPoint3d p2, VuoPoint3d p3, VuoReal time)
+{
+	return (VuoPoint3d) {
+		VuoReal_bezier3(p0.x,p1.x,p2.x,p3.x,time),
+		VuoReal_bezier3(p0.y,p1.y,p2.y,p3.y,time),
+		VuoReal_bezier3(p0.z,p1.z,p2.z,p3.z,time)
+	};
+}
+
+/**
+ * Snap value a to the nearest increment of value snap.
+ */
+static inline VuoPoint3d VuoPoint3d_snap(VuoPoint3d a, VuoPoint3d center, VuoPoint3d snap)
+{
+	return (VuoPoint3d) {
+		center.x + snap.x * (int)round( (a.x-center.x) / snap.x ),
+		center.y + snap.y * (int)round( (a.y-center.y) / snap.y ),
+		center.z + snap.z * (int)round( (a.z-center.z) / snap.z )
+	};
+}
+
 
 /**
  * @}

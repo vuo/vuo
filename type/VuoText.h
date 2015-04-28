@@ -23,6 +23,9 @@ extern "C"
 {
 #endif
 
+#include <string.h>
+struct json_object;
+
 /**
  * A Unicode (UTF-8) text string.
  */
@@ -33,10 +36,12 @@ struct json_object * VuoText_jsonFromValue(const VuoText value);
 char * VuoText_summaryFromValue(const VuoText value);
 
 VuoText VuoText_make(const char * unquotedString);
-size_t VuoText_length(const VuoText string);
-size_t VuoText_getIndexOfLastCharacter(const VuoText string, const VuoText character);
+size_t VuoText_length(const VuoText text);
+bool VuoText_areEqual(const VuoText text1, const VuoText text2);
+size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring);
 VuoText VuoText_substring(const VuoText string, int startIndex, int length);
-VuoText VuoText_append(VuoText *texts, unsigned long textsCount);
+VuoText VuoText_append(VuoText *texts, size_t textsCount);
+VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement);
 
 /// @{
 /**

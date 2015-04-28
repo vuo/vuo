@@ -14,6 +14,7 @@ NODE_SOURCES += \
 	vuo.midi.make.device.id.c \
 	vuo.midi.make.device.name.c \
 	vuo.midi.make.note.c \
+	vuo.midi.convert.note.frequency.c \
 	vuo.midi.receive.c \
 	vuo.midi.send.c
 

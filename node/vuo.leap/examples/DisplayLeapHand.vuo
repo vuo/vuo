@@ -9,9 +9,8 @@
 
 digraph G
 {
-DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="93,-649"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="337,-718" fillcolor="yellow"];
-Get3DPointValues [type="vuo.point.get.VuoPoint3d" version="1.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="-10,489" fillcolor="green"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="337,-718" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Get3DPointValues [type="vuo.point.get.VuoPoint3d" version="1.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="-10,709" fillcolor="green"];
 GetFrameValues2 [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<done>done\r|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-9,-657" fillcolor="violet"];
 GetHandValues2 [type="vuo.leap.get.hand" version="1.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<done>done\r|<id>id\r|<direction>direction\r|<palmNormal>palmNormal\r|<palmPosition>palmPosition\r|<palmVelocity>palmVelocity\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pointables>pointables\r" pos="0,-508" fillcolor="violet"];
 GetItemFromList [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="-237,-323" fillcolor="violet" _which="1"];
@@ -21,21 +20,20 @@ GetItemFromList4 [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Ge
 GetItemFromList5 [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="-243,-243" fillcolor="violet" _which="2"];
 GetItemFromList6 [type="vuo.list.get.VuoLeapHand" version="1.0.0" label="Get the nearest hand|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="-265,-446" fillcolor="violet" _which="1"];
 GetPointableValues [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-8,-324" fillcolor="violet"];
-GetPointableValues2 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-8,-168" fillcolor="violet"];
-GetPointableValues3 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-7,-8" fillcolor="violet"];
-GetPointableValues4 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-6,146" fillcolor="violet"];
-GetPointableValues5 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-7,302" fillcolor="violet"];
-HoldValue [type="vuo.hold.VuoLeapFrame" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="-6,-739" fillcolor="violet" _initialValue=""];
+GetPointableValues2 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-8,-118" fillcolor="violet"];
+GetPointableValues3 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-7,92" fillcolor="violet"];
+GetPointableValues4 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-6,296" fillcolor="violet"];
+GetPointableValues5 [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="-7,502" fillcolor="violet"];
 Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="563,-338" fillcolor="green" _shader=""];
 Make3DObject2 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="568,-154" fillcolor="green" _shader=""];
 Make3DObject3 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="565,-13" fillcolor="green" _shader=""];
 Make3DObject4 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="571,171" fillcolor="green" _shader=""];
 Make3DObject5 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="576,324" fillcolor="green" _shader=""];
-Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="-92,695" fillcolor="green"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="-92,915" fillcolor="green"];
 MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<done>done\r|<cube>cube\r" pos="561,496" fillcolor="green" _frontShader="" _leftShader="" _rightShader="" _backShader="" _topShader="" _bottomShader=""];
 MakeList17 [type="vuo.list.make.6.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<item6>item6\l|<done>done\r|<list>list\r" pos="922,-282" fillcolor="green"];
-MakeList21 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="-32,604" fillcolor="green" _item2="-1.000000"];
-MakeQuaternionFromVectors [type="vuo.quaternion.make.vectors" version="1.0.0" label="Make Quaternion from Vectors|<refresh>refresh\l|<fromVector>fromVector\l|<toVector>toVector\l|<done>done\r|<quaternion>quaternion\r" pos="95,682" fillcolor="green" _fromVector="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}"];
+MakeList21 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="-32,824" fillcolor="green" _item2="-1.000000"];
+MakeQuaternionFromVectors [type="vuo.quaternion.make.vectors" version="1.0.0" label="Make Quaternion from Vectors|<refresh>refresh\l|<fromVector>fromVector\l|<toVector>toVector\l|<done>done\r|<quaternion>quaternion\r" pos="95,902" fillcolor="green" _fromVector="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}"];
 MakeQuaternionTransform [type="vuo.transform.make.quaternion" version="1.0.0" label="Make Quaternion Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="393,450" fillcolor="green" _scale="{\"x\":0.200000,\"y\":0.050000,\"z\":0.200000}"];
 MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="590,-809" fillcolor="green" _rows="8" _columns="8"];
 MakeSphereVertices2 [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="588,-724" fillcolor="green" _rows="8" _columns="8"];
@@ -47,12 +45,11 @@ MakeTransform2 [type="vuo.transform.make" version="1.0.0" label="Make Transform|
 MakeTransform3 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="385,18" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.100000,\"y\":0.100000,\"z\":0.100000}"];
 MakeTransform4 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="391,202" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.100000,\"y\":0.100000,\"z\":0.100000}"];
 MakeTransform5 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="386,352" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.100000,\"y\":0.100000,\"z\":0.100000}"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="31,593" fillcolor="green"];
-ReceiveLeapFrame2 [type="vuo.leap.receive" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="-20,-831" fillcolor="violet"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="989,-293" fillcolor="green" _cameraName=""];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="31,813" fillcolor="green"];
+ReceiveLeapFrame2 [type="vuo.leap.receive" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="-20,-761" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="989,-293" fillcolor="green" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SortHandsByXDistance [type="vuo.leap.hand.sort.distance.x" version="1.0.0" label="Sort Hands from Right to Left|<refresh>refresh\l|<hands>hands\l|<target>target\l|<done>done\r|<sortedHands>sortedHands\r" pos="-287,-550" fillcolor="violet" _target="{\"x\":10.000000,\"y\":0.000000,\"z\":0.000000}"];
 
-DiscardDataFromEvent:event -> HoldValue:refresh;
 FireOnStart2:started -> MakeSphereVertices2:refresh;
 FireOnStart2:started -> MakeSphereVertices3:refresh;
 FireOnStart2:started -> MakeSphereVertices4:refresh;
@@ -80,7 +77,6 @@ GetPointableValues3:tipPosition -> MakeTransform3:translation;
 GetPointableValues4:tipPosition -> MakeTransform4:translation;
 GetPointableValues5:tipPosition -> MakeTransform5:translation;
 GetPointableValues:tipPosition -> MakeTransform:translation;
-HoldValue:heldValue -> GetFrameValues2:frame;
 Make3DObject2:object -> MakeList17:item2;
 Make3DObject3:object -> MakeList17:item3;
 Make3DObject4:object -> MakeList17:item4;
@@ -103,7 +99,6 @@ MakeTransform4:transform -> Make3DObject4:transform;
 MakeTransform5:transform -> Make3DObject5:transform;
 MakeTransform:transform -> Make3DObject:transform;
 Multiply:product -> Make3DPoint:y;
-ReceiveLeapFrame2:receivedFrame -> HoldValue:newValue;
-RenderSceneToWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+ReceiveLeapFrame2:receivedFrame -> GetFrameValues2:frame;
 SortHandsByXDistance:sortedHands -> GetItemFromList6:list;
 }

@@ -1,5 +1,6 @@
 Creates a gradient that transitions smoothly between the given colors along a straight line. 
 
+   - `name` — A name to identify the layer, allowing other nodes to select it from a group of layers. 
    - `colors` — The colors to transition between, in order from start to end.
    - `gradientStart` - The point where the first color begins transitioning to the next color, in Vuo coordinates. 
    - `gradientEnd` - The point where the next-to-last color finishes transitioning to the last color, in Vuo coordinates.

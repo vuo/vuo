@@ -107,10 +107,13 @@ void VuoComposition::addCable(VuoCable *cable)
 }
 
 /**
- * Removes a cable from the composition.
+ * Disconnects and removes a cable from the composition.
  */
 void VuoComposition::removeCable(VuoCable *cable)
 {
+	cable->setFrom(NULL, NULL);
+	cable->setTo(NULL, NULL);
+
 	cables.erase(cable);
 }
 
@@ -133,10 +136,13 @@ void VuoComposition::addPublishedInputCable(VuoCable *cable)
 }
 
 /**
- * Removes a published input cable from the composition.
+ * Disconnects and removes a published input cable from the composition.
  */
 void VuoComposition::removePublishedInputCable(VuoCable *cable)
 {
+	cable->setFrom(NULL, NULL);
+	cable->setTo(NULL, NULL);
+
 	publishedInputCables.erase(cable);
 }
 
@@ -159,10 +165,13 @@ void VuoComposition::addPublishedOutputCable(VuoCable *cable)
 }
 
 /**
- * Removes a published output cable from the composition.
+ * Disconnects and removes a published output cable from the composition.
  */
 void VuoComposition::removePublishedOutputCable(VuoCable *cable)
 {
+	cable->setFrom(NULL, NULL);
+	cable->setTo(NULL, NULL);
+
 	publishedOutputCables.erase(cable);
 }
 
@@ -254,18 +263,19 @@ VuoPublishedPort * VuoComposition::getPublishedPortWithName(string name, bool is
 }
 
 /**
- * Returns the published input port connected to the given port, or null if none is connected.
+ * Returns the set of published input ports connected to the given port.
  */
-VuoPublishedPort * VuoComposition::getPublishedInputPortConnectedToPort(VuoPort *port)
+set<VuoPublishedPort *> VuoComposition::getPublishedInputPortsConnectedToPort(VuoPort *port)
 {
+	set<VuoPublishedPort *> publishedPortsConnectedToPort;
 	for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
 	{
 		VuoPublishedPort *publishedPort = *i;
 		set<VuoPort *> connectedPorts = publishedPort->getConnectedPorts();
 		if (connectedPorts.find(port) != connectedPorts.end())
-			return publishedPort;
+			publishedPortsConnectedToPort.insert(publishedPort);
 	}
-	return NULL;
+	return publishedPortsConnectedToPort;
 }
 
 /**
@@ -294,9 +304,12 @@ set<pair<VuoPublishedPort *, VuoPort *> > VuoComposition::getPublishedInputPorts
 	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
 	{
 		VuoPort *port = *i;
-		VuoPublishedPort *publishedPort = getPublishedInputPortConnectedToPort(port);
-		if (publishedPort)
+		set<VuoPublishedPort *> publishedPorts = getPublishedInputPortsConnectedToPort(port);
+		for (set<VuoPublishedPort *>::iterator j = publishedPorts.begin(); j != publishedPorts.end(); ++j)
+		{
+			VuoPublishedPort *publishedPort = *j;
 			publishedPortsConnectedToNode.insert(make_pair(publishedPort, port));
+		}
 	}
 	return publishedPortsConnectedToNode;
 }
@@ -319,6 +332,19 @@ set<pair<VuoPublishedPort *, VuoPort *> > VuoComposition::getPublishedOutputPort
 		}
 	}
 	return publishedPortsConnectedToNode;
+}
+
+/**
+ * Returns the index of the published port in the list of published input or output ports.
+ */
+int VuoComposition::getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput)
+{
+	vector<VuoPublishedPort *> publishedPorts = (isInput ? getPublishedInputPorts() : getPublishedOutputPorts());
+	vector<VuoPublishedPort *>::iterator foundPort = find(publishedPorts.begin(), publishedPorts.end(), port);
+	if (foundPort != publishedPorts.end())
+		return std::distance(publishedPorts.begin(), foundPort);
+	else
+		return -1;
 }
 
 /**

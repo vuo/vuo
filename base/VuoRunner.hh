@@ -148,7 +148,6 @@ private:
 
 	vector<Port *> publishedInputPorts;
 	vector<Port *> publishedOutputPorts;
-	map<string, Port *> publishedOutputPortForIdentifier;  ///< Maps private port identifiers to the published output ports they're connected to.
 	bool arePublishedInputPortsCached;  ///< True if the list of published input ports has been retrieved and cached.
 	bool arePublishedOutputPortsCached; ///< True if the list of published output ports has been retrieved and cached.
 

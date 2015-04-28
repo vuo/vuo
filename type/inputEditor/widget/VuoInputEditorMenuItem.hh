@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORMENUITEM_HH
 #define VUOINPUTEDITORMENUITEM_HH
 
-#include "VuoMenu.hh"
+#include <QtGui/QIcon>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -26,11 +26,21 @@ public:
 	/**
 	 * Constructs a menu item with the given human-readable title, representing the given value.
 	 */
-	VuoInputEditorMenuItem(string title = "", json_object *value = NULL)
+	VuoInputEditorMenuItem(string title = "", json_object *value = NULL, const QIcon *icon = NULL)
 	{
 		this->value = value;
 		this->title = title;
+		this->icon = icon;
 		this->isSeparator = false;
+	}
+
+	/**
+	 * Destroys the menu item.
+	 */
+	~VuoInputEditorMenuItem()
+	{
+		if (icon)
+			delete icon;
 	}
 
 	/**
@@ -60,8 +70,10 @@ public:
 		{
 			if ((*it)->childItems.size() > 0)
 			{
-				QMenu *submenu = new VuoMenu(menu);
+				QMenu *submenu = new QMenu(menu);
 				submenu->setTitle(QString::fromStdString((*it)->title));
+				if ((*it)->icon)
+					submenu->setIcon(*(*it)->icon);
 				menu->addMenu(submenu);
 				buildMenu(submenu, actionGroup, *it);
 			}
@@ -74,6 +86,8 @@ public:
 				}
 
 				QAction *action = new QAction(QString::fromStdString((*it)->title), menu);
+				if ((*it)->icon)
+					action->setIcon(*(*it)->icon);
 				action->setCheckable(true);
 				action->setData(QVariant::fromValue((void *)(*it)->value));
 				menu->addAction(action);
@@ -85,6 +99,7 @@ public:
 private:
 	json_object *value;
 	string title;
+	const QIcon *icon;
 	vector<VuoInputEditorMenuItem *> childItems;
 	bool isSeparator;
 };

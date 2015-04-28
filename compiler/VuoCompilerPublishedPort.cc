@@ -15,13 +15,14 @@
  * Creates a published port that is not connected to any port in a running composition.
  *
  * @param name A name for the published port.
+ * @param type A type for the published port.
  * @param isOutput A boolean indicating whether the published port is an output port, as opposed to an input port.
  * @param connectedPorts The set of ports within the composition for which this published port is an alias.
  */
-VuoCompilerPublishedPort::VuoCompilerPublishedPort(string name, bool isOutput, const set<VuoCompilerPort *> &connectedPorts)
+VuoCompilerPublishedPort::VuoCompilerPublishedPort(string name, VuoType *type, bool isOutput, const set<VuoCompilerPort *> &connectedPorts)
 	: VuoBaseDetail<VuoPublishedPort>("VuoCompilerPublishedPort",
 									  new VuoPublishedPort(	name,
-															getTypeForPort(name, connectedPorts),
+															type,
 															isOutput,
 															getBasePorts(connectedPorts)))
 {
@@ -46,19 +47,6 @@ set<string> VuoCompilerPublishedPort::getConnectedPortIdentifiers(void)
 	}
 
 	return identifiers;
-}
-
-/**
- * Returns this published port's data type, or null if the port is event-only.
- */
-VuoType * VuoCompilerPublishedPort::getTypeForPort(string name, const set<VuoCompilerPort *> &connectedPorts)
-{
-	if (name == "refresh")
-		return NULL;
-
-	VuoCompilerPort *connectedPort = *connectedPorts.begin();
-	VuoCompilerPortClass *connectedPortClass = static_cast<VuoCompilerPortClass *>(connectedPort->getBase()->getClass()->getCompiler());
-	return connectedPortClass->getDataVuoType();
 }
 
 /**

@@ -67,7 +67,6 @@ VuoCompiler::VuoCompiler()
 		addLibrarySearchPath(VUO_ROOT "/runtime");
 
 		addLibrarySearchPath(GRAPHVIZ_ROOT "/lib/graphviz/");
-		addLibrarySearchPath(ICU_ROOT "/lib/");
 		addLibrarySearchPath(JSONC_ROOT "/lib/");
 		addLibrarySearchPath(ZMQ_ROOT "/lib/");
 		addLibrarySearchPath(LEAP_ROOT);
@@ -75,6 +74,8 @@ VuoCompiler::VuoCompiler()
 		addLibrarySearchPath(FREEIMAGE_ROOT "/lib/");
 		addLibrarySearchPath(CURL_ROOT "/lib/");
 		addLibrarySearchPath(RTMIDI_ROOT "/lib/");
+		addLibrarySearchPath(RTAUDIO_ROOT "/lib/");
+		addLibrarySearchPath(GAMMA_ROOT "/lib/");
 		addLibrarySearchPath(ASSIMP_ROOT "/lib/");
 		addLibrarySearchPath(FFMPEG_ROOT "/lib/");
 		addLibrarySearchPath(LIBUSB_ROOT "/lib/");
@@ -315,6 +316,19 @@ void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
 }
 
 /**
+ * Saves @a originalFileName into @a fileContents so that, when @a fileContents is written to some other
+ * file path, @a originalFileName will still be the name that shows up in compile errors/warnings and
+ * in the @c __FILE__ macro.
+ *
+ * This function inserts a preprocessor directive at the beginning of @a fileContents. Any modifications
+ * to @a fileContents after this function is called should keep the preprocessor directive on the first line.
+ */
+void VuoCompiler::preserveOriginalFileName(string &fileContents, string originalFileName)
+{
+	fileContents.insert(VuoFileUtilities::getFirstInsertionIndex(fileContents), "#line 1 \"" + originalFileName + "\"\n");
+}
+
+/**
  * Compiles a node class, port type, or library module to LLVM bitcode.
  *
  * @param inputPath The file to compile, containing a C implementation of the node class, port type, or library module.
@@ -330,29 +344,45 @@ void VuoCompiler::compileModule(string inputPath, string outputPath)
  *
  * @param inputPath The file to compile, containing a C implementation of the node class, port type, or library module.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
- * @param extraArgs Extra arguments to pass to Clang.
+ * @param includePaths Directories with header files to be included when compiling.
  */
-void VuoCompiler::compileModule(string inputPath, string outputPath, const vector<string> &extraArgs)
+void VuoCompiler::compileModule(string inputPath, string outputPath, const vector<string> &includePaths)
 {
 	if (isVerbose)
 		print();
 
-	string preprocessedInputPath;
+	vector<string> allIncludePaths = includePaths;
+	string preprocessedInputPath = inputPath;
+
+	string tmpPreprocessedInputDir;
 	string dir, file, ext;
 	VuoFileUtilities::splitPath(inputPath, dir, file, ext);
 	if (ext == "c")
 	{
-		preprocessedInputPath = VuoFileUtilities::makeTmpFile(file, ext, dir);
 		string inputContents = VuoFileUtilities::readFileToString(inputPath);
-		VuoCompilerSpecializedNodeClass::replaceGenericTypesWithBacking(inputContents);
-		VuoFileUtilities::writeStringToFile(inputContents, preprocessedInputPath);
+		string preprocessedInputContents = inputContents;
+		VuoCompilerSpecializedNodeClass::replaceGenericTypesWithBacking(preprocessedInputContents);
+		if (inputContents != preprocessedInputContents)
+		{
+			// Unspecialized generic node class
+			allIncludePaths.push_back(dir.empty() ? "." : dir);
+			tmpPreprocessedInputDir = VuoFileUtilities::makeTmpDir(file);
+			preprocessedInputPath = tmpPreprocessedInputDir + "/" + file + "." + ext;
+			preserveOriginalFileName(preprocessedInputContents, file + "." + ext);
+			VuoFileUtilities::writeStringToFile(preprocessedInputContents, preprocessedInputPath);
+		}
 	}
-	else
-		preprocessedInputPath = inputPath;
+
+	vector<string> extraArgs;
+	for (vector<string>::iterator i = allIncludePaths.begin(); i != allIncludePaths.end(); ++i)
+	{
+		extraArgs.push_back("-I");
+		extraArgs.push_back(*i);
+	}
 
 	Module *module = readModuleFromC(preprocessedInputPath, extraArgs);
-	if (preprocessedInputPath != inputPath)
-		remove(preprocessedInputPath.c_str());
+	if (! tmpPreprocessedInputDir.empty())
+		remove(tmpPreprocessedInputDir.c_str());
 	if (! module)
 	{
 		fprintf(stderr, "Couldn't compile %s to LLVM bitcode.\n", inputPath.c_str());
@@ -426,16 +456,18 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
 }
 
 /**
- * Turns a compiled composition into a standalone executable by
+ * Turns a compiled composition into an executable by
  * linking in all of its dependencies and adding a main function.
  *
  * @param inputPath Path to the compiled composition (an LLVM bitcode file).
  * @param outputPath Path where the resulting executable should be placed.
+ * @param isApp If true, the resulting executable can be added to an app bundle.
+ *			If false, the resulting executable will be headless unless the composition contains a window.
  * @param rPath An optional @c -rpath argument to be passed to clang.
  */
-void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, string rPath)
+void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, bool isApp, string rPath)
 {
-	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, false, rPath);
+	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, false, isApp, rPath);
 }
 
 /**
@@ -458,9 +490,12 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
  * @param compiledCompositionPath Path to the compiled composition (n LLVM bitcode file).
  * @param linkedCompositionPath Path where the resulting executable or dynamic library should be placed.
  * @param isDylib True if creating a dynamic library, false if creating an executable.
+ * @param isApp If true, the resulting executable can be added to an app bundle.
+ *			If false, the resulting executable will be headless unless the composition contains a window.
  * @param rPath An optional @c -rpath argument to be passed to clang.
  */
-void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib, string rPath)
+void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath,
+																	bool isDylib, bool isApp, string rPath)
 {
 	if (isVerbose)
 		print();
@@ -469,6 +504,11 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
 	dependencies.insert(getRuntimeDependency());
 	if (! isDylib)
 		dependencies.insert(getRuntimeMainDependency());
+	if (isApp)
+	{
+		string applicationDependency = getApplicationDependency();
+		getDependenciesRecursively(applicationDependency, dependencies);
+	}
 	set<Module *> modules;
 	set<string> libraries;
 	set<string> frameworks;
@@ -1218,6 +1258,14 @@ string VuoCompiler::getRuntimeMainDependency(void)
 string VuoCompiler::getRuntimeDependency(void)
 {
 	return "VuoRuntime.bc";
+}
+
+/**
+ * Returns the name of the library module that launches an application in the composition process.
+ */
+string VuoCompiler::getApplicationDependency(void)
+{
+	return "VuoWindow";
 }
 
 /**

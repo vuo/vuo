@@ -90,6 +90,11 @@ public:
 
 void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
 
+/**
+ * Configures OpenGL state for the specified context.
+ *
+ * @threadAnyGL
+ */
 static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
 {
 	glEnable(GL_MULTISAMPLE);
@@ -290,27 +295,8 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 		if (so.isRealSize)
 		{
 			VuoImage image = VuoListGetValueAtIndex_VuoImage(so.shader->textures,1);
-
 			float billboardMatrix[16];
-			VuoTransform_getMatrix(VuoTransform_makeIdentity(), billboardMatrix);
-
-			// Apply scale to make the image appear at real size (1:1).
-			billboardMatrix[0] = 2. * image->pixelsWide/sceneRenderer->viewportWidth;
-			billboardMatrix[5] = billboardMatrix[0] * image->pixelsHigh/image->pixelsWide;
-
-			// Apply existing 2D translation.
-				// Align the translation to pixel boundaries
-				billboardMatrix[12] = floor((modelviewMatrix[12]+1.)/2.*sceneRenderer->viewportWidth) / ((float)sceneRenderer->viewportWidth) * 2. - 1.;
-				billboardMatrix[13] = floor((modelviewMatrix[13]+1.)/2.*sceneRenderer->viewportWidth) / ((float)sceneRenderer->viewportWidth) * 2. - 1.;
-
-				// Account for odd-dimensioned image
-				billboardMatrix[12] += (image->pixelsWide % 2 ? (1./sceneRenderer->viewportWidth) : 0);
-				billboardMatrix[13] -= (image->pixelsHigh % 2 ? (1./sceneRenderer->viewportWidth) : 0);
-
-				// Account for odd-dimensioned viewport
-				billboardMatrix[13] += (sceneRenderer->viewportWidth  % 2 ? (1./sceneRenderer->viewportWidth) : 0);
-				billboardMatrix[13] -= (sceneRenderer->viewportHeight % 2 ? (1./sceneRenderer->viewportWidth) : 0);
-
+			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, billboardMatrix);
 			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, billboardMatrix);
 		}
 		else
@@ -560,6 +546,9 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
 	glLoadIdentity();
 }
 
+/**
+ * Draws a circle using OpenGL immediate mode.  For debugging only.
+ */
 static void drawCircle(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal)
 {
 	glPushMatrix();
@@ -583,6 +572,9 @@ static void drawCircle(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, V
 	glPopMatrix();
 }
 
+/**
+ * Draws a cone using OpenGL immediate mode.  For debugging only.
+ */
 static void drawCone(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal, float height)
 {
 	glPushMatrix();

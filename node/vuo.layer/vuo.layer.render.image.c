@@ -11,6 +11,7 @@
 #include "VuoGlContext.h"
 #include "VuoSceneRenderer.h"
 #include "VuoLayer.h"
+#include "VuoRenderedLayers.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -27,7 +28,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : false,
-						 "exampleCompositions" : [ ]
+						 "exampleCompositions" : [ "DrawLayersWithTrails.vuo" ]
 					 }
 				 });
 
@@ -57,7 +58,8 @@ void nodeInstanceEvent
 		VuoInputData(VuoList_VuoLayer) layers,
 		VuoInputData(VuoInteger, {"default":1024, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) width,
 		VuoInputData(VuoInteger, {"default":768, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) height,
-		VuoOutputData(VuoImage) image
+		VuoOutputData(VuoImage) image,
+		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
 {
 	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity()).sceneObject;
@@ -65,6 +67,8 @@ void nodeInstanceEvent
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
 	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, NULL);
+
+	*renderedLayers = VuoRenderedLayers_make(rootSceneObject, width, height);
 }
 
 void nodeInstanceFini

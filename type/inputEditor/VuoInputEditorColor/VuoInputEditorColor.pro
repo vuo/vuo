@@ -14,7 +14,7 @@ OTHER_FILES += \
 		VuoInputEditorColor.json
 
 LIBS += \
-	$$ROOT/runtime/libVuoHeap.dylib \
+	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/list/VuoList_VuoColor.o \
 	$$ROOT/type/VuoReal.o

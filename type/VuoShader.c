@@ -179,6 +179,9 @@ VuoShader VuoShader_make(const char *summary, const char *vertexShaderSource, co
 	return t;
 }
 
+/**
+ * A basic linear-projection vertex shader.
+ */
 static const char * defaultVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	uniform mat4 projectionMatrix;
@@ -197,15 +200,17 @@ static const char * defaultVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	}
 );
 
+/**
+ * Default shader: render an unlit gradient checkerboard
+ * (so you can see the object, and get a feel for its texture coordinates).
+ * White in the top left corner.
+ */
 static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	varying vec4 fragmentTextureCoordinate;
 
 	void main()
 	{
-		// Default shader: render an unlit gradient checkerboard
-		// (so you can see the object, and get a feel for its texture coordinates).
-		// White in the top left corner.
 		int toggle = 0;
 		toggle += mod(fragmentTextureCoordinate.x*16., 2.) < 1. ? 1 : 0;
 		toggle += mod(fragmentTextureCoordinate.y*16., 2.) < 1. ? 1 : 0;
@@ -367,6 +372,29 @@ void VuoShader_setUniformPoint4d(VuoShader shader, VuoGlContext glContext, const
 	glUseProgram(0);
 }
 
+/**
+ * Sets a @c vec4 uniform value on the specified @c shader accepting a VuoColor.
+ *
+ * @threadAnyGL
+ */
+void VuoShader_setUniformColor(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoColor value)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+	glUseProgram(shader->glProgramName);
+	{
+		GLint uniform = glGetUniformLocation(shader->glProgramName, uniformIdentifier);
+		if (uniform < 0)
+			fprintf(stderr, "Error: Couldn't find uniform '%s' in shader '%s'.\n", uniformIdentifier, shader->summary);
+		else
+			glUniform4f(uniform, value.r , value.g, value.b, value.a);
+	}
+	glUseProgram(0);
+}
+
+/**
+ * Renders an unlit (full-intensity) image.
+ */
 static const char * imageFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	uniform sampler2D texture;
@@ -730,6 +758,10 @@ VuoShader VuoShader_makeLitColorShader(VuoColor diffuseColor, VuoColor highlight
 	return shader;
 }
 
+/**
+ * A linear-projection vertex shader.
+ * Also builds a matrix that transforms between world coordinates and coordinates on a plane tangent to the surface.
+ */
 static const char *lightingVertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs provided by VuoSceneRenderer
 	uniform mat4 projectionMatrix;

@@ -127,7 +127,25 @@ enum VuoControlRequest
 	 * Includes data message-parts:
 	 *		@arg @c char *name
 	 */
-	VuoControlRequestPublishedInputPortFireEvent
+	VuoControlRequestPublishedInputPortFireEvent,
+
+	/**
+	 * Request that the published input port be set to the given value (converted to the port's type).
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *name;
+	 *		@arg @c char *valueAsString;
+	 */
+	VuoControlRequestPublishedInputPortValueModify,
+
+	/**
+	 * Request that the published output port's value be looked up and returned.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c bool shouldUseInterprocessSerialization;
+	 *		@arg @c char *name;
+	 */
+	VuoControlRequestPublishedOutputPortValueRetrieve
 };
 
 /**
@@ -255,7 +273,20 @@ enum VuoControlReply
 	/**
 	 * An event has been fired through the published input port.
 	 */
-	VuoControlReplyPublishedInputPortFiredEvent
+	VuoControlReplyPublishedInputPortFiredEvent,
+
+	/**
+	 * The published input port's value has been set.
+	 */
+	VuoControlReplyPublishedInputPortValueModified,
+
+	/**
+	 * A string representation of the published output port's value has been retrieved.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *valueAsString;
+	 */
+	VuoControlReplyPublishedOutputPortValueRetrieved
 };
 
 /**

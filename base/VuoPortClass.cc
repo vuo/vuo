@@ -18,6 +18,7 @@ VuoPortClass::VuoPortClass(string name, PortType portType)
 	this->name = name;
 	this->portType = portType;
 	this->eventBlocking = EventBlocking_None;
+	this->defaultEventThrottling = EventThrottling_Enqueue;
 }
 
 /**
@@ -50,6 +51,24 @@ VuoPortClass::EventBlocking VuoPortClass::getEventBlocking(void)
 void VuoPortClass::setEventBlocking(VuoPortClass::EventBlocking eventBlocking)
 {
 	this->eventBlocking = eventBlocking;
+}
+
+/**
+ * Returns the default event-throttling behavior of ports of this port class. Only applies to trigger ports.
+ * A port may override this.
+ */
+VuoPortClass::EventThrottling VuoPortClass::getDefaultEventThrottling(void)
+{
+	return defaultEventThrottling;
+}
+
+/**
+ * Sets the default event-throttling behavior of ports of this port class. Only applies to trigger ports.
+ * A port may override this.
+ */
+void VuoPortClass::setDefaultEventThrottling(VuoPortClass::EventThrottling eventThrottling)
+{
+	this->defaultEventThrottling = eventThrottling;
 }
 
 /**

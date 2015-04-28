@@ -10,6 +10,7 @@
 #ifndef VUOIMAGE_H
 #define VUOIMAGE_H
 
+#include "VuoBoolean.h"
 #include "VuoColor.h"
 #include "VuoPoint2d.h"
 
@@ -56,6 +57,9 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat
 VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
 VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh);
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh);
+VuoImage VuoImage_makeCopy(VuoImage image);
+VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds);
+VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal filterOpacity);
 
 VuoRectangle VuoImage_getRectangle(const VuoImage image);
 

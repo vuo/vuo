@@ -101,7 +101,7 @@ QPointF VuoRendererCable::getStartPoint(void) const
 	VuoNode *fromNode = getBase()->getFromNode();
 	VuoPort *fromPort = getBase()->getFromPort();
 
-	if (fromNode && fromPort && fromPort->hasRenderer())
+	if (fromPort && fromPort->hasRenderer())
 	{
 		VuoRendererPublishedPort *sidebarPort = fromPort->getRenderer()->getProxyPublishedSidebarPort();
 		if (sidebarPort)
@@ -110,7 +110,7 @@ QPointF VuoRendererCable::getStartPoint(void) const
 			return (views.empty()? QPointF(0,0) : views[0]->mapToScene(views[0]->mapFromGlobal(sidebarPort->getGlobalPos().toPoint())));
 		}
 
-		else if (fromNode->hasRenderer())
+		else if (fromNode && fromNode->hasRenderer())
 			return fromNode->getRenderer()->pos() + fromPort->getRenderer()->pos();
 	}
 
@@ -149,9 +149,14 @@ QPointF VuoRendererCable::getEndPoint(void) const
 
 QPainterPath VuoRendererCable::getCablePath(void) const
 {
-	QPointF from = getStartPoint();
-	QPointF to = getEndPoint();
+    return getCablePathForEndpoints(getStartPoint(), getEndPoint());
+}
 
+/**
+ * Returns a cable's path, given its start and end points.
+ */
+QPainterPath VuoRendererCable::getCablePathForEndpoints(QPointF from, QPointF to)
+{
 	QPainterPath cablePath(from);
 
 	// Cables going left to right are straight lines.
@@ -223,8 +228,7 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 	if (paintingDisabled())
 		return;
 
-	bool hoverHighlightingEnabled = (isHovered && (! getBase()->isPublishedCable()));
-
+	bool hoverHighlightingEnabled = isHovered;
 	drawBoundingRect(painter);
 
 	VuoNode::TintColor tintColor = getTintColor();
@@ -246,70 +250,28 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 															  VuoRendererColors::standardHighlight,
 															  timeOfLastActivity);
 
-	QPainterPath cablePath = getCablePath();
-
-	qreal cableWidth = this->cableWidth;
-	qreal cableHighlightWidth = this->cableHighlightWidth;
-	qreal cableHighlightOffset = this->cableHighlightOffset;
-	// Render event-only cables half-size.
-	if (!getBase()->getCompiler()->carriesData())
-	{
-		cableWidth /= 2.;
-		cableHighlightWidth /= 2.;
-		cableHighlightOffset /= 2.;
-	}
-
-	// Convert curve into line segments.
-	QList<QPolygonF> cablePolygons = cablePath.toSubpathPolygons();
-	if (cablePolygons.length() != 1)
-		return;
-	QPolygonF flattenedPath = cablePolygons[0];
-
-	QPainterPath upperLines;
-	for (int i=1; i<flattenedPath.count(); ++i)
-	{
-		// For each line segment...
-		QLineF l = QLineF(flattenedPath[i-1], flattenedPath[i]);
-
-		// ...make a parallel line segment, displaced along the normal.
-		QLineF normal = l.normalVector();
-		normal.setLength(cableHighlightOffset);
-		if (i==1)
-			upperLines.moveTo(normal.p2());
-
-		upperLines.lineTo(QPointF(l.dx(), l.dy()) + normal.p2());
-	}
-
-	// Turn each series of line segments into a thick outline.
-	QPainterPathStroker upperStroker;
-	upperStroker.setWidth(cableHighlightWidth);
-	upperStroker.setCapStyle(Qt::RoundCap);
-	QPainterPath upperOutline = upperStroker.createStroke(upperLines);
-
-	QPainterPathStroker mainStroker;
-	mainStroker.setWidth(cableWidth);
-	mainStroker.setCapStyle(Qt::RoundCap);
-	QPainterPath mainOutline = mainStroker.createStroke(cablePath);
+    QPointF startPoint = getStartPoint();
+    QPointF endPoint = getEndPoint();
+    bool cableCarriesData = effectivelyCarriesData();
 
 	// Etch the highlight out of the main cable.
-	QPainterPath mainOutlineMinusHighlight = mainOutline.subtracted(upperOutline);
+	QPainterPath mainOutlineMinusHighlight, upperOutline;
+	getOutlines(startPoint, endPoint, cableCarriesData, mainOutlineMinusHighlight, upperOutline);
+
+    if (mainOutlineMinusHighlight.isEmpty() && upperOutline.isEmpty())
+        return;
 
 	// Highlight the yank zone when hovering.
 	if (hoverHighlightingEnabled)
 	{
-		QPainterPath yankZone;
-		if (getBase()->getFromPort() && getBase()->getFromPort()->getRenderer()->supportsDisconnectionByDragging())
-			yankZone.addEllipse(QPointF(getStartPoint()), cableYankRadius, cableYankRadius);
-		if (getBase()->getToPort() && getBase()->getToPort()->getRenderer()->supportsDisconnectionByDragging())
-			yankZone.addEllipse(QPointF(getEndPoint()), cableYankRadius, cableYankRadius);
+		bool toPortSupportsYanking = getBase()->getToPort()->getRenderer()->supportsDisconnectionByDragging();
+
+		QPainterPath yankZone, invertedYankZone;
+		getYankZonePaths(startPoint, endPoint, cableCarriesData, toPortSupportsYanking, yankZone, invertedYankZone);
 
 		painter->setClipPath(yankZone);
 		painter->fillPath(mainOutlineMinusHighlight, QBrush(yankZoneColors->cableUpper()));
 		painter->fillPath(upperOutline, QBrush(yankZoneColors->cableMain()));
-
-		QPainterPath invertedYankZone;
-		invertedYankZone.addRect(cablePath.controlPointRect().adjusted(-cableWidth,-cableWidth,cableWidth,cableWidth));
-		invertedYankZone = invertedYankZone.subtracted(yankZone);
 
 		// When drawing the main cable below, don't overdraw the yank zone.
 		painter->setClipPath(invertedYankZone);
@@ -323,6 +285,135 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 		painter->setClipping(false);
 
 	delete colors;
+}
+
+/**
+ * Determines the cable's @c mainOutlineMinusHiglight and @c upperOutline, given the
+ * provided @c startPoint, @c endPoint, and @c cableCarriesData attribute values.
+ * Retrieves cached versions of the outlines, if available.
+ */
+void VuoRendererCable::getOutlines(QPointF startPoint,
+								   QPointF endPoint,
+								   bool cableCarriesData,
+								   QPainterPath &mainOutlineMinusHighlight,
+								   QPainterPath &upperOutline)
+{
+	if ((qMakePair(startPoint, endPoint) != this->cachedEndpointsForOutlines) ||
+		(cableCarriesData != this->cachedCarriesDataValueForOutlines))
+    {
+		qreal cableWidth, cableHighlightWidth, cableHighlightOffset;
+		getCableSpecs(cableCarriesData, cableWidth, cableHighlightWidth, cableHighlightOffset);
+
+        QPainterPath cablePath = getCablePathForEndpoints(startPoint, endPoint);
+
+        // Convert curve into line segments.
+        QList<QPolygonF> cablePolygons = cablePath.toSubpathPolygons();
+        if (cablePolygons.length() != 1)
+		{
+			mainOutlineMinusHighlight = QPainterPath();
+			upperOutline = QPainterPath();
+			return;
+		}
+
+        QPolygonF flattenedPath = cablePolygons[0];
+
+        QPainterPath upperLines;
+        for (int i=1; i<flattenedPath.count(); ++i)
+        {
+            // For each line segment...
+            QLineF l = QLineF(flattenedPath[i-1], flattenedPath[i]);
+
+            // ...make a parallel line segment, displaced along the normal.
+            QLineF normal = l.normalVector();
+            normal.setLength(cableHighlightOffset);
+            if (i==1)
+                upperLines.moveTo(normal.p2());
+
+            upperLines.lineTo(QPointF(l.dx(), l.dy()) + normal.p2());
+        }
+
+        // Turn each series of line segments into a thick outline.
+        QPainterPathStroker upperStroker;
+        upperStroker.setWidth(cableHighlightWidth);
+        upperStroker.setCapStyle(Qt::RoundCap);
+        QPainterPath upperOutline = upperStroker.createStroke(upperLines);
+
+        QPainterPathStroker mainStroker;
+        mainStroker.setWidth(cableWidth);
+        mainStroker.setCapStyle(Qt::RoundCap);
+        QPainterPath mainOutline = mainStroker.createStroke(cablePath);
+
+		this->cachedEndpointsForOutlines = qMakePair(startPoint, endPoint);
+		this->cachedCarriesDataValueForOutlines = cableCarriesData;
+        this->cachedOutlines = qMakePair(mainOutline.subtracted(upperOutline), upperOutline);
+    }
+
+	mainOutlineMinusHighlight = this->cachedOutlines.first;
+	upperOutline = this->cachedOutlines.second;
+}
+
+/**
+ * Determines the cable's @c yankZonePath and @c invertedYankZonePath, given the
+ * provided @c startPoint, @c endPoint, @c toPortSupportsYanking,
+ * and @c cableCarriesData attribute values.
+ * Retrieves cached versions of the yank zone paths, if available.
+ */
+void VuoRendererCable::getYankZonePaths(QPointF startPoint,
+										QPointF endPoint,
+										bool cableCarriesData,
+										bool toPortSupportsYanking,
+										QPainterPath &yankZone,
+										QPainterPath &invertedYankZone
+										)
+{
+	if ((qMakePair(startPoint, endPoint) != this->cachedEndpointsForYankZone) ||
+		(toPortSupportsYanking != this->cachedToPortSupportsYankingValueForYankZone) ||
+		(cableCarriesData != this->cachedCarriesDataValueForYankZone))
+	{
+		// Calculate the yank zone.
+		QPainterPath yankZone;
+		if (getBase()->getToPort() && toPortSupportsYanking)
+			yankZone.addEllipse(endPoint, VuoRendererCable::cableYankRadius, VuoRendererCable::cableYankRadius);
+
+		// Calculate the inverted yank zone.
+		QPainterPath invertedYankZone;
+
+		qreal cableWidth, cableHighlightWidth, cableHighlightOffset;
+		getCableSpecs(cableCarriesData, cableWidth, cableHighlightWidth, cableHighlightOffset);
+
+		QPainterPath cablePath = getCablePathForEndpoints(startPoint, endPoint);
+		invertedYankZone.addRect(cablePath.controlPointRect().adjusted(-cableWidth, -cableWidth ,cableWidth, cableWidth));
+		invertedYankZone = invertedYankZone.subtracted(yankZone);
+
+		this->cachedEndpointsForYankZone = qMakePair(startPoint, endPoint);
+		this->cachedCarriesDataValueForYankZone = cableCarriesData;
+		this->cachedToPortSupportsYankingValueForYankZone = toPortSupportsYanking;
+		this->cachedYankZonePaths = qMakePair(yankZone, invertedYankZone);
+	}
+
+	yankZone = this->cachedYankZonePaths.first;
+	invertedYankZone = this->cachedYankZonePaths.second;
+}
+
+/**
+ * Calculates the @c cableWidth, @c cableHighlightWidth, and @c cableHighlightOffset,
+ * for a cable, dependent on whether that cable carries data.
+ */
+void VuoRendererCable::getCableSpecs(bool cableCarriesData,
+										   qreal &cableWidth,
+										   qreal &cableHighlightWidth,
+										   qreal &cableHighlightOffset)
+{
+	const qreal dataCableToEventCableWidthRatio = 2.;
+
+	cableWidth = (cableCarriesData? VuoRendererCable::cableWidth :
+									 VuoRendererCable::cableWidth/dataCableToEventCableWidthRatio);
+
+	cableHighlightWidth = (cableCarriesData? VuoRendererCable::cableHighlightWidth :
+											  VuoRendererCable::cableHighlightWidth/dataCableToEventCableWidthRatio);
+
+	cableHighlightOffset = (cableCarriesData? VuoRendererCable::cableHighlightOffset :
+											   VuoRendererCable::cableHighlightOffset/dataCableToEventCableWidthRatio);
 }
 
 /**
@@ -397,8 +488,6 @@ void VuoRendererCable::removeFromScene()
 
 		VuoPort *rcFromPort = this->getBase()->getFromPort();
 		VuoPort *rcToPort = this->getBase()->getToPort();
-		this->getBase()->setFrom(NULL, NULL);
-		this->getBase()->setTo(NULL, NULL);
 
 		if (rcFromPort && rcFromPort->hasRenderer())
 		{
@@ -456,9 +545,6 @@ void VuoRendererCable::extendedHoverLeaveEvent()
  */
 bool VuoRendererCable::yankZoneIncludes(QPointF scenePos)
 {
-	if (getBase()->isPublishedCable())
-		return false;
-
 	qreal yankDistance = QLineF(scenePos, getEndPoint()).length();
 	return (yankDistance <= cableYankRadius);
 }
@@ -504,4 +590,44 @@ void VuoRendererCable::updateGeometry(void)
 void VuoRendererCable::resetTimeLastEventPropagated()
 {
 	this->timeLastEventPropagated = VuoRendererColors::getVirtualPropagatedEventOrigin();
+}
+
+/**
+ * Returns a boolean indicating whether this cable should be rendered as if it carries data.
+ * 
+ * Note that the returned value may conflict with that returned by VuoCompilerCable::carriesData()
+ * for cables connected to published ports.  This is because the vuoPsuedoPorts associated
+ * with, e.g., published input ports are always technically event-only trigger ports even if the
+ * published ports themselves have data.  This method treats the vuoPseudoPort as if it
+ * has the same data type as its associated VuoPublishedPort, whereas VuoCompilerCable::carriesData()
+ * uses the vuoPseudoPort's technical data type.
+ * 
+ * @todo: Modify or remove when cables store their own inherent types. https://b33p.net/kosada/node/6055
+ */
+bool VuoRendererCable::effectivelyCarriesData(void)
+{
+	VuoRendererPort *fromPort = (getBase()->getFromPort()? getBase()->getFromPort()->getRenderer() : NULL);
+	VuoRendererPort *toPort = (getBase()->getToPort()? getBase()->getToPort()->getRenderer() : NULL);
+	
+	VuoType *fromPortDataType = (fromPort?
+									 (fromPort->getProxyPublishedSidebarPort()?
+										  fromPort->getProxyPublishedSidebarPort()->getBase()->getType() : 
+										  fromPort->getDataType()) :
+									 NULL);
+
+	VuoType *toPortDataType = (toPort?
+								   (toPort->getProxyPublishedSidebarPort()?
+										toPort->getProxyPublishedSidebarPort()->getBase()->getType() : 
+										toPort->getDataType()) :
+								   NULL);
+							  
+	bool cableCarriesData = false;
+	if (fromPort && !toPort)
+		cableCarriesData = fromPortDataType;
+	else if (toPort && !fromPort)
+		cableCarriesData = toPortDataType;
+	else if (fromPort && toPort)
+		cableCarriesData = (fromPortDataType && toPortDataType);
+	
+	return cableCarriesData;
 }

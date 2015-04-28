@@ -25,8 +25,8 @@ MakeLayer5 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refr
 MakeLayer6 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="222,714" _center="{\"x\":0.000000,\"y\":-0.500000}" _alpha="1.000000"];
 MakeList5 [type="vuo.list.make.5.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="446,56" fillcolor="green"];
 MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="-5,714" _text="\"Scroll the mouse wheel to move the gears.\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
-ReceiveMouseScrolls [type="vuo.mouse.scroll" version="1.0.0" label="Receive Mouse Scrolls|<refresh>refresh\l|<modifierKey>modifierKey\l|<done>done\r|<scrolled>scrolled\r" pos="-562,279" _modifierKey="\"any\""];
-RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="506,45" fillcolor="green"];
+ReceiveMouseScrolls [type="vuo.mouse.scroll" version="1.0.0" label="Receive Mouse Scrolls|<refresh>refresh\l|<modifierKey>modifierKey\l|<done>done\r|<scrolled>scrolled\r" pos="-562,279" _modifierKey="\"any\"" _scrolled_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="506,45" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 Count:count -> Divide3:a;
 Count:count -> MakeLayer:rotation;

@@ -1,6 +1,8 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	IsMouseWithinRectangle.vuo
+	IsMouseWithinRectangle.vuo \
+	MakeSpiral.vuo \
+	MakeTerrain.vuo
 
 include(../../../example.pri)

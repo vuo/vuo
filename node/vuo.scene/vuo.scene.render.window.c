@@ -20,8 +20,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Render Scene to Window",
-					 "keywords" : [ "frame", "draw", "opengl", "scenegraph", "graphics", "display", "view", "object",
-						 "mouse", "trackpad", "touchpad", "wheel", "scroll", "click", "tap", "cursor", "pointer"],
+					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
@@ -114,7 +113,7 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal)
+		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop)
 )
 {
 	VuoWindowOpenGl_enableTriggers((*context)->window);

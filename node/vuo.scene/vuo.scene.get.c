@@ -148,7 +148,7 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 			const struct aiFace *faceObj = &meshObj->mFaces[face];
 			if (faceObj->mNumIndices != 3)
 			{
-				fprintf(stderr, "vuo.scene.get Warning: Face %d isn't a triangle (it has %d indices); skipping.\n",face,faceObj->mNumIndices);
+				fprintf(stderr, "vuo.scene.get Warning: Face %u isn't a triangle (it has %u indices); skipping.\n",face,faceObj->mNumIndices);
 				continue;
 			}
 
@@ -228,10 +228,12 @@ void nodeEvent
 		return;
 	}
 
-	char *normalizedSceneURL = VuoUrl_normalize(sceneURL);
-	size_t lastSlashInSceneURL = VuoText_getIndexOfLastCharacter(normalizedSceneURL, "/");
+	VuoText normalizedSceneURL = VuoUrl_normalize(sceneURL);
+	VuoRetain(normalizedSceneURL);
+	size_t lastSlashInSceneURL = VuoText_findLastOccurrence(normalizedSceneURL, "/");
 	VuoText sceneURLWithoutFilename = VuoText_substring(normalizedSceneURL, 1, lastSlashInSceneURL);
 	VuoRetain(sceneURLWithoutFilename);
+	VuoRelease(normalizedSceneURL);
 
 	VuoList_VuoShader shaders = VuoListCreate_VuoShader();
 	VuoRetain(shaders);

@@ -211,6 +211,8 @@ To use a generic type in a node class, use @c VuoGenericType1 in place of the da
 
 To use more than one generic type in a node class, you can use @c VuoGenericType2, @c VuoGenericType3, and so on. 
 
+To specify the default value for a generic input port, you can use the "defaults" key (as opposed to the the singular "default" key for non-generic input ports) in the JSON-formatted port details. For example, a port that can be specialized to either a @ref VuoReal defaulting to 1 or a @ref VuoPoint2d defaulting to (1,1) would be declared with this parameter: `VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":0.0, "VuoPoint2d":{"x":1,"y":1}}}) portName`. 
+
 For a node class to use generic types, it must be part of a node set. The source code for the node class and its included header files must be packaged into the node set. See @ref PackagingNodeSets. 
 
 For more information about using generic port types in a node class — including how to restrict the types that a generic type can be specialized with — see @ref VuoModuleMetadata. 

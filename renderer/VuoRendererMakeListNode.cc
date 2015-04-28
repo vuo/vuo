@@ -26,6 +26,8 @@ const qreal VuoRendererMakeListNode::drawerInteriorHorizontalPadding = VuoRender
 VuoRendererMakeListNode::VuoRendererMakeListNode(VuoNode *baseNode, VuoRendererSignaler *signaler)
 	: VuoRendererNode(baseNode, signaler)
 {
+	dragInProgress = false;
+
 	vector<VuoPort *> inputPorts = this->getBase()->getInputPorts();
 	for (int i = VuoNodeClass::unreservedInputPortStartIndex; i < inputPorts.size(); ++i)
 		drawerPorts.push_back(inputPorts[i]->getRenderer());
@@ -299,7 +301,7 @@ QRectF VuoRendererMakeListNode::boundingRect(void) const
  * hit tests, and QGraphicsScene::items() functions.
  */
 QPainterPath VuoRendererMakeListNode::shape() const
-{	
+{
 	QPainterPath p;
 	p.addPath(getMakeListDrawerPath());
 	p.addRect(getExtendedDragHandleRect());

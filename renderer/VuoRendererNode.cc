@@ -92,8 +92,8 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 		setOutputPorts(outputs);
 	}
 
-	updateNodeFrameRect();
 	setPos(baseNode->getX(), baseNode->getY());
+	updateNodeFrameRect();
 	layoutPorts();
 
 	this->signaler = signaler;
@@ -143,6 +143,9 @@ void VuoRendererNode::layoutPorts(void)
 	i=0;
 	foreach (VuoRendererPort *p, this->outputPorts->childItems())
 		p->setPos(getPortPoint(p, i++));
+
+	this->portPaths = getPortPaths(this->inputPorts, this->outputPorts);
+	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutlines[0], this->nodeIsSubcomposition);
 }
 
 /**
@@ -218,7 +221,131 @@ void VuoRendererNode::layoutConnectedInputDrawer(unsigned int i)
  */
 void VuoRendererNode::drawNodeFrame(QPainter *painter, QRectF nodeInnerFrameRect, VuoRendererColors *colors) const
 {
-	// First, build a path containing the ports, which we can subtract from the filled areas.
+	QPainterPath nodeOuterFrame = this->nodeFrames.first;
+	QPainterPath nodeInnerFrame = this->nodeFrames.second;
+
+	// Paint the outer frame.
+	painter->fillPath(nodeOuterFrame, colors->nodeFrame());
+
+	// Paint the inner frame.
+	if (nodeIsMissing)
+	{
+		// Draw background crosshatch using QLinearGradient instead of Qt::DiagCrossPattern, since Qt::DiagCrossPattern is a bitmap and doesn't scale cleanly.
+
+		QLinearGradient nodeBackgroundGradient(QPointF(0,0), QPointF(3.5,3.5));
+		nodeBackgroundGradient.setSpread(QGradient::RepeatSpread);
+		nodeBackgroundGradient.setColorAt(0.0, Qt::transparent);
+		nodeBackgroundGradient.setColorAt(0.8, Qt::transparent);
+		nodeBackgroundGradient.setColorAt(0.9, colors->nodeFrame());
+		nodeBackgroundGradient.setColorAt(1.0, Qt::transparent);
+		painter->fillPath(nodeInnerFrame, QBrush(nodeBackgroundGradient));
+
+		nodeBackgroundGradient.setStart(QPointF(0,3.5));
+		nodeBackgroundGradient.setFinalStop(QPointF(3.5,0));
+		painter->fillPath(nodeInnerFrame, QBrush(nodeBackgroundGradient));
+	}
+	else
+		painter->fillPath(nodeInnerFrame, colors->nodeFill());
+
+	// Paint the stateful indicator cable.
+	if (nodeIsStateful)
+	{
+		QPainterPath highlightOutline = this->statefulIndicatorOutlines[1];
+		QPainterPath cableOutlineMinusHighlight = this->statefulIndicatorOutlines[2];
+
+		// Fill the part of the main cable that doesn't overlap with the highlight.
+		painter->fillPath(cableOutlineMinusHighlight, QBrush(colors->cableMain()));
+
+		// Fill the highlight.
+		painter->fillPath(highlightOutline, QBrush(colors->cableUpper()));
+	}
+
+	// Paint the "Antenna" icon.
+	if (getBase()->getNodeClass()->isInterface())
+		painter->strokePath(this->antennaPath, QPen(QColor::fromRgb(255,255,255,128), VuoRendererFonts::midPenWidth, Qt::SolidLine, Qt::FlatCap));
+}
+
+/**
+ * Returns the outer and inner node frames, in that order, for a node with the provided @c nodeInnerFrameRect,
+ * @c portsPath, @c portsInsetPath, @c statefulIndicatorOutline, and @c isSubcomposition attribute values.
+ */
+QPair<QPainterPath, QPainterPath> VuoRendererNode::getNodeFrames(QRectF nodeInnerFrameRect,
+																 QPainterPath portsPath,
+																 QPainterPath portsInsetPath,
+																 QPainterPath statefulIndicatorOutline,
+																 bool isSubcomposition)
+{
+	// Calculate the bounds of the outer frame (header background, edges around the inner frame, optional footer).
+	QRectF nodeOuterFrameRect;
+	{
+		qreal nodeHeaderHeight = VuoRendererNode::nodeTitleHeight + VuoRendererNode::nodeClassHeight;
+		qreal nodeOuterFrameTopY = nodeInnerFrameRect.top() - nodeHeaderHeight;
+		nodeOuterFrameRect = QRectF(
+					nodeInnerFrameRect.left() - 1.,
+					nodeOuterFrameTopY,
+					nodeInnerFrameRect.width() + 2.,
+					nodeInnerFrameRect.height() + nodeHeaderHeight + 1.
+					);
+	}
+
+	// Calculate the outer and inner frames.
+	QPainterPath nodeOuterFrame;
+	if (isSubcomposition)
+	{
+		// If it's a subcomposition, the outer frame is a rounded rectangle with top and bottom bulges.
+		addRoundedCorner(nodeOuterFrame, false, nodeOuterFrameRect.topLeft(), VuoRendererNode::cornerRadius, true,  true);
+		nodeOuterFrame.cubicTo(
+					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.top() - VuoRendererNode::subcompositionBulge,
+					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.top() - VuoRendererNode::subcompositionBulge,
+					nodeOuterFrameRect.right() - VuoRendererNode::cornerRadius, nodeOuterFrameRect.top()
+					);
+		addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.topRight(), VuoRendererNode::cornerRadius, true,  false);
+		addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.bottomRight(), VuoRendererNode::cornerRadius, false, false);
+		nodeOuterFrame.cubicTo(
+					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.bottom() + VuoRendererNode::subcompositionBulge,
+					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.bottom() + VuoRendererNode::subcompositionBulge,
+					nodeOuterFrameRect.left() + VuoRendererNode::cornerRadius, nodeOuterFrameRect.bottom()
+					);
+		addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.bottomLeft(),  VuoRendererNode::cornerRadius, false, true);
+		nodeOuterFrame.closeSubpath();
+	}
+	else
+		// If it's not a subcomposition, the outer frame is just a rounded rectangle.
+		nodeOuterFrame.addRoundedRect(nodeOuterFrameRect, VuoRendererNode::cornerRadius, VuoRendererNode::cornerRadius);
+
+	QPainterPath nodeInnerFrame;
+	{
+		// The bottom of the inner frame has rounded corners, to match the outer frame.
+		nodeInnerFrame.moveTo(nodeInnerFrameRect.topLeft());
+		nodeInnerFrame.lineTo(nodeInnerFrameRect.topRight());
+
+		qreal innerCornerRadius = VuoRendererNode::cornerRadius - 1.;
+		addRoundedCorner(nodeInnerFrame, true, nodeInnerFrameRect.bottomRight(), innerCornerRadius, false, false);
+		addRoundedCorner(nodeInnerFrame, true, nodeInnerFrameRect.bottomLeft(), innerCornerRadius, false, true);
+
+		nodeInnerFrame.closeSubpath();
+	}
+
+	// Carve out the stateful indicator cable.
+	nodeOuterFrame = nodeOuterFrame.subtracted(statefulIndicatorOutline);
+	nodeInnerFrame = nodeInnerFrame.subtracted(statefulIndicatorOutline);
+
+	// Carve out the ports.
+	nodeOuterFrame = nodeOuterFrame.subtracted(portsInsetPath);
+	nodeInnerFrame = nodeInnerFrame.subtracted(portsPath);
+
+	// Carve out the inner frame (so the outer frame doesn't overdraw it).
+	nodeOuterFrame = nodeOuterFrame.subtracted(nodeInnerFrame);
+
+	return qMakePair(nodeOuterFrame, nodeInnerFrame);
+}
+
+/**
+ * Returns the port path and portInset path, in that order, for a node with the provided @c inputPorts
+ * and @c outputPorts lists.  These paths should be subtracted from the node's filled areas.
+ */
+QPair<QPainterPath, QPainterPath> VuoRendererNode::getPortPaths(VuoRendererPortList *inputPorts, VuoRendererPortList *outputPorts)
+{
 	QPainterPath ports;
 	QPainterPath portsInset;
 	{
@@ -252,141 +379,67 @@ void VuoRendererNode::drawNodeFrame(QPainter *painter, QRectF nodeInnerFrameRect
 		}
 	}
 
+	return qMakePair(ports, portsInset);
+}
 
-	// Calculate the bounds of the outer frame (header background, edges around the inner frame, optional footer).
-	QRectF nodeOuterFrameRect;
+/**
+ * Returns the (cableOutline, highlightOutline, cableOutline.subtracted(highlightOutline)) paths,
+ * in that order, required to paint a stateful indicator for a node with the provided
+ * @c nodeInnerFrameRect, or empty paths if @c isStateful is false.
+ */
+QVector<QPainterPath> VuoRendererNode::getStatefulIndicatorOutlines(QRectF nodeInnerFrameRect, bool isStateful)
+{
+	if (!isStateful)
+		return QVector<QPainterPath>(3, QPainterPath());
+
+	// Simplified version of VuoRendererCable::paint() —
+	QPainterPath cablePath;
+	cablePath.moveTo(nodeInnerFrameRect.bottomRight() - QPointF(VuoRendererFonts::thickPenWidth/2., 0));
+	cablePath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF(VuoRendererFonts::thickPenWidth/2., 0));
+
+	QPainterPathStroker cableStroker;
+	cableStroker.setWidth(VuoRendererCable::cableWidth);
+	cableStroker.setCapStyle(Qt::RoundCap);
+	QPainterPath cableOutline = cableStroker.createStroke(cablePath);
+
+	QPainterPath highlightPath;
+	highlightPath.moveTo(nodeInnerFrameRect.bottomRight() + QPointF(-VuoRendererFonts::thickPenWidth/2., VuoRendererCable::cableHighlightOffset));
+	highlightPath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF( VuoRendererFonts::thickPenWidth/2., VuoRendererCable::cableHighlightOffset));
+
+	QPainterPathStroker highlightStroker;
+	highlightStroker.setWidth(VuoRendererCable::cableHighlightWidth);
+	highlightStroker.setCapStyle(Qt::RoundCap);
+	QPainterPath highlightOutline = highlightStroker.createStroke(highlightPath);
+
+	QVector<QPainterPath> statefulIndicatorOutlines = QVector<QPainterPath>(3);
+	statefulIndicatorOutlines[0] = cableOutline;
+	statefulIndicatorOutlines[1] = highlightOutline;
+	statefulIndicatorOutlines[2] = cableOutline.subtracted(highlightOutline);
+	return statefulIndicatorOutlines;
+}
+
+/**
+ * Returns the path of the "Antenna" icon for a node with the provided @c nodeInnerFrameRect,
+ * or an empty path if @c isInterface is false.
+ */
+QPainterPath VuoRendererNode::getAntennaPath(QRectF nodeInnerFrameRect, bool isInterface)
+{
+	if (!isInterface)
+		return QPainterPath();
+
+	// "Antenna" icon.
+	// The icon should start at the node class label's baseline, and extend to match its ascender height.
+	QPainterPath antenna;
+	QPointF center = QPointF(nodeInnerFrameRect.right()-VuoRendererNode::antennaIconWidth, -2.);
+	const double arcSize = VuoRendererFonts::midPenWidth*1.6;
+	for (int i=1; i<4; ++i)
 	{
-		qreal nodeHeaderHeight = nodeTitleHeight + nodeClassHeight;
-		qreal nodeOuterFrameTopY = nodeInnerFrameRect.top() - nodeHeaderHeight;
-		nodeOuterFrameRect = QRectF(
-					nodeInnerFrameRect.left() - 1.,
-					nodeOuterFrameTopY,
-					nodeInnerFrameRect.width() + 2.,
-					nodeInnerFrameRect.height() + nodeHeaderHeight + 1.
-					);
+		QRectF arcBounds = QRectF(center.x()-i*arcSize, center.y()-i*arcSize, i*arcSize*2., i*arcSize*2.);
+		antenna.arcMoveTo(arcBounds, 45);
+		antenna.arcTo(arcBounds, 45, 90);
 	}
 
-
-	// Paint the outer and inner frames.
-	{
-		QPainterPath nodeOuterFrame;
-		if (nodeIsSubcomposition)
-		{
-			// If it's a subcomposition, the outer frame is a rounded rectangle with top and bottom bulges.
-			addRoundedCorner(nodeOuterFrame, false, nodeOuterFrameRect.topLeft(),     cornerRadius, true,  true);
-			nodeOuterFrame.cubicTo(
-						nodeOuterFrameRect.center().x(), nodeOuterFrameRect.top() - VuoRendererNode::subcompositionBulge,
-						nodeOuterFrameRect.center().x(), nodeOuterFrameRect.top() - VuoRendererNode::subcompositionBulge,
-						nodeOuterFrameRect.right() - cornerRadius, nodeOuterFrameRect.top()
-						);
-			addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.topRight(),    cornerRadius, true,  false);
-			addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.bottomRight(), cornerRadius, false, false);
-			nodeOuterFrame.cubicTo(
-						nodeOuterFrameRect.center().x(), nodeOuterFrameRect.bottom() + VuoRendererNode::subcompositionBulge,
-						nodeOuterFrameRect.center().x(), nodeOuterFrameRect.bottom() + VuoRendererNode::subcompositionBulge,
-						nodeOuterFrameRect.left() + cornerRadius, nodeOuterFrameRect.bottom()
-						);
-			addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.bottomLeft(),  cornerRadius, false, true);
-			nodeOuterFrame.closeSubpath();
-		}
-		else
-			// If it's not a subcomposition, the outer frame is just a rounded rectangle.
-			nodeOuterFrame.addRoundedRect(nodeOuterFrameRect, cornerRadius, cornerRadius);
-
-		QPainterPath nodeInnerFrame;
-		{
-			// The bottom of the inner frame has rounded corners, to match the outer frame.
-			nodeInnerFrame.moveTo(nodeInnerFrameRect.topLeft());
-			nodeInnerFrame.lineTo(nodeInnerFrameRect.topRight());
-
-			qreal innerCornerRadius = cornerRadius - 1.;
-			addRoundedCorner(nodeInnerFrame, true, nodeInnerFrameRect.bottomRight(), innerCornerRadius, false, false);
-			addRoundedCorner(nodeInnerFrame, true, nodeInnerFrameRect.bottomLeft(), innerCornerRadius, false, true);
-
-			nodeInnerFrame.closeSubpath();
-		}
-
-		// Carve out the ports.
-		nodeOuterFrame = nodeOuterFrame.subtracted(portsInset);
-		nodeInnerFrame = nodeInnerFrame.subtracted(ports);
-
-		// Carve out the inner frame (so the outer frame doesn't overdraw it).
-		nodeOuterFrame = nodeOuterFrame.subtracted(nodeInnerFrame);
-
-		// Carve out and paint the stateful indicator cable.
-		if (nodeIsStateful)
-		{
-			QPainterPath cablePath;
-			cablePath.moveTo(nodeInnerFrameRect.bottomRight() - QPointF(VuoRendererFonts::thickPenWidth/2., 0));
-			cablePath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF(VuoRendererFonts::thickPenWidth/2., 0));
-
-			QPainterPathStroker cableStroker;
-			cableStroker.setWidth(VuoRendererCable::cableWidth);
-			cableStroker.setCapStyle(Qt::RoundCap);
-			QPainterPath cableOutline = cableStroker.createStroke(cablePath);
-
-			nodeInnerFrame = nodeInnerFrame.subtracted(cableOutline);
-			nodeOuterFrame = nodeOuterFrame.subtracted(cableOutline);
-
-			// Simplified version of VuoRendererCable::paint() —
-
-			QPainterPath highlightPath;
-			highlightPath.moveTo(nodeInnerFrameRect.bottomRight() + QPointF(-VuoRendererFonts::thickPenWidth/2., VuoRendererCable::cableHighlightOffset));
-			highlightPath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF( VuoRendererFonts::thickPenWidth/2., VuoRendererCable::cableHighlightOffset));
-
-			QPainterPathStroker highlightStroker;
-			highlightStroker.setWidth(VuoRendererCable::cableHighlightWidth);
-			highlightStroker.setCapStyle(Qt::RoundCap);
-			QPainterPath highlightOutline = highlightStroker.createStroke(highlightPath);
-
-			// Fill the part of the main cable that doesn't overlap with the highlight.
-			painter->fillPath(cableOutline.subtracted(highlightOutline), QBrush(colors->cableMain()));
-
-			// Fill the highlight.
-			painter->fillPath(highlightOutline, QBrush(colors->cableUpper()));
-
-		}
-
-		// Paint the outer frame.
-		painter->fillPath(nodeOuterFrame, colors->nodeFrame());
-
-		// Paint the inner frame.
-		if(nodeIsMissing)
-		{
-			// Draw background crosshatch using QLinearGradient instead of Qt::DiagCrossPattern, since Qt::DiagCrossPattern is a bitmap and doesn't scale cleanly.
-
-			QLinearGradient nodeBackgroundGradient(QPointF(0,0), QPointF(3.5,3.5));
-			nodeBackgroundGradient.setSpread(QGradient::RepeatSpread);
-			nodeBackgroundGradient.setColorAt(0.0, Qt::transparent);
-			nodeBackgroundGradient.setColorAt(0.8, Qt::transparent);
-			nodeBackgroundGradient.setColorAt(0.9, colors->nodeFrame());
-			nodeBackgroundGradient.setColorAt(1.0, Qt::transparent);
-			painter->fillPath(nodeInnerFrame, QBrush(nodeBackgroundGradient));
-
-			nodeBackgroundGradient.setStart(QPointF(0,3.5));
-			nodeBackgroundGradient.setFinalStop(QPointF(3.5,0));
-			painter->fillPath(nodeInnerFrame, QBrush(nodeBackgroundGradient));
-		}
-		else
-			painter->fillPath(nodeInnerFrame, colors->nodeFill());
-
-		// "Antenna" icon.
-		// The icon should start at the node class label's baseline, and extend to match its ascender height.
-		if (getBase()->getNodeClass()->isInterface())
-		{
-			QPainterPath antenna;
-			QPointF center = QPointF(nodeInnerFrameRect.right()-antennaIconWidth, -2.);
-			const double arcSize = VuoRendererFonts::midPenWidth*1.6;
-			for (int i=1; i<4; ++i)
-			{
-				QRectF arcBounds = QRectF(center.x()-i*arcSize, center.y()-i*arcSize, i*arcSize*2., i*arcSize*2.);
-				antenna.arcMoveTo(arcBounds, 45);
-				antenna.arcTo(arcBounds, 45, 90);
-			}
-
-			painter->strokePath(antenna, QPen(QColor::fromRgb(255,255,255,128), VuoRendererFonts::midPenWidth, Qt::SolidLine, Qt::FlatCap));
-		}
-	}
+	return antenna;
 }
 
 /**
@@ -502,7 +555,7 @@ void VuoRendererNode::updateNodeFrameRect(void)
 	if (getBase()->getNodeClass()->isInterface())
 		nodeClassWidth +=
 				4.	// margin between node class label and antenna icon
-				+ antennaIconWidth;
+				+ VuoRendererNode::antennaIconWidth;
 
 	bool hasInputPorts = inputPorts->childItems().size() > VuoNodeClass::unreservedInputPortStartIndex;
 	bool hasOutputPorts = outputPorts->childItems().size() > VuoNodeClass::unreservedOutputPortStartIndex;
@@ -530,6 +583,9 @@ void VuoRendererNode::updateNodeFrameRect(void)
 	);
 
 	this->frameRect = updatedFrameRect;
+	this->statefulIndicatorOutlines = getStatefulIndicatorOutlines(this->frameRect, this->nodeIsStateful);
+	this->antennaPath = getAntennaPath(this->frameRect, this->getBase()->getNodeClass()->isInterface());
+	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutlines[0], this->nodeIsSubcomposition);
 }
 
 /**
@@ -616,7 +672,6 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	VuoRendererColors *colors = new VuoRendererColors(getBase()->getTintColor(), selectionType, false, VuoRendererColors::noHighlight, timeOfLastActivity);
 	drawNodeFrame(painter, frameRect, colors);
 
-
 	// Node Title
 	QString nodeTitle = QString::fromUtf8(getBase()->getTitle().c_str());
 	{
@@ -653,8 +708,6 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		painter->drawText(r,Qt::AlignLeft,nodeClass);
 		VuoRendererItem::drawRect(painter, r);
 	}
-
-	layoutPorts();
 
 	delete colors;
 }
@@ -948,12 +1001,12 @@ VuoRendererPortList * VuoRendererNode::getOutputPorts(void)
 }
 
 /**
-  * Returns mapping of port names to values for the ports that belong to this
+  * Returns an ordered list of port name-value pairs for the ports that belong to this
   * node and whose values are currently constant.
   */
-map<QString, json_object *> VuoRendererNode::getConstantPortValues()
+vector<pair<QString, json_object *> > VuoRendererNode::getConstantPortValues()
 {
-	map<QString, json_object *> portNamesAndValues;
+	vector<pair<QString, json_object *> > portNamesAndValues;
 
 	QList<VuoRendererPort *> inputPorts = this->inputPorts->childItems();
 	for (unsigned int i = 0; i < inputPorts.size(); ++i)
@@ -963,7 +1016,7 @@ map<QString, json_object *> VuoRendererNode::getConstantPortValues()
 		{
 			QString name = port->getBase()->getClass()->getName().c_str();
 			json_object *value = json_tokener_parse(port->getConstantAsString().c_str());
-			portNamesAndValues[name] = value;
+			portNamesAndValues.push_back(make_pair(name, value));
 		}
 	}
 

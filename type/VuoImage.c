@@ -39,6 +39,8 @@ VuoModuleMetadata({
 						 "VuoGlContext",
 						 "VuoGlPool",
 						 "VuoImageRenderer",
+						 "VuoImageBlur",
+						 "VuoImageMapColors",
 						 "CoreFoundation.framework",
 						 "IOSurface.framework"
 					 ]
@@ -188,6 +190,9 @@ VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, uns
 	return VuoImage_make(glTextureName, internalformat, pixelsWide, pixelsHigh);
 }
 
+/**
+ * Deletes @c image's GL texture.
+ */
 static void VuoImage_deleteImage(VuoImage image)
 {
 	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
@@ -210,6 +215,31 @@ VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsign
 	VuoRelease(imageRenderer);
 	VuoGlContext_disuse(glContext);
 	return image;
+}
+
+/**
+ * Returns a new texture copy of the passed image.
+ */
+VuoImage VuoImage_makeCopy(VuoImage image)
+{
+	VuoGlContext glContext = VuoGlContext_use();
+	VuoImageRenderer renderer = VuoImageRenderer_make(glContext);
+	VuoRetain(renderer);
+
+	VuoShader frag = VuoShader_makeImageShader();
+	VuoRetain(frag);
+
+	VuoShader_resetTextures(frag);
+	VuoShader_addTexture(frag, glContext, "texture", image);
+	VuoShader_setUniformFloat(frag, glContext, "alpha", 1);
+
+	VuoImage img = VuoImageRenderer_draw(renderer, frag, image->pixelsWide, image->pixelsHigh);
+
+	VuoRelease(frag);
+	VuoRelease(renderer);
+	VuoGlContext_disuse(glContext);
+
+	return img;
 }
 
 /**
@@ -264,14 +294,14 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 		if (json_object_object_get_ex(js, "pixelsWide", &o))
 			pixelsWide = json_object_get_int64(o);
 		else
-			goto error;
+			return NULL;
 	}
 	{
 		json_object * o;
 		if (json_object_object_get_ex(js, "pixelsHigh", &o))
 			pixelsHigh = json_object_get_int64(o);
 		else
-			goto error;
+			return NULL;
 	}
 	{
 		json_object * o;
@@ -357,19 +387,14 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 			VuoIoSurfacePool_signal(surf);
 			CFRelease(surf);
 
-			json_object_put(js);
 			VuoGlContext_disuse(glContext);
 			return image2d;
 		}
 		else
-			goto error;
+			return NULL;
 	}
 
 	return VuoImage_make(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
-
-error:
-	json_object_put(js);
-	return NULL;
 }
 
 /**

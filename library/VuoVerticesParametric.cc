@@ -43,54 +43,42 @@ void VuoVerticesParametric_calculateTangentArray(int vertexCount, const VuoPoint
 /**
  * Generates a mesh (@c VuoVertices) given a set of mathematical expressions specifying a warped surface.
  */
-VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, VuoText zExp, VuoText uExp, VuoText vExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, bool closeV )
+VuoList_VuoVertices VuoVerticesParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax)
 {
 	if (uSubdivisions==0 || vSubdivisions==0)
 		return VuoListCreate_VuoVertices();
 
-	mu::Parser xParser, yParser, zParser, uParser, vParser;
+	mu::Parser xParser, yParser, zParser;
 
 	xParser.SetExpr(xExp);
 	yParser.SetExpr(yExp);
 	zParser.SetExpr(zExp);
 
-	uParser.SetExpr(uExp);
-	vParser.SetExpr(vExp);
-
 	mu::value_type uVar = 0;
 	mu::value_type vVar = 0;
-
-	mu::value_type uv_uVar = 0;
-	mu::value_type uv_vVar = 0;
 
 	xParser.DefineVar("u", &uVar);
 	yParser.DefineVar("u", &uVar);
 	zParser.DefineVar("u", &uVar);
-	uParser.DefineVar("u", &uv_uVar);
-	vParser.DefineVar("u", &uv_uVar);
 	xParser.DefineVar("v", &vVar);
 	yParser.DefineVar("v", &vVar);
 	zParser.DefineVar("v", &vVar);
-	uParser.DefineVar("v", &uv_vVar);
-	vParser.DefineVar("v", &uv_vVar);
+
+	xParser.DefineConst("time", (double)time);
+	yParser.DefineConst("time", (double)time);
+	zParser.DefineConst("time", (double)time);
 
 	xParser.DefineConst("DEG2RAD", (double)DEG2RAD);
 	yParser.DefineConst("DEG2RAD", (double)DEG2RAD);
 	zParser.DefineConst("DEG2RAD", (double)DEG2RAD);
-	uParser.DefineConst("DEG2RAD", (double)DEG2RAD);
-	vParser.DefineConst("DEG2RAD", (double)DEG2RAD);
 
 	xParser.DefineConst("RAD2DEG", (double)RAD2DEG);
 	yParser.DefineConst("RAD2DEG", (double)RAD2DEG);
 	zParser.DefineConst("RAD2DEG", (double)RAD2DEG);
-	uParser.DefineConst("RAD2DEG", (double)RAD2DEG);
-	vParser.DefineConst("RAD2DEG", (double)RAD2DEG);
 
 	xParser.DefineConst("PI", (double)PI);
 	yParser.DefineConst("PI", (double)PI);
 	zParser.DefineConst("PI", (double)PI);
-	uParser.DefineConst("PI", (double)PI);
-	vParser.DefineConst("PI", (double)PI);
 
 	int width = uSubdivisions;
 	int height = vSubdivisions;
@@ -105,19 +93,15 @@ VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, 
 	VuoPoint4d *bitangents 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
 	VuoPoint4d *textures 	= (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*vertexCount);
 
-
 	try
 	{
 		int i = 0;
 		for(int y = 0; y < height; y++)
 		{
-
-			vVar = closeV && y==height-1 ? 0 : v;
-			uv_vVar = v;
+			vVar = VuoReal_lerp(vMin, vMax, (closeV && y==height-1) ? 0 : v);
 			for(int x = 0; x < width; x++)
 			{
-				uv_uVar = u;
-				uVar = closeU && x==width-1 ? 0: u;
+				uVar = VuoReal_lerp(uMin, uMax, (closeU && x==width-1) ? 0 : u);
 
 				positions[i].x = xParser.Eval();
 				positions[i].y = yParser.Eval();
@@ -129,8 +113,8 @@ VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, 
 				normals[i].z = 0.;
 				normals[i].w = 0.;
 
-				textures[i].x = uParser.Eval();
-				textures[i].y = vParser.Eval();
+				textures[i].x = u;
+				textures[i].y = v;
 				textures[i].z = 0.;
 				textures[i].w = 0.;
 

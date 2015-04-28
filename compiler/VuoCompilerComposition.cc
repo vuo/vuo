@@ -362,13 +362,19 @@ set<VuoPort *> VuoCompilerComposition::getConnectedGenericPorts(VuoPort *port)
 }
 
 /**
- * Returns the set of nodes that would need to be replaced in order to unspecialize the given port, and the
- * names of the less-specialized node classes that they would be replaced with.
+ * Outputs the composition components that would need to be modified in order to unspecialize the given port.
+ *
+ * @param portToUnspecialize The port to unspecialize.
+ * @param nodesToReplace The nodes that would need to be replaced, and the names of the less-specialized node classes
+ *			that would replace them.
+ * @param cablesToDelete The cables (including published) that would need to be removed because they would become invalid,
+ *			having a generic port on one end and a non-generic port on the other end.
  */
 void VuoCompilerComposition::createReplacementsToUnspecializePort(VuoPort *portToUnspecialize, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete)
 {
-	// Be able to look up the node for a port.
+	// Be able to look up the node and cables for a port.
 	map<VuoPort *, VuoNode *> nodeForPort;
+	map<VuoPort *, set<VuoCable *> > cablesForPort;
 	set<VuoNode *> nodes = getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
@@ -382,18 +388,12 @@ void VuoCompilerComposition::createReplacementsToUnspecializePort(VuoPort *portT
 		for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
 		{
 			VuoPort *port = *j;
-			nodeForPort[port] = node;
-		}
-	}
 
-	// Be able to look up the cables for a port.
-	map<VuoPort *, set<VuoCable *> > cablesForPort;
-	set<VuoCable *> cables = getBase()->getCables();
-	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
-	{
-		VuoCable *cable = *i;
-		cablesForPort[ cable->getFromPort() ].insert(cable);
-		cablesForPort[ cable->getToPort() ].insert(cable);
+			nodeForPort[port] = node;
+
+			vector<VuoCable *> cables = port->getConnectedCables(true);
+			cablesForPort[port].insert(cables.begin(), cables.end());
+		}
 	}
 
 	// Find the ports that will share the same generic type as portToUnspecialize, and organize them by node.
@@ -438,15 +438,18 @@ void VuoCompilerComposition::createReplacementsToUnspecializePort(VuoPort *portT
 				VuoCable *cable = *k;
 
 				bool areEndsCompatible = false;
-				VuoPort *portOnOtherEnd = (cable->getFromPort() == port ? cable->getToPort() : cable->getFromPort());
-				VuoNode *nodeOnOtherEnd = nodeForPort[portOnOtherEnd];
-				VuoCompilerNodeClass *nodeClassOnOtherEnd = nodeOnOtherEnd->getNodeClass()->getCompiler();
-				VuoCompilerSpecializedNodeClass *specializedNodeClassOnOtherEnd = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClassOnOtherEnd);
-				if (specializedNodeClassOnOtherEnd)
+				if (! cable->isPublishedCable())
 				{
-					VuoType *typeOnOtherEnd = specializedNodeClassOnOtherEnd->getOriginalPortType( portOnOtherEnd->getClass() );
-					if (! typeOnOtherEnd || dynamic_cast<VuoGenericType *>(typeOnOtherEnd))
-						areEndsCompatible = true;
+					VuoPort *portOnOtherEnd = (cable->getFromPort() == port ? cable->getToPort() : cable->getFromPort());
+					VuoNode *nodeOnOtherEnd = nodeForPort[portOnOtherEnd];
+					VuoCompilerNodeClass *nodeClassOnOtherEnd = nodeOnOtherEnd->getNodeClass()->getCompiler();
+					VuoCompilerSpecializedNodeClass *specializedNodeClassOnOtherEnd = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClassOnOtherEnd);
+					if (specializedNodeClassOnOtherEnd)
+					{
+						VuoType *typeOnOtherEnd = specializedNodeClassOnOtherEnd->getOriginalPortType( portOnOtherEnd->getClass() );
+						if (! typeOnOtherEnd || dynamic_cast<VuoGenericType *>(typeOnOtherEnd))
+							areEndsCompatible = true;
+					}
 				}
 
 				if (! areEndsCompatible)
@@ -522,13 +525,21 @@ void VuoCompilerComposition::setUniqueGraphvizIdentifierForNode(VuoNode *node)
  */
 string VuoCompilerComposition::getGraphvizDeclaration(string header, string footer)
 {
-	return getGraphvizDeclarationForComponents(getBase()->getNodes(), getBase()->getCables(), header, footer);
+	return getGraphvizDeclarationForComponents(getBase()->getNodes(),
+											   getBase()->getCables(),
+											   getBase()->getPublishedInputPorts(),
+											   getBase()->getPublishedOutputPorts(),
+											   header,
+											   footer);
 }
 
 /**
  * Returns the .vuo (Graphviz dot format) representation of the given nodes and cables in this composition.
  */
-string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet,
+string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet,
+																   set<VuoCable *> cableSet,
+																   vector<VuoPublishedPort *> publishedInputPorts,
+																   vector<VuoPublishedPort *> publishedOutputPorts,
 																   string header, string footer, double xPositionOffset, double yPositionOffset)
 {
 	// Sort nodes.
@@ -548,24 +559,10 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 	string compositionHeader = (! header.empty()? header : defaultGraphDeclaration);
 	string compositionFooter = (! footer.empty()? footer : "\n");
 
-	// Determine which of the composition's published ports are contained within the subcomposition.
-	set<VuoPublishedPort *> subcompositionPublishedInputPorts;
-	set<VuoPublishedPort *> subcompositionPublishedOutputPorts;
-	for (vector<VuoNode *>::iterator node = nodes.begin(); node != nodes.end(); ++node)
-	{
-		set<pair<VuoPublishedPort *, VuoPort *> > publishedInputPortsOfNode = getBase()->getPublishedInputPortsConnectedToNode((*node));
-		for (set<pair<VuoPublishedPort *, VuoPort *> >::iterator i = publishedInputPortsOfNode.begin(); i != publishedInputPortsOfNode.end(); ++i)
-			subcompositionPublishedInputPorts.insert(i->first);
-
-		set<pair<VuoPublishedPort *, VuoPort *> > publishedOutputPortsOfNode = getBase()->getPublishedOutputPortsConnectedToNode((*node));
-		for (set<pair<VuoPublishedPort *, VuoPort *> >::iterator i = publishedOutputPortsOfNode.begin(); i != publishedOutputPortsOfNode.end(); ++i)
-			subcompositionPublishedOutputPorts.insert(i->first);
-	}
-
 	ostringstream output;
 	string nodeCableSectionDivider = (! (cables.empty()
-										 && subcompositionPublishedInputPorts.empty()
-										 && subcompositionPublishedOutputPorts.empty())?
+										 && publishedInputPorts.empty()
+										 && publishedOutputPorts.empty())?
 										 "\n":"");
 
 	// Print header
@@ -582,31 +579,54 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 	}
 
 	// Print psuedo-nodes for published ports
-	if (! subcompositionPublishedInputPorts.empty())
+	if (! publishedInputPorts.empty())
 	{
 		output << VuoNodeClass::publishedInputNodeIdentifier << " [type=\"" << VuoNodeClass::publishedInputNodeClassName << "\" label=\"" << VuoNodeClass::publishedInputNodeIdentifier;
-		for (set<VuoPublishedPort *>::iterator i = subcompositionPublishedInputPorts.begin(); i != subcompositionPublishedInputPorts.end(); ++i)
+		for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
 			output << "|<" << (*i)->getName() << ">" << (*i)->getName() << "\\r";
 		output << "\"";
-		for (set<VuoPublishedPort *>::iterator i = subcompositionPublishedInputPorts.begin(); i != subcompositionPublishedInputPorts.end(); ++i)
-		{
-			VuoPort *connectedPort = *(*i)->getConnectedPorts().begin();
-			VuoCompilerInputData *data = static_cast<VuoCompilerInputEventPort *>(connectedPort->getCompiler())->getData();
-			if (data)
+		for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
+		{			
+			string typeName = (*i)->getType()? (*i)->getType()->getModuleKey() : "event";
+			string escapedTypeName = VuoStringUtilities::transcodeToGraphvizIdentifier(typeName);
+
+			if (!typeName.empty())
 			{
-				string portConstant = data->getInitialValue();
+				string portConstant = (*i)->getInitialValue();
 				string escapedPortConstant = VuoStringUtilities::transcodeToGraphvizIdentifier(portConstant);
 				output << " _" << (*i)->getName() << "=\"" << escapedPortConstant << "\"";
 			}
+
+			// @todo: The following check may be removed once it is impossible for a published port
+			// to have a generic type (https://b33p.net/kosada/node/7673, https://b33p.net/kosada/node/7674,
+			// https://b33p.net/kosada/node/7698).  For now, make sure not to associate generic types
+			// with published ports in the Graphviz source, so that the upgrade manager
+			// (https://b33p.net/kosada/node/7698) can reliably detect published ports whose types need to be
+			// inferred and correct for the situation in which the inferred type is generic.
+			if (!VuoGenericType::isGenericTypeName(typeName))
+				output << " _" << (*i)->getName() << "_type=\"" << escapedTypeName << "\"";
 		}
 		output << "];" << endl;
 	}
-	if (! subcompositionPublishedOutputPorts.empty())
+	if (! publishedOutputPorts.empty())
 	{
 		output << VuoNodeClass::publishedOutputNodeIdentifier <<  " [type=\"" << VuoNodeClass::publishedOutputNodeClassName << "\" label=\"" << VuoNodeClass::publishedOutputNodeIdentifier;
-		for (set<VuoPublishedPort *>::iterator i = subcompositionPublishedOutputPorts.begin(); i != subcompositionPublishedOutputPorts.end(); ++i)
+		for (vector<VuoPublishedPort *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
 			output << "|<" << (*i)->getName() << ">" << (*i)->getName() << "\\l";
-		output << "\"];" << endl;
+		output << "\"";
+
+		for (vector<VuoPublishedPort *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
+		{
+			string typeName = (*i)->getType()? (*i)->getType()->getModuleKey() : "event";
+			string escapedTypeName = VuoStringUtilities::transcodeToGraphvizIdentifier(typeName);
+
+			// @todo: The following check may be removed once it is impossible for a published port
+			// to have a generic type. (See previous @todo note for details.)
+			if (!VuoGenericType::isGenericTypeName(typeName))
+				output << " _" << (*i)->getName() << "_type=\"" << escapedTypeName << "\"";
+		}
+
+		output << "];" << endl;
 	}
 
 	output << nodeCableSectionDivider;
@@ -616,7 +636,7 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 		output << (*cable)->getCompiler()->getGraphvizDeclaration() << endl;
 
 	// Print pseudo-cables for published ports
-	for (set<VuoPublishedPort *>::iterator publishedPort = subcompositionPublishedInputPorts.begin(); publishedPort != subcompositionPublishedInputPorts.end(); ++publishedPort)
+	for (vector<VuoPublishedPort *>::iterator publishedPort = publishedInputPorts.begin(); publishedPort != publishedInputPorts.end(); ++publishedPort)
 	{
 		set<VuoPort *> connectedPorts = (*publishedPort)->getConnectedPorts();
 		for (set<VuoPort *>::iterator connectedPort = connectedPorts.begin(); connectedPort != connectedPorts.end(); ++connectedPort)
@@ -633,7 +653,7 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 			}
 		}
 	}
-	for (set<VuoPublishedPort *>::iterator publishedPort = subcompositionPublishedOutputPorts.begin(); publishedPort != subcompositionPublishedOutputPorts.end(); ++publishedPort)
+	for (vector<VuoPublishedPort *>::iterator publishedPort = publishedOutputPorts.begin(); publishedPort != publishedOutputPorts.end(); ++publishedPort)
 	{
 		set<VuoPort *> connectedPorts = (*publishedPort)->getConnectedPorts();
 		for (set<VuoPort *>::iterator connectedPort = connectedPorts.begin(); connectedPort != connectedPorts.end(); ++connectedPort)
@@ -742,4 +762,41 @@ bool VuoCompilerComposition::compareGraphvizIdentifiersOfCables(VuoCable *lhs, V
 	string lhsIdentifier = (lhs->hasCompiler() ? lhs->getCompiler()->getGraphvizDeclaration() : "");
 	string rhsIdentifier = (rhs->hasCompiler() ? rhs->getCompiler()->getGraphvizDeclaration() : "");
 	return lhsIdentifier.compare(rhsIdentifier) < 0;
+}
+
+/**
+ * Returns true if this composition complies with the provided @c protocol.
+ *
+ * A composition complies with a given protocol if, for each port specified
+ * in the protocol, the composition contains a published port with a matching
+ * name and type. The composition may have additional published ports and
+ * still comply with the protocol.
+ */
+bool VuoCompilerComposition::compliesWithProtocol(VuoProtocol *protocol)
+{
+	// Check whether the composition contains all of the required input ports.
+	vector<pair<string, VuoType *> > protocolInputs = protocol->getInputPortNamesAndTypes();
+	for (vector<pair<string, VuoType *> >::iterator i = protocolInputs.begin(); i != protocolInputs.end(); ++i)
+	{
+		string protocolInputName = i->first;
+		VuoType *protocolInputType = i->second;
+
+		VuoPublishedPort *compliantPublishedPort = getBase()->getPublishedInputPortWithName(protocolInputName);
+		if (!compliantPublishedPort || compliantPublishedPort->getType() != protocolInputType)
+			return false;
+	}
+
+	// Check whether the composition contains all of the required output ports.
+	vector<pair<string, VuoType *> > protocolOutputs = protocol->getOutputPortNamesAndTypes();
+	for (vector<pair<string, VuoType *> >::iterator i = protocolOutputs.begin(); i != protocolOutputs.end(); ++i)
+	{
+		string protocolOutputName = i->first;
+		VuoType *protocolOutputType = i->second;
+
+		VuoPublishedPort *compliantPublishedPort = getBase()->getPublishedOutputPortWithName(protocolOutputName);
+		if (!compliantPublishedPort || compliantPublishedPort->getType() != protocolOutputType)
+			return false;
+	}
+
+	return true;
 }

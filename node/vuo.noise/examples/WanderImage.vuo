@@ -16,7 +16,7 @@ MakeGradientNoise1D [type="vuo.noise.gradient.VuoReal" version="1.0.0" label="Ma
 MakeGradientNoise1D2 [type="vuo.noise.gradient.VuoReal" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="307,392" fillcolor="green" _gradientNoise="\"simplex\""];
 MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="985,152"];
 PlaceImageinScene [type="vuo.scene.make.image.unlit" version="1.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="721,141" _rotation="0,0,0" _width="0.500000" _alpha="1.000000"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1051,141" _cameraName=""];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1051,141" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 FireonStart:started -> GetImage:refresh;
 GetImage:image -> PlaceImageinScene:image;

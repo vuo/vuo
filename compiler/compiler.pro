@@ -7,7 +7,6 @@ include(../vuo.pri)
 
 DEFINES += LLVM_ROOT=\\\"$$LLVM_ROOT\\\"
 DEFINES += GRAPHVIZ_ROOT=\\\"$$GRAPHVIZ_ROOT\\\"
-DEFINES += ICU_ROOT=\\\"$$ICU_ROOT\\\"
 DEFINES += JSONC_ROOT=\\\"$$JSONC_ROOT\\\"
 DEFINES += ZMQ_ROOT=\\\"$$ZMQ_ROOT\\\"
 DEFINES += LEAP_ROOT=\\\"$$ROOT/node/Leap\\\"
@@ -15,6 +14,8 @@ DEFINES += MUPARSER_ROOT=\\\"$$MUPARSER_ROOT\\\"
 DEFINES += FREEIMAGE_ROOT=\\\"$$FREEIMAGE_ROOT\\\"
 DEFINES += CURL_ROOT=\\\"$$CURL_ROOT\\\"
 DEFINES += RTMIDI_ROOT=\\\"$$RTMIDI_ROOT\\\"
+DEFINES += RTAUDIO_ROOT=\\\"$$RTAUDIO_ROOT\\\"
+DEFINES += GAMMA_ROOT=\\\"$$GAMMA_ROOT\\\"
 DEFINES += ASSIMP_ROOT=\\\"$$ASSIMP_ROOT\\\"
 DEFINES += FFMPEG_ROOT=\\\"$$FFMPEG_ROOT\\\"
 DEFINES += LIBUSB_ROOT=\\\"$$LIBUSB_ROOT\\\"
@@ -68,7 +69,8 @@ SOURCES += \
 	VuoCompilerMakeListNodeClass.cc \
 	VuoCompilerPublishedInputNodeClass.cc \
 	VuoCompilerSpecializedNodeClass.cc \
-	VuoCompilerTargetSet.cc
+	VuoCompilerTargetSet.cc \
+	VuoCompilerDriver.cc
 
 HEADERS += \
 	VuoCompilerPassiveEdge.hh \
@@ -116,4 +118,5 @@ HEADERS += \
 	VuoCompilerMakeListNodeClass.hh \
 	VuoCompilerPublishedInputNodeClass.hh \
 	VuoCompilerSpecializedNodeClass.hh \
-	VuoCompilerTargetSet.hh
+	VuoCompilerTargetSet.hh \
+	VuoCompilerDriver.hh

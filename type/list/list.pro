@@ -1,5 +1,5 @@
 TEMPLATE = lib
-CONFIG += staticlib icu json
+CONFIG += staticlib json
 TARGET = VuoTypeList
 
 include(../../vuo.pri)
@@ -15,15 +15,19 @@ OTHER_FILES += \
 #    1 — type is reference counted, using VuoRetain() and VuoRelease()
 #    2 — type is reference counted, using ELEMENT_TYPE_retain() and ELEMENT_TYPE_release()
 TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
+		VuoAudioInputDevice:2 \
+		VuoAudioOutputDevice:2 \
+		VuoAudioSamples:2 \
 		VuoBlendMode:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
 		VuoCurve:0 \
-		VuoCurveDomain:0 \
+		VuoCurveEasing:0 \
 		VuoFont:2 \
 		VuoGradientNoise:0 \
 		VuoImage:1 \
 		VuoInteger:0 \
+		VuoKey:0 \
 		VuoLayer:2 \
 		VuoLeapFrame:2 \
 		VuoLeapHand:2 \
@@ -54,13 +58,15 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 	)
 
 TYPE_INCLUDEPATH = \
+	$$ROOT/node/vuo.audio \
 	$$ROOT/node/vuo.font \
 	$$ROOT/node/vuo.image \
+	$$ROOT/node/vuo.keyboard \
 	$$ROOT/node/vuo.layer \
 	$$ROOT/node/vuo.leap \
-	$$ROOT/node/vuo.math \
 	$$ROOT/node/vuo.midi \
 	$$ROOT/node/vuo.mouse \
+	$$ROOT/node/vuo.motion \
 	$$ROOT/node/vuo.movie \
 	$$ROOT/node/vuo.noise \
 	$$ROOT/node/vuo.osc \
@@ -78,7 +84,7 @@ QMAKE_EXTRA_COMPILERS += typeList
 
 typeListObjects.input = TYPE_LIST_OBJECTS
 typeListObjects.output = ${QMAKE_FILE_IN_BASE}.o
-typeListObjects.commands = $$QMAKE_CC -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
+typeListObjects.commands = $$QMAKE_CC -Oz -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 typeListObjects.CONFIG = target_predeps
 QMAKE_EXTRA_COMPILERS += typeListObjects
 

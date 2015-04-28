@@ -91,6 +91,11 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 		addCableInCompositionToCanvas(cable);
 
 	collapseTypecastNodes();
+	
+	// Now that all renderer components have been created, calculate
+	// the final positions of collapsed "Make List" drawers.
+	foreach (VuoNode *node, nodes)
+		node->getRenderer()->layoutConnectedInputDrawers();
 }
 
 /**
@@ -253,6 +258,24 @@ void VuoRendererComposition::removePublishedOutputCable(VuoRendererCable *rc)
 }
 
 /**
+ * Creates and connects a "Make List" drawer to each of the provided node's list input ports.
+ */
+void VuoRendererComposition::createAndConnectDrawersToListInputPorts(VuoRendererNode *node, VuoCompiler *compiler)
+{
+	foreach (VuoPort *port, node->getBase()->getInputPorts())
+	{
+		VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>(port->getCompiler());
+		if (inputEventPort && VuoCompilerMakeListNodeClass::isListType(inputEventPort->getDataType()))
+		{
+			VuoRendererCable *cable = NULL;
+			VuoRendererNode *makeListNode = createAndConnectMakeListNode(node->getBase(), port, compiler, cable);
+			addNode(makeListNode->getBase());
+			addCable(cable->getBase());
+		}
+	}
+}
+
+/**
  * Creates a "Make List" node, and creates a cable from the "Make List" node to the given input port.
  *
  * @param toNode The node that contains @c toPort.
@@ -299,8 +322,8 @@ VuoRendererNode * VuoRendererComposition::createAndConnectMakeListNode(VuoNode *
 	for (size_t i = 0; i < itemInitialValues.size(); ++i)
 	{
 		int portIndex = i + VuoNodeClass::unreservedInputPortStartIndex;
-		VuoCompilerInputEventPort *itemPort = static_cast<VuoCompilerInputEventPort *>( itemPorts[portIndex]->getCompiler() );
-		itemPort->getData()->setInitialValue( itemInitialValues[i] );
+		VuoRendererPort *itemPort = itemPorts[portIndex]->getRenderer();
+		itemPort->setConstant(itemInitialValues[i]);
 	}
 
 	VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPort *>(makeListNode->getOutputPorts().back()->getCompiler());
@@ -321,121 +344,8 @@ VuoRendererPublishedPort * VuoRendererComposition::createRendererForPublishedPor
 	if (! publishedPort->hasCompiler())
 		return NULL;
 
-	VuoPort *vuoPort = publishedPort->getCompiler()->getVuoPseudoPort();
-	VuoRendererPort *RP = new VuoRendererPort(vuoPort, signaler, true, false, false, false);
-	VuoRendererPublishedPort *RPP = new VuoRendererPublishedPort(publishedPort);
-	RP->setProxyPublishedSidebarPort(RPP);
-
-	return RPP;
+	return new VuoRendererPublishedPort(publishedPort);
 }
-
-/**
- * Publishes this composition's internal @c port under the provided @c name, if possible;
- * returns a pointer to the VuoRendererPublishedPort aliased to the internal port.
- * If the requested @c name is already taken by an existing external published port and
- * @c attemptMerge is true, the existing external port will accommodate the new internal port
- * provided that their types are compatible and the new port would not displace any previously
- * connected port. Otherwise, the newly published internal port will be published under a unique name
- * derived from the requested name.
- */
-VuoRendererPublishedPort * VuoRendererComposition::publishPort(VuoPort *port, string name, bool attemptMerge)
-{
-	string publishedPortName = ((! name.empty())? name : port->getClass()->getName());
-	bool isInput = port->getRenderer()->getInput();
-	VuoPublishedPort *publishedPort = NULL;
-
-	// If merging is enabled:
-	// Check whether this composition has a pre-existing externally visible published port
-	// that has the requested name and that can accommodate the newly published internal port.
-	// If so, add this internal port as a connected port for the existing alias.
-	bool performedMerge = false;
-	if (attemptMerge)
-	{
-		publishedPort = (isInput ?
-							 getBase()->getPublishedInputPortWithName(publishedPortName) :
-							 getBase()->getPublishedOutputPortWithName(publishedPortName));
-
-		if (publishedPort && publishedPort->getRenderer()->canAccommodateInternalPort(port->getRenderer()))
-		{
-			publishedPort->getRenderer()->addConnectedPort(port);
-			performedMerge = true;
-		}
-	}
-
-
-	// Otherwise, create a new externally visible published port with a unique name derived from
-	// the specified name, containing the current port as its lone connected internal port.
-	if (! performedMerge)
-	{
-		set<VuoCompilerPort *> connectedPorts;
-		connectedPorts.insert((VuoCompilerPort *)(port->getCompiler()));
-
-		publishedPort = (isInput?
-								 (new VuoCompilerPublishedInputPort(getUniquePublishedPortName(publishedPortName, true), connectedPorts, NULL))->getBase() :
-								 (new VuoCompilerPublishedOutputPort(getUniquePublishedPortName(publishedPortName, false), (VuoCompilerPort *)(port->getCompiler()), NULL))->getBase()
-							);
-	}
-
-	addPublishedPort(publishedPort, isInput);
-
-	VuoRendererPublishedPort *rendererPublishedPort = (publishedPort->hasRenderer()?
-															  publishedPort->getRenderer() :
-															  createRendererForPublishedPortInComposition(publishedPort));
-
-	VuoCable *existingPublishedCable = port->getCableConnecting(publishedPort->getCompiler()->getVuoPseudoPort());
-
-	if (! existingPublishedCable)
-	{
-		VuoCable *publishedCable = createPublishedCable(publishedPort->getCompiler()->getVuoPseudoPort(), port);
-		isInput? addPublishedInputCable(publishedCable) : addPublishedOutputCable(publishedCable);
-	}
-
-	return rendererPublishedPort;
-}
-
-/**
- * Creates a published cable connecting published pseudo-port @c vuoPort with
- * internal port @c internalPort (in whichever direction appropriate).
- */
-VuoCable * VuoRendererComposition::createPublishedCable(VuoPort *vuoPseudoPort, VuoPort *internalPort)
-{
-	VuoCable *publishedCable = NULL;
-	bool creatingPublishedInputCable = internalPort->getRenderer()->getInput();
-
-	if (creatingPublishedInputCable)
-	{
-		// If creating a published input cable, it will need to have an associated VuoCompilerCable.
-		VuoPort *fromPort = vuoPseudoPort;
-		VuoNode *fromNode = getBase()->getCompiler()->getPublishedInputNode();
-		VuoPort *toPort = internalPort;
-		VuoNode *toNode = internalPort->getRenderer()->getUnderlyingParentNode()->getBase();
-
-		publishedCable = (new VuoCompilerCable(fromNode->getCompiler(),
-											  (VuoCompilerPort *)(fromPort->getCompiler()),
-											  toNode->getCompiler(),
-											  (VuoCompilerPort *)(toPort->getCompiler())))->getBase();
-	}
-
-	else
-	{
-		// If creating a published output cable, it will need to have an associated VuoCompilerCable
-		// even though we don't currently construct a VuoCompilerNode for the published output node.
-		VuoPort *fromPort = internalPort;
-		VuoNode *fromNode = internalPort->getRenderer()->getUnderlyingParentNode()->getBase();
-		VuoPort *toPort = vuoPseudoPort;
-		VuoNode *toNode = getBase()->getCompiler()->getPublishedOutputNode();
-
-		publishedCable = (new VuoCompilerCable(fromNode->getCompiler(),
-											  (VuoCompilerPort *)(fromPort->getCompiler()),
-											  NULL,
-											   NULL))->getBase();
-		publishedCable->setTo(toNode, toPort);
-
-	}
-
-	return publishedCable;
-}
-
 
 /**
  * Adds an existing VuoPublishedPort as one of this composition's published ports.
@@ -479,7 +389,7 @@ int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort,
 {
 	if (isInput)
 	{
-		int index = getIndexOfPublishedPort(publishedPort, isInput);
+		int index = getBase()->getIndexOfPublishedPort(publishedPort, isInput);
 		if (index != -1)
 		{
 			getBase()->removePublishedInputPort(index);
@@ -489,7 +399,7 @@ int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort,
 	}
 	else
 	{
-		int index = getIndexOfPublishedPort(publishedPort, isInput);
+		int index = getBase()->getIndexOfPublishedPort(publishedPort, isInput);
 		if (index != -1)
 		{
 			getBase()->removePublishedOutputPort(index);
@@ -689,7 +599,7 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 	VuoCable *incomingDataCable = NULL;
 	for (vector<VuoCable *>::iterator i = inCables.begin(); !incomingDataCable && (i != inCables.end()); ++i)
 	{
-		if ((*i)->hasCompiler() && (*i)->getCompiler()->carriesData())
+		if ((*i)->hasRenderer() && (*i)->getRenderer()->effectivelyCarriesData())
 			incomingDataCable = *i;
 	}
 	if (! incomingDataCable)
@@ -724,7 +634,7 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 		return NULL;
 
 	// Don't try to collapse typecast nodes outputting to published ports.
-	if (getBase()->getPublishedInputPortConnectedToPort(toPort))
+	if (!getBase()->getPublishedInputPortsConnectedToPort(toPort).empty())
 		return NULL;
 
 	// Hide the typecast node.
@@ -737,7 +647,7 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 	VuoRendererTypecastPort *tp = new VuoRendererTypecastPort(rn,
 															  oldToRP,
 															  signaler);
-	
+
 	foreach (VuoCable *cable, inCables)
 	{
 		if (cable->hasRenderer())
@@ -749,7 +659,7 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 		if (cable->hasRenderer())
 			cable->getRenderer()->updateGeometry();
 	}
-	
+
 	tp->updateGeometry();
 	toRN->replaceInputPort(oldToRP, tp);
 	toRN->setCacheModeForNodeAndPorts(getCurrentDefaultCacheMode());
@@ -803,7 +713,7 @@ VuoRendererNode * VuoRendererComposition::uncollapseTypecastNode(VuoRendererType
 		if (cable->hasRenderer())
 			cable->getRenderer()->updateGeometry();
 	}
-	
+
 	typecast->updateGeometry();
 	uncollapsedNode->updateGeometry();
 
@@ -816,7 +726,7 @@ VuoRendererNode * VuoRendererComposition::uncollapseTypecastNode(VuoRendererType
 	toRN->updateGeometry();
 	toRN->replaceInputPort(typecast, uncollapsedToRP);
 	toRN->setCacheModeForNodeAndPorts(getCurrentDefaultCacheMode());
-	
+
 	// Notify the base port of the change in renderer port, to reverse
 	// the change made within the VuoRendererPort constructor on behalf of any
 	// renderer port previously initialized for this base port.
@@ -873,19 +783,6 @@ void VuoRendererComposition::clearInternalPortEligibilityHighlighting()
 			(*outputPort)->getRenderer()->setCacheMode(normalCacheMode);
 		}
 	}
-}
-
-/**
- * Returns the index of the published port in the list of published input or output ports.
- */
-int VuoRendererComposition::getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput)
-{
-	vector<VuoPublishedPort *> publishedPorts = (isInput ? getBase()->getPublishedInputPorts() : getBase()->getPublishedOutputPorts());
-	vector<VuoPublishedPort *>::iterator foundPort = find(publishedPorts.begin(), publishedPorts.end(), port);
-	if (foundPort != publishedPorts.end())
-		return std::distance(publishedPorts.begin(), foundPort);
-	else
-		return -1;
 }
 
 /**
@@ -1137,7 +1034,7 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 		compiler->compileComposition(compiledCompositionToExport, pathOfCompiledCompositionToExport);
 
 		string rPath = "@loader_path/../Frameworks";
-		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, rPath);
+		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, true, rPath);
 		remove(pathOfCompiledCompositionToExport.c_str());
 	}
 

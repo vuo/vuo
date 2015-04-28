@@ -9,8 +9,8 @@
 
 digraph G
 {
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="455,249" fillcolor="violet" _serverDescription=""];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="701,249"];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="455,249" fillcolor="violet" _serverDescription="" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="701,249" _requestedFrame_eventThrottling="drop"];
 
 ReceiveImageFromSyphon:receivedImage -> RenderImageToWindow:image;
 }

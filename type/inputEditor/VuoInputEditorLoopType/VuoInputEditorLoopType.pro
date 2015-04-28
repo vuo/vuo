@@ -13,5 +13,4 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorLoopType.json
 
-INCLUDEPATH += $$ROOT/node/vuo.movie
-LIBS += $$ROOT/node/vuo.movie/VuoLoopType.o
+LIBS += $$ROOT/type/VuoLoopType.o

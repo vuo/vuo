@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Calculates and displays a 3D terrain using simple trigonometric expressions.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="472,728"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-3,195" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="466,445" fillcolor="green"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="240,593" fillcolor="green" _translation="{\"x\":0.000000,\"y\":-0.200000,\"z\":0.000000}" _scale="{\"x\":1.000000,\"y\":0.500000,\"z\":1.000000}"];
+MakeList4 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="618,456" fillcolor="green"];
+MakeList6 [type="vuo.list.make.1.VuoVertices" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="400,456" fillcolor="green"];
+MakeParametricGrid [type="vuo.point.make.parametric.grid" version="1.0.0" label="Make Parametric Grid|<refresh>refresh\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uMin>uMin\l|<uMax>uMax\l|<vMin>vMin\l|<vMax>vMax\l|<done>done\r|<points>points\r" pos="257,216" fillcolor="violet" _xExpression="\"u\"" _yExpression="\"sin(u*PI)*cos(v*PI)\"" _zExpression="\"v\"" _rows="256" _columns="256" _uMin="-1.000000" _uMax="1.000000" _vMin="-1.000000" _vMax="1.000000"];
+MakePointVertices2 [type="vuo.vertices.make.points.VuoPoint3d" version="1.0.0" label="Make Point Vertices|<refresh>refresh\l|<positions>positions\l|<done>done\r|<vertices>vertices\r" pos="454,216" fillcolor="green"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="684,445" fillcolor="green" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="201,485" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+
+ConvertRealTo3DPoint:point3d -> Make3DTransform:rotation;
+FireOnStart:started -> MakeParametricGrid:refresh;
+FireOnStart:started -> ShadeWithUnlitColor:refresh;
+Make3DObject:object -> MakeList4:item1;
+Make3DTransform:transform -> Make3DObject:transform;
+MakeList4:list -> RenderSceneToWindow:objects;
+MakeList6:list -> Make3DObject:vertices;
+MakeParametricGrid:points -> MakePointVertices2:positions;
+MakePointVertices2:vertices -> MakeList6:item1;
+RenderSceneToWindow:requestedFrame -> ConvertRealTo3DPoint:y;
+ShadeWithUnlitColor:shader -> Make3DObject:shader;
+}

@@ -12,6 +12,7 @@
 
 #include "VuoBoolean.h"
 #include "VuoColor.h"
+#include "VuoHorizontalAlignment.h"
 #include "VuoInteger.h"
 #include "VuoReal.h"
 #include "VuoText.h"
@@ -23,16 +24,6 @@
  *
  * @{
  */
-
-/**
- * Specifies how one line of text should be aligned relative to other lines of text in the same block.
- */
-typedef enum
-{
-	VuoHorizontalAlignment_Left,
-	VuoHorizontalAlignment_Center,
-	VuoHorizontalAlignment_Right
-} VuoHorizontalAlignment;
 
 /**
  * A font description: family, style, point size, underline.

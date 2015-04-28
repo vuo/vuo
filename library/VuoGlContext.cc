@@ -19,7 +19,7 @@ using namespace std;
 #include <dispatch/dispatch.h>
 
 
-static dispatch_once_t VuoGlContextPoolCreated;
+static dispatch_once_t VuoGlContextPoolCreated;	///< Make sure this process only has a single GL Context Pool.
 
 /**
  * A process-wide set of mutually-shared OpenGL contexts.
@@ -297,7 +297,7 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 	else if (error == GL_INVALID_FRAMEBUFFER_OPERATION)
 	{
 		errorString = "GL_INVALID_FRAMEBUFFER_OPERATION (The framebuffer object is not complete. The offending command is ignored and has no other side effect than to set the error flag.)";
-		fprintf(stderr, "# %s:%d :: %s() OpenGL error %d: %s\n", file, line, func, error, errorString);
+		fprintf(stderr, "# %s:%u :: %s() OpenGL error %d: %s\n", file, line, func, error, errorString);
 
 		GLenum framebufferError = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		// Text from http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
@@ -312,7 +312,7 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 			framebufferErrorString = "GL_FRAMEBUFFER_UNSUPPORTED (The combination of internal formats of the attached images violates an implementation-dependent set of restrictions.)";
 		else if (framebufferError == GL_FRAMEBUFFER_COMPLETE)
 			framebufferErrorString = "GL_FRAMEBUFFER_COMPLETE (?)";
-		fprintf(stderr, "# %s:%d :: %s() OpenGL framebuffer error %d: %s\n", file, line, func, framebufferError, framebufferErrorString);
+		fprintf(stderr, "# %s:%u :: %s() OpenGL framebuffer error %d: %s\n", file, line, func, framebufferError, framebufferErrorString);
 
 		return;
 	}
@@ -323,5 +323,5 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 	else if (error == GL_STACK_OVERFLOW)
 		errorString = "GL_STACK_OVERFLOW (An attempt has been made to perform an operation that would cause an internal stack to overflow.)";
 
-	fprintf(stderr, "# %s:%d :: %s() OpenGL error %d: %s\n", file, line, func, error, errorString);
+	fprintf(stderr, "# %s:%u :: %s() OpenGL error %d: %s\n", file, line, func, error, errorString);
 }

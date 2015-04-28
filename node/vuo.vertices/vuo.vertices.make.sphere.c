@@ -36,11 +36,12 @@ void nodeEvent
 	char *yExp = "sin(DEG2RAD*((v-.5)*180)) / 2.";
 	char *zExp = "cos(DEG2RAD*((u-.5)*360)) * cos(DEG2RAD*((v-.5)*180)) / 2.";
 
-	char *uExp = "u";
-	char *vExp = "v";
-
-	*vertices = VuoVerticesParametric_generate( xExp, yExp, zExp, uExp, vExp,
+	*vertices = VuoVerticesParametric_generate(0,
+													 xExp, yExp, zExp,
 													 rows, columns,
 													 true,		// close u
-													 false);	// close v
+													 0, 1,
+													 false,		// close v
+													 0, 1
+												);
 }

@@ -10,7 +10,10 @@
 #ifndef VUOFILEUTILITIES_H
 #define VUOFILEUTILITIES_H
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
 #include "miniz.h"
+#pragma clang diagnostic pop
 
 /**
  * Functions for dealing with files.
@@ -61,6 +64,7 @@ public:
 	static string makeTmpDir(string dir);
 	static string getTmpDir(void);
 	static string getVuoFrameworkPath(void);
+	static size_t getFirstInsertionIndex(string s);
 	static string readStdinToString(void);
 	static string readFileToString(string path);
 	static void writeRawDataToFile(const char *data, size_t numBytes, string file);

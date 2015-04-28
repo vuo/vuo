@@ -39,6 +39,9 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 
 @synthesize syphonClient;
 
+/**
+ * Samples a GL_TEXTURE_RECT (for conversion to GL_TEXTURE_2D).
+ */
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	uniform sampler2DRect texture;

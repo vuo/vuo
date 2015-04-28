@@ -53,6 +53,9 @@ struct VuoImageRendererInternal
 	GLuint quadElementBuffer;
 };
 
+/**
+ * Positions and texture coordinates for a quad.
+ */
 static const GLfloat quadData[] = {
 	// Positions
 	-1, -1, 0, 1,
@@ -66,7 +69,10 @@ static const GLfloat quadData[] = {
 	0, 1, 0, 0,
 	1, 1, 0, 0
 };
-static const GLushort quadElements[] = { 0, 1, 2, 3 };
+static const GLushort quadElements[] = { 0, 1, 2, 3 };	///< The order of @c quadData's elements.
+/**
+ * An identity matrix.
+ */
 static const GLfloat unityMatrix[16] = {
 	1,0,0,0,
 	0,1,0,0,

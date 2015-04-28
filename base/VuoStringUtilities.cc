@@ -219,8 +219,12 @@ string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString
  */
 string VuoStringUtilities::generateHtmlFromMarkdownLine(const string &markdownString)
 {
+	size_t length = markdownString.length();
+	if (!length)
+		return "";
+
 	char *html;
-	mkd_line((char *)markdownString.c_str(), markdownString.length(), &html, MKD_NOPANTS);
+	mkd_line((char *)markdownString.c_str(), length, &html, MKD_NOPANTS);
 	string htmlString(html);
 	return htmlString;
 }

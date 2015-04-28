@@ -9,8 +9,7 @@ SOURCES += \
 	VuoInputEditor.cc \
 	VuoInputEditorWithMenu.cc \
 	VuoInputEditorWithDialog.cc \
-	VuoInputEditorWithLineEdit.cc \
-	VuoMenu.cc
+	VuoInputEditorWithLineEdit.cc
 
 HEADERS += \
 	VuoDialogForInputEditor.hh \
@@ -18,5 +17,4 @@ HEADERS += \
 	VuoInputEditorWithMenu.hh \
 	VuoInputEditorWithDialog.hh \
 	VuoInputEditorWithLineEdit.hh \
-	VuoInputEditorMenuItem.hh \
-	VuoMenu.hh
+	VuoInputEditorMenuItem.hh

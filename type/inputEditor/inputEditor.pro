@@ -6,11 +6,13 @@ SUBDIRS += \
 	VuoInputEditorBoolean \
 	VuoInputEditorColor \
 	VuoInputEditorCurve \
-	VuoInputEditorCurveDomain \
+	VuoInputEditorCurveEasing \
 	VuoInputEditorFont \
 	VuoInputEditorGradientNoise \
+	VuoInputEditorHorizontalAlignment \
 	VuoInputEditorInteger \
 	VuoInputEditorImageWrapMode \
+	VuoInputEditorKey \
 	VuoInputEditorLoopType \
 	VuoInputEditorModifierKey \
 	VuoInputEditorMouseButton \
@@ -24,6 +26,7 @@ SUBDIRS += \
 	VuoInputEditorText \
 	VuoInputEditorThresholdType \
 	VuoInputEditorTouchZone \
+	VuoInputEditorVerticalAlignment \
 	VuoInputEditorWave \
 	VuoInputEditorWrapMode
 
@@ -31,11 +34,13 @@ VuoInputEditorBlendMode.depends = widget
 VuoInputEditorBoolean.depends = widget
 VuoInputEditorColor.depends = widget
 VuoInputEditorCurve.depends = widget
-VuoInputEditorCurveDomain.depends = widget
+VuoInputEditorCurveEasing.depends = widget
 VuoInputEditorFont.depends = widget
 VuoInputEditorGradientNoise.depends = widget
+VuoInputEditorHorizontalAlignment.depends = widget
 VuoInputEditorInteger.depends = widget
 VuoInputEditorImageWrapMode.depends = widget
+VuoInputEditorKey.depends = widget
 VuoInputEditorLoopType.depends = widget
 VuoInputEditorModifierKey.depends = widget
 VuoInputEditorMouseButton.depends = widget
@@ -49,6 +54,7 @@ VuoInputEditorSizingMode.depends = widget
 VuoInputEditorText.depends = widget
 VuoInputEditorThresholdType.depends = widget
 VuoInputEditorTouchZone.depends = widget
+VuoInputEditorVerticalAlignment.depends = widget
 VuoInputEditorWave.depends = widget
 VuoInputEditorWrapMode.depends = widget
 

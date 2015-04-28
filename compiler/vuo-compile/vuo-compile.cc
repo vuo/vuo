@@ -121,11 +121,11 @@ int main (int argc, char * const argv[])
 
 		if (inputExtension == "vuo")
 			compiler.compileComposition(inputPath, outputPath);
-		else if (inputExtension == "c" || inputExtension == "cc")
+		else if (inputExtension == "c" || inputExtension == "cc" || inputExtension == "m" || inputExtension == "mm")
 			compiler.compileModule(inputPath, outputPath);
 		else
 		{
-			fprintf(stderr, "%s: input file '%s' must have a file extension of .vuo or .c\n", argv[0], inputPath.c_str());
+			fprintf(stderr, "%s: input file '%s' must have a file extension of .vuo, .c, .cc, .m, or .mm\n", argv[0], inputPath.c_str());
 			return 1;
 		}
 	}

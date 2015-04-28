@@ -46,7 +46,8 @@ MODULE_LISTS = \
 for(module_list, MODULE_LISTS) {
 	NODE_SOURCES = ""
 	NODE_LIBRARY_SOURCES = ""
-	NODE_LIBRARY_SHARED_SOURCES = ""
+	NODE_LIBRARY_SHARED_NONGL_SOURCES = ""
+	NODE_LIBRARY_SHARED_GL_SOURCES = ""
 	NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT = ""
 	TYPE_SOURCES = ""
 	TYPE_LIST_SOURCES = ""
@@ -64,7 +65,7 @@ for(module_list, MODULE_LISTS) {
 		MODULE_OBJECTS += $$objectfile
 	}
 
-	SHARED = $$NODE_LIBRARY_SHARED_SOURCES $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
+	SHARED = $$NODE_LIBRARY_SHARED_NONGL_SOURCES $$NODE_LIBRARY_SHARED_GL_SOURCES $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 	for(sourcefile, SHARED) {
 		objectfile = $${dirname(module_list)}/lib$${basename(sourcefile)}
 		objectfile ~= s/\\.cc?$/.dylib
@@ -105,7 +106,8 @@ BASE_STUB_SOURCES = ""
 INCLUDEPATH = ""
 NODE_SOURCES = ""
 NODE_LIBRARY_SOURCES = ""
-NODE_LIBRARY_SHARED_SOURCES = ""
+NODE_LIBRARY_SHARED_NONGL_SOURCES = ""
+NODE_LIBRARY_SHARED_GL_SOURCES = ""
 NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT = ""
 OTHER_FILES = ""
 QMAKE_AR_CMD = ""
@@ -123,9 +125,6 @@ LIBS = ""
 
 
 CONFIG = $$CONFIG_OLD VuoBase VuoCompiler VuoRuntime json lib_bundle
-LIBS += \
-	$${ICU_ROOT}/lib/libicuuc.a \
-	$${ICU_ROOT}/lib/libicudata.a
 TARGET = Vuo
 
 include(../vuo.pri)
@@ -143,13 +142,13 @@ QMAKE_LFLAGS += -Wl,-force_load,$${ROOT}/type/list/libVuoTypeList.a
 
 # Add the third-party libraries that Vuo nodes/types depend on
 MODULE_OBJECTS += \
-	$$ICU_ROOT/lib/libicuuc.a \
-	$$ICU_ROOT/lib/libicudata.a \
 	$$JSONC_ROOT/lib/libjson.a \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
 	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
 	$$CURL_ROOT/lib/libcurl.a \
 	$$RTMIDI_ROOT/lib/librtmidi.a \
+	$$RTAUDIO_ROOT/lib/librtaudio.a \
+	$$GAMMA_ROOT/lib/libGamma.a \
 	$$FFMPEG_ROOT/lib/libavcodec.dylib \
 	$$FFMPEG_ROOT/lib/libavdevice.dylib \
 	$$FFMPEG_ROOT/lib/libavfilter.dylib \
@@ -179,14 +178,16 @@ POST_TARGETDEPS += $${HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createHeadersDir
 
 
-# Create Resources directory; populate it with Info.plist
+# Create Resources directory; populate it with Info.plist and drivers
 RESOURCES_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Resources"
 createResourcesDir.commands += rm -rf $${RESOURCES_DEST_DIR}
 createResourcesDir.commands += && mkdir -p $${RESOURCES_DEST_DIR}
 createResourcesDir.commands += && cat Info.plist
 createResourcesDir.commands += | sed '"s/@SHORT_VERSION@/$$VUO_VERSION \\(r`svnversion -n` on `date +%Y.%m.%d`\\)/"'
-createResourcesDir.commands += > $${RESOURCES_DEST_DIR}/Info.plist
+createResourcesDir.commands += > $${RESOURCES_DEST_DIR}/Info.plist &&
+createResourcesDir.commands += cp drivers/* $${RESOURCES_DEST_DIR}
 createResourcesDir.depends += Info.plist
+createResourcesDir.depends += drivers/*
 createResourcesDir.target = $${RESOURCES_DEST_DIR}
 POST_TARGETDEPS += $${RESOURCES_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createResourcesDir
@@ -250,10 +251,8 @@ VUORUNTIME_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/VuoRuntime.framework"
 copyVuoRuntime.commands += rm -Rf $${VUORUNTIME_DEST_DIR} &&
 copyVuoRuntime.commands += mkdir -p $${VUORUNTIME_DEST_DIR} &&
 copyVuoRuntime.commands += cp $$ROOT/runtime/*\\.bc $$ROOT/runtime/VuoCompositionLoader $${VUORUNTIME_DEST_DIR} &&
-copyVuoRuntime.commands += cp $$ROOT/base/VuoCompositionStub.dylib $${VUORUNTIME_DEST_DIR} &&
-copyVuoRuntime.commands += cp $$ROOT/runtime/libVuoHeap.dylib $${MODULES_DEST_DIR}
+copyVuoRuntime.commands += cp $$ROOT/base/VuoCompositionStub.dylib $${VUORUNTIME_DEST_DIR}
 copyVuoRuntime.depends += $$ROOT/runtime/*.bc
-copyVuoRuntime.depends += $$ROOT/runtime/libVuoHeap.dylib
 copyVuoRuntime.depends += $$ROOT/runtime/VuoCompositionLoader
 copyVuoRuntime.depends += $$ROOT/base/VuoCompositionStub.dylib
 copyVuoRuntime.target = $${VUORUNTIME_DEST_DIR}
@@ -420,7 +419,9 @@ LIBS += \
 	-framework OpenGL \
 	-framework IOSurface \
 	$$ROOT/library/VuoImageRenderer.o \
-	$$ROOT/runtime/libVuoHeap.dylib
+	$$ROOT/library/VuoImageBlur.o \
+	$$ROOT/library/VuoImageMapColors.o \
+	$$ROOT/library/libVuoHeap.dylib
 
 
 # Copy Clang headers to the Frameworks directory
@@ -517,12 +518,12 @@ linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
 	../library/libVuoGlContext.dylib \
 	../library/libVuoGlPool.dylib \
+	../library/libVuoHeap.dylib \
 	../base/libVuoBase.a \
 	../compiler/libVuoCompiler.a \
 	../type/libVuoType.a \
 	../type/list/libVuoTypeList.a \
-	../library/VuoImageRenderer.o \
-	../runtime/libVuoHeap.dylib
+	../library/VuoImageRenderer.o
 POST_TARGETDEPS += $$VUO_FRAMEWORK_BINARY
 QMAKE_EXTRA_TARGETS += linkVuoFramework
 

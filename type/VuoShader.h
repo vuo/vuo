@@ -16,6 +16,7 @@
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
+#include "VuoColor.h"
 #include "VuoReal.h"
 #include "VuoGlContext.h"
 #include "VuoList_VuoInteger.h"
@@ -66,6 +67,7 @@ void VuoShader_setUniformFloat(VuoShader shader, VuoGlContext glContext, const c
 void VuoShader_setUniformPoint2d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint2d value);
 void VuoShader_setUniformPoint3d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint3d value);
 void VuoShader_setUniformPoint4d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint4d value);
+void VuoShader_setUniformColor(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoColor value);
 void VuoShader_setUniformFloatArray(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, const float* value, int length);
 const char * VuoShader_getDefaultVertexShader(void);
 VuoPoint2d VuoShader_samplerCoordinatesFromVuoCoordinates(VuoPoint2d vuoCoordinates, VuoImage image);

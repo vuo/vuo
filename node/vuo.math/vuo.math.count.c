@@ -41,11 +41,11 @@ VuoGenericType1 * nodeInstanceInit
 void nodeInstanceEvent
 (
 		VuoInstanceData(VuoGenericType1 *) countState,
-		VuoInputData(VuoGenericType1, {"default":1.0}) increment,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":1, "VuoReal":1.0}}) increment,
 		VuoInputEvent(VuoPortEventBlocking_None,increment) incrementEvent,
-		VuoInputData(VuoGenericType1, {"default":1.0}) decrement,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":1, "VuoReal":1.0}}) decrement,
 		VuoInputEvent(VuoPortEventBlocking_None,decrement) decrementEvent,
-		VuoInputData(VuoGenericType1, {"default":0.0}) setCount,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) setCount,
 		VuoInputEvent(VuoPortEventBlocking_None,setCount) setCountEvent,
 		VuoOutputData(VuoGenericType1) count
 )

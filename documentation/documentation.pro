@@ -30,7 +30,6 @@ NODE_CLASS_IMAGES += \
 	../node/vuo.math/vuo.math.divide.VuoInteger.c \
 	../node/vuo.math/vuo.math.isLessThan.c \
 	../node/vuo.math/vuo.math.subtract.c \
-	../node/vuo.mouse/vuo.mouse.status.c \
 	../node/vuo.select/vuo.select.in.2.c \
 	../node/vuo.select/vuo.select.in.c \
 	../node/vuo.select/vuo.select.latest.2.c \
@@ -51,6 +50,7 @@ COMPOSITION_IMAGES += \
 	composition/DiscardDataFromEventToCount.vuo \
 	composition/DisplayMultipleWindows.vuo \
 	composition/MultipleEventOnlyCables.vuo \
+	composition/ShareHeight.vuo \
 	composition/SumAddOne.vuo \
 	../node/vuo.event/examples/LoadImageAsynchronously.vuo \
 	../node/vuo.hold/examples/CountAndHold.vuo \

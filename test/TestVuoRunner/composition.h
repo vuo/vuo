@@ -99,5 +99,12 @@ char ** getPublishedOutputPortConnectedIdentifiers(char *name)
 void firePublishedInputPortEvent(char *name)
 {
 }
+void setPublishedInputPortValue(char *portIdentifier, char *valueAsString)
+{
+}
+char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
+{
+	return NULL;
+}
 int isPaused = 0;
 //@}

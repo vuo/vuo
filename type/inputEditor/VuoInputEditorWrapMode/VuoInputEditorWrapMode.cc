@@ -14,6 +14,8 @@ extern "C"
 	#include "VuoWrapMode.h"
 }
 
+#include "../VuoInputEditorCurve/VuoInputEditorCurveRenderer.hh"
+
 /**
  * Constructs a VuoInputEditorWrapMode object.
  */
@@ -29,17 +31,8 @@ VuoInputEditorMenuItem * VuoInputEditorWrapMode::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	json_object *optionAsJson_Wrap = VuoWrapMode_jsonFromValue(VuoWrapMode_Wrap);
-	const char *optionSummary_Wrap = VuoWrapMode_summaryFromValue(VuoWrapMode_Wrap);
-
-	json_object *optionAsJson_Saturate = VuoWrapMode_jsonFromValue(VuoWrapMode_Saturate);
-	const char *optionSummary_Saturate = VuoWrapMode_summaryFromValue(VuoWrapMode_Saturate);
-
-	VuoInputEditorMenuItem *optionItem_Wrap = new VuoInputEditorMenuItem(optionSummary_Wrap, optionAsJson_Wrap);
-	VuoInputEditorMenuItem *optionItem_Saturate = new VuoInputEditorMenuItem(optionSummary_Saturate, optionAsJson_Saturate);
-
-	optionsTree->addItem(optionItem_Wrap);
-	optionsTree->addItem(optionItem_Saturate);
+	optionsTree->addItem(new VuoInputEditorMenuItem(VuoWrapMode_summaryFromValue(VuoWrapMode_Wrap),		VuoWrapMode_jsonFromValue(VuoWrapMode_Wrap),		renderMenuIconWithWrapMode(VuoWrapMode_Wrap)));
+	optionsTree->addItem(new VuoInputEditorMenuItem(VuoWrapMode_summaryFromValue(VuoWrapMode_Saturate),	VuoWrapMode_jsonFromValue(VuoWrapMode_Saturate),	renderMenuIconWithWrapMode(VuoWrapMode_Saturate)));
 
 	return optionsTree;
 }

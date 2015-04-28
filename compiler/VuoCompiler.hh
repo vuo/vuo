@@ -68,7 +68,7 @@ private:
 	void loadModules(string path);
 	void reifyPortTypes(void);
 	void reifyGenericPortTypes(VuoCompilerComposition *composition);
-	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib, string rPath="");
+	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib, bool isApp=false, string rPath="");
 	set<string> getDependenciesForComposition(const string &compiledCompositionPath);
 	void getDependenciesRecursively(const string &dependency, set<string> &dependencies);
 	void getLinkerInputs(const set<string> &dependencies, set<Module *> &modules, set<string> &libraries, set<string> &frameworks);
@@ -79,8 +79,9 @@ private:
 	static bool writeModuleToBitcode(Module *module, string outputPath);
 	void setTargetForModule(Module *module, string target = "");
 	static vector<string> getCoreVuoDependencies(void);
-	string getRuntimeMainDependency(void);
-	string getRuntimeDependency(void);
+	static string getRuntimeMainDependency(void);
+	static string getRuntimeDependency(void);
+	static string getApplicationDependency(void);
 	static string getModuleNameForPath(string path);
 	llvm::sys::Path getClangPath(void);
 	string getCompositionStubPath(void);
@@ -97,14 +98,15 @@ public:
 	VuoCompiler(void);
 	static string getUserModulesPath();
 	static string getSystemModulesPath();
+	static void preserveOriginalFileName(string &fileContents, string originalFileName);
 	static Module * readModuleFromBitcode(string inputPath);
 	void addNodeClass(VuoCompilerNodeClass *nodeClass);
 	void compileComposition(VuoCompilerComposition *composition, string outputPath);
 	void compileComposition(string inputPath, string outputPath);
 	void compileCompositionString(const string &compositionString, string outputPath);
 	void compileModule(string inputPath, string outputPath);
-	void compileModule(string inputPath, string outputPath, const vector<string> &extraArgs);
-	void linkCompositionToCreateExecutable(string inputPath, string outputPath, string rPath="");
+	void compileModule(string inputPath, string outputPath, const vector<string> &includeDirs);
+	void linkCompositionToCreateExecutable(string inputPath, string outputPath, bool isApp=false, string rPath="");
 	void linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath);
 	void linkCompositionToCreateDynamicLibraries(string compiledCompositionPath, string linkedCompositionPath, string &newLinkedResourcePath, vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources);
 	VuoNode * createNode(VuoCompilerNodeClass *nodeClass, string title="", double x=0, double y=0);

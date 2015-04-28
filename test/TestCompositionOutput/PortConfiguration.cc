@@ -8,7 +8,11 @@
  */
 
 #include <fstream>
-#include <QtTest/QTest>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#include <QtTest/QtTest>
+#pragma clang diagnostic pop
 
 #include "PortConfiguration.hh"
 

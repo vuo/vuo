@@ -344,9 +344,10 @@ bool VuoCompilerNode::isArgumentInFunction(VuoCompilerNodeArgument *argument, Fu
 		return argumentClass->isInCallbackStartFunction();
 	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackUpdateFunction())
 		return argumentClass->isInCallbackUpdateFunction();
+	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackStopFunction())
+		return argumentClass->isInCallbackStopFunction();
 	else if (instanceData == argument &&
-			 (function == getBase()->getNodeClass()->getCompiler()->getFiniFunction() ||
-			  function == getBase()->getNodeClass()->getCompiler()->getCallbackStopFunction()))
+			 (function == getBase()->getNodeClass()->getCompiler()->getFiniFunction()))
 		return true;
 	return false;
 }
@@ -368,6 +369,8 @@ size_t VuoCompilerNode::getArgumentIndexInFunction(VuoCompilerNodeArgument *argu
 		return argumentClass->getIndexInCallbackStartFunction();
 	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackUpdateFunction())
 		return argumentClass->getIndexInCallbackUpdateFunction();
+	else if (function == getBase()->getNodeClass()->getCompiler()->getCallbackStopFunction())
+		return argumentClass->getIndexInCallbackStopFunction();
 	return 0;
 }
 
@@ -598,6 +601,17 @@ string VuoCompilerNode::getGraphvizDeclarationWithOptions(bool shouldUsePlacehol
 			string portConstant = (shouldUsePlaceholders ? "%s" : data->getInitialValue());
 			string escapedPortConstant = VuoStringUtilities::transcodeToGraphvizIdentifier(portConstant);
 			declaration << " _" << port->getClass()->getName() << "=\"" << escapedPortConstant << "\"";
+		}
+	}
+
+	// event throttling
+	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
+	{
+		VuoPort *port = *i;
+		if (port->getClass()->getPortType() == VuoPortClass::triggerPort)
+		{
+			string eventThrottling = (port->getEventThrottling() == VuoPortClass::EventThrottling_Enqueue ? "enqueue" : "drop");
+			declaration << " _" << port->getClass()->getName() << "_eventThrottling=\"" << eventThrottling << "\"";
 		}
 	}
 

@@ -43,6 +43,17 @@ void VuoWindowApplication_init(void)
 	}
 }
 
+/**
+ * Called at startup. Creates a VuoWindowApplication instance for any composition that
+ * uses this library.
+ */
+static void __attribute__((constructor)) launchApplication()
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+					  VuoWindowApplication_init();
+				  });
+}
+
 void VuoWindowText_destroy(VuoWindowText w);
 
 /**

@@ -153,6 +153,7 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.math.round")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get"));
 
+#if 0
 	if (inputPortClasses.size() != VuoNodeClass::unreservedInputPortStartIndex+1)
 		return false;
 	if (inputPortClasses[VuoNodeClass::unreservedInputPortStartIndex]->getPortType() != VuoPortClass::dataAndEventPort)
@@ -165,6 +166,7 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 		return false;
 
 	return true;
+#endif
 }
 
 /**

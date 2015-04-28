@@ -194,7 +194,7 @@ struct nodeInstanceData * nodeInstanceInit
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(decodedImage, VuoImage)
+		VuoOutputTrigger(decodedImage, VuoImage, VuoPortEventThrottling_Drop)
 )
 {
 	if ((*context)->isPlaying)
@@ -214,7 +214,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoReal, {"default":""}) setTime,
 		VuoInputEvent(VuoPortEventBlocking_None, setTime) setTimeEvent,
 
-		VuoOutputTrigger(decodedImage, VuoImage)
+		VuoOutputTrigger(decodedImage, VuoImage, VuoPortEventThrottling_Drop)
 )
 {
 	if (movieURLEvent)

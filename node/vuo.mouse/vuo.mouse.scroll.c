@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : false
+						  "isInterface" : true
 					  }
 				  });
 
@@ -64,7 +64,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
-		VuoOutputTrigger(scrolled, VuoPoint2d)
+		VuoOutputTrigger(scrolled, VuoPoint2d, VuoPortEventThrottling_Drop)
 )
 {
 	if ((*context)->isTriggerStopped)

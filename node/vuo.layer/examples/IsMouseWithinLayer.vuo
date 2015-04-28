@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Changes a layer's color when you hover the mouse over it. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+DiscardDataFromEvent [type="vuo.type.discardData.VuoBoolean" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="1043,350" fillcolor="yellow"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="68,116" fillcolor="yellow" _started_eventThrottling="enqueue"];
+IsPointWithinLayer [type="vuo.layer.within" version="1.0.0" label="Is Point within Layer|<refresh>refresh\l|<point>point\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<done>done\r|<withinLayer>withinLayer\r" pos="850,350" fillcolor="violet" _layerName="\"layer\""];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="286,136" fillcolor="yellow" _name="\"layer\"" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="30.000000" _width="0.400000" _height="0.600000"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="492,175" fillcolor="yellow"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="607,350" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="555,164" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput3 [type="vuo.select.in.VuoColor" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="128,299" fillcolor="yellow" _falseOption="{\"r\":0.500008,\"g\":0.000000,\"b\":0.500008,\"a\":1.000000}" _trueOption="{\"r\":0.807660,\"g\":0.304143,\"b\":0.862074,\"a\":1.000000}"];
+
+DiscardDataFromEvent:event -> SelectInput3:refresh;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> SelectInput3:refresh;
+IsPointWithinLayer:withinLayer -> DiscardDataFromEvent:dataAndEvent;
+IsPointWithinLayer:withinLayer -> SelectInput3:which;
+MakeColorLayer:layer -> MakeList2:item1;
+MakeList2:list -> RenderLayersToWindow:layers;
+ReceiveMouseMoves:movedTo -> IsPointWithinLayer:point;
+RenderLayersToWindow:renderedLayers -> IsPointWithinLayer:renderedLayers;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+SelectInput3:out -> MakeColorLayer:color;
+}

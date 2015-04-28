@@ -10,6 +10,7 @@
 #ifndef VUOTRANSFORM_H
 #define VUOTRANSFORM_H
 
+#include "VuoInteger.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
 #include "VuoTransform2d.h"
@@ -61,6 +62,7 @@ typedef struct
 } VuoTransform;
 
 void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, float *billboardMatrix);
 VuoPoint3d VuoTransform_getDirection(const VuoTransform transform);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
@@ -197,6 +199,7 @@ static inline void VuoTransform_printMatrix4x4(const float *matrix)
 }
 
 VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point);
+VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle rectangle);
 
 VuoTransform VuoTransform_valueFromJson(struct json_object *js);
 struct json_object * VuoTransform_jsonFromValue(const VuoTransform value);

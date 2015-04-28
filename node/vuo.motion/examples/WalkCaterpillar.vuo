@@ -1,0 +1,89 @@
+/**
+ * @file
+ * Displays an animated caterpillar. Press the left mouse button to make the caterpillar walk toward a point. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="287,646" fillcolor="green"];
+Add2 [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="301,742" fillcolor="green"];
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<done>done\r|<object>object\r" pos="1673,550" fillcolor="green"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<x>x\r" pos="2336,512"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.x" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<done>done\r|<point3d>point3d\r" pos="1833,523"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="284,551" fillcolor="green" _increment="0.100000" _decrement="1" _setCount="0.000000"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="-32,585"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="639,219" fillcolor="green" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1301,408" fillcolor="green"];
+Make3DObject2 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1313,519" fillcolor="green"];
+Make3DObject3 [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1293,631" fillcolor="green"];
+Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="756,653" fillcolor="green" _x="0.080000" _z="0.000000"];
+Make3DPoint3 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="757,743" fillcolor="green" _x="0.160000" _z="0.000000"];
+Make3DPoint5 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="754,561" fillcolor="green" _x="0.000000" _z="0.000000"];
+MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="224,657" fillcolor="green" _item2="0.500000"];
+MakeList10 [type="vuo.list.make.3.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="1610,576" fillcolor="green"];
+MakeList3 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="238,753" fillcolor="green" _item2="0.500000"];
+MakeList7 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="1879,561" fillcolor="green"];
+MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="1084,263" fillcolor="green" _rows="16" _columns="16"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1022,568" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform2 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1019,660" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform3 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1022,755" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeTransform5 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="1727,380" fillcolor="green" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="1641,190" fillcolor="magenta" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1945,550" fillcolor="green" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale3DPoint [type="vuo.point.multiply.scalar.VuoPoint3d" version="1.0.0" label="Scale 3D Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<done>done\r|<scaledPoint>scaledPoint\r" pos="900,440" fillcolor="green" _point="{\"x\":1,\"y\":1,\"z\":1}" _scaleFactor="0.100000"];
+ShadewithSolidColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="1066,342" fillcolor="green" _color="{\"r\":0.000000,\"g\":0.786160,\"b\":0.113466,\"a\":1.000000}"];
+SmoothWithRate5 [type="vuo.motion.smooth.rate.VuoReal" version="1.0.0" label="Smooth with Rate|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<rate>rate\l|<curve>curve\l|<easing>easing\l|<done>done\r|<position>position\r" pos="1908,160" fillcolor="violet" _setPosition="0.000000" _rate="0.500000" _curve="\"linear\"" _easing="\"in\""];
+Wave [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="517,539" fillcolor="green" _wave="\"sine\"" _period="2.000000" _center="0.000000" _amplitude="0.008000"];
+Wave2 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="517,661" fillcolor="green" _wave="\"sine\"" _period="2.000000" _center="0.000000" _amplitude="0.010000"];
+Wave3 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="506,787" fillcolor="green" _wave="\"sine\"" _period="2.000000" _center="0.000000" _amplitude="0.009000"];
+
+Add2:sum -> Wave3:time;
+Add:sum -> MakeList3:item1;
+Add:sum -> Wave2:time;
+Combine3DObjects:object -> MakeList7:item1;
+Convert2DPointToReal2:x -> SmoothWithRate5:setTarget;
+ConvertRealTo3DPoint:point3d -> MakeTransform5:translation;
+Count:count -> MakeList:item1;
+Count:count -> Wave:time;
+DiscardDataFromEvent:event -> Count:increment;
+FireonStart:started -> Count:refresh;
+FireonStart:started -> MakeSphereVertices:refresh;
+FireonStart:started -> Scale3DPoint:refresh;
+FireonStart:started -> ShadewithSolidColor:refresh;
+Make3DObject2:object -> MakeList10:item2;
+Make3DObject3:object -> MakeList10:item3;
+Make3DObject:done -> MakeTransform5:refresh;
+Make3DObject:object -> MakeList10:item1;
+Make3DPoint2:point -> MakeTransform2:translation;
+Make3DPoint3:point -> MakeTransform3:translation;
+Make3DPoint5:point -> MakeTransform:translation;
+MakeList10:list -> Combine3DObjects:childObjects;
+MakeList3:list -> Add2:terms;
+MakeList7:list -> RenderSceneToWindow2:objects;
+MakeList:list -> Add:terms;
+MakeSphereVertices:vertices -> Make3DObject2:vertices;
+MakeSphereVertices:vertices -> Make3DObject3:vertices;
+MakeSphereVertices:vertices -> Make3DObject:vertices;
+MakeTransform2:transform -> Make3DObject2:transform;
+MakeTransform3:transform -> Make3DObject3:transform;
+MakeTransform5:transform -> Combine3DObjects:transform;
+MakeTransform:transform -> Make3DObject:transform;
+ReceiveMouseButtons:pressed -> Convert2DPointToReal2:xy;
+RenderSceneToWindow2:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+RenderSceneToWindow2:requestedFrame -> SmoothWithRate5:time;
+RenderSceneToWindow2:showedWindow -> ReceiveMouseButtons:window;
+Scale3DPoint:scaledPoint -> MakeTransform2:scale;
+Scale3DPoint:scaledPoint -> MakeTransform3:scale;
+Scale3DPoint:scaledPoint -> MakeTransform:scale;
+ShadewithSolidColor:shader -> Make3DObject2:shader;
+ShadewithSolidColor:shader -> Make3DObject3:shader;
+ShadewithSolidColor:shader -> Make3DObject:shader;
+SmoothWithRate5:position -> ConvertRealTo3DPoint:x;
+Wave2:value -> Make3DPoint2:y;
+Wave3:value -> Make3DPoint3:y;
+Wave:value -> Make3DPoint5:y;
+}

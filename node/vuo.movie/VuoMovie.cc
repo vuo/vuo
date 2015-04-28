@@ -283,13 +283,10 @@ private:
 
 	int img_convert(AVPicture* dst, PixelFormat dst_pix_fmt, AVPicture* src, PixelFormat pix_fmt, int width, int height)
 	{
-		int av_log = av_log_get_level();
-		av_log_set_level(AV_LOG_QUIET);
 		SwsContext *img_convert_ctx = sws_getContext(width, height, pix_fmt, width, height, dst_pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);
 
 		int result = sws_scale(img_convert_ctx, src->data, src->linesize, 0, height, dst->data, dst->linesize);
 		sws_freeContext(img_convert_ctx);
-		av_log_set_level(av_log);
 
 		// Flip the image vertically, because otherwise glTexImage2d() reads in the pixels upside down.
 		// AVFrame->data[0] is stored like so : [ row 0 ] [ row 1 ] [ row 2 ] [ etc ]
@@ -1629,6 +1626,9 @@ static void __attribute__((constructor)) VuoMovie_initFfmpeg(void)
 {
 	av_register_all();
 	avformat_network_init();
+
+//	av_log_set_level(AV_LOG_DEBUG);
+	av_log_set_level(AV_LOG_FATAL);
 }
 
 /**

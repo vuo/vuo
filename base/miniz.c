@@ -156,6 +156,9 @@
      (i.e. 32-bit stat() fails for me on files > 0x7FFFFFFF bytes).
 */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
+
 #ifndef MINIZ_HEADER_INCLUDED
 #define MINIZ_HEADER_INCLUDED
 
@@ -4921,3 +4924,5 @@ void *mz_zip_extract_archive_file_to_heap(const char *pZip_filename, const char 
 
   For more information, please refer to <http://unlicense.org/>
 */
+
+#pragma clang diagnostic pop

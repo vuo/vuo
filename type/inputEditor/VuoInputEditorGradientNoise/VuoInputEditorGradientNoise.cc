@@ -29,16 +29,8 @@ VuoInputEditorMenuItem * VuoInputEditorGradientNoise::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *gradientTree = new VuoInputEditorMenuItem("root");
 
-	json_object *perlinAsJson = VuoGradientNoise_jsonFromValue(VuoGradientNoise_Perlin);
-	const char *perlinSummary = VuoGradientNoise_summaryFromValue(VuoGradientNoise_Perlin);
-	json_object *simplexAsJson = VuoGradientNoise_jsonFromValue(VuoGradientNoise_Simplex);
-	const char *simplexSummary = VuoGradientNoise_summaryFromValue(VuoGradientNoise_Simplex);
-
-	VuoInputEditorMenuItem *perlin = new VuoInputEditorMenuItem(perlinSummary, perlinAsJson);
-	VuoInputEditorMenuItem *simplex = new VuoInputEditorMenuItem(simplexSummary, simplexAsJson);
-
-	gradientTree->addItem(perlin);
-	gradientTree->addItem(simplex);
+	gradientTree->addItem(new VuoInputEditorMenuItem(VuoGradientNoise_summaryFromValue(VuoGradientNoise_Perlin), VuoGradientNoise_jsonFromValue(VuoGradientNoise_Perlin)));
+	gradientTree->addItem(new VuoInputEditorMenuItem(VuoGradientNoise_summaryFromValue(VuoGradientNoise_Simplex), VuoGradientNoise_jsonFromValue(VuoGradientNoise_Simplex)));
 
 	return gradientTree;
 }

@@ -30,6 +30,7 @@ class TestVuoRenderer : public QObject
 public:
 	TestVuoRenderer()
 	{
+		compiler = NULL;
 	}
 
 private:

@@ -28,17 +28,22 @@ public:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	void setName(string name);
 	bool canAccommodateInternalPort(VuoRendererPort *internalPort);
-	bool isCompatibleAliasForInternalPort(VuoRendererPort *port);
+	bool isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *port);
+	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *port);
+	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort, VuoRendererPort **portToSpecialize, string &specializedTypeName);
 	bool canBeMergedWith(VuoPublishedPort *otherExternalPort);
 	void addConnectedPort(VuoPort *port);
 	void removeConnectedPort(VuoPort *port);
 	QPointF getGlobalPos(void) const;
 	void setGlobalPos(QPointF pos);
+	VuoRendererPort * getPortRepresentation();
 
 private:
+	static VuoRendererPort * createPortRepresentation(string name, VuoType *type, bool isPublishedInput);
 	void updateNameRect();
 
 	QPointF globalPos;
+	VuoRendererPort *portRepresentation;
 
 };
 

@@ -36,7 +36,7 @@ VuoInteger VuoInteger_Absolute(VuoInteger val)
 
 void nodeEvent
 (
-		VuoInputData(VuoGenericType1) signedValue,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) signedValue,
 		VuoOutputData(VuoGenericType1) absoluteValue
 )
 {

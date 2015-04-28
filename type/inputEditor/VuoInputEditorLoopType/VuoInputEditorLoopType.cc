@@ -14,6 +14,8 @@ extern "C"
 	#include "VuoLoopType.h"
 }
 
+#include "../VuoInputEditorCurve/VuoInputEditorCurveRenderer.hh"
+
 /**
  * Constructs a VuoInputEditorLoopType object.
  */
@@ -33,7 +35,7 @@ VuoInputEditorMenuItem * VuoInputEditorLoopType::setUpMenuTree()
 	{
 		json_object *optionAsJson = VuoLoopType_jsonFromValue( (VuoLoopType)i );
 		char *optionSummary = VuoLoopType_summaryFromValue( (VuoLoopType)i );
-		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson);
+		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithLoopType((VuoLoopType)i));
 		optionsTree->addItem(optionItem);
 	}
 

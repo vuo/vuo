@@ -237,7 +237,7 @@ private slots:
 				{
 					VuoPort *port = node->getInputPortWithName("b");
 					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(port->getCompiler());
-					QCOMPARE(QString::fromStdString(eventPort->getData()->getInitialValue()), QString("0.000000"));
+					QCOMPARE(QString::fromStdString(eventPort->getData()->getInitialValue()), QString("0"));
 				}
 			}
 		}

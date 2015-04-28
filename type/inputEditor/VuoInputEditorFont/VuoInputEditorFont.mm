@@ -18,14 +18,14 @@
 #include <objc/runtime.h>
 
 /// @todo make these non-global --- how can we pass them through to changeFont and changeAttributes?
-static VuoInputEditorFont *currentEditor;
-static NSString *currentFontName;
-static double currentPointSize;
-static bool currentUnderline;
-static NSColor *currentColor;
-static VuoHorizontalAlignment currentAlignment;
-static double currentCharacterSpacing;
-static double currentLineSpacing;
+static VuoInputEditorFont *currentEditor;		///< The current font editor.
+static NSString *currentFontName;				///< The current font name (PostScript format).
+static double currentPointSize;					///< The current font size (in typographic points).
+static bool currentUnderline;					///< Does the current font have an underline?
+static NSColor *currentColor;					///< The current font's color.
+static VuoHorizontalAlignment currentAlignment;	///< The current font's horizontal alignment.
+static double currentCharacterSpacing;			///< The current font's character spacing.
+static double currentLineSpacing;				///< The current font's line spacing.
 
 /**
  * Constructs a VuoInputEditorFont object.
@@ -35,11 +35,17 @@ VuoInputEditor * VuoInputEditorFontFactory::newInputEditor()
 	return new VuoInputEditorFont();
 }
 
+/**
+ * Returns a value indicating which font panel widgets should be displayed.
+ */
 static unsigned long validateFontPanelModes(id self, SEL _cmd, NSFontPanel *fontPanel)
 {
    return NSFontPanelUnderlineEffectModeMask | NSFontPanelTextColorEffectModeMask | NSFontPanelCollectionModeMask | NSFontPanelFaceModeMask | NSFontPanelSizeModeMask;
 }
 
+/**
+ * Returns the currently-selected font.
+ */
 static VuoFont getCurrentVuoFont(void)
 {
 	// Convert to RGB colorspace (since the color picker might return a grey or CMYK color).
@@ -56,6 +62,9 @@ static VuoFont getCurrentVuoFont(void)
 					);
 }
 
+/**
+ * Returns the currently-selected attributes.
+ */
 static NSDictionary *getCurrentAttributes(void)
 {
 	return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -64,6 +73,9 @@ static NSDictionary *getCurrentAttributes(void)
 			nil];
 }
 
+/**
+ * Updates the composition's constant value when the user changes the selected font.
+ */
 static void userChangedFont(id self, SEL _cmd, NSFontManager *fm)
 {
 	NSFont *oldFont = [NSFont userFontOfSize:12];
@@ -75,6 +87,9 @@ static void userChangedFont(id self, SEL _cmd, NSFontManager *fm)
 	currentEditor->currentFontChanged(getCurrentVuoFont());
 }
 
+/**
+ * Updates the composition's constant value when the user changes the selected attributes.
+ */
 static void userChangedAttributes(id self, SEL _cmd, NSFontManager *fm)
 {
 	NSDictionary *newAttributes = [fm convertAttributes:getCurrentAttributes()];

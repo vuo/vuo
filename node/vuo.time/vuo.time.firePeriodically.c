@@ -94,7 +94,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) ctx,
 		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedStep":0.1}) seconds,
-		VuoOutputTrigger(fired,void)
+		VuoOutputTrigger(fired,void,VuoPortEventThrottling_Drop)
 )
 {
 	setRepeatingTimer(*ctx, seconds, fired);

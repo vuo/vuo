@@ -1118,6 +1118,8 @@ private:
 		TestSettingAndGettingPublishedPortValuesRunnerDelegate()
 		{
 			runner = NULL;
+			publishedIn1 = NULL;
+			publishedSum = NULL;
 			timesSumChanged = 0;
 			isStopping = false;
 		}
@@ -1217,6 +1219,7 @@ private:
 		TestFiringPublishedInputPortEventsRunnerDelegate()
 		{
 			runner = NULL;
+			publishedIncrementOne = NULL;
 			publishedDecrementBoth = NULL;
 			timesSumChanged = 0;
 		}
@@ -1383,6 +1386,90 @@ private slots:
 			runner->stop();
 			delete runner;
 		}
+	}
+
+	void testUnconnectedPublishedPorts()
+	{
+		string compositionPath = getCompositionPath("UnconnectedPublishedPorts.vuo");
+		VuoRunner *runner = createRunnerInNewProcess(compositionPath);
+		runner->start();
+
+		vector<VuoRunner::Port *> inPorts = runner->getPublishedInputPorts();
+		QCOMPARE(inPorts.size(), (size_t)1);
+		VuoRunner::Port *inPort = inPorts[0];
+
+		vector<VuoRunner::Port *> outPorts = runner->getPublishedOutputPorts();
+		QCOMPARE(outPorts.size(), (size_t)1);
+		VuoRunner::Port *outPort = outPorts[0];
+
+		runner->setPublishedInputPortValue(inPort, VuoInteger_jsonFromValue(49));
+		runner->firePublishedInputPortEvent(inPort);
+
+		json_object *outPortValue = runner->getPublishedOutputPortValue(outPort);
+		QCOMPARE(VuoInteger_valueFromJson(outPortValue), (VuoInteger)0);
+
+		runner->stop();
+		delete runner;
+	}
+
+private:
+
+	class TestMultiplyConnectedPublishedOutputPortsRunnerDelegate : public TestRunnerDelegate
+	{
+	private:
+		VuoRunner *runner;
+		int timesCountUpdated;
+
+	public:
+		TestMultiplyConnectedPublishedOutputPortsRunnerDelegate()
+		{
+			runner = NULL;
+			timesCountUpdated = 0;
+		}
+
+		~TestMultiplyConnectedPublishedOutputPortsRunnerDelegate()
+		{
+			delete runner;
+		}
+
+		void runComposition()
+		{
+			string compositionPath = getCompositionPath("MultiplyConnectedPublishedOutput.vuo");
+			runner = createRunnerInNewProcess(compositionPath);
+			runner->setDelegate(this);
+
+			runner->start();
+			runner->firePublishedInputPortEvent();
+			runner->firePublishedInputPortEvent();
+			runner->waitUntilStopped();
+		}
+
+		void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *port, bool sentData, string dataSummary)
+		{
+			++timesCountUpdated;
+			if (timesCountUpdated == 1)
+			{
+				QVERIFY(sentData);
+				QCOMPARE(QString::fromStdString(dataSummary), QString(VuoInteger_summaryFromValue(1)));
+			}
+			else if (timesCountUpdated == 2)
+			{
+				QVERIFY(sentData);
+				QCOMPARE(QString::fromStdString(dataSummary), QString(VuoInteger_summaryFromValue(2)));
+
+				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+								   runner->stop();
+							   });
+			}
+		}
+	};
+
+private slots:
+
+	void testMultiplyConnectedPublishedOutputPorts()
+	{
+		TestMultiplyConnectedPublishedOutputPortsRunnerDelegate delegate;
+		delegate.runComposition();
 	}
 
 	void testReplacingCompositionWithoutCrashing_data()

@@ -8,7 +8,6 @@
  */
 
 #include "VuoPort.hh"
-#include "VuoPortClass.hh"
 #include "VuoCable.hh"
 
 #include <stdio.h>
@@ -21,6 +20,7 @@ VuoPort::VuoPort(VuoPortClass *portClass)
 	: VuoBase<VuoCompilerNodeArgument,VuoRendererPort>("VuoPort")
 {
 	this->portClass = portClass;
+	this->eventThrottling = getClass()->getDefaultEventThrottling();
 }
 
 /**
@@ -65,6 +65,9 @@ VuoCable * VuoPort::getCableConnecting(VuoPort *otherPort)
 
 /**
  * Adds a connected cable.
+ * This method is called by the VuoCable constructor as well as
+ * VuoCable::setTo / VuoCable::setFrom, and should not
+ * normally need to be called otherwise.
  */
 void VuoPort::addConnectedCable(VuoCable *cable)
 {
@@ -73,10 +76,28 @@ void VuoPort::addConnectedCable(VuoCable *cable)
 
 /**
  * Removes a connected cable.
+ * This method is called by VuoCable::setTo / VuoCable::setFrom,
+ * and should not normally need to be called otherwise.
  */
 void VuoPort::removeConnectedCable(VuoCable *cable)
 {
 	connectedCables.erase(std::remove(connectedCables.begin(), connectedCables.end(), cable), connectedCables.end());
+}
+
+/**
+ * Returns the event-throttling behavior of this port. Only applies to trigger ports.
+ */
+VuoPortClass::EventThrottling VuoPort::getEventThrottling(void)
+{
+	return eventThrottling;
+}
+
+/**
+ * Sets the event-throttling behavior of this port. Only applies to trigger ports.
+ */
+void VuoPort::setEventThrottling(VuoPortClass::EventThrottling eventThrottling)
+{
+	this->eventThrottling = eventThrottling;
 }
 
 /**

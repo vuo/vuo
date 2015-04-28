@@ -10,6 +10,7 @@
 #import "VuoWindowOpenGLInternal.h"
 #import "VuoWindowApplication.h"
 
+#include <Carbon/Carbon.h>
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
 
@@ -164,10 +165,14 @@ void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
 	return YES;
 }
 
-//- (void) keyDown: (NSEvent*) event
-//{
-//	VLogCF(event);
-//}
+/**
+ * This method is implemented to avoid the system beep for keyboard events, which may be handled by vuo.keyboard nodes.
+ */
+- (void)keyDown:(NSEvent *)event
+{
+	if ([event keyCode] == kVK_Escape && [self isInFullScreenMode])
+		[super keyDown:event];
+}
 
 /**
  * Converts @c point (relative to @c view) to default scene coordinates (-1 to 1 in X, proportional in Y).
@@ -252,7 +257,10 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 		CGDirectDisplayID fullScreenDisplay = [[[fullScreenScreen deviceDescription] objectForKey:@"NSScreenNumber"] unsignedIntValue];  // http://www.cocoabuilder.com/archive/cocoa/133873-how-to-get-the-cgdirectdisplayid.html
 		CGLPixelFormatAttribute fullScreenAttributes[] =
 		{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 			kCGLPFAFullScreen,
+#pragma clang diagnostic pop
 			kCGLPFADisplayMask, (CGLPixelFormatAttribute) CGDisplayIDToOpenGLDisplayMask(fullScreenDisplay),
 
 			// copied from VuoGlContext
@@ -333,7 +341,7 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 						  togglingFullScreen = true;
 						  [windowedGlContext setView:self];
 						  [self exitFullScreenModeWithOptions:nil];
-						  [self.window makeKeyWindow];
+						  [self.window makeKeyAndOrderFront:nil];
 						  togglingFullScreen = false;
 						  CGLUnlockContext(cgl_ctx);
 					  });
@@ -589,6 +597,16 @@ VuoPoint2d VuoWindowOpenGLInternal_mapEventToSceneCoordinates(NSPoint point, NSV
 - (void)toggleFullScreen
 {
 	[glView toggleFullScreen];
+}
+
+/**
+ * Outputs the window's current width and height.
+ */
+- (void)getWidth:(unsigned int *)pixelsWide height:(unsigned int *)pixelsHigh
+{
+	NSSize size = [self frame].size;
+	*pixelsWide = size.width;
+	*pixelsHigh = size.height;
 }
 
 @end

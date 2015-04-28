@@ -13,5 +13,4 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorModifierKey.json
 
-INCLUDEPATH += $$ROOT/node/vuo.mouse
-LIBS += $$ROOT/node/vuo.mouse/VuoModifierKey.o
+LIBS += $$ROOT/type/VuoModifierKey.o

@@ -1587,6 +1587,41 @@ Function * VuoCompilerCodeGenUtilities::getSetInputPortValueFunction(Module *mod
 	return function;
 }
 
+Function * VuoCompilerCodeGenUtilities::getGetPublishedOutputPortValueFunction(Module *module)
+{
+	const char *functionName = "getPublishedOutputPortValue";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *intType = IntegerType::get(module->getContext(), 32);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(intType);
+		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Module *module)
+{
+	const char *functionName = "setPublishedInputPortValue";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
 Function * VuoCompilerCodeGenUtilities::getSendNodeExecutionStartedFunction(Module *module)
 {
 	const char *functionName = "sendNodeExecutionStarted";

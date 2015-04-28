@@ -126,6 +126,8 @@ private:
 		controller.enableGesture(Leap::Gesture::TYPE_KEY_TAP);
 		controller.enableGesture(Leap::Gesture::TYPE_SCREEN_TAP);
 		controller.enableGesture(Leap::Gesture::TYPE_SWIPE);
+
+		controller.setPolicyFlags(Leap::Controller::POLICY_BACKGROUND_FRAMES);
 	}
 
 	virtual void onFrame(const Leap::Controller &controller)

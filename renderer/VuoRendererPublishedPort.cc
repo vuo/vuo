@@ -9,6 +9,9 @@
 
 #include "VuoPortClass.hh"
 #include "VuoGenericType.hh"
+#include "VuoCompilerInputEventPortClass.hh"
+#include "VuoCompilerOutputEventPortClass.hh"
+#include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoRendererPublishedPort.hh"
 #include "VuoRendererPort.hh"
@@ -23,8 +26,70 @@ VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublish
 {
 	getBase()->setRenderer(this);
 	this->globalPos = QPointF();
+
+	// We can't use the VuoPseudoPort for rendering purposes because it won't necessarily have the type that we
+	// want the rendering to reflect. (e.g., published input pseudoports are always event-only trigger ports.)
+	// Create a new VuoRendererPort to represent this published port.
+	this->portRepresentation = createPortRepresentation(getBase()->getName(), getBase()->getType(), getBase()->getInput());
+	this->portRepresentation->setProxyPublishedSidebarPort(this);
+
+	// The VuoPsuedoPort must nevertheless have its own associated VuoRendererPort -- not because it will
+	// be rendered (it will not), but so that cables connected to it will have a way to access this VuoPublishedPort.
+	VuoPort *pseudoPort = getBase()->getCompiler()->getVuoPseudoPort();
+	pseudoPort->setRenderer(new VuoRendererPort(pseudoPort, NULL, getBase()->getInput(), false, false, false));
+	pseudoPort->getRenderer()->setProxyPublishedSidebarPort(this);
+
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
 	updateNameRect();
+}
+
+/**
+ * Creates and returns a VuoRendererPort to represent a published port within the sidebar.
+ *
+ * @param name The name of the published port.
+ * @param type The data type of the published port.
+ * @param isPublishedInput A boolean indicating whether the published port is a published input, as
+ * opposed to a published output.
+ */
+VuoRendererPort * VuoRendererPublishedPort::createPortRepresentation(string name, VuoType *type, bool isPublishedInput)
+{
+	VuoCompilerPort *portRepresentationCompiler;
+	if (isPublishedInput)
+	{
+		VuoCompilerOutputEventPortClass *portRepresentationOutputCompilerClass = new VuoCompilerOutputEventPortClass(name);
+
+		if (type)
+		{
+			portRepresentationOutputCompilerClass->setDataClass(new VuoCompilerOutputDataClass(name, NULL));
+			portRepresentationOutputCompilerClass->setDataVuoType(type);
+		}
+
+		portRepresentationCompiler = portRepresentationOutputCompilerClass->newPort();
+	}
+	else
+	{
+		VuoCompilerInputEventPortClass *portRepresentationInputCompilerClass = new VuoCompilerInputEventPortClass(name);
+
+		if (type)
+		{
+			portRepresentationInputCompilerClass->setDataClass(new VuoCompilerInputDataClass(name, NULL, false));
+			portRepresentationInputCompilerClass->setDataVuoType(type);
+		}
+		portRepresentationCompiler = portRepresentationInputCompilerClass->newPort();
+	}
+
+	VuoRendererPort *portRepresentation = new VuoRendererPort(
+		portRepresentationCompiler->getBase(),
+		NULL,
+		// "Published input" ports are *output* ports within the published input node,
+		// and vice versa.
+		isPublishedInput,
+		false,
+		false,
+		false
+		);
+
+	return portRepresentation;
 }
 
 /**
@@ -32,11 +97,7 @@ VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublish
  */
 void VuoRendererPublishedPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	VuoPort *firstConnectedPort = (*(getBase()->getConnectedPorts().begin()));
-	if (! firstConnectedPort)
-		return;
-
-	firstConnectedPort->getRenderer()->paintWithOptions(painter, true);
+	portRepresentation->paint(painter, option, widget);
 }
 
 /**
@@ -44,11 +105,7 @@ void VuoRendererPublishedPort::paint(QPainter *painter, const QStyleOptionGraphi
  */
 QRectF VuoRendererPublishedPort::boundingRect(void) const
 {
-	VuoPort *firstConnectedPort = (*(getBase()->getConnectedPorts().begin()));
-	if (! firstConnectedPort)
-		return QRectF();
-
-	return firstConnectedPort->getRenderer()->boundingRectWithOptions(true);
+	return portRepresentation->boundingRect();
 }
 
 /**
@@ -67,7 +124,7 @@ void VuoRendererPublishedPort::setName(string name)
  */
 bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *internalPort)
 {
-	if (! isCompatibleAliasForInternalPort(internalPort))
+	if (! isCompatibleAliasWithSpecializationForInternalPort(internalPort))
 		return false;
 
 	// If this is an output port already acting as an alias for an internal port
@@ -88,48 +145,66 @@ bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *inter
  * and the input @c internalPort, taking into account
  * the respective port types (input vs. output; event-only vs.
  * event+data; respective data types).
+ *
+ * If the connection would require one or both ports to be specialized, returns false.
+ * (But see @c VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(...).)
  */
-bool VuoRendererPublishedPort::isCompatibleAliasForInternalPort(VuoRendererPort *internalPort)
+bool VuoRendererPublishedPort::isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *internalPort)
 {
-	// For now, simply check whether the types of the internal and
-	// external ports match exactly, or are compatible generics.
-	// @todo: Implement more sophisticated type compatibility checks and specialize when necessary.
-	// See https://b33p.net/kosada/node/4695
-
-	bool inputOutputCompatible = ((getBase()->getInput() && internalPort->getInput()) ||
-									   (getBase()->getOutput() && internalPort->getOutput()));
-
-	if (!inputOutputCompatible)
+	// Temporarily disallow direct cable connections between published inputs and published outputs.
+	// @todo: Allow for https://b33p.net/kosada/node/7756 .
+	if (internalPort->getProxyPublishedSidebarPort())
 		return false;
 
-	VuoType *currentInternalDataType = internalPort->getDataType();
-	VuoType *currentExternalDataType = this->getBase()->getType();
+	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithoutSpecializationTo(internalPort) :
+								   internalPort->canConnectDirectlyWithoutSpecializationTo(portRepresentation));
+}
 
-	VuoGenericType *currentInternalGenericType = dynamic_cast<VuoGenericType *>(currentInternalDataType);
-	VuoGenericType *currentExternalGenericType = dynamic_cast<VuoGenericType *>(currentExternalDataType);
+/**
+ * Returns a boolean indicating whether there may be a cable
+ * attached directly between this externally visible published port
+ * and the input @c internalPort, taking into account
+ * the respective port types (input vs. output; event-only vs.
+ * event+data; respective data types), and the possibility that one
+ * port may be specialized in preparation for the connection.
+ *
+ * Convenience function for VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort,
+ * VuoRendererPort **portToSpecialize, string &specializedTypeName), for use
+ * when only the returned boolean and none of the other output parameter values are needed.
+ */
+bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort)
+{
+	VuoRendererPort *portToSpecialize = NULL;
+	string specializedTypeName = "";
 
-	// Case: Neither port is generic.
-	if ((currentInternalDataType == currentExternalDataType) && !currentInternalGenericType)
+	return this->isCompatibleAliasWithSpecializationForInternalPort(internalPort, &portToSpecialize, specializedTypeName);
+}
+
+/**
+ * Returns a boolean indicating whether there may be a cable
+ * attached directly between this externally visible published port
+ * and the input @c internalPort, taking into account
+ * the respective port types (input vs. output; event-only vs.
+ * event+data; respective data types), and the possibility that one
+ * port may be specialized in preparation for the connection.
+ */
+bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort,
+																				  VuoRendererPort **portToSpecialize,
+																				  string &specializedTypeName)
+{
+	*portToSpecialize = NULL;
+	specializedTypeName = "";
+
+	if (this->isCompatibleAliasWithoutSpecializationForInternalPort(internalPort))
 		return true;
 
-	/// @todo (https://b33p.net/kosada/node/7032)
-	if (VuoType::isListTypeName(currentInternalDataType->getModuleKey()) != VuoType::isListTypeName(currentExternalDataType->getModuleKey()))
+	// Temporarily disallow direct cable connections between published inputs and published outputs.
+	// @todo: Allow for https://b33p.net/kosada/node/7756 .
+	if (internalPort->getProxyPublishedSidebarPort())
 		return false;
 
-	// Case: Both ports are generic.
-	if (currentInternalGenericType && currentExternalGenericType)
-		return (currentInternalGenericType->isGenericTypeCompatible(currentExternalGenericType));
-
-	// Case: The internal port is generic and can be specialized to match the concrete type of the external port.
-	if (currentInternalGenericType && currentInternalGenericType->isSpecializedTypeCompatible(currentExternalDataType->getModuleKey()))
-		return true;
-
-	// Case: The external port is generic and can be specialized to match the concrete type of the internal port.
-	else if (currentExternalGenericType && currentExternalGenericType->isSpecializedTypeCompatible(currentInternalDataType->getModuleKey()))
-		return true;
-
-	// Case: Published port alias and internal port have incompatible input/output types.
-	return false;
+	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithSpecializationTo(internalPort, portToSpecialize, specializedTypeName) :
+								   internalPort->canConnectDirectlyWithSpecializationTo(portRepresentation, portToSpecialize, specializedTypeName));
 }
 
 /**
@@ -213,11 +288,17 @@ void VuoRendererPublishedPort::setGlobalPos(QPointF pos)
 }
 
 /**
+ * Returns the VuoRendererPort that visually represents this published port.
+ */
+VuoRendererPort * VuoRendererPublishedPort::getPortRepresentation()
+{
+	return portRepresentation;
+}
+
+/**
  * Updates the cached bounding box of the published port's label within the published port sidebar.
  */
 void VuoRendererPublishedPort::updateNameRect()
 {
-	VuoPort *firstConnectedPort = (*(getBase()->getConnectedPorts().begin()));
-	if (firstConnectedPort)
-		firstConnectedPort->getRenderer()->updateNameRect(true);
+	portRepresentation->updateNameRect();
 }

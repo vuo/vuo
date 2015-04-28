@@ -19,7 +19,10 @@
 #include <objc/runtime.h>
 #include <objc/message.h>
 
-static pthread_t mainThread = NULL;
+static pthread_t mainThread = NULL;	///< A reference to the main thread
+/**
+ * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
+ */
 static void __attribute__((constructor)) thisFunctionIsCalledAtStartup()
 {
 	mainThread = pthread_self();
@@ -31,6 +34,9 @@ static void __attribute__((constructor)) thisFunctionIsCalledAtStartup()
 	if (VuoHeap_init)
 		VuoHeap_init();
 }
+/**
+ * Is the current thread the main thread?
+ */
 static bool isMainThread(void)
 {
 	return mainThread == pthread_self();
@@ -793,11 +799,17 @@ string VuoRunner::getOutputPortSummary(string portIdentifier)
  */
 void VuoRunner::setPublishedInputPortValue(VuoRunner::Port *port, json_object *value)
 {
-	set<string> connectedPortIdentifiers = port->getConnectedPortIdentifiers();
-	for (set<string>::iterator i = connectedPortIdentifiers.begin(); i != connectedPortIdentifiers.end(); ++i)
-	{
-		setInputPortValue((*i).c_str(), value);
-	}
+	const char *valueAsString = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
+
+	dispatch_sync(controlQueue, ^{
+					  vuoMemoryBarrier();
+
+					  zmq_msg_t messages[2];
+					  vuoInitMessageWithString(&messages[0], port->getName().c_str());
+					  vuoInitMessageWithString(&messages[1], valueAsString);
+					  vuoControlRequestSend(VuoControlRequestPublishedInputPortValueModify, messages, 2);
+					  vuoControlReplyReceive(VuoControlReplyPublishedInputPortValueModified);
+				  });
 }
 
 /**
@@ -871,8 +883,20 @@ void VuoRunner::waitForAnyPublishedOutputPortEvent(void)
  */
 json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 {
-	set<string> connectedPortIdentifiers = port->getConnectedPortIdentifiers();
-	return getOutputPortValue( connectedPortIdentifiers.begin()->c_str() );
+	__block string valueAsString;
+	dispatch_sync(controlQueue, ^{
+					  vuoMemoryBarrier();
+
+					  zmq_msg_t messages[2];
+					  vuoInitMessageWithBool(&messages[0], !isInCurrentProcess());
+					  vuoInitMessageWithString(&messages[1], port->getName().c_str());
+					  vuoControlRequestSend(VuoControlRequestPublishedOutputPortValueRetrieve, messages, 2);
+					  vuoControlReplyReceive(VuoControlReplyPublishedOutputPortValueRetrieved);
+					  char *s = vuoReceiveAndCopyString(ZMQControl);
+					  valueAsString = s;
+					  free(s);
+				  });
+	return json_tokener_parse(valueAsString.c_str());
 }
 
 /**
@@ -907,14 +931,6 @@ vector<VuoRunner::Port *> VuoRunner::getCachedPublishedPorts(bool input)
 		if (! arePublishedOutputPortsCached)
 		{
 			publishedOutputPorts = refreshPublishedPorts(false);
-
-			for (vector<VuoRunner::Port *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
-			{
-				VuoRunner::Port *port = *i;
-				set<string> connectedIdentifiers = port->getConnectedPortIdentifiers();
-				publishedOutputPortForIdentifier[ *connectedIdentifiers.begin() ] = port;
-			}
-
 			arePublishedOutputPortsCached = true;
 		}
 		return publishedOutputPorts;
@@ -1171,17 +1187,24 @@ void VuoRunner::listen(void)
 													  delegate->receivedTelemetryOutputPortUpdated(portIdentifier, sentData, portDataSummary);
 											  });
 
-								map<string, VuoRunner::Port *>::iterator portIter = publishedOutputPortForIdentifier.find(portIdentifier);
-								if (portIter != publishedOutputPortForIdentifier.end())
+								if (sentData)
 								{
-									VuoRunner::Port *port = portIter->second;
-									dispatch_sync(delegateQueue, ^{
-													  if (delegate)
-														  delegate->receivedTelemetryPublishedOutputPortUpdated(port, sentData, portDataSummary);
-												  });
+									for (vector<VuoRunner::Port *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
+									{
+										VuoRunner::Port *port = *i;
+										set<string> connectedIdentifiers = port->getConnectedPortIdentifiers();
+										if (connectedIdentifiers.find(portIdentifier) != connectedIdentifiers.end())
+										{
+											dispatch_sync(delegateQueue, ^{
+															  if (delegate)
+															  delegate->receivedTelemetryPublishedOutputPortUpdated(port, sentData, portDataSummary);
+														  });
 
-									saturating_semaphore_signal(anyPublishedPortEventSemaphore, &anyPublishedPortEventSignaled);
+											saturating_semaphore_signal(anyPublishedPortEventSemaphore, &anyPublishedPortEventSignaled);
+										}
+									}
 								}
+
 								free(portDataSummary);
 							}
 						}
@@ -1271,7 +1294,7 @@ void VuoRunner::vuoControlReplyReceive(enum VuoControlReply expectedReply)
 {
 	int reply = vuoReceiveInt(ZMQControl);
 	if (reply != expectedReply)
-		fprintf(stderr, "VuoControl message received unexpected reply (received %u, expected %u)\n", reply, expectedReply);
+		fprintf(stderr, "VuoControl message received unexpected reply (received %d, expected %d)\n", reply, expectedReply);
 }
 
 /**
@@ -1286,7 +1309,7 @@ void VuoRunner::vuoLoaderControlReplyReceive(enum VuoLoaderControlReply expected
 {
 	int reply = vuoReceiveInt(ZMQLoaderControl);
 	if (reply != expectedReply)
-		fprintf(stderr, "VuoLoaderControl message received unexpected reply (received %u, expected %u)\n", reply, expectedReply);
+		fprintf(stderr, "VuoLoaderControl message received unexpected reply (received %d, expected %d)\n", reply, expectedReply);
 }
 
 /**

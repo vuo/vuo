@@ -11,12 +11,15 @@
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Details",
-					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "lighting", "Blinn", "Phong", "Lambert", "normal", "bump", "specular", "map" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "VuoGlContext"
-					 ],
+					  "title" : "Shade with Details",
+					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "lighting", "Blinn", "Phong", "Lambert", "normal", "bump", "specular", "map" ],
+					  "version" : "1.0.0",
+					  "dependencies" : [
+						  "VuoGlContext"
+					  ],
+					  "node": {
+						  "exampleCompositions" : [ "MoveLightAcrossTile.vuo" ]
+					  }
 				 });
 
 void nodeEvent

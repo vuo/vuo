@@ -80,7 +80,7 @@ See the chapter [Controlling the Flow of Events](#controlling-the-flow-of-events
 
 The rectangular boxes in your composition are \term{nodes}. Each \term{node} performs a task, like counting numbers or displaying a window or periodically firing events. Nodes are your tools for creating --- they're the building blocks of compositions.
 
-When you look at a node, the title (large text along the top) tells you the task that the node performs. You can get more details by hovering the mouse over the node. After a few seconds, this pops up a tooltip that shows an in-depth description of the node. 
+When you look at a node, the title (large text along the top) tells you the task that the node performs. You can get more details by hovering the mouse over the node. After a moment, this pops up a popover (tooltip) that shows an in-depth description of the node. 
 
 Nodes talk to each other by sending data and events through \term{cables} plugged into \term{ports}. Data and events flow from the \term{output port} of one node, through a cable, to the \term{input port} of another node. 
 
@@ -233,7 +233,9 @@ A \term{trigger port} is a special kind of output port. Trigger ports can fire (
 	\draw[->,line width=1,green] (4.1,.35) -- (3.6,.35); \node[right, green] at (4.1,.35) {trigger port};
 }
 
-(Note: A trigger port can fire an event *in response to* an event that came into the node, but this is a *different* event. For more information, see the section on [Executing nodes in the background](#executing-nodes-in-the-background).) 
+Some trigger ports fire events in response to things happening in the world outside your composition. For example, the \vuoNode{Receive Mouse Moves} node's trigger port fires an event each time the mouse is moved. The \vuoNode{Play Movie} node's trigger port fires a rapid series of events (for example, 30 per second), so that you can display images in rapid sequence as a movie. Similarly, the \vuoNode{Render Scene to Window} node's \vuoPort{requestedFrame} trigger port fires a rapid series of events, so that you can use these events to display scenes in rapid sequence as an animation. 
+
+Other trigger ports fire events in response to things happening within the composition. For example, the \vuoNode{Fire on Start} node's trigger port fires an event when the composition starts. The \vuoNode{Fire Periodically} node's trigger port fires events at a steady rate while the composition is running. A node's trigger port can even fire in response to an event received by the node, as happens with the \vuoNode{Spin Off Event} node. (However, this is a *different* event than the one that was received by the node. For more information, see the section on [Executing nodes in the background](#executing-nodes-in-the-background).) 
 
 Nodes that contain trigger ports will execute as described in the [Input ports](#input-ports) section when they receive an event, including transmitting events through the \term{done port}.
 
@@ -367,6 +369,20 @@ You can control how your composition executes by controlling the flow of events.
 Each event that's fired from a trigger port has its own unique identity. The event can branch off along different paths, and those paths can join up again at a node downstream. When the *same* event joins up, the joining node will wait for the event to travel along all incoming paths and then execute just once. But if two *different* events come into a node, the node will execute twice. So if you want to make sure that different parts of your composition are exactly in sync, make sure they're using the same event. 
 
 
+## Controlling the buildup of events
+
+What if a trigger port is firing events faster than the downstream nodes can process them? Will the events get queued up and wait until the downstream nodes are ready (causing the composition to lag), or will the composition skip some events so that it can keep up? That depends on the trigger port's \term{event throttling} setting. 
+
+Each trigger port has two options for event throttling: enqueue events or drop events. If enqueueing events, the trigger port will keep firing events regardless of whether the downstream nodes can keep up. If dropping events, the trigger port won't fire an event if the event would have to wait for the downstream nodes to finish processing a previous event (from this or another trigger port). 
+
+Each of these options is useful in different situations. For example, suppose you have a composition in which a `Play Movie` node fires events with image data and then applies a series of image filters. If you want the composition to display the resulting images in real-time, then you'd probably want the `Play Movie` node's trigger port to drop events to ensure that the movie plays at its original speed. On the other hand, if you're using the composition to apply a video post-processing effect and save the resulting images to file, then you'd probably want the trigger port to enqueue events. 
+
+When you add a node to a composition, each of its trigger ports may default to either enqueueing or dropping events. For example, the `Play Movie` node's trigger port defaults to dropping events, while each of the `Receive Mouse Clicks` node's trigger ports defaults to enqueueing events. 
+
+In the Vuo Editor, you can right-click on a trigger port and go to the "Set Event Throttling" menu to view or change whether the port enqueues or drops events. 
+
+
+
 # Understanding Data
 
 ## Setting a constant value for a port
@@ -383,6 +399,8 @@ For many types of data (such as integers and text), you can edit a constant valu
 	\draw[->,line width=1,green] (1,2) -- (1,1.5); \node[above, green] at (1,2) {input editor};
 }
 
+When using an input editor to edit text, you can enter text that contains multiple lines (line breaks) by composing your text in a basic text editor (such as TextEdit), then copying and pasting it into the input editor.
+
 If you edit a constant value for a node's input port, the node will use the new port value the next time it executes. Setting a constant value won't cause the node to execute. 
 
 ## Using the default value of a port
@@ -392,6 +410,14 @@ When you add a node to a composition, each input port has a preset constant valu
 If you disconnect a data-and-event cable to a port that previously had a constant value, then the port goes back to its previous value. If you did not set a constant value, it goes back to its default value.
 
 \vuoNodeClassImage{vuo.math.count.VuoReal}
+
+## Sending the same data to multiple ports
+
+What if you want to set the same value on multiple input ports? For example, suppose you want to draw several images, all having the same height. One way to accomplish this would be to go one by one to each node's height input port, open the input editor, and set it to the height you want. But what if you later decide to change the height? It would be better to set the height in one place and have it affect all nodes. 
+
+You can do this with the \vuoNode{Share Value} node, as illustrated here. When the \vuoNode{Share Value} node receives an event, it sends the value in its input port (100) through its output port to all connected nodes. 
+
+\vuoCompositionImage{ShareHeight}
 
 ## Using drawers
 
@@ -470,13 +496,49 @@ A generic node can have ports that each work with a different generic type. For 
 
 Some nodes interact with the world outside the composition --- such as windows, files, networks, and devices. 
 
-Nodes that bring information into the composition from the outside world and/or affect the outside world are called \term{interface} nodes. An example of an interface node is the \vuoNode{Check Mouse Status} node, which outputs information about the mouse's position and buttons. Another example is the \vuoNode{Display Console Window} node, which reads text typed in a console window and writes text to that window. 
+Nodes that bring information into the composition from the outside world and/or affect the outside world are called \term{interface} nodes. An example of an interface node is the \vuoNode{Get Image} node, which can download an image from the Internet. Another example is the \vuoNode{Display Console Window} node, which reads text typed in a console window and writes text to that window. 
 
-\vuoNodeClassImage{vuo.mouse.status} \hfill \vuoNodeClassImage{vuo.console.window}
+\vuoNodeClassImage{vuo.image.get} \hfill \vuoNodeClassImage{vuo.console.window}
 
 \noteQCUsers{Instead of Vuo's interface and non-interface nodes, Quartz Composer has an execution mode for each patch: provider, consumer, or processor. A patch's execution mode not only indicates how it interacts with the outside world, but also controls when it executes and whether it can be embedded in macro patches.} 
 
-Interface nodes have three radio arcs along the bottom edge, symbolizing that they send or receive data with the world outside your composition.
+Interface nodes have three radio arcs in the top-right corner, symbolizing that they send or receive data with the world outside your composition.
+
+
+
+# Interfacing with Applications
+
+Some applications allow you to use Vuo compositions as plugins — making it possible to customize or add to the application's behavior. For example, an application for video production may let you define a video effect by creating a Vuo composition that alters an image. The way that the application communicates with the composition is through published ports. 
+
+## Published ports
+
+A \term{published port} is an input port or output port for the composition as a whole. A published input port receives events and possibly data from somewhere outside the composition and passes it along to input ports on nodes inside the composition. A published output port takes events and possibly data from output ports inside the composition and sends it to somewhere outside the composition. 
+
+In the Vuo Editor, published ports appear in sidebars on the left and right of the composition canvas. (These sidebars are hidden by default if a composition has no published ports. To display them, go to \menu{Window > Show Published Ports}.) 
+
+Here's a composition with a published input port called \vuoPort{publishedIncrement} and a published output port called \vuoPort{publishedCount}: 
+
+\vuoScreenshot{editor-publishedports}
+
+## Protocols
+
+If you're going to use a composition as a plugin in some application, usually the application expects the composition to have certain published input and output ports. For example, an application that supports plugins for video effects would expect the composition to have a published input ports that receives an image a published output port that sends an altered image. To guarantee that your composition's published ports match what the application is expecting, you can use a protocol. 
+
+A \term{protocol} is a predetermined set of published ports with certain names and data types. Vuo supports the following protocols: 
+
+   - \term{Image Filter} — Alters an image. 
+      - Published input ports: 
+         - \vuoPort{image} (Image) — The original image. 
+         - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating plugins. 
+      - Published output ports: 
+         - \vuoPort{outputImage} — The altered image. 
+   - \term{Image Generator} — Creates an image. 
+      - Published input ports: 
+         - \vuoPort{width} (Integer) — The requested width of the image, in pixels. 
+         - \vuoPort{height} (Integer) — The requested height of the image, in pixels. 
+         - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating plugins. 
+      - Published output ports: 
+         - \vuoPort{outputImage} — The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports. 
 
 
 
@@ -517,9 +579,9 @@ Depending on your level of familiarity with Vuo's node sets and your personal pr
 
 You may select whichever display mode you prefer, and switch between the modes at your convenience; the editor will remember your preference between sessions. You can toggle between node titles and node class names by using the buttons at the bottom of the Node Library or by \menu{View>Node Library> Display by class} or \menu{Display by name}.
 
-### Node Tooltips
+### Node Popovers
 
-The node library makes the complete set of Vuo nodes available for you to browse as you compose. By hovering the mouse cursor over a node in the library, you will be presented with a tooltip describing the general purpose of the node as well as details that will help you make use of it.
+The node library makes the complete set of Vuo nodes available for you to browse as you compose. By hovering the mouse cursor over a node in the library, you will be presented with a popover (tooltip) describing the general purpose of the node as well as details that will help you make use of it.
 
 If you are interested in exploring new opportunities, this is an ideal way to casually familiarize yourself with the building blocks available to you in Vuo.
 
@@ -581,8 +643,10 @@ Input editors take on various forms depending on the data type of the specific i
       
 Some ports take lists as input. These ports have special attached "drawers" containing 0 or more input ports whose values will make up the contents of the list. Drawers contain two input ports by default, but may be resized to include more or fewer ports by dragging the "drag handle." 
 
+You can change how a trigger port should behave when it's firing events faster than downstream nodes can process them. Do this by right-clicking on the port, selecting "Set Event Throttling" from its context menu, and selecting either "Enqueue Events" or "Drop Events". 
+
 You can change a node's title (displayed at the top of the node) by double-clicking or hovering over the title and pressing \key{Return}, then entering the new title in the node title editor that pops up. You may save or dismiss your changes by pressing \key{Return} or \key{Escape}, respectively, just as you would using a port's input editor. You can also select one or more nodes from your canvas and press \key{Return} to edit the node titles for each of the selected nodes in sequence.
-   
+
 You can change a node's tint color by right-clicking on the node, selecting "Tint" from its context menu, and selecting your color of choice. Tint colors can be a useful tool in organizing your composition. For example, they can be used to visually associate nodes working together to perform a particular task.
 
 ### Viewing a composition
@@ -593,11 +657,7 @@ Tip: Hold down Shift while pressing an arrow key to scroll even faster.
 
 ### Publishing Ports
 
-Publishing a port creates an interface for your Vuo composition to interact with other applications. An application may let you customize or add on to its behavior by creating Vuo plugins. For example, an application for video production may let you define a video effect by creating a Vuo composition with certain published ports. An application can send data into a composition through published input ports and get data out of it through published output ports. 
-
 A composition's published ports are displayed in sidebars, which you can show and hide using the menu \menu{Window > Show/Hide Published Ports}. 
-
-\vuoScreenshot{editor-publishedports}
 
 You can publish any input or output port in a composition. Do this by right-clicking on the port and selecting \menu{Publish Port} from the context menu. Alternatively, drag a cable from the port to the \menu{Publish} well that appears in the sidebar when you start dragging. You can unpublish the port by right-clicking on the port again and selecting \menu{Unpublish Port}. 
 
@@ -606,6 +666,11 @@ In the sidebars, you can rename a published port by double-clicking on the name 
 Special copy/paste behavior to note:
             If you copy a node with a published port, that port will be published under the same name (if possible) in whatever composition you paste it into. The published port will be created if it does not already exist, merged if an existing published port of the same name and compatible type does exist, or renamed if an identically-named published port already exists but has an incompatible type.
 
+### Using a protocol for published ports
+
+To create a composition with a predetermined set of published ports defined by a protocol, go to the \menu{File} menu, select \menu{New Composition with Protocol}, and select the protocol you want. Typically, a protocol is used to have a Vuo composition as a plugin inside another application. That application should instruct you about the protocol to select. 
+
+The published ports in a protocol appear in a tinted area of the published port sidebars, with the protocol name at the top. You can't rename or delete these published ports. However, you can add other published ports to the composition and rename or delete them as usual. 
 
 
 ## Running a composition
@@ -618,6 +683,8 @@ After you've built your composition (or while you're building it), you can run i
 You can run a composition by clicking the Run button. (Or go to \menu{Run > Run}.) 
 
 You can stop a composition by clicking the Stop button. (Or go to \menu{Run > Stop}.) 
+
+If you start a composition that was created using \menu{New Composition with Protocol}, then extra functionality will be added to the composition to help you preview it. Its protocol published input ports will receive data and events, and its protocol published output ports will send their data and events to a preview window. For example, if you run a composition with the Image Filter protocol, then image and time data will be fed into the composition, and the composition's image output will be rendered to a window. 
 
 
 ### Firing an event manually
@@ -658,6 +725,8 @@ For working with 3D graphics, models, and meshes, the \vuoNodeClass{vuo.scene} n
 
 For working with 2D graphics, designs, and animations, the \vuoNodeClass{vuo.image} and \vuoNodeClass{vuo.layer} node sets are your starting point. These let you arrange and manipulate 2D images and render them in a window or composite image. 
 
+When animating 2D and 3D graphics, the \vuoNodeClass{vuo.motion} node set lets you control the path and speed of a moving object. 
+
 Several node sets let you work with video in different ways. For playing movie files, use the \vuoNodeClass{vuo.movie} node set. For sending and receiving video between Vuo compositions and other applications, use the \vuoNodeClass{vuo.syphon} node set. For importing video from a [Kinect](http://en.wikipedia.org/wiki/Kinect) camera, use the \vuoNodeClass{vuo.kinect} node set. 
 
 ### Vuo Coordinates
@@ -673,6 +742,13 @@ Typically, as illustrated above, the position (0,0) for 2D graphics or (0,0,0) f
 When working with 3D graphics, you can change the center and bounds of the rendering area by using a `Make Perspective Camera` or `Make Orthogonal Camera` node. For example, you can use a camera to zoom out, so that the rendering area shows a larger range of x- and y-coordinates. 
 
 
+## Processing and playing audio
+
+The \vuoNodeClass{vuo.audio} node set lets you work with audio input and output. You can use audio input to create music visualizations or control a composition with sound. You can use audio output to synthesize sounds. Together, audio input and output can be used to receive a live audio feed, process the audio, and play the processed audio. 
+
+To interface with with MIDI keyboards, synthesizers, and sequencers, you can use the \vuoNodeClass{vuo.midi} node set. 
+
+
 ## Communicating over a network
 
 Several node sets let you connect with other devices such as iPhones and iPads, Android phones and tablets, musical synthesizers and sequencers, and stage lighting. 
@@ -686,9 +762,11 @@ For working with OSC devices, use the \vuoNodeClass{vuo.osc} node set.
 
 Several node sets let users interact with your compositions using an input device. 
 
-For controlling a composition with a mouse or trackpad, use the \vuoNodeClass{vuo.mouse} node set. 
+To receive input from the mouse or trackpad, use the \vuoNodeClass{vuo.mouse} node set. 
 
-For controlling a composition with your hand and finger movements using a [Leap Motion](https://www.leapmotion.com/) device, use the \vuoNodeClass{vuo.leap} node set. 
+To receive keyboard buttons or typing, use the \vuoNodeClass{vuo.keyboard} node set. 
+
+To receive hand and finger movements with a [Leap Motion](https://www.leapmotion.com/) device, use the \vuoNodeClass{vuo.leap} node set. 
 
 For controlling a composition with your body movements using a [Kinect](http://en.wikipedia.org/wiki/Kinect), use the \vuoNodeClass{vuo.kinect} node set. 
 
@@ -828,4 +906,4 @@ You can use the Vuo Editor's \term{Show Events} mode, under the "Run" menu to de
 
 When you have a composition running, you can hover the mouse over any port in the Vuo Editor and a \term{port popover} will appear that reveals real-time information about that port. Next, you can drag the popover and drop it wherever you'd like and it will become its own independent window, continuously displaying information about the selected port. Some of the key information displayed is: the current value present at the port, the amount of time since the last event occurred, and the type of port selected. You can create many popovers, showing all the information you'd like to keep track of. This feature will allow you to easily monitor compositions and serve as a useful tool for problem-solving and creating.
 
-Don't forget \term {node tooltips}. They can be displayed when mousing over the title of a node on the canvas, not just when browsing node listings within the node library. By hovering the mouse cursor over a node, you will be presented with a tooltip describing the general purpose of the node as well as details that will help you make use of it.
+Don't forget \term {node popovers}. They can be displayed when mousing over the title of a node on the canvas, not just when browsing node listings within the node library. By hovering the mouse cursor over a node, you will be presented with a popover (tooltip) describing the general purpose of the node as well as details that will help you make use of it.

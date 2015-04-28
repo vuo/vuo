@@ -25,6 +25,7 @@ VuoCompilerNodeArgumentClass::VuoCompilerNodeArgumentClass(string name, enum Vuo
 	inInitFunction = false;
 	inCallbackStartFunction = false;
 	inCallbackUpdateFunction = false;
+	inCallbackStopFunction = false;
 }
 
 VuoCompilerNodeArgumentClass::~VuoCompilerNodeArgumentClass(void)
@@ -148,4 +149,31 @@ void VuoCompilerNodeArgumentClass::setIndexInCallbackUpdateFunction(size_t index
 {
 	this->indexInCallbackUpdateFunction = indexInCallbackUpdateFunction;
 	inCallbackUpdateFunction = true;
+}
+
+/**
+ * Returns true if this is known to be one of the parameters in its node class's callback stop function.
+ */
+bool VuoCompilerNodeArgumentClass::isInCallbackStopFunction(void)
+{
+	return inCallbackStopFunction;
+}
+
+/**
+ * Returns the index of this port's parameter in its node class's callback stop function.
+ *
+ * Assumes this port is known to be one of the parameters in its node class's callback stop function.
+ */
+size_t VuoCompilerNodeArgumentClass::getIndexInCallbackStopFunction(void)
+{
+	return indexInCallbackStopFunction;
+}
+
+/**
+ * Indicates that this is the parameter at index @c indexInCallbackStopFunction in its node class's callback stop function.
+ */
+void VuoCompilerNodeArgumentClass::setIndexInCallbackStopFunction(size_t indexInCallbackStopFunction)
+{
+	this->indexInCallbackStopFunction = indexInCallbackStopFunction;
+	inCallbackStopFunction = true;
 }

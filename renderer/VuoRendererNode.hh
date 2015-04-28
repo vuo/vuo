@@ -58,6 +58,15 @@ public:
 	qreal getInputDrawerOffset(unsigned int portIndex) const;
 	void updateNodeFrameRect(void);
 
+	static QPair<QPainterPath, QPainterPath> getNodeFrames(QRectF nodeInnerFrameRect,
+														   QPainterPath portsPath,
+														   QPainterPath portsInsetPath,
+														   QPainterPath statefulIndicatorOutline,
+														   bool isSubcomposition);
+	static QVector<QPainterPath> getStatefulIndicatorOutlines(QRectF nodeInnerFrameRect, bool isStateful);
+	static QPainterPath getAntennaPath(QRectF nodeInnerFrameRect, bool isInterface);
+	static QPair<QPainterPath, QPainterPath> getPortPaths(VuoRendererPortList *inputPorts, VuoRendererPortList *outputPorts);
+
 	void setMissingImplementation(bool missingImplementation);
 
 	void setProxyNode(VuoRendererNode * proxyNode);
@@ -73,7 +82,7 @@ public:
 	set<VuoCable *> getConnectedOutputCables(bool includePublishedCables);
 	VuoRendererPortList * getInputPorts(void);
 	VuoRendererPortList * getOutputPorts(void);
-	map<QString, json_object *> getConstantPortValues();
+	vector<pair<QString, json_object *> > getConstantPortValues();
 	void replaceInputPort(VuoRendererPort * oldPort, VuoRendererPort * newPort);
 	void addInputPort(VuoRendererPort * newPort);
 	bool hasGenericPort(void);
@@ -119,6 +128,11 @@ private:
 	static const qreal antennaIconWidth;
 
 	QRectF frameRect;
+	QPair<QPainterPath, QPainterPath> nodeFrames; // (nodeOuterFrame, nodeInnerFrame)
+	QPair<QPainterPath, QPainterPath> portPaths; // (ports, portsInset)
+	QVector<QPainterPath> statefulIndicatorOutlines; // (cableOutline, highlightOutline, cableOutlineMinusHighlight)
+	QPainterPath antennaPath;
+
 	QRectF nodeTitleBoundingRect;
 
 	// Node attributes affecting drawing

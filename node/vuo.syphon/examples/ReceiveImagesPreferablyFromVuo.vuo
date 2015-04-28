@@ -12,8 +12,8 @@ digraph G
 FilterServerDescriptionsByApp [type="vuo.syphon.filter.serverDescription.applicationName" version="1.0.0" label="Filter Server Descriptions by App|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<applicationName>applicationName\l|<done>done\r|<filteredServerDescriptions>filteredServerDescriptions\r" pos="280,120" fillcolor="violet" _applicationName="\"Vuo\""];
 GetItemFromList [type="vuo.list.get.VuoSyphonServerDescription" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="587,124" fillcolor="violet" _which="1"];
 ListSyphonServers [type="vuo.syphon.listServers" version="1.0.0" label="List Syphon Servers|<refresh>refresh\l|<done>done\r|<serversChanged>serversChanged\r" pos="60,104" fillcolor="violet"];
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="221,303"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="467,303"];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="221,303" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="467,303" _requestedFrame_eventThrottling="drop"];
 
 FilterServerDescriptionsByApp:filteredServerDescriptions -> GetItemFromList:list;
 GetItemFromList:item -> ReceiveImageFromSyphon:serverDescription;

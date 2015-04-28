@@ -3,7 +3,7 @@ Blends two images into a single image.
    - `background` — The background image (bottom layer) to blend.
    - `foreground` — The foreground image (top layer) to blend.
    - `blendMode` — The way that the images should be blended. For information about blend modes, see: 
-      - [Blend modes on Wikipedia](http://en.wikipedia.org/wiki/Blend_modes)
+      - [Wikipedia article on blend modes](http://en.wikipedia.org/wiki/Blend_modes)
       - [Photoshop blend modes](http://help.adobe.com/en_US/photoshop/cs/using/WSfd1234e1c4b69f30ea53e41001031ab64-77eba.html)
       - [GIMP blend modes](http://docs.gimp.org/en/gimp-concepts-layer-modes.html)
    - `foregroundOpacity` — The opacity that the foreground image component should have in the blended image, ranging from 0 to 1.

@@ -23,7 +23,6 @@ QMAKE_EXTRA_COMPILERS += node
 
 VUOCOMPILE_TYPE_INCLUDEPATH = \
 	$$MODULE_INCLUDEPATH \
-	$$ICU_ROOT/include \
 	$$JSONC_ROOT/include \
 	$$TYPE_INCLUDEPATH
 VUOCOMPILE_TYPE_DEPEND_FLAGS = \
@@ -40,7 +39,7 @@ QMAKE_EXTRA_COMPILERS += type
 
 typeObjects.input = TYPE_BITCODE
 typeObjects.output = ${QMAKE_FILE_IN_BASE}.o
-typeObjects.commands = $$QMAKE_CC -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
+typeObjects.commands = $$QMAKE_CC -Oz -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 typeObjects.variable_out = OBJECTS
 typeObjects.CONFIG = target_predeps
 QMAKE_EXTRA_COMPILERS += typeObjects
@@ -54,6 +53,7 @@ CLANG_NODE_LIBRARY_FLAGS = \
 	-fblocks \
 	-fexceptions \
 	-emit-llvm \
+	-Oz \
 	$$QMAKE_CXXFLAGS_WARN_ON \
 	$$join(CLANG_NODE_LIBRARY_INCLUDEPATH, " -I", "-I") \
 	$$join(DEFINES, " -D", "-D") \
@@ -82,7 +82,7 @@ VuoNodeSet {
 	NODE_SET_DIR = $$ROOT/node/$${NODE_SET}
 
 	NODE_OBJECTS = $$NODE_SOURCES
-	NODE_OBJECTS ~= s/\\.c$/.vuonode/g
+	NODE_OBJECTS ~= s/\\.cc?$/.vuonode/g
 
 	TYPE_OBJECTS = $$TYPE_SOURCES
 	TYPE_OBJECTS ~= s/\\.cc?$/.bc/g
@@ -104,6 +104,7 @@ VuoNodeSet {
 	exists($$NODE_SET_DIR/examples/*.png) { NODE_SET_ZIP_CONTENTS += examples/*.png }
 	exists($$NODE_SET_DIR/examples/*.jpg) { NODE_SET_ZIP_CONTENTS += examples/*.jpg }
 	exists($$NODE_SET_DIR/examples/*.mov) { NODE_SET_ZIP_CONTENTS += examples/*.mov }
+	exists($$NODE_SET_DIR/examples/*.mp3) { NODE_SET_ZIP_CONTENTS += examples/*.mp3 }
 
 	createNodeSetZip.commands = \
 		( [ -f $$NODE_SET_ZIP ] && rm $$NODE_SET_ZIP ) ; \

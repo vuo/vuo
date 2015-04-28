@@ -43,7 +43,6 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoList_VuoColor, {"default":[{"r":1,"g":1,"b":1,"a":1}, {"r":0,"g":0,"b":0,"a":1}]}) colors,
-		VuoInputEvent(VuoPortEventBlocking_None, colors) colorsEvent,
 		VuoInputData(VuoPoint2d, {"default":{"x":-1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) start,
 		VuoInputData(VuoPoint2d,  {"default":{"x":1,"y":-1}, "suggestedStep":{"x":0.1,"y":0.1}}) end,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,

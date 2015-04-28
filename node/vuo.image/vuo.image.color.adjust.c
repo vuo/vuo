@@ -48,7 +48,8 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_C
 
 		// Apply brightness.
 		pixelColor.rgb += brightness;
-
+		pixelColor.rgb = clamp(pixelColor.rgb, 0, 1);
+		
 		// // Apply gamma.
 		pixelColor.r = pow(pixelColor.r, gamma);
 		pixelColor.g = pow(pixelColor.g, gamma);
@@ -111,8 +112,8 @@ void nodeInstanceEvent
 
 	// *scaledValue = (value - start) * scaledRange / range + scaledStart;
 	VuoShader_setUniformFloat(shader, (*instance)->glContext, "saturation", saturation+1); 	// 0 - 3 values
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "brightness", brightness);			// -1, 1 values
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "contrast", contrast+1);				// 0, 2 values
+	VuoShader_setUniformFloat(shader, (*instance)->glContext, "brightness", brightness);	// -1, 1 values
+	VuoShader_setUniformFloat(shader, (*instance)->glContext, "contrast", contrast+1);		// 0, 2 values
 	VuoShader_setUniformFloat(shader, (*instance)->glContext, "gamma", gamma);
 	VuoShader_setUniformFloat(shader, (*instance)->glContext, "exposure", exposure*10);
 

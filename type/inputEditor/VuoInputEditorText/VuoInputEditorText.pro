@@ -13,8 +13,5 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorText.json
 
-INCLUDEPATH += $$ROOT/runtime
 LIBS += $$ROOT/type/VuoText.o \
-	$$ICU_ROOT/lib/libicuuc.a \
-	$$ICU_ROOT/lib/libicudata.a \
-	-Wl,-undefined,dynamic_lookup
+		-Wl,-undefined,dynamic_lookup

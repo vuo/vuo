@@ -8,7 +8,6 @@
  */
 
 #include "VuoInputEditorWithMenu.hh"
-#include "VuoMenu.hh"
 
 /**
  * Displays a menu.
@@ -18,7 +17,7 @@ json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *o
 	acceptedValue = originalValue;
 	VuoInputEditorMenuItem *menuTree = setUpMenuTree();
 
-	QMenu *menu = new VuoMenu();
+	QMenu *menu = new QMenu();
 	menu->setFont(getDefaultFont());
 	QActionGroup *menuActionGroup;
 	menuActionGroup = new QActionGroup(menu);

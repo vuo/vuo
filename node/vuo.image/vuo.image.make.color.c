@@ -42,7 +42,6 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoColor,{"default":{"r":1,"g":1,"b":1,"a":1}}) color,
-		VuoInputEvent(VuoPortEventBlocking_None, color) colorEvent,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,
 		VuoInputData(VuoInteger, {"default":480, "suggestedMin":1, "suggestedStep":32}) height,
 		VuoOutputData(VuoImage) image

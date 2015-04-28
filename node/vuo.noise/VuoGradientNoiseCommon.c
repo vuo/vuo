@@ -20,6 +20,9 @@ VuoModuleMetadata({
 #endif
 
 
+/**
+ * Perlin's shuffled ordering of 0..255, repeated once.
+ */
 static unsigned char perm[] =
 {
 	151, 160, 137, 91,
@@ -62,6 +65,9 @@ static unsigned char perm[] =
 				195, 78, 66, 215, 61, 156, 180
 };
 
+/**
+ * Lookup table for simplex traversal.
+ */
 static unsigned char simplex[64][4] =
 {
 	{0,1,2,3},{0,1,3,2},{0,0,0,0},{0,2,3,1},{0,0,0,0},{0,0,0,0},{0,0,0,0},{1,2,3,0},

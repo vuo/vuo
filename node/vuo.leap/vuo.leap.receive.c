@@ -38,7 +38,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(receivedFrame, VuoLeapFrame)
+		VuoOutputTrigger(receivedFrame, VuoLeapFrame, VuoPortEventThrottling_Drop)
 )
 {
 	(*context)->leap = VuoLeap_startListening(receivedFrame);

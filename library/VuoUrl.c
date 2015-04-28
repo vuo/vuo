@@ -17,13 +17,16 @@
 
 #include "module.h"
 
+#include "VuoText.h"
+
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoUrl",
 					 "dependencies" : [
 						 "curl",
 						 "crypto",
-						 "ssl"
+						 "ssl",
+						 "z"
 					 ]
 				 });
 #endif
@@ -95,10 +98,8 @@ static bool VuoUrl_urlIsAbsoluteFilePath(const char *url)
 /**
  * Resolves @c url (which could be an absolute URL, an absolute Unix file path, or a relative Unix file path)
  * into an absolure URL.
- *
- * The caller is responsible for freeing the returned string.
  */
-char *VuoUrl_normalize(const char *url)
+VuoText VuoUrl_normalize(const VuoText url)
 {
 	const char *fileScheme = "file://";
 	char *resolvedUrl;
@@ -175,7 +176,11 @@ char *VuoUrl_normalize(const char *url)
 		}
 	}
 
-	return resolvedUrl;
+	// Escape spaces.
+	VuoText escapedResolvedUrl = VuoText_replace(resolvedUrl, " ", "%20");
+	free(resolvedUrl);
+
+	return escapedResolvedUrl;
 }
 
 /**
@@ -186,7 +191,8 @@ char *VuoUrl_normalize(const char *url)
  */
 bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 {
-	char *resolvedUrl = VuoUrl_normalize(url);
+	VuoText resolvedUrl = VuoUrl_normalize(url);
+	VuoRetain(resolvedUrl);
 
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};
 	CURL *curl;
@@ -196,7 +202,7 @@ bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 	if (!curl)
 	{
 		fprintf(stderr, "VuoUrl_get() Error: cURL initialization failed.\n");
-		free(resolvedUrl);
+		VuoRelease(resolvedUrl);
 		return false;
 	}
 
@@ -220,7 +226,7 @@ bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 		return false;
 	}
 
-	free(resolvedUrl);
+	VuoRelease(resolvedUrl);
 
 	curl_easy_cleanup(curl);
 

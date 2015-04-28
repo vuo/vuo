@@ -13,7 +13,6 @@ NODE_SOURCES += \
 	vuo.mouse.status.c
 
 TYPE_SOURCES += \
-	VuoModifierKey.c \
 	VuoMouseButton.c
 
 NODE_LIBRARY_SOURCES += \
@@ -21,7 +20,6 @@ NODE_LIBRARY_SOURCES += \
 
 # OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
 OTHER_FILES += \
-	VuoModifierKey.h \
 	VuoMouseButton.h \
 	VuoMouse.h
 
