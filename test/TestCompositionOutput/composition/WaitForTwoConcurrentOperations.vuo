@@ -22,8 +22,8 @@ SelectInput3 [type="vuo.select.in.VuoReal" version="1.0.0" label="Select Input|<
 SelectInput4 [type="vuo.select.in.VuoReal" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="1087,484"];
 SelectOutput [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="587,251"];
 SelectOutput4 [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="579,534"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<whichOperationShouldWin>whichOperationShouldWin\r" _whichOperationShouldWin="false"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<whichOperationDidWin>whichOperationDidWin\l"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<whichOperationShouldWin>whichOperationShouldWin\r" _whichOperationShouldWin="false" _whichOperationShouldWin_type="VuoBoolean"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<whichOperationDidWin>whichOperationDidWin\l" _whichOperationDidWin_type="VuoBoolean"];
 
 Delay2:event -> GetWallTime3:refresh;
 Delay:event -> GetWallTime:refresh;

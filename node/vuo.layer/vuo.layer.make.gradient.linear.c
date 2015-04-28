@@ -21,6 +21,7 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
+		VuoInputData(VuoText) name,
 		VuoInputData(VuoList_VuoColor, {"default":[{"r":1,"g":1,"b":1,"a":1}, {"r":0,"g":0,"b":0,"a":1}]}) colors,
 		VuoInputData(VuoPoint2d, {"default":{"x":-1, "y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) gradientStart,
 		VuoInputData(VuoPoint2d, {"default":{"x":1, "y":-1}, "suggestedStep":{"x":0.1,"y":0.1}}) gradientEnd,
@@ -31,5 +32,5 @@ void nodeEvent
 		VuoOutputData(VuoLayer) layer
 )
 {
-	*layer = VuoLayer_makeLinearGradient(colors, gradientStart, gradientEnd, layerCenter, layerRotation, layerWidth, layerHeight);
+	*layer = VuoLayer_makeLinearGradient(name, colors, gradientStart, gradientEnd, layerCenter, layerRotation, layerWidth, layerHeight);
 }

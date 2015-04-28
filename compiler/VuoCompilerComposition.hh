@@ -12,6 +12,7 @@
 
 #include "VuoBaseDetail.hh"
 #include "VuoComposition.hh"
+#include "VuoProtocol.hh"
 
 #include "VuoCompilerGraphvizParser.hh"
 
@@ -34,8 +35,9 @@ public:
 	void setPublishedOutputNode(VuoNode *node);
 	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
 	string getGraphvizDeclaration(string header = "", string footer = "");
-	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
+	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts, string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
 	string diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler);
+	bool compliesWithProtocol(VuoProtocol *protocol);
 
 	static const string defaultGraphDeclaration; ///< The default graph type and ID to be generated for new .vuo (Graphviz dot format) composition files.
 

@@ -36,7 +36,7 @@ SOURCES = \
 	$$ROOT/base/VuoStringUtilities.cc \
 	$$ROOT/base/VuoTelemetry.c \
 	$$ROOT/base/miniz.c \
-	$$ROOT/runtime/VuoHeap.cc \
+	$$ROOT/library/VuoHeap.cc \
 	VuoRunner32.cc
 
 HEADERS = \

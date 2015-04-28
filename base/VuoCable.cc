@@ -67,6 +67,8 @@ VuoPort * VuoCable::getToPort(void)
 
 /**
  * Sets the node and port from which this cable is output.
+ * Updates the lists of connected cables maintained internally
+ * by this cable's previous and new fromPorts appropriately.
  */
 void VuoCable::setFrom(VuoNode *fromNode, VuoPort *fromPort)
 {
@@ -87,6 +89,8 @@ void VuoCable::setFrom(VuoNode *fromNode, VuoPort *fromPort)
 
 /**
  * Sets the node and port to which this cable is input.
+ * Updates the lists of connected cables maintained internally
+ * by this cable's previous and new toPorts appropriately.
  */
 void VuoCable::setTo(VuoNode *toNode, VuoPort *toPort)
 {

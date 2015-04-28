@@ -14,29 +14,33 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Parametric Vertices",
-					 "keywords" : [ "math", "shape" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "math", "shape", "surface" ],
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoVerticesParametric"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						 "isInterface" : false,
+						 "exampleCompositions" : [ "SpinShell.vuo" ]
 					 }
 				 });
 
 void nodeEvent
 (
+		VuoInputData(VuoReal, {"default":0.0}) time,
 		VuoInputData(VuoText, {"default":"u"}) xExpression,
 		VuoInputData(VuoText, {"default":"v"}) yExpression,
 		VuoInputData(VuoText, {"default":"0"}) zExpression,
-		VuoInputData(VuoText, {"default":"u"}) uExpression,
-		VuoInputData(VuoText, {"default":"v"}) vExpression,
 		VuoInputData(VuoInteger, {"default":16,"suggestedMin":0}) rows,
 		VuoInputData(VuoInteger, {"default":16,"suggestedMin":0}) columns,
 		VuoInputData(VuoBoolean, {"default":false}) uClosed,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedStep":0.1}) uMin,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedStep":0.1}) uMax,
 		VuoInputData(VuoBoolean, {"default":false}) vClosed,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedStep":0.1}) vMin,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedStep":0.1}) vMax,
 		VuoOutputData(VuoList_VuoVertices) vertices
 )
 {
-	*vertices = VuoVerticesParametric_generate( xExpression, yExpression, zExpression, uExpression, vExpression, rows, columns, (bool)uClosed, (bool)vClosed );
+	*vertices = VuoVerticesParametric_generate(time, xExpression, yExpression, zExpression, rows, columns, (bool)uClosed, uMin, uMax, (bool)vClosed, vMin, vMax);
 }

@@ -20,10 +20,16 @@
 struct json_object;
 
 // Types
+#include "VuoAudioSamples.h"
+#include "VuoBlendMode.h"
 #include "VuoBoolean.h"
 #include "VuoColor.h"
+#include "VuoCurve.h"
+#include "VuoCurveEasing.h"
+#include "VuoHorizontalAlignment.h"
 #include "VuoImage.h"
 #include "VuoInteger.h"
+#include "VuoModifierKey.h"
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
@@ -33,15 +39,20 @@ struct json_object;
 #include "VuoText.h"
 #include "VuoTransform.h"
 #include "VuoTransform2d.h"
+#include "VuoVerticalAlignment.h"
 #include "VuoVertices.h"
+#include "VuoWave.h"
 #include "VuoWindowReference.h"
 #include "VuoWrapMode.h"
 
 // List Types
+#include "VuoList_VuoAudioSamples.h"
+#include "VuoList_VuoBlendMode.h"
 #include "VuoList_VuoBoolean.h"
 #include "VuoList_VuoColor.h"
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoInteger.h"
+#include "VuoList_VuoModifierKey.h"
 #include "VuoList_VuoPoint2d.h"
 #include "VuoList_VuoPoint3d.h"
 #include "VuoList_VuoPoint4d.h"
@@ -95,6 +106,25 @@ enum VuoPortEventBlocking
 };
 
 /**
+ * Options for trigger ports to throttle events when triggers are firing events faster than the composition
+ * can process them.
+ */
+enum VuoPortEventThrottling
+{
+	/**
+	 * An event fired by this port will eventually reach downstream nodes, waiting if necessary for previous events
+	 * to flow through the composition.
+	 */
+	VuoPortEventThrottling_Enqueue,
+
+	/**
+	 * An event fired by this port will be dropped (not transmitted to any nodes downstream of the trigger port)
+	 * if it would otherwise have to wait for previous events to flow through the composition.
+	 */
+	VuoPortEventThrottling_Drop
+};
+
+/**
  * Use this to decorate parameters referring to a stateful node's instance data.
  *
  * When this parameter's function is called, the argument passed will be
@@ -124,7 +154,9 @@ enum VuoPortEventBlocking
  * @param type The port type. See @ref VuoTypes.
  * @param ... Optionally, a JSON object specification containing additional details about the data, such as its default value.
  *		The "default" key is recognized for all port types, and should have the format accepted by the port type's
- *		MyType_valueFromJson() function. Additional keys may be recognized by the port type's input editor (see
+ *		MyType_valueFromJson() function. The "defaults" key is recognized for generic port types; its value should be
+ *		a JSON object in which each key is a specialized port type name and each value has the format accepted by that
+ *		port type's MyType_valueFromJson() function. Additional keys may be recognized by the port type's input editor (see
  *		@ref DevelopingInputEditors).
  *
  * \eg{void nodeEvent(VuoInputData(VuoInteger,{"default":60,"suggestedMin":0,"suggestedMax":127}) noteNumber);}
@@ -197,27 +229,26 @@ enum VuoPortEventBlocking
  *
  * @param name The name of the trigger port.
  * @param type The port type, or `void` for an event-only trigger port. See @ref VuoTypes.
+ * @param ... Optionally, a VuoPortEventThrottling value.
  *
  * \eg{void nodeEvent(VuoOutputTrigger(started,void))
  * {
  *     // Fire an event without any data.
  *     started();
  * }}
- * \eg{void nodeEvent(VuoOutputTrigger(didSomething,int))
+ * \eg{void nodeEvent(VuoOutputTrigger(didSomething,VuoInteger))
  * {
  *     // Fire an event with stack data.
  *     didSomething(5);
  * }}
- * \eg{void nodeEvent(VuoOutputTrigger(didSomething,char *))
+ * \eg{void nodeEvent(VuoOutputTrigger(didSomething,VuoText))
  * {
  *     // Fire an event with heap data.
- *     char *heapData = (char *)malloc(strlen("hello")+1);
- *     strcpy(heapData, "hello");
- *     didSomething(heapData);
- *     VuoRelease(heapData);
+ *     VuoText t = VuoText_make("hello");
+ *     didSomething(t);
  * }}
  */
-#define VuoOutputTrigger(name,type) __attribute__((annotate("vuoOutputTrigger:" #name), annotate("vuoType:" # type))) void (* const name)(type)
+#define VuoOutputTrigger(name,type,...) __attribute__((annotate("vuoOutputTrigger:" #name), annotate("vuoType:" #type), annotate("vuoInputEventThrottling:" #__VA_ARGS__))) void (* const name)(type)
 
 /**
  * @}
@@ -344,6 +375,9 @@ void nodeInstanceTriggerUpdate(...);
  *
  * Parameter decorations must include:
  *		@arg @ref VuoInstanceData
+ *
+ * Parameter decorations may include:
+ *		@arg @ref VuoOutputTrigger — Stateful nodes may store references to trigger functions in their instance data, in order to fire events at any time.
  */
 void nodeInstanceTriggerStop(...);
 

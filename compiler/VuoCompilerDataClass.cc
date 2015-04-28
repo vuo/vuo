@@ -16,7 +16,6 @@
 VuoCompilerDataClass::VuoCompilerDataClass(string name, Type *type) :
 	VuoCompilerNodeArgumentClass(name, VuoPortClass::notAPort, type)
 {
-	type = NULL;
 	vuoType = NULL;
 }
 

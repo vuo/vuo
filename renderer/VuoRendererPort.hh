@@ -14,6 +14,7 @@
 
 #include "VuoBaseDetail.hh"
 #include "VuoType.hh"
+#include "VuoPortClass.hh"
 
 class VuoCompilerNodeClass;
 class VuoCompilerNode;
@@ -59,6 +60,7 @@ public:
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 	QPainterPath getPortPath(qreal inset) const;
 	static QPainterPath getPortConstantPath(QRectF innerPortRect, QString text, QPainterPath *outsetPath, bool isTypecast=false);
+	void updatePortConstantPath();
 	static QRectF getPortRect(void);
 	VuoRendererMakeListNode * getAttachedInputDrawer(void) const;
 	virtual QRectF getPortConstantTextRect(void) const;
@@ -67,7 +69,8 @@ public:
 	string getConstantAsString(void) const;
 	string getConstantAsStringToRender(void) const;
 	void setConstant(string constantValue);
-	VuoRendererPublishedPort * getPublishedPort() const;
+	bool getPublishable() const;
+	vector<VuoRendererPublishedPort *> getPublishedPorts() const;
 
 	VuoRendererNode * getUnderlyingParentNode(void) const;
 	VuoRendererNode * getRenderedParentNode(void) const;
@@ -109,7 +112,12 @@ private:
 	qint64 timeLastEventFired;
 	vector<QGraphicsItemAnimation *> animations;
 
-	friend class VuoRendererPublishedPort; 	///< VuoRendererPublishedPort needs paintWithOptions(...) and boundingRectWithOptions(...)
+	QRectF portHybridRect;
+	QPainterPath portConstantPath;
+	QPainterPath outsetPath;
+	QPainterPath outsetMinusPortConstantPath;
+	
+	friend class VuoRendererPublishedPort; 	///< VuoRendererPublishedPort needs paint(...) and boundingRect()
 	friend class TestVuoRenderer;
 
 protected:
@@ -117,21 +125,19 @@ protected:
 	bool isDonePort; ///< Is this port a done port?
 
 	QRectF nameRect; ///< The bounding box of the port's label when rendered on the canvas.
-	QRectF nameRectForSidebarMode; ///< The bounding box of the port's label when rendered in the "Published Port" sidebar.
 
-	void paintWithOptions(QPainter *painter, bool sidebarPaintMode);
-	QRectF boundingRectWithOptions(bool sidebarPaintMode) const;
-	bool portNameRenderingEnabled(bool sidebarPaintMode) const;
-	QRectF getNameRect(bool sidebarPaintMode=false) const;
-	void updateNameRect(bool sidebarPaintMode);
+	bool portNameRenderingEnabled(void) const;
+	QRectF getNameRect(void) const;
+	void updateNameRect(void);
 	bool isOnDrawer(void) const;
 	void updateEnabledStatus();
 
 	static QRectF getPortConstantTextRectForText(QString text);
+	static QPainterPath getPortPath(qreal inset, VuoPortClass::PortType portType, bool isInputPort, bool carriesData);
 	QPainterPath getFunctionPortGlyph(void) const;
 
-	void paintPortName(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode);
-	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors, bool sidebarPaintMode);
+	void paintPortName(QPainter *painter, VuoRendererColors *colors);
+	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);
 	string getPointStringForCoords(QList<double>) const;
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.

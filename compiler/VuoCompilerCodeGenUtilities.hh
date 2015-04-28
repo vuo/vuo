@@ -104,6 +104,8 @@ public:
 	static Function * getGetInputPortSummaryFunction(Module *module);
 	static Function * getGetOutputPortSummaryFunction(Module *module);
 	static Function * getSetInputPortValueFunction(Module *module);
+	static Function * getGetPublishedOutputPortValueFunction(Module *module);
+	static Function * getSetPublishedInputPortValueFunction(Module *module);
 	static Function * getSendNodeExecutionStartedFunction(Module *module);
 	static Function * getSendNodeExecutionFinishedFunction(Module *module);
 	static Function * getSendInputPortsUpdatedFunction(Module *module);

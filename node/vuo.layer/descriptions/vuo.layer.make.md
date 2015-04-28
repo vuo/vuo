@@ -1,5 +1,8 @@
 Creates a layer that can be combined with other layers to create a composite image. 
 
+The image used to create this layer may be resized in the composite image. If you want the image to be rendered at its original size, use the `Make Layer` node instead.
+
+   - `name` — A name to identify the layer, allowing other nodes to select it from a group of layers. 
    - `image` — The image displayed in the layer. For the layer to be visible, you have to provide an image. 
    - `center` — The center point of the image, in Vuo coordinates. 
    - `rotation` — The image's rotation to the left, in degrees. 

@@ -205,6 +205,64 @@ VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point)
 }
 
 /**
+ * Transforms @c rectangle using @c matrix (a column-major matrix of 16 values), and returns the new rectangle.
+ *
+ * If the matrix specifies a rotation, this function returns an axis-aligned rectangle fully enclosing the source rectangle.
+ *
+ * @see VuoTransform_getMatrix
+ */
+VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle rectangle)
+{
+	VuoReal left	= rectangle.center.x - rectangle.size.x/2.;
+	VuoReal right	= rectangle.center.x + rectangle.size.x/2.;
+	VuoReal bottom	= rectangle.center.y - rectangle.size.y/2.;
+	VuoReal top		= rectangle.center.y + rectangle.size.y/2.;
+
+	VuoPoint3d topLeft		= VuoTransform_transformPoint(matrix, VuoPoint3d_make(left, top, 0.));
+	VuoPoint3d topRight		= VuoTransform_transformPoint(matrix, VuoPoint3d_make(right, top, 0.));
+	VuoPoint3d bottomLeft	= VuoTransform_transformPoint(matrix, VuoPoint3d_make(left, bottom, 0.));
+	VuoPoint3d bottomRight	= VuoTransform_transformPoint(matrix, VuoPoint3d_make(right, bottom, 0.));
+
+	VuoReal transformedLeft		= MIN(MIN(MIN(topLeft.x, topRight.x), bottomLeft.x), bottomRight.x);
+	VuoReal transformedRight	= MAX(MAX(MAX(topLeft.x, topRight.x), bottomLeft.x), bottomRight.x);
+	VuoReal transformedBottom	= MIN(MIN(MIN(topLeft.y, topRight.y), bottomLeft.y), bottomRight.y);
+	VuoReal transformedTop		= MAX(MAX(MAX(topLeft.y, topRight.y), bottomLeft.y), bottomRight.y);
+
+	VuoRectangle transformedRectangle = VuoRectangle_make(
+				(transformedLeft + transformedRight)/2.,
+				(transformedBottom + transformedTop)/2.,
+				transformedRight - transformedLeft,
+				transformedTop - transformedBottom);
+
+	return transformedRectangle;
+}
+
+/**
+ * Returns a column-major matrix of 16 values that transforms a 1x1 quad so that it renders the specified image at real (pixel-perfect) size.
+ */
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, float *billboardMatrix)
+{
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), billboardMatrix);
+
+	// Apply scale to make the image appear at real size (1:1).
+	billboardMatrix[0] = 2. * imageWidth/viewportWidth;
+	billboardMatrix[5] = billboardMatrix[0] * imageHeight/imageWidth;
+
+	// Apply 2D translation.
+		// Align the translation to pixel boundaries
+		billboardMatrix[12] = floor((translationX+1.)/2.*viewportWidth) / ((float)viewportWidth) * 2. - 1.;
+		billboardMatrix[13] = floor((translationY+1.)/2.*viewportWidth) / ((float)viewportWidth) * 2. - 1.;
+
+		// Account for odd-dimensioned image
+		billboardMatrix[12] += (imageWidth % 2 ? (1./viewportWidth) : 0);
+		billboardMatrix[13] -= (imageHeight % 2 ? (1./viewportWidth) : 0);
+
+		// Account for odd-dimensioned viewport
+		billboardMatrix[13] += (viewportWidth  % 2 ? (1./viewportWidth) : 0);
+		billboardMatrix[13] -= (viewportHeight % 2 ? (1./viewportWidth) : 0);
+}
+
+/**
  * @ingroup VuoTransform
  * Decodes the JSON object @c js to create a new value.
  *

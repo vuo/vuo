@@ -162,11 +162,11 @@ Function * VuoCompilerTriggerAction::getWorkerFunction(Module *module, BasicBloc
 
 
 /**
- * Generates code to handle the trigger's data value (if any) having changed.
+ * Generates code to update the trigger's data value (if any) with the worker function argument.
  *
  * @return The trigger's new data value.
  */
-Value * VuoCompilerTriggerAction::generateDataValueDidChange(Module *module, BasicBlock *block, Function *triggerWorker)
+Value * VuoCompilerTriggerAction::generateDataValueUpdate(Module *module, BasicBlock *block, Function *triggerWorker)
 {
 	Value *currentDataValue = NULL;
 	Type *portDataType = getDataType();
@@ -194,6 +194,30 @@ Value * VuoCompilerTriggerAction::generateDataValueDidChange(Module *module, Bas
 	}
 
 	return currentDataValue;
+}
+
+/**
+ * Generates code to discard the worker function argument without updating the trigger's data value (if any).
+ */
+void VuoCompilerTriggerAction::generateDataValueDiscard(Module *module, BasicBlock *block, Function *triggerWorker)
+{
+	Value *currentDataValue = NULL;
+	Type *portDataType = getDataType();
+
+	if (portDataType)
+	{
+		// PortDataType *dataCopy = (PortDataType *)workerArg;
+		// PortDataType data = *dataCopy;
+		// free(dataCopy);
+		// PortDataType_release(data);
+		PointerType *dataCopyPointerType = PointerType::get(portDataType, 0);
+		Value *dataCopyAsVoidPointer = triggerWorker->arg_begin();
+		Value *dataCopyAddress = new BitCastInst(dataCopyAsVoidPointer, dataCopyPointerType, "", block);
+		currentDataValue = new LoadInst(dataCopyAddress, "", false, block);
+		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
+		CallInst::Create(freeFunction, dataCopyAsVoidPointer, "", block);
+		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, currentDataValue);
+	}
 }
 
 /**

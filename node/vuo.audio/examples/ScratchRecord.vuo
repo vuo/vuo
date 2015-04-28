@@ -1,0 +1,51 @@
+/**
+ * @file
+ * Uses mouse movements to skip backward and repeat a segment of music (like scratching a record). 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="892,343" fillcolor="cyan"];
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.0.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<verticalAlignment>verticalAlignment\l|<done>done\r|<alignedLayer>alignedLayer\r" pos="960,569" fillcolor="green" _horizontalAlignment="\"center\"" _verticalAlignment="\"center\""];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<done>done\r|<becameTrue>becameTrue\r" pos="465,325" fillcolor="cyan"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<x>x\r" pos="1393,488"];
+Count2 [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="683,358" fillcolor="cyan" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
+FindMaximum [type="vuo.math.max.VuoReal" version="1.0.0" label="Find Maximum|<refresh>refresh\l|<terms>terms\l|<done>done\r|<max>max\r" pos="1090,343" fillcolor="cyan"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="578,82" fillcolor="yellow" _started_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.hold.VuoReal" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="835,238" fillcolor="cyan" _initialValue=""];
+IsLessThan [type="vuo.math.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="309,325" fillcolor="cyan" _b="0.000000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="760,583" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="829,354" fillcolor="cyan"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="1173,643" fillcolor="green"];
+MakeList3 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1027,354" fillcolor="cyan" _item2=""];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="569,597" fillcolor="green" _text="\"Move your mouse to the left to scratch.\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.0.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<done>done\r|<decodedChannels>decodedChannels\r" pos="1237,203" fillcolor="violet" _url="\"DeclineOfTheAmiga.mp3\"" _decodedChannels_eventThrottling="drop"];
+ReceiveMouseDeltas [type="vuo.mouse.delta" version="1.0.0" label="Receive Mouse Deltas|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedBy>movedBy\r" pos="66,325" fillcolor="yellow" _window="" _modifierKey="\"any\"" _movedBy_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1236,632" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SendLiveAudio2 [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="1444,188" fillcolor="violet" _device="" _requestedChannels_eventThrottling="enqueue"];
+
+Add:sum -> MakeList3:item1;
+AlignLayerToWindow:alignedLayer -> MakeList2:item1;
+BecameTrue:becameTrue -> Count2:decrement;
+BecameTrue:becameTrue -> HoldValue2:refresh;
+Convert2DPointToReal2:x -> IsLessThan:a;
+Count2:count -> MakeList:item2;
+FindMaximum:max -> PlayAudioFile:setTime;
+FireOnStart:started -> MakeTextImage:refresh;
+FireOnStart:started -> PlayAudioFile:play;
+HoldValue2:heldValue -> MakeList:item1;
+IsLessThan:lessThan -> BecameTrue:value;
+MakeLayer:layer -> AlignLayerToWindow:layer;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList3:list -> FindMaximum:terms;
+MakeList:list -> Add:terms;
+MakeTextImage:image -> MakeLayer:image;
+PlayAudioFile:decodedChannels -> SendLiveAudio2:sendChannels;
+ReceiveMouseDeltas:movedBy -> Convert2DPointToReal2:xy;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+SendLiveAudio2:requestedChannels -> HoldValue2:newValue;
+}

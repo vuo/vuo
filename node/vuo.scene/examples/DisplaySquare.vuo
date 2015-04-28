@@ -13,7 +13,7 @@ FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<
 Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="329,253" fillcolor="violet" _shader="" _transform=""];
 MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="478,264"];
 MakeSquareVertices [type="vuo.vertices.make.square" version="1.0.0" label="Make Square Vertices|<refresh>refresh\l|<done>done\r|<vertices>vertices\r" pos="120,253" fillcolor="violet"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="542,253" _cameraName=""];
+RenderSceneToWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="542,253" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 FireonStart:started -> MakeSquareVertices:refresh;
 Make3DObject:object -> MakeList2:item1;

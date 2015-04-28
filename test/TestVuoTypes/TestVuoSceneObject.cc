@@ -378,12 +378,13 @@ private slots:
 			const char *xExp = "sin(DEG2RAD*((u-.5)*360)) * cos(DEG2RAD*((v-.5)*180)) / 2.";
 			const char *yExp = "sin(DEG2RAD*((v-.5)*180)) / 2.";
 			const char *zExp = "cos(DEG2RAD*((u-.5)*360)) * cos(DEG2RAD*((v-.5)*180)) / 2.";
-			const char *uExp = "u";
-			const char *vExp = "v";
-			VuoList_VuoVertices v = VuoVerticesParametric_generate( xExp, yExp, zExp, uExp, vExp,
+			VuoList_VuoVertices v = VuoVerticesParametric_generate(0,
+															 xExp, yExp, zExp,
 															 16, 16,
 															 false,		// close u
-															 false);	// close v
+															 0, 1,
+															 false,		// close v
+															 0, 1);
 			VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_make(v, VuoShader_makeImageShader(), VuoTransform_makeIdentity(), NULL));
 
 			VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), childObjects);

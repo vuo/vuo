@@ -74,7 +74,7 @@ private:
 	void generateCallbackStartFunction(void);
 	void generateCallbackStopFunction(void);
 	Value * generateGetNextEventID(Module *module, BasicBlock *block);
-	void generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL);
+	Value * generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL, bool shouldBlock = true);
 	void generateSignalForNodes(Module *module, BasicBlock *block, vector<VuoCompilerNode *> nodes);
 	Value * generatePortSerialization(Module *module, BasicBlock *block, VuoCompilerPort *port);
 	Value * generatePortSerializationInterprocess(Module *module, BasicBlock *block, VuoCompilerPort *port);
@@ -93,6 +93,8 @@ private:
 	void generateGetPublishedPortConnectedIdentifierCount(bool input);
 	void generateGetPublishedPortConnectedIdentifiers(bool input);
 	void generateFirePublishedInputPortEventFunction(void);
+	void generateGetPublishedOutputPortValueFunction(void);
+	void generateSetPublishedInputPortValueFunction(void);
 	void generateSendPortsUpdatedCall(BasicBlock *initialBlock, BasicBlock *finalBlock, VuoCompilerNode *node);
 	void generateSendTriggerPortValueChangedCall(BasicBlock *block, VuoCompilerTriggerPort *trigger, Value *triggerDataValue);
 	void generateSerializeFunction(void);

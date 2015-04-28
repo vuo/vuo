@@ -70,6 +70,23 @@ VuoRectangle VuoPoint2d_rectangleIntersection(VuoRectangle rectangleA, VuoRectan
 }
 
 /**
+ * Returns the union area of @c rectangleA and @c rectangleB.
+ */
+VuoRectangle VuoPoint2d_rectangleUnion(VuoRectangle rectangleA, VuoRectangle rectangleB)
+{
+	VuoReal left	= MIN(rectangleA.center.x - rectangleA.size.x/2., rectangleB.center.x - rectangleB.size.x/2.);
+	VuoReal right	= MAX(rectangleA.center.x + rectangleA.size.x/2., rectangleB.center.x + rectangleB.size.x/2.);
+	VuoReal bottom	= MIN(rectangleA.center.y - rectangleA.size.y/2., rectangleB.center.y - rectangleB.size.y/2.);
+	VuoReal top		= MAX(rectangleA.center.y + rectangleA.size.y/2., rectangleB.center.y + rectangleB.size.y/2.);
+
+	return VuoRectangle_make(
+				(left + right)/2.,
+				(bottom + top)/2.,
+				right - left,
+				top - bottom);
+}
+
+/**
  * @ingroup VuoPoint2d
  * Decodes the JSON object @c js to create a new value.
  *

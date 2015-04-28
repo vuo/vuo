@@ -105,6 +105,8 @@ extern int getPublishedOutputPortConnectedIdentifierCount(char *name);
 extern char ** getPublishedInputPortConnectedIdentifiers(char *name);
 extern char ** getPublishedOutputPortConnectedIdentifiers(char *name);
 extern void firePublishedInputPortEvent(char *name);
+extern void setPublishedInputPortValue(char *portIdentifier, char *valueAsString);
+extern char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
 extern void VuoHeap_init();
 extern void VuoHeap_fini();
 //@}
@@ -569,9 +571,25 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 					vuoControlReplySend(VuoControlReplyPublishedInputPortFiredEvent,NULL,0);
 					break;
 				}
-				default:
+				case VuoControlRequestPublishedInputPortValueModify:
 				{
-					fprintf(stderr, "composition: got unknown request %d\n", control);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					char *valueAsString = vuoReceiveAndCopyString(ZMQControl);
+					setPublishedInputPortValue(portIdentifier, valueAsString);
+					free(portIdentifier);
+					free(valueAsString);
+					vuoControlReplySend(VuoControlReplyPublishedInputPortValueModified,NULL,0);
+					break;
+				}
+				case VuoControlRequestPublishedOutputPortValueRetrieve:
+				{
+					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					char *valueAsString = getPublishedOutputPortValue(portIdentifier, shouldUseInterprocessSerialization);
+					zmq_msg_t messages[1];
+					vuoInitMessageWithString(&messages[0], valueAsString);
+					free(valueAsString);
+					vuoControlReplySend(VuoControlReplyPublishedOutputPortValueRetrieved,messages,1);
 					break;
 				}
 			}
@@ -634,17 +652,11 @@ void sendOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataS
 	vuoTelemetrySend(VuoTelemetryOutputPortsUpdated, messages, 3);
 }
 
-void vuoStopComposition();
-
 /**
  * Constructs and sends a message on the telemetry socket, indicating that an uncaught error has occurred.
  */
 void sendError(const char *message)
 {
-	/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
-	if (strcmp(message, "Out of video RAM.") == 0)
-		vuoStopComposition();
-
 	zmq_msg_t messages[1];
 	vuoInitMessageWithString(&messages[0], message);
 

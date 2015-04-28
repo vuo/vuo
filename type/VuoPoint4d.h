@@ -203,6 +203,21 @@ static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b)
 }
 
 /**
+ *	Returns a component-wise snap value using a center point and snap value.
+ */
+static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoint4d snap) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoint4d snap)
+{
+	return (VuoPoint4d) { 
+			center.x + snap.x * (int)round((a.x-center.x) / snap.x),
+			center.y + snap.y * (int)round((a.y-center.y) / snap.y),
+			center.z + snap.z * (int)round((a.z-center.z) / snap.z),
+			center.w + snap.w * (int)round((a.w-center.w) / snap.w)
+		};
+}
+
+
+/**
  * @}
  */
 

@@ -85,7 +85,6 @@ private:
 		/// @todo This is a temporary workaround for VuoFileUtilities::findAllFilesInDirectory() not searching recursively. - https://b33p.net/kosada/node/2468
 		vector<string> subDirs;
 		subDirs.push_back(frameworkDir + "/Frameworks/CRuntime.framework");
-		subDirs.push_back(frameworkDir + "/Frameworks/ICU.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/JSON-C.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/graphviz.framework");
 		subDirs.push_back(frameworkDir + "/Frameworks/graphviz.framework/graphviz");

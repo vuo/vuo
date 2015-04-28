@@ -3,8 +3,6 @@ CONFIG += zmq VuoPCH graphviz json
 
 include(../vuo.pri)
 
-RUNTIME_CXX_SOURCES += \
-	VuoHeap.cc
 RUNTIME_C_SOURCES += \
 	VuoRuntime.c \
 	VuoRuntimeMain.c \
@@ -14,7 +12,6 @@ RUNTIME_LOADER_SOURCES += \
 OTHER_FILES += $$RUNTIME_CXX_SOURCES $$RUNTIME_C_SOURCES $$RUNTIME_LOADER_SOURCES
 
 HEADERS += \
-	VuoHeap.h \
 	VuoRuntime.h
 
 QMAKE_CLEAN += VuoCompositionLoader
@@ -47,8 +44,7 @@ runtime_cxx.commands = \
 		-Wl,-no_function_starts \
 		-Wl,-no_version_load_command \
 		${QMAKE_FILE_IN} \
-		-o ${QMAKE_FILE_OUT} && \
-	install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Modules/libVuoHeap.dylib ${QMAKE_FILE_OUT}
+		-o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_cxx
 
 runtime_loader.input = RUNTIME_LOADER_SOURCES

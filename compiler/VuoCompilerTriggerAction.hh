@@ -34,7 +34,8 @@ public:
 	void generateFinalization(Module *module, BasicBlock *block);
 	Function * generateAsynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, string identifier);
 	Function * generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, string identifier);
-	Value * generateDataValueDidChange(Module *module, BasicBlock *block, Function *triggerWorker);
+	Value * generateDataValueUpdate(Module *module, BasicBlock *block, Function *triggerWorker);
+	void generateDataValueDiscard(Module *module, BasicBlock *block, Function *triggerWorker);
 	GlobalVariable * getPreviousDataVariable(void);
 };
 

@@ -25,6 +25,7 @@ NODE_SOURCES += \
 	vuo.image.make.gradient.linear.c \
 	vuo.image.make.gradient.radial.c \
 	vuo.image.make.text.c \
+#	vuo.image.make.triangle.c \
 	vuo.image.apply.mask.c \
 	vuo.image.resize.c \
 	vuo.image.resize.larger.c \
@@ -33,11 +34,12 @@ NODE_SOURCES += \
 	vuo.image.set.wrapMode.c
 
 NODE_INCLUDEPATH += \
+	../vuo.audio \
 	../vuo.font
 
 TYPE_SOURCES += \
 	VuoThresholdType.c
-	
+
 HEADERS += \
 	VuoThresholdType.h
 

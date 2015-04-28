@@ -167,6 +167,7 @@ public:
 	VuoOscInSocket(const IpEndpointName &localEndpoint, VuoOscInPacketListener *listener)
 		: UdpSocket(), listener_(listener)
 	{
+		netService = NULL;
 		SetAllowReuse(true);
 
 		try

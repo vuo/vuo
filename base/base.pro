@@ -13,6 +13,7 @@ SOURCES += \
 	VuoNodeSet.cc \
 	VuoPort.cc \
 	VuoPortClass.cc \
+	VuoProtocol.cc \
 	VuoCable.cc \
 	VuoRunner.cc \
 	VuoFileUtilities.cc \
@@ -35,6 +36,7 @@ HEADERS += \
 	VuoNodeSet.hh \
 	VuoPort.hh \
 	VuoPortClass.hh \
+	VuoProtocol.hh \
 	VuoCable.hh \
 	VuoRunner.hh \
 	VuoFileUtilities.hh \

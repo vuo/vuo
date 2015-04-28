@@ -16,9 +16,11 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
+							  "defaultType" : "VuoReal",
 							  "compatibleTypes" : [ "VuoBoolean", "VuoInteger", "VuoReal", "VuoText" ]
 						  },
 						  "VuoGenericType2" : {
+							  "defaultType" : "VuoReal",
 							  "compatibleTypes" : [ "VuoBoolean", "VuoInteger", "VuoReal", "VuoText" ]
 						  }
 					  },

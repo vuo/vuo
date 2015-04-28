@@ -36,7 +36,7 @@ public:
 	};
 
 	/**
-	 * Possible options for event-blocking behavior. See @ref VuoPortEventBlocking in node.h.
+	 * Options for event-blocking behavior. See @ref VuoPortEventBlocking in node.h.
 	 */
 	enum EventBlocking
 	{
@@ -45,18 +45,30 @@ public:
 		EventBlocking_Wall ///< An event received by this input port is never transmitted to any output port.
 	};
 
+	/**
+	 * Options for event-throttling behavior. See @ref VuoPortEventThrottling in node.h.
+	 */
+	enum EventThrottling
+	{
+		EventThrottling_Enqueue, ///< An event fired from this port is eventually transmitted downstream.
+		EventThrottling_Drop ///< An event fired from this port is dropped if it would have to wait on nodes downstream.
+	};
+
 	VuoPortClass(string name, enum PortType portType);
 	string getName(void);
 	PortType getPortType(void);
 	EventBlocking getEventBlocking(void);
 	void setEventBlocking(EventBlocking eventBlocking);
+	EventThrottling getDefaultEventThrottling(void);
+	void setDefaultEventThrottling(EventThrottling eventThrottling);
 
 	void print(void);
 
 private:
 	string name; ///< The parameter's name, used as an identifier and for display.
 	enum PortType portType; ///< The port's type.
-	enum EventBlocking eventBlocking; ///< The port's event-blocking behavior.
+	enum EventBlocking eventBlocking; ///< The port's event-blocking behavior. Only applies to non-trigger ports.
+	enum EventThrottling defaultEventThrottling; ///< The port's default event-throttling behavior. Only applies to trigger ports.
 };
 
 #endif // VUOPORTCLASS_HH

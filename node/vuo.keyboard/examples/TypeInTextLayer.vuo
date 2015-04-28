@@ -1,0 +1,46 @@
+/**
+ * @file
+ * Displays typed text in a layer.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="-380,130" fillcolor="yellow"];
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<done>done\r|<characterCount>characterCount\r" pos="-220,197" fillcolor="yellow"];
+Cut [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<done>done\r|<partialText>partialText\r" pos="113,131" fillcolor="yellow" _characterCount="20"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoText" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="192,445" fillcolor="yellow"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="92,-76" fillcolor="yellow" _started_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.hold.VuoText" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="-385,315" fillcolor="yellow" _initialValue="\"\""];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="681,68" fillcolor="yellow" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="682,212" fillcolor="yellow" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="883,160" fillcolor="yellow"];
+MakeList2 [type="vuo.list.make.2.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="-443,141" fillcolor="yellow"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="491,211" fillcolor="yellow" _font="{\"fontName\":\"Monaco\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+ReceiveKeyboardTyping [type="vuo.keyboard.type" version="1.0.0" label="Receive Keyboard Typing|<refresh>refresh\l|<window>window\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="-735,57" fillcolor="violet" _window="" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="946,149" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="enqueue" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="329,116" fillcolor="yellow" _option1="\"Type here.\""];
+Subtract3 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="-37,197" fillcolor="yellow" _b="19"];
+
+Append:compositeText -> CountCharacters:text;
+Append:compositeText -> Cut:text;
+CountCharacters:characterCount -> Subtract3:a;
+Cut:partialText -> HoldValue2:newValue;
+Cut:partialText -> SelectLatest2:option2;
+DiscardDataFromEvent:event -> HoldValue2:refresh;
+FireOnStart2:started -> MakeColorLayer:refresh;
+FireOnStart2:started -> SelectLatest2:option1;
+HoldValue2:heldValue -> MakeList2:item1;
+MakeColorLayer:layer -> MakeList:item1;
+MakeLayer:layer -> MakeList:item2;
+MakeList2:list -> Append:texts;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextImage:image -> MakeLayer:image;
+ReceiveKeyboardTyping:typedCharacter -> DiscardDataFromEvent:dataAndEvent;
+ReceiveKeyboardTyping:typedCharacter -> MakeList2:item2;
+SelectLatest2:latest -> MakeTextImage:text;
+Subtract3:difference -> Cut:startIndex;
+}

@@ -126,6 +126,9 @@ static inline void VuoStopComposition(void)
 #include <sys/time.h>
 #include <unistd.h>
 
+/**
+ * Returns the number of seconds (including fractional seconds) since midnight 1970.01.01 GMT.
+ */
 static double VLogGetTime(void)
 {
 	struct timeval t;
@@ -133,7 +136,11 @@ static double VLogGetTime(void)
 	return t.tv_sec + t.tv_usec / 1000000.;
 }
 
-static double VLogStartTime;
+static double VLogStartTime;	///< The time when this module was loaded.
+
+/**
+ * Stores the time at which this module was loaded, for use by @ref VLogGetElapsedTime().
+ */
 static void __attribute__((constructor)) VLogInitTime(void)
 {
 	VLogStartTime = VLogGetTime();
@@ -141,6 +148,9 @@ static void __attribute__((constructor)) VLogInitTime(void)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused"
+/**
+ * Returns the number of seconds (including fractional seconds) since this module was loaded.
+ */
 static double VLogGetElapsedTime()
 {
 	return VLogGetTime() - VLogStartTime;

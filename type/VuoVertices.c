@@ -330,7 +330,7 @@ void VuoVertices_verticesWithJsonArray(json_object *js, const char *arrayName, u
 	if (!vertexCount)
 		fprintf(stderr, "VuoVertices_verticesWithJsonArray() Error: Couldn't find any vertices for %s.\n", arrayName);
 	if (vertexCount != expectedVertexCount)
-		fprintf(stderr, "VuoVertices_verticesWithJsonArray() Error: Expected %d vertices, found %d.\n", expectedVertexCount, vertexCount);
+		fprintf(stderr, "VuoVertices_verticesWithJsonArray() Error: Expected %u vertices, found %u.\n", expectedVertexCount, vertexCount);
 
 	for (unsigned int i=0; i<expectedVertexCount; ++i)
 	{

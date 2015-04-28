@@ -24,10 +24,9 @@ public:
 	virtual VuoPort * getVuoPseudoPort(void) = 0;  ///< Returns the associated port belonging to the composition's published ("vuo.in" or "vuo.out") pseudo-node.
 
 protected:
-	VuoCompilerPublishedPort(string name, bool isOutput, const set<VuoCompilerPort *> &connectedPorts=set<VuoCompilerPort *>());
+	VuoCompilerPublishedPort(string name, VuoType *type, bool isOutput, const set<VuoCompilerPort *> &connectedPorts=set<VuoCompilerPort *>());
 
 private:
-	static VuoType * getTypeForPort(string name, const set<VuoCompilerPort *> &connectedPorts);
 	static set<VuoPort *> getBasePorts(set<VuoCompilerPort *>list);
 };
 

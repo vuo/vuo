@@ -50,7 +50,7 @@ void VuoCompilerEdge::generateTransmissionThroughCable(Module *module, BasicBloc
 	if (outputDataValue)
 	{
 		VuoCompilerInputData *inputData = inputEventPort->getData();
-		LoadInst *oldInputDataValue = oldInputDataValue = inputData->generateLoad(block);
+		LoadInst *oldInputDataValue = inputData->generateLoad(block);
 
 		// If needed, retain the new input port value.
 		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, outputDataValue);

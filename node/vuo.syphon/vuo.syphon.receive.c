@@ -59,7 +59,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoSyphonServerDescription) serverDescription,
 		VuoInputEvent(VuoPortEventBlocking_Wall, serverDescription) serverDescriptionEvent,
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(receivedImage, VuoImage)
+		VuoOutputTrigger(receivedImage, VuoImage, VuoPortEventThrottling_Drop)
 )
 {
 	if (serverDescriptionEvent)

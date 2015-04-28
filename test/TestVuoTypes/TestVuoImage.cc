@@ -199,6 +199,24 @@ private slots:
 		VuoRelease(sourceImage);
 	}
 
+
+	void testImageBlur1Performance()
+	{
+		unsigned int width = 640;
+		unsigned int height = 480;
+		unsigned char *buffer = (unsigned char *)malloc(width*height*4);
+		VuoImage sourceImage = VuoImage_makeFromBuffer(buffer, GL_RGBA, width, height);
+		free(buffer);
+		VuoRetain(sourceImage);
+
+		QBENCHMARK {
+			VuoImage i = VuoImage_blur(sourceImage, 1, FALSE);
+			VuoRetain(i);
+			VuoRelease(i);
+		}
+		VuoRelease(sourceImage);
+	}
+
 };
 
 QTEST_APPLESS_MAIN(TestVuoImage)

@@ -26,9 +26,9 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoGenericType1, {"default": 0}) value,
-		VuoInputData(VuoGenericType1, {"default": 0}) minimum,
-		VuoInputData(VuoGenericType1, {"default": 10}) maximum,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) value,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) minimum,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":10, "VuoReal":10.0}}) maximum,
 		VuoOutputData(VuoBoolean) withinRange
 )
 {

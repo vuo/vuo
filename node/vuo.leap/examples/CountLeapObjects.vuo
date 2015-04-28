@@ -19,7 +19,7 @@ HoldValue [type="vuo.hold.VuoText" version="1.0.0" label="Hold Value|<refresh>re
 ListCount [type="vuo.list.count.VuoLeapPointable" version="1.0.0" label="List Count|<refresh>refresh\l|<list>list\l|<done>done\r|<itemCount>itemCount\r" pos="197,380" fillcolor="violet"];
 ListCount2 [type="vuo.list.count.VuoLeapHand" version="1.0.0" label="List Count|<refresh>refresh\l|<list>list\l|<done>done\r|<itemCount>itemCount\r" pos="196,444" fillcolor="violet"];
 MakeList6 [type="vuo.list.make.5.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<item5>item5\l|<done>done\r|<list>list\r" pos="481,392" fillcolor="cyan" _item1="\"There are \"" _item3="\" fingers on \"" _item5="\" hands visible.\""];
-ReceiveLeapFrame [type="vuo.leap.receive" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="-62,275" fillcolor="violet"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="-62,275" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
 
 Append:compositeText -> HoldValue:newValue;
 ConvertIntegerToText2:text -> MakeList6:item4;

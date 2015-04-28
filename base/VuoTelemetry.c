@@ -80,7 +80,7 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
 	size_t messageSize = zmq_msg_size(&message);
 	if (messageSize != dataSize)
 	{
-		fprintf(stderr, "vuoReceiveBlocking() expected %lu bytes of data, but actually received %lu\n", dataSize, messageSize);
+		fprintf(stderr, "vuoReceiveBlocking() expected %lu bytes of data, but actually received %lu\n", (unsigned long)dataSize, (unsigned long)messageSize);
 		return;
 	}
 	memcpy(data, zmq_msg_data(&message), messageSize);
@@ -139,7 +139,7 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 	{
 		int flags = (i<messageCount-1 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
 		if(zmq_send(socket, &messages[i], flags))
-			fprintf(stderr, "%s: failed to send data %d\n",name,i);
+			fprintf(stderr, "%s: failed to send data %u\n",name,i);
 		zmq_msg_close(&messages[i]);
 	}
 }

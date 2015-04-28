@@ -44,6 +44,9 @@ VuoFont VuoFont_make(VuoText fontName, VuoReal pointSize, VuoBoolean underline, 
 	return f;
 }
 
+/**
+ * Returns a string key for the specified horizontal alignment.
+ */
 static const char *getStringForAlignment(VuoHorizontalAlignment a)
 {
 	switch (a)
@@ -57,6 +60,9 @@ static const char *getStringForAlignment(VuoHorizontalAlignment a)
 	}
 }
 
+/**
+ * Returns the horizontal alignment for the specified string key.
+ */
 static VuoHorizontalAlignment getAlignmentForString(const char *s)
 {
 	if (strcmp(s, getStringForAlignment(VuoHorizontalAlignment_Left))==0)

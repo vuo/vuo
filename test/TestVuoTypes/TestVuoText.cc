@@ -67,19 +67,17 @@ private slots:
 
 		QTest::newRow("empty string")		<< ""									<< "";
 		QTest::newRow("short")				<< "a"									<< "a";
-		QTest::newRow("borderline")			<< "01234567890123456789012345678901"	<< "01234567890123456789012345678901";
-		QTest::newRow("long")				<< "012345678901234567890123456789012"	<< "01234567890123456789012345678901...";
+		QTest::newRow("borderline")			<< "012345678901234567890123456789"	<< "012345678901234567890123456789";
+		QTest::newRow("long")				<< "0123456789012345678901234567890"	<< "012345678901234567890123456789...";
 		QTest::newRow("UTF8 short")			<< QString::fromUtf8("流")				<< QString::fromUtf8("流");
-		QTest::newRow("UTF8 borderline")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛");
-		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛...");
+		QTest::newRow("UTF8 borderline")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙");
+		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙...");
 	}
 	void testSummary()
 	{
 		QFETCH(QString, value);
 		QFETCH(QString, summary);
 
-		QEXPECT_FAIL("UTF8 borderline", "@todo: https://b33p.net/kosada/node/3730", Continue);
-		QEXPECT_FAIL("UTF8 long", "@todo: https://b33p.net/kosada/node/3730", Continue);
 		QCOMPARE(QString::fromUtf8(VuoText_summaryFromValue(value.toUtf8().data())), summary);
 	}
 
@@ -171,6 +169,88 @@ private slots:
 			textsArray[i] = texts.at(i);
 
 		QCOMPARE(QString::fromUtf8(VuoText_append(textsArray, textsCount)), compositeText);
+	}
+
+	void testEqual_data()
+	{
+		QTest::addColumn<QString>("text1");
+		QTest::addColumn<QString>("text2");
+		QTest::addColumn<bool>("expectedEqual");
+
+		{
+			QTest::newRow("Different strings") << "⓪" << "①" << false;
+		}
+		{
+			QTest::newRow("Same strings, same encoding") << "⓪" << "⓪" << true;
+		}
+		{
+			// http://en.wikipedia.org/wiki/Combining_character
+			const QChar cyrillicU_combiningBreve[] = { QChar(0x0423), QChar(0x0306) };
+			QString stringAsDecomposedCharacters(cyrillicU_combiningBreve, 2);
+			const QChar cyrillicShortU(0x040E);
+			QString stringAsComposedCharacter(cyrillicShortU);
+			QTest::newRow("Same strings, different encoding") << stringAsDecomposedCharacters << stringAsComposedCharacter << true;
+		}
+	}
+	void testEqual()
+	{
+		QFETCH(QString, text1);
+		QFETCH(QString, text2);
+		QFETCH(bool, expectedEqual);
+
+		QCOMPARE(VuoText_areEqual(text1.toUtf8().data(), text2.toUtf8().data()), expectedEqual);
+	}
+
+	void testFind_data()
+	{
+		QTest::addColumn<QString>("string");
+		QTest::addColumn<QString>("substring");
+		QTest::addColumn<size_t>("expectedIndex");
+
+		{
+			QTest::newRow("Not found") << "⓪①②③④" << "⑤" << (size_t)0;
+		}
+		{
+			QTest::newRow("Found at beginning") << "⓪①②③④" << "⓪" << (size_t)1;
+		}
+		{
+			QTest::newRow("Found at end") << "⓪①②③④" << "④" << (size_t)5;
+		}
+		{
+			QTest::newRow("Multiple occurrences") << "⓪①①①④" << "①" << (size_t)4;
+		}
+		{
+			QTest::newRow("Multiple characters") << "⓪①②③④" << "①②③④" << (size_t)2;
+		}
+	}
+	void testFind()
+	{
+		QFETCH(QString, string);
+		QFETCH(QString, substring);
+		QFETCH(size_t, expectedIndex);
+
+		QCOMPARE(VuoText_findLastOccurrence(string.toUtf8().data(), substring.toUtf8().data()), expectedIndex);
+	}
+
+	void testReplace_data()
+	{
+		QTest::addColumn<QString>("subject");
+		QTest::addColumn<QString>("stringToFind");
+		QTest::addColumn<QString>("replacement");
+		QTest::addColumn<QString>("expectedReplacedString");
+
+		QTest::newRow("Not found")	<< "⓪①②③④" << "⑤" << "⓪" << "⓪①②③④";
+		QTest::newRow("Single")		<< "⓪①②③④" << "③" << "⑤" << "⓪①②⑤④";
+		QTest::newRow("Multiple")	<< "⓪⓪①①②" << "①" << "⑤" << "⓪⓪⑤⑤②";
+	}
+	void testReplace()
+	{
+		QFETCH(QString, subject);
+		QFETCH(QString, stringToFind);
+		QFETCH(QString, replacement);
+		QFETCH(QString, expectedReplacedString);
+
+		QVERIFY(VuoText_areEqual(VuoText_replace(subject.toUtf8().data(), stringToFind.toUtf8().data(), replacement.toUtf8().data()), expectedReplacedString.toUtf8().data()));
 	}
 };
 

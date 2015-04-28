@@ -16,6 +16,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.math.min.c \
 	vuo.math.multiply.c \
 	vuo.math.sin.c \
+	vuo.math.snap.c \
 	vuo.math.subtract.c \
 	vuo.math.tan.c
 
@@ -29,17 +30,6 @@ NODE_SOURCES += \
 	vuo.math.round.c \
 	vuo.math.roundDown.c \
 	vuo.math.roundUp.c \
-	vuo.math.scale.c \
-	vuo.math.wave.c
-
-TYPE_SOURCES += \
-	VuoCurve.c \
-	VuoCurveDomain.c \
-	VuoWave.c
-
-HEADERS += \
-	VuoCurve.h \
-	VuoCurveDomain.h \
-	VuoWave.h
+	vuo.math.scale.c
 
 include(../../module.pri)

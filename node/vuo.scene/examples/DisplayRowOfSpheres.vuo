@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Displays multiple copies of a sphere in a row across the graphics area.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Copy3DObject [type="vuo.scene.copy.trs" version="1.0.0" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<done>done\r|<copies>copies\r" pos="534,204" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-64,45" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="344,48" fillcolor="green" _transform=""];
+MakeList5 [type="vuo.list.make.1.VuoPoint3d" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="369,245" fillcolor="violet" _item1=""];
+MakePointsAlongCurve3 [type="vuo.point.make.curve.VuoPoint3d" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<done>done\r|<points>points\r" pos="110,219" fillcolor="violet" _startPosition="{\"x\":-0.750000,\"y\":0.000000,\"z\":0.000000}" _endPosition="{\"x\":0.750000,\"y\":0.000000,\"z\":0.000000}" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
+MakePointsAlongCurve4 [type="vuo.point.make.curve.VuoPoint3d" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<done>done\r|<points>points\r" pos="110,339" fillcolor="violet" _startPosition="{\"x\":0.050000,\"y\":0.050000,\"z\":0.050000}" _endPosition="{\"x\":0.150000,\"y\":0.150000,\"z\":0.150000}" _curve="\"cubic\"" _easing="\"in\"" _numberOfPoints="9"];
+MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="133,47" fillcolor="green" _rows="16" _columns="16"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="709,204" fillcolor="green" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="160,120" fillcolor="green" _color="{\"r\":0.358007,\"g\":0.548424,\"b\":0.653422,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+
+Copy3DObject:copies -> RenderSceneToWindow:objects;
+FireOnStart:started -> MakePointsAlongCurve3:refresh;
+FireOnStart:started -> MakePointsAlongCurve4:refresh;
+FireOnStart:started -> MakeSphereVertices:refresh;
+FireOnStart:started -> ShadeWithColor:refresh;
+Make3DObject:object -> Copy3DObject:object;
+MakeList5:list -> Copy3DObject:rotations;
+MakePointsAlongCurve3:points -> Copy3DObject:translations;
+MakePointsAlongCurve4:points -> Copy3DObject:scales;
+MakeSphereVertices:vertices -> Make3DObject:vertices;
+ShadeWithColor:shader -> Make3DObject:shader;
+}

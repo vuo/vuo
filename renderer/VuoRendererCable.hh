@@ -32,6 +32,7 @@ public:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	QPointF getFloatingEndpointLoc();
 	void setFloatingEndpointLoc(QPointF loc);
+	bool effectivelyCarriesData(void);
 	void removeFromScene();
 	void extendedHoverEnterEvent();
 	void extendedHoverMoveEvent();
@@ -47,15 +48,45 @@ public:
 
 private:
 	// Drawing configuration
+	void getOutlines(QPointF startPoint,
+					 QPointF endPoint,
+					 bool cableCarriesData,
+					 QPainterPath &mainOutlineMinusHighlight,
+					 QPainterPath &upperOutline);
+
+	void getYankZonePaths(QPointF startPoint,
+						QPointF endPoint,
+						bool cableCarriesData,
+						bool toPortSupportsYanking,
+						QPainterPath &yankZone,
+						QPainterPath &invertedYankZone
+						);
+
 	QPointF floatingEndpointLoc;
 	VuoPort *floatingEndpointPreviousToPort;
 	bool isHovered;
 	qint64 timeLastEventPropagated;
 
+	// Cached outlines, and the cached attribute values used to calculate them.
+	QPair<QPainterPath, QPainterPath> cachedOutlines; // (mainOutlineMinusHighlight, upperOutline)
+	QPair<QPointF, QPointF> cachedEndpointsForOutlines;
+	bool cachedCarriesDataValueForOutlines;
+
+	// Cached yank zones, and the cached attribute values used to calculate them.
+	QPair<QPainterPath, QPainterPath> cachedYankZonePaths; // (yankZone, invertedYankZone)
+	QPair<QPointF, QPointF> cachedEndpointsForYankZone;
+	bool cachedCarriesDataValueForYankZone;
+	bool cachedToPortSupportsYankingValueForYankZone;
+
 	// Internal methods
 	QPointF getStartPoint(void) const;
 	QPointF getEndPoint(void) const;
 	QPainterPath getCablePath(void) const;
+	static QPainterPath getCablePathForEndpoints(QPointF from, QPointF to);
+	static void getCableSpecs(	bool cableCarriesData,
+								qreal &cableWidth,
+								qreal &cableHighlightWidth,
+								qreal &cableHighlightOffset);
 	bool isConnectedToSelectedNode(void);
 };
 

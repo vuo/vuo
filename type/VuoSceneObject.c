@@ -318,6 +318,38 @@ VuoSceneObject VuoSceneObject_makeDefaultCamera(void)
 }
 
 /**
+ * Searches the scenegraph (depth-first) for a scene object with the given name.
+ *
+ * @param so The root object of the scenegraph to search.
+ * @param nameToMatch The name to search for.
+ * @param[out] ancestorObjects The ancestors of @a foundObject, starting with the root of the scenegraph.
+ * @param[out] foundObject The first matching scene object found.
+ * @return True if a matching scene object was found.
+ */
+bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject)
+{
+	if (VuoText_areEqual(so.name, nameToMatch))
+	{
+		*foundObject = so;
+		return true;
+	}
+
+	VuoListAppendValue_VuoSceneObject(ancestorObjects, so);
+
+	unsigned long childObjectCount = (so.childObjects ? VuoListGetCount_VuoSceneObject(so.childObjects) : 0);
+	for (unsigned long i = 1; i <= childObjectCount; ++i)
+	{
+		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+		if (VuoSceneObject_find(childObject, nameToMatch, ancestorObjects, foundObject))
+			return true;
+	}
+
+	VuoListRemoveLastValue_VuoSceneObject(ancestorObjects);
+
+	return false;
+}
+
+/**
  * Performs a depth-first search of the scenegraph.
  * Returns the first camera whose name contains @c nameToMatch (or, if @c nameToMatch is emptystring, just returns the first camera).
  * Output paramater @c foundCamera indicates whether a camera was found.
@@ -536,9 +568,18 @@ void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float 
 			&& !VuoListGetCount_VuoSceneObject(*spotLights))
 	{
 		*ambientColor = VuoColor_makeWithRGBA(1,1,1,1);
-		*ambientBrightness = 0.1;
-		VuoSceneObject pointLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), 1, VuoPoint3d_make(-1,1,1), 10, .9);
-		VuoListAppendValue_VuoSceneObject(*pointLights, pointLight);
+		*ambientBrightness = 0.05;
+
+		// https://en.wikipedia.org/wiki/Three-point_lighting
+
+		VuoSceneObject keyLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .70, VuoPoint3d_make(-1,1,1), 5, .5);
+		VuoListAppendValue_VuoSceneObject(*pointLights, keyLight);
+
+		VuoSceneObject fillLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .2, VuoPoint3d_make(.5,0,1), 5, 0);
+		VuoListAppendValue_VuoSceneObject(*pointLights, fillLight);
+
+		VuoSceneObject backLight = VuoSceneObject_makePointLight(VuoColor_makeWithRGBA(1,1,1,1), .15, VuoPoint3d_make(1,.75,-.5), 5, 0);
+		VuoListAppendValue_VuoSceneObject(*pointLights, backLight);
 	}
 	else
 		*ambientColor = VuoColor_average(ambientColors);
@@ -669,6 +710,7 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	{
 		VuoSceneObject o = VuoSceneObject_make(verticesList, shader, transform, childObjects);
 		o.isRealSize = isRealSize;
+		o.name = name;
 		return o;
 	}
 }
@@ -950,6 +992,9 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 	return valueAsString;
 }
 
+/**
+ * Outputs information about the sceneobject (and its descendants).
+ */
 static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int level)
 {
 	for (unsigned int i=0; i<level; ++i)

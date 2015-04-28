@@ -22,7 +22,7 @@
 @interface VuoWindowOpenGLView : NSOpenGLView
 {
 	void (*initCallback)(VuoGlContext glContext, void *);  ///< Initializes the OpenGL context.
-	bool initCallbackCalled;
+	bool initCallbackCalled;	///< Has the init callback already been called?
 	void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int width, unsigned int height);  ///< Updates the OpenGL context when the view is resized.
 	void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *);  ///< Allows the caller to free resources on the old GL context and initialize the new GL context.
 	void (*drawCallback)(VuoGlContext glContext, void *);  ///< Draws onto the OpenGL context.
@@ -83,5 +83,6 @@ switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlCon
 - (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute;
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh;
 - (void)toggleFullScreen;
+- (void)getWidth:(unsigned int *)pixelsWide height:(unsigned int *)pixelsHigh;
 
 @end

@@ -61,10 +61,12 @@ If you're running any version of Mac OS X:
     tar zxf ../../clang-3.2.src.tar.gz
     mv clang-3.2.src clang
     cd ..
-    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --disable-bindings --enable-targets=host
+    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-Oz" --disable-bindings --enable-targets=host
     make install -j9
     cd tools/clang
     make install -j9
+
+If building LLVM and Clang for redistribution, also build and execute UPX (see the UPX section below).
 
 ### Remove libtool
 
@@ -94,27 +96,19 @@ Install Qt 5.2.1:
     # https://bugreports.qt-project.org/browse/QTBUG-36575
     curl -OL https://bugreports.qt-project.org/secure/attachment/37834/qmake-objcxx-cxxflags.patch
     patch -p1 < qmake-objcxx-cxxflags.patch
+    # https://bugreports.qt-project.org/browse/QTBUG-33961
+    # https://b33p.net/kosada/node/7718#comment-27777
+    curl -OL https://b33p.net/sites/default/files/cursorfixfrom5.2.1v2_0.patch
+    patch -p1 < cursorfixfrom5.2.1v2_0.patch
+    # https://bugreports.qt-project.org/browse/QTBUG-34534
+    # https://b33p.net/kosada/node/6477
+    curl -OL https://b33p.net/sites/default/files/qtbug-34534-rubberbandtrails.patch
+    patch -p0 < qtbug-34534-rubberbandtrails.patch
     cd ..
     ./configure -prefix /usr/local/Cellar/qt/5.2.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit
     make -j9
     make install
     ln -s /usr/local/Cellar/qt/5.2.1/bin/qmake /usr/local/bin/qmake
-
-### ICU
-
-    cd /tmp
-    curl -OL http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-src.tgz
-    tar zxf icu4c-52_1-src.tgz
-    cd icu/source/data/in
-    # Go to http://apps.icu-project.org/datacustom/, uncheck all except "Break Iterator", and download it into icu/source/data/in.
-    unzip -o icudt52l.zip
-    cd ../..
-    # On OS X 10.6, do: `export CC=gcc ; export CXX=g++`
-    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" ./configure --prefix=/usr/local/Cellar/icu4c/52.1/ --with-library-bits=64 --enable-static --disable-samples --disable-tests --disable-extras
-    make install -j9
-    make clean
-    CFLAGS="-m32" CXXFLAGS="-m32" ./configure --prefix=/usr/local/Cellar/icu4c/52.1-32/ --with-library-bits=32 --enable-static --disable-samples --disable-tests --disable-extras
-    make install -j9
 
 ### JSON-C
 
@@ -235,7 +229,49 @@ If you're running any version of Mac OS X:
     cp librtmidi.a /usr/local/Cellar/rtmidi/2.0.1/lib
     cp *.h /usr/local/Cellar/rtmidi/2.0.1/include
 
-#### CMake
+### RtAudio
+
+If you're running Mac OS 10.9:
+
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
+
+    cd /tmp
+    curl -OL http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-4.0.12.tar.gz
+    tar zxf rtaudio-4.0.12.tar.gz
+    cd rtaudio-4.0.12
+    ./configure
+    make
+    mkdir -p /usr/local/Cellar/rtaudio/4.0.12/{lib,include}
+    cp librtaudio.a /usr/local/Cellar/rtaudio/4.0.12/lib
+    cp *.h /usr/local/Cellar/rtaudio/4.0.12/include
+
+### Gamma
+
+If you're running Mac OS 10.9:
+
+    export CC=gcc-4.2
+    export CXX=g++-4.2
+
+If you're running any version of Mac OS X:
+
+    cd /tmp
+    curl -OL http://mat.ucsb.edu/gamma/dl/gamma-0.9.5.tar.gz
+    mkdir gamma-0.9.5
+    cd gamma-0.9.5
+    tar zxf ../gamma-0.9.5.tar.gz
+    
+If you're running Mac OS 10.6, add the following line to Makefile.config in the "Default variables" section:
+
+    EXT_CPPFLAGS = -m64
+
+If you're running any version of Mac OS X:
+
+    make install DESTDIR=/usr/local/Cellar/gamma/0.9.5
+
+### CMake
 
 (Required to build Open Asset Import, below.)
 
@@ -268,7 +304,7 @@ If you're running any version of Mac OS X:
     git apply c338b665ed870363d17a52d2e6e6db276934351f.patch
     curl -OL https://github.com/assimp/assimp/commit/6551fd4903628bef69f5d7bbd0f0f5b262f32d2e.patch
     git apply 6551fd4903628bef69f5d7bbd0f0f5b262f32d2e.patch
-    cmake -DENABLE_BOOST_WORKAROUND=ON -DBUILD_STATIC_LIB=ON -DNO_EXPORT=ON -DASSIMP_BUILD_ARCHITECTURE=x86_64 -DBUILD_ASSIMP_TOOLS=OFF -DBUILD_ASSIMP_SAMPLES=OFF -DBUILD_TESTS=OFF
+    cmake -DCMAKE_CXX_FLAGS='-Oz' -DENABLE_BOOST_WORKAROUND=ON -DBUILD_STATIC_LIB=ON -DNO_EXPORT=ON -DASSIMP_BUILD_ARCHITECTURE=x86_64 -DBUILD_ASSIMP_TOOLS=OFF -DBUILD_ASSIMP_SAMPLES=OFF -DBUILD_TESTS=OFF
     make -j9
     mkdir -p /usr/local/Cellar/assimp/3.0.1270/{lib,include}
     cp lib/libassimp.a /usr/local/Cellar/assimp/3.0.1270/lib
@@ -297,7 +333,16 @@ If you're running any version of Mac OS X:
     curl -OL http://www.ffmpeg.org/releases/ffmpeg-2.1.tar.bz2
     tar jxf ffmpeg-2.1.tar.bz2
     cd ffmpeg-2.1
-    ./configure --prefix=/usr/local/Cellar/ffmpeg/2.1 --disable-programs --disable-doc --disable-runtime-cpudetect --disable-ssse3 --disable-sse4 --disable-sse42 --disable-avx --enable-shared --disable-stripping --disable-static --enable-pthreads --enable-yasm --disable-debug --enable-demuxer=mpegts --enable-demuxer=mpegtsraw --extra-cflags='-arch x86_64' --extra-ldflags='-arch x86_64 -Xlinker -no_function_starts -Xlinker -no_version_load_command' --cc=clang
+    ./configure --prefix=/usr/local/Cellar/ffmpeg/2.1 \
+        --disable-programs --disable-doc \
+        --disable-runtime-cpudetect --disable-ssse3 --disable-sse4 --disable-sse42 --disable-avx \
+        --enable-shared --disable-stripping --disable-static --enable-pthreads --enable-yasm --disable-debug \
+        --enable-demuxer=mpegts --enable-demuxer=mpegtsraw \
+        --disable-bsfs --disable-devices \
+        --disable-decoder=aac --disable-decoder=aac_latm --disable-encoder=aac --disable-parser=aac --disable-parser=aac_latm --disable-demuxer=aac \
+        --disable-decoder=mp3 --disable-decoder=mp3adu --disable-decoder=mp3adufloat --disable-decoder=mp3float \
+        --disable-decoder=mp3on4 --disable-decoder=mp3on4float --disable-demuxer=mp3 --disable-muxer=mp3 \
+        --extra-cflags='-arch x86_64' --extra-ldflags='-arch x86_64 -Xlinker -no_function_starts -Xlinker -no_version_load_command' --cc=clang
     make -j9
     make install
 
@@ -347,15 +392,42 @@ Create a symbolic link to ld64 133.3 in the same directory as Clang (to force Cl
 
     ln -s $ROOT/compiler/binary/ld /usr/local/Cellar/llvm/3.2/bin/ld
 
-### OpenSSL 1.0.1c (unnecessary for Vuo end users)
+### OpenSSL (unnecessary for Vuo end users)
 
     cd /tmp
-    curl -OL http://www.openssl.org/source/openssl-1.0.1c.tar.gz
-    tar zxf openssl-1.0.1c.tar.gz
-    cd openssl-1.0.1c
-    ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1c --openssldir=/usr/local/etc/openssl no-zlib no-shared darwin64-x86_64-cc
+    curl -OL http://www.openssl.org/source/openssl-1.0.1g.tar.gz
+    tar zxf openssl-1.0.1g.tar.gz
+    cd openssl-1.0.1g
+    ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1g --openssldir=/usr/local/etc/openssl no-zlib no-shared darwin64-x86_64-cc
     make CFLAG="-O0"
     make install
+
+### UPX (only needed if building Vuo or Vuo.framework for distribution)
+
+    cd /tmp
+    curl -OL http://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
+    tar zxf ucl-1.03.tar.gz 
+    cd ucl-1.03
+    export UPX_UCLDIR=`pwd`
+    ./configure
+    make -j9
+    cd ..
+    curl -OL http://downloads.sourceforge.net/project/sevenzip/LZMA%20SDK/4.43/lzma443.tar.bz2
+    mkdir lzma443
+    cd lzma443
+    tar jxf ../lzma443.tar.bz2
+    export UPX_LZMADIR=`pwd`
+    cd ..
+    curl -OL http://upx.sourceforge.net/download/upx-3.91-src.tar.bz2
+    tar jxf upx-3.91-src.tar.bz2
+    cd upx-3.91-src
+    make -j9 all
+    mkdir -p /usr/local/Cellar/upx/3.91/bin
+    cp src/upx.out /usr/local/Cellar/upx/3.91/bin/upx
+    UPX=/usr/local/Cellar/upx/3.91/bin/upx
+    $UPX --backup --ultra-brute /usr/local/Cellar/llvm/3.2/bin/clang
+    $UPX --backup --ultra-brute /usr/local/Cellar/llvm/3.2/bin/llvm-link
+
 
 ## Reinstall dependencies that are provided with the Vuo source code (optional)
 
@@ -389,6 +461,7 @@ Edit source files:
 
     xcodebuild
     cp ./build/Release-assert/ld $ROOT/compiler/binary/ld
+    $UPX --ultra-brute $ROOT/compiler/binary/ld
 
 
 ## Install dependencies for building the RunImageFilter-GLFW API example code (optional)

@@ -11,8 +11,8 @@ digraph G
 {
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="134,91"];
 MakeServerDescription [type="vuo.syphon.make.serverDescription" version="1.0.0" label="Make Server Description|<refresh>refresh\l|<serverName>serverName\l|<applicationName>applicationName\l|<done>done\r|<serverDescription>serverDescription\r" pos="131,225" fillcolor="violet" _serverName="" _applicationName="\"Vuo\""];
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="363,226"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="609,226"];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="363,226" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="609,226" _requestedFrame_eventThrottling="drop"];
 
 FireOnStart:started -> MakeServerDescription:refresh;
 MakeServerDescription:serverDescription -> ReceiveImageFromSyphon:serverDescription;

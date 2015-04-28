@@ -7,17 +7,10 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include <string.h>
+#include <Carbon/Carbon.h>
 #include "type.h"
 #include "VuoText.h"
-#include <string.h>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-	#include <unicode/utext.h>
-	#include <unicode/ubrk.h>
-
-#pragma clang diagnostic pop
 
 
 /// @{
@@ -27,33 +20,14 @@ VuoModuleMetadata({
 					 "description" : "A Unicode (UTF-8) text string.",
 					 "keywords" : [ "char *", "character" ],
 					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "c",
-						 "icuuc",
-						 "icudata"
-					 ]
+					 "dependencies" : [ "Carbon.framework" ]
 				 });
 #endif
 /// @}
 
 /**
  * @ingroup VuoText
- * The stpncpy function is not provided by Mac OS X implementation of <string.h>.
- * Rather than adding a dependency, just define it here.
- * This is getting replaced anyway with Unicode-aware code.
- * http://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
- */
-char *VuoText_stpncpy(char *dest, const char *src, size_t n)
-{
-	char * sp = strncpy(dest,src,n);
-	if (strlen(src) < n)
-		return sp + strlen(src);
-	return sp + n;
-}
-
-/**
- * @ingroup VuoText
- * Decodes the JSON object @c js, expected to contain a string, to create a new value.
+ * Decodes the JSON object @c js, expected to contain a UTF-8 string, to create a new value.
  */
 VuoText VuoText_valueFromJson(json_object * js)
 {
@@ -77,31 +51,32 @@ json_object * VuoText_jsonFromValue(const VuoText value)
 
 /**
  * @ingroup VuoText
- * Creates a new UTF-8 C string from @c value, or, if it's more than 32 characters long, creates an aposiopesis.
+ * Creates a new UTF-8 C string from @c value, or, if it's more than 30 Unicode characters long, creates an aposiopesis.
  *
  * @eg{Hello World!}
- * @eg{I would like to convey my greeti...}
+ * @eg{I would like to convey my gree...}
  */
 char * VuoText_summaryFromValue(const VuoText value)
 {
 	if (!value)
 		return strdup("");
 
-	/// @todo handle unicode
-	char * summary = (char *)malloc(32+3+1);
+	const int maxLength = 30;
+	if (VuoText_length(value) <= maxLength)
+		return strdup(value);
 
-	char * sp = summary;
-	sp = VuoText_stpncpy(sp,value,32);
+	VuoText abbreviation = VuoText_substring(value, 1, maxLength);
+	VuoText ellipsis = VuoText_make("...");
+	VuoText summaryParts[2] = { abbreviation, ellipsis };
+	VuoText summaryWhole = VuoText_append(summaryParts, 2);
+	char *summary = strdup(summaryWhole);
 
-	// Add ellipsis if trimmed.
-	if (strlen(value) > 32)
-	{
-		*sp++ = '.';
-		*sp++ = '.';
-		*sp++ = '.';
-	}
-
-	*sp++ = 0;
+	VuoRetain(abbreviation);
+	VuoRelease(abbreviation);
+	VuoRetain(ellipsis);
+	VuoRelease(ellipsis);
+	VuoRetain(summaryWhole);
+	VuoRelease(summaryWhole);
 	return summary;
 }
 
@@ -121,146 +96,180 @@ VuoText VuoText_make(const char * unquotedString)
 }
 
 /**
- * @ingroup VuoText
- * Returns the byte offset of @c logicalCharIndex into @c text's UTF-8 representation.
+ * Creates a VuoText value from a @c CFStringRef.
  */
-size_t VuoText_convertUTF8IndexToByteIndex(UText *text, int logicalCharIndex)
+VuoText VuoText_makeFromMacString(CFStringRef cfString)
 {
-	UErrorCode status = U_ZERO_ERROR;
-	UBreakIterator *bi = ubrk_open(UBRK_CHARACTER, uloc_getDefault(), NULL, 0, &status);
-	ubrk_setUText(bi, text, &status);
+	// http://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
 
-	int curLogicalCharIndex = 0;
-	int curNativeCharIndex = 0;
-	while((curLogicalCharIndex < logicalCharIndex) && (curNativeCharIndex != UBRK_DONE))
+	const char *useUTF8StringPtr = NULL;
+	char *freeUTF8StringPtr = NULL;
+
+	if ((useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8)) == NULL)
 	{
-		curNativeCharIndex = ubrk_next(bi);
-		curLogicalCharIndex++;
+		CFIndex stringLength = CFStringGetLength(cfString);
+		CFIndex maxBytes = 4 * stringLength + 1;
+		freeUTF8StringPtr = malloc(maxBytes);
+		CFStringGetCString(cfString, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
+		useUTF8StringPtr = freeUTF8StringPtr;
 	}
 
-	return curNativeCharIndex;
+	VuoText text = VuoText_make(useUTF8StringPtr);
+
+	if (freeUTF8StringPtr != NULL)
+		free(freeUTF8StringPtr);
+
+	return text;
 }
 
 /**
  * @ingroup VuoText
- * Returns the number of UTF-8 characters in the string.
+ * Returns the number of Unicode characters in the text.
  */
-size_t VuoText_length(const VuoText string)
+size_t VuoText_length(const VuoText text)
 {
-	if (!string)
+	if (! text)
 		return 0;
 
-	UErrorCode status = U_ZERO_ERROR;
-	UText *text = utext_openUTF8(NULL, string, -1, &status);
-
-	UBreakIterator *bi = ubrk_open(UBRK_CHARACTER, uloc_getDefault(), NULL, 0, &status);
-	ubrk_setUText(bi, text, &status);
-
-	int charCount = 0;
-	while (ubrk_next(bi) != UBRK_DONE)
-		++charCount;
-
-	utext_close(text);
-
-	return charCount;
+	CFStringRef s = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
+	size_t length = CFStringGetLength(s);
+	CFRelease(s);
+	return length;
 }
 
 /**
  * @ingroup VuoText
- * Returns the index (starting at 1) of the last instance of @c character in @c string.
- * Returns 0 if the character is not found.
+ * Returns true if the two texts represent the same Unicode string (even if they use different UTF-8 encodings
+ * or Unicode character decompositions).
  */
-size_t VuoText_getIndexOfLastCharacter(const VuoText string, const VuoText character)
+bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 {
-	/// @todo handle unicode
+	if (! text1 || ! text2)
+		return (! text1 && ! text2);
 
-	size_t l = strlen(string);
-	for (int i = l-1; i>=0; --i)
-		if (string[i] == character[0])
-			return i+1;
+	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
+	CFStringRef s2 = CFStringCreateWithCString(kCFAllocatorDefault, text2, kCFStringEncodingUTF8);
+	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral);
 
-	return 0;
+	CFRelease(s1);
+	CFRelease(s2);
+	return (result == kCFCompareEqualTo);
 }
 
 /**
  * @ingroup VuoText
- * Returns the substring of @c string starting at index @c startIndex and spanning @c length UTF-8 characters.
+ * Returns the index (starting at 1) of the last instance of @a substring in @a string.
+ * Returns 0 if @a substring is not found.
+ *
+ * This function will find occurrences that consist of the same Unicode characters as @a substring, but won't find
+ * occurrences that consist of the same Unicode string decomposed into a different number of Unicode characters.
+ */
+size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring)
+{
+	if (! string)
+		return 0;
+
+	size_t foundIndex = 0;
+
+	size_t stringLength = VuoText_length(string);
+	size_t substringLength = VuoText_length(substring);
+	for (size_t i = 1; i <= stringLength - substringLength + 1; ++i)
+	{
+		VuoText currSubstring = VuoText_substring(string, i, substringLength);
+		if (VuoText_areEqual(substring, currSubstring))
+			foundIndex = i;
+		VuoRetain(currSubstring);
+		VuoRelease(currSubstring);
+	}
+
+	return foundIndex;
+}
+
+/**
+ * @ingroup VuoText
+ * Returns the substring of @c string starting at index @c startIndex and spanning @c length Unicode characters.
  *
  * @c startIndex is indexed from 1, not 0.
  *
- * If @c startIndex is past the end of the string, returns the empty string.
+ * If @a startIndex is past the end of @a string, returns the empty string.
  *
- * If @c string has fewer than @c length characters from @c startIndex to the end of @c string,
- * returns all characters from @c startIndex to the end of @c string.
+ * If @a startIndex is before the beginning of @a string, deducts the number of characters before
+ * the beginning from @a length, and returns characters starting at the beginning of @a string.
+ *
+ * If @a string has fewer than @a length characters from @a startIndex to the end of @a string,
+ * returns all characters from @a startIndex to the end of @a string.
  */
 VuoText VuoText_substring(const VuoText string, int startIndex, int length)
 {
+	if (! string || length < 0)
+		return VuoText_make("");
+
+	int originalLength = VuoText_length(string);
+	if (startIndex > originalLength)
+		return VuoText_make("");
+
 	if (startIndex < 1)
 	{
 		length -= 1 - startIndex;
 		startIndex = 1;
 	}
 
-	if (!string || length < 0)
-	{
-		VuoText text = strdup("");
-		VuoRegister(text, free);
-		return text;
-	}
+	if (startIndex + length - 1 > originalLength)
+		length = originalLength - startIndex + 1;
 
-	UErrorCode status = U_ZERO_ERROR;
-	UText *text = utext_openUTF8(NULL, string, -1, &status);
+	size_t startIndexFromZero = startIndex - 1;
 
-	size_t startIndexFrom0 = startIndex - 1;
+	CFStringRef s = CFStringCreateWithCString(kCFAllocatorDefault, string, kCFStringEncodingUTF8);
+	CFStringRef ss = CFStringCreateWithSubstring(kCFAllocatorDefault, s, CFRangeMake(startIndexFromZero, length));
+	VuoText substring = VuoText_makeFromMacString(ss);
 
-	size_t startAsByteIndex = VuoText_convertUTF8IndexToByteIndex(text, startIndexFrom0);
-	if (startAsByteIndex > strlen(string) - 1)
-		return VuoText_make("");
-
-	size_t endAsByteIndex = VuoText_convertUTF8IndexToByteIndex(text, startIndexFrom0 + length);
-	if (endAsByteIndex > strlen(string))
-		endAsByteIndex = strlen(string);
-
-	size_t lengthInBytes = endAsByteIndex - startAsByteIndex;
-	if (lengthInBytes == 0)
-		return VuoText_make("");
-
-	char *substr = (char *)malloc((lengthInBytes + 1) * sizeof(char));
-	VuoRegister(substr, free);
-	memcpy(substr, string + startAsByteIndex, lengthInBytes);
-	substr[lengthInBytes] = '\0';
-
-	utext_close(text);
-
-	return substr;
+	CFRelease(s);
+	CFRelease(ss);
+	return substring;
 }
 
 /**
  * @ingroup VuoText
  * Returns a string consisting of the elements in the @c texts array concatenated together.
  */
-VuoText VuoText_append(VuoText *texts, unsigned long textsCount)
+VuoText VuoText_append(VuoText *texts, size_t textsCount)
 {
-	// Even though the inputs are UTF-8, they're still null-terminated, so we can append them as C strings.
-
-	size_t textsLen = 0;
-	for (unsigned long i = 0; i < textsCount; ++i)
-		if (texts[i])
-			textsLen += strlen(texts[i]);
-
-	char *composite = (char *) malloc(textsLen + 1);
-
-	size_t offset = 0;
-	for (unsigned long i = 0; i < textsCount; ++i)
+	CFMutableArrayRef a = CFArrayCreateMutable(kCFAllocatorDefault, textsCount, &kCFTypeArrayCallBacks);
+	for (size_t i = 0; i < textsCount; ++i)
+	{
 		if (texts[i])
 		{
-			strcpy(composite + offset, texts[i]);
-			offset += strlen(texts[i]);
+			CFStringRef s = CFStringCreateWithCString(kCFAllocatorDefault, texts[i], kCFStringEncodingUTF8);
+			CFArrayAppendValue(a, s);
+			CFRelease(s);
 		}
-	composite[textsLen] = 0;
+	}
 
-	VuoText compositeText = VuoText_make(composite);
-	free(composite);
+	CFStringRef s = CFStringCreateByCombiningStrings(kCFAllocatorDefault, a, CFSTR(""));
+	VuoText compositeString = VuoText_makeFromMacString(s);
 
-	return compositeText;
+	CFRelease(s);
+	return compositeString;
+}
+
+/**
+ * Returns a new string in which each occurrence of @c stringToFind in @c subject has been replaced with @c replacement.
+ *
+ * @c stringToFind matches even if a different UTF-8 encoding or Unicode character decomposition is used.
+ */
+VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement)
+{
+	CFMutableStringRef subjectCF = CFStringCreateMutable(NULL, 0);
+	CFStringAppendCString(subjectCF, subject, kCFStringEncodingUTF8);
+	CFStringRef stringToFindCF = CFStringCreateWithCString(NULL, stringToFind, kCFStringEncodingUTF8);
+	CFStringRef replacementCF = CFStringCreateWithCString(NULL, replacement, kCFStringEncodingUTF8);
+
+	CFStringFindAndReplace(subjectCF, stringToFindCF, replacementCF, CFRangeMake(0,CFStringGetLength(subjectCF)), kCFCompareNonliteral);
+
+	VuoText replacedSubject = VuoText_makeFromMacString(subjectCF);
+	CFRelease(replacementCF);
+	CFRelease(stringToFindCF);
+	CFRelease(subjectCF);
+
+	return replacedSubject;
 }

@@ -86,6 +86,7 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 	makeCables();
 	makePublishedPorts();
 	setInputPortConstantValues();
+	setTriggerPortEventThrottling();
 	saveNodeDeclarations(compositionAsString);
 
 	gvFreeLayout(context, graph);
@@ -381,10 +382,49 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
 	{
 		string nodeClassName = agget(n, (char *)"type");
-		if (nodeClassName != VuoNodeClass::publishedInputNodeClassName && nodeClassName != VuoNodeClass::publishedOutputNodeClassName)
+		bool isPublishedInputNode = (nodeClassName == VuoNodeClass::publishedInputNodeClassName);
+		bool isPublishedOutputNode = (nodeClassName == VuoNodeClass::publishedOutputNodeClassName);
+		if (!isPublishedInputNode && !isPublishedOutputNode)
 			continue;
 
+		string nodeName = n->name;
+		VuoNode *node = nodeForName[nodeName];
+
 		map<string, set<VuoCompilerPort *> > connectedPortsForPublishedInputName;
+		map<string, set<VuoCompilerPort *> > connectedPortsForPublishedOutputName;
+
+		vector<string> publishedInputPortNames;
+		vector<string> publishedOutputPortNames;
+
+		if (isPublishedInputNode)
+		{
+			vector<VuoPort *> ports = node->getOutputPorts();
+			for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
+			{
+				VuoPort *port = *i;
+				string portName = port->getClass()->getName();
+				if (portName != VuoNodeClass::publishedInputNodeSimultaneousTriggerName && portName != "done")
+				{
+					publishedInputPortNames.push_back(portName);
+					connectedPortsForPublishedInputName[portName] = set<VuoCompilerPort *>();
+				}
+			}
+		}
+
+		else if (isPublishedOutputNode)
+		{
+			vector<VuoPort *> ports = node->getInputPorts();
+			for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
+			{
+				VuoPort *port = *i;
+				string portName = port->getClass()->getName();
+				if (portName != "refresh")
+				{
+					publishedOutputPortNames.push_back(portName);
+					connectedPortsForPublishedOutputName[portName] = set<VuoCompilerPort *>();
+				}
+			}
+		}
 
 		for (Agedge_t *e = agfstedge(graph, n); e; e = agnxtedge(graph, e, n))
 		{
@@ -396,38 +436,83 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 			VuoNode *fromNode = nodeForName[fromNodeName];
 			VuoNode *toNode = nodeForName[toNodeName];
 
-			if (nodeClassName == VuoNodeClass::publishedInputNodeClassName && toNode->hasCompiler())
+			if (isPublishedInputNode && toNode->hasCompiler())
 			{
 				// The edge is from the vuo.in node to some other node.
 				// Since there may be multiple out-edges from this port of the vuo.in node, save them for later processing.
 				VuoCompilerPort *connectedPort = static_cast<VuoCompilerPort *>(toNode->getInputPortWithName(toPortName)->getCompiler());
 				connectedPortsForPublishedInputName[fromPortName].insert(connectedPort);
 			}
-			else if (nodeClassName == VuoNodeClass::publishedOutputNodeClassName && fromNode->hasCompiler())
+			else if (isPublishedOutputNode && fromNode->hasCompiler())
 			{
 				// The edge is from the some other node to the vuo.out node.
-				// Since there can only be one in-edge to this port of the vuo.out node, go ahead and create the VuoCompilerPublishedPort.
+				// Since there may be multiple out-edges from this port of the vuo.in node, save them for later processing.
 				VuoCompilerPort *connectedPort = static_cast<VuoCompilerPort *>(fromNode->getOutputPortWithName(fromPortName)->getCompiler());
-				VuoPort *vuoOutPort = publishedOutputNode->getInputPortWithName(toPortName);
-				VuoCompilerPublishedPort *port = new VuoCompilerPublishedOutputPort(toPortName, connectedPort, vuoOutPort);
-				publishedOutputPorts.push_back(port);
+				connectedPortsForPublishedOutputName[toPortName].insert(connectedPort);
 			}
 		}
 
-		if (nodeClassName == VuoNodeClass::publishedInputNodeClassName)
+		map<string, VuoCompilerPublishedPort *> publishedPortForPublishedInputName;
+		map<string, VuoCompilerPublishedPort *> publishedPortForPublishedOutputName;
+
+		if (isPublishedInputNode)
 		{
 			for (map<string, set<VuoCompilerPort *> >::iterator i = connectedPortsForPublishedInputName.begin(); i != connectedPortsForPublishedInputName.end(); ++i)
 			{
 				string publishedInputName = i->first;
 				set<VuoCompilerPort *> connectedPorts = i->second;
 
+				// Parse the data type associated with the published port.
+				VuoType *publishedInputType = NULL;
+				string publishedPortTypeStr = "";
+				parseAttributeOfPort(n, publishedInputName, "type", publishedPortTypeStr);
+				if (!publishedPortTypeStr.empty())
+					publishedInputType = (publishedPortTypeStr == "event"? NULL :
+																			(compiler->getType(publishedPortTypeStr)? compiler->getType(publishedPortTypeStr)->getBase() :
+																													  NULL));
+				else
+					publishedInputType = inferTypeForPublishedPort(publishedInputName, connectedPorts);
+				
 				VuoCompilerNodeArgument *fromPort = publishedInputNode->getOutputPortWithName(publishedInputName)->getCompiler();
 				VuoCompilerTriggerPort *fromTrigger = static_cast<VuoCompilerTriggerPort *>(fromPort);
 
 				// Create the VuoCompilerPublishedPort from the saved information for the vuo.in node.
-				VuoCompilerPublishedPort *port = new VuoCompilerPublishedInputPort(publishedInputName, connectedPorts, fromTrigger);
-				publishedInputPorts.push_back(port);
+				VuoCompilerPublishedPort *port = new VuoCompilerPublishedInputPort(publishedInputName, publishedInputType, connectedPorts, fromTrigger);
+				publishedPortForPublishedInputName[publishedInputName] = port;
 			}
+
+			// Preserve the original ordering of the published input ports.
+			for (vector<string>::iterator i = publishedInputPortNames.begin(); i != publishedInputPortNames.end(); ++i)
+				publishedInputPorts.push_back(publishedPortForPublishedInputName[*i]);
+		}
+
+		else if (isPublishedOutputNode)
+		{
+			for (map<string, set<VuoCompilerPort *> >::iterator i = connectedPortsForPublishedOutputName.begin(); i != connectedPortsForPublishedOutputName.end(); ++i)
+			{
+				string publishedOutputName = i->first;
+				set<VuoCompilerPort *> connectedPorts = i->second;
+
+				// Parse the data type associated with the published port.
+				VuoType *publishedOutputType = NULL;
+				string publishedPortTypeStr = "";
+				parseAttributeOfPort(n, publishedOutputName, "type", publishedPortTypeStr);
+				if (!publishedPortTypeStr.empty())
+					publishedOutputType = (publishedPortTypeStr == "event"? NULL :
+																			(compiler->getType(publishedPortTypeStr)? compiler->getType(publishedPortTypeStr)->getBase() :
+																													  NULL));
+				else
+					publishedOutputType = inferTypeForPublishedPort(publishedOutputName, connectedPorts);
+				
+				
+				VuoPort *vuoOutPort = publishedOutputNode->getInputPortWithName(publishedOutputName);
+				VuoCompilerPublishedPort *port = new VuoCompilerPublishedOutputPort(publishedOutputName, publishedOutputType, connectedPorts, vuoOutPort);
+				publishedPortForPublishedOutputName[publishedOutputName] = port;
+			}
+
+			// Preserve the original ordering of the published output ports.
+			for (vector<string>::iterator i = publishedOutputPortNames.begin(); i != publishedOutputPortNames.end(); ++i)
+				publishedOutputPorts.push_back(publishedPortForPublishedOutputName[*i]);
 		}
 	}
 }
@@ -437,24 +522,39 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
  */
 void VuoCompilerGraphvizParser::setInputPortConstantValues(void)
 {
-	// Find the internal input port connected to each published input port.
-	map<VuoPort *, VuoCompilerPublishedPort *> publishedInputPortForInputPort;
-	for (vector<VuoCompilerPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
-	{
-		VuoCompilerPublishedPort *publishedInputPort = *i;
-		set<VuoPort *> connectedPorts = publishedInputPort->getBase()->getConnectedPorts();
-		for (set<VuoPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
-		{
-			VuoPort *inputPort = *j;
-			publishedInputPortForInputPort[inputPort] = publishedInputPort;
-		}
-	}
-
 	// Find the constant value of each published input port.
 	map<string, string> constantForPublishedInputPort;
 	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
 		if (nodeForName[n->name] == publishedInputNode)
 			constantForPublishedInputPort = parsePortConstantValues(n);
+
+	// Find the internal input ports connected to each published input port.
+	map<VuoPort *, VuoCompilerPublishedPort *> publishedInputDataPortForInputPort;
+	for (vector<VuoCompilerPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
+	{
+		VuoCompilerPublishedPort *publishedInputPort = *i;
+
+		// A given internal input port may have multiple connected published input ports, but at most
+		// one that carries data.  That's the one whose constant value we need.
+		if (publishedInputPort->getBase()->getType())
+		{
+			set<VuoPort *> connectedPorts = publishedInputPort->getBase()->getConnectedPorts();
+			for (set<VuoPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
+			{
+				VuoPort *inputPort = *j;
+				publishedInputDataPortForInputPort[inputPort] = publishedInputPort;
+			}
+
+			// Set the constant value in association with the published input port itself.
+			map<string, string>::iterator constantIter = constantForPublishedInputPort.find(publishedInputPort->getBase()->getName());
+			bool hasConstant = (constantIter != constantForPublishedInputPort.end());
+			if (hasConstant)
+			{
+				string constant = constantIter->second;
+				publishedInputPort->getBase()->setInitialValue(constant);
+			}
+		}
+	}
 
 	// Set the constant value of each internal input port.
 	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
@@ -473,7 +573,7 @@ void VuoCompilerGraphvizParser::setInputPortConstantValues(void)
 			map<string, string>::iterator constantIter;
 
 			// If the input port is published, use the published input port's constant value.
-			VuoCompilerPublishedPort *publishedInputPort = publishedInputPortForInputPort[inputPort];
+			VuoCompilerPublishedPort *publishedInputPort = publishedInputDataPortForInputPort[inputPort];
 			if (publishedInputPort)
 			{
 				constantIter = constantForPublishedInputPort.find(publishedInputPort->getBase()->getName());
@@ -501,6 +601,36 @@ void VuoCompilerGraphvizParser::setInputPortConstantValues(void)
 }
 
 /**
+ * Parses the event-throttling attribute for each trigger port.
+ */
+void VuoCompilerGraphvizParser::setTriggerPortEventThrottling(void)
+{
+	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
+	{
+		VuoNode *node = nodeForName[n->name];
+
+		vector<VuoPort *> outputPorts = node->getOutputPorts();
+		for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
+		{
+			VuoPort *port = *i;
+			if (port->getClass()->getPortType() == VuoPortClass::triggerPort)
+			{
+				string eventThrottlingStr;
+				parseAttributeOfPort(n, port->getClass()->getName(), "eventThrottling", eventThrottlingStr);
+				enum VuoPortClass::EventThrottling eventThrottling;
+				if (eventThrottlingStr == "drop")
+					eventThrottling = VuoPortClass::EventThrottling_Drop;
+				else
+					// If composition was created before event dropping was implemented, default to
+					// event enqueuing for backward compatibility (preserving the original behavior).
+					eventThrottling = VuoPortClass::EventThrottling_Enqueue;
+				port->setEventThrottling(eventThrottling);
+			}
+		}
+	}
+}
+
+/**
  * Returns a mapping of port names to constant values.
  *
  * A port name only appears in the map if it has a constant value defined in the composition.
@@ -518,14 +648,37 @@ map<string, string> VuoCompilerGraphvizParser::parsePortConstantValues(Agnode_t 
 		if (! inputPortName)
 			continue;
 
-		char portNameInDotInitializer[strlen("_")+strlen(inputPortName)+1];
-		sprintf(portNameInDotInitializer, "_%s", inputPortName);
-		char *constantRaw = agget(n, portNameInDotInitializer);
-		if (constantRaw)
-			constantForInputPort[inputPortName] = VuoStringUtilities::transcodeFromGraphvizIdentifier(constantRaw);
+		string constantValue;
+		if (parseAttributeOfPort(n, inputPortName, "", constantValue))
+			constantForInputPort[inputPortName] = constantValue;
 	}
 
 	return constantForInputPort;
+}
+
+/**
+ * Parses a port attribute from a node declaration.
+ *
+ * If the port attribute is found, returns true and sets @a attributeValue. Otherwise, returns false.
+ */
+bool VuoCompilerGraphvizParser::parseAttributeOfPort(Agnode_t *n, string portName, string suffix, string &attributeValue)
+{
+	ostringstream oss;
+	oss << "_" << portName;
+	if (! suffix.empty())
+		oss << "_" << suffix;
+	char *attributeName = strdup(oss.str().c_str());
+
+	char *rawAttributeValue = agget(n, attributeName);
+	free(attributeName);
+
+	if (rawAttributeValue)
+	{
+		attributeValue = VuoStringUtilities::transcodeFromGraphvizIdentifier(rawAttributeValue);
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -697,3 +850,18 @@ string VuoCompilerGraphvizParser::getDescription(void)
 {
 	return description;
 }
+
+/**
+ * Infers this published port's data type from its name and connected internal ports.
+ * Returns the inferred type, or NULL for event-only.
+ */
+VuoType * VuoCompilerGraphvizParser::inferTypeForPublishedPort(string name, const set<VuoCompilerPort *> &connectedPorts)
+{
+	if (connectedPorts.empty() || name == "refresh" || name == "done")
+		return NULL;
+	
+	VuoCompilerPort *connectedPort = *connectedPorts.begin();
+	VuoCompilerPortClass *connectedPortClass = static_cast<VuoCompilerPortClass *>(connectedPort->getBase()->getClass()->getCompiler());
+	return connectedPortClass->getDataVuoType();
+}
+

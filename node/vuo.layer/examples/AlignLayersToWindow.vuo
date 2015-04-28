@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Renders two layers and aligns them to the edge of the window.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow2 [type="vuo.layer.align.window" version="1.0.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<verticalAlignment>verticalAlignment\l|<done>done\r|<alignedLayer>alignedLayer\r" pos="133,311" fillcolor="violet" _horizontalAlignment="\"center\"" _verticalAlignment="\"top\""];
+AlignLayerToWindow3 [type="vuo.layer.align.window" version="1.0.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<verticalAlignment>verticalAlignment\l|<done>done\r|<alignedLayer>alignedLayer\r" pos="132,434" fillcolor="violet" _horizontalAlignment="\"right\"" _verticalAlignment="\"top\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-227,-14" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="-110,303" fillcolor="yellow" _name="" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _width="0.10000" _height="0.400000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="145,125" fillcolor="yellow" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="689,167" fillcolor="yellow" _item2="100.000000"];
+MakeList2 [type="vuo.list.make.4.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="355,152" fillcolor="yellow"];
+MakeList3 [type="vuo.list.make.2.VuoColor" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="-3,-57" fillcolor="yellow" _item1="{\"r\":0.701961,\"g\":0.701961,\"b\":0.701961,\"a\":1.000000}" _item2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<done>done\r|<layer>layer\r" pos="88,-83" fillcolor="yellow" _name="" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="10.000000" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="21.000000"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="-49,140" fillcolor="yellow" _text="\"Both layers stay close to the edge,\\neven if you resize the window.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":18.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"center\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="752,156" fillcolor="yellow"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="418,141" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+AlignLayerToWindow2:alignedLayer -> MakeList2:item3;
+AlignLayerToWindow3:alignedLayer -> MakeList2:item4;
+FireOnStart:started -> MakeList3:item1;
+FireOnStart:started -> MakeTextImage:refresh;
+MakeColorLayer:layer -> AlignLayerToWindow2:layer;
+MakeColorLayer:layer -> AlignLayerToWindow3:layer;
+MakeLayer:layer -> MakeList2:item2;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList3:list -> MakeRadialGradientLayer:colors;
+MakeList:list -> Multiply:terms;
+MakeRadialGradientLayer:layer -> MakeList2:item1;
+MakeTextImage:image -> MakeLayer:image;
+Multiply:product -> MakeColorLayer:rotation;
+RenderLayersToWindow:requestedFrame -> MakeList:item1;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow2:window;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow3:window;
+}

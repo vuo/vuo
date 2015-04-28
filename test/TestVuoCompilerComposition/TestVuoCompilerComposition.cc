@@ -317,7 +317,7 @@ private slots:
 			expectedNodesToReplace.insert("MakeList1 vuo.list.make.2.VuoGenericType1");
 			expectedNodesToReplace.insert("Add1 vuo.math.add.VuoGenericType1");
 			set<string> expectedCablesToDelete;
-			expectedCablesToDelete.insert("Add1:sum -> ConvertIntegertoText1:integer;");
+			expectedCablesToDelete.insert("Add1:sum -> ConvertIntegertoText1:integer");
 			QTest::newRow("Replace multiple nodes and remove cables") << "Recur_Hold_Add_Write_loop" << "Hold1" << "heldValue" << expectedNodesToReplace << expectedCablesToDelete;
 		}
 
@@ -327,6 +327,15 @@ private slots:
 			expectedNodesToReplace.insert("CountItemsInList vuo.list.count.VuoGenericType1");
 			set<string> expectedCablesToDelete;
 			QTest::newRow("Replace node with VuoList and no singleton") << "CountItemsInList" << "CountItemsInList" << "list" << expectedNodesToReplace << expectedCablesToDelete;
+		}
+
+		{
+			set<string> expectedNodesToReplace;
+			expectedNodesToReplace.insert("HoldValue1 vuo.hold.VuoGenericType1");
+			set<string> expectedCablesToDelete;
+			expectedCablesToDelete.insert("PublishedInputs:newValue -> HoldValue1:newValue");
+			expectedCablesToDelete.insert("HoldValue1:heldValue -> PublishedOutputs:heldValue");
+			QTest::newRow("Replace node that has published ports") << "HoldValuePublished" << "HoldValue1" << "heldValue" << expectedNodesToReplace << expectedCablesToDelete;
 		}
 	}
 	void testUnspecializeGenericPort()
@@ -379,7 +388,8 @@ private slots:
 
 		for (set<VuoCable *>::iterator i = cablesToDelete.begin(); i != cablesToDelete.end(); ++i)
 		{
-			string cable = (*i)->getCompiler()->getGraphvizDeclaration();
+			string cable = (*i)->getFromNode()->getTitle() + ":" + (*i)->getFromPort()->getClass()->getName() + " -> " +
+						   (*i)->getToNode()->getTitle() + ":" + (*i)->getToPort()->getClass()->getName();
 			QVERIFY2(expectedCablesToDelete.find(cable) != expectedCablesToDelete.end(), cable.c_str());
 		}
 		QCOMPARE(cablesToDelete.size(), expectedCablesToDelete.size());

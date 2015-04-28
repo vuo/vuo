@@ -32,6 +32,8 @@ protected:
 	size_t indexInCallbackStartFunction; ///< Where this parameter appears in the node's callback start function's parameter list.
 	bool inCallbackUpdateFunction; ///< Does this parameter appear in the node's callback update function?
 	size_t indexInCallbackUpdateFunction; ///< Where this parameter appears in the node's callback update function's parameter list.
+	bool inCallbackStopFunction; ///< Does this parameter appear in the node's callback stop function?
+	size_t indexInCallbackStopFunction; ///< Where this parameter appears in the node's callback stop function's parameter list.
 
 	VuoCompilerNodeArgumentClass(string name, VuoPortClass::PortType portType, Type *type);
 	virtual ~VuoCompilerNodeArgumentClass(void);  ///< to make this class dynamic_cast-able
@@ -50,6 +52,9 @@ public:
 	bool isInCallbackUpdateFunction(void);
 	size_t getIndexInCallbackUpdateFunction(void);
 	void setIndexInCallbackUpdateFunction(size_t indexInCallbackUpdateFunction);
+	bool isInCallbackStopFunction(void);
+	size_t getIndexInCallbackStopFunction(void);
+	void setIndexInCallbackStopFunction(size_t indexInCallbackStopFunction);
 };
 
 #endif

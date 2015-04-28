@@ -11,6 +11,7 @@
 #define VUOPORT_HH
 
 #include "VuoBase.hh"
+#include "VuoPortClass.hh"
 
 #include <set>
 using namespace std;
@@ -18,7 +19,6 @@ using namespace std;
 class VuoCompilerNodeArgument;
 class VuoRendererPort;
 class VuoCable;
-class VuoPortClass;
 
 /**
  * A port instance on a @c VuoNode instance.
@@ -37,12 +37,15 @@ public:
 	void addConnectedCable(VuoCable *cable);
 	void removeConnectedCable(VuoCable *cable);
 	VuoCable * getCableConnecting(VuoPort *otherPort);
+	VuoPortClass::EventThrottling getEventThrottling(void);
+	void setEventThrottling(VuoPortClass::EventThrottling eventThrottling);
 
 	void print(void);
 
 private:
 	VuoPortClass *portClass; ///< The port class this port is an instance of.
 	vector<VuoCable *> connectedCables;
+	VuoPortClass::EventThrottling eventThrottling; ///< The port's default event-throttling behavior. Only applies to trigger ports.
 };
 
 #endif // VUOPORT_HH

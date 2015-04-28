@@ -34,6 +34,7 @@ class TestNodeExecutionOrderRunnerDelegate : public VuoRunnerDelegateAdapter
 private:
 	VuoRunner *runner;
 	bool isStopping;
+	map<string, bool> isAfterStartEventForTrigger;
 
 public:
 	vector<nodeExecution_t> nodeExecutions;
@@ -72,7 +73,9 @@ public:
 
 	void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
 	{
-		if (! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_conductor") && ! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_semiconductor"))
+		if (! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_conductor") &&
+				! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_semiconductor") &&
+				! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_firePeriodically"))
 			return;
 
 		if (portIdentifier.find("nodeInfo") == string::npos)
@@ -94,14 +97,22 @@ public:
 			return;
 		}
 
-		nodeExecution_t nodeExecution;
-		istringstream sin(dataSummary);
-		sin >> nodeExecution.triggerID >> nodeExecution.eventCount >> nodeExecution.nodeID;
+		if (VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_firePeriodically") &&
+				! isAfterStartEventForTrigger[portIdentifier])
+		{
+			isAfterStartEventForTrigger[portIdentifier] = true;
+		}
+		else
+		{
+			nodeExecution_t nodeExecution = {"",0,""};
+			istringstream sin(dataSummary);
+			sin >> nodeExecution.triggerID >> nodeExecution.eventCount >> nodeExecution.nodeID;
 
-		if (nodeExecution.triggerID.empty() || nodeExecution.nodeID.empty())
-			QFAIL(dataSummary.c_str());
+			if (nodeExecution.triggerID.empty() || nodeExecution.nodeID.empty())
+				QFAIL(dataSummary.c_str());
 
-		nodeExecutions.push_back(nodeExecution);
+			nodeExecutions.push_back(nodeExecution);
+		}
 	}
 };
 
@@ -678,6 +689,7 @@ private slots:
 			sequencesForTriggerMapping_t sequencesForTrigger;
 			sequence_t s;
 			s.push_back("Conductor1");
+			s.push_back("FirePer1");
 			sequencesForTrigger["FirePer1"].insert(s);
 
 			QTest::newRow("Feedback loop between a trigger node and a conductor node.") << "FeedbackIntoTrigger.vuo" << sequencesForTrigger;
@@ -792,6 +804,26 @@ private slots:
 
 			QTest::newRow("Trigger that could interrupt another trigger's gather") << "GatherWithOverlappingTriggers.vuo" << sequencesForTrigger;
 		}
+
+		{
+			sequencesForTriggerMapping_t sequencesForTrigger;
+			{
+				sequence_t s;
+				s.push_back("Conductor1");
+				s.push_back("Conductor2");
+				s.push_back("FirePer1");
+				sequencesForTrigger["FirePer1"].insert(s);
+			}
+			{
+				sequence_t s;
+				s.push_back("Semiconductor1");
+				s.push_back("Conductor2");
+				s.push_back("FirePer1");
+				sequencesForTrigger["FirePer2"].insert(s);
+			}
+
+			QTest::newRow("2 triggers sending events down overlapping but different-ordered paths") << "DifferentNodeOrderPerTrigger.vuo" << sequencesForTrigger;
+		}
 	}
 	void testNodeExecutionOrder()
 	{
@@ -805,6 +837,7 @@ private slots:
 		TestNodeExecutionOrderRunnerDelegate delegate(compositionPath, compiler);
 
 		vector<nodeExecution_t> nodeExecutions = delegate.nodeExecutions;
+		printNodeExecutions(nodeExecutions);
 		checkCoverage(sequencesForTrigger, nodeExecutions);
 		checkSequences(sequencesForTrigger, nodeExecutions);
 	}

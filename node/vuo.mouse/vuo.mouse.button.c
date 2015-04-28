@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : false
+						  "isInterface" : true
 					  }
 				  });
 

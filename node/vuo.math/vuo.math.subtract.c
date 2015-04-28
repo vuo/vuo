@@ -26,8 +26,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoGenericType1, {"default":0.0}) a,
-		VuoInputData(VuoGenericType1, {"default":0.0}) b,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) a,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) b,
 		VuoOutputData(VuoGenericType1) difference
 )
 {

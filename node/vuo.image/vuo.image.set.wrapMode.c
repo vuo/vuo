@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoImageRenderer.h"
 #include "VuoImageWrapMode.h"
 #include "VuoGlContext.h"
 #include "VuoGlPool.h"
@@ -30,7 +29,6 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
@@ -39,9 +37,6 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoRegister(instance, free);
 
 	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	return instance;
 }
@@ -59,13 +54,7 @@ void nodeInstanceEvent
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 
-	VuoShader frag = VuoShader_makeImageShader();
-	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "alpha", 1);
-
-	VuoImage img = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	VuoImage img = VuoImage_makeCopy(image);
 
 	CGLContextObj cgl_ctx = (CGLContextObj)(*instance)->glContext;
 
@@ -102,12 +91,9 @@ void nodeInstanceEvent
 	glFlushRenderAPPLE();
 
 	*outputImage = img;
-
-	VuoRelease(frag);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
-	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

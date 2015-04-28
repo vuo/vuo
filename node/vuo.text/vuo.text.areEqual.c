@@ -28,7 +28,6 @@ void nodeEvent
 	*equal = true;
 	unsigned long textsCount = VuoListGetCount_VuoText(texts);
 	for (unsigned long i = 2; i <= textsCount && *equal; ++i)
-		// Even though the texts are UTF-8, they're still null-terminated, so we can compare them as C strings.
-		if (strcmp(VuoListGetValueAtIndex_VuoText(texts, i - 1), VuoListGetValueAtIndex_VuoText(texts, i)))
+		if (! VuoText_areEqual(VuoListGetValueAtIndex_VuoText(texts, i - 1), VuoListGetValueAtIndex_VuoText(texts, i)))
 			*equal = false;
 }

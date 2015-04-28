@@ -1,7 +1,6 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	Count.vuo \
-	WaveSphere.vuo
+	Count.vuo
 
 include(../../../example.pri)

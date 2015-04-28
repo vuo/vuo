@@ -18,8 +18,8 @@ SelectInput3 [type="vuo.select.in.2.VuoText" version="1.0.0" label="Select Input
 Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="258,287" _b="0"];
 Subtract2 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="259,377" _b="1"];
 Subtract3 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="259,466" _b="2"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<number>number\r" _number="0"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ordinalNumber>ordinalNumber\l"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<number>number\r" _number="0" _number_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ordinalNumber>ordinalNumber\l" _ordinalNumber_type="VuoText"];
 
 ConvertIntegertoText:text -> MakeList:item1;
 MakeList:list -> Append:texts;

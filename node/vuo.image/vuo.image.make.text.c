@@ -86,7 +86,10 @@ void nodeEvent
 	}
 
 	// Get the bounds of each line of text, and union them into bounds for the entire block of text.
-	double lineHeight=0;
+	double ascent = CTFontGetAscent(ctFont);
+	double descent = CTFontGetDescent(ctFont);
+	double leading = CTFontGetLeading(ctFont);
+	double lineHeight = ascent + descent + leading;
 	CGRect bounds = CGRectMake(0,0,0,0);
 	CGRect lineBounds[lineCount];
 	for (CFIndex i=0; i<lineCount; ++i)
@@ -96,12 +99,10 @@ void nodeEvent
 		// For some fonts (such as Consolas), CTLineGetImageBounds doesn't return sufficient bounds --- the right side of the text gets cut off.
 		// For other fonts (such as Zapfino), CTLineGetTypographicBounds doesn't return sufficient bounds --- the left side of its loopy "g" gets cut off.
 		// So combine the results of both.
-		double ascent, descent, leading;
-		double width = CTLineGetTypographicBounds(ctLine, &ascent, &descent, &leading);
+		double width = CTLineGetTypographicBounds(ctLine, NULL, NULL, NULL);
 		CGRect lineImageBounds = CTLineGetImageBounds(ctLine, cgContext);
 		width = fmax(width,lineImageBounds.size.width);
 		width += CTLineGetTrailingWhitespaceWidth(ctLine);
-		lineHeight = ascent+descent+leading;
 		lineBounds[i] = CGRectMake(lineImageBounds.origin.x, lineHeight*i - ascent, width, lineHeight);
 
 		// Can't use CGRectUnion since it shifts the origin to (0,0), cutting off the glyph's ascent and strokes left of the origin (e.g., Zapfino's "g").

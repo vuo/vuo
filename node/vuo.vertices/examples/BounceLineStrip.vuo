@@ -1,6 +1,6 @@
 /**
 * @file
-* Animates a line segment that bounces around within an area. 
+* Animates a line segment that bounces around within an area.
 *
 * @copyright Copyright © 2012–2014 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
@@ -9,45 +9,33 @@
 
 digraph G
 {
-Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="-98,1"];
+Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="-592,384"];
 DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="-605,328"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="546,425"];
-Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="315,230"];
-Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="317,365"];
-Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="326,513"];
-Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="908,217" _transform=""];
-MakeLineStripVertices2D [type="vuo.vertices.make.lineStrips.VuoPoint2d" version="1.0.0" label="Make Line Strip Vertices|<refresh>refresh\l|<positions>positions\l|<done>done\r|<vertices>vertices\r" pos="578,216" fillcolor="violet"];
-MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="37,100"];
-MakeList10 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="50,401"];
-MakeList11 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="57,490"];
-MakeList3 [type="vuo.list.make.1.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="-161,12" _item1="0.500000"];
-MakeList4 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="44,189"];
-MakeList5 [type="vuo.list.make.1.VuoVertices" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="842,228"];
-MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="1073,226"];
-MakeList7 [type="vuo.list.make.4.VuoPoint2d" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="515,227" fillcolor="violet" _item1=""];
-MakeList8 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="47,298"];
-MakeList9 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="60,599"];
-MakeWave [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="-205,274" _wave="\"triangle\"" _period="3.400000"];
-MakeWave2 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="-208,84" _wave="\"triangle\"" _period="4.000000"];
-MakeWave3 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="-207,175" _wave="\"triangle\"" _period="3.200000"];
-MakeWave4 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="-204,365" _wave="\"triangle\"" _period="6.000000"];
-MakeWave5 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="-201,468" _wave="\"triangle\"" _period="4.800000"];
-MakeWave6 [type="vuo.math.wave" version="1.0.0" label="Make Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="-200,559" _wave="\"triangle\"" _period="3.800000"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="100,89"];
-Multiply2 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="107,178"];
-Multiply3 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="110,287"];
-Multiply4 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="120,479"];
-Multiply5 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="123,588"];
-Multiply6 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="113,390"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1139,215" _cameraName=""];
-ShadeWithSolidColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="694,446" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="249,280" _started_eventThrottling="enqueue"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="9,117"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="9,197"];
+Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="7,274"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="699,142" _transform=""];
+MakeLineStripVertices2D [type="vuo.vertices.make.lineStrips.VuoPoint2d" version="1.0.0" label="Make Line Strip Vertices|<refresh>refresh\l|<positions>positions\l|<done>done\r|<vertices>vertices\r" pos="315,140" fillcolor="violet"];
+MakeList3 [type="vuo.list.make.1.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="-655,395" _item1="0.500000"];
+MakeList5 [type="vuo.list.make.1.VuoVertices" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="633,153"];
+MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="-722,-70"];
+MakeList7 [type="vuo.list.make.4.VuoPoint2d" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="252,151" fillcolor="violet" _item1=""];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="-656,-81" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithSolidColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="428,302" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+Wave [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="-210,317" _wave="\"triangle\"" _period="3.400000" _center="0.000000"];
+Wave2 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="-208,84" _wave="\"triangle\"" _period="4.000000" _center="0.000000"];
+Wave3 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="-210,201" _wave="\"triangle\"" _period="3.200000" _center="0.000000"];
+Wave4 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="-213,434" _wave="\"triangle\"" _period="6.000000" _center="0.000000"];
+Wave5 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="-216,550" _wave="\"triangle\"" _period="4.800000" _center="0.000000"];
+Wave6 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="-217,668" _wave="\"triangle\"" _period="3.800000" _center="0.000000"];
 
-Add:sum -> MakeList10:item1;
-Add:sum -> MakeList11:item1;
-Add:sum -> MakeList4:item1;
-Add:sum -> MakeList8:item1;
-Add:sum -> MakeList9:item1;
-Add:sum -> MakeList:item1;
+Add:sum -> Wave2:amplitude;
+Add:sum -> Wave3:amplitude;
+Add:sum -> Wave4:amplitude;
+Add:sum -> Wave5:amplitude;
+Add:sum -> Wave6:amplitude;
+Add:sum -> Wave:amplitude;
 DiscardDataFromEvent:event -> MakeList3:item1;
 FireOnStart:started -> ShadeWithSolidColor:refresh;
 Make2DPoint2:point -> MakeList7:item3;
@@ -55,34 +43,22 @@ Make2DPoint3:point -> MakeList7:item4;
 Make2DPoint:point -> MakeList7:item2;
 Make3DObject:object -> MakeList6:item1;
 MakeLineStripVertices2D:vertices -> MakeList5:item1;
-MakeList10:list -> Multiply6:terms;
-MakeList11:list -> Multiply4:terms;
 MakeList3:list -> Add:terms;
-MakeList4:list -> Multiply2:terms;
 MakeList5:list -> Make3DObject:vertices;
 MakeList6:list -> RenderSceneToWindow:objects;
 MakeList7:list -> MakeLineStripVertices2D:positions;
-MakeList8:list -> Multiply3:terms;
-MakeList9:list -> Multiply5:terms;
-MakeList:list -> Multiply:terms;
-MakeWave2:value -> MakeList:item2;
-MakeWave3:value -> MakeList4:item2;
-MakeWave4:value -> MakeList10:item2;
-MakeWave5:value -> MakeList11:item2;
-MakeWave6:value -> MakeList9:item2;
-MakeWave:value -> MakeList8:item2;
-Multiply2:product -> Make2DPoint:y;
-Multiply3:product -> Make2DPoint2:x;
-Multiply4:product -> Make2DPoint3:x;
-Multiply5:product -> Make2DPoint3:y;
-Multiply6:product -> Make2DPoint2:y;
-Multiply:product -> Make2DPoint:x;
 RenderSceneToWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
-RenderSceneToWindow:requestedFrame -> MakeWave2:time;
-RenderSceneToWindow:requestedFrame -> MakeWave3:time;
-RenderSceneToWindow:requestedFrame -> MakeWave4:time;
-RenderSceneToWindow:requestedFrame -> MakeWave5:time;
-RenderSceneToWindow:requestedFrame -> MakeWave6:time;
-RenderSceneToWindow:requestedFrame -> MakeWave:time;
+RenderSceneToWindow:requestedFrame -> Wave2:time;
+RenderSceneToWindow:requestedFrame -> Wave3:time;
+RenderSceneToWindow:requestedFrame -> Wave4:time;
+RenderSceneToWindow:requestedFrame -> Wave5:time;
+RenderSceneToWindow:requestedFrame -> Wave6:time;
+RenderSceneToWindow:requestedFrame -> Wave:time;
 ShadeWithSolidColor:shader -> Make3DObject:shader;
+Wave2:value -> Make2DPoint:x;
+Wave3:value -> Make2DPoint:y;
+Wave4:value -> Make2DPoint2:y;
+Wave5:value -> Make2DPoint3:x;
+Wave6:value -> Make2DPoint3:y;
+Wave:value -> Make2DPoint2:x;
 }

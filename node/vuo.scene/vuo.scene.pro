@@ -5,6 +5,8 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.scene.combine.c \
+	vuo.scene.copy.c \
+	vuo.scene.copy.trs.c \
 	vuo.scene.get.c \
 	vuo.scene.make.c \
 	vuo.scene.make.camera.orthographic.c \
@@ -20,6 +22,14 @@ NODE_SOURCES += \
 	vuo.scene.make.light.spot.target.c \
 	vuo.scene.render.image.c \
 	vuo.scene.render.window.c
+
+
+# NODE_LIBRARY_SOURCES += \
+# 	VuoPbMesh.c
+
+# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
+#OTHER_FILES += \
+#	VuoPbMesh.h
 
 NODE_INCLUDEPATH += \
 	$${ASSIMP_ROOT}/include

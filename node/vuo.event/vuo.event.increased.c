@@ -24,18 +24,18 @@ VuoModuleMetadata({
 					  }
 				  });
 
-VuoGenericType1 * nodeInstanceInit(void)
+VuoGenericType1 * nodeInstanceInit( VuoInputData(VuoGenericType1) value )
 {
 	VuoGenericType1 *lastValue = (VuoGenericType1 *)malloc(sizeof(VuoGenericType1));
 	VuoRegister(lastValue, free);
-	*lastValue = false;
+	*lastValue = value;
 	return lastValue;
 }
 
 void nodeInstanceEvent
 (
 		VuoInstanceData(VuoGenericType1 *) lastValue,
-		VuoInputData(VuoGenericType1, {"default":0.0}) value,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) value,
 		VuoInputEvent(VuoPortEventBlocking_Door, value) valueEvent,
 		VuoOutputEvent() increased
 )

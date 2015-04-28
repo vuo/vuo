@@ -1,0 +1,97 @@
+/**
+ * @file
+ * Compares the different ways of smoothing an animated object's movement from one point to another. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="934,995" fillcolor="green"];
+CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="940,1172" fillcolor="green"];
+CombineLayers3 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="942,1344" fillcolor="green"];
+CombineLayers4 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<done>done\r|<layer>layer\r" pos="939,835" fillcolor="green"];
+ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<done>done\r|<real>real\r" pos="23,413" fillcolor="yellow"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="-587,130" fillcolor="cyan" _increment="1" _decrement="1" _setCount="0" _minimum="0" _maximum="1" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="210,735" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-766,168" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="-766,110" fillcolor="yellow" _seconds="1.500000" _fired_eventThrottling="drop"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="-72,283" fillcolor="cyan" _x="-0.200000"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="-67,434" fillcolor="cyan" _x="0.200000"];
+Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="-67,575" fillcolor="cyan" _x="0.600000"];
+Make2DPoint4 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="-73,152" fillcolor="cyan" _x="-0.600000"];
+Make2DTransform [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="413,255" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+Make2DTransform2 [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="418,406" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+Make2DTransform3 [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="418,547" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+Make2DTransform4 [type="vuo.transform.make.2d" version="1.0.0" label="Make 2D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="412,152" fillcolor="green" _rotation="0.000000" _scale="{\"x\":1.000000,\"y\":1.000000}"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="429,742" fillcolor="green" _name="" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.300000" _height="0.100000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="695,1055" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="701,1232" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="703,1404" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer4 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="700,895" fillcolor="green" _name="" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="871,1021" fillcolor="green"];
+MakeList2 [type="vuo.list.make.4.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<item4>item4\l|<done>done\r|<list>list\r" pos="1139,846" fillcolor="green"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="876,861" fillcolor="green"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="877,1198" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="879,1370" fillcolor="green"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="498,1067" fillcolor="green" _text="\"Duration\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="503,907" fillcolor="green" _text="\"Target\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="504,1244" fillcolor="green" _text="\"Rate\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage4 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="506,1416" fillcolor="green" _text="\"Inertia\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":20.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1202,835" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="-257,133" fillcolor="cyan" _start="0.000000" _end="1.000000" _scaledStart="-0.500000" _scaledEnd="0.500000"];
+SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoPoint2d" version="1.0.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<done>done\r|<position>position\r" pos="172,255" fillcolor="violet" _setPosition="{\"x\":-0.200000,\"y\":-0.500000}" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in+out\""];
+SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoPoint2d" version="1.0.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<done>done\r|<position>position\r" pos="172,547" fillcolor="violet" _setPosition="{\"x\":0.600000,\"y\":-0.500000}" _duration="2.000000"];
+SmoothWithRate2 [type="vuo.motion.smooth.rate.VuoPoint2d" version="1.0.0" label="Smooth with Rate|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<rate>rate\l|<curve>curve\l|<easing>easing\l|<done>done\r|<position>position\r" pos="174,399" fillcolor="violet" _setPosition="{\"x\":0.200000,\"y\":-0.500000}" _rate="0.500000" _curve="\"quadratic\"" _easing="\"in+out\""];
+
+CombineLayers2:layer -> MakeList2:item3;
+CombineLayers3:layer -> MakeList2:item4;
+CombineLayers4:layer -> MakeList2:item1;
+CombineLayers:layer -> MakeList2:item2;
+ConvertIntegerToRealNumber2:real -> Scale:value;
+CountWithinRange:count -> ConvertIntegerToRealNumber2:integer;
+FireOnStart2:started -> CountWithinRange:increment;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> MakeTextImage2:refresh;
+FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> MakeTextImage4:refresh;
+FireOnStart:started -> MakeTextImage:refresh;
+FirePeriodically:fired -> CountWithinRange:increment;
+Make2DPoint2:point -> SmoothWithRate2:setTarget;
+Make2DPoint3:point -> SmoothWithInertia2:setTarget;
+Make2DPoint4:point -> Make2DTransform4:translation;
+Make2DPoint:point -> SmoothWithDuration2:setTarget;
+Make2DTransform2:transform -> CombineLayers2:transform;
+Make2DTransform3:transform -> CombineLayers3:transform;
+Make2DTransform4:transform -> CombineLayers4:transform;
+Make2DTransform:transform -> CombineLayers:transform;
+MakeColorLayer:layer -> MakeList3:item1;
+MakeColorLayer:layer -> MakeList4:item1;
+MakeColorLayer:layer -> MakeList5:item1;
+MakeColorLayer:layer -> MakeList:item1;
+MakeLayer2:layer -> MakeList4:item2;
+MakeLayer3:layer -> MakeList5:item2;
+MakeLayer4:layer -> MakeList3:item2;
+MakeLayer:layer -> MakeList:item2;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList3:list -> CombineLayers4:layers;
+MakeList4:list -> CombineLayers2:layers;
+MakeList5:list -> CombineLayers3:layers;
+MakeList:list -> CombineLayers:layers;
+MakeTextImage2:image -> MakeLayer4:image;
+MakeTextImage3:image -> MakeLayer2:image;
+MakeTextImage4:image -> MakeLayer3:image;
+MakeTextImage:image -> MakeLayer:image;
+RenderLayersToWindow:requestedFrame -> SmoothWithDuration2:time;
+RenderLayersToWindow:requestedFrame -> SmoothWithInertia2:time;
+RenderLayersToWindow:requestedFrame -> SmoothWithRate2:time;
+Scale:scaledValue -> Make2DPoint2:y;
+Scale:scaledValue -> Make2DPoint3:y;
+Scale:scaledValue -> Make2DPoint4:y;
+Scale:scaledValue -> Make2DPoint:y;
+SmoothWithDuration2:position -> Make2DTransform:translation;
+SmoothWithInertia2:position -> Make2DTransform3:translation;
+SmoothWithRate2:position -> Make2DTransform2:translation;
+}

@@ -24,6 +24,7 @@ VuoModuleMetadata({
 						 "hdr", "high", "dynamic", "range",
 						 "psd", "Photoshop",
 						 "raw", "cr2", "dng", "dcr", "nef", "raf", "mos", "kdc",
+						 "tiff",
 						 "Targa", "tga"
 					 ],
 					 "version" : "1.0.0",

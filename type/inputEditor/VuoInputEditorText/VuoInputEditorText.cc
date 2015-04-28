@@ -9,8 +9,6 @@
 
 #include "VuoInputEditorText.hh"
 #include "VuoInputEditorWithLineEdit.hh"
-#include "VuoText.h"
-#include "VuoHeap.h"
 
 extern "C"
 {

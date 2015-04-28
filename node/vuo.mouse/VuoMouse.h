@@ -22,10 +22,16 @@ void VuoMouse_startListeningForDeltas(VuoMouse *mouseListener, void (*movedBy)(V
 									  VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForDrags(VuoMouse *mouseListener, void (*dragMovedTo)(VuoPoint2d),
 									 VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
+void VuoMouse_startListeningForDragsWithCallback(VuoMouse *mouseListener, void (^dragMovedTo)(VuoPoint2d),
+												 VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForPresses(VuoMouse *mouseListener, void (*pressed)(VuoPoint2d),
 									   VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
+void VuoMouse_startListeningForPressesWithCallback(VuoMouse *mouseListener, void (^pressed)(VuoPoint2d),
+												   VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released)(VuoPoint2d),
 										VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
+void VuoMouse_startListeningForReleasesWithCallback(VuoMouse *mouseListener, void (^released)(VuoPoint2d),
+													VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForClicks(VuoMouse *mouseListener, void (*singleClicked)(VuoPoint2d), void (*doubleClicked)(VuoPoint2d),
 									  void (*tripleClicked)(VuoPoint2d),
 									  VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);

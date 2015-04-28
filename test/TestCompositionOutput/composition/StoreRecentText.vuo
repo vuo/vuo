@@ -18,8 +18,8 @@ Hold [type="vuo.hold.VuoText" version="1.0.0" label="Hold Value|<refresh>refresh
 MakeList [type="vuo.list.make.2.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="361,270"];
 MakeList2 [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="837,312" _item2="1"];
 Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="679,240"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<currentText>currentText\r|<characterLimit>characterLimit\r" _currentText="\"\"" _characterLimit="0"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<recentText>recentText\l"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<characterLimit>characterLimit\r|<currentText>currentText\r" _characterLimit="0" _characterLimit_type="VuoInteger" _currentText="\"\"" _currentText_type="VuoText"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<recentText>recentText\l" _recentText_type="VuoText"];
 
 Add:sum -> Cut:startIndex;
 Append:compositeText -> CountCharacters:text;

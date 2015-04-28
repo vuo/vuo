@@ -61,6 +61,7 @@ private:
 	VuoType * parseTypeParameter(string annotation);
 	struct json_object *parseInputDataDetailsParameter(string annotation);
 	int parseEventBlockingParameter(string annotation);
+	int parseEventThrottlingParameter(string annotation);
 	VuoPortClass * getExistingPortClass(VuoCompilerNodeArgumentClass *argumentClass, bool isInput);
 
 	friend class TestVuoCompilerType;

@@ -102,38 +102,13 @@ static VuoPoint2d VuoMouse_convertDeltaToVuoCoordinates(NSPoint delta, NSWindow 
 	return deltaInVuo;
 }
 
-/**
- * Returns true if the modifier keys in @a currentModifierFlags match the expected modifier keys in @a modifierKey.
- */
-static bool VuoMouse_modifierFlagsMatch(NSUInteger currentModifierFlags, VuoModifierKey modifierKey)
-{
-	NSUInteger flags = currentModifierFlags & NSDeviceIndependentModifierFlagsMask;
-
-	switch (modifierKey)
-	{
-		case VuoModifierKey_Any:
-			return true;
-		case VuoModifierKey_Command:
-			return (flags == NSCommandKeyMask);
-		case VuoModifierKey_Option:
-			return (flags == NSAlternateKeyMask);
-		case VuoModifierKey_Control:
-			return (flags == NSControlKeyMask);
-		case VuoModifierKey_Shift:
-			return (flags == NSShiftKeyMask);
-		case VuoModifierKey_None:
-			return (flags == 0);
-	}
-	return false;
-}
-
 
 /**
  * If the mouse was scrolled a non-zero amount, calls the trigger function and passes it the scroll delta.
  */
 static void VuoMouse_fireScrollDeltaIfNeeded(NSEvent *event, VuoModifierKey modifierKey, void (*scrolled)(VuoPoint2d))
 {
-	if (! VuoMouse_modifierFlagsMatch([event modifierFlags], modifierKey))
+	if (! VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey))
 		return;
 
 	VuoPoint2d delta = VuoPoint2d_make(-[event deltaX], [event deltaY]);
@@ -142,16 +117,16 @@ static void VuoMouse_fireScrollDeltaIfNeeded(NSEvent *event, VuoModifierKey modi
 }
 
 /**
- * If the mouse event is not ignored, calls the trigger function and passes it the mouse position.
+ * If the mouse event is not ignored, calls the block and passes it the mouse position.
  *
  * If a window is given, the mouse position is in Vuo coordinates relative to the window's content view.
  * The mouse event is ignored if it doesn't correspond to this window.
  *
  * If no window is given, the mouse position is in screen coordinates.
  */
-static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, VuoWindowReference windowRef, VuoModifierKey modifierKey, void (*fire)(VuoPoint2d))
+static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, VuoWindowReference windowRef, VuoModifierKey modifierKey, void (^fire)(VuoPoint2d))
 {
-	if (! VuoMouse_modifierFlagsMatch([event modifierFlags], modifierKey))
+	if (! VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey))
 		return;
 
 	bool shouldFire = false;
@@ -198,7 +173,7 @@ static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, VuoWindowReferenc
  */
 static void VuoMouse_fireMouseDeltaIfNeeded(NSEvent *event, VuoWindowReference windowRef, VuoModifierKey modifierKey, void (*fire)(VuoPoint2d))
 {
-	if (! VuoMouse_modifierFlagsMatch([event modifierFlags], modifierKey))
+	if (! VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey))
 		return;
 
 	bool shouldFire = false;
@@ -242,7 +217,7 @@ static void VuoMouse_fireMouseDeltaIfNeeded(NSEvent *event, VuoWindowReference w
 static void VuoMouse_fireMouseClickIfNeeded(struct VuoMouseContext *context, NSEvent *event, VuoWindowReference windowRef, VuoModifierKey modifierKey,
 											void (*singleClicked)(VuoPoint2d), void (*doubleClicked)(VuoPoint2d), void (*tripleClicked)(VuoPoint2d))
 {
-	if (! VuoMouse_modifierFlagsMatch([event modifierFlags], modifierKey))
+	if (! VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey))
 		return;
 
 	NSInteger clickCount = [event clickCount];
@@ -264,7 +239,7 @@ static void VuoMouse_fireMouseClickIfNeeded(struct VuoMouseContext *context, NSE
 	dispatch_after(clickInterval, context->clickQueue, ^{
 					   if (context->pendingClickCount == clickCount)
 					   {
-						   VuoMouse_fireMousePositionIfNeeded(event, windowRef, modifierKey, fired);
+						   VuoMouse_fireMousePositionIfNeeded(event, windowRef, modifierKey, ^(VuoPoint2d point){ fired(point); });
 						   context->pendingClickCount = 0;
 					   }
 					   dispatch_group_leave(context->clickGroup);
@@ -292,7 +267,7 @@ void VuoMouse_startListeningForScrolls(VuoMouse *mouseListener, void (*scrolled)
 void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
 	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask handler:^(NSEvent *event) {
-		VuoMouse_fireMousePositionIfNeeded(event, window, modifierKey, movedTo);
+		VuoMouse_fireMousePositionIfNeeded(event, window, modifierKey, ^(VuoPoint2d point){ movedTo(point); });
 		return event;
 	}];
 
@@ -315,9 +290,10 @@ void VuoMouse_startListeningForDeltas(VuoMouse *mouseListener, void (*movedBy)(V
 }
 
 /**
- * Starts listening for mouse drag events, and calling the trigger function for each one.
+ * Starts listening for mouse drag events, and calling the given block for each one.
  */
-void VuoMouse_startListeningForDrags(VuoMouse *mouseListener, void (*dragMovedTo)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+void VuoMouse_startListeningForDragsWithCallback(VuoMouse *mouseListener, void (^dragMovedTo)(VuoPoint2d),
+												 VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
 {
 	NSEventMask eventMask = 0;
 	switch (button)
@@ -343,12 +319,22 @@ void VuoMouse_startListeningForDrags(VuoMouse *mouseListener, void (*dragMovedTo
 
 	struct VuoMouseContext *context = (struct VuoMouseContext *)mouseListener;
 	context->monitor = monitor;
+
 }
 
 /**
- * Starts listening for mouse press events, and calling the trigger function for each one.
+ * Starts listening for mouse drag events, and calling the trigger function for each one.
  */
-void VuoMouse_startListeningForPresses(VuoMouse *mouseListener, void (*pressed)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+void VuoMouse_startListeningForDrags(VuoMouse *mouseListener, void (*dragMovedTo)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+{
+	VuoMouse_startListeningForDragsWithCallback(mouseListener, ^(VuoPoint2d point){ dragMovedTo(point); }, button, window, modifierKey);
+}
+
+/**
+ * Starts listening for mouse press events, and calling the given block for each one.
+ */
+void VuoMouse_startListeningForPressesWithCallback(VuoMouse *mouseListener, void (^pressed)(VuoPoint2d),
+												   VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
 {
 	NSEventMask eventMask = 0;
 	switch (button)
@@ -377,9 +363,18 @@ void VuoMouse_startListeningForPresses(VuoMouse *mouseListener, void (*pressed)(
 }
 
 /**
- * Starts listening for mouse release events, and calling the trigger function for each one.
+ * Starts listening for mouse press events, and calling the trigger function for each one.
  */
-void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+void VuoMouse_startListeningForPresses(VuoMouse *mouseListener, void (*pressed)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+{
+	VuoMouse_startListeningForPressesWithCallback(mouseListener, ^(VuoPoint2d point){ pressed(point); }, button, window, modifierKey);
+}
+
+/**
+ * Starts listening for mouse release events, and calling the given block for each one.
+ */
+void VuoMouse_startListeningForReleasesWithCallback(VuoMouse *mouseListener, void (^released)(VuoPoint2d),
+													VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
 {
 	NSEventMask eventMask = 0;
 	switch (button)
@@ -405,6 +400,14 @@ void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released
 
 	struct VuoMouseContext *context = (struct VuoMouseContext *)mouseListener;
 	context->monitor = monitor;
+}
+
+/**
+ * Starts listening for mouse release events, and calling the trigger function for each one.
+ */
+void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+{
+	VuoMouse_startListeningForReleasesWithCallback(mouseListener, ^(VuoPoint2d point){ released(point); }, button, window, modifierKey);
 }
 
 /**
@@ -512,5 +515,5 @@ VuoBoolean VuoMouse_isPressed(VuoMouseButton button, VuoModifierKey modifierKey)
 			buttonMask = (1 << 0) | (1 << 1) | (1 << 2);
 			break;
 	}
-	return ([NSEvent pressedMouseButtons] & buttonMask) && VuoMouse_modifierFlagsMatch([NSEvent modifierFlags], modifierKey);
+	return ([NSEvent pressedMouseButtons] & buttonMask) && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], modifierKey);
 }

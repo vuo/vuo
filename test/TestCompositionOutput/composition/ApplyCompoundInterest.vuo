@@ -17,8 +17,8 @@ Hold [type="vuo.hold.VuoInteger" label="Hold Value|<refresh>refresh\l|<initialVa
 ConvertIntegertoRealNumber [type="vuo.type.integer.real" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="684,254" _integer="0"];
 Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="1100,204" _terms=""];
 RoundDown [type="vuo.math.roundDown" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDownInteger>roundedDownInteger\r" pos="1262,206" _real="0.0"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<initialBalance>initialBalance\r|<apply>apply\r|<interestRate>interestRate\r"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<balance>balance\l"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<apply>apply\r|<initialBalance>initialBalance\r|<interestRate>interestRate\r" _apply="" _apply_type="event" _initialBalance="" _initialBalance_type="VuoInteger" _interestRate="" _interestRate_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<balance>balance\l" _balance_type="VuoInteger"];
 
 MakeList:list -> Multiply:terms;
 ConvertIntegertoRealNumber:real -> MakeList:item1;

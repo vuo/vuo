@@ -18,13 +18,12 @@
 class VuoCompilerPublishedOutputPort : public VuoCompilerPublishedPort
 {
 public:
-	VuoCompilerPublishedOutputPort(string name, VuoCompilerPort *connectedPort, VuoPort *vuoOutPort);
+	VuoCompilerPublishedOutputPort(string name, VuoType *type, set<VuoCompilerPort *> connectedPorts, VuoPort *vuoOutPort);
 	VuoPort * getVuoPseudoPort(void);
 	void setVuoPseudoPort(VuoPort *port);
 
 private:
 	VuoPort *vuoOutPort;
-	static set<VuoCompilerPort *> wrapInSet(VuoCompilerPort *port);
 };
 
 #endif // VUOCOMPILERPUBLISHEDOUTPUTPORT_HH

@@ -13,6 +13,7 @@
 #include "VuoSceneRenderer.h"
 #include "VuoLayer.h"
 #include "VuoList_VuoLayer.h"
+#include "VuoRenderedLayers.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -22,8 +23,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Render Layers to Window",
-					 "keywords" : [ "frame", "draw", "opengl", "graphics", "display", "view", "object",
-						 "mouse", "trackpad", "touchpad", "wheel", "scroll", "click", "tap", "cursor", "pointer"],
+					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
@@ -111,7 +111,7 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal)
+		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop)
 )
 {
 	VuoWindowOpenGl_enableTriggers((*context)->window);
@@ -127,7 +127,10 @@ void nodeInstanceTriggerStart
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoList_VuoLayer) layers
+		VuoInputData(VuoList_VuoLayer) layers,
+		VuoOutputTrigger(showedWindow, VuoWindowReference),
+		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop),
+		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
 {
 	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity()).sceneObject;
@@ -138,6 +141,10 @@ void nodeInstanceEvent
 
 	// Schedule a redraw.
 	VuoWindowOpenGl_redraw((*context)->window);
+
+	VuoInteger width, height;
+	VuoWindowReference_getContentSize(VuoWindowReference_make((*context)->window), &width, &height);
+	*renderedLayers = VuoRenderedLayers_makeWithWindow(rootSceneObject, width, height, VuoWindowReference_make((*context)->window));
 }
 
 void nodeInstanceTriggerStop

@@ -1,5 +1,6 @@
 Creates a circular gradient that transitions smoothly between the given colors.
 
+   - `name` — A name to identify the layer, allowing other nodes to select it from a group of layers. 
    - `colors` — The colors to transition between, in order from center outward.
    - `gradientCenter` — The center point, where the first color appears, in Vuo coordinates.
    - `gradientRadius` — The distance from the center to where the next-to-last color finishes transitioning to the last color, in Vuo coordinates.

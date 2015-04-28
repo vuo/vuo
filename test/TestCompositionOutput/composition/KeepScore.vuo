@@ -17,8 +17,8 @@ MakeList [type="vuo.list.make.4.VuoText" label="Make List|<refresh>refresh\l|<it
 Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="652,223" _texts=""];
 Count2 [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="241,318" _increment="1" _decrement="1"];
 Count [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="242,219" _increment="1" _decrement="1"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<whichTeam>whichTeam\r"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<scoreboard>scoreboard\l"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<whichTeam>whichTeam\r" _whichTeam="" _whichTeam_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<scoreboard>scoreboard\l" _scoreboard_type="VuoText"];
 
 SelectOutput:option1 -> Count:increment;
 SelectOutput:option2 -> Count:refresh;

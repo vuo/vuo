@@ -13,13 +13,15 @@
  * Creates a published port that is not connected to any port in a composition.
  *
  * @param name A name for the published port.
+ * @param type A type for the published port.
  * @param connectedPorts A non-empty set of ports, all having the same data type.
  * @param triggerPort The trigger port that implements events fired via this published port.
  */
 VuoCompilerPublishedInputPort::VuoCompilerPublishedInputPort(string name,
+															 VuoType *type,
 															 const set<VuoCompilerPort *> &connectedPorts,
 															 VuoCompilerTriggerPort *triggerPort)
-	: VuoCompilerPublishedPort(name, false, connectedPorts)
+	: VuoCompilerPublishedPort(name, type, false, connectedPorts)
 {
 	this->triggerPort = triggerPort;
 }

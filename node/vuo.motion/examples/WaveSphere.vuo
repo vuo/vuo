@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Animates a sphere that moves side-to-side in a wave motion. Move the mouse up or down to change the sphere's speed. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+CheckMouseStatus [type="vuo.mouse.status" version="1.0.0" label="Check Mouse Status|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<position>position\r|<isPressed>isPressed\r" pos="-98,327" fillcolor="cyan" _window="" _button="\"left\"" _modifierKey="\"any\""];
+ConvertRealto3DPoint [type="vuo.type.real.point3d.x" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<done>done\r|<point3d>point3d\r" pos="885,440"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="44,417"];
+Divide [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="278,354" fillcolor="cyan" _b="100.000000"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="234,41" fillcolor="orange" _started_eventThrottling="enqueue"];
+Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="88,327" fillcolor="cyan"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make Scene Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="792,64" fillcolor="orange" _shader=""];
+Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="526,360" fillcolor="orange" _x="0.250000" _y="0.250000" _z="0.250000"];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="962,75"];
+MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="416,61" fillcolor="orange" _rows="16" _columns="16"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="786,330" fillcolor="orange" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
+Wave [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<done>done\r|<value>value\r" pos="552,201" fillcolor="green" _wave="\"sine\""];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1028,64" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+CheckMouseStatus:position -> Get2DPointValues:point;
+ConvertRealto3DPoint:point3d -> MakeTransform:translation;
+DiscardDataFromEvent:event -> CheckMouseStatus:refresh;
+Divide:quotient -> Wave:period;
+FireonStart:started -> Make3DPoint2:refresh;
+FireonStart:started -> MakeSphereVertices:refresh;
+Get2DPointValues:y -> Divide:a;
+Make3DObject:object -> MakeList2:item1;
+Make3DPoint2:point -> MakeTransform:scale;
+MakeList2:list -> RenderSceneToWindow2:objects;
+MakeSphereVertices:vertices -> Make3DObject:vertices;
+MakeTransform:transform -> Make3DObject:transform;
+Wave:value -> ConvertRealto3DPoint:x;
+RenderSceneToWindow2:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+RenderSceneToWindow2:requestedFrame -> Wave:time;
+}

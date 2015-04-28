@@ -8,10 +8,10 @@ SOURCES +=\
 		VuoInputEditorCurve.cc
 
 HEADERS += \
-		VuoInputEditorCurve.hh
+		VuoInputEditorCurve.hh \
+		VuoInputEditorCurveRenderer.hh
 
 OTHER_FILES += \
 		VuoInputEditorCurve.json
 
-INCLUDEPATH += $$ROOT/node/vuo.math
-LIBS += $$ROOT/node/vuo.math/VuoCurve.o
+LIBS += $$ROOT/type/VuoCurve.o

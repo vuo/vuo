@@ -22,7 +22,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Render Image to Window",
-					 "keywords" : [ "draw", "graphics", "display", "view", "full screen", "fullscreen" ],
+					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
@@ -129,7 +129,7 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal)
+		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop)
 )
 {
 	VuoWindowOpenGl_enableTriggers((*context)->window);

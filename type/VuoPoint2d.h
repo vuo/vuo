@@ -10,6 +10,7 @@
 #ifndef VUOPOINT2D_H
 #define VUOPOINT2D_H
 
+#include "VuoReal.h"
 #include <math.h>
 
 /**
@@ -179,7 +180,7 @@ static inline float VuoPoint2d_distance(VuoPoint2d a, VuoPoint2d b)
 }
 
 /**
- *	Returns a linearly interpolated value between @a and @b using time @t.  @t is between 0 and 1.
+ * Returns a linearly interpolated value between @c a and @c b using time @c t.  @c t is between 0 and 1.
  */
 static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t) __attribute__((const));
 static inline VuoPoint2d VuoPoint2d_lerp(VuoPoint2d a, VuoPoint2d b, float t)
@@ -197,6 +198,57 @@ static inline VuoPoint2d VuoPoint2d_scale(VuoPoint2d a, VuoPoint2d b)
 }
 
 VuoRectangle VuoPoint2d_rectangleIntersection(VuoRectangle rectangleA, VuoRectangle rectangleB);
+VuoRectangle VuoPoint2d_rectangleUnion(VuoRectangle rectangleA, VuoRectangle rectangleB);
+
+/**
+ * Calculates a position along the path of an oscillating spring.
+ */
+static inline VuoPoint2d VuoPoint2d_spring(VuoReal timeSinceDrop, VuoPoint2d dropPosition, VuoPoint2d restingPosition, VuoReal period, VuoReal damping)
+{
+	VuoPoint2d p;
+	p.x = VuoReal_spring(timeSinceDrop, dropPosition.x, restingPosition.x, period, damping);
+	p.y = VuoReal_spring(timeSinceDrop, dropPosition.y, restingPosition.y, period, damping);
+	return p;
+}
+
+/**
+ * Limits @c point to values between @c min and @c max, inclusive.
+ */
+static inline VuoPoint2d VuoPoint2d_clamp(VuoPoint2d point, VuoReal min, VuoReal max)
+{
+	return (VuoPoint2d) {
+		fmin(fmax(point.x,min),max),
+		fmin(fmax(point.y,min),max)
+	};
+}
+
+/**
+ * Calculates a position along a cubic bezier curve.
+ *
+ * @param p0	The curve's starting position.
+ * @param p1	The control point for the curve's starting position.
+ * @param p2	The control point for the curve's ending position.
+ * @param p3	The curve's ending position.
+ * @param time	Which value along the curve should be returned. 0 = starting position, 1 = ending position.
+ */
+static inline VuoPoint2d VuoPoint2d_bezier3(VuoPoint2d p0, VuoPoint2d p1, VuoPoint2d p2, VuoPoint2d p3, VuoReal time)
+{
+	return (VuoPoint2d) {
+		VuoReal_bezier3(p0.x,p1.x,p2.x,p3.x,time),
+		VuoReal_bezier3(p0.y,p1.y,p2.y,p3.y,time)
+	};
+}
+
+/**
+ * Snap value a to the nearest increment of value snap.
+ */
+static inline VuoPoint2d VuoPoint2d_snap(VuoPoint2d a, VuoPoint2d center, VuoPoint2d snap)
+{
+	return (VuoPoint2d) {
+		center.x + snap.x * (int)round( (a.x-center.x) / snap.x ),
+		center.y + snap.y * (int)round( (a.y-center.y) / snap.y )
+	};
+}
 
 /**
  * @}

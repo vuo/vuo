@@ -214,6 +214,7 @@ void VuoNodeSet::extractResourcesFromSubdirectory(string archiveSubdir, string d
 	extensions.insert("png");
 	extensions.insert("jpg");
 	extensions.insert("mov");
+	extensions.insert("mp3");
 	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, archiveSubdir, extensions);
 
 	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)

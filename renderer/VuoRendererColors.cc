@@ -13,7 +13,7 @@ const qreal VuoRendererColors::minNodeFrameAndFillAlpha = 0.35;
 const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
 const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = 0.75;
 const qreal VuoRendererColors::defaultCableUpperAndMainAlpha = 0.5;
-const qreal VuoRendererColors::defaultPortFillAlpha = 3./8.;
+const qreal VuoRendererColors::defaultConstantAlpha = 3./8.;
 const int VuoRendererColors::subtleHighlightingLighteningFactor = 100; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
 const int VuoRendererColors::activityFadeDuration = 400;
 const int VuoRendererColors::activityAnimationFadeDuration = 950;
@@ -68,7 +68,7 @@ QColor VuoRendererColors::canvasFill(void)
 
 /**
  * Returns the color for the background of the main section of the node (the background of the area the port labels are drawn on).
- * Also used for the background of collapsed typecast ports.
+ * Also used for port fill, and the background of collapsed typecast ports.
  */
 QColor VuoRendererColors::nodeFill(void)
 {
@@ -77,6 +77,39 @@ QColor VuoRendererColors::nodeFill(void)
 	QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
 
 	return nodeFillColor;
+}
+
+/**
+ * Returns the color for the background of ports in the main section of the node.
+ */
+QColor VuoRendererColors::portFill(void)
+{
+	// If there are to be no modifications for selection, highlight, or hovering,
+	// use the same fill color as is used for the main section of the node.
+	bool useNodeFill = ((selectionType == VuoRendererColors::noSelection) &&
+						(highlightType == VuoRendererColors::noHighlight) &&
+						!isHovered);
+	
+	if (useNodeFill)
+		return nodeFill();
+	
+	// Otherwise, use the lighter constant flag fill color.
+	else
+	{
+		qreal adjustedAlpha = getCurrentAlphaForDefault(defaultConstantAlpha);
+		int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
+		QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
+		
+		return nodeFillColor;
+	}
+}
+
+/**
+ * Returns the color for the background of ports in the published port sidebars.
+ */
+QColor VuoRendererColors::publishedPortFill(void)
+{
+	return nodeFill();
 }
 
 /**
@@ -108,11 +141,11 @@ QColor VuoRendererColors::nodeClass(void)
 }
 
 /**
- * Returns the color for the background of ports in the main section of the node.
+ * Returns the color for the background of constants.
  */
-QColor VuoRendererColors::portFill(void)
+QColor VuoRendererColors::constantFill(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortFillAlpha);
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultConstantAlpha);
 	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
 	QColor color = tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor);
 
@@ -125,7 +158,7 @@ QColor VuoRendererColors::portFill(void)
 QColor VuoRendererColors::animatedPortFill(void)
 {
 	qreal minAlpha = 0;
-	qreal maxAlpha = getMaxAlphaForDefault(defaultPortFillAlpha);
+	qreal maxAlpha = getMaxAlphaForDefault(defaultNodeFrameAndFillAlpha);
 	qreal adjustedAlpha = maxAlpha-currentFadePercentage*(maxAlpha-minAlpha);
 
 	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
@@ -307,10 +340,10 @@ qint64 VuoRendererColors::getVirtualNodeExecutionOrigin(void)
  */
 qint64 VuoRendererColors::getVirtualFiredEventOrigin(void)
 {
-	qreal minPortFillAlpha = getMinAlphaForDefault(defaultPortFillAlpha);
-	qreal maxPortFillAlpha = getMaxAlphaForDefault(defaultPortFillAlpha);
+	qreal minPortFillAlpha = getMinAlphaForDefault(defaultNodeFrameAndFillAlpha);
+	qreal maxPortFillAlpha = getMaxAlphaForDefault(defaultNodeFrameAndFillAlpha);
 
-	const qreal defaultFadePercentage = (maxPortFillAlpha-defaultPortFillAlpha)/(maxPortFillAlpha-minPortFillAlpha);
+	const qreal defaultFadePercentage = (maxPortFillAlpha-defaultNodeFrameAndFillAlpha)/(maxPortFillAlpha-minPortFillAlpha);
 	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
 	qint64 virtualFiredEventOrigin = timeNow - defaultFadePercentage*activityFadeDuration;
 

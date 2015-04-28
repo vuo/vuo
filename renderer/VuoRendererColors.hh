@@ -53,10 +53,12 @@ public:
 	QColor nodeTitle(void);
 	QColor nodeClass(void);
 
-	QColor portFill(void);
+	QColor constantFill(void);
 	QColor animatedPortFill(void);
 	QColor eventBlockingBarrier(void);
 	QColor animatedeventBlockingBarrier(void);
+	QColor portFill(void);
+	QColor publishedPortFill(void);
 	QColor portTitlebarFill(void);
 	QColor portTitle(void);
 
@@ -91,7 +93,7 @@ private:
 	static const qreal maxNodeFrameAndFillAlpha; ///< Maximum alpha level, assigned to each node during its execution while in 'Show Events' mode.
 	static const qreal defaultNodeFrameAndFillAlpha; ///< Alpha level assigned to each node while in non-'Show Events' mode.
 	static const qreal defaultCableUpperAndMainAlpha; ///< Alpha level assigned to each cable while in non-'Show Events' mode.
-	static const qreal defaultPortFillAlpha; ///< Alpha level assigned to port fill while in non-'Show Events' mode.
+	static const qreal defaultConstantAlpha; ///< Alpha level assigned to constant while in non-'Show Events' mode.
 	static const int subtleHighlightingLighteningFactor; ///< The factor by which lightness is increased for components drawn in @c subtleHighlight as opposed to @c standardHighlight mode.
 	static const int activityFadeDuration; ///< Time period, in ms, over which a component fades to its minimum alpha level following activity (e.g., node execution) while in 'Show Events' mode.
 };

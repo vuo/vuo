@@ -386,6 +386,16 @@ void VuoCompilerNodeClass::parseCallbackUpdateFunction(void)
 void VuoCompilerNodeClass::parseCallbackStopFunction(void)
 {
 	callbackStopFunction = parser->getFunction(nameForGlobal("nodeInstanceTriggerStop"));
+	if (! callbackStopFunction)
+		return;
+
+	parseParameters(callbackStopFunction,
+					INPUT_DATA_ABSENT |
+					OUTPUT_DATA_ABSENT |
+					INPUT_EVENT_ABSENT |
+					OUTPUT_EVENT_ABSENT |
+					OUTPUT_TRIGGER_ABSENT | OUTPUT_TRIGGER_PRESENT |
+					INSTANCE_DATA_PRESENT);
 }
 
 /**
@@ -406,7 +416,9 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 	map<string, json_object *> detailsForInputDataClassName;
 	map<string, VuoType *> vuoTypeForArgumentName;
 	map<string, enum VuoPortClass::EventBlocking> eventBlockingForArgumentName;
+	map<string, enum VuoPortClass::EventThrottling> eventThrottlingForArgumentName;
 	map<string, VuoCompilerInputEventPortClass *> inputEventPortClassForArgumentName;
+	map<string, VuoCompilerTriggerPortClass *> triggerPortClassForArgumentName;
 
 	bool sawInputData = false;
 	bool sawOutputData = false;
@@ -428,6 +440,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		json_object *inputDataDetails = NULL;
 		VuoType *type = NULL;
 		int eventBlocking;
+		int eventThrottling;
 
 		if ((argumentClass = parseInputDataParameter(annotation, argument)) != NULL)
 		{
@@ -477,7 +490,11 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		{
 			existingPortClass = getExistingPortClass(argumentClass, false);
 			if (! existingPortClass)
+			{
 				outputArgumentClasses.push_back(argumentClass);
+
+				triggerPortClassForArgumentName[argumentName] = static_cast<VuoCompilerTriggerPortClass *>(argumentClass);
+			}
 
 			sawOutputTrigger = true;
 		}
@@ -502,6 +519,10 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		{
 			eventBlockingForArgumentName[argumentName] = (VuoPortClass::EventBlocking)eventBlocking;
 		}
+		else if ((eventThrottling = parseEventThrottlingParameter(annotation)) != -1)
+		{
+			eventThrottlingForArgumentName[argumentName] = (VuoPortClass::EventThrottling)eventThrottling;
+		}
 
 		VuoCompilerNodeArgumentClass *argumentClassInNodeClass = (existingPortClass ? existingPortClass->getCompiler() : argumentClass);
 		if (argumentClassInNodeClass)
@@ -515,14 +536,16 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 				argumentClassInNodeClass->setIndexInCallbackStartFunction(argumentIndex);
 			else if (function == callbackUpdateFunction)
 				argumentClassInNodeClass->setIndexInCallbackUpdateFunction(argumentIndex);
+			else if (function == callbackStopFunction)
+				argumentClassInNodeClass->setIndexInCallbackStopFunction(argumentIndex);
 		}
 	}
 
 	// Check that all required arguments and no disallowed arguments are present.
 	{
 		string functionName = function->getName().str();
-		string wronglyAbsentMessage = " is not allowed in " + functionName + "\n";
-		string wronglyPresentMessage = " is required in " + functionName + "\n";
+		string wronglyAbsentMessage = " is required in " + functionName + "\n";
+		string wronglyPresentMessage = " is not allowed in " + functionName + "\n";
 
 		if (sawInputData && ! (acceptanceFlags & INPUT_DATA_PRESENT))
 			fprintf(stderr, "%s", ("VuoInputData" + wronglyPresentMessage).c_str());
@@ -696,6 +719,16 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		VuoCompilerInputEventPortClass *eventPortClass = inputEventPortClassForArgumentName[argumentName];
 		if (eventPortClass)
 			eventPortClass->getBase()->setEventBlocking(eventBlocking);
+	}
+
+	// Set the event-throttling behavior for each added trigger port.
+	for (map<string, enum VuoPortClass::EventThrottling>::iterator i = eventThrottlingForArgumentName.begin(); i != eventThrottlingForArgumentName.end(); ++i)
+	{
+		string argumentName = i->first;
+		VuoPortClass::EventThrottling eventThrottling = i->second;
+		VuoCompilerTriggerPortClass *triggerPortClass = triggerPortClassForArgumentName[argumentName];
+		if (triggerPortClass)
+			triggerPortClass->getBase()->setDefaultEventThrottling(eventThrottling);
 	}
 }
 
@@ -888,6 +921,27 @@ int VuoCompilerNodeClass::parseEventBlockingParameter(string annotation)
 		return VuoPortClass::EventBlocking_Wall;
 
 	fprintf(stderr, "Unknown %s\n", annotation.c_str());
+	return -1;
+}
+
+/**
+ * Parses a "vuoInputEventThrottling" annotated function parameter. Returns -1 if not a "vuoInputEventThrottling".
+ */
+int VuoCompilerNodeClass::parseEventThrottlingParameter(string annotation)
+{
+	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEventThrottling:"))
+		return -1;
+
+	string eventThrottlingName = VuoStringUtilities::substrAfter(annotation, "vuoInputEventThrottling:");
+	if (! eventThrottlingName.empty())
+	{
+		if (eventThrottlingName == "VuoPortEventThrottling_Enqueue")
+			return VuoPortClass::EventThrottling_Enqueue;
+		else if (eventThrottlingName == "VuoPortEventThrottling_Drop")
+			return VuoPortClass::EventThrottling_Drop;
+		else
+			fprintf(stderr, "Unknown %s\n", annotation.c_str());
+	}
 	return -1;
 }
 

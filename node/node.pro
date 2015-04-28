@@ -7,12 +7,15 @@ HEADERS += \
 	node.h
 
 SUBDIRS += \
+	vuo.audio \
 	vuo.color \
 	vuo.console \
+	vuo.data \
 	vuo.event \
 	vuo.font \
 	vuo.hold \
 	vuo.image \
+	vuo.keyboard \
 	vuo.kinect \
 	vuo.layer \
 	vuo.leap \
@@ -20,6 +23,7 @@ SUBDIRS += \
 	vuo.logic \
 	vuo.math \
 	vuo.midi \
+	vuo.motion \
 	vuo.mouse \
 	vuo.movie \
 	vuo.noise \
@@ -34,4 +38,5 @@ SUBDIRS += \
 	vuo.time \
 	vuo.transform \
 	vuo.type \
-	vuo.vertices
+	vuo.vertices \
+	vuo.window

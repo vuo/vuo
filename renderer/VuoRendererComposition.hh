@@ -41,9 +41,8 @@ public:
 	void removeCable(VuoRendererCable *rc);
 	void removePublishedInputCable(VuoRendererCable *rc);
 	void removePublishedOutputCable(VuoRendererCable *rc);
+	void createAndConnectDrawersToListInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
-	VuoRendererPublishedPort * publishPort(VuoPort *port, string name="", bool attemptMerge=false);
-	VuoCable * createPublishedCable(VuoPort *vuoPseudoPort, VuoPort *internalPort);
 	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name);
@@ -73,16 +72,15 @@ protected:
 	void setRenderActivity(bool render);
 	void updateComponentCaching();
 	void repaintAllComponents();
+	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort);
 
 	VuoCompilerGraphvizParser *parser; ///< The Graphviz parser instance used by this composition.
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this composition.
 	bool cachingEnabled; ///< Should item renderings be cached?
 
 private:
-	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort);
 	void addNodeInCompositionToCanvas(VuoNode *n);
 	void addCableInCompositionToCanvas(VuoCable *c);
-	int getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput);
 	void updatePublishedInputNode();
 	void updatePublishedOutputNode();
 	bool isPublishedPortNameTaken(string name, bool isInput);

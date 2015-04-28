@@ -14,7 +14,7 @@ extern "C"
 
 #include "node.h"
 
-VuoList_VuoVertices VuoVerticesParametric_generate( VuoText xExp, VuoText yExp, VuoText zExp, VuoText uExp, VuoText vExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, bool closeV );
+VuoList_VuoVertices VuoVerticesParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax);
 
 #ifdef __cplusplus
 }

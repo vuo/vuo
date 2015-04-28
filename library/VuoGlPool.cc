@@ -29,23 +29,8 @@ using namespace std;
 #include <OpenGL/CGLMacro.h>
 
 
-
-/// @todo remove after https://b33p.net/kosada/node/6909
-static unsigned long long totalGLMemory = 256*1024*1024;	///< https://b33p.net/kosada/node/6908#comment-23731
-static unsigned long long totalGLMemoryAllocated = 0;  ///< https://b33p.net/kosada/node/6908
-typedef void (*sendErrorType)(const char *message);  ///< https://b33p.net/kosada/node/6908
-static sendErrorType sendError;
-static void __attribute__((constructor)) VuoGlPoolError_init(void)
-{
-	sendError = (sendErrorType) dlsym(RTLD_SELF, "sendError");  // for running composition in separate process as executable or in current process
-	if (! sendError)
-		sendError = (sendErrorType) dlsym(RTLD_DEFAULT, "sendError");  // for running composition in separate process as dynamic libraries
-}
-
-
-
 static map<VuoGlContext, map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > > VuoGlPool __attribute__((init_priority(101)));
-static dispatch_semaphore_t VuoGlPool_semaphore;
+static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGlPool.
 static void __attribute__((constructor)) VuoGlPool_init(void)
 {
 	VuoGlPool_semaphore = dispatch_semaphore_create(1);
@@ -79,14 +64,6 @@ GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long s
 
 			if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
 			{
-				/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
-				totalGLMemoryAllocated += size;
-				if (totalGLMemoryAllocated > totalGLMemory)
-				{
-					sendError("Out of video RAM.");
-					goto error;
-				}
-
 				glGenBuffers(1, &name);
 /// @todo https://b33p.net/kosada/node/6901
 //				GLenum bufferType = type == VuoGlPool_ArrayBuffer ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
@@ -98,7 +75,6 @@ GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long s
 				VLog("Unknown pool type %d.", type);
 		}
 	}
-error:
 	dispatch_semaphore_signal(VuoGlPool_semaphore);
 
 	return name;
@@ -130,12 +106,15 @@ void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long 
 typedef pair<unsigned short,unsigned short> VuoGlTextureDimensionsType;	///< Texture width and height.
 typedef pair<queue<GLuint>,double> VuoGlTextureLastUsed;	///< A queue of textures of a given format and size, including the last time any of the textures were used.
 typedef map<GLenum, map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed > > VuoGlTexturePoolType;	///< VuoGlTexturePool[internalformat][size] gives a list of unused textures.
-static VuoGlTexturePoolType *VuoGlTexturePool;
-static dispatch_semaphore_t VuoGlTexturePool_semaphore;
-static dispatch_semaphore_t VuoGlTexturePool_canceledAndCompleted;
-static dispatch_source_t VuoGlTexturePool_timer;
+static VuoGlTexturePoolType *VuoGlTexturePool;	///< A pool of GL Textures.
+static dispatch_semaphore_t VuoGlTexturePool_semaphore;	///< Serializes access to VuoGlTexturePool.
+static dispatch_semaphore_t VuoGlTexturePool_canceledAndCompleted;	///< Signals when the last VuoGlTexturePool cleanup has completed.
+static dispatch_source_t VuoGlTexturePool_timer;	///< Periodically cleans up VuoGlTexturePool.
 static double textureTimeout = 0.1;	///< Seconds a texture can remain in the pool unused, before it gets purged.
 
+/**
+ * Returns the number of seconds (including fractional seconds) since midnight 1970.01.01 GMT.
+ */
 static double VuoGlTexturePool_getTime(void)
 {
 	struct timeval t;
@@ -143,12 +122,15 @@ static double VuoGlTexturePool_getTime(void)
 	return t.tv_sec + t.tv_usec / 1000000.;
 }
 
+/**
+ * Purges expired textures from the GL Texture Pool.
+ */
 static void VuoGlTexturePool_cleanup(void *blah)
 {
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		double now = VuoGlTexturePool_getTime();
-//		VLog("pool (%llu MB allocated)", totalGLMemoryAllocated/1024/1024);
+//		VLog("pool:");
 		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool->begin(); internalformat != VuoGlTexturePool->end(); ++internalformat)
 		{
 //			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
@@ -157,8 +139,6 @@ static void VuoGlTexturePool_cleanup(void *blah)
 //				VLog("\t\t%dx%d: %lu unused textures (last used %gs ago)",dimensions->first.first,dimensions->first.second, dimensions->second.first.size(), now - dimensions->second.second);
 				if (now - dimensions->second.second > textureTimeout)
 				{
-					unsigned short width = dimensions->first.first;
-					unsigned short height = dimensions->first.second;
 					unsigned long textureCount = dimensions->second.first.size();
 					if (textureCount)
 					{
@@ -170,9 +150,6 @@ static void VuoGlTexturePool_cleanup(void *blah)
 							dimensions->second.first.pop();
 
 							glDeleteTextures(1, &textureName);
-
-							/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
-							totalGLMemoryAllocated -= width*height*4;
 						}
 						VuoGlContext_disuse(cgl_ctx);
 					}
@@ -186,6 +163,9 @@ static void VuoGlTexturePool_cleanup(void *blah)
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 }
+/**
+ * Initializes the GL Texture Pool.
+ */
 static void __attribute__((constructor)) VuoGlTexturePool_init(void)
 {
 	VuoGlTexturePool_semaphore = dispatch_semaphore_create(1);
@@ -200,6 +180,9 @@ static void __attribute__((constructor)) VuoGlTexturePool_init(void)
 									   });
 	dispatch_resume(VuoGlTexturePool_timer);
 }
+/**
+ * Destroys the GL Texture Pool.
+ */
 static void __attribute__((destructor)) VuoGlTexturePool_fini(void)
 {
 	dispatch_source_cancel(VuoGlTexturePool_timer);
@@ -247,14 +230,6 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 
 	if (name == 0)
 	{
-		/// @todo remove VRAM check after https://b33p.net/kosada/node/6909
-		totalGLMemoryAllocated += width*height*4;
-		if (totalGLMemoryAllocated > totalGLMemory)
-		{
-			sendError("Out of video RAM.");
-			return 0;
-		}
-
 		glGenTextures(1, &name);
 		glBindTexture(GL_TEXTURE_2D, name);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_UNSIGNED_BYTE, NULL);
@@ -380,13 +355,16 @@ typedef struct
 typedef map<VuoGlTextureDimensionsType, deque<VuoIoSurfacePoolEntryType> > VuoIoSurfacePoolType;	///< VuoIoSurfacePoolType[size] gives a list of IOSurfaces.
 static VuoIoSurfacePoolType *VuoIoSurfacePool;	///< Unused IOSurfaces.
 static VuoIoSurfacePoolType *VuoIoSurfaceQuarantine;	///< IOSurfaces which might still be in use by the receiver.
-static dispatch_semaphore_t VuoIoSurfacePool_semaphore;
-static dispatch_semaphore_t VuoIoSurfacePool_canceledAndCompleted;
-static dispatch_source_t VuoIoSurfacePool_timer;
-static CFStringRef receiverFinishedWithIoSurfaceKey = CFSTR("VuoReceiverFinished");
+static dispatch_semaphore_t VuoIoSurfacePool_semaphore;	///< Serializes access to the IOSurface pool.
+static dispatch_semaphore_t VuoIoSurfacePool_canceledAndCompleted;	///< Signals when the last IOSurface pool cleanup has completed.
+static dispatch_source_t VuoIoSurfacePool_timer;	///< Periodically cleans up the IOSurface pool.
+static CFStringRef receiverFinishedWithIoSurfaceKey = CFSTR("VuoReceiverFinished");	///< Signals from the receiver to the sender, when the receiver is finished using the IOSurface.
 
 static double ioSurfaceCleanupInterval = 0.1;	///< Interval (in seconds) to promote IOSurfaces from the quarantine to the pool, and to clean old IOSurfaces from the pool.
 
+/**
+ * Periodically cleans up the IOSurface pool.
+ */
 static void VuoIoSurfacePool_cleanup(void *blah)
 {
 	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
