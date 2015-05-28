@@ -78,11 +78,25 @@ If building LLVM and Clang for redistribution, also build and execute UPX (see t
 
 Install Graphviz 2.28.0:
 
-    (cd /usr/local && git checkout ac18935 Library/Formula/graphviz.rb)
-    brew edit graphviz
-        # Add `args << "--without-expat"`
-        # Add `args << "--without-x"`
-    brew install graphviz --env=std --build-from-source
+    curl -OL http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.28.0.tar.gz
+    tar zxf graphviz-2.28.0.tar.gz
+    cd graphviz-2.28.0
+
+If you're running Mac OS 10.7:
+
+    export CFLAGS="-mmacosx-version-min=10.7 -mno-sse4 -mno-sse4.1 -mno-sse4.2"
+
+If you're running Mac OS 10.8 or later:
+
+    export CFLAGS="-mmacosx-version-min=10.7 -mno-avx -mno-sse4 -mno-sse4.1 -mno-sse4.2"
+
+If you're running any version of Mac OS X:
+
+    export LDFLAGS='-Wl,-headerpad_max_install_names'
+    ./configure --prefix=/usr/local/Cellar/graphviz/2.28.0 --disable-static --enable-shared --disable-debug --disable-dependency-tracking --without-expat --without-x --disable-ltdl --disable-swig --disable-sharp --disable-guile --disable-java --disable-lua --disable-ocaml --disable-perl --disable-php --disable-python --disable-r --disable-ruby --disable-tcl --with-qt=no --with-quartz --disable-swig --without-pangocairo --without-digcola --without-fontconfig --without-freetype2 --without-ortho --without-png --without-jpeg --without-sfdp --without-gdk-pixbuf --without-quartz
+    make -j9
+    (cd lib ; make install)
+    (cd plugin ; make install)
 
 ### Qt
 
