@@ -1,0 +1,2 @@
+   - redcup2-7145482357.jpg was created by Redcup2.  It's licensed CC BY 2.0, and is avaialable at http://www.flickr.com/photos/redcup2/7145482357 .
+   - fisheye.data was created by Paul Bourke, and is available at http://paulbourke.net/dome/warppatch/ .

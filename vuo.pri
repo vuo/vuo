@@ -1,4 +1,4 @@
-VUO_VERSION = 0.7.0
+VUO_VERSION = 0.8.0
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -12,12 +12,13 @@ CONFIG += debug
 CONFIG -= depend_includepath
 
 QMAKE_CLEAN += -R
-QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a $${TARGET}.app pch *.dSYM *.o *.dylib moc_* *.moc *.vuonode *.bc
+QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a \"$${TARGET}.app\" pch *.dSYM *.o *.dylib moc_* *.moc *.vuonode *.vuonode+ *.bc *.bc+
 
 LLVM_ROOT = /usr/local/Cellar/llvm/3.2
+LLVM_DYLIB = libLLVM-3.2svn.dylib
 JSONC_ROOT = /usr/local/Cellar/json-c/0.10
 GRAPHVIZ_ROOT = /usr/local/Cellar/graphviz/2.28.0
-QT_ROOT = /usr/local/Cellar/qt/5.2.1
+QT_ROOT = /usr/local/Cellar/qt/5.3.1
 LIBFFI_ROOT = /usr/local/Cellar/libffi/3.0.11
 ZLIB_ROOT = /usr/local/Cellar/zlib/1.2.8
 ZMQ_ROOT = /usr/local/Cellar/zeromq/2.2.0
@@ -34,14 +35,19 @@ FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
 LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.9
 LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.2.0
 OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0
+ZXING_ROOT = /usr/local/Cellar/zxing/2.3.0
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport
 CONFIG += moc uic
 
 QMAKE_CC = $${LLVM_ROOT}/bin/clang
-QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CC = $$QMAKE_CC
 QMAKE_CXX = $${LLVM_ROOT}/bin/clang++
+analyze {
+	QMAKE_CC = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang
+	QMAKE_CXX = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang++
+}
+QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CC = $$QMAKE_CC
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
 QMAKE_LINK = $${LLVM_ROOT}/bin/clang++
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
@@ -82,6 +88,19 @@ mac {
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_version_load_command
 
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
+
+	!isEmpty(VUO_INFO_PLIST) : isEmpty(API_HEADER_LISTS) {
+		# Fill in version number
+		infoPlist.commands = \
+			cat "$$VUO_INFO_PLIST" \
+			| sed '"s/@SHORT_VERSION@/$$VUO_VERSION \\(r`svnversion -n` on `date +%Y.%m.%d`\\)/"' \
+			> "$$VUO_INFO_PLIST_GENERATED"
+		infoPlist.depends = $$VUO_INFO_PLIST
+		infoPlist.target = $$VUO_INFO_PLIST_GENERATED
+		PRE_TARGETDEPS += "$$system(echo $$VUO_INFO_PLIST_GENERATED)"
+		QMAKE_EXTRA_TARGETS += infoPlist
+		QMAKE_CLEAN += "$$VUO_INFO_PLIST_GENERATED"
+	}
 }
 
 LIBS += -lm
@@ -136,38 +155,7 @@ VuoLLVM {
 
 	LIBS += \
 		$${LIBFFI_ROOT}/lib/libffi.a \
-		$${LLVM_ROOT}/lib/libLLVMAnalysis.a \
-		$${LLVM_ROOT}/lib/libLLVMArchive.a \
-		$${LLVM_ROOT}/lib/libLLVMAsmParser.a \
-		$${LLVM_ROOT}/lib/libLLVMAsmPrinter.a \
-		$${LLVM_ROOT}/lib/libLLVMBitReader.a \
-		$${LLVM_ROOT}/lib/libLLVMBitWriter.a \
-		$${LLVM_ROOT}/lib/libLLVMCodeGen.a \
-		$${LLVM_ROOT}/lib/libLLVMCore.a \
-		$${LLVM_ROOT}/lib/libLLVMExecutionEngine.a \
-		$${LLVM_ROOT}/lib/libLLVMInstCombine.a \
-		$${LLVM_ROOT}/lib/libLLVMInstrumentation.a \
-		$${LLVM_ROOT}/lib/libLLVMInterpreter.a \
-		$${LLVM_ROOT}/lib/libLLVMJIT.a \
-		$${LLVM_ROOT}/lib/libLLVMLinker.a \
-		$${LLVM_ROOT}/lib/libLLVMMC.a \
-		$${LLVM_ROOT}/lib/libLLVMMCParser.a \
-		$${LLVM_ROOT}/lib/libLLVMObject.a \
-		$${LLVM_ROOT}/lib/libLLVMRuntimeDyld.a \
-		$${LLVM_ROOT}/lib/libLLVMScalarOpts.a \
-		$${LLVM_ROOT}/lib/libLLVMSelectionDAG.a \
-		$${LLVM_ROOT}/lib/libLLVMSupport.a \
-		$${LLVM_ROOT}/lib/libLLVMTarget.a \
-		$${LLVM_ROOT}/lib/libLLVMTransformUtils.a \
-		$${LLVM_ROOT}/lib/libLLVMVectorize.a \
-		$${LLVM_ROOT}/lib/libLLVMX86AsmParser.a \
-		$${LLVM_ROOT}/lib/libLLVMX86AsmPrinter.a \
-		$${LLVM_ROOT}/lib/libLLVMX86CodeGen.a \
-		$${LLVM_ROOT}/lib/libLLVMX86Desc.a \
-		$${LLVM_ROOT}/lib/libLLVMX86Info.a \
-		$${LLVM_ROOT}/lib/libLLVMX86Utils.a \
-		$${LLVM_ROOT}/lib/libLLVMipa.a \
-		$${LLVM_ROOT}/lib/libLLVMipo.a \
+		$${LLVM_ROOT}/lib/$$LLVM_DYLIB \
 		$${LLVM_ROOT}/lib/libclangAnalysis.a \
 		$${LLVM_ROOT}/lib/libclangAST.a \
 		$${LLVM_ROOT}/lib/libclangBasic.a \
@@ -178,8 +166,9 @@ VuoLLVM {
 		$${LLVM_ROOT}/lib/libclangLex.a \
 		$${LLVM_ROOT}/lib/libclangParse.a \
 		$${LLVM_ROOT}/lib/libclangSema.a \
-		$${LLVM_ROOT}/lib/libclangSerialization.a \
-		$${LLVM_ROOT}/lib/libclangTooling.a
+		$${LLVM_ROOT}/lib/libclangSerialization.a
+
+	QMAKE_POST_LINK = ([ -x $$TARGET ] && install_name_tool -change "@executable_path/../lib/$$LLVM_DYLIB" "$$LLVM_ROOT/lib/$$LLVM_DYLIB" $$TARGET) ; true
 }
 
 graphviz {
@@ -207,7 +196,7 @@ zmq | VuoRuntime {
 	INCLUDEPATH += $${ZMQ_ROOT}/include
 }
 
-openssl {
+openssl | VuoBase {
 	LIBS += \
 	$${OPENSSL_ROOT}/lib/libcrypto.a \
 	$${OPENSSL_ROOT}/lib/libssl.a
@@ -298,6 +287,7 @@ qtTest {
 		-framework QtCore \
 		-framework QtTest
 	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
+	QMAKE_OBJECTIVE_CFLAGS += -F$$QT_ROOT/lib
 	DEFINES += QT_TESTLIB_LIB
 }
 
@@ -339,6 +329,9 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 	} else {
 		QMAKE_OBJCXXFLAGS_PRECOMPILE =
 	}
+
+	# For VuoLog.h
+	INCLUDEPATH += $$ROOT/library
 } else {
 	QMAKE_CFLAGS_PRECOMPILE =
 	QMAKE_CXXFLAGS_PRECOMPILE =
@@ -404,7 +397,8 @@ VuoInputEditorWidget | VuoInputEditor {
 }
 VuoInputEditor {
 	INCLUDEPATH += \
-		$$ROOT/type
+		$$ROOT/type \
+		$$ROOT/type/list
 	QMAKE_LFLAGS += \
 		-Wl,-no_function_starts \
 		-Wl,-no_version_load_command

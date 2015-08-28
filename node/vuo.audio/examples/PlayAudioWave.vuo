@@ -12,16 +12,16 @@ digraph G
 Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<y>y\r" pos="470,312"];
 DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="470,277"];
 MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<done>done\r|<samples>samples\r" pos="371,187" fillcolor="violet" _wave="\"triangle\""];
-MakeList11 [type="vuo.list.make.2.VuoAudioSamples" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="568,110" fillcolor="violet"];
+MakeList11 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="568,110" fillcolor="violet"];
 MakeWaveformImage [type="vuo.audio.image.waveform" version="1.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<amplitude>amplitude\l|<done>done\r|<image>image\r" pos="565,232" fillcolor="yellow" _fillColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.250000}" _lineColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _amplitude="128"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="51,202" fillcolor="yellow" _window="" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="51,202" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
 RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="764,232" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="enqueue"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="631,84" fillcolor="violet" _device="" _requestedChannels_eventThrottling="enqueue"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="631,84" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
 
 Convert2DPointToReal2:y -> MakeAudioWave:frequency;
 DiscardDataFromEvent:event -> MakeAudioWave:refresh;
-MakeAudioWave:samples -> MakeList11:item1;
-MakeAudioWave:samples -> MakeList11:item2;
+MakeAudioWave:samples -> MakeList11:1;
+MakeAudioWave:samples -> MakeList11:2;
 MakeAudioWave:samples -> MakeWaveformImage:samples;
 MakeList11:list -> SendLiveAudio:sendChannels;
 MakeWaveformImage:image -> RenderImageToWindow:image;

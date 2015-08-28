@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORIMAGEWRAPMODE_HH
 #define VUOINPUTEDITORIMAGEWRAPMODE_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorImageWrapMode factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoImageWrapMode values.
  */
-class VuoInputEditorImageWrapMode : public VuoInputEditorWithMenu
+class VuoInputEditorImageWrapMode : public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif // VuoInputEditorImageWrapMode_HH

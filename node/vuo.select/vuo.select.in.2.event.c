@@ -23,8 +23,8 @@ void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1,"suggestedMax":2}) which,
 		VuoInputEvent(VuoPortEventBlocking_Wall,which) whichEvent,
-		VuoInputEvent(VuoPortEventBlocking_Door,) option1,
-		VuoInputEvent(VuoPortEventBlocking_Door,) option2,
+		VuoInputEvent(VuoPortEventBlocking_Door,,{"hasPortAction":false}) option1,
+		VuoInputEvent(VuoPortEventBlocking_Door,,{"hasPortAction":false}) option2,
 		VuoOutputEvent() out
 )
 {

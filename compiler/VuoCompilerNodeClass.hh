@@ -38,6 +38,7 @@ private:
 	Function *callbackStopFunction;
 	VuoCompilerInstanceDataClass *instanceDataClass;
 	map<string, set<string> > compatibleSpecializedForGenericTypeName;
+	set<VuoCompilerInputEventPortClass *> portsWithExplicitEventBlockingNone;
 
 	static bool isNodeClass(Module *module, string moduleKey);
 	void parse(void);
@@ -59,7 +60,8 @@ private:
 	VuoCompilerTriggerPortClass * parseTriggerParameter(string annotation, Argument *a);
 	VuoCompilerInstanceDataClass * parseInstanceDataParameter(string annotation, Argument *a);
 	VuoType * parseTypeParameter(string annotation);
-	struct json_object *parseInputDataDetailsParameter(string annotation);
+	struct json_object * parseInputDataDetailsParameter(string annotation);
+	struct json_object * parseInputEventDetailsParameter(string annotation);
 	int parseEventBlockingParameter(string annotation);
 	int parseEventThrottlingParameter(string annotation);
 	VuoPortClass * getExistingPortClass(VuoCompilerNodeArgumentClass *argumentClass, bool isInput);
@@ -94,6 +96,7 @@ public:
 	VuoCompilerInstanceDataClass * getInstanceDataClass(void);
 	string getDoxygenDocumentation(void);
 	string getDefaultSpecializedTypeName(string genericTypeName);
+	vector<string> getAutomaticKeywords(void);
 };
 
 #endif

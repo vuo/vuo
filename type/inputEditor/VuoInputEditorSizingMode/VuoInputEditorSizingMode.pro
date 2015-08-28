@@ -14,4 +14,7 @@ OTHER_FILES += \
 		VuoInputEditorSizingMode.json
 
 INCLUDEPATH += $$ROOT/type
-LIBS += $$ROOT/type/VuoSizingMode.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoSizingMode.o \
+	$$ROOT/type/list/VuoList_VuoSizingMode.o

@@ -17,6 +17,7 @@ OTHER_FILES += \
 
 INCLUDEPATH += $$ROOT/type/inputEditor/VuoInputEditorReal
 LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoPoint2d.o \
-	$$ROOT/type/VuoReal.o
-
+	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/VuoText.o

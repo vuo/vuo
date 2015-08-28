@@ -1,0 +1,41 @@
+/**
+* @file
+* Receives MIDI notes from a MIDI device and plays them aloud. 
+*
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+AdjustLoudness [type="vuo.audio.loudness" version="1.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<done>done\r|<adjustedSamples>adjustedSamples\r" pos="566,267"];
+ConvertIntegerToRealNumber3 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<done>done\r|<real>real\r" pos="295,278"];
+ConvertNoteNumberToFrequency [type="vuo.midi.convert.note.frequency" version="1.0.0" label="Convert Note Number to Frequency|<refresh>refresh\l|<noteNumber>noteNumber\l|<done>done\r|<frequency>frequency\r" pos="-77,280"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="460,357"];
+Divide [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="220,132" _b="127.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="252,61" _started_eventThrottling="enqueue"];
+GetMIDINoteValues [type="vuo.midi.get.note" version="1.0.0" label="Get MIDI Note Values|<refresh>refresh\l|<note>note\l|<done>done\r|<channel>channel\r|<isNoteOn>isNoteOn\r|<velocity>velocity\r|<noteNumber>noteNumber\r" pos="-52,102" fillcolor="violet"];
+MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<done>done\r|<samples>samples\r" pos="361,267" _wave="\"sine\""];
+MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="520,278"];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="1.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<done>done\r|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="-292,101" fillcolor="violet" _device="{\"isInput\":true}" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue"];
+SelectLatest6 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="401,117"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="760,252" _requestedChannels_eventThrottling="enqueue"];
+SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.0.0" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<done>done\r|<position>position\r" pos="563,87" _setPosition="0.000000" _duration="0.050000"];
+
+AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
+ConvertIntegerToRealNumber3:real -> Divide:a;
+ConvertNoteNumberToFrequency:frequency -> MakeAudioWave:frequency;
+DiscardDataFromEvent2:event -> MakeAudioWave:refresh;
+Divide:quotient -> SelectLatest6:option2;
+FireOnStart:started -> SelectLatest6:option1;
+GetMIDINoteValues:noteNumber -> ConvertNoteNumberToFrequency:noteNumber;
+GetMIDINoteValues:velocity -> ConvertIntegerToRealNumber3:integer;
+MakeAudioWave:samples -> MakeList3:1;
+MakeList3:list -> AdjustLoudness:samples;
+ReceiveMIDIEvents:receivedNote -> GetMIDINoteValues:note;
+SelectLatest6:latest -> SmoothWithInertia2:setTarget;
+SendLiveAudio:requestedChannels -> DiscardDataFromEvent2:dataAndEvent;
+SendLiveAudio:requestedChannels -> SmoothWithInertia2:time;
+SmoothWithInertia2:position -> AdjustLoudness:loudness;
+}

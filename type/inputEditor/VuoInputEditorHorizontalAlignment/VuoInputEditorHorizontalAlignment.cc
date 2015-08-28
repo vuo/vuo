@@ -9,29 +9,10 @@
 
 #include "VuoInputEditorHorizontalAlignment.hh"
 
-extern "C"
-{
-	#include "VuoHorizontalAlignment.h"
-}
-
 /**
  * Constructs a VuoInputEditorHorizontalAlignment object.
  */
 VuoInputEditor * VuoInputEditorHorizontalAlignmentFactory::newInputEditor()
 {
 	return new VuoInputEditorHorizontalAlignment();
-}
-
-/**
- * Creates the tree that models the menu.
- */
-VuoInputEditorMenuItem * VuoInputEditorHorizontalAlignment::setUpMenuTree()
-{
-	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
-
-	optionsTree->addItem(new VuoInputEditorMenuItem(VuoHorizontalAlignment_summaryFromValue(VuoHorizontalAlignment_Left), VuoHorizontalAlignment_jsonFromValue(VuoHorizontalAlignment_Left)));
-	optionsTree->addItem(new VuoInputEditorMenuItem(VuoHorizontalAlignment_summaryFromValue(VuoHorizontalAlignment_Center), VuoHorizontalAlignment_jsonFromValue(VuoHorizontalAlignment_Center)));
-	optionsTree->addItem(new VuoInputEditorMenuItem(VuoHorizontalAlignment_summaryFromValue(VuoHorizontalAlignment_Right), VuoHorizontalAlignment_jsonFromValue(VuoHorizontalAlignment_Right)));
-
-	return optionsTree;
 }

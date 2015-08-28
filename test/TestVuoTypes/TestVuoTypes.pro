@@ -12,13 +12,15 @@ TEST_VUO_TYPES_SOURCES += \
 	TestVuoFont.cc \
 	TestVuoInteger.cc \
 	TestVuoImage.cc \
+	TestVuoLayer.cc \
 	TestVuoList.cc \
+	TestVuoMathExpression.cc \
+	TestVuoMesh.cc \
 	TestVuoMidiNote.cc \
 	TestVuoPoint2d.cc \
 	TestVuoPoint3d.cc \
 	TestVuoPoint4d.cc \
 	TestVuoReal.cc \
-	TestVuoVertices.cc \
 	TestVuoSceneObject.cc \
 	TestVuoShader.cc \
 	TestVuoText.cc \

@@ -20,12 +20,13 @@
 
 #error "This header is a template; do not include it."
 
+#if defined(DOXYGEN) || !defined(LIST_TYPE_TYPE_DEFINED)
+/// @{
 /**
- * @typedef LIST_TYPE
  * A list of @ref ELEMENT_TYPE elements.
  */
-#ifndef LIST_TYPE_TYPE_DEFINED
 typedef void * LIST_TYPE;
+/// @}
 #endif
 
 /**
@@ -42,9 +43,22 @@ LIST_TYPE VuoListCreate_ELEMENT_TYPE(void);
 ELEMENT_TYPE VuoListGetValueAtIndex_ELEMENT_TYPE(const LIST_TYPE list, const unsigned long index);
 
 /**
+ * Changes the @ref ELEMENT_TYPE at @c index.
+ * Index values start at 1.
+ * If the list has no items, nothing is changed.
+ * Attempting to change an out-of-bounds index changes the first item in the list (if the index is 0), or last item in the list (if the index is greater than the list size).
+ */
+void VuoListSetValueAtIndex_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index);
+
+/**
  * Appends @c value to @c list.
  */
 void VuoListAppendValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value);
+
+/**
+ * Removes the first value from @c list.
+ */
+void VuoListRemoveFirstValue_ELEMENT_TYPE(LIST_TYPE list);
 
 /**
  * Removes the last value from @c list.

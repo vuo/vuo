@@ -14,8 +14,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if (__clang_major__ == 3 && __clang_minor__ >= 2) || __clang_major__ > 3
+	#define VUO_CLANG_32_OR_LATER
+#endif
+
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
+#ifdef VUO_CLANG_32_OR_LATER
+	#pragma clang diagnostic ignored "-Wdocumentation"
+#endif
 #include <json/json.h>
 #pragma clang diagnostic pop
 
@@ -27,9 +33,19 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <set>
 
 using namespace std;
 
+#ifdef __i386__
+#include "VuoRunner.hh"
+#include "VuoComposition.hh"
+#include "VuoFileUtilities.hh"
+#include "VuoPort.hh"
+#include "VuoProtocol.hh"
+#endif
+
+#ifdef __x86_64__
 #define __STDC_CONSTANT_MACROS
 #define __STDC_FORMAT_MACROS
 #define __STDC_LIMIT_MACROS
@@ -42,7 +58,9 @@ using namespace std;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wunused-private-field"
+#ifdef VUO_CLANG_32_OR_LATER
+	#pragma clang diagnostic ignored "-Wunused-private-field"
+#endif
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
 #include <clang/Basic/Version.h>
 #include <clang/CodeGen/CodeGenAction.h>
@@ -85,15 +103,21 @@ using namespace std;
 #undef NO
 #ifdef VUO_NO_ALREADY_DEFINED
 	#undef VUO_NO_ALREADY_DEFINED
+
 	// From /usr/include/objc/objc.h line 58
-	#define NO __objc_no
+	#if __has_feature(objc_bool)
+		#define NO              __objc_no
+	#else
+		#define NO              ((BOOL)0)
+	#endif
 #endif
 
 using namespace llvm;
 
 @INCLUDE_VUO_CXX_HEADERS@
+#endif // ifdef __x86_64__
 
-#endif
+#endif // ifdef __cplusplus
 
 #ifdef __cplusplus
 extern "C"

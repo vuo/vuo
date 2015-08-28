@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoImageWrapMode.h"
+#include "VuoList_VuoImageWrapMode.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -77,6 +78,20 @@ json_object * VuoImageWrapMode_jsonFromValue(const VuoImageWrapMode value)
 
 	return json_object_new_string(valueAsString);
 }
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoImageWrapMode VuoImageWrapMode_allowedValues(void)
+{
+	VuoList_VuoImageWrapMode l = VuoListCreate_VuoImageWrapMode();
+	VuoListAppendValue_VuoImageWrapMode(l, VuoImageWrapMode_None);
+	VuoListAppendValue_VuoImageWrapMode(l, VuoImageWrapMode_ClampEdge);
+	VuoListAppendValue_VuoImageWrapMode(l, VuoImageWrapMode_Repeat);
+	VuoListAppendValue_VuoImageWrapMode(l, VuoImageWrapMode_MirroredRepeat);
+	return l;
+}
+
 /**
  * @ingroup VuoImageWrapMode
  * Same as @c %VuoImageWrapMode_stringFromValue()

@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "MyPairOfReals.h"
+#include "VuoText.h"
 
 VuoModuleMetadata({
 					 "title" : "My Pair of Reals",
@@ -52,9 +53,5 @@ json_object * MyPairOfReals_jsonFromValue(const MyPairOfReals value)
 
 char * MyPairOfReals_summaryFromValue(const MyPairOfReals value)
 {
-	const char *format = "first = %g, second = %g";
-	int size = snprintf(NULL,0,format,value.first,value.second);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.first,value.second);
-	return valueAsString;
+	return VuoText_format("first = %g, second = %g", value.first, value.second);
 }

@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORTHRESHOLDTYPE_HH
 #define VUOINPUTEDITORTHRESHOLDTYPE_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorThresholdType factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoThresholdType values.
  */
-class VuoInputEditorThresholdType: public VuoInputEditorWithMenu
+class VuoInputEditorThresholdType: public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif // VUOINPUTEDITORTHRESHOLDTYPE_HH

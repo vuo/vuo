@@ -1,7 +1,10 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
+	ControlLoudness.vuo \
+	PanAudio.vuo \
 	PlayAudioFile.vuo \
+	PlayAudioFileAndLoop.vuo \
 	PlayAudioWave.vuo \
 	PlayBluesOrgan.vuo \
 	ScratchRecord.vuo \

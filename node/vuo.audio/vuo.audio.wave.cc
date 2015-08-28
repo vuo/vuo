@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						  "Gamma"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "PlayAudioWave.vuo", "PlayBluesOrgan.vuo" ],
+						  "exampleCompositions" : [ "PlayAudioWave.vuo", "PlayBluesOrgan.vuo", "PanAudio.vuo" ],
 					  }
 				 });
 }

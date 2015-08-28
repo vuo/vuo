@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORHORIZONTALALIGNMENT_HH
 #define VUOINPUTEDITORHORIZONTALALIGNMENT_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorHorizontalAlignment factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoLeapPointableType values.
  */
-class VuoInputEditorHorizontalAlignment : public VuoInputEditorWithMenu
+class VuoInputEditorHorizontalAlignment : public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif // VUOINPUTEDITORHORIZONTALALIGNMENT_HH

@@ -210,7 +210,7 @@ string VuoFileUtilities::readFileToString(string path)
 	ifstream in(path.c_str(), ios::in | ios::binary);
 	if (! in)
 	{
-		fprintf(stderr, "Couldn't read file at path %s\n", path.c_str());
+		VLog("Error: Couldn't read file at path '%s'.", path.c_str());
 		return "";
 	}
 
@@ -271,7 +271,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 	if (! d)
 	{
 		if (access(dirPath.c_str(), F_OK) != -1)
-			fprintf(stderr, "Couldn't open directory '%s' to find files in it.\n", dirPath.c_str());
+			VLog("Error: Couldn't open directory '%s' to find files in it.", dirPath.c_str());
 		return files;
 	}
 
@@ -360,7 +360,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInArchive(string arc
 		bool success = mz_zip_reader_file_stat(archive->zipArchive, i, &file_stat);
 		if (! success)
 		{
-			fprintf(stderr, "Couldn't read file %u in zip archive %s\n", i, archive->path.c_str());
+			VLog("Error: Couldn't read file '%u' in zip archive '%s'.", i, archive->path.c_str());
 			break;
 		}
 
@@ -532,6 +532,7 @@ string VuoFileUtilities::File::getRelativePath(void)
 char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 {
 	char * buffer;
+	numBytes = 0;
 
 	if (! archive)
 	{
@@ -542,7 +543,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 		FILE *pFile = fopen ( fullPath.c_str() , "rb" );
 		if (pFile==NULL)
 		{
-			fprintf(stderr, "Couldn't open file '%s' for reading\n", fullPath.c_str());
+			VLog("Error: Couldn't open file '%s' for reading.", fullPath.c_str());
 			return NULL;
 		}
 
@@ -559,7 +560,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 		fclose(pFile);
 		if (numBytes != lSize)
 		{
-			fprintf(stderr, "Couldn't read file '%s'\n", fullPath.c_str());
+			VLog("Error: Couldn't read file '%s'.", fullPath.c_str());
 			free(buffer);
 			return NULL;
 		}

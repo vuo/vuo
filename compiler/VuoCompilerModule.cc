@@ -25,6 +25,7 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 {
 	this->base = base;
 	this->module = module;
+	this->isPremium = false;
 
 	if (module)
 		parse();
@@ -90,7 +91,7 @@ void VuoCompilerModule::parseMetadata(void)
 
 	if (! moduleDetails)
 	{
-		fprintf(stderr, "Couldn't parse VuoModuleMetadata as JSON: %s\n", moduleDetailsStr.c_str());
+		VLog("Error: Couldn't parse VuoModuleMetadata as JSON: %s", moduleDetailsStr.c_str());
 		return;
 	}
 
@@ -107,43 +108,73 @@ void VuoCompilerModule::parseMetadata(void)
  *
  * If no such value is found, returns an empty string.
  */
-string VuoCompilerModule::parseString(json_object *o, string key)
+string VuoCompilerModule::parseString(json_object *o, string key, bool *foundValue)
 {
 	string s;
+	if (foundValue)
+		*foundValue = false;
+
 	json_object *stringObject = NULL;
 	if (json_object_object_get_ex(o, key.c_str(), &stringObject))
+	{
 		if (json_object_get_type(stringObject) == json_type_string)
+		{
 			s = json_object_get_string(stringObject);
+			if (foundValue)
+				*foundValue = true;
+		}
+	}
+
 	return s;
 }
 
 /**
  * Parses the integer value for @c key in the top level of the JSON object.
  *
- * If no such value is found, returns an empty string.
+ * If no such value is found, returns 0.
  */
-int VuoCompilerModule::parseInt(json_object *o, string key)
+int VuoCompilerModule::parseInt(json_object *o, string key, bool *foundValue)
 {
 	int i = 0;
+	if (foundValue)
+		*foundValue = false;
+
 	json_object *intObject = NULL;
 	if (json_object_object_get_ex(o, key.c_str(), &intObject))
+	{
 		if (json_object_get_type(intObject) == json_type_int)
+		{
 			i = json_object_get_int(intObject);
+			if (foundValue)
+				*foundValue = true;
+		}
+	}
+
 	return i;
 }
 
 /**
  * Parses the boolean value for @c key in the top level of the JSON object.
  *
- * If no such value is found, returns an empty string.
+ * If no such value is found, returns false.
  */
-bool VuoCompilerModule::parseBool(json_object *o, string key)
+bool VuoCompilerModule::parseBool(json_object *o, string key, bool *foundValue)
 {
 	bool b = 0;
+	if (foundValue)
+		*foundValue = false;
+
 	json_object *boolObject = NULL;
 	if (json_object_object_get_ex(o, key.c_str(), &boolObject))
+	{
 		if (json_object_get_type(boolObject) == json_type_boolean)
+		{
 			b = json_object_get_boolean(boolObject);
+			if (foundValue)
+				*foundValue = true;
+		}
+	}
+
 	return b;
 }
 
@@ -193,7 +224,7 @@ VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string versi
 /**
  * Parses the array-of-strings value for @c key in the top level of the JSON object.
  *
- * If no such value is found, returns an empty string.
+ * If no such value is found, returns an empty vector.
  */
 vector<string> VuoCompilerModule::parseArrayOfStrings(json_object *o, string key)
 {
@@ -335,4 +366,21 @@ Module * VuoCompilerModule::getModule(void)
 VuoModule * VuoCompilerModule::getPseudoBase(void)
 {
 	return base;
+}
+
+/**
+ * Returns a boolean indicating whether this module contains premium content.
+ */
+bool VuoCompilerModule::getPremium(void)
+{
+	return isPremium;
+}
+
+/**
+ * Sets the boolean indicating whether this module contains premium content.
+ * This attribute may be used, e.g., for purposes of automatic documentation generation.
+ */
+void VuoCompilerModule::setPremium(bool premium)
+{
+	this->isPremium = premium;
 }

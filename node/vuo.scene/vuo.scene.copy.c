@@ -10,8 +10,8 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Copy 3D Object",
-					  "keywords" : [ "duplicate", "array", "instance", "instantiate", "populate", "replicate" ],
+					 "title" : "Copy 3D Object with Transforms",
+					  "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false
@@ -31,7 +31,7 @@ void nodeEvent
 		VuoTransform transform = VuoListGetValueAtIndex_VuoTransform(transforms, i+1);
 
 		VuoListAppendValue_VuoSceneObject(*copies, VuoSceneObject_make(
-			object.verticesList,
+			object.mesh,
 			object.shader,
 			transform,
 			object.childObjects

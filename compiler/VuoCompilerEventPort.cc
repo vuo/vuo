@@ -43,7 +43,9 @@ StoreInst * VuoCompilerEventPort::generateStore(Value *value, BasicBlock *block)
 	unsigned valueBitWidth = ((IntegerType *)value->getType())->getBitWidth();
 	unsigned variableBitWidth = ((IntegerType *)((PointerType *)variable->getType())->getElementType())->getBitWidth();
 	if (valueBitWidth > variableBitWidth)
-		value = new TruncInst(value, IntegerType::get(block->getContext(), 1), "", block);
+		value = new TruncInst(value, IntegerType::get(block->getContext(), variableBitWidth), "", block);
+	else if (valueBitWidth < variableBitWidth)
+		value = new ZExtInst(value, IntegerType::get(block->getContext(), variableBitWidth), "", block);
 
 	return VuoCompilerPort::generateStore(value, block);
 }

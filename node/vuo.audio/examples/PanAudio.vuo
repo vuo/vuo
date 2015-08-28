@@ -1,0 +1,67 @@
+/**
+ * @file
+ * Pans audio between the left and right speakers. For this to work, you need stereo speakers or headphones. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AdjustLoudness [type="vuo.audio.loudness" version="1.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<done>done\r|<adjustedSamples>adjustedSamples\r" pos="549,110" fillcolor="violet"];
+AdjustLoudness2 [type="vuo.audio.loudness" version="1.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<done>done\r|<adjustedSamples>adjustedSamples\r" pos="549,195" fillcolor="violet"];
+ConvertRealTo2DPoint3 [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<done>done\r|<point2d>point2d\r" pos="971,635"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="652,540" _increment="30.000000" _decrement="1.000000" _setCount="0.000000"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="347,216"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="172,491"];
+DiscardDataFromEvent4 [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="434,547"];
+MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<done>done\r|<samples>samples\r" pos="248,126" fillcolor="violet" _wave="\"sawtooth\"" _frequency="200.000000"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="872,495" _color="{\"r\":0.597910,\"g\":0.847669,\"b\":0.448280,\"a\":1.000000}" _width="0.100000" _height="0.100000"];
+MakeList3 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="992,155" fillcolor="violet"];
+MakeList4 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="486,121" fillcolor="violet"];
+MakeList5 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="486,206" fillcolor="violet"];
+MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="1036,506"];
+MakeList9 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="129,478" _2="2.000000"];
+MixAudioChannels [type="vuo.audio.mix" version="1.0.0" label="Mix Audio Channels|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<mixedSamples>mixedSamples\r" pos="776,195" fillcolor="violet"];
+MixAudioChannels2 [type="vuo.audio.mix" version="1.0.0" label="Mix Audio Channels|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<mixedSamples>mixedSamples\r" pos="777,119" fillcolor="violet"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="192,467"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1099,495" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="650,414" _start="0.000000" _scaledStart="-0.750000" _scaledEnd="0.750000"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="1055,129" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="-20,407" _value="0.500000"];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="422,352"];
+Wave2 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="276,348" _wave="\"sine\"" _period="2.000000"];
+
+AdjustLoudness2:adjustedSamples -> MixAudioChannels:audioSamples;
+AdjustLoudness:adjustedSamples -> MixAudioChannels2:audioSamples;
+ConvertRealTo2DPoint3:point2d -> MakeColorLayer2:center;
+Count:count -> MakeColorLayer2:rotation;
+DiscardDataFromEvent2:event -> ShareValue2:refresh;
+DiscardDataFromEvent4:done -> Count:increment;
+DiscardDataFromEvent:event -> MakeAudioWave:refresh;
+MakeAudioWave:samples -> MakeList4:1;
+MakeAudioWave:samples -> MakeList5:1;
+MakeColorLayer2:layer -> MakeList8:1;
+MakeList3:list -> SendLiveAudio:sendChannels;
+MakeList4:list -> AdjustLoudness:samples;
+MakeList5:list -> AdjustLoudness2:samples;
+MakeList8:list -> RenderLayersToWindow:layers;
+MakeList9:list -> Multiply:terms;
+MixAudioChannels2:mixedSamples -> MakeList3:1;
+MixAudioChannels:mixedSamples -> MakeList3:2;
+Multiply:product -> Scale:end;
+Multiply:product -> Subtract:a;
+RenderLayersToWindow:requestedFrame -> DiscardDataFromEvent4:dataAndEvent;
+Scale:scaledValue -> ConvertRealTo2DPoint3:x;
+SendLiveAudio:requestedChannels -> DiscardDataFromEvent2:dataAndEvent;
+SendLiveAudio:requestedChannels -> DiscardDataFromEvent:dataAndEvent;
+SendLiveAudio:requestedChannels -> Wave2:time;
+ShareValue2:sameValue -> MakeList9:1;
+ShareValue2:sameValue -> Wave2:amplitude;
+ShareValue2:sameValue -> Wave2:center;
+Subtract:difference -> AdjustLoudness2:loudness;
+Subtract:difference -> Scale:value;
+Wave2:value -> AdjustLoudness:loudness;
+Wave2:value -> Subtract:b;
+}

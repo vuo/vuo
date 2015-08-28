@@ -24,20 +24,39 @@ VuoModuleMetadata({
 				 });
 
 
-VuoMidiOut nodeInstanceInit(
-		VuoInputData(VuoMidiDevice, {"default":{"isInput":false}}) device
+struct nodeInstanceData
+{
+	VuoMidiDevice device;
+	VuoMidiOut midiManager;
+};
+
+static void updateDevice(struct nodeInstanceData *context, VuoMidiDevice newDevice)
+{
+	VuoMidiDevice_release(context->device);
+	context->device = newDevice;
+	VuoMidiDevice_retain(context->device);
+
+	VuoRelease(context->midiManager);
+	context->midiManager = VuoMidiOut_make(newDevice);
+	VuoRetain(context->midiManager);
+}
+
+
+struct nodeInstanceData * nodeInstanceInit
+(
+		VuoInputData(VuoMidiDevice) device
 )
 {
-	VuoMidiOut mo = VuoMidiOut_make(device);
-	VuoRetain(mo);
-	return mo;
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	updateDevice(context, device);
+	return context;
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoMidiOut) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoMidiDevice, {"default":{"isInput":false}}) device,
-		VuoInputEvent(VuoPortEventBlocking_Wall, device) deviceEvent,
 		VuoInputData(VuoMidiNote,"") sendNote,
 		VuoInputEvent(VuoPortEventBlocking_None, sendNote) sendNoteEvent,
 		VuoInputData(VuoMidiController,"") sendController,
@@ -49,23 +68,20 @@ void nodeInstanceEvent
 //		VuoInputData(VuoMidiSysEx,"") sysEx
 )
 {
-	if (deviceEvent)
-	{
-		VuoRelease(*context);
-		*context = VuoMidiOut_make(device);
-		VuoRetain(*context);
-	}
+	if (! VuoMidiDevice_areEqual(device, (*context)->device))
+		updateDevice(*context, device);
 
 	if (sendNoteEvent)
-		VuoMidiOut_sendNote(*context, sendNote);
+		VuoMidiOut_sendNote((*context)->midiManager, sendNote);
 	if (sendControllerEvent)
-		VuoMidiOut_sendController(*context, sendController);
+		VuoMidiOut_sendController((*context)->midiManager, sendController);
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(VuoMidiOut) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoRelease(*context);
+	VuoMidiDevice_release((*context)->device);
+	VuoRelease((*context)->midiManager);
 }

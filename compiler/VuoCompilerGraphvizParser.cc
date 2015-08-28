@@ -93,7 +93,7 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 	agclose(graph);
 	gvFreeContext(context);
 
-	description = parseDescription(compositionAsString);
+	VuoComposition::parseHeader(compositionAsString, name, description, copyright);
 }
 
 /**
@@ -137,9 +137,9 @@ void VuoCompilerGraphvizParser::makeDummyNodeClasses(void)
 		if (nodeClassNamesSeen[nodeClassName])
 		{
 			if (nodeClassName == VuoNodeClass::publishedInputNodeClassName)
-				fprintf(stderr, "Composition has more than one node of class %s\n", VuoNodeClass::publishedInputNodeClassName.c_str());
+				VLog("Error: Composition has more than one node of class '%s'.", VuoNodeClass::publishedInputNodeClassName.c_str());
 			else if (nodeClassName == VuoNodeClass::publishedOutputNodeClassName)
-				fprintf(stderr, "Composition has more than one node of class %s\n", VuoNodeClass::publishedOutputNodeClassName.c_str());
+				VLog("Error: Composition has more than one node of class '%s'.", VuoNodeClass::publishedOutputNodeClassName.c_str());
 			else
 				continue;  // node class already created
 		}
@@ -270,7 +270,7 @@ void VuoCompilerGraphvizParser::makeNodes(void)
 
 		if (nodeForName[nodeName])
 		{
-			fprintf(stderr, "More than one node with name %s\n", nodeName.c_str());
+			VLog("Error: More than one node with name '%s'.", nodeName.c_str());
 			return;
 		}
 
@@ -357,8 +357,13 @@ void VuoCompilerGraphvizParser::makeCables(void)
 
 			else
 			{
-				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>(toNode->getInputPortWithName(toPortName)->getCompiler());
-				VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>(fromNode->getOutputPortWithName(fromPortName)->getCompiler());
+				VuoPort *toBasePort = toNode->getInputPortWithName(toPortName);
+				VuoPort *fromBasePort = fromNode->getOutputPortWithName(fromPortName);
+				if (!toBasePort || !fromBasePort)
+					continue;
+
+				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>(toBasePort->getCompiler());
+				VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>(fromBasePort->getCompiler());
 
 				VuoCompilerCable *cable = new VuoCompilerCable(fromNode->getCompiler(), fromPort, toNode->getCompiler(), toPort);
 
@@ -472,7 +477,7 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 																													  NULL));
 				else
 					publishedInputType = inferTypeForPublishedPort(publishedInputName, connectedPorts);
-				
+
 				VuoCompilerNodeArgument *fromPort = publishedInputNode->getOutputPortWithName(publishedInputName)->getCompiler();
 				VuoCompilerTriggerPort *fromTrigger = static_cast<VuoCompilerTriggerPort *>(fromPort);
 
@@ -503,8 +508,8 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 																													  NULL));
 				else
 					publishedOutputType = inferTypeForPublishedPort(publishedOutputName, connectedPorts);
-				
-				
+
+
 				VuoPort *vuoOutPort = publishedOutputNode->getInputPortWithName(publishedOutputName);
 				VuoCompilerPublishedPort *port = new VuoCompilerPublishedOutputPort(publishedOutputName, publishedOutputType, connectedPorts, vuoOutPort);
 				publishedPortForPublishedOutputName[publishedOutputName] = port;
@@ -672,7 +677,12 @@ bool VuoCompilerGraphvizParser::parseAttributeOfPort(Agnode_t *n, string portNam
 	char *rawAttributeValue = agget(n, attributeName);
 	free(attributeName);
 
-	if (rawAttributeValue)
+	// The Graphviz parser may return a constant value of the empty string if a constant value was defined
+	// for another identically named port within the same composition, even if it wasn't defined for this port.
+	// Any constant value that has been customized within the Vuo Editor should be non-empty anyway.
+	// Therefore, treat constants consisting of the empty string as if they were absent so that they
+	// don't override node-class-specific defaults.
+	if (rawAttributeValue && strcmp(rawAttributeValue, ""))
 	{
 		attributeValue = VuoStringUtilities::transcodeFromGraphvizIdentifier(rawAttributeValue);
 		return true;
@@ -704,7 +714,7 @@ void VuoCompilerGraphvizParser::checkPortClasses(vector<VuoPortClass *> dummy, v
 		}
 		if (! found)
 		{
-			fprintf(stderr, "Couldn't find port %s\n", dummyName.c_str());
+			VLog("Error: Couldn't find port '%s'.", dummyName.c_str());
 			return;
 		}
 	}
@@ -734,47 +744,6 @@ void VuoCompilerGraphvizParser::saveNodeDeclarations(const string &compositionAs
 			--nodesRemaining;
 		}
 	}
-}
-
-/**
- * Parses the composition's description from the string.
- *
- * The description is assumed to be in the 3rd line starting at the 3rd character,
- * or at the 4th character if the line has a leading space.
- */
-string VuoCompilerGraphvizParser::parseDescription(const string &compositionAsString)
-{
-	string description = "";
-	int charNum = 0;
-
-	for (int lineNum = 1; lineNum <= 3; ++lineNum)
-	{
-		string line;
-
-		while (true)
-		{
-			char c = compositionAsString[charNum++];
-			if (c == '\n')
-				break;
-			if (c == 0)
-				return "";
-			line += c;
-		}
-
-		if ((lineNum == 1 && line.substr(0, 2) != "/*") ||
-			(lineNum > 1 && line.substr(0, 2) != "* " && line.substr(0, 3) != " * "))
-			break;
-
-		if (lineNum == 3)
-		{
-			description = line;
-			if (description.substr(0, 1) == " ")
-				description.erase(0, 1);		// Remove optional leading space.
-			description.erase(0, 2);			// Remove "* ".
-		}
-	}
-
-	return description;
 }
 
 /**
@@ -844,11 +813,27 @@ vector<VuoCable *> VuoCompilerGraphvizParser::getPublishedOutputCables(void)
 }
 
 /**
+ * Returns the composition's title.
+ */
+string VuoCompilerGraphvizParser::getName(void)
+{
+	return name;
+}
+
+/**
  * Returns the composition's description.
  */
 string VuoCompilerGraphvizParser::getDescription(void)
 {
 	return description;
+}
+
+/**
+ * Returns the composition's copyright.
+ */
+string VuoCompilerGraphvizParser::getCopyright(void)
+{
+	return copyright;
 }
 
 /**
@@ -859,7 +844,7 @@ VuoType * VuoCompilerGraphvizParser::inferTypeForPublishedPort(string name, cons
 {
 	if (connectedPorts.empty() || name == "refresh" || name == "done")
 		return NULL;
-	
+
 	VuoCompilerPort *connectedPort = *connectedPorts.begin();
 	VuoCompilerPortClass *connectedPortClass = static_cast<VuoCompilerPortClass *>(connectedPort->getBase()->getClass()->getCompiler());
 	return connectedPortClass->getDataVuoType();

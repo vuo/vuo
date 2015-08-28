@@ -10,16 +10,21 @@
 #ifndef VUOLEAPPOINTABLETYPE_H
 #define VUOLEAPPOINTABLETYPE_H
 
+/// @{
+typedef void * VuoList_VuoLeapPointableType;
+#define VuoList_VuoLeapPointableType_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoLeapPointableType VuoLeapPointableType
- * Defines the type of object that a VuoLeapPointable is representing.
+ * Whether a pointable is a finger or a tool.
  *
  * @{
  */
 
 /**
- * An enum defining different types of blend shaders.
+ * Whether a pointable is a finger or a tool.
  */
 typedef enum {
 	VuoLeapPointableType_Finger,
@@ -28,6 +33,7 @@ typedef enum {
 
 VuoLeapPointableType VuoLeapPointableType_valueFromJson(struct json_object * js);
 struct json_object * VuoLeapPointableType_jsonFromValue(const VuoLeapPointableType value);
+VuoList_VuoLeapPointableType VuoLeapPointableType_allowedValues(void);
 char * VuoLeapPointableType_summaryFromValue(const VuoLeapPointableType value);
 
 /// @{

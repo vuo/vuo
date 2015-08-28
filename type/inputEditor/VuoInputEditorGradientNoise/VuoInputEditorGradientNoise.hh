@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORGRADIENTNOISE_HH
 #define VUOINPUTEDITORGRADIENTNOISE_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorGradientNoise factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoInputEditorGradientNoise values.
  */
-class VuoInputEditorGradientNoise : public VuoInputEditorWithMenu
+class VuoInputEditorGradientNoise : public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif // VUOINPUTEDITORGRADIENTNOISE_HH

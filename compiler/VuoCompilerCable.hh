@@ -24,6 +24,7 @@ public:
 	VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort * fromPort, VuoCompilerNode * toNode, VuoCompilerPort * toPort);
 	string getGraphvizDeclaration(void);
 	bool carriesData(void);
+	void generateTransmission(Module *module, BasicBlock *block, Value *outputDataValue, bool shouldTransmitEvent=true);
 };
 
 #endif

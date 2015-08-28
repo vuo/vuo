@@ -14,6 +14,7 @@
 #include "type.h"
 #include "VuoColor.h"
 #include "VuoList_VuoColor.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -87,11 +88,7 @@ json_object * VuoColor_jsonFromValue(const VuoColor value)
  */
 char * VuoColor_summaryFromValue(const VuoColor value)
 {
-	const char *format = "%g, %g, %g, %g";
-	int size = snprintf(NULL,0,format,value.r,value.g,value.b,value.a);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.r,value.g,value.b,value.a);
-	return valueAsString;
+	return VuoText_format("%g, %g, %g, %g", value.r, value.g, value.b, value.a);
 }
 
 /**

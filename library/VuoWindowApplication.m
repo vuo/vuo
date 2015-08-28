@@ -58,7 +58,7 @@ VuoModuleMetadata({
 
 		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-		VuoWindowApplicationDelegate *delegate = [VuoWindowApplicationDelegate new];
+		delegate = [VuoWindowApplicationDelegate new];
 		[self setDelegate:delegate];
 
 		[self setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -90,6 +90,15 @@ VuoModuleMetadata({
 }
 
 /**
+ * Releases this application instance.
+ */
+- (void)dealloc
+{
+	[delegate release];
+	[super dealloc];
+}
+
+/**
  * Loads license data and sends it to the standard "About" panel.
  */
 - (void)displayAboutPanel:(id)sender
@@ -104,7 +113,7 @@ VuoModuleMetadata({
 {
 	NSMutableAttributedString *mas = [NSMutableAttributedString new];
 
-	[mas appendAttributedString:[[NSAttributedString new] initWithHTML:[@"<p>This composition may include software licensed under the following terms:</p>" dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil]];
+	[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[@"<p>This composition may include software licensed under the following terms:</p>" dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
 
 	// Get the exported executable path.
 	char rawExecutablePath[PATH_MAX+1];
@@ -136,7 +145,7 @@ VuoModuleMetadata({
 			if (dp->d_name[0] == '.')
 				continue;
 
-			[mas appendAttributedString:[[NSAttributedString new] initWithHTML:[[NSString stringWithFormat:@"<h2>%s</h2>", dp->d_name] dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil]];
+			[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[[NSString stringWithFormat:@"<h2>%s</h2>", dp->d_name] dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
 
 			char licensePath[strlen(cleanedLicensesPath) + dp->d_namlen + 2];
 			strcpy(licensePath, cleanedLicensesPath);
@@ -152,7 +161,8 @@ VuoModuleMetadata({
 				[mdata appendBytes:data length:bytesRead];
 			close(fd);
 			[mdata appendData:[[NSString stringWithFormat:@"</pre>"] dataUsingEncoding:NSUTF8StringEncoding]];
-			[mas appendAttributedString:[[NSAttributedString new] initWithHTML:mdata documentAttributes:nil]];
+			[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:mdata documentAttributes:nil] autorelease]];
+			[mdata release];
 
 			foundLicenses = true;
 		}
@@ -160,9 +170,9 @@ VuoModuleMetadata({
 	}
 
 	if (!foundLicenses)
-		[mas appendAttributedString:[[NSAttributedString new] initWithHTML:[@"<p>(No license information found.)</p>" dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil]];
+		[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[@"<p>(No license information found.)</p>" dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
 
-	return mas;
+	return [mas autorelease];
 }
 
 /**

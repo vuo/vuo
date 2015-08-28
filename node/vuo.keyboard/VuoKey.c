@@ -11,6 +11,7 @@
 #include <Carbon/Carbon.h>
 #include "type.h"
 #include "VuoKey.h"
+#include "VuoList_VuoKey.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -640,6 +641,17 @@ json_object * VuoKey_jsonFromValue(const VuoKey value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoKey VuoKey_allowedValues(void)
+{
+	VuoList_VuoKey l = VuoListCreate_VuoKey();
+	for (VuoKey key = VuoKey_Any; key <= VuoKey_Kana; ++key)
+		VuoListAppendValue_VuoKey(l, key);
+	return l;
 }
 
 /**

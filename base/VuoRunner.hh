@@ -15,8 +15,14 @@
 #include "VuoTelemetry.h"
 class VuoRunnerDelegate;
 
+#if (__clang_major__ == 3 && __clang_minor__ >= 2) || __clang_major__ > 3
+	#define VUO_CLANG_32_OR_LATER
+#endif
+
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
+#ifdef VUO_CLANG_32_OR_LATER
+	#pragma clang diagnostic ignored "-Wdocumentation"
+#endif
 #include <json/json.h>
 #pragma clang diagnostic pop
 
@@ -29,6 +35,7 @@ class VuoRunnerDelegate;
  *
  * To construct a VuoRunner, use one of the factory methods:
  *
+ *    - VuoRunner::newSeparateProcessRunnerFromCompositionFile()
  *    - VuoRunner::newSeparateProcessRunnerFromExecutable()
  *    - VuoRunner::newSeparateProcessRunnerFromDynamicLibrary()
  *    - VuoRunner::newCurrentProcessRunnerFromDynamicLibrary()
@@ -58,11 +65,13 @@ class VuoRunnerDelegate;
  * VuoRunner::setDelegate().
  *
  * @see DevelopingApplications
+ * @see VuoRunnerCocoa (a similar API, in Objective-C)
  */
 class VuoRunner
 {
 public:
 	class Port;
+	static VuoRunner * newSeparateProcessRunnerFromCompositionFile(string compositionPath);
 	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool deleteExecutableWhenFinished = false);
 	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, string resourceDylibPath, string sourceDir, bool deleteDylibsWhenFinished = false);
 	static VuoRunner * newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir, bool deleteDylibWhenFinished = false);
@@ -80,6 +89,7 @@ public:
 	void firePublishedInputPortEvent(Port *port);
 	void firePublishedInputPortEvent(void);
 	void waitForAnyPublishedOutputPortEvent(void);
+	json_object * getPublishedInputPortValue(Port *port);
 	json_object * getPublishedOutputPortValue(Port *port);
 	vector<Port *> getPublishedInputPorts(void);
 	vector<Port *> getPublishedOutputPorts(void);
@@ -104,9 +114,10 @@ public:
 	class Port
 	{
 	public:
-		Port(string name, string type);
+		Port(string name, string type, json_object *details);
 		string getName(void);
 		string getType(void);
+		json_object *getDetails(void);
 
 		friend class VuoRunner;
 
@@ -116,6 +127,7 @@ public:
 
 		string name;
 		string type;
+		json_object *details;
 		set<string> connectedPortIdentifiers;
 	};
 
@@ -173,7 +185,6 @@ private:
 	bool isUsingCompositionLoader(void);
 
 	friend class TestVuoRunner;
-	friend class VuoRunner32;
 };
 
 

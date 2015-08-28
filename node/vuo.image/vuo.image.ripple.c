@@ -58,7 +58,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
 
-	instance->shader = VuoShader_make("Ripple Image", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+	instance->shader = VuoShader_make("Ripple Image Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(instance->shader);
 
 	instance->glContext = VuoGlContext_use();
@@ -75,7 +76,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":135.0,"suggestedMin":0,"suggestedMax":360,"suggestedStep":1}) angle,
 		VuoInputData(VuoReal, {"default":0.1,"suggestedMin":0,"suggestedMax":1}) amplitude,
-		VuoInputData(VuoReal, {"default":0.05,"suggestedMin":0.00001,"suggestedMax":0.05}) wavelength,
+		VuoInputData(VuoReal, {"default":0.05,"suggestedMin":0.000001,"suggestedMax":0.05}) wavelength,
 		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) phase,
 		VuoOutputData(VuoImage) rippledImage
 )
@@ -83,18 +84,17 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "texture", image);
+	double nonzeroWavelength = (wavelength == 0) ? 0.000001 : wavelength;
 
 	// Feed parameters to the shader.
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "angle", angle*M_PI/180.);
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "amplitude", amplitude);
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "wavelength", wavelength*M_PI*2.);
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "phase", phase*M_PI*2.);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "angle", angle*M_PI/180.);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "amplitude", amplitude);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "wavelength", nonzeroWavelength*M_PI*2.);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "phase", phase*M_PI*2.);
 
 	// Render.
-	*rippledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+	*rippledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

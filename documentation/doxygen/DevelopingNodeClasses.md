@@ -274,21 +274,27 @@ Built-in Vuo nodes follow a set of naming conventions. If you develop node class
       - Use [title case (Chicago Manual of Style)](http://blog.winepresspublishing.com/2012/06/grammar-tip-how-capitalize-titles/) (@vuoNode{Count within Range}). 
    - A node class's class name should: 
       - Consist of several parts separated by dots: 
-         - The first part is the creator ("vuo" in @vuoNodeClass{vuo.math.wave}, "mycompany" in @vuoNodeClass{mycompany.image.frobnicate}). 
-         - If the node class belongs to a set of related node classes, the next part is the node set name ("math" in @vuoNodeClass{vuo.math.wave}). 
-         - The next part is the action performed by the node class, usually similar to the title ("wave" in @vuoNodeClass{vuo.math.wave}).
-         - If there are details about the action performed, such as the data type acted on, these come last ("rgb" in @vuoNodeClass{vuo.color.make.rgb}). 
+         - The first part is the creator ("vuo" in @vuoNodeClass{vuo.math.count}, "mycompany" in @vuoNodeClass{mycompany.image.frobnicate}). 
+         - If the node class belongs to a set of related node classes, the next part is the node set name ("math" in @vuoNodeClass{vuo.math.count}). 
+         - The next part describes the action performed by the node class, usually using one or more words from the title ("count" in @vuoNodeClass{vuo.math.count} / @vuoNode{Count}, "send" in @vuoNodeClass{vuo.audio.send} / @vuoNode{Send Live Audio}, "volume" in @vuoNodeClass{vuo.audio.volume} / @vuoNode{Adjust Volume}). 
+         - If the node class is one of several that perform variations on the same action, the last part distinguishes this node class ("rgb" in @vuoNodeClass{vuo.color.make.rgb}, "duration" in @vuoNodeClass{vuo.motion.smooth.duration}). 
          - In summmary, the format is: @vuoNodeClass{[creator].[optional node set].[action].[optional details]}. 
       - Use lower camel case (@vuoNodeClass{vuo.math.isLessThan}). 
    - A port's name should:
       - Consist of full words or phrases, not abbreviations (@vuoPort{increment}, not @vuoPort{incr}). 
       - If the port is a trigger port, consist of a past-tense verb phrase (@vuoPort{started}, @vuoPort{receivedNote}, @vuoPort{requestedFrame}). 
-      - If the port is an input port that causes something special to happen when it receives an event, consist of a present-tense verb phrase (@vuoPort{sendNote}, @vuoPort{increment}). 
+      - If the port has a port action, consist of a present-tense verb phrase (@vuoPort{sendNote}, @vuoPort{increment}). 
       - Use lower camel case (@vuoPort{wrapMode}). 
       - Be descriptive — especially if the node may be used as a type converter, which hides the node's title (@vuoPort{roundedInteger}, not @vuoPort{integer}). 
 
 In addition to these general rules, there are some special kinds of node classes that all have similar names: 
 
+   - A "Receive" node is an interface node that inputs data from a device or data source into the composition. 
+      - If it's the only "Receive" node in its node set, its node class name should have the form @vuoNodeClass{[creator].[node set].receive} (example: @vuoNodeClass{vuo.audio.receive}). 
+      - Its title should begin with "Receive" (example: @vuoNodeClass{Receive Live Audio}). 
+   - A "Send" node is an interface node that outputs data from the composition to a device, file, or network. 
+      - If it's the only "Send" node in its node set, its node class name should have the form @vuoNodeClass{[creator].[node set].send} (example: @vuoNodeClass{vuo.audio.send}). 
+      - Its title should begin with "Send" (example: @vuoNodeClass{Send Live Audio}). 
    - A "Make" node puts together pieces (the inputs) to create a structured data value (the output). 
       - Its node class name should have the form @vuoNodeClass{[creator].[node set].make.[optional details]} (example: @vuoNodeClass{vuo.color.make.rgb}). 
       - Its title should have the form @vuoNodeClass{Make [optional details] [thing made]} (example: @vuoNodeClass{Make RGB Color}). 

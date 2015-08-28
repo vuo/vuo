@@ -35,12 +35,16 @@ VuoModuleMetadata({
  */
 VuoList_VuoMidiDevice VuoMidi_getInputDevices(void)
 {
-	RtMidiIn *midiin = new RtMidiIn();
-	unsigned int portCount = midiin->getPortCount();
 	VuoList_VuoMidiDevice inputDevices = VuoListCreate_VuoMidiDevice();
-	for (unsigned int i = 0; i < portCount; ++i)
-		VuoListAppendValue_VuoMidiDevice(inputDevices, VuoMidiDevice_make(i, VuoText_make(midiin->getPortName(i).c_str()), true));
-	delete midiin;
+	try
+	{
+		RtMidiIn *midiin = new RtMidiIn();
+		unsigned int portCount = midiin->getPortCount();
+		for (unsigned int i = 0; i < portCount; ++i)
+			VuoListAppendValue_VuoMidiDevice(inputDevices, VuoMidiDevice_make(i, VuoText_make(midiin->getPortName(i).c_str()), true));
+		delete midiin;
+	}
+	catch(...) {}
 	return inputDevices;
 }
 
@@ -49,12 +53,16 @@ VuoList_VuoMidiDevice VuoMidi_getInputDevices(void)
  */
 VuoList_VuoMidiDevice VuoMidi_getOutputDevices(void)
 {
-	RtMidiOut *midiout = new RtMidiOut();
-	unsigned int portCount = midiout->getPortCount();
 	VuoList_VuoMidiDevice outputDevices = VuoListCreate_VuoMidiDevice();
-	for (unsigned int i = 0; i < portCount; ++i)
-		VuoListAppendValue_VuoMidiDevice(outputDevices, VuoMidiDevice_make(i, VuoText_make(midiout->getPortName(i).c_str()), false));
-	delete midiout;
+	try
+	{
+		RtMidiOut *midiout = new RtMidiOut();
+		unsigned int portCount = midiout->getPortCount();
+		for (unsigned int i = 0; i < portCount; ++i)
+			VuoListAppendValue_VuoMidiDevice(outputDevices, VuoMidiDevice_make(i, VuoText_make(midiout->getPortName(i).c_str()), false));
+		delete midiout;
+	}
+	catch(...) {}
 	return outputDevices;
 }
 
@@ -68,16 +76,18 @@ VuoMidiOut VuoMidiOut_make(VuoMidiDevice md)
 	if (md.isInput)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		fprintf(stderr, "VuoMidi: The specified MIDI device (%s) isn't an output device.\n", VuoMidiDevice_summaryFromValue(md));
+		VLog("The specified MIDI device (%s) isn't an output device.", VuoMidiDevice_summaryFromValue(md));
 		return NULL;
 	}
 
 	const char *vuoMIDIID = "VuoMidiOut_make";
 
-	RtMidiOut *midiout = new RtMidiOut();
-	VuoRegister(midiout, VuoMidiOut_destroy);
+	RtMidiOut *midiout = NULL;
 	try
 	{
+		midiout = new RtMidiOut();
+		VuoRegister(midiout, VuoMidiOut_destroy);
+
 		if (md.id == -1 && strlen(md.name) == 0)
 			// Open the first MIDI device
 			midiout->openPort(0, vuoMIDIID);
@@ -101,8 +111,9 @@ VuoMidiOut VuoMidiOut_make(VuoMidiDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		fprintf(stderr, "VuoMidi: Failed to open the specified MIDI device (%s) :: %s.\n", VuoMidiDevice_summaryFromValue(md), error.what());
-		delete midiout;
+		VLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiDevice_summaryFromValue(md), error.what());
+		if (midiout)
+			delete midiout;
 		return NULL;
 	}
 
@@ -205,7 +216,7 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 			messageHex.push_back(hex[(*message)[i] >> 4]);
 			messageHex.push_back(hex[(*message)[i] & 0x0f]);
 		}
-		fprintf(stderr, "VuoMidi: Received unknown message: 0x%s\n", messageHex.c_str());
+		VLog("Warning: Received unknown message: 0x%s", messageHex.c_str());
 	}
 }
 
@@ -219,16 +230,18 @@ VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
 	if (!md.isInput)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		fprintf(stderr, "VuoMidi: The specified MIDI device (%s) isn't an input device.\n", VuoMidiDevice_summaryFromValue(md));
+		VLog("Error: The specified MIDI device (%s) isn't an input device.", VuoMidiDevice_summaryFromValue(md));
 		return NULL;
 	}
 
 	const char *vuoMIDIID = "VuoMidiIn_make";
 
 	struct VuoMidiIn_internal *mii;
-	RtMidiIn *midiin = new RtMidiIn();
+	RtMidiIn *midiin = NULL;
 	try
 	{
+		midiin = new RtMidiIn();
+
 		if (md.id == -1 && strlen(md.name) == 0)
 			// Open the first MIDI device
 			midiin->openPort(0, vuoMIDIID);
@@ -263,8 +276,9 @@ VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		fprintf(stderr, "VuoMidi: Failed to open the specified MIDI device (%s) :: %s.\n", VuoMidiDevice_summaryFromValue(md), error.what());
-		delete midiin;
+		VLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiDevice_summaryFromValue(md), error.what());
+		if (midiin)
+			delete midiin;
 		return NULL;
 	}
 
@@ -316,6 +330,7 @@ void VuoMidiIn_destroy(VuoMidiIn mi)
 	if (!mi)
 		return;
 	struct VuoMidiIn_internal *mii = (struct VuoMidiIn_internal *)mi;
+	dispatch_release(mii->callbackQueue);
 	delete mii->midiin;
 	free(mii);
 }

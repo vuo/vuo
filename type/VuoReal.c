@@ -9,6 +9,7 @@
 
 #include "type.h"
 #include "VuoReal.h"
+#include "VuoText.h"
 #include <float.h>
 
 /// @{
@@ -49,11 +50,7 @@ json_object * VuoReal_jsonFromValue(const VuoReal value)
  */
 char * VuoReal_summaryFromValue(const VuoReal value)
 {
-	const char *format = "%g";
-	int size = snprintf(NULL,0,format,value);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value);
-	return valueAsString;
+	return VuoText_format("%g", value);
 }
 
 /**

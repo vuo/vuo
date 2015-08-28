@@ -81,28 +81,20 @@ char * VuoAudioOutputDevice_summaryFromValue(const VuoAudioOutputDevice value)
 	if (value.id == -1 && strlen(value.name) == 0)
 		return strdup("The default audio output device");
 	else if (value.id == -1)
-	{
-		const char *format = "The first audio output device whose name contains \"%s\"";
-		int size = snprintf(NULL,0,format,value.name);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,value.name);
-		return valueAsString;
-	}
+		return VuoText_format("The first audio output device whose name contains \"%s\"", value.name);
 	else if (strlen(value.name) == 0)
-	{
-		const char *format = "Audio output device #%d";
-		int size = snprintf(NULL,0,format,value.id);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,value.id);
-		return valueAsString;
-	}
+		return VuoText_format("Audio output device #%ld", value.id);
 	else
-	{
 		// An actual detected audio output device (rather than abstract criteria).
-		const char *format = "Audio output device #%d (\"%s\")<br>%d output channels";
-		int size = snprintf(NULL,0,format,value.id,value.name,value.channelCount);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,value.id,value.name,value.channelCount);
-		return valueAsString;
-	}
+		return VuoText_format("Audio output device #%ld (\"%s\")<br>%ld output channels", value.id, value.name, value.channelCount);
+}
+
+/**
+ * Returns true if the two audio output device specifications are identical.
+ */
+bool VuoAudioOutputDevice_areEqual(VuoAudioOutputDevice value1, VuoAudioOutputDevice value2)
+{
+	return (value1.id == value2.id &&
+			VuoText_areEqual(value1.name, value2.name) &&
+			value1.channelCount == value2.channelCount);
 }

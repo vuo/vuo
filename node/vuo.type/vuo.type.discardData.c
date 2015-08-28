@@ -21,9 +21,8 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoGenericType1) dataAndEvent,
-		VuoInputEvent(VuoPortEventBlocking_None,dataAndEvent) inEvent,
 		VuoOutputEvent() event
 )
 {
-	*event = inEvent;
+	*event = true;
 }

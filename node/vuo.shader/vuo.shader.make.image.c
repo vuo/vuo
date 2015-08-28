@@ -12,7 +12,9 @@
 
 VuoModuleMetadata({
 					 "title" : "Shade with Image",
-					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "lighting", "Blinn", "Phong", "Lambert" ],
+					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
+						 "lighting", "lit", "lighted",
+						 "Blinn", "Phong", "Lambert" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoGlContext"
@@ -29,4 +31,14 @@ void nodeEvent
 )
 {
 	*shader = VuoShader_makeLitImageShader(image, alpha, highlightColor, shininess);
+
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		glFlushRenderAPPLE();
+
+		VuoGlContext_disuse(cgl_ctx);
+	}
 }

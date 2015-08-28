@@ -20,7 +20,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Render Scene to Window",
-					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
+					 "keywords" : [ "draw", "graphics", "display", "view", "object", "screen", "full screen", "fullscreen" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
@@ -58,22 +58,13 @@ void vuo_scene_render_window_init(VuoGlContext glContext, void *ctx)
 
 void vuo_scene_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
 {
-	//fprintf(stderr, "vuo_scene_render_window_resize(%d,%d)\n", width, height);
 	struct nodeInstanceData *context = ctx;
 
 	VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
 }
 
-void vuo_scene_render_window_switchContext(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *ctx)
-{
-//	VLog("old=%p  new=%p",oldGlContext,newGlContext);
-	struct nodeInstanceData *context = ctx;
-	VuoSceneRenderer_switchContext(context->sceneRenderer, newGlContext);
-}
-
 void vuo_scene_render_window_draw(VuoGlContext glContext, void *ctx)
 {
-	//fprintf(stderr, "vuo_scene_render_window_draw\n");
 	struct nodeInstanceData *context = ctx;
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
@@ -98,7 +89,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 				true,
 				vuo_scene_render_window_init,
 				vuo_scene_render_window_resize,
-				vuo_scene_render_window_switchContext,
 				vuo_scene_render_window_draw,
 				(void *)context
 			);
@@ -130,16 +120,19 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoList_VuoSceneObject) objects,
-		VuoInputData(VuoText) cameraName
+		VuoInputData(VuoText) cameraName,
+		VuoInputData(VuoList_VuoWindowProperty) windowProperties
 )
 {
+	VuoWindowOpenGl_setProperties((*context)->window, windowProperties);
+
 	VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), objects);
 
 	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
 												 VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 											 });
 
-	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName);
+	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName, true);
 
 	// Schedule a redraw.
 	VuoWindowOpenGl_redraw((*context)->window);

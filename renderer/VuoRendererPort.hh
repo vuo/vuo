@@ -15,11 +15,12 @@
 #include "VuoBaseDetail.hh"
 #include "VuoType.hh"
 #include "VuoPortClass.hh"
+#include "VuoRendererInputDrawer.hh"
 
 class VuoCompilerNodeClass;
 class VuoCompilerNode;
 class VuoRendererNode;
-class VuoRendererMakeListNode;
+class VuoRendererInputListDrawer;
 class VuoCable;
 class VuoPort;
 class VuoRendererColors;
@@ -34,14 +35,18 @@ class VuoRendererPort : public VuoRendererItem, public VuoBaseDetail<VuoPort>
 public:
 	VuoRendererPort(VuoPort *basePort, VuoRendererSignaler *signaler,
 					bool isOutput, bool isRefreshPort, bool isDonePort, bool isFunctionPort);
+	~VuoRendererPort();
 
 	QRectF boundingRect(void) const;
+	QRectF getNameRect(void) const;
+	QRectF getActionIndicatorRect(void) const;
 	QPainterPath shape(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	VuoRendererPublishedPort * getProxyPublishedSidebarPort(void) const;
 	void setProxyPublishedSidebarPort(VuoRendererPublishedPort *proxyPort);
 
-	bool getEligibleForSelection();
+	bool getEligibleForSelection(void);
+	bool isEligibleForConnection(void);
 	void setEligibleForDirectConnection(bool eligible);
 	void setEligibleForConnectionViaTypecast(bool eligible);
 	void extendedHoverEnterEvent(bool cableDragUnderway=false);
@@ -58,22 +63,26 @@ public:
 	bool getFunctionPort(void) const;
 	void updateGeometry();
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+	qreal getInset(void) const;
 	QPainterPath getPortPath(qreal inset) const;
 	static QPainterPath getPortConstantPath(QRectF innerPortRect, QString text, QPainterPath *outsetPath, bool isTypecast=false);
 	void updatePortConstantPath();
 	static QRectF getPortRect(void);
-	VuoRendererMakeListNode * getAttachedInputDrawer(void) const;
+	VuoRendererInputDrawer * getAttachedInputDrawer(void) const;
 	virtual QRectF getPortConstantTextRect(void) const;
 	VuoType * getDataType(void) const;
 	bool isConstant(void) const;
 	string getConstantAsString(void) const;
 	string getConstantAsStringToRender(void) const;
 	void setConstant(string constantValue);
+	string getPortNameToRender() const;
+	void setPortNameToRender(string name);
 	bool getPublishable() const;
 	vector<VuoRendererPublishedPort *> getPublishedPorts() const;
 
 	VuoRendererNode * getUnderlyingParentNode(void) const;
 	VuoRendererNode * getRenderedParentNode(void) const;
+	set<VuoRendererInputAttachment *> getAllUnderlyingUpstreamInputAttachments(void) const;
 
 	VuoRendererPort * getTypecastParentPort() const;
 	void setTypecastParentPort(VuoRendererPort *typecastParentPort);
@@ -91,7 +100,8 @@ public:
 	static const qreal portRadius; ///< Radius, in pixels at 1:1 zoom, of a circular port.
 	static const qreal portSpacing; ///< Vertical distance, in pixels at 1:1 zoom, between the center points of two ports.
 	static const qreal portContainerMargin;	///< Vertical distance, in pixels at 1:1 zoom, between the outer edge of the first/last port and the node frame rect.
-	static const qreal portInset; ///< The vertical and horizontal inset used when rendering a port shape within its outer port rect.
+	static const qreal portInset; ///< The vertical and horizontal inset used when rendering a circular or refresh/done port shape within its outer port rect.
+	static const qreal portInsetTriangular; ///< The vertical and horizontal inset used when rendering a triangular port shape (in the node body) within its outer port rect.
 	static const qreal constantFlagHeight; ///< Height, in pixels at 1:1 zoom, of a constant flag.
 
 protected:
@@ -116,7 +126,7 @@ private:
 	QPainterPath portConstantPath;
 	QPainterPath outsetPath;
 	QPainterPath outsetMinusPortConstantPath;
-	
+
 	friend class VuoRendererPublishedPort; 	///< VuoRendererPublishedPort needs paint(...) and boundingRect()
 	friend class TestVuoRenderer;
 
@@ -125,12 +135,14 @@ protected:
 	bool isDonePort; ///< Is this port a done port?
 
 	QRectF nameRect; ///< The bounding box of the port's label when rendered on the canvas.
+	string customizedPortName; ///< The name of the port as it should be rendered.
 
 	bool portNameRenderingEnabled(void) const;
-	QRectF getNameRect(void) const;
 	void updateNameRect(void);
-	bool isOnDrawer(void) const;
 	void updateEnabledStatus();
+	bool hasPortAction(void) const;
+	VuoRendererInputDrawer * getAttachedInputDrawerRenderedWithHostPort(const VuoRendererPort *port) const;
+	VuoRendererInputAttachment * getUnderlyingInputAttachment(void) const;
 
 	static QRectF getPortConstantTextRectForText(QString text);
 	static QPainterPath getPortPath(qreal inset, VuoPortClass::PortType portType, bool isInputPort, bool carriesData);
@@ -138,6 +150,7 @@ protected:
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors);
 	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);
+	void paintActionIndicator(QPainter *painter, VuoRendererColors *colors);
 	string getPointStringForCoords(QList<double>) const;
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.

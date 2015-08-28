@@ -15,4 +15,7 @@ OTHER_FILES += \
 		VuoInputEditorKey.json
 
 INCLUDEPATH += $$ROOT/node/vuo.keyboard
-LIBS += $$ROOT/node/vuo.keyboard/VuoKey.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/node/vuo.keyboard/VuoKey.o \
+	$$ROOT/type/list/VuoList_VuoKey.o

@@ -10,6 +10,11 @@
 #ifndef VUONOISE_H
 #define VUONOISE_H
 
+/// @{
+typedef void * VuoList_VuoNoise;
+#define VuoList_VuoNoise_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoNoise VuoNoise
@@ -32,6 +37,7 @@ typedef enum {
 
 VuoNoise VuoNoise_valueFromJson(struct json_object * js);
 struct json_object * VuoNoise_jsonFromValue(const VuoNoise value);
+VuoList_VuoNoise VuoNoise_allowedValues(void);
 char * VuoNoise_summaryFromValue(const VuoNoise value);
 
 /// @{

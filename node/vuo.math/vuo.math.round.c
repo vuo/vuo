@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Round",
-					 "keywords" : [ "near", "close", "approximate", "integer", "whole" ],
+					 "keywords" : [ "near", "close", "approximate", "integer", "whole", "real" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

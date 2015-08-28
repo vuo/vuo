@@ -28,9 +28,10 @@ void VuoPluginApp_createOpenGLContext(void)
 		NSOpenGLPFADoubleBuffer,
 		NSOpenGLPFAColorSize, 24,
 		NSOpenGLPFADepthSize, 16,
-		NSOpenGLPFAMultisample,
-		NSOpenGLPFASampleBuffers, 1,
-		NSOpenGLPFASamples, 4,
+		// Multisampling breaks point rendering on some GPUs.  https://b33p.net/kosada/node/8225#comment-31324
+//		NSOpenGLPFAMultisample,
+//		NSOpenGLPFASampleBuffers, 1,
+//		NSOpenGLPFASamples, 4,
 		0
 	};
     

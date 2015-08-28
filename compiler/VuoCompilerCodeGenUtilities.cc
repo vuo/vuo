@@ -946,7 +946,7 @@ Value * VuoCompilerCodeGenUtilities::generateTypeCastFromLoweredTypeToStruct(Bas
 		return new LoadInst(otherStructAsTypeToCastTo, "", false, block);
 	}
 
-	fprintf(stderr, "Couldn't cast from lowered type to struct:\n");
+	fprintf(stderr, "Error: Couldn't cast from lowered type to struct:\n");
 	originalValueToCast->getType()->dump();  fprintf(stderr, "\n");
 	typeToCastTo->dump();  fprintf(stderr, "\n");
 	return originalValueToCast;
@@ -1024,7 +1024,7 @@ Value * VuoCompilerCodeGenUtilities::generateSerialization(Module *module, Basic
 	else
 	{
 		/// @todo Handle other primitive types and structs (https://b33p.net/kosada/node/3942)
-		fprintf(stderr, "Couldn't serialize non-pointer value\n");
+		VLog("Error: Couldn't serialize non-pointer value.");
 		return NULL;
 	}
 }
@@ -1064,30 +1064,36 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateIsPausedComparison(Module *modul
 }
 
 /**
- * Generates code that prints a string. (Useful for debugging.)
+ * Generates code that gets the value of the @c stderr global variable.
  */
-void VuoCompilerCodeGenUtilities::generatePrint(Module *module, BasicBlock *block, string stringToPrint)
+Value * VuoCompilerCodeGenUtilities::generateStderr(Module *module, BasicBlock *block)
 {
-	Constant *stringValue = generatePointerToConstantString(module, stringToPrint, "stringToPrint");
+	PointerType *pointerToFileType = getPointerToFileType(module);
 
-	Function *putsFunction = getPutsFunction(module);
-	CallInst::Create(putsFunction, stringValue, "", block);
+	string variableName = "__stderrp";
+	GlobalVariable *stderrVariable = module->getNamedGlobal(variableName);
+	if (! stderrVariable)
+		stderrVariable = new GlobalVariable(*module, pointerToFileType, false, GlobalValue::ExternalLinkage, 0, variableName);
+
+	return new LoadInst(stderrVariable, "", false, block);
 }
 
 /**
- * Generates code that prints a value. (Useful for debugging.)
+ * Generates code that prints to stderr either a string literal or a formatted string with a value. (Useful for debugging.)
  */
 void VuoCompilerCodeGenUtilities::generatePrint(Module *module, BasicBlock *block, string formatString, Value *value)
 {
 	Value *formatStringValue = generatePointerToConstantString(module, formatString);
+	Value *stderrValue = generateStderr(module, block);
 
-	Function *printfFunction = getPrintfFunction(module);
-	vector<Value *> printfArgs;
-	printfArgs.push_back(formatStringValue);
-	printfArgs.push_back(value);
-	CallInst::Create(printfFunction, printfArgs, "", block);
+	Function *fprintfFunction = getFprintfFunction(module);
+	vector<Value *> fprintfArgs;
+	fprintfArgs.push_back(stderrValue);
+	fprintfArgs.push_back(formatStringValue);
+	if (value)
+		fprintfArgs.push_back(value);
+	CallInst::Create(fprintfFunction, fprintfArgs, "", block);
 }
-
 
 //@{
 /**
@@ -1165,6 +1171,15 @@ StructType * VuoCompilerCodeGenUtilities::getJsonObjectType(Module *module)
 		jsonObjectType = StructType::create(module->getContext(), "struct.json_object");
 
 	return jsonObjectType;
+}
+
+PointerType * VuoCompilerCodeGenUtilities::getPointerToFileType(Module *module)
+{
+	StructType *fileType = module->getTypeByName("struct.__sFILE");
+	if (! fileType)
+		fileType = StructType::create(module->getContext(), "struct.__sFILE");
+
+	return PointerType::get(fileType, 0);
 }
 //@}
 
@@ -1273,15 +1288,16 @@ Function * VuoCompilerCodeGenUtilities::getSscanfFunction(Module *module)
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getPrintfFunction(Module *module)
+Function * VuoCompilerCodeGenUtilities::getFprintfFunction(Module *module)
 {
-	const char *functionName = "printf";
+	const char *functionName = "fprintf";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> functionParams;
+		functionParams.push_back( getPointerToFileType(module) );
 		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(IntegerType::get(module->getContext(), 32), functionParams, true);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
@@ -1582,6 +1598,24 @@ Function * VuoCompilerCodeGenUtilities::getSetInputPortValueFunction(Module *mod
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(IntegerType::get(module->getContext(), 32));
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getGetPublishedInputPortValueFunction(Module *module)
+{
+	const char *functionName = "getPublishedInputPortValue";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *intType = IntegerType::get(module->getContext(), 32);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(intType);
+		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;

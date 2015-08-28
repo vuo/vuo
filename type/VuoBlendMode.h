@@ -10,6 +10,11 @@
 #ifndef VUOBLENDMODE_H
 #define VUOBLENDMODE_H
 
+/// @{
+typedef void * VuoList_VuoBlendMode;
+#define VuoList_VuoBlendMode_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoBlendMode VuoBlendMode
@@ -52,6 +57,7 @@ typedef enum {
 
 VuoBlendMode VuoBlendMode_valueFromJson(struct json_object * js);
 struct json_object * VuoBlendMode_jsonFromValue(const VuoBlendMode value);
+VuoList_VuoBlendMode VuoBlendMode_allowedValues(void);
 char * VuoBlendMode_summaryFromValue(const VuoBlendMode value);
 
 /// @{
@@ -60,6 +66,8 @@ char * VuoBlendMode_summaryFromValue(const VuoBlendMode value);
  */
 VuoBlendMode VuoBlendMode_valueFromString(const char *str);
 char * VuoBlendMode_stringFromValue(const VuoBlendMode value);
+void VuoBlendMode_retain(VuoBlendMode value);
+void VuoBlendMode_release(VuoBlendMode value);
 /// @}
 
 /**

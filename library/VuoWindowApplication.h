@@ -18,6 +18,7 @@
 {
 	dispatch_source_t timer;  ///< Process-wide libdispatch timer for processing events.
 	NSArray *windowMenuItems;  ///< Top-level menus for the current main window.
+	id delegate;  ///< The application's delegate.
 }
 
 - (void)replaceWindowMenu:(NSArray *)newMenuItems;

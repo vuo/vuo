@@ -1,0 +1,68 @@
+/**
+ * @file
+ * Displays 4 spheres in a grid, and deforms them with noise.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AddNoiseToObject [type="vuo.scene.noise" version="1.0.0" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<done>done\r|<noisedObject>noisedObject\r" pos="625,159" fillcolor="violet" _amount="{\"x\":0.200000,\"y\":0.200000,\"z\":0.200000}" _scale="1.000000"];
+AddNoiseToObject2 [type="vuo.scene.noise" version="1.0.0" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<done>done\r|<noisedObject>noisedObject\r" pos="632,284" fillcolor="violet" _amount="{\"x\":0.300000,\"y\":0.300000,\"z\":0.300000}" _scale="2.000000"];
+AddNoiseToObject3 [type="vuo.scene.noise" version="1.0.0" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<done>done\r|<noisedObject>noisedObject\r" pos="632,406" fillcolor="violet" _amount="{\"x\":0.150000,\"y\":0.150000,\"z\":0.150000}" _scale="0.750000"];
+AddNoiseToObject4 [type="vuo.scene.noise" version="1.0.0" label="Add Noise to 3D Object|<refresh>refresh\l|<object>object\l|<time>time\l|<amount>amount\l|<scale>scale\l|<done>done\r|<noisedObject>noisedObject\r" pos="631,517" fillcolor="violet" _amount="{\"x\":0.100000,\"y\":0.100000,\"z\":0.100000}" _scale="0.500000"];
+Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.0" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<done>done\r|<griddedObject>griddedObject\r" pos="920,192" fillcolor="violet" _scaleToFit="false" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _width="2.500000" _columns="2" _height="2.500000" _rows="2" _depth="2.000000" _slices="1"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="29,67" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="395,159"];
+Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="394,284"];
+Make3DObject3 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="398,406"];
+Make3DObject4 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="404,517"];
+MakeList3 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<done>done\r|<list>list\r" pos="832,203" fillcolor="violet"];
+MakeList5 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="207,-55" _1="{\"r\":0.573007,\"g\":0.572976,\"b\":0.572992,\"a\":1.000000}" _2="{\"r\":0.135103,\"g\":0.135103,\"b\":0.135103,\"a\":1.000000}"];
+MakeList6 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="906,4"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<width>width\l|<height>height\l|<done>done\r|<image>image\r" pos="281,-66" _center="{\"x\":0,\"y\":0}" _radius="1.400000" _width="320" _height="320"];
+MakeSphereMesh [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<mesh>mesh\r" pos="219,88" _rows="32" _columns="32"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="1.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="558,-66" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":-2.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="8.000000" _alpha="1.000000"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="956,-7" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="225,174" _color="{\"r\":0.215686,\"g\":0.647059,\"b\":0.996078,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="224,299" _color="{\"r\":0.980392,\"g\":0.572549,\"b\":0.125490,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
+ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="226,421" _color="{\"r\":0.121569,\"g\":0.745098,\"b\":0.168627,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
+ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="226,532" _color="{\"r\":0.882353,\"g\":0.219608,\"b\":0.294118,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.980000"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="454,94"];
+
+AddNoiseToObject2:noisedObject -> MakeList3:2;
+AddNoiseToObject3:noisedObject -> MakeList3:3;
+AddNoiseToObject4:noisedObject -> MakeList3:4;
+AddNoiseToObject:noisedObject -> MakeList3:1;
+Arrange3DObjectsInGrid:griddedObject -> MakeList6:2;
+FireOnStart:started -> MakeList5:1;
+FireOnStart:started -> MakeSphereMesh:refresh;
+FireOnStart:started -> ShadeWithColor2:refresh;
+FireOnStart:started -> ShadeWithColor3:refresh;
+FireOnStart:started -> ShadeWithColor4:refresh;
+FireOnStart:started -> ShadeWithColor:refresh;
+Make3DObject2:object -> AddNoiseToObject2:object;
+Make3DObject3:object -> AddNoiseToObject3:object;
+Make3DObject4:object -> AddNoiseToObject4:object;
+Make3DObject:object -> AddNoiseToObject:object;
+MakeList3:list -> Arrange3DObjectsInGrid:objects;
+MakeList5:list -> MakeRadialGradientImage:colors;
+MakeList6:list -> RenderSceneToWindow:objects;
+MakeRadialGradientImage:image -> MakeUnlit3DObjectFromImage:image;
+MakeSphereMesh:mesh -> Make3DObject2:mesh;
+MakeSphereMesh:mesh -> Make3DObject3:mesh;
+MakeSphereMesh:mesh -> Make3DObject4:mesh;
+MakeSphereMesh:mesh -> Make3DObject:mesh;
+MakeUnlit3DObjectFromImage:object -> MakeList6:1;
+RenderSceneToWindow:requestedFrame -> ShareValue2:value;
+ShadeWithColor2:shader -> Make3DObject2:shader;
+ShadeWithColor3:shader -> Make3DObject3:shader;
+ShadeWithColor4:shader -> Make3DObject4:shader;
+ShadeWithColor:shader -> Make3DObject:shader;
+ShareValue2:sameValue -> AddNoiseToObject2:time;
+ShareValue2:sameValue -> AddNoiseToObject3:time;
+ShareValue2:sameValue -> AddNoiseToObject4:time;
+ShareValue2:sameValue -> AddNoiseToObject:time;
+}

@@ -70,9 +70,9 @@ bool VuoRenderedLayers_findLayer(VuoRenderedLayers renderedLayers, VuoText layer
 {
 	bool found = VuoSceneObject_find(renderedLayers.rootSceneObject, layerName, ancestorObjects, foundObject);
 	return (found &&
-			foundObject->verticesList &&
-			VuoListGetCount_VuoVertices(foundObject->verticesList) == 1 &&
-			VuoListGetValueAtIndex_VuoVertices(foundObject->verticesList, 1).vertexCount == 4);
+			foundObject->mesh &&
+			foundObject->mesh->submeshCount == 1 &&
+			foundObject->mesh->submeshes[0].vertexCount == 4);
 }
 
 /**
@@ -83,7 +83,7 @@ bool VuoRenderedLayers_findLayer(VuoRenderedLayers renderedLayers, VuoText layer
 void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, VuoList_VuoSceneObject ancestorObjects, VuoSceneObject targetObject, VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4])
 {
 	// Get the layer's corner points.
-	VuoVertices layerQuad = VuoListGetValueAtIndex_VuoVertices(targetObject.verticesList, 1);
+	VuoSubmesh layerQuad = targetObject.mesh->submeshes[0];
 	VuoPoint3d layerCorners3d[] = { VuoPoint3d_make(layerQuad.positions[0].x, layerQuad.positions[0].y, 0),
 									VuoPoint3d_make(layerQuad.positions[1].x, layerQuad.positions[1].y, 0),
 									VuoPoint3d_make(layerQuad.positions[2].x, layerQuad.positions[2].y, 0),
@@ -106,7 +106,7 @@ void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, Vuo
 		}
 
 		// Scale the layer's corner points to the rendered layers' coordinate space.
-		VuoImage image = VuoListGetValueAtIndex_VuoImage(targetObject.shader->textures,1);
+		VuoImage image = VuoShader_getUniform_VuoImage(targetObject.shader, "texture");
 		float widthScale = 2. * (float)image->pixelsWide / (float)renderedLayers.pixelsWide;
 		float heightScale = widthScale * (float)image->pixelsHigh / (float)image->pixelsWide;
 		for (int i = 0; i < 4; ++i)
@@ -256,23 +256,12 @@ json_object * VuoRenderedLayers_jsonFromValue(const VuoRenderedLayers value)
 char * VuoRenderedLayers_summaryFromValue(const VuoRenderedLayers value)
 {
 	char *rootSummary = VuoSceneObject_summaryFromValue(value.rootSceneObject);
-	size_t rootSummaryBytes = strlen(rootSummary);
-
 	char *windowSummary = VuoWindowReference_summaryFromValue(value.window);
-	size_t windowSummaryBytes = strlen(windowSummary);
 
-	const char *linebreak = "<br>";
-	size_t linebreakBytes = strlen(linebreak);
+	char *summary = VuoText_format("%lux%lu<br>%s<br>%s", value.pixelsWide, value.pixelsHigh, windowSummary, rootSummary);
 
-	const char *format = "%lux%lu";
-	int pixelsSummaryBytes = snprintf(NULL, 0, format, value.pixelsWide, value.pixelsHigh);
+	free(windowSummary);
+	free(rootSummary);
 
-	char *summary = (char *)malloc(rootSummaryBytes + windowSummaryBytes + pixelsSummaryBytes + 2*linebreakBytes + 1);
-
-	snprintf(summary, pixelsSummaryBytes+1, format, value.pixelsWide, value.pixelsHigh);
-	strncat(summary, linebreak, linebreakBytes);
-	strncat(summary, windowSummary, windowSummaryBytes);
-	strncat(summary, linebreak, linebreakBytes);
-	strncat(summary, rootSummary, rootSummaryBytes);
 	return summary;
 }

@@ -5,7 +5,8 @@ If you're developing an application, library, or other project, your code can bu
 To learn how to develop an application that uses Vuo, see: 
 
    - This API documentation
-   - The example Qt projects (included with the Vuo SDK) for using Vuo inside an application
+   - The example Xcode project (`example/api/VuoPluginApp` included with the Vuo SDK) for using Vuo inside a Cocoa application
+   - The example Qt projects (`example/api/RunImageFilter` included with the Vuo SDK) for using Vuo inside an application
    - The source code for the Vuo command-line tools
 
 
@@ -20,7 +21,7 @@ To use Vuo, your application needs to link to Vuo.framework, which comes with th
 See the example Qt projects for using Vuo inside an application. 
 
 
-### Xcode 4 / 5
+### Xcode 4 and 5
 
   - Create a new project:
     - Choose template OS X > Application > Cocoa Application. 
@@ -51,7 +52,9 @@ Vuo.framework includes the basic functions you need to build and run a Vuo compo
 See the RunImageFilter example projects (included with the Vuo SDK) for examples of using these libraries. 
 
 
-## Compiling and linking a Vuo composition
+## The C++ API
+
+### Compiling and linking a Vuo composition
 
 If you want to run a Vuo composition, you first have to compile and link it. 
 
@@ -59,12 +62,15 @@ The easiest way to do that is with the factory methods VuoCompiler::newSeparateP
 
 The VuoCompiler class also provides functions for separately compiling a composition, linking a composition, and compiling a node class, port type, or library module. 
 
-
-
-## Running a Vuo composition
+### Running a Vuo composition
 
 Using the VuoRunner class, you can run and interact with a composition. The composition can run in the same process as the VuoRunner or in a separate process. 
 
 The VuoRunner::start and VuoRunner::stop functions allow you to start and stop a composition. While the composition is running, you can use other VuoRunner functions to control it and query it (such such pausing the composition, setting the values of published input ports, and getting the values of published output ports). 
 
 You can receive notifications from the running composition (such as when a published output port receives an event) by creating a derived class of VuoRunnerDelegate or VuoRunnerDelegateAdapter. Use VuoRunner::setDelegate to connect your class to the VuoRunner. Your class's VuoRunnerDelegate functions will be called whenever the VuoRunner receives messages from the running composition. 
+
+
+## The Cocoa API
+
+Using the VuoImageFilter and VuoImageGenerator classes, you can compile, run, interact with, and get information about a composition.  The composition runs in a separate 64-bit process.

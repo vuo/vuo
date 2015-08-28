@@ -14,6 +14,7 @@
 #include "VuoMidiNote.h"
 #include "VuoInteger.h"
 #include "VuoBoolean.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -94,17 +95,11 @@ json_object * VuoMidiNote_jsonFromValue(const VuoMidiNote mn)
  */
 char * VuoMidiNote_summaryFromValue(const VuoMidiNote mn)
 {
-	const char *format = "Channel %d: note %s%d (#%d) %s, velocity %d";
-
 	const char *noteNames[] = { "C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B" };
 	const char *noteName = noteNames[mn.noteNumber % 12];
 	unsigned char noteOctave = mn.noteNumber / 12 - 1;
-
 	const char *onOff = mn.isNoteOn ? "on" : "off";
 
-	int size = snprintf(NULL,0,format,mn.channel,noteName,noteOctave,mn.noteNumber,onOff,mn.velocity);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,mn.channel,noteName,noteOctave,mn.noteNumber,onOff,mn.velocity);
-
-	return valueAsString;
+	return VuoText_format("Channel %d: note %s%d (#%d) %s, velocity %d",
+						  mn.channel, noteName, noteOctave, mn.noteNumber, onOff, mn.velocity);
 }

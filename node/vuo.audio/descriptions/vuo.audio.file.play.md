@@ -8,3 +8,4 @@ When the composition starts or this node is added to a running composition, the 
    - `play` — When this port receives an event, the audio file starts playing from the current playhead time. If it was already playing, it continues.
    - `pause` — When this port receives an event, the audio file stops playing and keeps the playhead at the current time.
    - `setTime` — The time in the audio file where the playhead should start, in seconds. When this port receives an event, the playhead goes to that time. If the audio file was playing, it continues playing. If it was paused, it stays paused.
+   - `finishedPlayback` — Fires when playback has reached the end of the audio file.  (It does not fire when pausing the audio, or when there is an error decoding the audio.)

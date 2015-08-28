@@ -16,6 +16,7 @@ NODE_SOURCES += \
 	vuo.image.ripple.c \
 	vuo.image.twirl.c \
 	vuo.image.vignette.c \
+	vuo.image.findBarcode.c \
 	vuo.image.flip.horizontal.c \
 	vuo.image.flip.vertical.c \
 	vuo.image.get.c \
@@ -30,12 +31,22 @@ NODE_SOURCES += \
 	vuo.image.resize.c \
 	vuo.image.resize.larger.c \
 	vuo.image.render.window.c \
-#	vuo.image.rotate.c \
+	vuo.image.rotate.c \
 	vuo.image.set.wrapMode.c
 
 NODE_INCLUDEPATH += \
 	../vuo.audio \
-	../vuo.font
+	../vuo.font \
+	../vuo.layer
+
+NODE_LIBRARY_SOURCES += \
+	VuoBarcode.cc
+
+HEADERS += \
+	VuoBarcode.h
+
+NODE_LIBRARY_INCLUDEPATH += \
+	$$ZXING_ROOT/include
 
 TYPE_SOURCES += \
 	VuoThresholdType.c

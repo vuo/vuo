@@ -1,6 +1,8 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	Count.vuo
+	Count.vuo \
+	GraphFunctions.vuo \
+	PaintWithMath.vuo
 
 include(../../../example.pri)

@@ -35,6 +35,7 @@ typedef struct
 VuoMidiDevice VuoMidiDevice_valueFromJson(struct json_object * js);
 struct json_object * VuoMidiDevice_jsonFromValue(const VuoMidiDevice value);
 char * VuoMidiDevice_summaryFromValue(const VuoMidiDevice value);
+bool VuoMidiDevice_areEqual(const VuoMidiDevice value1, const VuoMidiDevice value2);
 
 /**
  * Automatically generated function.

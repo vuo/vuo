@@ -93,7 +93,7 @@ void nodeEvent
 		}
 	}
 
-	*image = VuoImage_makeFromBuffer(pixels, GL_RGBA, pixelsWide, pixelsHigh);
+	*image = VuoImage_makeFromBuffer(pixels, GL_RGBA, pixelsWide, pixelsHigh, VuoImageColorDepth_8);
 
 	free(pixels);
 }

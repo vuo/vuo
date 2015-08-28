@@ -14,7 +14,7 @@ Conductor1 [type="vuo.test.conductor" version="1.0.0" label="Conductor1|<refresh
 Semiconductor1 [type="vuo.test.semiconductor" version="1.0.0" label="Semiconductor1|<refresh>refresh\l|<triggerInfoConductive>triggerInfoConductive\l|<triggerInfoNonConductive>triggerInfoNonConductive\l|<nodeTitle>nodeTitle\l|<done>done\r|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" pos="456,418" _nodeTitle="\"Semiconductor1\""];
 TestFirePeriodically1 [type="vuo.test.firePeriodically" version="1.0.0" label="FirePer1|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<done>done\r|<fired>fired\r|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" pos="172,97" _milliseconds="1" _maxEventCount="100" _in0="\"\"" _in1="\"\"" _nodeTitle="\"FirePer1\"" _fired_eventThrottling="enqueue"];
 TestFirePeriodically2 [type="vuo.test.firePeriodically" version="1.0.0" label="FirePer2|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<done>done\r|<fired>fired\r|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" pos="170,416" _milliseconds="1" _maxEventCount="100" _triggerInfoIn="\"\"" _in0="\"\"" _in1="\"\"" _nodeTitle="\"FirePer2\"" _fired_eventThrottling="enqueue"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<start>start\r" _start="" _start_type="event"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<start>start\r" _start_type="event"];
 
 Conductor1:triggerInfoOut -> Conductor:triggerInfoIn0;
 Conductor:triggerInfoOut -> TestFirePeriodically1:triggerInfoIn;

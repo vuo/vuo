@@ -11,6 +11,7 @@
 #include <AppKit/AppKit.h>
 #include "type.h"
 #include "VuoWindowReference.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -58,11 +59,7 @@ char * VuoWindowReference_summaryFromValue(const VuoWindowReference value)
 	if (value == 0)
 		return strdup("(no window)");
 
-	const char *format = "window ID %lli";
-	int summaryBytes = snprintf(NULL, 0, format, value);
-	char *summary = (char *)malloc(summaryBytes + 1);
-	snprintf(summary, summaryBytes+1, format, value);
-	return summary;
+	return VuoText_format("window ID %lli", value);
 }
 
 /**

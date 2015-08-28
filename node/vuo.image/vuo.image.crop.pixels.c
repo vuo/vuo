@@ -86,15 +86,15 @@ void nodeInstanceEvent
 	else
 		h = height;
 
-	VuoShader frag = VuoShader_make("Crop Image Pixels Shader", VuoShader_getDefaultVertexShader(), cropFragmentShader);
+	VuoShader frag = VuoShader_make("Crop Image Pixels Shader");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, cropFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "x", uv_x);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "y", uv_y);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "width", uv_w);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "height", uv_h);
-	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	VuoShader_setUniform_VuoImage(frag, "texture", image);
+	VuoShader_setUniform_VuoReal (frag, "x",       uv_x);
+	VuoShader_setUniform_VuoReal (frag, "y",       uv_y);
+	VuoShader_setUniform_VuoReal (frag, "width",   uv_w);
+	VuoShader_setUniform_VuoReal (frag, "height",  uv_h);
+	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

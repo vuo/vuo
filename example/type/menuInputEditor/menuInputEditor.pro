@@ -6,7 +6,7 @@ cache()
 
 VUO_FRAMEWORK_PATH = ../../../framework
 VUO_USER_MODULES_PATH = ~/Library/Application\ Support/Vuo/Modules
-QT_ROOT = /usr/local/Cellar/qt/5.2.1
+QT_ROOT = /usr/local/Cellar/qt/5.3.1
 
 
 QMAKE_CC = $$VUO_FRAMEWORK_PATH/Vuo.framework/MacOS/Clang/bin/clang

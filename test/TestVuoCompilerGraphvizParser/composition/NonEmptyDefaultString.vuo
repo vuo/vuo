@@ -9,5 +9,5 @@
 
 digraph G 
 {
-NonEmptyDefaultString1 [type="vuo.test.unicodeDefaultString" label="UnicodeDefaultString1|<refresh>refresh\l|<string>string\l" _string=""];
+NonEmptyDefaultString1 [type="vuo.test.unicodeDefaultString" label="UnicodeDefaultString1|<refresh>refresh\l|<string>string\l" _string="\"\""];
 }

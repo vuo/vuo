@@ -72,15 +72,15 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Pixellation Shader", VuoShader_getDefaultVertexShader(), pixelFragmentShader);
+	VuoShader frag = VuoShader_make("Pixellation Shader");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, pixelFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
+	VuoShader_setUniform_VuoImage(frag, "texture", image);
 
 	VuoPoint2d pixelSize2d = VuoPoint2d_multiply(VuoPoint2d_make(1., (float)w/h), VuoShader_samplerSizeFromVuoSize(pixelSize));
-	VuoShader_setUniformPoint2d(frag, (*instance)->glContext, "pixelSize",  pixelSize2d);
-	VuoShader_setUniformPoint2d(frag, (*instance)->glContext, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
-	*pixellatedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	VuoShader_setUniform_VuoPoint2d(frag, "pixelSize",  pixelSize2d);
+	VuoShader_setUniform_VuoPoint2d(frag, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
+	*pixellatedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

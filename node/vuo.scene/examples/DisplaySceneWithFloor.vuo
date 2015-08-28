@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Displays a 3D scene with a plane underneath.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="27,552"];
+Divide [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="-265,483" _b="2.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-158,98" _started_eventThrottling="enqueue"];
+Get3DObjectBounds [type="vuo.scene.bounds" version="1.0.0" label="Get 3D Object Bounds|<refresh>refresh\l|<object>object\l|<done>done\r|<center>center\r|<width>width\r|<height>height\r|<depth>depth\r" pos="510,160" fillcolor="violet"];
+GetScene [type="vuo.scene.get" version="1.1.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<done>done\r|<scene>scene\r" pos="93,175" _sceneURL="\"jeep1.3ds\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
+Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="380,389"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="181,470" _rotation="{\"x\":-90.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="576,385"];
+MakeSquareMesh [type="vuo.mesh.make.square" version="2.0.0" label="Make Square Mesh|<refresh>refresh\l|<done>done\r|<mesh>mesh\r" pos="184,389"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="626,374" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SubtractPoints2 [type="vuo.point.subtract.VuoPoint3d" version="1.0.0" label="Subtract Points|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="-23,470"];
+
+ConvertRealTo3DPoint:point3d -> SubtractPoints2:b;
+Divide:quotient -> ConvertRealTo3DPoint:y;
+FireOnStart:started -> GetScene:refresh;
+FireOnStart:started -> MakeSquareMesh:refresh;
+Get3DObjectBounds:center -> SubtractPoints2:a;
+Get3DObjectBounds:height -> Divide:a;
+GetScene:scene -> Get3DObjectBounds:object;
+GetScene:scene -> MakeList3:1;
+Make3DObject2:object -> MakeList3:2;
+Make3DTransform2:transform -> Make3DObject2:transform;
+MakeList3:list -> RenderSceneToWindow:objects;
+MakeSquareMesh:mesh -> Make3DObject2:mesh;
+SubtractPoints2:difference -> Make3DTransform2:translation;
+}

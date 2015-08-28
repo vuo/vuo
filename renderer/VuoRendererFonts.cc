@@ -68,7 +68,7 @@ void VuoRendererFonts::addFont(QString font)
 			return;
 	}
 
-	fprintf(stderr, "Failed to open \"%s\"\n", font.toUtf8().data());
+	VLog("Error: Failed to open '%s'.", font.toUtf8().data());
 }
 
 /**

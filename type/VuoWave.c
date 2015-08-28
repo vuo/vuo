@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoWave.h"
+#include "VuoList_VuoWave.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -70,6 +71,18 @@ json_object * VuoWave_jsonFromValue(const VuoWave value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoWave VuoWave_allowedValues(void)
+{
+	VuoList_VuoWave l = VuoListCreate_VuoWave();
+	VuoListAppendValue_VuoWave(l, VuoWave_Sine);
+	VuoListAppendValue_VuoWave(l, VuoWave_Triangle);
+	VuoListAppendValue_VuoWave(l, VuoWave_Sawtooth);
+	return l;
 }
 
 /**

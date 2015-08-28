@@ -29,9 +29,12 @@ public:
 
 	QRectF boundingRect(void) const;
 	QPainterPath shape(void) const;
+	QPainterPath getCablePath(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	QPointF getFloatingEndpointLoc();
 	void setFloatingEndpointLoc(QPointF loc);
+	void setFrom(VuoNode *fromNode, VuoPort *fromPort);
+	void setTo(VuoNode *toNode, VuoPort *toPort);
 	bool effectivelyCarriesData(void);
 	void removeFromScene();
 	void extendedHoverEnterEvent();
@@ -81,7 +84,6 @@ private:
 	// Internal methods
 	QPointF getStartPoint(void) const;
 	QPointF getEndPoint(void) const;
-	QPainterPath getCablePath(void) const;
 	static QPainterPath getCablePathForEndpoints(QPointF from, QPointF to);
 	static void getCableSpecs(	bool cableCarriesData,
 								qreal &cableWidth,

@@ -227,10 +227,10 @@ private slots:
 		nodeClassNames.append("vuo.image.twirl");
 		nodeClassNames.append("vuo.image.get");
 		nodeClassNames.append("vuo.image.render.window");
-		nodeClassNames.append("vuo.noise.gradient.VuoReal");
-		nodeClassNames.append("vuo.noise.gradient.VuoPoint2d");
-		nodeClassNames.append("vuo.noise.gradient.VuoPoint3d");
-		nodeClassNames.append("vuo.noise.gradient.VuoPoint4d");
+		nodeClassNames.append("vuo.noise.gradient.VuoReal.VuoReal");
+		nodeClassNames.append("vuo.noise.gradient.VuoPoint2d.VuoReal");
+		nodeClassNames.append("vuo.noise.gradient.VuoPoint3d.VuoReal");
+		nodeClassNames.append("vuo.noise.gradient.VuoPoint4d.VuoReal");
 		nodeClassNames.append("vuo.midi.listDevices");
 		nodeClassNames.append("vuo.midi.receive");
 		nodeClassNames.append("vuo.midi.send");
@@ -251,10 +251,10 @@ private slots:
 		nodeClassNames.append("vuo.shader.make.image");
 		nodeClassNames.append("vuo.shader.make.normal");
 		nodeClassNames.append("vuo.text.append");
-		nodeClassNames.append("vuo.vertices.make.parametric");
-		nodeClassNames.append("vuo.vertices.make.sphere");
-		nodeClassNames.append("vuo.vertices.make.square");
-		nodeClassNames.append("vuo.vertices.make.triangle");
+		nodeClassNames.append("vuo.mesh.make.parametric");
+		nodeClassNames.append("vuo.mesh.make.sphere");
+		nodeClassNames.append("vuo.mesh.make.square");
+		nodeClassNames.append("vuo.mesh.make.triangle");
 
 		foreach (QString n, nodeClassNames)
 			QTest::newRow(qPrintable(n)) << n;

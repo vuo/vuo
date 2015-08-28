@@ -56,7 +56,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->glContext = VuoGlContext_use();
 
-	instance->shader = VuoShader_make("Swap Color Channels", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+	instance->shader = VuoShader_make("Adjust Color Brightness Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(instance->shader);
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
@@ -78,17 +79,14 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "texture", image);
-
 	// Feed parameters to the shader.
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "red", red);
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "green", green);
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "blue", blue);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "red",     red);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "green",   green);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "blue",    blue);
 
 	// Render.
-	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

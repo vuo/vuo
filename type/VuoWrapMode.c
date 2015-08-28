@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoWrapMode.h"
+#include "VuoList_VuoWrapMode.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -66,6 +67,17 @@ json_object * VuoWrapMode_jsonFromValue(const VuoWrapMode value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoWrapMode VuoWrapMode_allowedValues(void)
+{
+	VuoList_VuoWrapMode l = VuoListCreate_VuoWrapMode();
+	VuoListAppendValue_VuoWrapMode(l, VuoWrapMode_Wrap);
+	VuoListAppendValue_VuoWrapMode(l, VuoWrapMode_Saturate);
+	return l;
 }
 
 /**

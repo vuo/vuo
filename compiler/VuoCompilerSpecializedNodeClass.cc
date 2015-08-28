@@ -499,7 +499,7 @@ string VuoCompilerSpecializedNodeClass::createUnspecializedNodeClassName(set<Vuo
 string VuoCompilerSpecializedNodeClass::createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName)
 {
 	vector<string> specializedTypeNames;
-	vector<string> origGenericTypeNames = getGenericTypeNamesFromPorts(this);
+	vector<string> origGenericTypeNames = getGenericTypeNamesFromPorts(genericNodeClass);
 	for (vector<string>::iterator i = origGenericTypeNames.begin(); i != origGenericTypeNames.end(); ++i)
 	{
 		string g = *i;

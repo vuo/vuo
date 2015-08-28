@@ -10,6 +10,11 @@
 #ifndef VUOGRADIENTNOISE_H
 #define VUOGRADIENTNOISE_H
 
+/// @{
+typedef void * VuoList_VuoGradientNoise;
+#define VuoList_VuoGradientNoise_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoGradientNoise VuoGradientNoise
@@ -28,6 +33,7 @@ typedef enum {
 
 VuoGradientNoise VuoGradientNoise_valueFromJson(struct json_object * js);
 struct json_object * VuoGradientNoise_jsonFromValue(const VuoGradientNoise value);
+VuoList_VuoGradientNoise VuoGradientNoise_allowedValues(void);
 char * VuoGradientNoise_summaryFromValue(const VuoGradientNoise value);
 
 /// @{

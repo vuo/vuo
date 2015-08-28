@@ -33,14 +33,27 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoSyphonClient *syphonClient;
+	VuoSyphonServerDescription serverDescription;
 };
+
+void updateServer(struct nodeInstanceData *context, VuoSyphonServerDescription newServerDescription, VuoOutputTrigger(receivedImage, VuoImage))
+{
+	VuoSyphonServerDescription_release(context->serverDescription);
+	context->serverDescription = newServerDescription;
+	VuoSyphonServerDescription_retain(context->serverDescription);
+
+	VuoSyphonClient_connectToServer(context->syphonClient, newServerDescription, receivedImage);
+}
+
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
+
 	context->syphonClient = VuoSyphonClient_make();
 	VuoRetain(context->syphonClient);
+
 	return context;
 }
 
@@ -51,19 +64,18 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedImage, VuoImage)
 )
 {
-	VuoSyphonClient_connectToServer((*context)->syphonClient, serverDescription, receivedImage);
+	updateServer(*context, serverDescription, receivedImage);
 }
 
 void nodeInstanceEvent
 (
 		VuoInputData(VuoSyphonServerDescription) serverDescription,
-		VuoInputEvent(VuoPortEventBlocking_Wall, serverDescription) serverDescriptionEvent,
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedImage, VuoImage, VuoPortEventThrottling_Drop)
 )
 {
-	if (serverDescriptionEvent)
-		VuoSyphonClient_connectToServer((*context)->syphonClient, serverDescription, receivedImage);
+	if (! VuoSyphonServerDescription_areEqual(serverDescription, (*context)->serverDescription))
+		updateServer(*context, serverDescription, receivedImage);
 }
 
 void nodeInstanceTriggerStop
@@ -80,4 +92,5 @@ void nodeInstanceFini
 )
 {
 	VuoRelease((*context)->syphonClient);
+	VuoSyphonServerDescription_release((*context)->serverDescription);
 }

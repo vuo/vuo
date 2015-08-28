@@ -38,6 +38,8 @@ VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount);
  */
 VuoReal VuoReal_valueFromString(const char *str);
 char * VuoReal_stringFromValue(const VuoReal value);
+void VuoReal_retain(VuoReal value);
+void VuoReal_release(VuoReal value);
 /// @}
 
 /**

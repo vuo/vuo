@@ -136,8 +136,12 @@ void VuoCompilerChain::generateWaitForDispatchGroup(Module *module, BasicBlock *
  *
  * Assumes the worker function came from the return value of generateSubmissionForDispatchGroup().
  */
-Value * VuoCompilerChain::getEventIdValue(Module *module, Function *workerFunction, BasicBlock *block)
+Value * VuoCompilerChain::generateEventIdValue(Module *module, Function *workerFunction, BasicBlock *block)
 {
+	// void **context = (void **)arg;
+	// void *eventIdPtr = context[0];
+	// free(eventIdPtr);
+
 	Function::arg_iterator args = workerFunction->arg_begin();
 	Value *contextAddressAsVoidPointer = args++;
 	contextAddressAsVoidPointer->setName("context");
@@ -167,6 +171,14 @@ Value * VuoCompilerChain::getEventIdValue(Module *module, Function *workerFuncti
  */
 void VuoCompilerChain::generateWaitForUpstreamChains(Module *module, Function *workerFunction, BasicBlock *block)
 {
+	// void **context = (void **)arg;
+	// for (int i = 0; i < numUpstreamChains; ++i)
+	// {
+	//   dispatch_group_t dispatchGroupForChain = (dispatch_group_t)context[i];
+	//   dispatch_group_wait(dispatchGroupForChain, DISPATCH_TIME_FOREVER);
+	//   dispatch_release(dispatchGroupForChain);
+	// }
+
 	Function::arg_iterator args = workerFunction->arg_begin();
 	Value *contextAddressAsVoidPointer = args++;
 	contextAddressAsVoidPointer->setName("context");
@@ -191,6 +203,24 @@ void VuoCompilerChain::generateWaitForUpstreamChains(Module *module, Function *w
 
 		VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, dispatchGroupVariable);
 	}
+}
+
+/**
+ * Generates code that frees the worker function's context argument.
+ *
+ * Assumes the worker function came from the return value of generateSubmissionForDispatchGroup().
+ */
+void VuoCompilerChain::generateFreeContextArgument(Module *module, Function *workerFunction, BasicBlock *block)
+{
+	// void **context = (void **)arg;
+	// free(context);
+
+	Function::arg_iterator args = workerFunction->arg_begin();
+	Value *contextAddressAsVoidPointer = args++;
+	contextAddressAsVoidPointer->setName("context");
+
+	Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
+	CallInst::Create(freeFunction, contextAddressAsVoidPointer, "", block);
 }
 
 /**

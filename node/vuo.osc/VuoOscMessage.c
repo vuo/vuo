@@ -138,19 +138,13 @@ char * VuoOscMessage_summaryFromValue(const VuoOscMessage value)
 				case json_type_double:
 				{
 					double v = json_object_get_double(o);
-					const char *format = "%g";
-					int size = snprintf(NULL, 0, format, v);
-					data[i] = (char *)malloc(size+1);
-					snprintf(data[i], size+1, format, v);
+					data[i] = VuoText_format("%g", v);
 					break;
 				}
 				case json_type_int:
 				{
 					long long v = json_object_get_int64(o);
-					const char *format = "%lld";
-					int size = snprintf(NULL, 0, format, v);
-					data[i] = (char *)malloc(size+1);
-					snprintf(data[i], size+1, format, v);
+					data[i] = VuoText_format("%lld", v);
 					break;
 				}
 				case json_type_string:
@@ -181,10 +175,7 @@ char * VuoOscMessage_summaryFromValue(const VuoOscMessage value)
 	if (dataCount > SUMMARY_ITEMS_TO_SHOW)
 		strcat(compositeData, ", ...");
 
-	const char *format = "%s<br>[ %s ]";
-	int size = snprintf(NULL, 0, format, value->address, compositeData);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString, size+1, format, value->address, compositeData);
+	char *valueAsString = VuoText_format("%s<br>[ %s ]", value->address, compositeData);
 
 	free(compositeData);
 	for (int i=0; i<MIN(SUMMARY_ITEMS_TO_SHOW,dataCount); ++i)

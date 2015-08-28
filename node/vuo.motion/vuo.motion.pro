@@ -8,7 +8,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.motion.smooth.duration.c \
 	vuo.motion.smooth.inertia.c \
 	vuo.motion.smooth.rate.c \
-	vuo.motion.spring.c
+	vuo.motion.smooth.spring.c
 
 NODE_SOURCES += \
 	vuo.motion.wave.c

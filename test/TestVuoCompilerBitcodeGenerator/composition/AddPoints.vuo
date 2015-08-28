@@ -11,8 +11,7 @@ digraph G
 {
 AddPoints [type="vuo.point.add.VuoGenericType1" version="1.0.0" label="Add Points|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="417,95"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="124,73"];
-MakeList [type="vuo.list.make.2.VuoGenericType1" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="357,106" _item1="" _item2=""];
+MakeList [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="357,106"];
 
-FireOnStart:started -> MakeList:item1;
 MakeList:list -> AddPoints:terms;
 }

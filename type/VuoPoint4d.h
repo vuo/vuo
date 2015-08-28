@@ -38,6 +38,8 @@ char * VuoPoint4d_summaryFromValue(const VuoPoint4d value);
  */
 VuoPoint4d VuoPoint4d_valueFromString(const char *str);
 char * VuoPoint4d_stringFromValue(const VuoPoint4d value);
+void VuoPoint4d_retain(VuoPoint4d value);
+void VuoPoint4d_release(VuoPoint4d value);
 /// @}
 
 /**
@@ -208,7 +210,7 @@ static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b)
 static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoint4d snap) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoint4d snap)
 {
-	return (VuoPoint4d) { 
+	return (VuoPoint4d) {
 			center.x + snap.x * (int)round((a.x-center.x) / snap.x),
 			center.y + snap.y * (int)round((a.y-center.y) / snap.y),
 			center.z + snap.z * (int)round((a.z-center.z) / snap.z),

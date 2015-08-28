@@ -1,0 +1,96 @@
+/**
+ * @file
+ * Expected outputs for CalculateLoudness.vuo.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* The `Adjust Volume` node lerps from the prior value to the current value.
+	   Since it starts out at 1, check that first. */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 1.0 },
+			{ "port": "expectedLoudness", "value": 0.915 }, /* The sine wave isn't quite full volume, to avoid clipping. */
+			{ "port": "tolerance", "value": 0.001 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+	/* Next, change the volume to 0 and, since it's lerping, use a large tolerance. */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 0.0 },
+			{ "port": "expectedLoudness", "value": 0.7 },
+			{ "port": "tolerance", "value": 0.1 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+	/* Leaving the volume at 0, the result should now stablilze at exactly 0. */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 0.0 },
+			{ "port": "expectedLoudness", "value": 0.0 },
+			{ "port": "tolerance", "value": 0.000001 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+	/* Change to 0.5.  Lerping... */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 0.5 },
+			{ "port": "expectedLoudness", "value": 0.3 },
+			{ "port": "tolerance", "value": 0.1 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+	/* Leave at 0.5. */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 0.5 },
+			{ "port": "expectedLoudness", "value": 0.458 },
+			{ "port": "tolerance", "value": 0.001 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+	/* Change to 2.0.  Lerping... */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 2.0 },
+			{ "port": "expectedLoudness", "value": 1.4 },
+			{ "port": "tolerance", "value": 0.1 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+	/* Leave at 2.0. */
+	{
+		"firingPortName": "volume",
+		"valueForInputPortName" : [
+			{ "port": "volume", "value": 2.0 },
+			{ "port": "expectedLoudness", "value": 1.841 },
+			{ "port": "tolerance", "value": 0.001 }
+		],
+		"valueForOutputPortName" : [
+			{ "port": "equal", "value": true }
+		]
+	},
+]}

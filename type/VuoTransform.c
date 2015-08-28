@@ -11,8 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 #include "type.h"
 #include "VuoTransform.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -54,6 +56,62 @@ void VuoTransform_getMatrix(const VuoTransform value, float *matrix)
 	matrix[13] = value.translation.y;
 	matrix[14] = value.translation.z;
 	matrix[15] = 1;
+}
+
+/**
+ * Outputs the inverse of `matrix`
+ * (which is assumed to consist of a rotation followed by a scale followed by a translation,
+ * like the output of @ref VuoTransform_getMatrix),
+ * such that `outputInvertedMatrix * matrix = identityMatrix`.
+ */
+void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatrix)
+{
+	float inverseTranslation[16];
+	VuoTransform_getMatrix(VuoTransform_makeEuler(
+							   VuoPoint3d_make(-matrix[12], -matrix[13], -matrix[14]),
+							   VuoPoint3d_make(0,0,0),
+							   VuoPoint3d_make(1,1,1)),
+			inverseTranslation);
+
+	// Transpose the rotation/scale part of the input matrix (which undoes the rotation), and set the last row/column to identity.
+	float inverseRotation[16] = {
+		matrix[0],
+		matrix[4],
+		matrix[8],
+		0,
+
+		matrix[1],
+		matrix[5],
+		matrix[9],
+		0,
+
+		matrix[2],
+		matrix[6],
+		matrix[10],
+		0,
+
+		0,
+		0,
+		0,
+		1
+	};
+
+	float inverseScale[16];
+	VuoTransform_getMatrix(VuoTransform_makeEuler(
+							   VuoPoint3d_make(0,0,0),
+							   VuoPoint3d_make(0,0,0),
+							   VuoPoint3d_make(
+								   1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[0], matrix[1], matrix[2])),
+								   1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[4], matrix[5], matrix[6])),
+								   1/VuoPoint3d_magnitude(VuoPoint3d_make(matrix[8], matrix[9], matrix[10])))),
+			inverseScale);
+
+	VuoTransform_multiplyMatrices4x4(inverseTranslation, inverseRotation, outputInvertedMatrix);
+
+	VuoTransform_multiplyMatrices4x4(outputInvertedMatrix, inverseScale, outputInvertedMatrix);
+
+	// Apply inverseScale a second time, since inverseRotation includes forward scale.
+	VuoTransform_multiplyMatrices4x4(outputInvertedMatrix, inverseScale, outputInvertedMatrix);
 }
 
 /**
@@ -174,16 +232,55 @@ VuoTransform VuoTransform_makeFromTarget(VuoPoint3d position, VuoPoint3d target,
 	t.rotationSource.target = target;
 	t.rotationSource.upDirection = upDirection;
 	t.rotation[0] = u.x;
-	t.rotation[1] = v.x;
-	t.rotation[2] = n.x;
-	t.rotation[3] = u.y;
+	t.rotation[3] = v.x;
+	t.rotation[6] = n.x;
+	t.rotation[1] = u.y;
 	t.rotation[4] = v.y;
-	t.rotation[5] = n.y;
-	t.rotation[6] = u.z;
-	t.rotation[7] = v.z;
+	t.rotation[7] = n.y;
+	t.rotation[2] = u.z;
+	t.rotation[5] = v.z;
 	t.rotation[8] = n.z;
 
 	t.scale = VuoPoint3d_make(1,1,1);
+
+	return t;
+}
+
+/**
+ * Creates a transform from the specified `matrix` (assumed to consist of affine rotation, scale, and translation).
+ */
+VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix)
+{
+	VuoTransform t;
+
+	t.scale = VuoPoint3d_make(
+				VuoPoint3d_magnitude(VuoPoint3d_make(matrix[0], matrix[1], matrix[2])),
+				VuoPoint3d_magnitude(VuoPoint3d_make(matrix[4], matrix[5], matrix[6])),
+				VuoPoint3d_magnitude(VuoPoint3d_make(matrix[8], matrix[9], matrix[10])));
+
+	t.rotation[0] = matrix[ 0] / t.scale.x;
+	t.rotation[1] = matrix[ 1] / t.scale.x;
+	t.rotation[2] = matrix[ 2] / t.scale.x;
+
+	t.rotation[3] = matrix[ 4] / t.scale.y;
+	t.rotation[4] = matrix[ 5] / t.scale.y;
+	t.rotation[5] = matrix[ 6] / t.scale.y;
+
+	t.rotation[6] = matrix[ 8] / t.scale.z;
+	t.rotation[7] = matrix[ 9] / t.scale.z;
+	t.rotation[8] = matrix[10] / t.scale.z;
+
+	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+	t.type = VuoTransformTypeQuaternion;
+	t.rotationSource.quaternion.w = sqrt( fmax( 0, 1 + t.rotation[0] + t.rotation[4] + t.rotation[8] ) ) / 2;
+	t.rotationSource.quaternion.x = sqrt( fmax( 0, 1 + t.rotation[0] - t.rotation[4] - t.rotation[8] ) ) / 2;
+	t.rotationSource.quaternion.y = sqrt( fmax( 0, 1 - t.rotation[0] + t.rotation[4] - t.rotation[8] ) ) / 2;
+	t.rotationSource.quaternion.z = sqrt( fmax( 0, 1 - t.rotation[0] - t.rotation[4] + t.rotation[8] ) ) / 2;
+	t.rotationSource.quaternion.x = copysign( t.rotationSource.quaternion.x, t.rotation[5] - t.rotation[4] );
+	t.rotationSource.quaternion.y = copysign( t.rotationSource.quaternion.y, t.rotation[6] - t.rotation[2] );
+	t.rotationSource.quaternion.z = copysign( t.rotationSource.quaternion.z, t.rotation[1] - t.rotation[3] );
+
+	t.translation = VuoPoint3d_make(matrix[12], matrix[13], matrix[14]);
 
 	return t;
 }
@@ -351,6 +448,17 @@ VuoTransform VuoTransform_valueFromJson(json_object *js)
 }
 
 /**
+ * If the float is negative or positive zero, return positive zero.
+ */
+static inline float cook(float f)
+{
+	if (fabs(f) < FLT_EPSILON)
+		return 0;
+
+	return f;
+}
+
+/**
  * @ingroup VuoTransform
  * Encodes @c value as a JSON object.
  */
@@ -363,9 +471,9 @@ json_object * VuoTransform_jsonFromValue(const VuoTransform value)
 
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.translation.x));
-		json_object_array_add(o,json_object_new_double(value.translation.y));
-		json_object_array_add(o,json_object_new_double(value.translation.z));
+		json_object_array_add(o,json_object_new_double(cook(value.translation.x)));
+		json_object_array_add(o,json_object_new_double(cook(value.translation.y)));
+		json_object_array_add(o,json_object_new_double(cook(value.translation.z)));
 		json_object_object_add(js, "translation", o);
 	}
 
@@ -374,41 +482,41 @@ json_object * VuoTransform_jsonFromValue(const VuoTransform value)
 	if (value.type == VuoTransformTypeQuaternion)
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.x));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.y));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.z));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.quaternion.w));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.quaternion.x)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.quaternion.y)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.quaternion.z)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.quaternion.w)));
 		json_object_object_add(js, "quaternionRotation", o);
 	}
 	else if (value.type == VuoTransformTypeEuler)
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.rotationSource.euler.x));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.euler.y));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.euler.z));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.euler.x)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.euler.y)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.euler.z)));
 		json_object_object_add(js, "eulerRotation", o);
 	}
 	else
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.rotationSource.target.x));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.target.y));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.target.z));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.target.x)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.target.y)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.target.z)));
 		json_object_object_add(js, "target", o);
 
 		o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.rotationSource.upDirection.x));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.upDirection.y));
-		json_object_array_add(o,json_object_new_double(value.rotationSource.upDirection.z));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.upDirection.x)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.upDirection.y)));
+		json_object_array_add(o,json_object_new_double(cook(value.rotationSource.upDirection.z)));
 		json_object_object_add(js, "upDirection", o);
 	}
 
 	if (value.type != VuoTransformTypeTargeted)
 	{
 		json_object * o = json_object_new_array();
-		json_object_array_add(o,json_object_new_double(value.scale.x));
-		json_object_array_add(o,json_object_new_double(value.scale.y));
-		json_object_array_add(o,json_object_new_double(value.scale.z));
+		json_object_array_add(o,json_object_new_double(cook(value.scale.x)));
+		json_object_array_add(o,json_object_new_double(cook(value.scale.y)));
+		json_object_array_add(o,json_object_new_double(cook(value.scale.z)));
 		json_object_object_add(js, "scale", o);
 	}
 
@@ -426,36 +534,22 @@ char * VuoTransform_summaryFromValue(const VuoTransform value)
 		return strdup("identity transform (no change)");
 
 	if (value.type == VuoTransformTypeTargeted)
-	{
-		const char *format = "position (%g, %g, %g)<br>target (%g, %g, %g)<br>up (%g, %g, %g)";
-		int size = snprintf(NULL, 0, format, value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z, value.rotationSource.upDirection.x, value.rotationSource.upDirection.y, value.rotationSource.upDirection.z);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString, size+1, format, value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z, value.rotationSource.upDirection.x, value.rotationSource.upDirection.y, value.rotationSource.upDirection.z);
-		return valueAsString;
-	}
-
-	const char *format = "translation (%g, %g, %g)<br>rotation %s<br>scale (%g, %g, %g)";
+		return VuoText_format("position (%g, %g, %g)<br>target (%g, %g, %g)<br>up (%g, %g, %g)",
+							  value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z, value.rotationSource.upDirection.x, value.rotationSource.upDirection.y, value.rotationSource.upDirection.z);
 
 	char *rotation;
 	if (value.type == VuoTransformTypeQuaternion)
-	{
-		const char *format = "(%g, %g, %g, %g) quaternion";
-		int size = snprintf(NULL, 0, format, value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
-		rotation = (char *)malloc(size+1);
-		snprintf(rotation, size+1, format, value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
-	}
+		rotation = VuoText_format("(%g, %g, %g, %g) quaternion",
+								  value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
 	else
 	{
-		const char *format = "(%g°, %g°, %g°) euler";
 		VuoPoint3d r = VuoPoint3d_multiply(value.rotationSource.euler, 180./M_PI);
-		int size = snprintf(NULL, 0, format, r.x, r.y, r.z);
-		rotation = (char *)malloc(size+1);
-		snprintf(rotation, size+1, format, r.x, r.y, r.z);
+		rotation = VuoText_format("(%g°, %g°, %g°) euler",
+								  r.x, r.y, r.z);
 	}
 
-	int size = snprintf(NULL, 0, format, value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
-	char * valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString, size+1, format, value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
+	char *valueAsString = VuoText_format("translation (%g, %g, %g)<br>rotation %s<br>scale (%g, %g, %g)",
+										 value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
 	free(rotation);
 	return valueAsString;
 }

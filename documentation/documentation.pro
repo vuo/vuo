@@ -27,6 +27,7 @@ NODE_CLASS_IMAGES += \
 	../node/vuo.logic/vuo.logic.isOneTrue.c \
 	../node/vuo.math/vuo.math.add.c \
 	../node/vuo.math/vuo.math.count.c \
+	../node/vuo.math/vuo.math.countWithinRange.VuoReal.c \
 	../node/vuo.math/vuo.math.divide.VuoInteger.c \
 	../node/vuo.math/vuo.math.isLessThan.c \
 	../node/vuo.math/vuo.math.subtract.c \
@@ -47,6 +48,7 @@ COMPOSITION_IMAGES += \
 	composition/CountSometimes.vuo \
 	composition/CountWithFeedback.vuo \
 	composition/CountWithInfiniteFeedback.vuo \
+	composition/DeadlockedFeedbackLoop.vuo \
 	composition/DiscardDataFromEventToCount.vuo \
 	composition/DisplayMultipleWindows.vuo \
 	composition/MultipleEventOnlyCables.vuo \

@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<done>done\r|<result>result\r" pos="339,166" _expression="{\"expressions\":[\"result = 2.5 * n\"],\"inputVariables\":[\"n\"],\"outputVariables\":[\"result\"]}"];
+MakeDictionary [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<done>done\r|<dictionary>dictionary\r" pos="60,263"];
+MakeList4 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="-24,274" _1="\"n\""];
+MakeList5 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="14,289"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<calculate>calculate\r|<nValue>nValue\r" _calculate_type="event" _nValue="10.000000" _nValue_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<result>result\l" _result_type="VuoReal"];
+
+Calculate:result -> PublishedOutputs:result
+MakeDictionary:dictionary -> Calculate:values;
+MakeList4:list -> MakeDictionary:keys;
+MakeList5:list -> MakeDictionary:values;
+PublishedInputs:calculate -> Calculate:refresh;
+PublishedInputs:nValue -> MakeList5:1;
+}

@@ -33,6 +33,8 @@ char * VuoBoolean_summaryFromValue(const VuoBoolean value);
  */
 VuoBoolean VuoBoolean_valueFromString(const char *str);
 char * VuoBoolean_stringFromValue(const VuoBoolean value);
+void VuoBoolean_retain(VuoBoolean value);
+void VuoBoolean_release(VuoBoolean value);
 /// @}
 
 /**

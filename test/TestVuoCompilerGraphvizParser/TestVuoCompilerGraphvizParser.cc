@@ -12,6 +12,7 @@
 #include <fstream>
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerOutputEventPort.hh"
 #include "VuoPort.hh"
 
 
@@ -108,8 +109,7 @@ private slots:
 
 		VuoNode *n = parser->getNodes()[0];
 		VuoCompilerInputEventPort *port = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("string")->getCompiler());
-//		QEXPECT_FAIL("", "Known bug: https://b33p.net/kosada/node/3175", Continue);  /// @todo Is this bug fixed?
-		QCOMPARE(port->getData()->getInitialValue().c_str(), "");
+		QCOMPARE(port->getData()->getInitialValue().c_str(), "\"\"");
 
 		delete parser;
 	}
@@ -261,7 +261,7 @@ private slots:
 
 				QCOMPARE(QString(node->getNodeClass()->getDefaultTitle().c_str()), QString("Make List"));
 				QVERIFY(! node->getNodeClass()->getDescription().empty());
-				QCOMPARE(QString(node->getNodeClass()->getVersion().c_str()), QString("1.0.0"));
+				QCOMPARE(QString(node->getNodeClass()->getVersion().c_str()), QString("2.0.0"));
 
 				vector<VuoPort *> inputPorts = node->getInputPorts();
 				QCOMPARE(inputPorts.size(), (size_t)4);

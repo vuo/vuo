@@ -14,4 +14,7 @@ OTHER_FILES += \
 		VuoInputEditorWrapMode.json
 
 INCLUDEPATH += $$ROOT/type
-LIBS += $$ROOT/type/VuoWrapMode.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoWrapMode.o \
+	$$ROOT/type/list/VuoList_VuoWrapMode.o

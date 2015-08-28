@@ -13,4 +13,7 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorModifierKey.json
 
-LIBS += $$ROOT/type/VuoModifierKey.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoModifierKey.o \
+	$$ROOT/type/list/VuoList_VuoModifierKey.o

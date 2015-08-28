@@ -11,10 +11,10 @@ digraph G
 {
 FirePeriodicallyWithCount [type="vuo.test.firePeriodicallyWithCount" label="Fire Periodically with Count|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" _seconds="0.1"];
 Count [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _decrement="1"];
-MakeList [type="vuo.list.make.2.VuoInteger" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" _item2="10"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" _2="10"];
 Add [type="vuo.math.add.VuoInteger" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
 
 FirePeriodicallyWithCount:fired -> Count:increment;
-Count:count -> MakeList:item1;
+Count:count -> MakeList:1;
 MakeList:list -> Add:terms;
 }

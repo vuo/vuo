@@ -10,6 +10,11 @@
 #ifndef VUOLOOPTYPE_H
 #define VUOLOOPTYPE_H
 
+/// @{
+typedef void * VuoList_VuoLoopType;
+#define VuoList_VuoLoopType_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoLoopType VuoLoopType
@@ -29,6 +34,7 @@ typedef enum {
 
 VuoLoopType VuoLoopType_valueFromJson(struct json_object * js);
 struct json_object * VuoLoopType_jsonFromValue(const VuoLoopType value);
+VuoList_VuoLoopType VuoLoopType_allowedValues(void);
 char * VuoLoopType_summaryFromValue(const VuoLoopType value);
 
 /// @{
@@ -37,6 +43,8 @@ char * VuoLoopType_summaryFromValue(const VuoLoopType value);
  */
 VuoLoopType VuoLoopType_valueFromString(const char *str);
 char * VuoLoopType_stringFromValue(const VuoLoopType value);
+void VuoLoopType_retain(VuoLoopType value);
+void VuoLoopType_release(VuoLoopType value);
 /// @}
 
 /**

@@ -41,8 +41,9 @@ public:
 	void removeCable(VuoRendererCable *rc);
 	void removePublishedInputCable(VuoRendererCable *rc);
 	void removePublishedOutputCable(VuoRendererCable *rc);
-	void createAndConnectDrawersToListInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
+	void createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler);
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
+	void createAndConnectDictionaryAttachmentsForNode(VuoNode *node, VuoCompiler *compiler, set<VuoRendererNode *> &createdNodes, set<VuoRendererCable *> &createdCables);
 	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name);
@@ -81,6 +82,8 @@ protected:
 private:
 	void addNodeInCompositionToCanvas(VuoNode *n);
 	void addCableInCompositionToCanvas(VuoCable *c);
+	void createAndConnectDrawersToListInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
+	void createAndConnectDrawersToReadOnlyDictionaryInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
 	void updatePublishedInputNode();
 	void updatePublishedOutputNode();
 	bool isPublishedPortNameTaken(string name, bool isInput);

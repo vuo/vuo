@@ -40,21 +40,6 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 @synthesize syphonClient;
 
 /**
- * Samples a GL_TEXTURE_RECT (for conversion to GL_TEXTURE_2D).
- */
-static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	// Inputs
-	uniform sampler2DRect texture;
-	uniform vec2 textureSize;
-	varying vec4 fragmentTextureCoordinate;
-
-	void main()
-	{
-		gl_FragColor = texture2DRect(texture, fragmentTextureCoordinate.xy*textureSize);
-	}
-);
-
-/**
  * Creates a Syphon client that is not yet connected to any server.
  */
 -(id) init
@@ -175,18 +160,9 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 					if (frame.textureSize.width < 1 || frame.textureSize.height < 1)
 						return;
 
-					VuoImage image = VuoImage_makeClientOwned(frame.textureName, frame.textureSize.width, frame.textureSize.height, VuoSyphonListener_freeSyphonImageCallback, frame);
+					VuoImage image = VuoImage_makeClientOwnedGlTextureRectangle(frame.textureName, GL_RGBA, frame.textureSize.width, frame.textureSize.height, VuoSyphonListener_freeSyphonImageCallback, frame);
 					VuoRetain(image);
-					image->glTextureTarget = GL_TEXTURE_RECTANGLE_ARB;
-					VuoShader shader = VuoShader_make("samplerRect shader", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
-					VuoRetain(shader);
-					VuoShader_addTexture(shader, cgl_ctx, "texture", image);
-					VuoShader_setUniformPoint2d(shader, cgl_ctx, "textureSize", VuoPoint2d_make(image->pixelsWide, image->pixelsHigh));
-					VuoImageRenderer *ren = VuoImageRenderer_make(cgl_ctx);
-					VuoRetain(ren);
-					callback( VuoImageRenderer_draw(ren, shader, image->pixelsWide, image->pixelsHigh) );
-					VuoRelease(ren);
-					VuoRelease(shader);
+					callback(VuoImage_makeCopy(image));
 					VuoRelease(image);
 
 					VuoGlContext_disuse(cgl_ctx);

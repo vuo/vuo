@@ -99,7 +99,8 @@ private slots:
 		string oldCompositionSerialized = oldCompilerComposition.getGraphvizDeclaration();
 		VuoCompilerComposition newCompilerComposition(newComposition, NULL);
 
-		string actualDiff = newCompilerComposition.diffAgainstOlderComposition(oldCompositionSerialized, compiler);
+		string actualDiff = newCompilerComposition.diffAgainstOlderComposition(oldCompositionSerialized, compiler,
+																			   set<VuoCompilerComposition::NodeReplacement>());
 		QCOMPARE(QString::fromStdString(actualDiff), expectedDiff);
 	}
 

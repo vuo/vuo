@@ -10,16 +10,21 @@
 #ifndef VUOLEAPTOUCHZONE_H
 #define VUOLEAPTOUCHZONE_H
 
+/// @{
+typedef void * VuoList_VuoLeapTouchZone;
+#define VuoList_VuoLeapTouchZone_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoLeapTouchZone VuoLeapTouchZone
- * Defines the type of object that a VuoLeapPointable is representing.
+ * How close a pointable is to the touch zone.
  *
  * @{
  */
 
 /**
- * An enum defining different types of blend shaders.
+ * How close a pointable is to the touch zone.
  */
 typedef enum {
 	VuoLeapTouchZone_None,
@@ -29,6 +34,7 @@ typedef enum {
 
 VuoLeapTouchZone VuoLeapTouchZone_valueFromJson(struct json_object * js);
 struct json_object * VuoLeapTouchZone_jsonFromValue(const VuoLeapTouchZone value);
+VuoList_VuoLeapTouchZone VuoLeapTouchZone_allowedValues(void);
 char * VuoLeapTouchZone_summaryFromValue(const VuoLeapTouchZone value);
 
 /// @{

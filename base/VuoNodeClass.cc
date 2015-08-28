@@ -285,40 +285,6 @@ void VuoNodeClass::setOutputPortClasses(vector<VuoPortClass *> outputPortClasses
 }
 
 /**
- * Returns a list of keywords automatically associated with this node class,
- * based on attributes such as its port classes.
- */
-vector<string> VuoNodeClass::getAutomaticKeywords(void)
-{
-	vector<string> keywords;
-
-	// Automatically add trigger-related keywords for nodes containing trigger ports.
-	bool nodeHasTriggerPort = false;
-	for (vector<VuoPortClass *>::iterator i = outputPortClasses.begin(); i != outputPortClasses.end(); ++i)
-	{
-		if ((*i)->getPortType() == VuoPortClass::triggerPort)
-		{
-			nodeHasTriggerPort = true;
-			break;
-		}
-	}
-
-	if (nodeHasTriggerPort)
-	{
-		keywords.push_back("bang");
-		keywords.push_back("events");
-		keywords.push_back("trigger");
-		keywords.push_back("fire");
-	}
-
-	if (VuoStringUtilities::beginsWith(getClassName(), "vuo.type."))
-		keywords.push_back("conversion");
-
-	return keywords;
-}
-
-
-/**
  * Prints info about this node class and its ports, for debugging.
  */
 void VuoNodeClass::print(void)

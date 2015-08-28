@@ -10,27 +10,24 @@
 digraph G
 {
 Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<done>done\r|<object>object\r" pos="756,210"];
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="33,350"];
-GetScene [type="vuo.scene.get" version="1.0.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<done>done\r|<scene>scene\r" pos="544,371" fillcolor="cyan" _sceneURL="\"http:\\/\\/softpixel.com\\/~smokris\\/jeep1.3ds\""];
-Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="382,146" _x="-90.000000" _z="0"];
-Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="385,266" _x="0.050000" _y="0.050000" _z="0.050000"];
-MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="123,172" _item2="20.000000"];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="937,221"];
-MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="693,236"];
-MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="542,210" _translation="{\"x\":0,\"y\":0,\"z\":0}"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="186,161"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1003,210" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="641,335"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="333,350" _started_eventThrottling="enqueue"];
+GetScene [type="vuo.scene.get" version="1.1.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<done>done\r|<scene>scene\r" pos="544,371" fillcolor="cyan" _sceneURL="\"jeep1.3ds\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="284,236" _2="20.000000"];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="953,221"];
+MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="710,236"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="542,210" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="330,225"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1003,210" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
-Combine3DObjects:object -> MakeList2:item1;
+Combine3DObjects:object -> MakeList2:1;
+ConvertRealTo3DPoint:point3d -> MakeTransform:rotation;
 FireonStart:started -> GetScene:refresh;
-FireonStart:started -> Make3DPoint2:refresh;
-GetScene:scene -> MakeList6:item1;
-Make3DPoint2:point -> MakeTransform:scale;
-Make3DPoint:point -> MakeTransform:rotation;
+GetScene:scene -> MakeList6:1;
 MakeList2:list -> RenderSceneToWindow2:objects;
 MakeList6:list -> Combine3DObjects:childObjects;
 MakeList:list -> Multiply:terms;
 MakeTransform:transform -> Combine3DObjects:transform;
-Multiply:product -> Make3DPoint:y;
-RenderSceneToWindow2:requestedFrame -> MakeList:item1;
+Multiply:product -> ConvertRealTo3DPoint:y;
+RenderSceneToWindow2:requestedFrame -> MakeList:1;
 }

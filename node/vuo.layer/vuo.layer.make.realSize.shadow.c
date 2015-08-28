@@ -24,7 +24,7 @@ void nodeEvent
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) alpha,
 		VuoInputData(VuoColor, {"default":{"r":0,"g":0,"b":0,"a":1}}) shadowColor,
 		VuoInputData(VuoReal, {"default":4, "suggestedMin":0, "suggestedMax":20}) shadowBlur,
-		VuoInputData(VuoReal, {"default":225.0, "suggestedMin":0, "suggestedMax":360}) shadowAngle,
+		VuoInputData(VuoReal, {"default":315.0, "suggestedMin":0, "suggestedMax":360}) shadowAngle,
 		VuoInputData(VuoReal, {"default":0.005, "suggestedMin":0, "suggestedStep":0.005}) shadowDistance,
 		VuoOutputData(VuoLayer) layer
 )

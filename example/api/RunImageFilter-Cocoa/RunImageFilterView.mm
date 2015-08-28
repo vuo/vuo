@@ -61,16 +61,13 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 @interface RunImageFilterView : NSOpenGLView
 {
 	VuoRunner * runner;
-	GLuint vertexArray;
-	GLuint quadPositionBuffer;
-	GLuint quadElementBuffer;
-	GLuint inputTexture;
-	GLuint vertexShader;
-	GLuint fragmentShader;
-	GLuint program;
 	VuoRunner::Port * inputImagePort;
-	GLint positionAttribute;
-	GLint textureUniform;
+
+	VuoImage outputImage;
+
+	CVDisplayLinkRef displayLink;
+	bool displayLinkShouldStop;
+	NSCondition *displayLinkStopped;
 }
 @end
 
@@ -78,6 +75,8 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 - (void)awakeFromNib
 {
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:) name:NSWindowWillCloseNotification object:[self window]];
+
 	// Create a context with the pixelformat Vuo uses.
 	NSOpenGLPixelFormatAttribute attrs[] =
 	{
@@ -87,9 +86,10 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 		NSOpenGLPFADoubleBuffer,
 		NSOpenGLPFAColorSize, 24,
 		NSOpenGLPFADepthSize, 16,
-		NSOpenGLPFAMultisample,
-		NSOpenGLPFASampleBuffers, 1,
-		NSOpenGLPFASamples, 4,
+		// Multisampling breaks point rendering on some GPUs.  https://b33p.net/kosada/node/8225#comment-31324
+//		NSOpenGLPFAMultisample,
+//		NSOpenGLPFASampleBuffers, 1,
+//		NSOpenGLPFASamples, 4,
 		0
 	};
 	NSOpenGLPixelFormat *pf = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
@@ -111,18 +111,22 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	runner->start();
 
 	// Upload a quad, for rendering the texture later on
+	GLuint vertexArray;
 	glGenVertexArrays(1, &vertexArray);
 	glBindVertexArray(vertexArray);
 
+	GLuint quadPositionBuffer;
 	glGenBuffers(1, &quadPositionBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, quadPositionBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(quadPositions), quadPositions, GL_STATIC_DRAW);
 
+	GLuint quadElementBuffer;
 	glGenBuffers(1, &quadElementBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadElementBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadElements), quadElements, GL_STATIC_DRAW);
 
 	// Load an image from disk into a GL Texture
+	GLuint inputTexture;
 	glGenTextures(1,&inputTexture);
 	glBindTexture(GL_TEXTURE_2D, inputTexture);
 	NSImage * ni = [NSImage imageNamed:@"OttoOperatesTheRoller.jpg"];
@@ -151,16 +155,22 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	[niFlipped release];
 
 	// Prepare a shader for displaying the GL Texture onscreen
-	vertexShader = compileShader(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
-	fragmentShader = compileShader(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
+	GLint vertexShader = compileShader(cgl_ctx, GL_VERTEX_SHADER, vertexShaderSource);
+	GLint fragmentShader = compileShader(cgl_ctx, GL_FRAGMENT_SHADER, fragmentShaderSource);
 
-	program = glCreateProgram();
+	GLint program = glCreateProgram();
 	glAttachShader(program, vertexShader);
 	glAttachShader(program, fragmentShader);
 	glLinkProgram(program);
+	glUseProgram(program);
 
-	positionAttribute = glGetAttribLocation(program, "position");
-	textureUniform = glGetUniformLocation(program, "texture");
+	GLint positionAttribute = glGetAttribLocation(program, "position");
+	glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2, (void*)0);
+	glEnableVertexAttribArray(positionAttribute);
+
+	GLint textureUniform = glGetUniformLocation(program, "texture");
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(textureUniform, 0);
 
 	// Pass the GL Texture to the Vuo Composition
 	inputImagePort = runner->getPublishedInputPortWithName("inputImage");
@@ -171,7 +181,9 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 	json_object_put(o);
 
 	// Call RunImageFilterViewDisplayCallback every vertical refresh
-	CVDisplayLinkRef displayLink;
+	displayLinkShouldStop = NO;
+	displayLinkStopped = [[NSCondition alloc] init];
+	
 	CVDisplayLinkCreateWithCGDisplay(CGMainDisplayID(), &displayLink);
 	CVDisplayLinkSetOutputCallback(displayLink, RunImageFilterViewDisplayCallback, self);
 	CVDisplayLinkStart(displayLink);
@@ -181,48 +193,52 @@ CVReturn RunImageFilterViewDisplayCallback(CVDisplayLinkRef displayLink, const C
 {
 	RunImageFilterView * view = (RunImageFilterView *)displayLinkContext;
 	NSAutoreleasePool * p = [[NSAutoreleasePool alloc] init];
-	[view setNeedsDisplay:YES];
+
+	CGLContextObj cgl_ctx = (CGLContextObj)[[view openGLContext] CGLContextObj];
+
+	// Display the latest GL Texture onscreen
+	if (view->outputImage)
+	{
+		glBindTexture(GL_TEXTURE_2D, view->outputImage->glTextureName);
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
+	}
+
+	[[view openGLContext] flushBuffer];
+
+	VuoRelease(view->outputImage);
+	view->outputImage = nil;
+
+	// Execute the Vuo Composition
+	view->runner->firePublishedInputPortEvent(view->inputImagePort);
+	view->runner->waitForAnyPublishedOutputPortEvent();
+
+	// Retrieve the output GL Texture from the Vuo Composition, to be displayed during the next vertical refresh
+	VuoRunner::Port * outputImagePort = view->runner->getPublishedOutputPortWithName("outputImage");
+	json_object *o = view->runner->getPublishedOutputPortValue(outputImagePort);
+	view->outputImage = VuoImage_valueFromJson(o);
+	VuoRetain(view->outputImage);
+	json_object_put(o);
+
+	if (view->displayLinkShouldStop)
+	{
+		CVDisplayLinkStop(displayLink);
+		view->runner->stop();
+		[view->displayLinkStopped lock];
+		[view->displayLinkStopped signal];
+		[view->displayLinkStopped unlock];
+	}
 	[p drain];
 	return kCVReturnSuccess;
 }
 
-
-- (void)drawRect:(NSRect)dirtyRect
+- (void)windowWillClose:(NSNotification *)notification
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)[[self openGLContext] CGLContextObj];
+	[displayLinkStopped lock];
+	displayLinkShouldStop = YES;
 
-	// Execute the Vuo Composition
-	runner->firePublishedInputPortEvent(inputImagePort);
-	runner->waitForAnyPublishedOutputPortEvent();
-
-	// Retrieve the output GL Texture from the Vuo Composition
-	VuoRunner::Port * outputImagePort = runner->getPublishedOutputPortWithName("outputImage");
-	json_object *o = runner->getPublishedOutputPortValue(outputImagePort);
-	VuoImage outputImage = VuoImage_valueFromJson(o);
-	json_object_put(o);
-	VuoRetain(outputImage);
-
-	// Display the GL Texture onscreen
-	glUseProgram(program);
-	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, outputImage->glTextureName);
-		glUniform1i(textureUniform, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, quadPositionBuffer);
-		glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2, (void*)0);
-		glEnableVertexAttribArray(positionAttribute);
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadElementBuffer);
-			glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
-		}
-		glDisableVertexAttribArray(positionAttribute);
-	}
-	glUseProgram(0);
-
-	[[self openGLContext] flushBuffer];
-
-	VuoRelease(outputImage);
+	// Ensure the CVDisplayLink has finished executing for the last time before continuing.
+	[displayLinkStopped wait];
+	[displayLinkStopped unlock];
 }
 
 @end

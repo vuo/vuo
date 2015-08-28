@@ -17,6 +17,7 @@ extern "C" {
 }
 #include "type.h"
 #include <string>
+#include <sstream>
 #include <vector>
 
 //@{
@@ -96,7 +97,6 @@ char * LIST_TYPE_summaryFromValue(const LIST_TYPE value)
 	if (!value)
 		return strdup("(empty list)");
 
-	std::string summary;
 	const int maxItems = 20;
 	const int maxCharacters = 400;
 
@@ -106,22 +106,26 @@ char * LIST_TYPE_summaryFromValue(const LIST_TYPE value)
 
 	unsigned long characterCount = 0;
 
-	summary = "List containing elements: <ul>";
+	std::ostringstream summary;
+	summary << "List containing " << itemCount << " item" << (itemCount == 1 ? "" : "s") << ": <ul>";
 	for (unsigned long i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValueAtIndex_ELEMENT_TYPE(value, i);
 		char *itemSummary = ELEMENT_TYPE_summaryFromValue(item);
-		summary += std::string("<li>") + itemSummary + "</li>";
+		if (strlen(itemSummary))
+			summary << "<li>" << itemSummary << "</li>";
+		else
+			summary << "<li>&nbsp;</li>";
 		characterCount += strlen(itemSummary);
 		free(itemSummary);
 	}
 
 	if (itemCount > maxItems || characterCount > maxCharacters)
-		summary += "<li>...</li>";
+		summary << "<li>…</li>";
 
-	summary += "</ul>";
+	summary << "</ul>";
 
-	return strdup(summary.c_str());
+	return strdup(summary.str().c_str());
 }
 
 LIST_TYPE VuoListCreate_ELEMENT_TYPE(void)
@@ -155,11 +159,39 @@ ELEMENT_TYPE VuoListGetValueAtIndex_ELEMENT_TYPE(const LIST_TYPE list, const uns
 	return (*l)[index-1];
 }
 
+void VuoListSetValueAtIndex_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index)
+{
+	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
+
+	if (l->size() == 0)
+		return;
+
+	unsigned long clampedIndex = index - 1;
+
+	if (index == 0)
+		clampedIndex = 0;
+
+	if (index > l->size())
+		clampedIndex = l->size() - 1;
+
+	ELEMENT_TYPE oldValue = (*l)[clampedIndex];
+	(*l)[clampedIndex] = value;
+	RETAIN(value);
+	RELEASE(oldValue);
+}
+
 void VuoListAppendValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value)
 {
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	RETAIN(value);
 	l->push_back(value);
+}
+
+void VuoListRemoveFirstValue_ELEMENT_TYPE(LIST_TYPE list)
+{
+	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
+	RELEASE(l->front());
+	l->erase(l->begin());
 }
 
 void VuoListRemoveLastValue_ELEMENT_TYPE(LIST_TYPE list)

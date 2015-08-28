@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Parametric Points",
-					 "keywords" : [ "math", "shape" ],
+					 "keywords" : [ "math", "expression", "shape" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoPointsParametric"
@@ -30,7 +30,7 @@ void nodeEvent
 		VuoInputData(VuoText, {"default":"u"}) xExpression,
 		VuoInputData(VuoText, {"default":"u"}) yExpression,
 		VuoInputData(VuoText, {"default":"0"}) zExpression,
-		VuoInputData(VuoInteger, {"default":16,"suggestedMin":0}) subdivisions,
+		VuoInputData(VuoInteger, {"default":16,"suggestedMin":1}) subdivisions,
 		VuoInputData(VuoReal, {"default":0.0, "suggestedStep":0.1}) uMin,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedStep":0.1}) uMax,
 		VuoOutputData(VuoList_VuoPoint3d) points

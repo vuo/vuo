@@ -1,0 +1,31 @@
+/**
+ * @file
+ *
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="761,84"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<done>done\r|<becameTrue>becameTrue\r" pos="521,220"];
+IsLessThan [type="vuo.math.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="355,220" _b="0.000000"];
+MakeList3 [type="vuo.list.make.3.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="698,95" _item2="22.000000" _item3="33.000000"];
+MakeList6 [type="vuo.list.make.3.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="138,95" _item3="33.000000"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="201,84"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<item1>item1\r|<item2_event>item2_event\r" _item1="" _item1_type="VuoReal" _item2_event="" _item2_event_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<sum>sum\l" _sum_type="VuoReal"];
+
+BecameTrue:becameTrue -> MakeList3:item2;
+IsLessThan:lessThan -> BecameTrue:value;
+MakeList3:list -> Add:terms;
+MakeList6:list -> Multiply:terms;
+Multiply:product -> IsLessThan:a;
+Multiply:product -> MakeList3:item1;
+PublishedInputs:item1 -> MakeList6:item1;
+PublishedInputs:item2_event -> MakeList6:item2;
+Add:sum -> PublishedOutputs:sum;
+}

@@ -15,4 +15,7 @@ HEADERS += \
 OTHER_FILES += \
 	VuoInputEditorReal.json
 
-LIBS += $$ROOT/type/VuoReal.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/VuoText.o

@@ -54,7 +54,7 @@ void nodeInstanceEvent
 	VuoRetain(shader);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
 
 	VuoRelease(shader);
 }

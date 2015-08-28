@@ -21,13 +21,21 @@
 @interface Document : NSDocument
 {
     std::string compositionAsString; // The Vuo composition, represented as a .vuo source string.
-    VuoRunner *runner; // The runner used to start, stop, control, and query the composition.
-    NSImage *outputImage; // The output image to be retrieved from the running composition.
+	double time; // The current filter execution time.
+	NSImage *sourceImage; // The initial, unfiltered image.
+	VuoImageFilter *imageFilter; // Used to start, stop, control, and query the composition.
+
+	// Explicit property ivar declarations are required for 32-bit Objective-C.
+	NSButton *_setImageButton;
+	NSSlider *_timeSlider;
+	NSImageView *_outputImageView;
+	NSTextField *_imageTextField;
+	NSTextField *_imageLabel;
+	NSTextField *_timeLabel;
+	NSTextField *_outputImageLabel;
 }
 
 // UI elements
-@property (unsafe_unretained) IBOutlet NSButton *runButton;
-@property (unsafe_unretained) IBOutlet NSButton *stopButton;
 @property (unsafe_unretained) IBOutlet NSButton *setImageButton;
 @property (unsafe_unretained) IBOutlet NSSlider *timeSlider;
 @property (unsafe_unretained) IBOutlet NSImageView *outputImageView;

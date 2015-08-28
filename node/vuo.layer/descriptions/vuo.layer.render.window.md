@@ -1,10 +1,9 @@
 Displays a window containing a composite image. 
 
-When the composition starts or this node is added to a running composition, it pops up a window that contains a graphics area.
+When the composition starts or this node is added to a running composition, it displays a window that contains a graphics area. The window provides a menu option to toggle between windowed and full-screen mode.
 
-The window provides a menu option to toggle between windowed and full-screen mode.
-
-   - `layers` — The layers that make up the composite image. The layers are placed on top of each other in the order listed, with the first layer on the bottom and the last layer on the top. 
+   - `layers` — The layers that make up the composite image. The layers are placed in the order listed, with the first layer in back and the last layer in front. 
+   - `windowProperties` — A list of properties that affect the appearance of the window or the way the user can interact with it. The properties are applied to the window in order from first to last in the list. Each property remains in effect until this port receives some other property that overrides it. 
    - `showedWindow` — When the window is displayed, fires an event with a reference to the window. It can be sent to user interaction nodes (such as `Receive Mouse Clicks`) to limit their scope to this window. 
-   - `requestedFrame` — When the display is ready for the next frame, fires an event with the time at which the frame will be rendered.
+   - `requestedFrame` — When the display is ready for the next frame, fires an event with the time at which the frame will be rendered, measured in seconds since the composition started.
    - `renderedLayers` — The layers, transformed to their positions in the composite image. 

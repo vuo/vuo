@@ -24,69 +24,81 @@ VuoModuleMetadata({
 				 });
 
 
-VuoOscIn nodeInstanceInit
+struct nodeInstanceData
+{
+	VuoInteger udpPort;
+	VuoOscIn oscManager;
+};
+
+static void updatePort(struct nodeInstanceData *context, VuoInteger newUdpPort)
+{
+	context->udpPort = newUdpPort;
+
+	VuoRelease(context->oscManager);
+	context->oscManager = VuoOscIn_make(newUdpPort);
+	VuoRetain(context->oscManager);
+}
+
+
+struct nodeInstanceData * nodeInstanceInit
 (
 		VuoInputData(VuoInteger) udpPort
 )
 {
-	VuoOscIn oi = VuoOscIn_make(udpPort);
-	VuoRetain(oi);
-	return oi;
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	updatePort(context, udpPort);
+	return context;
 }
 
 void nodeInstanceTriggerStart
 (
-		VuoInstanceData(VuoOscIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
-	VuoOscIn_enableTriggers(*context, receivedMessage);
+	VuoOscIn_enableTriggers((*context)->oscManager, receivedMessage);
 }
 
 void nodeInstanceTriggerUpdate
 (
-		VuoInstanceData(VuoOscIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoInteger) udpPort,
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
-	VuoOscIn_disableTriggers(*context);
-	VuoRelease(*context);
-	*context = VuoOscIn_make(udpPort);
-	VuoRetain(*context);
-	VuoOscIn_enableTriggers(*context, receivedMessage);
+	VuoOscIn_disableTriggers((*context)->oscManager);
+	updatePort(*context, udpPort);
+	VuoOscIn_enableTriggers((*context)->oscManager, receivedMessage);
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoOscIn) context,
-		VuoInputData(VuoInteger, {"default":0}) udpPort,
-		VuoInputEvent(VuoPortEventBlocking_Wall, udpPort) udpPortEvent,
+		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoInputData(VuoInteger, {"default":0, "suggestedMin":0, "suggestedMax":65535}) udpPort,
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {
-	if (udpPortEvent)
+	if (udpPort != (*context)->udpPort)
 	{
-		VuoOscIn_disableTriggers(*context);
-		VuoRelease(*context);
-		*context = VuoOscIn_make(udpPort);
-		VuoRetain(*context);
-		VuoOscIn_enableTriggers(*context, receivedMessage);
+		VuoOscIn_disableTriggers((*context)->oscManager);
+		updatePort(*context, udpPort);
+		VuoOscIn_enableTriggers((*context)->oscManager, receivedMessage);
 	}
 }
 
 void nodeInstanceTriggerStop
 (
-		VuoInstanceData(VuoOscIn) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoOscIn_disableTriggers(*context);
+	VuoOscIn_disableTriggers((*context)->oscManager);
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(VuoOscIn) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoRelease(*context);
+	VuoRelease((*context)->oscManager);
 }

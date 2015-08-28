@@ -9,19 +9,17 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="77,486" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="465,445" fillcolor="green" _transform=""];
-MakeLineStripVertices2 [type="vuo.vertices.make.lineStrips.VuoPoint3d" version="1.0.0" label="Make Line Strip Vertices|<refresh>refresh\l|<positions>positions\l|<done>done\r|<vertices>vertices\r" pos="309,245" fillcolor="green"];
-MakeList6 [type="vuo.list.make.1.VuoVertices" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="399,456" fillcolor="green"];
-MakeList7 [type="vuo.list.make.2.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="617,456" fillcolor="green" _item2=""];
-MakeParametricPoints [type="vuo.point.make.parametric" version="1.0.0" label="Make Parametric Points|<refresh>refresh\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<subdivisions>subdivisions\l|<uMin>uMin\l|<uMax>uMax\l|<done>done\r|<points>points\r" pos="105,245" fillcolor="violet" _xExpression="\"cos(u*PI)\\/2\"" _yExpression="\"sin(u*PI)\\/2\"" _zExpression="\"0\"" _subdivisions="32" _uMin="0.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="684,445" fillcolor="green" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="222,526" fillcolor="green" _color="{\"r\":0.400000,\"g\":1.000000,\"b\":0.800000,\"a\":1.000000}"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-22,292" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="366,251" fillcolor="green"];
+MakeLineStripVertices2 [type="vuo.mesh.make.lineStrips.VuoPoint3d" version="2.0.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<done>done\r|<mesh>mesh\r" pos="330,51" fillcolor="green" _lineWidth="0.010000"];
+MakeList7 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="535,262" fillcolor="green"];
+MakeParametricPoints [type="vuo.point.make.parametric" version="1.0.0" label="Make Parametric Points|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<subdivisions>subdivisions\l|<uMin>uMin\l|<uMax>uMax\l|<done>done\r|<points>points\r" pos="95,51" fillcolor="violet" _time="0.000000" _xExpression="\"cos(u*180)\\/2\"" _yExpression="\"sin(u*180)\\/2\"" _zExpression="\"0\"" _subdivisions="32" _uMin="0.000000"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="585,251" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="123,332" fillcolor="green" _color="{\"r\":0.400000,\"g\":1.000000,\"b\":0.800000,\"a\":1.000000}"];
 
 FireOnStart:started -> ShadeWithUnlitColor:refresh;
-Make3DObject:object -> MakeList7:item1;
-MakeLineStripVertices2:vertices -> MakeList6:item1;
-MakeList6:list -> Make3DObject:vertices;
+Make3DObject:object -> MakeList7:1;
+MakeLineStripVertices2:mesh -> Make3DObject:mesh;
 MakeList7:list -> RenderSceneToWindow:objects;
 MakeParametricPoints:points -> MakeLineStripVertices2:positions;
 RenderSceneToWindow:requestedFrame -> MakeParametricPoints:uMax;

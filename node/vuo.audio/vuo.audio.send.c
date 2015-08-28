@@ -18,62 +18,84 @@ VuoModuleMetadata({
 						  "VuoAudio"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioWave.vuo" ],
+						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioWave.vuo", "PanAudio.vuo" ],
 						  "isInterface" : true
 					  }
 				 });
 
 
-VuoAudioOut nodeInstanceInit
+struct nodeInstanceData
+{
+	VuoAudioOutputDevice device;
+	VuoAudioIn audioManager;
+};
+
+static void updateDevice(struct nodeInstanceData *context, VuoAudioOutputDevice newDevice)
+{
+	VuoAudioOutputDevice_release(context->device);
+	context->device = newDevice;
+	VuoAudioOutputDevice_retain(context->device);
+
+	VuoRelease(context->audioManager);
+	context->audioManager = VuoAudioOut_getShared(newDevice);
+	VuoRetain(context->audioManager);
+}
+
+
+struct nodeInstanceData * nodeInstanceInit
 (
 		VuoInputData(VuoAudioOutputDevice) device
 )
 {
-	return VuoAudioOut_getShared(device);
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	updateDevice(context, device);
+	return context;
 }
 
 void nodeInstanceTriggerStart
 (
-		VuoInstanceData(VuoAudioOut) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(requestedChannels, VuoReal)
 )
 {
-	VuoAudioOut_addTrigger(*context, requestedChannels);
+	VuoAudioOut_addTrigger((*context)->audioManager, requestedChannels);
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoAudioOut) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoAudioOutputDevice) device,
-		VuoInputEvent(VuoPortEventBlocking_Wall, device) deviceEvent,
 		VuoInputData(VuoList_VuoAudioSamples) sendChannels,
 		VuoInputEvent(VuoPortEventBlocking_None, sendChannels) sendChannelsEvent,
 		VuoOutputTrigger(requestedChannels, VuoReal)
 )
 {
-	if (deviceEvent)
+	if (! VuoAudioOutputDevice_areEqual(device, (*context)->device))
 	{
-		VuoAudioOut_removeTrigger(*context, requestedChannels);
-		*context = VuoAudioOut_getShared(device);
-		VuoAudioOut_addTrigger(*context, requestedChannels);
+		VuoAudioOut_removeTrigger((*context)->audioManager, requestedChannels);
+		updateDevice(*context, device);
+		VuoAudioOut_addTrigger((*context)->audioManager, requestedChannels);
 	}
 
 	if (sendChannelsEvent)
-		VuoAudioOut_sendChannels(*context, sendChannels, context);
+		VuoAudioOut_sendChannels((*context)->audioManager, sendChannels, context);
 }
 
 void nodeInstanceTriggerStop
 (
-		VuoInstanceData(VuoAudioOut) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(requestedChannels, VuoReal)
 )
 {
-	VuoAudioOut_removeTrigger(*context, requestedChannels);
+	VuoAudioOut_removeTrigger((*context)->audioManager, requestedChannels);
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(VuoAudioOut) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	VuoAudioOutputDevice_release((*context)->device);
+	VuoRelease((*context)->audioManager);
 }

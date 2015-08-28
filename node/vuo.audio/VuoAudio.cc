@@ -86,8 +86,8 @@ typedef std::map<void *, std::map<VuoInteger, VuoReal> > lastOutputSampleType;
 typedef struct _VuoAudio_internal
 {
 	RtAudio *rta;	///< RtAudio's device pointer.
-	VuoAudioInputDevice inputDevice;	///< The device's id must be nonnegative, and channelCount must be set.
-	VuoAudioOutputDevice outputDevice;	///< The device's id must be nonnegative, and channelCount must be set.
+	VuoAudioInputDevice inputDevice;		///< The device's id must be nonnegative, and channelCount must be set.
+	VuoAudioOutputDevice outputDevice;		///< The device's id must be nonnegative, and channelCount must be set.
 
 	VuoTriggerSet<VuoList_VuoAudioSamples> inputTriggers;	///< Trigger methods to call when an audio buffer is received.
 	VuoTriggerSet<VuoReal> outputTriggers;	///< Trigger methods to call when an audio buffer is needed.

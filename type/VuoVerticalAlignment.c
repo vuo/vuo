@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoVerticalAlignment.h"
+#include "VuoList_VuoVerticalAlignment.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -65,6 +66,18 @@ json_object * VuoVerticalAlignment_jsonFromValue(const VuoVerticalAlignment valu
 		valueAsString = "bottom";
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoVerticalAlignment VuoVerticalAlignment_allowedValues(void)
+{
+	VuoList_VuoVerticalAlignment l = VuoListCreate_VuoVerticalAlignment();
+	VuoListAppendValue_VuoVerticalAlignment(l, VuoVerticalAlignment_Top);
+	VuoListAppendValue_VuoVerticalAlignment(l, VuoVerticalAlignment_Center);
+	VuoListAppendValue_VuoVerticalAlignment(l, VuoVerticalAlignment_Bottom);
+	return l;
 }
 
 /**

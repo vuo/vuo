@@ -25,7 +25,9 @@ public:
 	virtual ~VuoType(void);  ///< to make this class dynamic_cast-able
 
 	static const string listTypeNamePrefix;
+	static const string dictionaryTypeNamePrefix;
 	static bool isListTypeName(string typeName);
+	static bool isDictionaryTypeName(string typeName);
 	static string extractInnermostTypeName(string typeName);
 };
 

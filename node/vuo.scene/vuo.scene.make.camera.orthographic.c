@@ -32,7 +32,7 @@ void nodeEvent
 {
 	VuoTransform transform = VuoTransform_makeEuler(
 				position,
-				VuoPoint3d_multiply(rotation, -M_PI/180.f),
+				VuoPoint3d_multiply(rotation, M_PI/180.f),
 				VuoPoint3d_make(1,1,1)
 			);
 	*object = VuoSceneObject_makeOrthographicCamera(

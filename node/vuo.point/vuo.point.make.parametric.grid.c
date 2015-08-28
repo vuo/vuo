@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Parametric Grid",
-					 "keywords" : [ "math", "shape" ],
+					 "keywords" : [ "math", "expression", "shape" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoPointsParametric"
@@ -30,8 +30,8 @@ void nodeEvent
 		VuoInputData(VuoText, {"default":"u"}) xExpression,
 		VuoInputData(VuoText, {"default":"v"}) yExpression,
 		VuoInputData(VuoText, {"default":"0"}) zExpression,
-		VuoInputData(VuoInteger, {"default":16,"suggestedMin":0}) rows,
-		VuoInputData(VuoInteger, {"default":16,"suggestedMin":0}) columns,
+		VuoInputData(VuoInteger, {"default":16,"suggestedMin":1}) rows,
+		VuoInputData(VuoInteger, {"default":16,"suggestedMin":1}) columns,
 		VuoInputData(VuoReal, {"default":0.0, "suggestedStep":0.1}) uMin,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedStep":0.1}) uMax,
 		VuoInputData(VuoReal, {"default":0.0, "suggestedStep":0.1}) vMin,

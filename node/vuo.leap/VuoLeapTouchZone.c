@@ -12,12 +12,13 @@
 #include <string.h>
 #include "type.h"
 #include "VuoLeapTouchZone.h"
+#include "VuoList_VuoLeapTouchZone.h"
 
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "Leap Touch Zone",
-					 "description" : "VuoLeapTouchZone Type Enum.",
+					 "description" : "How close a pointable is to the touch zone.",
 					 "keywords" : [ "leap", "pointable" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -72,6 +73,18 @@ json_object * VuoLeapTouchZone_jsonFromValue(const VuoLeapTouchZone value)
 			break;
 	}
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoLeapTouchZone VuoLeapTouchZone_allowedValues(void)
+{
+	VuoList_VuoLeapTouchZone l = VuoListCreate_VuoLeapTouchZone();
+	VuoListAppendValue_VuoLeapTouchZone(l, VuoLeapTouchZone_None);
+	VuoListAppendValue_VuoLeapTouchZone(l, VuoLeapTouchZone_Hovering);
+	VuoListAppendValue_VuoLeapTouchZone(l, VuoLeapTouchZone_Touching);
+	return l;
 }
 
 /**

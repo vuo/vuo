@@ -10,8 +10,6 @@
 #ifndef VUOCOMPILERGRAPHVIZPARSER_H
 #define VUOCOMPILERGRAPHVIZPARSER_H
 
-#include "VuoCompilerTriggerEdge.hh"
-#include "VuoCompilerPassiveEdge.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCable.hh"
 
@@ -23,7 +21,7 @@ typedef struct Agraph_t graph_t; ///< Shorthand for @c Agraph_t.
 
 
 /**
- * Parses nodes and edges from a .vuo composition file.
+ * Parses nodes and cables from a .vuo composition file.
  */
 class VuoCompilerGraphvizParser
 {
@@ -43,7 +41,9 @@ private:
 	VuoNode *publishedOutputNode;
 	vector<VuoCable *> publishedInputCables;
 	vector<VuoCable *> publishedOutputCables;
+	string name;
 	string description;
+	string copyright;
 
 	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler, set<VuoCompilerNodeClass *> extraNodeClasses);
 	void makeDummyPorts(void);
@@ -73,8 +73,9 @@ public:
 	VuoNode * getPublishedOutputNode(void);
 	vector<VuoCable *> getPublishedInputCables(void);
 	vector<VuoCable *> getPublishedOutputCables(void);
+	string getName(void);
 	string getDescription(void);
-	static string parseDescription(const string &compositionAsString);
+	string getCopyright(void);
 };
 
 #endif

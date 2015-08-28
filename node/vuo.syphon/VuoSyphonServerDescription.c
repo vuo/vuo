@@ -79,16 +79,12 @@ json_object * VuoSyphonServerDescription_jsonFromValue(const VuoSyphonServerDesc
  */
 char * VuoSyphonServerDescription_summaryFromValue(const VuoSyphonServerDescription value)
 {
-	const char *format = "Syphon server \"%s\" in application \"%s\"<br>UUID: %s";
-
 	const char *serverUUID = strlen(value.serverUUID) > 0 ? value.serverUUID : "(unknown)";
 	const char *serverName = strlen(value.serverName) > 0 ? value.serverName : "(unknown)";
 	const char *applicationName = strlen(value.applicationName) > 0 ? value.applicationName : "(unknown)";
 
-	int size = snprintf(NULL,0,format,serverName,applicationName,serverUUID);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,serverName,applicationName,serverUUID);
-	return valueAsString;
+	return VuoText_format("Syphon server \"%s\" in application \"%s\"<br>UUID: %s",
+						  serverName, applicationName, serverUUID);
 }
 
 /**
@@ -104,4 +100,15 @@ VuoSyphonServerDescription VuoSyphonServerDescription_make(VuoText serverUUID, V
 	server.applicationName = applicationName;
 
 	return server;
+}
+
+/**
+ * @ingroup VuoSyphonServerDescription
+ * Returns true if the server descriptions are identical.
+ */
+bool VuoSyphonServerDescription_areEqual(const VuoSyphonServerDescription value1, const VuoSyphonServerDescription value2)
+{
+	return (VuoText_areEqual(value1.serverUUID, value2.serverUUID) &&
+			VuoText_areEqual(value1.serverName, value2.serverName) &&
+			VuoText_areEqual(value1.applicationName, value2.applicationName));
 }

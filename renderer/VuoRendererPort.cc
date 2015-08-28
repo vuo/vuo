@@ -16,7 +16,9 @@
 #include "VuoRendererPort.hh"
 #include "VuoRendererTypecastPort.hh"
 #include "VuoRendererNode.hh"
-#include "VuoRendererMakeListNode.hh"
+#include "VuoRendererInputListDrawer.hh"
+#include "VuoRendererKeyListForReadOnlyDictionary.hh"
+#include "VuoRendererValueListForReadOnlyDictionary.hh"
 #include "VuoRendererSignaler.hh"
 
 #include "VuoCompilerCable.hh"
@@ -40,6 +42,7 @@ const qreal VuoRendererPort::portRadius = VuoRendererFonts::thickPenWidth*0.3625
 const qreal VuoRendererPort::portSpacing = VuoRendererFonts::thickPenWidth*3.0/4.0;
 const qreal VuoRendererPort::portContainerMargin = VuoRendererFonts::thickPenWidth / 6.;
 const qreal VuoRendererPort::portInset = 1.4;
+const qreal VuoRendererPort::portInsetTriangular = 2.4;
 const qreal VuoRendererPort::constantFlagHeight = VuoRendererFonts::thickPenWidth*0.6;
 
 /**
@@ -63,6 +66,7 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 	setAnimated(false);
 	this->typecastParentPort = NULL;
 	this->proxyPublishedSidebarPort = NULL;
+	this->customizedPortName = "";
 	resetTimeLastEventFired();
 
 	const int maxAnimationsPerPort = 4;
@@ -85,7 +89,7 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 	// Create a hybrid rect having the width of the port's inset rect and the customized
 	// height of a constant flag, so that the constant flag has the desired height but
 	// directly adjoins the inset port shape.
-	QRectF portInnerRect = VuoRendererPort::getPortPath(VuoRendererPort::portInset).boundingRect();
+	QRectF portInnerRect = VuoRendererPort::getPortPath(getInset()).boundingRect();
 	this->portHybridRect = QRectF(portInnerRect.x(),
 								   -0.5*VuoRendererPort::constantFlagHeight,
 								   portInnerRect.width(),
@@ -150,6 +154,16 @@ QPainterPath VuoRendererPort::getPortConstantPath(QRectF innerPortRect, QString 
 	return p;
 }
 
+/**
+ * Returns the inset that should be passed to @ref getPortPath.
+ */
+qreal VuoRendererPort::getInset(void) const
+{
+	if (getDataType() || isRefreshPort || isDonePort)
+		return portInset;
+
+	return portInsetTriangular;
+}
 
 /**
  * Returns a closed path representing the port's circle/triangle.  Does not include constant flag (see @c getPortConstantPath).
@@ -180,69 +194,37 @@ QPainterPath VuoRendererPort::getPortPath(qreal inset,
 	QRectF outerPortRect = getPortRect();
 	QRectF innerPortRect = outerPortRect.adjusted(inset,inset,-inset,-inset);
 
-	switch (portType)
+	if (carriesData)
+		// Circle.
+		p.addEllipse(innerPortRect);
+	else
 	{
-		case VuoPortClass::notAPort:
-			break;
-		case VuoPortClass::dataAndEventPort:
-			// Circle.
-			p.addEllipse(innerPortRect);
-			break;
-		case VuoPortClass::eventOnlyPort:
-		{
-			// Triangle.
+		// Triangle.
 
-			// Align the port rect to integer pixels, so lines are sharp.
-			outerPortRect = outerPortRect.toRect();
+		// Align the port rect to integer pixels, so lines are sharp.
+		outerPortRect = outerPortRect.toRect();
 
-			// Move right 1 pixel, so the triangle's center-of-gravity better matches circular ports.
-			outerPortRect = outerPortRect.adjusted(1,0,1,0);
+		// Move right 1 pixel, so the triangle's center-of-gravity better matches circular ports.
+		outerPortRect = outerPortRect.adjusted(1,0,1,0);
 
-			// Adjust the inset so that the amount of whitespace padding the triangle's
-			// vertical left edge matches the amount of whitespace padding its diagonal edges.
-			qreal h = outerPortRect.height();
-			qreal w = outerPortRect.width();
-			qreal triangleLeftInset = (inset*(w-0.5*h))/sqrt(pow(0.5*h,2)+pow(w,2));
+		// Adjust the inset so that the amount of whitespace padding the triangle's
+		// vertical left edge matches the amount of whitespace padding its diagonal edges.
+		qreal h = outerPortRect.height();
+		qreal w = outerPortRect.width();
+		qreal triangleLeftInset = (inset*(w-0.5*h))/sqrt(pow(0.5*h,2)+pow(w,2));
 
-			// Round the left inset to the nearest whole pixel to eliminate blur for input ports.
-			if (isInputPort)
-				triangleLeftInset = qRound(triangleLeftInset);
+		// Round the left inset to the nearest whole pixel to eliminate blur for input ports.
+		if (isInputPort)
+			triangleLeftInset = qRound(triangleLeftInset);
 
-			qreal triangleVerticalInset = inset-(0.5*h/w)*(inset-triangleLeftInset);
+		qreal triangleVerticalInset = inset-(0.5*h/w)*(inset-triangleLeftInset);
 
-			innerPortRect = outerPortRect.adjusted(triangleLeftInset, triangleVerticalInset, -inset, -triangleVerticalInset);
+		innerPortRect = outerPortRect.adjusted(triangleLeftInset, triangleVerticalInset, -inset, -triangleVerticalInset);
 
-			p.moveTo(innerPortRect.right(), innerPortRect.center().y());
-			p.lineTo(innerPortRect.topLeft());
-			p.lineTo(innerPortRect.bottomLeft());
-			p.closeSubpath();
-			break;
-		}
-		case VuoPortClass::triggerPort:
-			if (carriesData)
-			{
-				// Right half of circle...
-				p.moveTo(innerPortRect.center().x(), innerPortRect.top());
-				p.arcTo(innerPortRect,90,-180);
-			}
-			else
-			{
-				// Right tip of triangle...
-				p.moveTo(innerPortRect.right(), innerPortRect.center().y());
-			}
-
-			// ...and left half explosion.
-			float arcRadius = innerPortRect.width()/2.;
-			float striationRadius = arcRadius*1.6;
-			bool inner = carriesData;
-			for (int i = (carriesData ? 1 : 2); i < (carriesData ? 10 : 9); ++i)
-			{
-				p.lineTo(cos((float)i*M_PI/10. + M_PI/2.) * (inner ? arcRadius : striationRadius),
-						 sin((float)i*M_PI/10. + M_PI/2.) * (inner ? arcRadius : striationRadius));
-				inner = !inner;
-			}
-			p.closeSubpath();
-			break;
+		p.moveTo(innerPortRect.right(), innerPortRect.center().y());
+		p.lineTo(innerPortRect.topLeft());
+		p.lineTo(innerPortRect.bottomLeft());
+		p.closeSubpath();
 	}
 
 	return p;
@@ -301,29 +283,86 @@ QRectF VuoRendererPort::getPortRect(void)
 }
 
 /**
- * Returns the collapsed "Make List" node attached to this input port, or @c NULL if none.
+ * Returns the input drawer that is rendered as if it is attached to this port
+ * (whether or not it is in the underlying composition), or NULL if none.
  */
-VuoRendererMakeListNode * VuoRendererPort::getAttachedInputDrawer(void) const
+VuoRendererInputDrawer * VuoRendererPort::getAttachedInputDrawer(void) const
+{
+	return getAttachedInputDrawerRenderedWithHostPort(this);
+}
+
+/**
+ * Returns the input drawer that is rendered as if it is attached to `targetHostPort`
+ * (whether or not it is in the underlying composition), or NULL if none.
+ */
+VuoRendererInputDrawer * VuoRendererPort::getAttachedInputDrawerRenderedWithHostPort(const VuoRendererPort *targetHostPort) const
+{
+	VuoRendererInputAttachment *underlyingAttachment = getUnderlyingInputAttachment();
+	if (underlyingAttachment &&
+			underlyingAttachment->getRenderedHostPort() &&
+			underlyingAttachment->getRenderedHostPort()->hasRenderer() &&
+			(underlyingAttachment->getRenderedHostPort()->getRenderer() == targetHostPort) &&
+			(dynamic_cast<VuoRendererInputDrawer *>(underlyingAttachment)))
+		return dynamic_cast<VuoRendererInputDrawer *>(underlyingAttachment);
+
+	else if (underlyingAttachment)
+	{
+		// The drawer might not be directly connected in the underlying composition.  Find it anyway.
+		foreach (VuoPort *port, underlyingAttachment->getBase()->getInputPorts())
+		{
+			VuoRendererInputDrawer *upstreamDrawer = port->getRenderer()->getAttachedInputDrawerRenderedWithHostPort(targetHostPort);
+			if (upstreamDrawer)
+				return upstreamDrawer;
+		}
+	}
+
+	return NULL;
+}
+
+/**
+ * Returns the input drawer attached to this port in the underlying composition
+ * (whether or not it is rendered as if it is), or NULL if none.
+ */
+VuoRendererInputAttachment * VuoRendererPort::getUnderlyingInputAttachment(void) const
 {
 	if (! getInput())
 		return NULL;
 
 	vector<VuoCable *> inCables = getBase()->getConnectedCables(false);
-	VuoCable *incomingDataCable = NULL;
-
-	for (vector<VuoCable *>::iterator i = inCables.begin(); !incomingDataCable && (i != inCables.end()); ++i)
-		if ((*i)->hasRenderer() && (*i)->getRenderer()->effectivelyCarriesData())
-			incomingDataCable = *i;
-
-	if (! incomingDataCable)
-		return NULL;
-
-	VuoNode *fromNode = incomingDataCable->getFromNode();
-
-	if (fromNode && fromNode->hasRenderer() && dynamic_cast<VuoRendererMakeListNode *>(fromNode->getRenderer()))
-		return (VuoRendererMakeListNode *)fromNode->getRenderer();
+	foreach (VuoCable *cable, inCables)
+	{
+		VuoNode *fromNode = cable->getFromNode();
+		if (fromNode && fromNode->hasRenderer() &&
+				dynamic_cast<VuoRendererInputAttachment *>(fromNode->getRenderer()) &&
+				dynamic_cast<VuoRendererInputAttachment *>(fromNode->getRenderer())->getUnderlyingHostPort()->getRenderer() == this)
+			return dynamic_cast<VuoRendererInputAttachment *>(fromNode->getRenderer());
+	}
 
 	return NULL;
+}
+
+/**
+ * Returns a set containing the input attachments connected directly or indirectly
+ * to this port in the underlying composition.
+ * Assumption: A given port can have at most one input attachment.
+ */
+set<VuoRendererInputAttachment *> VuoRendererPort::getAllUnderlyingUpstreamInputAttachments(void) const
+{
+	set<VuoRendererInputAttachment *> allUpstreamAttachments;
+	VuoRendererInputAttachment *directUpstreamAttachment = getUnderlyingInputAttachment();
+	if (!directUpstreamAttachment)
+		return allUpstreamAttachments;
+
+	allUpstreamAttachments.insert(directUpstreamAttachment);
+
+	vector<VuoPort *> inputPorts = directUpstreamAttachment->getBase()->getInputPorts();
+	foreach (VuoPort *port, inputPorts)
+	{
+		set<VuoRendererInputAttachment *> indirectUpstreamAttachments = port->getRenderer()->getAllUnderlyingUpstreamInputAttachments();
+		allUpstreamAttachments.insert(indirectUpstreamAttachments.begin(), indirectUpstreamAttachments.end());
+	}
+
+	return allUpstreamAttachments;
 }
 
 /**
@@ -367,9 +406,7 @@ QRectF VuoRendererPort::getNameRect() const
  */
 void VuoRendererPort::updateNameRect()
 {
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
-	QString text = QString::fromUtf8(sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName().c_str() :
-													   getBase()->getClass()->getName().c_str());
+	QString text = QString::fromUtf8(getPortNameToRender().c_str());
 	QFont font = VuoRendererFonts::getSharedFonts()->nodePortTitleFont();
 	QSizeF textSize = QFontMetricsF(font).size(0,text);
 
@@ -377,9 +414,9 @@ void VuoRendererPort::updateNameRect()
 		(isOutput? -VuoRendererFonts::thickPenWidth/2.0 - textSize.width() - 2. :
 										 VuoRendererFonts::thickPenWidth/2.0
 											 - VuoRendererFonts::getHorizontalOffset(font, text)
-											 + (isOnDrawer() ? 1. : 3.)
+											 + 3.
 										 ),
-		-VuoRendererFonts::thickPenWidth/3.0,
+		-VuoRendererFonts::thickPenWidth/3.0 - 1.,
 		textSize.width(),
 		textSize.height()
 	);
@@ -424,17 +461,6 @@ VuoRendererNode * VuoRendererPort::getRenderedParentNode(void) const
 }
 
 /**
- * Returns true if this port is part of a drawer (a collapsed Make List node).
- */
-bool VuoRendererPort::isOnDrawer(void) const
-{
-	if (!parentItem() || !parentItem()->parentItem())
-		return false;
-
-	return (dynamic_cast<VuoRendererMakeListNode *>(parentItem()->parentItem()));
-}
-
-/**
  * Returns this port's typecast parent port, or NULL if it has none.
  */
 VuoRendererPort * VuoRendererPort::getTypecastParentPort() const
@@ -456,13 +482,16 @@ void VuoRendererPort::setTypecastParentPort(VuoRendererPort *typecastParentPort)
 QRectF VuoRendererPort::boundingRect(void) const
 {
 	VuoRendererNode *renderedParentNode = getRenderedParentNode();
-	if (renderedParentNode && renderedParentNode->getProxyNode())
+	if (renderedParentNode && renderedParentNode->paintingDisabled())
 		return QRectF();
 
 	QRectF r = getPortPath(1.5).boundingRect();
 
 	if (portNameRenderingEnabled())
 		r = r.united(getNameRect());
+
+	if (hasPortAction())
+		r = r.united(getActionIndicatorRect());
 
 	if (isConstant())
 		r = r.united(this->outsetPath.controlPointRect());
@@ -544,8 +573,25 @@ void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *co
 		else if (type == VuoPortClass::triggerPort)
 		{
 			// Exploding port
-			QRectF barrierRect = getPortRect().adjusted(-3,-3,3,3);
-			painter->drawArc(barrierRect,145*16,70*16);
+
+			bool carriesData = (getBase()->getClass()->hasCompiler() &&
+								((VuoCompilerPortClass *)getBase()->getClass()->getCompiler())->getDataVuoType());
+
+			if (carriesData)
+			{
+				QRectF barrierRect = getPortRect().adjusted(-1.5,-1.5,1.5,1.5);
+				painter->drawArc(barrierRect,145*16,70*16);
+			}
+			else
+			{
+				// Triangular port
+				QRectF barrierRect = getPortRect().adjusted(-.5,1.5,.5,-1.5);
+
+				QPainterPath p;
+				p.moveTo(barrierRect.topLeft());
+				p.lineTo(barrierRect.bottomLeft());
+				painter->drawPath(p);
+			}
 		}
 	}
 
@@ -569,11 +615,81 @@ void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors
 	if (!portNameRenderingEnabled())
 		return;
 
-	string name = (sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName() : getBase()->getClass()->getName());
+	string name = getPortNameToRender();
 
 	painter->setPen(sidebarPaintMode && getProxyPublishedSidebarPort()->isSelected()? Qt::white : colors->portTitle());
 	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
 	painter->drawText(getNameRect(), isOutput? Qt::AlignRight : Qt::AlignLeft, QString::fromStdString(name));
+}
+
+/**
+ * Returns the name of the port as it should be rendered.
+ */
+string VuoRendererPort::getPortNameToRender() const
+{
+	bool sidebarPaintMode = getProxyPublishedSidebarPort();
+	return (!customizedPortName.empty()? customizedPortName :
+										 (sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName() :
+																				 getBase()->getClass()->getName()));
+}
+
+/**
+ * Sets the name of the port as it should be rendered. If set, it will override
+ * the default name of the port class.
+ */
+void VuoRendererPort::setPortNameToRender(string name)
+{
+	this->customizedPortName = name;
+	updateNameRect();
+}
+
+/**
+ * Returns true if this port has a port action.
+ */
+bool VuoRendererPort::hasPortAction(void) const
+{
+	if (getBase()->getClass()->hasCompiler())
+	{
+		VuoCompilerInputEventPortClass *eventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>(getBase()->getClass()->getCompiler());
+		if (eventPortClass)
+			return eventPortClass->hasPortAction();
+	}
+
+	return false;
+}
+
+/**
+ * Returns the bounding rectangle of the port action symbol. Assumes this port has a port action.
+ */
+QRectF VuoRendererPort::getActionIndicatorRect(void) const
+{
+	const qreal marginFromPortName = 4;
+	const qreal triangleHeight = 6;
+	const qreal triangleWidth = 5;
+	qreal triangleLeft = qRound( getNameRect().right() + marginFromPortName );
+	qreal triangleBottom = qRound( getNameRect().center().y() - triangleHeight/2 );
+
+	return QRectF(triangleLeft, triangleBottom, triangleWidth, triangleHeight);
+}
+
+/**
+ * Draws the port action symbol (a triangle to the right of the port name) if this port has a port action.
+ */
+void VuoRendererPort::paintActionIndicator(QPainter *painter, VuoRendererColors *colors)
+{
+	if (hasPortAction())
+	{
+		QRectF rect = getActionIndicatorRect();
+
+		QPainterPath p;
+		p.moveTo(rect.topLeft());
+		p.lineTo(rect.bottomLeft());
+		p.lineTo(rect.right(), rect.center().y());
+		p.closeSubpath();
+
+		QColor color = colors->actionIndicator();
+		painter->fillPath(p, color);
+	}
 }
 
 /**
@@ -582,7 +698,7 @@ void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors
 void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 	VuoRendererNode *renderedParentNode = getRenderedParentNode();
-	if (renderedParentNode && renderedParentNode->getProxyNode())
+	if (renderedParentNode && renderedParentNode->paintingDisabled())
 		return;
 
 	drawBoundingRect(painter);
@@ -621,7 +737,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 													  timeOfLastActivity);
 
 	// Draw the port circle / constant flag
-	QPainterPath portPath = getPortPath(VuoRendererPort::portInset);
+	QPainterPath portPath = getPortPath(getInset());
 
 	QBrush portBrush;
 
@@ -723,6 +839,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	paintEventBarrier(painter, colors);
 	paintPortName(painter, colors);
+	paintActionIndicator(painter, colors);
 
 	delete colors;
 }
@@ -731,9 +848,18 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
  * Returns a boolean indicating whether this port has been deemed
  * eligible for selection based on its proximity to the cursor.
  */
-bool VuoRendererPort::getEligibleForSelection()
+bool VuoRendererPort::getEligibleForSelection(void)
 {
 	return isEligibleForSelection;
+}
+
+/**
+ * Returns a boolean indicating whether this port is eligible for direct or
+ * typecast-assisted connection to the cable currently being dragged between ports.
+ */
+bool VuoRendererPort::isEligibleForConnection(void)
+{
+	return isEligibleForDirectConnection || isEligibleForConnectionViaTypecast;
 }
 
 /**
@@ -828,7 +954,7 @@ bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort 
 {
 	bool fromPortIsEnabledOutput = (this->getOutput() && this->isEnabled());
 	bool toPortIsEnabledInput = (toPort->getInput() && toPort->isEnabled());
-	
+
 	if (fromPortIsEnabledOutput && toPortIsEnabledInput)
 	{
 		VuoType *fromDataType = this->getDataType();
@@ -1203,6 +1329,30 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return outputString;
 		}
+		if (getDataType()->getModuleKey()=="VuoMathExpressionList")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *expressionsObject = NULL;
+
+			string expression;
+			if (json_object_object_get_ex(js, "expressions", &expressionsObject))
+			{
+				if (json_object_get_type(expressionsObject) == json_type_array)
+				{
+					int itemCount = json_object_array_length(expressionsObject);
+					if (itemCount > 0)
+					{
+						json_object *itemObject = json_object_array_get_idx(expressionsObject, 0);
+						if (json_object_get_type(itemObject) == json_type_string)
+							expression = json_object_get_string(itemObject);
+					}
+				}
+			}
+
+			json_object_put(js);
+
+			return expression;
+		}
 	}
 
 	return getConstantAsString();
@@ -1235,7 +1385,7 @@ void VuoRendererPort::setConstant(string constantValue)
 bool VuoRendererPort::portNameRenderingEnabled() const
 {
 	bool sidebarPaintMode = getProxyPublishedSidebarPort();
-	string name = (sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName() : getBase()->getClass()->getName());
+	string name = getPortNameToRender();
 
 	if (name.empty() || isAnimated)
 		return false;
@@ -1280,11 +1430,21 @@ bool VuoRendererPort::getPublishable() const
 	// @todo: Allow generic published ports (https://b33p.net/kosada/node/7655).
 	bool isGeneric = bool(dynamic_cast<VuoGenericType *>(this->getDataType()));
 
+	// @todo: Allow published dictionary ports (https://b33p.net/kosada/node/8524).
+	bool hasDictionaryType = (this->getDataType() && VuoStringUtilities::beginsWith(this->getDataType()->getModuleKey(), "VuoDictionary_"));
+
+	// @todo: Allow published math expression ports for "Calculate" nodes (https://b33p.net/kosada/node/8550).
+	bool isMathExpressionInputToCalculateNode = (this->getDataType() &&
+												 (this->getDataType()->getModuleKey() == "VuoMathExpressionList") &&
+												 this->getUnderlyingParentNode() &&
+												 (this->getUnderlyingParentNode()->getBase()->getNodeClass()->getClassName() == "vuo.math.calculate"));
+
+
 	// @todo: Allow direct connections between external published inputs and external published outputs
 	// (https://b33p.net/kosada/node/7756).
 	bool isExternalPublishedPort = getProxyPublishedSidebarPort();
 
-	return (!isGeneric && !isExternalPublishedPort);
+	return (!isGeneric && !hasDictionaryType && !isMathExpressionInputToCalculateNode && !isExternalPublishedPort);
 }
 
 /**
@@ -1387,7 +1547,13 @@ void VuoRendererPort::setCacheModeForPortAndChildren(QGraphicsItem::CacheMode mo
 void VuoRendererPort::updateEnabledStatus()
 {
 	// Port animations, and ports without compilers, shouldn't accept mouse events.
-	setEnabled(!isAnimated && 
+	setEnabled(!isAnimated &&
 			   ((getBase()->hasCompiler() && getBase()->getClass()->hasCompiler()) ||
 				getProxyPublishedSidebarPort()));
+}
+
+VuoRendererPort::~VuoRendererPort()
+{
+	foreach (QGraphicsItemAnimation *animation, animations)
+		animation->clear();
 }

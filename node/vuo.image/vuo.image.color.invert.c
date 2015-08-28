@@ -60,11 +60,11 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Invert Color Shader", VuoShader_getDefaultVertexShader(), invertFragmentShader);
+	VuoShader frag = VuoShader_make("Invert Color Shader");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, invertFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	*invertedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	VuoShader_setUniform_VuoImage(frag, "texture", image);
+	*invertedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

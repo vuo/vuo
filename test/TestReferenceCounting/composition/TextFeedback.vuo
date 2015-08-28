@@ -9,15 +9,15 @@
 
 digraph G
 {
-Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="285,289" _texts=""];
-HoldValue [type="vuo.hold.VuoText" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="172,118" _initialValue="initial text" _newValue=""];
-MakeList [type="vuo.list.make.2.VuoText" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="146,289" _item1="" _item2="appended text"];
-CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="413,118" _text=""];
+Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="285,289"];
+HoldValue [type="vuo.hold.VuoText" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="172,118" _initialValue="initial text"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="146,289" _2="appended text"];
+CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="413,118"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
 
 HoldValue:heldValue -> CountCharacters:text;
-HoldValue:heldValue -> MakeList:item1;
+HoldValue:heldValue -> MakeList:1;
 Append:compositeText -> HoldValue:newValue;
 MakeList:list -> Append:texts;
 PublishedInputs:inEvent -> HoldValue:refresh;

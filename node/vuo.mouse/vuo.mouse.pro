@@ -15,12 +15,13 @@ NODE_SOURCES += \
 TYPE_SOURCES += \
 	VuoMouseButton.c
 
+HEADERS += \
+	VuoMouseButton.h
+
 NODE_LIBRARY_SOURCES += \
 	VuoMouse.m
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
-	VuoMouseButton.h \
+HEADERS += \
 	VuoMouse.h
 
 include(../../module.pri)

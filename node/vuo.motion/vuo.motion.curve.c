@@ -19,13 +19,13 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "exampleCompositions" : [ "CompareEasingCurves.vuo" ]
+						  "exampleCompositions" : [ "CompareEasingCurves.vuo", "DrawCurve.vuo" ]
 					  }
 				  });
 
 void nodeEvent
 (
-		VuoInputData(VuoReal,"0.0") time,
+		VuoInputData(VuoReal) time,
 		VuoInputData(VuoGenericType1) startPosition,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":1.}}}) endPosition,
 		VuoInputData(VuoReal, {"default":1.}) duration,

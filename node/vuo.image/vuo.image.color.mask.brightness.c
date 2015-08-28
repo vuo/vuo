@@ -22,7 +22,8 @@ VuoModuleMetadata({
 					  }
 				 });
 
-static const char * thresholdFragmentShader = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_COLOR_CONVERSIONS(
+static const char *thresholdFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
@@ -32,7 +33,7 @@ static const char * thresholdFragmentShader = VUOSHADER_GLSL_FRAGMENT_SOURCE_WIT
 	void main(void)
 	{
 		vec4 rgb = texture2D(texture, fragmentTextureCoordinate.xy);
-		vec3 hsl = RgbToHsl(rgb.rgb);
+		vec3 hsl = rgbToHsl(rgb.rgb);
 
 		rgb *= smoothstep(threshold*sharpness, threshold*(2-sharpness), hsl.z);
 
@@ -40,7 +41,8 @@ static const char * thresholdFragmentShader = VUOSHADER_GLSL_FRAGMENT_SOURCE_WIT
 	}
 );
 
-static const char * colorFragmentShader = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_COLOR_CONVERSIONS(
+static const char *colorFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
@@ -97,36 +99,40 @@ void nodeInstanceEvent
 	switch(thresholdType)
 	{
 		case VuoThresholdType_Luminance:
-			frag = VuoShader_make("Luminance Threshold Shader", VuoShader_getDefaultVertexShader(), thresholdFragmentShader);
+			frag = VuoShader_make("Threshold Shader (Luminance)");
+			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, thresholdFragmentShader);
 			break;
 
 		case VuoThresholdType_Red:
-			frag = VuoShader_make("Red Threshold Shader", VuoShader_getDefaultVertexShader(), colorFragmentShader);
-			VuoShader_setUniformPoint4d(frag, (*instance)->glContext, "mask", (VuoPoint4d){ 1, 0, 0, 0 } );
+			frag = VuoShader_make("Threshold Shader (Red)");
+			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 1, 0, 0, 0 } );
 			break;
 
 		case VuoThresholdType_Green:
-			frag = VuoShader_make("Green Threshold Shader", VuoShader_getDefaultVertexShader(), colorFragmentShader);
-			VuoShader_setUniformPoint4d(frag, (*instance)->glContext, "mask", (VuoPoint4d){ 0, 1, 0, 0 } );
+			frag = VuoShader_make("Threshold Shader (Green)");
+			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 0, 1, 0, 0 } );
 			break;
 
 		case VuoThresholdType_Blue:
-			frag = VuoShader_make("Blue Threshold Shader", VuoShader_getDefaultVertexShader(), colorFragmentShader);
-			VuoShader_setUniformPoint4d(frag, (*instance)->glContext, "mask", (VuoPoint4d){ 0, 0, 1, 0 } );
+			frag = VuoShader_make("Threshold Shader (Blue)");
+			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 0, 0, 1, 0 } );
 			break;
 
 		case VuoThresholdType_Alpha:
-			frag = VuoShader_make("Alpha Threshold Shader", VuoShader_getDefaultVertexShader(), colorFragmentShader);
-			VuoShader_setUniformPoint4d(frag, (*instance)->glContext, "mask", (VuoPoint4d){ 0, 0, 0, 1 } );
+			frag = VuoShader_make("Threshold Shader (Alpha)");
+			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 0, 0, 0, 1 } );
 			break;
 	}
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "threshold", MAX(threshold,0));
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "sharpness", MAX(MIN(sharpness,1),0));
+	VuoShader_setUniform_VuoImage(frag, "texture",   image);
+	VuoShader_setUniform_VuoReal (frag, "threshold", MAX(threshold,0));
+	VuoShader_setUniform_VuoReal (frag, "sharpness", MAX(MIN(sharpness,1),0));
 
-	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

@@ -1,5 +1,5 @@
-These nodes are for translating, rotating, and scaling 3D objects. 
+These nodes are for translating, rotating, and scaling graphics. They can be used with the `vuo.layer` node set for drawing 2D layers or the `vuo.scene` node set for drawing 3D scenes. 
 
-**Translation** changes the position. **Rotation** changes the angle. **Scaling** changes the size. 
+**Translation** changes the position. **Rotation** changes the angle. **Scaling** changes the size.
 
-You can connect these nodes to nodes from the `vuo.scene` node set to draw 3D scenes. 
+When the transformation is applied to a layer or object, the layer or object is first rotated, then scaled, then translated.

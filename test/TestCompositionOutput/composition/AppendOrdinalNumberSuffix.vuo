@@ -11,7 +11,7 @@ digraph G
 {
 Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="1100,207"];
 ConvertIntegertoText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="921,193"];
-MakeList [type="vuo.list.make.2.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="1039,218"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="1039,218"];
 SelectInput [type="vuo.select.in.2.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="809,296" _option1="\"st\""];
 SelectInput2 [type="vuo.select.in.2.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="663,361" _option1="\"nd\""];
 SelectInput3 [type="vuo.select.in.2.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="510,442" _option1="\"rd\"" _option2="\"th\""];
@@ -21,11 +21,11 @@ Subtract3 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<
 PublishedInputs [type="vuo.in" label="PublishedInputs|<number>number\r" _number="0" _number_type="VuoInteger"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ordinalNumber>ordinalNumber\l" _ordinalNumber_type="VuoText"];
 
-ConvertIntegertoText:text -> MakeList:item1;
+ConvertIntegertoText:text -> MakeList:1;
 MakeList:list -> Append:texts;
 SelectInput2:out -> SelectInput:option2;
 SelectInput3:out -> SelectInput2:option2;
-SelectInput:out -> MakeList:item2;
+SelectInput:out -> MakeList:2;
 Subtract2:difference -> SelectInput2:which;
 Subtract2:done -> SelectInput2:option1;
 Subtract3:difference -> SelectInput3:which;

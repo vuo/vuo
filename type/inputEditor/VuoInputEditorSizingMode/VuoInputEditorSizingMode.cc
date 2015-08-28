@@ -34,9 +34,9 @@ VuoInputEditorMenuItem * VuoInputEditorSizingMode::setUpMenuTree()
 	for (int i = 0; i < VuoSizingMode_Fill+1; ++i)
 	{
 		json_object *optionAsJson = VuoSizingMode_jsonFromValue( (VuoSizingMode)i );
-		const char *optionSummary = VuoSizingMode_summaryFromValue( (VuoSizingMode)i );
+		char *optionSummary = VuoSizingMode_summaryFromValue( (VuoSizingMode)i );
 		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithSizingMode((VuoSizingMode)i));
-
+		free(optionSummary);
 		optionsTree->addItem(optionItem);
 	}
 

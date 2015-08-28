@@ -10,12 +10,13 @@ NODE_SOURCES += \
 TYPE_SOURCES += \
 	VuoKey.c
 
+HEADERS += \
+	VuoKey.h
+
 NODE_LIBRARY_SOURCES += \
 	VuoKeyboard.m
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
-	VuoKey.h \
+HEADERS += \
 	VuoKeyboard.h
 
 include(../../module.pri)

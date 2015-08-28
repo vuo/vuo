@@ -16,6 +16,7 @@ extern "C" {
 Q_DECLARE_METATYPE(VuoPoint3d);
 Q_DECLARE_METATYPE(VuoPoint4d);
 Q_DECLARE_METATYPE(VuoTransform);
+Q_DECLARE_METATYPE(float*);
 
 /**
  * Tests the VuoTransform type.
@@ -148,6 +149,21 @@ private slots:
 				VuoPoint3d_make(1,1,1));
 			QTest::newRow("rotate 90° CCW around z axis (VuoTransform_quaternionFromVectors)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,1,0);
 		}
+
+		{
+			VuoTransform t = VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,-1),VuoPoint3d_make(0,1,0));
+			QTest::newRow("identity 0 (VuoTransform_makeFromTarget)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(1,0,0);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,-2),VuoPoint3d_make(0,1,0));
+			QTest::newRow("identity 1 (VuoTransform_makeFromTarget)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(1,0,0);
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(-1,0,0),VuoPoint3d_make(0,1,0));
+			QTest::newRow("rotate 90° CCW around y axis (VuoTransform_makeFromTarget)") << t << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,0,-1);
+		}
 	}
 	void testTransformPoint()
 	{
@@ -163,6 +179,20 @@ private slots:
 		QCOMPARE(actualPoint.x+10.f, expectedPoint.x+10.f);
 		QCOMPARE(actualPoint.y+10.f, expectedPoint.y+10.f);
 		QCOMPARE(actualPoint.z+10.f, expectedPoint.z+10.f);
+
+
+		// Also use this data to test VuoTransform_makeFromMatrix4x4().
+		{
+			float inputMatrix[16];
+			VuoTransform_getMatrix(transform, inputMatrix);
+			VuoTransform outputTransform = VuoTransform_makeFromMatrix4x4(inputMatrix);
+
+			float outputMatrix[16];
+			VuoTransform_getMatrix(outputTransform, outputMatrix);
+
+			for (int i = 0; i < 16; ++i)
+				QCOMPARE(inputMatrix[i]+10.f, outputMatrix[i]+10.f);
+		}
 	}
 
 	void testDirection_data()
@@ -207,11 +237,6 @@ private slots:
 			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
 			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4));
 		}
-
-		{
-			VuoTransform t = VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,-1),VuoPoint3d_make(0,1,0));
-			QTest::newRow("targeted rotation") << t << VuoPoint3d_make(-1,0,0);
-		}
 	}
 	void testDirection()
 	{
@@ -224,6 +249,64 @@ private slots:
 		QCOMPARE(actualDirection.x+10.f, expectedDirection.x+10.f);
 		QCOMPARE(actualDirection.y+10.f, expectedDirection.y+10.f);
 		QCOMPARE(actualDirection.z+10.f, expectedDirection.z+10.f);
+	}
+
+	void testMatrixRoundtrip_data()
+	{
+		QTest::addColumn<VuoTransform>("expectedTransform");
+		QTest::addColumn<float *>("expectedMatrix");
+
+		{
+			VuoTransform t = VuoTransform_makeIdentity();
+
+			float *matrix = new float[16];
+			memset(matrix, 0, sizeof(float)*16);
+			matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1;
+
+			QTest::newRow("identity") << t << matrix;
+		}
+
+		{
+			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(1,0,0), VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.), VuoPoint3d_make(2,2,2));
+
+			float *matrix = new float[16];
+			memset(matrix, 0, sizeof(float)*16);
+
+			matrix[ 0] = 0;
+			matrix[ 1] = 0;
+			matrix[ 2] = -2;
+			matrix[ 3] = 0;
+
+			matrix[ 4] = 0;
+			matrix[ 5] = 2;
+			matrix[ 6] = 0;
+			matrix[ 7] = 0;
+
+			matrix[ 8] = 2;
+			matrix[ 9] = 0;
+			matrix[10] = 0;
+			matrix[11] = 0;
+
+			matrix[12] = 1;
+			matrix[13] = 0;
+			matrix[14] = 0;
+			matrix[15] = 1;
+
+			QTest::newRow("rotate, scale, translate (quaternion)") << t << matrix;
+		}
+	}
+	void testMatrixRoundtrip()
+	{
+		QFETCH(VuoTransform, expectedTransform);
+		QFETCH(float *, expectedMatrix);
+
+		float actualMatrix[16];
+		VuoTransform_getMatrix(expectedTransform, actualMatrix);
+		for (int i = 0; i < 16; ++i)
+		    QCOMPARE(actualMatrix[i] + 10.f, expectedMatrix[i] + 10.f);
+
+		VuoTransform actualTransform = VuoTransform_makeFromMatrix4x4(expectedMatrix);
+		QCOMPARE(VuoTransform_stringFromValue(actualTransform), VuoTransform_stringFromValue(expectedTransform));
 	}
 
 	void testSerializationAndSummary_data()

@@ -13,15 +13,18 @@
 #include "VuoColor.h"
 #include "VuoImage.h"
 #include "VuoInteger.h"
+#include "VuoMesh.h"
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
 #include "VuoColor.h"
 #include "VuoReal.h"
+#include "VuoText.h"
 #include "VuoGlContext.h"
 #include "VuoList_VuoInteger.h"
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoColor.h"
+#include "VuoList_VuoText.h"
 
 #include <dispatch/dispatch.h>
 
@@ -30,167 +33,175 @@
  * @defgroup VuoShader VuoShader
  * A graphics shader program, specifying how to render a 3D object.
  *
+ * A VuoShader can contain up to 3 separate GL Program Objects,
+ * each of which processes a different type of input primitive (points, lines, triangles).
+ *
+ * Each GL Program Object must contain a vertex shader, and can optionally contain a geometry and/or fragment shader.
+ *
+ * If no fragment shader is present, the program object is assumed to be used for Transform Feedback (see @ref VuoSceneObjectRenderer).
+ *
+ * The struct is typedef'd to a pointer so that VuoShaders are reference-counted,
+ * enabling Vuo to automatically delete the GL Program Objects when the last reference is released.
+ *
+ * ## Usage
+ *
+ * To create a shader that supports rendering points, lines, and triangles to a framebuffer:
+ * @code
+ * VuoShader shader = VuoShader_make("Color Shader (Unlit)");
+ *
+ * VuoShader_addSource(shader, VuoMesh_Points, vertexShader1, geometryShader1, fragmentShader1);
+ * VuoShader_setExpectedOutputPrimitiveCount(shader, VuoMesh_Points, 2);
+ *
+ * VuoShader_addSource(shader, VuoMesh_IndividualLines, vertexShader2, geometryShader2, fragmentShader2);
+ * VuoShader_setExpectedOutputPrimitiveCount(shader, VuoMesh_IndividualLines, 2);
+ *
+ * VuoShader_addSource(shader, VuoMesh_IndividualTriangles, vertexShader3, NULL, fragmentShader3);
+ *
+ * VuoShader_setUniform_VuoColor(shader, "color", color);
+ * @endcode
+ *
+ * To render using that shader:
+ * @code
+ * GLint positionAttribute, normalAttribute, tangentAttribute, bitangentAttribute, textureCoordinateAttribute;
+ * VuoShader_getAttributeLocations(shader, elementAssemblyMethod, glContext, &positionAttribute, &normalAttribute, &tangentAttribute, &bitangentAttribute, &textureCoordinateAttribute);
+ *
+ * // [...] enable vertex attribute arrays
+ *
+ * VuoShader_activate(shader, elementAssemblyMethod, glContext);
+ *
+ * // [...] glDrawArrays() or glDrawElements()
+ *
+ * VuoShader_deactivate(shader, elementAssemblyMethod, glContext);
+ *
+ * // [...] disable vertex attribute arrays
+ * @endcode
+ *
  * @{
  */
 
 /**
- * A macro to facilitate defining a GLSL shader in a C source file.
+ * References to shader source code and shader code uploaded to the GPU.
  */
-#define VUOSHADER_GLSL_SOURCE(version,source) "#version " #version "\n" #source
+typedef struct
+{
+	VuoText vertexSource;
+	unsigned int glVertexShaderName;
+
+	VuoText geometrySource;
+	unsigned int glGeometryShaderName;
+	unsigned int expectedOutputPrimitiveCount;
+
+	VuoText fragmentSource;
+	unsigned int glFragmentShaderName;
+
+	unsigned int glProgramName;
+} VuoSubshader;
+
+/**
+ * Holds values to eventually be assigned to a GL Program Object's uniforms.
+ */
+typedef struct
+{
+	VuoText name;
+	VuoText type;
+	union
+	{
+		VuoImage image;
+		VuoBoolean boolean;
+		VuoInteger integer;
+		VuoReal real;
+		VuoPoint2d point2d;
+		VuoPoint3d point3d;
+		VuoPoint4d point4d;
+		VuoColor color;
+	} value;
+} VuoShaderUniform;
 
 /**
  * A graphics shader program, specifying how to render a 3D object.
- *
- * The struct is typedef'd to a pointer so that VuoShaders are reference-counted,
- * enabling us to automatically delete the GL Program Objects when the last reference is released.
  */
 typedef struct _VuoShader
 {
-	char *summary; ///< Text describing the shader, displayed in port popovers.
+	VuoText name; ///< Text describing the shader, displayed in port popovers.
 
-	unsigned int glVertexShaderName;
-	unsigned int glFragmentShaderName;
-	unsigned int glProgramName;
+	VuoSubshader pointProgram;
+	VuoSubshader lineProgram;
+	VuoSubshader triangleProgram;
 
-	// The following pair of lists are used together to assign textures to texture units, then to assign texture unit numbers to shader uniforms.
-	VuoList_VuoImage textures;
-	VuoList_VuoInteger glTextureUniformLocations;
+	VuoShaderUniform *uniforms;
+	unsigned int uniformsCount;
 
 	dispatch_semaphore_t lock;	///< Serializes operations that modify the state of this GL program object.
 } *VuoShader;
 
-VuoShader VuoShader_make(const char *summary, const char *vertexShaderSource, const char *fragmentShaderSource);
-char * VuoShader_summaryFromValue(const VuoShader value);
-VuoShader VuoShader_valueFromJson(struct json_object * js);
-struct json_object * VuoShader_jsonFromValue(const VuoShader value);
-void VuoShader_setUniformFloat(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, float value);
-void VuoShader_setUniformPoint2d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint2d value);
-void VuoShader_setUniformPoint3d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint3d value);
-void VuoShader_setUniformPoint4d(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoPoint4d value);
-void VuoShader_setUniformColor(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoColor value);
-void VuoShader_setUniformFloatArray(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, const float* value, int length);
-const char * VuoShader_getDefaultVertexShader(void);
-VuoPoint2d VuoShader_samplerCoordinatesFromVuoCoordinates(VuoPoint2d vuoCoordinates, VuoImage image);
-VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize);
 
-VuoShader VuoShader_makeImageShader(void);
-void VuoShader_resetTextures(VuoShader shader);
-void VuoShader_addTexture(VuoShader shader, VuoGlContext glContext, const char *uniformIdentifier, VuoImage texture);
-void VuoShader_activateTextures(VuoShader shader, VuoGlContext glContext);
-void VuoShader_deactivateTextures(VuoShader shader, VuoGlContext glContext);
+/// @name Creating shaders from GLSL source code
+/// @{
+VuoShader VuoShader_make(const char *name);
+void VuoShader_addSource(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const char *vertexShaderSource, const char *geometryShaderSource, const char *fragmentShaderSource);
+void VuoShader_setExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const unsigned int expectedOutputPrimitiveCount);
 
-VuoShader VuoShader_makeColorShader(VuoColor color);
+/// A macro to facilitate defining a GLSL shader in a C source file.
+#define VUOSHADER_GLSL_SOURCE(version,source) "#version " #version "\n" #source
+/// @}
+
+
+/// @name Creating standard shaders
+/// @{
+VuoShader VuoShader_makeDefaultShader(void);
+VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha);
+VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image);
+VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha);
+VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image);
+VuoShader VuoShader_makeUnlitColorShader(VuoColor color);
 VuoShader VuoShader_makeLitColorShader(VuoColor diffuseColor, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, VuoImage specularImage, VuoImage normalImage);
-
 VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end);
 VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height);
-
-
-/**
- *	Provides a GLSL method which converts rgb to hsl.  Accepts a vec3 and returns a vec3 (hsl).	
- */
-#define VUOSHADER_GLSL_FRAGMENT_COLOR_CONVERSION_SOURCE "							\
-	vec3 RgbToHsl(vec3 color)														\
-	{																				\
-		vec3 hsl;																	\
-																					\
-		float fmin = min(min(color.r, color.g), color.b);							\
-		float fmax = max(max(color.r, color.g), color.b);							\
-		float delta = fmax - fmin;													\
-																					\
-		hsl.z = (fmax + fmin) / 2.0;												\
-																					\
-		if (delta == 0.0)															\
-		{																			\
-			hsl.x = 0.0;															\
-			hsl.y = 0.0;															\
-		}																			\
-		else																		\
-		{																			\
-			if (hsl.z < 0.5)														\
-				hsl.y = delta / (fmax + fmin);										\
-			else																	\
-				hsl.y = delta / (2.0 - fmax - fmin);								\
-																					\
-			float deltaR = (((fmax - color.r) / 6.0) + (delta / 2.0)) / delta;		\
-			float deltaG = (((fmax - color.g) / 6.0) + (delta / 2.0)) / delta;		\
-			float deltaB = (((fmax - color.b) / 6.0) + (delta / 2.0)) / delta;		\
-																					\
-			if (color.r == fmax )													\
-				hsl.x = deltaB - deltaG;											\
-			else if (color.g == fmax)												\
-				hsl.x = (1.0 / 3.0) + deltaR - deltaB;								\
-			else if (color.b == fmax)												\
-				hsl.x = (2.0 / 3.0) + deltaG - deltaR;								\
-																					\
-			if (hsl.x < 0.0)														\
-				hsl.x += 1.0;														\
-			else if (hsl.x > 1.0)													\
-				hsl.x -= 1.0;														\
-		}																			\
-																					\
-		return hsl;																	\
-	}																				\
-																					\
-	float HueToRGB(float f1, float f2, float hue)									\
-	{																				\
-		if (hue < 0.0)																\
-			hue += 1.0;																\
-		else if (hue > 1.0)															\
-			hue -= 1.0;																\
-		float res;																	\
-		if ((6.0 * hue) < 1.0)														\
-			res = f1 + (f2 - f1) * 6.0 * hue;										\
-		else if ((2.0 * hue) < 1.0)													\
-			res = f2;																\
-		else if ((3.0 * hue) < 2.0)													\
-			res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;						\
-		else																		\
-			res = f1;																\
-		return res;																	\
-	}																				\
-																					\
-	vec3 HslToRgb(vec3 hsl)															\
-	{																				\
-		vec3 rgb;																	\
-																					\
-		if (hsl.y == 0.0)															\
-			rgb = vec3(hsl.z);														\
-		else																		\
-		{																			\
-			float f2;																\
-																					\
-			if (hsl.z < 0.5)														\
-				f2 = hsl.z * (1.0 + hsl.y);											\
-			else																	\
-				f2 = (hsl.z + hsl.y) - (hsl.y * hsl.z);								\
-																					\
-			float f1 = 2.0 * hsl.z - f2;											\
-																					\
-			rgb.r = HueToRGB(f1, f2, hsl.x + (1.0/3.0));							\
-			rgb.g = HueToRGB(f1, f2, hsl.x);										\
-			rgb.b = HueToRGB(f1, f2, hsl.x - (1.0/3.0));							\
-		}																			\
-																					\
-		return rgb;																	\
-	}																				\
-"
-
-/**
- *	Provides the template for a glsl shader with hsl to rgb conversion methods defined (RgbToHsl(vec3 rgb), HslToRgb(vec3 hs))
- */
-#define VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_COLOR_CONVERSIONS(source) "#version 120\n" VUOSHADER_GLSL_FRAGMENT_COLOR_CONVERSION_SOURCE "\n" #source
-
-
-/// @{
-/**
- * Automatically generated function.
- */
-VuoShader VuoShader_valueFromString(const char *str);
-char * VuoShader_stringFromValue(const VuoShader value);
 /// @}
+
+
+/// @name Using shaders
+/// @{
+bool VuoShader_isTransformFeedback(VuoShader shader);
+unsigned int VuoShader_getExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode);
+bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, int *positionLocation, int *normalLocation, int *tangentLocation, int *bitangentLocation, int *textureCoordinateLocation);
+unsigned int VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext);
+void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext);
+
+void VuoShader_setUniform_VuoImage  (VuoShader shader, const char *uniformIdentifier, const VuoImage   image);
+void VuoShader_setUniform_VuoBoolean(VuoShader shader, const char *uniformIdentifier, const VuoBoolean boolean);
+void VuoShader_setUniform_VuoInteger(VuoShader shader, const char *uniformIdentifier, const VuoInteger integer);
+void VuoShader_setUniform_VuoReal   (VuoShader shader, const char *uniformIdentifier, const VuoReal    real);
+void VuoShader_setUniform_VuoPoint2d(VuoShader shader, const char *uniformIdentifier, const VuoPoint2d point2d);
+void VuoShader_setUniform_VuoPoint3d(VuoShader shader, const char *uniformIdentifier, const VuoPoint3d point3d);
+void VuoShader_setUniform_VuoPoint4d(VuoShader shader, const char *uniformIdentifier, const VuoPoint4d point4d);
+void VuoShader_setUniform_VuoColor  (VuoShader shader, const char *uniformIdentifier, const VuoColor   color);
+
+VuoImage VuoShader_getUniform_VuoImage(VuoShader shader, const char *uniformIdentifier);
+
+VuoPoint2d VuoShader_samplerCoordinatesFromVuoCoordinates(VuoPoint2d vuoCoordinates, VuoImage image);
+VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize);
+/// @}
+
+
+/// @name Summary, serialization, and reference counting
+/// @{
+char * VuoShader_summaryFromValue(const VuoShader value);
+VuoShader VuoShader_valueFromJson(struct json_object * js);
+struct json_object * VuoShader_jsonFromValue(const VuoShader value);
+
+/// Automatically generated function.
+VuoShader VuoShader_valueFromString(const char *str);
+/// Automatically generated function.
+char * VuoShader_stringFromValue(const VuoShader value);
+/// Automatically generated function.
+void VuoShader_retain(VuoShader value);
+/// Automatically generated function.
+void VuoShader_release(VuoShader value);
+/// @}
+
 
 /**
  * @}

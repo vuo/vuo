@@ -56,13 +56,13 @@ void nodeInstanceEvent
 										   "VuoPoint2d":{"x":0.,"y":0.},
 										   "VuoPoint3d":{"x":0.,"y":0.,"z":0.}
 									   }}) setPosition,
-		VuoInputEvent(VuoPortEventBlocking_Wall, setPosition) setPositionEvent,
+		VuoInputEvent(VuoPortEventBlocking_Wall, setPosition, {"hasPortAction":true}) setPositionEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{
 										   "VuoReal":1.,
 										   "VuoPoint2d":{"x":1.,"y":1.},
 										   "VuoPoint3d":{"x":1.,"y":1.,"z":1.}
 									   }}) setTarget,
-		VuoInputEvent(VuoPortEventBlocking_Wall, setTarget) setTargetEvent,
+		VuoInputEvent(VuoPortEventBlocking_Wall, setTarget, {"hasPortAction":true}) setTargetEvent,
 		VuoInputData(VuoReal, {"default":1., "suggestedMin":0., "suggestedStep":0.1}) duration,
 		VuoInputEvent(VuoPortEventBlocking_Wall, duration) durationEvent,
 		VuoOutputData(VuoGenericType1) position,
@@ -74,7 +74,8 @@ void nodeInstanceEvent
 		(*ctx)->positionLastFrame = *position = setPosition;
 		(*ctx)->moving = false;
 		(*ctx)->velocity = VuoGenericType1_valueFromString("");
-		(*ctx)->updateNeededAfterSetPosition = true;
+		if( setPositionEvent )	
+			(*ctx)->updateNeededAfterSetPosition = true;
 		(*ctx)->first = false;
 	}
 

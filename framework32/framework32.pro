@@ -1,6 +1,6 @@
 TEMPLATE = aux
 CONFIG -= qt
-CONFIG += VuoPCH Vuo32
+CONFIG += VuoPCH Vuo32 zmq
 
 include(../vuo.pri)
 
@@ -11,7 +11,6 @@ QMAKE_LFLAGS += $$FLAGS32
 
 ZMQ32_ROOT = /usr/local/Cellar/zeromq/2.2.0-32
 JSONC32_ROOT = /usr/local/Cellar/json-c/0.10-32
-ICU32_ROOT = /usr/local/Cellar/icu4c/52.1-32
 
 DEFINES += ZMQ
 INCLUDEPATH += \
@@ -20,11 +19,15 @@ INCLUDEPATH += \
 
 INCLUDEPATH += \
 	$$ROOT/base \
-	$$ROOT/runtime
+	$$ROOT/library \
+	$$ROOT/runtime \
+	$$ROOT/type
 
 SOURCES = \
+	VuoTypeStubs.c \
 	$$ROOT/base/VuoBase.cc \
 	$$ROOT/base/VuoCable.cc \
+	$$ROOT/base/VuoComposition.cc \
 	$$ROOT/base/VuoFileUtilities.cc \
 	$$ROOT/base/VuoModule.cc \
 	$$ROOT/base/VuoNode.cc \
@@ -32,36 +35,57 @@ SOURCES = \
 	$$ROOT/base/VuoNodeSet.cc \
 	$$ROOT/base/VuoPort.cc \
 	$$ROOT/base/VuoPortClass.cc \
+	$$ROOT/base/VuoProtocol.cc \
+	$$ROOT/base/VuoPublishedPort.cc \
 	$$ROOT/base/VuoRunner.cc \
 	$$ROOT/base/VuoStringUtilities.cc \
 	$$ROOT/base/VuoTelemetry.c \
+	$$ROOT/base/VuoType.cc \
 	$$ROOT/base/miniz.c \
-	$$ROOT/library/VuoHeap.cc \
-	VuoRunner32.cc
+	$$ROOT/library/VuoHeap.cc
 
-HEADERS = \
-	VuoRunner32.hh \
-	Vuo32.h
+OBJECTIVE_SOURCES += \
+	$$ROOT/base/VuoRunnerCocoa.mm \
+	$$ROOT/base/VuoRunnerCocoa+Conversion.mm
 
+INCLUDEPATH += \
+	../compiler \
+	../framework \
+	../library \
+	../node \
+	$$system(ls -1d ../node/*/) \
+	../runtime \
+	../type \
+	../type/list
 
 # Build type and library object files
 TYPE_AND_LIBRARY_SOURCES = \
 	$$ROOT/type/VuoBoolean.c \
 	$$ROOT/type/VuoColor.c \
 	$$ROOT/type/VuoImage.c \
+	$$ROOT/type/VuoImageColorDepth.c \
 	$$ROOT/type/VuoInteger.c \
+	$$ROOT/type/VuoPoint2d.c \
+	$$ROOT/type/VuoPoint3d.c \
 	$$ROOT/type/VuoReal.c \
 	$$ROOT/type/VuoShader.c \
 	$$ROOT/type/VuoText.c \
+	$$ROOT/type/list/VuoList_VuoBoolean.cc \
 	$$ROOT/type/list/VuoList_VuoColor.cc \
 	$$ROOT/type/list/VuoList_VuoImage.cc \
+	$$ROOT/type/list/VuoList_VuoImageColorDepth.cc \
 	$$ROOT/type/list/VuoList_VuoInteger.cc \
+	$$ROOT/type/list/VuoList_VuoPoint2d.cc \
+	$$ROOT/type/list/VuoList_VuoPoint3d.cc \
+	$$ROOT/type/list/VuoList_VuoReal.cc \
+	$$ROOT/type/list/VuoList_VuoText.cc \
 	$$ROOT/library/VuoGlContext.cc \
 	$$ROOT/library/VuoGlPool.cc \
 	$$ROOT/library/VuoImageRenderer.cc
 TYPE_AND_LIBRARY_FLAGS = \
 	$$QMAKE_CFLAGS \
 	-I$$ROOT/library \
+	-I$$ROOT/library/shader \
 	-I$$ROOT/node \
 	-I$$ROOT/runtime \
 	-I$$ROOT/type \
@@ -81,10 +105,11 @@ QMAKE_EXTRA_COMPILERS += typeAndLibraryObjects
 
 # Build 32-bit dynamic library for Vuo.framework
 
-VUO_FRAMEWORK_SOURCES = $$SOURCES $$TYPE_AND_LIBRARY_SOURCES
+VUO_FRAMEWORK_SOURCES = $$SOURCES $$OBJECTIVE_SOURCES $$TYPE_AND_LIBRARY_SOURCES
 for(sourcefile, VUO_FRAMEWORK_SOURCES) {
 	objectfile = $${basename(sourcefile)}
 	objectfile ~= s/\\.cc?$/.o
+	objectfile ~= s/\\.mm?$/.o
 	VUO_FRAMEWORK_OBJECTS += $$objectfile
 }
 
@@ -98,13 +123,14 @@ linkVuoFramework.commands = \
 		-current_version $$VUO_VERSION \
 		-install_name @rpath/$$VUO_FRAMEWORK_BINARY_RELATIVE \
 		$$VUO_FRAMEWORK_OBJECT_FLAGS \
-		$${ICU32_ROOT}/lib/libicuuc.a \
-		$${ICU32_ROOT}/lib/libicudata.a \
 		$${JSONC32_ROOT}/lib/libjson.a \
 		$${ZMQ32_ROOT}/lib/libzmq.a \
 		-framework CoreFoundation \
 		-framework OpenGL \
 		-framework IOSurface \
+		-framework CoreVideo \
+		-framework QuartzCore \
+		-framework AppKit \
 		-lobjc \
 		-o libVuo32.dylib
 linkVuoFramework.target = libVuo32.dylib
@@ -124,15 +150,6 @@ lipoVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 lipoVuoFramework.depends = libVuo32.dylib
 POST_TARGETDEPS += $$VUO_FRAMEWORK_BINARY
 QMAKE_EXTRA_TARGETS += lipoVuoFramework
-
-
-# Copy additional headers for 32-bit to Vuo.framework
-HEADERS_DEST_DIR = $$ROOT/framework/Vuo.framework/Versions/$$VUO_VERSION/Headers
-copyHeaders.commands = cp $$HEADERS $${HEADERS_DEST_DIR}
-copyHeaders.target = $${HEADERS_DEST_DIR}/Vuo32.h
-copyHeaders.depends = $$HEADERS
-POST_TARGETDEPS += $${HEADERS_DEST_DIR}/Vuo32.h
-QMAKE_EXTRA_TARGETS += copyHeaders
 
 
 QMAKE_CLEAN += *.dylib

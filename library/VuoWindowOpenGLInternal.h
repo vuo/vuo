@@ -24,32 +24,32 @@
 	void (*initCallback)(VuoGlContext glContext, void *);  ///< Initializes the OpenGL context.
 	bool initCallbackCalled;	///< Has the init callback already been called?
 	void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int width, unsigned int height);  ///< Updates the OpenGL context when the view is resized.
-	void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *);  ///< Allows the caller to free resources on the old GL context and initialize the new GL context.
 	void (*drawCallback)(VuoGlContext glContext, void *);  ///< Draws onto the OpenGL context.
 	void *drawContext;  ///< Argument to pass to callbacks (e.g. node instance data).
 
-	bool callerRequestedRedraw;	///< True if an external caller (i.e., not resize or toggleFullScreen) requested that the GL view be redrawn.
+	bool callerRequestedRedraw;	///< True if an external caller (i.e., not resize or setFullScreen) requested that the GL view be redrawn.
 	VuoDisplayRefresh displayRefresh;	///< Handles redrawing at the display refresh rate.  Only draws if @c callerRequestedRedraw.
 
-	bool togglingFullScreen;	///< If true, code that requires drawQueue will be skipped (to avoid deadlock).
+	NSRect viewport;
 }
 
 - (id)initWithFrame:(NSRect)frame
 		 initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
 	   resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
-switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))switchContextCallback
 		 drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 		  drawContext:(void *)_drawContext;
 
 - (void)enableTriggers;
 - (void)disableTriggers;
 
-- (void)toggleFullScreen;
+- (void)setFullScreen:(BOOL)fullScreen onScreen:(NSScreen *)screen;
+- (BOOL)isFullScreen;
 - (void)scheduleRedraw;
 
 @property(retain) VuoWindowOpenGLInternal *glWindow;  ///< The parent window; allows the view to access it while full-screen.
 @property(retain) NSOpenGLContext *windowedGlContext;  ///< The OpenGL context from Vuo's context pool; allows the windw to access it while the view is full-screen.
 @property dispatch_queue_t drawQueue;	///< Queue to ensure that multiple threads don't attempt to draw to the same window simultaneously.
+@property NSRect viewport;	///< The viewport in which we're rendering (it might not match the view's dimensions), relative to the parent view.  In points (not pixels).
 
 @end
 
@@ -66,23 +66,29 @@ switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlCon
 
 	BOOL userResizedWindow;  ///< True if the user has manually resized the window.
 	BOOL programmaticallyResizingWindow;  ///< True if a programmatic resize of the window is in progress.
+
+	NSRect contentRectWhenWindowed;
+	NSUInteger styleMaskWhenWindowed;
 }
 
 @property(retain) VuoWindowOpenGLView *glView;  ///< The OpenGL view inside this window.
 @property BOOL depthBuffer;  ///< Was a depth buffer requested?
+@property NSRect contentRectWhenWindowed;  ///< The position and size of the window's content area, prior to switching to full-screen.  In points (not pixels).
+@property NSUInteger styleMaskWhenWindowed;  ///< The window's style mask, prior to switching to full-screen.
 
 - (id)initWithDepthBuffer:(BOOL)depthBuffer
 			  initCallback:(void (*)(VuoGlContext glContext, void *))initCallback
 			resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))resizeCallback
-	 switchContextCallback:(void (*)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *))switchContextCallback
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))drawCallback
 			   drawContext:(void *)drawContext;
 - (void)enableTriggers;
 - (void)disableTriggers;
 - (void)scheduleRedraw;
+- (void)setProperties:(VuoList_VuoWindowProperty)properties;
 - (void)executeWithWindowContext:(void(^)(VuoGlContext glContext))blockToExecute;
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh;
-- (void)toggleFullScreen;
+- (void)unlockAspectRatio;
+- (void)setFullScreen:(BOOL)fullScreen onScreen:(NSScreen *)screen;
 - (void)getWidth:(unsigned int *)pixelsWide height:(unsigned int *)pixelsHigh;
 
 @end

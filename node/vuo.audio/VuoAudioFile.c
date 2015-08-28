@@ -66,6 +66,7 @@ typedef struct VuoAudioFileInternal
 	VuoLoopType loop;									///< What to do upon reaching the end of the audio file.
 
 	void (*decodedChannels)(VuoList_VuoAudioSamples);	///< The trigger port callback, to be called when a new buffer is ready for playback.
+	void (*finishedPlayback)(void);						///< The trigger port callback, to be called when the audio file has reached the end.
 	dispatch_source_t playbackTimer;					///< Schedules decoding.
 	dispatch_semaphore_t playbackTimerCanceled;			///< After @c playbackTimer has been canceled and executed its last decode, this is signaled.
 } *VuoAudioFileInternal;
@@ -102,6 +103,8 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 				VLog("Error reading samples: %s", errStr);
 				free(errStr);
 				afi->playing = false;
+				if (afi->finishedPlayback)
+					afi->finishedPlayback();
 				return;
 			}
 
@@ -119,6 +122,8 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 		{
 //			VLog("couldn't get all the frames; stopping playback");
 			afi->playing = false;
+			if (afi->finishedPlayback)
+				afi->finishedPlayback();
 		}
 	});
 
@@ -167,6 +172,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 	afi->playing = false;
 	afi->loop = VuoLoopType_None;
 	afi->decodedChannels = NULL;
+	afi->finishedPlayback = NULL;
 	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", NULL);
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, q);
@@ -331,13 +337,14 @@ bool VuoAudioFile_getInfo(VuoText url, VuoReal *duration, VuoInteger *channelCou
  *
  * Does not change playback status.
  */
-void VuoAudioFile_enableTriggers(VuoAudioFile af, void (*decodedChannels)(VuoList_VuoAudioSamples))
+void VuoAudioFile_enableTriggers(VuoAudioFile af, void (*decodedChannels)(VuoList_VuoAudioSamples), void (*finishedPlayback)(void))
 {
 	if (!af)
 		return;
 	VuoAudioFileInternal afi = (VuoAudioFileInternal)af;
 	dispatch_sync(afi->audioFileQueue, ^{
 					  afi->decodedChannels = decodedChannels;
+					  afi->finishedPlayback = finishedPlayback;
 				  });
 }
 
@@ -353,6 +360,7 @@ void VuoAudioFile_disableTriggers(VuoAudioFile af)
 	VuoAudioFileInternal afi = (VuoAudioFileInternal)af;
 	dispatch_sync(afi->audioFileQueue, ^{
 					  afi->decodedChannels = NULL;
+					  afi->finishedPlayback = NULL;
 				  });
 }
 

@@ -9,19 +9,19 @@
 
 digraph G
 {
-MakeList [type="vuo.list.make.2.VuoInteger" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="429,260" _item1="" _item2=""];
-CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="316,236" _text=""];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="429,260"];
+CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="316,236"];
 ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="72"];
-CountCharacters2 [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="314,316" _text=""];
-Add [type="vuo.math.add.VuoInteger" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="589,263" _terms=""];
+CountCharacters2 [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="314,316"];
+Add [type="vuo.math.add.VuoInteger" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="589,263"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
 
 MakeList:list -> Add:terms;
 ConvertIntegertoText:text -> CountCharacters2:text;
-CountCharacters2:characterCount -> MakeList:item2;
+CountCharacters2:characterCount -> MakeList:2;
 ConvertIntegertoText:text -> CountCharacters:text;
-CountCharacters:characterCount -> MakeList:item1;
+CountCharacters:characterCount -> MakeList:1;
 PublishedInputs:inEvent -> ConvertIntegertoText:refresh;
 Add:sum -> PublishedOutputs:outEvent;
 }

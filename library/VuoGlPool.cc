@@ -29,7 +29,7 @@ using namespace std;
 #include <OpenGL/CGLMacro.h>
 
 
-static map<VuoGlContext, map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > > VuoGlPool __attribute__((init_priority(101)));
+static map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > VuoGlPool __attribute__((init_priority(101)));
 static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGlPool.
 static void __attribute__((constructor)) VuoGlPool_init(void)
 {
@@ -46,21 +46,21 @@ static void __attribute__((constructor)) VuoGlPool_init(void)
  *
  * @threadAnyGL
  */
-GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long size)
+GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
 {
 	GLuint name = 0;
 
-	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
+//	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		if (VuoGlPool[glContext][type][size].size())
-		{
-			name = VuoGlPool[glContext][type][size].back();
-			VuoGlPool[glContext][type][size].pop_back();
-		}
-		else
+//		if (VuoGlPool[type][size].size())
+//		{
+//			name = VuoGlPool[type][size].back();
+//			VuoGlPool[type][size].pop_back();
+//		}
+//		else
 		{
 //			VLog("allocating %d",type);
-			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 
 			if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
 			{
@@ -73,9 +73,11 @@ GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long s
 			}
 			else
 				VLog("Unknown pool type %d.", type);
+
+			VuoGlContext_disuse(cgl_ctx);
 		}
 	}
-	dispatch_semaphore_signal(VuoGlPool_semaphore);
+//	dispatch_semaphore_signal(VuoGlPool_semaphore);
 
 	return name;
 }
@@ -88,17 +90,75 @@ GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long s
  *
  * @threadAnyGL
  */
-void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long size, GLuint name)
+void VuoGlPool_disuse(VuoGlPoolType type, unsigned long size, GLuint name)
 {
-	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
+//	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
-			VuoGlPool[glContext][type][size].push_back(name);
+		{
+			CGLContextObj cgl_ctx=(CGLContextObj)VuoGlContext_use();
+			glDeleteBuffers(1, &name);
+			VuoGlContext_disuse(cgl_ctx);
+//			VuoGlPool[type][size].push_back(name);
+		}
 		else
 			VLog("Unknown pool type %d.", type);
 	}
-	dispatch_semaphore_signal(VuoGlPool_semaphore);
+//	dispatch_semaphore_signal(VuoGlPool_semaphore);
 }
+
+typedef map<GLuint, unsigned int> VuoGlPoolReferenceCounts;	///< The number of times each OpenGL Buffer Object is retained.
+static VuoGlPoolReferenceCounts VuoGlPool_referenceCounts __attribute__((init_priority(101)));  ///< The reference count for each OpenGL Buffer Object.
+static dispatch_semaphore_t VuoGlPool_referenceCountsSemaphore = NULL;  ///< Synchronizes access to @c VuoGlPool_referenceCounts.
+static void __attribute__((constructor)) VuoGlPool_referenceCountsInit(void)
+{
+	VuoGlPool_referenceCountsSemaphore = dispatch_semaphore_create(1);
+}
+
+/**
+ * Helper for @ref VuoGlPool_retain.
+ */
+void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int line, const char *func)
+{
+	if (glBufferName == 0)
+		return;
+
+	dispatch_semaphore_wait(VuoGlPool_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+
+	VuoGlPoolReferenceCounts::iterator it = VuoGlPool_referenceCounts.find(glBufferName);
+	if (it == VuoGlPool_referenceCounts.end())
+		VuoGlPool_referenceCounts[glBufferName] = 1;
+	else
+		++VuoGlPool_referenceCounts[glBufferName];
+
+	dispatch_semaphore_signal(VuoGlPool_referenceCountsSemaphore);
+//	VuoLog(file, line, func, "VuoGlPool_retain(%d)", glBufferName);
+}
+
+/**
+ * Helper for @ref VuoGlPool_release.
+ */
+void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int line, const char *func)
+{
+	if (glBufferName == 0)
+		return;
+
+	dispatch_semaphore_wait(VuoGlPool_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+
+	VuoGlPoolReferenceCounts::iterator it = VuoGlPool_referenceCounts.find(glBufferName);
+	if (it == VuoGlPool_referenceCounts.end())
+		VuoLog(file, line, func, "Error: VuoGlPool_release() was called with OpenGL Buffer Object %d, which was never retained.", glBufferName);
+	else
+	{
+		if (--VuoGlPool_referenceCounts[glBufferName] == 0)
+			VuoGlPool_disuse(type, size, glBufferName);
+	}
+
+	dispatch_semaphore_signal(VuoGlPool_referenceCountsSemaphore);
+//	VuoLog(file, line, func, "VuoGlPool_release(%d)", glBufferName);
+}
+
+
 
 
 
@@ -320,6 +380,7 @@ void VuoGlTexture_retain(GLuint glTextureName)
  */
 void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName)
 {
+//	VLog("%d (%s %dx%d)", glTextureName, VuoGl_stringForConstant(internalformat), width, height);
 	if (glTextureName == 0)
 		return;
 
@@ -327,7 +388,7 @@ void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned 
 
 	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
 	if (it == VuoGlTexture_referenceCounts.end())
-		fprintf(stderr, "Error: VuoGlTexture_release() was called with OpenGL Texture Object %d, which was never retained.\n", glTextureName);
+		VLog("Error: VuoGlTexture_release() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
 	else
 	{
 		if (--VuoGlTexture_referenceCounts[glTextureName] == 0)
@@ -471,12 +532,18 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 	{
 		CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
 		CFDictionaryAddValue(properties, kIOSurfaceIsGlobal, kCFBooleanTrue);
+
 		long long pixelsWideLL = pixelsWide;
-		CFDictionaryAddValue(properties, kIOSurfaceWidth, CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsWideLL));
+		CFNumberRef pixelsWideCF = CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsWideLL);
+		CFDictionaryAddValue(properties, kIOSurfaceWidth, pixelsWideCF);
+
 		long long pixelsHighLL = pixelsHigh;
-		CFDictionaryAddValue(properties, kIOSurfaceHeight, CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsHighLL));
+		CFNumberRef pixelsHighCF = CFNumberCreate(NULL, kCFNumberLongLongType, &pixelsHighLL);
+		CFDictionaryAddValue(properties, kIOSurfaceHeight, pixelsHighCF);
+
 		long long bytesPerElement = 4;
-		CFDictionaryAddValue(properties, kIOSurfaceBytesPerElement, CFNumberCreate(NULL, kCFNumberLongLongType, &bytesPerElement));
+		CFNumberRef bytesPerElementCF = CFNumberCreate(NULL, kCFNumberLongLongType, &bytesPerElement);
+		CFDictionaryAddValue(properties, kIOSurfaceBytesPerElement, bytesPerElementCF);
 
 		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
@@ -491,7 +558,11 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 //		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		ioSurface = (VuoIoSurface)IOSurfaceCreate(properties);
-		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGB, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)ioSurface, 0);
+		CFRelease(pixelsWideCF);
+		CFRelease(pixelsHighCF);
+		CFRelease(bytesPerElementCF);
+		CFRelease(properties);
+		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)ioSurface, 0);
 		if (err != kCGLNoError)
 		{
 			VLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
@@ -564,7 +635,7 @@ void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 	{
 		infoLog = (char *)malloc(infologLength);
 		glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
-		fprintf(stderr,"%s\n",infoLog);
+		VLog("%s",infoLog);
 		free(infoLog);
 	}
 }
@@ -580,20 +651,46 @@ __attribute__((constructor)) static void VuoGlShaderPool_init(void)
 	VuoGlShaderPool_semaphore = dispatch_semaphore_create(1);
 }
 
+#include "deform.h"
+#include "hsl.h"
+#include "lighting.h"
+#include "noise2D.h"
+#include "noise3D.h"
+#include "noise4D.h"
+#include "triangle.h"
+#include "triangleLine.h"
+#include "trianglePoint.h"
+
+/**
+ * If @c source contains the string `include(includeFileName)`, replaces that string with @c includeContents.
+ */
+string VuoGlShader_replaceInclude(string source, string includeFileName, const unsigned char *includeContents, unsigned int includeContentsLength)
+{
+	string includeToken = string("include(") + includeFileName + ")";
+	string::size_type includeTokenLocation;
+	if ((includeTokenLocation = source.find(includeToken)) == std::string::npos)
+		return source;
+
+	return source.substr(0, includeTokenLocation) + "\n"
+			+ string((const char *)includeContents, includeContentsLength) + "\n"
+			+ source.substr(includeTokenLocation + includeToken.length());
+}
+
 /**
  * Returns an OpenGL Shader Object representing the specified @c source.
  *
  * To improve performance, this function keeps a cache of precompiled shaders.
  * If a precompiled shader exists for the specified @c source, that shader is returned.
  * Otherwise, @c source is passed off to OpenGL to be compiled.
+ *
+ * Do not call `glDeleteShaders()` on the returned shader;
+ * it's expected to persist throughout the lifetime of the process.
  */
 GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 {
-	GLint length = strlen(source);
-
 	std::locale loc;
 	const std::collate<char> &coll = std::use_facet<std::collate<char> >(loc);
-	long hash = coll.hash(source, source+length);
+	long hash = coll.hash(source, source+strlen(source));
 
 	dispatch_semaphore_wait(VuoGlShaderPool_semaphore, DISPATCH_TIME_FOREVER);
 
@@ -604,8 +701,48 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 	{
 		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
+		string combinedSource = source;
+
+		if (strcmp((const char *)(*cgl_ctx->disp.get_string)(cgl_ctx->rend,0x1F00), "ATI Technologies Inc.") == 0)
+		{
+			// On ATI Radeon HD 5770 (and possibly others), using snoise4D3D() causes
+			// GLSL compliation to crash inside ATIRadeonX3000GLDriver,
+			// so use the built-in noise function.
+			// Continue using snoise4D3D() on other systems since it (at least on some configurations)
+			// prevents falling back to the software renderer.
+			// https://b33p.net/kosada/node/8285
+
+			// Ignore "include(noise4D)".
+			string includeToken = string("include(noise4D)");
+			string::size_type includeTokenLocation;
+			if ((includeTokenLocation = combinedSource.find(includeToken)) != std::string::npos)
+				combinedSource.replace(includeTokenLocation, includeToken.length(), "");
+
+			// Replace snoise4D3D() calls with noise3().
+			string::size_type snoise4D3DLocation = 0;
+			string snoise4D3DToken = string("snoise4D3D");
+			string noise3Token = string("noise3");
+			while ((snoise4D3DLocation = combinedSource.find(snoise4D3DToken, snoise4D3DLocation)) != std::string::npos)
+			{
+				 combinedSource.replace(snoise4D3DLocation, snoise4D3DToken.length(), noise3Token);
+				 snoise4D3DLocation += noise3Token.length();
+			}
+		}
+
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "deform",        deform_glsl,        deform_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "hsl",           hsl_glsl,           hsl_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "lighting",      lighting_glsl,      lighting_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "noise2D",       noise2D_glsl,       noise2D_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "noise3D",       noise3D_glsl,       noise3D_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "noise4D",       noise4D_glsl,       noise4D_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "triangle",      triangle_glsl,      triangle_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "triangleLine",  triangleLine_glsl,  triangleLine_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "trianglePoint", trianglePoint_glsl, trianglePoint_glsl_len);
+
 		shader = glCreateShader(type);
-		glShaderSource(shader, 1, (const GLchar**)&source, &length);
+		GLint length = combinedSource.length();
+		const GLchar *combinedSourceCString = combinedSource.c_str();
+		glShaderSource(shader, 1, (const GLchar**)&combinedSourceCString, &length);
 		glCompileShader(shader);
 		VuoGlShader_printShaderInfoLog(cgl_ctx, shader);
 
@@ -617,6 +754,9 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 	return shader;
 }
 
+/// Helper for @ref VuoGl_stringForConstant.
+#define RETURN_STRING_IF_EQUAL(value) if (constant == value) return #value
+
 /**
  * Returns a string for the specified OpenGL constant.
  *
@@ -624,16 +764,37 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
  */
 const char * VuoGl_stringForConstant(GLenum constant)
 {
-	if (constant == GL_RGB)
-		return "GL_RGB";
-	if (constant == GL_RGBA)
-		return "GL_RGBA";
-	if (constant == GL_LUMINANCE8)
-		return "GL_LUMINANCE8";
-	if (constant == GL_LUMINANCE8_ALPHA8)
-		return "GL_LUMINANCE8_ALPHA8";
-	if (constant == GL_DEPTH_COMPONENT)
-		return "GL_DEPTH_COMPONENT";
+	if (constant == 0)
+		return "(GL_ZERO or GL_POINTS)";
+	if (constant == 1)
+		return "(GL_ONE or GL_LINES)";
+	RETURN_STRING_IF_EQUAL(GL_LINE_LOOP);
+	RETURN_STRING_IF_EQUAL(GL_LINE_STRIP);
+	RETURN_STRING_IF_EQUAL(GL_TRIANGLES);
+	RETURN_STRING_IF_EQUAL(GL_TRIANGLE_STRIP);
+	RETURN_STRING_IF_EQUAL(GL_TRIANGLE_FAN);
+	RETURN_STRING_IF_EQUAL(GL_QUADS);
+	RETURN_STRING_IF_EQUAL(GL_QUAD_STRIP);
+	RETURN_STRING_IF_EQUAL(GL_POLYGON);
+	RETURN_STRING_IF_EQUAL(GL_RGB);
+	RETURN_STRING_IF_EQUAL(GL_RGB16);
+	RETURN_STRING_IF_EQUAL(GL_RGB16F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_RGB32F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_RGBA);
+	RETURN_STRING_IF_EQUAL(GL_RGBA16);
+	RETURN_STRING_IF_EQUAL(GL_RGBA16F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_RGBA32F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_BGRA);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE8);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE8_ALPHA8);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16_ALPHA16);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE_ALPHA16F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_DEPTH_COMPONENT);
+	RETURN_STRING_IF_EQUAL(GL_TEXTURE_2D);
+	RETURN_STRING_IF_EQUAL(GL_TEXTURE_RECTANGLE_ARB);
 
 	return "(unknown)";
 }

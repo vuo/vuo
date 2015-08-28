@@ -10,6 +10,11 @@
 #ifndef VUOMOUSEBUTTON_H
 #define VUOMOUSEBUTTON_H
 
+/// @{
+typedef void * VuoList_VuoMouseButton;
+#define VuoList_VuoMouseButton_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoMouseButton VuoMouseButton
@@ -30,6 +35,7 @@ typedef enum {
 
 VuoMouseButton VuoMouseButton_valueFromJson(struct json_object * js);
 struct json_object * VuoMouseButton_jsonFromValue(const VuoMouseButton value);
+VuoList_VuoMouseButton VuoMouseButton_allowedValues(void);
 char * VuoMouseButton_summaryFromValue(const VuoMouseButton value);
 
 /// @{

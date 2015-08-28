@@ -124,7 +124,8 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 												0);
 	VuoPoint3d shadowCenter3d = VuoTransform_transformPoint(matrix, shadowOffset3d);
 	VuoPoint2d shadowCenter = VuoPoint2d_make(shadowCenter3d.x, shadowCenter3d.y);
-	VuoLayer shadow = VuoLayer_make(NULL, blurredImage, shadowCenter, rotation, width, alpha);
+	VuoReal shadowWidth = width * blurredImage->pixelsWide/image->pixelsWide;
+	VuoLayer shadow = VuoLayer_make(NULL, blurredImage, shadowCenter, rotation, shadowWidth, alpha);
 	shadow.sceneObject.isRealSize = isRealSize;
 
 	VuoList_VuoLayer layers = VuoListCreate_VuoLayer();
@@ -188,7 +189,7 @@ VuoLayer VuoLayer_makeColor(VuoText name, VuoColor color, VuoPoint2d center, Vuo
 {
 	VuoLayer o;
 	o.sceneObject = VuoSceneObject_makeQuad(
-				VuoShader_makeColorShader(color),
+				VuoShader_makeUnlitColorShader(color),
 				VuoPoint3d_make(center.x, center.y, 0),
 				VuoPoint3d_make(0, 0, rotation),
 				width,
@@ -278,7 +279,7 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 
 	if (so.shader)
 	{
-		VuoImage image = VuoListGetValueAtIndex_VuoImage(so.shader->textures,1);
+		VuoImage image = VuoShader_getUniform_VuoImage(so.shader, "texture");
 		if (image && so.isRealSize)
 			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, so.transform.translation.x, so.transform.translation.y, viewportWidth, viewportHeight, matrix);
 		else

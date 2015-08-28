@@ -55,7 +55,6 @@ VuoModuleMetadata({
 
 		NSFont *_textFont = [NSFont fontWithName:@"Monaco" size:0];
 		self.textFont = _textFont;
-		[_textFont release];
 
 		NSScrollView *_scrollView = [[NSScrollView alloc] initWithFrame:[[self contentView] frame]];
 		self.scrollView = _scrollView;
@@ -191,6 +190,7 @@ VuoModuleMetadata({
 	NSDictionary *attributes = [NSDictionary dictionaryWithObject:textFont forKey:NSFontAttributeName];
 	NSAttributedString *attributedLine = [[NSAttributedString alloc] initWithString:line attributes:attributes];
 	[[textView textStorage] appendAttributedString:attributedLine];
+	[attributedLine release];
 
 	NSTextContainer *textContainer = [textView textContainer];
 	NSLayoutManager *layoutManager = [textView layoutManager];

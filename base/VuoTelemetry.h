@@ -101,9 +101,19 @@ enum VuoControlRequest
 	VuoControlRequestPublishedInputPortTypesRetrieve,
 
 	/**
+	 * Request that the published input ports' details be looked up and returned.
+	 */
+	VuoControlRequestPublishedInputPortDetailsRetrieve,
+
+	/**
 	 * Request that the published output ports' types be looked up and returned.
 	 */
 	VuoControlRequestPublishedOutputPortTypesRetrieve,
+
+	/**
+	 * Request that the published output ports' details be looked up and returned.
+	 */
+	VuoControlRequestPublishedOutputPortDetailsRetrieve,
 
 	/**
 	 * Request that the published input port's connected unpublished ports be looked up and returned.
@@ -137,6 +147,15 @@ enum VuoControlRequest
 	 *		@arg @c char *valueAsString;
 	 */
 	VuoControlRequestPublishedInputPortValueModify,
+
+	/**
+	 * Request that the published input port's value be looked up and returned.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c bool shouldUseInterprocessSerialization;
+	 *		@arg @c char *name;
+	 */
+	VuoControlRequestPublishedInputPortValueRetrieve,
 
 	/**
 	 * Request that the published output port's value be looked up and returned.
@@ -241,6 +260,16 @@ enum VuoControlReply
 	VuoControlReplyPublishedInputPortTypesRetrieved,
 
 	/**
+	 * The list of published input ports' details, as string representations, has been retrieved.
+	 *
+	 * Includes data message-parts:
+	 *		@arg char *details0
+	 *		@arg char *details1
+	 *		@arg ...
+	 */
+	VuoControlReplyPublishedInputPortDetailsRetrieved,
+
+	/**
 	 * The list of published output ports' types, as string representations, has been retrieved.
 	 *
 	 * Includes data message-parts:
@@ -249,6 +278,16 @@ enum VuoControlReply
 	 *		@arg ...
 	 */
 	VuoControlReplyPublishedOutputPortTypesRetrieved,
+
+	/**
+	 * The list of published output ports' details, as string representations, has been retrieved.
+	 *
+	 * Includes data message-parts:
+	 *		@arg char *details0
+	 *		@arg char *details1
+	 *		@arg ...
+	 */
+	VuoControlReplyPublishedOutputPortDetailsRetrieved,
 
 	/**
 	 * The list of published input ports' connected unpublished ports has been retrieved.
@@ -279,6 +318,14 @@ enum VuoControlReply
 	 * The published input port's value has been set.
 	 */
 	VuoControlReplyPublishedInputPortValueModified,
+
+	/**
+	 * A string representation of the published input port's value has been retrieved.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *valueAsString;
+	 */
+	VuoControlReplyPublishedInputPortValueRetrieved,
 
 	/**
 	 * A string representation of the published output port's value has been retrieved.

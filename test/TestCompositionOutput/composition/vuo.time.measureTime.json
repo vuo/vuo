@@ -18,9 +18,6 @@
 		"firingPortName" : "start",
 		"valueForInputPortName" : [
 			{ "port" : "time", "value" : "2.0" }
-		],
-		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "0" }
 		]
 	},
 	{
@@ -48,9 +45,6 @@
 		"firingPortName" : "start",
 		"valueForInputPortName" : [
 			{ "port" : "time", "value" : "6.0" }
-		],
-		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "2" }
 		]
 	},
 	{
@@ -66,9 +60,6 @@
 		"firingPortName" : "reset",
 		"valueForInputPortName" : [
 			{ "port" : "time", "value" : "8.0" }
-		],
-		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "0" }
 		]
 	},
 	{
@@ -102,9 +93,6 @@
 		"firingPortName" : "start",
 		"valueForInputPortName" : [
 			{ "port" : "time", "value" : "13.0" }
-		],
-		"valueForOutputPortName" : [
-			{ "port" : "elapsedTime", "value" : "0" }
 		]
 	},
 	{

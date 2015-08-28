@@ -13,6 +13,7 @@
 #include "type.h"
 #include "VuoPoint4d.h"
 #include "VuoReal.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -90,9 +91,5 @@ json_object * VuoPoint4d_jsonFromValue(const VuoPoint4d value)
  */
 char * VuoPoint4d_summaryFromValue(const VuoPoint4d value)
 {
-	const char *format = "%g, %g, %g, %g";
-	int size = snprintf(NULL,0,format,value.x,value.y,value.z,value.w);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.x,value.y,value.z,value.w);
-	return valueAsString;
+	return VuoText_format("%g, %g, %g, %g", value.x, value.y, value.z, value.w);
 }

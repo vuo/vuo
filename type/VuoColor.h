@@ -27,6 +27,8 @@ typedef void * VuoList_VuoColor;
 
 /**
  * A color, with component values specifying red, green, blue, and alpha (opacity).
+ *
+ * Each value is in the range [0,1], and specifies a color in the sRGB color space.
  */
 typedef struct
 {
@@ -40,7 +42,7 @@ char * VuoColor_summaryFromValue(const VuoColor value);
 /**
  * Returns a @c VuoColor with the given red, green, blue, alpha.
  *
- * Assumes each value is in the range [0,1].
+ * Assumes each value is in the range [0,1], and specifies a color in the sRGB color space.
  */
 static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, VuoReal a) __attribute__((const));
 static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, VuoReal a)
@@ -52,7 +54,7 @@ static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, Vu
 /**
  * Gets the red, green, blue, alpha of a color.
  *
- * Each value is in the range [0,1].
+ * Each value is in the range [0,1], and specifies a color in the sRGB color space.
  */
 static inline void VuoColor_getRGBA(VuoColor color, VuoReal *r, VuoReal *g, VuoReal *b, VuoReal *a)
 {
@@ -73,6 +75,8 @@ VuoColor VuoColor_average(VuoList_VuoColor colors);
  */
 VuoColor VuoColor_valueFromString(const char *str);
 char * VuoColor_stringFromValue(const VuoColor value);
+void VuoColor_retain(VuoColor value);
+void VuoColor_release(VuoColor value);
 /// @}
 
 /**

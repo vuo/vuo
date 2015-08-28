@@ -54,18 +54,18 @@ public:
 			{
 				context = avaialbleSharedContexts.back();
 				avaialbleSharedContexts.pop_back();
-//				fprintf(stderr, "VuoGlContextPool::use() found existing context %p\n", context);
+//				VLog("Found existing context %p.", context);
 			}
 			else
 			{
 				context = createContext(rootContext);
 				if (!context)
 				{
-					fprintf(stderr, "Error: VuoGlContextPool::use() couldn't create a context.\n");
+					VLog("Error: Couldn't create a context.");
 					return NULL;
 				}
 				allSharedContexts.push_back(context);
-//				fprintf(stderr, "VuoGlContextPool::use() created %p\n", context);
+//				VLog("Created context %p.", context);
 			}
 		}
 		dispatch_semaphore_signal(poolSemaphore);
@@ -80,14 +80,14 @@ public:
 	 */
 	void disuse(CGLContextObj context)
 	{
-//		fprintf(stderr, "VuoGlContextPool::disuse(%p)\n", context);
+//		VLog("%p", context);
 
 		dispatch_semaphore_wait(poolSemaphore, DISPATCH_TIME_FOREVER);
 		{
 			if (std::find(allSharedContexts.begin(), allSharedContexts.end(), context) != allSharedContexts.end())
 				avaialbleSharedContexts.push_back(context);
 			else
-				fprintf(stderr, "Error: Called VuoGlContextPool::disuse() with context %p that isn't in the global share pool.  I'm not going to muddy the waters.\n", context);
+				VLog("Error: Disued context %p, which isn't in the global share pool.  I'm not going to muddy the waters.", context);
 		}
 		dispatch_semaphore_signal(poolSemaphore);
 	}
@@ -104,7 +104,7 @@ private:
 		if (!rootContext)
 			rootContext = createContext(NULL);
 
-//		fprintf(stderr, "VuoGlContextPool() rootContext=%p\n", rootContext);
+//		VLog("rootContext=%p", rootContext);
 	}
 	/// @todo provide a way to shut down entire system and release the contexts.
 
@@ -114,28 +114,7 @@ private:
 		if (rootContext)
 			pf = CGLGetPixelFormat(rootContext);
 		else
-		{
-			CGLPixelFormatAttribute pfa[] = {
-				kCGLPFAAccelerated,
-				kCGLPFAWindow,
-				kCGLPFANoRecovery,
-				kCGLPFADoubleBuffer,
-				kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
-				kCGLPFADepthSize, (CGLPixelFormatAttribute) 16,
-				kCGLPFAMultisample,
-				kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
-				kCGLPFASamples, (CGLPixelFormatAttribute) 4,
-				(CGLPixelFormatAttribute) 0
-			};
-
-			GLint npix;
-			CGLError error = CGLChoosePixelFormat(pfa, &pf, &npix);
-			if (error != kCGLNoError)
-			{
-				fprintf(stderr, "Error: VuoGlContextPool::createContext() failed: %s\n", CGLErrorString(error));
-				return NULL;
-			}
-		}
+			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true);
 
 		CGLContextObj context;
 		{
@@ -143,7 +122,7 @@ private:
 			CGLDestroyPixelFormat(pf);
 			if (error != kCGLNoError)
 			{
-				fprintf(stderr, "Error: VuoGlContextPool::createContext() failed: %s\n", CGLErrorString(error));
+				VLog("Error: %s\n", CGLErrorString(error));
 				return NULL;
 			}
 		}
@@ -172,7 +151,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 {
 	if (VuoGlContextPool::singletonInstance)
 	{
-		fprintf(stderr, "Error: VuoGlContext_setGlobalRootContext() was called after VuoGlContextPool was initialized.  Ignoring the new rootContext.\n");
+		VLog("Error: Called after VuoGlContextPool was initialized.  Ignoring the new rootContext.");
 		return;
 	}
 
@@ -200,7 +179,7 @@ VuoGlContext VuoGlContext_use(void)
 	GLint value;																										\
 	glGetIntegerv(pname, &value);																						\
 	if (value)																											\
-		VLog(#pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
+		VuoLog(file, line, func, #pname " (value %d) was still active when the context was disused. (This may result in leaks.)", value);	\
 }
 
 /**
@@ -212,15 +191,13 @@ VuoGlContext VuoGlContext_use(void)
 	GLint value;																															\
 	glGetIntegerv(pname, &value);																											\
 	if (value)																																\
-		VLog(#pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
+		VuoLog(file, line, func, #pname " (texture %d on unit %d) was still active when the context was disused. (This may result in leaks.)", value, unit);	\
 }
 
 /**
- * Throws the specified @c VuoGlContext back in the pool.
- *
- * @threadAny
+ * Helper for @ref VuoGlContext_disuse.
  */
-void VuoGlContext_disuse(VuoGlContext glContext)
+void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsigned int line, const char *func)
 {
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
@@ -278,10 +255,51 @@ void VuoGlContext_disuse(VuoGlContext glContext)
 }
 
 /**
+ * Returns a platform-specific OpenGL pixelformat description.
+ *
+ * On Mac OS X, this is a @c CGLPixelFormatObj.
+ */
+void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
+{
+	CGLPixelFormatAttribute pfa[] = {
+		kCGLPFAAccelerated,
+		kCGLPFAWindow,
+		kCGLPFANoRecovery,
+		kCGLPFADoubleBuffer,
+		kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
+		kCGLPFADepthSize, (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0),
+		// Multisampling breaks point rendering on some GPUs.  https://b33p.net/kosada/node/8225#comment-31324
+//		kCGLPFAMultisample,
+//		kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
+//		kCGLPFASamples, (CGLPixelFormatAttribute) 4,
+		(CGLPixelFormatAttribute) 0
+	};
+
+	CGLPixelFormatObj pf;
+	GLint npix;
+	CGLError error = CGLChoosePixelFormat(pfa, &pf, &npix);
+	if (error != kCGLNoError)
+	{
+		VLog("Error: %s", CGLErrorString(error));
+		return NULL;
+	}
+
+	return (void *)pf;
+}
+
+/**
  * Helper for @c VGL().
  */
 void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func)
 {
+	GLint vertexOnGPU, fragmentOnGPU;
+	CGLGetParameter(cgl_ctx, kCGLCPGPUVertexProcessing, &vertexOnGPU);
+	if (!vertexOnGPU)
+		VuoLog(file, line, func, "OpenGL warning: Falling back to software renderer for vertex shader.  This will slow things down.");
+	CGLGetParameter(cgl_ctx, kCGLCPGPUFragmentProcessing, &fragmentOnGPU);
+	if (!fragmentOnGPU)
+		VuoLog(file, line, func, "OpenGL warning: Falling back to software renderer for fragment shader.  This will slow things down.");
+
 	GLenum error = glGetError();
 	if (error == GL_NO_ERROR)
 		return;
@@ -297,7 +315,7 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 	else if (error == GL_INVALID_FRAMEBUFFER_OPERATION)
 	{
 		errorString = "GL_INVALID_FRAMEBUFFER_OPERATION (The framebuffer object is not complete. The offending command is ignored and has no other side effect than to set the error flag.)";
-		fprintf(stderr, "# %s:%u :: %s() OpenGL error %d: %s\n", file, line, func, error, errorString);
+		VuoLog(file, line, func, "OpenGL error %d: %s", error, errorString);
 
 		GLenum framebufferError = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		// Text from http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
@@ -312,7 +330,7 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 			framebufferErrorString = "GL_FRAMEBUFFER_UNSUPPORTED (The combination of internal formats of the attached images violates an implementation-dependent set of restrictions.)";
 		else if (framebufferError == GL_FRAMEBUFFER_COMPLETE)
 			framebufferErrorString = "GL_FRAMEBUFFER_COMPLETE (?)";
-		fprintf(stderr, "# %s:%u :: %s() OpenGL framebuffer error %d: %s\n", file, line, func, framebufferError, framebufferErrorString);
+		VuoLog(file, line, func, "OpenGL framebuffer error %d: %s", framebufferError, framebufferErrorString);
 
 		return;
 	}
@@ -323,5 +341,5 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 	else if (error == GL_STACK_OVERFLOW)
 		errorString = "GL_STACK_OVERFLOW (An attempt has been made to perform an operation that would cause an internal stack to overflow.)";
 
-	fprintf(stderr, "# %s:%u :: %s() OpenGL error %d: %s\n", file, line, func, error, errorString);
+	VuoLog(file, line, func, "OpenGL error %d: %s", error, errorString);
 }

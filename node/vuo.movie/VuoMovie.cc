@@ -11,21 +11,23 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include "VuoGlContext.h"
 #include "VuoGlPool.h"
-#include <time.h>
 #include "VuoList_VuoReal.h"
+#include <sys/time.h>
 
 extern "C"
 {
 #include "module.h"
 #include <dispatch/dispatch.h>
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <avcodec.h>
 #include <avformat.h>
 #include <avutil.h>
 #include <swscale.h>
 #include <string.h>
+#include <libswresample/swresample.h>
+#include <libavutil/opt.h>
 #pragma clang diagnostic pop
 
 #ifdef VUO_COMPILER
@@ -35,7 +37,8 @@ VuoModuleMetadata({
 						"avcodec",
 						"avformat",
 						"avutil",
-						"swscale"
+						"swscale",
+						"swresample"
 					 ],
 					 "compatibleOperatingSystems": {
 						 "macosx" : { "min": "10.6" }
@@ -47,7 +50,13 @@ VuoModuleMetadata({
 #define SEC_PER_USEC .000001	///< Seconds per microsecond. Vuo nodes want information in seconds, where ffmpeg operates in microseconds.
 #define REWIND .1				///< How many seconds behind the requested frame to seek.
 #define REWIND_INCREMENT .2		///< If the REWIND value does not seek far enough, increment by this value.
+#define AVCODEC_MAX_AUDIO_FRAME_SIZE 192000	///< https://github.com/chelyaev/ffmpeg-tutorial/issues/13
 
+#define AV_SYNC_THRESHOLD 0.01 	///< The maximum allowable latency in either direction for audio offset
+#define AV_NOSYNC_THRESHOLD 10.0 	///< If the audio track is offset by greater than this amount, give up synching and reset.
+#define SAMPLE_CORRECTION_PERCENT_MAX 10 	///< Maximum number of samples to add or subtract from a buffer when synching.
+#define AUDIO_DIFF_AVG_NB 20 			///< Used in calculating audio offset.
+#define MAX_PACKET_QUEUE_LENGTH 100	///< If we're not using a particular stream, keep the queue only up to this amount
 /**
  * Instance class used to control the playback of video.
  * \sa @c VuoMovie_getNextFrame @c VuoMovie_initFfmpeg @c VuoMovie_getInfo @c VuoMovie_make
@@ -57,6 +66,24 @@ class VuoMovieDecoder
 public:
 
 	/**
+	 * A replacement for the FFMPEG AVPacketList which uses deprecated functionality.
+	 */
+	typedef struct VuoPacketList {
+		AVPacket pkt;
+		VuoPacketList *next;
+	} VuoPacketList;
+
+	/**
+	 * Holds audio AVPackets for decoding.
+	 */
+	typedef struct PacketQueue
+	{
+		VuoPacketList *first_pkt, *last_pkt;
+		int nb_packets;
+		int size;
+	} PacketQueue;
+
+	/**
 	 * Internal struct which contains context and current playback status of VuoMovieDecoder.
 	 */
 	typedef struct AVContainer
@@ -64,26 +91,49 @@ public:
 		char *path;
 
 		AVFormatContext *pFormatCtx;
+
 		AVCodecContext *pCodecCtx;
+		AVCodecContext *aCodecCtx;
 
 		AVStream *video_st;
+		AVStream *audio_st;
+
+		PacketQueue audioPacketQueue;
+		int bytesPerAudioSample;		// size of an audio sample (eg, sizeof(float), sizeof(double), etc)
+
+		int64_t avOffset;	// first video packet PTS - first audio packet PTS
+
+		PacketQueue videoPacketQueue;
 
 		int videoStreamIndex;
+		int audioStreamIndex;
+
+		/* used for AV difference average computation */
+		double audio_diff_cum;
+		double audio_diff_avg_coef;
+		double audio_diff_threshold;
+		int audio_diff_avg_count;
+
 		int64_t startPts;
 
 		double duration;				// in seconds
 		int packetDuration = 0;			// int time_base units
 		int previousPacketDuration = 0;	// the duration of the packet immediately prior to the last queued packet.
 
-		int64_t lastTimestamp = 0;		// in microseconds
-		int64_t lastPts = 0;			// in av units
+		int64_t currentVideoTimestampUSEC = 0;		// in microseconds
+		int64_t currentAudioTimestampUSEC = 0;		// in microseconds
 
-//		int64_t *pts;					// a cache of the frame pts values - used when seeking
-		int64_t firstFrame, lastFrame;	// the first and last frame pts values
+		int64_t currentVideoPTS = 0;				// in av units
+		int64_t currentAudioPTS = 0;				// in av units
+
+		int64_t firstVideoFrame, lastVideoFrame;	// the first and last frame pts values
+		int64_t firstAudioFrame, lastAudioFrame;	// first audio timestamp (PTS value)
 
 		bool seekUnavailable;			// if true, the seek function will close and re-open it's stream
 										// when seeking, then step to the desired frame.  necessary with
 										// some codecs; namely flv and some gif files
+
+		struct SwrContext *swr_ctx;
 	}  AVContainer;
 
 	/**
@@ -124,36 +174,66 @@ public:
 			return -1;
 
 		// get more accurate duration
-		nextFrame(NULL);
-		container.firstFrame = container.lastPts;	// get the first frame's pts value, since format->start_pts isn't reliable
+		packetQueueInit(&container.videoPacketQueue);
+
+		nextVideoFrame(NULL);
+		container.firstVideoFrame = container.currentVideoPTS;	// get the first frame's pts value, since format->start_pts isn't reliable
+
+		if(containsAudio())
+		{
+			nextAudioFrame(NULL, 512);
+			container.firstAudioFrame = container.currentAudioPTS;	// get the first frame's pts value, since format->start_pts isn't reliable
+			container.avOffset = container.currentAudioTimestampUSEC - container.currentVideoTimestampUSEC;
+		}
+
+		// VLog("first audio timestamp : %f", container.currentAudioTimestampUSEC * SEC_PER_USEC);
+		// VLog("first video timestamp : %f", container.currentVideoTimestampUSEC * SEC_PER_USEC)
+
+		// VLog("==================");
 
 		container.duration = av_rescale_q ( container.video_st->duration,  container.video_st->time_base, AV_TIME_BASE_Q ) * SEC_PER_USEC;
 
 		// seek function clamps desired frame timestamp to first and last pts, so set it super high on the first run
-		container.lastFrame = INT64_MAX;
+		container.lastVideoFrame = INT64_MAX;
+		container.lastAudioFrame = INT64_MAX;
 
 		// seek to 1 microsecond before projected duration (if a duration value was available - otherwise we've got to step from start)
 		// codecs like flash and some gif don't get seek support from ffmpeg, so do things the hard way.
 		if(container.duration > 0. && !container.seekUnavailable)
 			seekToMs( (container.duration * 1000)-1000  );
 
-		while(nextFrame(NULL))
-			;
+		while(nextVideoFrame(NULL)) ;
 
-		container.lastFrame = container.lastPts;
+		container.lastVideoFrame = container.currentVideoPTS;
 
-		container.duration = av_rescale_q(container.lastFrame-container.firstFrame, container.video_st->time_base, AV_TIME_BASE_Q ) * SEC_PER_USEC;;
+		if(containsAudio())
+		{
+			while(nextAudioFrame(NULL, 512)) ;
+			container.lastAudioFrame = container.currentAudioPTS;
+		}
 
-		seekFrame(0);
+		// VLog("File: %s\nCodec: %s", path, container.pCodecCtx->codec_name);
+		// VLog("video: first pts: %lli last pts: %lli", container.firstVideoFrame, container.lastVideoFrame);
+		// VLog("audio: first pts: %lli last pts: %lli", container.firstAudioFrame, container.lastAudioFrame);
 
-//		VLog("first frame pts: %lli last frame pts: %lli", container.firstFrame, container.lastFrame);
-//		VLog("packetDuration says: %i", container.packetDuration);
-//		VLog("second duration is %f", container.duration);
-//		int64_t sec = secondToAvTime(container.duration);
-//		VLog("sec %f to pts is %lli", container.duration, sec);
-//		VLog("File: %s\nCodec: %s", path, container.pCodecCtx->codec_name);
+		container.duration = av_rescale_q(container.lastVideoFrame-container.firstVideoFrame, container.video_st->time_base, AV_TIME_BASE_Q ) * SEC_PER_USEC;
+
+		seekFrame(container.pCodecCtx, 0);
+
+		// VLog("second duration is %f", container.duration);
+		// int64_t sec = secondToAvTime(container.duration);
+		// VLog("sec %f to pts is %lli", container.duration, sec);
+
 
 		return 0;
+	}
+
+	/**
+	 * If file contains audio tracks, return yes.  Otherwise, no.
+	 */
+	bool containsAudio()
+	{
+		return container.audioStreamIndex > -1;
 	}
 
 	/**
@@ -161,18 +241,32 @@ public:
 	 */
 	double getCurrentSecond()
 	{
-		return container.lastTimestamp * SEC_PER_USEC;
+		return container.currentVideoTimestampUSEC * SEC_PER_USEC;
 	}
 
 	/**
 	 * Attempts to extract the frame image and timestamp for the next full frame in the current stream.
 	 */
-	bool getNextFrame(VuoImage *image, double *frameTimestampInSeconds)
+	bool getNextVideoFrame(VuoImage *image, double *frameTimestampInSeconds)
 	{
-		bool gotNextFrame = nextFrame(image);
+		bool gotNextFrame = nextVideoFrame(image);
 
 		if(gotNextFrame)
-			*frameTimestampInSeconds = container.lastTimestamp * SEC_PER_USEC;
+			*frameTimestampInSeconds = container.currentVideoTimestampUSEC * SEC_PER_USEC;
+
+		return gotNextFrame;
+	}
+
+	/**
+	 * Attempt to extract audioSamples.sampleCount number of values from audio channels
+	 */
+	bool getNextAudioFrame(VuoList_VuoAudioSamples *audioSamples, double *frameTimestampInSeconds)
+	{
+		// nextAudioFrame will fill the channel array using 512 buckets at whatever sample rate ffmpeg specifies
+		bool gotNextFrame = nextAudioFrame(audioSamples, VuoAudioSamples_bufferSize);
+
+		if(gotNextFrame)
+			*frameTimestampInSeconds = container.currentAudioTimestampUSEC * SEC_PER_USEC;
 
 		return gotNextFrame;
 	}
@@ -180,17 +274,19 @@ public:
 	/**
 	 * Attempts to extract chronologically prior frame image and timestamp in the current stream.
 	 */
-	bool getPreviousFrame(VuoImage *image, double *frameTimestampInSeconds)
+	bool getPreviousVideoFrame(VuoImage *image, double *frameTimestampInSeconds)
 	{
-		if( container.lastPts-container.previousPacketDuration <= container.firstFrame || !seekFrame(container.lastPts - container.previousPacketDuration) )
+		// Check if we're at the beginning of the video, then attempt to seek to the frame prior to the one we want
+		if( container.currentVideoPTS-container.previousPacketDuration <= container.firstVideoFrame ||
+			!seekFrame(container.pCodecCtx, container.currentVideoPTS - container.previousPacketDuration) )
 		{
 			return false;
 		}
 
-		bool gotNextFrame = nextFrame(image);
+		bool gotNextFrame = nextVideoFrame(image);
 
 		if(gotNextFrame)
-			*frameTimestampInSeconds = container.lastTimestamp * SEC_PER_USEC;
+			*frameTimestampInSeconds = container.currentVideoTimestampUSEC * SEC_PER_USEC;
 
 		return gotNextFrame;
 	}
@@ -202,8 +298,9 @@ public:
 	{
 		VuoList_VuoReal framePts = VuoListCreate_VuoReal();
 
-		while(nextFrame(NULL))
-			VuoListAppendValue_VuoReal(framePts, container.lastTimestamp);
+		//
+		while(nextVideoFrame(NULL))
+			VuoListAppendValue_VuoReal(framePts, container.currentVideoTimestampUSEC);
 
 		return framePts;
 	}
@@ -219,7 +316,7 @@ public:
 												container.pFormatCtx->streams[container.videoStreamIndex]->time_base.num);
 		desiredFrameNumber /= 1000;	// convert to microsecond
 
-		return seekFrame(desiredFrameNumber);
+		return seekFrame(container.pCodecCtx, desiredFrameNumber);
 	}
 
 private:
@@ -244,6 +341,15 @@ private:
 				break;
 			}
 
+		// hook up audio stream index
+		container.audioStreamIndex = -1;
+		for(int i = 0; i < (container.pFormatCtx)->nb_streams; i++)
+			if( (container.pFormatCtx)->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+			{
+				container.audioStreamIndex = i;
+				break;
+			}
+
 		if(container.videoStreamIndex < 0)
 		  return -1; // Didn't find a video stream
 
@@ -256,18 +362,86 @@ private:
 		// Find the decoder for the video stream
 		pCodec = avcodec_find_decoder(container.pCodecCtx->codec_id);
 
+		// And the audio stream (if applicable)
+		AVCodec *aCodec = NULL;
+		if(container.audioStreamIndex > -1)
+		{
+			container.audio_st = (container.pFormatCtx)->streams[container.audioStreamIndex];
+			container.aCodecCtx = container.audio_st->codec;
+			aCodec = avcodec_find_decoder(container.aCodecCtx->codec_id);
+		}
+
 		if (pCodec == NULL)
 		  return -1; // Codec not found
 
-//		VLog("Codec: %s", AVCodecIDToString(pCodec->id) );
+		// if(container.audioStreamIndex >= 0)
+		// 	VLog("Audio Codec: %s", AVCodecIDToString(aCodec->id) );
 
-		// Flash can't seek, so when seeking just jet to 0
+
+		// Flash can't seek, so when seeking just jet to 0 and step
 		if(pCodec->id == AV_CODEC_ID_FLV1 || pCodec->id == AV_CODEC_ID_GIF)
 			container.seekUnavailable = true;
 
 		// Open codec
 		if(avcodec_open2(container.pCodecCtx, pCodec, NULL) < 0)
 		  return -1; // Could not open codec
+
+		if(container.audioStreamIndex >= 0)
+		{
+			int ret;
+			if ((ret = avcodec_open2(container.aCodecCtx, aCodec, NULL)) < 0)
+			{
+				VLog("Failed opening audio context: %s", av_err2str(ret));
+				container.audioStreamIndex = -1;
+			}
+			else
+			{
+				container.swr_ctx = swr_alloc();
+				if (!container.swr_ctx)
+				{
+					VLog("Could not allocate resampler context\n");
+					container.audioStreamIndex = -1;
+				}
+				else
+				{
+					/* set output resample options */
+					int src_ch_layout = container.aCodecCtx->channel_layout;
+					int src_rate = container.aCodecCtx->sample_rate;
+					AVSampleFormat src_sample_fmt = container.aCodecCtx->sample_fmt;
+
+					// we want planar doubles
+					AVSampleFormat dst_sample_fmt = AV_SAMPLE_FMT_DBLP;
+
+					av_opt_set_int(container.swr_ctx, "in_channel_layout", src_ch_layout, 0);
+					av_opt_set_int(container.swr_ctx, "in_sample_rate", src_rate, 0);
+					av_opt_set_sample_fmt(container.swr_ctx, "in_sample_fmt", src_sample_fmt, 0);
+
+					av_opt_set_int(container.swr_ctx, "out_channel_layout", src_ch_layout, 0);
+					av_opt_set_int(container.swr_ctx, "out_sample_rate", VuoAudioSamples_sampleRate, 0);
+					av_opt_set_sample_fmt(container.swr_ctx, "out_sample_fmt", dst_sample_fmt, 0);
+
+					container.bytesPerAudioSample = av_get_bytes_per_sample(src_sample_fmt);
+
+					 /* averaging filter for audio sync */
+					container.audio_diff_avg_coef = exp(log(0.01 / AUDIO_DIFF_AVG_NB));
+					container.audio_diff_avg_count = 0;
+					/* Correct audio only if larger error than this */
+
+					// 512 is default sample size
+					container.audio_diff_cum = .0;
+
+					// use 1/30 because humans can't tell the difference less than this threshold
+					container.audio_diff_threshold = 1./30;//2.0 * 512 / VuoAudioSamples_sampleRate;//container.aCodecCtx->sample_rate;
+
+					int ret;
+					if ((ret = swr_init(container.swr_ctx)) < 0)
+						container.audioStreamIndex = -1;
+					else
+						/* initialize the packet queue */
+						packetQueueInit(&container.audioPacketQueue);
+				}
+			}
+		}
 
 		return 0;
 	}
@@ -307,30 +481,35 @@ private:
 
 	double rewind = .05;
 	double rewindIncrement = .1;
-	bool seekFrame(int64_t frame)
+	bool seekFrame(AVCodecContext *codexCtx, int64_t frame)
 	{
-//		VLog("SeekTo: %lli", frame);
-
-		if(frame > container.lastFrame)
-			frame = container.lastFrame;
-
-		if(frame < container.firstFrame)
-			frame = container.firstFrame;
-
+		packetQueueFlush(&container.videoPacketQueue);
 		avcodec_flush_buffers(container.pCodecCtx);
+
+		if(containsAudio())
+		{
+			packetQueueFlush(&container.audioPacketQueue);
+			avcodec_flush_buffers(container.aCodecCtx);
+		}
+
+		if(frame > container.lastVideoFrame)
+			frame = container.lastVideoFrame;
+
+		if(frame < container.firstVideoFrame)
+			frame = container.firstVideoFrame;
 
 		int64_t seek = frame - secondToAvTime(rewind);
 
 		int ret = av_seek_frame(container.pFormatCtx, container.videoStreamIndex, seek, AVSEEK_FLAG_ANY);
 
-		container.lastPts = 0;
+		container.currentVideoPTS = 0;
 
 		if(ret < 0)
 		{
 			if(container.seekUnavailable)
 			{
-				if(container.pCodecCtx != NULL)
-					avcodec_close(container.pCodecCtx);
+				if(codexCtx != NULL)
+					avcodec_close(codexCtx);
 
 				if(container.pFormatCtx != NULL)
 					avformat_close_input(&container.pFormatCtx);
@@ -344,41 +523,78 @@ private:
 				return false;
 		}
 
-		if(frame <= container.firstFrame)
-			return nextFrame(NULL);
+		if(frame <= container.firstVideoFrame)
+			return nextVideoFrame(NULL);
 
 		bool frameDecoded = false;
 
-		while(container.lastPts + container.packetDuration < frame)
+		// after initial seek, step frame by frame til we get to right before the one we want.
+		while(container.currentVideoPTS + container.packetDuration < frame)
 		{
+			// VLog("seeking: %llu + %i / %llu", container.currentVideoPTS, container.packetDuration, frame);
+
 			// don't bail on a null frame in this loop, since nextFrame() can sometimes
 			// decode a junk frame and return false when there are in fact frames still
 			// left.  test with `/System/Library/Compositions/Yosemite.mov` to see this
 			// behavior.
-			if( !nextFrame(NULL) )
+			if( !nextVideoFrame(NULL) )
 			{
-				container.lastPts = frame;
 				if(frameDecoded)
-					frame = container.lastPts;
+				{
+					frame = container.currentVideoPTS;
+				}
+				else
+				{
+					container.currentVideoPTS = frame;
+					frame -= container.packetDuration;
+				}
 			}
 			else
+			{
 				frameDecoded = true;
+			}
 
 			// av_seek_frame can put the index before or after the desired frame.  when it overshoots,
 			// seek to a further back point to guarantee we get a frame before and save the rewind
 			// time used so that in future cycles this won't be necessary.
-			if(container.lastPts >= frame)
+			if(container.currentVideoPTS >= frame)
 			{
-				avcodec_flush_buffers(container.pCodecCtx);
+				if(codexCtx != NULL)
+				{
+					packetQueueFlush(&container.videoPacketQueue);
+					avcodec_flush_buffers(container.pCodecCtx);
+
+					if(containsAudio())
+					{
+						packetQueueFlush(&container.audioPacketQueue);
+						avcodec_flush_buffers(container.aCodecCtx);
+					}
+
+					// avcodec_flush_buffers(codexCtx);
+				}
+
 				rewind += rewindIncrement;
 				ret = av_seek_frame(container.pFormatCtx, container.videoStreamIndex, frame-secondToAvTime(rewind), AVSEEK_FLAG_ANY);
 				if(ret < 0) return false;
 
-				container.lastPts = container.firstFrame;
+				container.currentVideoPTS = container.firstVideoFrame;
 			}
 		}
 
-		return container.lastPts < frame;
+		// update
+		container.currentVideoTimestampUSEC = av_rescale_q ( container.currentVideoPTS,  container.video_st->time_base, AV_TIME_BASE_Q );
+
+		/// also step the audio to match
+		if(containsAudio())
+		{
+			do {
+				nextAudioFrame(NULL, 8);
+			} while( container.currentAudioTimestampUSEC - container.avOffset < container.currentVideoTimestampUSEC );
+		}
+
+		// VLog("vid: %f  audio: %f", container.currentVideoTimestampUSEC * SEC_PER_USEC, container.currentAudioTimestampUSEC * SEC_PER_USEC);
+
+		return container.currentVideoPTS < frame;
 
 		/// @todo (https://b33p.net/kosada/node/6598)
 	}
@@ -412,7 +628,7 @@ private:
 		img_convert((AVPicture *)pFrameRGB, pixelFormat, (AVPicture*)pFrame, pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height);
 
 		// Write frame to GL texture and create a VuoImage for it, then break and return.
-		image = VuoImage_makeFromBuffer(pFrameRGB->data[0], GL_RGBA, pCodecCtx->width, pCodecCtx->height);
+		image = VuoImage_makeFromBuffer(pFrameRGB->data[0], GL_RGBA, pCodecCtx->width, pCodecCtx->height, VuoImageColorDepth_8);
 
 		// Free the RGB image
 		av_free(buffer);
@@ -421,56 +637,405 @@ private:
 		return image;
 	}
 
-	bool nextFrame(VuoImage *image)
+	/**
+	 *	Get next packet and put it in the audio or video queue.  Should
+	 * 	only ever be called by next{Audio, Video}Frame() methods.
+	 */
+	bool nextFrame(PacketQueue *videoPktList, PacketQueue *audioPktList)
 	{
-		AVFrame *pFrame = avcodec_alloc_frame();
-		int frameFinished = 0;
 		AVPacket packet;
-		bool lastFrameOk = false;
-		if (image != NULL)
-			*image = NULL;
+		bool gotPacket = false;
 
-		//	@todo Refactor av_read_frame loop to it's own method, as it is called during a bunch of other tasks
 		while(av_read_frame(container.pFormatCtx, &packet) >= 0)
 		{
 			// Is this a packet from the video stream?
 			if(packet.stream_index == container.videoStreamIndex)
 			{
-				avcodec_decode_video2(container.pCodecCtx, pFrame, &frameFinished, &packet);
-
-				// Did we get a video frame?
-				if(frameFinished)
-				{
-					// Duration of this packet in AVStream->time_base units, 0 if unknown.
-					container.previousPacketDuration = container.packetDuration;
-					container.packetDuration = packet.duration;
-
-					// Get PTS here because formats with I frames can return junk values before a full frame is found
-					int64_t pts = av_frame_get_best_effort_timestamp ( pFrame );
-					container.lastPts = pts;
-
-//					VLog("pts: %lli  duration: %i", pts, container.packetDuration);
-
-					if( pts == AV_NOPTS_VALUE )
-						pts = 1;//pts = container.frameCount * av_q2d(container.video_st->time_base);	// if no pts, guess using the time base and current frame count.
-					else
-						pts = av_rescale_q ( pts,  container.video_st->time_base, AV_TIME_BASE_Q );  // pts is now in microseconds.
-
-					container.lastTimestamp = pts;
-
-					if(image != NULL)
-						*image = vuoImageWithAvFrame(container.pCodecCtx, pFrame);
-
-					lastFrameOk = true;
-
+				if(videoPktList != NULL)
+					packetQueue_put(videoPktList, &packet);
+				else
 					av_free_packet(&packet);
 
+				gotPacket = true;
+
+				break;
+			}
+			else if(packet.stream_index == container.audioStreamIndex)
+			{
+				if(audioPktList != NULL)
+					packetQueue_put(audioPktList, &packet);
+				else
+					av_free_packet(&packet);
+
+				gotPacket = true;
+				break;
+			}
+			else
+			{
+				av_free_packet(&packet);
+			}
+		}
+
+		return gotPacket;
+	}
+
+	/**
+	 * Decodes the next available video packet in videoPacketQueue and puts the image in *image
+	 */
+	bool nextVideoFrame(VuoImage *image)
+	{
+		AVFrame *pFrame = avcodec_alloc_frame();
+		int frameFinished = 0;
+		AVPacket packet;
+
+		while( !frameFinished )
+		{
+			// try to get the next video packet from the queue, and if the queue is empty,
+			// try to decode more packets.  if that fails, then return.
+			while( packetQueue_get(&container.videoPacketQueue, &packet) < 0 )
+			{
+				// no more packets available
+				if( !nextFrame(&container.videoPacketQueue, &container.audioPacketQueue) )
+				{
+					return false;
+				}
+			}
+
+			avcodec_decode_video2(container.pCodecCtx, pFrame, &frameFinished, &packet);
+		}
+
+		// Did we get a video frame?
+		if(frameFinished)
+		{
+			// Duration of this packet in AVStream->time_base units, 0 if unknown.
+			container.previousPacketDuration = container.packetDuration;
+			container.packetDuration = packet.duration;
+
+			// Get PTS here because formats with I frames can return junk values before a full frame is found
+			int64_t pts = av_frame_get_best_effort_timestamp ( pFrame );
+			container.currentVideoPTS = pts;
+
+			if( pts == AV_NOPTS_VALUE )
+				pts = 1;//pts = container.frameCount * av_q2d(container.video_st->time_base);	// if no pts, guess using the time base and current frame count.
+			else
+				pts = av_rescale_q ( pts,  container.video_st->time_base, AV_TIME_BASE_Q );  // pts is now in microseconds.
+
+			container.currentVideoTimestampUSEC = pts;
+
+
+			if(image != NULL)
+				*image = vuoImageWithAvFrame(container.pCodecCtx, pFrame);
+
+			av_free_packet(&packet);
+			av_free(pFrame);
+
+			return true;
+		}
+		else
+		{
+			av_free(pFrame);
+
+			return false;
+		}
+	}
+
+	/**
+	 * Read enough packets to fill the audioSamples.samples buffer, and store what's left for the next go-round
+	 */
+	bool nextAudioFrame(VuoList_VuoAudioSamples *audioSamples, const int wantedSampleCount)
+	{
+		static bool isPlanar = av_sample_fmt_is_planar( (AVSampleFormat)container.aCodecCtx->sample_fmt) > 0;
+		uint channel_count = container.aCodecCtx->channels;
+
+		long len = wantedSampleCount * sizeof(double);
+
+		int len1, audio_size;
+
+		/* get all samples in the next packet and store them here */
+		static uint8_t **audio_buf = (uint8_t **)malloc(channel_count*sizeof(uint8_t));
+
+		static unsigned int audio_buf_size = 0;		// how many bytes the audio_decode_frame function filled audio_buf with
+		static unsigned int audio_buf_index = 0;	// the current index of read samples from audio_buf
+
+		unsigned int stream_index = 0;
+
+		if(audioSamples == NULL)
+		{
+			audio_size = audio_decode_frame(audio_buf);
+			if(audio_size < 0)
+				return false;
+			else
+				return true;
+		}
+
+		/* init as many audiosamples arrays as channels and alloc with wanted sample size */
+		for(int i = 0; i < channel_count; i++)
+		{
+			VuoAudioSamples as = VuoAudioSamples_alloc(wantedSampleCount);
+
+			as.samplesPerSecond = container.aCodecCtx->sample_rate;
+			VuoListAppendValue_VuoAudioSamples(audioSamples, as);
+		}
+
+		while(stream_index < len)
+		{
+			if(audio_buf_index >= audio_buf_size)
+			{
+				/* We have already sent all our data; get more */
+				audio_size = audio_decode_frame(audio_buf);
+
+				if(audio_size < 0)
+				{
+					// VLog("... silence ...");
+
+					/* If error, output silence */
+					audio_buf_size = 512 * sizeof(double);
+					for(int i = 0; i < channel_count; i++)
+					{
+						audio_buf[i] = (uint8_t*)malloc(sizeof(double)*wantedSampleCount);
+						memset(audio_buf[i], 0., audio_buf_size);
+					}
+				}
+				else
+				{
+					audio_size = synchronize_audio(audio_buf, audio_size);
+					audio_buf_size = audio_size;
+				}
+
+				// VLog("Decode Audio -> samples: %li", audio_buf_size / sizeof(double));
+
+				audio_buf_index = 0;
+			}
+
+			len1 = audio_buf_size - audio_buf_index;
+
+			if(len1 + stream_index > len)
+				len1 = len - stream_index;
+
+			// copy to stream and update index and length tallies
+			if( isPlanar )
+			{
+				for(int i = 0; i < channel_count; i++)
+				{
+					VuoAudioSamples as = VuoListGetValueAtIndex_VuoAudioSamples(audioSamples, i+1);
+					memcpy( as.samples + stream_index/sizeof(double), audio_buf[i] + audio_buf_index, len1);
+				}
+			}
+			else
+			{
+				// todo - this shouldn't happen, but if does?
+			}
+
+			stream_index += len1;
+			audio_buf_index += len1;
+		}
+
+		return true;
+	}
+
+	int audio_decode_frame(uint8_t **audio_buf)
+	{
+		static AVPacket pkt;
+		static uint8_t *audio_pkt_data = NULL;
+		static int audio_pkt_size = 0;
+		static AVFrame frame;
+
+		container.aCodecCtx->request_sample_fmt = AV_SAMPLE_FMT_FLTP;
+
+		int len1, data_size = 0;
+		int converted_sample_count = 0;
+
+		for(;;)
+		{
+			while(audio_pkt_size > 0)
+			{
+				int got_frame = 0;
+
+				len1 = avcodec_decode_audio4(container.aCodecCtx, &frame, &got_frame, &pkt);
+
+				/* if error, skip frame */
+				if(len1 < 0)
+				{
+					audio_pkt_size = 0;
 					break;
+				}
+
+				audio_pkt_data += len1;
+				audio_pkt_size -= len1;
+
+				if (got_frame)
+				{
+					int64_t pts = av_frame_get_best_effort_timestamp ( &frame );
+
+					container.currentAudioPTS = pts;
+
+					if( pts != AV_NOPTS_VALUE )
+					{
+						// todo - what if no pts value?
+						pts = av_rescale_q ( pts,  container.audio_st->time_base, AV_TIME_BASE_Q );  // pts is now in microseconds.
+						container.currentAudioTimestampUSEC = pts;
+					}
+
+					uint channel_count = container.aCodecCtx->channels;
+
+					// data_size = frame.linesize[0];	// LIES
+					data_size = frame.nb_samples * container.bytesPerAudioSample;
+
+					// convert frame data to double planar
+					uint8_t **dst_data;
+					int dst_linesize;
+
+					// figure out how many samples should come out of swr_convert
+					int dst_nb_samples = av_rescale_rnd(swr_get_delay(container.swr_ctx, container.aCodecCtx->sample_rate) +
+						frame.nb_samples, VuoAudioSamples_sampleRate, container.aCodecCtx->sample_rate, AV_ROUND_UP);
+
+					/* allocate and fill destination double* arrays */
+					int ret = av_samples_alloc_array_and_samples(&dst_data, &dst_linesize, channel_count, dst_nb_samples, AV_SAMPLE_FMT_DBLP, 0);
+					if(ret < 0) VLog("Failed allocating double** array");
+
+					/**
+					 *	ret returns the new number of samples per channel
+					 */
+					ret = swr_convert(container.swr_ctx, dst_data, dst_nb_samples, (const uint8_t **)frame.data, frame.nb_samples);
+					if(ret < 0) VLog("Failed conversion!");
+
+					converted_sample_count = ret;
+
+					/*
+					 * For planar sample formats, each audio channel is in a separate data plane, and linesize is the
+					 * buffer size, in bytes, for a single plane. All data planes must be the same size. For packed
+					 * sample formats, only the first data plane is used, and samples for each channel are interleaved.
+					 * In this case, linesize is the buffer size, in bytes, for the 1 plane.
+					 */
+					if( av_sample_fmt_is_planar( (AVSampleFormat)container.aCodecCtx->sample_fmt) > 0 )
+					{
+						for(int i = 0; i < channel_count; i++)
+						{
+							audio_buf[i] = (uint8_t *)malloc(sizeof(double) * converted_sample_count);//dst_linesize);
+							memcpy(audio_buf[i], dst_data[i], dst_linesize);
+						}
+					}
+					else
+					{
+						VLog("Audio data is still interleaved!  This shouldn't happen.");
+						// memcpy(audio_buf, frame.data[0], data_size);
+					}
+				}
+
+				/* No data yet, get more frames */
+				if(data_size <= 0)
+					continue;
+				else
+				{
+					/* We have data, return it and come back for more later */
+					return converted_sample_count * sizeof(double);
+				}
+			}
+
+			if(pkt.data)
+				av_free_packet(&pkt);
+
+			while(packetQueue_get(&container.audioPacketQueue, &pkt) < 0)
+			{
+				if(!nextFrame(&container.videoPacketQueue, &container.audioPacketQueue))
+				{
+					// VLog("Out of audio packets to decode");
+					return -1;
+				}
+			}
+			audio_pkt_data = pkt.data;
+			audio_pkt_size = pkt.size;
+		}
+	}
+
+	/**
+	 *	http://dranger.com/ffmpeg/tutorial06.html
+	 */
+	int synchronize_audio(uint8_t **samples, int samples_size)//, double pts)
+	{
+		double diff, avg_diff;
+		int wanted_size, min_size, max_size;//, nb_samples;
+
+		// diff is in seconds
+		// diff = ((double)container.currentAudioTimestampUSEC - container.currentVideoTimestampUSEC) * SEC_PER_USEC;
+		diff = (double) ((container.currentAudioTimestampUSEC- container.avOffset) - container.currentVideoTimestampUSEC) * SEC_PER_USEC;
+
+		if(diff < AV_NOSYNC_THRESHOLD)
+		{
+			// accumulate the diffs
+			container.audio_diff_cum = diff + container.audio_diff_avg_coef * container.audio_diff_cum;
+
+			if(container.audio_diff_avg_count < AUDIO_DIFF_AVG_NB)
+			{
+				container.audio_diff_avg_count++;
+			}
+			else
+			{
+				avg_diff = container.audio_diff_cum * (1.0 - container.audio_diff_avg_coef);
+
+				if(fabs(avg_diff) >= container.audio_diff_threshold)
+				{
+					wanted_size = samples_size + ((int)(diff * VuoAudioSamples_sampleRate) * sizeof(double));
+					// wanted_size = samples_size + ((int)(diff * container.audio_st->codec->sample_rate) * sizeof(double));
+
+					min_size = samples_size * ((100. - SAMPLE_CORRECTION_PERCENT_MAX) / 100.);
+					max_size = samples_size * ((100. + SAMPLE_CORRECTION_PERCENT_MAX) / 100.);
+
+					if(wanted_size < min_size)
+					{
+						wanted_size = min_size;
+					}
+					else if (wanted_size > max_size)
+					{
+						wanted_size = max_size;
+					}
+
+					wanted_size = (wanted_size - (wanted_size % 8));
+
+					if(wanted_size < samples_size)
+					{
+						/* remove samples */
+						samples_size = wanted_size;
+
+						// VLog("remove samples a: %f v: %f  offset: %f  diff: %f",
+						// 	(double)container.currentAudioTimestampUSEC * SEC_PER_USEC,
+						// 	(double)container.currentVideoTimestampUSEC * SEC_PER_USEC,
+						// 	container.avOffset * SEC_PER_USEC,
+						// 	diff);
+					}
+					else if(wanted_size > samples_size)
+					{
+						// VLog("add samples a: %f v: %f  offset: %f  diff: %f",
+						// 	(double)container.currentAudioTimestampUSEC * SEC_PER_USEC,
+						// 	(double)container.currentVideoTimestampUSEC * SEC_PER_USEC,
+						// 	container.avOffset * SEC_PER_USEC,
+						// 	diff);
+
+						/* add samples by copying final sample */
+						uint channels = container.aCodecCtx->channels;
+						for(int i = 0; i < channels; i++)
+						{
+							uint8_t *cp = (uint8_t*) malloc(wanted_size);
+
+							memcpy(cp, samples[i], samples_size);
+							memset(cp + samples_size, samples[i][(samples_size-1)/sizeof(double)], wanted_size - samples_size);
+
+							samples[i] = cp;
+						}
+
+						samples_size = wanted_size;
+					}
 				}
 			}
 		}
-		av_free(pFrame);
-		return lastFrameOk;
+		else
+		{
+			/* difference container TOO big; reset diff stuff */
+			container.audio_diff_avg_count = 0;
+			container.audio_diff_cum = 0;
+		}
+
+		return samples_size;
 	}
 
 	char* AVCodecIDToString(AVCodecID id)
@@ -1617,6 +2182,111 @@ private:
 
 		return (char*)"CODEC NOT FOUND";
 	}
+
+	/**
+	 * Initialize the PacketQueue
+	 */
+	void packetQueueInit(PacketQueue *q)
+	{
+		memset(q, 0, sizeof(PacketQueue));
+		q->nb_packets = 0;
+		q->size = 0;
+	}
+
+	/**
+	 * Clear all packets in the queue
+	 */
+	void packetQueueFlush(PacketQueue *q)
+	{
+		AVPacket pkt;
+
+		while(packetQueue_get(q, &pkt) >= 0)
+		{
+			av_free_packet(&pkt);
+		}
+
+		q->nb_packets = 0;
+		q->size = 0;
+	}
+
+	int packetQueue_put(PacketQueue *q, AVPacket *pkt)
+	{
+		VuoPacketList *pkt1;
+
+		// allocate the packet
+		if(av_dup_packet(pkt) < 0)
+			return -1;
+
+		pkt1 = (VuoPacketList*)av_malloc(sizeof(VuoPacketList));
+		if (!pkt1)	return -1;
+
+		pkt1->pkt = *pkt;
+		pkt1->next = NULL;
+
+		// packetqueue is empty, add this to start; else add this to the end of the train
+		if (!q->last_pkt)
+			q->first_pkt = pkt1;
+		else
+			q->last_pkt->next = pkt1;
+
+		// set this packet as the last in the train
+		q->last_pkt = pkt1;
+
+		// update the packet amount count
+		q->nb_packets++;
+
+		// and update the total size tally
+		q->size += pkt1->pkt.size;
+
+		// if we're silencing audio, keep the packet queue tidy
+		while(q->nb_packets > MAX_PACKET_QUEUE_LENGTH)
+		{
+			AVPacket pkt;
+			packetQueue_get(q, &pkt);
+			av_free_packet(&pkt);
+		}
+
+		return 0;
+	}
+
+	/**
+	 * @param q The PacketQueue to extract a packet from
+	 * @param pkt (out) - extracted packet (if method returns 0).
+	 */
+	static int packetQueue_get(PacketQueue *q, AVPacket *pkt)
+	{
+		VuoPacketList *pkt1 = NULL;
+		int ret;
+
+		// get the first packet in the queue
+		pkt1 = q->first_pkt;
+
+		if (pkt1)
+		{
+			q->first_pkt = pkt1->next;
+
+			// if this was the last packet in the queue, set queue first/last to NULL
+			if (!q->first_pkt)
+				q->last_pkt = NULL;
+
+			q->nb_packets--;
+			q->size -= pkt1->pkt.size;
+
+			// store extracted packet in `out pkt`
+			*pkt = pkt1->pkt;
+
+			av_free(pkt1);
+
+			ret = 0;
+		}
+		else
+		{
+			ret = -1;
+		}
+
+		return ret;
+	}
+
 };
 
 /**
@@ -1627,7 +2297,7 @@ static void __attribute__((constructor)) VuoMovie_initFfmpeg(void)
 	av_register_all();
 	avformat_network_init();
 
-//	av_log_set_level(AV_LOG_DEBUG);
+	// av_log_set_level(AV_LOG_VERBOSE);
 	av_log_set_level(AV_LOG_FATAL);
 }
 
@@ -1667,17 +2337,36 @@ VuoMovie VuoMovie_make(const char *path)
 /**
  * VuoMovie_getNextFrame gets the next full frame's image and presentation timestamp (in seconds).  Will return true if next frame is found and false if not.
  */
-bool VuoMovie_getNextFrame(VuoMovie movie, VuoImage *image, double *nextFrame)
+bool VuoMovie_getNextVideoFrame(VuoMovie movie, VuoImage *image, double *nextFrame)
 {
-	return ((VuoMovieDecoder*)movie)->getNextFrame(image, nextFrame);
+	return ((VuoMovieDecoder*)movie)->getNextVideoFrame(image, nextFrame);
+}
+
+/**
+ * Returns true if audio channels are present in file, false if not.
+ */
+bool VuoMovie_containsAudio(VuoMovie movie)
+{
+	return ((VuoMovieDecoder*)movie)->containsAudio();
+}
+
+/**
+ * Return the next available chunk of audio samples.  If none are available, return false.
+ */
+bool VuoMovie_getNextAudioSample(VuoMovie movie, VuoList_VuoAudioSamples *audioSamples, double *frameTimestampInSeconds)
+{
+	// UInt8 *stream = (UInt8*)malloc(sizeof(UInt8)*VuoAudioSamples_bufferSize);
+	// ((VuoMovieDecoder*)movie)->audio_callback(stream, VuoAudioSamples_bufferSize);
+
+	return ((VuoMovieDecoder*)movie)->getNextAudioFrame(audioSamples, frameTimestampInSeconds) >= 0;
 }
 
 /**
  * Returns the frame prior to the internal currently queued frame, and the presentation timestamp associated.
  */
-bool VuoMovie_getPreviousFrame(VuoMovie movie, VuoImage *image, double *previousFrame)
+bool VuoMovie_getPreviousVideoFrame(VuoMovie movie, VuoImage *image, double *previousFrame)
 {
-	return ((VuoMovieDecoder*)movie)->getPreviousFrame(image, previousFrame);
+	return ((VuoMovieDecoder*)movie)->getPreviousVideoFrame(image, previousFrame);
 }
 
 /**

@@ -17,10 +17,14 @@
  * Copies the message data into a newly allocated string.
  *
  * Assumes the message data includes a null terminator.
+ *
+ * If the message is zero-length, returns NULL.
  */
 char * vuoCopyStringFromMessage(zmq_msg_t *message)
 {
 	size_t messageSize = zmq_msg_size(message);
+	if (!messageSize)
+		return NULL;
 	char *string = (char *)malloc(messageSize);
 	memcpy(string, zmq_msg_data(message), messageSize);
 	return string;
@@ -80,7 +84,7 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
 	size_t messageSize = zmq_msg_size(&message);
 	if (messageSize != dataSize)
 	{
-		fprintf(stderr, "vuoReceiveBlocking() expected %lu bytes of data, but actually received %lu\n", (unsigned long)dataSize, (unsigned long)messageSize);
+		VLog("Error: vuoReceiveBlocking() expected %lu bytes of data, but actually received %lu.", (unsigned long)dataSize, (unsigned long)messageSize);
 		return;
 	}
 	memcpy(data, zmq_msg_data(&message), messageSize);
@@ -92,7 +96,7 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
  */
 unsigned long vuoReceiveUnsignedInt64(void *socket)
 {
-	uint64_t number;
+	uint64_t number = 0;
 	vuoReceiveBlocking(socket, (void *)&number, sizeof(number));
 	return number;
 }
@@ -102,7 +106,7 @@ unsigned long vuoReceiveUnsignedInt64(void *socket)
  */
 int vuoReceiveInt(void *socket)
 {
-	int number;
+	int number = 0;
 	vuoReceiveBlocking(socket, (void *)&number, sizeof(number));
 	return number;
 }
@@ -112,7 +116,7 @@ int vuoReceiveInt(void *socket)
  */
 bool vuoReceiveBool(void *socket)
 {
-	bool value;
+	bool value = false;
 	vuoReceiveBlocking(socket, (void *)&value, sizeof(value));
 	return value;
 }
@@ -130,7 +134,7 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 		memcpy(zmq_msg_data(&message), &type, sizeof type);
 		int flags = (messageCount>0 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
 		if(zmq_send(socket, &message, flags))
-			fprintf(stderr, "%s: failed to send type\n",name);
+			VLog("Error: Failed to send type for '%s'.", name);
 		zmq_msg_close(&message);
 	}
 
@@ -139,7 +143,7 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 	{
 		int flags = (i<messageCount-1 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
 		if(zmq_send(socket, &messages[i], flags))
-			fprintf(stderr, "%s: failed to send data %u\n",name,i);
+			VLog("Error: Failed to send data %u for '%s'.", i, name);
 		zmq_msg_close(&messages[i]);
 	}
 }

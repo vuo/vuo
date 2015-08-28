@@ -1,0 +1,63 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add4 [type="vuo.math.add.VuoGenericType1" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="319,317"];
+Add5 [type="vuo.math.add.VuoGenericType1" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="322,392"];
+Add6 [type="vuo.math.add.VuoGenericType1" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="558,416"];
+Add7 [type="vuo.math.add.VuoGenericType1" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="323,467"];
+Add9 [type="vuo.math.add.VuoGenericType1" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="374,579"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Only I should get to keep my published data+event ports|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="377,-31"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoGenericType1" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="342,667"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoGenericType1" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="341,735"];
+HoldValue [type="vuo.hold.VuoGenericType1" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="268,100" _newValue=""];
+HoldValue2 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="492,190" _newValue=""];
+HoldValue3 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="273,206" _newValue=""];
+HoldValue4 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="489,276" _newValue=""];
+MakeList5 [type="vuo.list.make.2.VuoGenericType1" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="259,403" _item2=""];
+MakeList6 [type="vuo.list.make.2.VuoGenericType1" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="495,427" _item1=""];
+MakeList7 [type="vuo.list.make.2.VuoGenericType1" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="260,478"];
+MakeList9 [type="vuo.list.make.2.VuoGenericType1" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="311,590"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<terms>terms\r|<item1>item1\r|<initialValue_2>initialValue_2\r|<item2>item2\r|<item1_2>item1_2\r|<refresh_2>refresh_2\r|<setCount>setCount\r|<item2_2>item2_2\r|<refresh_4>refresh_4\r|<initialValue>initialValue\r|<dataAndEvent>dataAndEvent\r|<refresh_3>refresh_3\r|<decrement>decrement\r|<item1_3>item1_3\r|<increment>increment\r" _terms="" _item1="" _initialValue_2="" _item2="" _item1_2="" _setCount="0.000000" _item2_2="" _initialValue="" _dataAndEvent="" _decrement="1.000000" _item1_3="" _increment="1.000000"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<event>event\l|<count>count\l|<heldValue>heldValue\l|<heldValue_2>heldValue_2\l|<done_4>done_4\l|<sum>sum\l|<sum_2>sum_2\l|<done_2>done_2\l|<done_3>done_3\l"];
+
+Add4:sum -> HoldValue4:initialValue;
+Add7:sum -> MakeList6:item2;
+HoldValue3:heldValue -> HoldValue2:initialValue;
+MakeList5:list -> Add5:terms;
+MakeList6:list -> Add6:terms;
+MakeList7:list -> Add7:terms;
+MakeList9:list -> Add9:terms;
+PublishedInputs:terms -> Add4:terms;
+PublishedInputs:item1 -> MakeList5:item1;
+PublishedInputs:initialValue_2 -> HoldValue3:initialValue;
+PublishedInputs:item2 -> MakeList7:item2;
+PublishedInputs:item1_2 -> MakeList7:item1;
+PublishedInputs:refresh_2 -> Add9:refresh;
+PublishedInputs:setCount -> Count:setCount;
+PublishedInputs:item2_2 -> MakeList9:item2;
+PublishedInputs:refresh_4 -> DiscardDataFromEvent:refresh;
+PublishedInputs:initialValue -> HoldValue:initialValue;
+PublishedInputs:dataAndEvent -> DiscardDataFromEvent2:dataAndEvent;
+PublishedInputs:dataAndEvent -> DiscardDataFromEvent:dataAndEvent;
+PublishedInputs:refresh_3 -> Add6:refresh;
+PublishedInputs:decrement -> Count:decrement;
+PublishedInputs:item1_3 -> MakeList9:item1;
+PublishedInputs:increment -> Count:increment;
+DiscardDataFromEvent2:event -> PublishedOutputs:event;
+Count:count -> PublishedOutputs:count;
+HoldValue2:heldValue -> PublishedOutputs:heldValue;
+HoldValue4:heldValue -> PublishedOutputs:heldValue_2;
+DiscardDataFromEvent:done -> PublishedOutputs:done_4;
+Add6:sum -> PublishedOutputs:sum;
+Add9:sum -> PublishedOutputs:sum_2;
+Add9:done -> PublishedOutputs:done_2;
+Add6:done -> PublishedOutputs:done_3;
+}

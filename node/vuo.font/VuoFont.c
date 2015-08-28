@@ -134,13 +134,12 @@ char * VuoFont_summaryFromValue(const VuoFont value)
 {
 	const char *fontName = value.fontName ? value.fontName : "(no font)";
 	const char *underline = value.underline ? "<li>underlined</li>" : "";
-	const char *color = VuoColor_summaryFromValue(value.color);
+	char *color = VuoColor_summaryFromValue(value.color);
 	const char *alignment = getStringForAlignment(value.alignment);
 
-	const char *format = "%s %gpt<ul><li>color: %s</li>%s<li>%s-aligned</li><li>character spacing: %g</li><li>line spacing: %g</li></ul>";
-	int size = snprintf(NULL,0,format,fontName,value.pointSize,color,underline,alignment,value.characterSpacing,value.lineSpacing);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,fontName,value.pointSize,color,underline,alignment,value.characterSpacing,value.lineSpacing);
-	free((char *)color);
-	return valueAsString;
+	char *summary = VuoText_format("%s %gpt<ul><li>color: %s</li>%s<li>%s-aligned</li><li>character spacing: %g</li><li>line spacing: %g</li></ul>",
+						  fontName, value.pointSize, color, underline, alignment, value.characterSpacing, value.lineSpacing);
+
+	free(color);
+	return summary;
 }

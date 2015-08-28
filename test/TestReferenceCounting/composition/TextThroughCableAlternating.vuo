@@ -12,7 +12,7 @@ digraph G
 PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
 ConvertIntegerToText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="1075,261" _integer="1"];
-ConvertTextToInteger [type="vuo.type.text.integer" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="1118,258" _text=""];
+ConvertTextToInteger [type="vuo.type.text.integer" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="1118,258"];
 DiscardDatafromEvent [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="1214,155" _dataAndEvent="0"];
 DiscardDatafromEvent2 [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="50,161" _dataAndEvent="0"];
 Count [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="1544,172" _increment="1" _decrement="1"];

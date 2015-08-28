@@ -14,5 +14,8 @@ OTHER_FILES += \
 	VuoInputEditorCurveEasing.json
 
 LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoCurve.o \
-	$$ROOT/type/VuoCurveEasing.o
+	$$ROOT/type/VuoCurveEasing.o \
+	$$ROOT/type/list/VuoList_VuoCurve.o \
+	$$ROOT/type/list/VuoList_VuoCurveEasing.o

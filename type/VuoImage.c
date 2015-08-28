@@ -110,6 +110,9 @@ VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned int glInter
  */
 VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh)
 {
+	if (!pixelsWide || !pixelsHigh)
+		return NULL;
+
 	VuoImage t = VuoImage_make_internal(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
 	VuoGlTexture_retain(glTextureName);
 	return t;
@@ -136,9 +139,47 @@ VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat
  *
  * @threadAny
  */
-VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
+VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
 {
-	VuoImage t = VuoImage_make_internal(glTextureName, 0, pixelsWide, pixelsHigh);
+	if (!pixelsWide || !pixelsHigh)
+		return NULL;
+
+	VuoImage t = VuoImage_make_internal(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
+	t->freeCallback = freeCallback;
+	t->freeCallbackContext = freeCallbackContext;
+	return t;
+}
+
+/**
+ * @ingroup VuoImage
+ * Returns a new @ref VuoImage structure representing the specified @c glTextureName.
+ *
+ * The texture must:
+ *
+ *    - be of type @c GL_TEXTURE_RECTANGLE_ARB
+ *    - use wrap mode GL_CLAMP_TO_BORDER on the S and T axes
+ *    - use minifying and magnification filter GL_LINEAR
+ *
+ * When the VuoImage is no longer needed, @c freeCallback is called.
+ * The @c freeCallback may then activate a GL context and delete the texture, or send it back to a texture pool.
+ *
+ * @c freeCallbackContext is optional data passed to @c freeCallback via the @ref VuoImage struct.
+ * Use @c NULL if you don't need to provide additional data to the callback.
+ *
+ * @ref VuoImage is intended to be immutable — do not modify the contents of the @c glTextureName
+ * between passing it to this function and when @c freeCallback is called.
+ *
+ * @note Images returned by this function may only be passed to functions that explicitly mention support for @c GL_TEXTURE_RECTANGLE_ARB.
+ *
+ * @threadAny
+ */
+VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
+{
+	if (!pixelsWide || !pixelsHigh)
+		return NULL;
+
+	VuoImage t = VuoImage_make_internal(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
+	t->glTextureTarget = GL_TEXTURE_RECTANGLE_ARB;
 	t->freeCallback = freeCallback;
 	t->freeCallbackContext = freeCallbackContext;
 	return t;
@@ -150,33 +191,31 @@ VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int 
  *
  * @threadAny
  *
- * @param pixels Pointer the a buffer of pixel data.  8 bits per channel.  Row-major, starting at the bottom (flipped).  Zero stride.  Premultiplied alpha.
+ * @param pixels Pointer to a buffer of pixel data.  Row-major, starting at the bottom (flipped).  Zero stride.  Premultiplied alpha.  The caller is responsible for freeing this buffer sometime after this function returns.
  * @param format An OpenGL format constant.  Supported formats include:
- *    - @c GL_RGB (24 bits per pixel)
- *    - @c GL_RGBA (32 bits per pixel)
- *    - @c GL_BGRA (32 bits per pixel)
- *    - @c GL_LUMINANCE (8 bits per pixel)
- *    - @c GL_LUMINANCE_ALPHA (16 bits per pixel)
+ *    - @c GL_RGB
+ *    - @c GL_RGBA
+ *    - @c GL_BGRA
+ *    - @c GL_LUMINANCE
+ *    - @c GL_LUMINANCE_ALPHA
  * @param pixelsWide Width in pixels
  * @param pixelsHigh Height in pixels
+ * @param colorDepth The number of bits per channel.  When 8bpc, `pixels` should be `unsigned char *`; when 16bpc, `pixels` should be `float *`.
  */
-VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh)
+VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth colorDepth)
 {
+	if (!pixelsWide || !pixelsHigh)
+		return NULL;
+
 	VuoGlContext glContext = VuoGlContext_use();
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
-	GLenum internalformat = GL_RGBA;
-	if (format == GL_RGB)
-		internalformat = GL_RGB;
-	else if (format == GL_LUMINANCE)
-		internalformat = GL_LUMINANCE8;
-	else if (format == GL_LUMINANCE_ALPHA)
-		internalformat = GL_LUMINANCE8_ALPHA8;
-
+	GLenum internalformat = VuoImageColorDepth_getGlInternalFormat(format, colorDepth);
+//	VLog("Using format=%s -> internalformat=%s", VuoGl_stringForConstant(format), VuoGl_stringForConstant(internalformat));
 	GLuint glTextureName = VuoGlTexturePool_use(glContext, internalformat, pixelsWide, pixelsHigh, format);
 
 	glBindTexture(GL_TEXTURE_2D, glTextureName);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixelsWide, pixelsHigh, format, GL_UNSIGNED_BYTE, (GLvoid *)pixels);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixelsWide, pixelsHigh, format, colorDepth==VuoImageColorDepth_8? GL_UNSIGNED_BYTE : GL_FLOAT, (GLvoid *)pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Since returning from this function implies that the texture is ready to use,
@@ -188,6 +227,81 @@ VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, uns
 	VuoGlContext_disuse(glContext);
 
 	return VuoImage_make(glTextureName, internalformat, pixelsWide, pixelsHigh);
+}
+
+/**
+ * Downloads the specified image's pixel data from the GPU to the CPU, and returns the CPU memory buffer.
+ *
+ * The return value is a pointer to a buffer of pixel data.  8 bits per channel.  Row-major, starting at the bottom (flipped).  Zero stride.  Premultiplied alpha.
+ *
+ * The caller should @c free() the returned buffer when it is finished using it.
+ *
+ * @threadAny
+ *
+ * @param image The image to download.
+ * @param requestedFormat An OpenGL format constant.  Supported formats include:
+ *    - @c GL_RGBA (32 bits per pixel)
+ *    - @c GL_BGRA (32 bits per pixel)
+ *    - @c GL_LUMINANCE (8 bits per pixel)
+ *    - @c GL_LUMINANCE_ALPHA (16 bits per pixel)
+ */
+unsigned char *VuoImage_copyBuffer(VuoImage image, unsigned int requestedFormat)
+{
+	if (!image)
+		return NULL;
+
+	unsigned int channels;
+	if (requestedFormat == GL_LUMINANCE)
+		channels = 1;
+	else if (requestedFormat == GL_LUMINANCE_ALPHA)
+		channels = 2;
+	else if (requestedFormat == GL_RGBA || requestedFormat == GL_BGRA)
+		channels = 4;
+	else
+	{
+		VLog("Error: Unknown format %d", requestedFormat);
+		return NULL;
+	}
+	unsigned char *pixels = (unsigned char *)malloc(image->pixelsWide * image->pixelsHigh * channels);
+
+	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+	glBindTexture(image->glTextureTarget, image->glTextureName);
+	glGetTexImage(image->glTextureTarget, 0, requestedFormat, GL_UNSIGNED_BYTE, (GLvoid *)pixels);
+	glBindTexture(image->glTextureTarget, 0);
+
+	VuoGlContext_disuse(cgl_ctx);
+
+	return pixels;
+}
+
+/**
+ * Changes the image's wrap mode.
+ */
+void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+	glBindTexture(image->glTextureTarget, image->glTextureName);
+
+	GLint wrapModeGL = GL_CLAMP_TO_BORDER;
+	if (wrapMode == VuoImageWrapMode_ClampEdge)
+		wrapModeGL = GL_CLAMP_TO_EDGE;
+	else if (wrapMode == VuoImageWrapMode_Repeat)
+		wrapModeGL = GL_REPEAT;
+	else if (wrapMode == VuoImageWrapMode_MirroredRepeat)
+		wrapModeGL = GL_MIRRORED_REPEAT;
+
+	glTexParameteri(image->glTextureTarget, GL_TEXTURE_WRAP_S, wrapModeGL);
+	glTexParameteri(image->glTextureTarget, GL_TEXTURE_WRAP_T, wrapModeGL);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Ensure the command queue gets executed before we return,
+	// since the VuoShader might immediately be used on another context.
+	glFlushRenderAPPLE();
+
+	VuoGlContext_disuse(cgl_ctx);
 }
 
 /**
@@ -205,12 +319,15 @@ static void VuoImage_deleteImage(VuoImage image)
  */
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh)
 {
+	if (!pixelsWide || !pixelsHigh)
+		return NULL;
+
 	VuoGlContext glContext = VuoGlContext_use();
 	VuoImageRenderer imageRenderer = VuoImageRenderer_make(glContext);
 	VuoRetain(imageRenderer);
-	VuoShader shader = VuoShader_makeColorShader(color);
+	VuoShader shader = VuoShader_makeUnlitColorShader(color);
 	VuoRetain(shader);
-	VuoImage image = VuoImageRenderer_draw(imageRenderer, shader, pixelsWide, pixelsHigh);
+	VuoImage image = VuoImageRenderer_draw(imageRenderer, shader, pixelsWide, pixelsHigh, VuoImageColorDepth_8);
 	VuoRelease(shader);
 	VuoRelease(imageRenderer);
 	VuoGlContext_disuse(glContext);
@@ -219,6 +336,8 @@ VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsign
 
 /**
  * Returns a new texture copy of the passed image.
+ *
+ * @c image may be either @c GL_TEXTURE_2D or @c GL_TEXTURE_RECTANGLE_ARB.
  */
 VuoImage VuoImage_makeCopy(VuoImage image)
 {
@@ -226,14 +345,48 @@ VuoImage VuoImage_makeCopy(VuoImage image)
 	VuoImageRenderer renderer = VuoImageRenderer_make(glContext);
 	VuoRetain(renderer);
 
-	VuoShader frag = VuoShader_makeImageShader();
+	VuoShader shader = NULL;
+	if (image->glTextureTarget == GL_TEXTURE_2D)
+		shader = VuoShader_makeUnlitImageShader(image, 1);
+	else if (image->glTextureTarget == GL_TEXTURE_RECTANGLE_ARB)
+		shader = VuoShader_makeGlTextureRectangleShader(image, 1);
+	VuoRetain(shader);
+
+	VuoImage img = VuoImageRenderer_draw(renderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+
+	VuoRelease(shader);
+	VuoRelease(renderer);
+	VuoGlContext_disuse(glContext);
+
+	return img;
+}
+
+/**
+ * Deletes the GL texture.
+ */
+static void VuoImage_makeGlTextureRectangleCopy_freeCallback(VuoImage imageToFree)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	glDeleteTextures(1, &imageToFree->glTextureName);
+	VuoGlContext_disuse(cgl_ctx);
+}
+
+/**
+ * Copies @c image to a new @c GL_TEXTURE_RECTANGLE_ARB texture.
+ *
+ * @note This is intended for interfacing with host apps; Vuo should always use @c GL_TEXTURE_2D internally.
+ */
+VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image)
+{
+	VuoGlContext glContext = VuoGlContext_use();
+	VuoImageRenderer renderer = VuoImageRenderer_make(glContext);
+	VuoRetain(renderer);
+
+	VuoShader frag = VuoShader_makeUnlitImageShader(image, 1);
 	VuoRetain(frag);
 
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, glContext, "texture", image);
-	VuoShader_setUniformFloat(frag, glContext, "alpha", 1);
-
-	VuoImage img = VuoImageRenderer_draw(renderer, frag, image->pixelsWide, image->pixelsHigh);
+	GLuint textureName = VuoImageRenderer_draw_internal(renderer, frag, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image), false, true);
+	VuoImage img = VuoImage_makeClientOwnedGlTextureRectangle(textureName, image->glInternalFormat, image->pixelsWide, image->pixelsHigh, VuoImage_makeGlTextureRectangleCopy_freeCallback, NULL);
 
 	VuoRelease(frag);
 	VuoRelease(renderer);
@@ -248,6 +401,31 @@ VuoImage VuoImage_makeCopy(VuoImage image)
 VuoRectangle VuoImage_getRectangle(const VuoImage image)
 {
 	return VuoRectangle_make(0, 0, 2, 2. * image->pixelsHigh / image->pixelsWide);
+}
+
+/**
+ * Returns the color depth of the image.
+ */
+VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
+{
+	if (!image)
+		return VuoImageColorDepth_8;
+
+	if (image->glInternalFormat == GL_LUMINANCE8
+	 || image->glInternalFormat == GL_LUMINANCE8_ALPHA8
+	 || image->glInternalFormat == GL_RGB
+	 || image->glInternalFormat == GL_RGBA)
+		return VuoImageColorDepth_8;
+	else if (image->glInternalFormat == GL_LUMINANCE16F_ARB
+		  || image->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB
+		  || image->glInternalFormat == GL_RGB16
+		  || image->glInternalFormat == GL_RGBA16
+		  || image->glInternalFormat == GL_RGB16F_ARB
+		  || image->glInternalFormat == GL_RGBA16F_ARB)
+		return VuoImageColorDepth_16;
+
+	VLog("Error: Unknown glInternalFormat %x (%s)", image->glInternalFormat, VuoGl_stringForConstant(image->glInternalFormat));
+	return VuoImageColorDepth_8;
 }
 
 /**
@@ -303,6 +481,9 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 		else
 			return NULL;
 	}
+	if (pixelsWide == 0 || pixelsHigh == 0)
+		return NULL;
+
 	{
 		json_object * o;
 		if (json_object_object_get_ex(js, "glTextureName", &o))
@@ -336,14 +517,14 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 					surf = IOSurfaceLookup(surfID);
 					if (!surf)
 					{
-						VLog("IOSurfaceLookup(%d) failed.", surfID);
+						VLog("Error: IOSurfaceLookup(%d) failed.", surfID);
 						return NULL;
 					}
-					glInternalFormat = GL_RGB;
+					glInternalFormat = GL_RGBA;
 					CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, glInternalFormat, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
 					if(err != kCGLNoError)
 					{
-						fprintf(stderr,"VuoImageRenderer_draw_internal() Error in CGLTexImageIOSurface2D(): %s\n", CGLErrorString(err));
+						VLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
 						return NULL;
 					}
 					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
@@ -354,9 +535,8 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 			// Convert the GL_TEXTURE_RECTANGLE_ARB into GL_TEXTURE_2D.
 			VuoImage image2d;
 			{
-				VuoImage imageRect = VuoImage_makeClientOwned(textureRect, pixelsWide, pixelsHigh, VuoImage_deleteImage, NULL);
+				VuoImage imageRect = VuoImage_makeClientOwnedGlTextureRectangle(textureRect, glInternalFormat, pixelsWide, pixelsHigh, VuoImage_deleteImage, NULL);
 				VuoRetain(imageRect);
-				imageRect->glTextureTarget = GL_TEXTURE_RECTANGLE_ARB;
 
 				const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 					// Inputs
@@ -370,14 +550,16 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 					}
 				);
 
-				VuoShader shader = VuoShader_make("convert IOSurface GL_TEXTURE_RECTANGLE_ARB to GL_TEXTURE_2D", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+				/// @todo candidate for VuoShader_makeGlTextureRectangleShader()?
+				VuoShader shader = VuoShader_make("Convert IOSurface GL_TEXTURE_RECTANGLE_ARB to GL_TEXTURE_2D");
+				VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 				VuoRetain(shader);
-				VuoShader_addTexture(shader, cgl_ctx, "texture", imageRect);
-				VuoShader_setUniformPoint2d(shader, cgl_ctx, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
+				VuoShader_setUniform_VuoImage  (shader, "texture", imageRect);
+				VuoShader_setUniform_VuoPoint2d(shader, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
 
 				VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
 				VuoRetain(ir);
-				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh);
+				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh, VuoImage_getColorDepth(imageRect));
 				VuoRelease(ir);
 
 				VuoRelease(shader);
@@ -433,6 +615,8 @@ json_object * VuoImage_jsonFromValue(const VuoImage value)
  * @ingroup VuoImage
  * Returns a JSON object containing an interprocess handle for the specified texture.
  *
+ * @c value may be either @c GL_TEXTURE_2D or @c GL_TEXTURE_RECTANGLE_ARB.
+ *
  * @threadAny
  */
 json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
@@ -441,19 +625,20 @@ json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
 	if (!value)
 		return js;
 
+	VuoShader shader = NULL;
 	{
 		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 //		VLog("Creating an IOSurface from glTextureName %d on target %lu",value->glTextureName,value->glTextureTarget);
 
-		VuoShader shader = VuoShader_makeImageShader();
+		if (value->glTextureTarget == GL_TEXTURE_2D)
+			shader = VuoShader_makeUnlitAlphaPassthruImageShader(value);
+		else if (value->glTextureTarget == GL_TEXTURE_RECTANGLE_ARB)
+			shader = VuoShader_makeGlTextureRectangleAlphaPassthruShader(value);
 		VuoRetain(shader);
-		VuoShader_addTexture(shader, cgl_ctx, "texture", value);
-		VuoShader_setUniformFloat(shader, cgl_ctx, "alpha", 1);
 
 		VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
 		VuoRetain(ir);
-		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir,shader,value->pixelsWide,value->pixelsHigh,true);
-		VuoRelease(shader);
+		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir, shader, value->pixelsWide, value->pixelsHigh, VuoImage_getColorDepth(value), true, true);
 		VuoRelease(ir);
 //		VLog("Created IOSurfaceID %d",surfID);
 
@@ -474,6 +659,9 @@ json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
 		json_object * o = json_object_new_int64(value->pixelsHigh);
 		json_object_object_add(js, "pixelsHigh", o);
 	}
+	// VuoShader_makeUnlitImageShader retains the image; VuoRelease(shader) then releases it.
+	// So don't release the shader until we're done with the image, in case this release is its last.
+	VuoRelease(shader);
 
 	return js;
 }
@@ -492,12 +680,6 @@ char * VuoImage_summaryFromValue(const VuoImage value)
 	if (!value)
 		return strdup("(no image)");
 
-	const char * format = "GL Texture (%sID %u)<br>%lux%lu";
-
 	const char *clientOwned = value->freeCallback ? "client-owned " : "";
-
-	int size = snprintf(NULL, 0, format, clientOwned, value->glTextureName, value->pixelsWide, value->pixelsHigh);
-	char * valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString, size+1, format, clientOwned, value->glTextureName, value->pixelsWide, value->pixelsHigh);
-	return valueAsString;
+	return VuoText_format("GL Texture (%sID %u)<br>%lux%lu", clientOwned, value->glTextureName, value->pixelsWide, value->pixelsHigh);
 }

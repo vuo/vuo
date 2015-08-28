@@ -58,6 +58,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoList_VuoLayer) layers,
 		VuoInputData(VuoInteger, {"default":1024, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) width,
 		VuoInputData(VuoInteger, {"default":768, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) height,
+		VuoInputData(VuoImageColorDepth, {"default":"8bpc"}) colorDepth,
 		VuoOutputData(VuoImage) image,
 		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
@@ -66,7 +67,7 @@ void nodeInstanceEvent
 
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
-	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, NULL);
+	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, colorDepth, NULL);
 
 	*renderedLayers = VuoRenderedLayers_make(rootSceneObject, width, height);
 }

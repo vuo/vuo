@@ -111,46 +111,52 @@ VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds)
 		}
 	);
 
-	VuoShader verticalPassShader = VuoShader_make("Gaussian Vertical Pass Shader", VuoShader_getDefaultVertexShader(), verticalPassFragmentShader);
-	VuoShader horizontalPassShader = VuoShader_make("Gaussian Horizontal Pass Shader", VuoShader_getDefaultVertexShader(), horizontalPassFragmentShader);
+	VuoShader verticalPassShader = VuoShader_make("Gaussian Blur Shader (Vertical)");
+	VuoShader_addSource(verticalPassShader, VuoMesh_IndividualTriangles, NULL, NULL, verticalPassFragmentShader);
 	VuoRetain(verticalPassShader);
+
+	VuoShader horizontalPassShader = VuoShader_make("Gaussian Blur Shader (Horizontal)");
+	VuoShader_addSource(horizontalPassShader, VuoMesh_IndividualTriangles, NULL, NULL, horizontalPassFragmentShader);
 	VuoRetain(horizontalPassShader);
 
-	VuoShader_setUniformFloat(verticalPassShader, glContext, "inset", inset);
-	VuoShader_setUniformFloat(verticalPassShader, glContext, "width", w);
-	VuoShader_setUniformFloat(verticalPassShader, glContext, "height", h);
-	VuoShader_setUniformFloat(horizontalPassShader, glContext, "width", w);
+	VuoShader_setUniform_VuoReal(verticalPassShader,   "inset",  inset);
+	VuoShader_setUniform_VuoReal(verticalPassShader,   "width",  w);
+	VuoShader_setUniform_VuoReal(verticalPassShader,   "height", h);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "width",  w);
 
-	const float offset[] = { 0.0, 1.3846153846, 3.2307692308 };
-	const float weight[] = { 0.2270270270, 0.3162162162, 0.0702702703 };
+	VuoShader_setUniform_VuoReal(verticalPassShader, "offset[0]", 0);
+	VuoShader_setUniform_VuoReal(verticalPassShader, "offset[1]", 1.3846153846);
+	VuoShader_setUniform_VuoReal(verticalPassShader, "offset[2]", 3.2307692308);
+	VuoShader_setUniform_VuoReal(verticalPassShader, "weight[0]", 0.2270270270);
+	VuoShader_setUniform_VuoReal(verticalPassShader, "weight[1]", 0.3162162162);
+	VuoShader_setUniform_VuoReal(verticalPassShader, "weight[2]", 0.0702702703);
 
-	VuoShader_setUniformFloatArray(verticalPassShader, glContext, "offset", offset, 3);
-	VuoShader_setUniformFloatArray(verticalPassShader, glContext, "weight", weight, 3);
-
-	VuoShader_setUniformFloatArray(horizontalPassShader, glContext, "offset", offset, 3);
-	VuoShader_setUniformFloatArray(horizontalPassShader, glContext, "weight", weight, 3);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "offset[0]", 0);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "offset[1]", 1.3846153846);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "offset[2]", 3.2307692308);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "weight[0]", 0.2270270270);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "weight[1]", 0.3162162162);
+	VuoShader_setUniform_VuoReal(horizontalPassShader, "weight[2]", 0.0702702703);
 
 	for(int i = 0; i < radius; i++)
 	{
 		// apply vertical pass
-		VuoShader_resetTextures(verticalPassShader);
-		VuoShader_addTexture(verticalPassShader, glContext, "texture", img);
+		VuoShader_setUniform_VuoImage(verticalPassShader, "texture", img);
 
-		VuoImage verticalPassImage = VuoImageRenderer_draw(imageRenderer, verticalPassShader, w, h);
+		VuoImage verticalPassImage = VuoImageRenderer_draw(imageRenderer, verticalPassShader, w, h, VuoImage_getColorDepth(img));
 
 		// Only inset the first pass
 		if (inset)
 		{
 			inset=0;
-			VuoShader_setUniformFloat(verticalPassShader, glContext, "inset", inset);
+			VuoShader_setUniform_VuoReal(verticalPassShader, "inset", inset);
 		}
 
 		// apply horizontal pass
-		VuoShader_resetTextures(horizontalPassShader);
-		VuoShader_addTexture(horizontalPassShader, glContext, "texture", verticalPassImage);
+		VuoShader_setUniform_VuoImage(horizontalPassShader, "texture", verticalPassImage);
 
 		// one pass complete, ready for another (or not)
-		img = VuoImageRenderer_draw(imageRenderer, horizontalPassShader, w, h);
+		img = VuoImageRenderer_draw(imageRenderer, horizontalPassShader, w, h, VuoImage_getColorDepth(img));
 	}
 
 	VuoRelease(verticalPassShader);

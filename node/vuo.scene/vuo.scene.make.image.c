@@ -11,7 +11,9 @@
 
 VuoModuleMetadata({
 					 "title" : "Make 3D Object from Image",
-					 "keywords" : [ "billboard", "sprite", "projector", "lighting", "Blinn", "Phong", "Lambert" ],
+					 "keywords" : [ "billboard", "sprite", "projector",
+						 "lighting", "lit", "lighted",
+						 "Blinn", "Phong", "Lambert" ],
 					 "version" : "2.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "FlipCoin.vuo" ]

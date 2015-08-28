@@ -10,6 +10,11 @@
 #ifndef VUOWAVE_H
 #define VUOWAVE_H
 
+/// @{
+typedef void * VuoList_VuoWave;
+#define VuoList_VuoWave_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoWave VuoWave
@@ -29,6 +34,7 @@ typedef enum {
 
 VuoWave VuoWave_valueFromJson(struct json_object * js);
 struct json_object * VuoWave_jsonFromValue(const VuoWave value);
+VuoList_VuoWave VuoWave_allowedValues(void);
 char * VuoWave_summaryFromValue(const VuoWave value);
 
 /// @{
@@ -37,6 +43,8 @@ char * VuoWave_summaryFromValue(const VuoWave value);
  */
 VuoWave VuoWave_valueFromString(const char *str);
 char * VuoWave_stringFromValue(const VuoWave value);
+void VuoWave_retain(VuoWave value);
+void VuoWave_release(VuoWave value);
 /// @}
 
 /**

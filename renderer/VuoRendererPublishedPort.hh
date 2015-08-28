@@ -34,15 +34,15 @@ public:
 	bool canBeMergedWith(VuoPublishedPort *otherExternalPort);
 	void addConnectedPort(VuoPort *port);
 	void removeConnectedPort(VuoPort *port);
-	QPointF getGlobalPos(void) const;
-	void setGlobalPos(QPointF pos);
+	QPoint getCompositionViewportPos(void) const;
+	void setCompositionViewportPos(QPoint pos);
 	VuoRendererPort * getPortRepresentation();
 
 private:
 	static VuoRendererPort * createPortRepresentation(string name, VuoType *type, bool isPublishedInput);
 	void updateNameRect();
 
-	QPointF globalPos;
+	QPoint compositionViewportPos;
 	VuoRendererPort *portRepresentation;
 
 };

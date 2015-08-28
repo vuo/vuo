@@ -9,10 +9,10 @@
 
 digraph G
 {
-SelectInput2 [type="vuo.select.in.2.VuoText" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="247,241.5" _option2=""];
-DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="407,244.5" _writeLine=""];
+SelectInput2 [type="vuo.select.in.2.VuoText" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="247,241.5"];
+DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="407,244.5"];
 Count [type="vuo.math.count.VuoInteger" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" pos="65,214.5" _increment="1" _decrement="1"];
-SelectLatest [type="vuo.select.latest.2.VuoText" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="61,308" _option1="" _option2=""];
+SelectLatest [type="vuo.select.latest.2.VuoText" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="61,308"];
 FireonStart [type="vuo.event.fireOnStart" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-82,260"];
 
 SelectInput2:out -> DisplayConsoleWindow:writeLine;

@@ -11,10 +11,10 @@
 #define VUOSCENEOBJECT_H
 
 #include "VuoText.h"
-#include "VuoVertices.h"
+#include "VuoMesh.h"
 #include "VuoShader.h"
 #include "VuoTransform.h"
-#include "VuoList_VuoVertices.h"
+#include "VuoPoint3d.h"
 
 /// @{
 typedef void * VuoList_VuoSceneObject;
@@ -36,6 +36,7 @@ typedef enum
 {
 	VuoSceneObject_NotACamera,
 	VuoSceneObject_PerspectiveCamera,
+	VuoSceneObject_StereoCamera,
 	VuoSceneObject_OrthographicCamera
 } VuoSceneObject_CameraType;
 
@@ -56,7 +57,7 @@ typedef enum
 typedef struct VuoSceneObject
 {
 	// Data for visible (mesh) scene objects
-	VuoList_VuoVertices verticesList;
+	VuoMesh mesh;
 	VuoShader shader;
 	bool isRealSize;	///< If the object is real-size, it ignores rotations and scales, and is sized to match the shader's first image.
 
@@ -69,6 +70,8 @@ typedef struct VuoSceneObject
 	float cameraWidth;	///< Orthographic width, in scene coordinates.
 	float cameraDistanceMin;	///< Distance from camera to near clip plane.
 	float cameraDistanceMax;	///< Distance from camera to far clip plane.
+	float cameraConfocalDistance;	///< Distance from camera to stereoscopic confocal plane.
+	float cameraIntraocularDistance;	///< Distance between the stereoscopic camera pair.
 
 	// Data for light scene objects
 	VuoSceneObject_LightType lightType;
@@ -84,7 +87,7 @@ typedef struct VuoSceneObject
 } VuoSceneObject;
 
 VuoSceneObject VuoSceneObject_makeEmpty(void);
-VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects);
+VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects);
 VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
 VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height);
 VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
@@ -92,6 +95,7 @@ VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, Vu
 VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
 
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax);
+VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance);
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeDefaultCamera(void);
 
@@ -104,11 +108,24 @@ VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, Vu
 
 void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float *ambientBrightness, VuoList_VuoSceneObject *pointLights, VuoList_VuoSceneObject *spotLights);
 
+void VuoSceneObject_visit(VuoSceneObject object, void (^function)(VuoSceneObject currentObject));
+void VuoSceneObject_apply(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]));
+
+void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int faceCullingMode);
+
+VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object);
+
 VuoSceneObject VuoSceneObject_valueFromJson(struct json_object * js);
 struct json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value);
 char * VuoSceneObject_summaryFromValue(const VuoSceneObject value);
 
+VuoBox VuoSceneObject_bounds(const VuoSceneObject so);										///< Get the axis aligned bounding box of this sceneobject and it's children.
+bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float matrix[16]); 	///< Bounding box of the vertices for this SceneObject (taking into account transform).
+void VuoSceneObject_normalize(VuoSceneObject *so);
+void VuoSceneObject_center(VuoSceneObject *so);
 void VuoSceneObject_dump(const VuoSceneObject so);
+
+unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject value);
 
 ///@{
 /**

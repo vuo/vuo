@@ -35,15 +35,15 @@ void nodeEvent
 
 	VuoInteger columns = VuoListGetValueAtIndex_VuoAudioSamples(channels, 1).sampleCount;
 
-	unsigned char *pixels = (unsigned char *)calloc(1, rows*columns);
+	float *pixels = (float *)calloc(1, rows*columns*sizeof(float));
 	for (VuoInteger row = 0; row < rows; ++row)
 	{
 		VuoAudioSamples rowSamples = VuoListGetValueAtIndex_VuoAudioSamples(channels, row+1);
 		for (VuoInteger column = 0; column < MIN(columns, rowSamples.sampleCount); ++column)
-			pixels[row*columns + column] = 127.5 + rowSamples.samples[column]*127.5;
+			pixels[row*columns + column] = .5 + rowSamples.samples[column]*.5;
 	}
 
-	*image = VuoImage_makeFromBuffer(pixels, GL_LUMINANCE, columns, rows);
+	*image = VuoImage_makeFromBuffer(pixels, GL_LUMINANCE, columns, rows, VuoImageColorDepth_16);
 
 	free(pixels);
 }

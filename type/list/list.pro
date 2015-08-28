@@ -23,9 +23,14 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoColor:0 \
 		VuoCurve:0 \
 		VuoCurveEasing:0 \
+		VuoDispersion:0 \
+		VuoDisplacement:0 \
 		VuoFont:2 \
 		VuoGradientNoise:0 \
+		VuoHorizontalAlignment:0 \
 		VuoImage:1 \
+		VuoImageColorDepth:0 \
+		VuoImageWrapMode:0 \
 		VuoInteger:0 \
 		VuoKey:0 \
 		VuoLayer:2 \
@@ -33,7 +38,9 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoLeapHand:2 \
 		VuoLeapPointable:0 \
 		VuoLeapPointableType:0 \
+		VuoLeapTouchZone:0 \
 		VuoLoopType:0 \
+		VuoMesh:2 \
 		VuoMidiController:0 \
 		VuoMidiDevice:2 \
 		VuoMidiNote:0 \
@@ -45,14 +52,19 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \
 		VuoReal:0 \
+		VuoRenderedLayers:2 \
 		VuoSceneObject:2 \
+		VuoScreen:2 \
 		VuoShader:1 \
+		VuoSizingMode:0 \
 		VuoSyphonServerDescription:0 \
 		VuoText:1 \
+		VuoThresholdType:0 \
 		VuoTransform:0 \
 		VuoTransform2d:0 \
-		VuoVertices:2 \
+		VuoVerticalAlignment:0 \
 		VuoWave:0 \
+		VuoWindowProperty:2 \
 		VuoWindowReference:0 \
 		VuoWrapMode:0 \
 	)
@@ -70,6 +82,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.movie \
 	$$ROOT/node/vuo.noise \
 	$$ROOT/node/vuo.osc \
+	$$ROOT/node/vuo.scene \
 	$$ROOT/node/vuo.syphon
 
 include(../../module.pri)
@@ -88,7 +101,7 @@ typeListObjects.commands = $$QMAKE_CC -Oz -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_I
 typeListObjects.CONFIG = target_predeps
 QMAKE_EXTRA_COMPILERS += typeListObjects
 
-OTHER_FILES = $$TYPE_LIST_SOURCES
+OTHER_FILES += $$TYPE_LIST_SOURCES
 
 HEADERS = VuoList_*.h
 

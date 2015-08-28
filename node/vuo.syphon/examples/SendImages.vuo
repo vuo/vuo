@@ -12,12 +12,12 @@ digraph G
 FireOnDisplayRefresh2 [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="-291,301" _requestedFrame_eventThrottling="drop"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-18,173"];
 GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="126,203" _imageURL="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
-MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="64,312" _item2="100.000000"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="64,312" _2="100.000000"];
 Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="127,301"];
 RippleImage [type="vuo.image.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<done>done\r|<rippledImage>rippledImage\r" pos="289,286" _amplitude="0.100000" _wavelength="0.050000" _phase="0.000000"];
 SendImageToSyphon [type="vuo.syphon.send" version="1.0.0" label="Send Image to Syphon|<refresh>refresh\l|<serverName>serverName\l|<sendImage>sendImage\l|<done>done\r" pos="547,269" fillcolor="violet" _serverName="\"Vuo Syphon Server\""];
 
-FireOnDisplayRefresh2:requestedFrame -> MakeList:item1;
+FireOnDisplayRefresh2:requestedFrame -> MakeList:1;
 FireOnStart:started -> GetImage:imageURL;
 GetImage:image -> RippleImage:image;
 MakeList:list -> Multiply:terms;

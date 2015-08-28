@@ -42,7 +42,7 @@ bool VuoCompilerDriver::isValidDriverForProtocol(VuoProtocol *protocol)
 		VuoType *driverBridgeInputType = driverBridgeInput->getBase()->getType();
 
 		if (!protocol->hasInputPort(driverBridgeInputName) ||
-				(protocol->getTypeForInputPort(driverBridgeInputName) != driverBridgeInputType))
+				(protocol->getTypeForInputPort(driverBridgeInputName) != driverBridgeInputType->getModuleKey()))
 		{
 			return false;
 		}
@@ -58,7 +58,7 @@ bool VuoCompilerDriver::isValidDriverForProtocol(VuoProtocol *protocol)
 		VuoType *driverBridgeOutputType = driverBridgeOutput->getBase()->getType();
 
 		if (!protocol->hasOutputPort(driverBridgeOutputName) ||
-				(protocol->getTypeForOutputPort(driverBridgeOutputName) != driverBridgeOutputType))
+				(protocol->getTypeForOutputPort(driverBridgeOutputName) != driverBridgeOutputType->getModuleKey()))
 		{
 			return false;
 		}

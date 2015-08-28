@@ -95,7 +95,7 @@ static inline VuoReal lerp(VuoReal t, VuoReal a, VuoReal b);
 /**
  * Returns the value for Perlin noise at a 1D location.
  */
-VuoReal VuoGradientNoise_perlin_VuoReal(VuoReal x)
+VuoReal VuoGradientNoise_perlin_VuoReal_VuoReal(VuoReal x)
 {
 	VuoInteger X;
 	VuoReal u;
@@ -114,9 +114,39 @@ VuoReal VuoGradientNoise_perlin_VuoReal(VuoReal x)
 }
 
 /**
+ * Returns 2 values for Perlin noise at a 1D location.
+ */
+VuoPoint2d VuoGradientNoise_perlin_VuoReal_VuoPoint2d(VuoReal x)
+{
+	return VuoPoint2d_make(VuoGradientNoise_perlin_VuoReal_VuoReal(x),
+						   VuoGradientNoise_perlin_VuoReal_VuoReal(x+1));
+}
+
+/**
+ * Returns 3 values for Perlin noise at a 1D location.
+ */
+VuoPoint3d VuoGradientNoise_perlin_VuoReal_VuoPoint3d(VuoReal x)
+{
+	return VuoPoint3d_make(VuoGradientNoise_perlin_VuoReal_VuoReal(x-1),
+						   VuoGradientNoise_perlin_VuoReal_VuoReal(x),
+						   VuoGradientNoise_perlin_VuoReal_VuoReal(x+1));
+}
+
+/**
+ * Returns 4 values for Perlin noise at a 1D location.
+ */
+VuoPoint4d VuoGradientNoise_perlin_VuoReal_VuoPoint4d(VuoReal x)
+{
+	return VuoPoint4d_make(VuoGradientNoise_perlin_VuoReal_VuoReal(x-1),
+						   VuoGradientNoise_perlin_VuoReal_VuoReal(x),
+						   VuoGradientNoise_perlin_VuoReal_VuoReal(x+1),
+						   VuoGradientNoise_perlin_VuoReal_VuoReal(x+2));
+}
+
+/**
  * Returns the value for Perlin noise at a 2D location.
  */
-VuoReal VuoGradientNoise_perlin_VuoPoint2d(VuoPoint2d point)
+VuoReal VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d point)
 {
 	VuoReal x = point.x;
 	VuoReal y = point.y;
@@ -151,9 +181,39 @@ VuoReal VuoGradientNoise_perlin_VuoPoint2d(VuoPoint2d point)
 }
 
 /**
+ * Returns 2 values for Perlin noise at a 2D location.
+ */
+VuoPoint2d VuoGradientNoise_perlin_VuoPoint2d_VuoPoint2d(VuoPoint2d point)
+{
+	return VuoPoint2d_make(VuoGradientNoise_perlin_VuoPoint2d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d_multiply(point,-1)));
+}
+
+/**
+ * Returns 3 values for Perlin noise at a 2D location.
+ */
+VuoPoint3d VuoGradientNoise_perlin_VuoPoint2d_VuoPoint3d(VuoPoint2d point)
+{
+	return VuoPoint3d_make(VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(-1,-1))),
+						   VuoGradientNoise_perlin_VuoPoint2d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(1,1))));
+}
+
+/**
+ * Returns 4 values for Perlin noise at a 2D location.
+ */
+VuoPoint4d VuoGradientNoise_perlin_VuoPoint2d_VuoPoint4d(VuoPoint2d point)
+{
+	return VuoPoint4d_make(VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(-1,-1))),
+						   VuoGradientNoise_perlin_VuoPoint2d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(1,1))),
+						   VuoGradientNoise_perlin_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(2,2))));
+}
+
+/**
  * Returns the value for Perlin noise at a 3D location.
  */
-VuoReal VuoGradientNoise_perlin_VuoPoint3d(VuoPoint3d point)
+VuoReal VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d point)
 {
 	VuoReal x = point.x;
 	VuoReal y = point.y;
@@ -199,9 +259,39 @@ VuoReal VuoGradientNoise_perlin_VuoPoint3d(VuoPoint3d point)
 }
 
 /**
+ * Returns 2 values for Perlin noise at a 3D location.
+ */
+VuoPoint2d VuoGradientNoise_perlin_VuoPoint3d_VuoPoint2d(VuoPoint3d point)
+{
+	return VuoPoint2d_make(VuoGradientNoise_perlin_VuoPoint3d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d_multiply(point,-1)));
+}
+
+/**
+ * Returns 3 values for Perlin noise at a 3D location.
+ */
+VuoPoint3d VuoGradientNoise_perlin_VuoPoint3d_VuoPoint3d(VuoPoint3d point)
+{
+	return VuoPoint3d_make(VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(-1,-1,-1))),
+						   VuoGradientNoise_perlin_VuoPoint3d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(1,1,1))));
+}
+
+/**
+ * Returns 4 values for Perlin noise at a 3D location.
+ */
+VuoPoint4d VuoGradientNoise_perlin_VuoPoint3d_VuoPoint4d(VuoPoint3d point)
+{
+	return VuoPoint4d_make(VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(-1,-1,-1))),
+						   VuoGradientNoise_perlin_VuoPoint3d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(1,1,1))),
+						   VuoGradientNoise_perlin_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(2,2,2))));
+}
+
+/**
  * Returns the value for Perlin noise at a 4D location.
  */
-VuoReal VuoGradientNoise_perlin_VuoPoint4d(VuoPoint4d point)
+VuoReal VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d point)
 {
 	VuoReal x = point.x;
 	VuoReal y = point.y;
@@ -279,9 +369,39 @@ VuoReal VuoGradientNoise_perlin_VuoPoint4d(VuoPoint4d point)
 }
 
 /**
+ * Returns 2 values for Perlin noise at a 4D location.
+ */
+VuoPoint2d VuoGradientNoise_perlin_VuoPoint4d_VuoPoint2d(VuoPoint4d point)
+{
+	return VuoPoint2d_make(VuoGradientNoise_perlin_VuoPoint4d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d_multiply(point,-1)));
+}
+
+/**
+ * Returns 3 values for Perlin noise at a 4D location.
+ */
+VuoPoint3d VuoGradientNoise_perlin_VuoPoint4d_VuoPoint3d(VuoPoint4d point)
+{
+	return VuoPoint3d_make(VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(-1,-1,-1,-1))),
+						   VuoGradientNoise_perlin_VuoPoint4d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(1,1,1,1))));
+}
+
+/**
+ * Returns 4 values for Perlin noise at a 4D location.
+ */
+VuoPoint4d VuoGradientNoise_perlin_VuoPoint4d_VuoPoint4d(VuoPoint4d point)
+{
+	return VuoPoint4d_make(VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(-1,-1,-1,-1))),
+						   VuoGradientNoise_perlin_VuoPoint4d_VuoReal(point),
+						   VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(1,1,1,1))),
+						   VuoGradientNoise_perlin_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(2,2,2,2))));
+}
+
+/**
  * Returns the value for Simplex noise at a 1D location.
  */
-VuoReal VuoGradientNoise_simplex_VuoReal(VuoReal x)
+VuoReal VuoGradientNoise_simplex_VuoReal_VuoReal(VuoReal x)
 {
 	VuoInteger i0 = (int)floor(x);
 	VuoInteger i1 = i0 + 1;
@@ -301,9 +421,39 @@ VuoReal VuoGradientNoise_simplex_VuoReal(VuoReal x)
 }
 
 /**
+ * Returns 2 values for Simplex noise at a 1D location.
+ */
+VuoPoint2d VuoGradientNoise_simplex_VuoReal_VuoPoint2d(VuoReal x)
+{
+	return VuoPoint2d_make(VuoGradientNoise_simplex_VuoReal_VuoReal(x),
+						   VuoGradientNoise_simplex_VuoReal_VuoReal(x+1));
+}
+
+/**
+ * Returns 3 values for Simplex noise at a 1D location.
+ */
+VuoPoint3d VuoGradientNoise_simplex_VuoReal_VuoPoint3d(VuoReal x)
+{
+	return VuoPoint3d_make(VuoGradientNoise_simplex_VuoReal_VuoReal(x-1),
+						   VuoGradientNoise_simplex_VuoReal_VuoReal(x),
+						   VuoGradientNoise_simplex_VuoReal_VuoReal(x+1));
+}
+
+/**
+ * Returns 4 values for Simplex noise at a 1D location.
+ */
+VuoPoint4d VuoGradientNoise_simplex_VuoReal_VuoPoint4d(VuoReal x)
+{
+	return VuoPoint4d_make(VuoGradientNoise_simplex_VuoReal_VuoReal(x-1),
+						   VuoGradientNoise_simplex_VuoReal_VuoReal(x),
+						   VuoGradientNoise_simplex_VuoReal_VuoReal(x+1),
+						   VuoGradientNoise_simplex_VuoReal_VuoReal(x+2));
+}
+
+/**
  * Returns the value for Simplex noise at a 2D location.
  */
-VuoReal VuoGradientNoise_simplex_VuoPoint2d(VuoPoint2d point)
+VuoReal VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d point)
 {
 	VuoReal x = point.x;
 	VuoReal y = point.y;
@@ -393,9 +543,39 @@ VuoReal VuoGradientNoise_simplex_VuoPoint2d(VuoPoint2d point)
 }
 
 /**
+ * Returns 2 values for Simplex noise at a 2D location.
+ */
+VuoPoint2d VuoGradientNoise_simplex_VuoPoint2d_VuoPoint2d(VuoPoint2d point)
+{
+	return VuoPoint2d_make(VuoGradientNoise_simplex_VuoPoint2d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_multiply(point,-1)));
+}
+
+/**
+ * Returns 3 values for Simplex noise at a 2D location.
+ */
+VuoPoint3d VuoGradientNoise_simplex_VuoPoint2d_VuoPoint3d(VuoPoint2d point)
+{
+	return VuoPoint3d_make(VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(-1,-1))),
+						   VuoGradientNoise_simplex_VuoPoint2d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(1,1))));
+}
+
+/**
+ * Returns 4 values for Simplex noise at a 2D location.
+ */
+VuoPoint4d VuoGradientNoise_simplex_VuoPoint2d_VuoPoint4d(VuoPoint2d point)
+{
+	return VuoPoint4d_make(VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(-1,-1))),
+						   VuoGradientNoise_simplex_VuoPoint2d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(1,1))),
+						   VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_add(point,VuoPoint2d_make(2,2))));
+}
+
+/**
  * Returns the value for Simplex noise at a 3D location.
  */
-VuoReal VuoGradientNoise_simplex_VuoPoint3d(VuoPoint3d point)
+VuoReal VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d point)
 {
 	VuoReal x = point.x;
 	VuoReal y = point.y;
@@ -552,9 +732,39 @@ VuoReal VuoGradientNoise_simplex_VuoPoint3d(VuoPoint3d point)
 }
 
 /**
+ * Returns 2 values for Simplex noise at a 3D location.
+ */
+VuoPoint2d VuoGradientNoise_simplex_VuoPoint3d_VuoPoint2d(VuoPoint3d point)
+{
+	return VuoPoint2d_make(VuoGradientNoise_simplex_VuoPoint3d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_multiply(point,-1)));
+}
+
+/**
+ * Returns 3 values for Simplex noise at a 3D location.
+ */
+VuoPoint3d VuoGradientNoise_simplex_VuoPoint3d_VuoPoint3d(VuoPoint3d point)
+{
+	return VuoPoint3d_make(VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(-1,-1,-1))),
+						   VuoGradientNoise_simplex_VuoPoint3d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(1,1,1))));
+}
+
+/**
+ * Returns 4 values for Simplex noise at a 3D location.
+ */
+VuoPoint4d VuoGradientNoise_simplex_VuoPoint3d_VuoPoint4d(VuoPoint3d point)
+{
+	return VuoPoint4d_make(VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(-1,-1,-1))),
+						   VuoGradientNoise_simplex_VuoPoint3d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(1,1,1))),
+						   VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_add(point,VuoPoint3d_make(2,2,2))));
+}
+
+/**
  * Returns the value for Simplex noise at a 4D location.
  */
-VuoReal VuoGradientNoise_simplex_VuoPoint4d(VuoPoint4d point)
+VuoReal VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d point)
 {
 	VuoReal x = point.x;
 	VuoReal y = point.y;
@@ -701,6 +911,36 @@ VuoReal VuoGradientNoise_simplex_VuoPoint4d(VuoPoint4d point)
 
 	// Sum up and scale the result to cover the range [-1,1]
 	return 27.0f * (n0 + n1 + n2 + n3 + n4); // TODO: The scale factor is preliminary!
+}
+
+/**
+ * Returns 2 values for Simplex noise at a 4D location.
+ */
+VuoPoint2d VuoGradientNoise_simplex_VuoPoint4d_VuoPoint2d(VuoPoint4d point)
+{
+	return VuoPoint2d_make(VuoGradientNoise_simplex_VuoPoint4d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_multiply(point,-1)));
+}
+
+/**
+ * Returns 3 values for Simplex noise at a 4D location.
+ */
+VuoPoint3d VuoGradientNoise_simplex_VuoPoint4d_VuoPoint3d(VuoPoint4d point)
+{
+	return VuoPoint3d_make(VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(-1,-1,-1,-1))),
+						   VuoGradientNoise_simplex_VuoPoint4d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(1,1,1,1))));
+}
+
+/**
+ * Returns 4 values for Simplex noise at a 4D location.
+ */
+VuoPoint4d VuoGradientNoise_simplex_VuoPoint4d_VuoPoint4d(VuoPoint4d point)
+{
+	return VuoPoint4d_make(VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(-1,-1,-1,-1))),
+						   VuoGradientNoise_simplex_VuoPoint4d_VuoReal(point),
+						   VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(1,1,1,1))),
+						   VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_add(point,VuoPoint4d_make(2,2,2,2))));
 }
 
 /**

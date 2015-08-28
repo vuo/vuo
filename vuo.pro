@@ -10,6 +10,7 @@ SUBDIRS += \
 	compiler_vuo_link \
 	framework \
 	library \
+	library_shader \
 	node \
 	renderer \
 	renderer_vuo_export \
@@ -45,6 +46,8 @@ compiler_vuo_link.depends = framework
 framework.subdir = framework
 framework.depends = base compiler renderer runtime node type type_input_editor type_list library
 
+library.depends = library_shader
+
 node.depends = compiler_vuo_compile type type_list
 
 renderer.depends = base compiler
@@ -57,10 +60,12 @@ renderer_vuo_render.depends = framework
 
 runtime.depends = base
 
+library_shader.subdir = library/shader
+
 type.depends = compiler_vuo_compile
 
 type_input_editor.subdir = type/inputEditor
-type_input_editor.depends = type node library
+type_input_editor.depends = type type_list node library
 
 type_list.subdir = type/list
 type_list.depends = type

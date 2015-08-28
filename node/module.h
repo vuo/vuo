@@ -11,7 +11,7 @@
 #define MODULE_H
 
 #include "VuoHeap.h"
-
+#include "VuoLog.h"
 
 
 /**
@@ -104,103 +104,14 @@
  */
 static inline void VuoStopComposition(void)
 {
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-					   typedef void (*vuoStopCompositionType)(void);
-					   vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_SELF, "vuoStopComposition");
-						   vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
-					   vuoStopComposition();
-				   });
+	typedef void (*vuoStopCompositionType)(void);
+	vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_SELF, "vuoStopComposition");
+	if (!vuoStopComposition)
+		vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
+	vuoStopComposition();
 }
 
 
-/**
- * @ingroup DevelopingNodeClasses DevelopingTypes DevelopingLibraryModules
- * @defgroup VuoModuleDebug Module Debugging
- * Macros to help with debugging.
- *
- * @{
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <unistd.h>
-
-/**
- * Returns the number of seconds (including fractional seconds) since midnight 1970.01.01 GMT.
- */
-static double VLogGetTime(void)
-{
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	return t.tv_sec + t.tv_usec / 1000000.;
-}
-
-static double VLogStartTime;	///< The time when this module was loaded.
-
-/**
- * Stores the time at which this module was loaded, for use by @ref VLogGetElapsedTime().
- */
-static void __attribute__((constructor)) VLogInitTime(void)
-{
-	VLogStartTime = VLogGetTime();
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused"
-/**
- * Returns the number of seconds (including fractional seconds) since this module was loaded.
- */
-static double VLogGetElapsedTime()
-{
-	return VLogGetTime() - VLogStartTime;
-}
-#pragma clang diagnostic pop
-
-/**
- * Prints the name of the file and function to @c stderr (and implicitly flushes the output buffer).  Useful for debugging.
- *
- * \eg{
- * void nodeEvent()
- * {
- *     VL();
- * }
- * }
- */
-#define VL() fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs  %s:%d\t%s()\033[0m\n", getpid()%212+19, getpid(), VLogGetElapsedTime(), __FILE__, __LINE__, __func__);
-
-/**
- * Prints the name of the file and function, and `printf()`-style format/arguments, to @c stderr (and implicitly flushes the output buffer).  Useful for debugging.
- *
- * \eg{
- * void nodeEvent(VuoInputData(VuoInteger, "42") number)
- * {
- *     VLog("%d", number);
- * }
- * }
- */
-#define VLog(format, ...) fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs  %s:%d\t%s() \t" format "\033[0m\n", getpid()%212+19, getpid(), VLogGetElapsedTime(), __FILE__, __LINE__, __func__, ##__VA_ARGS__);
-
-/**
- * Prints the name of the current file and function, and the address and description of the specified @c heapPointer, to @c stderr (and implicitly flushes the output buffer).  Useful for debugging.
- *
- * \eg{
- * void nodeEvent(VuoInputData(VuoShader) shader)
- * {
- *     VLogHeap(shader);
- * }
- * }
- */
-#define VLogHeap(heapPointer) VLog("%s = %p (registered at %s)", #heapPointer, heapPointer, VuoHeap_getDescription(heapPointer));
-
-/**
- * Prints the specified Core Foundation object.
- */
-#define VLogCF(coreFoundationRef) { CFStringRef d = CFCopyDescription(coreFoundationRef); CFIndex len = CFStringGetLength(d)+1; char *z = (char *)malloc(len); CFStringGetCString(d, z, len, kCFStringEncodingUTF8); VLog("%s = %s", #coreFoundationRef, z); free(z); CFRelease(d); }
-
-/**
- * @}
- */
 
 
 #ifndef __OBJC__

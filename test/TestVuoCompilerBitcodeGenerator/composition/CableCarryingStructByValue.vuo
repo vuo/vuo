@@ -13,10 +13,10 @@ graph [rankdir=LR];
 node [shape=Mrecord];
 
 FirePeriodically [type="vuo.time.firePeriodically" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" _seconds="1"];
-MakeSquareVertices [type="vuo.vertices.make.square" label="Make Square Vertices|<refresh>refresh\l|<vertices>vertices\r"];
-Make3DObject [type="vuo.scene.make" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<object>object\r" _vertices="0"];
+MakeSquareMesh [type="vuo.mesh.make.square" label="Make Square Mesh|<refresh>refresh\l|<mesh>mesh\r"];
+Make3DObject [type="vuo.scene.make" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<object>object\r"];
 
-FirePeriodically:fired -> MakeSquareVertices:refresh;
-MakeSquareVertices:vertices -> Make3DObject:vertices;
+FirePeriodically:fired -> MakeSquareMesh:refresh;
+MakeSquareMesh:mesh -> Make3DObject:mesh;
 
 }

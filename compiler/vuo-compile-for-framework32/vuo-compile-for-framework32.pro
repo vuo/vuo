@@ -3,6 +3,10 @@ CONFIG -= qt app_bundle
 CONFIG += console VuoFramework
 TARGET = vuo-compile
 
+VUO_INFO_PLIST = vuo-compile-Info.plist
+VUO_INFO_PLIST_GENERATED = vuo-compile-Info-generated.plist
+QMAKE_LFLAGS += -Wl,-sectcreate,__TEXT,__info_plist,$$VUO_INFO_PLIST_GENERATED
+
 include(../../vuo.pri)
 
 SOURCES += \

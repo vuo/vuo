@@ -92,6 +92,7 @@ vector<string> VuoNodeSet::getNodeClassNames(void)
 {
 	set<string> extensions;
 	extensions.insert("vuonode");
+	extensions.insert("vuonode+");
 	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, "", extensions);
 
 	vector<string> classNames;
@@ -215,6 +216,9 @@ void VuoNodeSet::extractResourcesFromSubdirectory(string archiveSubdir, string d
 	extensions.insert("jpg");
 	extensions.insert("mov");
 	extensions.insert("mp3");
+	extensions.insert("data");
+	extensions.insert("3ds");
+	extensions.insert("dae");
 	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, archiveSubdir, extensions);
 
 	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)

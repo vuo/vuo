@@ -14,6 +14,9 @@
 /// The common beginning of all VuoList type names (before the item type name).
 const string VuoType::listTypeNamePrefix = "VuoList_";
 
+/// The common beginning of all VuoDictionary type names (before the key and value type names).
+const string VuoType::dictionaryTypeNamePrefix = "VuoDictionary_";
+
 
 /**
  * Creates a type.
@@ -36,6 +39,14 @@ VuoType::~VuoType(void)
 bool VuoType::isListTypeName(string typeName)
 {
 	return VuoStringUtilities::beginsWith(typeName, listTypeNamePrefix);
+}
+
+/**
+ * Returns true if the type name is for a dictionary type.
+ */
+bool VuoType::isDictionaryTypeName(string typeName)
+{
+	return VuoStringUtilities::beginsWith(typeName, dictionaryTypeNamePrefix);
 }
 
 /**

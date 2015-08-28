@@ -84,16 +84,15 @@ void nodeInstanceEvent
 		return;
 	}
 
-	VuoShader frag = VuoShader_make("Crop Image Shader", VuoShader_getDefaultVertexShader(), cropFragmentShader);
+	VuoShader frag = VuoShader_make("Crop Image Shader");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, cropFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
 
-	VuoShader_setUniformPoint2d(frag, (*instance)->glContext, "offset", VuoPoint2d_subtract(samplerCenter, VuoPoint2d_make(samplerWidth/2., samplerHeight/2.)));
-
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "width", samplerWidth);
-	VuoShader_setUniformFloat(frag, (*instance)->glContext, "height", samplerHeight);
-	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, outputWidth, outputHeight);
+	VuoShader_setUniform_VuoImage  (frag, "texture", image);
+	VuoShader_setUniform_VuoPoint2d(frag, "offset",  VuoPoint2d_subtract(samplerCenter, VuoPoint2d_make(samplerWidth/2., samplerHeight/2.)));
+	VuoShader_setUniform_VuoReal   (frag, "width",   samplerWidth);
+	VuoShader_setUniform_VuoReal   (frag, "height",  samplerHeight);
+	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, outputWidth, outputHeight, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

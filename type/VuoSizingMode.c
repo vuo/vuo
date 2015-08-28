@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoSizingMode.h"
+#include "VuoList_VuoSizingMode.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -71,6 +72,18 @@ json_object * VuoSizingMode_jsonFromValue(const VuoSizingMode value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoSizingMode VuoSizingMode_allowedValues(void)
+{
+	VuoList_VuoSizingMode l = VuoListCreate_VuoSizingMode();
+	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Stretch);
+	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Fit);
+	VuoListAppendValue_VuoSizingMode(l, VuoSizingMode_Fill);
+	return l;
 }
 
 /**

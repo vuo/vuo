@@ -10,6 +10,11 @@
 #ifndef VUOTHRESHOLDTYPE_H
 #define VUOTHRESHOLDTYPE_H
 
+/// @{
+typedef void * VuoList_VuoThresholdType;
+#define VuoList_VuoThresholdType_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoThresholdType VuoThresholdType
@@ -31,6 +36,7 @@ typedef enum {
 
 VuoThresholdType VuoThresholdType_valueFromJson(struct json_object * js);
 struct json_object * VuoThresholdType_jsonFromValue(const VuoThresholdType value);
+VuoList_VuoThresholdType VuoThresholdType_allowedValues(void);
 char * VuoThresholdType_summaryFromValue(const VuoThresholdType value);
 
 /// @{

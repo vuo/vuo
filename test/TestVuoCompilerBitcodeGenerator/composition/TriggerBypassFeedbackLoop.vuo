@@ -13,7 +13,7 @@ FirePeriodically [type="vuo.time.firePeriodically" label="FirePeriodically|<refr
 Hold [type="vuo.hold.VuoInteger" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="207.5,152.5" _initialValue="0" _newValue="0"];
 Subtract [type="vuo.math.subtract.VuoInteger" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="350.5,255" _a="0" _b="5"];
 ConvertIntegertoText [type="vuo.type.integer.text" label="ConvertIntegertoText|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="564.5,152" _integer="0"];
-DisplayConsoleWindow [type="vuo.console.window" label="DisplayConsoleWindow|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="498.5,76.5" _writeLine=""];
+DisplayConsoleWindow [type="vuo.console.window" label="DisplayConsoleWindow|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="498.5,76.5"];
 
 FirePeriodically:fired -> DisplayConsoleWindow:refresh;
 FirePeriodically:fired -> Hold:refresh;

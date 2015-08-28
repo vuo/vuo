@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORMODIFIERKEY_HH
 #define VUOINPUTEDITORMODIFIERKEY_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorModifierKey factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoModifierKey values.
  */
-class VuoInputEditorModifierKey : public VuoInputEditorWithMenu
+class VuoInputEditorModifierKey : public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif

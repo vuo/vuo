@@ -11,7 +11,7 @@ digraph G
 {
 PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
-InputList [type="vuo.test.inputList" label="Input List|<refresh>refresh\l|<listIn>listIn\l|<outEvent>outEvent\r" _listIn=""];
+InputList [type="vuo.test.inputList" label="Input List|<refresh>refresh\l|<listIn>listIn\l|<outEvent>outEvent\r"];
 
 PublishedInputs:inEvent -> InputList:refresh;
 InputList:outEvent -> PublishedOutputs:outEvent;

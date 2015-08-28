@@ -14,6 +14,7 @@
 #include "VuoLeapPointable.h"
 #include "VuoLeapPointableType.h"
 #include "VuoLeapTouchZone.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -50,7 +51,7 @@
  */
 VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
 {
-	VuoLeapPointable pointable = 
+	VuoLeapPointable pointable =
 	{
 		-1,
 		VuoLeapPointableType_Finger,
@@ -153,11 +154,7 @@ json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value)
  */
 char * VuoLeapPointable_summaryFromValue(const VuoLeapPointable value)
 {
-	const char *format = "%d";
-	int size = snprintf(NULL,0,format,value.id);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.id);
-	return valueAsString;
+	return VuoText_format("%ld", value.id);
 }
 
 /**
@@ -165,7 +162,7 @@ char * VuoLeapPointable_summaryFromValue(const VuoLeapPointable value)
  * Creates a new pointable from the specified values.
  */
 VuoLeapPointable VuoLeapPointable_make(
-	VuoInteger id, 
+	VuoInteger id,
 	VuoLeapPointableType type,
 	VuoReal length,
 	VuoReal width,

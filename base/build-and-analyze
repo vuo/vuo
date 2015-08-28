@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CLANG=$1
+shift 1
+
+$CLANG --analyze "$@" 2>&1 \
+	| egrep -v "^clang: warning: .+ 'linker' input unused$" \
+	| egrep -v "^clang: warning: argument unused during compilation: '-dynamiclib'$"
+
+# Run the actual clang build command last, so the shell script exits with its status
+$CLANG "$@"

@@ -14,4 +14,7 @@ OTHER_FILES += \
 		VuoInputEditorMouseButton.json
 
 INCLUDEPATH += $$ROOT/node/vuo.mouse
-LIBS += $$ROOT/node/vuo.mouse/VuoMouseButton.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/node/vuo.mouse/VuoMouseButton.o \
+	$$ROOT/type/list/VuoList_VuoMouseButton.o
