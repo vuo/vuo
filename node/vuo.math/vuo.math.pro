@@ -9,6 +9,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.math.areEqual.c \
 	vuo.math.cos.c \
 	vuo.math.count.c \
+	vuo.math.exponentiate.c \
 	vuo.math.isGreaterThan.c \
 	vuo.math.isLessThan.c \
 	vuo.math.isWithinRange.c \
@@ -21,6 +22,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.math.tan.c
 
 NODE_SOURCES += \
+	vuo.math.calculate.c \
 	vuo.math.countWithinRange.VuoInteger.c \
 	vuo.math.countWithinRange.VuoReal.c \
 	vuo.math.divide.VuoInteger.c \

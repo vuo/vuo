@@ -16,6 +16,8 @@
 json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
 	VuoDialogForInputEditor dialog;
+	dialogPointer = &dialog;
+
 	dialog.setWindowFlags(Qt::FramelessWindowHint);
 	dialog.setFont(getDefaultFont());
 	setUpDialog(dialog, originalValue, details);
@@ -27,5 +29,15 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 	dialog.show();  // Needed to position the dialog. (https://bugreports.qt-project.org/browse/QTBUG-31406)
 	dialog.exec();
 
+	dialogPointer = NULL;
+
 	return (dialog.result() == QDialog::Accepted ? getAcceptedValue() : originalValue);
+}
+
+/**
+ * Returns a pointer to the dialog displayed by show(). This pointer is only valid during a call to show().
+ */
+QDialog * VuoInputEditorWithDialog::getDialog(void)
+{
+	return dialogPointer;
 }

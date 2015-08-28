@@ -35,6 +35,9 @@ public:
 	void setDescription(string description);
 	string getDescription(void);
 
+	void setCopyright(string copyright);
+	string getCopyright(void);
+
 	void addNode(VuoNode *node);
 	void removeNode(VuoNode *node);
 	void replaceNode(VuoNode *oldNode, VuoNode *newNode);
@@ -66,10 +69,13 @@ public:
 	set<pair<VuoPublishedPort *, VuoPort *> > getPublishedOutputPortsConnectedToNode(VuoNode *node);
 	int getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput);
 
+	static void parseHeader(const string &compositionAsString, string &name, string &description, string &copyright);
+
 private:
 	string name;
 	string directory;
 	string description;
+	string copyright;
 
 	set<VuoNode *> nodes;
 	set<VuoCable *> cables;

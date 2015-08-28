@@ -7,7 +7,9 @@ cache()
 # Subdirs are listed in the order that the tests should run.
 SUBDIRS += \
 	test_TestVuoUtilities \
+	test_TestVuoProtocol \
 	test_TestVuoRunner \
+	test_TestVuoRunnerCocoa \
 	test_TestVuoCompiler \
 	test_TestVuoCompiler_node \
 	test_TestVuoCompilerModule \
@@ -94,8 +96,14 @@ test_TestVuoMovie.depends =
 test_TestVuoRenderer.subdir = TestVuoRenderer
 test_TestVuoRenderer.depends =
 
+test_TestVuoProtocol.subdir = TestVuoProtocol
+test_TestVuoProtocol.depends =
+
 test_TestVuoRunner.subdir = TestVuoRunner
 test_TestVuoRunner.depends =
+
+test_TestVuoRunnerCocoa.subdir = TestVuoRunnerCocoa
+test_TestVuoRunnerCocoa.depends =
 
 test_TestVuoTypes.subdir = TestVuoTypes
 test_TestVuoTypes.depends =
@@ -106,7 +114,11 @@ test_TestVuoUtilities.depends =
 
 exists(TestVuoEditor) {
 	SUBDIRS += \
+		test_TestCompositionUpgrade \
 		test_TestVuoEditor
+
+	test_TestCompositionUpgrade.subdir = TestCompositionUpgrade
+	test_TestCompositionUpgrade.depends = test_TestCompositionExecution
 
 	test_TestVuoEditor.subdir = TestVuoEditor
 }

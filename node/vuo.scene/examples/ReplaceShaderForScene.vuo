@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Displays a 3D scene whose shaders have been replaced with a checkerboard image. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeAllShaders [type="vuo.scene.shader.set.all" version="1.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<done>done\r|<shadedObject>shadedObject\r" pos="707,228" fillcolor="violet"];
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<done>done\r|<object>object\r" pos="502,183"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="14,100"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-22,255" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetScene [type="vuo.scene.get" version="1.1.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<done>done\r|<scene>scene\r" pos="229,198" _sceneURL="\"jeep1.3ds\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="298,-6" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000}"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<done>done\r|<image>image\r" pos="219,345" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.100000" _center="{\"x\":0,\"y\":0}" _width="640" _height="480"];
+MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="897,239" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="948,269" fillcolor="green"];
+MakeList7 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="456,209"];
+MakeList8 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="39,20" _1="8.000000"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="85,9"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="994,228" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithImage [type="vuo.shader.make.image" version="2.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<alpha>alpha\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="469,345" _alpha="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+
+ChangeAllShaders:shadedObject -> MakeList3:1;
+Combine3DObjects:object -> ChangeAllShaders:object;
+ConvertRealTo3DPoint:point3d -> Make3DTransform:rotation;
+FireOnStart:started -> GetScene:refresh;
+FireOnStart:started -> MakeCheckerboardImage:refresh;
+GetScene:scene -> MakeList7:1;
+Make3DTransform:transform -> Combine3DObjects:transform;
+MakeCheckerboardImage:image -> ShadeWithImage:image;
+MakeList3:list -> RenderSceneToWindow:objects;
+MakeList5:list -> RenderSceneToWindow:windowProperties;
+MakeList7:list -> Combine3DObjects:childObjects;
+MakeList8:list -> Multiply:terms;
+Multiply:product -> ConvertRealTo3DPoint:y;
+RenderSceneToWindow:requestedFrame -> MakeList8:2;
+ShadeWithImage:shader -> ChangeAllShaders:shader;
+}

@@ -10,6 +10,11 @@
 #ifndef VUOKEY_H
 #define VUOKEY_H
 
+/// @{
+typedef void * VuoList_VuoKey;
+#define VuoList_VuoKey_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoKey VuoKey
@@ -145,6 +150,7 @@ typedef enum {
 
 VuoKey VuoKey_valueFromJson(struct json_object * js);
 struct json_object * VuoKey_jsonFromValue(const VuoKey value);
+VuoList_VuoKey VuoKey_allowedValues(void);
 char * VuoKey_summaryFromValue(const VuoKey value);
 
 char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned long flags, unsigned int *deadKeyState);

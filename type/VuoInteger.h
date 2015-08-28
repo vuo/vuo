@@ -45,6 +45,8 @@ static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInt
  */
 VuoInteger VuoInteger_valueFromString(const char *str);
 char * VuoInteger_stringFromValue(const VuoInteger value);
+void VuoInteger_retain(VuoInteger value);
+void VuoInteger_release(VuoInteger value);
 /// @}
 
 /**

@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object",
-					 "keywords" : [ "duplicate", "array", "instance", "instantiate", "populate", "replicate" ],
+					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false,
@@ -22,9 +22,9 @@ VuoModuleMetadata({
 void nodeEvent
 (
 	VuoInputData(VuoSceneObject) object,
-	VuoInputData(VuoList_VuoPoint3d) translations,
-	VuoInputData(VuoList_VuoPoint3d) rotations,
-	VuoInputData(VuoList_VuoPoint3d) scales,
+	VuoInputData(VuoList_VuoPoint3d, {"default":[{"x":0,"y":0,"z":0}]}) translations,
+	VuoInputData(VuoList_VuoPoint3d, {"default":[{"x":0,"y":0,"z":0}]}) rotations,
+	VuoInputData(VuoList_VuoPoint3d, {"default":[{"x":1,"y":1,"z":1}]}) scales,
 	VuoOutputData(VuoList_VuoSceneObject) copies
 )
 {
@@ -64,9 +64,9 @@ void nodeEvent
 
 		// VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale)
 		VuoListAppendValue_VuoSceneObject(*copies, VuoSceneObject_make(
-			object.verticesList,
+			object.mesh,
 			object.shader,
-			VuoTransform_makeEuler(translation, rotation, scale),
+			VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale),
 			object.childObjects
 			));
 	}

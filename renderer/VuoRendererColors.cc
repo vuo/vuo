@@ -89,17 +89,17 @@ QColor VuoRendererColors::portFill(void)
 	bool useNodeFill = ((selectionType == VuoRendererColors::noSelection) &&
 						(highlightType == VuoRendererColors::noHighlight) &&
 						!isHovered);
-	
+
 	if (useNodeFill)
 		return nodeFill();
-	
+
 	// Otherwise, use the lighter constant flag fill color.
 	else
 	{
 		qreal adjustedAlpha = getCurrentAlphaForDefault(defaultConstantAlpha);
 		int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
 		QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
-		
+
 		return nodeFillColor;
 	}
 }
@@ -188,7 +188,7 @@ QColor VuoRendererColors::eventBlockingBarrier(void)
 }
 
 /**
- * Returns the color for the evnet wall or door of the animated copy of a port.
+ * Returns the color for the event wall or door of the animated copy of a port.
  */
 QColor VuoRendererColors::animatedeventBlockingBarrier(void)
 {
@@ -197,6 +197,14 @@ QColor VuoRendererColors::animatedeventBlockingBarrier(void)
 	qreal adjustedAlpha = maxAlpha-currentFadePercentage*(maxAlpha-minAlpha);
 
 	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
+}
+
+/**
+ * Returns the color for the port action symbol.
+ */
+QColor VuoRendererColors::actionIndicator(void)
+{
+	return nodeFrame();
 }
 
 /**
@@ -227,6 +235,14 @@ QColor VuoRendererColors::cableMain(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableUpperAndMainAlpha);
 	return tint(QColor::fromHslF(0, 0, .25, adjustedAlpha), 2.);
+}
+
+/**
+ * Returns the color for marking nodes and cables involved in build errors.
+ */
+QColor VuoRendererColors::errorMark(void)
+{
+	return QColor::fromRgb(220, 50, 47, 160);
 }
 
 /**
@@ -262,7 +278,7 @@ QColor VuoRendererColors::tint(QColor color, qreal amount, int lighteningFactor)
 	qreal h,s,l,a;
 	color.getHslF(&h,&s,&l,&a);
 
-	qreal hs;
+	qreal hs = 0;
 	if (tintColor == VuoNode::TintYellow)
 		hs = 45./360.;
 	else if (tintColor == VuoNode::TintOrange)

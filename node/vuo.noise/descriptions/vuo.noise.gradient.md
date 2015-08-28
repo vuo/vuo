@@ -1,4 +1,4 @@
-Generates a pseudorandom number using Perlin noise or simplex noise.
+Generates a pseudorandom value using Perlin noise or simplex noise.
 
 This node can be used to animate an object in a natural-looking motion by sending gradually changing values to the `position` input port. 
 
@@ -6,4 +6,4 @@ This node can be used to animate an object in a natural-looking motion by sendin
    - `gradientNoise` — The way to generate the gradient noise.
       - "Perlin" — improved Perlin noise
       - "Simplex" — simplex noise
-   - `value` — The gradient noise value, usually ranging from -1 to 1.
+   - `value` — The gradient noise value.  Each component of the value usually ranges from -1 to 1.

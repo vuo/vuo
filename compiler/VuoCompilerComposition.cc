@@ -37,6 +37,7 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 
 	publishedInputNode = NULL;
 	publishedOutputNode = NULL;
+	graph = NULL;
 
 	if (parser)
 	{
@@ -67,20 +68,34 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 		publishedInputNode = parser->getPublishedInputNode();
 		publishedOutputNode = parser->getPublishedOutputNode();
 
+		getBase()->setName(parser->getName());
 		getBase()->setDescription(parser->getDescription());
+		getBase()->setCopyright(parser->getCopyright());
 
 		updateGenericPortTypes();
 	}
 }
 
 /**
+ * Creates a composition from the Graphviz-formatted string representation of a composition.
+ */
+VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler)
+{
+	VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionGraphvizDeclaration, compiler);
+	VuoCompilerComposition *composition = new VuoCompilerComposition(new VuoComposition(), parser);
+	delete parser;
+	return composition;
+}
+
+/**
  * Checks that the composition is valid (able to be compiled).
  *
- * @throw std::runtime_error The composition is invalid.
+ * @throw std::exception The composition is invalid.
  */
 void VuoCompilerComposition::check(void)
 {
 	checkForMissingNodeClasses();
+	checkFeedback();
 }
 
 /**
@@ -110,14 +125,18 @@ void VuoCompilerComposition::checkForMissingNodeClasses(void)
 }
 
 /**
- * Creates a composition from the Graphviz-formatted string representation of a composition.
+ * Checks that the structure of feedback loops in the composition is valid.
+ *
+ * @param potentialCables Cables that are not yet in the composition but should be included in the check.
+ * @throw VuoCompilerException There is at least one infinite feedback loop or deadlocked feedback loop.
  */
-VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler)
+void VuoCompilerComposition::checkFeedback(set<VuoCompilerCable *> potentialCables)
 {
-	VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionString(compositionGraphvizDeclaration, compiler);
-	VuoCompilerComposition *composition = new VuoCompilerComposition(new VuoComposition(), parser);
-	delete parser;
-	return composition;
+	delete graph;
+	graph = new VuoCompilerGraph(this, potentialCables);
+
+	graph->checkForInfiniteFeedback();
+	graph->checkForDeadlockedFeedback();
 }
 
 /**
@@ -586,7 +605,7 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 			output << "|<" << (*i)->getName() << ">" << (*i)->getName() << "\\r";
 		output << "\"";
 		for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
-		{			
+		{
 			string typeName = (*i)->getType()? (*i)->getType()->getModuleKey() : "event";
 			string escapedTypeName = VuoStringUtilities::transcodeToGraphvizIdentifier(typeName);
 
@@ -682,9 +701,9 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
  *
  * This needs to be kept in sync with VuoRuntime function isNodeInBothCompositions().
  *
- * The string representation has the [JSON Patch](http://tools.ietf.org/html/draft-ietf-appsawg-json-patch-02) format.
- * The key used for each node is its Graphviz identifier. Unlike the example below (spaced for readability), the
- * returned string contains no whitespace.
+ * The string representation is based on the [JSON Patch](http://tools.ietf.org/html/draft-ietf-appsawg-json-patch-02) format,
+ * with some extensions. The key used for each node is its Graphviz identifier. Unlike the example below (spaced for readability),
+ * the returned string contains no whitespace.
  *
  * @eg{
  * [
@@ -693,7 +712,8 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
  * ]
  * }
  */
-string VuoCompilerComposition::diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler)
+string VuoCompilerComposition::diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler,
+														   const set<NodeReplacement> &nodeReplacements)
 {
 	json_object *diff = json_object_new_array();
 
@@ -736,6 +756,32 @@ string VuoCompilerComposition::diffAgainstOlderComposition(string oldComposition
 			json_object_array_add(diff, add);
 		}
 	}
+	for (set<NodeReplacement>::iterator nodeReplacementIter = nodeReplacements.begin(); nodeReplacementIter != nodeReplacements.end(); ++nodeReplacementIter)
+	{
+		// {   "map" : "<node identifier>",
+		//      "to" : "<node identifier>",
+		//   "ports" : [
+		//			{ "map" : "<port identifier>", "to" : "<port identifier>" },
+		//			{ "map" : "<port identifier>", "to" : "<port identifier>" },
+		//			... ] }
+		json_object *mapObj = json_object_new_object();
+		json_object *oldNodeIdentifier = json_object_new_string(nodeReplacementIter->oldNodeIdentifier.c_str());
+		json_object_object_add(mapObj, "map", oldNodeIdentifier);
+		json_object *newNodeIdentifier = json_object_new_string(nodeReplacementIter->newNodeIdentifier.c_str());
+		json_object_object_add(mapObj, "to", newNodeIdentifier);
+		json_object *ports = json_object_new_array();
+		for (map<string, string>::const_iterator portMapIter = nodeReplacementIter->oldAndNewPortIdentifiers.begin(); portMapIter != nodeReplacementIter->oldAndNewPortIdentifiers.end(); ++portMapIter)
+		{
+			json_object *portObj = json_object_new_object();
+			json_object *oldPortIdentifier = json_object_new_string(portMapIter->first.c_str());
+			json_object_object_add(portObj, "map", oldPortIdentifier);
+			json_object *newPortIdentifier = json_object_new_string(portMapIter->second.c_str());
+			json_object_object_add(portObj, "to", newPortIdentifier);
+			json_object_array_add(ports, portObj);
+		}
+		json_object_object_add(mapObj, "ports", ports);
+		json_object_array_add(diff, mapObj);
+	}
 
 	delete oldComposition;
 
@@ -765,38 +811,11 @@ bool VuoCompilerComposition::compareGraphvizIdentifiersOfCables(VuoCable *lhs, V
 }
 
 /**
- * Returns true if this composition complies with the provided @c protocol.
- *
- * A composition complies with a given protocol if, for each port specified
- * in the protocol, the composition contains a published port with a matching
- * name and type. The composition may have additional published ports and
- * still comply with the protocol.
+ * Needed so this type can be used in STL containers.
  */
-bool VuoCompilerComposition::compliesWithProtocol(VuoProtocol *protocol)
+bool operator<(const VuoCompilerComposition::NodeReplacement &lhs, const VuoCompilerComposition::NodeReplacement &rhs)
 {
-	// Check whether the composition contains all of the required input ports.
-	vector<pair<string, VuoType *> > protocolInputs = protocol->getInputPortNamesAndTypes();
-	for (vector<pair<string, VuoType *> >::iterator i = protocolInputs.begin(); i != protocolInputs.end(); ++i)
-	{
-		string protocolInputName = i->first;
-		VuoType *protocolInputType = i->second;
-
-		VuoPublishedPort *compliantPublishedPort = getBase()->getPublishedInputPortWithName(protocolInputName);
-		if (!compliantPublishedPort || compliantPublishedPort->getType() != protocolInputType)
-			return false;
-	}
-
-	// Check whether the composition contains all of the required output ports.
-	vector<pair<string, VuoType *> > protocolOutputs = protocol->getOutputPortNamesAndTypes();
-	for (vector<pair<string, VuoType *> >::iterator i = protocolOutputs.begin(); i != protocolOutputs.end(); ++i)
-	{
-		string protocolOutputName = i->first;
-		VuoType *protocolOutputType = i->second;
-
-		VuoPublishedPort *compliantPublishedPort = getBase()->getPublishedOutputPortWithName(protocolOutputName);
-		if (!compliantPublishedPort || compliantPublishedPort->getType() != protocolOutputType)
-			return false;
-	}
-
-	return true;
+	return (lhs.oldNodeIdentifier != rhs.oldNodeIdentifier ?
+										 lhs.oldNodeIdentifier < rhs.oldNodeIdentifier :
+										 lhs.newNodeIdentifier < rhs.newNodeIdentifier);
 }

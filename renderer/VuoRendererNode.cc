@@ -11,7 +11,7 @@
 #include<math.h>
 
 #include "VuoRendererComposition.hh"
-#include "VuoRendererMakeListNode.hh"
+#include "VuoRendererInputListDrawer.hh"
 #include "VuoRendererPort.hh"
 #include "VuoRendererCable.hh"
 #include "VuoCompilerNode.hh"
@@ -158,7 +158,9 @@ void VuoRendererNode::layoutConnectedInputDrawers(void)
 		return;
 
 	VuoPort *finalInputPort = inputPorts[inputPorts.size()-1];
-	layoutConnectedInputDrawersAtAndAbovePort(finalInputPort->getRenderer());
+
+	if (finalInputPort->hasRenderer())
+		layoutConnectedInputDrawersAtAndAbovePort(finalInputPort->getRenderer());
 }
 
 /**
@@ -180,15 +182,13 @@ void VuoRendererNode::layoutConnectedInputDrawersAtAndAbovePort(VuoRendererPort 
 			layoutConnectedInputDrawer(i);
 	}
 
-	if (dynamic_cast<VuoRendererMakeListNode *>(this))
+	VuoRendererInputDrawer *thisDrawer = dynamic_cast<VuoRendererInputDrawer *>(this);
+	if (thisDrawer)
 	{
-		VuoRendererPort *hostPort = ((VuoRendererMakeListNode *)this)->getHostInputPort();
-		if (hostPort)
-		{
-			VuoRendererNode *hostNode = hostPort->getRenderedParentNode();
-			if (hostNode)
-				hostNode->layoutConnectedInputDrawersAtAndAbovePort(hostPort);
-		}
+		VuoNode *hostNode = thisDrawer->getRenderedHostNode();
+		VuoPort *hostPort = thisDrawer->getRenderedHostPort();
+		if (hostNode && hostNode->hasRenderer() && hostPort && hostPort->hasRenderer())
+			hostNode->getRenderer()->layoutConnectedInputDrawersAtAndAbovePort(hostPort->getRenderer());
 	}
 }
 
@@ -203,7 +203,7 @@ void VuoRendererNode::layoutConnectedInputDrawer(unsigned int i)
 		return;
 
 	VuoRendererPort *p = inputPorts[i]->getRenderer();
-	VuoRendererMakeListNode *drawer = p->getAttachedInputDrawer();
+	VuoRendererInputDrawer *drawer = p->getAttachedInputDrawer();
 	if (drawer)
 	{
 		QPointF point = getPortPoint(p, i);
@@ -360,7 +360,7 @@ QPair<QPainterPath, QPainterPath> VuoRendererNode::getPortPaths(VuoRendererPortL
 				insetPath = tp->getPortPath(true,false,&outsetPath);
 			else
 			{
-				insetPath = p->getPortPath(VuoRendererPort::portInset);
+				insetPath = p->getPortPath(p->getInset());
 				outsetPath = p->getPortPath(0);
 			}
 
@@ -373,7 +373,7 @@ QPair<QPainterPath, QPainterPath> VuoRendererNode::getPortPaths(VuoRendererPortL
 		foreach(VuoRendererPort *p, outputPorts->childItems())
 		{
 			QPainterPath outsetPath = p->getPortPath(0).translated(p->pos());
-			QPainterPath insetPath = p->getPortPath(VuoRendererPort::portInset).translated(p->pos());
+			QPainterPath insetPath = p->getPortPath(p->getInset()).translated(p->pos());
 			ports.addPath(outsetPath);
 			portsInset.addPath(p->getFunctionPort() || p->getDonePort() ? outsetPath : insetPath);
 		}
@@ -458,7 +458,7 @@ qreal VuoRendererNode::getInputDrawerOffset(unsigned int portIndex) const
 		if (port->getAttachedInputDrawer())
 		{
 			qreal currentDrawerChainedOffset = port->getAttachedInputDrawer()->getMaxDrawerChainedLabelWidth() +
-					VuoRendererMakeListNode::drawerHorizontalSpacing;
+					VuoRendererInputDrawer::drawerHorizontalSpacing;
 			cumulativeDrawerOffset += currentDrawerChainedOffset;
 		}
 		else if (dynamic_cast<VuoRendererTypecastPort *>(port))
@@ -468,7 +468,7 @@ qreal VuoRendererNode::getInputDrawerOffset(unsigned int portIndex) const
 			tp->getPortPath(false, true, &outsetPath);
 			qreal currentTypecastOffset = outsetPath.boundingRect().width();
 			currentTypecastOffset += 0.5*VuoRendererPort::getPortRect().width(); // Account for typecast child port.
-			currentTypecastOffset += VuoRendererMakeListNode::drawerHorizontalSpacing;
+			currentTypecastOffset += VuoRendererInputDrawer::drawerHorizontalSpacing;
 
 			if (currentTypecastOffset > maxConstantOffset)
 				maxConstantOffset = currentTypecastOffset;
@@ -478,7 +478,7 @@ qreal VuoRendererNode::getInputDrawerOffset(unsigned int portIndex) const
 			QPainterPath outsetPath;
 			port->getPortConstantPath(VuoRendererPort::getPortRect(), QString::fromUtf8(port->getConstantAsStringToRender().c_str()),&outsetPath);
 			qreal currentConstantOffset = outsetPath.boundingRect().width();
-			currentConstantOffset += VuoRendererMakeListNode::drawerHorizontalSpacing;
+			currentConstantOffset += VuoRendererInputDrawer::drawerHorizontalSpacing;
 
 			if (currentConstantOffset > maxConstantOffset)
 				maxConstantOffset = currentConstantOffset;
@@ -505,13 +505,13 @@ qreal VuoRendererNode::getInputDrawerOffset(unsigned int portIndex) const
 /**
  * Returns a vector containing all of the drawers attached to any of this node's input ports.
  */
-vector<VuoRendererMakeListNode *> VuoRendererNode::getAttachedInputDrawers(void) const
+vector<VuoRendererInputDrawer *> VuoRendererNode::getAttachedInputDrawers(void) const
 {
-	vector<VuoRendererMakeListNode *> drawers;
+	vector<VuoRendererInputDrawer *> drawers;
 	vector<VuoPort *> inputPorts = this->getBase()->getInputPorts();
 	for(unsigned int i = 0; i < inputPorts.size(); ++i)
 	{
-		VuoRendererMakeListNode *drawer = inputPorts[i]->getRenderer()->getAttachedInputDrawer();
+		VuoRendererInputDrawer *drawer = inputPorts[i]->getRenderer()->getAttachedInputDrawer();
 		if (drawer)
 			drawers.push_back(drawer);
 	}
@@ -540,10 +540,11 @@ void VuoRendererNode::updateNodeFrameRect(void)
 
 		qreal thisRowWidth = 0;
 		if (adjustedInputPortRow < inputPorts->childItems().size())
-			thisRowWidth += QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortTitleFont()).boundingRect(QString::fromUtf8(inputPorts->childItems()[adjustedInputPortRow]->getBase()->getClass()->getName().c_str())).width();
+			thisRowWidth += inputPorts->childItems()[adjustedInputPortRow]->getNameRect().width() +
+							inputPorts->childItems()[adjustedInputPortRow]->getActionIndicatorRect().width();
 
 		if (adjustedOutputPortRow < outputPorts->childItems().size())
-			thisRowWidth += QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortTitleFont()).boundingRect(QString::fromUtf8(outputPorts->childItems()[adjustedOutputPortRow]->getBase()->getClass()->getName().c_str())).width();
+			thisRowWidth += outputPorts->childItems()[adjustedOutputPortRow]->getNameRect().width();
 
 		if(thisRowWidth > maxPortRowWidth)
 			maxPortRowWidth = thisRowWidth;
@@ -593,7 +594,7 @@ void VuoRendererNode::updateNodeFrameRect(void)
  */
 QRectF VuoRendererNode::boundingRect(void) const
 {
-	if (proxyNode)
+	if (paintingDisabled())
 		return QRectF();
 
 	QRectF r = frameRect;
@@ -614,6 +615,13 @@ QRectF VuoRendererNode::boundingRect(void) const
 	return r.toAlignedRect();
 }
 
+/**
+ * Returns a boolean indicating whether painting is currently disabled for this node.
+ */
+bool VuoRendererNode::paintingDisabled() const
+{
+	return this->proxyNode;
+}
 
 /**
  * Returns the center point of the specified input/output port circle.
@@ -648,11 +656,14 @@ QPointF VuoRendererNode::getPortPoint(VuoRendererPort *port, unsigned int portIn
 }
 
 /**
- * Returns the bounding rect for the node title box.
+ * Returns the bounding rect for the node's outer frame (excluding ports).
  */
-QRectF VuoRendererNode::getNodeTitleBoundingRect() const
+QRectF VuoRendererNode::getOuterNodeFrameBoundingRect(void) const
 {
-	return nodeTitleBoundingRect;
+	if (paintingDisabled())
+		return QRectF();
+	
+	return nodeFrames.first.boundingRect();
 }
 
 /**
@@ -662,7 +673,7 @@ QRectF VuoRendererNode::getNodeTitleBoundingRect() const
  */
 void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	if (proxyNode)
+	if (paintingDisabled())
 		return;
 
 	drawBoundingRect(painter);
@@ -746,9 +757,12 @@ VuoRendererTypecastPort * VuoRendererNode::getProxyCollapsedTypecast(void) const
 
 	foreach (VuoPort *p, proxyNode->getBase()->getInputPorts())
 	{
-		VuoRendererTypecastPort *tp = dynamic_cast<VuoRendererTypecastPort *>(p->getRenderer());
-		if (tp && (tp->getUncollapsedTypecastNode()->getBase() == this->getBase()))
-			return tp;
+		if (p->hasRenderer())
+		{
+			VuoRendererTypecastPort *tp = dynamic_cast<VuoRendererTypecastPort *>(p->getRenderer());
+			if (tp && (tp->getUncollapsedTypecastNode()->getBase() == this->getBase()))
+				return tp;
+		}
 	}
 
 	return NULL;
@@ -776,7 +790,7 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 		foreach (VuoRendererPort * p, outputPorts->childItems())
 			p->updateGeometry();
 
-		foreach (VuoRendererMakeListNode *n, getAttachedInputDrawers())
+		foreach (VuoRendererInputDrawer *n, getAttachedInputDrawers())
 			n->updateGeometry();
 
 		setCacheModeForConnectedCables(getCurrentDefaultCacheMode());
@@ -798,9 +812,9 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 			{
 				set<VuoRendererNode *> movedNodes;
 
-				// "Make List" nodes follow their host nodes' movements automatically.
+				// Attachments follow their host nodes' movements automatically.
 				// Pushing their moves onto the 'Undo' stack breaks other 'Undo' commands.
-				if (!dynamic_cast<VuoRendererMakeListNode *>(this))
+				if (!dynamic_cast<VuoRendererInputAttachment *>(this))
 				{
 					movedNodes.insert(this);
 					signaler->signalNodesMoved(movedNodes, dx, dy, true);
@@ -863,6 +877,21 @@ void VuoRendererNode::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
 }
 
 /**
+ * Handle mouse release events.
+ */
+void VuoRendererNode::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+	if (event->button() == Qt::LeftButton)
+	{
+		// Display the node popover, as long as the mouse release did not mark the end of a drag.
+		if (QLineF(event->screenPos(), event->buttonDownScreenPos(Qt::LeftButton)).length() < QApplication::startDragDistance())
+			signaler->signalNodePopoverRequested(this);
+	}
+
+	QGraphicsItem::mouseReleaseEvent(event);
+}
+
+/**
  * Handle mouse double-click events.
  */
 void VuoRendererNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -920,11 +949,14 @@ set<VuoCable *> VuoRendererNode::getConnectedInputCables(bool includePublishedCa
 		vector<VuoCable *> inputCables = (*inputPort)->getConnectedCables(includePublishedCables);
 		connectedInputCables.insert(inputCables.begin(), inputCables.end());
 
-		VuoRendererTypecastPort *typecastPort = dynamic_cast<VuoRendererTypecastPort *>((*inputPort)->getRenderer());
-		if (typecastPort)
+		if ((*inputPort)->hasRenderer())
 		{
-			vector<VuoCable *> childPortInputCables = typecastPort->getChildPort()->getBase()->getConnectedCables(includePublishedCables);
-			connectedInputCables.insert(childPortInputCables.begin(), childPortInputCables.end());
+			VuoRendererTypecastPort *typecastPort = dynamic_cast<VuoRendererTypecastPort *>((*inputPort)->getRenderer());
+			if (typecastPort)
+			{
+				vector<VuoCable *> childPortInputCables = typecastPort->getChildPort()->getBase()->getConnectedCables(includePublishedCables);
+				connectedInputCables.insert(childPortInputCables.begin(), childPortInputCables.end());
+			}
 		}
 	}
 
@@ -1091,7 +1123,9 @@ void VuoRendererNode::setTitle(string title)
  */
 QString VuoRendererNode::generateNodeClassToolTipTitle(VuoNodeClass *nodeClass, VuoNode *node)
 {
-	string humanReadableName = (nodeClass->hasCompiler() ? nodeClass->getDefaultTitle() : node->getTitle());
+	// Temporary workaround for crash: https://b33p.net/kosada/node/8228
+	//string humanReadableName = (nodeClass->hasCompiler() ? nodeClass->getDefaultTitle() : node->getTitle());
+	string humanReadableName = nodeClass->getDefaultTitle();
 	return QString("<h2>%1</h2>").arg(humanReadableName.c_str());
 }
 
@@ -1182,12 +1216,12 @@ qint64 VuoRendererNode::getTimeLastExecutionEnded()
  */
 void VuoRendererNode::setCacheModeForNodeAndPorts(QGraphicsItem::CacheMode mode)
 {
-	// Caching is currently disabled for VuoRendererMakeListNodes; see
+	// Caching is currently disabled for VuoRendererInputAttachments; see
 	// https://b33p.net/kosada/node/6286 and https://b33p.net/kosada/node/6064 .
-	if (!VuoCompilerMakeListNodeClass::isMakeListNodeClassName(getBase()->getNodeClass()->getClassName()))
-		this->setCacheMode(mode);
-	else
+	if (dynamic_cast<VuoRendererInputAttachment *>(this))
 		this->setCacheMode(QGraphicsItem::NoCache);
+	else
+		this->setCacheMode(mode);
 
 	foreach (VuoRendererPort *port, getInputPorts()->childItems())
 		port->setCacheModeForPortAndChildren(mode);

@@ -52,14 +52,12 @@ VuoCompilerMakeListNodeClass::VuoCompilerMakeListNodeClass(VuoCompilerMakeListNo
  */
 VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack)
 {
-	string itemCountAndType = VuoStringUtilities::substrAfter(nodeClassName, makeListNodeClassNamePrefix);
-	size_t dotPos = itemCountAndType.find(".");
-	if (dotPos == string::npos || dotPos == 0 || dotPos == itemCountAndType.length() - 1)
+	unsigned long itemCount;
+	string itemTypeStr;
+	bool parsedOk = parseNodeClassName(nodeClassName, itemCount, itemTypeStr);
+	if (! parsedOk)
 		return NULL;
 
-	string itemCountStr = itemCountAndType.substr(0, dotPos);
-	unsigned long itemCount = atol(itemCountStr.c_str());
-	string itemTypeStr = itemCountAndType.substr(dotPos + 1);
 	VuoCompilerType *itemType;
 	VuoCompilerType *listType;
 	if (nodeToBack)
@@ -87,7 +85,7 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	string moduleDetails =
 			"{ \"title\" : \"Make List\", "
 			"\"description\" : \"" + makeListNodeClassDescription + "\", "
-			"\"version\" : \"1.0.0\" }";
+			"\"version\" : \"2.0.0\" }";
 	Constant *moduleDetailsValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, moduleDetails, ".str");  // VuoCompilerBitcodeParser::resolveGlobalToConst requires that the variable have a name
 	GlobalVariable *moduleDetailsVariable = new GlobalVariable(*module, pointerToCharType, false, GlobalValue::ExternalLinkage, 0, "moduleDetails");
 	moduleDetailsVariable->setInitializer(moduleDetailsValue);
@@ -126,7 +124,7 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	{
 		Value *arg = argIter++;
 		ostringstream oss;
-		oss << "item" << i+1;
+		oss << i+1;
 		string argName = oss.str();
 		arg->setName(argName);
 
@@ -243,29 +241,43 @@ bool VuoCompilerMakeListNodeClass::isMakeListNodeClassName(string nodeClassName)
 }
 
 /**
- * Returns true if the given type is a VuoList type.
- */
-bool VuoCompilerMakeListNodeClass::isListType(VuoCompilerType *type)
-{
-	if (! type)
-		return false;
-
-	return VuoStringUtilities::beginsWith(type->getBase()->getModuleKey(), VuoType::listTypeNamePrefix);
-}
-
-/**
  * Returns the name that a "Make List" node class would have if it were to input the given number of items
  * and output the given type of list.
  */
 string VuoCompilerMakeListNodeClass::getNodeClassName(unsigned long itemCount, VuoCompilerType *listType)
 {
+	string itemTypeStr = VuoStringUtilities::substrAfter(listType->getBase()->getModuleKey(), VuoType::listTypeNamePrefix);
+	return buildNodeClassName(itemCount, itemTypeStr);
+}
+
+/**
+ * Parses item count and type from the "Make List" node class name.
+ *
+ * @return True if the node class name was successfully parsed, false otherwise.
+ */
+bool VuoCompilerMakeListNodeClass::parseNodeClassName(string nodeClassName, unsigned long &itemCount, string &itemTypeName)
+{
+	string itemCountAndType = VuoStringUtilities::substrAfter(nodeClassName, makeListNodeClassNamePrefix);
+	size_t dotPos = itemCountAndType.find(".");
+	if (dotPos == string::npos || dotPos == 0 || dotPos == itemCountAndType.length() - 1)
+		return false;
+
+	string itemCountStr = itemCountAndType.substr(0, dotPos);
+	itemCount = atol(itemCountStr.c_str());
+	itemTypeName = itemCountAndType.substr(dotPos + 1);
+	return true;
+}
+
+/**
+ * Creates a "Make List" node class name from the item count and type.
+ */
+string VuoCompilerMakeListNodeClass::buildNodeClassName(unsigned long itemCount, string itemTypeName)
+{
 	ostringstream oss;
 	oss << itemCount;
 	string itemCountStr = oss.str();
 
-	string itemTypeStr = VuoStringUtilities::substrAfter(listType->getBase()->getModuleKey(), VuoType::listTypeNamePrefix);
-
-	return makeListNodeClassNamePrefix + itemCountStr + "." + itemTypeStr;
+	return makeListNodeClassNamePrefix + itemCountStr + "." + itemTypeName;
 }
 
 /**
@@ -334,7 +346,19 @@ string VuoCompilerMakeListNodeClass::createUnspecializedNodeClassName(set<VuoPor
 	if (! foundDataAndEvent)
 		return getBase()->getClassName();
 
-	ostringstream unspecializedNodeClassName;
-	unspecializedNodeClassName << makeListNodeClassNamePrefix << itemCount << "." << VuoGenericType::createGenericTypeName(1);
-	return unspecializedNodeClassName.str();
+	return buildNodeClassName(itemCount, VuoGenericType::createGenericTypeName(1));
+}
+
+/**
+ * Returns the name for the Make List node class that would result if the given specialized type were substituted for the
+ * generic item type.
+ */
+string VuoCompilerMakeListNodeClass::createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName)
+{
+	unsigned long itemCount = 0;
+	string itemTypeName;
+	parseNodeClassName(getBase()->getClassName(), itemCount, itemTypeName);
+
+	string specializedItemTypeName = (itemTypeName == genericTypeName ? specializedTypeName : itemTypeName);
+	return buildNodeClassName(itemCount, specializedItemTypeName);
 }

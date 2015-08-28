@@ -80,6 +80,14 @@ char ** getPublishedOutputPortTypes(void)
 {
 	return NULL;
 }
+char ** getPublishedInputPortDetails(void)
+{
+	return NULL;
+}
+char ** getPublishedOutputPortDetails(void)
+{
+	return NULL;
+}
 int getPublishedInputPortConnectedIdentifierCount(char *name)
 {
 	return 0;
@@ -101,6 +109,10 @@ void firePublishedInputPortEvent(char *name)
 }
 void setPublishedInputPortValue(char *portIdentifier, char *valueAsString)
 {
+}
+char * getPublishedInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
+{
+	return NULL;
 }
 char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
 {

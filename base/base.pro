@@ -1,57 +1,13 @@
+include(../framework/masterLists.pri)
+
 TEMPLATE = lib
 CONFIG -= qt
-CONFIG += staticlib VuoPCH VuoRuntime graphviz json discount
+CONFIG += staticlib VuoPCH VuoRuntime graphviz json discount openssl
 TARGET = VuoBase
 
 include(../vuo.pri)
 
-SOURCES += \
-	VuoBase.cc \
-	VuoBaseDetail.cc \
-	VuoNodeClass.cc \
-	VuoNode.cc \
-	VuoNodeSet.cc \
-	VuoPort.cc \
-	VuoPortClass.cc \
-	VuoProtocol.cc \
-	VuoCable.cc \
-	VuoRunner.cc \
-	VuoFileUtilities.cc \
-	VuoTelemetry.c \
-	VuoStringUtilities.cc \
-	VuoPublishedPort.cc \
-	VuoModule.cc \
-	VuoType.cc \
-	VuoGenericType.cc \
-	VuoTimeUtilities.cc \
-	VuoCompositionStub.c \
-	VuoComposition.cc \
-	miniz.c
-
-HEADERS += \
-	VuoBase.hh \
-	VuoBaseDetail.hh \
-	VuoNodeClass.hh \
-	VuoNode.hh \
-	VuoNodeSet.hh \
-	VuoPort.hh \
-	VuoPortClass.hh \
-	VuoProtocol.hh \
-	VuoCable.hh \
-	VuoRunner.hh \
-	VuoFileUtilities.hh \
-	VuoTelemetry.h \
-	VuoStringUtilities.hh \
-	VuoPublishedPort.hh \
-	VuoModule.hh \
-	VuoType.hh \
-	VuoGenericType.hh \
-	VuoTimeUtilities.hh \
-	VuoComposition.hh \
-	miniz.h
-
-BASE_STUB_SOURCES += \
-	VuoCompositionStub.c
+include (base.pri)
 
 base_stub.input = BASE_STUB_SOURCES
 base_stub.output = ${QMAKE_FILE_IN_BASE}.dylib
@@ -67,3 +23,14 @@ base_stub.commands = \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += base_stub
+
+createMasterHeader.commands += (cd ../framework ; ./generateFrameworkHeader.pl $${FRAMEWORK_VUO_STUB_HEADER} $${MASTER_VUO_HEADER_LIST} > Vuo.h)
+createMasterHeader.depends += ../framework/$$FRAMEWORK_VUO_STUB_HEADER
+createMasterHeader.target = ../framework/Vuo.h
+POST_TARGETDEPS += ../framework/Vuo.h
+QMAKE_EXTRA_TARGETS += createMasterHeader
+
+QMAKE_OBJECTIVE_CFLAGS += \
+	-I../type \
+	-I../type/list \
+	-I../library

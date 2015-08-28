@@ -63,13 +63,6 @@ void vuo_layer_render_window_resize(VuoGlContext glContext, void *ctx, unsigned 
 	VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
 }
 
-void vuo_layer_render_window_switchContext(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *ctx)
-{
-//	VLog("old=%p  new=%p",oldGlContext,newGlContext);
-	struct nodeInstanceData *context = ctx;
-	VuoSceneRenderer_switchContext(context->sceneRenderer, newGlContext);
-}
-
 void vuo_layer_render_window_draw(VuoGlContext glContext, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
@@ -96,7 +89,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 				false,
 				vuo_layer_render_window_init,
 				vuo_layer_render_window_resize,
-				vuo_layer_render_window_switchContext,
 				vuo_layer_render_window_draw,
 				(void *)context
 			);
@@ -128,11 +120,14 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoList_VuoLayer) layers,
+		VuoInputData(VuoList_VuoWindowProperty) windowProperties,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
 		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop),
 		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
 {
+	VuoWindowOpenGl_setProperties((*context)->window, windowProperties);
+
 	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity()).sceneObject;
 
 	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){

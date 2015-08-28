@@ -10,6 +10,11 @@
 #ifndef VUOHORIZONTALALIGNMENT_H
 #define VUOHORIZONTALALIGNMENT_H
 
+/// @{
+typedef void * VuoList_VuoHorizontalAlignment;
+#define VuoList_VuoHorizontalAlignment_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoHorizontalAlignment VuoHorizontalAlignment
@@ -30,6 +35,7 @@ typedef enum
 
 VuoHorizontalAlignment VuoHorizontalAlignment_valueFromJson(struct json_object * js);
 struct json_object * VuoHorizontalAlignment_jsonFromValue(const VuoHorizontalAlignment value);
+VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_allowedValues(void);
 char * VuoHorizontalAlignment_summaryFromValue(const VuoHorizontalAlignment value);
 
 /**

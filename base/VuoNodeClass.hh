@@ -61,8 +61,6 @@ public:
 	vector<VuoPortClass *> getOutputPortClasses(void);
 	void setOutputPortClasses(vector<VuoPortClass *> outputPortClasses);
 
-	vector<string> getAutomaticKeywords(void);
-
 	void print(void);
 
 private:

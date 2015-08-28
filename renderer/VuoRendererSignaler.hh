@@ -27,6 +27,7 @@ public:
 	explicit VuoRendererSignaler(void);
 	void signalNodesMoved(set<VuoRendererNode *> nodes, qreal dx, qreal dy, bool movedByDragging=false);
 	void signalInputEditorRequested(VuoRendererPort *port);
+	void signalNodePopoverRequested(VuoRendererNode *node);
 	void signalNodeTitleEditorRequested(VuoRendererNode *node);
 	void signalInputPortCountAdjustmentRequested(VuoRendererNode *node, int inputPortCountDelta, bool requestedByDragging);
 	void signalDisableDragStickiness(bool disable);
@@ -34,6 +35,7 @@ public:
 signals:
 	void nodesMoved(set<VuoRendererNode *> nodes, qreal dx, qreal dy, bool movedByDragging); ///< Emitted when nodes have been moved.
 	void inputEditorRequested(VuoRendererPort *port); ///< Emitted when the user has requested an input editor be presented.
+	void nodePopoverRequested(VuoRendererNode *node); ///< Emitted when the user has requested a node popover be presented.
 	void nodeTitleEditorRequested(VuoRendererNode *node); ///< Emitted when the user has requested a node title editor be presented.
 	void inputPortCountAdjustmentRequested(VuoRendererNode *node, int inputPortCountDelta, bool requestedByDragging); ///< Emitted when a node is to have its port count adjusted.
 	void dragStickinessDisableRequested(bool disable); ///< Emitted when drag stickiness for the canvas is to be disabled or re-enabled.

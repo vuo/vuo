@@ -13,7 +13,6 @@
 #include "type.h"
 #include "VuoSceneObject.h"
 #include "VuoList_VuoImage.h"
-#include "VuoList_VuoVertices.h"
 #include "VuoList_VuoSceneObject.h"
 #include "VuoBoolean.h"
 
@@ -40,7 +39,7 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 {
 	VuoSceneObject o;
 
-	o.verticesList = NULL;
+	o.mesh = NULL;
 	o.shader = NULL;
 	o.isRealSize = false;
 
@@ -59,11 +58,11 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 /**
  * Creates a visible (mesh) scene object.
  */
-VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects)
+VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects)
 {
 	VuoSceneObject o;
 
-	o.verticesList = verticesList;
+	o.mesh = mesh;
 	o.shader = shader;
 	o.isRealSize = false;
 
@@ -95,10 +94,8 @@ VuoSceneObject VuoSceneObject_make(VuoList_VuoVertices verticesList, VuoShader s
  */
 VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height)
 {
-	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
-	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuadWithoutNormals());
 	return VuoSceneObject_make(
-				verticesList,
+				VuoMesh_makeQuadWithoutNormals(),
 				shader,
 				VuoTransform_makeEuler(
 					center,
@@ -125,10 +122,8 @@ VuoSceneObject VuoSceneObject_makeQuad(VuoShader shader, VuoPoint3d center, VuoP
  */
 VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal height)
 {
-	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
-	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuad());
 	return VuoSceneObject_make(
-				verticesList,
+				VuoMesh_makeQuad(),
 				shader,
 				VuoTransform_makeEuler(
 					center,
@@ -150,22 +145,12 @@ VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPo
 		return VuoSceneObject_makeEmpty();
 
 	VuoSceneObject object = VuoSceneObject_makeQuad(
-				VuoShader_makeImageShader(),
+				VuoShader_makeUnlitImageShader(image, alpha),
 				center,
 				rotation,
 				width,
 				image->pixelsHigh * width/image->pixelsWide
 			);
-
-	{
-		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoShader_addTexture(object.shader, glContext, "texture", image);
-
-		VuoShader_setUniformFloat(object.shader, glContext, "alpha", alpha);
-
-		VuoGlContext_disuse(glContext);
-	}
 
 	return object;
 }
@@ -196,13 +181,12 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 {
 	VuoList_VuoSceneObject cubeChildObjects = VuoListCreate_VuoSceneObject();
 
-	VuoList_VuoVertices quadVertices = VuoListCreate_VuoVertices();
-	VuoListAppendValue_VuoVertices(quadVertices, VuoVertices_getQuad());
+	VuoMesh quadMesh = VuoMesh_makeQuad();
 
 	// Front Face
 	{
 		VuoSceneObject so = VuoSceneObject_make(
-					quadVertices,
+					quadMesh,
 					frontShader,
 					VuoTransform_makeEuler(VuoPoint3d_make(0,0,.5), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1)),
 					NULL
@@ -213,7 +197,7 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 	// Left Face
 	{
 		VuoSceneObject so = VuoSceneObject_make(
-					quadVertices,
+					quadMesh,
 					leftShader,
 					VuoTransform_makeEuler(VuoPoint3d_make(-.5,0,0), VuoPoint3d_make(0,-M_PI/2.,0), VuoPoint3d_make(1,1,1)),
 					NULL
@@ -224,7 +208,7 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 	// Right Face
 	{
 		VuoSceneObject so = VuoSceneObject_make(
-					quadVertices,
+					quadMesh,
 					rightShader,
 					VuoTransform_makeEuler(VuoPoint3d_make(.5,0,0), VuoPoint3d_make(0,M_PI/2.,0), VuoPoint3d_make(1,1,1)),
 					NULL
@@ -235,7 +219,7 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 	// Back Face
 	{
 		VuoSceneObject so = VuoSceneObject_make(
-					quadVertices,
+					quadMesh,
 					backShader,
 					VuoTransform_makeEuler(VuoPoint3d_make(0,0,-.5), VuoPoint3d_make(0,M_PI,0), VuoPoint3d_make(1,1,1)),
 					NULL
@@ -246,7 +230,7 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 	// Top Face
 	{
 		VuoSceneObject so = VuoSceneObject_make(
-					quadVertices,
+					quadMesh,
 					topShader,
 					VuoTransform_makeEuler(VuoPoint3d_make(0,.5,0), VuoPoint3d_make(-M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
 					NULL
@@ -257,7 +241,7 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 	// Bottom Face
 	{
 		VuoSceneObject so = VuoSceneObject_make(
-					quadVertices,
+					quadMesh,
 					bottomShader,
 					VuoTransform_makeEuler(VuoPoint3d_make(0,-.5,0), VuoPoint3d_make(M_PI/2.,0,0), VuoPoint3d_make(1,1,1)),
 					NULL
@@ -280,6 +264,23 @@ VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform t
 	o.cameraFieldOfView = fieldOfView;
 	o.cameraDistanceMin = distanceMin;
 	o.cameraDistanceMax = distanceMax;
+	return o;
+}
+
+/**
+ * Returns a stereoscopic camera having the position and negative-rotation specified by @c transform (its scale is ignored).
+ */
+VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance)
+{
+	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.name = name;
+	o.transform = transform;
+	o.cameraType = VuoSceneObject_StereoCamera;
+	o.cameraFieldOfView = fieldOfView;
+	o.cameraDistanceMin = distanceMin;
+	o.cameraDistanceMax = distanceMax;
+	o.cameraConfocalDistance = confocalDistance;
+	o.cameraIntraocularDistance = intraocularDistance;
 	return o;
 }
 
@@ -350,18 +351,19 @@ bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoScen
 }
 
 /**
- * Performs a depth-first search of the scenegraph.
- * Returns the first camera whose name contains @c nameToMatch (or, if @c nameToMatch is emptystring, just returns the first camera).
- * Output paramater @c foundCamera indicates whether a camera was found.
- * If no camera was found, returns VuoSceneObject_makeDefaultCamera().
- *
- * @todo apply hierarchical transformations
+ * Helper for @ref VuoSceneObject_apply.
  */
-VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera)
+VuoSceneObject VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera, float modelviewMatrix[16])
 {
+	float localModelviewMatrix[16];
+	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
+	float compositeModelviewMatrix[16];
+	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
+
 	if (so.cameraType != VuoSceneObject_NotACamera && strstr(so.name,nameToMatch))
 	{
 		*foundCamera = true;
+		so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
 		return so;
 	}
 
@@ -372,7 +374,7 @@ VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch,
 		{
 			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
 			bool foundChildCamera;
-			VuoSceneObject childCamera = VuoSceneObject_findCamera(childObject, nameToMatch, &foundChildCamera);
+			VuoSceneObject childCamera = VuoSceneObject_findCameraInternal(childObject, nameToMatch, &foundChildCamera, compositeModelviewMatrix);
 			if (foundChildCamera)
 			{
 				*foundCamera = true;
@@ -391,6 +393,21 @@ VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch,
 }
 
 /**
+ * Performs a depth-first search of the scenegraph.
+ * Returns the first camera whose name contains @c nameToMatch (or, if @c nameToMatch is emptystring, just returns the first camera),
+ * with its transform altered to incorporate the transforms of its ancestor objects.
+ * Output paramater @c foundCamera indicates whether a camera was found.
+ * If no camera was found, returns VuoSceneObject_makeDefaultCamera().
+ */
+VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera)
+{
+	float localModelviewMatrix[16];
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
+
+	return VuoSceneObject_findCameraInternal(so, nameToMatch, foundCamera, localModelviewMatrix);
+}
+
+/**
  * @ingroup VuoSceneObject
  * Returns the @c VuoSceneObject_CameraType corresponding with the string @c cameraTypeString.  If none matches, returns VuoSceneObject_NotACamera.
  */
@@ -398,6 +415,8 @@ VuoSceneObject_CameraType VuoSceneObject_cameraTypeFromCString(const char *camer
 {
 	if (strcmp(cameraTypeString,"perspective")==0)
 		return VuoSceneObject_PerspectiveCamera;
+	else if (strcmp(cameraTypeString,"stereo")==0)
+		return VuoSceneObject_StereoCamera;
 	else if (strcmp(cameraTypeString,"orthographic")==0)
 		return VuoSceneObject_OrthographicCamera;
 
@@ -414,6 +433,8 @@ const char * VuoSceneObject_cStringForCameraType(VuoSceneObject_CameraType camer
 	{
 		case VuoSceneObject_PerspectiveCamera:
 			return "perspective";
+		case VuoSceneObject_StereoCamera:
+			return "stereo";
 		case VuoSceneObject_OrthographicCamera:
 			return "orthographic";
 		default:
@@ -515,10 +536,11 @@ const char * VuoSceneObject_cStringForLightType(VuoSceneObject_LightType lightTy
 	}
 }
 
-static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, VuoList_VuoColor ambientColors, float *ambientBrightness, VuoList_VuoSceneObject pointLights, VuoList_VuoSceneObject spotLights)
+/**
+ * Helper for @ref VuoSceneObject_findLights.
+ */
+static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, float modelviewMatrix[16], VuoList_VuoColor ambientColors, float *ambientBrightness, VuoList_VuoSceneObject pointLights, VuoList_VuoSceneObject spotLights)
 {
-	/// @todo apply hierarchical transforms
-
 	switch (so.lightType)
 	{
 		case VuoSceneObject_AmbientLight:
@@ -526,22 +548,43 @@ static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, VuoList_VuoCol
 			*ambientBrightness += so.lightBrightness;
 			return;
 		case VuoSceneObject_PointLight:
+		{
+			float localModelviewMatrix[16];
+			VuoTransform_getMatrix(so.transform, localModelviewMatrix);
+			float compositeModelviewMatrix[16];
+			VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
+			so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
+
 			VuoListAppendValue_VuoSceneObject(pointLights, so);
 			return;
+		}
 		case VuoSceneObject_Spotlight:
+		{
+			float localModelviewMatrix[16];
+			VuoTransform_getMatrix(so.transform, localModelviewMatrix);
+			float compositeModelviewMatrix[16];
+			VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
+			so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
+
 			VuoListAppendValue_VuoSceneObject(spotLights, so);
 			return;
+		}
 		default:
 			break;
 	}
 
 	if (so.childObjects)
 	{
+		float localModelviewMatrix[16];
+		VuoTransform_getMatrix(so.transform, localModelviewMatrix);
+		float compositeModelviewMatrix[16];
+		VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
+
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
 			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
-			VuoSceneObject_findLightsRecursive(childObject, ambientColors, ambientBrightness, pointLights, spotLights);
+			VuoSceneObject_findLightsRecursive(childObject, compositeModelviewMatrix, ambientColors, ambientBrightness, pointLights, spotLights);
 		}
 	}
 }
@@ -561,7 +604,11 @@ void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float 
 	*ambientBrightness = 0;
 	*pointLights = VuoListCreate_VuoSceneObject();
 	*spotLights = VuoListCreate_VuoSceneObject();
-	VuoSceneObject_findLightsRecursive(so, ambientColors, ambientBrightness, *pointLights, *spotLights);
+
+	float localModelviewMatrix[16];
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
+
+	VuoSceneObject_findLightsRecursive(so, localModelviewMatrix, ambientColors, ambientBrightness, *pointLights, *spotLights);
 
 	if (!VuoListGetCount_VuoColor(ambientColors)
 			&& !VuoListGetCount_VuoSceneObject(*pointLights)
@@ -588,12 +635,212 @@ void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float 
 }
 
 /**
+ * Applies @c function to @c object and its child objects,
+ * without preserving changes to objects.
+ */
+void VuoSceneObject_visit(const VuoSceneObject object, void (^function)(const VuoSceneObject currentObject))
+{
+	function(object);
+
+	if (object.childObjects)
+	{
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object.childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject o = VuoListGetValueAtIndex_VuoSceneObject(object.childObjects, i);
+			VuoSceneObject_visit(o, function);
+		}
+	}
+}
+
+/**
+ * Helper for @ref VuoSceneObject_apply.
+ */
+void VuoSceneObject_applyInternal(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]), float modelviewMatrix[16])
+{
+	float localModelviewMatrix[16];
+	VuoTransform_getMatrix(object->transform, localModelviewMatrix);
+	float compositeModelviewMatrix[16];
+	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
+
+	function(object, compositeModelviewMatrix);
+
+	if (object->childObjects)
+	{
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object->childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		{
+			VuoSceneObject o = VuoListGetValueAtIndex_VuoSceneObject(object->childObjects, i);
+			VuoSceneObject_applyInternal(&o, function, compositeModelviewMatrix);
+			VuoListSetValueAtIndex_VuoSceneObject(object->childObjects, o, i);
+		}
+	}
+}
+
+/**
+ * Applies @c function to @c object and its child objects,
+ * and outputs the modified @c object.
+ *
+ * The value `modelviewMatrix` (which `VuoSceneObject_apply` passes to `function`)
+ * is the cumulative transformation matrix (from `object` down to the `currentObject`).
+ */
+void VuoSceneObject_apply(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]))
+{
+	float localModelviewMatrix[16];
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
+
+	VuoSceneObject_applyInternal(object, function, localModelviewMatrix);
+}
+
+/**
+ * Sets the @c faceCullingMode on @c object and its child objects.
+ *
+ * @c faceCullingMode can be @c GL_NONE (show both front and back faces),
+ * @c GL_BACK (show only front faces),
+ * or @c GL_FRONT (show only back faces).
+ */
+void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int faceCullingMode)
+{
+	VuoSceneObject_apply(object, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
+							 if (currentObject->mesh)
+								 for (unsigned long i = 0; i < currentObject->mesh->submeshCount; ++i)
+									 currentObject->mesh->submeshes[i].faceCullingMode = faceCullingMode;
+						 });
+}
+
+/**
+ * Makes a deep copy of @c object.
+ * Each mesh is copied (see @ref VuoMesh_copy),
+ * and each child object is copied.
+ *
+ * You can change attributes on the copy without affecting the original.
+ *
+ * @todo The shaders are not copied, so changes to the copy's shaders will affect both the original and the copy.
+ */
+VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
+{
+	VuoSceneObject copiedObject = object;
+
+	copiedObject.mesh = VuoMesh_copy(object.mesh);
+
+	if (object.childObjects)
+	{
+		copiedObject.childObjects = VuoListCreate_VuoSceneObject();
+		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object.childObjects);
+		for (unsigned long i = 1; i <= childObjectCount; ++i)
+			VuoListAppendValue_VuoSceneObject(copiedObject.childObjects, VuoSceneObject_copy(VuoListGetValueAtIndex_VuoSceneObject(object.childObjects, i)));
+	}
+
+	copiedObject.name = VuoText_make(object.name);
+
+	return copiedObject;
+}
+
+/**
+ * Returns the bounds of a sceneobject including it's children.
+ */
+bool VuoSceneObject_boundsRecursive(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
+{
+	// matrix parameter is the trickle down transformations
+	float localModelviewMatrix[16];
+	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
+
+	float compositeModelviewMatrix[16];
+	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, matrix, compositeModelviewMatrix);
+
+	bool foundBounds = VuoSceneObject_meshBounds(so, bounds, compositeModelviewMatrix);
+
+	if(so.childObjects != NULL)
+	{
+		for(int i = 0; i < VuoListGetCount_VuoSceneObject(so.childObjects); i++)
+		{
+			VuoBox childBounds;
+			bool childBoundsFound = VuoSceneObject_boundsRecursive(VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i+1), &childBounds, compositeModelviewMatrix);
+
+			if(childBoundsFound)
+			{
+				*bounds = foundBounds ? VuoBox_encapsulate(*bounds, childBounds) : childBounds;
+				foundBounds = true;
+			}
+		}
+	}
+
+	return foundBounds;
+}
+
+/**
+  *	Get the axis aligned bounding box of this sceneobject and it's children (and it's children's children).
+  */
+VuoBox VuoSceneObject_bounds(const VuoSceneObject so)
+{
+	VuoBox bounds;
+
+	float identity[16] =
+	{
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+
+	bool success = VuoSceneObject_boundsRecursive(so, &bounds, identity);
+
+	if(success)
+		return bounds;
+	else
+		return VuoBox_make( (VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0} );
+}
+
+/**
+ *	Bounding box of the vertices for this SceneObject (taking into account transform).
+ */
+bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
+{
+	if (VuoSceneObject_getVertexCount(so) < 1)
+		return false;
+
+	if (so.isRealSize)
+		// We don't know what the actual rendered size of the realSize layer will be,
+		// but we can at least include its center point.
+		*bounds = VuoBox_make(VuoPoint3d_make(matrix[12], matrix[13], matrix[14]), VuoPoint3d_make(0,0,0));
+	else
+		*bounds = VuoMesh_bounds(so.mesh, matrix);
+
+	return true;
+}
+
+/**
+ *	Make the bounds center of all vertices == {0,0,0}
+ */
+void VuoSceneObject_center(VuoSceneObject *so)
+{
+	VuoBox bounds = VuoSceneObject_bounds(*so);
+	so->transform.translation = VuoPoint3d_subtract(so->transform.translation, bounds.center);
+}
+
+/**
+ * Change the root sceneobject's transform such that the entire scenegraph renders within a 1x1x1 axis-aligned cube.
+ * If the scenegraph has zero size (e.g., if it is empty, or if it consists entirely of Real Size Layers),
+ * the transform is left unchanged.
+ */
+void VuoSceneObject_normalize(VuoSceneObject *so)
+{
+	VuoBox bounds = VuoSceneObject_bounds(*so);
+
+	float scale = fmax(fmax(bounds.size.x, bounds.size.y), bounds.size.z);
+	if (fabs(scale) < 0.00001)
+		return;
+
+	so->transform.scale       = VuoPoint3d_multiply(so->transform.scale,       1./scale);
+	so->transform.translation = VuoPoint3d_multiply(so->transform.translation, 1./scale);
+}
+/**
  * @ingroup VuoSceneObject
  * Decodes the JSON object @c js to create a new value.
  *
  * @eg{
  *   {
- *     "verticesList" : ... ,
+ *     "mesh" : ... ,
  *     "shader" : ... ,
  *     "isRealSize" : false,
  *     "childObjects" : ...,
@@ -616,9 +863,9 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 {
 	json_object *o = NULL;
 
-	VuoList_VuoVertices verticesList = NULL;
-	if (json_object_object_get_ex(js, "verticesList", &o))
-		verticesList = VuoList_VuoVertices_valueFromJson(o);
+	VuoMesh mesh = NULL;
+	if (json_object_object_get_ex(js, "mesh", &o))
+		mesh = VuoMesh_valueFromJson(o);
 
 	VuoShader shader = NULL;
 	if (json_object_object_get_ex(js, "shader", &o))
@@ -651,6 +898,14 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	float cameraDistanceMax;
 	if (json_object_object_get_ex(js, "cameraDistanceMax", &o))
 		cameraDistanceMax = json_object_get_double(o);
+
+	float cameraConfocalDistance;
+	if (json_object_object_get_ex(js, "cameraConfocalDistance", &o))
+		cameraConfocalDistance = json_object_get_double(o);
+
+	float cameraIntraocularDistance;
+	if (json_object_object_get_ex(js, "cameraIntraocularDistance", &o))
+		cameraIntraocularDistance = json_object_get_double(o);
 
 	VuoSceneObject_LightType lightType = VuoSceneObject_NotALight;
 	if (json_object_object_get_ex(js, "lightType", &o))
@@ -692,6 +947,16 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 					cameraDistanceMin,
 					cameraDistanceMax
 					);
+	else if (cameraType == VuoSceneObject_StereoCamera)
+		return VuoSceneObject_makeStereoCamera(
+					name,
+					transform,
+					cameraFieldOfView,
+					cameraDistanceMin,
+					cameraDistanceMax,
+					cameraConfocalDistance,
+					cameraIntraocularDistance
+					);
 	else if (cameraType == VuoSceneObject_OrthographicCamera)
 		return VuoSceneObject_makeOrthographicCamera(
 					name,
@@ -708,7 +973,7 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 		return VuoSceneObject_makeSpotlight(lightColor, lightBrightness, transform, lightCone, lightRange, lightSharpness);
 	else
 	{
-		VuoSceneObject o = VuoSceneObject_make(verticesList, shader, transform, childObjects);
+		VuoSceneObject o = VuoSceneObject_make(mesh, shader, transform, childObjects);
 		o.isRealSize = isRealSize;
 		o.name = name;
 		return o;
@@ -729,9 +994,17 @@ json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
 		json_object_object_add(js, "cameraDistanceMin", json_object_new_double(value.cameraDistanceMin));
 		json_object_object_add(js, "cameraDistanceMax", json_object_new_double(value.cameraDistanceMax));
 
-		if (value.cameraType == VuoSceneObject_PerspectiveCamera)
+		if (value.cameraType == VuoSceneObject_PerspectiveCamera
+		 || value.cameraType == VuoSceneObject_StereoCamera)
 			json_object_object_add(js, "cameraFieldOfView", json_object_new_double(value.cameraFieldOfView));
-		else if (value.cameraType == VuoSceneObject_OrthographicCamera)
+
+		if (value.cameraType == VuoSceneObject_StereoCamera)
+		{
+			json_object_object_add(js, "cameraConfocalDistance", json_object_new_double(value.cameraConfocalDistance));
+			json_object_object_add(js, "cameraIntraocularDistance", json_object_new_double(value.cameraIntraocularDistance));
+		}
+
+		if (value.cameraType == VuoSceneObject_OrthographicCamera)
 			json_object_object_add(js, "cameraWidth", json_object_new_double(value.cameraWidth));
 	}
 
@@ -758,10 +1031,10 @@ json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
 	{
 		// visible or group scene object
 
-		if (value.verticesList)
+		if (value.mesh)
 		{
-			json_object *verticesListObject = VuoList_VuoVertices_jsonFromValue(value.verticesList);
-			json_object_object_add(js, "verticesList", verticesListObject);
+			json_object *meshObject = VuoMesh_jsonFromValue(value.mesh);
+			json_object_object_add(js, "mesh", meshObject);
 		}
 
 		if (value.shader)
@@ -800,13 +1073,12 @@ json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
  */
 unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject value)
 {
-	if (!value.verticesList)
+	if (!value.mesh)
 		return 0;
 
 	unsigned long vertexCount = 0;
-	unsigned long verticesListCount = VuoListGetCount_VuoVertices(value.verticesList);
-	for (unsigned long i = 1; i <= verticesListCount; ++i)
-		vertexCount += VuoListGetValueAtIndex_VuoVertices(value.verticesList, i).vertexCount;
+	for (unsigned int i = 0; i < value.mesh->submeshCount; ++i)
+		vertexCount += value.mesh->submeshes[i].vertexCount;
 
 	return vertexCount;
 }
@@ -816,13 +1088,12 @@ unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject value)
  */
 unsigned long VuoSceneObject_getElementCount(const VuoSceneObject value)
 {
-	if (!value.verticesList)
+	if (!value.mesh)
 		return 0;
 
 	unsigned long elementCount = 0;
-	unsigned long verticesListCount = VuoListGetCount_VuoVertices(value.verticesList);
-	for (unsigned long i = 1; i <= verticesListCount; ++i)
-		elementCount += VuoListGetValueAtIndex_VuoVertices(value.verticesList, i).elementCount;
+	for (unsigned int i = 0; i < value.mesh->submeshCount; ++i)
+		elementCount += value.mesh->submeshes[i].elementCount;
 
 	return elementCount;
 }
@@ -830,7 +1101,7 @@ unsigned long VuoSceneObject_getElementCount(const VuoSceneObject value)
 /**
  * Traverses the specified scenegraph and returns statistics about it.
  */
-void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount, unsigned long *totalTextureCount)
+void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
 {
 	unsigned long childObjectCount = 0;
 	if (value.childObjects)
@@ -838,11 +1109,28 @@ void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *des
 	*descendantCount += childObjectCount;
 	*totalVertexCount += VuoSceneObject_getVertexCount(value);
 	*totalElementCount += VuoSceneObject_getElementCount(value);
-	if (value.shader)
-		*totalTextureCount += VuoListGetCount_VuoImage(value.shader->textures);
 
 	for (unsigned long i = 1; i <= childObjectCount; ++i)
-		VuoSceneObject_getStatistics(VuoListGetValueAtIndex_VuoSceneObject(value.childObjects, i), descendantCount, totalVertexCount, totalElementCount, totalTextureCount);
+		VuoSceneObject_getStatistics(VuoListGetValueAtIndex_VuoSceneObject(value.childObjects, i), descendantCount, totalVertexCount, totalElementCount);
+}
+
+/**
+ * Returns a list of all unique shader names in the sceneobject and its descendants.
+ */
+VuoList_VuoText VuoSceneRenderer_findShaderNames(VuoSceneObject object)
+{
+	// Exploit json_object's set-containing-only-unique-items data structure.
+	__block json_object *names = json_object_new_object();
+	VuoSceneObject_visit(object, ^(const VuoSceneObject currentObject){
+							 if (currentObject.shader)
+								json_object_object_add(names, currentObject.shader->name, NULL);
+						 });
+
+	VuoList_VuoText nameList = VuoListCreate_VuoText();
+	json_object_object_foreach(names, key, val)
+		VuoListAppendValue_VuoText(nameList, VuoText_make(key));
+	json_object_put(names);
+	return nameList;
 }
 
 /**
@@ -853,8 +1141,6 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 {
 	if (value.cameraType != VuoSceneObject_NotACamera)
 	{
-		const char *format = "%s camera<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g";
-
 		const char *cameraType = VuoSceneObject_cStringForCameraType(value.cameraType);
 
 		float cameraViewValue = 0;
@@ -863,6 +1149,11 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		{
 			cameraViewValue = value.cameraFieldOfView;
 			cameraViewString = "° field of view";
+		}
+		else if (value.cameraType == VuoSceneObject_StereoCamera)
+		{
+			cameraViewValue = value.cameraFieldOfView;
+			cameraViewString = "° field of view (stereoscopic)";
 		}
 		else if (value.cameraType == VuoSceneObject_OrthographicCamera)
 		{
@@ -885,9 +1176,8 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 			rotationString = VuoPoint3d_summaryFromValue(value.transform.rotationSource.target);
 		}
 
-		int size = snprintf(NULL, 0, format, cameraType, translationString, rotationLabel, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString, size+1, format, cameraType, translationString, rotationLabel, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
+		char *valueAsString = VuoText_format("%s camera<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g",
+											 cameraType, translationString, rotationLabel, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
 		free(rotationString);
 		free(translationString);
 		return valueAsString;
@@ -895,8 +1185,6 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 
 	if (value.lightType != VuoSceneObject_NotALight)
 	{
-		const char *format = "%s%slight<br>color (%s)<br>brightness %g%s%s";
-
 		const char *lightType = VuoSceneObject_cStringForLightType(value.lightType);
 		const char *space = value.lightType == VuoSceneObject_Spotlight ? "" : " ";
 		char *colorString = VuoColor_summaryFromValue(value.lightColor);
@@ -905,13 +1193,10 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		if (value.lightType == VuoSceneObject_PointLight
 				|| value.lightType == VuoSceneObject_Spotlight)
 		{
-			const char *format = "<br>position (%s)<br>range %g units (%g sharpness)";
-
 			char *positionString = VuoPoint3d_summaryFromValue(value.transform.translation);
 
-			int size = snprintf(NULL, 0, format, positionString, value.lightRange, value.lightSharpness);
-			positionRangeString = (char *)malloc(size+1);
-			snprintf(positionRangeString, size+1, format, positionString, value.lightRange, value.lightSharpness);
+			positionRangeString = VuoText_format("<br>position (%s)<br>range %g units (%g sharpness)",
+												 positionString, value.lightRange, value.lightSharpness);
 
 			free(positionString);
 		}
@@ -921,23 +1206,19 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		char *directionConeString;
 		if (value.lightType == VuoSceneObject_Spotlight)
 		{
-			const char *format = "<br>direction (%s)<br>cone %g°";
-
 			VuoPoint3d direction = VuoTransform_getDirection(value.transform);
 			char *directionString = VuoPoint3d_summaryFromValue(direction);
 
-			int size = snprintf(NULL, 0, format, directionString, value.lightCone * 180./M_PI);
-			directionConeString = (char *)malloc(size+1);
-			snprintf(directionConeString, size+1, format, directionString, value.lightCone * 180./M_PI);
+			directionConeString = VuoText_format("<br>direction (%s)<br>cone %g°",
+												 directionString, value.lightCone * 180./M_PI);
 
 			free(directionString);
 		}
 		else
 			directionConeString = strdup("");
 
-		int size = snprintf(NULL, 0, format, lightType, space, colorString, value.lightBrightness, positionRangeString, directionConeString);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString, size+1, format, lightType, space, colorString, value.lightBrightness, positionRangeString, directionConeString);
+		char *valueAsString = VuoText_format("%s%slight<br>color (%s)<br>brightness %g%s%s",
+											 lightType, space, colorString, value.lightBrightness, positionRangeString, directionConeString);
 
 		free(directionConeString);
 		free(positionRangeString);
@@ -946,14 +1227,9 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		return valueAsString;
 	}
 
-	const char *format = "%d vertices, %d elements<br><br>%s<br><br>%s<br><br>%d child object%s%s";
-
 	unsigned long vertexCount = VuoSceneObject_getVertexCount(value);
 	unsigned long elementCount = VuoSceneObject_getElementCount(value);
 
-	char *shader = "(no shader)";
-	if (value.shader)
-		shader = VuoShader_summaryFromValue(value.shader);
 	char *transform = VuoTransform_summaryFromValue(value.transform);
 
 	unsigned long childObjectCount = 0;
@@ -967,27 +1243,48 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		unsigned long descendantCount = 0;
 		unsigned long totalVertexCount = 0;
 		unsigned long totalElementCount = 0;
-		unsigned long totalTextureCount = 0;
-		VuoSceneObject_getStatistics(value, &descendantCount, &totalVertexCount, &totalElementCount, &totalTextureCount);
+		VuoSceneObject_getStatistics(value, &descendantCount, &totalVertexCount, &totalElementCount);
 		const char *descendantPlural = descendantCount == 1 ? "" : "s";
-		const char *totalTexturePlural = totalTextureCount == 1 ? "" : "s";
 
-		const char *descendantsFormat = "<br>%d descendant%s<br><br>total, including descendants:<br>%d vertices, %d elements<br>%d texture%s";
-		int size = snprintf(NULL, 0, descendantsFormat, descendantCount, descendantPlural, totalVertexCount, totalElementCount, totalTextureCount, totalTexturePlural);
-		descendants = (char *)malloc(size+1);
-		snprintf(descendants, size+1, descendantsFormat, descendantCount, descendantPlural, totalVertexCount, totalElementCount, totalTextureCount, totalTexturePlural);
+		descendants = VuoText_format("<br>%ld descendant%s<br><br>total, including descendants:<br>%ld vertices, %ld elements",
+									 descendantCount, descendantPlural, totalVertexCount, totalElementCount);
 	}
 	else
 		descendants = strdup("");
 
-	int size = snprintf(NULL, 0, format, vertexCount, elementCount, shader, transform, childObjectCount, childObjectPlural, descendants);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString, size+1, format, vertexCount, elementCount, shader, transform, childObjectCount, childObjectPlural, descendants);
+	VuoList_VuoText shaderNames = VuoSceneRenderer_findShaderNames(value);
+	VuoRetain(shaderNames);
+	char *shaderNamesSummary;
+	if (VuoListGetCount_VuoText(shaderNames))
+	{
+		VuoInteger shaderNameCount = VuoListGetCount_VuoText(shaderNames);
+		const char *header = "<br><br>shaders:<ul>";
+		VuoInteger shaderNameLength = strlen(header);
+		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
+			shaderNameLength += strlen("<li>") + strlen(VuoListGetValueAtIndex_VuoText(shaderNames, i)) + strlen("</li>");
+		shaderNameLength += strlen("</ul>");
+
+		shaderNamesSummary = (char *)malloc(shaderNameLength + 1);
+		char *t = shaderNamesSummary;
+		t = strcpy(t, header) + strlen(header);
+		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
+		{
+			t = strcpy(t, "<li>") + strlen("<li>");
+			t = strcpy(t, VuoListGetValueAtIndex_VuoText(shaderNames, i)) + strlen(VuoListGetValueAtIndex_VuoText(shaderNames, i));
+			t = strcpy(t, "</li>") + strlen("</li>");
+		}
+		t = strcpy(t, "</ul>");
+	}
+	else
+		shaderNamesSummary = strdup("");
+	VuoRelease(shaderNames);
+
+	char *valueAsString = VuoText_format("%ld vertices, %ld elements<br><br>%s<br><br>%ld child object%s%s%s",
+										 vertexCount, elementCount, transform, childObjectCount, childObjectPlural, descendants, shaderNamesSummary);
 
 	free(descendants);
 	free(transform);
-	if (value.shader)
-		free(shader);
+	free(shaderNamesSummary);
 
 	return valueAsString;
 }

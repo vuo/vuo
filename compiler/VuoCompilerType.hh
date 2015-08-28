@@ -44,6 +44,7 @@ protected:
 
 public:
 	static VuoCompilerType * newType(string typeName, Module *module);
+	static bool isListType(VuoCompilerType *type);
 
 	Value * generateValueFromStringFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Value * generateStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);

@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Makes a layer spring back to the center of the window after it's dragged with the mouse.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.0.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<verticalAlignment>verticalAlignment\l|<done>done\r|<alignedLayer>alignedLayer\r" pos="509,-107" _horizontalAlignment="\"center\"" _verticalAlignment="\"bottom\""];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="53,309"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-258,-100" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="507,102" _name="\"square\"" _color="{\"r\":0.411887,\"g\":0.410727,\"b\":1.000000,\"a\":1.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="290,-93" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="823,128" fillcolor="green"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="772,113" fillcolor="green"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="76,-79" _text="\"Drag the layer and let go.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+ReceiveMouseDragsOnLayer [type="vuo.layer.drag" version="1.0.0" label="Receive Mouse Drags on Layer|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<startedDrag>startedDrag\r|<draggedCenterTo>draggedCenterTo\r|<endedDrag>endedDrag\r" pos="-185,279" fillcolor="yellow" _layerName="\"square\"" _button="\"left\"" _modifierKey="\"any\"" _startedDrag_eventThrottling="enqueue" _draggedCenterTo_eventThrottling="drop" _endedDrag_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="869,102" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectLatest2 [type="vuo.select.latest.2.VuoPoint2d" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="98,127"];
+SmoothWithSpring2 [type="vuo.motion.smooth.spring.VuoPoint2d" version="1.0.0" label="Smooth with Spring|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<period>period\l|<damping>damping\l|<done>done\r|<position>position\r" pos="263,113" fillcolor="violet" _setTarget="{\"x\":0.000000,\"y\":0.000000}" _period="0.500000" _damping="0.500000"];
+
+AlignLayerToWindow:alignedLayer -> MakeList4:2;
+DiscardDataFromEvent2:done -> SmoothWithSpring2:setTarget;
+FireOnStart:started -> MakeTextImage:refresh;
+FireOnStart:started -> SelectLatest2:option1;
+MakeColorLayer:layer -> MakeList4:1;
+MakeLayer:layer -> AlignLayerToWindow:layer;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList:list -> RenderLayersToWindow:windowProperties;
+MakeTextImage:image -> MakeLayer:image;
+ReceiveMouseDragsOnLayer:draggedCenterTo -> SelectLatest2:option2;
+ReceiveMouseDragsOnLayer:endedDrag -> DiscardDataFromEvent2:dataAndEvent;
+RenderLayersToWindow:renderedLayers -> ReceiveMouseDragsOnLayer:renderedLayers;
+RenderLayersToWindow:requestedFrame -> SmoothWithSpring2:time;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+SelectLatest2:latest -> SmoothWithSpring2:setPosition;
+SmoothWithSpring2:position -> MakeColorLayer:center;
+}

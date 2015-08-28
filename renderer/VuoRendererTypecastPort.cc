@@ -12,7 +12,7 @@
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
 #include "VuoRendererNode.hh"
-#include "VuoRendererMakeListNode.hh"
+#include "VuoRendererInputDrawer.hh"
 #include "VuoRendererColors.hh"
 #include "VuoRendererFonts.hh"
 
@@ -34,6 +34,7 @@ VuoRendererTypecastPort::VuoRendererTypecastPort(VuoRendererNode *uncollapsedTyp
 					  false)
 {
 	this->replacedPort = replacedPort;
+	this->setPortNameToRender(replacedPort->getPortNameToRender());
 	setUncollapsedTypecastNode(uncollapsedTypecastNode);
 }
 
@@ -85,7 +86,7 @@ QPainterPath VuoRendererTypecastPort::getPortPath(bool includeNormalPort, bool i
 
 		// @ todo: Replace magic 0/1 childPortXPadding value with something more transparent.
 		VuoRendererNode *parentNode = getRenderedParentNode();
-		const double childPortXPadding = (dynamic_cast<VuoRendererMakeListNode *>(parentNode)? 0 : 1);
+		const double childPortXPadding = (dynamic_cast<VuoRendererInputDrawer *>(parentNode)? 0 : 1);
 
 		if(childPort)
 			p -= childPort->getPortPath(0).translated(childPort->pos().x()+childPortXPadding, 0);
@@ -170,6 +171,9 @@ QRectF VuoRendererTypecastPort::boundingRect(void) const
 
 	if (!isRefreshPort)
 		r = r.united(getNameRect());
+
+	if (hasPortAction())
+		r = r.united(getActionIndicatorRect());
 
 	// Antialiasing bleed
 	r.adjust(-1,-1,1,1);

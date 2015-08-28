@@ -9,24 +9,24 @@
 
 digraph G
 {
-Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="315,628" fillcolor="cyan"];
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="328,311" fillcolor="violet" _increment="0.050000" _decrement="1" _setCount="0.000000"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="166,279" fillcolor="violet" _seconds="0.100000"];
-MakeGradientNoise1D [type="vuo.noise.gradient.VuoReal" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="530,352" fillcolor="orange" _gradientNoise="\"simplex\""];
-MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="229,509" fillcolor="cyan" _item2="24.000000"];
-MakeList2 [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="255,639" fillcolor="cyan" _item2="60.000000"];
-MakeMIDINote [type="vuo.midi.make.note" version="1.0.0" label="Make MIDI Note|<refresh>refresh\l|<channel>channel\l|<isNoteOn>isNoteOn\l|<velocity>velocity\l|<noteNumber>noteNumber\l|<done>done\r|<note>note\r" pos="579,588" fillcolor="yellow" _channel="1" _isNoteOn="\"true\"" _velocity="127"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="289,498" fillcolor="cyan"];
-Round [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="476,459"];
-SendMIDIEvent [type="vuo.midi.send" version="1.0.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l|<done>done\r" pos="827,573" fillcolor="yellow" _device="{\"isInput\":false}" _sendController=""];
+Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="352,400"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="365,83" _increment="0.050000" _decrement="1" _setCount="0.000000"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="203,51" _seconds="0.100000" _fired_eventThrottling="enqueue"];
+MakeGradientNoise1D [type="vuo.noise.gradient.VuoReal.VuoReal" version="1.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="567,124" _gradientNoise="\"simplex\""];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="263,281" _2="24.000000"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="289,411" _2="60.000000"];
+MakeMIDINote [type="vuo.midi.make.note" version="1.0.0" label="Make MIDI Note|<refresh>refresh\l|<channel>channel\l|<isNoteOn>isNoteOn\l|<velocity>velocity\l|<noteNumber>noteNumber\l|<done>done\r|<note>note\r" pos="616,360" fillcolor="violet" _channel="1" _isNoteOn="\"true\"" _velocity="127"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="326,270"];
+Round [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="513,231"];
+SendMIDIEvent [type="vuo.midi.send" version="1.0.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l|<done>done\r" pos="864,345" fillcolor="violet" _device="{\"isInput\":false}"];
 
 Add:sum -> Round:real;
 Count:count -> MakeGradientNoise1D:position;
 FirePeriodically:fired -> Count:increment;
-MakeGradientNoise1D:value -> MakeList:item1;
+MakeGradientNoise1D:value -> MakeList:1;
 MakeList2:list -> Add:terms;
 MakeList:list -> Multiply:terms;
 MakeMIDINote:note -> SendMIDIEvent:sendNote;
-Multiply:product -> MakeList2:item1;
+Multiply:product -> MakeList2:1;
 Round:roundedInteger -> MakeMIDINote:noteNumber;
 }

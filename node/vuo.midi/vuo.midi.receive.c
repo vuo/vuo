@@ -18,23 +18,44 @@ VuoModuleMetadata({
 						 "VuoMidi"
 					 ],
 					 "node": {
-						 "isInterface" : true
+						 "isInterface" : true,
+						 "exampleCompositions" : [ "ReceiveMidiNotes.vuo" ]
 					 }
 				 });
 
 
-VuoMidiIn nodeInstanceInit(
+struct nodeInstanceData
+{
+	VuoMidiDevice device;
+	VuoMidiIn midiManager;
+};
+
+static void updateDevice(struct nodeInstanceData *context, VuoMidiDevice newDevice)
+{
+	VuoMidiDevice_release(context->device);
+	context->device = newDevice;
+	VuoMidiDevice_retain(context->device);
+
+	VuoRelease(context->midiManager);
+	context->midiManager = VuoMidiIn_make(newDevice);
+	VuoRetain(context->midiManager);
+}
+
+
+struct nodeInstanceData * nodeInstanceInit
+(
 		VuoInputData(VuoMidiDevice, {"default":{"isInput":true}}) device
 )
 {
-	VuoMidiIn mi = VuoMidiIn_make(device);
-	VuoRetain(mi);
-	return mi;
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	updateDevice(context, device);
+	return context;
 }
 
 void nodeInstanceTriggerStart
 (
-		VuoInstanceData(VuoMidiIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedNote, VuoMidiNote),
 		VuoOutputTrigger(receivedController, VuoMidiController)
 //		VuoOutputTrigger(receivedAftertouch, VuoMidiAftertouch),
@@ -44,36 +65,38 @@ void nodeInstanceTriggerStart
 //		VuoOutputTrigger(receivedSysEx, VuoMidiSysEx)
 )
 {
-	VuoMidiIn_enableTriggers(*context, receivedNote, receivedController);
+	VuoMidiIn_enableTriggers((*context)->midiManager, receivedNote, receivedController);
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoMidiIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoMidiDevice, {"default":{"isInput":true}}) device,
-		VuoInputEvent(VuoPortEventBlocking_Wall, device) deviceEvent
+		VuoOutputTrigger(receivedNote, VuoMidiNote),
+		VuoOutputTrigger(receivedController, VuoMidiController)
 )
 {
-	if (deviceEvent)
+	if (! VuoMidiDevice_areEqual(device, (*context)->device))
 	{
-		VuoRelease(*context);
-		*context = VuoMidiIn_make(device);
-		VuoRetain(*context);
+		VuoMidiIn_disableTriggers((*context)->midiManager);
+		updateDevice(*context, device);
+		VuoMidiIn_enableTriggers((*context)->midiManager, receivedNote, receivedController);
 	}
 }
 
 void nodeInstanceTriggerStop
 (
-		VuoInstanceData(VuoMidiIn) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoMidiIn_disableTriggers(*context);
+	VuoMidiIn_disableTriggers((*context)->midiManager);
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(VuoMidiIn) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoRelease(*context);
+	VuoMidiDevice_release((*context)->device);
+	VuoRelease((*context)->midiManager);
 }

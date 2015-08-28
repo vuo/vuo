@@ -2,11 +2,11 @@ These instructions are for building Vuo Base, Vuo Compiler, Vuo Renderer, Vuo Ru
 
 Vuo's source code is available so you can learn about how Vuo works, tinker with it, and maybe even help develop Vuo.
 
-You ***do not*** need to build Vuo from source if you:
+You ***do not*** need to build Vuo from source if you want to:
 
-   - want to run the Vuo Editor application.  (The Vuo Editor application is not included in this source code archive — it is available as a [separate download](https://vuo.org/subscriber).)
-   - want to develop an application that uses Vuo.  (Instead, [download Vuo.framework](https://vuo.org/subscriber), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Applications that use Vuo".)
-   - want to develop nodes and types for Vuo.  (@todo / instructions forthcoming.)
+   - **run the Vuo Editor application**.  The Vuo Editor application is not included in this source code archive — it is available as a [separate download](https://vuo.org/download).
+   - **develop an application that uses Vuo**.  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Applications that use Vuo".
+   - **develop nodes and types for Vuo**.  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Node Classes and Port Types".
 
 
 
@@ -17,7 +17,7 @@ You ***do not*** need to build Vuo from source if you:
 
 ### Xcode
 
-Install a recent version of [Xcode](https://developer.apple.com/xcode/) (3.2 or 4).
+Install a recent version of [Xcode](https://developer.apple.com/xcode/) (version 3.2 or later).
 
 Accept the Xcode license by opening Xcode.app or running:
 
@@ -47,7 +47,7 @@ If you're running Mac OS 10.8 or earlier:
 
 If you're running Mac OS 10.9:
 
-    brew install apple-gcc42
+    brew install https://raw.github.com/Homebrew/homebrew-dupes/ad6f252e3dceb0ca26748816de57c87e0c4630f0/apple-gcc42.rb
     export CC=gcc-4.2
     export CXX=g++-4.2
 
@@ -61,7 +61,9 @@ If you're running any version of Mac OS X:
     tar zxf ../../clang-3.2.src.tar.gz
     mv clang-3.2.src clang
     cd ..
-    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-Oz" --disable-bindings --enable-targets=host
+    curl -OL https://b33p.net/sites/default/files/llvm-disable-unused-intrinsics_1.patch
+    patch -p0 < llvm-disable-unused-intrinsics_1.patch
+    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-Oz" --disable-bindings --enable-targets=host --enable-shared
     make install -j9
     cd tools/clang
     make install -j9
@@ -86,29 +88,22 @@ Install Graphviz 2.28.0:
 
 ### Qt
 
-Install Qt 5.2.1:
+Install Qt 5.3.1:
 
+    unset CC CXX
     cd /tmp
-    curl -OL http://download.qt-project.org/official_releases/qt/5.2/5.2.1/single/qt-everywhere-opensource-src-5.2.1.tar.gz
-    tar xzf qt-everywhere-opensource-src-5.2.1.tar.gz
-    cd qt-everywhere-opensource-src-5.2.1
+    curl -OL http://download.qt-project.org/official_releases/qt/5.3/5.3.1/single/qt-everywhere-opensource-src-5.3.1.tar.gz
+    tar xzf qt-everywhere-opensource-src-5.3.1.tar.gz
+    cd qt-everywhere-opensource-src-5.3.1
     cd qtbase
     # https://bugreports.qt-project.org/browse/QTBUG-36575
     curl -OL https://bugreports.qt-project.org/secure/attachment/37834/qmake-objcxx-cxxflags.patch
     patch -p1 < qmake-objcxx-cxxflags.patch
-    # https://bugreports.qt-project.org/browse/QTBUG-33961
-    # https://b33p.net/kosada/node/7718#comment-27777
-    curl -OL https://b33p.net/sites/default/files/cursorfixfrom5.2.1v2_0.patch
-    patch -p1 < cursorfixfrom5.2.1v2_0.patch
-    # https://bugreports.qt-project.org/browse/QTBUG-34534
-    # https://b33p.net/kosada/node/6477
-    curl -OL https://b33p.net/sites/default/files/qtbug-34534-rubberbandtrails.patch
-    patch -p0 < qtbug-34534-rubberbandtrails.patch
     cd ..
-    ./configure -prefix /usr/local/Cellar/qt/5.2.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit
+    ./configure -prefix /usr/local/Cellar/qt/5.3.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit -skip qtmultimedia
     make -j9
     make install
-    ln -s /usr/local/Cellar/qt/5.2.1/bin/qmake /usr/local/bin/qmake
+    ln -s /usr/local/Cellar/qt/5.3.1/bin/qmake /usr/local/bin/qmake
 
 ### JSON-C
 
@@ -139,13 +134,17 @@ If you're running any version of Mac OS X:
     curl -OL http://download.zeromq.org/zeromq-2.2.0.tar.gz
     tar zxf zeromq-2.2.0.tar.gz
     cd zeromq-2.2.0
+    curl -OL https://b33p.net/sites/default/files/zeromq-skip-abort.patch
+    patch -p0 < zeromq-skip-abort.patch
     ./configure --prefix=/usr/local/Cellar/zeromq/2.2.0
     make -j9
     make install
+    ln -s . /usr/local/Cellar/zeromq/2.2.0/include/zmq
     make clean
     CXXFLAGS="-m32" ./configure --prefix=/usr/local/Cellar/zeromq/2.2.0-32
     make -j9
     make install
+    ln -s . /usr/local/Cellar/zeromq/2.2.0-32/include/zmq
 
 ### libffi
 
@@ -191,7 +190,7 @@ If you're running Mac OS 10.8 or earlier:
 
 If you're running Mac OS 10.9:
 
-    curl -OL http://sourceforge.net/p/freeimage/bugs/228/attachment/Makefile.osx-10.9
+    curl -OL http://sourceforge.net/p/freeimage/bugs/_discuss/thread/33613606/8561/attachment/Makefile.osx-10.9
     make -f Makefile.osx-10.9
 
 If you're running any version of Mac OS X:
@@ -297,6 +296,7 @@ If you're running any version of Mac OS X:
     tar zxf assimp--3.0.1270-source-only.zip
     cd assimp--3.0.1270-source-only
     curl -OL https://github.com/assimp/assimp/commit/27767031e61629faa0cb9ce4f0d6ded8a5b487f1.patch
+    # The following patches will show warnings about whitespace errors and types differing from expected; these are safe to ignore.
     git apply 27767031e61629faa0cb9ce4f0d6ded8a5b487f1.patch
     curl -OL https://github.com/assimp/assimp/commit/8213805dc6556566a9f983e480e44038bdb75674.patch
     git apply 8213805dc6556566a9f983e480e44038bdb75674.patch
@@ -377,12 +377,38 @@ If you're running any version of Mac OS X:
     curl -OL https://b33p.net/sites/default/files/udpsocket-get-port-1_1_0_0.patch
     patch -p0 < udpsocket-get-port-1_1_0_0.patch
     mkdir -p /usr/local/Cellar/oscpack/1.1.0/{lib,include}
+    # On Mac OS 10.9, edit the Makefile: on line 17 ("CXX := g++"), append " -stdlib=libstdc++"
     make install PREFIX=/usr/local/Cellar/oscpack/1.1.0
     ar -r liboscpack.a `find . -name *.o`  # ... if liboscpack.a doesn't already exist
     cp liboscpack.a /usr/local/Cellar/oscpack/1.1.0/lib
     mkdir -p /usr/local/Cellar/oscpack/1.1.0/include/oscpack/{osc,ip}
     cp osc/*.h /usr/local/Cellar/oscpack/1.1.0/include/oscpack/osc
     cp ip/*.h /usr/local/Cellar/oscpack/1.1.0/include/oscpack/ip
+
+### ZXing
+
+    cd /tmp
+    curl -OL https://zxing.googlecode.com/files/ZXing-2.3.0.zip
+    unzip ZXing-2.3.0.zip
+    cd zxing-2.3.0/cpp
+    mkdir build
+    cd build
+
+If you're running prior to Mac OS 10.9:
+
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+
+If you're running Mac OS 10.9:
+
+    unset CC CXX
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-stdlib=libstdc++' ..
+
+If you're running any version of Mac OS X:
+
+    make -j9 libzxing
+    mkdir -p /usr/local/Cellar/zxing/2.3.0/{lib,include}
+    cp libzxing.a /usr/local/Cellar/zxing/2.3.0/lib
+    (cd ../core/src && find . -type f -name \*.h -exec tar cf - {} +) | (cd /usr/local/Cellar/zxing/2.3.0/include && tar xf -)
 
 ### ld64 133.3
 
@@ -392,7 +418,7 @@ Create a symbolic link to ld64 133.3 in the same directory as Clang (to force Cl
 
     ln -s $ROOT/compiler/binary/ld /usr/local/Cellar/llvm/3.2/bin/ld
 
-### OpenSSL (unnecessary for Vuo end users)
+### OpenSSL
 
     cd /tmp
     curl -OL http://www.openssl.org/source/openssl-1.0.1g.tar.gz
@@ -468,9 +494,9 @@ Edit source files:
 
 ### GLFW
 
-Install GLFW:
+Install GLFW 2.7.9:
 
-    brew install glfw
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-versions/ab9fd9a69bc6af2ec6125fae6771aa31111590a7/glfw2.rb
 
 
 ## Install dependencies for building documentation (optional)
@@ -569,25 +595,38 @@ Generate the makefiles:
 
     qmake -r
 
+Or, to build Vuo and also run the Clang Static Analyzer:
+
+    qmake -r CONFIG+=analyze
+
 Run the makefiles:
 
     make -j9
-    make -j9 examples
+    make -j9 vuo32
+
+Optionally, build the Doxygen API documentation and PDF user manual:
+
     make -j9 docs
 
-Run the tests:
+Optionally, run the tests:
 
     make tests
 
+Optionally, build the examples:
+
+    make -j9 examples
+
 You can now run the example compositions from the command line. For example:
 
-    ./example/graph/Countdown
+    ./node/vuo.scene/examples/AddNoiseToClay
 
 You can now run the command-line tools:
 
+    ./base/vuo-debug/vuo-debug --help
     ./compiler/vuo-compile/vuo-compile --help
     ./compiler/vuo-link/vuo-link --help
     ./renderer/vuo-render/vuo-render --help
+    ./renderer/vuo-export/vuo-export --help
 
 For examples of compiling a node class with `vuo-compile`, do:
 
@@ -595,7 +634,7 @@ For examples of compiling a node class with `vuo-compile`, do:
 
 For examples of compiling and linking a composition with `vuo-compile` and `vuo-link`, do:
 
-    cd example/graph && make clean && qmake -r && make
+    cd node/vuo.scene/examples && make clean && qmake && make
 
 For examples of rendering a node class or composition with `vuo-render`, do:
 

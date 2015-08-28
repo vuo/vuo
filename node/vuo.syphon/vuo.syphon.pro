@@ -12,8 +12,7 @@ NODE_SOURCES += \
 	vuo.syphon.send.c \
 	vuo.syphon.receive.c
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoSyphonListener.h \
 	VuoSyphonSender.h \
 	VuoSyphonServerNotifier.h
@@ -24,7 +23,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoSyphonSender.m \
 	VuoSyphonServerNotifier.m
 
-OTHER_FILES += \
+HEADERS += \
 	VuoSyphon.h
 
 NODE_LIBRARY_INCLUDEPATH = \

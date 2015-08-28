@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoBlendMode.h"
+#include "VuoList_VuoBlendMode.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -212,6 +213,17 @@ json_object * VuoBlendMode_jsonFromValue(const VuoBlendMode value)
 
 	}
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoBlendMode VuoBlendMode_allowedValues(void)
+{
+	VuoList_VuoBlendMode l = VuoListCreate_VuoBlendMode();
+	for (VuoBlendMode b = VuoBlendMode_Normal; b <= VuoBlendMode_Luminosity; ++b)
+		VuoListAppendValue_VuoBlendMode(l, b);
+	return l;
 }
 
 /**

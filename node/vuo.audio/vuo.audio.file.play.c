@@ -26,7 +26,7 @@ VuoModuleMetadata({
 					  ],
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "PlayAudioFile.vuo", "ScratchRecord.vuo" ]
+						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioFileAndLoop.vuo", "ScratchRecord.vuo" ]
 					  }
 				 });
 
@@ -60,10 +60,11 @@ struct nodeInstanceData *nodeInstanceInit
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Drop),
+		VuoOutputTrigger(finishedPlayback, void)
 )
 {
-	VuoAudioFile_enableTriggers((*context)->af, decodedChannels);
+	VuoAudioFile_enableTriggers((*context)->af, decodedChannels, finishedPlayback);
 }
 
 void nodeInstanceEvent
@@ -76,6 +77,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoReal, {"default":""}) setTime,
 		VuoInputEvent(VuoPortEventBlocking_None, setTime) setTimeEvent,
 		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Enqueue),
+		VuoOutputTrigger(finishedPlayback, void),
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
@@ -87,7 +89,7 @@ void nodeInstanceEvent
 		VuoRelease((*context)->af);
 		(*context)->af = VuoAudioFile_make(url);
 		VuoRetain((*context)->af);
-		VuoAudioFile_enableTriggers((*context)->af, decodedChannels);
+		VuoAudioFile_enableTriggers((*context)->af, decodedChannels, finishedPlayback);
 
 		VuoRelease((*context)->url);
 		(*context)->url = url;

@@ -11,6 +11,7 @@
 #define VUOPOINT3D_H
 
 #include "VuoReal.h"
+#include "VuoBoolean.h"
 #include <math.h>
 
 /**
@@ -29,6 +30,15 @@ typedef struct
 	float x,y,z;
 } VuoPoint3d;
 
+/**
+ *	Defines a bounding box.
+ */
+typedef struct
+{
+	VuoPoint3d center;
+	VuoPoint3d size;
+} VuoBox;
+
 VuoPoint3d VuoPoint3d_valueFromJson(struct json_object * js);
 struct json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value);
 char * VuoPoint3d_summaryFromValue(const VuoPoint3d value);
@@ -39,6 +49,8 @@ char * VuoPoint3d_summaryFromValue(const VuoPoint3d value);
  */
 VuoPoint3d VuoPoint3d_valueFromString(const char *str);
 char * VuoPoint3d_stringFromValue(const VuoPoint3d value);
+void VuoPoint3d_retain(VuoPoint3d value);
+void VuoPoint3d_release(VuoPoint3d value);
 /// @}
 
 /**
@@ -49,6 +61,30 @@ static inline VuoPoint3d VuoPoint3d_make(float x, float y, float z)
 {
 	VuoPoint3d p = {x,y,z};
 	return p;
+}
+
+/**
+ * Returns a box with the specified center and size.
+ */
+static inline VuoBox VuoBox_make(VuoPoint3d center, VuoPoint3d size) __attribute__((const));
+static inline VuoBox VuoBox_make(VuoPoint3d center, VuoPoint3d size)
+{
+	VuoBox box = { center, size };
+	return box;
+}
+
+/**
+ * Returns an axis aligned bounding box with the specified min and max coordinates.
+ */
+static inline VuoBox VuoBox_makeWithPoints(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) __attribute__((const));
+static inline VuoBox VuoBox_makeWithPoints(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax)
+{
+	VuoBox box =
+	{
+		(VuoPoint3d){ (xmin+xmax)/2., (ymin+ymax)/2., (zmin+zmax)/2. },
+		(VuoPoint3d){ xmax-xmin, ymax-ymin, zmax-zmin }
+	};
+	return box;
 }
 
 /**
@@ -251,6 +287,54 @@ static inline VuoPoint3d VuoPoint3d_snap(VuoPoint3d a, VuoPoint3d center, VuoPoi
 	};
 }
 
+/**
+ *	Grow the VuoBox to encapsulate @c b
+ */
+static inline VuoBox VuoBox_encapsulate(VuoBox a, VuoBox b)
+{
+	float xmin, ymin, zmin, xmax, ymax, zmax;
+
+	VuoPoint3d extents_a = VuoPoint3d_multiply(a.size, .5);
+	VuoPoint3d extents_b = VuoPoint3d_multiply(b.size, .5);
+
+	xmin = fmin(a.center.x - extents_a.x, b.center.x - extents_b.x);
+	xmax = fmax(a.center.x + extents_a.x, b.center.x + extents_b.x);
+
+	ymin = fmin(a.center.y - extents_a.y, b.center.y - extents_b.y);
+	ymax = fmax(a.center.y + extents_a.y, b.center.y + extents_b.y);
+
+	zmin = fmin(a.center.z - extents_a.z, b.center.z - extents_b.z);
+	zmax = fmax(a.center.z + extents_a.z, b.center.z + extents_b.z);
+
+	return VuoBox_makeWithPoints( xmin, xmax, ymin, ymax, zmin, zmax );
+}
+
+/**
+ *	Check if a point is contained within a bounding box.
+ */
+static inline VuoBoolean VuoBox_contains(VuoBox aabb, VuoPoint3d point)
+{
+	VuoPoint3d exents = VuoPoint3d_multiply(aabb.size, .5);
+	VuoPoint3d min = VuoPoint3d_subtract(aabb.center, exents);
+	VuoPoint3d max = VuoPoint3d_add(aabb.center, exents);
+
+	return 	point.x > min.x && point.x < max.x &&
+			point.y > min.y && point.y < max.y &&
+			point.z > min.z && point.z < max.z;
+}
+
+/**
+ *	Check if two boxes interesect with one another.
+ */
+static inline VuoBoolean VuoBox_intersects(VuoBox a, VuoBox b)
+{
+	VuoPoint3d dist = VuoPoint3d_subtract(a.center, b.center);
+	VuoPoint3d size = VuoPoint3d_add(a.size, b.size);
+
+	return 	fabs(dist.x) * 2 < size.x &&
+			fabs(dist.y) * 2 < size.y &&
+			fabs(dist.z) * 2 < size.z;
+}
 
 /**
  * @}

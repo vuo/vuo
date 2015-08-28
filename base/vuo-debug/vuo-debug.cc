@@ -50,53 +50,62 @@ class TelemetryLogger : public VuoRunnerDelegate
 
 int main (int argc, char * const argv[])
 {
-	bool doPrintHelp = false;
+	bool hasInputFile = false;
 	string executablePath;
 
-	static struct option options[] = {
-		{"help", no_argument, NULL, 0},
-		{NULL, no_argument, NULL, 0}
-	};
-	int optionIndex=-1;
-	while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
+	try
 	{
-		switch(optionIndex)
+		bool doPrintHelp = false;
+
+		static struct option options[] = {
+			{"help", no_argument, NULL, 0},
+			{NULL, no_argument, NULL, 0}
+		};
+		int optionIndex=-1;
+		while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
 		{
-			case 0:  // --help
-				doPrintHelp = true;
-				break;
+			switch(optionIndex)
+			{
+				case 0:  // --help
+					doPrintHelp = true;
+					break;
+			}
 		}
-	}
 
-	if (doPrintHelp)
-	{
-		printf("Tool for debugging compositions. Runs the given composition executable file and logs telemetry data to the console.\n\n"
-			   "Nodes in the composition use the directory containing the composition executable file to resolve relative paths.\n\n"
-			   "Usage: %s [options] file\n\n"
-			   "Options:\n"
-			   "  --help                       Display this information.\n",
-			   argv[0]);
-	}
-	else
-	{
-		if (optind == argc)
+		hasInputFile = (optind < argc) && ! doPrintHelp;
+
+		if (doPrintHelp)
 		{
-			fprintf(stderr, "%s: no input file\n", argv[0]);
-			return 1;
+			printf("Tool for debugging compositions. Runs the given composition executable file and logs telemetry data to the console.\n\n"
+				   "Nodes in the composition use the directory containing the composition executable file to resolve relative paths.\n\n"
+				   "Usage: %s [options] file\n\n"
+				   "Options:\n"
+				   "  --help                       Display this information.\n",
+				   argv[0]);
 		}
-		executablePath = argv[optind];
+		else
+		{
+			if (! hasInputFile)
+				throw std::runtime_error("no input file");
+			executablePath = argv[optind];
 
-		string file, executableDir, ext;
-		VuoFileUtilities::splitPath(executablePath, executableDir, file, ext);
+			string file, executableDir, ext;
+			VuoFileUtilities::splitPath(executablePath, executableDir, file, ext);
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, executableDir);
+			VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, executableDir);
 
-		TelemetryLogger *logger = new TelemetryLogger();
-		runner->setDelegate(logger);
+			TelemetryLogger *logger = new TelemetryLogger();
+			runner->setDelegate(logger);
 
-		runner->start();
-		runner->waitUntilStopped();
+			runner->start();
+			runner->waitUntilStopped();
+		}
+
+		return 0;
 	}
-
-	return 0;
+	catch (std::exception &e)
+	{
+		fprintf(stderr, "%s: error: %s\n", hasInputFile ? executablePath.c_str() : argv[0], e.what());
+		return 1;
+	}
 }

@@ -9,20 +9,20 @@
 
 digraph G
 {
-MakeList [type="vuo.list.make.2.VuoReal" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="955,200" _item1="" _item2=""];
-MakeList2 [type="vuo.list.make.2.VuoReal" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="630,123" _item1="1" _item2=""];
-Add [type="vuo.math.add.VuoReal" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="794,121" _terms=""];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="955,200"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="630,123" _1="1"];
+Add [type="vuo.math.add.VuoReal" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="794,121"];
 DiscardDatafromEvent [type="vuo.type.discardData.VuoInteger" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r" pos="536,91" _dataAndEvent="0"];
 Hold [type="vuo.hold.VuoInteger" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="344,214" _initialValue="0" _newValue="0"];
 ConvertIntegertoRealNumber [type="vuo.type.integer.real" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="684,254" _integer="0"];
-Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="1100,204" _terms=""];
+Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="1100,204"];
 RoundDown [type="vuo.math.roundDown" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDownInteger>roundedDownInteger\r" pos="1262,206" _real="0.0"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<apply>apply\r|<initialBalance>initialBalance\r|<interestRate>interestRate\r" _apply="" _apply_type="event" _initialBalance="" _initialBalance_type="VuoInteger" _interestRate="" _interestRate_type="VuoReal"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<apply>apply\r|<initialBalance>initialBalance\r|<interestRate>interestRate\r" _apply_type="event" _initialBalance_type="VuoInteger" _interestRate_type="VuoReal"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<balance>balance\l" _balance_type="VuoInteger"];
 
 MakeList:list -> Multiply:terms;
-ConvertIntegertoRealNumber:real -> MakeList:item1;
-Add:sum -> MakeList:item2;
+ConvertIntegertoRealNumber:real -> MakeList:1;
+Add:sum -> MakeList:2;
 Multiply:product -> RoundDown:real;
 RoundDown:roundedDownInteger -> Hold:newValue;
 Hold:heldValue -> ConvertIntegertoRealNumber:integer;
@@ -31,6 +31,6 @@ MakeList2:list -> Add:terms;
 DiscardDatafromEvent:event -> MakeList2:refresh;
 PublishedInputs:initialBalance -> Hold:initialValue;
 PublishedInputs:apply -> Hold:refresh;
-PublishedInputs:interestRate -> MakeList2:item2;
+PublishedInputs:interestRate -> MakeList2:2;
 RoundDown:roundedDownInteger -> PublishedOutputs:balance;
 }

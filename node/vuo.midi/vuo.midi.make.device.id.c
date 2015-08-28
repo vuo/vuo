@@ -22,7 +22,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":0,"suggestedMin":0}) id,
-		VuoInputData(VuoBoolean, {"default":"true"}) isInput,
+		VuoInputData(VuoBoolean, {"default":true}) isInput,
 		VuoOutputData(VuoMidiDevice) device
 )
 {

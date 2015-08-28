@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoThresholdType.h"
+#include "VuoList_VuoThresholdType.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -86,6 +87,19 @@ json_object * VuoThresholdType_jsonFromValue(const VuoThresholdType value)
 	return json_object_new_string(valueAsString);
 }
 
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoThresholdType VuoThresholdType_allowedValues(void)
+{
+	VuoList_VuoThresholdType l = VuoListCreate_VuoThresholdType();
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Luminance);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Red);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Green);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Blue);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Alpha);
+	return l;
+}
 /**
  * @ingroup VuoThresholdType
  * Same as @c %VuoThresholdType_stringFromValue()

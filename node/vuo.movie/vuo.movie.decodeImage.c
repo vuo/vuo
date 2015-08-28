@@ -75,7 +75,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoText) movieURL,
-		VuoInputEvent(VuoPortEventBlocking_Wall, movieURL) movieURLEvent,
+		VuoInputEvent(VuoPortEventBlocking_Wall, movieURL, {"hasPortAction":true}) movieURLEvent,
 		VuoInputData(VuoReal, {"suggestedMin":0.}) frameTime,
 		VuoOutputData(VuoImage) image
 )
@@ -91,7 +91,7 @@ void nodeInstanceEvent
 		double nextFrameTime;
 		VuoImage img;
 		// will fail if frameTime is out of bounds
-		if( VuoMovie_getNextFrame((*context)->movie, &img, &nextFrameTime) )
+		if( VuoMovie_getNextVideoFrame((*context)->movie, &img, &nextFrameTime) )
 			*image = img;
 	}
 }

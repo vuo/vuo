@@ -16,8 +16,7 @@ GENERIC_NODE_SOURCES += \
 NODE_LIBRARY_SOURCES += \
 	VuoOsc.cc
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoOsc.h
 
 NODE_LIBRARY_INCLUDEPATH = \

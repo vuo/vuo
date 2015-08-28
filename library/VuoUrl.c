@@ -60,7 +60,7 @@ static size_t VuoUrl_curlCallback(void *contents, size_t size, size_t nmemb, voi
 	mem->memory = (char *)realloc(mem->memory, mem->size + realsize + 1);
 	if(mem->memory == NULL)
 	{
-		fprintf(stderr, "VuoUrl_curlCallback() Error: realloc() returned NULL (out of memory?).\n");
+		VLog("Error: realloc() returned NULL (out of memory?).");
 		return 0;
 	}
 
@@ -201,10 +201,12 @@ bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 	curl = curl_easy_init();
 	if (!curl)
 	{
-		fprintf(stderr, "VuoUrl_get() Error: cURL initialization failed.\n");
+		VLog("Error: cURL initialization failed.");
 		VuoRelease(resolvedUrl);
 		return false;
 	}
+
+	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);  // Don't use signals for the timeout logic, since they're not thread-safe.
 
 	curl_easy_setopt(curl, CURLOPT_URL, resolvedUrl);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

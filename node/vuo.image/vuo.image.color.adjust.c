@@ -18,7 +18,8 @@ VuoModuleMetadata({
 					 "version" : "1.0.0",
 				 });
 
-static const char * fragmentShaderSource = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_COLOR_CONVERSIONS(
+static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D image;
@@ -36,20 +37,20 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_C
 		pixelColor.rgb /= pixelColor.a;
 
 		// // Apply Exposure
-		vec3 hsl = RgbToHsl(pixelColor.rgb);
-		hsl.z = hsl.z * pow(2, exposure);
+		vec3 hsl = rgbToHsl(pixelColor.rgb);
+		hsl.z = hsl.z * pow(2., exposure);
 
 		// // Apply saturation
 		hsl.y *= saturation;
-		pixelColor.rgb = HslToRgb(hsl);
+		pixelColor.rgb = hslToRgb(hsl);
 
 		// Apply contrast.
-		pixelColor.rgb = ((pixelColor.rgb - 0.5f) * max(contrast, 0)) + 0.5f;
+		pixelColor.rgb = ((pixelColor.rgb - 0.5f) * max(contrast, 0.)) + 0.5f;
 
 		// Apply brightness.
 		pixelColor.rgb += brightness;
-		pixelColor.rgb = clamp(pixelColor.rgb, 0, 1);
-		
+		pixelColor.rgb = clamp(pixelColor.rgb, 0., 1.);
+
 		// // Apply gamma.
 		pixelColor.r = pow(pixelColor.r, gamma);
 		pixelColor.g = pow(pixelColor.g, gamma);
@@ -104,21 +105,21 @@ void nodeInstanceEvent
 	if(!image)
 		return;
 
-	VuoShader shader = VuoShader_make("Adjust Image Colors", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+	VuoShader shader = VuoShader_make("Adjust Image Colors");
+	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(shader);
 
-	VuoShader_resetTextures(shader);
-	VuoShader_addTexture(shader, (*instance)->glContext, "image", image);
+	VuoShader_setUniform_VuoImage(shader, "image", image);
 
 	// *scaledValue = (value - start) * scaledRange / range + scaledStart;
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "saturation", saturation+1); 	// 0 - 3 values
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "brightness", brightness);	// -1, 1 values
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "contrast", contrast+1);		// 0, 2 values
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "gamma", gamma);
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "exposure", exposure*10);
+	VuoShader_setUniform_VuoReal(shader, "saturation", saturation+1); 	// 0 - 3 values
+	VuoShader_setUniform_VuoReal(shader, "brightness", brightness);	// -1, 1 values
+	VuoShader_setUniform_VuoReal(shader, "contrast", contrast+1);		// 0, 2 values
+	VuoShader_setUniform_VuoReal(shader, "gamma", gamma);
+	VuoShader_setUniform_VuoReal(shader, "exposure", exposure*10);
 
 	// Render.
-	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, shader, image->pixelsWide, image->pixelsHigh);
+	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoRelease(shader);
 }

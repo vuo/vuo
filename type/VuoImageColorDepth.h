@@ -1,0 +1,56 @@
+/**
+ * @file
+ * VuoImageColorDepth C type definition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+#ifndef VUOIMAGECOLORDEPTH_H
+#define VUOIMAGECOLORDEPTH_H
+
+/// @{
+typedef void * VuoList_VuoImageColorDepth;
+#define VuoList_VuoImageColorDepth_TYPE_DEFINED
+/// @}
+
+/**
+ * @ingroup VuoTypes
+ * @defgroup VuoImageColorDepth VuoImageColorDepth
+ * An image's color bit-depth
+ *
+ * @{
+ */
+
+/**
+ * An image's color bit-depth
+ */
+typedef enum {
+	VuoImageColorDepth_8,			//  8 bits per channel (32 bits per RGBA pixel)
+	VuoImageColorDepth_16			// 16 bits per channel (64 bits per RGBA pixel)
+} VuoImageColorDepth;
+
+unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, VuoImageColorDepth imageColorDepth);
+
+VuoImageColorDepth VuoImageColorDepth_valueFromJson(struct json_object * js);
+struct json_object * VuoImageColorDepth_jsonFromValue(const VuoImageColorDepth value);
+VuoList_VuoImageColorDepth VuoImageColorDepth_allowedValues(void);
+char * VuoImageColorDepth_summaryFromValue(const VuoImageColorDepth value);
+
+/**
+ * Automatically generated function.
+ */
+///@{
+VuoImageColorDepth VuoImageColorDepth_valueFromString(const char *str);
+char * VuoImageColorDepth_stringFromValue(const VuoImageColorDepth value);
+void VuoImageColorDepth_retain(VuoImageColorDepth value);
+void VuoImageColorDepth_release(VuoImageColorDepth value);
+///@}
+
+/**
+ * @}
+ */
+
+#endif // VUOIMAGECOLORDEPTH_H
+

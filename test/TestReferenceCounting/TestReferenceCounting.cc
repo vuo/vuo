@@ -125,7 +125,6 @@ private slots:
 		QTest::newRow("VuoString stored in the first/last node of a feedback loop") << "TextFeedback.vuo" << "";
 		QTest::newRow("Empty VuoList of VuoStrings stored only in a constant input port") << "InputList.vuo" << "";
 		QTest::newRow("Non-empty VuoList of VuoStrings stored only in an unpublished output port") << "OutputList.vuo" << "";
-		QTest::newRow("VuoList_VuoVertices stored only in a published output port") << "MakeSquareVertices.vuo" << "";
 		QTest::newRow("VuoList_VuoSceneObject stored only a published output port") << "MakeListOfSceneObjects.vuo" << "";
 	}
 	void testTelemetryErrors()

@@ -14,6 +14,7 @@
 #include "VuoMidiController.h"
 #include "VuoInteger.h"
 #include "VuoBoolean.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -84,11 +85,6 @@ json_object * VuoMidiController_jsonFromValue(const VuoMidiController mn)
  */
 char * VuoMidiController_summaryFromValue(const VuoMidiController mn)
 {
-	const char *format = "Channel %d, controller %d (0x%02x): value %d";
-
-	int size = snprintf(NULL,0,format,mn.channel,mn.controllerNumber,mn.controllerNumber,mn.value);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,mn.channel,mn.controllerNumber,mn.controllerNumber,mn.value);
-
-	return valueAsString;
+	return VuoText_format("Channel %d, controller %d (0x%02x): value %d",
+						  mn.channel, mn.controllerNumber, mn.controllerNumber, mn.value);
 }

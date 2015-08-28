@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Displays rotated frames in a movie.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Convert2DPointToReal3 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<y>y\r" pos="337,535"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="312,425" _decrement="1.000000" _setCount="0.000000"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-93,0" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="459,195" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="476,76" _center="{\"x\":0.000000,\"y\":-0.550000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="688,217" fillcolor="green"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="128,436" _2="100.000000"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="637,202" fillcolor="green"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="316,51" _text="\"Move the mouse up and down to rotate the image.\"" _font="{\"fontName\":\"Optima-Regular\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="174,425"];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r|<decodedAudio>decodedAudio\r" pos="-38,197" fillcolor="yellow" _movieURL="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedImage_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+ReceiveMouseDeltas [type="vuo.mouse.delta" version="1.0.0" label="Receive Mouse Deltas|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedBy>movedBy\r" pos="-112,425" fillcolor="yellow" _modifierKey="\"any\"" _movedBy_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="734,191" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RotateImage [type="vuo.image.rotate" version="1.0.0" label="Rotate Image|<refresh>refresh\l|<image>image\l|<rotation>rotation\l|<expandBounds>expandBounds\l|<done>done\r|<rotatedImage>rotatedImage\r" pos="261,196" fillcolor="violet" _expandBounds="false"];
+
+Convert2DPointToReal3:y -> MakeList2:1;
+Count:count -> RotateImage:rotation;
+FireOnStart2:started -> MakeTextImage3:refresh;
+FireOnStart2:started -> PlayMovie:play;
+MakeLayer3:layer -> MakeList4:1;
+MakeLayer:layer -> MakeList4:2;
+MakeList2:list -> Multiply:terms;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList:list -> RenderLayersToWindow:windowProperties;
+MakeTextImage3:image -> MakeLayer3:image;
+Multiply:product -> Count:increment;
+PlayMovie:decodedImage -> RotateImage:image;
+ReceiveMouseDeltas:movedBy -> Convert2DPointToReal3:xy;
+RenderLayersToWindow:showedWindow -> ReceiveMouseDeltas:window;
+RotateImage:rotatedImage -> MakeLayer:image;
+}

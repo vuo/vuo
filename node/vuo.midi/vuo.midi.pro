@@ -21,8 +21,7 @@ NODE_SOURCES += \
 NODE_LIBRARY_SOURCES += \
 	VuoMidi.cc
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoMidi.h
 
 NODE_LIBRARY_INCLUDEPATH = \

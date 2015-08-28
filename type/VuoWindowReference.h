@@ -35,6 +35,16 @@ char * VuoWindowReference_summaryFromValue(const VuoWindowReference value);
 VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value);
 void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height);
 
+/// @{
+/**
+ * Automatically generated function.
+ */
+VuoWindowReference VuoWindowReference_valueFromString(const char *str);
+char * VuoWindowReference_stringFromValue(const VuoWindowReference value);
+void VuoWindowReference_retain(VuoWindowReference value);
+void VuoWindowReference_release(VuoWindowReference value);
+/// @}
+
 /**
  * @}
  */

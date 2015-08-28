@@ -211,6 +211,19 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 
 	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES];
 
+	// QColorDialog (used in VuoInputEditorColor) reparents the sharedColorPanel's contentView when NoButtons=false;
+	// when the dialog is shown by the Font editor, the buttons cause a crash.
+	// By setting NoButtons=true, then discreetly opening the dialog, we force Qt to switch the sharedColorPanel back to normal.
+	// https://b33p.net/kosada/node/7892
+	{
+		[[NSColorPanel sharedColorPanel] setAlphaValue:0];
+		QColorDialog dialog;
+		dialog.setOption(QColorDialog::NoButtons, true);
+		dialog.show();
+		dialog.hide();
+		[[NSColorPanel sharedColorPanel] setAlphaValue:1];
+	}
+
 	// Create a delegate to catch if the user closes the font panel.
 	VuoInputEditorFontPanelDelegate *delegate = [[VuoInputEditorFontPanelDelegate alloc] initWithQDialog:dialog];
 	[fp setDelegate:delegate];
@@ -258,9 +271,11 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	const unsigned int buttonSep = 12;
 	NSView *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 4*buttonWidth+3*buttonSep, 2*buttonHeight+3*buttonSep)];
 	[fp setAccessoryView:accessoryView];
+	[accessoryView autorelease];
 	[fp setMinSize:NSMakeSize([accessoryView frame].size.width, [fp minSize].height)];
 
 	VuoInputEditorFontAccessoryDelegate *accessoryDelegate = [VuoInputEditorFontAccessoryDelegate new];
+	[accessoryDelegate autorelease];
 
 	// Add a horizontal alignment widget.
 	{
@@ -276,6 +291,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[alignmentControl setAction:@selector(alignmentChanged:)];
 
 		[accessoryView addSubview:alignmentControl];
+		[alignmentControl autorelease];
 	}
 
 	int secondBaseline = buttonHeight+buttonSep;
@@ -290,6 +306,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[charSpacingLabel setStringValue:@"Character Spacing"];
 		[charSpacingLabel setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
 		[accessoryView addSubview:charSpacingLabel];
+		[charSpacingLabel autorelease];
 
 		NSSlider *charSpacingControl = [[NSSlider alloc] initWithFrame:NSMakeRect(0, secondBaseline, sliderWidth, buttonHeight)];
 		[charSpacingControl setNumberOfTickMarks:1];	// A single tick at the center.
@@ -302,6 +319,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[charSpacingControl setAction:@selector(charSpacingChanged:)];
 
 		[accessoryView addSubview:charSpacingControl];
+		[charSpacingControl autorelease];
 	}
 
 	// Add line spacing widget.
@@ -313,6 +331,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[lineSpacingLabel setStringValue:@"Line Spacing"];
 		[lineSpacingLabel setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
 		[accessoryView addSubview:lineSpacingLabel];
+		[lineSpacingLabel autorelease];
 
 		NSSlider *lineSpacingControl = [[NSSlider alloc] initWithFrame:NSMakeRect(2*buttonWidth+2*buttonSep, secondBaseline, sliderWidth, buttonHeight)];
 		[lineSpacingControl setNumberOfTickMarks:1];	// A single tick at the center.
@@ -325,6 +344,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 		[lineSpacingControl setAction:@selector(lineSpacingChanged:)];
 
 		[accessoryView addSubview:lineSpacingControl];
+		[lineSpacingControl autorelease];
 	}
 
 
@@ -339,6 +359,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 			[okButton setTarget:delegate];
 			[okButton setAction:@selector(okButtonPressed)];
 			[accessoryView addSubview:okButton];
+			[okButton autorelease];
 		}
 		{
 			NSButton *cancelButton = [[NSButton alloc] initWithFrame:NSMakeRect(2*buttonWidth+3*buttonSep,0,buttonWidth,buttonHeight)];
@@ -349,6 +370,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 			[cancelButton setTarget:delegate];
 			[cancelButton setAction:@selector(cancelButtonPressed)];
 			[accessoryView addSubview:cancelButton];
+			[cancelButton autorelease];
 		}
 	}
 

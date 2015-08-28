@@ -1,9 +1,14 @@
 TEMPLATE = lib
 CONFIG -= qt
-CONFIG += staticlib graphviz VuoLLVM zmq json Carbon VuoPCH VuoBase
+CONFIG += staticlib graphviz VuoLLVM zmq json Carbon VuoPCH VuoBase VuoType
 TARGET = VuoCompiler
 
 include(../vuo.pri)
+exists($$ROOT/licensetools/licensetools.pro) {include($$ROOT/licensetools/licensetools.pro)}
+exists($$ROOT/licensetools/premiumnode.pro) {
+   include($$ROOT/licensetools/premiumnode.pro)
+   DEFINES += PREMIUM_NODE_LOADER_ENABLED
+}
 
 DEFINES += LLVM_ROOT=\\\"$$LLVM_ROOT\\\"
 DEFINES += GRAPHVIZ_ROOT=\\\"$$GRAPHVIZ_ROOT\\\"
@@ -21,10 +26,10 @@ DEFINES += FFMPEG_ROOT=\\\"$$FFMPEG_ROOT\\\"
 DEFINES += LIBUSB_ROOT=\\\"$$LIBUSB_ROOT\\\"
 DEFINES += LIBFREENECT_ROOT=\\\"$$LIBFREENECT_ROOT\\\"
 DEFINES += OSCPACK_ROOT=\\\"$$OSCPACK_ROOT\\\"
+DEFINES += ZXING_ROOT=\\\"$$ZXING_ROOT\\\"
 DEFINES += SYPHON_ROOT=\\\"$$ROOT/node/vuo.syphon/Syphon\\\"
 
 SOURCES += \
-	VuoCompilerPassiveEdge.cc \
 	VuoCompilerPortClass.cc \
 	VuoCompilerPort.cc \
 	VuoCompilerDataClass.cc \
@@ -39,7 +44,6 @@ SOURCES += \
 	VuoCompilerNodeArgumentClass.cc \
 	VuoCompilerNodeArgument.cc \
 	VuoCompilerNode.cc \
-	VuoCompilerLeaf.cc \
 	VuoCompilerInstanceDataClass.cc \
 	VuoCompilerInstanceData.cc \
 	VuoCompilerInputDataClass.cc \
@@ -48,12 +52,9 @@ SOURCES += \
 	VuoCompilerInputEventPort.cc \
 	VuoCompilerGraphvizParser.cc \
 	VuoCompilerBitcodeGenerator.cc \
+	VuoCompilerGraph.cc \
 	VuoCompilerTriggerPortClass.cc \
 	VuoCompilerTriggerPort.cc \
-	VuoCompilerTriggerEdge.cc \
-	VuoCompilerTriggerAction.cc \
-	VuoCompilerEdge.cc \
-	VuoCompilerDebug.cc \
 	VuoCompilerChain.cc \
 	VuoCompilerBitcodeParser.cc \
 	VuoCompiler.cc \
@@ -70,10 +71,17 @@ SOURCES += \
 	VuoCompilerPublishedInputNodeClass.cc \
 	VuoCompilerSpecializedNodeClass.cc \
 	VuoCompilerTargetSet.cc \
-	VuoCompilerDriver.cc
+	VuoCompilerDriver.cc \
+	VuoCompilerException.cc
+
+INCLUDEPATH += \
+	../framework \
+	../library \
+	../node \
+	$$system(ls -1d ../node/*/) \
+	../runtime
 
 HEADERS += \
-	VuoCompilerPassiveEdge.hh \
 	VuoCompilerPortClass.hh \
 	VuoCompilerPort.hh \
 	VuoCompilerDataClass.hh \
@@ -88,7 +96,6 @@ HEADERS += \
 	VuoCompilerNodeArgumentClass.hh \
 	VuoCompilerNodeArgument.hh \
 	VuoCompilerNode.hh \
-	VuoCompilerLeaf.hh \
 	VuoCompilerInstanceDataClass.hh \
 	VuoCompilerInstanceData.hh \
 	VuoCompilerInputDataClass.hh \
@@ -97,12 +104,9 @@ HEADERS += \
 	VuoCompilerInputEventPort.hh \
 	VuoCompilerGraphvizParser.hh \
 	VuoCompilerBitcodeGenerator.hh \
+	VuoCompilerGraph.hh \
 	VuoCompilerTriggerPortClass.hh \
 	VuoCompilerTriggerPort.hh \
-	VuoCompilerTriggerEdge.hh \
-	VuoCompilerTriggerAction.hh \
-	VuoCompilerEdge.hh \
-	VuoCompilerDebug.hh \
 	VuoCompilerChain.hh \
 	VuoCompilerBitcodeParser.hh \
 	VuoCompiler.hh \
@@ -119,4 +123,5 @@ HEADERS += \
 	VuoCompilerPublishedInputNodeClass.hh \
 	VuoCompilerSpecializedNodeClass.hh \
 	VuoCompilerTargetSet.hh \
-	VuoCompilerDriver.hh
+	VuoCompilerDriver.hh \
+	VuoCompilerException.hh

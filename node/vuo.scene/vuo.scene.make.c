@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Make 3D Object",
 					 "keywords" : [ "mesh", "model", "vertices", "shader", "texture", "draw", "opengl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
 						 "isInterface" : false,
 						 "exampleCompositions" : [ "DisplaySquare.vuo", "SpinSphere.vuo" ]
@@ -21,14 +21,14 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoVertices) vertices,
+		VuoInputData(VuoMesh) mesh,
 		VuoInputData(VuoShader) shader,
 		VuoInputData(VuoTransform) transform,
 		VuoOutputData(VuoSceneObject) object
 )
 {
 	*object = VuoSceneObject_make(
-				vertices,
+				mesh,
 				shader,
 				transform,
 				NULL

@@ -1,0 +1,71 @@
+/**
+ * @file
+ * Displays a traffic signal mesh, and changes the shader used to render each of its lights.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeShaderForMaterial [type="vuo.scene.shader.set.material" version="1.0.0" label="Change Shader for Material|<refresh>refresh\l|<object>object\l|<material>material\l|<shader>shader\l|<done>done\r|<shadedObject>shadedObject\r" pos="940,189" fillcolor="violet"];
+CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="683,204" _wrapMode="\"wrap\""];
+CycleThroughList5 [type="vuo.list.cycle.VuoColor" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="561,345" _wrapMode="\"wrap\""];
+CycleThroughList8 [type="vuo.list.cycle.VuoPoint3d" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="563,483" _wrapMode="\"wrap\""];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="736,716" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="115,360" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="enqueue"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="195,-5" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetScene [type="vuo.scene.get" version="1.1.0" label="Get Scene|<refresh>refresh\l|<sceneURL>sceneURL\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<done>done\r|<scene>scene\r" pos="539,97" fillcolor="green" _sceneURL="\"TrafficSignal.dae\"" _center="false" _fit="false" _hasLeftHandedCoordinates="false"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="555,-137" _translation="{\"x\":-0.300000,\"y\":0.500000,\"z\":0.900000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":2.000000,\"y\":2.000000,\"z\":2.000000}"];
+MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<done>done\r|<cube>cube\r" pos="774,-137"];
+MakeList11 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="480,356" _1="{\"r\":0.270588,\"g\":0.832349,\"b\":0.630396,\"a\":1.000000}" _2="{\"r\":0.972549,\"g\":0.749020,\"b\":0.227451,\"a\":1.000000}" _3="{\"r\":0.941176,\"g\":0.309804,\"b\":0.278431,\"a\":1.000000}"];
+MakeList16 [type="vuo.list.make.3.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="482,494" _1="{\"x\":0.000000,\"y\":-0.400000,\"z\":-0.100000}" _2="{\"x\":0.000000,\"y\":0.000000,\"z\":-0.100000}" _3="{\"x\":0.000000,\"y\":0.400000,\"z\":-0.100000}"];
+MakeList4 [type="vuo.list.make.6.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<done>done\r|<list>list\r" pos="1233,170"];
+MakeList8 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="602,215" _1="\"shieldGreen-material\"" _2="\"shieldYellow-material\"" _3="\"shieldRed-material\""];
+MakePointLight [type="vuo.scene.make.light.point" version="1.0.0" label="Make Point Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<range>range\l|<sharpness>sharpness\l|<done>done\r|<object>object\r" pos="969,610" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="0.300000" _position="{\"x\":0.300000,\"y\":2.000000,\"z\":2.000000}" _range="5.000000" _sharpness="0.000000"];
+MakePointLight3 [type="vuo.scene.make.light.point" version="1.0.0" label="Make Point Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<range>range\l|<sharpness>sharpness\l|<done>done\r|<object>object\r" pos="969,737" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="0.300000" _position="{\"x\":-0.900000,\"y\":0.500000,\"z\":1.000000}" _range="5.000000" _sharpness="0.000000"];
+MakeSpotlight [type="vuo.scene.make.light.spot" version="1.0.0" label="Make Spotlight|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<rotation>rotation\l|<cone>cone\l|<range>range\l|<sharpness>sharpness\l|<done>done\r|<object>object\r" pos="975,453" _brightness="1.000000" _rotation="{\"x\":180.000000,\"y\":0.000000}" _cone="90.000000" _range="0.700000" _sharpness="0.000000"];
+MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<done>done\r|<object>object\r" pos="874,16" _name="\"camera\"" _position="{\"x\":-0.500000,\"y\":-0.300000,\"z\":0.600000}" _target="{\"x\":0.400000,\"y\":0.000000,\"z\":0.000000}" _upDirection="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _fieldOfView="100.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1283,159" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="793,323" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.000000"];
+ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="570,-51" _color="{\"r\":0.989441,\"g\":0.957946,\"b\":0.864057,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.000000"];
+ShareValue [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="280,381"];
+ShowBackOfObject2 [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<done>done\r|<backObject>backObject\r" pos="948,-137" _keepFront="false"];
+
+ChangeShaderForMaterial:shadedObject -> MakeList4:3;
+CycleThroughList2:item -> ChangeShaderForMaterial:material;
+CycleThroughList5:item -> MakeSpotlight:color;
+CycleThroughList5:item -> ShadeWithColor:color;
+CycleThroughList8:item -> MakeSpotlight:position;
+FireOnStart2:started -> MakePointLight3:refresh;
+FireOnStart2:started -> MakePointLight:refresh;
+FirePeriodically:fired -> ShareValue:refresh;
+FireonStart:started -> GetScene:refresh;
+FireonStart:started -> Make3DTransform2:refresh;
+FireonStart:started -> MakeTargetedPerspectiveCamera:refresh;
+FireonStart:started -> ShadeWithColor3:refresh;
+FireonStart:started -> ShareValue:refresh;
+GetScene:scene -> ChangeShaderForMaterial:object;
+Make3DTransform2:transform -> MakeCube:transform;
+MakeCube:cube -> ShowBackOfObject2:object;
+MakeList11:list -> CycleThroughList5:list;
+MakeList16:list -> CycleThroughList8:list;
+MakeList4:list -> RenderSceneToWindow2:objects;
+MakeList8:list -> CycleThroughList2:list;
+MakePointLight3:object -> MakeList4:6;
+MakePointLight:object -> MakeList4:5;
+MakeSpotlight:object -> MakeList4:4;
+MakeTargetedPerspectiveCamera:object -> MakeList4:2;
+ShadeWithColor3:shader -> MakeCube:backShader;
+ShadeWithColor3:shader -> MakeCube:bottomShader;
+ShadeWithColor3:shader -> MakeCube:frontShader;
+ShadeWithColor3:shader -> MakeCube:leftShader;
+ShadeWithColor3:shader -> MakeCube:rightShader;
+ShadeWithColor3:shader -> MakeCube:topShader;
+ShadeWithColor:shader -> ChangeShaderForMaterial:shader;
+ShareValue:done -> CycleThroughList2:goForward;
+ShareValue:done -> CycleThroughList5:goForward;
+ShareValue:done -> CycleThroughList8:goForward;
+ShowBackOfObject2:backObject -> MakeList4:1;
+}

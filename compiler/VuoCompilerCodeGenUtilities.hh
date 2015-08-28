@@ -25,6 +25,7 @@ private:
 	static void generateSubmissionToDispatchQueue(Module *module, BasicBlock *block, GlobalVariable *dispatchQueueVariable, Function *workerFunction, Value *contextValue, bool isSynchronous);
 	static StructType * getGraphvizGraphType(Module *module);
 	static StructType * getJsonObjectType(Module *module);
+	static PointerType * getPointerToFileType(Module *module);
 
 	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, Value *timeoutValue);
 
@@ -39,6 +40,8 @@ private:
 
 	static Function * getVuoRetainFunction(Module *module);
 	static Function * getVuoReleaseFunction(Module *module);
+
+	static Value * generateStderr(Module *module, BasicBlock *block);
 
 	static bool isParameterPassedByValue(Function *function, int parameterIndex);
 
@@ -78,8 +81,7 @@ public:
 	static Value * generateSerialization(Module *module, BasicBlock *block, Value *valueToSerialize);
 	static void generateUnserialization(Module *module, BasicBlock *block, Value *stringToUnserialize, GlobalVariable *destination);
 	static ICmpInst * generateIsPausedComparison(Module *module, BasicBlock *block);
-	static void generatePrint(Module *module, BasicBlock *block, string stringToPrint);
-	static void generatePrint(Module *module, BasicBlock *block, string formatString, Value *value);
+	static void generatePrint(Module *module, BasicBlock *block, string formatString, Value *value=NULL);
 
 	static Function * getStrcatFunction(Module *module);
 	static Function * getStrcmpFunction(Module *module);
@@ -87,7 +89,7 @@ public:
 	static Function * getStrlenFunction(Module *module);
 	static Function * getSnprintfFunction(Module *module);
 	static Function * getSscanfFunction(Module *module);
-	static Function * getPrintfFunction(Module *module);
+	static Function * getFprintfFunction(Module *module);
 	static Function * getPutsFunction(Module *module);
 	static Function * getMallocFunction(Module *module);
 	static Function * getFreeFunction(Module *module);
@@ -104,6 +106,7 @@ public:
 	static Function * getGetInputPortSummaryFunction(Module *module);
 	static Function * getGetOutputPortSummaryFunction(Module *module);
 	static Function * getSetInputPortValueFunction(Module *module);
+	static Function * getGetPublishedInputPortValueFunction(Module *module);
 	static Function * getGetPublishedOutputPortValueFunction(Module *module);
 	static Function * getSetPublishedInputPortValueFunction(Module *module);
 	static Function * getSendNodeExecutionStartedFunction(Module *module);

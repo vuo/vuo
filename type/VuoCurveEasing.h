@@ -10,6 +10,11 @@
 #ifndef VUOCURVEEASING_H
 #define VUOCURVEEASING_H
 
+/// @{
+typedef void * VuoList_VuoCurveEasing;
+#define VuoList_VuoCurveEasing_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoCurveEasing VuoCurveEasing
@@ -30,6 +35,7 @@ typedef enum {
 
 VuoCurveEasing VuoCurveEasing_valueFromJson(struct json_object * js);
 struct json_object * VuoCurveEasing_jsonFromValue(const VuoCurveEasing value);
+VuoList_VuoCurveEasing VuoCurveEasing_allowedValues(void);
 char * VuoCurveEasing_summaryFromValue(const VuoCurveEasing value);
 
 /// @{
@@ -38,6 +44,8 @@ char * VuoCurveEasing_summaryFromValue(const VuoCurveEasing value);
  */
 VuoCurveEasing VuoCurveEasing_valueFromString(const char *str);
 char * VuoCurveEasing_stringFromValue(const VuoCurveEasing value);
+void VuoCurveEasing_retain(VuoCurveEasing value);
+void VuoCurveEasing_release(VuoCurveEasing value);
 /// @}
 
 /**

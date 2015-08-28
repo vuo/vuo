@@ -1,6 +1,6 @@
 /**
  * @file
- * Logs your mouse button releases and clicks to the console window. 
+ * Demonstrates the difference between mouse button events and mouse click events.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,28 +9,58 @@
 
 digraph G
 {
-DiscardDataFromEvent [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="562,85"];
-DiscardDataFromEvent2 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="600,342"];
-DiscardDataFromEvent3 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="588,462"];
-DiscardDataFromEvent4 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="566,560"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="877,358" fillcolor="green"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="300,123" fillcolor="violet" _window="" _button="\"left\"" _modifierKey="\"any\""];
-ReceiveMouseClicks [type="vuo.mouse.click" version="1.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="294,517" fillcolor="violet" _window="" _button="\"left\"" _modifierKey="\"any\""];
-ReceiveMouseClicks2 [type="vuo.mouse.click" version="1.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="293,717" fillcolor="violet" _window="" _button="\"left\"" _modifierKey="\"any\""];
-ReceiveMouseClicks3 [type="vuo.mouse.click" version="1.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="297,322" fillcolor="violet" _window="" _button="\"left\"" _modifierKey="\"any\""];
-SelectLatest [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="654,255" fillcolor="green" _option1="\"release\"" _option2="\"single-click\""];
-SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="658,349" fillcolor="green" _option2="\"double-click\""];
-SelectLatest3 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="658,435" fillcolor="green" _option2="\"triple-click\""];
+DiscardDataFromEvent6 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="297,293"];
+DiscardDataFromEvent7 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="332,486"];
+DiscardDataFromEvent8 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="267,637"];
+DiscardDataFromEvent9 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="252,763"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="844,-30" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1180,152" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.000000}"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1177,584" _name="\"\"" _center="{\"x\":0.000000,\"y\":-0.200000}"];
+MakeLayer5 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1173,-16" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.400000}" _alpha="1.000000"];
+MakeList10 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r" pos="1374,163"];
+MakeList14 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="1344,148"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="498,182" _text="\"released\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":42.000000,\"underline\":false,\"color\":{\"r\":0.989434,\"g\":0.957944,\"b\":0.864060,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="996,599" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":42.000000,\"underline\":false,\"color\":{\"r\":0.146795,\"g\":0.570824,\"b\":0.525023,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage5 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="992,-1" _text="\"The \\\"Receive Mouse Buttons\\\" node fires events immediately.\\nThe \\\"Receive Mouse Clicks\\\" node waits to fire an event\\nuntil it's clear whether the mouse was clicked, double-clicked, or triple-clicked.\\n\\nClick, double-click, or triple-click to see these nodes in action.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":0.647465,\"g\":0.467514,\"b\":0.023485,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="94,278" fillcolor="violet" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseClicks3 [type="vuo.mouse.click" version="1.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="177,474" fillcolor="violet" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1415,137" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectLatest5 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="524,474" _option1="\"singleClicked\"" _option2="\"doubleClicked\""];
+SelectLatest6 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="655,499" _option2="\"tripleClicked\""];
+ShareValue2 [type="vuo.data.share.VuoWindowReference" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="-66,474"];
+ShareValue5 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="728,278"];
+SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.0.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<done>done\r|<position>position\r" pos="964,278" _setPosition="1.000000" _setTarget="0.000000" _duration="0.500000" _curve="\"quadratic\"" _easing="\"out\""];
+SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.0.0" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<done>done\r|<position>position\r" pos="961,463" _setPosition="1.000000" _setTarget="0.000000" _duration="1.000000" _curve="\"quadratic\"" _easing="\"out\""];
 
-DiscardDataFromEvent2:event -> SelectLatest:option2;
-DiscardDataFromEvent3:event -> SelectLatest2:option2;
-DiscardDataFromEvent4:event -> SelectLatest3:option2;
-DiscardDataFromEvent:event -> SelectLatest:option1;
-ReceiveMouseButtons:released -> DiscardDataFromEvent:dataAndEvent;
-ReceiveMouseClicks2:tripleClicked -> DiscardDataFromEvent4:dataAndEvent;
-ReceiveMouseClicks3:singleClicked -> DiscardDataFromEvent2:dataAndEvent;
-ReceiveMouseClicks:doubleClicked -> DiscardDataFromEvent3:dataAndEvent;
-SelectLatest2:latest -> SelectLatest3:option1;
-SelectLatest3:latest -> DisplayConsoleWindow:writeLine;
-SelectLatest:latest -> SelectLatest2:option1;
+DiscardDataFromEvent6:event -> MakeTextImage:refresh;
+DiscardDataFromEvent6:event -> SmoothWithDuration2:setPosition;
+DiscardDataFromEvent6:event -> SmoothWithDuration2:setTarget;
+DiscardDataFromEvent7:event -> SelectLatest5:option1;
+DiscardDataFromEvent8:event -> SelectLatest5:option2;
+DiscardDataFromEvent9:event -> SelectLatest6:option2;
+FireOnStart:started -> MakeTextImage5:refresh;
+MakeLayer2:layer -> MakeList14:3;
+MakeLayer5:layer -> MakeList14:1;
+MakeLayer:layer -> MakeList14:2;
+MakeList10:list -> RenderLayersToWindow:windowProperties;
+MakeList14:list -> RenderLayersToWindow:layers;
+MakeTextImage2:image -> MakeLayer2:image;
+MakeTextImage5:image -> MakeLayer5:image;
+MakeTextImage:image -> MakeLayer:image;
+ReceiveMouseButtons:released -> DiscardDataFromEvent6:dataAndEvent;
+ReceiveMouseClicks3:doubleClicked -> DiscardDataFromEvent8:dataAndEvent;
+ReceiveMouseClicks3:singleClicked -> DiscardDataFromEvent7:dataAndEvent;
+ReceiveMouseClicks3:tripleClicked -> DiscardDataFromEvent9:dataAndEvent;
+RenderLayersToWindow:requestedFrame -> ShareValue5:value;
+RenderLayersToWindow:showedWindow -> ShareValue2:value;
+SelectLatest5:latest -> SelectLatest6:option1;
+SelectLatest6:done -> SmoothWithDuration3:setPosition;
+SelectLatest6:done -> SmoothWithDuration3:setTarget;
+SelectLatest6:latest -> MakeTextImage2:text;
+ShareValue2:sameValue -> ReceiveMouseButtons:window;
+ShareValue2:sameValue -> ReceiveMouseClicks3:window;
+ShareValue5:sameValue -> SmoothWithDuration2:time;
+ShareValue5:sameValue -> SmoothWithDuration3:time;
+SmoothWithDuration2:position -> MakeLayer:alpha;
+SmoothWithDuration3:position -> MakeLayer2:alpha;
 }

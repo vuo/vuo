@@ -10,7 +10,7 @@
 digraph G
 {
 CountItemsInList [type="vuo.list.count.VuoBoolean" version="1.0.0" label="CountItemsInList|<refresh>refresh\l|<list>list\l|<done>done\r|<itemCount>itemCount\r" pos="138,71"];
-MakeList [type="vuo.list.make.2.VuoBoolean" version="1.0.0" label="MakeList|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="78,82" _item1="" _item2=""];
+MakeList [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="MakeList|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="78,82"];
 
 MakeList:list -> CountItemsInList:list;
 }

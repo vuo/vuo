@@ -40,12 +40,17 @@ void *ZMQTelemetry = 0;	///< The telemetry socket. Use only on VuoControlQueue.
 bool hasBeenUnpaused;  ///< True if node execution was unpaused initially, or if it has since been unpaused.
 bool isPaused;  ///< True if node execution is currently paused.
 bool isStopped; ///< True if composition execution has stopped.
+bool isStopRequested;  ///< True if vuoStopComposition() has been called.
 
 dispatch_source_t telemetryTimer;  ///< Timer for sending telemetry messages.
 dispatch_source_t controlTimer;  ///< Timer for receiving control messages.
+dispatch_source_t waitForStopTimer = NULL;  ///< Timer for checking if the runner will stop the composition.
 dispatch_semaphore_t telemetryCanceledSemaphore;  ///< Signaled when telemetry events are no longer being processed.
 dispatch_semaphore_t controlCanceledSemaphore;  ///< Signaled when control events are no longer being processed.
+dispatch_semaphore_t waitForStopCanceledSemaphore;  ///< Signaled when no longer checking if the runner will stop the composition.
 
+static pid_t originalParentPid;  ///< Process ID of the runner that started the composition.
+static void stopComposition(void);
 
 #include <graphviz/gvplugin.h>
 
@@ -100,12 +105,15 @@ extern char ** getPublishedInputPortNames(void);
 extern char ** getPublishedOutputPortNames(void);
 extern char ** getPublishedInputPortTypes(void);
 extern char ** getPublishedOutputPortTypes(void);
+extern char ** getPublishedInputPortDetails(void);
+extern char ** getPublishedOutputPortDetails(void);
 extern int getPublishedInputPortConnectedIdentifierCount(char *name);
 extern int getPublishedOutputPortConnectedIdentifierCount(char *name);
 extern char ** getPublishedInputPortConnectedIdentifiers(char *name);
 extern char ** getPublishedOutputPortConnectedIdentifiers(char *name);
 extern void firePublishedInputPortEvent(char *name);
 extern void setPublishedInputPortValue(char *portIdentifier, char *valueAsString);
+extern char * getPublishedInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
 extern char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
 extern void VuoHeap_init();
 extern void VuoHeap_fini();
@@ -143,10 +151,14 @@ void vuoInit(int argc, char **argv)
 					doPrintHelp = true;
 					break;
 				case 1:	// "vuo-control"
+					if (controlURL)
+						free(controlURL);
 					controlURL = (char *)malloc(strlen(optarg) + 1);
 					strcpy(controlURL, optarg);
 					break;
 				case 2:	// "vuo-telemetry"
+					if (telemetryURL)
+						free(telemetryURL);
 					telemetryURL = (char *)malloc(strlen(optarg) + 1);
 					strcpy(telemetryURL, optarg);
 					break;
@@ -240,11 +252,15 @@ void vuoInit(int argc, char **argv)
 		if (!foundLicenses)
 			printf("(No license information found.)\n");
 
+		free(controlURL);
+		free(telemetryURL);
 		exit(0);
 	}
 
 	VuoHeap_init();
 	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused);
+	free(controlURL);
+	free(telemetryURL);
 }
 
 /**
@@ -253,7 +269,6 @@ void vuoInit(int argc, char **argv)
  */
 void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused)
 {
-//	fprintf(stderr, "\n\n# vuoInitInProcess()\n");
 	if (controlURL && telemetryURL)
 	{
 		hasZMQConnection = true;
@@ -263,19 +278,23 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_PUB);
 
 		if(zmq_bind(ZMQControl,controlURL))
-			fprintf(stderr, "VuoControl: bind failed (%s).\n", controlURL);
+			VLog("Error: Bind '%s' failed.", controlURL);
 
 		if(zmq_bind(ZMQTelemetry,telemetryURL))
-			fprintf(stderr, "VuoTelemetry: bind failed (%s).\n", telemetryURL);
+			VLog("Error: Bind '%s' failed.", telemetryURL);
 
 		VuoTelemetryQueue = dispatch_queue_create("org.vuo.runtime.telemetry", NULL);
-		VuoControlQueue = dispatch_queue_create("org.vuo.runtime.control", NULL);
 	}
+
+	VuoControlQueue = dispatch_queue_create("org.vuo.runtime.control", NULL);
 
 	hasBeenUnpaused = false;
 	isPaused = _isPaused;
 	isStopped = false;
+	isStopRequested = false;
 
+	originalParentPid = getppid();
+	waitForStopCanceledSemaphore = dispatch_semaphore_create(0);
 
 	// set up composition
 	{
@@ -315,7 +334,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 
 			struct rusage r;
 			if(getrusage(RUSAGE_SELF,&r))
-				fprintf(stderr, "VuoTelemetry: failed to gather: %s\n", strerror(errno));
+				VLog("Error: Failed to gather: %s", strerror(errno));
 
 			zmq_msg_t messages[2];
 
@@ -356,7 +375,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				{ZMQControl,0,ZMQ_POLLIN,0},
 			};
 			int itemCount = 1;
-			long timeout = -1;  // wait indefinitely
+			long timeout = USEC_PER_SEC;  // wait up to 1 second (can't wait forever, in case VuoStopComposition is called)
 			zmq_poll(items,itemCount,timeout);
 			if(!(items[0].revents & ZMQ_POLLIN))
 				return;
@@ -380,26 +399,12 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 						});
 					}
 
-					dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-						if (hasBeenUnpaused)
-						{
-							if (!isPaused)
-							{
-								isPaused = true;
-								nodeInstanceTriggerStop();
-							}
-
-							nodeInstanceFini();  // Called on a non-main thread to avoid deadlock with vuoTelemetrySend.
-						}
-					});
-					cleanup();
+					stopComposition();
 
 					if (timeoutInSeconds >= 0)
 					{
 						VuoHeap_fini();
 					}
-
-					dispatch_source_cancel(controlTimer);
 
 					vuoControlReplySend(VuoControlReplyCompositionStopping,NULL,0);
 
@@ -534,6 +539,30 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 					vuoControlReplySend(VuoControlReplyPublishedOutputPortTypesRetrieved,messages,count);
 					break;
 				}
+				case VuoControlRequestPublishedInputPortDetailsRetrieve:
+				{
+					int count = getPublishedInputPortCount();
+					char **names = getPublishedInputPortDetails();
+
+					zmq_msg_t messages[count];
+					for (int i = 0; i < count; ++i)
+					vuoInitMessageWithString(&messages[i], names[i]);
+
+					vuoControlReplySend(VuoControlReplyPublishedInputPortDetailsRetrieved,messages,count);
+					break;
+				}
+				case VuoControlRequestPublishedOutputPortDetailsRetrieve:
+				{
+					int count = getPublishedOutputPortCount();
+					char **names = getPublishedOutputPortDetails();
+
+					zmq_msg_t messages[count];
+					for (int i = 0; i < count; ++i)
+					vuoInitMessageWithString(&messages[i], names[i]);
+
+					vuoControlReplySend(VuoControlReplyPublishedOutputPortDetailsRetrieved,messages,count);
+					break;
+				}
 				case VuoControlRequestPublishedInputPortConnectedIdentifiersRetrieve:
 				{
 					char *name = vuoReceiveAndCopyString(ZMQControl);
@@ -581,6 +610,17 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 					vuoControlReplySend(VuoControlReplyPublishedInputPortValueModified,NULL,0);
 					break;
 				}
+				case VuoControlRequestPublishedInputPortValueRetrieve:
+				{
+					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					char *valueAsString = getPublishedInputPortValue(portIdentifier, shouldUseInterprocessSerialization);
+					zmq_msg_t messages[1];
+					vuoInitMessageWithString(&messages[0], valueAsString);
+					free(valueAsString);
+					vuoControlReplySend(VuoControlReplyPublishedInputPortValueRetrieved,messages,1);
+					break;
+				}
 				case VuoControlRequestPublishedOutputPortValueRetrieve:
 				{
 					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
@@ -608,6 +648,9 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
  */
 void sendNodeExecutionStarted(char *nodeIdentifier)
 {
+	if (! hasZMQConnection)
+		return;
+
 	zmq_msg_t messages[1];
 	vuoInitMessageWithString(&messages[0], nodeIdentifier);
 
@@ -619,6 +662,9 @@ void sendNodeExecutionStarted(char *nodeIdentifier)
  */
 void sendNodeExecutionFinished(char *nodeIdentifier)
 {
+	if (! hasZMQConnection)
+		return;
+
 	zmq_msg_t messages[1];
 	vuoInitMessageWithString(&messages[0], nodeIdentifier);
 
@@ -630,6 +676,9 @@ void sendNodeExecutionFinished(char *nodeIdentifier)
  */
 void sendInputPortsUpdated(char *portIdentifier, bool receivedEvent, bool receivedData, char *portDataSummary)
 {
+	if (! hasZMQConnection)
+		return;
+
 	zmq_msg_t messages[4];
 	vuoInitMessageWithString(&messages[0], portIdentifier);
 	vuoInitMessageWithBool(&messages[1], receivedEvent);
@@ -644,6 +693,9 @@ void sendInputPortsUpdated(char *portIdentifier, bool receivedEvent, bool receiv
  */
 void sendOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataSummary)
 {
+	if (! hasZMQConnection)
+		return;
+
 	zmq_msg_t messages[3];
 	vuoInitMessageWithString(&messages[0], portIdentifier);
 	vuoInitMessageWithBool(&messages[1], sentData);
@@ -657,6 +709,9 @@ void sendOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataS
  */
 void sendError(const char *message)
 {
+	if (! hasZMQConnection)
+		return;
+
 	zmq_msg_t messages[1];
 	vuoInitMessageWithString(&messages[0], message);
 
@@ -688,7 +743,10 @@ char * vuoTranscodeToGraphvizIdentifier(const char *originalString)
 }
 
 
-const char *compositionDiff = NULL;  ///< A string containing a space-delimited list of nodes present in both the old and new composition, when replacing compositions for live coding.
+/**
+ * A string representation of the differences between the old and new composition, when replacing compositions for live coding.
+ */
+const char *compositionDiff = NULL;
 
 /**
  * Returns true if the node is found in both the old and the new composition, when replacing compositions for live coding.
@@ -733,6 +791,78 @@ bool isNodeInBothCompositions(const char *nodeIdentifier)
 	return ! isInChanges;
 }
 
+/**
+ * If the new node and port have a mapping from the old composition, when replacing compositions for live coding,
+ * finds the old node and port that they map from.
+ *
+ * This needs to be kept in sync with VuoCompilerComposition::diffAgainstOlderComposition().
+ */
+void mapFromReplacementNodeAndPort(const char *newNodeIdentifier, const char *newPortIdentifier,
+								   char **oldNodeIdentifier, char **oldPortIdentifier)
+{
+	*oldNodeIdentifier = NULL;
+	*oldPortIdentifier = NULL;
+
+	if (! compositionDiff)
+		return;
+
+	json_object *diff = json_tokener_parse(compositionDiff);
+	if (! diff)
+		return;
+
+	int numChanges = json_object_array_length(diff);
+	for (int i = 0; i < numChanges && ! *oldNodeIdentifier && ! *oldPortIdentifier; ++i)
+	{
+		json_object *change = json_object_array_get_idx(diff, i);
+		json_object *newNodeIdentifierObj;
+		if (json_object_object_get_ex(change, "to", &newNodeIdentifierObj))
+		{
+			if (! strcmp(newNodeIdentifier, json_object_get_string(newNodeIdentifierObj)))
+			{
+				json_object *oldNodeIdentifierObj;
+				if (json_object_object_get_ex(change, "map", &oldNodeIdentifierObj))
+				{
+					*oldNodeIdentifier = strdup( json_object_get_string(oldNodeIdentifierObj) );
+				}
+
+				json_object *portsObj;
+				if (json_object_object_get_ex(change, "ports", &portsObj))
+				{
+					int numPorts = json_object_array_length(portsObj);
+					for (int j = 0; j < numPorts; ++j)
+					{
+						json_object *portObj = json_object_array_get_idx(portsObj, j);
+						json_object *newPortIdentifierObj;
+						if (json_object_object_get_ex(portObj, "to", &newPortIdentifierObj))
+						{
+							if (! strcmp(newPortIdentifier, json_object_get_string(newPortIdentifierObj)))
+							{
+								json_object *oldPortIdentifierObj;
+								if (json_object_object_get_ex(portObj, "map", &oldPortIdentifierObj))
+								{
+									*oldPortIdentifier = strdup( json_object_get_string(oldPortIdentifierObj) );
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (! (*oldNodeIdentifier && *oldPortIdentifier) )
+	{
+		free(*oldNodeIdentifier);
+		free(*oldPortIdentifier);
+		*oldNodeIdentifier = NULL;
+		*oldPortIdentifier = NULL;
+	}
+
+	json_object_put(diff);
+
+}
+
 
 GVC_t *graphvizContext = NULL;  ///< The context used when working with a Graphviz graph.
 
@@ -772,78 +902,134 @@ void closeGraphvizGraph(graph_t * graph)
 }
 
 /**
- * Returns the constant value of the input port or instance data listed in the Graphviz graph,
- * or null if it is not listed.
+ * Returns the constant value of the input port in the serialized composition, or null if it is not found.
+ *
+ * The input port is looked up from the Graphviz graph, using any mappings of old-to-new nodes and ports
+ * in the composition diff.
  */
-const char * getConstantValueFromGraphviz(graph_t * graph, const char *node, const char *port)
+const char * getConstantValueFromGraphviz(graph_t *graph, const char *node, const char *port)
 {
+	char *portConstantUnescaped = NULL;
+
+	char *replacedNode, *replacedPort;
+	mapFromReplacementNodeAndPort(node, port, &replacedNode, &replacedPort);
+
+	const char *nodeInGraph, *portInGraph;
+	if (replacedNode && replacedPort)
+	{
+		nodeInGraph = replacedNode;
+		portInGraph = replacedPort;
+	}
+	else
+	{
+		nodeInGraph = node;
+		portInGraph = port;
+	}
+
 	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
 	{
-		if (strcmp(n->name, node))
-			continue;
-
-		field_t *nodeInfo = (field_t *)ND_shape_info(n);
-		int numNodeInfoFields = nodeInfo->n_flds;
-
-		for (int i = 0; i < numNodeInfoFields; i++)
+		if (! strcmp(n->name, nodeInGraph))
 		{
-			field_t *nodeInfoField = nodeInfo->fld[i];
-			if (nodeInfoField->id == NULL || strcmp(nodeInfoField->id, port))
-				continue;
+			field_t *nodeInfo = (field_t *)ND_shape_info(n);
+			int numNodeInfoFields = nodeInfo->n_flds;
 
-			char portInDotInitializer[strlen("_")+strlen(port)+1];
-			sprintf(portInDotInitializer, "_%s", port);
-
-			char *portConstant = agget(n, portInDotInitializer);
-			if (!portConstant)
-				return NULL;
-
-			size_t portConstantLen = strlen(portConstant);
-			char *portConstantUnescaped = (char *)malloc(portConstantLen+1);
-			int k = 0;
-			for (int j = 0; j < portConstantLen; ++j)
+			for (int i = 0; i < numNodeInfoFields; i++)
 			{
-				if (j < portConstantLen-1 && portConstant[j] == '\\' && portConstant[j+1] == '\\')
-					++j;
-				portConstantUnescaped[k++] = portConstant[j];
-			}
-			portConstantUnescaped[k] = 0;
+				field_t *nodeInfoField = nodeInfo->fld[i];
+				if (nodeInfoField->id && ! strcmp(nodeInfoField->id, portInGraph))
+				{
+					char portInDotInitializer[strlen("_")+strlen(portInGraph)+1];
+					sprintf(portInDotInitializer, "_%s", portInGraph);
 
-			return portConstantUnescaped;
+					char *portConstant = agget(n, portInDotInitializer);
+					if (! portConstant)
+						break;
+
+					size_t portConstantLen = strlen(portConstant);
+					portConstantUnescaped = (char *)malloc(portConstantLen+1);
+					int k = 0;
+					for (int j = 0; j < portConstantLen; ++j)
+					{
+						if (j < portConstantLen-1 && portConstant[j] == '\\' && portConstant[j+1] == '\\')
+							++j;
+						portConstantUnescaped[k++] = portConstant[j];
+					}
+					portConstantUnescaped[k] = 0;
+
+					break;
+				}
+			}
+
+			break;
 		}
 	}
 
-	return NULL;
+	free(replacedNode);
+	free(replacedPort);
+
+	return portConstantUnescaped;
 }
 
+
+/**
+ * @threadQueue{VuoControlQueue}
+ */
+void stopComposition(void)
+{
+	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		if (hasBeenUnpaused)
+		{
+			if (!isPaused)
+			{
+				isPaused = true;
+				nodeInstanceTriggerStop();
+			}
+
+			nodeInstanceFini();  // Called on a non-main thread to avoid deadlock with vuoTelemetrySend.
+		}
+	});
+	cleanup();
+
+	if (controlTimer)
+		dispatch_source_cancel(controlTimer);
+	else
+		isStopped = true;
+}
 
 /**
  * Cleanly stops the composition.
  */
 void vuoStopComposition(void)
 {
-	if (hasZMQConnection)
-	{
-		vuoTelemetrySend(VuoTelemetryStopRequested, NULL, 0);
-	}
-	else
-	{
-		dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-						  if (hasBeenUnpaused)
-						  {
-							  if (!isPaused)
-							  {
-								  isPaused = true;
-								  nodeInstanceTriggerStop();
-							  }
+	isStopRequested = true;
+	dispatch_async(VuoControlQueue, ^{
+					   if (hasZMQConnection)
+					   {
+						   vuoTelemetrySend(VuoTelemetryStopRequested, NULL, 0);
 
-							  nodeInstanceFini();
-						  }
-					  });
-		cleanup();
-
-		isStopped = true;
-	}
+						   dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC, NSEC_PER_SEC/10);
+						   dispatch_source_set_event_handler(waitForStopTimer, ^{
+																 if (getppid() != originalParentPid)
+																 {
+																	 // Runner has crashed, so composition needs to stop itself.
+																	 dispatch_sync(VuoControlQueue, ^{
+																		 stopComposition();
+																	 });
+																	 dispatch_source_cancel(waitForStopTimer);
+																 }
+															 });
+						   dispatch_source_set_cancel_handler(waitForStopTimer, ^{
+																  dispatch_semaphore_signal(waitForStopCanceledSemaphore);
+															  });
+						   dispatch_resume(waitForStopTimer);
+					   }
+					   else
+					   {
+						   stopComposition();
+					   }
+				   });
 }
 
 
@@ -876,6 +1062,14 @@ void vuoFini(void)
 		zmq_close(ZMQControl);
 	});
 	dispatch_release(VuoControlQueue);
+
+	if (waitForStopTimer)
+	{
+		dispatch_source_cancel(waitForStopTimer);
+		dispatch_semaphore_wait(waitForStopCanceledSemaphore, DISPATCH_TIME_FOREVER);
+		dispatch_release(waitForStopCanceledSemaphore);
+		dispatch_release(waitForStopTimer);
+	}
 
 	zmq_term(ZMQContext);
 }

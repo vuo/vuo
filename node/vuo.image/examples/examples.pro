@@ -11,6 +11,9 @@ EXAMPLE_SOURCES += \
 	MaskMovieWithStar.vuo \
 	RecolorMovie.vuo \
 	RenderText.vuo \
-	VignetteMovie.vuo
+	RotateMovie.vuo \
+	ScanBarcodes.vuo \
+	VignetteMovie.vuo \
+#	WarpImageForFisheyeProjection.vuo
 
 include(../../../example.pri)

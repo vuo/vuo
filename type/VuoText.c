@@ -240,6 +240,8 @@ VuoText VuoText_append(VuoText *texts, size_t textsCount)
 		if (texts[i])
 		{
 			CFStringRef s = CFStringCreateWithCString(kCFAllocatorDefault, texts[i], kCFStringEncodingUTF8);
+			if (!s)
+				continue;
 			CFArrayAppendValue(a, s);
 			CFRelease(s);
 		}
@@ -272,4 +274,25 @@ VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replaceme
 	CFRelease(subjectCF);
 
 	return replacedSubject;
+}
+
+/**
+ * Returns a new string formatted using the printf-style `format` string.
+ *
+ * The caller is responsible for freeing the returned string.
+ */
+char *VuoText_format(const char *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	int size = vsnprintf(NULL, 0, format, args);
+	va_end(args);
+
+	char *formattedString = (char *)malloc(size+1);
+	va_start(args, format);
+	vsnprintf(formattedString, size+1, format, args);
+	va_end(args);
+
+	return formattedString;
 }

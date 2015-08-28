@@ -18,7 +18,7 @@
 
 #include <OpenGL/CGLCurrent.h>
 
-#include <Vuo/Vuo32.h>
+#include <Vuo/Vuo.h>
 
 
 #define GLSL_STRING(version,source) "#version " #version "\n" #source
@@ -60,7 +60,7 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 @interface RunImageFilterView : NSOpenGLView <NSApplicationDelegate>
 {
-	VuoRunner32 * runner;
+	VuoRunner * runner;
 	GLuint vertexArray;
 	GLuint quadPositionBuffer;
 	GLuint quadElementBuffer;
@@ -89,9 +89,10 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 		NSOpenGLPFADoubleBuffer,
 		NSOpenGLPFAColorSize, 24,
 		NSOpenGLPFADepthSize, 16,
-		NSOpenGLPFAMultisample,
-		NSOpenGLPFASampleBuffers, 1,
-		NSOpenGLPFASamples, 4,
+		// Multisampling breaks point rendering on some GPUs.  https://b33p.net/kosada/node/8225#comment-31324
+//		NSOpenGLPFAMultisample,
+//		NSOpenGLPFASampleBuffers, 1,
+//		NSOpenGLPFASamples, 4,
 		0
 	};
 	NSOpenGLPixelFormat *pf = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
@@ -110,7 +111,7 @@ static const GLushort quadElements[] = { 0, 1, 2, 3 };
 
 	// Compile, link, and run the composition
 	const char *compositionFile = [[[NSBundle mainBundle] pathForResource:@"RippleImage" ofType:@"vuo"] UTF8String];
-	runner = VuoRunner32::newSeparateProcessRunnerFromCompositionFile(compositionFile);
+	runner = VuoRunner::newSeparateProcessRunnerFromCompositionFile(compositionFile);
 	runner->start();
 
 	// Use a GL Context created by Vuo.

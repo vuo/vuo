@@ -12,6 +12,7 @@
 #include <dlfcn.h>
 #include <map>
 #include <sstream>
+#include <iomanip>
 using namespace std;
 
 /**
@@ -30,6 +31,20 @@ map<const void *, int> referenceCounts;  ///< The reference count for each point
 map<const void *, DeallocateFunctionType> deallocateFunctions;  ///< The function to be used for deallocating each pointer.
 map<const void *, string> descriptions;  ///< A human-readable description for each pointer.
 dispatch_semaphore_t referenceCountsSemaphore = NULL;  ///< Synchronizes access to @ref referenceCounts.
+
+/**
+ * Copies the first 16 printable characters of `pointer` into `summary`, followed by char 0.
+ */
+static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
+{
+	char *pointerAsChar = (char *)pointer;
+	for (int i = 0; i < 16; ++i)
+		if (isprint(pointerAsChar[i]))
+			summary[i] = pointerAsChar[i];
+		else
+			summary[i] = '_';
+	summary[16] = 0;
+}
 
 /**
  * Initializes the reference-counting system. To be called once, before any other reference-counting function calls.
@@ -52,9 +67,9 @@ void VuoHeap_init(void)
 											  const void *heapPointer = i->first;
 											  int referenceCount = i->second;
 											  string description = descriptions[heapPointer];
-											  char *z = (char *)heapPointer;
-											  fprintf(stderr, "\t%p @ \"%s\" (%d refs) — \"%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\"\n", heapPointer, description.c_str(), referenceCount,
-												  z[0],z[1],z[2],z[3],z[4],z[5],z[6],z[7],z[8],z[9],z[10],z[11],z[12],z[13],z[14],z[15]);
+											  char pointerSummary[17];
+											  VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
+											  fprintf(stderr, "\t% 3d refs to %p \"%s\", registered at %s\n", referenceCount, heapPointer, pointerSummary, description.c_str());
 										  }
 										  dispatch_semaphore_signal(referenceCountsSemaphore);
 									  });
@@ -76,7 +91,9 @@ void VuoHeap_fini(void)
 			const void *heapPointer = i->first;
 			int referenceCount = i->second;
 			string description = descriptions[heapPointer];
-			errorMessage << "\t" << heapPointer << " " << description << " (reference count = " << referenceCount << ")" << endl;
+			char pointerSummary[17];
+			VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
+			errorMessage << "\t" << setw(3) << referenceCount << " refs to " << heapPointer << " \"" << pointerSummary << "\", registered at " << description << endl;
 		}
 		sendErrorWrapper(errorMessage.str().c_str());
 	}

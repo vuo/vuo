@@ -101,17 +101,17 @@ void nodeEvent
 		// So combine the results of both.
 		double width = CTLineGetTypographicBounds(ctLine, NULL, NULL, NULL);
 		CGRect lineImageBounds = CTLineGetImageBounds(ctLine, cgContext);
-		width = fmax(width,lineImageBounds.size.width);
+		width = fmax(width,CGRectGetWidth(lineImageBounds));
 		width += CTLineGetTrailingWhitespaceWidth(ctLine);
-		lineBounds[i] = CGRectMake(lineImageBounds.origin.x, lineHeight*i - ascent, width, lineHeight);
+		lineBounds[i] = CGRectMake(CGRectGetMinX(lineImageBounds), lineHeight*i - ascent, width, lineHeight);
 
 		// Can't use CGRectUnion since it shifts the origin to (0,0), cutting off the glyph's ascent and strokes left of the origin (e.g., Zapfino's "g").
-		if (lineBounds[i].origin.x < bounds.origin.x)
-			bounds.origin.x = lineBounds[i].origin.x;
-		if (lineBounds[i].origin.y < bounds.origin.y)
-			bounds.origin.y = lineBounds[i].origin.y;
-		if (lineBounds[i].size.width > bounds.size.width)
-			bounds.size.width = lineBounds[i].size.width;
+		if (CGRectGetMinX(lineBounds[i]) < CGRectGetMinX(bounds))
+			bounds.origin.x = CGRectGetMinX(lineBounds[i]);
+		if (CGRectGetMinY(lineBounds[i]) < CGRectGetMinY(bounds))
+			bounds.origin.y = CGRectGetMinY(lineBounds[i]);
+		if (CGRectGetWidth(lineBounds[i]) > CGRectGetWidth(bounds))
+			bounds.size.width = CGRectGetWidth(lineBounds[i]);
 
 		// Final bounds should always include the full first line's height.
 		if (i==0)
@@ -119,8 +119,8 @@ void nodeEvent
 		else
 			bounds.size.height += lineHeight * font.lineSpacing;
 	}
-	unsigned int width = ceil(bounds.size.width)+2;
-	unsigned int height = ceil(bounds.size.height)+2;
+	unsigned int width = ceil(CGRectGetWidth(bounds))+2;
+	unsigned int height = ceil(CGRectGetHeight(bounds))+2;
 
 	// Release the temporary context.
 	CGContextRelease(cgContext);
@@ -137,13 +137,13 @@ void nodeEvent
 	{
 		CTLineRef ctLine = CFArrayGetValueAtIndex(ctLines, i);
 
-		float textXPosition = 1 - bounds.origin.x;
+		float textXPosition = 1 - CGRectGetMinX(bounds);
 		if (font.alignment == VuoHorizontalAlignment_Center)
-			textXPosition += (bounds.size.width - lineBounds[i].size.width)/2.;
+			textXPosition += (CGRectGetWidth(bounds) - CGRectGetWidth(lineBounds[i]))/2.;
 		else if (font.alignment == VuoHorizontalAlignment_Right)
-			textXPosition += bounds.size.width - lineBounds[i].size.width;
+			textXPosition += CGRectGetWidth(bounds) - CGRectGetWidth(lineBounds[i]);
 
-		float textYPosition = 1 - bounds.origin.y;
+		float textYPosition = 1 - CGRectGetMinY(bounds);
 		textYPosition += lineHeight*i*font.lineSpacing;
 
 		CGContextSetTextPosition(cgContext, textXPosition, textYPosition);
@@ -151,7 +151,7 @@ void nodeEvent
 	}
 
 	// Make a VuoImage from the CGContext.
-	*image = VuoImage_makeFromBuffer(CGBitmapContextGetData(cgContext), GL_RGBA, width, height);
+	*image = VuoImage_makeFromBuffer(CGBitmapContextGetData(cgContext), GL_RGBA, width, height, VuoImageColorDepth_8);
 
 	CFRelease(ctLines);
 	CFRelease(attributedLines);

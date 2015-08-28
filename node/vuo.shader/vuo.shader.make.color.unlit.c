@@ -30,5 +30,15 @@ void nodeEvent
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeColorShader(color);
+	*shader = VuoShader_makeUnlitColorShader(color);
+
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		glFlushRenderAPPLE();
+
+		VuoGlContext_disuse(cgl_ctx);
+	}
 }

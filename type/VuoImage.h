@@ -12,6 +12,8 @@
 
 #include "VuoBoolean.h"
 #include "VuoColor.h"
+#include "VuoImageColorDepth.h"
+#include "VuoImageWrapMode.h"
 #include "VuoPoint2d.h"
 
 /**
@@ -54,14 +56,20 @@ struct _VuoImage
 };
 
 VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh);
-VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
-VuoImage VuoImage_makeFromBuffer(unsigned char *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh);
+VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
+VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
+VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth colorDepth);
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh);
 VuoImage VuoImage_makeCopy(VuoImage image);
+VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image);
+unsigned char *VuoImage_copyBuffer(VuoImage image, unsigned int requestedFormat);
+void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode);
+
 VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds);
 VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal filterOpacity);
 
 VuoRectangle VuoImage_getRectangle(const VuoImage image);
+VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image);
 
 VuoImage VuoImage_valueFromJson(struct json_object * js);
 struct json_object * VuoImage_jsonFromValue(const VuoImage value);
@@ -75,6 +83,8 @@ char * VuoImage_summaryFromValue(const VuoImage value);
 VuoImage VuoImage_valueFromString(const char *str);
 char * VuoImage_stringFromValue(const VuoImage value);
 char * VuoImage_interprocessStringFromValue(const VuoImage value);
+void VuoImage_retain(VuoImage value);
+void VuoImage_release(VuoImage value);
 /// @}
 
 /**

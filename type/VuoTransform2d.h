@@ -44,6 +44,8 @@ char * VuoTransform2d_summaryFromValue(const VuoTransform2d value);
  */
 VuoTransform2d VuoTransform2d_valueFromString(const char *str);
 char * VuoTransform2d_stringFromValue(const VuoTransform2d value);
+void VuoTransform2d_retain(VuoTransform2d value);
+void VuoTransform2d_release(VuoTransform2d value);
 /// @}
 
 /**

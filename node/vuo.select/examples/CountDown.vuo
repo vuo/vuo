@@ -16,7 +16,7 @@ DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display C
 FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="126,119" _seconds="1"];
 IsLessThan1 [type="vuo.math.isLessThan.VuoInteger" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="658,198" _b="1"];
 IsLessThan2 [type="vuo.math.isLessThan.VuoInteger" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="835,114" _b="0"];
-MakeList1 [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="452,150" _item1="6"];
+MakeList1 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="452,150" _1="6"];
 SelectInput1 [type="vuo.select.in.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="866,234" fillcolor="violet" _trueOption="\"Liftoff!\""];
 SelectInput2 [type="vuo.select.in.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="1019,219" fillcolor="violet" _trueOption="\"\""];
 
@@ -24,7 +24,7 @@ Add1:sum -> ConvertIntegertoText3:integer;
 Add1:sum -> IsLessThan1:a;
 Add1:sum -> IsLessThan2:a;
 ConvertIntegertoText3:text -> SelectInput1:falseOption;
-Count1:count -> MakeList1:item2;
+Count1:count -> MakeList1:2;
 FirePeriodically1:fired -> Count1:decrement;
 IsLessThan1:done -> SelectInput1:refresh;
 IsLessThan1:lessThan -> SelectInput1:which;

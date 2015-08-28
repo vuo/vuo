@@ -23,692 +23,160 @@
  */
 VuoCompilerBitcodeGenerator * VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(VuoCompilerComposition *composition, VuoCompiler *compiler)
 {
-	VuoCompilerBitcodeGenerator * cg = new VuoCompilerBitcodeGenerator;
-	cg->compiler = compiler;
-	cg->composition = composition;
-	cg->initialize();
+	VuoCompilerBitcodeGenerator * cg = new VuoCompilerBitcodeGenerator(composition, compiler);
 	return cg;
 }
 
 /**
  * Private constructor.
  */
-VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(void)
+VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition *composition, VuoCompiler *compiler)
 {
-	composition = NULL;
-	compiler = NULL;
 	module = NULL;
 	debugMode = false;
-}
 
-/**
- * Helper for factory methods.
- */
-void VuoCompilerBitcodeGenerator::initialize(void)
-{
-	makeEdgesForNode();
-	makeDownstreamEdges();
+	this->composition = composition;
+	this->compiler = compiler;
+
+	graph = new VuoCompilerGraph(composition);
+	chainsForTrigger = graph->getChains();  // store in a data member, rather than calling getChains() multiple times, to preserve order of chains
 	makeOrderedNodes();
-	makeNodeForTrigger();
-	makeTriggerObjects();
-
-	for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = nodeForTrigger.begin(); i != nodeForTrigger.end(); ++i)
-	{
-		VuoCompilerTriggerPort *trigger = i->first;
-		makeEdgesForTrigger(trigger);
-		makeChainsForTrigger(trigger);
-	}
-
-	debugMode = false;
 }
 
 /**
- * Creates an edge for each bundle of cables connecting a node's trigger port or set of output ports
- * to another node's inputs.
+ * Helper function for VuoCompilerBitcodeGenerator::makeOrderedNodes().
  */
-void VuoCompilerBitcodeGenerator::makeEdgesForNode(void)
+bool VuoCompilerBitcodeGenerator::areNodeListsSortedBySize(const vector<VuoCompilerNode *> &nodes1, const vector<VuoCompilerNode *> &nodes2)
 {
-	typedef pair<VuoCompilerNode *, VuoCompilerNode *> nodePair;
-	typedef pair<VuoCompilerOutputEventPort *, VuoCompilerInputEventPort *> portPair;
-	map<pair<nodePair, VuoCompilerTriggerPort *>, set<VuoCompilerInputEventPort *> > triggerEdgeParts;
-	map<nodePair, set<portPair> > passiveEdgeParts;
-
-	// Add cables for the trigger port that can fire an event for all published input ports simultaneously.
-	set<VuoCable *> publishedInputCables = composition->getBase()->getPublishedInputCables();
-	VuoNode *publishedInputNode = composition->getPublishedInputNode();
-	if (publishedInputNode)
-	{
-		string triggerName = VuoNodeClass::publishedInputNodeSimultaneousTriggerName;
-		VuoCompilerNodeArgument *triggerArg = publishedInputNode->getOutputPortWithName(triggerName)->getCompiler();
-		VuoCompilerTriggerPort *triggerPort = static_cast<VuoCompilerTriggerPort *>(triggerArg);
-		for (set<VuoCable *>::iterator i = publishedInputCables.begin(); i != publishedInputCables.end(); ++i)
-		{
-			VuoCable *origCable = *i;
-			VuoCompilerNode *toNode = origCable->getToNode()->getCompiler();
-			VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>( origCable->getToPort()->getCompiler() );
-			VuoCompilerCable *copyCable = new VuoCompilerCable(publishedInputNode->getCompiler(), triggerPort, toNode, toPort);
-			publishedInputCables.insert( copyCable->getBase() );
-		}
-	}
-
-	// Collect cables into edge-like structures.
-	set<VuoCable *> cables = composition->getBase()->getCables();
-	cables.insert(publishedInputCables.begin(), publishedInputCables.end());
-	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
-	{
-		VuoCable *cable = *i;
-		nodePair fromToNodes = make_pair(cable->getFromNode()->getCompiler(), cable->getToNode()->getCompiler());
-		VuoCompilerInputEventPort *toPort = static_cast<VuoCompilerInputEventPort *>(cable->getToPort()->getCompiler());
-		VuoCompilerTriggerPort *fromTrigger = dynamic_cast<VuoCompilerTriggerPort *>(cable->getFromPort()->getCompiler());
-		if (fromTrigger)
-		{
-			triggerEdgeParts[ make_pair(fromToNodes, fromTrigger) ].insert(toPort);
-		}
-		else
-		{
-			VuoCompilerOutputEventPort *fromPort = dynamic_cast<VuoCompilerOutputEventPort *>(cable->getFromPort()->getCompiler());
-			passiveEdgeParts[fromToNodes].insert( make_pair(fromPort, toPort) );
-		}
-	}
-
-	// Create the trigger edges.
-	for (map<pair<nodePair, VuoCompilerTriggerPort *>, set<VuoCompilerInputEventPort *> >::iterator i = triggerEdgeParts.begin(); i != triggerEdgeParts.end(); ++i)
-	{
-		VuoCompilerNode *fromNode = i->first.first.first;
-		VuoCompilerNode *toNode = i->first.first.second;
-		VuoCompilerTriggerPort *fromTrigger = i->first.second;
-		set<VuoCompilerInputEventPort *> toPorts = i->second;
-		VuoCompilerTriggerEdge *edge = new VuoCompilerTriggerEdge(fromNode, toNode, fromTrigger, toPorts);
-		triggerInEdgesForNode[toNode].insert(edge);
-	}
-
-	// Create the passive edges.
-	for (map<nodePair, set<portPair> >::iterator i = passiveEdgeParts.begin(); i != passiveEdgeParts.end(); ++i)
-	{
-		VuoCompilerNode *fromNode = i->first.first;
-		VuoCompilerNode *toNode = i->first.second;
-		set<portPair> fromToPorts = i->second;
-		VuoCompilerPassiveEdge *edge = new VuoCompilerPassiveEdge(fromNode, toNode, fromToPorts);
-		passiveInEdgesForNode[toNode].insert(edge);
-		passiveOutEdgesForNode[fromNode].insert(edge);
-	}
+	return nodes1.size() < nodes2.size();
 }
 
 /**
- * Creates the mapping of each trigger to the node that contains it.
- */
-void VuoCompilerBitcodeGenerator::makeNodeForTrigger(void)
-{
-	set<VuoNode *> nodes = composition->getBase()->getNodes();
-	VuoNode *publishedInputNode = composition->getPublishedInputNode();
-	if (publishedInputNode)
-		nodes.insert(publishedInputNode);
-	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-	{
-		VuoNode *node = *i;
-		vector<VuoPort *> outputPorts = node->getOutputPorts();
-		for (vector<VuoPort *>::iterator j = outputPorts.begin(); j != outputPorts.end(); ++j)
-		{
-			VuoCompilerTriggerPort *trigger = dynamic_cast<VuoCompilerTriggerPort *>((*j)->getCompiler());
-			if (trigger)
-				nodeForTrigger[trigger] = node->getCompiler();
-		}
-	}
-}
-
-/**
- * Returns the set of outgoing edges from a node that may transmit an event from the given incoming edge to the node.
- *
- * The returned set always includes all outgoing edges from the node's done port.
- */
-set<VuoCompilerPassiveEdge *> VuoCompilerBitcodeGenerator::outEdgesThatMayTransmitFromInEdge(VuoCompilerEdge *inEdge)
-{
-	set<VuoCompilerPassiveEdge *> transmittingOutEdges;
-
-	VuoCompilerNode *node = inEdge->getToNode();
-	set<VuoCompilerPassiveEdge *> passiveOutEdges = passiveOutEdgesForNode[node];
-	if (inEdge->mayTransmitThroughNode())
-	{
-		transmittingOutEdges = passiveOutEdges;
-	}
-	else
-	{
-		VuoCompilerOutputEventPort *donePort = static_cast<VuoCompilerOutputEventPort *>(node->getBase()->getDonePort()->getCompiler());
-		for (set<VuoCompilerPassiveEdge *>::iterator i = passiveOutEdges.begin(); i != passiveOutEdges.end(); ++i)
-		{
-			VuoCompilerPassiveEdge *outEdge = *i;
-			set<VuoCompilerOutputEventPort *> outputPorts = outEdge->getOutputPorts();
-			for (set<VuoCompilerOutputEventPort *>::iterator j = outputPorts.begin(); j != outputPorts.end(); ++j)
-				if (*j == donePort)
-					transmittingOutEdges.insert(outEdge);
-		}
-	}
-
-	return transmittingOutEdges;
-}
-
-/**
- * Creates the lists of edges that may be pushed by the trigger.
- */
-void VuoCompilerBitcodeGenerator::makeEdgesForTrigger(VuoCompilerTriggerPort *trigger)
-{
-	// This is a depth-first search of the graph edges, starting from the trigger.
-
-	stack<VuoCompilerEdge *> edgesToVisit;
-	map<VuoCompilerEdge *, bool> edgesSeen;
-
-	// Add each out-edge of the trigger to...
-	set<VuoCompilerTriggerEdge *> triggerEdges = getTriggerEdges();
-	for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
-	{
-		VuoCompilerTriggerEdge *edge = *i;
-		if (edge->getTrigger() == trigger)
-		{
-			// ... the list of reachable trigger edges.
-			triggerEdgesForTrigger[trigger].insert(edge);
-
-			// ... the list of edges to visit.
-			edgesToVisit.push(edge);
-		}
-	}
-
-	// Visit each edge reachable from the trigger.
-	while (! edgesToVisit.empty())
-	{
-		VuoCompilerEdge *edge = edgesToVisit.top();
-		edgesToVisit.pop();
-
-		// Plan to visit each out-edge that may get an event from the current edge.
-		set<VuoCompilerPassiveEdge *> outEdges = outEdgesThatMayTransmitFromInEdge(edge);
-		for (set<VuoCompilerPassiveEdge *>::iterator i = outEdges.begin(); i != outEdges.end(); ++i)
-		{
-			// If the out-edge has not yet been visited or planned to visit, add it to...
-			VuoCompilerPassiveEdge *outEdge = *i;
-			if (! edgesSeen[outEdge])
-			{
-				// ... the list of reachable passive edges.
-				passiveEdgesForTrigger[trigger].insert(outEdge);
-
-				// ... the list of edges to visit.
-				edgesToVisit.push(outEdge);
-				edgesSeen[outEdge] = true;
-			}
-		}
-	}
-
-	// In case the trigger has no out-edges, add empty lists of edges.
-	triggerEdgesForTrigger[trigger];
-	passiveEdgesForTrigger[trigger];
-}
-
-/**
- * Creates the list of edges downstream of each edge.
- *
- * Reports an error if the composition contains an infinite feedback loop or a deadlocked feedback loop.
- */
-void VuoCompilerBitcodeGenerator::makeDownstreamEdges(void)
-{
-	list<VuoCompilerEdge *> edgesToVisit;  // Used as a stack, except for a call to find().
-
-	// Prepare to visit each trigger edge.
-	set<VuoCompilerTriggerEdge *> triggerEdges = getTriggerEdges();
-	for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
-	{
-		VuoCompilerTriggerEdge *triggerEdge = *i;
-		edgesToVisit.push_back(triggerEdge);
-	}
-
-	// Use dynamic programming to find the edges downstream of each edge.
-	while (! edgesToVisit.empty())
-	{
-		// Visit an edge.
-		VuoCompilerEdge *edge = edgesToVisit.back();
-
-		set<VuoCompilerPassiveEdge *> downstreamEdges;
-		bool areDownstreamEdgesComplete = true;
-
-		// Prepare to visit any out-edges that have not yet been visited.
-		set<VuoCompilerPassiveEdge *> outEdges = outEdgesThatMayTransmitFromInEdge(edge);
-		for (set<VuoCompilerPassiveEdge *>::iterator i = outEdges.begin(); i != outEdges.end(); ++i)
-		{
-			VuoCompilerPassiveEdge *outEdge = *i;
-			downstreamEdges.insert(outEdge);
-
-			map<VuoCompilerEdge *, set<VuoCompilerPassiveEdge *> >::iterator downstreamEdgesIter = downstreamEdgesForEdge.find(outEdge);
-			if (downstreamEdgesIter != downstreamEdgesForEdge.end())
-			{
-				// The out-edge has been visited, so add its downstream edges to this edge's.
-				set<VuoCompilerPassiveEdge *> downstreamEdgesForOutEdge = downstreamEdgesIter->second;
-				downstreamEdges.insert(downstreamEdgesForOutEdge.begin(), downstreamEdgesForOutEdge.end());
-			}
-			else
-			{
-				// Check for an infinite feedback loop.
-				if (find(edgesToVisit.begin(), edgesToVisit.end(), outEdge) != edgesToVisit.end())
-				{
-					fprintf(stderr, "Infinite feedback loop involving cables from %s to %s\n", outEdge->getFromNode()->getBase()->getTitle().c_str(), outEdge->getToNode()->getBase()->getTitle().c_str());
-					downstreamEdgesForEdge.clear();
-					return;
-				}
-
-				// The out-edge has not been visited. It needs to be visited before this edge's downstream edges can be determined.
-				edgesToVisit.push_back(outEdge);
-				areDownstreamEdgesComplete = false;
-			}
-		}
-
-		if (areDownstreamEdgesComplete)
-		{
-			// All out-edges have been visited. These out-edges and their downstream edges become this edge's downstream edges.
-			downstreamEdgesForEdge[edge] = downstreamEdges;
-			edgesToVisit.pop_back();
-		}
-	}
-
-	checkForDeadlockedFeedbackLoops();
-}
-
-/**
- * Check for a deadlocked feedback loop (where node A must execute before node B, and node B must execute before node A).
- */
-void VuoCompilerBitcodeGenerator::checkForDeadlockedFeedbackLoops(void)
-{
-	// Create a set of all nodes downstream of each node, except for the node containing the trigger port.
-	map<VuoCompilerNode *, set<VuoCompilerNode *> > downstreamNodesForNode;
-	for (map<VuoCompilerEdge *, set<VuoCompilerPassiveEdge *> >::iterator i = downstreamEdgesForEdge.begin(); i != downstreamEdgesForEdge.end(); ++i)
-	{
-		VuoCompilerEdge *upstreamEdge = i->first;
-		VuoCompilerNode *upstreamNode = upstreamEdge->getToNode();
-		set<VuoCompilerPassiveEdge *> downstreamEdges = i->second;
-		for (set<VuoCompilerPassiveEdge *>::iterator j = downstreamEdges.begin(); j != downstreamEdges.end(); ++j)
-		{
-			VuoCompilerPassiveEdge *downstreamEdge = *j;
-			VuoCompilerNode *downstreamNode = downstreamEdge->getToNode();
-			downstreamNodesForNode[upstreamNode].insert(downstreamNode);
-		}
-	}
-
-	// Find any cases where two nodes are mutually downstream of, and dependent on, each other
-	// (excluding the valid case where the repeated node of a feedback loop is both upstream and downstream of each node in the loop).
-	for (map<VuoCompilerNode *, set<VuoCompilerNode *> >::iterator i = downstreamNodesForNode.begin(); i != downstreamNodesForNode.end(); ++i)
-	{
-		VuoCompilerNode *upstreamNode = i->first;
-		set<VuoCompilerNode *> downstreamNodesOfUpstreamNode = i->second;
-		for (set<VuoCompilerNode *>::iterator j = downstreamNodesOfUpstreamNode.begin(); j != downstreamNodesOfUpstreamNode.end(); ++j)
-		{
-			VuoCompilerNode *downstreamNode = *j;
-
-			// Are downstreamNode and upstreamNode different nodes?
-			if (downstreamNode != upstreamNode)
-			{
-				set<VuoCompilerNode *> downstreamNodesOfDownstreamNode = downstreamNodesForNode[downstreamNode];
-
-				// Does upstreamNode have at least as many downstream nodes as downstreamNode does?
-				// (Avoid reporting an error when upstreamNode is downstream of downstreamNode in a valid feedback loop.)
-				if (downstreamNodesOfUpstreamNode.size() >= downstreamNodesOfDownstreamNode.size())
-				{
-					// Is upstreamNode downstream of downstreamNode?
-					if (downstreamNodesOfDownstreamNode.find(upstreamNode) != downstreamNodesOfDownstreamNode.end())
-					{
-						// Are the nodes downstream of downstreamNode *not* a subset of the nodes downstream of upstreamNode?
-						// If so, report an error.
-						for (set<VuoCompilerNode *>::iterator k = downstreamNodesOfDownstreamNode.begin(); k != downstreamNodesOfDownstreamNode.end(); ++k)
-						{
-							VuoCompilerNode *downstreamNodeOfDownstreamNode = *k;
-							if (downstreamNodesOfUpstreamNode.find(downstreamNodeOfDownstreamNode) == downstreamNodesOfUpstreamNode.end())
-							{
-								fprintf(stderr, "Deadlocked feedback loop involving nodes %s and %s\n", upstreamNode->getBase()->getTitle().c_str(), downstreamNode->getBase()->getTitle().c_str());
-								downstreamEdgesForEdge.clear();
-								return;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-/**
- * Creates a topologically sorted list of all nodes in the graph.
- *
- * Assumes the list of downstream edges has been created.
+ * Sets up VuoCompilerBitcodeGenerator::orderedNodes.
  */
 void VuoCompilerBitcodeGenerator::makeOrderedNodes(void)
 {
-	// If the composition has an infinite or deadlocked feedback loop, don't create the node list.
-	if (downstreamEdgesForEdge.empty())
-		return;
-
-	// This is a topological sort of the graph nodes. (http://en.wikipedia.org/wiki/Topological_sorting)
-
-	// Create a list of edges to visit...
-	set<VuoCompilerPassiveEdge *> edgesToVisit;
-	set<VuoCompilerPassiveEdge *> backEdges;
-	for (map<VuoCompilerEdge *, set<VuoCompilerPassiveEdge *> >::iterator i = downstreamEdgesForEdge.begin(); i != downstreamEdgesForEdge.end(); ++i)
+	// For each trigger, put its downstream nodes into topological order.
+	vector< vector<VuoCompilerNode *> > orderedNodesPerTrigger;
+	for (map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
 	{
-		VuoCompilerEdge *upstreamEdge = i->first;
-		set<VuoCompilerPassiveEdge *> downstreamEdges = i->second;
-		for (set<VuoCompilerPassiveEdge *>::iterator j = downstreamEdges.begin(); j != downstreamEdges.end(); ++j)
+		vector<VuoCompilerChain *> chain = i->second;
+
+		vector<VuoCompilerNode *> nodesInProgress;
+		for (vector<VuoCompilerChain *>::iterator j = chain.begin(); j != chain.end(); ++j)
 		{
-			VuoCompilerPassiveEdge *downstreamEdge = *j;
-			if (upstreamEdge->getToNode() == downstreamEdge->getToNode())
-			{
-				loopEndNodes.insert(upstreamEdge->getToNode());
-				backEdges.insert(downstreamEdge);
-			}
-			else
-			{
-				edgesToVisit.insert(downstreamEdge);
-			}
+			vector<VuoCompilerNode *> nodes = (*j)->getNodes();
+			nodesInProgress.insert(nodesInProgress.end(), nodes.begin(), nodes.end());
+		}
+		orderedNodesPerTrigger.push_back(nodesInProgress);
+	}
+
+	// Visit each trigger, in descending order of number of downstream nodes (so that orderedNodes will be more likely
+	// to match the ordering of the triggers with more downstream nodes, and thus be more likely to wait on them one at
+	// a time instead of less efficiently having to wait on all initially).
+	sort(orderedNodesPerTrigger.begin(), orderedNodesPerTrigger.end(), areNodeListsSortedBySize);
+	for (vector< vector<VuoCompilerNode *> >::reverse_iterator i = orderedNodesPerTrigger.rbegin(); i != orderedNodesPerTrigger.rend(); ++i)
+	{
+		// Merge the trigger's downstream nodes into orderedNodes.
+		int previousNodeIndex = -1;
+		for (vector<VuoCompilerNode *>::iterator j = (*i).begin(); j != (*i).end(); ++j)
+		{
+			VuoCompilerNode *node = *j;
+			vector<VuoCompilerNode *>::iterator nodeIter = find(orderedNodes.begin(), orderedNodes.end(), node);
+			if (nodeIter == orderedNodes.end())
+				nodeIter = orderedNodes.insert(orderedNodes.begin() + previousNodeIndex + 1, node);
+			previousNodeIndex = nodeIter - orderedNodes.begin();
 		}
 	}
 
-	// ... excluding back-edges (in feedback loops).
-	for (set<VuoCompilerPassiveEdge *>::iterator i = backEdges.begin(); i != backEdges.end(); ++i)
-	{
-		VuoCompilerPassiveEdge *edge = *i;
-		edgesToVisit.erase(edge);
-	}
-
-	// Create the initial list of nodes to visit: those whose only in-edges come from triggers.
-	set<VuoCompilerNode *> nodesToVisit;
-	set<VuoNode *> nodes = composition->getBase()->getNodes();
-	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-	{
-		VuoCompilerNode *node = (*i)->getCompiler();
-		if (! triggerInEdgesForNode[node].empty())
-		{
-			bool hasPassiveInEdgesToVisit = false;
-			set<VuoCompilerPassiveEdge *> passiveInEdges = passiveInEdgesForNode[node];
-			for (set<VuoCompilerPassiveEdge *>::iterator j = passiveInEdges.begin(); j != passiveInEdges.end(); ++j)
-			{
-				VuoCompilerPassiveEdge *edge = *j;
-				if (edgesToVisit.find(edge) != edgesToVisit.end())
-				{
-					hasPassiveInEdgesToVisit = true;
-					break;
-				}
-			}
-
-			if (! hasPassiveInEdgesToVisit)
-				nodesToVisit.insert(node);
-		}
-	}
-
-	// Visit the nodes in topological order, adding them to the list.
-	while (! nodesToVisit.empty())
-	{
-		// Add this node to the list.
-		VuoCompilerNode *node = *nodesToVisit.begin();
-		nodesToVisit.erase(node);
-		orderedNodes.push_back(node);
-
-		// Find all nodes that are successors to this node, and add them to a list of nodes to possibly visit.
-		set<VuoCompilerNode *> nodesToAdd;
-		set<VuoCompilerPassiveEdge *> edgesToRemove;
-		for (set<VuoCompilerPassiveEdge *>::iterator i = edgesToVisit.begin(); i != edgesToVisit.end(); ++i)
-		{
-			VuoCompilerPassiveEdge *edge = *i;
-			if (edge->getFromNode() == node)
-			{
-				edgesToRemove.insert(edge);
-				nodesToAdd.insert(edge->getToNode());
-			}
-		}
-
-		// Rrom the list of edges to visit, remove each edge between this node and a successor node.
-		for (set<VuoCompilerPassiveEdge *>::iterator i = edgesToRemove.begin(); i != edgesToRemove.end(); ++i)
-		{
-			VuoCompilerPassiveEdge *edge = *i;
-			edgesToVisit.erase(edge);
-		}
-
-		// From the list of nodes to possibly visit, remove each node that still has incoming edges.
-		for (set<VuoCompilerPassiveEdge *>::iterator i = edgesToVisit.begin(); i != edgesToVisit.end(); ++i)
-		{
-			VuoCompilerPassiveEdge *edge = *i;
-			VuoCompilerNode *toNode = edge->getToNode();
-			if (nodesToAdd.find(toNode) != nodesToAdd.end())
-				nodesToAdd.erase(toNode);
-		}
-
-		// Add nodes to visit.
-		nodesToVisit.insert(nodesToAdd.begin(), nodesToAdd.end());
-	}
-}
-
-/**
- * Creates a topologically sorted list of all linear chains of nodes that may be pushed by the trigger.
- *
- * Assumes the topologically sorted list of nodes has been created.
- */
-void VuoCompilerBitcodeGenerator::makeChainsForTrigger(VuoCompilerTriggerPort *trigger)
-{
-	map<VuoCompilerNode *, bool> chainNodesSeen;
-	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
-	{
-		if (! isNodeDownstreamOfTrigger(*i, trigger))
-			continue;
-
-		if (chainNodesSeen[*i])
-			continue;
-
-		// Create the chain starting with node *i and ending when we hit a leaf, scatter, or gather.
-		vector<VuoCompilerNode *> chainNodes;
-		vector<VuoCompilerNode *>::iterator currNodeIter, nextNodeIter = i;
-		do {
-			currNodeIter = nextNodeIter;
-			chainNodes.push_back(*currNodeIter);
-			chainNodesSeen[*currNodeIter] = true;
-
-			// Skip any nodes that belong to other chains.
-			for (nextNodeIter = currNodeIter + 1; nextNodeIter != orderedNodes.end(); ++nextNodeIter)
-				 if (edgeExists(*currNodeIter, *nextNodeIter, trigger))
-					 break;
-
-		} while (nextNodeIter != orderedNodes.end() &&
-				 ! isDeadEnd(*currNodeIter, trigger) &&
-				 ! isScatter(*currNodeIter, trigger) &&
-				 ! isGather(*nextNodeIter, trigger));
-
-		VuoCompilerChain *chain = new VuoCompilerChain(chainNodes, false);
-		chainsForTrigger[trigger].push_back(chain);
-	}
-
-	// Create a chain for each node that is the last (and only repeated) node in a feedback loop.
-	for (set<VuoCompilerNode *>::iterator i = loopEndNodes.begin(); i != loopEndNodes.end(); ++i)
-	{
-		if (! isNodeDownstreamOfTrigger(*i, trigger))
-			continue;
-
-		VuoCompilerNode *loopEndNode = *i;
-		vector<VuoCompilerNode *> loopEndNodeList;
-		loopEndNodeList.push_back(loopEndNode);
-		VuoCompilerChain *chain = new VuoCompilerChain(loopEndNodeList, true);
-		chainsForTrigger[trigger].push_back(chain);
-	}
-}
-
-/**
- * Creates a VuoCompilerTriggerAction for each VuoCompilerTriggerPort.
- *
- * Assumes the mapping of triggers to nodes has been created.
- */
-void VuoCompilerBitcodeGenerator::makeTriggerObjects(void)
-{
+	// For any node that contains a trigger port, add it at to orderedNodes (at the beginning) if it's not already there.
+	map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = graph->getNodesForTriggerPorts();
 	for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = nodeForTrigger.begin(); i != nodeForTrigger.end(); ++i)
 	{
-		VuoCompilerTriggerPort *trigger = i->first;
 		VuoCompilerNode *node = i->second;
-		triggerActionForTrigger[trigger] = new VuoCompilerTriggerAction(trigger, node);
+		if (find(orderedNodes.begin(), orderedNodes.end(), node) == orderedNodes.end())
+			orderedNodes.insert(orderedNodes.begin(), node);
 	}
 }
 
 /**
- * Returns true if at least one of the node's in-edges (trigger or passive) is reachable from the trigger.
- *
- * Assumes the list of downstream edges for each edge has been created.
+ * Puts the nodes into the same order as VuoCompilerBitcodeGenerator::orderedNodes.
  */
-bool VuoCompilerBitcodeGenerator::isNodeDownstreamOfTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
-{
-	set<VuoCompilerTriggerEdge *> triggerOutEdges = triggerEdgesForTrigger[trigger];
-	set<VuoCompilerPassiveEdge *> nodeInEdges = passiveInEdgesForNode[node];
-
-	for (set<VuoCompilerTriggerEdge *>::iterator i = triggerOutEdges.begin(); i != triggerOutEdges.end(); ++i)
-	{
-		VuoCompilerTriggerEdge *triggerOutEdge = *i;
-
-		// Is the node directly connected to the trigger?
-		if (triggerOutEdge->getToNode() == node)
-			return true;
-
-		// Is the node further downstream of the trigger?
-		for (set<VuoCompilerPassiveEdge *>::iterator j = nodeInEdges.begin(); j != nodeInEdges.end(); ++j)
-		{
-			VuoCompilerPassiveEdge *nodeInEdge = *j;
-			if (downstreamEdgesForEdge[triggerOutEdge].find(nodeInEdge) != downstreamEdgesForEdge[triggerOutEdge].end())
-				return true;
-		}
-	}
-
-	return false;
-}
-
-/**
- * Returns true if at least one of @a node's in-edges is reachable from @a upstreamNode.
- *
- * Assumes the list of downstream edges for each edge has been created.
- */
-bool VuoCompilerBitcodeGenerator::isNodeDownstreamOfNode(VuoCompilerNode *node, VuoCompilerNode *upstreamNode)
-{
-	set<VuoCompilerPassiveEdge *> nodeOutEdges = passiveOutEdgesForNode[upstreamNode];
-	set<VuoCompilerPassiveEdge *> nodeInEdges = passiveInEdgesForNode[node];
-
-	for (set<VuoCompilerPassiveEdge *>::iterator i = nodeOutEdges.begin(); i != nodeOutEdges.end(); ++i)
-	{
-		VuoCompilerPassiveEdge *nodeOutEdge = *i;
-
-		// Is the node directly connected to upstreamNode?
-		if (nodeOutEdge->getToNode() == node)
-			return true;
-
-		// Is the node further downstream of upstreamNode?
-		for (set<VuoCompilerPassiveEdge *>::iterator j = nodeInEdges.begin(); j != nodeInEdges.end(); ++j)
-		{
-			VuoCompilerPassiveEdge *nodeInEdge = *j;
-			if (downstreamEdgesForEdge[nodeOutEdge].find(nodeInEdge) != downstreamEdgesForEdge[nodeOutEdge].end())
-				return true;
-		}
-	}
-
-	return false;
-}
-
-/**
- * Returns true if there is a passive edge from fromNode to toNode that may be pushed by the trigger.
- *
- * Assumes the list of edges reachable from each trigger has been created.
- */
-bool VuoCompilerBitcodeGenerator::edgeExists(VuoCompilerNode *fromNode, VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger)
-{
-	set<VuoCompilerPassiveEdge *> outEdges = passiveOutEdgesForNode[fromNode];
-	for (set<VuoCompilerPassiveEdge *>::iterator i = outEdges.begin(); i != outEdges.end(); ++i)
-	{
-		VuoCompilerPassiveEdge *outEdge = *i;
-
-		// Is fromNode's out-edge an in-edge of toNode, and is it reachable from the trigger?
-		if (outEdge->getToNode() == toNode &&
-				passiveEdgesForTrigger[trigger].find(outEdge) != passiveEdgesForTrigger[trigger].end())
-			return true;
-	}
-	return false;
-}
-
-/**
- * Returns true if the node doesn't have any passive out-edges that may be pushed by the trigger.
- *
- * Assumes the list of edges reachable from each trigger has been created.
- */
-bool VuoCompilerBitcodeGenerator::isDeadEnd(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
-{
-	set<VuoCompilerPassiveEdge *> outEdges = passiveOutEdgesForNode[node];
-	for (set<VuoCompilerPassiveEdge *>::iterator i = outEdges.begin(); i != outEdges.end(); ++i)
-	{
-		VuoCompilerPassiveEdge *outEdge = *i;
-
-		// Is the node's out-edge reachable from the trigger?
-		if (passiveEdgesForTrigger[trigger].find(outEdge) != passiveEdgesForTrigger[trigger].end())
-			return false;
-	}
-	return true;
-}
-
-/**
- * Returns true if more than one of the node's passive out-edges may be pushed by the trigger.
- *
- * Assumes the list of edges reachable from each trigger has been created.
- */
-bool VuoCompilerBitcodeGenerator::isScatter(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
-{
-	int numOutEdges = 0;
-	set<VuoCompilerPassiveEdge *> outEdges = passiveOutEdgesForNode[node];
-	for (set<VuoCompilerPassiveEdge *>::iterator i = outEdges.begin(); i != outEdges.end(); ++i)
-	{
-		VuoCompilerPassiveEdge *outEdge = *i;
-
-		// Is the node's out-edge reachable from the trigger?
-		if (passiveEdgesForTrigger[trigger].find(outEdge) != passiveEdgesForTrigger[trigger].end())
-			++numOutEdges;
-	}
-	return numOutEdges > 1;
-}
-
-/**
- * Returns true if more than one of the node's passive in-edges may be pushed by the trigger.
- *
- * Assumes the list of edges reachable from each trigger has been created.
- */
-bool VuoCompilerBitcodeGenerator::isGather(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
-{
-	int numInEdges = 0;
-	set<VuoCompilerPassiveEdge *> inEdges = passiveInEdgesForNode[node];
-	for (set<VuoCompilerPassiveEdge *>::iterator i = inEdges.begin(); i != inEdges.end(); ++i)
-	{
-		VuoCompilerPassiveEdge *inEdge = *i;
-
-		// Is the node's in-edge reachable from the trigger?
-		if (passiveEdgesForTrigger[trigger].find(inEdge) != passiveEdgesForTrigger[trigger].end())
-			++numInEdges;
-	}
-	return numInEdges > 1;
-}
-
-/**
- * Returns a list of all trigger edges in the composition.
- */
-set<VuoCompilerTriggerEdge *> VuoCompilerBitcodeGenerator::getTriggerEdges(void)
-{
-	set<VuoCompilerTriggerEdge *> edges;
-	for (map<VuoCompilerNode *, set<VuoCompilerTriggerEdge *> >::iterator i = triggerInEdgesForNode.begin(); i != triggerInEdgesForNode.end(); ++i)
-		for (set<VuoCompilerTriggerEdge *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-			edges.insert(*j);
-	return edges;
-}
-
-/**
- * Puts the nodes into the same order as they appear in @ref orderedNodes.
- */
-vector<VuoCompilerNode *> VuoCompilerBitcodeGenerator::sortNodes(set<VuoCompilerNode *> originalNodes)
+void VuoCompilerBitcodeGenerator::sortNodes(vector<VuoCompilerNode *> &nodes)
 {
 	vector<VuoCompilerNode *> sortedNodes;
 	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
 	{
 		VuoCompilerNode *node = *i;
-		if (originalNodes.find(node) != originalNodes.end())
+		if (find(nodes.begin(), nodes.end(), node) != nodes.end())
 			sortedNodes.push_back(node);
 	}
-	return sortedNodes;
+	nodes = sortedNodes;
+}
+
+/**
+ * Returns the nodes that need to be waited on before transmitting an event out @a triggger.
+ */
+vector<VuoCompilerNode *> VuoCompilerBitcodeGenerator::getNodesToWaitOnBeforeTransmission(VuoCompilerTriggerPort *trigger)
+{
+	// Does the trigger port have a gather somewhere downstream of it?
+	// If so, then when the event reaches its first scatter, all downstream nodes will be locked before the event can proceed.
+	// This is an (imprecise) way to prevent deadlock in the situation where one trigger port has scatter and a gather,
+	// and another trigger port overlaps with some branches of the scatter but not others (https://b33p.net/kosada/node/6696).
+	bool isGatherDownstreamOfTrigger = graph->hasGatherDownstream(trigger);
+	bool isScatterAtTrigger = graph->getNodesImmediatelyDownstream(trigger).size() > 1;
+
+	// Does the trigger port have out-of-topological-order nodes somewhere downstream of it?
+	// If so, then all downstream nodes will be locked before the event can proceed.
+	// This prevents deadlock where the events from two different trigger ports reach the downstream nodes in a different order
+	// (https://b33p.net/kosada/node/7924).
+	vector<VuoCompilerNode *> downstreamNodes;
+	vector<VuoCompilerChain *> chains = chainsForTrigger[trigger];
+	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+		vector<VuoCompilerNode *> chainNodes = chain->getNodes();
+		downstreamNodes.insert(downstreamNodes.end(), chainNodes.begin(), chainNodes.end());
+	}
+	vector<VuoCompilerNode *> sortedDownstreamNodes = downstreamNodes;
+	sortNodes(sortedDownstreamNodes);
+	bool hasOutOfOrderDownstreamNodes = (downstreamNodes != sortedDownstreamNodes);
+
+	// Wait for either all nodes downstream of the trigger or the nodes directly connected to the trigger.
+	vector<VuoCompilerNode *> nodesToWaitOn =
+			((isGatherDownstreamOfTrigger && isScatterAtTrigger) || hasOutOfOrderDownstreamNodes) ?
+				graph->getNodesDownstream(trigger) :
+				graph->getNodesImmediatelyDownstream(trigger);
+
+	// Wait for the node containing the trigger port, to avoid firing corrupted data if the trigger fires
+	// on its own at the same time that it's being manually fired (https://b33p.net/kosada/node/6497).
+	VuoCompilerNode *triggerNode = graph->getNodesForTriggerPorts()[trigger];
+	if (find(nodesToWaitOn.begin(), nodesToWaitOn.end(), triggerNode) == nodesToWaitOn.end() &&
+			triggerNode->getBase() != composition->getPublishedInputNode())
+		nodesToWaitOn.push_back(triggerNode);
+
+	return nodesToWaitOn;
+}
+
+/**
+ * Returns the nodes that need to be waited on before transmitting an event from @a trigger out of @a node.
+ */
+vector<VuoCompilerNode *> VuoCompilerBitcodeGenerator::getNodesToWaitOnBeforeTransmission(VuoCompilerTriggerPort *trigger, VuoCompilerNode *node)
+{
+	// Does the trigger port have a gather somewhere downstream of it?
+	// If so, then when the event reaches its first scatter, all downstream nodes will be locked before the event can proceed.
+	// This is an (imprecise) way to prevent deadlock in the situation where one trigger port has scatter and a gather,
+	// and another trigger port overlaps with some branches of the scatter but not others (https://b33p.net/kosada/node/6696).
+	bool isGatherDownstreamOfTrigger = graph->hasGatherDownstream(trigger);
+	bool isScatterAtNode = graph->getNodesImmediatelyDownstream(node, trigger).size() > 1;
+
+	// Wait for either all nodes downstream of the node or the nodes directly connected to the node.
+	vector<VuoCompilerNode *> nodesToWaitOn =
+			(isGatherDownstreamOfTrigger && isScatterAtNode) ?
+				graph->getNodesDownstream(node, trigger) :
+				graph->getNodesImmediatelyDownstream(node, trigger);
+
+	return nodesToWaitOn;
 }
 
 
@@ -726,7 +194,8 @@ Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 	generateGetPortValueOrSummaryFunctions();
 
 	generatePublishedPortGetters();
-	generateGetPublishedOutputPortValueFunction();
+	generateGetPublishedPortValueFunction(false);
+	generateGetPublishedPortValueFunction(true);
 	generateSetPublishedInputPortValueFunction();
 
 	generateSerializeFunction();
@@ -737,15 +206,16 @@ Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 
 	// First set the function header for each trigger, then generate the function body for each trigger.
 	// This has to be split into 2 steps because the 2nd step assumes that the 1st step is complete for all triggers.
-	for (map<VuoCompilerTriggerPort *, set<VuoCompilerTriggerEdge *> >::iterator i = triggerEdgesForTrigger.begin(); i != triggerEdgesForTrigger.end(); ++i)
+	vector<VuoCompilerTriggerPort *> triggers = graph->getTriggerPorts();
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
 	{
-		VuoCompilerTriggerPort *trigger = i->first;
+		VuoCompilerTriggerPort *trigger = *i;
 		Function *f = generateTriggerFunctionHeader(trigger);
 		trigger->setFunction(f);
 	}
-	for (map<VuoCompilerTriggerPort *, set<VuoCompilerTriggerEdge *> >::iterator i = triggerEdgesForTrigger.begin(); i != triggerEdgesForTrigger.end(); ++i)
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
 	{
-		VuoCompilerTriggerPort *trigger = i->first;
+		VuoCompilerTriggerPort *trigger = *i;
 		generateTriggerFunctionBody(trigger);
 	}
 
@@ -807,6 +277,9 @@ void VuoCompilerBitcodeGenerator::generateAllocation(void)
 	lastEventIdSemaphoreVariable = VuoCompilerCodeGenUtilities::generateAllocationForSemaphore(module, "lastEventId__semaphore");
 
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
+	VuoNode *publishedInputNode = composition->getPublishedInputNode();
+	if (publishedInputNode)
+		nodes.insert(publishedInputNode);
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoCompilerNode *node = (*i)->getCompiler();
@@ -825,9 +298,6 @@ void VuoCompilerBitcodeGenerator::generateAllocation(void)
 																	 claimingEventIdIdentifier);
 		claimingEventIdVariableForNode[node] = claimingEventIdVariable;
 	}
-
-	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
-		i->second->generateAllocation(module);
 }
 
 /**
@@ -851,8 +321,11 @@ void VuoCompilerBitcodeGenerator::generateSetupFunction(void)
 	generateInitializationForPorts(block, false);
 	generateInitializationForPorts(block, true);
 
-	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
-		i->second->generateInitialization(module, block);
+	generateInitialEventlessTransmissions(function, block);
+
+	vector<VuoCompilerTriggerPort *> triggers = graph->getTriggerPorts();
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
+		(*i)->generateInitialization(module, block);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -868,8 +341,9 @@ void VuoCompilerBitcodeGenerator::generateCleanupFunction(void)
 	Function *function = Function::Create(functionType, GlobalValue::ExternalLinkage, "cleanup", module);
 	BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, NULL);
 
-	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
-		i->second->generateFinalization(module, block);
+	vector<VuoCompilerTriggerPort *> triggers = graph->getTriggerPorts();
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
+		(*i)->generateFinalization(module, block);
 
 	VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(module, block, lastEventIdSemaphoreVariable);
 
@@ -1031,11 +505,11 @@ void VuoCompilerBitcodeGenerator::generateCallbackStopFunction(void)
 	generateSignalForNodes(module, block, orderedNodes);
 
 	// Flush any pending events.
-	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
+	vector<VuoCompilerTriggerPort *> triggers = graph->getTriggerPorts();
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
 	{
-		VuoCompilerTriggerPort *triggerPort = i->first;
-		VuoCompilerTriggerAction *triggerAction = i->second;
-		Function *barrierWorkerFunction = triggerAction->generateSynchronousSubmissionToDispatchQueue(module, block, triggerPort->getIdentifier() + "__barrier");
+		VuoCompilerTriggerPort *trigger = *i;
+		Function *barrierWorkerFunction = trigger->generateSynchronousSubmissionToDispatchQueue(module, block, trigger->getIdentifier() + "__barrier");
 		BasicBlock *barrierBlock = BasicBlock::Create(module->getContext(), "", barrierWorkerFunction, NULL);
 		ReturnInst::Create(module->getContext(), barrierBlock);
 	}
@@ -1076,8 +550,6 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
  * semaphores claimed so far and returns.
  *
  * Returns a value that is true if all semaphore were successfully claimed and false if none were claimed.
- *
- * Assumes the list of nodes is in the same order as @ref orderedNodes (to avoid deadlock).
  *
  * @eg{
  * // When an event reaches a node through just one edge into the node, this code is generated just once.
@@ -1120,6 +592,8 @@ Value * VuoCompilerBitcodeGenerator::generateGetNextEventID(Module *module, Basi
 Value * VuoCompilerBitcodeGenerator::generateWaitForNodes(Module *module, Function *function, BasicBlock *&block,
 														  vector<VuoCompilerNode *> nodes, Value *eventIdValue, bool shouldBlock)
 {
+	sortNodes(nodes);
+
 	if (! eventIdValue)
 		eventIdValue = generateGetNextEventID(module, block);
 
@@ -1261,7 +735,7 @@ Value * VuoCompilerBitcodeGenerator::generatePortSerializationOrSummary(Module *
 	GlobalVariable *dataVariable = NULL;
 	VuoCompilerType *type = NULL;
 
-	/// @todo Refactor by replacing with VuoCompilerPort::getDataVariable() and VuoCompilerPort::getDataType() (https://b33p.net/kosada/node/2995)
+	/// @todo Refactor by replacing with VuoCompilerPort::getDataVariable() and VuoCompilerPort::getDataType()
 	VuoCompilerEventPort *eventPort = dynamic_cast<VuoCompilerEventPort *>(port);
 	if (eventPort)
 	{
@@ -1277,8 +751,7 @@ Value * VuoCompilerBitcodeGenerator::generatePortSerializationOrSummary(Module *
 		VuoCompilerTriggerPort *triggerPort = dynamic_cast<VuoCompilerTriggerPort *>(port);
 		if (triggerPort)
 		{
-			VuoCompilerTriggerAction *triggerAction = triggerActionForTrigger[triggerPort];
-			dataVariable = triggerAction->getPreviousDataVariable();
+			dataVariable = triggerPort->getPreviousDataVariable();
 			if (dataVariable)
 			{
 				type = triggerPort->getClass()->getDataVuoType()->getCompiler();
@@ -1433,7 +906,7 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueOrSummaryFunction(bool isS
 			string currentPortIdentifier;
 			GlobalVariable *dataVariable = NULL;
 
-			/// @todo Refactor by replacing with VuoCompilerPort::getIdentifier() and VuoCompilerPort::getDataVariable() (https://b33p.net/kosada/node/2995)
+			/// @todo Refactor by replacing with VuoCompilerPort::getIdentifier() and VuoCompilerPort::getDataVariable()
 			VuoCompilerEventPort *eventPort = dynamic_cast<VuoCompilerEventPort *>(port->getCompiler());
 			if (eventPort)
 			{
@@ -1449,9 +922,8 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueOrSummaryFunction(bool isS
 				VuoCompilerTriggerPort *triggerPort = dynamic_cast<VuoCompilerTriggerPort *>(port->getCompiler());
 				if (triggerPort)
 				{
-					VuoCompilerTriggerAction *triggerAction = triggerActionForTrigger[triggerPort];
 					currentPortIdentifier = triggerPort->getIdentifier();
-					dataVariable = triggerAction->getPreviousDataVariable();
+					dataVariable = triggerPort->getPreviousDataVariable();
 				}
 			}
 
@@ -1459,6 +931,7 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueOrSummaryFunction(bool isS
 			{
 				BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentPortIdentifier, function, 0);
 				BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), currentPortIdentifier, function, 0);
+				BasicBlock *origCurrentBlock = currentBlock;
 
 				vector<VuoCompilerNode *> nodeList;
 				nodeList.push_back(node->getCompiler());
@@ -1504,7 +977,7 @@ void VuoCompilerBitcodeGenerator::generateGetPortValueOrSummaryFunction(bool isS
 					generateSignalForNodes(module, finalBlock, nodeList);
 				}
 
-				blocksForString[currentPortIdentifier] = make_pair(currentBlock, finalBlock);
+				blocksForString[currentPortIdentifier] = make_pair(origCurrentBlock, finalBlock);
 			}
 		}
 	}
@@ -1628,9 +1101,6 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
 					BranchInst::Create(nextBlock, updateCallbacksBlock);
 					currentBlock = nextBlock;
 
-					// dispatch_semaphore_signal(nodeSemaphore);
-					VuoCompilerCodeGenUtilities::generateSignalForSemaphore(module, currentBlock, semaphoreVariable);
-
 					// char *summary = <Type>_summaryFromValue(value);
 					Value *summaryValue = type->generateSummaryFromValueFunctionCall(module, currentBlock, dataValue);
 
@@ -1644,6 +1114,11 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
 
 					// free(summary);
 					CallInst::Create(freeFunction, summaryValue, "", currentBlock);
+
+					generateEventlessTransmission(function, currentBlock, node->getCompiler(), true);
+
+					// dispatch_semaphore_signal(nodeSemaphore);
+					VuoCompilerCodeGenUtilities::generateSignalForSemaphore(module, currentBlock, semaphoreVariable);
 
 					blocksForString[currentPortIdentifier] = make_pair(initialBlockForString, currentBlock);
 				}
@@ -1659,8 +1134,6 @@ void VuoCompilerBitcodeGenerator::generateSetInputPortValueFunction(void)
 
 /**
  * Generates code to initialize each input or output data-and-event port's value.
- *
- * @param block The basic block to which the generated code is appended.
  */
 void VuoCompilerBitcodeGenerator::generateInitializationForPorts(BasicBlock *block, bool input)
 {
@@ -1690,6 +1163,21 @@ void VuoCompilerBitcodeGenerator::generateInitializationForPorts(BasicBlock *blo
 				}
 			}
 		}
+	}
+}
+
+/**
+ * Generates code to initialize each input and output data-and-event port reachable by eventless transmission.
+ *
+ * Assumes all other input ports' values have already been initialized.
+ */
+void VuoCompilerBitcodeGenerator::generateInitialEventlessTransmissions(Function *function, BasicBlock *&block)
+{
+	set<VuoNode *> nodes = composition->getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoCompilerNode *node = (*i)->getCompiler();
+		generateEventlessTransmission(function, block, node, false);
 	}
 }
 
@@ -1733,18 +1221,19 @@ void VuoCompilerBitcodeGenerator::generateFireTriggerPortEventFunction(void)
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 
 	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
-	for (map<VuoCompilerTriggerPort *, VuoCompilerTriggerAction *>::iterator i = triggerActionForTrigger.begin(); i != triggerActionForTrigger.end(); ++i)
+	vector<VuoCompilerTriggerPort *> triggers = graph->getTriggerPorts();
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
 	{
-		VuoCompilerTriggerPort *port = i->first;
-		VuoCompilerTriggerAction *triggerAction = i->second;
-		string currentPortIdentifier = port->getIdentifier();
-		Function *triggerFunction = port->getFunction();
-		VuoCompilerNode *triggerNode = nodeForTrigger[port];
+		VuoCompilerTriggerPort *trigger = *i;
+		string currentPortIdentifier = trigger->getIdentifier();
+		Function *triggerFunction = trigger->getFunction();
+		VuoCompilerNode *triggerNode = graph->getNodesForTriggerPorts()[trigger];
 
 		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentPortIdentifier, function, 0);
+		BasicBlock *origCurrentBlock = currentBlock;
 
 		vector<Value *> triggerArgs;
-		GlobalVariable *dataVariable = triggerAction->getPreviousDataVariable();
+		GlobalVariable *dataVariable = trigger->getPreviousDataVariable();
 		if (dataVariable)
 		{
 			generateWaitForNodes(module, function, currentBlock, vector<VuoCompilerNode *>(1, triggerNode));
@@ -1763,7 +1252,7 @@ void VuoCompilerBitcodeGenerator::generateFireTriggerPortEventFunction(void)
 		if (dataVariable)
 			generateSignalForNodes(module, currentBlock, vector<VuoCompilerNode *>(1, triggerNode));
 
-		blocksForString[currentPortIdentifier] = make_pair(currentBlock, currentBlock);
+		blocksForString[currentPortIdentifier] = make_pair(origCurrentBlock, currentBlock);
 	}
 
 	BasicBlock *finalBlock = BasicBlock::Create(module->getContext(), "final", function, 0);
@@ -1785,6 +1274,9 @@ void VuoCompilerBitcodeGenerator::generatePublishedPortGetters(void)
 
 	generateGetPublishedPortTypesFunction(true);
 	generateGetPublishedPortTypesFunction(false);
+
+	generateGetPublishedPortDetailsFunction(true);
+	generateGetPublishedPortDetailsFunction(false);
 
 	generateGetPublishedPortConnectedIdentifierCount(true);
 	generateGetPublishedPortConnectedIdentifierCount(false);
@@ -1914,6 +1406,166 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedPortTypesFunction(bool inp
 	}
 
 	generateFunctionReturningStringArray(functionName, types);
+}
+
+/**
+ * Generates the getPublishedInputPortDetails or getPublishedOutputPortDetailss function.
+ *
+ * `char ** getPublishedInputPortDetails(void);`
+ * `char ** getPublishedOutputPortDetails(void);`
+ *
+ * Example:
+ *
+ * @eg{
+ * char ** getPublishedInputPortDetails(void)
+ * {
+ *		return { "{\"default\":0}", ... };
+ * }
+ * }
+ */
+void VuoCompilerBitcodeGenerator::generateGetPublishedPortDetailsFunction(bool input)
+{
+	string functionName;
+	vector<VuoPublishedPort *> publishedPorts;
+	if (input)
+	{
+		functionName = "getPublishedInputPortDetails";
+		publishedPorts = composition->getBase()->getPublishedInputPorts();
+	}
+	else
+	{
+		functionName = "getPublishedOutputPortDetails";
+		publishedPorts = composition->getBase()->getPublishedOutputPorts();
+	}
+
+	vector<string> details;
+	for (vector<VuoPublishedPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
+	{
+		set<VuoPort *> connectedPorts = (*i)->getConnectedPorts();
+
+		json_object *suggestedMin = NULL;
+		json_object *suggestedMax = NULL;
+		json_object *suggestedStep = NULL;
+
+		for (set<VuoPort *>::iterator connectedPort = connectedPorts.begin(); connectedPort != connectedPorts.end(); ++connectedPort)
+		{
+			/// @todo Remove temporary detail-coalescing workaround (https://b33p.net/kosada/node/8043)
+			VuoCompilerInputEventPortClass *connectedInputEventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>((*connectedPort)->getClass()->getCompiler());
+			if (connectedInputEventPortClass)
+			{
+				VuoCompilerInputDataClass *connectedInputDataClass = connectedInputEventPortClass->getDataClass();
+				if (connectedInputDataClass)
+				{
+					json_object *js = connectedInputDataClass->getDetails();
+					json_object *o;
+
+					if (json_object_object_get_ex(js, "suggestedMin", &o))
+					{
+						if (!suggestedMin)
+							suggestedMin = o;
+						else
+						{
+							// Use the larger of the current port's suggestedMin.x and all previous ports' suggestedMin.x.
+							/// @todo https://b33p.net/kosada/node/7317
+							bool newIsBetter = false;
+							string type = (*i)->getType()->getModuleKey();
+							if (type == "VuoInteger")
+								newIsBetter = json_object_get_int64(o) > json_object_get_int64(suggestedMin);
+							else if (type == "VuoReal")
+								newIsBetter = json_object_get_double(o) > json_object_get_double(suggestedMin);
+							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
+							{
+								double oldX=0,newX=0;
+								json_object *x;
+								if (json_object_object_get_ex(suggestedMin, "x", &x))
+									oldX = json_object_get_double(x);
+								if (json_object_object_get_ex(o, "x", &x))
+									newX = json_object_get_double(x);
+								newIsBetter = newX > oldX;
+							}
+
+							if (newIsBetter)
+								suggestedMin = o;
+						}
+					}
+
+					if (json_object_object_get_ex(js, "suggestedMax", &o))
+					{
+						if (!suggestedMax)
+							suggestedMax = o;
+						else
+						{
+							// Use the smaller of the current port's suggestedMax.x and all previous ports' suggestedMax.x.
+							/// @todo https://b33p.net/kosada/node/7317
+							bool newIsBetter = false;
+							string type = (*i)->getType()->getModuleKey();
+							if (type == "VuoInteger")
+								newIsBetter = json_object_get_int64(o) < json_object_get_int64(suggestedMax);
+							else if (type == "VuoReal")
+								newIsBetter = json_object_get_double(o) < json_object_get_double(suggestedMax);
+							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
+							{
+								double oldX=0,newX=0;
+								json_object *x;
+								if (json_object_object_get_ex(suggestedMax, "x", &x))
+									oldX = json_object_get_double(x);
+								if (json_object_object_get_ex(o, "x", &x))
+									newX = json_object_get_double(x);
+								newIsBetter = newX < oldX;
+							}
+
+							if (newIsBetter)
+								suggestedMax = o;
+						}
+					}
+
+					if (json_object_object_get_ex(js, "suggestedStep", &o))
+					{
+						if (!suggestedStep)
+							suggestedStep = o;
+						else
+						{
+							// Use the smaller of the current port's suggestedStep.x and all previous ports' suggestedStep.x.
+							/// @todo https://b33p.net/kosada/node/7317
+							bool newIsBetter = false;
+							string type = (*i)->getType()->getModuleKey();
+							if (type == "VuoInteger")
+								newIsBetter = json_object_get_int64(o) < json_object_get_int64(suggestedStep);
+							else if (type == "VuoReal")
+								newIsBetter = json_object_get_double(o) < json_object_get_double(suggestedStep);
+							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
+							{
+								double oldX=0,newX=0;
+								json_object *x;
+								if (json_object_object_get_ex(suggestedStep, "x", &x))
+									oldX = json_object_get_double(x);
+								if (json_object_object_get_ex(o, "x", &x))
+									newX = json_object_get_double(x);
+								newIsBetter = newX < oldX;
+							}
+
+							if (newIsBetter)
+								suggestedStep = o;
+						}
+					}
+				}
+			}
+		}
+
+		json_object *detailsObject = json_object_new_object();
+		json_object_object_add(detailsObject, "default", json_tokener_parse((*i)->getInitialValue().c_str()));
+		if (suggestedMin)
+			json_object_object_add(detailsObject, "suggestedMin", suggestedMin);
+		if (suggestedMax)
+			json_object_object_add(detailsObject, "suggestedMax", suggestedMax);
+		if (suggestedStep)
+			json_object_object_add(detailsObject, "suggestedStep", suggestedStep);
+
+		string detailsSerialized = json_object_to_json_string_ext(detailsObject, JSON_C_TO_STRING_PLAIN);
+		details.push_back(detailsSerialized);
+	}
+
+	generateFunctionReturningStringArray(functionName, details);
 }
 
 /**
@@ -2162,17 +1814,17 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
 }
 
 /**
- * Generates the getPublishedOutputPortValue() function.
+ * Generates the getPublishedOutputPortValue()/getPublishedInputPortValue() function.
  *
  * @eg{
  * char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
  * {
  *	 char *ret = NULL;
- *   if (! strcmp(portIdentifier, ""))
+ *   if (! strcmp(portIdentifier, "vuo_out__PublishedOutputPorts__firstName"))
  *   {
- *     ret = getOutputPortValue("", shouldUseInterprocessSerialization);
+ *     ret = getOutputPortValue("vuo_math_add__Add__sum", shouldUseInterprocessSerialization);
  *   }
- *   else if (! strcmp(portIdentifier, ""))
+ *   else if (! strcmp(portIdentifier, "vuo_out__PublishedOutputPorts__secondName"))
  *   {
  *     // no incoming data-and-event cable
  *   }
@@ -2180,9 +1832,11 @@ void VuoCompilerBitcodeGenerator::generateFirePublishedInputPortEventFunction(vo
  * }
  * }
  */
-void VuoCompilerBitcodeGenerator::generateGetPublishedOutputPortValueFunction(void)
+void VuoCompilerBitcodeGenerator::generateGetPublishedPortValueFunction(bool isInput)
 {
-	Function *function = VuoCompilerCodeGenUtilities::getGetPublishedOutputPortValueFunction(module);
+	Function *function = isInput ?
+				VuoCompilerCodeGenUtilities::getGetPublishedInputPortValueFunction(module)
+			  : VuoCompilerCodeGenUtilities::getGetPublishedOutputPortValueFunction(module);
 
 	Function::arg_iterator args = function->arg_begin();
 	Value *portIdentifierValue = args++;
@@ -2190,7 +1844,9 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedOutputPortValueFunction(vo
 	Value *shouldUseInterprocessSerializationValue = args++;
 	shouldUseInterprocessSerializationValue->setName("shouldUseInterprocessSerialization");
 
-	Function *getValueFunction = VuoCompilerCodeGenUtilities::getGetOutputPortValueFunction(module);
+	Function *getValueFunction = isInput ?
+				VuoCompilerCodeGenUtilities::getGetInputPortValueFunction(module)
+			  : VuoCompilerCodeGenUtilities::getGetOutputPortValueFunction(module);
 
 	BasicBlock *initialBlock = BasicBlock::Create(module->getContext(), "initial", function, 0);
 	PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
@@ -2199,7 +1855,9 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedOutputPortValueFunction(vo
 	new StoreInst(nullValue, retVariable, false, initialBlock);
 
 	map<string, pair<BasicBlock *, BasicBlock *> > blocksForString;
-	vector<VuoPublishedPort *> publishedPorts = composition->getBase()->getPublishedOutputPorts();
+	vector<VuoPublishedPort *> publishedPorts = isInput ?
+				composition->getBase()->getPublishedInputPorts()
+			  : composition->getBase()->getPublishedOutputPorts();
 	for (vector<VuoPublishedPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
 	{
 		VuoPublishedPort *publishedPort = *i;
@@ -2240,14 +1898,14 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedOutputPortValueFunction(vo
  * @eg{
  * void setPublishedInputPortValue(char *portIdentifier, char *valueAsString)
  * {
- *   if (! strcmp(portIdentifier, ""))
+ *   if (! strcmp(portIdentifier, "vuo_in__PublishedInputPorts__firstName"))
  *   {
- *     setInputPortValue("", valueAsString, true);
+ *     setInputPortValue("vuo_math_subtract__Subtract__a", valueAsString, true);
  *   }
- *   else if (! strcmp(portIdentifier, ""))
+ *   else if (! strcmp(portIdentifier, "vuo_in__PublishedInputPorts__secondName"))
  *   {
- *     setInputPortValue("", valueAsString, true);
- *     setInputPortValue("", valueAsString, true);
+ *     setInputPortValue("vuo_math_subtract__Subtract__b", valueAsString, true);
+ *     setInputPortValue("vuo_math_subtract__Subtract2__b", valueAsString, true);
  *   }
  * }
  * }
@@ -2301,12 +1959,101 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
 }
 
 /**
- * Generates a call to sendOutputPortsUpdated() for each output port that is transmitting an event and data,
- * and a call to sendInputPortsUpdated() for each input port that is receiving an event and data.
- *
- * Assumes the node's semaphore is already claimed (in code generated by this method's caller).
+ * Generates code to transmit an event (if any) and data (if any) from @a outputPort to all connected input ports,
+ * and send telemetry indicating that these output and input ports have been updated.
  */
-void VuoCompilerBitcodeGenerator::generateSendPortsUpdatedCall(BasicBlock *initialBlock, BasicBlock *finalBlock, VuoCompilerNode *node)
+void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *function, BasicBlock *&currentBlock,
+																	 VuoCompilerPort *outputPort, Value *dataValue,
+																	 bool requiresEvent, bool shouldSendTelemetry)
+{
+	Function *sendOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(module);
+	Type *boolType = sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(1);
+
+	Value *sentDataValue = NULL;
+	Value *dataSummaryValue = NULL;
+	if (shouldSendTelemetry)
+	{
+		if (dataValue)
+		{
+			// sentData = true;
+			Constant *trueValue = ConstantInt::get(boolType, 1);
+			sentDataValue = trueValue;
+
+			// dataSummary = <type>_summaryFromValue(portValue);
+			VuoCompilerType *type = outputPort->getDataVuoType()->getCompiler();
+			dataSummaryValue = type->generateSummaryFromValueFunctionCall(module, currentBlock, dataValue);
+		}
+		else
+		{
+			// sentData = false;
+			Constant *falseValue = ConstantInt::get(boolType, 0);
+			sentDataValue = falseValue;
+
+			// dataSummary = NULL;
+			PointerType *pointerToCharType = static_cast<PointerType *>(sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(2));
+			dataSummaryValue = ConstantPointerNull::get(pointerToCharType);
+		}
+
+		generateSendOutputPortUpdated(currentBlock, outputPort, sentDataValue, dataSummaryValue);
+	}
+
+	// If the output port should transmit an event...
+	bool alwaysTransmitsEvent = (dynamic_cast<VuoCompilerTriggerPort *>(outputPort) || ! requiresEvent);
+	BasicBlock *transmissionBlock = NULL;
+	BasicBlock *noTransmissionBlock = NULL;
+	if (alwaysTransmitsEvent)
+	{
+		transmissionBlock = currentBlock;
+	}
+	else
+	{
+		transmissionBlock = BasicBlock::Create(module->getContext(), "", function, NULL);
+		noTransmissionBlock = BasicBlock::Create(module->getContext(), "", function, NULL);
+
+		VuoCompilerOutputEventPort *outputEventPort = dynamic_cast<VuoCompilerOutputEventPort *>(outputPort);
+		LoadInst *eventValue = outputEventPort->generateLoad(currentBlock);
+		ConstantInt *zeroValue = ConstantInt::get(static_cast<IntegerType *>(eventValue->getType()), 0);
+		ICmpInst *eventValueIsTrue = new ICmpInst(*currentBlock, ICmpInst::ICMP_NE, eventValue, zeroValue, "");
+		BranchInst::Create(transmissionBlock, noTransmissionBlock, eventValueIsTrue, currentBlock);
+	}
+
+	// ... then transmit the event and data (if any) to each connected input port.
+	set<VuoCompilerCable *> outgoingCables = (requiresEvent ?
+												  graph->getCablesImmediatelyDownstream(outputPort) :
+												  graph->getCablesImmediatelyEventlesslyDownstream(outputPort));
+	for (set<VuoCompilerCable *>::iterator i = outgoingCables.begin(); i != outgoingCables.end(); ++i)
+	{
+		VuoCompilerCable *cable = *i;
+		cable->generateTransmission(module, transmissionBlock, dataValue, requiresEvent);
+
+		if (shouldSendTelemetry)
+		{
+			VuoCompilerPort *inputPort = static_cast<VuoCompilerPort *>(cable->getBase()->getToPort()->getCompiler());
+			Value *dataSummaryValueOrNull = (dataValue ? dataSummaryValue : NULL);
+			generateSendInputPortUpdated(transmissionBlock, inputPort, sentDataValue, dataSummaryValueOrNull);
+		}
+	}
+
+	if (! alwaysTransmitsEvent)
+	{
+		BranchInst::Create(noTransmissionBlock, transmissionBlock);
+		currentBlock = noTransmissionBlock;
+	}
+
+	if (shouldSendTelemetry && dataValue)
+	{
+		// free(dataSummary)
+		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
+		CallInst::Create(freeFunction, dataSummaryValue, "", currentBlock);
+	}
+}
+
+/**
+ * Generates code to transmit an event (if any) and data (if any) through each outgoing cable from @a node,
+ * and to send telemetry indicating that the output and input ports on these cables have been updated.
+ */
+void VuoCompilerBitcodeGenerator::generateTransmissionFromNode(Function *function, BasicBlock *&currentBlock, VuoCompilerNode *node,
+															   bool requiresEvent, bool shouldSendTelemetry)
 {
 	vector<VuoPort *> outputPorts = node->getBase()->getOutputPorts();
 	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
@@ -2316,192 +2063,161 @@ void VuoCompilerBitcodeGenerator::generateSendPortsUpdatedCall(BasicBlock *initi
 		if (! outputEventPort)
 			continue;
 
-		BasicBlock *telemetryBlock = BasicBlock::Create(module->getContext(), "", initialBlock->getParent(), NULL);
-		BasicBlock *noTelemetryBlock = BasicBlock::Create(module->getContext(), "", initialBlock->getParent(), NULL);
-
-		// If the output port isn't transmitting an event, do nothing.
-		LoadInst *eventValue = outputEventPort->generateLoad(initialBlock);
-		ConstantInt *zeroValue = ConstantInt::get(static_cast<IntegerType *>(eventValue->getType()), 0);
-		ICmpInst *eventValueIsTrue = new ICmpInst(*initialBlock, ICmpInst::ICMP_NE, eventValue, zeroValue, "");
-		BranchInst::Create(telemetryBlock, noTelemetryBlock, eventValueIsTrue, initialBlock);
-
-		Function *sendOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(module);
-		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
-		Type *boolType = sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(1);
-		PointerType *pointerToCharType = static_cast<PointerType *>(sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(2));
-		Constant *falseValue = ConstantInt::get(boolType, 0);
-		Constant *trueValue = ConstantInt::get(boolType, 1);
-
-		string outputPortIdentifier = outputEventPort->getIdentifier();
-		Constant *outputPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, outputPortIdentifier);
-
-		VuoCompilerOutputData *outputData = outputEventPort->getData();
-		Value *sentDataValue;
-		Value *outputDataSummaryValue;
-		if (outputData)
+		BasicBlock *telemetryBlock = NULL;
+		BasicBlock *noTelemetryBlock = NULL;
+		if (requiresEvent)
 		{
-			// sentData = true;
-			sentDataValue = trueValue;
+			telemetryBlock = BasicBlock::Create(module->getContext(), "", function, NULL);
+			noTelemetryBlock = BasicBlock::Create(module->getContext(), "", function, NULL);
 
-			// outputDataSummary = <Type>_summaryFromValue(outputData);
-			outputDataSummaryValue = generatePortSummary(module, telemetryBlock, outputEventPort);
+			// If the output port isn't transmitting an event, do nothing.
+			Value *eventValue = outputEventPort->generateLoad(currentBlock);
+			ConstantInt *zeroValue = ConstantInt::get(static_cast<IntegerType *>(eventValue->getType()), 0);
+			ICmpInst *eventValueIsTrue = new ICmpInst(*currentBlock, ICmpInst::ICMP_NE, eventValue, zeroValue, "");
+			BranchInst::Create(telemetryBlock, noTelemetryBlock, eventValueIsTrue, currentBlock);
 		}
 		else
 		{
-			// sentData = false;
-			sentDataValue = falseValue;
-
-			// outputDataSummary = NULL;
-			outputDataSummaryValue = ConstantPointerNull::get(pointerToCharType);
+			telemetryBlock = currentBlock;
 		}
 
-		// sendOutputPortsUpdated(outputPortIdentifier, sentData, outputDataSummary);
-		vector<Value *> sendOutputPortsUpdatedArgs;
-		sendOutputPortsUpdatedArgs.push_back(outputPortIdentifierValue);
-		sendOutputPortsUpdatedArgs.push_back(sentDataValue);
-		sendOutputPortsUpdatedArgs.push_back(outputDataSummaryValue);
-		CallInst::Create(sendOutputPortsUpdatedFunction, sendOutputPortsUpdatedArgs, "", telemetryBlock);
+		// Transmit the data through the output port to each connected input port.
+		VuoCompilerOutputData *outputData = outputEventPort->getData();
+		Value *outputDataValue = outputData ? outputData->generateLoad(telemetryBlock) : NULL;
+		generateTransmissionFromOutputPort(function, telemetryBlock, outputEventPort, outputDataValue,
+										   requiresEvent, shouldSendTelemetry);
 
-		set<VuoCompilerPassiveEdge *> passiveOutEdges = passiveOutEdgesForNode[node];
-		for (set<VuoCompilerPassiveEdge *>::iterator i = passiveOutEdges.begin(); i != passiveOutEdges.end(); ++i)
+		if (requiresEvent)
 		{
-			set<VuoCompilerInputEventPort *> inputPorts = (*i)->getInputPortsConnectedToOutputPort(outputEventPort);
-			for (set<VuoCompilerInputEventPort *>::iterator j = inputPorts.begin(); j != inputPorts.end(); ++j)
-			{
-				VuoCompilerInputEventPort *inputEventPort = *j;
-
-				string inputPortIdentifier = inputEventPort->getIdentifier();
-				Constant *inputPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, inputPortIdentifier);
-
-				Value *inputDataSummaryValue;
-				if (outputData)
-				{
-					// inputDataSummary = outputDataSummary;
-					inputDataSummaryValue = outputDataSummaryValue;
-				}
-				else
-				{
-					// inputDataSummary = <Type>_summaryFromValue(inputData);
-					inputDataSummaryValue = generatePortSummary(module, telemetryBlock, inputEventPort);
-				}
-
-				// sendInputPortsUpdated(inputPortIdentifier, true, sentData, inputDataSummary);
-				Function *sendInputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendInputPortsUpdatedFunction(module);
-				vector<Value *> sendInputPortsUpdatedArgs;
-				sendInputPortsUpdatedArgs.push_back(inputPortIdentifierValue);
-				sendInputPortsUpdatedArgs.push_back(trueValue);
-				sendInputPortsUpdatedArgs.push_back(sentDataValue);
-				sendInputPortsUpdatedArgs.push_back(inputDataSummaryValue);
-				CallInst::Create(sendInputPortsUpdatedFunction, sendInputPortsUpdatedArgs, "", telemetryBlock);
-
-				if (! outputData)
-				{
-					// free(inputDataSummary);
-					CallInst::Create(freeFunction, inputDataSummaryValue, "", telemetryBlock);
-				}
-			}
+			BranchInst::Create(noTelemetryBlock, telemetryBlock);
+			currentBlock = noTelemetryBlock;
 		}
-
-		if (outputData)
-		{
-			// free(outputDataSummary);
-			CallInst::Create(freeFunction, outputDataSummaryValue, "", telemetryBlock);
-		}
-
-		BranchInst::Create(noTelemetryBlock, telemetryBlock);
-		initialBlock = noTelemetryBlock;
 	}
-
-	BranchInst::Create(finalBlock, initialBlock);
 }
 
 /**
- * Generates a call to sendOutputPortsUpdated() for the given trigger port if it carries data.
+ * Generates code to transmit data without an event through each data-and-event output port of @a firstNode
+ * and onward to all data-and-event ports reachable via eventless transmission.
  *
- * Assumes the node's semaphore is already claimed (in code generated by this method's caller).
+ * If @a isCompositionStarted is true, assumes that the semaphore for @a firstNode has already been claimed.
  */
-void VuoCompilerBitcodeGenerator::generateSendTriggerPortValueChangedCall(BasicBlock *block, VuoCompilerTriggerPort *trigger, Value *triggerDataValue)
+void VuoCompilerBitcodeGenerator::generateEventlessTransmission(Function *function, BasicBlock *&currentBlock,
+																VuoCompilerNode *firstNode, bool isCompositionStarted)
 {
-	Constant *triggerIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, trigger->getIdentifier());
+	if (! graph->mayTransmitEventlessly(firstNode))
+		return;
+	vector<VuoCompilerNode *> downstreamNodes = graph->getNodesEventlesslyDownstream(firstNode);
 
-	Function *sendOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(module);
-	Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
-	Type *boolType = sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(1);
-	PointerType *pointerToCharType = static_cast<PointerType *>(sendOutputPortsUpdatedFunction->getFunctionType()->getParamType(2));
-	Constant *falseValue = ConstantInt::get(boolType, 0);
-	Constant *trueValue = ConstantInt::get(boolType, 1);
-
-	Value *sentDataValue;
-	Value *triggerDataSummaryValue;
-	if (triggerDataValue)
+	if (isCompositionStarted)
 	{
-		// sentData = true;
-		sentDataValue = trueValue;
+		// Claim the nodes downstream via eventless transmission.
+		generateWaitForNodes(module, function, currentBlock, downstreamNodes, NULL, true);
+	}
 
-		// triggerDataSummary = <type>_summaryFromValue(portValue);
-		VuoCompilerType *type = static_cast<VuoCompilerTriggerPortClass *>(trigger->getBase()->getClass()->getCompiler())->getDataVuoType()->getCompiler();
-		triggerDataSummaryValue = type->generateSummaryFromValueFunctionCall(module, block, triggerDataValue);
+	// For this node and each node downstream via eventless transmission...
+	vector<VuoCompilerNode *> nodesToVisit = downstreamNodes;
+	nodesToVisit.insert(nodesToVisit.begin(), firstNode);
+	for (vector<VuoCompilerNode *>::iterator i = nodesToVisit.begin(); i != nodesToVisit.end(); ++i)
+	{
+		VuoCompilerNode *node = *i;
+
+		if (graph->mayTransmitEventlessly(node))
+		{
+			// Call the node's event function, and send telemetry if needed.
+			generateNodeExecution(function, currentBlock, node, isCompositionStarted);
+
+			// Transmit data through the node's outgoing cables, and send telemetry for port updates if needed.
+			generateTransmissionFromNode(function, currentBlock, node, false, isCompositionStarted);
+		}
+
+		if (isCompositionStarted && node != firstNode)
+			generateSignalForNodes(module, currentBlock, vector<VuoCompilerNode *>(1, node));
+	}
+}
+
+/**
+ * Generates code to call the node's event function, sending telemetry indicating that execution has started and finished.
+ */
+void VuoCompilerBitcodeGenerator::generateNodeExecution(Function *function, BasicBlock *&currentBlock, VuoCompilerNode *node,
+														bool shouldSendTelemetry)
+{
+	Constant *nodeIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, node->getIdentifier());
+
+	if (shouldSendTelemetry)
+	{
+		// Send telemetry indicating that the node's execution has started.
+		Function *sendNodeExecutionStartedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionStartedFunction(module);
+		CallInst::Create(sendNodeExecutionStartedFunction, nodeIdentifierValue, "", currentBlock);
+	}
+
+	// Call the node's event function.
+	if (debugMode)
+		VuoCompilerCodeGenUtilities::generatePrint(module, currentBlock, node->getBase()->getTitle() + "\n");
+	BasicBlock *nodeEventFinalBlock = BasicBlock::Create(module->getContext(), "", function, NULL);
+	node->generateEventFunctionCall(module, function, currentBlock, nodeEventFinalBlock);
+	currentBlock = nodeEventFinalBlock;
+
+	if (shouldSendTelemetry)
+	{
+		// Send telemetry indicating that the node's execution has finished.
+		Function *sendNodeExecutionFinishedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionFinishedFunction(module);
+		CallInst::Create(sendNodeExecutionFinishedFunction, nodeIdentifierValue, "", currentBlock);
+	}
+}
+
+/**
+ * Generates a call to @c sendOutputPortsUpdated() to send telemetry.
+ */
+void VuoCompilerBitcodeGenerator::generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort,
+																Value *sentDataValue, Value *dataSummaryValue)
+{
+	Constant *outputPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, outputPort->getIdentifier());
+	Function *sendOutputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(module);
+
+	// sendOutputPortsUpdated(outputPortIdentifier, sentData, outputDataSummary);
+	vector<Value *> sendOutputPortsUpdatedArgs;
+	sendOutputPortsUpdatedArgs.push_back(outputPortIdentifierValue);
+	sendOutputPortsUpdatedArgs.push_back(sentDataValue);
+	sendOutputPortsUpdatedArgs.push_back(dataSummaryValue);
+	CallInst::Create(sendOutputPortsUpdatedFunction, sendOutputPortsUpdatedArgs, "", block);
+}
+
+/**
+ * Generates a call to @c sendInputPortsUpdated() to send telemetry.
+ */
+void VuoCompilerBitcodeGenerator::generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort,
+															   Value *sentDataValue, Value *outputDataSummaryValue)
+{
+	Constant *inputPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, inputPort->getIdentifier());
+
+	Value *inputDataSummaryValue;
+	if (outputDataSummaryValue)
+	{
+		// inputDataSummary = triggerDataSummary;
+		inputDataSummaryValue = outputDataSummaryValue;
 	}
 	else
 	{
-		// sentData = false;
-		sentDataValue = falseValue;
-
-		// triggerDataSummary = NULL;
-		triggerDataSummaryValue = ConstantPointerNull::get(pointerToCharType);
+		// inputDataSummary = <Type>_summaryFromValue(inputData);
+		inputDataSummaryValue = generatePortSummary(module, block, inputPort);
 	}
 
-	// sendOutputPortsUpdated(triggerPortIdentifier, sentData, triggerDataSummary);
-	vector<Value *> sendOutputPortsUpdatedArgs;
-	sendOutputPortsUpdatedArgs.push_back(triggerIdentifierValue);
-	sendOutputPortsUpdatedArgs.push_back(sentDataValue);
-	sendOutputPortsUpdatedArgs.push_back(triggerDataSummaryValue);
-	CallInst::Create(sendOutputPortsUpdatedFunction, sendOutputPortsUpdatedArgs, "", block);
+	// sendInputPortsUpdated(inputPortIdentifier, true, sentData, inputDataSummary);
+	Function *sendInputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendInputPortsUpdatedFunction(module);
+	Type *boolType = sendInputPortsUpdatedFunction->getFunctionType()->getParamType(1);
+	Constant *trueValue = ConstantInt::get(boolType, 1);
+	vector<Value *> sendInputPortsUpdatedArgs;
+	sendInputPortsUpdatedArgs.push_back(inputPortIdentifierValue);
+	sendInputPortsUpdatedArgs.push_back(trueValue);
+	sendInputPortsUpdatedArgs.push_back(sentDataValue);
+	sendInputPortsUpdatedArgs.push_back(inputDataSummaryValue);
+	CallInst::Create(sendInputPortsUpdatedFunction, sendInputPortsUpdatedArgs, "", block);
 
-	set<VuoCompilerTriggerEdge *> triggerEdges = triggerEdgesForTrigger[trigger];
-	for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
+	if (! outputDataSummaryValue)
 	{
-		set<VuoCompilerInputEventPort *> inputPorts = (*i)->getInputPorts();
-		for (set<VuoCompilerInputEventPort *>::iterator j = inputPorts.begin(); j != inputPorts.end(); ++j)
-		{
-			VuoCompilerInputEventPort *inputEventPort = *j;
-
-			string inputPortIdentifier = inputEventPort->getIdentifier();
-			Constant *inputPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, inputPortIdentifier);
-
-			Value *inputDataSummaryValue;
-			if (triggerDataValue)
-			{
-				// inputDataSummary = triggerDataSummary;
-				inputDataSummaryValue = triggerDataSummaryValue;
-			}
-			else
-			{
-				// inputDataSummary = <Type>_summaryFromValue(inputData);
-				inputDataSummaryValue = generatePortSummary(module, block, inputEventPort);
-			}
-
-			// sendInputPortsUpdated(inputPortIdentifier, true, sentData, inputDataSummary);
-			Function *sendInputPortsUpdatedFunction = VuoCompilerCodeGenUtilities::getSendInputPortsUpdatedFunction(module);
-			vector<Value *> sendInputPortsUpdatedArgs;
-			sendInputPortsUpdatedArgs.push_back(inputPortIdentifierValue);
-			sendInputPortsUpdatedArgs.push_back(trueValue);
-			sendInputPortsUpdatedArgs.push_back(sentDataValue);
-			sendInputPortsUpdatedArgs.push_back(inputDataSummaryValue);
-			CallInst::Create(sendInputPortsUpdatedFunction, sendInputPortsUpdatedArgs, "", block);
-
-			if (! triggerDataValue)
-			{
-				// free(inputDataSummary)
-				CallInst::Create(freeFunction, inputDataSummaryValue, "", block);
-			}
-		}
-	}
-
-	if (triggerDataValue)
-	{
-		// free(triggerDataSummary)
-		CallInst::Create(freeFunction, triggerDataSummaryValue, "", block);
+		// free(inputDataSummary)
+		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
+		CallInst::Create(freeFunction, inputDataSummaryValue, "", block);
 	}
 }
 
@@ -2746,11 +2462,10 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerFunctionHeader(VuoCompile
 void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTriggerPort *trigger)
 {
 	Function *function = trigger->getFunction();
-	VuoCompilerTriggerAction *triggerAction = triggerActionForTrigger[trigger];
 
 	// Schedule the following:
 	BasicBlock *workerSchedulerBlock = BasicBlock::Create(module->getContext(), "workerSchedulerBlock", function, NULL);
-	Function *triggerWorker = triggerAction->generateAsynchronousSubmissionToDispatchQueue(module, workerSchedulerBlock, trigger->getIdentifier());
+	Function *triggerWorker = trigger->generateAsynchronousSubmissionToDispatchQueue(module, workerSchedulerBlock, trigger->getIdentifier());
 	ReturnInst::Create(module->getContext(), workerSchedulerBlock);
 
 	BasicBlock *isPausedComparisonBlock = BasicBlock::Create(module->getContext(), "isPausedComparisonBlock", triggerWorker, NULL);
@@ -2766,71 +2481,10 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 	// Get a unique ID for this event.
 	Value *eventIdValueInTriggerWorker = generateGetNextEventID(module, triggerBlock);
 
-	// Does the trigger port have a gather somewhere downstream of it?
-	// If so, then when the event reaches its first scatter, all downstream nodes will be locked before the event can proceed.
-	// This is an (imprecise) way to prevent deadlock in the situation where one trigger port has scatter and a gather,
-	// and another trigger port overlaps with some branches of the scatter but not others (https://b33p.net/kosada/node/6696).
-	bool isGatherDownstreamOfTrigger = false;
-	for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end() && ! isGatherDownstreamOfTrigger; ++i)
-		if (isNodeDownstreamOfTrigger(*i, trigger) && isGather(*i, trigger))
-			isGatherDownstreamOfTrigger = true;
-
-	// Does the trigger port have out-of-topological-order nodes somewhere downstream of it?
-	// If so, then all downstream nodes will be locked before the event can proceed.
-	// This prevents deadlock where the events from two different trigger ports reach the downstream nodes in a different order
-	// (https://b33p.net/kosada/node/7924).
-	bool hasOutOfOrderDownstreamNodes = false;
-	vector<VuoCompilerChain *> chains = chainsForTrigger[trigger];
-	vector<VuoCompilerNode *> firstNodeInEachChain;
-	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
-	{
-		VuoCompilerChain *chain = *i;
-		vector<VuoCompilerNode *> chainNodes = chain->getNodes();
-		set<VuoCompilerNode *> chainNodeSet(chainNodes.begin(), chainNodes.end());
-		vector<VuoCompilerNode *> sortedChainNodes = sortNodes(chainNodeSet);
-		if (chainNodes != sortedChainNodes)
-		{
-			hasOutOfOrderDownstreamNodes = true;
-			break;
-		}
-		firstNodeInEachChain.push_back(*chainNodes.begin());
-	}
-	if (! hasOutOfOrderDownstreamNodes)
-	{
-		set<VuoCompilerNode *> firstNodeSet(firstNodeInEachChain.begin(), firstNodeInEachChain.end());
-		vector<VuoCompilerNode *> sortedFirstNodes = sortNodes(firstNodeSet);
-		if (firstNodeInEachChain != sortedFirstNodes)
-			hasOutOfOrderDownstreamNodes = true;
-	}
-
-	// Wait for the node containing the trigger port and the nodes directly downstream of the trigger —
-	// or, if the trigger scatters the event and there's a gather downstream
-	// or the trigger has out-of-topological-order downstream nodes, wait for all nodes downstream.
-	set<VuoCompilerNode *> triggerOutputNodes;
-	set<VuoCompilerTriggerEdge *> triggerEdges = triggerEdgesForTrigger[trigger];
-	if (! (isGatherDownstreamOfTrigger && triggerEdges.size() > 1) && ! hasOutOfOrderDownstreamNodes)
-	{
-		for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
-		{
-			VuoCompilerTriggerEdge *edge = *i;
-			triggerOutputNodes.insert( edge->getToNode() );
-		}
-	}
-	else
-	{
-		for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
-			if (isNodeDownstreamOfTrigger(*i, trigger))
-				triggerOutputNodes.insert(*i);
-	}
-	VuoCompilerNode *triggerNode = nodeForTrigger[trigger];
-	bool isTriggerWaitNeeded = ((triggerNode->getBase() != composition->getPublishedInputNode()) &&
-								(triggerNode->getBase() != composition->getPublishedOutputNode()) &&
-								(triggerOutputNodes.find(triggerNode) == triggerOutputNodes.end()));
-	if (isTriggerWaitNeeded)
-		triggerOutputNodes.insert(triggerNode);
-	vector<VuoCompilerNode *> orderedTriggerOutputNodes = sortNodes(triggerOutputNodes);
+	// Attempt to claim all necessary downstream nodes.
+	vector<VuoCompilerNode *> triggerWaitNodes = getNodesToWaitOnBeforeTransmission(trigger);
 	bool canDropEvents = (trigger->getBase()->getEventThrottling() == VuoPortClass::EventThrottling_Drop);
-	Value *didClaimNodes = generateWaitForNodes(module, triggerWorker, triggerBlock, orderedTriggerOutputNodes, eventIdValueInTriggerWorker, ! canDropEvents);
+	Value *didClaimNodes = generateWaitForNodes(module, triggerWorker, triggerBlock, triggerWaitNodes, eventIdValueInTriggerWorker, ! canDropEvents);
 
 	// If this trigger can drop events and the downstream nodes are not immediately available, then drop this event.
 	if (canDropEvents)
@@ -2842,29 +2496,32 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 		BranchInst::Create(nextTriggerBlock, dropEventBlock, claimedNodesIsTrue, triggerBlock);
 		triggerBlock = nextTriggerBlock;
 
-		triggerAction->generateDataValueDiscard(module, dropEventBlock, triggerWorker);
+		trigger->generateDataValueDiscard(module, dropEventBlock, triggerWorker);
 		BranchInst::Create(triggerReturnBlock, dropEventBlock);
 	}
 
 	// Update the stored trigger port value.
-	Value *triggerDataValue = triggerAction->generateDataValueUpdate(module, triggerBlock, triggerWorker);
-	if (isTriggerWaitNeeded)
-		generateSignalForNodes(module, triggerBlock, vector<VuoCompilerNode *>(1, triggerNode));
+	Value *triggerDataValue = trigger->generateDataValueUpdate(module, triggerBlock, triggerWorker);
 
-	// Send telemetry indicating that the trigger port value may have changed.
-	generateSendTriggerPortValueChangedCall(triggerBlock, trigger, triggerDataValue);
-
-	// Transmit data and events along each of the trigger's cables.
-	for (set<VuoCompilerTriggerEdge *>::iterator i = triggerEdges.begin(); i != triggerEdges.end(); ++i)
+	// If the node containing the trigger no longer needs to be claimed, signal it.
+	VuoCompilerNode *triggerNode = graph->getNodesForTriggerPorts()[trigger];
+	bool isTriggerNodeClaimed = find(triggerWaitNodes.begin(), triggerWaitNodes.end(), triggerNode) != triggerWaitNodes.end();
+	if (isTriggerNodeClaimed)
 	{
-		VuoCompilerTriggerEdge *edge = *i;
-		edge->generateTransmission(module, triggerBlock, triggerDataValue);
+		vector<VuoCompilerNode *> nodesDownstreamOfTrigger = graph->getNodesDownstream(triggerNode, trigger);
+		bool isTriggerNodeDownstream = find(nodesDownstreamOfTrigger.begin(), nodesDownstreamOfTrigger.end(), triggerNode) != nodesDownstreamOfTrigger.end();
+		if (! isTriggerNodeDownstream)
+			generateSignalForNodes(module, triggerBlock, vector<VuoCompilerNode *>(1, triggerNode));
 	}
+
+	// Transmit events and data (if any) out of the trigger port, and send telemetry for port updates.
+	generateTransmissionFromOutputPort(triggerWorker, triggerBlock, trigger, triggerDataValue);
 
 
 	// For each chain downstream of the trigger...
 
 	// Create a dispatch group for the chain.
+	vector<VuoCompilerChain *> chains = chainsForTrigger[trigger];
 	for (vector<VuoCompilerChain *>::iterator i = chains.begin(); i != chains.end(); ++i)
 	{
 		VuoCompilerChain *chain = *i;
@@ -2888,7 +2545,7 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 				break;  // Any chains after this are downstream.
 
 			VuoCompilerNode *lastNodeInOtherChain = otherChain->getNodes().back();
-			if (edgeExists(lastNodeInOtherChain, firstNodeInThisChain, trigger))
+			if (graph->mayTransmit(lastNodeInOtherChain, firstNodeInThisChain, trigger))
 				upstreamChains.push_back(otherChain);
 		}
 
@@ -2902,7 +2559,8 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 		chain->generateWaitForUpstreamChains(module, chainWorker, chainSetupBlock);
 
 		// For each node in the chain...
-		Value *eventIdValueInChainWorker = chain->getEventIdValue(module, chainWorker, chainSetupBlock);
+		Value *eventIdValueInChainWorker = chain->generateEventIdValue(module, chainWorker, chainSetupBlock);
+		chain->generateFreeContextArgument(module, chainWorker, chainSetupBlock);
 		BasicBlock *prevBlock = chainSetupBlock;
 		for (vector<VuoCompilerNode *>::iterator j = chainNodes.begin(); j != chainNodes.end(); ++j)
 		{
@@ -2911,96 +2569,41 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 			// If the node received an event, then...
 			BasicBlock *nodeExecutionBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
 			BasicBlock *downstreamWaitBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			BasicBlock *transmissionBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			BasicBlock *signalBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
 			Value *nodePushedCondition = node->generateReceivedEventCondition(prevBlock);
 			BranchInst::Create(nodeExecutionBlock, downstreamWaitBlock, nodePushedCondition, prevBlock);
 
-			// Send telemetry indicating that the node's execution has started.
-			Constant *nodeIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, node->getIdentifier());
-			Function *sendNodeExecutionStartedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionStartedFunction(module);
-			CallInst::Create(sendNodeExecutionStartedFunction, nodeIdentifierValue, "", nodeExecutionBlock);
-
-			// Call the node's event function.
-			if (debugMode)
-				VuoCompilerCodeGenUtilities::generatePrint(module, nodeExecutionBlock, node->getBase()->getTitle() + "\n");
-			BasicBlock *nodeEventFinalBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			node->generateEventFunctionCall(module, chainWorker, nodeExecutionBlock, nodeEventFinalBlock);
-			nodeExecutionBlock = nodeEventFinalBlock;
-
-			// Send telemetry indicating that the node's execution has finished.
-			Function *sendNodeExecutionFinishedFunction = VuoCompilerCodeGenUtilities::getSendNodeExecutionFinishedFunction(module);
-			CallInst::Create(sendNodeExecutionFinishedFunction, nodeIdentifierValue, "", nodeExecutionBlock);
+			// Call the node's event function, and send telemetry that the node's execution has started and finished.
+			generateNodeExecution(chainWorker, nodeExecutionBlock, node);
 
 
 			// Regardless of whether the node received an event...
 			BranchInst::Create(downstreamWaitBlock, nodeExecutionBlock);
 
-			// Wait for the nodes directly downstream of the current node —
-			// or, if the node scatters the event and there's a gather downstream, wait for all nodes downstream.
-			set<VuoCompilerPassiveEdge *> passiveOutEdges = passiveOutEdgesForNode[node];
-			set<VuoCompilerPassiveEdge *> passiveEdgesForCurrentTrigger = passiveEdgesForTrigger[trigger];
-			if (loopEndNodes.find(node) == loopEndNodes.end() || scheduledNodes.find(node) == scheduledNodes.end())
+			// Wait on any necessary downstream nodes.
+			if (! graph->isRepeatedInFeedbackLoop(node, trigger) || scheduledNodes.find(node) == scheduledNodes.end())
 			{
-				vector<VuoCompilerNode *> orderedOutputNodes;
-				if (! (isGatherDownstreamOfTrigger && isScatter(node, trigger)))
-				{
-					set<VuoCompilerNode *> outputNodes;
-					for (set<VuoCompilerPassiveEdge *>::iterator j = passiveOutEdges.begin(); j != passiveOutEdges.end(); ++j)
-					{
-						VuoCompilerPassiveEdge *edge = *j;
-						if (passiveEdgesForCurrentTrigger.find(edge) == passiveEdgesForCurrentTrigger.end())
-							continue;
-						outputNodes.insert( edge->getToNode() );
-					}
-					orderedOutputNodes = sortNodes(outputNodes);
-				}
-				else
-				{
-					for (vector<VuoCompilerNode *>::iterator i = orderedNodes.begin(); i != orderedNodes.end(); ++i)
-						if (isNodeDownstreamOfNode(*i, node))
-							orderedOutputNodes.push_back(*i);
-				}
-				generateWaitForNodes(module, chainWorker, downstreamWaitBlock, orderedOutputNodes, eventIdValueInChainWorker);
+				vector<VuoCompilerNode *> outputNodes = getNodesToWaitOnBeforeTransmission(trigger, node);
+				generateWaitForNodes(module, chainWorker, downstreamWaitBlock, outputNodes, eventIdValueInChainWorker);
 			}
 
 
 			// If the node received an event, then...
-			BranchInst::Create(transmissionBlock, signalBlock, nodePushedCondition, downstreamWaitBlock);
+			BasicBlock *transmissionTelemetryBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			BasicBlock *signalBlock = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
+			BranchInst::Create(transmissionTelemetryBlock, signalBlock, nodePushedCondition, downstreamWaitBlock);
 
-			// Send telemetry indicating that the node's output port values, and any connected input port values, may have changed.
-			BasicBlock *nextnodePushedBlock2 = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-			generateSendPortsUpdatedCall(transmissionBlock, nextnodePushedBlock2, node);
-			transmissionBlock = nextnodePushedBlock2;
-
-			// Transmit data and events along the node's output cables.
-			set <VuoCompilerPort * > outputPortsInPassiveEdges;
-			for (set<VuoCompilerPassiveEdge *>::iterator j = passiveOutEdges.begin(); j != passiveOutEdges.end(); ++j)
-			{
-				VuoCompilerPassiveEdge *edge = *j;
-				if (passiveEdgesForCurrentTrigger.find(edge) == passiveEdgesForCurrentTrigger.end())
-					continue;
-				set <VuoCompilerOutputEventPort * > outputPortsInThisEdge = edge->getOutputPorts();
-				for (set<VuoCompilerOutputEventPort * >::iterator k = outputPortsInThisEdge.begin(); k != outputPortsInThisEdge.end(); ++k)
-				{
-					VuoCompilerOutputEventPort *outputPort = *k;
-					outputPortsInPassiveEdges.insert(outputPort);
-				}
-
-				BasicBlock *nextnodePushedBlock2 = BasicBlock::Create(module->getContext(), "", chainWorker, NULL);
-				edge->generateTransmission(module, transmissionBlock, nextnodePushedBlock2);
-				transmissionBlock = nextnodePushedBlock2;
-			}
+			// Transmit events and data through the node's outgoing cables, and send telemetry for port updates.
+			generateTransmissionFromNode(chainWorker, transmissionTelemetryBlock, node);
 
 			// Reset the node's event inputs.
-			node->generatePushedReset(transmissionBlock);
+			node->generatePushedReset(transmissionTelemetryBlock);
 
 
 			// Regardless of whether the node received an event...
-			BranchInst::Create(signalBlock, transmissionBlock);
+			BranchInst::Create(signalBlock, transmissionTelemetryBlock);
 
 			// If this was the last time this event could reach the node, signal the node's semaphore.
-			if (loopEndNodes.find(node) == loopEndNodes.end() || scheduledNodes.find(node) != scheduledNodes.end())
+			if (! graph->isRepeatedInFeedbackLoop(node, trigger) || scheduledNodes.find(node) != scheduledNodes.end())
 			{
 				vector<VuoCompilerNode *> nodeList;
 				nodeList.push_back(node);

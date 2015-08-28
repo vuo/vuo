@@ -22,11 +22,11 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoReal,0.0) value,
-		VuoInputData(VuoReal,0.0) start,
-		VuoInputData(VuoReal,0.0) end,
-		VuoInputData(VuoReal,0.0) scaledStart,
-		VuoInputData(VuoReal,0.0) scaledEnd,
+		VuoInputData(VuoReal, {"default":0.0}) value,
+		VuoInputData(VuoReal, {"default":0.0}) start,
+		VuoInputData(VuoReal, {"default":1.0}) end,
+		VuoInputData(VuoReal, {"default":0.0}) scaledStart,
+		VuoInputData(VuoReal, {"default":100.0}) scaledEnd,
 		VuoOutputData(VuoReal) scaledValue
 )
 {

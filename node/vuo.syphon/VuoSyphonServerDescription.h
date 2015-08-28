@@ -34,6 +34,7 @@ typedef struct
 VuoSyphonServerDescription VuoSyphonServerDescription_valueFromJson(struct json_object * js);
 struct json_object * VuoSyphonServerDescription_jsonFromValue(const VuoSyphonServerDescription value);
 char * VuoSyphonServerDescription_summaryFromValue(const VuoSyphonServerDescription value);
+bool VuoSyphonServerDescription_areEqual(const VuoSyphonServerDescription value1, const VuoSyphonServerDescription value2);
 
 VuoSyphonServerDescription VuoSyphonServerDescription_make(VuoText serverUUID, VuoText serverName, VuoText applicationName);
 

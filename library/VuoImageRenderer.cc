@@ -98,13 +98,15 @@ VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
 	glGenVertexArrays(1, &imageRenderer->vertexArray);
 	glBindVertexArray(imageRenderer->vertexArray);
 	{
-		imageRenderer->quadDataBuffer = VuoGlPool_use(glContext, VuoGlPool_ArrayBuffer, sizeof(quadData));
+		imageRenderer->quadDataBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, sizeof(quadData));
+		VuoGlPool_retain(imageRenderer->quadDataBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STREAM_DRAW);
 /// @todo https://b33p.net/kosada/node/6901
 //		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quadData), quadData);
 
-		imageRenderer->quadElementBuffer = VuoGlPool_use(glContext, VuoGlPool_ElementArrayBuffer, sizeof(quadElements));
+		imageRenderer->quadElementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer, sizeof(quadElements));
+		VuoGlPool_retain(imageRenderer->quadElementBuffer);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->quadElementBuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadElements), quadElements, GL_STREAM_DRAW);
 /// @todo https://b33p.net/kosada/node/6901
@@ -123,18 +125,20 @@ VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
  * @threadAnyGL
  * (Additionally, the caller is responsible for ensuring that the same @c VuoImageRenderer is not used simultaneously on multiple threads.)
  */
-VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh)
+VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth)
 {
 	if (pixelsWide < 1 || pixelsHigh < 1)
 		return NULL;
 
-	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,false), GL_RGBA, pixelsWide, pixelsHigh);
+	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,imageColorDepth,false,false), VuoImageColorDepth_getGlInternalFormat(GL_RGBA, imageColorDepth), pixelsWide, pixelsHigh);
 }
 
 /**
  * Helper for VuoImageRenderer_draw().
+ *
+ * If @c outputToGlTextureRectangle is true, the caller is responsible for deleting the texture (it should not be thrown into the GL texture pool).
  */
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, bool outputToIOSurface)
+unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle)
 {
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
 
@@ -146,13 +150,31 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		glViewport(0, 0, pixelsWide, pixelsHigh);
 
 		// Create a new GL Texture Object.
-		GLuint textureTarget = outputToIOSurface ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
+		GLuint textureTarget = (outputToIOSurface || outputToGlTextureRectangle) ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
+		GLuint textureTargetInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_RGBA, imageColorDepth);
 
-		VuoIoSurface ioSurface;
+		VuoIoSurface ioSurface = NULL;
 		if (outputToIOSurface)
 			ioSurface = VuoIoSurfacePool_use(cgl_ctx, pixelsWide, pixelsHigh, &outputTexture);
 		else
-			outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, GL_RGBA, pixelsWide, pixelsHigh, GL_RGBA);
+		{
+			if (outputToGlTextureRectangle)
+			{
+				glGenTextures(1, &outputTexture);
+				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, outputTexture);
+				glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, textureTargetInternalFormat, pixelsWide, pixelsHigh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+			}
+			else
+				outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_RGBA);
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, imageRenderer->outputFramebuffer);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, outputTexture, 0);
@@ -162,38 +184,59 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 
 		// Execute the shader.
 		{
-			glUseProgram(shader->glProgramName);
+			GLint positionAttribute;
+			GLint textureCoordinateAttribute;
+			bool ret = VuoShader_getAttributeLocations(shader, VuoMesh_IndividualTriangles, cgl_ctx, &positionAttribute, NULL, NULL, NULL, &textureCoordinateAttribute);
+			if (!ret)
 			{
-				VuoShader_activateTextures(shader, cgl_ctx);
+				VLog("Error: Failed to get attribute locations.");
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				if (outputToIOSurface)
+					VuoIoSurfacePool_disuse(cgl_ctx, pixelsWide, pixelsHigh, ioSurface, outputTexture);
+				else
 				{
-					glBindVertexArray(imageRenderer->vertexArray);
+					if (outputToGlTextureRectangle)
+						glDeleteTextures(1, &outputTexture);
+					else
+					{
+						VuoGlTexture_retain(outputTexture);
+						VuoGlTexture_release(textureTargetInternalFormat, pixelsWide, pixelsHigh, outputTexture);
+					}
+				}
+				return 0;
+			}
 
-					GLint projectionMatrixUniform = glGetUniformLocation(shader->glProgramName, "projectionMatrix");
-					glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, unityMatrix);
+			unsigned int programName = VuoShader_activate(shader, VuoMesh_IndividualTriangles, cgl_ctx);
+			{
+				glBindVertexArray(imageRenderer->vertexArray);
 
-					GLint modelviewMatrixUniform = glGetUniformLocation(shader->glProgramName, "modelviewMatrix");
-					glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, unityMatrix);
+				GLint projectionMatrixUniform = glGetUniformLocation(programName, "projectionMatrix");
+				glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, unityMatrix);
 
-					glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
+				GLint modelviewMatrixUniform = glGetUniformLocation(programName, "modelviewMatrix");
+				glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, unityMatrix);
 
-					GLuint positionAttribute = glGetAttribLocation(shader->glProgramName, "position");
-					glEnableVertexAttribArray(positionAttribute);
-					glVertexAttribPointer(positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)0);
+				glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
 
-					GLint textureCoordinateAttribute = glGetAttribLocation(shader->glProgramName, "textureCoordinate");
+				glEnableVertexAttribArray(positionAttribute);
+				glVertexAttribPointer(positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)0);
+
+				if (textureCoordinateAttribute != -1)
+				{
 					glEnableVertexAttribArray(textureCoordinateAttribute);
 					glVertexAttribPointer(textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)(sizeof(GLfloat)*16));
-
-					glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
-
-					glDisableVertexAttribArray(textureCoordinateAttribute);
-					glDisableVertexAttribArray(positionAttribute);
-
-					glBindVertexArray(0);
 				}
-				VuoShader_deactivateTextures(shader, cgl_ctx);
+
+				glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
+
+				if (textureCoordinateAttribute != -1)
+				glDisableVertexAttribArray(textureCoordinateAttribute);
+
+				glDisableVertexAttribArray(positionAttribute);
+
+				glBindVertexArray(0);
 			}
-			glUseProgram(0);
+			VuoShader_deactivate(shader, VuoMesh_IndividualTriangles, cgl_ctx);
 		}
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, 0, 0);
@@ -224,8 +267,11 @@ void VuoImageRenderer_destroy(VuoImageRenderer ir)
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
 	CGLContextObj cgl_ctx = (CGLContextObj)imageRenderer->glContext;
 
-	VuoGlPool_disuse(imageRenderer->glContext, VuoGlPool_ElementArrayBuffer, sizeof(quadElements), imageRenderer->quadElementBuffer);
-	VuoGlPool_disuse(imageRenderer->glContext, VuoGlPool_ArrayBuffer, sizeof(quadData), imageRenderer->quadDataBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	VuoGlPool_release(VuoGlPool_ElementArrayBuffer, sizeof(quadElements), imageRenderer->quadElementBuffer);
+	VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(quadData), imageRenderer->quadDataBuffer);
+
 	glDeleteVertexArrays(1, &imageRenderer->vertexArray);
 	glDeleteFramebuffers(1, &imageRenderer->outputFramebuffer);
 	free(imageRenderer);

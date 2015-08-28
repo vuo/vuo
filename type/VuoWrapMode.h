@@ -10,6 +10,11 @@
 #ifndef VUOWRAPMODE_H
 #define VUOWRAPMODE_H
 
+/// @{
+typedef void * VuoList_VuoWrapMode;
+#define VuoList_VuoWrapMode_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoWrapMode VuoWrapMode
@@ -28,6 +33,7 @@ typedef enum {
 
 VuoWrapMode VuoWrapMode_valueFromJson(struct json_object * js);
 struct json_object * VuoWrapMode_jsonFromValue(const VuoWrapMode value);
+VuoList_VuoWrapMode VuoWrapMode_allowedValues(void);
 char * VuoWrapMode_summaryFromValue(const VuoWrapMode value);
 
 /// @{
@@ -36,6 +42,8 @@ char * VuoWrapMode_summaryFromValue(const VuoWrapMode value);
  */
 VuoWrapMode VuoWrapMode_valueFromString(const char *str);
 char * VuoWrapMode_stringFromValue(const VuoWrapMode value);
+void VuoWrapMode_retain(VuoWrapMode value);
+void VuoWrapMode_release(VuoWrapMode value);
 /// @}
 
 /**

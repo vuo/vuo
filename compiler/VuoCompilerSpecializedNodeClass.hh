@@ -37,7 +37,7 @@ public:
 	virtual string getOriginalGenericNodeClassDescription(void);
 	virtual VuoNodeSet *getOriginalGenericNodeSet(void);
 	virtual string createUnspecializedNodeClassName(set<VuoPortClass *> portClassesToUnspecialize);
-	string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
+	virtual string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
 	string createDefaultSpecializedNodeClassName(void);
 
 	static VuoNodeClass * newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack=NULL);

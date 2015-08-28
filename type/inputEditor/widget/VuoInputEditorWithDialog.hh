@@ -21,6 +21,8 @@ public:
 	json_object * show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues);
 
 protected:
+	QDialog * getDialog(void);
+
 	/**
 	 * Adds widgets to the dialog and configures them to display the dialog's initial value.
 	 *
@@ -34,6 +36,9 @@ protected:
 	 * Returns the value currently set in the dialog's widgets.
 	 */
 	virtual json_object * getAcceptedValue(void) = 0;
+
+private:
+	QDialog *dialogPointer;
 };
 
 #endif // VUOINPUTEDITORWITHDIALOG_HH

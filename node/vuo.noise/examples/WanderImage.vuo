@@ -9,22 +9,17 @@
 
 digraph G
 {
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="358,98"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="358,98" _started_eventThrottling="enqueue"];
 GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="537,141" _imageURL="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
-Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="541,307" _z="0.0"];
-MakeGradientNoise1D [type="vuo.noise.gradient.VuoReal" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="308,305" fillcolor="green" _gradientNoise="\"perlin\""];
-MakeGradientNoise1D2 [type="vuo.noise.gradient.VuoReal" version="1.0.0" label="Make Gradient Noise 1D|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="307,392" fillcolor="green" _gradientNoise="\"simplex\""];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="985,152"];
+MakeGradientNoise12 [type="vuo.noise.gradient.VuoReal.VuoPoint3d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<done>done\r|<value>value\r" pos="530,318" fillcolor="violet" _gradientNoise="\"perlin\""];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="985,152"];
 PlaceImageinScene [type="vuo.scene.make.image.unlit" version="1.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="721,141" _rotation="0,0,0" _width="0.500000" _alpha="1.000000"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1051,141" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1051,141" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 FireonStart:started -> GetImage:refresh;
 GetImage:image -> PlaceImageinScene:image;
-Make3DPoint:point -> PlaceImageinScene:center;
-MakeGradientNoise1D2:value -> Make3DPoint:y;
-MakeGradientNoise1D:value -> Make3DPoint:x;
+MakeGradientNoise12:value -> PlaceImageinScene:center;
 MakeList2:list -> RenderSceneToWindow2:objects;
-PlaceImageinScene:object -> MakeList2:item1;
-RenderSceneToWindow2:requestedFrame -> MakeGradientNoise1D2:position;
-RenderSceneToWindow2:requestedFrame -> MakeGradientNoise1D:position;
+PlaceImageinScene:object -> MakeList2:1;
+RenderSceneToWindow2:requestedFrame -> MakeGradientNoise12:position;
 }

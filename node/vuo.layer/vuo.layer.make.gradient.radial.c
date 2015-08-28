@@ -24,7 +24,7 @@ void nodeEvent
 		VuoInputData(VuoText) name,
 		VuoInputData(VuoList_VuoColor, {"default":[{"r":1,"g":1,"b":1,"a":1}, {"r":0,"g":0,"b":0,"a":1}]}) colors,
 		VuoInputData(VuoPoint2d, {"default":{"x":0, "y":0}, "suggestedStep":{"x":0.1,"y":0.1}}) gradientCenter,
-		VuoInputData(VuoReal, {"default":1, "suggestedStep":0.1}) gradientRadius,
+		VuoInputData(VuoReal, {"default":1, "suggestedMin":0.0, "suggestedStep":0.1}) gradientRadius,
 		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) layerCenter,
 		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedMax":360.0, "suggestedStep":15.0}) layerRotation,
 		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) layerWidth,

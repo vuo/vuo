@@ -11,7 +11,7 @@ digraph G
 {
 TriggerCarryingReal1 [type="vuo.test.triggerCarryingReal" label="TriggerCarryingReal1|<refresh>refresh\l|<fired>fired\r"];
 ConvertRealToText1 [type="vuo.type.real.text" label="Convert Real to Text1|<refresh>refresh\l|<real>real\l|<text>text\r" _real="0"];
-DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" _writeLine=""];
+DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r"];
 
 TriggerCarryingReal1:fired -> ConvertRealToText1:real;
 ConvertRealToText1:text -> DisplayConsoleWindow1:writeLine;

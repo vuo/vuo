@@ -105,6 +105,15 @@ VuoNodeSet {
 	exists($$NODE_SET_DIR/examples/*.jpg) { NODE_SET_ZIP_CONTENTS += examples/*.jpg }
 	exists($$NODE_SET_DIR/examples/*.mov) { NODE_SET_ZIP_CONTENTS += examples/*.mov }
 	exists($$NODE_SET_DIR/examples/*.mp3) { NODE_SET_ZIP_CONTENTS += examples/*.mp3 }
+	exists($$NODE_SET_DIR/examples/*.3ds) { NODE_SET_ZIP_CONTENTS += examples/*.3ds }
+	exists($$NODE_SET_DIR/examples/*.dae) { NODE_SET_ZIP_CONTENTS += examples/*.dae }
+	exists($$NODE_SET_DIR/examples/*.data){ NODE_SET_ZIP_CONTENTS += examples/*.data}
+
+	# Check for impending existence of premium nodes.
+	exists($$NODE_SET_DIR/premium) { NODE_SET_ZIP_CONTENTS += *.vuonode+ }
+
+	# Ugly hack to check for impending existence of premium node libraries.
+	exists($$NODE_SET_DIR/premium/Vuo[^\.]*) { NODE_SET_ZIP_CONTENTS += *.bc+ }
 
 	createNodeSetZip.commands = \
 		( [ -f $$NODE_SET_ZIP ] && rm $$NODE_SET_ZIP ) ; \

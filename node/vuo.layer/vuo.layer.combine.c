@@ -11,7 +11,7 @@
 #include "VuoLayer.h"
 
 VuoModuleMetadata({
-					 "title" : "Combine Layers",
+					 "title" : "Combine Layers with Transform",
 					 "keywords" : [ "group", "join", "together", "merge" ],
 					 "version" : "1.0.0",
 					 "node": {

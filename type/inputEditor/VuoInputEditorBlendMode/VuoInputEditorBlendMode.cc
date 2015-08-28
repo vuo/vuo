@@ -34,6 +34,7 @@ VuoInputEditorMenuItem * VuoInputEditorBlendMode::setUpMenuTree()
 		json_object *optionAsJson = VuoBlendMode_jsonFromValue( (VuoBlendMode)i );
 		char *optionSummary = VuoBlendMode_summaryFromValue( (VuoBlendMode)i );
 		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson);
+		free(optionSummary);
 		optionsTree->addItem(optionItem);
 
 		// Add separators after the last item in each group.

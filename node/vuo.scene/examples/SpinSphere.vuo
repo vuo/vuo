@@ -9,23 +9,23 @@
 
 digraph G
 {
-ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="559,609"];
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-5,228" fillcolor="green"];
-Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="362,248" fillcolor="green" _shader=""];
-MakeList [type="vuo.list.make.2.VuoReal" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="160,510" fillcolor="yellow" _item2="20.000000"];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="509,259" fillcolor="green"];
-MakeSphereVertices [type="vuo.vertices.make.sphere" version="1.0.0" label="Make Sphere Vertices|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<vertices>vertices\r" pos="155,248" fillcolor="green" _rows="16" _columns="16"];
-MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="460,484" fillcolor="yellow" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="223,499" fillcolor="yellow"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="575,248" fillcolor="green" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="487,432"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-77,51" fillcolor="green" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="290,71" fillcolor="green"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="88,333" fillcolor="yellow" _2="20.000000"];
+MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="437,82" fillcolor="green"];
+MakeSphereVertices [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<mesh>mesh\r" pos="83,71" fillcolor="green" _rows="16" _columns="16"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="388,307" fillcolor="yellow" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="151,322" fillcolor="yellow"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="503,71" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 ConvertRealTo3DPoint2:point3d -> MakeTransform:rotation;
 FireonStart:started -> MakeSphereVertices:refresh;
-Make3DObject:object -> MakeList2:item1;
+Make3DObject:object -> MakeList2:1;
 MakeList2:list -> RenderSceneToWindow2:objects;
 MakeList:list -> Multiply:terms;
-MakeSphereVertices:vertices -> Make3DObject:vertices;
+MakeSphereVertices:mesh -> Make3DObject:mesh;
 MakeTransform:transform -> Make3DObject:transform;
 Multiply:product -> ConvertRealTo3DPoint2:y;
-RenderSceneToWindow2:requestedFrame -> MakeList:item1;
+RenderSceneToWindow2:requestedFrame -> MakeList:1;
 }

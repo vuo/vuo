@@ -16,7 +16,7 @@ GetMovieInfo [type="vuo.movie.info" version="1.0.0" label="Get Movie Info|<refre
 HoldValue [type="vuo.hold.VuoText" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="343,98" fillcolor="cyan" _initialValue="\"chess.mov\"" _newValue="\"\""];
 ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="290,255" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
 RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="920,176" fillcolor="green" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="536,255" fillcolor="cyan" _start="-1.000000" _end="1.000000" _scaledStart=""];
+Scale [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="536,255" fillcolor="cyan" _start="-1.000000" _end="1.000000"];
 
 Convert2DPointToReal:x -> Scale:value;
 DecodeMovieImage:image -> RenderImageToWindow:image;

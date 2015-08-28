@@ -1,6 +1,9 @@
 TEMPLATE = aux
 CONFIG += zmq VuoPCH graphviz json
 
+VUO_INFO_PLIST = VuoCompositionLoader-Info.plist
+VUO_INFO_PLIST_GENERATED = VuoCompositionLoader-Info-generated.plist
+
 include(../vuo.pri)
 
 RUNTIME_C_SOURCES += \
@@ -49,7 +52,7 @@ QMAKE_EXTRA_COMPILERS += runtime_cxx
 
 runtime_loader.input = RUNTIME_LOADER_SOURCES
 runtime_loader.output = ${QMAKE_FILE_IN_BASE}
-runtime_loader.depends = ${QMAKE_PCH_OUTPUT} $$ROOT/base/VuoTelemetry.o
+runtime_loader.depends = ${QMAKE_PCH_OUTPUT} $$ROOT/base/VuoTelemetry.o $$VUO_INFO_PLIST_GENERATED
 runtime_loader.commands = \
 	$$QMAKE_CXX \
 		-Xclang -include-pch -Xclang $$ROOT/runtime/pch/runtime/c++.pch \
@@ -61,6 +64,7 @@ runtime_loader.commands = \
 		-framework CoreFoundation \
 		-framework Foundation \
 		-Wl,-rpath,@loader_path/../../../../.. \
+		-Wl,-sectcreate,__TEXT,__info_plist,$$VUO_INFO_PLIST_GENERATED \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_loader

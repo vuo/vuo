@@ -27,7 +27,7 @@ QMAKE_CLEAN = -r $${TARGET}.app
 # Rebuild this example when Vuo.framework's headers change.
 DEPENDPATH += $$VUO_FRAMEWORK_PATH/Vuo.framework/Headers
 
-GLFW_ROOT = /usr/local/Cellar/glfw/2.7.7/
+GLFW_ROOT = /usr/local/Cellar/glfw2/2.7.9/
 INCLUDEPATH += $${GLFW_ROOT}/include
 LIBS += -framework Vuo -L$${GLFW_ROOT}/lib -lglfw -framework OpenGL
 

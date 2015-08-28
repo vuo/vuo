@@ -12,6 +12,7 @@ NODE_SOURCES += \
 	vuo.audio.image.channels.c \
 	vuo.audio.image.waveform.c \
 	vuo.audio.listDevices.c \
+	vuo.audio.loudness.c \
 	vuo.audio.make.input.id.c \
 	vuo.audio.make.input.name.c \
 	vuo.audio.make.output.id.c \
@@ -30,8 +31,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoAudio.cc \
 	VuoAudioFile.c
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoAudio.h \
 	VuoAudioFile.h
 

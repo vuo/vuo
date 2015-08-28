@@ -1,6 +1,7 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	CycleSeasons.vuo
+	CycleSeasons.vuo \
+	ShowInstantReplay.vuo
 
 include(../../../example.pri)

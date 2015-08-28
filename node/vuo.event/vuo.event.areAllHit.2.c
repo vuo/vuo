@@ -20,8 +20,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputEvent(VuoPortEventBlocking_Door,) input1,
-		VuoInputEvent(VuoPortEventBlocking_Door,) input2,
+		VuoInputEvent(VuoPortEventBlocking_Door,,{"hasPortAction":false}) input1,
+		VuoInputEvent(VuoPortEventBlocking_Door,,{"hasPortAction":false}) input2,
 		VuoOutputData(VuoBoolean) allHit,
 		VuoOutputEvent(allHit) allHitEvent
 )

@@ -68,7 +68,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
 
-	instance->shader = VuoShader_make("Twirl Image", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+	instance->shader = VuoShader_make("Twirl Image");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(instance->shader);
 
 	instance->glContext = VuoGlContext_use();
@@ -92,17 +93,14 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "texture", image);
-
 	// Feed parameters to the shader.
-	VuoShader_setUniformPoint2d((*instance)->shader, (*instance)->glContext, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "angle", angle*M_PI/180.);
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "cutoffRadius", VuoShader_samplerSizeFromVuoSize(radius));
+	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "angle", angle*M_PI/180.);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "cutoffRadius", VuoShader_samplerSizeFromVuoSize(radius));
 
 	// Render.
-	*twirledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh);
+	*twirledImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

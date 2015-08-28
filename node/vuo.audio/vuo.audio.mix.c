@@ -18,7 +18,8 @@ VuoModuleMetadata({
 						 "VuoAudio"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						 "isInterface" : false,
+						 "exampleCompositions" : [ "PanAudio.vuo" ],
 					 }
 				 });
 
@@ -31,7 +32,7 @@ void nodeEvent
 	unsigned int channelCount = VuoListGetCount_VuoAudioSamples(audioSamples);
 
 	*mixedSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
-		
+
 	for(unsigned int n = 0; n < (*mixedSamples).sampleCount; n++)
 		(*mixedSamples).samples[n] = 0.;
 

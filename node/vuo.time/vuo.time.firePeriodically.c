@@ -93,7 +93,8 @@ void nodeInstanceTriggerUpdate
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) ctx,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedStep":0.1}) seconds,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0, "suggestedStep":0.1}) seconds,
+		VuoInputEvent(VuoPortEventBlocking_None, seconds) secondsEvent,
 		VuoOutputTrigger(fired,void,VuoPortEventThrottling_Drop)
 )
 {

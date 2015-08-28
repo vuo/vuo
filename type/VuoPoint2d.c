@@ -13,6 +13,7 @@
 #include "type.h"
 #include "VuoPoint2d.h"
 #include "VuoReal.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -134,9 +135,14 @@ json_object * VuoPoint2d_jsonFromValue(const VuoPoint2d value)
  */
 char * VuoPoint2d_summaryFromValue(const VuoPoint2d value)
 {
-	const char *format = "%g, %g";
-	int size = snprintf(NULL,0,format,value.x,value.y);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.x,value.y);
-	return valueAsString;
+	return VuoText_format("%g, %g", value.x, value.y);
+}
+
+/**
+ * Returns true if the two points are equal (within tolerance).
+ */
+bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2)
+{
+	return fabs(value1.x - value2.x) < 0.00001
+		&& fabs(value1.y - value2.y) < 0.00001;
 }

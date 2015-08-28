@@ -57,6 +57,7 @@ public:
 	QColor animatedPortFill(void);
 	QColor eventBlockingBarrier(void);
 	QColor animatedeventBlockingBarrier(void);
+	QColor actionIndicator(void);
 	QColor portFill(void);
 	QColor publishedPortFill(void);
 	QColor portTitlebarFill(void);
@@ -64,6 +65,8 @@ public:
 
 	QColor cableUpper(void);
 	QColor cableMain(void);
+
+	QColor errorMark(void);
 
 	static qint64 getVirtualNodeExecutionOrigin(void);
 	static qint64 getVirtualFiredEventOrigin(void);

@@ -14,8 +14,7 @@ NODE_LIBRARY_SOURCES += \
 SOURCES += \
 	VuoMovie.cc
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoMovie.h
 
 NODE_LIBRARY_INCLUDEPATH = \

@@ -12,12 +12,13 @@
 #include <string.h>
 #include "type.h"
 #include "VuoLeapPointableType.h"
+#include "VuoList_VuoLeapPointableType.h"
 
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "Leap Pointable Type",
-					 "description" : "VuoLeapPointable Type Enum.",
+					 "description" : "Whether a pointable is a finger or a tool.",
 					 "keywords" : [ "leap", "pointable" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -66,6 +67,17 @@ json_object * VuoLeapPointableType_jsonFromValue(const VuoLeapPointableType valu
 			break;
 	}
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoLeapPointableType VuoLeapPointableType_allowedValues(void)
+{
+	VuoList_VuoLeapPointableType l = VuoListCreate_VuoLeapPointableType();
+	VuoListAppendValue_VuoLeapPointableType(l, VuoLeapPointableType_Finger);
+	VuoListAppendValue_VuoLeapPointableType(l, VuoLeapPointableType_Tool);
+	return l;
 }
 
 /**

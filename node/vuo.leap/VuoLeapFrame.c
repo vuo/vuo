@@ -12,6 +12,7 @@
 
 #include "type.h"
 #include "VuoLeapFrame.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -71,11 +72,7 @@ json_object * VuoLeapFrame_jsonFromValue(const VuoLeapFrame value)
  */
 char * VuoLeapFrame_summaryFromValue(const VuoLeapFrame value)
 {
-	const char *format = "%d";
-	int size = snprintf(NULL,0,format,value.id);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.id);
-	return valueAsString;
+	return VuoText_format("%ld", value.id);
 }
 
 /**

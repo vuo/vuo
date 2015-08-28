@@ -32,7 +32,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoGenericType1) initialValue,
 		VuoInputEvent(VuoPortEventBlocking_Wall,initialValue) initialValueEvent,
 		VuoInputData(VuoGenericType1) newValue,
-		VuoInputEvent(VuoPortEventBlocking_Wall,newValue) newValueEvent,
+		VuoInputEvent(VuoPortEventBlocking_Wall,newValue,{"hasPortAction":true}) newValueEvent,
 		VuoOutputData(VuoGenericType1) heldValue
 )
 {

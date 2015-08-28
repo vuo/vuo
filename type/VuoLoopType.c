@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoLoopType.h"
+#include "VuoList_VuoLoopType.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -72,6 +73,18 @@ json_object * VuoLoopType_jsonFromValue(const VuoLoopType value)
 			break;
 	}
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoLoopType VuoLoopType_allowedValues(void)
+{
+	VuoList_VuoLoopType l = VuoListCreate_VuoLoopType();
+	VuoListAppendValue_VuoLoopType(l, VuoLoopType_Loop);
+	VuoListAppendValue_VuoLoopType(l, VuoLoopType_Mirror);
+	VuoListAppendValue_VuoLoopType(l, VuoLoopType_None);
+	return l;
 }
 
 /**

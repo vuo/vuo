@@ -32,8 +32,9 @@ public:
 	void generateFinalizationForDispatchGroup(Module *module, BasicBlock *block);
 	Function * generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, Value *eventIdValue, vector<VuoCompilerChain *> upstreamChains);
 	void generateWaitForDispatchGroup(Module *module, BasicBlock *block);
-	static Value * getEventIdValue(Module *module, Function *workerFunction, BasicBlock *block);
+	static Value * generateEventIdValue(Module *module, Function *workerFunction, BasicBlock *block);
 	void generateWaitForUpstreamChains(Module *module, Function *workerFunction, BasicBlock *block);
+	static void generateFreeContextArgument(Module *module, Function *workerFunction, BasicBlock *block);
 	vector<VuoCompilerNode *> getNodes(void);
 };
 

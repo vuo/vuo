@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoHorizontalAlignment.h"
+#include "VuoList_VuoHorizontalAlignment.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -59,6 +60,18 @@ json_object * VuoHorizontalAlignment_jsonFromValue(const VuoHorizontalAlignment 
 		valueAsString = "right";
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_allowedValues(void)
+{
+	VuoList_VuoHorizontalAlignment l = VuoListCreate_VuoHorizontalAlignment();
+	VuoListAppendValue_VuoHorizontalAlignment(l, VuoHorizontalAlignment_Left);
+	VuoListAppendValue_VuoHorizontalAlignment(l, VuoHorizontalAlignment_Center);
+	VuoListAppendValue_VuoHorizontalAlignment(l, VuoHorizontalAlignment_Right);
+	return l;
 }
 
 /**

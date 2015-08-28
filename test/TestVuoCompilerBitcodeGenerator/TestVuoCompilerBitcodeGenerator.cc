@@ -10,15 +10,18 @@
 #include <fstream>
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerBitcodeGenerator.hh"
-#include "VuoCompilerDebug.hh"
+#include "VuoCompilerException.hh"
+#include "VuoCompilerGraph.hh"
 #include "VuoFileUtilities.hh"
+#include "VuoStringUtilities.hh"
 #include "VuoPort.hh"
 
 
-typedef map<string, set<string> > chainsMap;  ///< Typedef needed for Q_DECLARE_METATYPE and QFETCH to compile. (The comma causes an error.)
+typedef map<string, set<string> > nodesMap;  ///< Typedef needed for Q_DECLARE_METATYPE and QFETCH to compile. (The comma causes an error.)
 
 // Be able to use these types in QTest::addColumn()
-Q_DECLARE_METATYPE(chainsMap);
+Q_DECLARE_METATYPE(nodesMap);
+Q_DECLARE_METATYPE(set<string>);
 
 
 /**
@@ -37,8 +40,16 @@ private:
 	{
 		vector<string> chainStrings;
 		for (map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> >::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+		{
 			for (vector<VuoCompilerChain *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-				chainStrings.push_back(  VuoCompilerDebug::chainToString(*j) );
+			{
+				string s;
+				vector<VuoCompilerNode *> nodes = (*j)->getNodes();
+				for (vector<VuoCompilerNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+					s += (*i)->getBase()->getTitle() + (i+1 == nodes.end() ? "" : " ");
+				chainStrings.push_back(s);
+			}
+		}
 		return chainStrings;
 	}
 
@@ -54,43 +65,7 @@ private slots:
 		cleanupCompiler();
 	}
 
-	void testEdges_data()
-	{
-		QTest::addColumn< QString >("nodeTitle");
-		QTest::addColumn< size_t >("triggerInEdgeCount");
-		QTest::addColumn< size_t >("passiveInEdgeCount");
-		QTest::addColumn< size_t >("passiveOutEdgeCount");
-
-		QTest::newRow("Trigger node") << "FirePeriodically1" << (size_t)0 << (size_t)0 << (size_t)0;
-		QTest::newRow("Node between trigger and non-trigger") << "Count1" << (size_t)1 << (size_t)0 << (size_t)1;
-		QTest::newRow("Node between two non-triggers") << "Convert Integer to Text1" << (size_t)0 << (size_t)1 << (size_t)1;
-		QTest::newRow("Node after non-trigger") << "DisplayConsoleWindow1" << (size_t)0 << (size_t)1 << (size_t)0;
-	}
-	void testEdges()
-	{
-		QFETCH(QString, nodeTitle);
-		QFETCH(size_t, triggerInEdgeCount);
-		QFETCH(size_t, passiveInEdgeCount);
-		QFETCH(size_t, passiveOutEdgeCount);
-
-		string compositionPath = getCompositionPath("Recur_Count_Write.vuo");
-		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
-
-		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(generator->composition->getBase()->getNodes());
-		VuoCompilerNode *node = nodeForTitle[nodeTitle.toUtf8().constData()]->getCompiler();
-		QVERIFY(node != NULL);
-
-		QCOMPARE(generator->triggerInEdgesForNode[node].size(), triggerInEdgeCount);
-		QCOMPARE(generator->passiveInEdgesForNode[node].size(), passiveInEdgeCount);
-		QCOMPARE(generator->passiveOutEdgesForNode[node].size(), passiveOutEdgeCount);
-
-		delete parser;
-		delete generator;
-	}
-
-	void testEdgeMayTransmitThroughNode_data()
+	void testEventMayTransmitThroughNode_data()
 	{
 		QTest::addColumn< QString >("fromNodeTitle");
 		QTest::addColumn< QString >("toNodeTitle");
@@ -99,8 +74,9 @@ private slots:
 		QTest::newRow("always-transmitting cable and never-transmitting cable") << "FireonStart1" << "SelectInput1" << true;
 		QTest::newRow("never-transmitting cable") << "FireonStart2" << "SelectInput2" << false;
 		QTest::newRow("sometimes-transmitting cable") << "FireonStart3" << "SelectInput3" << true;
+		QTest::newRow("never-transmitting cable and done port") << "FireonStart4" << "SelectInput4" << true;
 	}
-	void testEdgeMayTransmitThroughNode()
+	void testEventMayTransmitThroughNode()
 	{
 		QFETCH(QString, fromNodeTitle);
 		QFETCH(QString, toNodeTitle);
@@ -109,19 +85,170 @@ private slots:
 		string compositionPath = getCompositionPath("Semiconductor.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
+		VuoCompilerGraph graph(&composition);
+
+		set<VuoCompilerCable *> incomingCables;
+		set<VuoCompilerCable *> outgoingCables;
+		set<VuoCable *> cables = composition.getBase()->getCables();
+		for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+		{
+			if ((*i)->getFromNode()->getTitle() == fromNodeTitle.toStdString() && (*i)->getToNode()->getTitle() == toNodeTitle.toStdString())
+				incomingCables.insert((*i)->getCompiler());
+			if ((*i)->getFromNode()->getTitle() == toNodeTitle.toStdString())
+				outgoingCables.insert((*i)->getCompiler());
+		}
+		QVERIFY(! incomingCables.empty());
+		QVERIFY(! outgoingCables.empty());
+
+		// Check if an event coming in through incomingCables (fromNode -> toNode) will transmit
+		// through outgoingCables (toNode -> connected node).
+		QCOMPARE(graph.mayTransmit(incomingCables, outgoingCables), mayTransmitThroughNode);
+
+		delete parser;
+	}
+
+	void testNodesDownstream_data()
+	{
+		QTest::addColumn< QString >("compositionFile");
+		QTest::addColumn< nodesMap >("expectedDownstreamNodes");
+
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["TriggerWithOutput1:trigger"].insert("TriggerWithOutput1");
+			downstreamNodes["TriggerWithOutput1:trigger"].insert("Count1");
+			QTest::newRow("Trigger with self-loop and non-blocking output port.") << "TriggerPortWithOutputPort.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically1:fired"].insert("Count1");
+			downstreamNodes["FirePeriodically1:fired"].insert("Count2");
+			QTest::newRow("Trigger pushing 2 nodes that gather at the 2nd node.") << "Recur_Count_Count_gather.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically1:fired"].insert("Count1");
+			downstreamNodes["FirePeriodically1:fired"].insert("FirePeriodically1");
+			QTest::newRow("Trigger in a loop with 1 other node.") << "Recur_Count_loop.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically1:fired"].insert("Count1");
+			downstreamNodes["FirePeriodically1:fired"].insert("Count3");
+			downstreamNodes["FirePeriodically2:fired"].insert("Count2");
+			downstreamNodes["FirePeriodically2:fired"].insert("Count3");
+			QTest::newRow("2 triggers with overlapping paths.") << "2Recur_2Count_Count.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			QTest::newRow("0 triggers.") << "Add.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically1:fired"].insert("Hold1");
+			downstreamNodes["FirePeriodically1:fired"].insert("MakeList1");
+			downstreamNodes["FirePeriodically1:fired"].insert("Add1");
+			downstreamNodes["FirePeriodically1:fired"].insert("ConvertIntegertoText1");
+			downstreamNodes["FirePeriodically1:fired"].insert("DisplayConsoleWindow1");
+			downstreamNodes["DisplayConsoleWindow1:typedLine"];
+			downstreamNodes["DisplayConsoleWindow1:typedWord"];
+			downstreamNodes["DisplayConsoleWindow1:typedCharacter"];
+			QTest::newRow("Trigger pushing several nodes, including 2 nodes in a feedback loop.") << "Recur_Hold_Add_Write_loop.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically:fired"].insert("DisplayConsoleWindow");
+			downstreamNodes["FirePeriodically:fired"].insert("Hold");
+			downstreamNodes["FirePeriodically:fired"].insert("Subtract");
+			downstreamNodes["FirePeriodically:fired"].insert("ConvertIntegertoText");
+			downstreamNodes["DisplayConsoleWindow:typedLine"];
+			downstreamNodes["DisplayConsoleWindow:typedWord"];
+			downstreamNodes["DisplayConsoleWindow:typedCharacter"];
+			QTest::newRow("Feedback loop with a trigger cable bypassing it.") << "TriggerBypassFeedbackLoop.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically:fired"].insert("Hold");
+			downstreamNodes["FirePeriodically:fired"].insert("SelectInput");
+			downstreamNodes["FirePeriodically:fired"].insert("Subtract");
+			downstreamNodes["FirePeriodically:fired"].insert("ConvertIntegertoText");
+			downstreamNodes["FirePeriodically:fired"].insert("DisplayConsoleWindow");
+			downstreamNodes["DisplayConsoleWindow:typedLine"];
+			downstreamNodes["DisplayConsoleWindow:typedWord"];
+			downstreamNodes["DisplayConsoleWindow:typedCharacter"];
+			QTest::newRow("Feedback loop with a non-trigger cable bypassing it.") << "PassiveBypassFeedbackLoop.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically:fired"].insert("SelectInput");
+			downstreamNodes["FirePeriodically:fired"].insert("Subtract");
+			downstreamNodes["FirePeriodically:fired"].insert("Hold");
+			QTest::newRow("Trigger cable to each node in a feedback loop.") << "TriggerEachFeedbackLoopNode.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically:fired"].insert("Hold2");
+			downstreamNodes["FirePeriodically:fired"].insert("DiscardDatafromEvent");
+			downstreamNodes["FirePeriodically:fired"].insert("Hold3");
+			downstreamNodes["FirePeriodically:fired"].insert("MakeList");
+			downstreamNodes["FirePeriodically:fired"].insert("Append");
+			downstreamNodes["FirePeriodically:fired"].insert("CountCharacters");
+			downstreamNodes["FirePeriodically:fired"].insert("Subtract");
+			downstreamNodes["FirePeriodically:fired"].insert("Cut");
+			downstreamNodes["FirePeriodically:fired"].insert("DisplayConsoleWindow");
+			downstreamNodes["DisplayConsoleWindow:typedLine"];
+			downstreamNodes["DisplayConsoleWindow:typedWord"];
+			downstreamNodes["DisplayConsoleWindow:typedCharacter"];
+			QTest::newRow("Scatters and gathers involving nodes in a feedback loop.") << "StoreRecentText.vuo" << downstreamNodes;
+		}
+		{
+			map<string, set<string> > downstreamNodes;
+			downstreamNodes["FirePeriodically1:fired"].insert("Subtract1");
+			downstreamNodes["FirePeriodically1:fired"].insert("Subtract2");
+			downstreamNodes["FirePeriodically1:fired"].insert("Subtract3");
+			downstreamNodes["PublishedInputs:publishedIn0"].insert("Subtract1");
+			downstreamNodes["PublishedInputs:publishedIn0"].insert("Subtract2");
+			downstreamNodes["PublishedInputs:publishedIn0"].insert("Subtract3");
+			downstreamNodes["PublishedInputs:publishedIn1"].insert("Subtract1");
+			downstreamNodes["PublishedInputs:publishedIn1"].insert("Subtract3");
+			downstreamNodes["PublishedInputs:vuoSimultaneous"].insert("Subtract1");
+			downstreamNodes["PublishedInputs:vuoSimultaneous"].insert("Subtract2");
+			downstreamNodes["PublishedInputs:vuoSimultaneous"].insert("Subtract3");
+			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published.vuo" << downstreamNodes;
+		}
+	}
+	void testNodesDownstream()
+	{
+		QFETCH(QString, compositionFile);
+		QFETCH(nodesMap, expectedDownstreamNodes);
+
+		string compositionPath = getCompositionPath(compositionFile.toStdString());
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
 
-		map<string, VuoNode *> nodeForTitle = makeNodeForTitle(generator->composition->getBase()->getNodes());
-		VuoNode *toNode = nodeForTitle[toNodeTitle.toUtf8().constData()];
-		QVERIFY(toNode != NULL);
+		vector<string> triggerTitles;
+		for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = generator->graph->nodeForTrigger.begin(); i != generator->graph->nodeForTrigger.end(); ++i)
+		{
+			VuoCompilerTriggerPort *trigger = i->first;
+			VuoCompilerNode *triggerNode = i->second;
+			string triggerTitle = triggerNode->getBase()->getTitle() + ":" + trigger->getBase()->getClass()->getName();
+			triggerTitles.push_back(triggerTitle);
+			QVERIFY2(expectedDownstreamNodes.find(triggerTitle) != expectedDownstreamNodes.end(), triggerTitle.c_str());
+			vector<VuoCompilerNode *> actualDownstreamNodes = generator->graph->getNodesDownstream(trigger);
+			vector<string> actualDownstreamNodeTitles;
 
-		set<VuoCompilerTriggerEdge *> triggerInEdges = generator->triggerInEdgesForNode[toNode->getCompiler()];
-		QCOMPARE(triggerInEdges.size(), (size_t)1);
-
-		VuoCompilerTriggerEdge *edge = *triggerInEdges.begin();
-		QCOMPARE(QString(edge->getFromNode()->getBase()->getTitle().c_str()), fromNodeTitle);
-		QCOMPARE(QString(edge->getToNode()->getBase()->getTitle().c_str()), toNodeTitle);
-		QVERIFY(edge->mayTransmitThroughNode() == mayTransmitThroughNode);
+			for (vector<VuoCompilerNode *>::iterator j = actualDownstreamNodes.begin(); j != actualDownstreamNodes.end(); ++j)
+			{
+				string nodeTitle = (*j)->getBase()->getTitle();
+				actualDownstreamNodeTitles.push_back(nodeTitle);
+				QVERIFY2(expectedDownstreamNodes[triggerTitle].find(nodeTitle) != expectedDownstreamNodes[triggerTitle].end(),
+						 (triggerTitle + " " + nodeTitle).c_str());
+			}
+			QVERIFY2(actualDownstreamNodes.size() == expectedDownstreamNodes[triggerTitle].size(),
+					 (triggerTitle + " " + VuoStringUtilities::join(actualDownstreamNodeTitles, ',')).c_str());
+		}
+		QVERIFY2(generator->graph->nodeForTrigger.size() == expectedDownstreamNodes.size(),
+				 (VuoStringUtilities::join(triggerTitles, ',')).c_str());
 
 		delete parser;
 		delete generator;
@@ -130,40 +257,71 @@ private slots:
 	void testOrderedNodes_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
+		QTest::addColumn< set<string> >("omittedNodes");
 
-		QTest::newRow("Trigger with self-loop and non-blocking output port.") << "TriggerPortWithOutputPort.vuo";
-		QTest::newRow("Trigger pushing 2 nodes that gather at the 2nd node.") << "Recur_Count_Count_gather.vuo";
-		QTest::newRow("Trigger in a loop with 1 other node.") << "Recur_Count_loop.vuo";
-		QTest::newRow("2 triggers with overlapping paths.") << "2Recur_2Count_Count.vuo";
-		QTest::newRow("0 triggers.") << "Add.vuo";
-		QTest::newRow("Trigger pushing several nodes, including 2 nodes in a feedback loop.") << "Recur_Hold_Add_Write_loop.vuo";
-		QTest::newRow("Feedback loop with a trigger cable bypassing it.") << "TriggerBypassFeedbackLoop.vuo";
-		QTest::newRow("Feedback loop with a passive cable bypassing it.") << "PassiveBypassFeedbackLoop.vuo";
-		QTest::newRow("Trigger cable to each node in a feedback loop.") << "TriggerEachFeedbackLoopNode.vuo";
-		QTest::newRow("Scatters and gathers involving nodes in a feedback loop.") << "StoreRecentText.vuo";
-		QTest::newRow("Published input and output ports.") << "Recur_Subtract_published.vuo";
+		set<string> noOmittedNodes;
+
+		{
+			QTest::newRow("Trigger with self-loop and non-blocking output port.") << "TriggerPortWithOutputPort.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Trigger pushing 2 nodes that gather at the 2nd node.") << "Recur_Count_Count_gather.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Trigger in a loop with 1 other node.") << "Recur_Count_loop.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("2 triggers with overlapping paths.") << "2Recur_2Count_Count.vuo" << noOmittedNodes;
+		}
+		{
+			set<string> omittedNodes;
+			omittedNodes.insert("Add");
+			QTest::newRow("0 triggers.") << "Add.vuo" << omittedNodes;
+		}
+		{
+			QTest::newRow("Trigger pushing several nodes, including 2 nodes in a feedback loop.") << "Recur_Hold_Add_Write_loop.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Feedback loop with a trigger cable bypassing it.") << "TriggerBypassFeedbackLoop.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Feedback loop with a passive cable bypassing it.") << "PassiveBypassFeedbackLoop.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Trigger cable to each node in a feedback loop.") << "TriggerEachFeedbackLoopNode.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Scatters and gathers involving nodes in a feedback loop.") << "StoreRecentText.vuo" << noOmittedNodes;
+		}
+		{
+			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published.vuo" << noOmittedNodes;
+		}
 	}
 	void testOrderedNodes()
 	{
 		QFETCH(QString, compositionFile);
+		QFETCH(set<string>, omittedNodes);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
-		set<VuoNode *> expectedNodes = generator->composition->getBase()->getNodes();
 		vector<VuoCompilerNode *> orderedNodes = generator->orderedNodes;
-		set<VuoCompilerNode *> loopEndNodes = generator->loopEndNodes;
+
+		set<VuoNode *> expectedNodes = composition.getBase()->getNodes();
+		VuoNode *publishedInputNode = composition.getPublishedInputNode();
+		if (publishedInputNode)
+			expectedNodes.insert(publishedInputNode);
 
 		// Check that each element of expectedNodes is also in orderedNodes.
 		vector<VuoCompilerNode *> orderedNodesRemaining = orderedNodes;
 		for (set<VuoNode *>::iterator i = expectedNodes.begin(); i != expectedNodes.end(); ++i)
 		{
 			VuoCompilerNode *expectedNode = (*i)->getCompiler();
-			bool shouldBeInOrderedNodes = (! generator->passiveInEdgesForNode[expectedNode].empty() ||
-										   ! generator->triggerInEdgesForNode[expectedNode].empty());  /// @todo This doesn't handle a composition with two connected nodes and no trigger.
+			string expectedNodeTitle = (*i)->getTitle();
+			bool shouldBeInOrderedNodes = (omittedNodes.find(expectedNodeTitle) == omittedNodes.end());
 			bool isInOrderedNodes = find(orderedNodes.begin(), orderedNodes.end(), expectedNode) != orderedNodes.end();
-			QVERIFY2(shouldBeInOrderedNodes == isInOrderedNodes, (*i)->getTitle().c_str());
+			QVERIFY2(shouldBeInOrderedNodes == isInOrderedNodes, expectedNodeTitle.c_str());
 
 			if (isInOrderedNodes)
 			{
@@ -179,29 +337,6 @@ private slots:
 			QFAIL(remainingNode->getBase()->getTitle().c_str());
 		}
 
-		// Check that, for each edge in the composition, the from-node precedes the to-node in orderedNodes.
-		for (set<VuoNode *>::iterator i = expectedNodes.begin(); i != expectedNodes.end(); ++i)
-		{
-			VuoCompilerNode *expectedNode = (*i)->getCompiler();
-			set<VuoCompilerPassiveEdge *> outEdges = generator->passiveOutEdgesForNode[expectedNode];
-			for (set<VuoCompilerPassiveEdge *>::iterator j = outEdges.begin(); j != outEdges.end(); ++j)
-			{
-				VuoCompilerPassiveEdge *outEdge = *j;
-				int fromNodeIndex;
-				for (fromNodeIndex = 0; fromNodeIndex < orderedNodes.size(); ++fromNodeIndex)
-					if (orderedNodes.at(fromNodeIndex) == outEdge->getFromNode())
-						break;
-				int toNodeIndex;
-				for (toNodeIndex = 0; toNodeIndex < orderedNodes.size(); ++toNodeIndex)
-					if (orderedNodes.at(toNodeIndex) == outEdge->getToNode())
-						break;
-				QVERIFY(fromNodeIndex < orderedNodes.size());
-				QVERIFY(toNodeIndex < orderedNodes.size());
-				QVERIFY(fromNodeIndex < toNodeIndex ||
-						loopEndNodes.find(outEdge->getToNode()) != loopEndNodes.end());
-			}
-		}
-
 		delete parser;
 		delete generator;
 	}
@@ -209,7 +344,7 @@ private slots:
 	void testChains_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
-		QTest::addColumn< chainsMap >("expectedChains");
+		QTest::addColumn< nodesMap >("expectedChains");
 
 		{
 			map<string, set<string> > chains;
@@ -248,7 +383,8 @@ private slots:
 
 		{
 			map<string, set<string> > chains;
-			chains["FirePeriodically1:fired"].insert("Count1 Count2");
+			chains["FirePeriodically1:fired"].insert("Count1");
+			chains["FirePeriodically1:fired"].insert("Count2");
 			QTest::newRow("Trigger with a gather.") << "Recur_Count_Count_gather.vuo" << chains;
 		}
 
@@ -304,7 +440,8 @@ private slots:
 			map<string, set<string> > chains;
 			chains["FirePeriodically:fired"].insert("Hold");
 			chains["FirePeriodically:fired"].insert("Subtract");
-			chains["FirePeriodically:fired"].insert("ConvertIntegertoText DisplayConsoleWindow");
+			chains["FirePeriodically:fired"].insert("ConvertIntegertoText");
+			chains["FirePeriodically:fired"].insert("DisplayConsoleWindow");
 			chains["FirePeriodically:fired"].insert("Hold");
 			QTest::newRow("Feedback loop with a trigger cable bypassing it.") << "TriggerBypassFeedbackLoop.vuo" << chains;
 		}
@@ -366,13 +503,13 @@ private slots:
 	void testChains()
 	{
 		QFETCH(QString, compositionFile);
-		QFETCH(chainsMap, expectedChains);
+		QFETCH(nodesMap, expectedChains);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
 		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
-		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = generator->nodeForTrigger;
+		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = generator->graph->nodeForTrigger;
 
 		map<string, set<string> > actualChains;
 		map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > chainsForTrigger = generator->chainsForTrigger;
@@ -426,54 +563,65 @@ private slots:
 	void testInfiniteFeedbackLoops_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
+		QTest::addColumn< bool >("hasInfiniteFeedbackLoop");
 
-		QTest::newRow("Infinite feedback loop containing 2 nodes.") << "TriggerPortWithOutputPort_Count_infiniteLoop.vuo";
-		QTest::newRow("Infinite feedback loop containing 1 node.") << "Recur_Count_infiniteLoop.vuo";
-		QTest::newRow("No feedback loops.") << "Recur_Count_Count_gather_Count.vuo";
+		QTest::newRow("Infinite feedback loop containing 2 nodes.") << "TriggerPortWithOutputPort_Count_infiniteLoop.vuo" << true;
+		QTest::newRow("Infinite feedback loop containing 1 node.") << "Recur_Count_infiniteLoop.vuo" << true;
+		QTest::newRow("No feedback loops.") << "Recur_Count_Count_gather_Count.vuo" << false;
 	}
 	void testInfiniteFeedbackLoops()
 	{
 		QFETCH(QString, compositionFile);
+		QFETCH(bool, hasInfiniteFeedbackLoop);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
+		VuoCompilerGraph graph(&composition);
 
-		QEXPECT_FAIL("No feedback loops.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
-		QVERIFY(generator->downstreamEdgesForEdge.empty());
+		bool gotException = false;
+		try {
+			graph.checkForInfiniteFeedback();
+		} catch (const VuoCompilerException &e) {
+			gotException = true;
+		}
+		QCOMPARE(gotException, hasInfiniteFeedbackLoop);
 
 		delete parser;
-		delete generator;
 	}
 
 	void testDeadlockedFeedbackLoops_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
+		QTest::addColumn< bool >("hasDeadlockedFeedbackLoop");
 
-		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 2-node feedback loop.") << "DeadlockedFeedbackLoop2Nodes.vuo";
-		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 3-node feedback loop.") << "DeadlockedFeedbackLoop3Nodes.vuo";
-		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 4-node feedback loop.") << "DeadlockedFeedbackLoop4Nodes.vuo";
-		QTest::newRow("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.") << "AsymmetricFeedbackLoop.vuo";
-		QTest::newRow("Trigger unambiguously pushing 2 nested feedback loops.") << "NestedLoopsBothTriggered.vuo";
-		QTest::newRow("Trigger unambiguously pushing nodes not in a feedback loop.") << "NonDeadlockedWithSemiconductor.vuo";
+		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 2-node feedback loop.") << "DeadlockedFeedbackLoop2Nodes.vuo" << true;
+		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 3-node feedback loop.") << "DeadlockedFeedbackLoop3Nodes.vuo" << true;
+		QTest::newRow("Trigger ambiguously pushing 2 nodes in a 4-node feedback loop.") << "DeadlockedFeedbackLoop4Nodes.vuo" << true;
+		QTest::newRow("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.") << "AsymmetricFeedbackLoop.vuo" << false;
+		QTest::newRow("Trigger unambiguously pushing 2 nested feedback loops.") << "NestedLoopsBothTriggered.vuo" << false;
+		QTest::newRow("Trigger unambiguously pushing nodes not in a feedback loop.") << "NonDeadlockedWithSemiconductor.vuo" << false;
+		QTest::newRow("2 triggers that start at different points in a feedback loop.") << "NonDeadlocked2Triggers.vuo" << false;
 	}
 	void testDeadlockedFeedbackLoops()
 	{
 		QFETCH(QString, compositionFile);
+		QFETCH(bool, hasDeadlockedFeedbackLoop);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
+		VuoCompilerGraph graph(&composition);
 
-		QEXPECT_FAIL("Trigger unambiguously pushing 2 nodes in a 2-node feedback loop.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
-		QEXPECT_FAIL("Trigger unambiguously pushing 2 nested feedback loops.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
-		QEXPECT_FAIL("Trigger unambiguously pushing nodes not in a feedback loop.", "@todo: Check that no exception was thrown - https://b33p.net/kosada/node/2341", Continue);
-		QVERIFY(generator->downstreamEdgesForEdge.empty());
+		bool gotException = false;
+		try {
+			graph.checkForDeadlockedFeedback();
+		} catch (const VuoCompilerException &e) {
+			gotException = true;
+		}
+		QCOMPARE(gotException, hasDeadlockedFeedbackLoop);
 
 		delete parser;
-		delete generator;
 	}
 
 	void testCompilingWithoutCrashing_data()

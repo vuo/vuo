@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoCurve.h"
+#include "VuoList_VuoCurve.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -67,6 +68,20 @@ json_object * VuoCurve_jsonFromValue(const VuoCurve value)
 		valueAsString = "exponential";
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoCurve VuoCurve_allowedValues(void)
+{
+	VuoList_VuoCurve l = VuoListCreate_VuoCurve();
+	VuoListAppendValue_VuoCurve(l, VuoCurve_Linear);
+	VuoListAppendValue_VuoCurve(l, VuoCurve_Quadratic);
+	VuoListAppendValue_VuoCurve(l, VuoCurve_Cubic);
+	VuoListAppendValue_VuoCurve(l, VuoCurve_Circular);
+	VuoListAppendValue_VuoCurve(l, VuoCurve_Exponential);
+	return l;
 }
 
 /**

@@ -15,12 +15,12 @@ Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>r
 Count2 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="194,123" _increment="1" _decrement="1" _setCount="0.000000"];
 DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="467,177"];
 FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="14,73" _seconds="1"];
-MakeList [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="359,70"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="359,70"];
 
 Add:sum -> ConvertIntegertoText:integer;
 ConvertIntegertoText:text -> DisplayConsoleWindow:writeLine;
-Count1:count -> MakeList:item1;
-Count2:count -> MakeList:item2;
+Count1:count -> MakeList:1;
+Count2:count -> MakeList:2;
 FirePeriodically1:fired -> Count1:increment;
 FirePeriodically1:fired -> Count2:increment;
 MakeList:list -> Add:terms;

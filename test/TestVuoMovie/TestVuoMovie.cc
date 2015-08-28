@@ -42,7 +42,7 @@ private slots:
 		double pts;
 		VuoImage i;
 		QBENCHMARK {
-			while (VuoMovie_getNextFrame(m, &i, &pts))
+			while (VuoMovie_getNextVideoFrame(m, &i, &pts))
 			{
 				VuoRetain(i);
 				VuoRelease(i);
@@ -58,17 +58,17 @@ private slots:
 		QVERIFY(m != NULL);
 
 		double duration = VuoMovie_getDuration(m);
-		// QuickTime Player says Fish.mov is 30 FPS (maybe we should provide a VuoMovie function to get average framerate).
-		unsigned int frames = duration * 30;
 
 		double pts;
 		VuoImage i;
 		QBENCHMARK {
+			// QuickTime Player says Fish.mov is 30 FPS (maybe we should provide a VuoMovie function to get average framerate).
+			int frames = duration * 30;
 			while (frames--)
 			{
 				double frameTime = duration * (double)rand()/(double)RAND_MAX;
 				QVERIFY(VuoMovie_seekToSecond(m, frameTime));
-				QVERIFY(VuoMovie_getNextFrame(m, &i, &pts));
+				QVERIFY(VuoMovie_getNextVideoFrame(m, &i, &pts));
 				VuoRetain(i);
 				VuoRelease(i);
 			}
@@ -92,7 +92,7 @@ private slots:
 		double pts;
 		VuoImage i;
 		QBENCHMARK {
-			while (VuoMovie_getNextFrame(m, &i, &pts))
+			while (VuoMovie_getNextVideoFrame(m, &i, &pts))
 			{
 				VuoRetain(i);
 				VuoRelease(i);
@@ -109,16 +109,16 @@ private slots:
 		QVERIFY(m != NULL);
 
 		double duration = VuoMovie_getDuration(m);
-		unsigned int frames = 120;	// more than frames available
 
 		double pts;
 		VuoImage i;
 		QBENCHMARK {
+			int frames = 120;	// more than frames available
 			while (frames--)
 			{
 				double frameTime = duration * (double)rand()/(double)RAND_MAX;
 				QVERIFY(VuoMovie_seekToSecond(m, frameTime));
-				QVERIFY(VuoMovie_getNextFrame(m, &i, &pts));
+				QVERIFY(VuoMovie_getNextVideoFrame(m, &i, &pts));
 				VuoRetain(i);
 				VuoRelease(i);
 			}

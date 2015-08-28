@@ -6,6 +6,7 @@ include(../../vuo.pri)
 GENERIC_NODE_SOURCES += \
 	vuo.event.changed.c \
 	vuo.event.decreased.c \
+	vuo.event.emptyList.c \
 	vuo.event.increased.c
 
 NODE_SOURCES += \

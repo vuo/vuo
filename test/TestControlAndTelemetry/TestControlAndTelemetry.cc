@@ -511,7 +511,7 @@ private:
 				else if (node->getNodeClass()->getClassName() == "vuo.list.make.2.VuoInteger")
 				{
 					{
-						VuoPort *basePort = node->getInputPortWithName("item1");
+						VuoPort *basePort = node->getInputPortWithName("1");
 						item1PortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 					}
 					{
@@ -554,9 +554,9 @@ private:
 					expectedIdentifiersAndValues.push_back(countPair);
 					IdentifierAndValue item1Pair = { item1PortIdentifier.c_str(), QString("%1").arg(count) };
 					expectedIdentifiersAndValues.push_back(item1Pair);
-					IdentifierAndValue listPair = { listPortIdentifier.c_str(), QString("List containing elements: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					IdentifierAndValue listPair = { listPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndValues.push_back(listPair);
-					IdentifierAndValue termsPair = { termsPortIdentifier.c_str(), QString("List containing elements: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					IdentifierAndValue termsPair = { termsPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndValues.push_back(termsPair);
 					IdentifierAndValue sumPair = { sumPortIdentifier.c_str(), QString("%1").arg(count + 10) };
 					expectedIdentifiersAndValues.push_back(sumPair);
@@ -976,10 +976,11 @@ private slots:
 
 		{
 			vector<VuoRunner::Port *> inputs;
-			inputs.push_back( new VuoRunner::Port("publishedIn0", "VuoInteger") );
-			inputs.push_back( new VuoRunner::Port("publishedIn1", "VuoInteger") );
+			inputs.push_back( new VuoRunner::Port("publishedIn0", "VuoInteger", json_tokener_parse("{\"default\":null}")) );
+			inputs.push_back( new VuoRunner::Port("publishedIn1", "VuoInteger", json_tokener_parse("{\"default\":null}")) );
+			inputs.push_back( new VuoRunner::Port("publishedIn2", "VuoReal", json_tokener_parse("{\"default\":0.050000,\"suggestedMin\":0.000001,\"suggestedMax\":0.050000}")) );
 			vector<VuoRunner::Port *> outputs;
-			outputs.push_back( new VuoRunner::Port("publishedSum", "VuoInteger") );
+			outputs.push_back( new VuoRunner::Port("publishedSum", "VuoInteger", json_tokener_parse("{\"default\":null}")) );
 			QTest::newRow("some published input and output ports") << "Recur_Add_published.vuo" << inputs << outputs;
 		}
 
@@ -1009,6 +1010,7 @@ private slots:
 		{
 			QCOMPARE(actualInputs.at(i)->getName(), expectedInputs.at(i)->getName());
 			QCOMPARE(actualInputs.at(i)->getType(), expectedInputs.at(i)->getType());
+			QCOMPARE(json_object_to_json_string_ext(actualInputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN), json_object_to_json_string_ext(expectedInputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN));
 		}
 
 		QCOMPARE(actualOutputs.size(), expectedOutputs.size());
@@ -1016,6 +1018,7 @@ private slots:
 		{
 			QCOMPARE(actualOutputs.at(i)->getName(), expectedOutputs.at(i)->getName());
 			QCOMPARE(actualOutputs.at(i)->getType(), expectedOutputs.at(i)->getType());
+			QCOMPARE(json_object_to_json_string_ext(actualOutputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN), json_object_to_json_string_ext(expectedOutputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN));
 		}
 
 		delete runner;
@@ -1144,7 +1147,9 @@ private:
 			QVERIFY(publishedIn1 != NULL);
 			QVERIFY(publishedSum != NULL);
 
+			QCOMPARE((VuoInteger)0, VuoInteger_valueFromJson(runner->getPublishedInputPortValue(publishedIn0)));
 			runner->setPublishedInputPortValue(publishedIn0, VuoInteger_jsonFromValue(100));
+			QCOMPARE((VuoInteger)100, VuoInteger_valueFromJson(runner->getPublishedInputPortValue(publishedIn0)));
 
 			runner->unpause();
 			runner->waitUntilStopped();
@@ -1524,7 +1529,7 @@ private slots:
 			remove(bcPath.c_str());
 
 			string compositionGraphviz = composition->getGraphvizDeclaration();
-			string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler);
+			string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, "", compositionDiff);
 		}
 
@@ -1584,7 +1589,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler);
+			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 		}
 
@@ -1602,7 +1607,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler);
+			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 		}
 
@@ -1676,7 +1681,7 @@ private slots:
 			remove(bcPath.c_str());
 
 			string compositionGraphviz = composition->getGraphvizDeclaration();
-			string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler);
+			string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110, "Add1:sum" becomes 110 + 0 = 110.
@@ -1721,7 +1726,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler);
+			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// "Count1:increment" becomes 1000, "Count1:count" becomes 1110, "Add1:sum" becomes 1110 + 1110 = 2220.
@@ -1740,8 +1745,8 @@ private slots:
 			VuoNode *count3Node = countNodeClass->newNode("Count3");
 			composition->getBase()->addNode(count3Node);
 
-			// Remove "Count1:count -> MakeList1:item2".
-			VuoCompilerPort *makeList1NodeItem2Port = static_cast<VuoCompilerPort *>(makeList1Node->getInputPortWithName("item2")->getCompiler());
+			// Remove "Count1:count -> MakeList1:2".
+			VuoCompilerPort *makeList1NodeItem2Port = static_cast<VuoCompilerPort *>(makeList1Node->getInputPortWithName("2")->getCompiler());
 			VuoCable *count1ToMakeList1Cable = NULL;
 			foreach (VuoCable *c, composition->getBase()->getCables())
 			{
@@ -1758,7 +1763,7 @@ private slots:
 																		 count3Node->getCompiler(), count3NodeIncrementPort);
 			composition->getBase()->addCable(count1ToCount3Cable->getBase());
 
-			// Add "Count3:count -> MakeList1:item2".
+			// Add "Count3:count -> MakeList1:2".
 			VuoCompilerPort *count3NodeCountPort = static_cast<VuoCompilerPort *>(count3Node->getOutputPortWithName("count")->getCompiler());
 			VuoCompilerCable *count3ToAdd1Cable = new VuoCompilerCable(count3Node->getCompiler(), count3NodeCountPort,
 																	   makeList1Node->getCompiler(), makeList1NodeItem2Port);
@@ -1769,7 +1774,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler);
+			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// "Count1:increment" becomes 10000, "Count1:count" becomes 11110,
@@ -1800,7 +1805,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = originalComposition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler);
+			string compositionDiff = originalComposition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 			delete originalComposition;
 

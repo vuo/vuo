@@ -12,11 +12,15 @@
 
 // Headers commonly used by type implementations
 
+#if (__clang_major__ == 3 && __clang_minor__ >= 2) || __clang_major__ > 3
+        #define VUO_CLANG_32_OR_LATER
+#endif
+
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-	#include <json/json.h>
-
+#ifdef VUO_CLANG_32_OR_LATER
+	#pragma clang diagnostic ignored "-Wdocumentation"
+#endif
+#include <json/json.h>
 #pragma clang diagnostic pop
 
 
@@ -79,9 +83,23 @@ json_object * MyType_jsonFromValue(const MyType value);
 struct json_object * MyType_interprocessJsonFromValue(const MyType value);
 
 /**
+ * Returns a list of values that instances of this type can have.
+ *
+ * The values returned by this function are shown in input editor menus, in the order specified.
+ *
+ * The type may have other values not returned by this function (for example, if the values were allowed
+ * in older versions of the type, but are not allowed now).
+ *
+ * This function is required for enum types, and should only be defined for enum types.
+ */
+VuoList_MyType MyType_allowedValues(void);
+
+/**
  * Returns a brief description of a value.
  *
  * This function is required.
+ *
+ * For enum types, the string returned by this function is shown in input editor menus.
  *
  * @param value The value to summarize. May be null.
  * @return The summary. It should be heap-allocated; the caller is responsible for freeing it.

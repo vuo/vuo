@@ -14,4 +14,7 @@ OTHER_FILES += \
 		VuoInputEditorThresholdType.json
 
 INCLUDEPATH += $$ROOT/node/vuo.image
-LIBS += $$ROOT/node/vuo.image/VuoThresholdType.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/node/vuo.image/VuoThresholdType.o \
+	$$ROOT/type/list/VuoList_VuoThresholdType.o

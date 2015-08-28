@@ -8,6 +8,7 @@ GENERIC_NODE_SOURCES += \
 
 NODE_SOURCES += \
 	vuo.type.boolean.integer.c \
+	vuo.type.boolean.real.c \
 	vuo.type.boolean.text.c \
 	vuo.type.integer.boolean.c\
 	vuo.type.integer.point2d.x.c \

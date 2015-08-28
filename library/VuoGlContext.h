@@ -25,7 +25,16 @@ typedef void * VuoGlContext;
 void VuoGlContext_setGlobalRootContext(void *rootContext);
 
 VuoGlContext VuoGlContext_use(void);
-void VuoGlContext_disuse(VuoGlContext glContext);
+
+void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsigned int line, const char *func);
+/**
+ * Throws the specified @c VuoGlContext back in the pool.
+ *
+ * @threadAny
+ */
+#define VuoGlContext_disuse(glContext) VuoGlContext_disuseF(glContext, __FILE__, __LINE__, __func__)
+
+void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer);
 
 void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func);
 

@@ -28,20 +28,25 @@ struct json_object;
 #include "VuoCurveEasing.h"
 #include "VuoHorizontalAlignment.h"
 #include "VuoImage.h"
+#include "VuoImageColorDepth.h"
+#include "VuoImageWrapMode.h"
 #include "VuoInteger.h"
+#include "VuoMathExpressionList.h"
+#include "VuoMesh.h"
 #include "VuoModifierKey.h"
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
 #include "VuoReal.h"
 #include "VuoSceneObject.h"
+#include "VuoScreen.h"
 #include "VuoShader.h"
 #include "VuoText.h"
 #include "VuoTransform.h"
 #include "VuoTransform2d.h"
 #include "VuoVerticalAlignment.h"
-#include "VuoVertices.h"
 #include "VuoWave.h"
+#include "VuoWindowProperty.h"
 #include "VuoWindowReference.h"
 #include "VuoWrapMode.h"
 
@@ -52,17 +57,19 @@ struct json_object;
 #include "VuoList_VuoColor.h"
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoInteger.h"
+#include "VuoList_VuoMesh.h"
 #include "VuoList_VuoModifierKey.h"
 #include "VuoList_VuoPoint2d.h"
 #include "VuoList_VuoPoint3d.h"
 #include "VuoList_VuoPoint4d.h"
 #include "VuoList_VuoReal.h"
 #include "VuoList_VuoSceneObject.h"
+#include "VuoList_VuoScreen.h"
 #include "VuoList_VuoShader.h"
 #include "VuoList_VuoText.h"
 #include "VuoList_VuoTransform.h"
 #include "VuoList_VuoTransform2d.h"
-#include "VuoList_VuoVertices.h"
+#include "VuoList_VuoWindowProperty.h"
 #include "VuoList_VuoWindowReference.h"
 #include "VuoList_VuoWrapMode.h"
 
@@ -175,11 +182,13 @@ enum VuoPortEventThrottling
  *
  * @param eventBlocking A value of type VuoPortEventBlocking, indicating the port's event-blocking behavior.
  * @param name The identifier of the corresponding data port, or blank if this is intended to be an event-only input port.
+ * @param ... Optionally, a JSON object specification containing additional details about the event.
+ *		Currently, the only supported key is "hasPortAction"; its value should be a boolean.
  *
  * \eg{void nodeEvent(VuoInputData(VuoInteger,"0") seconds, VuoInputEvent(VuoPortEventBlocking_Wall,seconds) secondsEvent);}
  * \eg{void nodeEvent(VuoInputEvent(VuoPortEventBlocking_None,) start);}
  */
-#define VuoInputEvent(eventBlocking,name) __attribute__((annotate("vuoInputEventBlocking:" #eventBlocking),annotate("vuoInputEvent:" #name))) const bool
+#define VuoInputEvent(eventBlocking, name, ...) __attribute__((annotate("vuoInputEventBlocking:" #eventBlocking),annotate("vuoInputEvent:" #name),annotate("vuoInputEventDetails: " #__VA_ARGS__))) const bool
 
 /**
  * Use this to decorate parameters referring to the data part of a data-and-event output port.

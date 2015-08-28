@@ -13,4 +13,7 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorLoopType.json
 
-LIBS += $$ROOT/type/VuoLoopType.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoLoopType.o \
+	$$ROOT/type/list/VuoList_VuoLoopType.o

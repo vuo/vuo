@@ -65,90 +65,8 @@ VuoModuleMetadata({
 	float BlendPinLightf(float base, float blend) { return ((blend < 0.5) ? BlendDarkenf(base, (2.0 * blend)) : BlendLightenf(base, (2.0 *(blend - 0.5)))); }\
 	float BlendHardMixf(float base, float blend) { return ((BlendVividLightf(base, blend) < 0.5) ? 0.0 : 1.0); }\
 	float BlendReflectf(float base, float blend) { return ((blend == 1.0) ? blend : min(base * base / (1.0 - blend), 1.0)); }\
-	vec3 RGBToHSL(vec3 color)\
-	{\
-		vec3 hsl;\
-		\
-		float fmin = min(min(color.r, color.g), color.b);\
-		float fmax = max(max(color.r, color.g), color.b);\
-		float delta = fmax - fmin;\
-\
-		hsl.z = (fmax + fmin) / 2.0;\
-\
-		if (delta == 0.0)\
-		{\
-			hsl.x = 0.0;\
-			hsl.y = 0.0;\
-		}\
-		else\
-		{\
-			if (hsl.z < 0.5)\
-				hsl.y = delta / (fmax + fmin);\
-			else\
-				hsl.y = delta / (2.0 - fmax - fmin);\
-			\
-			float deltaR = (((fmax - color.r) / 6.0) + (delta / 2.0)) / delta;\
-			float deltaG = (((fmax - color.g) / 6.0) + (delta / 2.0)) / delta;\
-			float deltaB = (((fmax - color.b) / 6.0) + (delta / 2.0)) / delta;\
-\
-			if (color.r == fmax )\
-				hsl.x = deltaB - deltaG;\
-			else if (color.g == fmax)\
-				hsl.x = (1.0 / 3.0) + deltaR - deltaB;\
-			else if (color.b == fmax)\
-				hsl.x = (2.0 / 3.0) + deltaG - deltaR;\
-\
-			if (hsl.x < 0.0)\
-				hsl.x += 1.0;\
-			else if (hsl.x > 1.0)\
-				hsl.x -= 1.0;\
-		}\
-\
-		return hsl;\
-	}\
-\
-	float HueToRGB(float f1, float f2, float hue)\
-	{\
-		if (hue < 0.0)\
-			hue += 1.0;\
-		else if (hue > 1.0)\
-			hue -= 1.0;\
-		float res;\
-		if ((6.0 * hue) < 1.0)\
-			res = f1 + (f2 - f1) * 6.0 * hue;\
-		else if ((2.0 * hue) < 1.0)\
-			res = f2;\
-		else if ((3.0 * hue) < 2.0)\
-			res = f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;\
-		else\
-			res = f1;\
-		return res;\
-	}\
-\
-	vec3 HSLToRGB(vec3 hsl)\
-	{\
-		vec3 rgb;\
-		\
-		if (hsl.y == 0.0)\
-			rgb = vec3(hsl.z);\
-		else\
-		{\
-			float f2;\
-			\
-			if (hsl.z < 0.5)\
-				f2 = hsl.z * (1.0 + hsl.y);\
-			else\
-				f2 = (hsl.z + hsl.y) - (hsl.y * hsl.z);\
-				\
-			float f1 = 2.0 * hsl.z - f2;\
-			\
-			rgb.r = HueToRGB(f1, f2, hsl.x + (1.0/3.0));\
-			rgb.g = HueToRGB(f1, f2, hsl.x);\
-			rgb.b= HueToRGB(f1, f2, hsl.x - (1.0/3.0));\
-		}\
-		\
-		return rgb;\
-	}\
+	\
+	include(hsl)\
 	"
 
 #define BLEND_FILTERS(source) "#version 120\n" FilterSource "\n" #source
@@ -231,8 +149,8 @@ static const char * fragmentShaderSource_blendDarkerColor = BLEND_FILTERS(
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
 
-		vec3 base_lum = RGBToHSL(base.rgb);
-		vec3 blend_lum = RGBToHSL(blend.rgb);
+		vec3 base_lum = rgbToHsl(base.rgb);
+		vec3 blend_lum = rgbToHsl(blend.rgb);
 
 		vec3 result = base_lum.b < blend_lum.b ? base.rgb : blend.rgb;
 
@@ -267,8 +185,8 @@ static const char * fragmentShaderSource_blendLighterColor = BLEND_FILTERS(
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
 
-		vec3 base_lum = RGBToHSL(base.rgb);
-		vec3 blend_lum = RGBToHSL(blend.rgb);
+		vec3 base_lum = rgbToHsl(base.rgb);
+		vec3 blend_lum = rgbToHsl(blend.rgb);
 
 		vec3 result = base_lum.b > blend_lum.b ? base.rgb : blend.rgb;
 
@@ -570,8 +488,8 @@ static const char * fragmentShaderSource_blendHue = BLEND_FILTERS(
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
 
-		vec3 baseHSL = RGBToHSL(base.rgb);
-		vec3 result = HSLToRGB(vec3(RGBToHSL(blend.rgb).r, baseHSL.g, baseHSL.b));
+		vec3 baseHSL = rgbToHsl(base.rgb);
+		vec3 result = hslToRgb(vec3(rgbToHsl(blend.rgb).r, baseHSL.g, baseHSL.b));
 
 		result = mix(base.rgb, result, blend.a);
 		result = mix(blend.rgb, result, base.a);
@@ -587,8 +505,8 @@ static const char * fragmentShaderSource_blendSaturation = BLEND_FILTERS(
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
 
-		vec3 baseHSL = RGBToHSL(base.rgb);
-		vec3 result = HSLToRGB(vec3(baseHSL.r, RGBToHSL(blend.rgb).g, baseHSL.b));
+		vec3 baseHSL = rgbToHsl(base.rgb);
+		vec3 result = hslToRgb(vec3(baseHSL.r, rgbToHsl(blend.rgb).g, baseHSL.b));
 
 		result = mix(base.rgb, result, blend.a);
 		result = mix(blend.rgb, result, base.a);
@@ -604,8 +522,8 @@ static const char * fragmentShaderSource_blendColor = BLEND_FILTERS(
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
 
-		vec3 blendHSL = RGBToHSL(blend.rgb);
-		vec3 result = HSLToRGB(vec3(blendHSL.r, blendHSL.g, RGBToHSL(base.rgb).b));
+		vec3 blendHSL = rgbToHsl(blend.rgb);
+		vec3 result = hslToRgb(vec3(blendHSL.r, blendHSL.g, rgbToHsl(base.rgb).b));
 
 		result = mix(base.rgb, result, blend.a);
 		result = mix(blend.rgb, result, base.a);
@@ -621,8 +539,8 @@ static const char * fragmentShaderSource_blendLuminosity = BLEND_FILTERS(
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
 
-		vec3 baseHSL = RGBToHSL(base.rgb);
-		vec3 result = HSLToRGB(vec3(baseHSL.r, baseHSL.g, RGBToHSL(blend.rgb).b));
+		vec3 baseHSL = rgbToHsl(base.rgb);
+		vec3 result = hslToRgb(vec3(baseHSL.r, baseHSL.g, rgbToHsl(blend.rgb).b));
 
 		result = mix(base.rgb, result, blend.a);
 		result = mix(blend.rgb, result, base.a);
@@ -758,20 +676,22 @@ void nodeInstanceEvent
 		}
 		if( (*instance)->currentBlendMode >= 0 )
 			VuoRelease((*instance)->shader);
-		(*instance)->shader = VuoShader_make(VuoBlendMode_summaryFromValue(blendMode), VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+		char *blendModeSummary = VuoBlendMode_summaryFromValue(blendMode);
+		(*instance)->shader = VuoShader_make(blendModeSummary);
+		free(blendModeSummary);
+		VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 		VuoRetain((*instance)->shader);
 		(*instance)->currentBlendMode = blendMode;
 	}
 
 	// Associate the input image with the shader.
-	VuoShader_resetTextures((*instance)->shader);
-	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "background", background);
-	VuoShader_addTexture((*instance)->shader, (*instance)->glContext, "foreground", foreground);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "background", background);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "foreground", foreground);
 
-	VuoShader_setUniformFloat((*instance)->shader, (*instance)->glContext, "foregroundOpacity", foregroundOpacity);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "foregroundOpacity", foregroundOpacity);
 
 	// Render.
-	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, background->pixelsWide, background->pixelsHigh);
+	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, background->pixelsWide, background->pixelsHigh, VuoImage_getColorDepth(background));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

@@ -13,13 +13,13 @@ Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|
 ConvertIntegerToText8 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="564,330"];
 DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="477,218"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="36,56"];
-MakeList2 [type="vuo.list.make.3.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="146,144" _item1="10" _item2="11" _item3="5"];
-MakeList4 [type="vuo.list.make.3.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<item3>item3\l|<done>done\r|<list>list\r" pos="455,80" _item1="\"The volume of the box is \"" _item3="\" cubic inches\""];
+MakeList2 [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="146,144" _1="10" _2="11" _3="5"];
+MakeList4 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="455,80" _1="\"The volume of the box is \"" _3="\" cubic inches\""];
 Multiply [type="vuo.math.multiply.VuoInteger" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="206,133"];
 
 Append:compositeText -> DisplayConsoleWindow:writeLine;
-ConvertIntegerToText8:text -> MakeList4:item2;
-FireOnStart2:started -> MakeList2:item1;
+ConvertIntegerToText8:text -> MakeList4:2;
+FireOnStart2:started -> Multiply:refresh;
 MakeList2:list -> Multiply:terms;
 MakeList4:list -> Append:texts;
 Multiply:product -> ConvertIntegerToText8:integer;

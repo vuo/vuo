@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoPoint3d.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -82,9 +83,5 @@ json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value)
  */
 char * VuoPoint3d_summaryFromValue(const VuoPoint3d value)
 {
-	const char *format = "%g, %g, %g";
-	int size = snprintf(NULL,0,format,value.x,value.y,value.z);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.x,value.y,value.z);
-	return valueAsString;
+	return VuoText_format("%g, %g, %g", value.x, value.y, value.z);
 }

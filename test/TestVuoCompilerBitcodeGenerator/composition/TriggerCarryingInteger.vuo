@@ -11,7 +11,7 @@ digraph G
 {
 TriggerCarryingInteger1 [type="vuo.test.triggerCarryingInteger" label="TriggerCarryingInteger1|<refresh>refresh\l|<fired>fired\r"];
 ConvertIntegertoText1 [type="vuo.type.integer.text" label="Convert Integer to Text1|<refresh>refresh\l|<integer>integer\l|<text>text\r" _integer="0"];
-DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" _writeLine=""];
+DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r"];
 
 TriggerCarryingInteger1:fired -> ConvertIntegertoText1:integer;
 ConvertIntegertoText1:text -> DisplayConsoleWindow1:writeLine;

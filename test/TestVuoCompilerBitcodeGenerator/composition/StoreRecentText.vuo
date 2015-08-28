@@ -15,9 +15,9 @@ Cut [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>tex
 DiscardDatafromEvent [type="vuo.type.discardData.VuoText" version="1.0.0" label="DiscardDatafromEvent|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="106,128"];
 DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="DisplayConsoleWindow|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="1192,504"];
 FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="74,53" _seconds="1"];
-Hold2 [type="vuo.hold.VuoText" version="1.0.0" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="132,210" _initialValue="\"recent\"" _newValue=""];
-Hold3 [type="vuo.hold.VuoText" version="1.0.0" label="Hold3|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="424,212" _initialValue=""];
-MakeList [type="vuo.list.make.2.VuoText" version="1.0.0" label="MakeList|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="704,314"];
+Hold2 [type="vuo.hold.VuoText" version="1.0.0" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="132,210" _initialValue="\"recent\""];
+Hold3 [type="vuo.hold.VuoText" version="1.0.0" label="Hold3|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="424,212"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="MakeList|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="704,314"];
 Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="1001,214" _b="9"];
 
 Append:compositeText -> CountCharacters:text;
@@ -28,8 +28,8 @@ Cut:partialText -> Hold3:newValue;
 DiscardDatafromEvent:event -> Hold3:refresh;
 FirePeriodically:fired -> Hold2:refresh;
 Hold2:heldValue -> DiscardDatafromEvent:dataAndEvent;
-Hold2:heldValue -> MakeList:item2;
-Hold3:heldValue -> MakeList:item1;
+Hold2:heldValue -> MakeList:2;
+Hold3:heldValue -> MakeList:1;
 MakeList:list -> Append:texts;
 Subtract:difference -> Cut:startIndex;
 }

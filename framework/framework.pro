@@ -1,130 +1,7 @@
-CONFIG_OLD = $$CONFIG
+include(masterLists.pri)
 
-# .pro files that specify HEADERS to be included in the framework:
-API_HEADER_LISTS = \
-	../base/base.pro \
-	../compiler/compiler.pro \
-	../library/library.pro \
-	../node/node.pro \
-	../node/vuo.image/vuo.image.pro \
-	../node/vuo.leap/vuo.leap.pro \
-	../node/vuo.math/vuo.math.pro \
-	../node/vuo.midi/vuo.midi.pro \
-	../node/vuo.noise/vuo.noise.pro \
-	../node/vuo.syphon/vuo.syphon.pro \
-	../runtime/runtime.pro \
-	../type/type.pro \
-	../type/list/list.pro
-
-for(header_list, API_HEADER_LISTS) {
-	include($${header_list})
-	EXPLICIT_HEADERS = $$find(HEADERS, "^[^\\*]+$")  # Exclude header paths containing wildcards
-	for(header, EXPLICIT_HEADERS) {
-		FRAMEWORK_VUO_HEADERS.files += $$join(header, , $${dirname(header_list)}/, )
-		MASTER_VUO_HEADER_LIST += $${header}
-	}
-	HEADERS = ""
-	POST_TARGETDEPS -= $$NODE_SET_ZIP
-	QMAKE_EXTRA_TARGETS -= createNodeSetZip
-}
-
-# Add the list headers (which were specified with a wildcard, excluded above).
-FRAMEWORK_VUO_HEADERS.files += ../type/list/VuoList_*.h
-# The list headers get included via node.h, so there's no need to add them to MASTER_VUO_HEADER_LIST.
-
-FRAMEWORK_VUO_STUB_HEADER = "Vuo.stub.h"
-VUO_PRI_LIBS = $$LIBS
-
-
-# Build the MODULE_OBJECTS list, containing compiled Vuo Modules to be copied to the Framework.
-MODULE_LISTS = \
-	../library/library.pro \
-	../node/node.pro \
-	../type/type.pro \
-	../type/list/list.pro
-
-for(module_list, MODULE_LISTS) {
-	NODE_SOURCES = ""
-	NODE_LIBRARY_SOURCES = ""
-	NODE_LIBRARY_SHARED_NONGL_SOURCES = ""
-	NODE_LIBRARY_SHARED_GL_SOURCES = ""
-	NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT = ""
-	TYPE_SOURCES = ""
-	TYPE_LIST_SOURCES = ""
-
-	include($${module_list})
-
-	module_list_sources = \
-		$$TYPE_SOURCES \
-		$$TYPE_LIST_SOURCES \
-		$$NODE_LIBRARY_SOURCES
-	for(sourcefile, module_list_sources) {
-		objectfile = $${dirname(module_list)}/$${basename(sourcefile)}
-		objectfile ~= s/\\.cc?$/.bc
-		objectfile ~= s/\\.m$/.bc
-		MODULE_OBJECTS += $$objectfile
-	}
-
-	SHARED = $$NODE_LIBRARY_SHARED_NONGL_SOURCES $$NODE_LIBRARY_SHARED_GL_SOURCES $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
-	for(sourcefile, SHARED) {
-		objectfile = $${dirname(module_list)}/lib$${basename(sourcefile)}
-		objectfile ~= s/\\.cc?$/.dylib
-		MODULE_OBJECTS += $$objectfile
-		QMAKE_LFLAGS += $$objectfile
-		headerfile = $${basename(sourcefile)}
-		headerfile ~= s/\\.cc?$/.h
-		FRAMEWORK_VUO_HEADERS.files += $${dirname(module_list)}/$$headerfile
-		MASTER_VUO_HEADER_LIST += $$headerfile
-	}
-}
-
-# Add node set zips to the list of files to be copied to Modules
-NODE_SETS = $$system(ls -1 ../node/*/*.pro)
-NODE_SETS = $$dirname(NODE_SETS)
-NODE_SETS = $$basename(NODE_SETS)
-NODE_SET_ZIPS = $$join(NODE_SETS,.vuonode ../node/,../node/,.vuonode)
-NODE_SET_ZIPS = $$split(NODE_SET_ZIPS," ")
-MODULE_OBJECTS += $$NODE_SET_ZIPS
-
-# Add each type's objects to the list of files to be linked in to the framework dylib
-for(node_set, NODE_SETS) {
-	TYPE_SOURCES = ""
-	include(../node/$${node_set}/$${node_set}.pro)
-	POST_TARGETDEPS -= $$NODE_SET_ZIP
-	QMAKE_EXTRA_TARGETS -= createNodeSetZip
-
-	TYPE_OBJECTS = $$TYPE_SOURCES
-	TYPE_OBJECTS ~= s/\\.cc?$/.o/g
-	TYPE_OBJECTS = $$join(TYPE_OBJECTS," ../node/$${node_set}/",../node/$${node_set}/,)
-	VUO_PRI_LIBS += $$TYPE_OBJECTS
-}
-
-
-# Now reset variables as appropriate for building Vuo.framework
-SOURCES = ""
-BASE_STUB_SOURCES = ""
-INCLUDEPATH = ""
-NODE_SOURCES = ""
-NODE_LIBRARY_SOURCES = ""
-NODE_LIBRARY_SHARED_NONGL_SOURCES = ""
-NODE_LIBRARY_SHARED_GL_SOURCES = ""
-NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT = ""
-OTHER_FILES = ""
-QMAKE_AR_CMD = ""
-QMAKE_CLEAN = ""
-QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_RANLIB = ""
-RUNTIME_C_SOURCES = ""
-RUNTIME_CXX_SOURCES = ""
-RUNTIME_LOADER_SOURCES = ""
-TYPE_SOURCES = ""
-TYPE_LIST_SOURCES = ""
 TEMPLATE = aux
-QMAKE_PRE_LINK = ""
-QMAKE_POST_LINK = ""
-LIBS = ""
-
-
-CONFIG = $$CONFIG_OLD VuoBase VuoCompiler VuoRuntime json lib_bundle
+CONFIG += VuoBase VuoCompiler VuoRuntime json lib_bundle
 TARGET = Vuo
 
 include(../vuo.pri)
@@ -139,6 +16,11 @@ QMAKE_LFLAGS += -Wl,-force_load,$${ROOT}/compiler/libVuoCompiler.a
 QMAKE_LFLAGS += -Wl,-force_load,$${ROOT}/type/libVuoType.a
 QMAKE_LFLAGS += -Wl,-force_load,$${ROOT}/type/list/libVuoTypeList.a
 
+# Make sure there's enough room to install_name_tool after linking.
+QMAKE_LFLAGS += -headerpad_max_install_names
+
+# Make sure it can run in older OS X versions.
+QMAKE_LFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
 
 # Add the third-party libraries that Vuo nodes/types depend on
 MODULE_OBJECTS += \
@@ -159,6 +41,7 @@ MODULE_OBJECTS += \
 	$$LIBUSB_ROOT/lib/libusb.dylib \
 	$$LIBFREENECT_ROOT/lib/libfreenect.dylib \
 	$$OSCPACK_ROOT/lib/liboscpack.a \
+	$$ZXING_ROOT/lib/libzxing.a \
 	$$ASSIMP_ROOT/lib/libassimp.a
 !equals(MAC_VERSION, "10.6") {
 	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
@@ -171,8 +54,8 @@ createHeadersDir.commands += rm -rf $${HEADERS_DEST_DIR} &&
 createHeadersDir.commands += mkdir -p $${HEADERS_DEST_DIR} &&
 createHeadersDir.commands += ln -s . $${HEADERS_DEST_DIR}/Vuo &&
 createHeadersDir.commands += cp $$FRAMEWORK_VUO_HEADERS.files $${HEADERS_DEST_DIR} &&
-createHeadersDir.commands += ./generateFrameworkHeader.pl $${FRAMEWORK_VUO_STUB_HEADER} $${MASTER_VUO_HEADER_LIST} > $${HEADERS_DEST_DIR}/Vuo.h
-createHeadersDir.depends += $$FRAMEWORK_VUO_HEADERS.files $$FRAMEWORK_VUO_STUB_HEADER
+createHeadersDir.commands += cp Vuo.h $${HEADERS_DEST_DIR}/Vuo.h
+createHeadersDir.depends += $$FRAMEWORK_VUO_HEADERS.files $$FRAMEWORK_VUO_STUB_HEADER Vuo.h
 createHeadersDir.target = $${HEADERS_DEST_DIR}
 POST_TARGETDEPS += $${HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += createHeadersDir
@@ -248,9 +131,13 @@ FRAMEWORKS_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Framew
 
 # Copy VuoRuntime files to the Frameworks directory
 VUORUNTIME_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/VuoRuntime.framework"
+VUOCOMPOSITIONLOADER_DEST_DIR = "$$VUORUNTIME_DEST_DIR/VuoCompositionLoader.app/Contents/MacOS"
 copyVuoRuntime.commands += rm -Rf $${VUORUNTIME_DEST_DIR} &&
 copyVuoRuntime.commands += mkdir -p $${VUORUNTIME_DEST_DIR} &&
-copyVuoRuntime.commands += cp $$ROOT/runtime/*\\.bc $$ROOT/runtime/VuoCompositionLoader $${VUORUNTIME_DEST_DIR} &&
+copyVuoRuntime.commands += mkdir -p $${VUOCOMPOSITIONLOADER_DEST_DIR}/ &&
+copyVuoRuntime.commands += cp VuoCompositionLoader.plist $${VUOCOMPOSITIONLOADER_DEST_DIR}/../Info.plist &&
+copyVuoRuntime.commands += cp $$ROOT/runtime/VuoCompositionLoader $${VUOCOMPOSITIONLOADER_DEST_DIR} &&
+copyVuoRuntime.commands += cp $$ROOT/runtime/*\\.bc $${VUORUNTIME_DEST_DIR} &&
 copyVuoRuntime.commands += cp $$ROOT/base/VuoCompositionStub.dylib $${VUORUNTIME_DEST_DIR}
 copyVuoRuntime.depends += $$ROOT/runtime/*.bc
 copyVuoRuntime.depends += $$ROOT/runtime/VuoCompositionLoader
@@ -273,7 +160,7 @@ QMAKE_EXTRA_TARGETS += copyZeroMQLibs
 ZEROMQ_HEADERS_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/zmq.framework/Headers"
 copyZeroMQHeaders.commands += rm -rf $${ZEROMQ_HEADERS_DEST_DIR} &&
 copyZeroMQHeaders.commands += mkdir -p $${ZEROMQ_HEADERS_DEST_DIR} &&
-copyZeroMQHeaders.commands += cp -r $${ZMQ_ROOT}/include/* $${ZEROMQ_HEADERS_DEST_DIR}
+copyZeroMQHeaders.commands += cp -a $${ZMQ_ROOT}/include/* $${ZEROMQ_HEADERS_DEST_DIR}
 copyZeroMQHeaders.target = $${ZEROMQ_HEADERS_DEST_DIR}
 POST_TARGETDEPS += $${ZEROMQ_HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyZeroMQHeaders
@@ -415,12 +302,20 @@ QMAKE_EXTRA_TARGETS += copyAndCleanQtFrameworks
 # Link the LIBS from vuo.pri to produce Vuo.framework/Vuo
 LIBS += $$VUO_PRI_LIBS
 LIBS += \
+	-framework AppKit \
 	-framework CoreFoundation \
+	-framework QuartzCore \
 	-framework OpenGL \
 	-framework IOSurface \
+	-F$$FRAMEWORKS_DEST_DIR \
+	-Wl,-reexport_framework,llvm \
+	$$MUPARSER_ROOT/lib/libmuparser.a \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoImageBlur.o \
 	$$ROOT/library/VuoImageMapColors.o \
+	$$ROOT/library/VuoMathExpressionParser.o \
+	$$ROOT/library/libVuoGlContext.dylib \
+	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib
 
 
@@ -443,6 +338,16 @@ copyLLVMHeaders.target = $${LLVM_HEADERS_DEST_DIR}
 POST_TARGETDEPS += $${LLVM_HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyLLVMHeaders
 
+# Copy LLVM dylib to the Frameworks directory
+LLVM_DYLIB_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/llvm.framework"
+LLVM_DYLIB_DEST = "$$LLVM_DYLIB_DEST_DIR/llvm"
+copyLLVMDylib.commands = \
+       mkdir -p $$LLVM_DYLIB_DEST_DIR \
+	&& cp $$LLVM_ROOT/lib/$$LLVM_DYLIB $$LLVM_DYLIB_DEST \
+	&& install_name_tool -id "@loader_path/Frameworks/llvm.framework/llvm" $$LLVM_DYLIB_DEST
+copyLLVMDylib.target = $$LLVM_DYLIB_DEST
+POST_TARGETDEPS += $$LLVM_DYLIB_DEST
+QMAKE_EXTRA_TARGETS += copyLLVMDylib
 
 # Copy Graphviz libraries to the Frameworks directory
 GRAPHVIZ_LIBS_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/graphviz.framework"
@@ -513,9 +418,11 @@ linkVuoFramework.commands = \
 	&& install_name_tool -change "/usr/local/lib/libgvc.6.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libgvc.6.dylib" "$$VUO_FRAMEWORK_BINARY" \
 	&& install_name_tool -change "/usr/local/lib/libpathplan.4.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libpathplan.4.dylib" "$$VUO_FRAMEWORK_BINARY" \
 	&& install_name_tool -change "/usr/local/lib/libxdot.4.dylib" "@rpath/$${GRAPHVIZ_LIBS_DEST_DIR}/libxdot.4.dylib" "$$VUO_FRAMEWORK_BINARY" \
+	&& install_name_tool -change "@executable_path/../lib/$$LLVM_DYLIB" "@rpath/$$LLVM_DYLIB_DEST" "$$VUO_FRAMEWORK_BINARY" \
 	&& rm -f $$CURRENT_LINK
 linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
+	$$LLVM_DYLIB_DEST \
 	../library/libVuoGlContext.dylib \
 	../library/libVuoGlPool.dylib \
 	../library/libVuoHeap.dylib \
@@ -533,7 +440,9 @@ CLANG_BINS_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/MacOS/
 copyClangBins.commands += rm -rf $${CLANG_BINS_DEST_DIR} &&
 copyClangBins.commands += mkdir -p $${CLANG_BINS_DEST_DIR} &&
 copyClangBins.commands += cp -r $${LLVM_ROOT}/bin/clang $${CLANG_BINS_DEST_DIR} &&
+copyClangBins.commands += install_name_tool -change "@executable_path/../lib/$$LLVM_DYLIB" "@executable_path/../../../Frameworks/llvm.framework/llvm" $${CLANG_BINS_DEST_DIR}/clang &&
 copyClangBins.commands += cp -r $${LLVM_ROOT}/bin/llvm-link $${CLANG_BINS_DEST_DIR} &&
+copyClangBins.commands += install_name_tool -change "@executable_path/../lib/$$LLVM_DYLIB" "@executable_path/../../../Frameworks/llvm.framework/llvm" $${CLANG_BINS_DEST_DIR}/llvm-link &&
 copyClangBins.commands += ln -s clang $${CLANG_BINS_DEST_DIR}/clang++ &&
 copyClangBins.commands += cp -r $${ROOT}/compiler/binary/ld $${CLANG_BINS_DEST_DIR}
 copyClangBins.target = $${CLANG_BINS_DEST_DIR}
@@ -588,7 +497,13 @@ QMAKE_EXTRA_TARGETS += fixOtherProjects
 QMAKE_INFO_PLIST_OUT = /dev/null
 
 QMAKE_CLEAN += \
+	Vuo.h \
 	"Vuo\\.framework" \
 	$$RESOURCES_SUBDIR \
 	fixedOtherProjects \
 	vuo-*
+
+
+# Make available in Qt Creator.
+OTHER_FILES = \
+	Vuo.stub.h

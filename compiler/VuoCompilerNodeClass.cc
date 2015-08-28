@@ -289,7 +289,7 @@ void VuoCompilerNodeClass::parseEventFunction(void)
 
 		if (! eventFunction)
 		{
-			fprintf(stderr, "Missing function nodeEvent or nodeInstanceEvent\n");
+			VLog("Error: Node class '%s' is missing function nodeEvent or nodeInstanceEvent.", getBase()->getClassName().c_str());
 			return;
 		}
 	}
@@ -414,6 +414,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 	map<string, VuoCompilerInputEventPortClass *> inputEventPortClassForDataClassName;
 	map<string, VuoCompilerOutputEventPortClass *> outputEventPortClassForDataClassName;
 	map<string, json_object *> detailsForInputDataClassName;
+	map<string, json_object *> detailsForInputEventArgumentName;
 	map<string, VuoType *> vuoTypeForArgumentName;
 	map<string, enum VuoPortClass::EventBlocking> eventBlockingForArgumentName;
 	map<string, enum VuoPortClass::EventThrottling> eventThrottlingForArgumentName;
@@ -438,6 +439,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		VuoPortClass *existingPortClass = NULL;
 		string dataPortName;
 		json_object *inputDataDetails = NULL;
+		json_object *inputEventDetails = NULL;
 		VuoType *type = NULL;
 		int eventBlocking;
 		int eventThrottling;
@@ -515,6 +517,10 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		{
 			detailsForInputDataClassName[argumentName] = inputDataDetails;
 		}
+		else if ((inputEventDetails = parseInputEventDetailsParameter(annotation)) != NULL)
+		{
+			detailsForInputEventArgumentName[argumentName] = inputEventDetails;
+		}
 		else if ((eventBlocking = parseEventBlockingParameter(annotation)) != -1)
 		{
 			eventBlockingForArgumentName[argumentName] = (VuoPortClass::EventBlocking)eventBlocking;
@@ -544,34 +550,34 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 	// Check that all required arguments and no disallowed arguments are present.
 	{
 		string functionName = function->getName().str();
-		string wronglyAbsentMessage = " is required in " + functionName + "\n";
-		string wronglyPresentMessage = " is not allowed in " + functionName + "\n";
+		string wronglyAbsentMessage = " is required in " + functionName;
+		string wronglyPresentMessage = " is not allowed in " + functionName;
 
 		if (sawInputData && ! (acceptanceFlags & INPUT_DATA_PRESENT))
-			fprintf(stderr, "%s", ("VuoInputData" + wronglyPresentMessage).c_str());
+			VLog("Error: %s", ("VuoInputData" + wronglyPresentMessage).c_str());
 		if (sawOutputData && ! (acceptanceFlags & OUTPUT_DATA_PRESENT))
-			fprintf(stderr, "%s", ("VuoOutputData" + wronglyPresentMessage).c_str());
+			VLog("Error: %s", ("VuoOutputData" + wronglyPresentMessage).c_str());
 		if (sawInputEvent && ! (acceptanceFlags & INPUT_EVENT_PRESENT))
-			fprintf(stderr, "%s", ("VuoInputEvent" + wronglyPresentMessage).c_str());
+			VLog("Error: %s", ("VuoInputEvent" + wronglyPresentMessage).c_str());
 		if (sawOutputEvent && ! (acceptanceFlags & OUTPUT_EVENT_PRESENT))
-			fprintf(stderr, "%s", ("VuoOutputEvent" + wronglyPresentMessage).c_str());
+			VLog("Error: %s", ("VuoOutputEvent" + wronglyPresentMessage).c_str());
 		if (sawOutputTrigger && ! (acceptanceFlags & OUTPUT_TRIGGER_PRESENT))
-			fprintf(stderr, "%s", ("VuoOutputTrigger" + wronglyPresentMessage).c_str());
+			VLog("Error: %s", ("VuoOutputTrigger" + wronglyPresentMessage).c_str());
 		if (sawInstanceData && ! (acceptanceFlags & INSTANCE_DATA_PRESENT))
-			fprintf(stderr, "%s", ("VuoInstanceData" + wronglyPresentMessage).c_str());
+			VLog("Error: %s", ("VuoInstanceData" + wronglyPresentMessage).c_str());
 
 		if (! sawInputData && ! (acceptanceFlags & INPUT_DATA_ABSENT))
-			fprintf(stderr, "%s", ("VuoInputData" + wronglyAbsentMessage).c_str());
+			VLog("Error: %s", ("VuoInputData" + wronglyAbsentMessage).c_str());
 		if (! sawOutputData && ! (acceptanceFlags & OUTPUT_DATA_ABSENT))
-			fprintf(stderr, "%s", ("VuoOutputData" + wronglyAbsentMessage).c_str());
+			VLog("Error: %s", ("VuoOutputData" + wronglyAbsentMessage).c_str());
 		if (! sawInputEvent && ! (acceptanceFlags & INPUT_EVENT_ABSENT))
-			fprintf(stderr, "%s", ("VuoInputEvent" + wronglyAbsentMessage).c_str());
+			VLog("Error: %s", ("VuoInputEvent" + wronglyAbsentMessage).c_str());
 		if (! sawOutputEvent && ! (acceptanceFlags & OUTPUT_EVENT_ABSENT))
-			fprintf(stderr, "%s", ("VuoOutputEvent" + wronglyAbsentMessage).c_str());
+			VLog("Error: %s", ("VuoOutputEvent" + wronglyAbsentMessage).c_str());
 		if (! sawOutputTrigger && ! (acceptanceFlags & OUTPUT_TRIGGER_ABSENT))
-			fprintf(stderr, "%s", ("VuoOutputTrigger" + wronglyAbsentMessage).c_str());
+			VLog("Error: %s", ("VuoOutputTrigger" + wronglyAbsentMessage).c_str());
 		if (! sawInstanceData && ! (acceptanceFlags & INSTANCE_DATA_ABSENT))
-			fprintf(stderr, "%s", ("VuoInstanceData" + wronglyAbsentMessage).c_str());
+			VLog("Error: %s", ("VuoInstanceData" + wronglyAbsentMessage).c_str());
 	}
 
 	// Match up data port classes with event port classes. Add event and trigger port classes to addedInputPortClasses/addedOutputPortClasses.
@@ -698,7 +704,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		}
 	}
 
-	// Set the default value and other details for each added input port.
+	// Set the default value and other data-related details for each added input port.
 	for (vector<VuoPortClass *>::iterator i = addedInputPortClasses.begin(); i != addedInputPortClasses.end(); ++i)
 	{
 		VuoCompilerInputEventPortClass *eventPortClass = static_cast<VuoCompilerInputEventPortClass *>((*i)->getCompiler());
@@ -711,14 +717,22 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		}
 	}
 
-	// Set the event-blocking behavior for each added input port.
+	// Set the event-blocking behavior and other event-related details for each added input port.
 	for (map<string, enum VuoPortClass::EventBlocking>::iterator i = eventBlockingForArgumentName.begin(); i != eventBlockingForArgumentName.end(); ++i)
 	{
 		string argumentName = i->first;
 		VuoPortClass::EventBlocking eventBlocking = i->second;
 		VuoCompilerInputEventPortClass *eventPortClass = inputEventPortClassForArgumentName[argumentName];
 		if (eventPortClass)
+		{
 			eventPortClass->getBase()->setEventBlocking(eventBlocking);
+
+			if (eventBlocking == VuoPortClass::EventBlocking_None)
+				portsWithExplicitEventBlockingNone.insert(eventPortClass);
+
+			json_object *details = detailsForInputEventArgumentName[argumentName];
+			eventPortClass->setDetails(details);
+		}
 	}
 
 	// Set the event-throttling behavior for each added trigger port.
@@ -729,6 +743,23 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		VuoCompilerTriggerPortClass *triggerPortClass = triggerPortClassForArgumentName[argumentName];
 		if (triggerPortClass)
 			triggerPortClass->getBase()->setDefaultEventThrottling(eventThrottling);
+	}
+
+	// Update the port action status for each input port.
+	for (vector<VuoPortClass *>::iterator i = inputPortClasses.begin(); i != inputPortClasses.end(); ++i)
+	{
+		VuoCompilerInputEventPortClass *eventPortClass = static_cast<VuoCompilerInputEventPortClass *>((*i)->getCompiler());
+		if (eventPortClass->getBase() != getBase()->getRefreshPortClass())
+		{
+			bool isPortActionInDetails = false;
+			bool hasPortAction = parseBool(eventPortClass->getDetails(), "hasPortAction", &isPortActionInDetails);
+
+			if (isPortActionInDetails)
+				eventPortClass->setPortAction(hasPortAction);
+			else if (! eventPortClass->getDataClass() ||
+					 portsWithExplicitEventBlockingNone.find(eventPortClass) != portsWithExplicitEventBlockingNone.end())
+				eventPortClass->setPortAction(true);
+		}
 	}
 }
 
@@ -759,7 +790,7 @@ VuoCompilerOutputDataClass * VuoCompilerNodeClass::parseOutputDataParameter(stri
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		fprintf(stderr, "Output port data %s must be a pointer.\n", argumentName.c_str());
+		VLog("Error: Output port data %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -796,7 +827,7 @@ VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParamete
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		fprintf(stderr, "Output port %s must be a pointer.\n", argumentName.c_str());
+		VLog("Error: Output port %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -819,7 +850,7 @@ VuoCompilerTriggerPortClass * VuoCompilerNodeClass::parseTriggerParameter(string
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		fprintf(stderr, "Output trigger %s must be a pointer.\n", argumentName.c_str());
+		VLog("Error: Output trigger %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -839,7 +870,7 @@ VuoCompilerInstanceDataClass * VuoCompilerNodeClass::parseInstanceDataParameter(
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		fprintf(stderr, "Node instance data %s must be a pointer.\n", argumentName.c_str());
+		VLog("Error: Node instance data %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -899,7 +930,26 @@ json_object * VuoCompilerNodeClass::parseInputDataDetailsParameter(string annota
 	{
 		detailsObj = json_tokener_parse(details.c_str());
 		if (! detailsObj)
-			fprintf(stderr, "Couldn't parse vuoInputDataDetails: %s\n", details.c_str());
+			VLog("Error: Couldn't parse vuoInputDataDetails: %s\n", details.c_str());
+	}
+	return detailsObj;
+}
+
+/**
+ * Parses a "vuoInputEventDetails" annotated function parameter. Returns null if not a "vuoInputEventDetails".
+ */
+json_object * VuoCompilerNodeClass::parseInputEventDetailsParameter(string annotation)
+{
+	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEventDetails:"))
+		return NULL;
+
+	json_object *detailsObj = NULL;
+	string details = VuoStringUtilities::substrAfter(annotation, "vuoInputEventDetails:");
+	if (details.find_first_not_of(' ') != string::npos)
+	{
+		detailsObj = json_tokener_parse(details.c_str());
+		if (! detailsObj)
+			VLog("Error: Couldn't parse vuoInputEventDetails: %s\n", details.c_str());
 	}
 	return detailsObj;
 }
@@ -920,7 +970,7 @@ int VuoCompilerNodeClass::parseEventBlockingParameter(string annotation)
 	else if (eventBlockingName == "VuoPortEventBlocking_Wall")
 		return VuoPortClass::EventBlocking_Wall;
 
-	fprintf(stderr, "Unknown %s\n", annotation.c_str());
+	VLog("Error: Unknown %s\n", annotation.c_str());
 	return -1;
 }
 
@@ -940,7 +990,7 @@ int VuoCompilerNodeClass::parseEventThrottlingParameter(string annotation)
 		else if (eventThrottlingName == "VuoPortEventThrottling_Drop")
 			return VuoPortClass::EventThrottling_Drop;
 		else
-			fprintf(stderr, "Unknown %s\n", annotation.c_str());
+			VLog("Error: Unknown %s\n", annotation.c_str());
 	}
 	return -1;
 }
@@ -963,7 +1013,7 @@ VuoPortClass * VuoCompilerNodeClass::getExistingPortClass(VuoCompilerNodeArgumen
 		}
 		else if ((isInput && existingOutputPortClass) || (! isInput && existingInputPortClass))
 		{
-			fprintf(stderr, "Port %s is declared as an input port in one function and an output port in another function.\n", argumentName.c_str());
+			VLog("Error: Port %s is declared as an input port in one function and an output port in another function.\n", argumentName.c_str());
 			return NULL;
 		}
 
@@ -1125,4 +1175,41 @@ string VuoCompilerNodeClass::getDefaultSpecializedTypeName(string genericTypeNam
 		return typeNameIter->second;
 
 	return "";
+}
+
+/**
+ * Returns a list of keywords automatically associated with this node class,
+ * based on attributes such as its port classes and premium status.
+ */
+vector<string> VuoCompilerNodeClass::getAutomaticKeywords(void)
+{
+	vector<string> keywords;
+
+	// Automatically add trigger-related keywords for nodes containing trigger ports.
+	bool nodeHasTriggerPort = false;
+	vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();
+	for (vector<VuoPortClass *>::iterator i = outputPortClasses.begin(); i != outputPortClasses.end(); ++i)
+	{
+		if ((*i)->getPortType() == VuoPortClass::triggerPort)
+		{
+			nodeHasTriggerPort = true;
+			break;
+		}
+	}
+
+	if (nodeHasTriggerPort)
+	{
+		keywords.push_back("bang");
+		keywords.push_back("events");
+		keywords.push_back("trigger");
+		keywords.push_back("fire");
+	}
+
+	if (VuoStringUtilities::beginsWith(getBase()->getClassName(), "vuo.type."))
+		keywords.push_back("conversion");
+
+	if (getPremium())
+		keywords.push_back("premium");
+
+	return keywords;
 }

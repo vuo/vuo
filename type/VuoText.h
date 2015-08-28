@@ -43,12 +43,21 @@ VuoText VuoText_substring(const VuoText string, int startIndex, int length);
 VuoText VuoText_append(VuoText *texts, size_t textsCount);
 VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement);
 
+#ifndef DOXYGEN
+	#define VUOTEXT_FORMAT_ATTRIBUTE __attribute__((format(printf, 1, 2)))
+#else
+	#define VUOTEXT_FORMAT_ATTRIBUTE
+#endif
+char *VuoText_format(const char *format, ...) VUOTEXT_FORMAT_ATTRIBUTE;
+
 /// @{
 /**
  * Automatically generated function.
  */
 VuoText VuoText_valueFromString(const char *str);
 char * VuoText_stringFromValue(const VuoText value);
+void VuoText_retain(VuoText value);
+void VuoText_release(VuoText value);
 /// @}
 
 /**

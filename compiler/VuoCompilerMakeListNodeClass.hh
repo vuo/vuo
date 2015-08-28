@@ -24,6 +24,8 @@ private:
 	VuoCompilerMakeListNodeClass(string nodeClassName, Module *module);
 	VuoCompilerMakeListNodeClass(VuoCompilerMakeListNodeClass *compilerNodeClass, VuoNode *nodeToBack);
 
+	static bool parseNodeClassName(string nodeClassName, unsigned long &itemCount, string &itemTypeName);
+
 	static const string makeListNodeClassNamePrefix;
 	static const string makeListNodeClassDescription;
 
@@ -35,11 +37,12 @@ public:
 	string getOriginalGenericNodeClassDescription(void);
 	VuoNodeSet *getOriginalGenericNodeSet(void);
 	string createUnspecializedNodeClassName(set<VuoPortClass *> portClassesToUnspecialize);
+	string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
 
 	static VuoNodeClass * newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack=NULL);
 	static bool isMakeListNodeClassName(string nodeClassName);
-	static bool isListType(VuoCompilerType *type);
 	static string getNodeClassName(unsigned long itemCount, VuoCompilerType *listType);
+	static string buildNodeClassName(unsigned long itemCount, string itemTypeName);
 };
 
 #endif

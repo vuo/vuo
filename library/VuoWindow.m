@@ -49,7 +49,10 @@ void VuoWindowApplication_init(void)
  */
 static void __attribute__((constructor)) launchApplication()
 {
-	dispatch_async(dispatch_get_main_queue(), ^{
+	// Wait a bit before calling `VuoWindowApplication_init()`, since -[NSApplication init] fails with
+	// `RegisterApplication(), FAILED TO REGISTER PROCESS WITH CPS/CoreGraphics in WindowServer, err=1003`
+	// apparently if it happens too early.
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.25*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 					  VuoWindowApplication_init();
 				  });
 }
@@ -153,7 +156,6 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 		bool useDepthBuffer,
 		void (*initCallback)(VuoGlContext glContext, void *),
 		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
-		void (*switchContextCallback)(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *),
 		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 )
@@ -164,7 +166,6 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 					  window = [[VuoWindowOpenGLInternal alloc] initWithDepthBuffer:useDepthBuffer
 						  initCallback:initCallback
 						  resizeCallback:resizeCallback
-						  switchContextCallback:switchContextCallback
 						  drawCallback:drawCallback
 						  drawContext:context];
 					  [window makeKeyAndOrderFront:nil];
@@ -214,6 +215,19 @@ void VuoWindowOpenGl_redraw(VuoWindowOpenGl w)
 }
 
 /**
+ * Applies a list of properties to a window.
+ *
+ * @threadAny
+ */
+void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty properties)
+{
+	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	dispatch_sync(dispatch_get_main_queue(), ^{
+					  [window setProperties:properties];
+				  });
+}
+
+/**
  * Executes the specifed block on the window's OpenGL context, then returns.
  * Ensures that nobody else is using the OpenGL context at that time
  * (by synchronizing with the window's @c drawQueue).
@@ -237,6 +251,19 @@ void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, 
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
 	dispatch_async(dispatch_get_main_queue(), ^{
 					   [window setAspectRatioToWidth:pixelsWide height:pixelsHigh];
+				   });
+}
+
+/**
+ * Removes the aspect ratio constraint set by @ref VuoWindowOpenGl_setAspectRatio.
+ *
+ * After calling this method, the user will be able to resizes the window freely.
+ */
+void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w)
+{
+	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	dispatch_async(dispatch_get_main_queue(), ^{
+					   [window unlockAspectRatio];
 				   });
 }
 

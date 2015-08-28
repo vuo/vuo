@@ -1,0 +1,109 @@
+/**
+ * @file
+ * Clicking toggles between a live video feed and a 3 second instant replay.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BecameFalse [type="vuo.event.becameFalse" version="1.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<done>done\r|<becameFalse>becameFalse\r" pos="1798,255"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<done>done\r|<becameTrue>becameTrue\r" pos="1800,337"];
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<done>done\r|<real>real\r" pos="492,760"];
+ConvertIntegerToRealNumber4 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<done>done\r|<real>real\r" pos="488,843"];
+CycleThroughList [type="vuo.list.cycle.VuoImage" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="387,363" _wrapMode="\"wrap\""];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="763,513"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoBoolean" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="1013,564"];
+Enqueue [type="vuo.list.enqueue.VuoImage" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<done>done\r|<list>list\r" pos="123,349" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-166,13" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="119,460" fillcolor="yellow" _seconds="0.033333" _fired_eventThrottling="drop"];
+FramesPerSecond [type="vuo.data.share.VuoReal" version="1.0.0" label="Frames per Second|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="-227,205" _value="30.000000"];
+GetImageSize [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<done>done\r|<width>width\r|<height>height\r" pos="570,149"];
+GetImageSize2 [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<done>done\r|<width>width\r|<height>height\r" pos="100,672"];
+GetItemFromList [type="vuo.list.get.VuoImage" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="388,288"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1494,604" _center="{\"x\":0.700000,\"y\":-0.500000}" _alpha="1.000000"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="563,32" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+MakeLayer4 [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1494,491" _center="{\"x\":0.700000,\"y\":-0.190000}" _alpha="1.000000"];
+MakeList [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r" pos="1108,89" fillcolor="green"];
+MakeList10 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="-210,330"];
+MakeList6 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="747,69" fillcolor="green"];
+MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="346,658" _2="0.250000"];
+MakeList9 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="345,722" _2="0.250000"];
+MakeTextImage5 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="775,529" _text="\"Instant\\nReplay\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage6 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="777,460" _text="\"Live\"" _font="{\"fontName\":\"Helvetica-Bold\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="392,647"];
+Multiply3 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="391,711"];
+Multiply4 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="-164,319"];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r|<decodedAudio>decodedAudio\r" pos="223,43" _movieURL="\"\\/System\\/Library\\/Compositions\\/Fish.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedImage_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="1204,295" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1149,63" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.0.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<done>done\r|<image>image\r|<renderedLayers>renderedLayers\r" pos="827,58" fillcolor="green" _colorDepth="\"8bpc\""];
+ResizeImage [type="vuo.image.resize" version="1.0.0" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<done>done\r|<resizedImage>resizedImage\r" pos="775,609" _sizingMode="\"fit\""];
+Round [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="613,673"];
+Round2 [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="613,688"];
+Round3 [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="222,459"];
+Round4 [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<done>done\r|<roundedInteger>roundedInteger\r" pos="403,420"];
+SelectInput5 [type="vuo.select.in.VuoImage" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="633,306"];
+SelectInput6 [type="vuo.select.in.VuoImage" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="1094,482"];
+ShareValue [type="vuo.data.share.VuoReal" version="1.0.0" label="Replay Length (Seconds)|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="-206,151" _value="3.000000"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Paused?|<refresh>refresh\l|<toggle>toggle\l|<done>done\r|<value>value\r" pos="1590,299"];
+
+BecameFalse:becameFalse -> PlayMovie:play;
+BecameTrue:becameTrue -> CycleThroughList:goToFirst;
+BecameTrue:becameTrue -> PlayMovie:pause;
+ConvertIntegerToRealNumber4:real -> MakeList9:1;
+ConvertIntegerToRealNumber:real -> MakeList7:1;
+CycleThroughList:item -> SelectInput5:trueOption;
+DiscardDataFromEvent2:event -> SelectInput6:refresh;
+DiscardDataFromEvent:event -> Toggle:toggle;
+Enqueue:list -> CycleThroughList:list;
+Enqueue:list -> GetItemFromList:list;
+FireOnStart:started -> FramesPerSecond:refresh;
+FireOnStart:started -> MakeTextImage5:refresh;
+FireOnStart:started -> MakeTextImage6:refresh;
+FireOnStart:started -> PlayMovie:play;
+FireOnStart:started -> ShareValue:refresh;
+FirePeriodically2:fired -> CycleThroughList:goForward;
+FramesPerSecond:sameValue -> MakeList10:2;
+GetImageSize2:height -> ConvertIntegerToRealNumber4:integer;
+GetImageSize2:width -> ConvertIntegerToRealNumber:integer;
+GetImageSize:height -> RenderLayersToImage:height;
+GetImageSize:width -> RenderLayersToImage:width;
+GetItemFromList:item -> SelectInput5:falseOption;
+MakeLayer2:layer -> MakeList6:2;
+MakeLayer3:layer -> MakeList6:1;
+MakeLayer4:layer -> MakeList6:3;
+MakeList10:list -> Multiply4:terms;
+MakeList6:list -> RenderLayersToImage:layers;
+MakeList7:list -> Multiply:terms;
+MakeList9:list -> Multiply3:terms;
+MakeList:list -> RenderImageToWindow:windowProperties;
+MakeTextImage5:image -> SelectInput6:trueOption;
+MakeTextImage6:image -> SelectInput6:falseOption;
+Multiply3:product -> Round2:real;
+Multiply4:product -> Round3:real;
+Multiply4:product -> Round4:real;
+Multiply:product -> Round:real;
+PlayMovie:decodedImage -> Enqueue:addItem;
+PlayMovie:decodedImage -> GetImageSize:image;
+PlayMovie:decodedImage -> MakeLayer3:image;
+ReceiveMouseButtons:pressed -> DiscardDataFromEvent:dataAndEvent;
+RenderImageToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToImage:image -> RenderImageToWindow:image;
+ResizeImage:resizedImage -> MakeLayer2:image;
+Round2:roundedInteger -> ResizeImage:height;
+Round3:roundedInteger -> Enqueue:maxItemCount;
+Round4:roundedInteger -> GetItemFromList:which;
+Round:roundedInteger -> ResizeImage:width;
+SelectInput5:out -> GetImageSize2:image;
+SelectInput5:out -> ResizeImage:image;
+SelectInput6:out -> MakeLayer4:image;
+ShareValue:sameValue -> MakeList10:1;
+Toggle:value -> BecameFalse:value;
+Toggle:value -> BecameTrue:value;
+Toggle:value -> DiscardDataFromEvent2:dataAndEvent;
+Toggle:value -> SelectInput5:which;
+Toggle:value -> SelectInput6:which;
+}

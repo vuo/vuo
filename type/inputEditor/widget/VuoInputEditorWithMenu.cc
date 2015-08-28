@@ -18,6 +18,7 @@ json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *o
 	VuoInputEditorMenuItem *menuTree = setUpMenuTree();
 
 	QMenu *menu = new QMenu();
+	menu->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
 	menu->setFont(getDefaultFont());
 	QActionGroup *menuActionGroup;
 	menuActionGroup = new QActionGroup(menu);

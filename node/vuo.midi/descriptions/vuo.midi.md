@@ -22,3 +22,5 @@ A MIDI **controller** message often represents a musical effect (volume, panning
 A MIDI note or controller message also includes: 
 
    - A **channel**, ranging from 1 to 16. Each channel has its own stream of MIDI notes and controller values. A channel often represents one musical instrument. 
+
+You can send MIDI messages between two Vuo compositions, one with a `Send MIDI Event` node and the other with a `Receive MIDI Event` node. For this to work, you need to set up a MIDI device that supports both input and output. The compositions will communicate through this device. On Mac OS X, you can set up the device like this: open the Audio MIDI Setup application and go to the MIDI window, double-click on the IAC driver, and check the box for "Device is online". Then run the compositions. 

@@ -1,0 +1,64 @@
+/**
+ * @file
+ * Ripples a plane with various kinds of waves. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CycleThroughList2 [type="vuo.list.cycle.VuoDispersion" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="338,430" _wrapMode="\"wrap\""];
+CycleThroughList4 [type="vuo.list.cycle.VuoDisplacement" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="338,550" _wrapMode="\"wrap\""];
+CycleThroughList6 [type="vuo.list.cycle.VuoText" version="1.0.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<done>done\r|<item>item\r" pos="340,670" _wrapMode="\"wrap\""];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="500,574"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="443,639"];
+DiscardDataFromEvent3 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="439,795"];
+Divide2 [type="vuo.math.divide.VuoReal" version="1.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<quotient>quotient\r" pos="364,-14" _b="4.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-79,89" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="315,141"];
+MakeList19 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<done>done\r|<list>list\r" pos="172,681" _1="\"Linear and transverse\"" _2="\"Linear and longitudinal\"" _3="\"Radial and transverse\"" _4="\"Radial and longitudinal\""];
+MakeList20 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="772,151" fillcolor="green"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r" pos="802,181" fillcolor="green"];
+MakeList5 [type="vuo.list.make.4.VuoDispersion" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<done>done\r|<list>list\r" pos="170,441" _1="\"linear\"" _2="\"linear\"" _3="\"radial\"" _4="\"radial\""];
+MakeList9 [type="vuo.list.make.2.VuoDisplacement" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="170,561" _1="\"transverse\"" _2="\"longitudinal\""];
+MakeParametricMesh [type="vuo.mesh.make.parametric" version="3.0.0" label="Make Parametric Mesh|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uMin>uMin\l|<uMax>uMax\l|<vClosed>vClosed\l|<vMin>vMin\l|<vMax>vMax\l|<done>done\r|<mesh>mesh\r" pos="96,141" _time="0.000000" _xExpression="\"u\"" _yExpression="\"v\"" _zExpression="\"0\"" _rows="16" _columns="16" _uClosed="false" _uMin="-0.500000" _uMax="0.500000" _vClosed="false" _vMin="-0.500000" _vMax="0.500000"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="581,670" _font="{\"fontName\":\"Helvetica\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="578,790" _text="\"Click to change the type of ripple.\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="1.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="785,671" _center="{\"x\":0.000000,\"y\":-0.650000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.500000" _alpha="1.000000"];
+MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="1.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="785,790" _center="{\"x\":0.000000,\"y\":-0.700000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.500000" _alpha="1.000000"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="-92,496" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="843,140" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RippleObject [type="vuo.scene.ripple" version="1.0.0" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<done>done\r|<rippledObject>rippledObject\r" pos="546,141" fillcolor="violet" _angle="90.000000" _amplitude="0.050000" _wavelength="0.050000"];
+
+CycleThroughList2:item -> RippleObject:dispersion;
+CycleThroughList4:item -> RippleObject:displacement;
+CycleThroughList6:item -> MakeTextImage:text;
+DiscardDataFromEvent2:event -> CycleThroughList4:goForward;
+DiscardDataFromEvent3:event -> CycleThroughList6:goForward;
+DiscardDataFromEvent:event -> CycleThroughList2:goForward;
+Divide2:quotient -> RippleObject:phase;
+FireOnStart:started -> CycleThroughList2:refresh;
+FireOnStart:started -> CycleThroughList4:refresh;
+FireOnStart:started -> CycleThroughList6:refresh;
+FireOnStart:started -> MakeParametricMesh:refresh;
+FireOnStart:started -> MakeTextImage2:refresh;
+Make3DObject:object -> RippleObject:object;
+MakeList19:list -> CycleThroughList6:list;
+MakeList20:list -> RenderSceneToWindow:objects;
+MakeList4:list -> RenderSceneToWindow:windowProperties;
+MakeList5:list -> CycleThroughList2:list;
+MakeList9:list -> CycleThroughList4:list;
+MakeParametricMesh:mesh -> Make3DObject:mesh;
+MakeTextImage2:image -> MakeUnlit3DObjectFromImage2:image;
+MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
+MakeUnlit3DObjectFromImage2:object -> MakeList20:3;
+MakeUnlit3DObjectFromImage:object -> MakeList20:2;
+ReceiveMouseButtons:released -> DiscardDataFromEvent2:dataAndEvent;
+ReceiveMouseButtons:released -> DiscardDataFromEvent3:dataAndEvent;
+ReceiveMouseButtons:released -> DiscardDataFromEvent:dataAndEvent;
+RenderSceneToWindow:requestedFrame -> Divide2:a;
+RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window;
+RippleObject:rippledObject -> MakeList20:1;
+}

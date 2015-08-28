@@ -9,10 +9,13 @@ NODE_LIBRARY_SOURCES += \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
 	VuoUrl.c \
-	VuoVerticesParametric.cc \
+	VuoMathExpressionParser.cc \
+	VuoMeshParametric.cc \
 	VuoPointsParametric.cc \
+	VuoScreenCommon.m \
 	VuoWindow.m \
 	VuoWindowApplication.m \
 	VuoWindowOpenGLInternal.m \
@@ -23,9 +26,11 @@ SOURCES += \
 	VuoImageBlur.c \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
-	VuoSceneRenderer.cc \
-	VuoVerticesParametric.cc \
-	VuoPointsParametric.cc
+	VuoMathExpressionParser.cc \
+	VuoMeshParametric.cc \
+	VuoPointsParametric.cc \
+	VuoSceneObjectRenderer.cc \
+	VuoSceneRenderer.cc
 
 HEADERS += \
 	VuoDisplayRefresh.h \
@@ -34,12 +39,16 @@ HEADERS += \
 	VuoHeap.h \
 	VuoImageGet.h \
 	VuoImageRenderer.h \
+	VuoLog.h \
+	VuoMathExpressionParser.h \
+	VuoMeshParametric.h \
+	VuoPointsParametric.h \
 	VuoPool.hh \
+	VuoSceneObjectRenderer.h \
 	VuoSceneRenderer.h \
+	VuoScreenCommon.h \
 	VuoTriggerSet.hh \
 	VuoUrl.h \
-	VuoVerticesParametric.h \
-	VuoPointsParametric.h \
 	VuoWindow.h \
 	VuoNSRunLoop.h
 
@@ -55,6 +64,7 @@ INCLUDEPATH += \
 	../type/list
 
 NODE_LIBRARY_INCLUDEPATH = \
+	shader \
 	$${FREEIMAGE_ROOT}/include \
 	$${MUPARSER_ROOT}/include \
 	$${CURL_ROOT}/include \

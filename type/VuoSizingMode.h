@@ -10,6 +10,11 @@
 #ifndef VUOSIZINGMODE_H
 #define VUOSIZINGMODE_H
 
+/// @{
+typedef void * VuoList_VuoSizingMode;
+#define VuoList_VuoSizingMode_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoSizingMode VuoSizingMode
@@ -29,6 +34,7 @@ typedef enum {
 
 VuoSizingMode VuoSizingMode_valueFromJson(struct json_object * js);
 struct json_object * VuoSizingMode_jsonFromValue(const VuoSizingMode value);
+VuoList_VuoSizingMode VuoSizingMode_allowedValues(void);
 char * VuoSizingMode_summaryFromValue(const VuoSizingMode value);
 
 /// @{
@@ -37,6 +43,8 @@ char * VuoSizingMode_summaryFromValue(const VuoSizingMode value);
  */
 VuoSizingMode VuoSizingMode_valueFromString(const char *str);
 char * VuoSizingMode_stringFromValue(const VuoSizingMode value);
+void VuoSizingMode_retain(VuoSizingMode value);
+void VuoSizingMode_release(VuoSizingMode value);
 /// @}
 
 /**

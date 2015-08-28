@@ -10,6 +10,11 @@
 #ifndef VUOVERTICALALIGNMENT_H
 #define VUOVERTICALALIGNMENT_H
 
+/// @{
+typedef void * VuoList_VuoVerticalAlignment;
+#define VuoList_VuoVerticalAlignment_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoVerticalAlignment VuoVerticalAlignment
@@ -32,6 +37,7 @@ typedef enum
 
 VuoVerticalAlignment VuoVerticalAlignment_valueFromJson(struct json_object * js);
 struct json_object * VuoVerticalAlignment_jsonFromValue(const VuoVerticalAlignment value);
+VuoList_VuoVerticalAlignment VuoVerticalAlignment_allowedValues(void);
 char * VuoVerticalAlignment_summaryFromValue(const VuoVerticalAlignment value);
 
 /**

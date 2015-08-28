@@ -5,6 +5,7 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.layer.align.window.c \
+	vuo.layer.arrange.grid.c \
 	vuo.layer.make.c \
 	vuo.layer.copy.c \
 	vuo.layer.copy.trs.c \
@@ -15,6 +16,7 @@ NODE_SOURCES += \
 	vuo.layer.make.gradient.linear.c \
 	vuo.layer.make.gradient.radial.c \
 	vuo.layer.combine.c \
+	vuo.layer.combine.center.c \
 	vuo.layer.drag.c \
 	vuo.layer.render.window.c \
 	vuo.layer.render.image.c \

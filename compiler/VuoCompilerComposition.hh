@@ -15,6 +15,7 @@
 #include "VuoProtocol.hh"
 
 #include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerGraph.hh"
 
 /**
  * A collection of nodes and the cables connecting them.
@@ -22,10 +23,23 @@
 class VuoCompilerComposition : public VuoBaseDetail<VuoComposition>
 {
 public:
+	/**
+	 * A mapping from a node to its replacement in a composition diff.
+	 */
+	class NodeReplacement
+	{
+	public:
+		string oldNodeIdentifier;  ///< The Graphviz identifier of the original node.
+		string newNodeIdentifier;  ///< The Graphviz identifier of the replacement node.
+		map<string, string> oldAndNewPortIdentifiers;  ///< A mapping of equivalent port class names from the original node to the replacement node.
+	};
+	friend bool operator<(const NodeReplacement &lhs, const NodeReplacement &rhs);
+
 	VuoCompilerComposition(VuoComposition *baseComposition, VuoCompilerGraphvizParser *parser);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
 	void check(void);
 	void checkForMissingNodeClasses(void);
+	void checkFeedback(set<VuoCompilerCable *> potentialCables = set<VuoCompilerCable *>());
 	void updateGenericPortTypes(void);
 	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
 	void createReplacementsToUnspecializePort(VuoPort *port, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete);
@@ -36,12 +50,12 @@ public:
 	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
 	string getGraphvizDeclaration(string header = "", string footer = "");
 	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts, string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
-	string diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler);
-	bool compliesWithProtocol(VuoProtocol *protocol);
+	string diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler, const set<NodeReplacement> &nodeReplacements);
 
 	static const string defaultGraphDeclaration; ///< The default graph type and ID to be generated for new .vuo (Graphviz dot format) composition files.
 
 private:
+	VuoCompilerGraph *graph;
 	VuoNode *publishedInputNode;
 	VuoNode *publishedOutputNode;
 	map<unsigned int, bool> genericTypeSuffixUsed;

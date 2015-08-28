@@ -10,7 +10,7 @@
 digraph G 
 {
 Add1 [type="vuo.math.add.VuoInteger" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="373,54"];
-MakeList [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="313,65" _item1="0" _item2="1"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="313,65" _1="0" _2="1"];
 
 MakeList:list -> Add1:terms;
 }

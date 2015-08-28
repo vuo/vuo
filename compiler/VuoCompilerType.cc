@@ -75,11 +75,11 @@ void VuoCompilerType::parse(void)
 	summaryFromValueFunction = parser->getFunction(typeName + "_summaryFromValue");
 
 	if (! valueFromJsonFunction)
-		fprintf(stderr, "Couldn't find %s_valueFromJson() function\n", typeName.c_str());
+		VLog("Error: Couldn't find %s_valueFromJson() function.", typeName.c_str());
 	if (! jsonFromValueFunction)
-		fprintf(stderr, "Couldn't find %s_jsonFromValue() function\n", typeName.c_str());
+		VLog("Error: Couldn't find %s_jsonFromValue() function.", typeName.c_str());
 	if (! summaryFromValueFunction)
-		fprintf(stderr, "Couldn't find %s_summaryFromValueFunction() function\n", typeName.c_str());
+		VLog("Error: Couldn't find %s_summaryFromValueFunction() function.", typeName.c_str());
 
 	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(jsonFromValueFunction, 0, module, typeName);
 
@@ -270,7 +270,7 @@ void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess
  * @eg{
  * void VuoSceneObject_retain(VuoSceneObject value)
  * {
- *   VuoRetain((void *)value.verticesList);
+ *   VuoRetain((void *)value.mesh);
  *   VuoRetain((void *)value.shader);
  *   VuoRetain((void *)value.childObjects);
  * }
@@ -440,4 +440,15 @@ Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
 Attributes VuoCompilerType::getFunctionParameterAttributes(void)
 {
 	return jsonFromValueFunction->getAttributes().getParamAttributes(1);
+}
+
+/**
+ * Returns true if the type is a list type.
+ */
+bool VuoCompilerType::isListType(VuoCompilerType *type)
+{
+	if (! type)
+		return false;
+
+	return VuoType::isListTypeName(type->getBase()->getModuleKey());
 }

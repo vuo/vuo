@@ -24,8 +24,7 @@ NODE_SOURCES += \
 NODE_LIBRARY_SOURCES += \
 	VuoLeap.cc
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoLeap.h
 
 NODE_LIBRARY_INCLUDEPATH = \

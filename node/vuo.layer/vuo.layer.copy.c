@@ -11,8 +11,8 @@
 #include "VuoLayer.h"
 
 VuoModuleMetadata({
-					 "title" : "Copy Layer",
-					 "keywords" : [ "duplicate", "array", "instance", "instantiate", "populate" ],
+					 "title" : "Copy Layer with Transforms",
+					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "isInterface" : false

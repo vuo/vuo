@@ -31,6 +31,8 @@ struct nodeInstanceData
 
 	VuoRenderedLayers renderedLayers;
 	VuoText layerName;
+	VuoMouseButton button;
+	VuoModifierKey modifierKey;
 
 	bool isDraggingLayer;
 	VuoPoint2d startDrag;
@@ -217,6 +219,9 @@ void vuo_layer_drag_startTriggers(struct nodeInstanceData * context,
 	if (! context->renderedLayers.window)
 		return;
 
+	context->button = button;
+	context->modifierKey = modifierKey;
+
 	VuoMouse_startListeningForPressesWithCallback(context->dragStartedListener,
 												  ^(VuoPoint2d point){ vuo_layer_drag_dragStarted(point, startedDrag, context); },
 												  button, context->renderedLayers.window, modifierKey);
@@ -255,6 +260,8 @@ struct nodeInstanceData * nodeInstanceInit()
 	context->renderedLayers = VuoRenderedLayers_makeEmpty();
 	VuoRenderedLayers_retain(context->renderedLayers);
 	context->layerName = NULL;
+	context->button = VuoMouseButton_Any;
+	context->modifierKey = VuoModifierKey_Any;
 
 	context->isDraggingLayer = false;
 	context->startDrag = VuoPoint2d_make(0,0);
@@ -311,13 +318,9 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoRenderedLayers) renderedLayers,
-		VuoInputEvent(VuoPortEventBlocking_None, renderedLayers) renderedLayersEvent,
 		VuoInputData(VuoText) layerName,
-		VuoInputEvent(VuoPortEventBlocking_None, layerName) layerNameEvent,
 		VuoInputData(VuoMouseButton, {"default":"left"}) button,
-		VuoInputEvent(VuoPortEventBlocking_None, button) buttonEvent,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
-		VuoInputEvent(VuoPortEventBlocking_None, modifierKey) modifierKeyEvent,
 		VuoOutputTrigger(startedDrag, VuoPoint2d),
 		VuoOutputTrigger(draggedCenterTo, VuoPoint2d, VuoPortEventThrottling_Drop),
 		VuoOutputTrigger(endedDrag, VuoPoint2d)
@@ -327,14 +330,15 @@ void nodeInstanceEvent
 		return;
 
 	bool windowChanged = (renderedLayers.window != (*context)->renderedLayers.window);
+	bool buttonChanged = (button != (*context)->button);
+	bool modifierKeyChanged = (modifierKey != (*context)->modifierKey);
 
-	if (buttonEvent || modifierKeyEvent || windowChanged)
+	if (buttonChanged || modifierKeyChanged || windowChanged)
 		vuo_layer_drag_stopTriggers(*context);
 
-	if (renderedLayersEvent || layerNameEvent)
-		vuo_layer_drag_updateLayers(*context, renderedLayers, layerName);
+	vuo_layer_drag_updateLayers(*context, renderedLayers, layerName);
 
-	if (buttonEvent || modifierKeyEvent || windowChanged)
+	if (buttonChanged || modifierKeyChanged || windowChanged)
 		vuo_layer_drag_startTriggers(*context, button, modifierKey, startedDrag, draggedCenterTo, endedDrag);
 }
 

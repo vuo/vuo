@@ -14,12 +14,12 @@ ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Conve
 DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="447,126"];
 FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="11,-21" _seconds="1"];
 Hold1 [type="vuo.hold.VuoInteger" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="180,0" _initialValue="0"];
-MakeList [type="vuo.list.make.2.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="154,137" _item2="1"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="154,137" _2="1"];
 
 Add1:sum -> ConvertIntegertoText1:integer;
 Add1:sum -> Hold1:newValue;
 ConvertIntegertoText1:text -> DisplayConsoleWindow:writeLine;
 FirePeriodically1:fired -> Hold1:refresh;
-Hold1:heldValue -> MakeList:item1;
+Hold1:heldValue -> MakeList:1;
 MakeList:list -> Add1:terms;
 }

@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoAudioSamples.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -82,11 +83,7 @@ json_object * VuoAudioSamples_jsonFromValue(const VuoAudioSamples value)
  */
 char * VuoAudioSamples_summaryFromValue(const VuoAudioSamples value)
 {
-	const char *format = "%d samples @ %g kHz";
-	int size = snprintf(NULL,0,format,value.sampleCount,value.samplesPerSecond/1000);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.sampleCount,value.samplesPerSecond/1000);
-	return valueAsString;
+	return VuoText_format("%ld samples @ %g kHz", value.sampleCount, value.samplesPerSecond/1000);
 }
 
 /**

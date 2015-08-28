@@ -64,6 +64,8 @@ VuoImage VuoImage_get(const char *imageURL)
 
 	// Decode the memory buffer into a straightforward array of BGRA pixels
 	FIBITMAP *dib;
+	GLuint format;
+	VuoImageColorDepth colorDepth;
 	unsigned char *pixels;
 	{
 		FIMEMORY *hmem = FreeImage_OpenMemory((BYTE *)data, dataLength);
@@ -71,12 +73,12 @@ VuoImage VuoImage_get(const char *imageURL)
 		FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
 		if (fif == FIF_UNKNOWN)
 		{
-			fprintf(stderr, "VuoImage_get() Error: Couldn't determine image type.\n");
+			VLog("Error: '%s': Couldn't determine image type.", imageURL);
 			return NULL;
 		}
 		if (!FreeImage_FIFSupportsReading(fif))
 		{
-			fprintf(stderr, "VuoImage_get() Error: This image type doesn't support reading.\n");
+			VLog("Error: '%s': This image type doesn't support reading.", imageURL);
 			return NULL;
 		}
 
@@ -85,22 +87,60 @@ VuoImage VuoImage_get(const char *imageURL)
 
 		if (!dib)
 		{
-			fprintf(stderr, "VuoImage_get() Error: Failed to read image.\n");
+			VLog("Error: '%s': Failed to read image.", imageURL);
 			return NULL;
 		}
 
-		if (FreeImage_GetBPP(dib) != 32)
+		const FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
+		const unsigned int bpp = FreeImage_GetBPP(dib);
+		const FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(dib);
+
+		if (type == FIT_FLOAT
+		 || type == FIT_DOUBLE)
 		{
-			//fprintf(stderr, "VuoImage_get() Converting image to 32 bits per pixel.\n");
-			FIBITMAP *dibConverted = FreeImage_ConvertTo32Bits(dib);
+			// If it is > 8bpc greyscale, convert to float.
+			colorDepth = VuoImageColorDepth_16;
+			format = GL_LUMINANCE;
+		}
+		else if (type == FIT_RGB16
+			  || type == FIT_RGBF)
+		{
+			// If it is > 8bpc WITHOUT an alpha channel, convert to float.
+			colorDepth = VuoImageColorDepth_16;
+			format = GL_RGB;
+
+			FIBITMAP *dibFloat = FreeImage_ConvertToRGBF(dib);
 			FreeImage_Unload(dib);
-			dib = dibConverted;
+			dib = dibFloat;
+		}
+		else
+		{
+			// Upload other images as 8bpc.
+			// If it is > 8bpc WITH an alpha channel, convert to 8bpc (since FreeImage doesn't yet support converting to RGBAF).
+			colorDepth = VuoImageColorDepth_8;
+			format = GL_BGRA;
+
+			if (colorType == FIC_MINISBLACK && bpp == 16)
+			{
+				// Truncate 16bpc grey images to 8bpc, since `FreeImage_ConvertTo32Bits()` alone doesn't do this.
+				FIBITMAP *dibConverted = FreeImage_ConvertTo32Bits(FreeImage_ConvertToStandardType(dib));
+				FreeImage_Unload(dib);
+				dib = dibConverted;
+			}
+
+			if (bpp != 32)
+			{
+//				VLog("Converting %d bpp to 32 bpp.", bpp);
+				FIBITMAP *dibConverted = FreeImage_ConvertTo32Bits(dib);
+				FreeImage_Unload(dib);
+				dib = dibConverted;
+			}
 		}
 
 		pixels = FreeImage_GetBits(dib);
 		if (!pixels)
 		{
-			fprintf(stderr, "VuoImage_get() Error: Couldn't get pixels from image.\n");
+			VLog("Error: '%s': Couldn't get pixels from image.", imageURL);
 			FreeImage_Unload(dib);
 			return NULL;
 		}
@@ -109,7 +149,7 @@ VuoImage VuoImage_get(const char *imageURL)
 	unsigned long pixelsWide = FreeImage_GetWidth(dib);
 	unsigned long pixelsHigh = FreeImage_GetHeight(dib);
 
-	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, GL_BGRA, pixelsWide, pixelsHigh);
+	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, format, pixelsWide, pixelsHigh, colorDepth);
 
 	FreeImage_Unload(dib);
 	free(data);

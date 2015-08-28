@@ -13,6 +13,7 @@
 #include <math.h>
 #include "type.h"
 #include "VuoTransform2d.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -126,11 +127,7 @@ char * VuoTransform2d_summaryFromValue(const VuoTransform2d value)
 	if (VuoTransform2d_isIdentity(value))
 		return strdup("identity transform (no change)");
 
-	const char *format = "translation (%g, %g)<br>rotation %g°<br>scale (%g, %g)";
-
 	VuoReal rotationInDegrees = value.rotation * 180./M_PI;
-	int size = snprintf(NULL, 0, format, value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
-	char * valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString, size+1, format, value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
-	return valueAsString;
+	return VuoText_format("translation (%g, %g)<br>rotation %g°<br>scale (%g, %g)",
+						  value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
 }

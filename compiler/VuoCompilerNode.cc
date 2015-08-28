@@ -75,27 +75,49 @@ void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *functi
 
 	generateFunctionCall(functionSrc, module, initialBlock);
 
-	// If any always-transmitting input port was pushed, then set each output event port to its pushed state.
+	// The output port should transmit an event if it's a done port or any non-blocking input port received the event.
+	// The output port should not transmit an event if no non-blocking or door input ports received the event.
+	// Otherwise, the output port's event transmission is handled by the node class implementation.
 
-	vector<VuoPort *> alwaysTransmittingPorts;
+	VuoCompilerOutputEventPort *donePort = dynamic_cast<VuoCompilerOutputEventPort *>( getBase()->getDonePort()->getCompiler() );
+	donePort->generateStore(true, initialBlock);
+
+	vector<VuoPort *> nonBlockingInputPorts;
+	vector<VuoPort *> doorInputPorts;
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
 	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
-		if ((*i)->getClass()->getEventBlocking() == VuoPortClass::EventBlocking_None)
-			alwaysTransmittingPorts.push_back(*i);
-	Value *shouldTransmit = generateReceivedEventCondition(initialBlock, alwaysTransmittingPorts);
+	{
+		VuoPortClass::EventBlocking eventBlocking = (*i)->getClass()->getEventBlocking();
+		if (eventBlocking == VuoPortClass::EventBlocking_None)
+			nonBlockingInputPorts.push_back(*i);
+		else if (eventBlocking == VuoPortClass::EventBlocking_Door)
+			doorInputPorts.push_back(*i);
+	}
 
-	BasicBlock *transmitBlock = BasicBlock::Create(module->getContext(), "transmitThroughNode", function, 0);
-	BranchInst::Create(transmitBlock, finalBlock, shouldTransmit, initialBlock);
+	Value *eventHitNonBlockingInputPort = generateReceivedEventCondition(initialBlock, nonBlockingInputPorts);
+	Value *eventHitDoorInputPort = generateReceivedEventCondition(initialBlock, doorInputPorts);
+
+	Value *transmitForAllOutputPorts = eventHitNonBlockingInputPort;
+	Value *blockForAllOutputPorts = BinaryOperator::Create(Instruction::And,
+														   BinaryOperator::CreateNot(eventHitNonBlockingInputPort, "", initialBlock),
+														   BinaryOperator::CreateNot(eventHitDoorInputPort, "", initialBlock),
+														   "", initialBlock);
+	Value *handleTransmission = BinaryOperator::Create(Instruction::Or, transmitForAllOutputPorts, blockForAllOutputPorts, "", initialBlock);
+
+	Constant *zeroValue = ConstantInt::get(transmitForAllOutputPorts->getType(), 0);
+	ICmpInst *handleTransmissionComparison = new ICmpInst(*initialBlock, ICmpInst::ICMP_NE, handleTransmission, zeroValue, "");
+	BasicBlock *handleTransmissionBlock = BasicBlock::Create(module->getContext(), "transmitThroughNode", function, 0);
+	BranchInst::Create(handleTransmissionBlock, finalBlock, handleTransmissionComparison, initialBlock);
 
 	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
 	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
 	{
 		VuoCompilerOutputEventPort *eventPort = dynamic_cast<VuoCompilerOutputEventPort *>((*i)->getCompiler());
-		if (eventPort)
-			eventPort->generateStore(true, transmitBlock);
+		if (eventPort && eventPort != donePort)
+			eventPort->generateStore(transmitForAllOutputPorts, handleTransmissionBlock);
 	}
 
-	BranchInst::Create(finalBlock, transmitBlock);
+	BranchInst::Create(finalBlock, handleTransmissionBlock);
 }
 
 /**
@@ -596,7 +618,7 @@ string VuoCompilerNode::getGraphvizDeclarationWithOptions(bool shouldUsePlacehol
 		VuoPort *port = *i;
 		VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(port->getCompiler());
 		VuoCompilerInputData *data = eventPort->getData();
-		if (data && (shouldUsePlaceholders || (! eventPort->hasConnectedDataCable(true))))
+		if (data && (shouldUsePlaceholders || (! eventPort->hasConnectedDataCable(true) && ! data->getInitialValue().empty())))
 		{
 			string portConstant = (shouldUsePlaceholders ? "%s" : data->getInitialValue());
 			string escapedPortConstant = VuoStringUtilities::transcodeToGraphvizIdentifier(portConstant);

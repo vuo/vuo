@@ -11,12 +11,12 @@ digraph G
 {
 Divide [type="vuo.math.divide.VuoReal" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="535,144" _a="0.0" _b="9"];
 Subtract [type="vuo.math.subtract.VuoReal" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="63,140" _a="0.0" _b="32"];
-MakeList [type="vuo.list.make.2.VuoReal" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r" pos="228,143" _item1="" _item2="5"];
-Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="378,143" _terms=""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<degreesFahrenheit>degreesFahrenheit\r" _degreesFahrenheit="" _degreesFahrenheit_type="VuoReal"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="228,143" _2="5"];
+Multiply [type="vuo.math.multiply.VuoReal" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r" pos="378,143"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<degreesFahrenheit>degreesFahrenheit\r" _degreesFahrenheit_type="VuoReal"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<degreesCelsius>degreesCelsius\l" _degreesCelsius_type="VuoReal"];
 
-Subtract:difference -> MakeList:item1;
+Subtract:difference -> MakeList:1;
 MakeList:list -> Multiply:terms;
 Multiply:product -> Divide:a;
 PublishedInputs:degreesFahrenheit -> Subtract:a;

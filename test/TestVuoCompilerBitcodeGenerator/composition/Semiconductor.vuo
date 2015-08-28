@@ -9,15 +9,26 @@
 
 digraph G 
 {
-FireonStart1 [type="vuo.event.fireOnStart" label="FireonStart1|<refresh>refresh\l|<started>started\r" pos="23,58.5"];
-FireonStart2 [type="vuo.event.fireOnStart" label="FireonStart2|<refresh>refresh\l|<started>started\r" pos="21,163.5"];
-FireonStart3 [type="vuo.event.fireOnStart" label="FireonStart3|<refresh>refresh\l|<started>started\r" pos="23,277.5"];
-SelectInput1 [type="vuo.select.in.2.event" label="SelectInput1|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="295,47.5" _which="0"];
-SelectInput2 [type="vuo.select.in.2.event" label="SelectInput2|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="293,152.5" _which="0"];
-SelectInput3 [type="vuo.select.in.2.event" label="SelectInput3|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="291,262.5" _which="0"];
+FireonStart1 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart1|<refresh>refresh\l|<done>done\r|<started>started\r" pos="23,58" _started_eventThrottling="enqueue"];
+FireonStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart2|<refresh>refresh\l|<done>done\r|<started>started\r" pos="21,163" _started_eventThrottling="enqueue"];
+FireonStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart3|<refresh>refresh\l|<done>done\r|<started>started\r" pos="23,277" _started_eventThrottling="enqueue"];
+FireonStart4 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart4|<refresh>refresh\l|<done>done\r|<started>started\r" pos="22,391" _started_eventThrottling="enqueue"];
+SelectInput1 [type="vuo.select.in.2.event" version="1.0.0" label="SelectInput1|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="295,47" _which="0"];
+SelectInput2 [type="vuo.select.in.2.event" version="1.0.0" label="SelectInput2|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="293,152" _which="0"];
+SelectInput3 [type="vuo.select.in.2.event" version="1.0.0" label="SelectInput3|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="291,262" _which="0"];
+SelectInput4 [type="vuo.select.in.2.event" version="1.0.0" label="SelectInput4|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="290,376" _which="0"];
+Subtract1 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="503,47" _a="0.000000" _b="0.000000"];
+Subtract2 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="499,152" _a="0.000000" _b="0.000000"];
+Subtract3 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract3|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="501,262" _a="0.000000" _b="0.000000"];
+Subtract4 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract4|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="500,376" _a="0.000000" _b="0.000000"];
 
 FireonStart1:started -> SelectInput1:refresh;
 FireonStart1:started -> SelectInput1:which;
 FireonStart2:started -> SelectInput2:which;
+FireonStart4:started -> SelectInput4:which;
 FireonStart3:started -> SelectInput3:option1;
+SelectInput1:out -> Subtract1:a;
+SelectInput2:out -> Subtract2:a;
+SelectInput4:done -> Subtract4:a;
+SelectInput3:out -> Subtract3:a;
 }

@@ -16,7 +16,13 @@ HEADERS += \
 	VuoRendererColors.hh \
 	VuoRendererFonts.hh \
 	VuoRendererPublishedPort.hh \
-	VuoRendererMakeListNode.hh
+	VuoRendererInputListDrawer.hh \
+	VuoRendererReadOnlyDictionary.hh \
+	VuoRendererKeyListForReadOnlyDictionary.hh \
+	VuoRendererValueListForReadOnlyDictionary.hh \
+	VuoRendererInputDrawer.hh \
+	VuoRendererInputAttachment.hh \
+	VuoRendererHiddenInputAttachment.hh
 
 SOURCES += \
 	VuoRendererPort.cc \
@@ -30,4 +36,10 @@ SOURCES += \
 	VuoRendererColors.cc \
 	VuoRendererFonts.cc \
 	VuoRendererPublishedPort.cc \
-	VuoRendererMakeListNode.cc
+	VuoRendererInputListDrawer.cc \
+	VuoRendererReadOnlyDictionary.cc \
+	VuoRendererKeyListForReadOnlyDictionary.cc \
+	VuoRendererValueListForReadOnlyDictionary.cc \
+	VuoRendererInputDrawer.cc \
+	VuoRendererInputAttachment.cc \
+	VuoRendererHiddenInputAttachment.cc

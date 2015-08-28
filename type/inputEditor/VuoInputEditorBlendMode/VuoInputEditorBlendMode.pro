@@ -13,4 +13,7 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorBlendMode.json
 
-LIBS += $$ROOT/type/VuoBlendMode.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoBlendMode.o \
+	$$ROOT/type/list/VuoList_VuoBlendMode.o

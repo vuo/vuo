@@ -34,15 +34,16 @@ protected:
 	Module *module;  ///< The LLVM module that defines this node class or type
 	VuoModule *base;  ///< The (pseudo) base for this (pseudo) compiler detail class
 	VuoCompilerBitcodeParser *parser;  ///< The parser of the LLVM module
+	bool isPremium;  ///< A boolean indicating whether this module contains premium content
 
 	VuoCompilerModule(VuoModule *base, Module *module);
 	virtual ~VuoCompilerModule();
 
 	virtual void parse(void);
 	virtual void parseMetadata(void);
-	static string parseString(json_object *o, string key);
-	static int parseInt(json_object *o, string key);
-	static bool parseBool(json_object *o, string key);
+	static string parseString(json_object *o, string key, bool *foundValue=NULL);
+	static int parseInt(json_object *o, string key, bool *foundValue=NULL);
+	static bool parseBool(json_object *o, string key, bool *foundValue=NULL);
 	static vector<string> parseArrayOfStrings(json_object *o, string key);
 	virtual set<string> globalsToRename(void);
 	string nameForGlobal(string genericGlobalVarOrFuncName);
@@ -62,6 +63,8 @@ public:
 	VuoCompilerTargetSet getCompatibleTargets(void);
 	Module * getModule(void);
 	VuoModule * getPseudoBase(void);
+	bool getPremium(void);
+	void setPremium(bool premium);
 };
 
 #endif // VUOCOMPILERMODULE_HH

@@ -228,7 +228,7 @@ VuoLeap VuoLeap_startListening
 	leap->controller = new Leap::Controller;
 	leap->listener = new VuoLeapListener(receivedFrame);
 	leap->controller->addListener(*leap->listener);
-
+	
 	return (VuoLeap)leap;
 }
 

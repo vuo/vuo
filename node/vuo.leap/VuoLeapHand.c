@@ -14,6 +14,7 @@
 #include "VuoLeapHand.h"
 #include "VuoLeapPointable.h"
 #include "VuoList_VuoLeapPointable.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -121,11 +122,7 @@ json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value)
  */
 char * VuoLeapHand_summaryFromValue(const VuoLeapHand value)
 {
-	const char *format = "%d";
-	int size = snprintf(NULL,0,format,value.id);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.id);
-	return valueAsString;
+	return VuoText_format("%ld", value.id);
 }
 
 /**

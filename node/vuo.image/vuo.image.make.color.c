@@ -47,11 +47,11 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_makeColorShader(color);
+	VuoShader shader = VuoShader_makeUnlitColorShader(color);
 	VuoRetain(shader);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
 
 	VuoRelease(shader);
 }

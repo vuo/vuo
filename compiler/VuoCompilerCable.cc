@@ -10,8 +10,9 @@
 #include <sstream>
 
 #include "VuoCompilerCable.hh"
-#include "VuoCompilerTriggerPort.hh"
+#include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerOutputEventPort.hh"
+#include "VuoCompilerTriggerPort.hh"
 #include "VuoPort.hh"
 
 /**
@@ -93,3 +94,27 @@ bool VuoCompilerCable::carriesData(void)
 		return (fromPortHasData && toPortHasData);
 }
 
+/**
+ * Generates code to transmit the data (if any) and an event (if any) from an output port to an input port.
+ */
+void VuoCompilerCable::generateTransmission(Module *module, BasicBlock *block, Value *outputDataValue, bool shouldTransmitEvent)
+{
+	VuoCompilerInputEventPort *inputEventPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getToPort()->getCompiler());
+
+	if (outputDataValue)
+	{
+		// PortDataType_retain(outputData);
+		// PortDataType_release(inputData);
+		// inputData = outputData;
+
+		VuoCompilerInputData *inputData = inputEventPort->getData();
+		LoadInst *oldInputDataValue = inputData->generateLoad(block);
+
+		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, outputDataValue);
+		inputData->generateStore(outputDataValue, block);
+		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, oldInputDataValue);
+	}
+
+	if (shouldTransmitEvent)
+		inputEventPort->generateStore(true, block);
+}

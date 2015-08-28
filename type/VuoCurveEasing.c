@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoCurveEasing.h"
+#include "VuoList_VuoCurveEasing.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -63,6 +64,19 @@ json_object * VuoCurveEasing_jsonFromValue(const VuoCurveEasing value)
 		valueAsString = "middle";
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoCurveEasing VuoCurveEasing_allowedValues(void)
+{
+	VuoList_VuoCurveEasing l = VuoListCreate_VuoCurveEasing();
+	VuoListAppendValue_VuoCurveEasing(l, VuoCurveEasing_In);
+	VuoListAppendValue_VuoCurveEasing(l, VuoCurveEasing_Out);
+	VuoListAppendValue_VuoCurveEasing(l, VuoCurveEasing_InOut);
+	VuoListAppendValue_VuoCurveEasing(l, VuoCurveEasing_Middle);
+	return l;
 }
 
 /**

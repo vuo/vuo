@@ -13,17 +13,17 @@ Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refre
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-354,154" fillcolor="yellow" _started_eventThrottling="enqueue"];
 Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="15,356" fillcolor="yellow" _x="0.000000" _z="0.000000"];
 Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="230,341" fillcolor="yellow" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
-MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<done>done\r|<cube>cube\r" pos="443,339" fillcolor="yellow" _frontShader="" _leftShader="" _rightShader="" _backShader="" _topShader="" _bottomShader=""];
-MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="416,179" fillcolor="yellow"];
+MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<done>done\r|<cube>cube\r" pos="443,339" fillcolor="yellow"];
+MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="416,179" fillcolor="yellow"];
 ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="-419,318" fillcolor="violet" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="-419,425" fillcolor="violet" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="482,168" fillcolor="yellow" _cameraName="" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="482,168" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 Count:count -> Make3DPoint:y;
 FireOnStart:started -> Count:refresh;
 Make3DPoint:point -> Make3DTransform:rotation;
 Make3DTransform:transform -> MakeCube:transform;
-MakeCube:cube -> MakeList3:item1;
+MakeCube:cube -> MakeList3:1;
 MakeList3:list -> RenderSceneToWindow:objects;
 ReceiveKeyboardButtons2:pressed -> Count:decrement;
 ReceiveKeyboardButtons:pressed -> Count:increment;

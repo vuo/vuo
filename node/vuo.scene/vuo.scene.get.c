@@ -13,6 +13,8 @@
 #include "VuoGlContext.h"
 #include "VuoImageGet.h"
 
+#include "VuoPoint3d.h"	// todo Remove
+
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
 
@@ -52,7 +54,7 @@ VuoModuleMetadata({
 						 "GameStudio", "3DGS", "hmp",
 						 "Izware", "Nendo", "ndo"
 					 ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageGet",
@@ -81,64 +83,64 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 		aiDecomposeMatrix(&m, &scaling, &rotation, &position);
 		sceneObject->transform = VuoTransform_makeQuaternion(
 					VuoPoint3d_make(position.x, position.y, position.z),
-					VuoPoint4d_make(rotation.w, rotation.x, rotation.y, rotation.z),
+					VuoPoint4d_make(rotation.x, rotation.y, rotation.z, rotation.w),
 					VuoPoint3d_make(scaling.x, scaling.y, scaling.z)
 					);
 	}
 
-	// Convert each mesh to a VuoVertices instance.
+	// Convert each mesh to a VuoSubmesh instance.
 	if (node->mNumMeshes)
 	{
-		sceneObject->verticesList = VuoListCreate_VuoVertices();
+		sceneObject->mesh = VuoMesh_make(node->mNumMeshes);
 
-		/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
+			/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
 		int materialIndex = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
 		sceneObject->shader = VuoListGetValueAtIndex_VuoShader(shaders, materialIndex+1);
 		VuoRetain(sceneObject->shader);
 	}
-	for (unsigned int mesh = 0; mesh < node->mNumMeshes; ++mesh)
+	for (unsigned int meshIndex = 0; meshIndex < node->mNumMeshes; ++meshIndex)
 	{
-		const struct aiMesh *meshObj = scene->mMeshes[node->mMeshes[mesh]];
+		const struct aiMesh *meshObj = scene->mMeshes[node->mMeshes[meshIndex]];
 
 		if (!meshObj->mVertices)
 		{
-			fprintf(stderr, "vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively() Error: Mesh '%s' doesn't contain any positions.  Skipping.\n", meshObj->mName.data);
+			VLog("Error: Mesh '%s' doesn't contain any positions.  Skipping.", meshObj->mName.data);
 			continue;
 		}
 
-		VuoVertices v = VuoVertices_alloc(meshObj->mNumVertices, meshObj->mNumFaces*3);
-		v.elementAssemblyMethod = VuoVertices_IndividualTriangles;
+		VuoSubmesh sm = VuoSubmesh_make(meshObj->mNumVertices, meshObj->mNumFaces*3);
+		sm.elementAssemblyMethod = VuoMesh_IndividualTriangles;
 
 		for (unsigned int vertex = 0; vertex < meshObj->mNumVertices; ++vertex)
 		{
 			struct aiVector3D position = meshObj->mVertices[vertex];
-			v.positions[vertex] = VuoPoint4d_make(position.x, position.y, position.z, 1);
+			sm.positions[vertex] = VuoPoint4d_make(position.x, position.y, position.z, 1);
 
 			if (meshObj->mNormals)
 			{
 				struct aiVector3D normal = meshObj->mNormals[vertex];
-				v.normals[vertex] = VuoPoint4d_make(normal.x, normal.y, normal.z, 0);
+				sm.normals[vertex] = VuoPoint4d_make(normal.x, normal.y, normal.z, 0);
 			}
 
 			if (meshObj->mTangents)
 			{
 				struct aiVector3D tangent = meshObj->mTangents[vertex];
-				v.tangents[vertex] = VuoPoint4d_make(tangent.x, tangent.y, tangent.z, 0);
+				sm.tangents[vertex] = VuoPoint4d_make(tangent.x, tangent.y, tangent.z, 0);
 			}
 
 			if (meshObj->mBitangents)
 			{
 				struct aiVector3D bitangent = meshObj->mBitangents[vertex];
-				v.bitangents[vertex] = VuoPoint4d_make(bitangent.x, bitangent.y, bitangent.z, 0);
+				sm.bitangents[vertex] = VuoPoint4d_make(bitangent.x, bitangent.y, bitangent.z, 0);
 			}
 
 			if (meshObj->mTextureCoords[0])
 			{
 				struct aiVector3D textureCoordinate = meshObj->mTextureCoords[0][vertex];
-				v.textureCoordinates[vertex] = VuoPoint4d_make(textureCoordinate.x, textureCoordinate.y, textureCoordinate.z, 0);
+				sm.textureCoordinates[vertex] = VuoPoint4d_make(textureCoordinate.x, textureCoordinate.y, textureCoordinate.z, 0);
 			}
 
-			/// @todo handle other texture coordinate channels
+				/// @todo handle other texture coordinate channels
 		}
 
 		unsigned int numValidElements = 0;
@@ -148,13 +150,13 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 			const struct aiFace *faceObj = &meshObj->mFaces[face];
 			if (faceObj->mNumIndices != 3)
 			{
-				fprintf(stderr, "vuo.scene.get Warning: Face %u isn't a triangle (it has %u indices); skipping.\n",face,faceObj->mNumIndices);
+				VLog("Warning: Face %u isn't a triangle (it has %u indices); skipping.",face,faceObj->mNumIndices);
 				continue;
 			}
 
-			v.elements[numValidElements++] = faceObj->mIndices[0];
-			v.elements[numValidElements++] = faceObj->mIndices[1];
-			v.elements[numValidElements++] = faceObj->mIndices[2];
+			sm.elements[numValidElements++] = faceObj->mIndices[0];
+			sm.elements[numValidElements++] = faceObj->mIndices[1];
+			sm.elements[numValidElements++] = faceObj->mIndices[2];
 			for (int i=0;i<3;++i)
 			{
 				if (faceObj->mIndices[i]<minIndex)
@@ -164,8 +166,10 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 			}
 		}
 
-		VuoListAppendValue_VuoVertices(sceneObject->verticesList, v);
+		sceneObject->mesh->submeshes[meshIndex] = sm;
 	}
+
+	VuoMesh_upload(sceneObject->mesh);
 
 	if (node->mNumChildren)
 		sceneObject->childObjects = VuoListCreate_VuoSceneObject();
@@ -180,6 +184,9 @@ void vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(const struct aiSce
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":""}) sceneURL,
+		VuoInputData(VuoBoolean, {"default":true}) center,
+		VuoInputData(VuoBoolean, {"default":true}) fit,
+		VuoInputData(VuoBoolean, {"default":false}) hasLeftHandedCoordinates,
 		VuoOutputData(VuoSceneObject) scene
 )
 {
@@ -192,7 +199,7 @@ void nodeEvent
 	unsigned int dataLength;
 	if (!VuoUrl_get(sceneURL, &data, &dataLength))
 	{
-		fprintf(stderr, "vuo.scene.get Error: Didn't get any scene data for '%s'.\n", sceneURL);
+		VLog("Error: Didn't get any scene data for '%s'.", sceneURL);
 		return;
 	}
 
@@ -224,7 +231,7 @@ void nodeEvent
 	aiReleasePropertyStore(props);
 	if (!ais)
 	{
-		fprintf(stderr, "vuo.scene.get Error: %s\n", aiGetErrorString());
+		VLog("Error reading '%s': %s\n", sceneURL, aiGetErrorString());
 		return;
 	}
 
@@ -242,9 +249,15 @@ void nodeEvent
 	{
 		struct aiMaterial *m = ais->mMaterials[i];
 
-//		struct aiString name;
-//		aiGetMaterialString(m, AI_MATKEY_NAME, &name);
-//		VLog("material %d: %s",i,name.data);
+		struct aiString name;
+		aiGetMaterialString(m, AI_MATKEY_NAME, &name);
+		// VLog("material %d: %s",i,name.data);
+
+		// Some meshes (such as the leaves in "Tree 2 N020414.3DS") obviously expect two-sided rendering,
+		// so I tried using material property AI_MATKEY_TWOSIDED.  But I wasn't able to find (or create with Blender)
+		// any meshes having materials where AI_MATKEY_TWOSIDED is nonzero.
+//		int twosided = 0;
+//		aiGetMaterialIntegerArray(m, AI_MATKEY_TWOSIDED, &twosided, NULL);
 
 		VuoShader shader = NULL;
 
@@ -256,17 +269,17 @@ void nodeEvent
 		struct aiColor4D specularColorAI = {1,1,1,1};
 		aiGetMaterialColor(m, AI_MATKEY_COLOR_SPECULAR, &specularColorAI);
 		VuoColor specularColor = VuoColor_makeWithRGBA(specularColorAI.r, specularColorAI.g, specularColorAI.b, specularColorAI.a);
-//		VLog("\tspecularColor: %s",VuoColor_summaryFromValue(specularColor));
+	//		VLog("\tspecularColor: %s",VuoColor_summaryFromValue(specularColor));
 
 		float shininess = 10;
 		aiGetMaterialFloatArray(m, AI_MATKEY_SHININESS, &shininess, NULL);
 		if (shininess)
 			shininess = MAX(1.0001 - 1./shininess, 0);
-//		VLog("\tshininess: %g",shininess);
+	//		VLog("\tshininess: %g",shininess);
 
 		int diffuseTextures = aiGetMaterialTextureCount(m, aiTextureType_DIFFUSE);
 		VuoImage diffuseImage = NULL;
-		/// @todo load and blend multiple diffuse textures
+			/// @todo load and blend multiple diffuse textures
 		if (diffuseTextures)
 		{
 			struct aiString path;
@@ -311,7 +324,7 @@ void nodeEvent
 			VuoRetain(textureURL);
 //			VLog("\tspecular: %s",textureURL);
 
-			VuoImage specularImage = VuoImage_get(textureURL);
+			specularImage = VuoImage_get(textureURL);
 
 			VuoRelease(textureURL);
 		}
@@ -394,14 +407,22 @@ void nodeEvent
 			if (!specularImage)
 				specularImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,.9), 1, 1);
 
-			shader = VuoShader_makeLitImageDetailsShader(diffuseImage, 1, normalImage, specularImage);
+			VuoImage_setWrapMode(diffuseImage, VuoImageWrapMode_Repeat);
+			VuoImage_setWrapMode(normalImage, VuoImageWrapMode_Repeat);
+			VuoImage_setWrapMode(specularImage, VuoImageWrapMode_Repeat);
+			shader = VuoShader_makeLitImageDetailsShader(diffuseImage, 1, specularImage, normalImage);
 		}
 		else if (diffuseImage)
+		{
+			VuoImage_setWrapMode(diffuseImage, VuoImageWrapMode_Repeat);
 			shader = VuoShader_makeLitImageShader(diffuseImage, 1, specularColor, shininess);
+		}
 		else
 			shader = VuoShader_makeLitColorShader(diffuseColor, specularColor, shininess);
 
-//		VLog("\tshader: %s",VuoShader_summaryFromValue(shader));
+		shader->name = strdup(name.data);
+
+		// VLog("\tshader: %s",shader->summary);//VuoShader_summaryFromValue(shader));
 
 		VuoListAppendValue_VuoShader(shaders, shader);
 	}
@@ -410,6 +431,81 @@ void nodeEvent
 
 	vuo_scene_get_convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, shaders, scene);
 	VuoRelease(shaders);
+
+	if(center)
+		VuoSceneObject_center(scene);
+
+	if(fit)
+		VuoSceneObject_normalize(scene);
+
+	if(hasLeftHandedCoordinates)
+	{
+		VuoSceneObject_apply(scene, ^(VuoSceneObject *currentObject, float modelviewMatrix[16])
+		{
+			// VuoTransform flipAxis = VuoTransform_makeEuler( (VuoPoint3d) {0,0,0}, (VuoPoint3d){0,0,0}, (VuoPoint3d){-1, 1, 1} );
+			// float matrix[16];
+			// VuoTransform_getMatrix(flipAxis, matrix);
+
+			if(currentObject->mesh != NULL)
+			{
+				for(int i = 0; i < currentObject->mesh->submeshCount; i++)
+				{
+					VuoSubmesh msh = currentObject->mesh->submeshes[i];
+					for(int n = 0; n < msh.vertexCount; n++)
+					{
+						msh.positions[n].x *= -1;
+					}
+
+					// flip triangle winding order
+					switch(msh.elementAssemblyMethod)
+					{
+						case VuoMesh_IndividualTriangles:
+						{
+							unsigned int elementCount = msh.elementCount;
+							for(int i = 0; i < elementCount; i+= 3)
+							{
+								unsigned int tmp = msh.elements[i];
+								msh.elements[i] = msh.elements[i+2];
+								msh.elements[i+2] = tmp;
+							}
+						} break;
+
+						// @todo - fill in additional winding order flip methods whenever this loader
+						// provides the ability to read 'em
+						// http://www.asawicki.info/news_1524_how_to_flip_triangles_in_triangle_mesh.html
+						// case VuoMesh_TriangleStrip:
+						// {
+						// 	unsigned int elementCount = msh.elementCount;
+
+						// 	// add an extra duplicate vertex at the beginning of the strip
+						// 	// if the element count is even
+						// 	if(elementCount % 2 == 0)
+						// 	{
+						// 		msh.elementCount++;
+						// 		unsigned int *resized = malloc(sizeof(unsigned int) * msh.elementCount);
+						// 		resized[0] = msh.elements[0];
+						// 		memcpy(&resized[1], msh.elements, sizeof(unsigned int) * msh.elementCount);
+						// 		msh.elements = resized;
+						// 	}
+						// 	else
+						// 	{
+						// 		for(int i = 0; i < elementCount / 2; i++)
+						// 		{
+						// 			unsigned int tmp = msh.elements[i];
+						// 			msh.elements[i] = msh.elements[elementCount-i];
+						// 			msh.elements[i] = tmp;
+						// 		}
+						// 	}
+						// } break;
+
+						default:
+							break;
+					}
+				}
+				VuoMesh_upload(currentObject->mesh);
+			}
+	});
+	}
 
 	aiReleaseImport(ais);
 }

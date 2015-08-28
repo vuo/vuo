@@ -16,7 +16,7 @@ Hold2 [type="vuo.hold.VuoInteger" label="Hold2|<refresh>refresh\l|<initialValue>
 Subtract1 [type="vuo.math.subtract.VuoInteger" label="Subtract1|<refresh>refresh\l|<a>b\l|<a>b\l|<difference>difference\r" pos="403,367" _a="0" _b="5"];
 Subtract2 [type="vuo.math.subtract.VuoInteger" label="Subtract2|<refresh>refresh\l|<a>b\l|<a>b\l|<difference>difference\r" pos="188,383" _a="0" _b="7"];
 ConvertIntegertoText1 [type="vuo.type.integer.text" label="ConvertIntegertoText1|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="351,343" _integer="0"];
-DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="784,15" _writeLine=""];
+DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="784,15"];
 
 FirePeriodically1:fired -> Hold1:refresh;
 DiscardDatafromEvent2:event -> Hold2:refresh;

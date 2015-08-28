@@ -537,9 +537,9 @@ static VuoColor blendLuminosity(VuoColor base, VuoColor blend, float foregroundO
 void nodeEvent
 (
 		VuoInputData(VuoColor, {"default":{"r":1,"g":1,"b":1,"a":1}}) background,
-		VuoInputData(VuoColor, {"default":{"r":1,"g":1,"b":1,"a":1}}) foreground,
+		VuoInputData(VuoColor, {"default":{"r":0,"g":0,"b":0,"a":1}}) foreground,
 		VuoInputData(VuoBlendMode, {"default":"normal"}) blendMode,
-		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":1}) foregroundOpacity,
+		VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0, "suggestedMax":1}) foregroundOpacity,
 		VuoOutputData(VuoColor) blendedColor
 )
 {

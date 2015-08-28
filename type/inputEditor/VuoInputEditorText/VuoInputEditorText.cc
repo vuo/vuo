@@ -29,6 +29,8 @@ VuoInputEditor * VuoInputEditorTextFactory::newInputEditor()
  */
 void VuoInputEditorText::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
+	setWidth(270);
+
 	VuoInputEditorWithLineEdit::setUpDialog(dialog, originalValue, details);
 
 	// Parse supported port annotations from the port's "details" JSON object:

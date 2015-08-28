@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "%TypeName%.h"
+#include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -68,11 +69,7 @@ json_object * %TypeName%_jsonFromValue(const %TypeName% value)
  */
 char * %TypeName%_summaryFromValue(const %TypeName% value)
 {
-	const char *format = "%d";
-	int size = snprintf(NULL,0,format,value.replaceThis);
-	char *valueAsString = (char *)malloc(size+1);
-	snprintf(valueAsString,size+1,format,value.replaceThis);
-	return valueAsString;
+	return VuoText_format("%d", value.replaceThis);
 }
 
 /**

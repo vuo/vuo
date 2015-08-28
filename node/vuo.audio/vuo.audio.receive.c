@@ -24,51 +24,74 @@ VuoModuleMetadata({
 					  }
 				 });
 
-VuoAudioIn nodeInstanceInit
+
+struct nodeInstanceData
+{
+	VuoAudioInputDevice device;
+	VuoAudioIn audioManager;
+};
+
+static void updateDevice(struct nodeInstanceData *context, VuoAudioInputDevice newDevice)
+{
+	VuoAudioInputDevice_release(context->device);
+	context->device = newDevice;
+	VuoAudioInputDevice_retain(context->device);
+
+	VuoRelease(context->audioManager);
+	context->audioManager = VuoAudioIn_getShared(newDevice);
+	VuoRetain(context->audioManager);
+}
+
+
+struct nodeInstanceData * nodeInstanceInit
 (
 		VuoInputData(VuoAudioInputDevice) device
 )
 {
-	return VuoAudioIn_getShared(device);
+	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
+	VuoRegister(context, free);
+	updateDevice(context, device);
+	return context;
 }
 
 void nodeInstanceTriggerStart
 (
-		VuoInstanceData(VuoAudioIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples)
 )
 {
-	VuoAudioIn_addTrigger(*context, receivedChannels);
+	VuoAudioIn_addTrigger((*context)->audioManager, receivedChannels);
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoAudioIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoAudioInputDevice) device,
-		VuoInputEvent(VuoPortEventBlocking_Wall, device) deviceEvent,
 		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Drop)
 )
 {
-	if (deviceEvent)
+	if (! VuoAudioInputDevice_areEqual(device, (*context)->device))
 	{
-		VuoAudioIn_removeTrigger(*context, receivedChannels);
-		*context = VuoAudioIn_getShared(device);
-		VuoAudioIn_addTrigger(*context, receivedChannels);
+		VuoAudioIn_removeTrigger((*context)->audioManager, receivedChannels);
+		updateDevice(*context, device);
+		VuoAudioIn_addTrigger((*context)->audioManager, receivedChannels);
 	}
 }
 
 void nodeInstanceTriggerStop
 (
-		VuoInstanceData(VuoAudioIn) context,
+		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples)
 )
 {
-	VuoAudioIn_removeTrigger(*context, receivedChannels);
+	VuoAudioIn_removeTrigger((*context)->audioManager, receivedChannels);
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(VuoAudioIn) context
+		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	VuoAudioInputDevice_release((*context)->device);
+	VuoRelease((*context)->audioManager);
 }

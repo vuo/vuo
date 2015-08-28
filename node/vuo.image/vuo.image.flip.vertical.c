@@ -60,11 +60,11 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Vertically Flipped Shader", VuoShader_getDefaultVertexShader(), verticalFragmentShader);
+	VuoShader frag = VuoShader_make("Vertical Flip Shader");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, verticalFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	*flippedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	VuoShader_setUniform_VuoImage(frag, "texture", image);
+	*flippedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

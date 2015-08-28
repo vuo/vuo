@@ -96,3 +96,5 @@ using namespace llvm;
 #ifdef ZMQ
 #include <zmq.h>
 #endif
+
+#include "VuoLog.h"

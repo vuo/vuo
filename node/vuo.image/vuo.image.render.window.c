@@ -43,6 +43,7 @@ struct nodeInstanceData
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer sceneRenderer;
 	bool hasShown;
+	bool aspectRatioOverridden;
 
 	dispatch_semaphore_t scenegraphSemaphore; ///< Serializes access to @c rootSceneObject.
 	VuoSceneObject rootSceneObject;
@@ -55,18 +56,15 @@ void vuo_image_render_window_init(VuoGlContext glContext, void *ctx)
 	context->sceneRenderer = VuoSceneRenderer_make(glContext);
 	VuoRetain(context->sceneRenderer);
 
-	VuoList_VuoVertices verticesList = VuoListCreate_VuoVertices();
 	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
-	VuoListAppendValue_VuoVertices(verticesList, VuoVertices_getQuadWithoutNormals());
+	VuoMesh mesh = VuoMesh_makeQuadWithoutNormals();
 	context->rootSceneObject = VuoSceneObject_make(
-				verticesList,
-				VuoShader_makeImageShader(),
+				mesh,
+				VuoShader_makeUnlitImageShader(NULL, 1),
 				VuoTransform_makeIdentity(),
 				VuoListCreate_VuoSceneObject()
 			);
 	context->rootSceneObject.transform.scale.x = 2;
-
-	VuoShader_setUniformFloat(context->rootSceneObject.shader, glContext, "alpha", 1);
 
 	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
 }
@@ -75,13 +73,6 @@ void vuo_image_render_window_resize(VuoGlContext glContext, void *ctx, unsigned 
 {
 	struct nodeInstanceData *context = ctx;
 	VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
-}
-
-void vuo_image_render_window_switchContext(VuoGlContext oldGlContext, VuoGlContext newGlContext, void *ctx)
-{
-//	VLog("old=%p  new=%p",oldGlContext,newGlContext);
-	struct nodeInstanceData *context = ctx;
-	VuoSceneRenderer_switchContext(context->sceneRenderer, newGlContext);
 }
 
 void vuo_image_render_window_draw(VuoGlContext glContext, void *ctx)
@@ -93,7 +84,7 @@ void vuo_image_render_window_draw(VuoGlContext glContext, void *ctx)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	dispatch_semaphore_wait(context->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
-	if (VuoListGetCount_VuoImage(context->rootSceneObject.shader->textures))
+	if (VuoShader_getUniform_VuoImage(context->rootSceneObject.shader, "texture"))
 		VuoSceneRenderer_draw(context->sceneRenderer);
 	dispatch_semaphore_signal(context->scenegraphSemaphore);
 }
@@ -114,13 +105,13 @@ struct nodeInstanceData *nodeInstanceInit(void)
 				false,
 				vuo_image_render_window_init,
 				vuo_image_render_window_resize,
-				vuo_image_render_window_switchContext,
 				vuo_image_render_window_draw,
 				(void *)context
 			);
 	VuoRetain(context->window);
 
 	context->hasShown = false;
+	context->aspectRatioOverridden = false;
 
 	return context;
 }
@@ -145,18 +136,31 @@ void nodeInstanceTriggerStart
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoImage) image
+		VuoInputData(VuoImage) image,
+		VuoInputData(VuoList_VuoWindowProperty) windowProperties
 )
 {
+	unsigned int windowPropertyCount = VuoListGetCount_VuoWindowProperty(windowProperties);
+	for (unsigned int i = 0; i < windowPropertyCount; ++i)
+	{
+		VuoWindowPropertyType type = VuoListGetValueAtIndex_VuoWindowProperty(windowProperties, i).type;
+		if (type == VuoWindowProperty_AspectRatio)
+			(*context)->aspectRatioOverridden = true;
+		else if (type == VuoWindowProperty_AspectRatioReset)
+			(*context)->aspectRatioOverridden = false;
+	}
+
+	VuoWindowOpenGl_setProperties((*context)->window, windowProperties);
+
 	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
 												 dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 
-												 VuoShader_resetTextures((*context)->rootSceneObject.shader);
-												 if (image)
+												 if (image && image->pixelsWide && image->pixelsHigh)
 												 {
-													 VuoShader_addTexture((*context)->rootSceneObject.shader, glContext, "texture", image);
+													 VuoShader_setUniform_VuoImage((*context)->rootSceneObject.shader, "texture", image);
 													 (*context)->rootSceneObject.transform.scale.y = 2. * (float)image->pixelsHigh/(float)image->pixelsWide;
-													 VuoWindowOpenGl_setAspectRatio((*context)->window, image->pixelsWide, image->pixelsHigh);
+													 if (!(*context)->aspectRatioOverridden)
+														 VuoWindowOpenGl_setAspectRatio((*context)->window, image->pixelsWide, image->pixelsHigh);
 												 }
 
 												 VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, (*context)->rootSceneObject);

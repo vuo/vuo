@@ -36,8 +36,10 @@ void nodeEvent
 	}
 
 	float rms = 0;
+	
 	for(int j = 0; j < audioSamples.sampleCount; j++)
 		rms += pow(audioSamples.samples[j], 2);
 	rms /= audioSamples.sampleCount;
-	*loudness = pow(rms, .5);
+
+	*loudness = pow( pow(rms, .5), 1/4.);
 }

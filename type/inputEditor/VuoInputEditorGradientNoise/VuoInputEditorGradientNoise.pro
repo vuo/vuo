@@ -14,4 +14,7 @@ OTHER_FILES += \
 	VuoInputEditorGradientNoise.json
 
 INCLUDEPATH += $$ROOT/node/vuo.noise
-LIBS += $$ROOT/node/vuo.noise/VuoGradientNoise.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/node/vuo.noise/VuoGradientNoise.o \
+	$$ROOT/type/list/VuoList_VuoGradientNoise.o

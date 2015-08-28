@@ -9,8 +9,8 @@
 
 digraph G
 {
-HoldValue1 [type="vuo.hold.VuoInteger" version="1.0.0" label="HoldValue1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="262,101" _initialValue=""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<newValue>newValue\r" _newValue="" _newValue_type="VuoInteger"];
+HoldValue1 [type="vuo.hold.VuoInteger" version="1.0.0" label="HoldValue1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="262,101"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<newValue>newValue\r" _newValue_type="VuoInteger"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<heldValue>heldValue\l" _heldValue_type="VuoInteger"];
 
 PublishedInputs:newValue -> HoldValue1:newValue;

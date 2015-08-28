@@ -21,6 +21,9 @@
 #include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
 
+#ifdef PREMIUM_NODE_LOADER_ENABLED
+#include "VuoPremiumNodeLoader.hh"
+#endif
 
 VuoCompiler::VuoCompiler()
 {
@@ -82,6 +85,7 @@ VuoCompiler::VuoCompiler()
 		addLibrarySearchPath(LIBFREENECT_ROOT "/lib/");
 		addFrameworkSearchPath(SYPHON_ROOT);
 		addLibrarySearchPath(OSCPACK_ROOT "/lib/");
+		addLibrarySearchPath(ZXING_ROOT "/lib/");
 		addLibrarySearchPath(VUO_ROOT "/runtime");
 
 		addHeaderSearchPath(VUO_ROOT "/library");
@@ -100,6 +104,16 @@ VuoCompiler::VuoCompiler()
 
 	// Allow user to override Vuo.framework and system-wide modules
 	addModuleSearchPath(getUserModulesPath());
+}
+
+/**
+ * Initializes the premium node loader with the license information provided.
+ */
+void VuoCompiler::setLicense(string licenseContent, string licenseSignature)
+{
+	#ifdef PREMIUM_NODE_LOADER_ENABLED
+	VuoPremiumNodeLoader::initializeWithLicense(licenseContent, licenseSignature);
+	#endif
 }
 
 /**
@@ -139,47 +153,96 @@ void VuoCompiler::loadModulesIfNeeded(void)
  */
 void VuoCompiler::loadModules(string path)
 {
+	const string premiumNodeExtension = "vuonode+";
+	const string premiumNodeLibraryExtension = "bc+";
 	/// @todo Search recursively - https://b33p.net/kosada/node/2468
 
 	set<string> moduleExtensions;
 	moduleExtensions.insert("bc");
 	moduleExtensions.insert("vuonode");
+	moduleExtensions.insert(premiumNodeExtension);
+	moduleExtensions.insert(premiumNodeLibraryExtension);
 	set<string> archiveExtensions;
 	archiveExtensions.insert("vuonode");
 	set<VuoFileUtilities::File *> moduleFiles = VuoFileUtilities::findFilesInDirectory(path, moduleExtensions, archiveExtensions);
 	for (set<VuoFileUtilities::File *>::iterator i = moduleFiles.begin(); i != moduleFiles.end(); ++i)
 	{
+		bool moduleParseError = false;
+		bool premiumModule = false;
 		VuoFileUtilities::File *moduleFile = *i;
+		string moduleKey, dir, ext;
+		VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
 
-		string moduleKey = getModuleNameForPath(moduleFile->getRelativePath());
-		Module *module = readModuleFromBitcode(moduleFile);
-		VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+		size_t inputDataBytes;
+		char *rawInputData = moduleFile->getContentsAsRawData(inputDataBytes);
+		char *processedInputData = NULL;
 
-		if (compilerModule)
+		if ((ext == premiumNodeExtension) || (ext == premiumNodeLibraryExtension))
 		{
-			if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
-				nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
-			else if (dynamic_cast<VuoCompilerType *>(compilerModule))
-				types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
-			else
-				libraryModules[moduleKey] = compilerModule;
+			#ifdef PREMIUM_NODE_LOADER_ENABLED
+			if (inputDataBytes <= INT_MAX)
+				processedInputData = VuoPremiumNodeLoader::getPremiumDataContent(rawInputData,
+																					static_cast<int>(inputDataBytes),
+																					moduleKey.c_str());
+			#endif
 
-			VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
-			if (nodeSet)
+			if (!processedInputData)
 			{
-				map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
-				if (nodeSetIter == nodeSetForName.end())
-				{
-					nodeSetForName[nodeSet->getName()] = nodeSet;
-				}
-				else
-				{
-					delete nodeSet;
-					nodeSet = nodeSetIter->second;
-				}
-				compilerModule->getPseudoBase()->setNodeSet(nodeSet);
+				moduleParseError = true;
+				//VLog("Error: Couldn't extract premium content from file '%s'.", moduleFile->getRelativePath().c_str());
 			}
 
+			free(rawInputData);
+			premiumModule = true;
+		}
+		else
+			processedInputData = rawInputData;
+
+		Module *module = NULL;
+		if (!moduleParseError)
+		{
+			string moduleReadError;
+			module = readModuleFromBitcodeData(processedInputData, inputDataBytes, moduleReadError);
+			free(processedInputData);
+
+			if (!module)
+			{
+				moduleParseError = true;
+				VLog("Error: Couldn't parse module '%s': %s.", moduleFile->getRelativePath().c_str(), moduleReadError.c_str());
+			}
+		}
+
+		if (!moduleParseError)
+		{
+			VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+
+			if (compilerModule)
+			{
+				if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
+					nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
+				else if (dynamic_cast<VuoCompilerType *>(compilerModule))
+					types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
+				else
+					libraryModules[moduleKey] = compilerModule;
+
+				VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
+				if (nodeSet)
+				{
+					map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
+					if (nodeSetIter == nodeSetForName.end())
+					{
+						nodeSetForName[nodeSet->getName()] = nodeSet;
+					}
+					else
+					{
+						delete nodeSet;
+						nodeSet = nodeSetIter->second;
+					}
+					compilerModule->getPseudoBase()->setNodeSet(nodeSet);
+				}
+
+				compilerModule->setPremium(premiumModule);
+			}
 		}
 
 		delete moduleFile;
@@ -385,7 +448,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 		remove(tmpPreprocessedInputDir.c_str());
 	if (! module)
 	{
-		fprintf(stderr, "Couldn't compile %s to LLVM bitcode.\n", inputPath.c_str());
+		VLog("Error: Couldn't compile '%s' to LLVM bitcode.", inputPath.c_str());
 		return;
 	}
 
@@ -393,7 +456,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 	VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
 	if (! compilerModule)
 	{
-		fprintf(stderr, "Didn't recognize %s as a node class, type, or library.\n", inputPath.c_str());
+		VLog("Error: Didn't recognize '%s' as a node class, type, or library.", inputPath.c_str());
 		return;
 	}
 
@@ -409,6 +472,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
  *
  * @param composition The composition to compile.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
+ * @throw std::exception The composition is invalid.
  */
 void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string outputPath)
 {
@@ -432,6 +496,7 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
  *
  * @param inputPath The .vuo file containing the composition.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
+ * @throw std::exception The composition is invalid.
  */
 void VuoCompiler::compileComposition(string inputPath, string outputPath)
 {
@@ -447,6 +512,7 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath)
  *
  * @param compositionString A string containing the composition.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
+ * @throw std::exception The composition is invalid.
  */
 void VuoCompiler::compileCompositionString(const string &compositionString, string outputPath)
 {
@@ -464,6 +530,7 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
  * @param isApp If true, the resulting executable can be added to an app bundle.
  *			If false, the resulting executable will be headless unless the composition contains a window.
  * @param rPath An optional @c -rpath argument to be passed to clang.
+ * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
  */
 void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string outputPath, bool isApp, string rPath)
 {
@@ -476,6 +543,7 @@ void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string out
  *
  * @param inputPath Path to the compiled composition (an LLVM bitcode file).
  * @param outputPath Path where the resulting dynamic library should be placed.
+ * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
  */
 void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath)
 {
@@ -493,6 +561,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
  * @param isApp If true, the resulting executable can be added to an app bundle.
  *			If false, the resulting executable will be headless unless the composition contains a window.
  * @param rPath An optional @c -rpath argument to be passed to clang.
+ * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
  */
 void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath,
 																	bool isDylib, bool isApp, string rPath)
@@ -534,6 +603,7 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
  *				created at @c newLinkedResourcePath, it will be the last element in this list.
  * @param alreadyLinkedResources Names of resources that have been linked into the composition in previous calls to this
  *				function. When this function returns, any new resources will have been added to this list.
+ * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
  */
 void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledCompositionPath, string linkedCompositionPath,
 														  string &newLinkedResourcePath, vector<string> &alreadyLinkedResourcePaths,
@@ -616,6 +686,8 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
  *
  * This includes the composition's nodes, their dependencies, and the libraries needed
  * by every linked composition. It does not include the Vuo runtime or a main function.
+ *
+ * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
  */
 set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCompositionPath)
 {
@@ -750,7 +822,7 @@ void VuoCompiler::getLinkerInputs(const set<string> &dependencies,
 						if (! dependencyPath.isEmpty())
 							libraries.insert(dependencyPath.str());
 						else
-							fprintf(stderr, "Warning: Could not locate dependency \'%s\'\n", dependency.c_str());
+							VLog("Warning: Could not locate dependency '%s'.", dependency.c_str());
 					}
 				}
 			}
@@ -780,7 +852,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	{
 		string error;
 		if (Linker::LinkModules(compositeModule, *i, Linker::PreserveSource, &error))
-			fprintf(stderr, "VuoCompiler::link() compositeModule error: %s\n", error.c_str());
+			VLog("Error: Failed to link compositeModule: %s", error.c_str());
 	}
 	string compositeModulePath = VuoFileUtilities::makeTmpFile("composite", "bc");
 	writeModuleToBitcode(compositeModule, compositeModulePath);
@@ -982,17 +1054,27 @@ Module * VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile)
 {
 	size_t inputDataBytes;
 	char *inputData = inputFile->getContentsAsRawData(inputDataBytes);
-	StringRef inputDataAsStringRef(inputData, inputDataBytes);
-	MemoryBuffer *mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
 
 	string error;
-	Module *module = ParseBitcodeFile(&(*mb), getGlobalContext(), &error);
+	Module *module = readModuleFromBitcodeData(inputData, inputDataBytes, error);
 	if (! module)
-		fprintf(stderr, "Couldn't parse module '%s': %s.\n", inputFile->getRelativePath().c_str(), error.c_str());
+		VLog("Error: Couldn't parse module '%s': %s.", inputFile->getRelativePath().c_str(), error.c_str());
 
-	delete mb;
 	free(inputData);
 
+	return module;
+}
+
+/**
+ * Returns the LLVM module read from @a inputData (a data buffer of size @a inputDataBytes).
+ */
+Module * VuoCompiler::readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string &error)
+{
+	StringRef inputDataAsStringRef(inputData, inputDataBytes);
+	MemoryBuffer *mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
+	Module *module = ParseBitcodeFile(&(*mb), getGlobalContext(), &error);
+
+	delete mb;
 	return module;
 }
 
@@ -1005,7 +1087,7 @@ bool VuoCompiler::writeModuleToBitcode(Module *module, string outputPath)
 {
 	if (verifyModule(*module, PrintMessageAction))
 	{
-		fprintf(stderr, "Module verification failed.\n");
+		VLog("Error: Module verification failed.");
 		return true;
 	}
 
@@ -1013,7 +1095,7 @@ bool VuoCompiler::writeModuleToBitcode(Module *module, string outputPath)
 	raw_fd_ostream out(outputPath.c_str(), err);
 	if (! err.empty())
 	{
-		fprintf(stderr, "Couldn't open file %s for writing (%s)\n", outputPath.c_str(), err.c_str());
+		VLog("Error: Couldn't open file '%s' for writing: %s", outputPath.c_str(), err.c_str());
 		return true;
 	}
 	WriteBitcodeToFile(module, out);
@@ -1401,7 +1483,7 @@ string VuoCompiler::getCompositionLoaderPath(void)
 	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	return (vuoFrameworkPath.empty() ?
 				VUO_ROOT "/runtime/VuoCompositionLoader" :
-				vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/VuoCompositionLoader");
+				vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/VuoCompositionLoader.app/Contents/MacOS/VuoCompositionLoader");
 }
 
 /**
@@ -1448,6 +1530,8 @@ void VuoCompiler::print(void)
 
 /**
  * Creates a runner object that can run the composition in file @a compositionFilePath in a new process.
+ *
+ * @throw std::exception The composition is invalid.
  */
 VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionFile(string compositionFilePath)
 {
@@ -1467,6 +1551,7 @@ VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionFile(string comp
  *
  * @param composition A serialized composition.
  * @param workingDirectory The directory used by nodes in the composition to resolve relative paths.
+ * @throw std::exception The composition is invalid.
  */
 VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionString(string composition, string workingDirectory)
 {
@@ -1481,6 +1566,8 @@ VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionString(string co
 
 /**
  * Creates a runner object that can run the composition in file @a compositionFilePath in this process.
+ *
+ * @throw std::exception The composition is invalid.
  */
 VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionFile(string compositionFilePath)
 {
@@ -1500,6 +1587,7 @@ VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionFile(string compo
  *
  * @param composition A serialized composition.
  * @param workingDirectory The directory used by nodes in the composition to resolve relative paths.
+ * @throw std::exception The composition is invalid.
  */
 VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionString(string composition, string workingDirectory)
 {

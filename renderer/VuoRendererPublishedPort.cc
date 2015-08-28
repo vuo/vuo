@@ -25,7 +25,7 @@ VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublish
 	: VuoBaseDetail<VuoPublishedPort>("VuoRendererPublishedPort", basePublishedPort)
 {
 	getBase()->setRenderer(this);
-	this->globalPos = QPointF();
+	this->compositionViewportPos = QPoint();
 
 	// We can't use the VuoPseudoPort for rendering purposes because it won't necessarily have the type that we
 	// want the rendering to reflect. (e.g., published input pseudoports are always event-only trigger ports.)
@@ -270,21 +270,21 @@ void VuoRendererPublishedPort::removeConnectedPort(VuoPort *port)
 }
 
 /**
- * Returns the location of the published port within the published port sidebar,
- * in global coordinates.
+ * Returns the location of the rendered sidebar published port,
+ * in coordinates relative to the composition viewport.
  */
-QPointF VuoRendererPublishedPort::getGlobalPos(void) const
+QPoint VuoRendererPublishedPort::getCompositionViewportPos(void) const
 {
-	return globalPos;
+	return compositionViewportPos;
 }
 
 /**
- * Sets the location of the published port within the published port sidebar,
- * in global coordinates.
+ * Sets the location of the rendered sidebar published port,
+ * in coordinates relative to the composition viewport.
  */
-void VuoRendererPublishedPort::setGlobalPos(QPointF pos)
+void VuoRendererPublishedPort::setCompositionViewportPos(QPoint pos)
 {
-	this->globalPos = pos;
+	this->compositionViewportPos = pos;
 }
 
 /**

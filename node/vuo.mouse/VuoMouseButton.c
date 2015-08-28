@@ -10,6 +10,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoMouseButton.h"
+#include "VuoList_VuoMouseButton.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -69,6 +70,19 @@ json_object * VuoMouseButton_jsonFromValue(const VuoMouseButton value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoMouseButton VuoMouseButton_allowedValues(void)
+{
+	VuoList_VuoMouseButton l = VuoListCreate_VuoMouseButton();
+	VuoListAppendValue_VuoMouseButton(l, VuoMouseButton_Left);
+	VuoListAppendValue_VuoMouseButton(l, VuoMouseButton_Middle);
+	VuoListAppendValue_VuoMouseButton(l, VuoMouseButton_Right);
+	VuoListAppendValue_VuoMouseButton(l, VuoMouseButton_Any);
+	return l;
 }
 
 /**

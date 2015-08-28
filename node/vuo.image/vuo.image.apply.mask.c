@@ -19,7 +19,8 @@ VuoModuleMetadata({
 					  }
 				 });
 
-static const char * maskFragmentShader = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_COLOR_CONVERSIONS(
+static const char *maskFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
@@ -29,7 +30,7 @@ static const char * maskFragmentShader = VUOSHADER_GLSL_FRAGMENT_SOURCE_WITH_COL
 	{
 		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
 		vec4 maskColor = texture2D(mask, fragmentTextureCoordinate.xy);
-		float maskAmount = maskColor.a * RgbToHsl(maskColor.rgb).z;
+		float maskAmount = maskColor.a * rgbToHsl(maskColor.rgb).z;
 		color.rgb *= maskAmount;
 		color.a = maskAmount;
 		gl_FragColor = color;
@@ -67,12 +68,12 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Apply Mask", VuoShader_getDefaultVertexShader(), maskFragmentShader);
+	VuoShader frag = VuoShader_make("Apply Mask");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, maskFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	VuoShader_addTexture(frag, (*instance)->glContext, "mask", mask);
-	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h);
+	VuoShader_setUniform_VuoImage(frag, "texture", image);
+	VuoShader_setUniform_VuoImage(frag, "mask", mask);
+	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

@@ -43,6 +43,66 @@ static bool isMainThread(void)
 }
 
 /**
+ * Creates a runner object that can run the composition in file @a compositionPath in a new process.
+ */
+VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compositionPath)
+{
+	string compositionDir, compositionFile, compositionExt;
+	VuoFileUtilities::splitPath(compositionPath, compositionDir, compositionFile, compositionExt);
+	string compiledCompositionPath = VuoFileUtilities::makeTmpFile(compositionFile, "bc");
+
+	string compiledCompositionDir, compiledCompositionFile, compiledCompositionExt;
+	VuoFileUtilities::splitPath(compiledCompositionPath, compiledCompositionDir, compiledCompositionFile, compiledCompositionExt);
+	string linkedCompositionPath = compiledCompositionDir + compiledCompositionFile;
+
+	string vuoFrameworkDir = VuoFileUtilities::getVuoFrameworkPath();
+	string vuoCompilePath = vuoFrameworkDir + "/MacOS/vuo-compile";
+	string vuoLinkPath = vuoFrameworkDir + "/MacOS/vuo-link";
+
+	// vuo-compile --output /tmp/composition.bc composition.vuo
+	pid_t compilePid = fork();
+	if (compilePid == 0)
+	{
+		execl(vuoCompilePath.c_str(), "vuo-compile", "--output", compiledCompositionPath.c_str(), compositionPath.c_str(), NULL);
+		VLog("Error: Couldn't run '%s'.", vuoCompilePath.c_str());
+		return NULL;
+	}
+	else if (compilePid > 0)
+	{
+		int status;
+		waitpid(compilePid, &status, 0);
+	}
+	else
+	{
+		VLog("Error: Couldn't fork '%s'.", vuoCompilePath.c_str());
+		return NULL;
+	}
+
+	// vuo-link --output /tmp/composition composition.bc
+	pid_t linkPid = fork();
+	if (linkPid == 0)
+	{
+		execl(vuoLinkPath.c_str(), "vuo-link", "--output", linkedCompositionPath.c_str(), compiledCompositionPath.c_str(), NULL);
+		VLog("Error: Couldn't run '%s'.", vuoLinkPath.c_str());
+		return NULL;
+	}
+	else if (linkPid > 0)
+	{
+		int status;
+		waitpid(linkPid, &status, 0);
+	}
+	else
+	{
+		VLog("Error: Couldn't fork '%s'.", vuoLinkPath.c_str());
+		return NULL;
+	}
+
+	remove(compiledCompositionPath.c_str());
+
+	return newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
+}
+
+/**
  * Creates a runner that can run a composition in a new process.
  *
  * @param executablePath A linked composition executable, produced by VuoCompiler::linkCompositionToCreateExecutable().
@@ -206,7 +266,7 @@ void VuoRunner::start(bool isPaused)
 		dylibHandle = dlopen(dylibPath.c_str(), RTLD_NOW);
 		if (!dylibHandle)
 		{
-			fprintf(stderr, "VuoRunner: couldn't load dylib: %s\n", dlerror());
+			VLog("Error: Couldn't load dylib: '%s'.", dlerror());
 			return;
 		}
 
@@ -215,7 +275,7 @@ void VuoRunner::start(bool isPaused)
 		initInProcessType vuoInitInProcess = (initInProcessType)dlsym(dylibHandle, "vuoInitInProcess");
 		if (! vuoInitInProcess)
 		{
-			fprintf(stderr, "VuoRunner: couldn't find function `vuoInitInProcess`: %s\n", dlerror());
+			VLog("Error: Couldn't find function vuoInitInProcess(): %s", dlerror());
 			return;
 		}
 
@@ -305,7 +365,7 @@ void VuoRunner::start(bool isPaused)
 		{
 			if (++numTries == 1000)
 			{
-				fprintf(stderr, "runner VuoLoaderControl: connect failed.\n");
+				VLog("Error: VuoLoaderControl connect failed.");
 				return;
 			}
 			usleep(USEC_PER_SEC / 1000);
@@ -332,7 +392,7 @@ void VuoRunner::setUpConnections(void)
 	{
 		if (++numTries == 1000)
 		{
-			fprintf(stderr, "runner VuoControl: connect failed.\n");
+			VLog("Error: VuoControl connect failed.");
 			return;
 		}
 		usleep(USEC_PER_SEC / 1000);
@@ -444,6 +504,10 @@ void VuoRunner::drainMainDispatchQueue(void)
 void VuoRunner::pause(void)
 {
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  vuoControlRequestSend(VuoControlRequestCompositionPause,NULL,0);
@@ -459,6 +523,10 @@ void VuoRunner::pause(void)
 void VuoRunner::unpause(void)
 {
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  vuoControlRequestSend(VuoControlRequestCompositionUnpause,NULL,0);
@@ -486,6 +554,10 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string resourceD
 		throw std::logic_error("The runner is not using a composition loader. Only use this function if the composition was constructed with newSeparateProcessRunnerFromDynamicLibrary().");
 
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  if (dylibPath != compositionDylibPath)
 					  {
 						  if (shouldDeleteBinariesWhenFinished)
@@ -528,6 +600,10 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string resourceD
 void VuoRunner::stop(void)
 {
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  // Only tell the composition to stop if it hasn't already ended on its own.
@@ -555,7 +631,7 @@ void VuoRunner::stop(void)
 						  finiType vuoFini = (finiType)dlsym(dylibHandle, "vuoFini");
 						  if (! vuoFini)
 						  {
-							  fprintf(stderr, "VuoRunner: couldn't find function `vuoFini`: %s\n", dlerror());
+							  VLog("Error: Couldn't find function vuoFini(): %s", dlerror());
 							  return;
 						  }
 						  vuoFini();
@@ -643,6 +719,10 @@ void VuoRunner::setInputPortValue(string portIdentifier, json_object *value)
 	const char *valueAsString = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
 
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[2];
@@ -666,6 +746,10 @@ void VuoRunner::setInputPortValue(string portIdentifier, json_object *value)
 void VuoRunner::fireTriggerPortEvent(string portIdentifier)
 {
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[1];
@@ -689,6 +773,10 @@ json_object * VuoRunner::getInputPortValue(string portIdentifier)
 {
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[2];
@@ -697,8 +785,13 @@ json_object * VuoRunner::getInputPortValue(string portIdentifier)
 					  vuoControlRequestSend(VuoControlRequestInputPortValueRetrieve, messages, 2);
 					  vuoControlReplyReceive(VuoControlReplyInputPortValueRetrieved);
 					  char *s = vuoReceiveAndCopyString(ZMQControl);
-					  valueAsString = s;
-					  free(s);
+					  if (s)
+					  {
+						  valueAsString = s;
+						  free(s);
+					  }
+					  else
+						  valueAsString = "null";
 				  });
 	return json_tokener_parse(valueAsString.c_str());
 }
@@ -717,6 +810,10 @@ json_object * VuoRunner::getOutputPortValue(string portIdentifier)
 {
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[2];
@@ -725,8 +822,13 @@ json_object * VuoRunner::getOutputPortValue(string portIdentifier)
 					  vuoControlRequestSend(VuoControlRequestOutputPortValueRetrieve, messages, 2);
 					  vuoControlReplyReceive(VuoControlReplyOutputPortValueRetrieved);
 					  char *s = vuoReceiveAndCopyString(ZMQControl);
-					  valueAsString = s;
-					  free(s);
+					  if (s)
+					  {
+						  valueAsString = s;
+						  free(s);
+					  }
+					  else
+						  valueAsString = "null";
 				  });
 	return json_tokener_parse(valueAsString.c_str());
 }
@@ -745,6 +847,10 @@ string VuoRunner::getInputPortSummary(string portIdentifier)
 {
 	__block string summary;
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[1];
@@ -752,8 +858,13 @@ string VuoRunner::getInputPortSummary(string portIdentifier)
 					  vuoControlRequestSend(VuoControlRequestInputPortSummaryRetrieve, messages, 1);
 					  vuoControlReplyReceive(VuoControlReplyInputPortSummaryRetrieved);
 					  char *s = vuoReceiveAndCopyString(ZMQControl);
-					  summary = s;
-					  free(s);
+					  if (s)
+					  {
+						  summary = s;
+						  free(s);
+					  }
+					  else
+						  summary = "";
 				  });
 	return summary;
 }
@@ -772,6 +883,10 @@ string VuoRunner::getOutputPortSummary(string portIdentifier)
 {
 	__block string summary;
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[1];
@@ -779,8 +894,13 @@ string VuoRunner::getOutputPortSummary(string portIdentifier)
 					  vuoControlRequestSend(VuoControlRequestOutputPortSummaryRetrieve, messages, 1);
 					  vuoControlReplyReceive(VuoControlReplyOutputPortSummaryRetrieved);
 					  char *s = vuoReceiveAndCopyString(ZMQControl);
-					  summary = s;
-					  free(s);
+					  if (s)
+					  {
+						  summary = s;
+						  free(s);
+					  }
+					  else
+						  summary = "";
 				  });
 	return summary;
 }
@@ -802,6 +922,10 @@ void VuoRunner::setPublishedInputPortValue(VuoRunner::Port *port, json_object *v
 	const char *valueAsString = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
 
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[2];
@@ -822,6 +946,10 @@ void VuoRunner::setPublishedInputPortValue(VuoRunner::Port *port, json_object *v
 void VuoRunner::firePublishedInputPortEvent(VuoRunner::Port *port)
 {
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  anyPublishedPortEventSignaled = false;
@@ -843,7 +971,7 @@ void VuoRunner::firePublishedInputPortEvent(VuoRunner::Port *port)
  */
 void VuoRunner::firePublishedInputPortEvent(void)
 {
-	Port port(VuoNodeClass::publishedInputNodeSimultaneousTriggerName, "");
+	Port port(VuoNodeClass::publishedInputNodeSimultaneousTriggerName, "", NULL);
 	firePublishedInputPortEvent(&port);
 }
 
@@ -872,6 +1000,43 @@ void VuoRunner::waitForAnyPublishedOutputPortEvent(void)
 }
 
 /**
+ * Sends a control request to the composition telling it to retrieve a published input port's value.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ *
+ * @param port The published input port.
+ * @return JSON representation of the port's value.
+ *
+ * @see VuoTypes for information about types and their JSON representations.
+ */
+json_object * VuoRunner::getPublishedInputPortValue(VuoRunner::Port *port)
+{
+	__block string valueAsString;
+	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  zmq_msg_t messages[2];
+					  vuoInitMessageWithBool(&messages[0], !isInCurrentProcess());
+					  vuoInitMessageWithString(&messages[1], port->getName().c_str());
+					  vuoControlRequestSend(VuoControlRequestPublishedInputPortValueRetrieve, messages, 2);
+					  vuoControlReplyReceive(VuoControlReplyPublishedInputPortValueRetrieved);
+					  char *s = vuoReceiveAndCopyString(ZMQControl);
+					  if (s)
+					  {
+						  valueAsString = s;
+						  free(s);
+					  }
+					  else
+						  valueAsString = "null";
+				  });
+	return json_tokener_parse(valueAsString.c_str());
+}
+
+/**
  * Sends a control request to the composition telling it to retrieve a published output port's value.
  *
  * Assumes the composition has been started and has not been stopped.
@@ -885,6 +1050,10 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 {
 	__block string valueAsString;
 	dispatch_sync(controlQueue, ^{
+					  if (stopped) {
+						  return;
+					  }
+
 					  vuoMemoryBarrier();
 
 					  zmq_msg_t messages[2];
@@ -893,8 +1062,13 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
 					  vuoControlRequestSend(VuoControlRequestPublishedOutputPortValueRetrieve, messages, 2);
 					  vuoControlReplyReceive(VuoControlReplyPublishedOutputPortValueRetrieved);
 					  char *s = vuoReceiveAndCopyString(ZMQControl);
-					  valueAsString = s;
-					  free(s);
+					  if (s)
+					  {
+						  valueAsString = s;
+						  free(s);
+					  }
+					  else
+						  valueAsString = "null";
 				  });
 	return json_tokener_parse(valueAsString.c_str());
 }
@@ -949,39 +1123,46 @@ vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
 {
 	vuoMemoryBarrier();
 
-	enum VuoControlRequest requests[3];
-	enum VuoControlReply replies[3];
+	enum VuoControlRequest requests[4];
+	enum VuoControlReply replies[4];
 	if (input)
 	{
 		requests[0] = VuoControlRequestPublishedInputPortNamesRetrieve;
 		requests[1] = VuoControlRequestPublishedInputPortTypesRetrieve;
-		requests[2] = VuoControlRequestPublishedInputPortConnectedIdentifiersRetrieve;
+		requests[2] = VuoControlRequestPublishedInputPortDetailsRetrieve;
+		requests[3] = VuoControlRequestPublishedInputPortConnectedIdentifiersRetrieve;
 		replies[0] = VuoControlReplyPublishedInputPortNamesRetrieved;
 		replies[1] = VuoControlReplyPublishedInputPortTypesRetrieved;
-		replies[2] = VuoControlReplyPublishedInputPortConnectedIdentifiersRetrieved;
+		replies[2] = VuoControlReplyPublishedInputPortDetailsRetrieved;
+		replies[3] = VuoControlReplyPublishedInputPortConnectedIdentifiersRetrieved;
 	}
 	else
 	{
 		requests[0] = VuoControlRequestPublishedOutputPortNamesRetrieve;
 		requests[1] = VuoControlRequestPublishedOutputPortTypesRetrieve;
-		requests[2] = VuoControlRequestPublishedOutputPortConnectedIdentifiersRetrieve;
+		requests[2] = VuoControlRequestPublishedOutputPortDetailsRetrieve;
+		requests[3] = VuoControlRequestPublishedOutputPortConnectedIdentifiersRetrieve;
 		replies[0] = VuoControlReplyPublishedOutputPortNamesRetrieved;
 		replies[1] = VuoControlReplyPublishedOutputPortTypesRetrieved;
-		replies[2] = VuoControlReplyPublishedOutputPortConnectedIdentifiersRetrieved;
+		replies[2] = VuoControlReplyPublishedOutputPortDetailsRetrieved;
+		replies[3] = VuoControlReplyPublishedOutputPortConnectedIdentifiersRetrieved;
 	}
 
 	vector<string> names;
 	vector<string> types;
+	vector<string> details;
 
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < 3; ++i)
 	{
 		vuoControlRequestSend(requests[i], NULL, 0);
 		vuoControlReplyReceive(replies[i]);
 		vector<string> messageStrings = receiveListOfStrings(ZMQControl);
 		if (i == 0)
 			names = messageStrings;
-		else
+		else if (i == 1)
 			types = messageStrings;
+		else
+			details = messageStrings;
 	}
 
 	vector<VuoRunner::Port *> ports;
@@ -989,12 +1170,12 @@ vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
 	{
 		zmq_msg_t messages[1];
 		vuoInitMessageWithString(&messages[0], names[i].c_str());
-		vuoControlRequestSend(requests[2], messages, 1);
-		vuoControlReplyReceive(replies[2]);
+		vuoControlRequestSend(requests[3], messages, 1);
+		vuoControlReplyReceive(replies[3]);
 		vector<string> messageStrings = receiveListOfStrings(ZMQControl);
 		set<string> identifiers( messageStrings.begin(), messageStrings.end() );
 
-		VuoRunner::Port *port = new Port(names[i], types[i]);
+		VuoRunner::Port *port = new Port(names[i], types[i], json_tokener_parse(details[i].c_str()));
 		port->setConnectedPortIdentifiers(identifiers);
 		ports.push_back(port);
 	}
@@ -1070,7 +1251,7 @@ void VuoRunner::listen(void)
 	{
 		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_SUB);
 		if(zmq_connect(ZMQTelemetry,ZMQTelemetryURL.c_str()))
-			fprintf(stderr, "runner VuoTelemetry: connect failed.\n");
+			VLog("Error: VuoTelemetry connect failed.");
 	}
 
 	{
@@ -1158,12 +1339,20 @@ void VuoRunner::listen(void)
 								bool receivedData = vuoReceiveBool(ZMQTelemetry);
 								if (hasMoreToReceive(ZMQTelemetry))
 								{
-									char *portDataSummary = vuoReceiveAndCopyString(ZMQTelemetry);
+									string portDataSummary;
+									char *s = vuoReceiveAndCopyString(ZMQTelemetry);
+									if (s)
+									{
+										portDataSummary = s;
+										free(s);
+									}
+									else
+										portDataSummary = "";
+
 									dispatch_sync(delegateQueue, ^{
 													  if (delegate)
 														  delegate->receivedTelemetryInputPortUpdated(portIdentifier, receivedEvent, receivedData, portDataSummary);
 												  });
-									free(portDataSummary);
 								}
 							}
 						}
@@ -1181,7 +1370,16 @@ void VuoRunner::listen(void)
 							bool sentData = vuoReceiveBool(ZMQTelemetry);
 							if (hasMoreToReceive(ZMQTelemetry))
 							{
-								char *portDataSummary = vuoReceiveAndCopyString(ZMQTelemetry);
+								string portDataSummary;
+								char *s = vuoReceiveAndCopyString(ZMQTelemetry);
+								if (s)
+								{
+									portDataSummary = s;
+									free(s);
+								}
+								else
+									portDataSummary = "";
+
 								dispatch_sync(delegateQueue, ^{
 												  if (delegate)
 													  delegate->receivedTelemetryOutputPortUpdated(portIdentifier, sentData, portDataSummary);
@@ -1204,8 +1402,6 @@ void VuoRunner::listen(void)
 										}
 									}
 								}
-
-								free(portDataSummary);
 							}
 						}
 						free(portIdentifier);
@@ -1294,7 +1490,7 @@ void VuoRunner::vuoControlReplyReceive(enum VuoControlReply expectedReply)
 {
 	int reply = vuoReceiveInt(ZMQControl);
 	if (reply != expectedReply)
-		fprintf(stderr, "VuoControl message received unexpected reply (received %d, expected %d)\n", reply, expectedReply);
+		VLog("Error: VuoControl message received unexpected reply (received %d, expected %d).", reply, expectedReply);
 }
 
 /**
@@ -1309,7 +1505,7 @@ void VuoRunner::vuoLoaderControlReplyReceive(enum VuoLoaderControlReply expected
 {
 	int reply = vuoReceiveInt(ZMQLoaderControl);
 	if (reply != expectedReply)
-		fprintf(stderr, "VuoLoaderControl message received unexpected reply (received %d, expected %d)\n", reply, expectedReply);
+		VLog("Error: VuoLoaderControl message received unexpected reply (received %d, expected %d).", reply, expectedReply);
 }
 
 /**
@@ -1403,11 +1599,13 @@ void VuoRunner::setDelegate(VuoRunnerDelegate *delegate)
  *
  * @param name The published port's name.
  * @param type The published port's data type name, or an empty string if the port is event-only.
+ * @param details The published port's details (see @ref VuoInputData).
  */
-VuoRunner::Port::Port(string name, string type)
+VuoRunner::Port::Port(string name, string type, json_object *details)
 {
 	this->name = name;
 	this->type = type;
+	this->details = details;
 }
 
 /**
@@ -1424,6 +1622,14 @@ string VuoRunner::Port::getName(void)
 string VuoRunner::Port::getType(void)
 {
 	return type;
+}
+
+/**
+ * Returns the published port's details.
+ */
+json_object *VuoRunner::Port::getDetails(void)
+{
+	return details;
 }
 
 /**

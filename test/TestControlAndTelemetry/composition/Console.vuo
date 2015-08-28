@@ -9,5 +9,5 @@
 
 digraph G
 {
-DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="122.5,71" _writeLine=""];
+DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="122.5,71"];
 }

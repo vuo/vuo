@@ -10,6 +10,11 @@
 #ifndef VUOMODIFIERKEY_H
 #define VUOMODIFIERKEY_H
 
+/// @{
+typedef void * VuoList_VuoModifierKey;
+#define VuoList_VuoModifierKey_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoModifierKey VuoModifierKey
@@ -32,6 +37,7 @@ typedef enum {
 
 VuoModifierKey VuoModifierKey_valueFromJson(struct json_object * js);
 struct json_object * VuoModifierKey_jsonFromValue(const VuoModifierKey value);
+VuoList_VuoModifierKey VuoModifierKey_allowedValues(void);
 char * VuoModifierKey_summaryFromValue(const VuoModifierKey value);
 
 bool VuoModifierKey_doMacEventFlagsMatch(unsigned long flags, VuoModifierKey modifierKey);
@@ -42,6 +48,8 @@ bool VuoModifierKey_doMacEventFlagsMatch(unsigned long flags, VuoModifierKey mod
  */
 VuoModifierKey VuoModifierKey_valueFromString(const char *str);
 char * VuoModifierKey_stringFromValue(const VuoModifierKey value);
+void VuoModifierKey_retain(VuoModifierKey value);
+void VuoModifierKey_release(VuoModifierKey value);
 /// @}
 
 /**

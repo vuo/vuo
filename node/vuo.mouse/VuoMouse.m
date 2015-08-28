@@ -9,6 +9,7 @@
 
 #include <AppKit/AppKit.h>
 #include "VuoMouse.h"
+#include "VuoWindowOpenGLInternal.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -58,10 +59,10 @@ static VuoPoint2d VuoMouse_convertWindowToScreenCoordinates(NSPoint pointInWindo
  */
 static VuoPoint2d VuoMouse_convertViewToVuoCoordinates(NSPoint pointInView, NSView *view)
 {
-	NSRect bounds = [view bounds];
+	NSRect bounds = [(VuoWindowOpenGLView *)view viewport];
 	VuoPoint2d pointInVuo;
-	pointInVuo.x = ((pointInView.x - bounds.size.width/2.) * 2.) / bounds.size.width;
-	pointInVuo.y = ((pointInView.y - bounds.size.height/2.) * 2.) / bounds.size.width;
+	pointInVuo.x = ((pointInView.x - NSMinX(bounds) - NSWidth(bounds) /2.) * 2.) / NSWidth(bounds);
+	pointInVuo.y = ((pointInView.y - NSMinY(bounds) - NSHeight(bounds)/2.) * 2.) / NSWidth(bounds);
 	return pointInVuo;
 }
 
@@ -71,6 +72,10 @@ static VuoPoint2d VuoMouse_convertViewToVuoCoordinates(NSPoint pointInView, NSVi
 static VuoPoint2d VuoMouse_convertFullScreenToVuoCoordinates(NSPoint pointInScreen, NSWindow *window, bool *isInScreen)
 {
 	NSRect fullScreenFrame = [[window screen] frame];
+	// Expand the frame by one point, since NSPointInRect() decides the topmost point (largest Y value) is outside the rectangle.
+	// (Allow using the top edge, per Fitts's Law.)
+	fullScreenFrame = NSInsetRect(fullScreenFrame, 0, -1);
+
 	NSView *view = [window contentView];
 	NSPoint pointInView = NSMakePoint(pointInScreen.x - fullScreenFrame.origin.x,
 									  pointInScreen.y - fullScreenFrame.origin.y);
@@ -135,8 +140,12 @@ static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, VuoWindowReferenc
 	NSWindow *targetWindow = (NSWindow *)windowRef;
 	if (targetWindow)
 	{
-		if ([[targetWindow contentView] isInFullScreenMode])
+		if ([(VuoWindowOpenGLView *)[targetWindow contentView] isFullScreen])
 		{
+			// https://b33p.net/kosada/node/8489
+			// When in fullscreen mode with multiple displays, -[event locationInWindow] produces inconsistent results,
+			// so use +[NSEvent mouseLocation] which seems to work with both single and multiple displays.
+			pointInWindowOrScreen = [NSEvent mouseLocation];
 			convertedPoint = VuoMouse_convertFullScreenToVuoCoordinates(pointInWindowOrScreen, targetWindow, &shouldFire);
 		}
 		else if (targetWindow == [event window])
@@ -183,8 +192,12 @@ static void VuoMouse_fireMouseDeltaIfNeeded(NSEvent *event, VuoWindowReference w
 	NSWindow *targetWindow = (NSWindow *)windowRef;
 	if (targetWindow)
 	{
-		if ([[targetWindow contentView] isInFullScreenMode])
+		if ([(VuoWindowOpenGLView *)[targetWindow contentView] isFullScreen])
 		{
+			// https://b33p.net/kosada/node/8489
+			// When in fullscreen mode with multiple displays, -[event locationInWindow] produces inconsistent results,
+			// so use +[NSEvent mouseLocation] which seems to work with both single and multiple displays.
+			pointInWindowOrScreen = [NSEvent mouseLocation];
 			VuoMouse_convertFullScreenToVuoCoordinates(pointInWindowOrScreen, targetWindow, &shouldFire);
 			convertedDelta = VuoMouse_convertDeltaToVuoCoordinates(deltaInScreen, targetWindow);
 		}

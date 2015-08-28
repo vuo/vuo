@@ -85,35 +85,22 @@ char * VuoMidiDevice_summaryFromValue(const VuoMidiDevice md)
 	const char *inOut = md.isInput ? "input" : "output";
 
 	if (md.id == -1 && strlen(md.name) == 0)
-	{
-		const char *format = "The first MIDI %s device";
-		int size = snprintf(NULL,0,format,inOut);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,inOut);
-		return valueAsString;
-	}
+		return VuoText_format("The first MIDI %s device", inOut);
 	else if (md.id == -1)
-	{
-		const char *format = "The first MIDI %s device whose name contains \"%s\"";
-		int size = snprintf(NULL,0,format,inOut,md.name);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,inOut,md.name);
-		return valueAsString;
-	}
+		return VuoText_format("The first MIDI %s device whose name contains \"%s\"", inOut, md.name);
 	else if (strlen(md.name) == 0)
-	{
-		const char *format = "MIDI %s device #%d";
-		int size = snprintf(NULL,0,format,inOut,md.id);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,inOut,md.id);
-		return valueAsString;
-	}
+		return VuoText_format("MIDI %s device #%ld", inOut, md.id);
 	else
-	{
-		const char *format = "MIDI %s device #%d (\"%s\")";
-		int size = snprintf(NULL,0,format,inOut,md.id,md.name);
-		char *valueAsString = (char *)malloc(size+1);
-		snprintf(valueAsString,size+1,format,inOut,md.id,md.name);
-		return valueAsString;
-	}
+		return VuoText_format("MIDI %s device #%ld (\"%s\")", inOut, md.id, md.name);
+}
+
+/**
+ * @ingroup VuoMidiDevice
+ * Returns true if the two MIDI device specifications are identical.
+ */
+bool VuoMidiDevice_areEqual(const VuoMidiDevice value1, const VuoMidiDevice value2)
+{
+	return (value1.id == value2.id &&
+			VuoText_areEqual(value1.name, value2.name) &&
+			value1.isInput == value2.isInput);
 }

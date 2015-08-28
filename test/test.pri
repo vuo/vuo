@@ -6,6 +6,7 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/node \
 	-I$$ROOT/node/vuo.audio \
 	-I$$ROOT/node/vuo.font \
+	-I$$ROOT/node/vuo.layer \
 	-I$$ROOT/node/vuo.midi \
 	-I$$ROOT/node/vuo.movie \
 	-I$$ROOT/runtime \
@@ -23,9 +24,12 @@ QMAKE_LFLAGS += \
 	$$FFMPEG_ROOT/lib/libavcodec.dylib \
 	$$FFMPEG_ROOT/lib/libavformat.dylib \
 	$$FFMPEG_ROOT/lib/libavutil.dylib \
+	$$FFMPEG_ROOT/lib/libswresample.dylib \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
 	-lobjc \
 	-framework Foundation \
+	-framework QuartzCore \
+	-framework AppKit \
 	$$ROOT/runtime/libVuoRuntime.bc \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
@@ -33,17 +37,24 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/library/VuoImageBlur.bc \
+	$$ROOT/library/VuoImageMapColors.o \
 	$$ROOT/library/VuoImageRenderer.o \
+	$$ROOT/library/VuoMeshParametric.o \
+	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoSceneRenderer.o \
-	$$ROOT/library/VuoVerticesParametric.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoImage.o \
+	$$ROOT/type/VuoImageColorDepth.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/node/vuo.font/VuoFont.o \
+	$$ROOT/node/vuo.layer/VuoLayer.o \
 	$$ROOT/node/vuo.midi/VuoMidiNote.o \
 	$$ROOT/node/vuo.movie/VuoMovie.o \
+	$$ROOT/type/VuoDictionary_VuoText_VuoReal.o \
+	$$ROOT/type/VuoMesh.o \
+	$$ROOT/type/VuoMathExpressionList.o \
 	$$ROOT/type/VuoPoint2d.o \
 	$$ROOT/type/VuoPoint3d.o \
 	$$ROOT/type/VuoPoint4d.o \
@@ -53,16 +64,17 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/VuoTransform.o \
 	$$ROOT/type/VuoTransform2d.o \
-	$$ROOT/type/VuoVertices.o \
 	$$ROOT/type/list/VuoList_VuoAudioSamples.o \
 	$$ROOT/type/list/VuoList_VuoColor.o \
 	$$ROOT/type/list/VuoList_VuoImage.o \
+	$$ROOT/type/list/VuoList_VuoImageColorDepth.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
+	$$ROOT/type/list/VuoList_VuoLayer.o \
 	$$ROOT/type/list/VuoList_VuoPoint2d.o \
 	$$ROOT/type/list/VuoList_VuoPoint3d.o \
+	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$ROOT/type/list/VuoList_VuoSceneObject.o \
 	$$ROOT/type/list/VuoList_VuoText.o \
-	$$ROOT/type/list/VuoList_VuoVertices.o \
 	$$QMAKE_LFLAGS $$LIBS $$QMAKE_LIBS \
 	-Wl,-rpath,$$ROOT/framework \
 	"-framework QtTest" \

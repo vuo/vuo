@@ -837,7 +837,7 @@ private slots:
 		TestNodeExecutionOrderRunnerDelegate delegate(compositionPath, compiler);
 
 		vector<nodeExecution_t> nodeExecutions = delegate.nodeExecutions;
-		printNodeExecutions(nodeExecutions);
+//		printNodeExecutions(nodeExecutions);
 		checkCoverage(sequencesForTrigger, nodeExecutions);
 		checkSequences(sequencesForTrigger, nodeExecutions);
 	}

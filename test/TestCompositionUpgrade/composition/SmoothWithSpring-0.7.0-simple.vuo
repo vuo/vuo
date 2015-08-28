@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="149,92" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="368,31" fillcolor="yellow" _name="\"\"" _color="{\"r\":0.882353,\"g\":0.847059,\"b\":0.737255,\"a\":1.000000}" _rotation="0.000000" _width="0.100000" _height="0.100000"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="525,42" fillcolor="yellow"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="220,280" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="588,31" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Spring2 [type="vuo.motion.spring.VuoPoint2d" version="1.0.0" label="Spring|<refresh>refresh\l|<time>time\l|<setRestingPosition>setRestingPosition\l|<dropFromPosition>dropFromPosition\l|<period>period\l|<damping>damping\l|<done>done\r|<position>position\r" pos="486,272" fillcolor="violet" _setRestingPosition="" _period="1.000000" _damping="0.500000"];
+
+FireOnStart:started -> MakeColorLayer2:refresh;
+MakeColorLayer2:layer -> MakeList2:item1;
+MakeList2:list -> RenderLayersToWindow:layers;
+ReceiveMouseButtons:pressed -> Spring2:dropFromPosition;
+RenderLayersToWindow:requestedFrame -> Spring2:time;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
+Spring2:position -> MakeColorLayer2:center;
+}

@@ -25,7 +25,7 @@
 class VuoCompilerNode;
 class VuoCompilerNodeClass;
 class VuoRendererColors;
-class VuoRendererMakeListNode;
+class VuoRendererInputDrawer;
 class VuoRendererPort;
 class VuoRendererTypecastPort;
 class VuoNodeClass;
@@ -52,9 +52,10 @@ public:
 
 	virtual QRectF boundingRect(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-	virtual QRectF getNodeTitleBoundingRect(void) const;
+	virtual QRectF getOuterNodeFrameBoundingRect(void) const;
+	virtual bool paintingDisabled(void) const;
 
-	vector<VuoRendererMakeListNode *> getAttachedInputDrawers(void) const;
+	vector<VuoRendererInputDrawer *> getAttachedInputDrawers(void) const;
 	qreal getInputDrawerOffset(unsigned int portIndex) const;
 	void updateNodeFrameRect(void);
 
@@ -102,16 +103,17 @@ public:
 
 	// Drawing configuration
 	static const qreal nodeTitleHeight;
+	static const qreal cornerRadius;
 
 protected:
 	virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
 	virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
 	virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+	void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 	void mouseDoubleClickEvent (QGraphicsSceneMouseEvent *event);
 	void keyPressEvent(QKeyEvent *event);
 
 	// Drawing configuration
-	static const qreal cornerRadius;
 	virtual void layoutPorts(void);
 
 	VuoRendererSignaler *signaler; ///< The object that sends signals on behalf of this renderer node.

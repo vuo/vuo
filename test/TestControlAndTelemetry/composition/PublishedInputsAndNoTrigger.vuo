@@ -12,15 +12,15 @@ digraph G
 PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedIncrementOne>publishedIncrementOne\r|<publishedDecrementBoth>publishedDecrementBoth\r" _publishedIncrementOne="42" _publishedIncrementBoth="1"];
 Count1 [type="vuo.math.count.VuoInteger" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r"];
 Count2 [type="vuo.math.count.VuoInteger" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1"];
-MakeList1 [type="vuo.list.make.2.VuoInteger" label="MakeList1|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<list>list\r"];
+MakeList1 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList1|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r"];
 Add1 [type="vuo.math.add.VuoInteger" label="Add1|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedSum>publishedSum\l"];
 
 PublishedInputs:publishedIncrementOne -> Count1:increment;
 PublishedInputs:publishedDecrementBoth -> Count1:decrement;
 PublishedInputs:publishedDecrementBoth -> Count2:decrement;
-Count1:count -> MakeList1:item1;
-Count2:count -> MakeList1:item2;
+Count1:count -> MakeList1:1;
+Count2:count -> MakeList1:2;
 MakeList1:list -> Add1:terms;
 Add1:sum -> PublishedOutputs:publishedSum;
 }

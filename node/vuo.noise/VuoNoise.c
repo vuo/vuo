@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoNoise.h"
+#include "VuoList_VuoNoise.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -86,6 +87,21 @@ json_object * VuoNoise_jsonFromValue(const VuoNoise value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoNoise VuoNoise_allowedValues(void)
+{
+	VuoList_VuoNoise l = VuoListCreate_VuoNoise();
+	VuoListAppendValue_VuoNoise(l, VuoNoise_White);
+	VuoListAppendValue_VuoNoise(l, VuoNoise_Grey);
+	VuoListAppendValue_VuoNoise(l, VuoNoise_Pink);
+	VuoListAppendValue_VuoNoise(l, VuoNoise_Brown);
+	VuoListAppendValue_VuoNoise(l, VuoNoise_Blue);
+	VuoListAppendValue_VuoNoise(l, VuoNoise_Violet);
+	return l;
 }
 
 /**

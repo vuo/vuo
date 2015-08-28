@@ -11,10 +11,11 @@ SUBDIRS += \
 	vuo.color \
 	vuo.console \
 	vuo.data \
+	vuo.dictionary \
 	vuo.event \
 	vuo.font \
 	vuo.hold \
-	vuo.image \
+	vuo_image \
 	vuo.keyboard \
 	vuo.kinect \
 	vuo.layer \
@@ -22,6 +23,7 @@ SUBDIRS += \
 	vuo.list \
 	vuo.logic \
 	vuo.math \
+	vuo.mesh \
 	vuo.midi \
 	vuo.motion \
 	vuo.mouse \
@@ -30,7 +32,8 @@ SUBDIRS += \
 	vuo.osc \
 	vuo.point \
 	vuo.quaternion \
-	vuo.scene \
+	vuo_scene \
+	vuo.screen \
 	vuo.select \
 	vuo.shader \
 	vuo.syphon \
@@ -38,5 +41,18 @@ SUBDIRS += \
 	vuo.time \
 	vuo.transform \
 	vuo.type \
-	vuo.vertices \
 	vuo.window
+
+vuo_image.subdir = vuo.image
+exists(vuo.image/premium) {
+	SUBDIRS += vuo_image_premium
+	vuo_image_premium.subdir = vuo.image/premium
+	vuo_image.depends = vuo_image_premium
+}
+
+vuo_scene.subdir = vuo.scene
+exists(vuo.scene/premium) {
+	SUBDIRS += vuo_scene_premium
+	vuo_scene_premium.subdir = vuo.scene/premium
+	vuo_scene.depends = vuo_scene_premium
+}

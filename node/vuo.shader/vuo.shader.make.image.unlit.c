@@ -29,15 +29,11 @@ void nodeEvent
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeImageShader();
+	*shader = VuoShader_makeUnlitImageShader(image, alpha);
 
 	if (image)
 	{
 		VuoGlContext glContext = VuoGlContext_use();
-
-		VuoShader_addTexture(*shader, glContext, "texture", image);
-
-		VuoShader_setUniformFloat(*shader, glContext, "alpha", alpha);
 
 		// Ensure the command queue gets executed before we return,
 		// since the VuoShader might immediately be used on another context.

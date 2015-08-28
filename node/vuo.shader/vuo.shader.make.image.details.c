@@ -12,7 +12,9 @@
 
 VuoModuleMetadata({
 					  "title" : "Shade with Details",
-					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "lighting", "Blinn", "Phong", "Lambert", "normal", "bump", "specular", "map" ],
+					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
+						  "lighting", "lit", "lighted",
+						  "Blinn", "Phong", "Lambert", "normal", "bump", "specular", "map" ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						  "VuoGlContext"
@@ -32,4 +34,14 @@ void nodeEvent
 )
 {
 	*shader = VuoShader_makeLitImageDetailsShader(image, alpha, specularImage, normalImage);
+
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+		// Ensure the command queue gets executed before we return,
+		// since the VuoShader might immediately be used on another context.
+		glFlushRenderAPPLE();
+
+		VuoGlContext_disuse(cgl_ctx);
+	}
 }

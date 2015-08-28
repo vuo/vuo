@@ -69,7 +69,7 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 
 	int len = VuoListGetCount_VuoColor(colors);
 
-	unsigned char* pixels = (unsigned char*)malloc(sizeof(char)*len*4);
+	unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char)*len*4);
 	int n = 0;
 	for(int i = 1; i <= len; i++)
 	{
@@ -80,19 +80,20 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 		pixels[n++] = (unsigned int)(col.a*255);
 	}
 
-	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_RGBA, len, 1);
+	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_RGBA, len, 1, VuoImageColorDepth_8);
+	free(pixels);
 
-	VuoShader shader = VuoShader_make("Map Image Colors", VuoShader_getDefaultVertexShader(), fragmentShaderSource);
+	VuoShader shader = VuoShader_make("Map Image Colors Shader");
+	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoRetain(shader);
 
-	VuoShader_resetTextures(shader);
-	VuoShader_addTexture(shader, glContext, "gradientStrip", gradientStrip);
-	VuoShader_addTexture(shader, glContext, "image", image);
-	VuoShader_setUniformFloat(shader, glContext, "gradientCount", (float)len);
-	VuoShader_setUniformFloat(shader, glContext, "amount", filterOpacity);
+	VuoShader_setUniform_VuoImage(shader, "gradientStrip", gradientStrip);
+	VuoShader_setUniform_VuoImage(shader, "image", image);
+	VuoShader_setUniform_VuoReal (shader, "gradientCount", (float)len);
+	VuoShader_setUniform_VuoReal (shader, "amount", filterOpacity);
 
 	// Render.
-	VuoImage mappedImage = VuoImageRenderer_draw(imageRenderer, shader, image->pixelsWide, image->pixelsHigh);
+	VuoImage mappedImage = VuoImageRenderer_draw(imageRenderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoRelease(shader);
 

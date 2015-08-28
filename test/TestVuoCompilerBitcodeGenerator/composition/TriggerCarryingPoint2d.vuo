@@ -9,7 +9,7 @@
 
 digraph G 
 {
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="56,51" _window="" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="56,51" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
 Get2DPointValues3 [type="vuo.point.get.VuoPoint2d" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="525.5,163.5" _point="0,0"];
 
 ReceiveMouseMoves:movedTo -> Get2DPointValues3:point;

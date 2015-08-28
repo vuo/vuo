@@ -13,4 +13,7 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorHorizontalAlignment.json
 
-LIBS += $$ROOT/type/VuoHorizontalAlignment.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoHorizontalAlignment.o \
+	$$ROOT/type/list/VuoList_VuoHorizontalAlignment.o

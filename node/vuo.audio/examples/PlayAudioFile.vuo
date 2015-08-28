@@ -11,7 +11,7 @@ digraph G
 {
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-96,20" fillcolor="yellow" _started_eventThrottling="enqueue"];
 PlayAudioFile [type="vuo.audio.file.play" version="1.0.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<done>done\r|<decodedChannels>decodedChannels\r" pos="126,67" fillcolor="violet" _url="\"DeclineOfTheAmiga.mp3\"" _setTime="\"\"" _decodedChannels_eventThrottling="enqueue"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="327,53" fillcolor="violet" _device="" _requestedChannels_eventThrottling="enqueue"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<done>done\r|<requestedChannels>requestedChannels\r" pos="327,53" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
 
 FireOnStart:started -> PlayAudioFile:play;
 PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;

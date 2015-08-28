@@ -26,6 +26,14 @@ void VuoRendererSignaler::signalNodesMoved(set<VuoRendererNode *> nodes, qreal d
 }
 
 /**
+ * Emits a @c signalNodePopoverRequested signal.
+ */
+void VuoRendererSignaler::signalNodePopoverRequested(VuoRendererNode *node)
+{
+	emit nodePopoverRequested(node);
+}
+
+/**
  * Emits a @c inputEditorRequested signal.
  */
 void VuoRendererSignaler::signalInputEditorRequested(VuoRendererPort *port)

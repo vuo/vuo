@@ -25,6 +25,14 @@ public:
 	VuoCompilerPort * newPort(void);
 	VuoCompilerPort * newPort(VuoPort *port);
 	VuoCompilerInputDataClass * getDataClass(void);
+	void setDetails(struct json_object *details);
+	json_object * getDetails(void);
+	void setPortAction(bool portAction);
+	bool hasPortAction(void);
+
+private:
+	struct json_object *details;
+	bool portAction;
 };
 
 

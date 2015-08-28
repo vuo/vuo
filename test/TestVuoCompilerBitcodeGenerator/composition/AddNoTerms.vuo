@@ -10,9 +10,8 @@
 digraph G 
 {
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r"];
-MakeList [type="vuo.list.make.0.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r"];
+MakeList [type="vuo.list.make.0.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r"];
 Add [type="vuo.math.add.VuoInteger" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
 
-FireOnStart:started -> MakeList:refresh
 MakeList:list -> Add:terms
 }

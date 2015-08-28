@@ -16,6 +16,11 @@
 #include "VuoCurveEasing.h"
 #include "VuoLoopType.h"
 
+/// @{
+typedef void * VuoList_VuoCurve;
+#define VuoList_VuoCurve_TYPE_DEFINED
+/// @}
+
 /**
  * @ingroup VuoTypes
  * @defgroup VuoCurve VuoCurve
@@ -37,6 +42,7 @@ typedef enum {
 
 VuoCurve VuoCurve_valueFromJson(struct json_object * js);
 struct json_object * VuoCurve_jsonFromValue(const VuoCurve value);
+VuoList_VuoCurve VuoCurve_allowedValues(void);
 char * VuoCurve_summaryFromValue(const VuoCurve value);
 
 /// @{
@@ -45,6 +51,8 @@ char * VuoCurve_summaryFromValue(const VuoCurve value);
  */
 VuoCurve VuoCurve_valueFromString(const char *str);
 char * VuoCurve_stringFromValue(const VuoCurve value);
+void VuoCurve_retain(VuoCurve value);
+void VuoCurve_release(VuoCurve value);
 /// @}
 
 VuoReal		VuoReal_curve(		VuoReal time, VuoReal startPosition,	VuoReal endPosition,	VuoReal duration, VuoCurve curve, VuoCurveEasing easing, VuoLoopType loop);

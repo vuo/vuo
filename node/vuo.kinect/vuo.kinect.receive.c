@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Kinect Images",
 					  "keywords" : [ "video", "camera", "infrared", "depth", "sensor", "controller", "motion", "body" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "dependencies" : [
 						  "freenect",
 						  "usb"
@@ -44,7 +44,7 @@ void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint
 	freenect_frame_mode mode = freenect_get_current_video_mode(dev);
 
 	uint16_t *depth = (uint16_t*)v_depth;
-	uint8_t *depthOutput = (uint8_t*)malloc(mode.width*mode.height*4);
+	float *depthOutput = (float*)malloc(mode.width*mode.height*sizeof(float)*2);
 
 	for(unsigned int y=0; y<mode.height; ++y)
 	{
@@ -56,8 +56,8 @@ void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint
 			uint16_t v = depth[y*mode.width + x];
 			if (v)
 			{
-				depthOutput[pos+0] = 255 - (v>>6);
-				depthOutput[pos+1] = 255;
+				depthOutput[pos+0] = v/16383.;
+				depthOutput[pos+1] = 1;
 			}
 			else
 			{
@@ -68,7 +68,7 @@ void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint
 		}
 	}
 
-	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height);
+	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_16);
 	free(depthOutput);
 	context->receivedDepthImage(image);
 }
@@ -91,7 +91,7 @@ void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t t
 	}
 	free(tmp);
 
-	VuoImage image = VuoImage_makeFromBuffer(rgb, GL_RGB, mode.width, mode.height);
+	VuoImage image = VuoImage_makeFromBuffer(rgb, GL_RGB, mode.width, mode.height, VuoImageColorDepth_8);
 	context->receivedImage(image);
 }
 

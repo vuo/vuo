@@ -103,14 +103,14 @@ void nodeInstanceEvent
 			break;
 	}
 
-	VuoShader frag = VuoShader_make("Resize Image Shader", VuoShader_getDefaultVertexShader(), applyScaleFragmentShader);
+	VuoShader frag = VuoShader_make("Resize Image Shader");
+	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, applyScaleFragmentShader);
 	VuoRetain(frag);
-	VuoShader_resetTextures(frag);
-	VuoShader_addTexture(frag, (*instance)->glContext, "texture", image);
-	VuoShader_setUniformPoint2d(frag, (*instance)->glContext, "scale", scale);
-	VuoShader_setUniformPoint2d(frag, (*instance)->glContext, "offset", offset);
+	VuoShader_setUniform_VuoImage  (frag, "texture", image);
+	VuoShader_setUniform_VuoPoint2d(frag, "scale", scale);
+	VuoShader_setUniform_VuoPoint2d(frag, "offset", offset);
 
-	*resizedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, width, height);
+	*resizedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, width, height, VuoImage_getColorDepth(image));
 
 	VuoRelease(frag);
 }

@@ -76,6 +76,7 @@ private:
 	Module * readModuleFromC(string inputPath);
 	Module * readModuleFromC(string inputPath, const vector<string> &extraArgs);
 	static Module * readModuleFromBitcode(VuoFileUtilities::File *inputFile);
+	static Module * readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string &error);
 	static bool writeModuleToBitcode(Module *module, string outputPath);
 	void setTargetForModule(Module *module, string target = "");
 	static vector<string> getCoreVuoDependencies(void);
@@ -98,6 +99,7 @@ public:
 	VuoCompiler(void);
 	static string getUserModulesPath();
 	static string getSystemModulesPath();
+	void setLicense(string licenseContent, string licenseSignature);
 	static void preserveOriginalFileName(string &fileContents, string originalFileName);
 	static Module * readModuleFromBitcode(string inputPath);
 	void addNodeClass(VuoCompilerNodeClass *nodeClass);

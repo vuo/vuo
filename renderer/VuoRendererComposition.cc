@@ -23,7 +23,10 @@
 #include "VuoCompilerPublishedOutputPort.hh"
 
 #include "VuoRendererNode.hh"
-#include "VuoRendererMakeListNode.hh"
+#include "VuoRendererInputListDrawer.hh"
+#include "VuoRendererReadOnlyDictionary.hh"
+#include "VuoRendererKeyListForReadOnlyDictionary.hh"
+#include "VuoRendererValueListForReadOnlyDictionary.hh"
 #include "VuoRendererPort.hh"
 #include "VuoRendererCable.hh"
 #include "VuoRendererTypecastPort.hh"
@@ -91,7 +94,7 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 		addCableInCompositionToCanvas(cable);
 
 	collapseTypecastNodes();
-	
+
 	// Now that all renderer components have been created, calculate
 	// the final positions of collapsed "Make List" drawers.
 	foreach (VuoNode *node, nodes)
@@ -116,8 +119,17 @@ VuoRendererNode * VuoRendererComposition::createRendererNode(VuoNode *baseNode)
 {
 	VuoRendererNode *rn = NULL;
 
-	if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(baseNode->getNodeClass()->getClassName()))
-		rn = new VuoRendererMakeListNode(baseNode, signaler);
+	if (VuoRendererReadOnlyDictionary::isReadOnlyDictionary(baseNode))
+		rn = new VuoRendererReadOnlyDictionary(baseNode, signaler);
+
+	else if (VuoRendererKeyListForReadOnlyDictionary::isKeyListForReadOnlyDictionary(baseNode))
+		rn = new VuoRendererKeyListForReadOnlyDictionary(baseNode, signaler);
+
+	else if (VuoRendererValueListForReadOnlyDictionary::isValueListForReadOnlyDictionary(baseNode))
+		rn = new VuoRendererValueListForReadOnlyDictionary(baseNode, signaler);
+
+	else if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(baseNode->getNodeClass()->getClassName()))
+		rn = new VuoRendererInputListDrawer(baseNode, signaler);
 
 	else
 		rn = new VuoRendererNode(baseNode, signaler);
@@ -187,6 +199,11 @@ void VuoRendererComposition::addCableInCompositionToCanvas(VuoCable *c)
 	rc->setZValue(-1);
 	addItem(rc);
 
+	// The following VuoRendererCable::setFrom()/setTo() calls are unnecessary as far as the
+	// base cable is concerned, but forces the connected component renderings to update appropriately.
+	rc->setFrom(rc->getBase()->getFromNode(), rc->getBase()->getFromPort());
+	rc->setTo(rc->getBase()->getToNode(), rc->getBase()->getToPort());
+
 	// Performance optimizations
 	rc->setCacheMode(getCurrentDefaultCacheMode());
 }
@@ -214,7 +231,7 @@ void VuoRendererComposition::addPublishedOutputCable(VuoCable *c)
 }
 
 /**
- * Removes a node from the canvas.
+ * Removes a node from the canvas and the underlying composition.
  */
 void VuoRendererComposition::removeNode(VuoRendererNode *rn)
 {
@@ -225,10 +242,13 @@ void VuoRendererComposition::removeNode(VuoRendererNode *rn)
 }
 
 /**
- * Removes a cable from the canvas.
+ * Removes a cable from the canvas and the underlying composition.
  */
 void VuoRendererComposition::removeCable(VuoRendererCable *rc)
 {
+	rc->setFrom(NULL, NULL);
+	rc->setTo(NULL, NULL);
+
 	rc->updateGeometry();
 	rc->removeFromScene();
 
@@ -240,6 +260,9 @@ void VuoRendererComposition::removeCable(VuoRendererCable *rc)
  */
 void VuoRendererComposition::removePublishedInputCable(VuoRendererCable *rc)
 {
+	rc->setFrom(NULL, NULL);
+	rc->setTo(NULL, NULL);
+
 	rc->updateGeometry();
 	rc->removeFromScene();
 
@@ -251,10 +274,25 @@ void VuoRendererComposition::removePublishedInputCable(VuoRendererCable *rc)
  */
 void VuoRendererComposition::removePublishedOutputCable(VuoRendererCable *rc)
 {
+	rc->setFrom(NULL, NULL);
+	rc->setTo(NULL, NULL);
+
 	rc->updateGeometry();
 	rc->removeFromScene();
 
 	getBase()->removePublishedOutputCable(rc->getBase());
+}
+
+/**
+ * Creates and connects the appropriate input attachments to the provided @c node.
+ */
+void VuoRendererComposition::createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler)
+{
+	if (node->getBase()->getNodeClass()->getClassName() == "vuo.math.calculate")
+		createAndConnectDrawersToReadOnlyDictionaryInputPorts(node, compiler);
+
+	createAndConnectDrawersToListInputPorts(node, compiler);
+
 }
 
 /**
@@ -265,7 +303,7 @@ void VuoRendererComposition::createAndConnectDrawersToListInputPorts(VuoRenderer
 	foreach (VuoPort *port, node->getBase()->getInputPorts())
 	{
 		VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>(port->getCompiler());
-		if (inputEventPort && VuoCompilerMakeListNodeClass::isListType(inputEventPort->getDataType()))
+		if (inputEventPort && VuoCompilerType::isListType(inputEventPort->getDataType()))
 		{
 			VuoRendererCable *cable = NULL;
 			VuoRendererNode *makeListNode = createAndConnectMakeListNode(node->getBase(), port, compiler, cable);
@@ -273,6 +311,22 @@ void VuoRendererComposition::createAndConnectDrawersToListInputPorts(VuoRenderer
 			addCable(cable->getBase());
 		}
 	}
+}
+
+/**
+ * Creates and connects the appropriate read-only dictionary attachments to the provided @c node.
+ */
+void VuoRendererComposition::createAndConnectDrawersToReadOnlyDictionaryInputPorts(VuoRendererNode *node, VuoCompiler *compiler)
+{
+	set<VuoRendererNode *> nodesToAdd;
+	set<VuoRendererCable *> cablesToAdd;
+	createAndConnectDictionaryAttachmentsForNode(node->getBase(), compiler, nodesToAdd, cablesToAdd);
+
+	foreach (VuoRendererNode *node, nodesToAdd)
+		addNode(node->getBase());
+
+	foreach (VuoRendererCable *cable, cablesToAdd)
+		addCable(cable->getBase());
 }
 
 /**
@@ -336,6 +390,126 @@ VuoRendererNode * VuoRendererComposition::createAndConnectMakeListNode(VuoNode *
 }
 
 /**
+ * Creates the nodes and connecting cables that the input @c node will need to provide
+ * it with an input dictionary of keys and values, to be attached to the node's "values" input port.
+ *
+ * @param node The node that needs the dictionary attachments created.
+ * @param compiler A compiler used to get the attachment node classes.
+ * @param[out] createdNodes The created nodes.
+ * @param[out] createdCables The created cables.
+ */
+void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNode *node,
+																		  VuoCompiler *compiler,
+																		  set<VuoRendererNode *> &createdNodes,
+																		  set<VuoRendererCable *> &createdCables)
+{
+	createdNodes.clear();
+	createdCables.clear();
+
+	VuoPort *expressionInputPort = node->getInputPortWithName("expression");
+	VuoPort *valuesInputPort = node->getInputPortWithName("values");
+	if (!(expressionInputPort && valuesInputPort))
+	{
+		VLog("Error: Cannot create dictionary attachments for a node without 'expression' and 'values' input ports.");
+		return;
+	}
+
+	// Assume for now that the dictionary should map strings to reals for use as variables in a VuoMathExpressionList.
+	const string dictionaryTypeName = "VuoDictionary_VuoText_VuoReal";
+	const string dictionaryClassName = "vuo.dictionary.make.VuoText.VuoReal";
+	const string dictionaryKeySourceTypeName = "VuoMathExpressionList";
+
+	VuoCompilerPort *valuesInputPortCompiler = static_cast<VuoCompilerPort *>(valuesInputPort->getCompiler());
+	if (valuesInputPortCompiler->getDataVuoType()->getModuleKey() != dictionaryTypeName)
+	{
+		VLog("Error: Unexpected dictionary type required: %s", valuesInputPortCompiler->getDataVuoType()->getModuleKey().c_str());
+		return;
+	}
+
+	VuoCompilerPort *expressionInputPortCompiler = static_cast<VuoCompilerPort *>(expressionInputPort->getCompiler());
+	if (expressionInputPortCompiler->getDataVuoType()->getModuleKey() != dictionaryKeySourceTypeName)
+	{
+		VLog("Error: Unexpected key source type encountered: %s", expressionInputPortCompiler->getDataVuoType()->getModuleKey().c_str());
+		return;
+	}
+
+	// Extract the variable names from the math expressions.
+	VuoCompilerInputEventPort *expressionInputEventPort = static_cast<VuoCompilerInputEventPort *>(expressionInputPortCompiler);
+	string expressionConstant = expressionInputEventPort->getData()->getInitialValue();
+	json_object *js = json_tokener_parse(expressionConstant.c_str());
+	json_object *expressionsObject = NULL;
+
+	vector<string> inputVariables;
+	if (json_object_object_get_ex(js, "inputVariables", &expressionsObject))
+	{
+		if (json_object_get_type(expressionsObject) == json_type_array)
+		{
+			int variableCount = json_object_array_length(expressionsObject);
+			for (int i = 0; i < variableCount; ++i)
+			{
+				json_object *itemObject = json_object_array_get_idx(expressionsObject, i);
+				if (json_object_get_type(itemObject) == json_type_string)
+					inputVariables.push_back(json_object_get_string(itemObject));
+			}
+		}
+	}
+	json_object_put(js);
+
+	unsigned long itemCount = inputVariables.size();
+
+	string keyListClassName = VuoCompilerMakeListNodeClass::buildNodeClassName(itemCount, "VuoText");
+	string valueListClassName = VuoCompilerMakeListNodeClass::buildNodeClassName(itemCount, "VuoReal");
+
+	VuoCompilerNodeClass *keyListNodeClass = compiler->getNodeClass(keyListClassName);
+	VuoCompilerNodeClass *valueListNodeClass = compiler->getNodeClass(valueListClassName);
+	VuoCompilerNodeClass *dictionaryNodeClass = compiler->getNodeClass(dictionaryClassName);
+
+	if (keyListNodeClass && valueListNodeClass && dictionaryNodeClass)
+	{
+		// Create and connect all base components before creating any renderer components so that createRendererNode()
+		// has all of the information it needs to create the appropriate renderer form for each node.
+		QPoint offset(-220, 50);
+		VuoNode *dictionaryNode = compiler->createNode(dictionaryNodeClass, "", node->getX()+offset.x(), node->getY()+offset.y());
+		VuoNode *keyListNode = compiler->createNode(keyListNodeClass, "", node->getX()+offset.x(), node->getY()+offset.y());
+		VuoNode *valueListNode = compiler->createNode(valueListNodeClass, "", node->getX()+offset.x(), node->getY()+offset.y());
+
+		VuoCable *cableCarryingDictionary = (new VuoCompilerCable(dictionaryNode->getCompiler(),
+														   static_cast<VuoCompilerPort *>(dictionaryNode->getOutputPortWithName("dictionary")->getCompiler()),
+														   node->getCompiler(),
+														   static_cast<VuoCompilerPort *>(valuesInputPort->getCompiler())))->getBase();
+
+		VuoCable *cableCarryingKeys = (new VuoCompilerCable(keyListNode->getCompiler(),
+														   static_cast<VuoCompilerPort *>(keyListNode->getOutputPortWithName("list")->getCompiler()),
+														   dictionaryNode->getCompiler(),
+														   static_cast<VuoCompilerPort *>(dictionaryNode->getInputPortWithName("keys")->getCompiler())))->getBase();
+
+		VuoCable *cableCarryingValues = (new VuoCompilerCable(valueListNode->getCompiler(),
+														   static_cast<VuoCompilerPort *>(valueListNode->getOutputPortWithName("list")->getCompiler()),
+														   dictionaryNode->getCompiler(),
+														   static_cast<VuoCompilerPort *>(dictionaryNode->getInputPortWithName("values")->getCompiler())))->getBase();
+
+		// Set the variable names extracted from the math expressions.
+		vector<VuoPort *> keyPorts = keyListNode->getInputPorts();
+		for (size_t i = 0; i < itemCount; ++i)
+		{
+			VuoPort *keyPort = keyPorts[i + VuoNodeClass::unreservedInputPortStartIndex];
+			string key = "\"" + inputVariables[i] + "\"";
+
+			VuoCompilerInputEventPort *keyEventPort = static_cast<VuoCompilerInputEventPort *>(keyPort->getCompiler());
+			keyEventPort->getData()->setInitialValue(key);
+		}
+
+		createdNodes.insert(createRendererNode(dictionaryNode));
+		createdNodes.insert(createRendererNode(keyListNode));
+		createdNodes.insert(createRendererNode(valueListNode));
+
+		createdCables.insert(new VuoRendererCable(cableCarryingDictionary));
+		createdCables.insert(new VuoRendererCable(cableCarryingKeys));
+		createdCables.insert(new VuoRendererCable(cableCarryingValues));
+	}
+}
+
+/**
  * Creates a renderer detail for the pre-existing @c publishedPort, on the assumption that
  * the published port provided already exists in the base composition and has an associated compiler detail.
  */
@@ -363,7 +537,7 @@ void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, b
 			updatePublishedInputNode();
 		}
 		else if (publishedPort != existingPort)
-			fprintf(stderr, "Error: Unhandled published port name conflict\n");
+			VLog("Error: Unhandled published port name conflict.");
 	}
 	else // if (! isInput)
 	{
@@ -375,7 +549,7 @@ void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, b
 			updatePublishedOutputNode();
 		}
 		else if (publishedPort != existingPort)
-			fprintf(stderr, "Error: Unhandled published port name conflict\n");
+			VLog("Error: Unhandled published port name conflict.");
 	}
 }
 
@@ -1038,7 +1212,7 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 		remove(pathOfCompiledCompositionToExport.c_str());
 	}
 
-	catch (const runtime_error &e)
+	catch (const exception &e)
 	{
 		errString = e.what();
 		return false;

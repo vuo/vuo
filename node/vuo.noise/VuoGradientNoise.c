@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoGradientNoise.h"
+#include "VuoList_VuoGradientNoise.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -66,6 +67,17 @@ json_object * VuoGradientNoise_jsonFromValue(const VuoGradientNoise value)
 	}
 
 	return json_object_new_string(valueAsString);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoGradientNoise VuoGradientNoise_allowedValues(void)
+{
+	VuoList_VuoGradientNoise l = VuoListCreate_VuoGradientNoise();
+	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Perlin);
+	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Simplex);
+	return l;
 }
 
 /**

@@ -31,8 +31,23 @@ typedef enum
 //	VuoGlPool_VertexArray	///< Cannot be shared between contexts
 } VuoGlPoolType;
 
-GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long size);
-void VuoGlPool_disuse(VuoGlContext glContext, VuoGlPoolType type, unsigned long size, GLuint name);
+GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size);
+
+/**
+ * Increments the reference count for @c glBufferName.
+ *
+ * @threadAny
+ */
+#define VuoGlPool_retain(glBufferName) VuoGlPool_retainF(glBufferName, __FILE__, __LINE__, __func__);
+void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int line, const char *func);
+
+/**
+ * Decrements the reference count for @c glBufferName.
+ *
+ * @threadAny
+ */
+#define VuoGlPool_release(type, size, glBufferName) VuoGlPool_releaseF(type, size, glBufferName, __FILE__, __LINE__, __func__);
+void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int line, const char *func);
 
 GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format);
 

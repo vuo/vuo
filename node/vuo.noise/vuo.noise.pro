@@ -9,8 +9,7 @@ GENERIC_NODE_SOURCES += \
 NODE_LIBRARY_SOURCES += \
 	VuoGradientNoiseCommon.c
 
-# OTHER_FILES instead of HEADERS, to avoid including in Vuo.framework
-OTHER_FILES += \
+HEADERS += \
 	VuoGradientNoiseCommon.h
 
 TYPE_SOURCES += \

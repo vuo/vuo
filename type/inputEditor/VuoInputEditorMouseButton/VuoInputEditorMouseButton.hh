@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORMOUSEBUTTON_HH
 #define VUOINPUTEDITORMOUSEBUTTON_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorMouseButton factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoMouseButton values.
  */
-class VuoInputEditorMouseButton : public VuoInputEditorWithMenu
+class VuoInputEditorMouseButton : public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif // VUOINPUTEDITORMOUSEBUTTON_HH

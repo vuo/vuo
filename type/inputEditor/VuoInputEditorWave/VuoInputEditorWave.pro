@@ -13,4 +13,7 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorWave.json
 
-LIBS += $$ROOT/type/VuoWave.o
+LIBS += \
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoWave.o \
+	$$ROOT/type/list/VuoList_VuoWave.o

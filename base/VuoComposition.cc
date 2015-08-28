@@ -70,6 +70,22 @@ string VuoComposition::getDescription(void)
 }
 
 /**
+ * Sets the composition's copyright.
+ */
+void VuoComposition::setCopyright(string copyright)
+{
+	this->copyright = copyright;
+}
+
+/**
+ * Returns the composition's copyright.
+ */
+string VuoComposition::getCopyright(void)
+{
+	return copyright;
+}
+
+/**
  * Adds a node to the composition.
  */
 void VuoComposition::addNode(VuoNode *node)
@@ -387,5 +403,107 @@ void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
 							   newNode->getOutputPortWithName( oldPort->getClass()->getName() );
 		publishedPort->removeConnectedPort(oldPort);
 		publishedPort->addConnectedPort(newPort);
+	}
+}
+
+/**
+ * Parses the composition's Doxygen header to retrieve its name, description, and copyright.
+ *
+ * If a Doxygen line starts `@brief `, the @c name is the remainder of that line.
+ *
+ * If a Doxygen line starts `@copyright `, the @c copyright is the remainder of that paragraph.
+ *
+ * The remaining Doxygen lines are the @c description.
+ */
+void VuoComposition::parseHeader(const string &compositionAsString, string &name, string &description, string &copyright)
+{
+	__block int charNum = 0;
+	string (^getNextLine)() = ^{
+			string line;
+			while (true)
+			{
+				char c = compositionAsString[charNum++];
+				if (c == '\n')
+					break;
+				if (c == 0)
+					return (string)"";
+				line += c;
+			}
+			return line;
+		};
+
+	__block bool firstLine = true;
+	bool (^getNextDoxygenLine)(string &line) = ^(string &line){
+			while ((line = getNextLine()) != "")
+			{
+				if (firstLine)
+				{
+					firstLine = false;
+					if (line != "/**")
+						return false;
+					else
+						continue;
+				}
+
+				if (line == "*/")
+					return false;
+
+				if (line.substr(0, 1) == "*")
+				{
+					if (line.length() > 1)
+						line = line.substr(2);
+					else
+						line = "";
+					return true;
+				}
+				if (line.substr(0, 2) == " *")
+				{
+					if (line.length() > 2)
+						line = line.substr(3);
+					else
+						line = "";
+					return true;
+				}
+				return false;
+			}
+			return false;
+		};
+
+	string line;
+	bool firstDescriptionLine = true;
+	bool inCopyright = false;
+	while (getNextDoxygenLine(line))
+	{
+		if (line == "@file")
+			continue;
+
+		if (line.substr(0, 7) == "@brief ")
+		{
+			name = line.substr(7);
+			continue;
+		}
+		if (line.substr(0, 11) == "@copyright ")
+		{
+			inCopyright = true;
+			copyright = line.substr(11);
+			continue;
+		}
+
+		if (line == "")
+		{
+			inCopyright = false;
+			continue;
+		}
+
+		if (inCopyright)
+		{
+			copyright += " " + line;
+			continue;
+		}
+
+		if (!firstDescriptionLine)
+			description += " ";
+		description += line;
+		firstDescriptionLine = false;
 	}
 }

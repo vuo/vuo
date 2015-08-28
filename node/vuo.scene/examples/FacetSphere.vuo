@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Deforms a sphere by turning its smooth surface into flat faces.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="189,401"];
+FacetObject [type="vuo.scene.facet" version="1.0.0" label="Facet 3D Object|<refresh>refresh\l|<object>object\l|<done>done\r|<facetedObject>facetedObject\r" pos="494,185" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-129,49" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject4 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="326,185"];
+Make3DTransform4 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="90,276" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.800000,\"y\":0.800000,\"z\":0.800000}"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="666,196" fillcolor="green"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r" pos="696,226" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="-66,467" _2="30.000000"];
+MakeSphereMesh5 [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<mesh>mesh\r" pos="96,93" _rows="32" _columns="32"];
+Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="-20,456"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="737,185" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="105,176" _color="{\"r\":0.127275,\"g\":0.217365,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+
+ConvertRealTo3DPoint:point3d -> Make3DTransform4:rotation;
+FacetObject:facetedObject -> MakeList:1;
+FireOnStart:started -> Make3DTransform4:refresh;
+FireOnStart:started -> MakeSphereMesh5:refresh;
+FireOnStart:started -> ShadeWithColor4:refresh;
+Make3DObject4:object -> FacetObject:object;
+Make3DTransform4:transform -> Make3DObject4:transform;
+MakeList4:list -> RenderSceneToWindow:windowProperties;
+MakeList5:list -> Multiply:terms;
+MakeList:list -> RenderSceneToWindow:objects;
+MakeSphereMesh5:mesh -> Make3DObject4:mesh;
+Multiply:product -> ConvertRealTo3DPoint:y;
+RenderSceneToWindow:requestedFrame -> MakeList5:1;
+ShadeWithColor4:shader -> Make3DObject4:shader;
+}

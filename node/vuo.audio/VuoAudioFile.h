@@ -22,7 +22,7 @@ bool VuoAudioFile_getInfo(VuoText url, VuoReal *duration, VuoInteger *channelCou
 typedef void *VuoAudioFile;
 
 VuoAudioFile VuoAudioFile_make(VuoText url);
-void VuoAudioFile_enableTriggers(VuoAudioFile af, void (*decodedChannels)(VuoList_VuoAudioSamples));
+void VuoAudioFile_enableTriggers(VuoAudioFile af, void (*decodedChannels)(VuoList_VuoAudioSamples), void (*finishedPlayback)(void));
 void VuoAudioFile_disableTriggers(VuoAudioFile af);
 void VuoAudioFile_setLoopType(VuoAudioFile af, VuoLoopType loop);
 void VuoAudioFile_setTime(VuoAudioFile af, VuoReal time);

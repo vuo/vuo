@@ -10,7 +10,7 @@
 #ifndef VUOINPUTEDITORVERTICALALIGNMENT_HH
 #define VUOINPUTEDITORVERTICALALIGNMENT_HH
 
-#include "VuoInputEditorWithMenu.hh"
+#include "VuoInputEditorWithEnumMenu.hh"
 
 /**
  * A VuoInputEditorVerticalAlignment factory.
@@ -28,12 +28,9 @@ public:
 /**
  * An input editor that displays a menu of VuoLeapPointableType values.
  */
-class VuoInputEditorVerticalAlignment : public VuoInputEditorWithMenu
+class VuoInputEditorVerticalAlignment : public VuoInputEditorWithEnumMenu
 {
 	Q_OBJECT
-
-public:
-	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
 #endif // VUOINPUTEDITORVERTICALALIGNMENT_HH

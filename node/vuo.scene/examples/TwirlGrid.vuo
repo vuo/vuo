@@ -1,0 +1,31 @@
+/**
+ * @file
+ * Deforms a plane by twirling it.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Curve2 [type="vuo.motion.curve.VuoReal" version="1.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<done>done\r|<value>value\r" pos="543,382" _endPosition="720.000000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-53,182" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="338,231"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="900,240" fillcolor="green"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<done>done\r|<list>list\r" pos="930,270" fillcolor="green"];
+MakeParametricMesh [type="vuo.mesh.make.parametric" version="3.0.0" label="Make Parametric Mesh|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uMin>uMin\l|<uMax>uMax\l|<vClosed>vClosed\l|<vMin>vMin\l|<vMax>vMax\l|<done>done\r|<mesh>mesh\r" pos="121,231" _time="0.000000" _xExpression="\"u\"" _yExpression="\"v\"" _zExpression="\"0\"" _rows="32" _columns="32" _uClosed="false" _uMin="-0.500000" _uMax="0.500000" _vClosed="false" _vMin="-0.500000" _vMax="0.500000"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="971,229" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShowBackOfObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<done>done\r|<backObject>backObject\r" pos="520,231" fillcolor="violet" _keepFront="true"];
+TwirlObject2 [type="vuo.scene.twirl" version="1.0.0" label="Twirl 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<done>done\r|<twirledObject>twirledObject\r" pos="725,230" fillcolor="violet"];
+
+Curve2:value -> TwirlObject2:amount;
+FireOnStart:started -> MakeParametricMesh:refresh;
+Make3DObject2:object -> ShowBackOfObject:object;
+MakeList5:list -> RenderSceneToWindow:windowProperties;
+MakeList:list -> RenderSceneToWindow:objects;
+MakeParametricMesh:mesh -> Make3DObject2:mesh;
+RenderSceneToWindow:requestedFrame -> Curve2:time;
+ShowBackOfObject:backObject -> TwirlObject2:object;
+TwirlObject2:twirledObject -> MakeList:1;
+}

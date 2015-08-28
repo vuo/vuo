@@ -80,21 +80,22 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_make("Checkerboard Shader", VuoShader_getDefaultVertexShader(), checkerboardFragmentShaderSource);
+	VuoShader shader = VuoShader_make("Checkerboard Shader");
+	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, checkerboardFragmentShaderSource);
 	VuoRetain(shader);
 
 	VuoPoint4d col1 = { upperLeftColor.r, upperLeftColor.g, upperLeftColor.b, upperLeftColor.a };
 	VuoPoint4d col2 = { upperRightColor.r, upperRightColor.g, upperRightColor.b, upperRightColor.a };
 	VuoPoint2d cen = { (center.x+1)/2., (center.y+1)/2. };
 
-	VuoShader_setUniformFloat(shader, (*instance)->glContext, "size", MAX(squareSize/2, .0001) );
-	VuoShader_setUniformPoint2d(shader, (*instance)->glContext, "center", cen);
-	VuoShader_setUniformPoint2d(shader, (*instance)->glContext, "imageSize", (VuoPoint2d){width, height});
-	VuoShader_setUniformPoint4d(shader, (*instance)->glContext, "color1", col1);
-	VuoShader_setUniformPoint4d(shader, (*instance)->glContext, "color2", col2);
+	VuoShader_setUniform_VuoReal   (shader, "size", MAX(squareSize/2, .0001) );
+	VuoShader_setUniform_VuoPoint2d(shader, "center", cen);
+	VuoShader_setUniform_VuoPoint2d(shader, "imageSize", (VuoPoint2d){width, height});
+	VuoShader_setUniform_VuoPoint4d(shader, "color1", col1);
+	VuoShader_setUniform_VuoPoint4d(shader, "color2", col2);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
 
 	VuoRelease(shader);
 }

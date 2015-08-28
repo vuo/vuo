@@ -22,9 +22,9 @@ void nodeEvent
 (
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoList_VuoColor, {"default":[
-			{"r":0,"g":1,"b":0,"a":1},	// green
-			{"r":1,"g":0,"b":0,"a":1},	// red
-			{"r":1,"g":1,"b":0,"a":1}]})// yellow
+			{"r":0.21,"g":0.27,"b":0.12,"a":1},
+			{"r":0.60,"g":0.60,"b":0.60,"a":1},
+			{"r":0.42,"g":0.64,"b":1.00,"a":1}]})
 			colors,
 		VuoInputData(VuoReal, {"default":1,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) filterOpacity,
 		VuoOutputData(VuoImage) mappedImage
