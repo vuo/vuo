@@ -15,8 +15,11 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "Mouse Button",
-					 "version" : "1.0.0"
+					  "title" : "Mouse Button",
+					  "version" : "1.0.0",
+					  "dependencies" : [
+						"VuoList_VuoMouseButton"
+					  ]
 				 });
 #endif
 /// @}

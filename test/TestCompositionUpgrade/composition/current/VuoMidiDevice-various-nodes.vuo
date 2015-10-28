@@ -1,0 +1,23 @@
+/**
+ * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+GetItemFromList [type="vuo.list.get.VuoMidiDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="337,256" _which="1"];
+HoldValue [type="vuo.data.hold.VuoMidiInputDevice" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="237,156"];
+MakeList [type="vuo.list.make.2.VuoMidiInputDevice" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="267,267"];
+SelectInput [type="vuo.select.in.boolean.VuoMidiInputDevice" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="537,456" _which="false"];
+SelectInput2 [type="vuo.select.in.2.VuoMidiInputDevice" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="437,356" _which="1"];
+SelectLatest [type="vuo.select.latest.2.VuoMidiInputDevice" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="637,556"];
+SelectOutput [type="vuo.select.out.2.VuoMidiInputDevice" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="737,656" _which="1"];
+
+MakeList:list -> GetItemFromList:list;
+}

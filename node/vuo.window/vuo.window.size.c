@@ -12,8 +12,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Window Size",
-					 "keywords" : [ "width", "height", "dimensions" ],
+					 "keywords" : [ "width", "height", "dimensions", "properties" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

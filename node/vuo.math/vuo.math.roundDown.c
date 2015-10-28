@@ -13,17 +13,17 @@
 VuoModuleMetadata({
 					 "title" : "Round Down",
 					 "keywords" : [ "floor", "near", "close", "approximate", "integer", "whole", "real" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoReal, {"default":0.0}) real,
-		VuoOutputData(VuoInteger) roundedDownInteger
+		VuoOutputData(VuoInteger) roundedDown
 )
 {
-	*roundedDownInteger = (VuoInteger)floor(real);
+	*roundedDown = (VuoInteger)floor(real);
 }

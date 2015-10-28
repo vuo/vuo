@@ -7,7 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
+#define NS_RETURNS_INNER_POINTER
 #include <AppKit/AppKit.h>
+
 #include "VuoMouse.h"
 #include "VuoWindowOpenGLInternal.h"
 
@@ -15,6 +17,12 @@
 VuoModuleMetadata({
 					"title" : "VuoMouse",
 					"dependencies" : [
+						"VuoBoolean",
+						"VuoModifierKey",
+						"VuoMouseButton",
+						"VuoPoint2d",
+						"VuoWindowReference",
+						"VuoWindowOpenGLInternal",
 						"AppKit.framework"
 					]
 				 });

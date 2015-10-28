@@ -5,5 +5,6 @@ TARGET = TestVuoRenderer
 QT += testlib
 
 include(../../vuo.pri)
+include(../test.pri)
 
 SOURCES += TestVuoRenderer.cc

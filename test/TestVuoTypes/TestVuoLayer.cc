@@ -17,8 +17,6 @@ extern "C" {
 Q_DECLARE_METATYPE(VuoPoint2d);
 Q_DECLARE_METATYPE(VuoLayer);
 
-#define QUOTE(...) #__VA_ARGS__
-
 /**
  * Tests the VuoLayer type.
  */

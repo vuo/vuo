@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					  "title" : "Resize Image",
 					  "keywords" : [ "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "EnlargeMovie.vuo" ]
 					  }

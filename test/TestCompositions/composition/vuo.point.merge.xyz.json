@@ -1,0 +1,214 @@
+/**
+ * @file
+ * Expected outputs for the vuo.point.merge.xyz node.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ ],
+			"y" : [ ],
+			"z" : [ ]
+		},
+		"outputPortValues" : {
+			"points" : [ ]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1 ],
+			"y" : [ 2 ],
+			"z" : [ 3 ]
+		},
+		"outputPortValues" : {
+			"points" : [ {"x":1, "y":2, "z":3} ]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1 ],
+			"y" : [ ],
+			"z" : [ ]
+		},
+		"outputPortValues" : {
+			"points" : [ {"x":1, "y":0, "z":0} ]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ ],
+			"y" : [ 2 ],
+			"z" : [ ]
+		},
+		"outputPortValues" : {
+			"points" : [ {"x":0, "y":2, "z":0} ]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ ],
+			"y" : [ ],
+			"z" : [ 3 ]
+		},
+		"outputPortValues" : {
+			"points" : [ {"x":0, "y":0, "z":3} ]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2 ],
+			"y" : [ 3 ],
+			"z" : [ 4 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":3, "z":4},
+				{"x":2, "y":3, "z":4},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1 ],
+			"y" : [ 2, 3 ],
+			"z" : [ 4 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":2, "z":4},
+				{"x":1, "y":3, "z":4},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1 ],
+			"y" : [ 2 ],
+			"z" : [ 3, 4 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":2, "z":3},
+				{"x":1, "y":2, "z":4},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2, 3 ],
+			"y" : [ 4, 5 ],
+			"z" : [ 3, 2 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":4, "z":3},
+				{"x":2, "y":5, "z":2},
+				{"x":3, "y":6, "z":1},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2 ],
+			"y" : [ 3, 4, 5 ],
+			"z" : [ 7, 6 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":3, "z":7},
+				{"x":2, "y":4, "z":6},
+				{"x":3, "y":5, "z":5},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2 ],
+			"y" : [ 3, 4 ],
+			"z" : [ 9, 8, 7 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":3, "z":9},
+				{"x":2, "y":4, "z":8},
+				{"x":3, "y":5, "z":7},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2, 3, 4 ],
+			"y" : [ 5, 6 ],
+			"z" : [ 7, 8 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":5, "z":7},
+				{"x":2, "y":6, "z":8},
+				{"x":3, "y":7, "z":9},
+				{"x":4, "y":8, "z":10},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2 ],
+			"y" : [ 6, 7, 8, 9 ],
+			"z" : [ 3, 4 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":6, "z":3},
+				{"x":2, "y":7, "z":4},
+				{"x":3, "y":8, "z":5},
+				{"x":4, "y":9, "z":6},
+			]
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"x" : [ 1, 2, 4 ],
+			"y" : [ 3, 4 ],
+			"z" : [ 20, 18, 17, 15 ]
+		},
+		"outputPortValues" : {
+			"points" : [
+				{"x":1, "y":3, "z":20},
+				{"x":2, "y":4, "z":18},
+				{"x":4, "y":5, "z":17},
+				{"x":6, "y":6, "z":15},
+			]
+		}
+	},
+]}

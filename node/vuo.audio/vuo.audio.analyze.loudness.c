@@ -8,38 +8,33 @@
  */
 
 #include "node.h"
-#include "VuoAudio.h"
 
 VuoModuleMetadata({
 					 "title" : "Calculate Loudness",
 					 "keywords" : [ "sound", "music", "volume", "gain", "rms", "root mean square", "decibel" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "VuoAudio"
-					 ],
-					 "node": {
-						 "isInterface" : false,
+					 "version" : "2.0.0",
+					 "node" : {
 						 "exampleCompositions" : [ "VisualizeLoudness.vuo" ],
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoAudioSamples) audioSamples,
+		VuoInputData(VuoAudioSamples) samples,
 		VuoOutputData(VuoReal) loudness
 )
 {
-	if (audioSamples.sampleCount == 0)
+	if (samples.sampleCount == 0)
 	{
 		*loudness = 0;
 		return;
 	}
 
 	float rms = 0;
-	
-	for(int j = 0; j < audioSamples.sampleCount; j++)
-		rms += pow(audioSamples.samples[j], 2);
-	rms /= audioSamples.sampleCount;
+
+	for(int j = 0; j < samples.sampleCount; j++)
+		rms += pow(samples.samples[j], 2);
+	rms /= samples.sampleCount;
 
 	*loudness = pow( pow(rms, .5), 1/4.);
 }

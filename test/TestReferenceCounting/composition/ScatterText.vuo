@@ -9,19 +9,19 @@
 
 digraph G
 {
-MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="429,260"];
-CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="316,236"];
-ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="72"];
-CountCharacters2 [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="314,316"];
-Add [type="vuo.math.add.VuoInteger" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="589,263"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+Add [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="589,263"];
+ConvertIntegertoText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="72"];
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="316,236"];
+CountCharacters2 [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="314,316"];
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="543,274"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r" _inEvent="" _inEvent_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l" _outEvent_type="VuoInteger"];
 
-MakeList:list -> Add:terms;
 ConvertIntegertoText:text -> CountCharacters2:text;
-CountCharacters2:characterCount -> MakeList:2;
 ConvertIntegertoText:text -> CountCharacters:text;
+CountCharacters2:characterCount -> MakeList:2;
 CountCharacters:characterCount -> MakeList:1;
+MakeList:list -> Add:values;
 PublishedInputs:inEvent -> ConvertIntegertoText:refresh;
 Add:sum -> PublishedOutputs:outEvent;
 }

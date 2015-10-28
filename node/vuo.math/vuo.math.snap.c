@@ -20,15 +20,15 @@ VuoModuleMetadata({
 						 }
 					 },
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoGenericType1) value,
-		VuoInputData(VuoGenericType1) spacing,
-		VuoInputData(VuoGenericType1) center,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0,  "VuoReal":0.0, "VuoPoint2d":{"x":0.0,"y":0.0}, "VuoPoint3d":{"x":0.0,"y":0.0,"z":0.0}, "VuoPoint4d":{"x":0.0,"y":0.0,"z":0.0,"w":0.0}}}) value,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":10, "VuoReal":0.1, "VuoPoint2d":{"x":0.1,"y":0.1}, "VuoPoint3d":{"x":0.1,"y":0.1,"z":0.1}, "VuoPoint4d":{"x":0.1,"y":0.1,"z":0.1,"w":0.1}}}) spacing,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0,  "VuoReal":0.0, "VuoPoint2d":{"x":0.0,"y":0.0}, "VuoPoint3d":{"x":0.0,"y":0.0,"z":0.0}, "VuoPoint4d":{"x":0.0,"y":0.0,"z":0.0,"w":0.0}}}) center,
 		VuoOutputData(VuoGenericType1) snappedValue
 )
 {

@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				 });
 
@@ -32,8 +32,8 @@ void nodeEvent
 	unsigned long count = MIN( VuoListGetCount_VuoText(keys), VuoListGetCount_VuoReal(values) );
 	for (unsigned long i = 1; i <= count; ++i)
 	{
-		VuoText key = VuoListGetValueAtIndex_VuoText(keys, i);
-		VuoReal value = VuoListGetValueAtIndex_VuoReal(values, i);
+		VuoText key = VuoListGetValue_VuoText(keys, i);
+		VuoReal value = VuoListGetValue_VuoReal(values, i);
 		VuoDictionarySetKeyValue_VuoText_VuoReal(*dictionary, key, value);
 	}
 }

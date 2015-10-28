@@ -13,6 +13,7 @@
 #include "VuoCompiler.hh"
 #include "VuoCompilerBitcodeGenerator.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerException.hh"
 #include "VuoCompilerGenericType.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNodeClass.hh"
@@ -24,6 +25,8 @@
 #ifdef PREMIUM_NODE_LOADER_ENABLED
 #include "VuoPremiumNodeLoader.hh"
 #endif
+
+dispatch_queue_t VuoCompiler::llvmQueue = dispatch_queue_create("org.vuo.compiler.llvm", NULL);
 
 VuoCompiler::VuoCompiler()
 {
@@ -46,11 +49,6 @@ VuoCompiler::VuoCompiler()
 	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	if (! vuoFrameworkPath.empty())
 	{
-		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Frameworks/graphviz.framework/");
-		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Frameworks/json.framework/");
-		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Frameworks/zmq.framework/");
-		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Frameworks/CRuntime.framework/");
-		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/");
 		addPreferredLibrarySearchPath(vuoFrameworkPath + "/Modules/");
 
 		addModuleSearchPath(vuoFrameworkPath + "/Modules/");
@@ -59,7 +57,7 @@ VuoCompiler::VuoCompiler()
 
 		addHeaderSearchPath(vuoFrameworkPath + "/Headers/");
 
-		clangPath = vuoFrameworkPath + "/MacOS/Clang/bin/clang";
+		clangPath = vuoFrameworkPath + "/Frameworks/llvm.framework/Versions/A/Helpers/clang";
 	}
 	else
 	{
@@ -69,6 +67,7 @@ VuoCompiler::VuoCompiler()
 		addModuleSearchPath(VUO_ROOT "/type/list");
 		addLibrarySearchPath(VUO_ROOT "/runtime");
 
+		addLibrarySearchPath(GRAPHVIZ_ROOT "/lib/");
 		addLibrarySearchPath(GRAPHVIZ_ROOT "/lib/graphviz/");
 		addLibrarySearchPath(JSONC_ROOT "/lib/");
 		addLibrarySearchPath(ZMQ_ROOT "/lib/");
@@ -104,6 +103,49 @@ VuoCompiler::VuoCompiler()
 
 	// Allow user to override Vuo.framework and system-wide modules
 	addModuleSearchPath(getUserModulesPath());
+}
+
+/**
+ * Destructor.
+ */
+VuoCompiler::~VuoCompiler(void)
+{
+	set<Module *> modulesToDelete;
+
+	for (map<string, VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
+	{
+		modulesToDelete.insert( i->second->getModule() );
+		VuoNodeClass *base = i->second->getBase();
+		delete i->second;
+		delete base;
+	}
+	for (map<string, VuoCompilerType *>::iterator i = types.begin(); i != types.end(); ++i)
+	{
+		modulesToDelete.insert( i->second->getModule() );
+		VuoType *base = i->second->getBase();
+		delete i->second;
+		delete base;
+	}
+	for (set<VuoCompilerGenericType *>::iterator i = genericTypes.begin(); i != genericTypes.end(); ++i)
+	{
+		modulesToDelete.insert( (*i)->getModule() );
+		VuoType *base = (*i)->getBase();
+		delete *i;
+		delete base;
+	}
+	for (map<string, VuoCompilerModule *>::iterator i = libraryModules.begin(); i != libraryModules.end(); ++i)
+	{
+		modulesToDelete.insert( i->second->getModule() );
+		VuoModule *base = i->second->getPseudoBase();
+		delete i->second;
+		delete base;
+	}
+
+	for (set<Module *>::iterator i = modulesToDelete.begin(); i != modulesToDelete.end(); ++i)
+		delete *i;
+
+	for (map<string, VuoNodeSet *>::iterator i = nodeSetForName.begin(); i != nodeSetForName.end(); ++i)
+		delete i->second;
 }
 
 /**
@@ -214,7 +256,10 @@ void VuoCompiler::loadModules(string path)
 
 		if (!moduleParseError)
 		{
-			VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+			__block VuoCompilerModule *compilerModule;
+			dispatch_sync(llvmQueue, ^{
+							  compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+						  });
 
 			if (compilerModule)
 			{
@@ -242,6 +287,10 @@ void VuoCompiler::loadModules(string path)
 				}
 
 				compilerModule->setPremium(premiumModule);
+			}
+			else
+			{
+				deleteModule(module);
 			}
 		}
 
@@ -297,12 +346,17 @@ void VuoCompiler::reifyPortTypes(void)
 				if (genericType)
 				{
 					reifiedType = VuoCompilerGenericType::newGenericType(genericType, this->types);
+					if (reifiedType)
+						genericTypes.insert( static_cast<VuoCompilerGenericType *>(reifiedType) );
 				}
 				else
 				{
 					map<string, VuoCompilerType *>::iterator reifiedTypeIter = types.find(typeName);
 					if (reifiedTypeIter != types.end())
+					{
+						delete baseType;
 						reifiedType = reifiedTypeIter->second;
+					}
 				}
 
 				if (reifiedType)
@@ -320,37 +374,9 @@ void VuoCompiler::reifyPortTypes(void)
  */
 void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
 {
-	// For any node that needs a different backing type than its node class was compiled with,
-	// recompile the node class with the desired backing type, instantiate a replacement node
-	// from the new node class, and substitute the replacement node into the composition.
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
-	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-	{
-		VuoNode *node = *i;
 
-		VuoCompilerSpecializedNodeClass *nodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
-		if (! nodeClass)
-			continue;
-
-		bool doBackingTypesMatch = true;
-		map<string, string> backingTypesForNodeClass = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node->getNodeClass());
-		map<string, string> backingTypesForNode = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node);
-		for (map<string, string>::iterator j = backingTypesForNode.begin(); j != backingTypesForNode.end(); ++j)
-			if (backingTypesForNodeClass[j->first] != j->second)
-				doBackingTypesMatch = false;
-
-		if (! doBackingTypesMatch)
-		{
-			VuoNodeClass *replacementNodeClass =
-					(dynamic_cast<VuoCompilerMakeListNodeClass *>(nodeClass) ?
-						 VuoCompilerMakeListNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node) :
-						 VuoCompilerSpecializedNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node));
-			VuoNode *replacementNode = replacementNodeClass->getCompiler()->newNode(node);
-			composition->getBase()->replaceNode(node, replacementNode);
-		}
-	}
-
-	// Update the generic type for each generic port to have the desired backing type.
+	// Set a backing type for each generic type that doesn't already have one.
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
@@ -374,6 +400,40 @@ void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
 				if (reifiedType)
 					port->setDataVuoType(reifiedType->getBase());
 			}
+		}
+	}
+
+	// For any node that needs a different backing type than its node class was compiled with,
+	// recompile the node class with the desired backing type, instantiate a replacement node
+	// from the new node class, and substitute the replacement node into the composition.
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoNode *node = *i;
+
+		VuoCompilerSpecializedNodeClass *nodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
+		if (! nodeClass)
+			continue;
+
+		bool doBackingTypesMatch = true;
+		map<string, string> backingTypesForNodeClass = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node->getNodeClass());
+		map<string, string> backingTypesForNode = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node);
+		for (map<string, string>::iterator j = backingTypesForNode.begin(); j != backingTypesForNode.end(); ++j)
+		{
+			string genericType = j->first;
+			string backingTypeForNode = j->second;
+
+			if (backingTypesForNodeClass[genericType] != backingTypeForNode)
+				doBackingTypesMatch = false;
+		}
+
+		if (! doBackingTypesMatch)
+		{
+			VuoNodeClass *replacementNodeClass =
+					(dynamic_cast<VuoCompilerMakeListNodeClass *>(nodeClass) ?
+						 VuoCompilerMakeListNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node) :
+						 VuoCompilerSpecializedNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, node));
+			VuoNode *replacementNode = replacementNodeClass->getCompiler()->newNode(node);
+			composition->getBase()->replaceNode(node, replacementNode);
 		}
 	}
 }
@@ -453,15 +513,19 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 	}
 
 	string moduleKey = getModuleNameForPath(inputPath);
-	VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
-	if (! compilerModule)
-	{
-		VLog("Error: Didn't recognize '%s' as a node class, type, or library.", inputPath.c_str());
-		return;
-	}
+	dispatch_sync(llvmQueue, ^{
+					  VuoCompilerModule *compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+					  if (! compilerModule)
+					  {
+						  VLog("Error: Didn't recognize '%s' as a node class, type, or library.", inputPath.c_str());
+						  return;
+					  }
 
-	setTargetForModule(module, target);
-	writeModuleToBitcode(module, outputPath);
+					  setTargetForModule(module, target);
+					  writeModuleToBitcode(module, outputPath);
+
+					  delete module;
+				  });
 }
 
 /**
@@ -484,9 +548,11 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
 	if (telemetry == "console")
 		generator->setDebugMode(true);
 
-	Module *module = generator->generateBitcode();
-	setTargetForModule(module, target);
-	writeModuleToBitcode(module, outputPath);
+	dispatch_sync(llvmQueue, ^{
+					  Module *module = generator->generateBitcode();
+					  setTargetForModule(module, target);
+					  writeModuleToBitcode(module, outputPath);
+				  });
 
 	delete generator;
 }
@@ -518,7 +584,10 @@ void VuoCompiler::compileCompositionString(const string &compositionString, stri
 {
 	VuoCompilerComposition *composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, this);
 	compileComposition(composition, outputPath);
+
+	VuoComposition *baseComposition = composition->getBase();
 	delete composition;
+	delete baseComposition;
 }
 
 /**
@@ -562,6 +631,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
  *			If false, the resulting executable will be headless unless the composition contains a window.
  * @param rPath An optional @c -rpath argument to be passed to clang.
  * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
+ * @throw VuoCompilerException The linker encountered errors and failed.
  */
 void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath,
 																	bool isDylib, bool isApp, string rPath)
@@ -604,6 +674,8 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
  * @param alreadyLinkedResources Names of resources that have been linked into the composition in previous calls to this
  *				function. When this function returns, any new resources will have been added to this list.
  * @throw std::runtime_error At least one of the dependencies is incompatible with the targets for building the composition.
+ * @throw VuoCompilerException The linker encountered errors and failed. The values of @a newLinkedResourcePath,
+ *				@a alreadyLinkedResourcePaths, and @a alreadyLinkedResources are unchanged.
  */
 void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledCompositionPath, string linkedCompositionPath,
 														  string &newLinkedResourcePath, vector<string> &alreadyLinkedResourcePaths,
@@ -612,11 +684,16 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 	if (isVerbose)
 		print();
 
+	// Wait to update the passed-by-reference arguments until the end of this function, in case an exception is thrown.
+	string tmpNewLinkedResourcePath = newLinkedResourcePath;
+	vector<string> tmpAlreadyLinkedResourcePaths = alreadyLinkedResourcePaths;
+	set<string> tmpAlreadyLinkedResources = alreadyLinkedResources;
+
 	// Get the dependencies used by the new resources and not the previous resources.
 	set<string> newDependencies = getDependenciesForComposition(compiledCompositionPath);
 	set<string> newDependenciesCopy = newDependencies;
 	for (set<string>::iterator i = newDependenciesCopy.begin(); i != newDependenciesCopy.end(); ++i)
-		if (alreadyLinkedResources.find(*i) != alreadyLinkedResources.end())
+		if (tmpAlreadyLinkedResources.find(*i) != tmpAlreadyLinkedResources.end())
 			newDependencies.erase(newDependencies.find(*i));
 
 	// Get the dynamic libraries and frameworks used by the new and previous resources.
@@ -626,9 +703,9 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		set<Module *> modules;
 		set<string> libraries;
 
-		alreadyLinkedResources.insert(newDependencies.begin(), newDependencies.end());
+		tmpAlreadyLinkedResources.insert(newDependencies.begin(), newDependencies.end());
 
-		getLinkerInputs(alreadyLinkedResources, modules, libraries, frameworks);
+		getLinkerInputs(tmpAlreadyLinkedResources, modules, libraries, frameworks);
 
 		for (set<string>::iterator i = libraries.begin(); i != libraries.end(); ++i)
 			if (VuoStringUtilities::endsWith(*i, ".dylib"))
@@ -641,17 +718,17 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		set<Module *> modules;
 		set<string> libraries;
 
-		libraries.insert(alreadyLinkedResourcePaths.begin(), alreadyLinkedResourcePaths.end());
+		libraries.insert(tmpAlreadyLinkedResourcePaths.begin(), tmpAlreadyLinkedResourcePaths.end());
 		libraries.insert(dylibs.begin(), dylibs.end());
 		getLinkerInputs(newDependencies, modules, libraries, frameworks);
 
-		link(newLinkedResourcePath, modules, libraries, frameworks, true);
+		link(tmpNewLinkedResourcePath, modules, libraries, frameworks, true);
 
-		alreadyLinkedResourcePaths.push_back(newLinkedResourcePath);
+		tmpAlreadyLinkedResourcePaths.push_back(tmpNewLinkedResourcePath);
 	}
 	else
 	{
-		newLinkedResourcePath = "";
+		tmpNewLinkedResourcePath = "";
 	}
 
 	// Get the Vuo runtime dependency.
@@ -674,10 +751,14 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 
 		libraries.insert(compiledCompositionPath);
 		libraries.insert(vuoRuntimePath);
-		libraries.insert(alreadyLinkedResourcePaths.begin(), alreadyLinkedResourcePaths.end());
+		libraries.insert(tmpAlreadyLinkedResourcePaths.begin(), tmpAlreadyLinkedResourcePaths.end());
 		libraries.insert(dylibs.begin(), dylibs.end());
 		link(linkedCompositionPath, modules, libraries, frameworks, true);
 	}
+
+	newLinkedResourcePath = tmpNewLinkedResourcePath;
+	alreadyLinkedResourcePaths = tmpAlreadyLinkedResourcePaths;
+	alreadyLinkedResources = tmpAlreadyLinkedResources;
 }
 
 /**
@@ -696,9 +777,13 @@ set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCom
 	set<string> dependencies;
 
 	// Add the node classes in the top-level composition and their dependencies.
+	__block vector<string> directDependencies;
 	Module *compositionModule = readModuleFromBitcode(compiledCompositionPath);
-	VuoCompilerBitcodeParser parser(compositionModule);
-	vector<string> directDependencies = parser.getStringsFromGlobalArray("moduleDependencies");
+	dispatch_sync(llvmQueue, ^{
+					  VuoCompilerBitcodeParser parser(compositionModule);
+					  directDependencies = parser.getStringsFromGlobalArray("moduleDependencies");
+					  delete compositionModule;
+				  });
 	for (vector<string>::iterator i = directDependencies.begin(); i != directDependencies.end(); ++i)
 	{
 		string dependency = *i;
@@ -762,18 +847,11 @@ void VuoCompiler::getDependenciesRecursively(const string &dependency, set<strin
 									 "This composition is compatible with: " + compositionTargets.toString());
 
 		// Add the module's dependencies.
-		vector<string> directDependencies = module->getDependencies();
-		for (vector<string>::iterator i = directDependencies.begin(); i != directDependencies.end(); ++i)
+		set<string> directDependencies = module->getDependencies();
+		for (set<string>::iterator i = directDependencies.begin(); i != directDependencies.end(); ++i)
 		{
 			string directDependency = *i;
 			getDependenciesRecursively(directDependency, dependencies);
-		}
-
-		/// @todo Only add the types needed by this module. (https://b33p.net/kosada/node/3021)
-		for (map<string, VuoCompilerType *>::iterator i = types.begin(); i != types.end(); ++i)
-		{
-			string typeDependency = i->first;
-			getDependenciesRecursively(typeDependency, dependencies);
 		}
 	}
 }
@@ -839,6 +917,7 @@ void VuoCompiler::getLinkerInputs(const set<string> &dependencies,
  * @param frameworks The frameworks to link in.
  * @param isDylib If true, the output file will be a dynamic library. Otherwise, it will be an executable.
  * @param rPath The @c -rpath argument to be passed to clang. If empty, the folder containing the Vuo framework on the build system will be used.
+ * @throw VuoCompilerException clang or ld failed to link the given dependencies.
  */
 void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath)
 {
@@ -846,16 +925,19 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 
 	// Write all the modules with renamed symbols to a composite module file (since the linker can't operate on in-memory modules).
-	Module *compositeModule = new Module("composite", getGlobalContext());
-	setTargetForModule(compositeModule);
-	for (set<Module *>::const_iterator i = modules.begin(); i != modules.end(); ++i)
-	{
-		string error;
-		if (Linker::LinkModules(compositeModule, *i, Linker::PreserveSource, &error))
-			VLog("Error: Failed to link compositeModule: %s", error.c_str());
-	}
 	string compositeModulePath = VuoFileUtilities::makeTmpFile("composite", "bc");
-	writeModuleToBitcode(compositeModule, compositeModulePath);
+	dispatch_sync(llvmQueue, ^{
+					  Module *compositeModule = new Module("composite", getGlobalContext());
+					  setTargetForModule(compositeModule);
+					  for (set<Module *>::const_iterator i = modules.begin(); i != modules.end(); ++i)
+					  {
+						  string error;
+						  if (Linker::LinkModules(compositeModule, *i, Linker::PreserveSource, &error))
+						  VLog("Error: Failed to link compositeModule: %s", error.c_str());
+					  }
+					  writeModuleToBitcode(compositeModule, compositeModulePath);
+					  delete compositeModule;
+				  });
 
 
 	// llvm-3.1/llvm/tools/clang/tools/driver/driver.cpp
@@ -867,8 +949,20 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 
 	args.push_back(compositeModulePath.c_str());
 
+	vector<string> coreDependencies = getCoreVuoDependencies();
 	for (set<string>::const_iterator i = libraries.begin(); i != libraries.end(); ++i)
-		args.push_back(i->c_str());
+	{
+		string library = *i;
+
+		for (vector<string>::iterator j = coreDependencies.begin(); j != coreDependencies.end(); ++j)
+		{
+			string coreDependency = *j;
+			if (VuoStringUtilities::endsWith(library, "lib" + coreDependency + ".a"))
+				args.push_back("-force_load");  // Load all symbols of static core dependencies, not just those used in the objects.
+		}
+
+		args.push_back(library.c_str());
+	}
 
 	// Add framework search paths
 	vector<string> frameworkArguments;
@@ -905,7 +999,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	string vuoFrameworkContainingFolder = vuoFrameworkPath + "/..";
 	if (! vuoFrameworkPath.empty())
 	{
-		cRuntimePath = vuoFrameworkPath + "/Frameworks/CRuntime.framework/";
+		cRuntimePath = vuoFrameworkPath + "/Modules/";
 		crt1Path = cRuntimePath;
 		crt1Path.appendComponent("crt1.o");
 	}
@@ -959,12 +1053,34 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	if (C)
 		Res = TheDriver.ExecuteCompilation(*C, FailingCommand);
 
-	if (Res < 0)
-		TheDriver.generateCompilationDiagnostics(*C, FailingCommand);
-
-
 	// Clean up composite module file.
 	remove(compositeModulePath.c_str());
+
+	if (Res != 0)
+	{
+		vector<string> thirdPartyNodeClasses;
+		for (map<string, VuoCompilerNodeClass *>::const_iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
+		{
+			string nodeClassName = i->first;
+			if (! VuoStringUtilities::beginsWith(nodeClassName, "vuo."))
+				thirdPartyNodeClasses.push_back(nodeClassName);
+		}
+
+		string details = "One or more nodes in this composition can't be used by this version of Vuo. ";
+		if (! thirdPartyNodeClasses.empty())
+		{
+			details += "Make sure you're using the latest version of all the extra Vuo nodes you've installed:\n";
+			sort(thirdPartyNodeClasses.begin(), thirdPartyNodeClasses.end());
+			for (vector<string>::iterator i = thirdPartyNodeClasses.begin(); i != thirdPartyNodeClasses.end(); ++i)
+				details += " • " + *i + "\n";
+		}
+		details += "Check the Console application for messages with more information about the problem.";
+
+		vector<VuoCompilerError> errors;
+		VuoCompilerError error("Node outdated or broken", details, set<VuoNode *>(), set<VuoCable *>());
+		errors.push_back(error);
+		throw VuoCompilerException(errors);
+	}
 }
 
 /**
@@ -997,7 +1113,7 @@ Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &ex
 		args.push_back("-v");
 
 	// System headers installed by Xcode Command Line Tools
-	string macosHeaderSearchPath = VuoFileUtilities::getVuoFrameworkPath() + "/Frameworks/MacOS.framework/Headers";
+	string macosHeaderSearchPath = VuoFileUtilities::getVuoFrameworkPath() + "/Headers/macos";
 	args.push_back("-I");
 	args.push_back(macosHeaderSearchPath.c_str());
 
@@ -1038,6 +1154,8 @@ Module * VuoCompiler::readModuleFromC(string inputPath, const vector<string> &ex
 
 /**
  * Returns the LLVM module read from @a inputPath (an LLVM bitcode file).
+ *
+ * @threadNoQueue{llvmQueue}
  */
 Module * VuoCompiler::readModuleFromBitcode(string inputPath)
 {
@@ -1049,6 +1167,8 @@ Module * VuoCompiler::readModuleFromBitcode(string inputPath)
 
 /**
  * Returns the LLVM module read from @a inputFile (an LLVM bitcode file).
+ *
+ * @threadNoQueue{llvmQueue}
  */
 Module * VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile)
 {
@@ -1067,21 +1187,39 @@ Module * VuoCompiler::readModuleFromBitcode(VuoFileUtilities::File *inputFile)
 
 /**
  * Returns the LLVM module read from @a inputData (a data buffer of size @a inputDataBytes).
+ *
+ * @threadNoQueue{llvmQueue}
  */
 Module * VuoCompiler::readModuleFromBitcodeData(char *inputData, size_t inputDataBytes, string &error)
 {
-	StringRef inputDataAsStringRef(inputData, inputDataBytes);
-	MemoryBuffer *mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
-	Module *module = ParseBitcodeFile(&(*mb), getGlobalContext(), &error);
-
-	delete mb;
+	__block Module *module;
+	dispatch_sync(llvmQueue, ^{
+					  StringRef inputDataAsStringRef(inputData, inputDataBytes);
+					  MemoryBuffer *mb = MemoryBuffer::getMemBuffer(inputDataAsStringRef, "", false);
+					  module = ParseBitcodeFile(&(*mb), getGlobalContext(), &error);
+					  delete mb;
+				  });
 	return module;
+}
+
+/**
+ * Calls the destructor for @a module, using the LLVM global context thread-safely.
+ *
+ * @threadNoQueue{llvmQueue}
+ */
+void VuoCompiler::deleteModule(Module *module)
+{
+	dispatch_sync(llvmQueue, ^{
+					  delete module;
+				  });
 }
 
 /**
  * Verifies the LLVM module and writes it to @a outputPath (an LLVM bitcode file).
  *
  * Returns true if there was a problem verifying or writing the module.
+ *
+ * @threadQueue{llvmQueue}
  */
 bool VuoCompiler::writeModuleToBitcode(Module *module, string outputPath)
 {
@@ -1105,6 +1243,8 @@ bool VuoCompiler::writeModuleToBitcode(Module *module, string outputPath)
 
 /**
  * Sets the target triple for @c module. If @c target is empty, uses the target triple of the host machine.
+ *
+ * @threadQueue{llvmQueue}
  */
 void VuoCompiler::setTargetForModule(Module *module, string target)
 {
@@ -1139,8 +1279,8 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
 /**
  * Instantiates a node for the given node class.
  *
- * If the node class is a generic template (e.g. vuo.hold), then the node is instantiated with the specialized
- * version of the node class (e.g. vuo.hold.VuoGenericType1).
+ * If the node class is a generic template (e.g. vuo.data.hold), then the node is instantiated with the specialized
+ * version of the node class (e.g. vuo.data.hold.VuoGenericType1).
  *
  * @param nodeClass The node class from which to create the node.
  * @param title The node's title.
@@ -1321,6 +1461,7 @@ vector<string> VuoCompiler::getCoreVuoDependencies(void)
 	dependencies.push_back("gvplugin_core");
 	dependencies.push_back("json");
 	dependencies.push_back("objc");
+	dependencies.push_back("c");
 	dependencies.push_back("CoreFoundation.framework");
 	dependencies.push_back("Foundation.framework");
 	return dependencies;
@@ -1483,7 +1624,7 @@ string VuoCompiler::getCompositionLoaderPath(void)
 	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	return (vuoFrameworkPath.empty() ?
 				VUO_ROOT "/runtime/VuoCompositionLoader" :
-				vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/VuoCompositionLoader.app/Contents/MacOS/VuoCompositionLoader");
+				vuoFrameworkPath + "/Helpers/VuoCompositionLoader.app/Contents/MacOS/VuoCompositionLoader");
 }
 
 /**
@@ -1494,7 +1635,7 @@ string VuoCompiler::getCompositionStubPath(void)
 	string vuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
 	return (vuoFrameworkPath.empty() ?
 				VUO_ROOT "/base/VuoCompositionStub.dylib" :
-				vuoFrameworkPath + "/Frameworks/VuoRuntime.framework/VuoCompositionStub.dylib");
+				vuoFrameworkPath + "/Modules/VuoCompositionStub.dylib");
 }
 
 /**

@@ -12,10 +12,9 @@
 
 #include <set>
 #include <dispatch/dispatch.h>
-#include "module.h"
 
 /**
- * Manages a set of trigger methods.
+ * Manages a set of callbacks for nodes' trigger ports.
  *
  * It's safe for multiple threads to call @ref addTrigger(), @ref removeTrigger(), @ref size(), and @ref fire() on the same set.
  */

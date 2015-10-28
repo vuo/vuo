@@ -1,0 +1,60 @@
+/**
+ * @file
+ * Expected outputs for the vuo.transform.combine node. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "transforms",
+		"inputPortValues" : {
+			"transforms" : []
+		},
+		"outputPortValues" : {
+			"composite" : "identity"
+		}
+	},
+
+	{
+		"firingPort" : "transforms",
+		"inputPortValues" : {
+			"transforms" : [
+				"identity",
+				"identity"
+			]
+		},
+		"outputPortValues" : {
+			"composite" : "identity"
+		}
+	},
+
+	/* Move away from the origin, then rotate around the origin. */
+	{
+		"firingPort" : "transforms",
+		"inputPortValues" : {
+			"transforms" : [
+				{
+					"eulerRotation" : [0,0,0],
+					"translation" : [1,0,0],
+					"scale" : [1,1,1]
+				},
+				{
+					"eulerRotation" : [0,0,1.570796],
+					"translation" : [0,0,0],
+					"scale" : [1,1,1]
+				},
+			]
+		},
+		"outputPortValues" : {
+			"composite" : {
+					"quaternionRotation" : [0,0,0.707107,0.707107],
+					"translation" : [0,1,0],
+					"scale" : [1,1,1]
+				},
+
+		}
+	},
+]}

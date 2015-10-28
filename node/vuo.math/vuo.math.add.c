@@ -11,27 +11,28 @@
 
 VuoModuleMetadata({
 					 "title" : "Add",
-					 "keywords" : [ "sum", "plus", "total", "+", "arithmetic", "calculate" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "sum", "plus", "total", "+", "arithmetic", "calculate", "vector", "point" ],
+					 "version" : "2.0.0",
 					 "genericTypes" : {
 						 "VuoGenericType1" : {
 							"defaultType" : "VuoReal",
-							"compatibleTypes" : [ "VuoInteger", "VuoReal" ]
+							"compatibleTypes" : [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ]
 						 }
 					 },
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoGenericType1) terms,
+		VuoInputData(VuoList_VuoGenericType1) values,
 		VuoOutputData(VuoGenericType1) sum
 )
 {
-	*sum = 0;
-	unsigned long termsCount = VuoListGetCount_VuoGenericType1(terms);
+	VuoGenericType1 tmp = {0};
+	*sum = tmp;
+	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
 	for (unsigned long i = 1; i <= termsCount; ++i)
-		*sum += VuoListGetValueAtIndex_VuoGenericType1(terms, i);
+		*sum = VuoGenericType1_add(*sum, (VuoGenericType1)VuoListGetValue_VuoGenericType1(values, i));
 }

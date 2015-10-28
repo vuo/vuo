@@ -23,7 +23,7 @@ void nodeEvent
 (
 		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}}) point,
 		VuoInputData(VuoRenderedLayers) renderedLayers,
-		VuoInputEvent(VuoPortEventBlocking_Wall, renderedLayers) renderedLayersEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"renderedLayers"}) renderedLayersEvent,
 		VuoInputData(VuoText) layerName,
 		VuoOutputData(VuoBoolean) withinLayer
 )

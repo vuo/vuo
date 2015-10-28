@@ -21,7 +21,9 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-						  "c"
+						"VuoInteger",
+						"VuoPoint2d",
+						"VuoText"
 					  ]
 				  });
 #endif
@@ -47,6 +49,8 @@ VuoScreen VuoScreen_valueFromJson(json_object *js)
 
 	if (json_object_object_get_ex(js, "name", &o))
 		value.name = VuoText_valueFromJson(o);
+	else
+		value.name = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "topLeft", &o))
 		value.topLeft = VuoPoint2d_valueFromJson(o);
@@ -107,10 +111,10 @@ char * VuoScreen_summaryFromValue(const VuoScreen value)
 	else if (value.id == -1)
 		return VuoText_format("The first screen whose name contains \"%s\"", value.name);
 	else if (strlen(value.name) == 0)
-		return VuoText_format("Screen #%ld", value.id);
+		return VuoText_format("Screen #%lld", value.id);
 	else
 		// An actual detected screen (rather than abstract criteria).
-		return VuoText_format("Screen \"%s\"<br>%ld x %ld points<br>%ld x %ld DPI", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
+		return VuoText_format("Screen \"%s\"<br>%lld x %lld points<br>%lld x %lld DPI", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
 }
 
 /**

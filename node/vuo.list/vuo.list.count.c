@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Count Items in List",
-					  "keywords" : [ "amount", "length", "how many", "elements" ],
+					  "keywords" : [ "amount", "length", "how many", "elements", "number", "size" ],
 					  "version" : "1.0.0",
 					  "node" : {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

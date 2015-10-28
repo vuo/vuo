@@ -12,10 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Boolean to Integer",
 					 "keywords" : [ "0", "1", "true", "false" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "version" : "1.0.0"
 				 });
 
 void nodeEvent

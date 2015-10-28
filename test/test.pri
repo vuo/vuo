@@ -8,7 +8,7 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/node/vuo.font \
 	-I$$ROOT/node/vuo.layer \
 	-I$$ROOT/node/vuo.midi \
-	-I$$ROOT/node/vuo.movie \
+	-I$$ROOT/node/vuo.video \
 	-I$$ROOT/runtime \
 	-I$$ROOT/type \
 	-I$$ROOT/type/list \
@@ -26,6 +26,9 @@ QMAKE_LFLAGS += \
 	$$FFMPEG_ROOT/lib/libavutil.dylib \
 	$$FFMPEG_ROOT/lib/libswresample.dylib \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
+	$$CURL_ROOT/lib/libcurl.a \
+	-lssl \
+	-lcrypto \
 	-lobjc \
 	-framework Foundation \
 	-framework QuartzCore \
@@ -42,8 +45,10 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoMeshParametric.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoSceneRenderer.o \
+	$$ROOT/library/VuoUrl.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
+	$$ROOT/type/VuoBlendMode.o \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoImage.o \
 	$$ROOT/type/VuoImageColorDepth.o \
@@ -51,7 +56,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/node/vuo.font/VuoFont.o \
 	$$ROOT/node/vuo.layer/VuoLayer.o \
 	$$ROOT/node/vuo.midi/VuoMidiNote.o \
-	$$ROOT/node/vuo.movie/VuoMovie.o \
+	$$ROOT/node/vuo.video/VuoMovie.o \
 	$$ROOT/type/VuoDictionary_VuoText_VuoReal.o \
 	$$ROOT/type/VuoMesh.o \
 	$$ROOT/type/VuoMathExpressionList.o \
@@ -65,6 +70,8 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoTransform.o \
 	$$ROOT/type/VuoTransform2d.o \
 	$$ROOT/type/list/VuoList_VuoAudioSamples.o \
+	$$ROOT/type/list/VuoList_VuoBoolean.o \
+	$$ROOT/type/list/VuoList_VuoBlendMode.o \
 	$$ROOT/type/list/VuoList_VuoColor.o \
 	$$ROOT/type/list/VuoList_VuoImage.o \
 	$$ROOT/type/list/VuoList_VuoImageColorDepth.o \

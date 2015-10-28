@@ -31,6 +31,14 @@ VuoCompilerEventPortClass::VuoCompilerEventPortClass(string name) :
 }
 
 /**
+ * Destructor.
+ */
+VuoCompilerEventPortClass::~VuoCompilerEventPortClass(void)
+{
+	delete dataClass;
+}
+
+/**
  * Returns this port's data class, or @c NULL if none.
  */
 VuoCompilerDataClass * VuoCompilerEventPortClass::getDataClass(void)

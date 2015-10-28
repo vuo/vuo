@@ -13,8 +13,8 @@ VuoModuleMetadata({
 					 "title" : "Fire on Start",
 					 "keywords" : [ "begin", "init", "launch", "main", "pulse", "signal" ],
 					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
+					 "node" : {
+						 "exampleCompositions" : [ ]  // no examples needed
 					 }
 				 });
 

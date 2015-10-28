@@ -47,6 +47,17 @@
  */
 - (IBAction)setImageInRunningComposition:(NSString *)imagePath {
 	sourceImage = [[NSImage alloc] initWithContentsOfFile:[imagePath stringByStandardizingPath]];
+	if (!sourceImage)
+	{
+		NSAlert *a = [NSAlert new];
+		[a setMessageText:@"Unable to read image."];
+		[a setInformativeText:imagePath];
+		NSWindow *w = [[[self windowControllers] objectAtIndex:0] window];
+		[a beginSheetModalForWindow:w completionHandler:^(NSModalResponse returnCode){}];
+		[a release];
+		return;
+	}
+	
     [self updateOutputImage];
 }
 

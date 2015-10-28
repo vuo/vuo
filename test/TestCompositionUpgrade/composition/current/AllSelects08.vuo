@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+SelectEventInput [type="vuo.select.in.event.2" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="675,664" _which="1"];
+SelectEventInput2 [type="vuo.select.in.boolean.event" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="575,564" _which="false"];
+SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1075,1064" _which="false"];
+SelectEventOutput2 [type="vuo.select.out.event.2" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="1175,1164" _which="1"];
+SelectInput [type="vuo.select.in.2.VuoGenericType1" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="375,364" _which="1"];
+SelectInput2 [type="vuo.select.in.boolean.VuoGenericType1" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="475,464" _which="false"];
+SelectLatest [type="vuo.select.latest.2.VuoGenericType1" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="775,764"];
+SelectOutput [type="vuo.select.out.boolean.VuoGenericType1" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="975,964" _which="false"];
+SelectOutput2 [type="vuo.select.out.2.VuoGenericType1" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="875,864" _which="1"];
+}

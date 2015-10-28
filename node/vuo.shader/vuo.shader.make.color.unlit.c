@@ -15,12 +15,12 @@
 VuoModuleMetadata({
 					 "title" : "Shade with Unlit Color",
 					 "keywords" : [ "paint", "draw", "opengl", "glsl", "scenegraph", "graphics", "solid", "self illumination", "tone", "chroma" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -31,14 +31,4 @@ void nodeEvent
 )
 {
 	*shader = VuoShader_makeUnlitColorShader(color);
-
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
 }

@@ -17,4 +17,5 @@ OTHER_FILES += \
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoCurve.o \
+	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoCurve.o

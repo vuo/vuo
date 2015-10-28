@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add3 [type="vuo.math.add.VuoInteger" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="336,137"];
+MakeList4 [type="vuo.list.make.1.VuoInteger" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<done>done\r|<list>list\r" pos="273,148"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<item1>item1\r" _item1="" _item1_type="VuoInteger"];
+
+MakeList4:list -> Add3:terms;
+PublishedInputs:item1 -> MakeList4:item1;
+}

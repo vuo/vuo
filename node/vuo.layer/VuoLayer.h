@@ -11,11 +11,11 @@
 #define VUOLAYER_H
 
 #include "VuoColor.h"
-#include "VuoTransform2d.h"
-#include "VuoSceneObject.h"
-#include "VuoList_VuoColor.h"
 #include "VuoPoint2d.h"
+#include "VuoSceneObject.h"
+#include "VuoTransform2d.h"
 #include "VuoWindowReference.h"
+#include "VuoList_VuoColor.h"
 
 /**
  * @ingroup VuoTypes

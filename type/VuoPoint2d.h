@@ -12,6 +12,7 @@
 
 #include "VuoReal.h"
 #include <math.h>
+#include <stdbool.h>
 
 /**
  * @ingroup VuoTypes
@@ -32,7 +33,10 @@ typedef struct
 VuoPoint2d VuoPoint2d_valueFromJson(struct json_object * js);
 struct json_object * VuoPoint2d_jsonFromValue(const VuoPoint2d value);
 char * VuoPoint2d_summaryFromValue(const VuoPoint2d value);
+
 bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2);
+VuoPoint2d VuoPoint2d_random(const VuoPoint2d minimum, const VuoPoint2d maximum);
+VuoPoint2d VuoPoint2d_randomWithState(unsigned short state[3], const VuoPoint2d minimum, const VuoPoint2d maximum);
 
 /// @{
 /**
@@ -112,19 +116,31 @@ static inline float VuoPoint2d_squaredMagnitude(VuoPoint2d a)
 }
 
 /**
- * @c a / @c b
+ * Component-wise division.
  */
-static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, float b) __attribute__((const));
-static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, float b)
+static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, VuoPoint2d b) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_divide(VuoPoint2d a, VuoPoint2d b)
 {
 	VuoPoint2d p =
 	{
-		a.x / b,
-		a.y / b
+		a.x / b.x,
+		a.y / b.y
 	};
 	return p;
 }
 
+/**
+ * If any component of the value is zero or very close to zero, moves it further from zero (either 0.000001 or -0.000001).
+ */
+static inline VuoPoint2d VuoPoint2d_makeNonzero(VuoPoint2d a) __attribute__((const));
+static inline VuoPoint2d VuoPoint2d_makeNonzero(VuoPoint2d a)
+{
+	if (fabs(a.x) < 0.000001)
+		a.x = copysign(0.000001, a.x);
+	if (fabs(a.y) < 0.000001)
+		a.y = copysign(0.000001, a.y);
+	return a;
+}
 
 /**
  * Returns the magnitude of the vector.
@@ -247,9 +263,10 @@ static inline VuoPoint2d VuoPoint2d_bezier3(VuoPoint2d p0, VuoPoint2d p1, VuoPoi
  */
 static inline VuoPoint2d VuoPoint2d_snap(VuoPoint2d a, VuoPoint2d center, VuoPoint2d snap)
 {
+	VuoPoint2d nonzeroSnap = VuoPoint2d_makeNonzero(snap);
 	return (VuoPoint2d) {
-		center.x + snap.x * (int)round( (a.x-center.x) / snap.x ),
-		center.y + snap.y * (int)round( (a.y-center.y) / snap.y )
+		center.x + nonzeroSnap.x * (int)round( (a.x-center.x) / nonzeroSnap.x ),
+		center.y + nonzeroSnap.y * (int)round( (a.y-center.y) / nonzeroSnap.y )
 	};
 }
 

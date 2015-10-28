@@ -32,6 +32,9 @@ VuoPoint4d VuoPoint4d_valueFromJson(struct json_object * js);
 struct json_object * VuoPoint4d_jsonFromValue(const VuoPoint4d value);
 char * VuoPoint4d_summaryFromValue(const VuoPoint4d value);
 
+VuoPoint4d VuoPoint4d_random(const VuoPoint4d minimum, const VuoPoint4d maximum);
+VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d minimum, const VuoPoint4d maximum);
+
 /// @{
 /**
  * Automatically generated function.
@@ -164,17 +167,17 @@ static inline float VuoPoint4d_squaredMagnitude(VuoPoint4d a)
 
 
 /**
- * @c a / @c b
+ * Component-wise division.
  */
-static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, float b) __attribute__((const));
-static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, float b)
+static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_divide(VuoPoint4d a, VuoPoint4d b)
 {
 	VuoPoint4d p =
 	{
-		a.x / b,
-		a.y / b,
-		a.z / b,
-		a.w / b
+		a.x / b.x,
+		a.y / b.y,
+		a.z / b.z,
+		a.w / b.w
 	};
 	return p;
 }
@@ -196,6 +199,23 @@ static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b)
 }
 
 /**
+ * If any component of the value is zero or very close to zero, moves it further from zero (either 0.000001 or -0.000001).
+ */
+static inline VuoPoint4d VuoPoint4d_makeNonzero(VuoPoint4d a) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_makeNonzero(VuoPoint4d a)
+{
+	if (fabs(a.x) < 0.000001)
+		a.x = copysign(0.000001, a.x);
+	if (fabs(a.y) < 0.000001)
+		a.y = copysign(0.000001, a.y);
+	if (fabs(a.z) < 0.000001)
+		a.z = copysign(0.000001, a.z);
+	if (fabs(a.w) < 0.000001)
+		a.w = copysign(0.000001, a.w);
+	return a;
+}
+
+/**
  *	Distance between @c a and @c b.
  */
 static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
@@ -210,11 +230,12 @@ static inline float VuoPoint4d_distance(VuoPoint4d a, VuoPoint4d b)
 static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoint4d snap) __attribute__((const));
 static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoint4d snap)
 {
+	VuoPoint4d nonzeroSnap = VuoPoint4d_makeNonzero(snap);
 	return (VuoPoint4d) {
-			center.x + snap.x * (int)round((a.x-center.x) / snap.x),
-			center.y + snap.y * (int)round((a.y-center.y) / snap.y),
-			center.z + snap.z * (int)round((a.z-center.z) / snap.z),
-			center.w + snap.w * (int)round((a.w-center.w) / snap.w)
+			center.x + nonzeroSnap.x * (int)round((a.x-center.x) / nonzeroSnap.x),
+			center.y + nonzeroSnap.y * (int)round((a.y-center.y) / nonzeroSnap.y),
+			center.z + nonzeroSnap.z * (int)round((a.z-center.z) / nonzeroSnap.z),
+			center.w + nonzeroSnap.w * (int)round((a.w-center.w) / nonzeroSnap.w)
 		};
 }
 

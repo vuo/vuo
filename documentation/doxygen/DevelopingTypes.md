@@ -89,6 +89,8 @@ typedef struct
 } MyPairOfReals;
 @endcode
 
+If a port type refers to other port types, then you need to list those as dependencies in the @ref VuoModuleMetadata. For more information, see @ref ManagingDependencies.
+
 
 ### The functions
 

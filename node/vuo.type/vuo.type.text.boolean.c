@@ -13,10 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Text to Boolean",
 					 "keywords" : [ "0", "1", "true", "false" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "version" : "1.0.0"
 				 });
 
 void nodeEvent

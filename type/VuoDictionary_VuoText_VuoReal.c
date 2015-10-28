@@ -20,7 +20,10 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-						"c"
+						"VuoReal",
+						"VuoText",
+						"VuoList_VuoReal",
+						"VuoList_VuoText"
 					  ]
 				  });
 #endif
@@ -106,7 +109,7 @@ VuoList_VuoText VuoDictionaryGetKeys_VuoText_VuoReal(VuoDictionary_VuoText_VuoRe
 	unsigned long count = VuoListGetCount_VuoText(d.keys);
 	for (unsigned long i = 1; i <= count; ++i)
 	{
-		VuoText key = VuoListGetValueAtIndex_VuoText(d.keys, i);
+		VuoText key = VuoListGetValue_VuoText(d.keys, i);
 		VuoListAppendValue_VuoText(keysCopy, key);
 	}
 
@@ -121,8 +124,8 @@ VuoReal VuoDictionaryGetValueForKey_VuoText_VuoReal(VuoDictionary_VuoText_VuoRea
 {
 	unsigned long count = VuoListGetCount_VuoText(d.keys);
 	for (unsigned long i = 1; i <= count; ++i)
-		if (VuoText_areEqual(key, VuoListGetValueAtIndex_VuoText(d.keys, i)))
-			return VuoListGetValueAtIndex_VuoReal(d.values, i);
+		if (VuoText_areEqual(key, VuoListGetValue_VuoText(d.keys, i)))
+			return VuoListGetValue_VuoReal(d.values, i);
 
 	return 0;
 }

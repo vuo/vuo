@@ -1,0 +1,72 @@
+/**
+* @file
+* Plays different movies on the faces of a spinning cube. 
+*
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="669,295"];
+ConvertVideoFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="643,421"];
+ConvertVideoFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="689,561"];
+ConvertVideoFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="702,692"];
+ConvertVideoFrameToImage4 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="702,845"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-109,239" fillcolor="yellow" _started_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.data.hold.VuoVideoFrame" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="368,311"];
+HoldValue3 [type="vuo.data.hold.VuoVideoFrame" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="366,467"];
+HoldValue4 [type="vuo.data.hold.VuoVideoFrame" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="367,633"];
+HoldValue5 [type="vuo.data.hold.VuoVideoFrame" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="365,799"];
+MakeCube2 [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<cube>cube\r" pos="848,190"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="396,178" _2="20.000000"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1037,231" fillcolor="green"];
+MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1007,201" fillcolor="green"];
+MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="652,152" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.500000,\"y\":0.500000,\"z\":0.500000}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="442,167"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="136,309" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Eiffel Tower.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+PlayMovie2 [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="138,476" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Fish.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+PlayMovie3 [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="138,647" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+PlayMovie4 [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="137,816" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1078,190" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="595,466" _opacity="1.000000"];
+ShadeWithImage2 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="588,322" _opacity="1.000000"];
+ShadeWithImage3 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="592,635" _opacity="1.000000"];
+ShadeWithImage4 [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="594,797" _opacity="1.000000"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="187,168" fillcolor="green"];
+
+ConvertRealTo3DPoint2:point3d -> MakeTransform:rotation;
+ConvertVideoFrameToImage2:image -> ShadeWithImage:image;
+ConvertVideoFrameToImage3:image -> ShadeWithImage3:image;
+ConvertVideoFrameToImage4:image -> ShadeWithImage4:image;
+ConvertVideoFrameToImage:image -> ShadeWithImage2:image;
+FireOnStart:started -> PlayMovie2:play;
+FireOnStart:started -> PlayMovie3:play;
+FireOnStart:started -> PlayMovie4:play;
+FireOnStart:started -> PlayMovie:play;
+HoldValue2:heldValue -> ConvertVideoFrameToImage:frame;
+HoldValue3:heldValue -> ConvertVideoFrameToImage2:frame;
+HoldValue4:heldValue -> ConvertVideoFrameToImage3:frame;
+HoldValue5:heldValue -> ConvertVideoFrameToImage4:frame;
+MakeCube2:cube -> MakeList3:1;
+MakeList0:list -> RenderSceneToWindow2:setWindowProperties;
+MakeList3:list -> RenderSceneToWindow2:objects;
+MakeList:list -> Multiply:values;
+MakeTransform:transform -> MakeCube2:transform;
+Multiply:product -> ConvertRealTo3DPoint2:y;
+PlayMovie2:decodedVideo -> HoldValue3:newValue;
+PlayMovie3:decodedVideo -> HoldValue4:newValue;
+PlayMovie4:decodedVideo -> HoldValue5:newValue;
+PlayMovie:decodedVideo -> HoldValue2:newValue;
+RenderSceneToWindow2:requestedFrame -> ShareValue2:value;
+ShadeWithImage2:shader -> MakeCube2:frontShader;
+ShadeWithImage3:shader -> MakeCube2:rightShader;
+ShadeWithImage4:shader -> MakeCube2:backShader;
+ShadeWithImage:shader -> MakeCube2:leftShader;
+ShareValue2:sameValue -> HoldValue2:refresh;
+ShareValue2:sameValue -> HoldValue3:refresh;
+ShareValue2:sameValue -> HoldValue4:refresh;
+ShareValue2:sameValue -> HoldValue5:refresh;
+ShareValue2:sameValue -> MakeList:1;
+}

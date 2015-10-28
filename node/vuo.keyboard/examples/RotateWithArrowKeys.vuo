@@ -9,24 +9,43 @@
 
 digraph G
 {
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="-153,371" fillcolor="yellow" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-354,154" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="15,356" fillcolor="yellow" _x="0.000000" _z="0.000000"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="230,341" fillcolor="yellow" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
-MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<done>done\r|<cube>cube\r" pos="443,339" fillcolor="yellow"];
-MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="416,179" fillcolor="yellow"];
-ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="-419,318" fillcolor="violet" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="-419,425" fillcolor="violet" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="482,168" fillcolor="yellow" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="-129,379" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-354,154" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="42,208" _x="0.000000" _z="0.000000"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="268,199" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<cube>cube\r" pos="567,342"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="569,841" fillcolor="green"];
+MakeList4 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="539,811" fillcolor="green"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="-42,824" _text="\"Use the left and right arrow keys to rotate the cube\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="195,819" _center="{\"x\":0.000000,\"y\":-0.550000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="1.250000" _opacity="1.000000"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-419,318" fillcolor="violet" _key="\"RightArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-419,425" fillcolor="violet" _key="\"LeftArrow\"" _modifierKey="\"any\"" _repeatWhenHeld="true" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="610,800" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="270,422" _color="{\"r\":0.653590,\"g\":1.000000,\"b\":0.283940,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="270,516" _color="{\"r\":1.000000,\"g\":0.966232,\"b\":0.401160,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="273,328" _color="{\"r\":0.417060,\"g\":0.663691,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="277,621" _color="{\"r\":1.000000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 
 Count:count -> Make3DPoint:y;
 FireOnStart:started -> Count:refresh;
+FireOnStart:started -> MakeTextImage:refresh;
+FireOnStart:started -> ShadeWithColor2:refresh;
+FireOnStart:started -> ShadeWithColor3:refresh;
+FireOnStart:started -> ShadeWithColor4:refresh;
+FireOnStart:started -> ShadeWithColor:refresh;
 Make3DPoint:point -> Make3DTransform:rotation;
 Make3DTransform:transform -> MakeCube:transform;
-MakeCube:cube -> MakeList3:1;
-MakeList3:list -> RenderSceneToWindow:objects;
+MakeCube:cube -> MakeList4:1;
+MakeList0:list -> RenderSceneToWindow:setWindowProperties;
+MakeList4:list -> RenderSceneToWindow:objects;
+MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
+MakeUnlit3DObjectFromImage:object -> MakeList4:2;
 ReceiveKeyboardButtons2:pressed -> Count:decrement;
 ReceiveKeyboardButtons:pressed -> Count:increment;
 RenderSceneToWindow:showedWindow -> ReceiveKeyboardButtons2:window;
 RenderSceneToWindow:showedWindow -> ReceiveKeyboardButtons:window;
+ShadeWithColor2:shader -> MakeCube:rightShader;
+ShadeWithColor3:shader -> MakeCube:frontShader;
+ShadeWithColor4:shader -> MakeCube:backShader;
+ShadeWithColor:shader -> MakeCube:leftShader;
 }

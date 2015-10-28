@@ -9,8 +9,10 @@
 
 digraph G
 {
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="455,249" fillcolor="violet" _receivedImage_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="701,249" _requestedFrame_eventThrottling="drop"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="670,275"];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.1" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="455,249" fillcolor="violet" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="711,249" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
 ReceiveImageFromSyphon:receivedImage -> RenderImageToWindow:image;
 }

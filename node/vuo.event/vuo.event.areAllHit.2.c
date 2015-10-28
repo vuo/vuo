@@ -14,16 +14,16 @@ VuoModuleMetadata({
 					 "keywords" : [ "boolean" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputEvent(VuoPortEventBlocking_Door,,{"hasPortAction":false}) input1,
-		VuoInputEvent(VuoPortEventBlocking_Door,,{"hasPortAction":false}) input2,
+		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) input1,
+		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) input2,
 		VuoOutputData(VuoBoolean) allHit,
-		VuoOutputEvent(allHit) allHitEvent
+		VuoOutputEvent({"data":"allHit"}) allHitEvent
 )
 {
 	*allHit = input1 && input2;

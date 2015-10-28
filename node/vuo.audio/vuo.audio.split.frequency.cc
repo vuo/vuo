@@ -16,13 +16,11 @@ extern "C" {
 VuoModuleMetadata({
 					 "title" : "Split Audio by Frequency",
 					 "keywords" : [ "" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "dependencies" : [
-						 "VuoAudio",
 						 "Gamma"
 					 ],
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "VisualizeFrequencies.vuo" ]
 					 }
 				 });
@@ -50,8 +48,9 @@ extern "C"
 
 	void nodeInstanceEvent
 	(
-		VuoInputData(VuoAudioSamples) audioSamples,
-		VuoInputData(VuoList_VuoReal, {"default":[300, 4000]}) cutoffFrequencies,
+		VuoInputData(VuoAudioSamples) samples,
+		VuoInputData(VuoList_VuoReal) cutoffFrequencies,
+		VuoInputEvent() cutoffFrequenciesEvent,
 		VuoOutputData(VuoList_VuoAudioSamples) splitSamples,
 		VuoInstanceData(struct nodeInstanceData *) context
 	);
@@ -89,23 +88,23 @@ static int compare (const void * a, const void * b)
 	return x-y;
 }
 
-VuoAudioSamples SamplesWithFilterAndFrequency(const VuoAudioSamples audioSamples, gam::Biquad<> *filter, const double frq)
+VuoAudioSamples SamplesWithFilterAndFrequency(const VuoAudioSamples samples, gam::Biquad<> *filter, const double frq)
 {
 	(*filter).freq(frq);
 
-	VuoAudioSamples filteredSamples = VuoAudioSamples_alloc(audioSamples.sampleCount);
-	unsigned int sampleCount = audioSamples.sampleCount;
-	filteredSamples.samplesPerSecond = audioSamples.samplesPerSecond;
+	VuoAudioSamples filteredSamples = VuoAudioSamples_alloc(samples.sampleCount);
+	unsigned int sampleCount = samples.sampleCount;
+	filteredSamples.samplesPerSecond = samples.samplesPerSecond;
 
 	if( (*filter).type() == gam::BAND_PASS)
 	{
 		for(int i = 0; i < sampleCount; i++)
-			filteredSamples.samples[i] = (*filter).nextBP( audioSamples.samples[i] );
+			filteredSamples.samples[i] = (*filter).nextBP( samples.samples[i] );
 	}
 	else
 	{
 		for(int i = 0; i < sampleCount; i++)
-			filteredSamples.samples[i] = (*filter)( audioSamples.samples[i] );
+			filteredSamples.samples[i] = (*filter)( samples.samples[i] );
 	}
 
 	return filteredSamples;
@@ -113,8 +112,9 @@ VuoAudioSamples SamplesWithFilterAndFrequency(const VuoAudioSamples audioSamples
 
 void nodeInstanceEvent
 (
-	VuoInputData(VuoAudioSamples) audioSamples,
+	VuoInputData(VuoAudioSamples) samples,
 	VuoInputData(VuoList_VuoReal, {"default":[300, 4000]}) cutoffFrequencies,
+	VuoInputEvent({"data":"cutoffFrequencies", "eventBlocking":"wall"}) cutoffFrequenciesEvent,
 	VuoOutputData(VuoList_VuoAudioSamples) splitSamples,
 	VuoInstanceData(struct nodeInstanceData *) context
 )
@@ -123,7 +123,7 @@ void nodeInstanceEvent
 
 	if(len < 1) return;
 
-	unsigned int sampleCount = audioSamples.sampleCount;
+	unsigned int sampleCount = samples.sampleCount;
 	*splitSamples = VuoListCreate_VuoAudioSamples();
 
 	(*context)->sync->spu(VuoAudioSamples_sampleRate);
@@ -132,7 +132,7 @@ void nodeInstanceEvent
 	double *freq = (double*)malloc(sizeof(double) * len);
 
 	for(int i = 0; i < len; i++)
-		freq[i] = VuoListGetValueAtIndex_VuoReal(cutoffFrequencies, i+1);
+		freq[i] = VuoListGetValue_VuoReal(cutoffFrequencies, i+1);
 
 	qsort (freq, len, sizeof(double), compare);
 
@@ -140,7 +140,7 @@ void nodeInstanceEvent
 	gam::Biquad<> *mid = (*context)->biquad_band;
 	gam::Biquad<> *high = (*context)->biquad_high;
 
-	VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( audioSamples, low, freq[0]) );
+	VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( samples, low, freq[0]) );
 
 	if(len > 1)
 	{
@@ -149,11 +149,11 @@ void nodeInstanceEvent
 			double lowCutoff = freq[n];
 			double highCutoff = freq[n+1];
 
-			VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( audioSamples, mid, (highCutoff+lowCutoff)/2.) );
+			VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( samples, mid, (highCutoff+lowCutoff)/2.) );
 		}
 	}
 
-	VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( audioSamples, high, freq[len-1]) );
+	VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( samples, high, freq[len-1]) );
 
 	free(freq);
 }

@@ -13,6 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Find Barcode in Image",
 					  "keywords" : [
+						  "search", "scanner",
 						  "UPC",
 						  "Code", "39", "128", "QR",
 						  "DataMatrix"
@@ -29,15 +30,15 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
-		VuoInputEvent(VuoPortEventBlocking_Door, image) imageEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"image"}) imageEvent,
 		VuoOutputData(VuoText) barcode,
-		VuoOutputEvent(barcode) barcodeEvent,
+		VuoOutputEvent({"data":"barcode"}) barcodeEvent,
 		VuoOutputData(VuoPoint2d) center,
-		VuoOutputEvent(center) centerEvent,
+		VuoOutputEvent({"data":"center"}) centerEvent,
 		VuoOutputData(VuoReal) width,
-		VuoOutputEvent(width) widthEvent,
+		VuoOutputEvent({"data":"width"}) widthEvent,
 		VuoOutputData(VuoReal) height,
-		VuoOutputEvent(height) heightEvent
+		VuoOutputEvent({"data":"height"}) heightEvent
 )
 {
 	VuoRectangle r;

@@ -11,7 +11,7 @@
 
 digraph G
 {
-MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<done>done\r|<image>image\r" pos="262,113"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="262,113"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r|<color>color\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _color_type="VuoColor"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 

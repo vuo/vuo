@@ -7,6 +7,9 @@ NODE="$2"
 if [ "$NODE" == "vuo.math.count" ]; then
 	NODE="vuo.math.count.VuoReal"
 fi
+if [ "$NODE" == "vuo.math.countWithinRange" ]; then
+	NODE="vuo.math.countWithinRange.VuoReal"
+fi
 
 $VUORENDER --output-format=pdf --output image-generated/$NODE.pdf $NODE
 $VUORENDER --output-format=png --output image-generated/$NODE.png $NODE

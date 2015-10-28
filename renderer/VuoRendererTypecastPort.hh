@@ -29,7 +29,7 @@ public:
 	qreal getChildPortXOffset(void) const;
 
 	QPainterPath getPortPath(bool includeNormalPort, bool includeFlag, QPainterPath *outsetPath) const;
-	static QString getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort);
+	static QString getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort, bool inMenu);
 	QRectF getPortConstantTextRect(void) const;
 
 private:
@@ -40,7 +40,7 @@ private:
 	VuoRendererNode * uncollapsedTypecastNode;
 
 	void setUncollapsedTypecastNode(VuoRendererNode *uncollapsedTypecastNode);
-	QString getTypecastTitle(void) const;
+	QString getCanvasTypecastTitle(void) const;
 };
 
 #endif // VUORENDERERTYPECASTPORT_HH

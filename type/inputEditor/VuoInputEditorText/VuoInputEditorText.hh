@@ -49,6 +49,9 @@ protected:
 	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
 	QString convertToLineEditFormat(json_object *value);
 	json_object * convertFromLineEditFormat(const QString &valueAsString);
+
+	bool eventFilter(QObject *object, QEvent *event);
+	bool event(QEvent *event);
 };
 
 #endif // VUOINPUTEDITORTEXT_HH

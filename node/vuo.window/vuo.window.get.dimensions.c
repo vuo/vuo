@@ -13,6 +13,9 @@ VuoModuleMetadata({
 					 "title" : "Get Window Dimensions",
 					 "keywords" : [ "width", "height", "size" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

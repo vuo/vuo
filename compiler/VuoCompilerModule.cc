@@ -25,6 +25,8 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 {
 	this->base = base;
 	this->module = module;
+	this->moduleDetails = NULL;
+	this->parser = NULL;
 	this->isPremium = false;
 
 	if (module)
@@ -34,9 +36,10 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 /**
  * Destructor.
  */
-VuoCompilerModule::~VuoCompilerModule()
+VuoCompilerModule::~VuoCompilerModule(void)
 {
-	/// @todo
+	delete parser;
+	json_object_put(moduleDetails);
 }
 
 /**
@@ -87,6 +90,7 @@ void VuoCompilerModule::parse(void)
 void VuoCompilerModule::parseMetadata(void)
 {
 	string moduleDetailsStr = parser->getGlobalString( nameForGlobal("moduleDetails") );
+	json_object_put(moduleDetails);
 	moduleDetails = json_tokener_parse(moduleDetailsStr.c_str());
 
 	if (! moduleDetails)
@@ -99,7 +103,8 @@ void VuoCompilerModule::parseMetadata(void)
 	base->setDescription( parseString(moduleDetails, "description") );
 	base->setVersion( parseString(moduleDetails, "version") );
 	base->setKeywords( parseArrayOfStrings(moduleDetails, "keywords") );
-	dependencies = parseArrayOfStrings(moduleDetails, "dependencies");
+	vector<string> dependenciesVector = parseArrayOfStrings(moduleDetails, "dependencies");
+	dependencies = set<string>(dependenciesVector.begin(), dependenciesVector.end());
 	compatibleTargets = parseTargetSet(moduleDetails, "compatibleOperatingSystems");
 }
 
@@ -339,7 +344,7 @@ Function * VuoCompilerModule::declareFunctionInModule(Module *module, Function *
 /**
  * Returns a list of this VuoCompilerModule's dependencies.
  */
-vector<string> VuoCompilerModule::getDependencies(void)
+set<string> VuoCompilerModule::getDependencies(void)
 {
 	return dependencies;
 }

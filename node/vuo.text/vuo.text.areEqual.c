@@ -13,9 +13,8 @@
 VuoModuleMetadata({
 					 "title" : "Are Equal",
 					 "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "strcmp", "string" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
-						 "isInterface" : false
 					 }
 				 });
 
@@ -28,6 +27,6 @@ void nodeEvent
 	*equal = true;
 	unsigned long textsCount = VuoListGetCount_VuoText(texts);
 	for (unsigned long i = 2; i <= textsCount && *equal; ++i)
-		if (! VuoText_areEqual(VuoListGetValueAtIndex_VuoText(texts, i - 1), VuoListGetValueAtIndex_VuoText(texts, i)))
+		if (! VuoText_areEqual(VuoListGetValue_VuoText(texts, i - 1), VuoListGetValue_VuoText(texts, i)))
 			*equal = false;
 }

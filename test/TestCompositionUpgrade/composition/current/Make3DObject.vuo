@@ -1,0 +1,19 @@
+/**
+ * @file
+ *
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="635,149"];
+MakeList4 [type="vuo.list.make.2.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="300,152"];
+MakePointVertices2 [type="vuo.mesh.make.points.VuoPoint3d" version="2.0.0" label="Make Point Mesh|<refresh>refresh\l|<positions>positions\l|<pointSize>pointSize\l|<mesh>mesh\r" pos="370,141" _pointSize="0.010000"];
+
+MakeList4:list -> MakePointVertices2:positions;
+MakePointVertices2:mesh -> Make3DObject:mesh;
+}

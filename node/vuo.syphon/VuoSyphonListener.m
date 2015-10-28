@@ -69,7 +69,9 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 					  callback = receivedFrame;
 
 					  VuoList_VuoSyphonServerDescription allServerDescriptions = VuoSyphon_getAvailableServerDescriptions();
+					  VuoRetain(allServerDescriptions);
 					  [self refreshSyphonClientThreadUnsafe:allServerDescriptions];
+					  VuoRelease(allServerDescriptions);
 
 					  if (!serverNotifier)
 					  {
@@ -84,7 +86,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 /**
  * Updates the connected server in response to changes to the desired server or available servers.
  *
- * Must be called on @ref refreshQueue.
+ * @threadQueue{refreshQueue}
  */
 -(void) refreshSyphonClientThreadUnsafe:(VuoList_VuoSyphonServerDescription)serverDescriptions
 {
@@ -127,16 +129,19 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 	// Not connected to a server — see if a desired one is available.
 
 	VuoList_VuoSyphonServerDescription matchingServers = VuoSyphon_filterServerDescriptions(serverDescriptions, desiredServer);
+	VuoRetain(matchingServers);
 
 	if (VuoListGetCount_VuoSyphonServerDescription(matchingServers) == 0)
 	{
 		// No desired server is available.
 		[syphonClient stop];
 		self.syphonClient = nil;
+		VuoRelease(matchingServers);
 		return;
 	}
 
-	VuoSyphonServerDescription chosenServer = VuoListGetValueAtIndex_VuoSyphonServerDescription(matchingServers, 1);
+	VuoSyphonServerDescription chosenServer = VuoListGetValue_VuoSyphonServerDescription(matchingServers, 1);
+	VuoRelease(matchingServers);
 
 	// Look up the official server description. (SyphonClient won't accept one constructed from chosenServer's fields.)
 	NSDictionary *chosenServerDict = nil;

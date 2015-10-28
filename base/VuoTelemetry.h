@@ -430,6 +430,14 @@ enum VuoTelemetry
 	VuoTelemetryOutputPortsUpdated,
 
 	/**
+	 * Published just after a trigger port drops an event.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier;
+	 */
+	VuoTelemetryEventDropped,
+
+	/**
 	 * Published when an uncaught error occurs in the composition.
 	 *
 	 * Includes data message-parts:

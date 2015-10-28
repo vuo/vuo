@@ -23,6 +23,7 @@ extern "C"
 {
 #endif
 
+#include <stdbool.h>
 #include <string.h>
 struct json_object;
 
@@ -38,6 +39,7 @@ char * VuoText_summaryFromValue(const VuoText value);
 VuoText VuoText_make(const char * unquotedString);
 size_t VuoText_length(const VuoText text);
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);
+bool VuoText_isLessThan(const VuoText text1, const VuoText text2);
 size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring);
 VuoText VuoText_substring(const VuoText string, int startIndex, int length);
 VuoText VuoText_append(VuoText *texts, size_t textsCount);

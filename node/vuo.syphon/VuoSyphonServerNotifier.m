@@ -10,7 +10,10 @@
 #import "VuoNSRunLoop.h"
 #import "VuoSyphon.h"
 #import "VuoSyphonServerNotifier.h"
+
+#define NS_RETURNS_INNER_POINTER
 #import <Syphon.h>
+
 #import <objc/message.h>
 
 #ifdef VUO_COMPILER

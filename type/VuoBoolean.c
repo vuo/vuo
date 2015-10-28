@@ -21,7 +21,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "true", "false" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoBoolean"
 					 ]
 				 });
 #endif
@@ -43,6 +43,17 @@ VuoBoolean VuoBoolean_valueFromJson(json_object * js)
 json_object * VuoBoolean_jsonFromValue(const VuoBoolean value)
 {
 	return json_object_new_boolean(value);
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoBoolean VuoBoolean_allowedValues(void)
+{
+	VuoList_VuoBoolean l = VuoListCreate_VuoBoolean();
+	VuoListAppendValue_VuoBoolean(l, false);
+	VuoListAppendValue_VuoBoolean(l, true);
+	return l;
 }
 
 /**

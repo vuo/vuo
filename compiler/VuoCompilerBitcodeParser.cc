@@ -127,9 +127,7 @@ string VuoCompilerBitcodeParser::getGlobalValueConstString(string name)
 		return "";  // if the string's value is "", v->getValueID() is Value::ConstantAggregateZeroVal
 
 	ConstantDataArray *ca = (ConstantDataArray *)v;
-	string caStr = ca->getAsString();
-	if (caStr[caStr.length()-1] == 0)  // length is 1 too long
-		caStr.resize(caStr.length()-1);
+	string caStr = ca->getAsCString().str();
 	return caStr;
 }
 

@@ -15,5 +15,6 @@ OTHER_FILES += \
 
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoWave.o \
 	$$ROOT/type/list/VuoList_VuoWave.o

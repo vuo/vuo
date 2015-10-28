@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Vignette Image",
 					  "keywords" : [ "border", "surround", "encapsulate", "darken", "post-process", "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "filter" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
 					  }

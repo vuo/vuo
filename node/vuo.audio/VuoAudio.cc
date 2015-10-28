@@ -8,7 +8,6 @@
  */
 
 #include "VuoAudio.h"
-#include "VuoAudioSamples.h"
 #include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
 
@@ -27,6 +26,12 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoAudio",
 					 "dependencies" : [
+						 "VuoAudioSamples",
+						 "VuoAudioInputDevice",
+						 "VuoAudioOutputDevice",
+						 "VuoList_VuoAudioSamples",
+						 "VuoList_VuoAudioInputDevice",
+						 "VuoList_VuoAudioOutputDevice",
 						 "RtAudio",
 						 "CoreAudio.framework"
 					 ]
@@ -60,7 +65,7 @@ VuoList_VuoAudioOutputDevice VuoAudio_getOutputDevices(void)
 {
 	RtAudio rta;
 	unsigned int deviceCount = rta.getDeviceCount();
-	VuoList_VuoAudioOutputDevice outputDevices = VuoListCreate_VuoAudioInputDevice();
+	VuoList_VuoAudioOutputDevice outputDevices = VuoListCreate_VuoAudioOutputDevice();
 	for (unsigned int i = 0; i < deviceCount; ++i)
 	{
 		RtAudio::DeviceInfo info = rta.getDeviceInfo(i);
@@ -193,8 +198,8 @@ int VuoAudio_receivedEvent(void *outputBuffer, void *inputBuffer, unsigned int n
 
 							  for (unsigned int channel = 0; channel < outputChannelCount; ++channel)
 							  {
-								  VuoAudioSamples as = VuoListGetValueAtIndex_VuoAudioSamples(channels, channel+1);
-								  if (!as.samples)
+								  VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(channels, channel+1);
+								  if (!as.samples || as.sampleCount == 0)
 									  continue;
 
 								  if (ai->lastOutputSample[id].find(channel) == ai->lastOutputSample[id].end())
@@ -248,12 +253,14 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 		inputParameters.deviceId = deviceId;
 		inputParameters.nChannels = ai->rta->getDeviceInfo(deviceId).inputChannels;
 		ai->inputDevice.name = VuoText_make(ai->rta->getDeviceInfo(deviceId).name.c_str());
+		VuoRetain(ai->inputDevice.name);
 		ai->inputDevice.channelCount = inputParameters.nChannels;
 
 		RtAudio::StreamParameters outputParameters;
 		outputParameters.deviceId = deviceId;
 		outputParameters.nChannels = ai->rta->getDeviceInfo(deviceId).outputChannels;
 		ai->outputDevice.name = VuoText_make(ai->rta->getDeviceInfo(deviceId).name.c_str());
+		VuoRetain(ai->outputDevice.name);
 		ai->outputDevice.channelCount = outputParameters.nChannels;
 
 		RtAudio::StreamOptions options;
@@ -311,7 +318,17 @@ static void VuoAudio_destroy(VuoAudio_internal ai)
 		VLog("Failed to close the audio device (%s) :: %s.\n", ai->inputDevice.name, error.what());
 	}
 
+	// Release any leftover buffers.
+	for (pendingOutputType::iterator it = ai->pendingOutput.begin(); it != ai->pendingOutput.end(); ++it)
+		while (!it->second.empty())
+		{
+			VuoRelease(it->second.front());
+			it->second.pop();
+		}
+
 	delete ai->rta;
+	VuoRelease(ai->inputDevice.name);
+	VuoRelease(ai->outputDevice.name);
 	delete ai;
 }
 VUOKEYEDPOOL_DEFINE(unsigned int, VuoAudio_internal, VuoAudio_make);

@@ -20,9 +20,9 @@ VuoModuleMetadata({
 					 "title" : "Fire Periodically",
 					 "keywords" : [ "lfo", "wave generator", "signal", "tempo", "timer", "stop watch", "stopwatch", "clock",
 						"metronome", "repeat", "seconds", "interval", "rate" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -94,8 +94,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) ctx,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0, "suggestedStep":0.1}) seconds,
-		VuoInputEvent(VuoPortEventBlocking_None, seconds) secondsEvent,
-		VuoOutputTrigger(fired,void,VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(fired,void,{"eventThrottling":"drop"})
 )
 {
 	setRepeatingTimer(*ctx, seconds, fired);

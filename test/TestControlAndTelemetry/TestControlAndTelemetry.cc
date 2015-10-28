@@ -26,15 +26,14 @@ class TestControlAndTelemetry : public TestCompositionExecution
 	Q_OBJECT
 
 private:
+	VuoCompiler *compiler;
 
 	/**
 	 * Builds the composition at @c compositionPath into an executable and returns a newly allocated
 	 * @c VuoRunner for that executable.
 	 */
-	static VuoRunner * createRunnerInNewProcess(const string &compositionPath, VuoCompilerComposition **composition = NULL)
+	static VuoRunner * createRunnerInNewProcess(VuoCompiler *compiler, const string &compositionPath, VuoCompilerComposition **composition = NULL)
 	{
-		VuoCompiler *compiler = initCompiler();
-
 		string dir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
@@ -52,7 +51,6 @@ private:
 			compiler->compileComposition(compositionPath, bcPath);
 		}
 		compiler->linkCompositionToCreateExecutable(bcPath, exePath);
-		delete compiler;
 		remove(bcPath.c_str());
 
 		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, "", true);
@@ -60,14 +58,17 @@ private:
 		return runner;
 	}
 
+	VuoRunner * createRunnerInNewProcess(const string &compositionPath, VuoCompilerComposition **composition = NULL)
+	{
+		return createRunnerInNewProcess(compiler, compositionPath, composition);
+	}
+
 	/**
 	 * Builds the composition at @c compositionPath into a dylib and returns a newly allocated
 	 * @c VuoRunner for that dylib.
 	 */
-	static VuoRunner * createRunnerInNewProcessWithDylib(const string &compositionPath)
+	VuoRunner * createRunnerInNewProcessWithDylib(const string &compositionPath)
 	{
-		VuoCompiler *compiler = initCompiler();
-
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
@@ -79,7 +80,6 @@ private:
 		set<string> alreadyLinkedResources;
 		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 		string compositionLoaderPath = compiler->getCompositionLoaderPath();
-		delete compiler;
 		remove(bcPath.c_str());
 
 		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir, true);
@@ -91,10 +91,8 @@ private:
 	 * Builds the composition at @c compositionPath into a dylib and returns a newly allocated
 	 * @c VuoRunner for that dylib.
 	 */
-	static VuoRunner * createRunnerInCurrentProcess(const string &compositionPath)
+	VuoRunner * createRunnerInCurrentProcess(const string &compositionPath)
 	{
-		VuoCompiler *compiler = initCompiler();
-
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
 		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
@@ -102,7 +100,6 @@ private:
 
 		compiler->compileComposition(compositionPath, bcPath);
 		compiler->linkCompositionToCreateDynamicLibrary(bcPath, dylibPath);
-		delete compiler;
 		remove(bcPath.c_str());
 
 		VuoRunner * runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(dylibPath, compositionDir, true);
@@ -179,12 +176,22 @@ private:
 
 private slots:
 
+	void initTestCase()
+	{
+		compiler = initCompiler();
+	}
+
+	void cleanupTestCase()
+	{
+		delete compiler;
+	}
+
 	void testStartingAndStoppingComposition()
 	{
 		string compositionPath = getCompositionPath("WriteTimesToFile.vuo");
 
 		{
-			printf("    New process, executable\n");
+			printf("    New process, executable\n"); fflush(stdout);
 
 			WriteTimesToFileHelper helper;
 
@@ -200,7 +207,7 @@ private slots:
 		}
 
 		{
-			printf("    New process, dylib\n");
+			printf("    New process, dylib\n"); fflush(stdout);
 
 			WriteTimesToFileHelper helper;
 
@@ -216,7 +223,7 @@ private slots:
 		}
 
 		{
-			printf("    Current process, runOnMainThread()\n");
+			printf("    Current process, runOnMainThread()\n"); fflush(stdout);
 
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
@@ -236,7 +243,7 @@ private slots:
 		}
 
 		{
-			printf("    Current process, drainMainDispatchQueue()\n");
+			printf("    Current process, drainMainDispatchQueue()\n"); fflush(stdout);
 
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
@@ -259,7 +266,7 @@ private slots:
 			delete helper;
 		}
 
-		printf("    Error handling\n");
+		printf("    Error handling\n"); fflush(stdout);
 
 		{
 			WriteTimesToFileHelper helper;
@@ -320,7 +327,7 @@ private slots:
 		const int PAUSE_CHECK_USEC = USEC_PER_SEC;
 
 		{
-			printf("    New process, started paused\n");
+			printf("    New process, started paused\n"); fflush(stdout);
 
 			WriteTimesToFileHelper helper;
 
@@ -348,7 +355,7 @@ private slots:
 		}
 
 		{
-			printf("    New process, started unpaused\n");
+			printf("    New process, started unpaused\n"); fflush(stdout);
 
 			WriteTimesToFileHelper helper;
 
@@ -379,7 +386,7 @@ private slots:
 		}
 
 		{
-			printf("    Current process, started paused\n");
+			printf("    Current process, started paused\n"); fflush(stdout);
 
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
@@ -411,7 +418,7 @@ private slots:
 		}
 
 		{
-			printf("    Current process, started unpaused\n");
+			printf("    Current process, started unpaused\n"); fflush(stdout);
 
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
@@ -476,17 +483,17 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("Recur_Count_Add.vuo");
 			VuoCompilerComposition *composition = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &composition);
+			runner = createRunnerInNewProcess(compiler, compositionPath, &composition);
 
 			string incrementPortIdentifier;
 			string countPortIdentifier;
 			string item1PortIdentifier;
 			string listPortIdentifier;
-			string termsPortIdentifier;
+			string valuesPortIdentifier;
 			string sumPortIdentifier;
 			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
@@ -522,8 +529,8 @@ private:
 				else if (node->getNodeClass()->getClassName() == "vuo.math.add.VuoInteger")
 				{
 					{
-						VuoPort *basePort = node->getInputPortWithName("terms");
-						termsPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
+						VuoPort *basePort = node->getInputPortWithName("values");
+						valuesPortIdentifier = static_cast<VuoCompilerPort *>(basePort->getCompiler())->getIdentifier();
 					}
 					{
 						VuoPort *basePort = node->getOutputPortWithName("sum");
@@ -556,8 +563,8 @@ private:
 					expectedIdentifiersAndValues.push_back(item1Pair);
 					IdentifierAndValue listPair = { listPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
 					expectedIdentifiersAndValues.push_back(listPair);
-					IdentifierAndValue termsPair = { termsPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
-					expectedIdentifiersAndValues.push_back(termsPair);
+					IdentifierAndValue valuesPair = { valuesPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					expectedIdentifiersAndValues.push_back(valuesPair);
 					IdentifierAndValue sumPair = { sumPortIdentifier.c_str(), QString("%1").arg(count + 10) };
 					expectedIdentifiersAndValues.push_back(sumPair);
 				}
@@ -604,8 +611,7 @@ private:
 
 		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
 		{
-			if (sentData)  // ignore done port
-				appendIdentifierAndValue(portIdentifier, dataSummary);
+			appendIdentifierAndValue(portIdentifier, dataSummary);
 		}
 	};
 
@@ -614,7 +620,7 @@ private slots:
 	void testGettingPortValues()
 	{
 		TestGettingPortValuesRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
 
 private:
@@ -648,11 +654,11 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("Recur_Count.vuo");
 			VuoCompilerComposition *composition = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &composition);
+			runner = createRunnerInNewProcess(compiler, compositionPath, &composition);
 
 			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
@@ -754,7 +760,7 @@ private:
 			{
 				QCOMPARE(incrementFromRunner, (VuoInteger)1000);
 
-				long expectedCount = firstCountSeen + 1 + 98 + 998;
+				VuoInteger expectedCount = firstCountSeen + 1 + 98 + 998;
 				QCOMPARE(countFromSummary, expectedCount);
 				QCOMPARE(countFromRunner, expectedCount);
 
@@ -777,7 +783,7 @@ private slots:
 	void testSettingAndGettingPortValues()
 	{
 		TestSettingAndGettingPortValuesRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
 
 private:
@@ -804,11 +810,11 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("FirePeriodicallyWithCount.vuo");
 			VuoCompilerComposition *composition = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &composition);
+			runner = createRunnerInNewProcess(compiler, compositionPath, &composition);
 
 			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
@@ -871,7 +877,7 @@ private slots:
 	void testGettingTriggerPortValues()
 	{
 		TestGettingTriggerPortValuesRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
 
 private:
@@ -897,11 +903,11 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = TestCompositionExecution::getCompositionPath("SpinOffWithCount.vuo");
 			VuoCompilerComposition *composition = NULL;
-			runner = createRunnerInNewProcess(compositionPath, &composition);
+			runner = createRunnerInNewProcess(compiler, compositionPath, &composition);
 
 			foreach (VuoNode *node, composition->getBase()->getNodes())
 			{
@@ -965,8 +971,34 @@ private slots:
 	void testFiringTriggerPortEvents()
 	{
 		TestFiringTriggerPortEventsRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
+
+private:
+
+	void compareJsonObjects(json_object *actual, json_object *expected)
+	{
+		{
+			json_object_object_foreach(expected, key, val)
+			{
+				json_object *o;
+				bool foundKey = json_object_object_get_ex(actual, key, &o);
+				QVERIFY2(foundKey, key);
+				QCOMPARE(QString(json_object_to_json_string(o)), QString(json_object_to_json_string(val)));
+			}
+		}
+		{
+			json_object_object_foreach(actual, key, val)
+			{
+				json_object *o;
+				bool foundKey = json_object_object_get_ex(expected, key, &o);
+				QVERIFY2(foundKey, key);
+				QCOMPARE(QString(json_object_to_json_string(val)), QString(json_object_to_json_string(o)));
+			}
+		}
+	}
+
+private slots:
 
 	void testGettingPublishedPorts_data()
 	{
@@ -976,11 +1008,11 @@ private slots:
 
 		{
 			vector<VuoRunner::Port *> inputs;
-			inputs.push_back( new VuoRunner::Port("publishedIn0", "VuoInteger", json_tokener_parse("{\"default\":null}")) );
-			inputs.push_back( new VuoRunner::Port("publishedIn1", "VuoInteger", json_tokener_parse("{\"default\":null}")) );
+			inputs.push_back( new VuoRunner::Port("publishedIn0", "VuoInteger", json_tokener_parse("{}")) );
+			inputs.push_back( new VuoRunner::Port("publishedIn1", "VuoInteger", json_tokener_parse("{}")) );
 			inputs.push_back( new VuoRunner::Port("publishedIn2", "VuoReal", json_tokener_parse("{\"default\":0.050000,\"suggestedMin\":0.000001,\"suggestedMax\":0.050000}")) );
 			vector<VuoRunner::Port *> outputs;
-			outputs.push_back( new VuoRunner::Port("publishedSum", "VuoInteger", json_tokener_parse("{\"default\":null}")) );
+			outputs.push_back( new VuoRunner::Port("publishedSum", "VuoInteger", json_tokener_parse("{}")) );
 			QTest::newRow("some published input and output ports") << "Recur_Add_published.vuo" << inputs << outputs;
 		}
 
@@ -1010,7 +1042,7 @@ private slots:
 		{
 			QCOMPARE(actualInputs.at(i)->getName(), expectedInputs.at(i)->getName());
 			QCOMPARE(actualInputs.at(i)->getType(), expectedInputs.at(i)->getType());
-			QCOMPARE(json_object_to_json_string_ext(actualInputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN), json_object_to_json_string_ext(expectedInputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN));
+			compareJsonObjects(actualInputs.at(i)->getDetails(), expectedInputs.at(i)->getDetails());
 		}
 
 		QCOMPARE(actualOutputs.size(), expectedOutputs.size());
@@ -1018,7 +1050,7 @@ private slots:
 		{
 			QCOMPARE(actualOutputs.at(i)->getName(), expectedOutputs.at(i)->getName());
 			QCOMPARE(actualOutputs.at(i)->getType(), expectedOutputs.at(i)->getType());
-			QCOMPARE(json_object_to_json_string_ext(actualOutputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN), json_object_to_json_string_ext(expectedOutputs.at(i)->getDetails(), JSON_C_TO_STRING_PLAIN));
+			compareJsonObjects(actualOutputs.at(i)->getDetails(), expectedOutputs.at(i)->getDetails());
 		}
 
 		delete runner;
@@ -1132,10 +1164,10 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = getCompositionPath("Recur_Add_published.vuo");
-			runner = createRunnerInNewProcess(compositionPath);
+			runner = createRunnerInNewProcess(compiler, compositionPath);
 			runner->setDelegate(this);
 
 			runner->startPaused();
@@ -1207,7 +1239,7 @@ private slots:
 	void testSettingAndGettingPublishedPortValues()
 	{
 		TestSettingAndGettingPublishedPortValuesRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
 
 private:
@@ -1234,10 +1266,10 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = getCompositionPath("PublishedInputsAndNoTrigger.vuo");
-			runner = createRunnerInNewProcess(compositionPath);
+			runner = createRunnerInNewProcess(compiler, compositionPath);
 			runner->setDelegate(this);
 
 			runner->start();
@@ -1289,7 +1321,7 @@ private slots:
 	void testFiringPublishedInputPortEvents()
 	{
 		TestFiringPublishedInputPortEventsRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
 
 	void testWaitingForAnyPublishedPortEvent()
@@ -1298,7 +1330,7 @@ private slots:
 
 		// Do twice: Generate an event and start to wait before it reaches any published output.
 		{
-			printf("    Trigger, wait, propagate\n");
+			printf("    Trigger, wait, propagate\n"); fflush(stdout);
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
@@ -1323,7 +1355,7 @@ private slots:
 
 		// Do twice: Generate an event and let it reach a published output port before starting to wait.
 		{
-			printf("    Trigger, propagate, wait\n");
+			printf("    Trigger, propagate, wait\n"); fflush(stdout);
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
@@ -1350,7 +1382,7 @@ private slots:
 
 		// Do one of each. (Generate, wait, receive published output event. Generate, receive published output event, wait.)
 		{
-			printf("    Do one of each\n");
+			printf("    Do one of each\n"); fflush(stdout);
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
@@ -1377,7 +1409,7 @@ private slots:
 
 		// Generate more events than are waited on.
 		{
-			printf("    Trigger more than waited on\n");
+			printf("    Trigger more than waited on\n"); fflush(stdout);
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
@@ -1437,10 +1469,10 @@ private:
 			delete runner;
 		}
 
-		void runComposition()
+		void runComposition(VuoCompiler *compiler)
 		{
 			string compositionPath = getCompositionPath("MultiplyConnectedPublishedOutput.vuo");
-			runner = createRunnerInNewProcess(compositionPath);
+			runner = createRunnerInNewProcess(compiler, compositionPath);
 			runner->setDelegate(this);
 
 			runner->start();
@@ -1474,7 +1506,7 @@ private slots:
 	void testMultiplyConnectedPublishedOutputPorts()
 	{
 		TestMultiplyConnectedPublishedOutputPortsRunnerDelegate delegate;
-		delegate.runComposition();
+		delegate.runComposition(compiler);
 	}
 
 	void testReplacingCompositionWithoutCrashing_data()
@@ -1491,8 +1523,6 @@ private slots:
 		QFETCH(QString, compositionFile);
 
 		string compositionPath = getCompositionPath(compositionFile.toUtf8().constData());
-
-		VuoCompiler *compiler = initCompiler();
 
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
@@ -1539,15 +1569,12 @@ private slots:
 			remove((*i).c_str());
 
 		delete runner;
-		delete compiler;
 		delete composition;
 	}
 
 	void testAddingResourcesToRunningComposition()
 	{
 		string compositionPath = getCompositionPath("PublishedInputsAndNoTrigger.vuo");
-
-		VuoCompiler *compiler = initCompiler();
 
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
@@ -1617,15 +1644,12 @@ private slots:
 			remove((*i).c_str());
 
 		delete runner;
-		delete compiler;
 		delete composition;
 	}
 
 	void testSerializingAndUnserializingComposition()
 	{
 		string compositionPath = getCompositionPath("PublishedInputsAndNoTrigger.vuo");
-
-		VuoCompiler *compiler = initCompiler();
 
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
@@ -1822,7 +1846,6 @@ private slots:
 			remove((*i).c_str());
 
 		delete runner;
-		delete compiler;
 		delete composition;
 	}
 

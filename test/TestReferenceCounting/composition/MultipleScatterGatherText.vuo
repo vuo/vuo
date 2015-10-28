@@ -9,28 +9,28 @@
 
 digraph G
 {
-Cut [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="334,198" _startIndex="1" _characterCount="3"];
-AreEqual [type="vuo.text.areEqual" label="Are Equal|<refresh>refresh\l|<texts>texts\l|<equal>equal\r" pos="1163,240"];
-ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="123456"];
-MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1005,240"];
-Cut4 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="835,305" _startIndex="4" _characterCount="3"];
-Cut3 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="331,316" _startIndex="4" _characterCount="3"];
-Cut2 [type="vuo.text.cut" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="838,187" _startIndex="1" _characterCount="3"];
-Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="632,248"];
-MakeList2 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="498,247"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="632,248"];
+AreEqual [type="vuo.text.areEqual" version="1.0.1" label="Are Equal|<refresh>refresh\l|<texts>texts\l|<equal>equal\r" pos="1163,240"];
+ConvertIntegertoText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="26,267" _integer="123456"];
+Cut [type="vuo.text.cut" version="2.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="334,198" _startPosition="1" _characterCount="3"];
+Cut2 [type="vuo.text.cut" version="2.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="838,187" _startPosition="1" _characterCount="3"];
+Cut3 [type="vuo.text.cut" version="2.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="331,316" _startPosition="4" _characterCount="3"];
+Cut4 [type="vuo.text.cut" version="2.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="835,305" _startPosition="4" _characterCount="3"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1117,251"];
+MakeList2 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="586,259"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r" _inEvent_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l" _outEvent_type="VuoBoolean"];
 
-MakeList2:list -> Append:texts;
 Append:compositeText -> Cut2:text;
 Append:compositeText -> Cut4:text;
-MakeList:list -> AreEqual:texts;
-Cut2:partialText -> MakeList:1;
-Cut4:partialText -> MakeList:2;
-Cut:partialText -> MakeList2:1;
 ConvertIntegertoText:text -> Cut3:text;
 ConvertIntegertoText:text -> Cut:text;
+Cut2:partialText -> MakeList:1;
 Cut3:partialText -> MakeList2:2;
+Cut4:partialText -> MakeList:2;
+Cut:partialText -> MakeList2:1;
+MakeList2:list -> Append:texts;
+MakeList:list -> AreEqual:texts;
 PublishedInputs:inEvent -> ConvertIntegertoText:refresh;
 AreEqual:equal -> PublishedOutputs:outEvent;
 }

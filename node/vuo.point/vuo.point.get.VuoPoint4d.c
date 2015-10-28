@@ -12,9 +12,9 @@
 VuoModuleMetadata({
 					 "title" : "Get 4D Point Values",
 					 "keywords" : [ "xyzw", "homogenous", "coordinates" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
+					 "version" : "2.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

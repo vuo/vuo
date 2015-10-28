@@ -20,6 +20,11 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoPointsParametric",
 					 "dependencies" : [
+						 "VuoInteger",
+						 "VuoPoint3d",
+						 "VuoReal",
+						 "VuoText",
+						 "VuoList_VuoPoint3d",
 						 "muParser"
 					 ]
 				 });
@@ -168,7 +173,6 @@ VuoList_VuoPoint3d VuoPointsParametric1d_generate(
 	catch (mu::Parser::exception_type &e)
 	{
 		VLog("Error: %s", e.GetMsg().c_str());
-		return VuoListCreate_VuoPoint3d();
 	}
 	return points;
 }
@@ -293,7 +297,6 @@ VuoList_VuoPoint3d VuoPointsParametric2d_generate(
 	catch (mu::Parser::exception_type &e)
 	{
 		VLog("Error: %s", e.GetMsg().c_str());
-		return VuoListCreate_VuoPoint3d();
 	}
 	return points;
 }

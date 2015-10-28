@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Blur Image",
 					  "keywords" : [ "gaussian", "distort", "obscure", "smudge", "filter", "censor", "smooth", "soften", "unfocus", "defocus", "detail" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "BlurMovie.vuo" ]
 					  }

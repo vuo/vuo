@@ -15,14 +15,12 @@ Conductor1 [type="vuo.test.conductor" label="Conductor1|<refresh>refresh\l|<trig
 Conductor2 [type="vuo.test.conductor" label="Conductor2|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor2\""];
 Conductor3 [type="vuo.test.conductor" label="Conductor3|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor3\""];
 Conductor4 [type="vuo.test.conductor" label="Conductor4|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor4\""];
-DiscardDatafromEvent [type="vuo.type.discardData.VuoText" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<event>event\r"];
 
 PublishedInputs:start -> TestFirePeriodically1:refresh;
 TestFirePeriodically1:fired -> Conductor1:triggerInfoIn0
 TestFirePeriodically1:fired -> Conductor2:triggerInfoIn0
 Conductor1:triggerInfoOut -> Conductor3:triggerInfoIn0
-Conductor2:triggerInfoOut -> DiscardDatafromEvent:dataAndEvent
-DiscardDatafromEvent:event -> Conductor3:triggerInfoIn0
+Conductor2:triggerInfoOut -> Conductor3:triggerInfoIn0 [event=true]
 Conductor3:triggerInfoOut -> Conductor4:triggerInfoIn0
 
 }

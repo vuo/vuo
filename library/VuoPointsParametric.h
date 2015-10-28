@@ -12,7 +12,11 @@ extern "C"
 {
 #endif
 
-#include "node.h"
+#include "VuoInteger.h"
+#include "VuoPoint3d.h"
+#include "VuoReal.h"
+#include "VuoText.h"
+#include "VuoList_VuoPoint3d.h"
 
 VuoList_VuoPoint3d VuoPointsParametric1d_generate(
 	VuoReal time,

@@ -1,11 +1,12 @@
 # Produces several variables:
 #
-# FRAMEWORK_VUO_HEADERS
-# FRAMEWORK_VUO_STUB_HEADER
-# MASTER_VUO_HEADER_LIST
+# FRAMEWORK_VUO_HEADERS		— headers to be copied to the framework's Headers folder
+# FRAMEWORK_VUO_STUB_HEADER	— filename of the Vuo.h template into which actual header names are substituted
+# MASTER_VUO_HEADER_LIST	— headers to be automatically included by the framework's Vuo.h
 # MODULE_OBJECTS
 # QMAKE_LFLAGS
 # TYPE_OBJECTS
+# TYPE_HEADERS
 # VUO_PRI_LIBS
 
 CONFIG_OLD = $$CONFIG
@@ -47,6 +48,15 @@ FRAMEWORK_VUO_HEADERS.files += ../type/list/VuoList_*.h
 
 FRAMEWORK_VUO_STUB_HEADER = "Vuo.stub.h"
 VUO_PRI_LIBS = $$LIBS
+
+
+# Build the TYPE_HEADERS list, containing headers for Vuo Types to be copied to the Framework.
+HEADERS = ""
+include(../type/type.pro)
+TYPE_HEADERS = $$HEADERS
+HEADERS = ""
+POST_TARGETDEPS -= $$NODE_SET_ZIP
+QMAKE_EXTRA_TARGETS -= createNodeSetZip
 
 
 # Build the MODULE_OBJECTS list, containing compiled Vuo Modules to be copied to the Framework.

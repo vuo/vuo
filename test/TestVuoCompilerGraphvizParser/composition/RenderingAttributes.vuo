@@ -9,7 +9,7 @@
 
 digraph G
 {
-AddTinted [type="vuo.math.add.VuoInteger" label="AddTinted|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" pos="22,42" fillcolor="yellow"];
-AddCollapsed [type="vuo.math.add.VuoInteger" label="AddCollapsed|<refresh>refresh\l|<terms>terms\l|<sum>sum\r" collapsed];
-AddUncollapsed [type="vuo.math.add.VuoInteger" label="AddUncollapsed|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+AddTinted [type="vuo.math.add.VuoInteger" label="AddTinted|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="22,42" fillcolor="yellow"];
+AddCollapsed [type="vuo.math.add.VuoInteger" label="AddCollapsed|<refresh>refresh\l|<values>values\l|<sum>sum\r" collapsed];
+AddUncollapsed [type="vuo.math.add.VuoInteger" label="AddUncollapsed|<refresh>refresh\l|<values>values\l|<sum>sum\r"];
 }

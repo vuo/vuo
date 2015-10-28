@@ -136,6 +136,28 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 					1);
 	}
 
+	// Some GPUs (e.g., Intel HD Graphics 4000 on @jmcc's MacBook Air) sporadically return crazy values for acos(),
+	// so provide our own implementation (polynomial approximation).
+	float acos2(float x)
+	{
+		// Handbook of Mathematical Functions
+		// M. Abramowitz and I.A. Stegun, Ed.
+
+		// Absolute error <= 6.7e-5
+		float negate = float(x < 0);
+		x = abs(x);
+		float ret = -0.0187293;
+		ret = ret * x;
+		ret = ret + 0.0742610;
+		ret = ret * x;
+		ret = ret - 0.2121144;
+		ret = ret * x;
+		ret = ret + 1.5707288;
+		ret = ret * sqrt(1.0-x);
+		ret = ret - 2 * negate * ret;
+		return negate * 3.14159265358979 + ret;
+	}
+
 	void main()
 	{
 		// Transform into worldspace.
@@ -192,7 +214,7 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 			vec3 initialFaceNormal = normalize(geometryNormal[0].xyz + /*geometryNormal[1].xyz +*/ geometryNormal[2].xyz);
 
 			vec3 axis = normalize(cross(initialFaceNormal, normal.xyz));
-			float angle = acos(dot(initialFaceNormal, normal.xyz));
+			float angle = acos2(dot(initialFaceNormal, normal.xyz));
 			if (angle > 0.0001)
 			{
 				// Turn the axis/angle into a quaternion.
@@ -279,7 +301,7 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "chaos",             chaos*2);
 	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "center",            center);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "range",             range);
-	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "gravity",           VuoPoint3d_divide(gravity,10));
+	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "gravity",           VuoPoint3d_multiply(gravity, 1./10.));
 
 	// Render.
 	*explodedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);

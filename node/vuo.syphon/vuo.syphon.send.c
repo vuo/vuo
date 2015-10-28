@@ -15,8 +15,8 @@
 
 VuoModuleMetadata({
 					  "title" : "Send Image via Syphon",
-					  "keywords" : [ "application", "frame", "interprocess", "IOSurface", "output", "server", "share", "video" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "application", "frame", "interprocess", "IOSurface", "server", "share", "video" ],
+					  "version" : "1.0.1",
 					  "node": {
 						  "isInterface" : true,
 						  "exampleCompositions" : [ "SendImages.vuo" ]
@@ -34,7 +34,7 @@ struct nodeInstanceData
 	VuoText serverName;
 };
 
-void updateServer(struct nodeInstanceData *context, VuoText newServerName)
+static void updateServer(struct nodeInstanceData *context, VuoText newServerName)
 {
 	VuoRelease(context->serverName);
 	context->serverName = newServerName;
@@ -64,7 +64,7 @@ void nodeInstanceEvent
 (
 		VuoInputData(VuoText, "") serverName,
 		VuoInputData(VuoImage) sendImage,
-		VuoInputEvent(VuoPortEventBlocking_None, sendImage) sendImageEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"sendImage"}) sendImageEvent,
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {

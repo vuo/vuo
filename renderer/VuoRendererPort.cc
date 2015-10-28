@@ -49,7 +49,7 @@ const qreal VuoRendererPort::constantFlagHeight = VuoRendererFonts::thickPenWidt
  * Creates a renderer detail for the specified base port.
  */
 VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signaler,
-								 bool isOutput, bool isRefreshPort, bool isDonePort, bool isFunctionPort)
+								 bool isOutput, bool isRefreshPort, bool isFunctionPort)
 	: VuoBaseDetail<VuoPort>("VuoRendererPort standard", basePort)
 {
 	getBase()->setRenderer(this);
@@ -58,7 +58,6 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 
 	this->isOutput = isOutput;
 	this->isRefreshPort = isRefreshPort;
-	this->isDonePort = isDonePort;
 	this->isFunctionPort = isFunctionPort;
 	this->isEligibleForDirectConnection = false;
 	this->isEligibleForConnectionViaTypecast = false;
@@ -66,7 +65,8 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 	setAnimated(false);
 	this->typecastParentPort = NULL;
 	this->proxyPublishedSidebarPort = NULL;
-	this->customizedPortName = "";
+	this->customizedPortName = getDefaultPortNameToRender();
+
 	resetTimeLastEventFired();
 
 	const int maxAnimationsPerPort = 4;
@@ -159,7 +159,7 @@ QPainterPath VuoRendererPort::getPortConstantPath(QRectF innerPortRect, QString 
  */
 qreal VuoRendererPort::getInset(void) const
 {
-	if (getDataType() || isRefreshPort || isDonePort)
+	if (getDataType() || isRefreshPort)
 		return portInset;
 
 	return portInsetTriangular;
@@ -280,6 +280,56 @@ QRectF VuoRendererPort::getPortRect(void)
 		portRadius*2.0,
 		portRadius*2.0
 	);
+}
+
+/**
+ * Returns a rectangle encompassing the port's event barrier.
+ */
+QRectF VuoRendererPort::getEventBarrierRect(void) const
+{
+	QRectF barrierRect = QRectF();
+
+	bool sidebarPaintMode = getProxyPublishedSidebarPort();
+	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
+	VuoPortClass::EventBlocking eventBlocking = getBase()->getClass()->getEventBlocking();
+
+	if (!isAnimated &&
+			((!isOutput && !sidebarPaintMode && eventBlocking != VuoPortClass::EventBlocking_None)
+			|| (isOutput && type == VuoPortClass::triggerPort))
+		)
+	{
+		if (type == VuoPortClass::dataAndEventPort)
+		{
+			// Circular port
+			barrierRect = getPortRect().adjusted(-1.5,-1.5,1.5,1.5);
+		}
+
+		else if (type == VuoPortClass::eventOnlyPort)
+		{
+			// Triangular port
+			barrierRect = getPortRect().adjusted(-3.5,-3.5,3.5,3.5);
+		}
+
+		else if (type == VuoPortClass::triggerPort)
+		{
+			// Exploding port
+
+			bool carriesData = (getBase()->getClass()->hasCompiler() &&
+								((VuoCompilerPortClass *)getBase()->getClass()->getCompiler())->getDataVuoType());
+
+			if (carriesData)
+			{
+				barrierRect = getPortRect().adjusted(-1.5,-1.5,1.5,1.5);;
+			}
+			else
+			{
+				// Triangular port
+				barrierRect = getPortRect().adjusted(-.5,2.5,.5,-1.5);
+			}
+		}
+	}
+
+	return barrierRect;
 }
 
 /**
@@ -487,6 +537,8 @@ QRectF VuoRendererPort::boundingRect(void) const
 
 	QRectF r = getPortPath(1.5).boundingRect();
 
+	r = r.united(getEventBarrierRect());
+
 	if (portNameRenderingEnabled())
 		r = r.united(getNameRect());
 
@@ -529,14 +581,13 @@ void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *co
 			|| (isOutput && type == VuoPortClass::triggerPort))
 			)
 	{
+		QRectF barrierRect = getEventBarrierRect();
 		QColor eventBlockingBarrierColor = (isAnimated? colors->animatedeventBlockingBarrier() : colors->eventBlockingBarrier());
 		painter->setPen(QPen(eventBlockingBarrierColor, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
 		if (type == VuoPortClass::dataAndEventPort)
 		{
 			// Circular port
-			QRectF barrierRect = getPortRect().adjusted(-1.5,-1.5,1.5,1.5);
-
 			if (eventBlocking == VuoPortClass::EventBlocking_Wall)
 				painter->drawArc(barrierRect,40*16,-80*16);
 			else // VuoPortClass::EventBlocking_Door
@@ -548,7 +599,6 @@ void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *co
 		else if (type == VuoPortClass::eventOnlyPort)
 		{
 			// Triangular port
-			QRectF barrierRect = getPortRect().adjusted(-3.5,-3.5,3.5,3.5);
 			QLineF topLine = QLineF(barrierRect.topLeft(),QPointF(barrierRect.right(),barrierRect.center().y()));
 			QLineF bottomLine = QLineF(barrierRect.bottomLeft(),QPointF(barrierRect.right(),barrierRect.center().y()));
 
@@ -579,13 +629,11 @@ void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *co
 
 			if (carriesData)
 			{
-				QRectF barrierRect = getPortRect().adjusted(-1.5,-1.5,1.5,1.5);
 				painter->drawArc(barrierRect,145*16,70*16);
 			}
 			else
 			{
 				// Triangular port
-				QRectF barrierRect = getPortRect().adjusted(-.5,1.5,.5,-1.5);
 
 				QPainterPath p;
 				p.moveTo(barrierRect.topLeft());
@@ -623,14 +671,26 @@ void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors
 }
 
 /**
- * Returns the name of the port as it should be rendered.
+ * Returns the name of the port as it should be rendered. This will be the empty string
+ * if name rendering is currently disabled for this port.
  */
 string VuoRendererPort::getPortNameToRender() const
 {
+	bool displayPortName = (getRenderedParentNode()? getRenderedParentNode()->nameDisplayEnabledForPort(this) : true);
+
+	return (!displayPortName? "": getPortNameToRenderWhenDisplayed());
+}
+
+/**
+ * Returns the name of the port as it should be rendered when it is to be rendered at all.
+ */
+string VuoRendererPort::getPortNameToRenderWhenDisplayed() const
+{
 	bool sidebarPaintMode = getProxyPublishedSidebarPort();
-	return (!customizedPortName.empty()? customizedPortName :
-										 (sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName() :
-																				 getBase()->getClass()->getName()));
+
+	return (sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName() :
+							  (!customizedPortName.empty()? customizedPortName :
+															getBase()->getClass()->getName()));
 }
 
 /**
@@ -641,6 +701,82 @@ void VuoRendererPort::setPortNameToRender(string name)
 {
 	this->customizedPortName = name;
 	updateNameRect();
+}
+
+/**
+ * Returns the default display name of the port. This may be overridden.
+ * (See VuoRendererPort::setPortNameToRender(string name)).
+ */
+string VuoRendererPort::getDefaultPortNameToRender()
+{
+	return getDefaultPortNameToRenderForPortClass(getBase()->getClass());
+}
+
+/**
+ * Returns the default display name for a port of the provided @c portClass.
+ */
+string VuoRendererPort::getDefaultPortNameToRenderForPortClass(VuoPortClass *portClass)
+{
+	bool isTriggerPort = (portClass->getPortType() == VuoPortClass::triggerPort);
+
+	// First, look for a name stored within the details of the port's data class, if applicable.
+	// Exception: Don't attempt to retrieve the details of a data class associated with a data-carrying
+	// trigger port, because it returns a non-NULL but invalid pointer.
+
+	bool carriesData = (portClass->hasCompiler() && static_cast<VuoCompilerPortClass *>(portClass->getCompiler())->getDataVuoType());
+	if (carriesData && !isTriggerPort)
+	{
+		json_object *details = static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler())->getDataClass()->getDetails();
+		json_object *nameValue = NULL;
+
+		if (details && json_object_object_get_ex(details, "name", &nameValue))
+			return json_object_get_string(nameValue);
+	}
+
+	// Failing that, look for a name stored within the details of the port class.
+	if (portClass->hasCompiler())
+	{
+		VuoCompilerPortClass *portCompilerClass = static_cast<VuoCompilerPortClass *>(portClass->getCompiler());
+		if (portCompilerClass)
+		{
+			json_object *details = portCompilerClass->getDetails();
+			if (details)
+			{
+				json_object *nameValue = NULL;
+				if (json_object_object_get_ex(details, "name", &nameValue))
+					return json_object_get_string(nameValue);
+
+			}
+		}
+	}
+
+	return formatPortName(portClass->getName().c_str()).toUtf8().constData();
+}
+
+/**
+ * Inserts spaces and applies appropriate capitalization to the provided @c portName.
+ */
+QString VuoRendererPort::formatPortName(QString portName)
+{
+	// Insert spaces among CamelCase transitions.
+	QString formattedString = VuoRendererComposition::insertSpacesAtCamelCaseTransitions(portName);
+
+	// Capitalize the first letter.
+	if (!formattedString.isEmpty())
+		formattedString[0] = formattedString[0].toUpper();
+
+	// Attempt to identify words, like "2D"/"3D" or strings of variables,
+	// that should receive special capitalization.
+	QStringList finalFormattedStringList;
+	foreach (QString word, formattedString.split(" "))
+	{
+		if (word.contains(QRegExp("^[\\ddxyzw]+$", Qt::CaseInsensitive)))
+			word = word.toUpper();
+
+		finalFormattedStringList.append(word);
+	}
+
+	return finalFormattedStringList.join(" ");
 }
 
 /**
@@ -663,13 +799,14 @@ bool VuoRendererPort::hasPortAction(void) const
  */
 QRectF VuoRendererPort::getActionIndicatorRect(void) const
 {
+	QFontMetricsF fontMetrics = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
 	const qreal marginFromPortName = 4;
 	const qreal triangleHeight = 6;
 	const qreal triangleWidth = 5;
 	qreal triangleLeft = qRound( getNameRect().right() + marginFromPortName );
-	qreal triangleBottom = qRound( getNameRect().center().y() - triangleHeight/2 );
+	qreal triangleTop = qRound( getNameRect().bottom() - fontMetrics.descent() - fontMetrics.xHeight());
 
-	return QRectF(triangleLeft, triangleBottom, triangleWidth, triangleHeight);
+	return QRectF(triangleLeft, triangleTop, triangleWidth, triangleHeight);
 }
 
 /**
@@ -693,7 +830,7 @@ void VuoRendererPort::paintActionIndicator(QPainter *painter, VuoRendererColors 
 }
 
 /**
- * Draws an input or output port (both standard ports and refresh/done/function ports).
+ * Draws an input or output port (both standard ports and refresh/function ports).
  */
 void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -701,11 +838,16 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	if (renderedParentNode && renderedParentNode->paintingDisabled())
 		return;
 
-	drawBoundingRect(painter);
-
 	bool sidebarPaintMode = getProxyPublishedSidebarPort();
 
-	bool isColorInverted = isRefreshPort || isDonePort || isFunctionPort;
+	// Workaround to prevent items that have been removed from the scene from being painted on the scene anyway.
+	// https://b33p.net/kosada/node/7938
+	if (!(scene() || sidebarPaintMode))
+		return;
+
+	drawBoundingRect(painter);
+
+	bool isColorInverted = isRefreshPort || isFunctionPort;
 
 	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isSelected() && !sidebarPaintMode)?
 														  VuoRendererColors::directSelection :
@@ -947,27 +1089,31 @@ void VuoRendererPort::extendedHoverLeaveEvent()
  * the respective port types (input vs. output; event-only vs.
  * event+data; respective data types).
  *
+ * The @c eventOnlyConnection argument should indicate whether the cable
+ * potentially connecting the two ports would be an always-event-only cable.
+ *
  * If the connection would require one or both ports to be specialized, returns false.
  * (But see @c VuoRendererPort::canConnectDirectlyWithSpecializationTo(...).)
  */
-bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort)
+bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection)
 {
 	bool fromPortIsEnabledOutput = (this->getOutput() && this->isEnabled());
 	bool toPortIsEnabledInput = (toPort->getInput() && toPort->isEnabled());
 
 	if (fromPortIsEnabledOutput && toPortIsEnabledInput)
 	{
+		// OK: Any connection made using an event-only cable.
+		if (eventOnlyConnection)
+			return true;
+
 		VuoType *fromDataType = this->getDataType();
 		VuoType *toDataType = toPort->getDataType();
 
 		// OK: Event-only to event+data.
 		// OK: Event-only to event-only.
-		if (!fromDataType)
+		// OK: Event+data to event-only.
+		if (!fromDataType || !toDataType)
 			return true;
-
-		// NOT OK (without a typeconverter): Event+data to event-only.
-		else if (fromDataType && !toDataType)
-			return false;
 
 		// OK: Event+data to event+data, if types are non-generic and identical.
 		else
@@ -983,16 +1129,20 @@ bool VuoRendererPort::canConnectDirectlyWithoutSpecializationTo(VuoRendererPort 
  * event+data; respective data types), and the possibility that one
  * port may be specialized in preparation for the connection.
  *
+ * The @c eventOnlyConnection argument should indicate whether the cable
+ * potentially connecting the two ports would be an always-event-only cable.
+ *
  * Convenience function for VuoRendererPort::canConnectDirectlyWithSpecializationTo(const VuoRendererPort *toPort,
  * VuoRendererPort **portToSpecialize, string &specializedTypeName), for use
  * when only the returned boolean and none of the other output parameter values are needed.
+ *
  */
-bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort)
+bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection)
 {
 	VuoRendererPort *portToSpecialize = NULL;
 	string specializedTypeName = "";
 
-	return (this->canConnectDirectlyWithSpecializationTo(toPort, &portToSpecialize, specializedTypeName));
+	return (this->canConnectDirectlyWithSpecializationTo(toPort, eventOnlyConnection, &portToSpecialize, specializedTypeName));
 }
 
 /**
@@ -1002,17 +1152,18 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
  * event+data; respective data types), and the possibility that one
  * port may be specialized in preparation for the connection.
  *
- * @param[out] toPort The port to consider connecting to.
+ * @param[in] toPort The port to consider connecting to.
+ * @param[in] eventOnlyConnection A boolean indicating whether the connection under consideration would be always-event-only.
  * @param[out] portToSpecialize The port, either this port or @c toPort, that will require specialization in order for the connection to be completed.
  *                              Does not account for potential cascade effects. May be NULL, if the connection may be completed without specialization.
  * @param[out] specializedTypeName The name of the specialized port type with which the generic port type is to be replaced.
  */
-bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, VuoRendererPort **portToSpecialize, string &specializedTypeName)
+bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection, VuoRendererPort **portToSpecialize, string &specializedTypeName)
 {
 	*portToSpecialize = NULL;
 	specializedTypeName = "";
 
-	if (this->canConnectDirectlyWithoutSpecializationTo(toPort))
+	if (this->canConnectDirectlyWithoutSpecializationTo(toPort, eventOnlyConnection))
 		return true;
 
 	bool fromPortIsEnabledOutput = (this->getOutput() && this->isEnabled());
@@ -1063,17 +1214,16 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 }
 
 /**
- * Returns a boolean indicating whether there is a cable
- * connecting this port to @c toPort.
+ * Returns the cable connecting this port to @c toPort, or NULL if not applicable.
  */
-bool VuoRendererPort::isConnectedTo(VuoRendererPort *toPort)
+VuoCable * VuoRendererPort::getCableConnectedTo(VuoRendererPort *toPort)
 {
 	vector<VuoCable *> cables = this->getBase()->getConnectedCables(false);
 	for (vector<VuoCable *>::iterator cable = cables.begin(); cable != cables.end(); ++cable)
 		if ((*cable)->getToPort() == toPort->getBase())
-			return true;
+			return (*cable);
 
-	return false;
+	return NULL;
 }
 
 /**
@@ -1105,7 +1255,6 @@ void VuoRendererPort::keyPressEvent(QKeyEvent *event)
 bool VuoRendererPort::supportsDisconnectionByDragging(void)
 {
 	return (getInput() &&
-			(! isConstant()) &&
 			(! dynamic_cast<VuoRendererTypecastPort *>(this)) &&
 			(! getAttachedInputDrawer()));
 }
@@ -1132,14 +1281,6 @@ bool VuoRendererPort::getOutput(void) const
 bool VuoRendererPort::getRefreshPort(void) const
 {
 	return isRefreshPort;
-}
-
-/**
- * Returns true if this port is a done port.
- */
-bool VuoRendererPort::getDonePort(void) const
-{
-	return isDonePort;
 }
 
 /**
@@ -1193,7 +1334,20 @@ VuoType * VuoRendererPort::getDataType(void) const
 bool VuoRendererPort::isConstant(void) const
 {
 	return ((getInput() && getDataType()) &&						// input port with data...
-			(! ((VuoCompilerPort *)(getBase()->getCompiler()))->hasConnectedDataCable(true)));	// ... that has no incoming data cable (published or unpublished).
+			(!effectivelyHasConnectedDataCable(true)));	// ... that has no incoming data cable (published or unpublished).
+}
+
+/**
+ * Returns true if this port has a connected cable that effectively carries data.
+ * For details on what it means to effectively carry data, see VuoRendererCable::effectivelyCarriesData().
+ */
+bool VuoRendererPort::effectivelyHasConnectedDataCable(bool includePublishedCables) const
+{
+	vector<VuoCable *> connectedCables = getBase()->getConnectedCables(includePublishedCables);
+	for (vector<VuoCable *>::iterator cable = connectedCables.begin(); cable != connectedCables.end(); ++cable)
+		if ((*cable)->hasRenderer() && (*cable)->getRenderer()->effectivelyCarriesData())
+			return true;
+	return false;
 }
 
 /**
@@ -1227,20 +1381,6 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		if (getDataType()->getModuleKey()=="VuoColor")
 		{
 			return "   ";
-		}
-		if (getDataType()->getModuleKey()=="VuoText")
-		{
-			json_object *js = json_tokener_parse(getConstantAsString().c_str());
-			string textWithoutQuotes;
-			if (json_object_get_type(js) == json_type_string)
-				textWithoutQuotes = json_object_get_string(js);
-			json_object_put(js);
-
-			// Abbreviate long VuoText data with an ellipsis.
-			if (textWithoutQuotes.length() > 30)
-				textWithoutQuotes = textWithoutQuotes.substr(0, 27) + "...";
-
-			return textWithoutQuotes;
 		}
 		if (getDataType()->getModuleKey()=="VuoReal")
 		{
@@ -1353,7 +1493,82 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return expression;
 		}
+		if (getDataType()->getModuleKey()=="VuoRealRegulation")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			string outputString;
+			if (json_object_object_get_ex(js, "name", &o))
+				outputString = json_object_get_string(o);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoImage")
+		{
+			VuoImage value = VuoImage_valueFromString(getConstantAsString().c_str());
+
+			if (!value)
+				return strdup("");
+
+			return VuoText_format("%lu×%lu", value->pixelsWide, value->pixelsHigh);
+		}
+		if (getDataType()->getModuleKey()=="VuoTransform")
+		{
+			VuoTransform value = VuoTransform_valueFromString(getConstantAsString().c_str());
+
+			if (VuoTransform_isIdentity(value))
+				return strdup("≡");
+
+			if (value.type == VuoTransformTypeTargeted)
+				return VuoText_format("(%g,%g,%g) toward (%g,%g,%g)",
+									  value.translation.x, value.translation.y, value.translation.z, value.rotationSource.target.x, value.rotationSource.target.y, value.rotationSource.target.z);
+
+			char *rotation;
+			if (value.type == VuoTransformTypeQuaternion)
+				rotation = VuoText_format("‹%g,%g,%g,%g›",
+										  value.rotationSource.quaternion.x, value.rotationSource.quaternion.y, value.rotationSource.quaternion.z, value.rotationSource.quaternion.w);
+			else
+			{
+				VuoPoint3d r = VuoPoint3d_multiply(value.rotationSource.euler, 180./M_PI);
+				rotation = VuoText_format("(%g°,%g°,%g°)",
+										  r.x, r.y, r.z);
+			}
+
+			char *valueAsString = VuoText_format("(%g,%g,%g) %s %g×%g×%g",
+												 value.translation.x, value.translation.y, value.translation.z, rotation, value.scale.x, value.scale.y, value.scale.z);
+			free(rotation);
+			return valueAsString;
+		}
+		if (getDataType()->getModuleKey()=="VuoTransform2d")
+		{
+			VuoTransform2d value = VuoTransform2d_valueFromString(getConstantAsString().c_str());
+
+			if (VuoTransform2d_isIdentity(value))
+				return strdup("≡");
+
+			VuoReal rotationInDegrees = value.rotation * 180./M_PI;
+			return VuoText_format("(%g,%g) %g° %g×%g",
+								  value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
+		}
 	}
+
+	// If it's a JSON string (e.g., VuoText or an enum identifier), unescape and truncate it.
+	json_object *js = json_tokener_parse(getConstantAsString().c_str());
+	if (json_object_get_type(js) == json_type_string)
+	{
+		string textWithoutQuotes = json_object_get_string(js);
+		json_object_put(js);
+
+		// Abbreviate long strings with an ellipsis.
+		if (textWithoutQuotes.length() > 30)
+			textWithoutQuotes = textWithoutQuotes.substr(0, 27) + "…";
+
+		return textWithoutQuotes;
+	}
+	json_object_put(js);
 
 	return getConstantAsString();
 }
@@ -1391,7 +1606,7 @@ bool VuoRendererPort::portNameRenderingEnabled() const
 		return false;
 	else if (sidebarPaintMode)
 		return true;
-	else if (isRefreshPort || isDonePort || isFunctionPort || typecastParentPort)
+	else if (isRefreshPort || isFunctionPort || typecastParentPort)
 		return false;
 
 	return true;
@@ -1464,6 +1679,25 @@ vector<VuoRendererPublishedPort *> VuoRendererPort::getPublishedPorts(void) cons
 
 	return publishedPorts;
 }
+
+/**
+ * Returns a vector of pointers to the externally visible published ports
+ * connected to this port by data-carrying cables.
+ */
+vector<VuoRendererPublishedPort *> VuoRendererPort::getPublishedPortsConnectedByDataCarryingCables(void) const
+{
+	vector <VuoRendererPublishedPort *> publishedPorts;
+	foreach (VuoCable *cable, getBase()->getConnectedCables(true))
+	{
+		if (getInput() && cable->isPublishedInputCable() && cable->getRenderer()->effectivelyCarriesData())
+			publishedPorts.push_back(cable->getFromPort()->getRenderer()->getProxyPublishedSidebarPort());
+		else if (getOutput() && cable->isPublishedOutputCable() && cable->getRenderer()->effectivelyCarriesData())
+			publishedPorts.push_back(cable->getToPort()->getRenderer()->getProxyPublishedSidebarPort());
+	}
+
+	return publishedPorts;
+}
+
 
 /**
  * If set, this port will not be drawn; its drawing will be handled by @c proxySidebarPort.  Used for ports

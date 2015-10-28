@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AddPoints2 [type="vuo.point.add.VuoPoint3d" version="1.0.0" label="Add Points|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="365,277"];
+Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="495,459"];
+Get3DPointValues [type="vuo.point.get.VuoPoint3d" version="1.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="523,263"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="87,450" _x="0.000000" _y="0.000000"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="102,222" _x="0.000000" _y="0.000000" _z="0.000000"];
+MakeList2 [type="vuo.list.make.2.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="319,288"];
+SubtractPoints2 [type="vuo.point.subtract.VuoPoint2d" version="1.0.0" label="Subtract Points|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="336,451"];
+
+AddPoints2:sum -> Get3DPointValues:point;
+Make2DPoint:point -> SubtractPoints2:a;
+Make2DPoint:point -> SubtractPoints2:b;
+Make3DPoint:point -> MakeList2:1;
+Make3DPoint:point -> MakeList2:2;
+MakeList2:list -> AddPoints2:terms;
+SubtractPoints2:difference -> Get2DPointValues:point;
+}

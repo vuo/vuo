@@ -13,7 +13,10 @@
 VuoModuleMetadata({
 					  "title" : "Make Audio Input from Name",
 					  "keywords" : [ "sound", "input", "microphone", "music", "listen", "device" ],
-					  "version" : "1.0.0"
+					  "version" : "1.0.0",
+					  "node" : {
+						  "exampleCompositions" : [ ]
+					  }
 				 });
 
 void nodeEvent

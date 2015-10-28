@@ -11,7 +11,7 @@
 #define VUOCURVEEASING_H
 
 /// @{
-typedef void * VuoList_VuoCurveEasing;
+typedef const struct VuoList_VuoCurveEasing_struct { void *l; } * VuoList_VuoCurveEasing;
 #define VuoList_VuoCurveEasing_TYPE_DEFINED
 /// @}
 

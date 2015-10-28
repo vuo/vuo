@@ -113,6 +113,7 @@ public:
 	static Function * getSendNodeExecutionFinishedFunction(Module *module);
 	static Function * getSendInputPortsUpdatedFunction(Module *module);
 	static Function * getSendOutputPortsUpdatedFunction(Module *module);
+	static Function * getSendEventDroppedFunction(Module *module);
 	static Function * getTranscodeToGraphvizIdentifierFunction(Module *module);
 	static Function * getSerializeFunction(Module *module);
 	static Function * getUnserializeFunction(Module *module);

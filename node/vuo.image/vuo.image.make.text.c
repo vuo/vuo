@@ -22,7 +22,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Text Image",
 					 "keywords" : [ "font", "glyph", "line", "string", "typeface" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.2",
 					 "dependencies" : [
 						 "ApplicationServices.framework"
 					 ],
@@ -38,6 +38,12 @@ void nodeEvent
 		VuoOutputData(VuoImage) image
 )
 {
+	if (!VuoText_length(text))
+	{
+		*image = NULL;
+		return;
+	}
+
 	// Find a font matching VuoFont.
 	CTFontRef ctFont;
 	if (font.fontName)
@@ -119,6 +125,8 @@ void nodeEvent
 		else
 			bounds.size.height += lineHeight * font.lineSpacing;
 	}
+
+	// The 2 extra pixels are to account for the antialiasing on strokes that touch the edge of the glyph bounds — without those pixels, some edge strokes are slightly cut off.
 	unsigned int width = ceil(CGRectGetWidth(bounds))+2;
 	unsigned int height = ceil(CGRectGetHeight(bounds))+2;
 

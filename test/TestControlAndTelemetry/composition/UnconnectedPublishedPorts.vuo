@@ -10,6 +10,6 @@
 digraph G 
 {
 PublishedInputs [type="vuo.in" label="PublishedInputs|<in>in\r" _in="0" _in_type="VuoInteger"];
-Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" _a="0" _b="0"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" _a="0" _b="0"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<out>out\l" _out_type="VuoInteger"];
 }

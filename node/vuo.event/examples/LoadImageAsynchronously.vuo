@@ -1,6 +1,6 @@
 /**
  * @file
- * Downloads an image from the internet and displays it. While waiting for the image to download, displays a different image loaded from your computer. 
+ * Downloads an image from the internet and displays it. While waiting for the image to download, displays a placeholder image. 
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,17 +9,19 @@
 
 digraph G
 {
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="113,141" fillcolor="cyan"];
-GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="413,327" fillcolor="green" _imageURL="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
-GetImage2 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="401,177" fillcolor="green" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/6.jpg\""];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="702,369" fillcolor="green" _requestedFrame_eventThrottling="drop"];
-SelectLatest [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="638,263" fillcolor="green"];
-SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<done>done\r|<spunOff>spunOff\r" pos="247,301" fillcolor="violet"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="235,138" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="432,343" _url="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
+MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="397,159" _color="{\"r\":0.427100,\"g\":0.455131,\"b\":0.689281,\"a\":1.000000}" _width="640" _height="480"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="757,289" fillcolor="green"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="798,263" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectLatest [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="638,263"];
+SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<spunOff>spunOff\r" pos="247,301" fillcolor="violet" _spunOff_eventThrottling="enqueue"];
 
-FireonStart:started -> GetImage2:refresh;
-GetImage2:done -> SpinOffEvent:refresh;
-GetImage2:image -> SelectLatest:option1;
+FireonStart:started -> MakeColorImage:refresh;
 GetImage:image -> SelectLatest:option2;
+MakeColorImage:image -> SelectLatest:option1;
+MakeColorImage:image -> SpinOffEvent:refresh;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
 SelectLatest:latest -> RenderImageToWindow:image;
 SpinOffEvent:spunOff -> GetImage:refresh;
 }

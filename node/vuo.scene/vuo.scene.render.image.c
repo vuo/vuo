@@ -19,13 +19,12 @@
 VuoModuleMetadata({
 					 "title" : "Render Scene to Image",
 					 "keywords" : [ "draw", "object", "opengl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "RippleImageOfSphere.vuo" ]
 					 }
 				 });

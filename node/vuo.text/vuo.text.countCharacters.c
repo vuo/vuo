@@ -14,7 +14,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "letter", "length", "size", "strlen", "string" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "CheckSmsLength.vuo" ]
 					 }
 				 });

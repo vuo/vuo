@@ -68,7 +68,7 @@ private slots:
 		QTest::addColumn< bool >("isInputPort");
 		QTest::addColumn< QString >("typeName");
 
-		QTest::newRow("VuoInteger output port") << "vuo.math.round" << "roundedInteger" << false << "VuoInteger";
+		QTest::newRow("VuoInteger output port") << "vuo.math.round" << "rounded" << false << "VuoInteger";
 		QTest::newRow("VuoText input port") << "vuo.text.cut" << "text" << true << "VuoText";
 		QTest::newRow("event-only trigger port defined in event function") << "vuo.time.firePeriodically" << "fired" << false << "void";
 		QTest::newRow("VuoInteger trigger port defined in callback start function") << "vuo.test.triggerCarryingInteger" << "fired" << false << "VuoInteger";

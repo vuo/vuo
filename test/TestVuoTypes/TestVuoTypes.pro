@@ -25,7 +25,8 @@ TEST_VUO_TYPES_SOURCES += \
 	TestVuoShader.cc \
 	TestVuoText.cc \
 	TestVuoTransform.cc \
-	TestVuoTransform2d.cc
+	TestVuoTransform2d.cc \
+	TestVuoUrl.cc
 
 OTHER_FILES += $$TEST_VUO_TYPES_SOURCES
 

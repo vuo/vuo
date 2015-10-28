@@ -436,25 +436,7 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
 	// Extract the variable names from the math expressions.
 	VuoCompilerInputEventPort *expressionInputEventPort = static_cast<VuoCompilerInputEventPort *>(expressionInputPortCompiler);
 	string expressionConstant = expressionInputEventPort->getData()->getInitialValue();
-	json_object *js = json_tokener_parse(expressionConstant.c_str());
-	json_object *expressionsObject = NULL;
-
-	vector<string> inputVariables;
-	if (json_object_object_get_ex(js, "inputVariables", &expressionsObject))
-	{
-		if (json_object_get_type(expressionsObject) == json_type_array)
-		{
-			int variableCount = json_object_array_length(expressionsObject);
-			for (int i = 0; i < variableCount; ++i)
-			{
-				json_object *itemObject = json_object_array_get_idx(expressionsObject, i);
-				if (json_object_get_type(itemObject) == json_type_string)
-					inputVariables.push_back(json_object_get_string(itemObject));
-			}
-		}
-	}
-	json_object_put(js);
-
+	vector<string> inputVariables = extractInputVariableListFromExpressionsConstant(expressionConstant);
 	unsigned long itemCount = inputVariables.size();
 
 	string keyListClassName = VuoCompilerMakeListNodeClass::buildNodeClassName(itemCount, "VuoText");
@@ -507,6 +489,35 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
 		createdCables.insert(new VuoRendererCable(cableCarryingKeys));
 		createdCables.insert(new VuoRendererCable(cableCarryingValues));
 	}
+}
+
+/**
+ * Extracts the input variables from the provided "inputVariables" @c constant
+ * and returns the variables in an ordered list.
+ */
+vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsConstant(string constant)
+{
+	vector<string> inputVariables;
+
+	json_object *js = json_tokener_parse(constant.c_str());
+	json_object *expressionsObject = NULL;
+
+	if (json_object_object_get_ex(js, "inputVariables", &expressionsObject))
+	{
+		if (json_object_get_type(expressionsObject) == json_type_array)
+		{
+			int variableCount = json_object_array_length(expressionsObject);
+			for (int i = 0; i < variableCount; ++i)
+			{
+				json_object *itemObject = json_object_array_get_idx(expressionsObject, i);
+				if (json_object_get_type(itemObject) == json_type_string)
+					inputVariables.push_back(json_object_get_string(itemObject));
+			}
+		}
+	}
+	json_object_put(js);
+
+	return inputVariables;
 }
 
 /**
@@ -693,7 +704,7 @@ string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool 
 	{
 		ostringstream oss;
 		oss << ++portNameInstanceNum;
-		uniquePortName = uniquePortNamePrefix + "_" + oss.str();
+		uniquePortName = uniquePortNamePrefix + oss.str();
 	}
 
 	return uniquePortName;
@@ -706,7 +717,7 @@ string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool 
  */
 bool VuoRendererComposition::isPublishedPortNameTaken(string name, bool isInput)
 {
-	if (name == "refresh" || name == "done")
+	if (name == "refresh")
 		return true;
 
 	VuoPublishedPort *publishedPort = (isInput ?
@@ -759,10 +770,6 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 
 	// Don't try to collapse typecast nodes with incoming cables to the "refresh" port.
 	if ( ! rn->getBase()->getRefreshPort()->getConnectedCables(true).empty() )
-		return NULL;
-
-	// Don't try to collapse typecast nodes with outgoing cables from the "done" port.
-	if ( ! rn->getBase()->getDonePort()->getConnectedCables(true).empty() )
 		return NULL;
 
 	// Don't try to collapse typecast nodes outputting to multiple nodes, or without any output cables.
@@ -822,16 +829,25 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 															  oldToRP,
 															  signaler);
 
+	QGraphicsItem::CacheMode defaultCacheMode = getCurrentDefaultCacheMode();
 	foreach (VuoCable *cable, inCables)
 	{
 		if (cable->hasRenderer())
+		{
+			cable->getRenderer()->setCacheMode(QGraphicsItem::NoCache);
 			cable->getRenderer()->updateGeometry();
+			cable->getRenderer()->setCacheMode(defaultCacheMode);
+		}
 	}
 
 	foreach (VuoCable *cable, outCables)
 	{
 		if (cable->hasRenderer())
+		{
+			cable->getRenderer()->setCacheMode(QGraphicsItem::NoCache);
 			cable->getRenderer()->updateGeometry();
+			cable->getRenderer()->setCacheMode(defaultCacheMode);
+		}
 	}
 
 	tp->updateGeometry();
@@ -876,16 +892,25 @@ VuoRendererNode * VuoRendererComposition::uncollapseTypecastNode(VuoRendererType
 	VuoRendererPort *uncollapsedToRP = typecast->getReplacedPort();
 	VuoRendererNode *toRN = outCable->getToNode()->getRenderer();
 
+	QGraphicsItem::CacheMode defaultCacheMode = getCurrentDefaultCacheMode();
 	foreach (VuoCable *cable, typecastInPort->getConnectedCables(true))
 	{
 		if (cable->hasRenderer())
+		{
+			cable->getRenderer()->setCacheMode(QGraphicsItem::NoCache);
 			cable->getRenderer()->updateGeometry();
+			cable->getRenderer()->setCacheMode(defaultCacheMode);
+		}
 	}
 
 	foreach (VuoCable *cable, typecastOutPort->getConnectedCables(true))
 	{
 		if (cable->hasRenderer())
+		{
+			cable->getRenderer()->setCacheMode(QGraphicsItem::NoCache);
 			cable->getRenderer()->updateGeometry();
+			cable->getRenderer()->setCacheMode(defaultCacheMode);
+		}
 	}
 
 	typecast->updateGeometry();
@@ -1128,7 +1153,10 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	}
 
 	// Generate and bundle the Info.plist.
-	string plist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>NSHighResolutionCapable</key><true/></dict></plist>";
+	string plist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict>";
+	plist += "<key>NSHighResolutionCapable</key><true/>";
+	plist += "<key>CFBundleExecutable</key><string>" + file + "</string>";
+	plist += "</dict></plist>";
 	VuoFileUtilities::writeStringToFile(plist, tmpAppPath + "/Contents/Info.plist");
 
 	// Bundle the essential components of Vuo.framework.
@@ -1136,7 +1164,7 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	string targetVuoFrameworkPath = tmpAppPath + "/Contents/Frameworks/Vuo.framework/Versions/" + VUO_VERSION_STRING;
 	bundleVuoSubframeworks(sourceVuoFrameworkPath, targetVuoFrameworkPath);
 	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Modules", targetVuoFrameworkPath + "/Modules", "dylib");
-	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Licenses", targetVuoFrameworkPath + "/Licenses");
+	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Documentation/Licenses", targetVuoFrameworkPath + "/Documentation/Licenses");
 
 	// Move the generated app bundle to the desired save path.
 	bool saveSucceeded = (! rename(tmpAppPath.c_str(), savePath.toUtf8().constData()));
@@ -1183,7 +1211,10 @@ string VuoRendererComposition::createAppBundleDirectoryStructure()
 	string vuoFrameworksPathVersionsCurrentModules = vuoFrameworksPathVersionsCurrent + "/Modules";
 	mkdir(vuoFrameworksPathVersionsCurrentModules.c_str(), 0755);
 
-	string vuoFrameworksPathVersionsCurrentLicenses = vuoFrameworksPathVersionsCurrent + "/Licenses";
+	string vuoFrameworksPathVersionsCurrentDocumentation = vuoFrameworksPathVersionsCurrent + "/Documentation";
+	mkdir(vuoFrameworksPathVersionsCurrentDocumentation.c_str(), 0755);
+
+	string vuoFrameworksPathVersionsCurrentLicenses = vuoFrameworksPathVersionsCurrent + "/Documentation/Licenses";
 	mkdir(vuoFrameworksPathVersionsCurrentLicenses.c_str(), 0755);
 
 	return appPath;
@@ -1266,11 +1297,8 @@ void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPat
 	QDir targetVuoSubframeworksPath((targetVuoFrameworkPath + "/Frameworks").c_str());
 
 	set<string> subframeworksToExclude;
-	subframeworksToExclude.insert("CRuntime.framework");
-	subframeworksToExclude.insert("VuoRuntime.framework");
 	subframeworksToExclude.insert("clang.framework");
 	subframeworksToExclude.insert("llvm.framework");
-	subframeworksToExclude.insert("zmq.framework");
 
 	if (sourceVuoSubframeworksPath.exists())
 	{
@@ -1295,4 +1323,20 @@ void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPat
 			}
 		}
 	}
+}
+
+/**
+ * Inserts spaces at CamelCase transitions within the input @c camelCaseString,
+ * capitalizes the first letter of the string, and returns the result.
+ */
+QString VuoRendererComposition::insertSpacesAtCamelCaseTransitions(QString camelCaseString)
+{
+	QString formattedString = camelCaseString;
+
+	// Insert spaces among CamelCase transitions.
+	while (formattedString.contains(QRegExp("\\S[A-Z]")))
+		formattedString.replace(QRegExp("(\\S)([A-Z])"), "\\1 \\2");
+	formattedString.replace(QRegExp("([^0-9])([0-9])"), "\\1 \\2");
+
+	return formattedString;
 }

@@ -5,10 +5,12 @@ include(../../../vuo.pri)
 !equals(MAC_VERSION, "10.6") {
 
 EXAMPLE_SOURCES += \
-	CountLeapObjects.vuo \
 	DisplayLeapHand.vuo \
+	HighlightExtendedFingers.vuo \
+	HoldEgg.vuo \
 	PlayFingerPuppetsWithLeap.vuo \
 	PlayTennisWithLeap.vuo \
+	ShowHandStatus.vuo \
 	TwirlImageWithLeap.vuo
 
 }

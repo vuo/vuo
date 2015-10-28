@@ -17,63 +17,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-struct json_object;
-
-// Types
-#include "VuoAudioSamples.h"
-#include "VuoBlendMode.h"
-#include "VuoBoolean.h"
-#include "VuoColor.h"
-#include "VuoCurve.h"
-#include "VuoCurveEasing.h"
-#include "VuoHorizontalAlignment.h"
-#include "VuoImage.h"
-#include "VuoImageColorDepth.h"
-#include "VuoImageWrapMode.h"
-#include "VuoInteger.h"
-#include "VuoMathExpressionList.h"
-#include "VuoMesh.h"
-#include "VuoModifierKey.h"
-#include "VuoPoint2d.h"
-#include "VuoPoint3d.h"
-#include "VuoPoint4d.h"
-#include "VuoReal.h"
-#include "VuoSceneObject.h"
-#include "VuoScreen.h"
-#include "VuoShader.h"
-#include "VuoText.h"
-#include "VuoTransform.h"
-#include "VuoTransform2d.h"
-#include "VuoVerticalAlignment.h"
-#include "VuoWave.h"
-#include "VuoWindowProperty.h"
-#include "VuoWindowReference.h"
-#include "VuoWrapMode.h"
-
-// List Types
-#include "VuoList_VuoAudioSamples.h"
-#include "VuoList_VuoBlendMode.h"
-#include "VuoList_VuoBoolean.h"
-#include "VuoList_VuoColor.h"
-#include "VuoList_VuoImage.h"
-#include "VuoList_VuoInteger.h"
-#include "VuoList_VuoMesh.h"
-#include "VuoList_VuoModifierKey.h"
-#include "VuoList_VuoPoint2d.h"
-#include "VuoList_VuoPoint3d.h"
-#include "VuoList_VuoPoint4d.h"
-#include "VuoList_VuoReal.h"
-#include "VuoList_VuoSceneObject.h"
-#include "VuoList_VuoScreen.h"
-#include "VuoList_VuoShader.h"
-#include "VuoList_VuoText.h"
-#include "VuoList_VuoTransform.h"
-#include "VuoList_VuoTransform2d.h"
-#include "VuoList_VuoWindowProperty.h"
-#include "VuoList_VuoWindowReference.h"
-#include "VuoList_VuoWrapMode.h"
-
-
 /**
  * @addtogroup DevelopingNodeClasses
  * @{
@@ -88,48 +31,6 @@ struct json_object;
  * one of the node's ports or the node's instance data. This is indicated by its decoration.
  * @{
  */
-
-/**
- * Options for input ports to block events.
- */
-enum VuoPortEventBlocking
-{
-	/**
-	 * An event received by this input port is never blocked. It always flows to all non-trigger output ports.
-	 */
-	VuoPortEventBlocking_None,
-
-	/**
-	 * An event received by this input port may or may not be blocked. Although it always flows to the "done" port,
-	 * it may or may not flow to any other non-trigger output port.
-	 */
-	VuoPortEventBlocking_Door,
-
-	/**
-	 * An event received by this input port is always blocked. Although it always flows to the "done" port,
-	 * it never flows to any other output port.
-	 */
-	VuoPortEventBlocking_Wall
-};
-
-/**
- * Options for trigger ports to throttle events when triggers are firing events faster than the composition
- * can process them.
- */
-enum VuoPortEventThrottling
-{
-	/**
-	 * An event fired by this port will eventually reach downstream nodes, waiting if necessary for previous events
-	 * to flow through the composition.
-	 */
-	VuoPortEventThrottling_Enqueue,
-
-	/**
-	 * An event fired by this port will be dropped (not transmitted to any nodes downstream of the trigger port)
-	 * if it would otherwise have to wait for previous events to flow through the composition.
-	 */
-	VuoPortEventThrottling_Drop
-};
 
 /**
  * Use this to decorate parameters referring to a stateful node's instance data.
@@ -159,16 +60,20 @@ enum VuoPortEventThrottling
  * @hideinitializer
  *
  * @param type The port type. See @ref VuoTypes.
- * @param ... Optionally, a JSON object specification containing additional details about the data, such as its default value.
- *		The "default" key is recognized for all port types, and should have the format accepted by the port type's
- *		MyType_valueFromJson() function. The "defaults" key is recognized for generic port types; its value should be
- *		a JSON object in which each key is a specialized port type name and each value has the format accepted by that
- *		port type's MyType_valueFromJson() function. Additional keys may be recognized by the port type's input editor (see
- *		@ref DevelopingInputEditors).
+ * @param ... Optionally, a JSON object specification containing additional details about the data. Supported JSON keys include:
+ *			- "default" — The default constant value for the port. It should have the format accepted by the port type's
+ *			  MyType_valueFromJson() function.
+ *			- "defaults" — For generic ports, the default constant values for data types to which the port can be specialized.
+ *			  The value for this JSON key should be a JSON object in which each key is a specialized port type name and each
+ *			  value has the format accepted by that port type's MyType_valueFromJson() function.
+ *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
+ *			  This is usually not necessary.
+ *			.
+ *		Additional keys may be recognized by the port type's input editor (see @ref DevelopingInputEditors).
  *
  * \eg{void nodeEvent(VuoInputData(VuoInteger,{"default":60,"suggestedMin":0,"suggestedMax":127}) noteNumber);}
  */
-#define VuoInputData(type, ...) __attribute__((annotate("vuoInputData"),annotate("vuoType:" #type),annotate("vuoInputDataDetails: " #__VA_ARGS__))) const type
+#define VuoInputData(type, ...) __attribute__((annotate("vuoInputData"),annotate("vuoType:" #type),annotate("vuoDetails: " #__VA_ARGS__))) const type
 
 /**
  * Use this to decorate parameters referring to an event-only input port or the event part of a data-and-event input port.
@@ -180,15 +85,23 @@ enum VuoPortEventThrottling
  *
  * @hideinitializer
  *
- * @param eventBlocking A value of type VuoPortEventBlocking, indicating the port's event-blocking behavior.
- * @param name The identifier of the corresponding data port, or blank if this is intended to be an event-only input port.
- * @param ... Optionally, a JSON object specification containing additional details about the event.
- *		Currently, the only supported key is "hasPortAction"; its value should be a boolean.
+ * @param ... Optionally, a JSON object specification containing additional details about the event. Supported JSON keys are:
+ *			- "data" (string) — For data-and-event ports, the variable name for the VuoInputData parameter that provides the
+ *			  data part of the port.
+ *			- "eventBlocking" (string) — The port's policy for blocking events. Defaults to "none".
+ *				- "none" — An event received by this input port is never blocked. It always flows to all non-trigger output ports.
+ *				- "door" — An event received by this input port may or may not be blocked. It may or may not flow to any
+ *				   non-trigger output port.
+ *				- "wall" — An event received by this input port is always blocked. It never flows to any output port.
+ *			- "hasPortAction" (boolean) — Overrides the default heuristics for determining whether the port has a port action
+ *			  (does something special when it receives an event). This is usually not necessary.
+ *			- "name" (string) — For event-only ports, overrides the default heuristics for creating the port's displayed name
+ *			  in rendered compositions. This is usually not necessary.
  *
- * \eg{void nodeEvent(VuoInputData(VuoInteger,"0") seconds, VuoInputEvent(VuoPortEventBlocking_Wall,seconds) secondsEvent);}
- * \eg{void nodeEvent(VuoInputEvent(VuoPortEventBlocking_None,) start);}
+ * \eg{void nodeEvent(VuoInputData(VuoInteger,"0") seconds, VuoInputEvent({"data":"seconds","eventBlocking":"wall"}) secondsEvent);}
+ * \eg{void nodeEvent(VuoInputEvent() start);}
  */
-#define VuoInputEvent(eventBlocking, name, ...) __attribute__((annotate("vuoInputEventBlocking:" #eventBlocking),annotate("vuoInputEvent:" #name),annotate("vuoInputEventDetails: " #__VA_ARGS__))) const bool
+#define VuoInputEvent(...) __attribute__((annotate("vuoInputEvent"),annotate("vuoDetails: " #__VA_ARGS__))) const bool
 
 /**
  * Use this to decorate parameters referring to the data part of a data-and-event output port.
@@ -204,29 +117,36 @@ enum VuoPortEventThrottling
  * @hideinitializer
  *
  * @param type The port type. See @ref VuoTypes.
+ * @param ... Optionally, a JSON object specification containing additional details about the data. Supported JSON keys are:
+ *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
+ *			  This is usually not necessary.
  *
  * \eg{void nodeEvent(VuoOutputData(VuoInteger) seconds);}
  */
-#define VuoOutputData(type) __attribute__((annotate("vuoOutputData"), annotate("vuoType:" # type))) type * const
+#define VuoOutputData(type, ...) __attribute__((annotate("vuoOutputData"), annotate("vuoType:" # type),annotate("vuoDetails: " #__VA_ARGS__))) type * const
 
 /**
  * Use this to decorate parameters referring to an event-only output port or the event part of a data-and-event output port.
  *
  * When this parameter's function is called, the argument passed will be
  * a @c bool*. Set this to true if an event should be sent through the output port.
- * However, if any input port with the @ref VuoPortEventBlocking_None option received an event, then an
+ * However, if any input port with the "eventBlocking" option "none" received an event, then an
  * event will be sent through the output port regardless of this parameter's value.
  *
  * For an event-only port, the parameter's name becomes the port name.
  *
  * @hideinitializer
  *
- * @param name The identifier of the corresponding data port, or blank if this is intended to be an event-only output port.
+ * @param ... Optionally, a JSON object specification containing additional details about the event. Supported JSON keys are:
+ *			- "data" (string) — For data-and-event ports, the variable name for the VuoOutputData parameter that provides the
+ *			  data part of the port.
+ *			- "name" (string) — For event-only ports, overrides the default heuristics for creating the port's displayed name
+ *			  in rendered compositions. This is usually not necessary.
  *
- * \eg{void nodeEvent(VuoOutputData(VuoInteger) seconds, VuoOutputEvent(seconds) secondsEvent);}
+ * \eg{void nodeEvent(VuoOutputData(VuoInteger) seconds, VuoOutputEvent({"data":"seconds"}) secondsEvent);}
  * \eg{void nodeEvent(VuoOutputEvent() started);}
  */
-#define VuoOutputEvent(name) __attribute__((annotate("vuoOutputEvent:" #name))) bool * const
+#define VuoOutputEvent(...) __attribute__((annotate("vuoOutputEvent"),annotate("vuoDetails: " #__VA_ARGS__))) bool * const
 
 /**
  * Use this to decorate parameters referring to a trigger output port.
@@ -238,7 +158,15 @@ enum VuoPortEventThrottling
  *
  * @param name The name of the trigger port.
  * @param type The port type, or `void` for an event-only trigger port. See @ref VuoTypes.
- * @param ... Optionally, a VuoPortEventThrottling value.
+ * @param ... Optionally, a JSON object specification containing additional details about the event. Supported JSON keys are:
+ *			- "eventThrottling" (string) — How the trigger should handle events when triggers are firing events faster than the
+ *			  composition can process them. Defaults to "enqueue".
+ *				- "enqueue" — An event fired by this port will eventually reach downstream nodes, waiting if necessary for
+ *				  previous events to flow through the composition.
+ *				- "drop" — An event fired by this port will be dropped (not transmitted to any nodes downstream of the trigger
+ *				  port) if it would otherwise have to wait for previous events to flow through the composition.
+ *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
+ *			  This is usually not necessary.
  *
  * \eg{void nodeEvent(VuoOutputTrigger(started,void))
  * {
@@ -257,7 +185,7 @@ enum VuoPortEventThrottling
  *     didSomething(t);
  * }}
  */
-#define VuoOutputTrigger(name,type,...) __attribute__((annotate("vuoOutputTrigger:" #name), annotate("vuoType:" #type), annotate("vuoInputEventThrottling:" #__VA_ARGS__))) void (* const name)(type)
+#define VuoOutputTrigger(name,type,...) __attribute__((annotate("vuoOutputTrigger:" #name), annotate("vuoType:" #type), annotate("vuoDetails: " #__VA_ARGS__))) void (* const name)(type)
 
 /**
  * @}

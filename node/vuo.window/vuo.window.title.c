@@ -12,8 +12,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Window Title",
-					 "keywords" : [ "label", "name" ],
+					 "keywords" : [ "label", "name", "properties" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

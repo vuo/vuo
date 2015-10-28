@@ -12,10 +12,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Measure Time",
-					  "keywords" : [ "animate", "frame", "stopwatch", "start", "pause", "elapsed", "count" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "animate", "frame", "stopwatch", "start", "pause", "elapsed", "count", "cue" ],
+					  "version" : "2.0.1",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ "ShowStopwatch.vuo", "RotateOnCue.vuo" ]
 					  },
 				  });
 
@@ -27,6 +27,7 @@ struct nodeInstanceData
 
 	bool hasStarted;
 	bool isRunning;
+	bool needsTimeEventAfterReset;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
@@ -39,12 +40,12 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoReal, {"default":0.0}) time,
-		VuoInputEvent(VuoPortEventBlocking_Door, time) timeEvent,
-		VuoInputEvent(VuoPortEventBlocking_Wall,) start,
-		VuoInputEvent(VuoPortEventBlocking_Wall,) pause,
-		VuoInputEvent(VuoPortEventBlocking_Wall,) reset,
+		VuoInputEvent({"eventBlocking":"door","data":"time"}) timeEvent,
+		VuoInputEvent({"eventBlocking":"wall"}) start,
+		VuoInputEvent({"eventBlocking":"wall"}) pause,
+		VuoInputEvent({"eventBlocking":"wall"}) reset,
 		VuoOutputData(VuoReal) elapsedTime,
-		VuoOutputEvent(elapsedTime) elapsedTimeEvent
+		VuoOutputEvent({"data":"elapsedTime"}) elapsedTimeEvent
 )
 {
 	if (reset || (start && ! (*context)->hasStarted))  // this event resets it
@@ -52,6 +53,12 @@ void nodeInstanceEvent
 		(*context)->lastStartOrResetTime = time;
 		(*context)->lastPauseTime = time;
 		(*context)->totalPauseTime = 0;
+	}
+
+	if (reset)
+	{
+		(*context)->isRunning = false;
+		(*context)->needsTimeEventAfterReset = true;
 	}
 
 	if (start)
@@ -71,10 +78,20 @@ void nodeInstanceEvent
 		(*context)->isRunning = false;
 	}
 
-	if ((*context)->isRunning)
+	if (timeEvent)
 	{
-		*elapsedTime = time - (*context)->lastStartOrResetTime - (*context)->totalPauseTime;
-		*elapsedTimeEvent = true;
+		if ((*context)->needsTimeEventAfterReset)
+		{
+			*elapsedTime = 0;
+			*elapsedTimeEvent = true;
+			(*context)->needsTimeEventAfterReset = false;
+		}
+
+		if ((*context)->isRunning)
+		{
+			*elapsedTime = time - (*context)->lastStartOrResetTime - (*context)->totalPauseTime;
+			*elapsedTimeEvent = true;
+		}
 	}
 }
 

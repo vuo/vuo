@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CopyLayerWithTransforms2 [type="vuo.layer.copy" version="2.0.0" label="Copy Layer with Transforms|<refresh>refresh\l|<layer>layer\l|<transforms>transforms\l|<copies>copies\r" pos="375,338"];
+MakeList [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="752,477"];
+MakeList13 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="803,492"];
+MakeList7 [type="vuo.list.make.2.VuoTransform2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="329,364"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="849,466" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+CopyLayerWithTransforms2:copies -> MakeList:1;
+MakeList13:list -> RenderLayersToWindow:setWindowProperties;
+MakeList7:list -> CopyLayerWithTransforms2:transforms;
+MakeList:list -> RenderLayersToWindow:layers;
+}

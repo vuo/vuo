@@ -13,7 +13,10 @@
 VuoModuleMetadata({
 					  "title" : "Crop Image Pixels",
 					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
+					  "node" : {
+						  "exampleCompositions" : [ ]
+					  }
 				 });
 
 static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,

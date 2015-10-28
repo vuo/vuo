@@ -1,0 +1,57 @@
+/**
+ * @file
+ * A little timer that measures the seconds elapsed.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add3 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="-113,1140"];
+ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="94,1155"];
+ConvertRealToText4 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="514,1137"];
+CountCharacters2 [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="-346,1140"];
+Cut [type="vuo.text.cut" version="2.0.0" label="Cut Text|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="91,1111" _startPosition="1"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-394,680" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="261,978" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="575,1096" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="576,1211" _center="{\"x\":0.000000,\"y\":-0.250000}" _opacity="1.000000"];
+MakeList11 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-159,1151" _2="3"];
+MakeList2 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="809,1095" fillcolor="green"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="758,1080" fillcolor="green"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="359,1111" _font="{\"fontName\":\"EurostileRegular\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="366,1225" _text="\"Click to start and stop.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="392,741" fillcolor="violet"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-441,777" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="855,1069" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RoundDown [type="vuo.math.roundDown" version="2.0.0" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDown>roundedDown\r" pos="-587,1140"];
+SelectOutput3 [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="153,775"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="10,774"];
+
+Add3:sum -> Cut:characterCount;
+ConvertIntegerToText:text -> CountCharacters2:text;
+ConvertRealToText4:text -> Cut:text;
+CountCharacters2:characterCount -> MakeList11:1;
+Cut:partialText -> MakeTextImage:text;
+FireOnStart:started -> MakeTextImage2:refresh;
+FireOnStart:started -> MeasureTime:refresh;
+MakeLayer2:layer -> MakeList7:2;
+MakeLayer:layer -> MakeList7:1;
+MakeList11:list -> Add3:values;
+MakeList2:list -> RenderLayersToWindow2:setWindowProperties;
+MakeList7:list -> RenderLayersToWindow2:layers;
+MakeTextImage2:image -> MakeLayer2:image;
+MakeTextImage:image -> MakeLayer:image;
+MeasureTime:elapsedTime -> ConvertRealToText4:real;
+MeasureTime:elapsedTime -> RoundDown:real;
+ReceiveMouseButtons:pressed -> Toggle:toggle;
+RenderLayersToWindow2:requestedFrame -> MeasureTime:time;
+RenderLayersToWindow2:showedWindow -> ReceiveMouseButtons:window;
+RoundDown:roundedDown -> ConvertIntegerToText:integer;
+SelectOutput3:falseOption -> MeasureTime:pause;
+SelectOutput3:trueOption -> MeasureTime:reset;
+SelectOutput3:trueOption -> MeasureTime:start;
+Toggle:value -> SelectOutput3:which;
+}

@@ -12,8 +12,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Resizable Status",
-					 "keywords" : [ "resize", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify", "lock", "fixed", "size" ],
+					 "keywords" : [ "resize", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify", "lock", "fixed", "size", "properties" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

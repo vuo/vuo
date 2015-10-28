@@ -23,7 +23,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Image to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "1.0.0",
+					 "version" : "3.1.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoGlContext",
@@ -120,7 +120,7 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
 	VuoWindowOpenGl_enableTriggers((*context)->window);
@@ -137,20 +137,24 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoList_VuoWindowProperty) windowProperties
+		VuoInputData(VuoList_VuoWindowProperty) setWindowProperties,
+		VuoInputEvent({"eventBlocking":"none","data":"setWindowProperties"}) setWindowPropertiesEvent
 )
 {
-	unsigned int windowPropertyCount = VuoListGetCount_VuoWindowProperty(windowProperties);
-	for (unsigned int i = 0; i < windowPropertyCount; ++i)
+	if (setWindowPropertiesEvent)
 	{
-		VuoWindowPropertyType type = VuoListGetValueAtIndex_VuoWindowProperty(windowProperties, i).type;
-		if (type == VuoWindowProperty_AspectRatio)
-			(*context)->aspectRatioOverridden = true;
-		else if (type == VuoWindowProperty_AspectRatioReset)
-			(*context)->aspectRatioOverridden = false;
-	}
+		unsigned int windowPropertyCount = VuoListGetCount_VuoWindowProperty(setWindowProperties);
+		for (unsigned int i = 0; i < windowPropertyCount; ++i)
+		{
+			VuoWindowPropertyType type = VuoListGetValue_VuoWindowProperty(setWindowProperties, i).type;
+			if (type == VuoWindowProperty_AspectRatio)
+				(*context)->aspectRatioOverridden = true;
+			else if (type == VuoWindowProperty_AspectRatioReset)
+				(*context)->aspectRatioOverridden = false;
+		}
 
-	VuoWindowOpenGl_setProperties((*context)->window, windowProperties);
+		VuoWindowOpenGl_setProperties((*context)->window, setWindowProperties);
+	}
 
 	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
 												 dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);

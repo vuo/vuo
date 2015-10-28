@@ -1,1 +1,1 @@
-Calculates the quotient of `a` divided by `b` (`a/b`).
+Calculates the quotient of `A` divided by `B` (`A/B`).

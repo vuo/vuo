@@ -12,8 +12,8 @@
 #include <string.h>
 #include "type.h"
 #include "VuoMidiNote.h"
-#include "VuoInteger.h"
 #include "VuoBoolean.h"
+#include "VuoInteger.h"
 #include "VuoText.h"
 
 /// @{
@@ -24,7 +24,9 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoBoolean",
+						"VuoInteger",
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -102,4 +104,15 @@ char * VuoMidiNote_summaryFromValue(const VuoMidiNote mn)
 
 	return VuoText_format("Channel %d: note %s%d (#%d) %s, velocity %d",
 						  mn.channel, noteName, noteOctave, mn.noteNumber, onOff, mn.velocity);
+}
+
+/**
+ * Returns true if the channel, note status (on/off), velocity, and note number all match.
+ */
+bool VuoMidiNote_areEqual(const VuoMidiNote value1, const VuoMidiNote value2)
+{
+	return (value1.channel    == value2.channel
+		 && value1.isNoteOn   == value2.isNoteOn
+		 && value1.velocity   == value2.velocity
+		 && value1.noteNumber == value2.noteNumber);
 }

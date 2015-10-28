@@ -1,6 +1,6 @@
 /**
  * @file
- * vuo.select.latest.2 node implementation.
+ * vuo.select.latest node implementation.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -10,21 +10,21 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Select Latest",
+					 "title" : "Select Latest (2)",
 					 "keywords" : [ "coalesce", "join", "combine", "recent", "current",
 						"switch", "multiplexer", "if", "else", "case", "route", "condition", "control flow" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ "ShowArrowPresses.vuo" ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoGenericType1) option1,
-		VuoInputEvent(VuoPortEventBlocking_None,option1) option1Event,
+		VuoInputEvent({"eventBlocking":"none","data":"option1"}) option1Event,
 		VuoInputData(VuoGenericType1) option2,
-		VuoInputEvent(VuoPortEventBlocking_None,option2) option2Event,
+		VuoInputEvent({"eventBlocking":"none","data":"option2"}) option2Event,
 		VuoOutputData(VuoGenericType1) latest
 )
 {

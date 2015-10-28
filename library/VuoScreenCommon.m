@@ -11,12 +11,15 @@
 #include "VuoScreenCommon.h"
 
 #include <IOKit/graphics/IOGraphicsLib.h>
+#define NS_RETURNS_INNER_POINTER
 #include <AppKit/AppKit.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					  "title" : "VuoScreenCommon",
 					  "dependencies" : [
+						  "VuoScreen",
+						  "VuoList_VuoScreen",
 						  "IOKit.framework",
 						  "AppKit.framework"
 					  ]

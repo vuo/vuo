@@ -13,13 +13,12 @@
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Normal Colors",
-					 "keywords" : [ "mesh", "draw", "opengl", "glsl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-					 ],
-					 "node": {
-						 "isInterface" : false
+					 "title" : "Shade with Vertex Normals",
+					 "keywords" : [ "mesh", "draw", "opengl", "glsl", "scenegraph", "graphics",
+						 "colors", "direction", "heading", "facing" ],
+					 "version" : "1.1.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -59,22 +58,33 @@ static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	}
 );
 
-const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, include(trianglePoint));
-const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
+static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, include(trianglePoint));
+static const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
 
 static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	// Inputs from node
+	uniform vec4 xColor;
+	uniform vec4 yColor;
+	uniform vec4 zColor;
+
 	// Inputs from vertex/geometry shader
 	varying mat3 vertexPlaneToWorld;
 
 	void main()
 	{
-		vec3 normal = vertexPlaneToWorld[2];
-
-		gl_FragColor = vec4(abs(normal), 1);
+		vec3 absNormal = abs(vertexPlaneToWorld[2]);
+		gl_FragColor = absNormal.x*xColor
+					 + absNormal.y*yColor
+					 + absNormal.z*zColor;
 	}
 );
 
 static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+	// Inputs from node
+	uniform vec4 xColor;
+	uniform vec4 yColor;
+	uniform vec4 zColor;
+
 	// Inputs from vertex/geometry shader
 	varying vec4 vertexPosition;
 	varying mat3 vertexPlaneToWorld;
@@ -85,15 +95,19 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 		vertexPosition;
 		fragmentTextureCoordinate;
 
-		vec3 normal = vertexPlaneToWorld[2];
-
-		gl_FragColor = vec4(abs(normal), 1);
+		vec3 absNormal = abs(vertexPlaneToWorld[2]);
+		gl_FragColor = absNormal.x*xColor
+					 + absNormal.y*yColor
+					 + absNormal.z*zColor;
 	}
 );
 
 
 void nodeEvent
 (
+		VuoInputData(VuoColor, {"default":{"r":1.0,"g":0.0,"b":0.0,"a":1.0}}) xColor,
+		VuoInputData(VuoColor, {"default":{"r":0.0,"g":1.0,"b":0.0,"a":1.0}}) yColor,
+		VuoInputData(VuoColor, {"default":{"r":0.0,"g":0.0,"b":1.0,"a":1.0}}) zColor,
 		VuoOutputData(VuoShader) shader
 )
 {
@@ -107,13 +121,7 @@ void nodeEvent
 
 	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSource,            NULL,                      fragmentShaderSource);
 
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
+	VuoShader_setUniform_VuoColor(*shader, "xColor", xColor);
+	VuoShader_setUniform_VuoColor(*shader, "yColor", yColor);
+	VuoShader_setUniform_VuoColor(*shader, "zColor", zColor);
 }

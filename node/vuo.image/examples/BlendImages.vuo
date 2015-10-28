@@ -9,18 +9,18 @@
 
 digraph G
 {
-BlendImage [type="vuo.image.blend" version="1.0.0" label="Blend Image|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<done>done\r|<blended>blended\r" pos="452,205" fillcolor="violet" _blendMode="\"normal\"" _foregroundOpacity="0.500000"];
-DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="467,326"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-47,154" fillcolor="green"];
-GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="163,205" fillcolor="green" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/2.jpg\""];
-GetImage3 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="166,286" fillcolor="green" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/6.jpg\""];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="202,458" fillcolor="green" _requestedFrame_eventThrottling="drop"];
+BlendImage [type="vuo.image.blend" version="1.2.0" label="Blend Image|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="452,205" fillcolor="violet" _blendMode="\"normal\"" _foregroundOpacity="0.500000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-47,154" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="163,205" _url="\"Sunset.jpg\""];
+GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="166,286" _url="\"Seagulls.jpg\""];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="91,453"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="132,427" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 BlendImage:blended -> RenderImageToWindow:image;
-DiscardDataFromEvent:event -> BlendImage:refresh;
 FireOnStart:started -> GetImage3:refresh;
 FireOnStart:started -> GetImage:refresh;
 GetImage3:image -> BlendImage:foreground;
 GetImage:image -> BlendImage:background;
-RenderImageToWindow:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
+RenderImageToWindow:requestedFrame -> BlendImage:refresh;
 }

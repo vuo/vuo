@@ -9,6 +9,12 @@
 
 #ifndef VUOBOOLEAN_H
 #define VUOBOOLEAN_H
+struct json_object;
+
+/// @{
+typedef void * VuoList_VuoBoolean;
+#define VuoList_VuoBoolean_TYPE_DEFINED
+/// @}
 
 /**
  * @ingroup VuoTypes
@@ -21,10 +27,11 @@
 /**
  * A Boolean
  */
-typedef signed long VuoBoolean;
+typedef unsigned long VuoBoolean;
 
 VuoBoolean VuoBoolean_valueFromJson(struct json_object * js);
 struct json_object * VuoBoolean_jsonFromValue(const VuoBoolean value);
+VuoList_VuoBoolean VuoBoolean_allowedValues(void);
 char * VuoBoolean_summaryFromValue(const VuoBoolean value);
 
 /// @{

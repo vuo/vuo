@@ -22,7 +22,9 @@ VuoModuleMetadata({
 					 "keywords" : [ "coordinate" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoBoolean",
+						"VuoReal",
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -84,4 +86,30 @@ json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value)
 char * VuoPoint3d_summaryFromValue(const VuoPoint3d value)
 {
 	return VuoText_format("%g, %g, %g", value.x, value.y, value.z);
+}
+
+/**
+ * Returns a pseudorandom value where each component is between `minimum` and `maximum`.
+ *
+ * @see VuoInteger_random
+ */
+VuoPoint3d VuoPoint3d_random(const VuoPoint3d minimum, const VuoPoint3d maximum)
+{
+	return VuoPoint3d_make(
+				VuoReal_random(minimum.x, maximum.x),
+				VuoReal_random(minimum.y, maximum.y),
+				VuoReal_random(minimum.z, maximum.z));
+}
+
+/**
+ * Returns a pseudorandom value where each component is between `minimum` and `maximum`.
+ *
+ * @see VuoInteger_randomWithState
+ */
+VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d minimum, const VuoPoint3d maximum)
+{
+	return VuoPoint3d_make(
+				VuoReal_randomWithState(state, minimum.x, maximum.x),
+				VuoReal_randomWithState(state, minimum.y, maximum.y),
+				VuoReal_randomWithState(state, minimum.z, maximum.z));
 }

@@ -984,8 +984,12 @@ void VuoCompilerCodeGenUtilities::generateRetainOrReleaseCall(Module *module, Ba
 		Function *function = (isRetain ? getVuoRetainFunction(module) : getVuoReleaseFunction(module));
 		Type *voidPointerType = function->getFunctionType()->getParamType(0);
 
-		Value *valueCasted = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, argument, voidPointerType);
-		CallInst::Create(function, valueCasted, "", block);
+		vector<Value *> retainOrReleaseArgs;
+		retainOrReleaseArgs.push_back(VuoCompilerCodeGenUtilities::generateTypeCast(module, block, argument, voidPointerType));
+		retainOrReleaseArgs.push_back(VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, module->getModuleIdentifier(), "VuoFileName"));	// file
+		retainOrReleaseArgs.push_back(ConstantInt::get(module->getContext(), APInt(32, 0)));																// line
+		retainOrReleaseArgs.push_back(VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, block->getName(), "VuoBlockName"));				// function
+		CallInst::Create(function, retainOrReleaseArgs, "", block);
 	}
 	else if (argument->getType()->isStructTy())
 	{
@@ -1449,7 +1453,7 @@ Function * VuoCompilerCodeGenUtilities::getCallbackStopFunction(Module *module)
 
 Function * VuoCompilerCodeGenUtilities::getVuoRetainFunction(Module *module)
 {
-	const char *functionName = "VuoRetain";
+	const char *functionName = "VuoRetainF";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
@@ -1457,7 +1461,10 @@ Function * VuoCompilerCodeGenUtilities::getVuoRetainFunction(Module *module)
 		IntegerType *intType = IntegerType::get(module->getContext(), 32);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(voidPointerType);
+		functionParams.push_back(voidPointerType);	// pointer
+		functionParams.push_back(voidPointerType);	// file
+		functionParams.push_back(intType);			// line
+		functionParams.push_back(voidPointerType);	// function
 		FunctionType *functionType = FunctionType::get(intType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
@@ -1466,7 +1473,7 @@ Function * VuoCompilerCodeGenUtilities::getVuoRetainFunction(Module *module)
 
 Function * VuoCompilerCodeGenUtilities::getVuoReleaseFunction(Module *module)
 {
-	const char *functionName = "VuoRelease";
+	const char *functionName = "VuoReleaseF";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
@@ -1474,7 +1481,10 @@ Function * VuoCompilerCodeGenUtilities::getVuoReleaseFunction(Module *module)
 		IntegerType *intType = IntegerType::get(module->getContext(), 32);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(voidPointerType);
+		functionParams.push_back(voidPointerType);	// pointer
+		functionParams.push_back(voidPointerType);	// file
+		functionParams.push_back(intType);			// line
+		functionParams.push_back(voidPointerType);	// function
 		FunctionType *functionType = FunctionType::get(intType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
@@ -1720,6 +1730,22 @@ Function * VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(Module
 		vector<Type *> functionParams;
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(boolType);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getSendEventDroppedFunction(Module *module)
+{
+	const char *functionName = "sendEventDropped";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
 		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);

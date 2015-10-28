@@ -19,7 +19,7 @@
 /// The starting index for unreserved input ports within the @c inputPortClasses list.
 const int VuoNodeClass::unreservedInputPortStartIndex = 1;  // 0 is refresh port
 /// The starting index for unreserved output ports within the @c outputPortClasses list.
-const int VuoNodeClass::unreservedOutputPortStartIndex = 1; // 0 is done port
+const int VuoNodeClass::unreservedOutputPortStartIndex = 0;
 /// The class name of the Vuo published input pseudo-node.
 const string VuoNodeClass::publishedInputNodeClassName = "vuo.in";
 /// The class name of the Vuo published output pseudo-node.
@@ -35,7 +35,7 @@ const string VuoNodeClass::publishedInputNodeSimultaneousTriggerName = "vuoSimul
  * Create a dummy base node class with no implementation.
  *
  * @param className The node class name.  See @c #getClassName.
- * @param inputPortClassNames Strings representing the names of this node class's input ports.  This list **should not** include the refresh or done port.
+ * @param inputPortClassNames Strings representing the names of this node class's input ports.  This list **should not** include the refresh port.
  * @param outputPortClassNames Strings representing the names of this node class's output ports.
  */
 VuoNodeClass::VuoNodeClass(string className, vector<string> inputPortClassNames, vector<string> outputPortClassNames)
@@ -44,8 +44,6 @@ VuoNodeClass::VuoNodeClass(string className, vector<string> inputPortClassNames,
 {
 	this->refreshPortClass = new VuoPortClass("refresh", VuoPortClass::eventOnlyPort);
 	inputPortClasses.push_back(this->refreshPortClass);
-	this->donePortClass = new VuoPortClass("done", VuoPortClass::eventOnlyPort);
-	outputPortClasses.push_back(this->donePortClass);
 	this->interface = false;
 
 	for (vector<string>::iterator i = inputPortClassNames.begin(); i != inputPortClassNames.end(); ++i)
@@ -65,18 +63,28 @@ VuoNodeClass::VuoNodeClass(string className, vector<string> inputPortClassNames,
  *
  * @param className The node class name.  See @c #getClassName.
  * @param refreshPortClass The refresh port class.
- * @param donePortClass The done port class.
  * @param inputPortClasses This node class's input ports.  This list **should** include @c refreshPortClass.
  * @param outputPortClasses This node class's output ports.
  */
-VuoNodeClass::VuoNodeClass(string className, VuoPortClass * refreshPortClass, VuoPortClass * donePortClass, vector<VuoPortClass *> inputPortClasses, vector<VuoPortClass *> outputPortClasses)
+VuoNodeClass::VuoNodeClass(string className, VuoPortClass * refreshPortClass, vector<VuoPortClass *> inputPortClasses, vector<VuoPortClass *> outputPortClasses)
 	: VuoBase<VuoCompilerNodeClass,void>("VuoNodeClass with actual ports"),
 	  VuoModule(className)
 {
 	this->refreshPortClass = refreshPortClass;
-	this->donePortClass = donePortClass;
 	this->inputPortClasses = inputPortClasses;
 	this->outputPortClasses = outputPortClasses;
+}
+
+/**
+ * Destructor.
+ */
+VuoNodeClass::~VuoNodeClass(void)
+{
+	for (vector<VuoPortClass *>::iterator i = inputPortClasses.begin(); i != inputPortClasses.end(); ++i)
+		delete *i;
+
+	for (vector<VuoPortClass *>::iterator i = outputPortClasses.begin(); i != outputPortClasses.end(); ++i)
+		delete *i;
 }
 
 /**
@@ -90,7 +98,6 @@ VuoNode * VuoNodeClass::newNode(string title, double x, double y)
 
 	vector<VuoPort *> inputPorts;
 	VuoPort * refreshPort = NULL;
-	VuoPort * donePort = NULL;
 	for (vector<VuoPortClass *>::iterator it = inputPortClasses.begin(); it != inputPortClasses.end(); ++it)
 	{
 		VuoPort * p = new VuoPort(*it);
@@ -104,11 +111,9 @@ VuoNode * VuoNodeClass::newNode(string title, double x, double y)
 	{
 		VuoPort * p = new VuoPort(*it);
 		outputPorts.push_back(p);
-		if (*it == donePortClass)
-			donePort = p;
 	}
 
-	return new VuoNode(this, nodeTitle, refreshPort, donePort, inputPorts, outputPorts, x, y);
+	return new VuoNode(this, nodeTitle, refreshPort, inputPorts, outputPorts, x, y);
 }
 
 /**
@@ -151,7 +156,11 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 	string nodeClassName = getClassName();
 	return (VuoStringUtilities::beginsWith(nodeClassName, "vuo.type")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.math.round")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get"));
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.first.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.last.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.random.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get."));
 
 #if 0
 	if (inputPortClasses.size() != VuoNodeClass::unreservedInputPortStartIndex+1)
@@ -229,22 +238,6 @@ void VuoNodeClass::setRefreshPortClass(VuoPortClass * refreshPortClass)
 }
 
 /**
- * Returns the node class's done port class.
- */
-VuoPortClass * VuoNodeClass::getDonePortClass(void)
-{
-	return donePortClass;
-}
-
-/**
- * Sets the node class's done port class.
- */
-void VuoNodeClass::setDonePortClass(VuoPortClass * donePortClass)
-{
-	this->donePortClass = donePortClass;
-}
-
-/**
  * Returns a list of the node class's input port classes.
  *
  * The port classes are listed in the order defined in the node class implementation's event function,
@@ -267,9 +260,7 @@ void VuoNodeClass::setInputPortClasses(vector<VuoPortClass *> inputPortClasses)
 /**
  * Returns a list of the node class's output port classes.
  *
- * The port classes are listed in the order defined in the node class implementation's event function,
- * with the exception that the done port is always present (even if not specified in the node class
- * implementation's event function) and is always first.
+ * The port classes are listed in the order defined in the node class implementation's event function.
  */
 vector<VuoPortClass *> VuoNodeClass::getOutputPortClasses(void)
 {

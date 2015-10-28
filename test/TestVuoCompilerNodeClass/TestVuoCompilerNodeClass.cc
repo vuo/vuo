@@ -53,9 +53,8 @@ private slots:
 			inputNames.push_back("initialValue");
 			inputNames.push_back("newValue");
 			vector<string> outputNames;
-			outputNames.push_back("done");
 			outputNames.push_back("heldValue");
-			QTest::newRow("Node class with explicit event blocking") << "vuo.hold.VuoInteger" << inputNames << outputNames;
+			QTest::newRow("Node class with explicit event blocking") << "vuo.data.hold.VuoInteger" << inputNames << outputNames;
 		}
 
 		{
@@ -64,7 +63,6 @@ private slots:
 			inputNames.push_back("a");
 			inputNames.push_back("b");
 			vector<string> outputNames;
-			outputNames.push_back("done");
 			outputNames.push_back("difference");
 			QTest::newRow("Node class without explicit event blocking") << "vuo.math.subtract.VuoInteger" << inputNames << outputNames;
 		}
@@ -74,7 +72,6 @@ private slots:
 			inputNames.push_back("refresh");  // Refresh should always be the 0th port of getInputPortClasses(), even though it's not specified at all in Fire Periodically's nodeInstanceEvent method.
 			inputNames.push_back("seconds");
 			vector<string> outputNames;
-			outputNames.push_back("done");
 			outputNames.push_back("fired");
 			QTest::newRow("Node class with a trigger in both the callbackStart and event functions") << "vuo.time.firePeriodically" << inputNames << outputNames;
 		}
@@ -87,7 +84,6 @@ private slots:
 			inputNames.push_back("inputData2");
 			inputNames.push_back("inputData3");
 			vector<string> outputNames;
-			outputNames.push_back("done");
 			QTest::newRow("Node class with input data in the init, callbackStart, and event functions") << "vuo.test.inputDataPortOrder" << inputNames << outputNames;
 		}
 	}
@@ -115,6 +111,69 @@ private slots:
 			string actualName = actualOutputs.at(i)->getName();
 			string expectedName = expectedOutputNames.at(i);
 			QCOMPARE(QString(actualName.c_str()), QString(expectedName.c_str()));
+		}
+	}
+
+	void testPortDetails()
+	{
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass("vuo.test.details");
+
+		vector<VuoPortClass *> portClasses;
+		vector<VuoPortClass *> inputPortClasses = nodeClass->getBase()->getInputPortClasses();
+		vector<VuoPortClass *> outputPortClasses = nodeClass->getBase()->getOutputPortClasses();
+		portClasses.insert(portClasses.end(), inputPortClasses.begin(), inputPortClasses.end());
+		portClasses.insert(portClasses.end(), outputPortClasses.begin(), outputPortClasses.end());
+
+		foreach (VuoPortClass *basePortClass, portClasses)
+		{
+			if (basePortClass == nodeClass->getBase()->getRefreshPortClass())
+				continue;
+
+			string portName = basePortClass->getName();
+
+			VuoCompilerEventPortClass *eventPortClass = dynamic_cast<VuoCompilerEventPortClass *>(basePortClass->getCompiler());
+			if (eventPortClass)
+			{
+				QVERIFY2(eventPortClass->getDetails() != NULL, portName.c_str());
+				string eventDetails;
+				{
+					json_object *o = NULL;
+					bool found = json_object_object_get_ex(eventPortClass->getDetails(), "test", &o);
+					QVERIFY2(found, portName.c_str());
+					eventDetails = json_object_get_string(o);
+				}
+				string expectedEventDetails = portName + " event";
+				QCOMPARE(QString::fromStdString(eventDetails), QString::fromStdString(expectedEventDetails));
+
+				VuoCompilerDataClass *dataClass = eventPortClass->getDataClass();
+				if (dataClass)
+				{
+					QVERIFY2(dataClass->getDetails() != NULL, portName.c_str());
+					string dataDetails;
+					{
+						json_object *o = NULL;
+						bool found = json_object_object_get_ex(dataClass->getDetails(), "test", &o);
+						QVERIFY2(found, portName.c_str());
+						dataDetails = json_object_get_string(o);
+					}
+					string expectedDataDetails = portName + " data";
+					QCOMPARE(QString::fromStdString(dataDetails), QString::fromStdString(expectedDataDetails));
+				}
+			}
+			else
+			{
+				VuoCompilerTriggerPortClass *triggerPortClass = dynamic_cast<VuoCompilerTriggerPortClass *>(basePortClass->getCompiler());
+				QVERIFY2(triggerPortClass->getDetails() != NULL, portName.c_str());
+				string details;
+				{
+					json_object *o = NULL;
+					bool found = json_object_object_get_ex(triggerPortClass->getDetails(), "test", &o);
+					QVERIFY2(found, portName.c_str());
+					details = json_object_get_string(o);
+				}
+				string expectedDetails = portName + " trigger";
+				QCOMPARE(QString::fromStdString(details), QString::fromStdString(expectedDetails));
+			}
 		}
 	}
 
@@ -147,11 +206,12 @@ private slots:
 		QTest::addColumn< bool >("isInput");
 		QTest::addColumn< VuoPortClass::EventBlocking >("expectedEventBlocking");
 
-		QTest::newRow("VuoInputEvent")					<< "vuo.select.in.2.event"		<< "option1"	<< true		<< VuoPortClass::EventBlocking_Door;
-		QTest::newRow("VuoInputEvent and VuoInputData") << "vuo.select.in.2.event"		<< "which"		<< true		<< VuoPortClass::EventBlocking_Wall;
-		QTest::newRow("VuoInputData")						<< "vuo.text.countCharacters"	<< "text"		<< true		<< VuoPortClass::EventBlocking_None;
+		QTest::newRow("event-only door")					<< "vuo.select.in.boolean.event"<< "falseOption"	<< true		<< VuoPortClass::EventBlocking_Door;
+		QTest::newRow("data-and-event door")				<< "vuo.select.in.boolean"		<< "falseOption"	<< true		<< VuoPortClass::EventBlocking_Door;
+		QTest::newRow("data-and-event wall")				<< "vuo.data.hold"				<< "newValue"		<< true		<< VuoPortClass::EventBlocking_Wall;
+		QTest::newRow("data-and-event non-blocking")		<< "vuo.text.countCharacters"	<< "text"		<< true		<< VuoPortClass::EventBlocking_None;
 		QTest::newRow("refresh")							<< "vuo.text.countCharacters"	<< "refresh"	<< true		<< VuoPortClass::EventBlocking_None;
-		QTest::newRow("output port")						<< "vuo.select.in.2.event"		<< "out"		<< false	<< VuoPortClass::EventBlocking_None;
+		QTest::newRow("output port")						<< "vuo.select.in.event.2"		<< "out"		<< false	<< VuoPortClass::EventBlocking_None;
 	}
 	void testPortEventBlocking()
 	{
@@ -222,7 +282,7 @@ private slots:
 		{
 			vector<string> expectedUniqueGenericTypes;
 			expectedUniqueGenericTypes.push_back("VuoGenericType1");
-			QTest::newRow("1 generic type in multiple ports") << "vuo.hold" << expectedUniqueGenericTypes;
+			QTest::newRow("1 generic type in multiple ports") << "vuo.data.hold" << expectedUniqueGenericTypes;
 		}
 
 		{
@@ -289,14 +349,14 @@ private slots:
 			set<string> expectedCompatibleTypes;
 			expectedCompatibleTypes.insert("VuoInteger");
 			expectedCompatibleTypes.insert("VuoReal");
-			QTest::newRow("Generic singleton compatible with numeric") << "vuo.math.add" << "sum" << "VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
+			QTest::newRow("Generic singleton compatible with numeric") << "vuo.math.max" << "max" << "VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
 		}
 
 		{
 			set<string> expectedCompatibleTypes;
 			expectedCompatibleTypes.insert("VuoList_VuoInteger");
 			expectedCompatibleTypes.insert("VuoList_VuoReal");
-			QTest::newRow("Generic list compatible with numeric") << "vuo.math.add" << "terms" << "VuoList_VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
+			QTest::newRow("Generic list compatible with numeric") << "vuo.math.max" << "values" << "VuoList_VuoGenericType1" << VuoGenericType::whitelistedTypes << expectedCompatibleTypes;
 		}
 	}
 	void testGenericPortCompatibility()

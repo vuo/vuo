@@ -4,7 +4,6 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 GENERIC_NODE_SOURCES += \
-	vuo.point.add.c \
 	vuo.point.distance.c \
 	vuo.point.make.curve.c \
 	vuo.point.multiply.scalar.c \
@@ -12,8 +11,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.point.sort.distance.c \
 	vuo.point.sort.distance.x.c \
 	vuo.point.sort.distance.y.c \
-	vuo.point.sort.distance.z.c \
-	vuo.point.subtract.c
+	vuo.point.sort.distance.z.c
 
 NODE_SOURCES += \
 	vuo.point.get.VuoPoint2d.c \
@@ -24,6 +22,8 @@ NODE_SOURCES += \
 	vuo.point.make.VuoPoint2d.c \
 	vuo.point.make.VuoPoint3d.c \
 	vuo.point.make.VuoPoint4d.c \
+	vuo.point.merge.xy.c \
+	vuo.point.merge.xyz.c \
 	vuo.point.sort.distance.w.VuoPoint4d.c \
 	vuo.point.within.box.c \
 	vuo.point.within.circle.c \

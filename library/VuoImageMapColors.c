@@ -73,7 +73,7 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 	int n = 0;
 	for(int i = 1; i <= len; i++)
 	{
-		VuoColor col = VuoListGetValueAtIndex_VuoColor(colors, i);
+		VuoColor col = VuoListGetValue_VuoColor(colors, i);
 		pixels[n++] = (unsigned int)(col.r*255);
 		pixels[n++] = (unsigned int)(col.g*255);
 		pixels[n++] = (unsigned int)(col.b*255);

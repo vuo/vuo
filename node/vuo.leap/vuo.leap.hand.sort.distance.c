@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "organize", "order", "nearest", "point" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo" ]
 					  }
 				  });
 
@@ -49,10 +49,10 @@ void nodeEvent
 	sortable_pointValue pointValues[count];
 
 	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, VuoPoint3d_squaredMagnitude(VuoPoint3d_subtract(VuoListGetValueAtIndex_VuoLeapHand(Hands, i+1).palmPosition, target))};
+		pointValues[i] = (sortable_pointValue){i, VuoPoint3d_squaredMagnitude(VuoPoint3d_subtract(VuoListGetValue_VuoLeapHand(Hands, i+1).palmPosition, target))};
 
 	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
 
 	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoLeapHand(*sortedHands, VuoListGetValueAtIndex_VuoLeapHand(Hands, pointValues[i].index+1) );
+		VuoListAppendValue_VuoLeapHand(*sortedHands, VuoListGetValue_VuoLeapHand(Hands, pointValues[i].index+1) );
 }

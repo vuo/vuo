@@ -9,10 +9,10 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="0,0"];
-HoldValue1 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="68,63"];
-HoldValue2 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="68,63"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,0" _started_eventThrottling="enqueue"];
+HoldValue1 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="68,63"];
+HoldValue2 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="68,63"];
 
-FireOnStart:started -> HoldValue1:refresh
-FireOnStart:started -> HoldValue2:refresh
+FireOnStart:started -> HoldValue1:refresh;
+FireOnStart:started -> HoldValue2:refresh;
 }

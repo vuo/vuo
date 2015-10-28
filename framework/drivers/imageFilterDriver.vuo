@@ -9,18 +9,16 @@
 
 digraph G
 {
-DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="514,425"];
-FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="355,149" fillcolor="cyan" _requestedFrame_eventThrottling="drop"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="145,18" fillcolor="cyan" _started_eventThrottling="enqueue"];
-GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="295,50" fillcolor="cyan" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/3.jpg\""];
-HoldValue2 [type="vuo.hold.VuoImage" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="533,-46" fillcolor="cyan"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="149,230" fillcolor="magenta" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="355,149" fillcolor="cyan" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="145,18" fillcolor="cyan" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="295,50" fillcolor="cyan" _url="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/3.jpg\""];
+HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="533,-46" fillcolor="cyan"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="149,230" fillcolor="magenta" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<outputImage>outputImage\r" _outputImage_type="VuoImage"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<image>image\l|<time>time\l" _image_type="VuoImage" _time_type="VuoReal"];
 
-DiscardDataFromEvent:event -> HoldValue2:refresh;
-FireOnDisplayRefresh:requestedFrame -> DiscardDataFromEvent:dataAndEvent;
-FireOnStart:started -> GetImage:imageURL;
+FireOnDisplayRefresh:requestedFrame -> HoldValue2:refresh;
+FireOnStart:started -> GetImage:url;
 GetImage:image -> HoldValue2:initialValue;
 PublishedInputs:outputImage -> RenderImageToWindow:image;
 HoldValue2:heldValue -> PublishedOutputs:image;

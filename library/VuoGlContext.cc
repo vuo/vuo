@@ -111,15 +111,20 @@ private:
 	CGLContextObj createContext(CGLContextObj rootContext)
 	{
 		CGLPixelFormatObj pf;
+		bool shouldDestroyPixelFormat = false;
 		if (rootContext)
 			pf = CGLGetPixelFormat(rootContext);
 		else
+		{
 			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true);
+			shouldDestroyPixelFormat = true;
+		}
 
 		CGLContextObj context;
 		{
 			CGLError error = CGLCreateContext(pf, rootContext, &context);
-			CGLDestroyPixelFormat(pf);
+			if (shouldDestroyPixelFormat)
+				CGLDestroyPixelFormat(pf);
 			if (error != kCGLNoError)
 			{
 				VLog("Error: %s\n", CGLErrorString(error));
@@ -141,7 +146,8 @@ CGLContextObj VuoGlContextPool::rootContext = NULL;
 /**
  * Specifies a platform-specific context to be used as the base for all of Vuo's shared GL contexts.
  *
- * On Mac, this should be a @c CGLContext.
+ * On Mac, this should be a `CGLContext`.  The `CGLContext` must be unlocked when calling this function,
+ * but after that you may lock it at any time (Vuo doesn't require it to be locked or unlocked).
  *
  * Must be called before any Vuo composition is loaded, and before any other @c VuoGlContext_* methods.
  *
@@ -155,7 +161,13 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 		return;
 	}
 
-	VuoGlContextPool::rootContext = (CGLContextObj)rootContext;
+	CGLPixelFormatObj pf = CGLGetPixelFormat((CGLContextObj)rootContext);
+	CGLError error = CGLCreateContext(pf, (CGLContextObj)rootContext, &VuoGlContextPool::rootContext);
+	if (error != kCGLNoError)
+	{
+		VLog("Error: %s\n", CGLErrorString(error));
+		return;
+	}
 }
 
 /**
@@ -261,19 +273,68 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
  */
 void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 {
-	CGLPixelFormatAttribute pfa[] = {
-		kCGLPFAAccelerated,
-		kCGLPFAWindow,
-		kCGLPFANoRecovery,
-		kCGLPFADoubleBuffer,
-		kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
-		kCGLPFADepthSize, (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0),
-		// Multisampling breaks point rendering on some GPUs.  https://b33p.net/kosada/node/8225#comment-31324
-//		kCGLPFAMultisample,
-//		kCGLPFASampleBuffers, (CGLPixelFormatAttribute) 1,
-//		kCGLPFASamples, (CGLPixelFormatAttribute) 4,
-		(CGLPixelFormatAttribute) 0
-	};
+	// Check whether it's OK to use multisampling on this GPU.
+	static dispatch_once_t multisamplingCheck;
+	static bool multisampling = false;
+	dispatch_once(&multisamplingCheck, ^{
+					  // Create a temporary context so we can get the GPU renderer string.
+					  CGLPixelFormatObj pf;
+					  {
+						  CGLPixelFormatAttribute pfa[13] = {
+							  kCGLPFAAccelerated,
+							  kCGLPFANoRecovery,
+							  kCGLPFADoubleBuffer,
+							  kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
+							  kCGLPFADepthSize, (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0),
+							  (CGLPixelFormatAttribute) 0
+						  };
+						  GLint npix;
+						  CGLError error = CGLChoosePixelFormat(pfa, &pf, &npix);
+						  if (error != kCGLNoError)
+						  {
+							  VLog("Error: %s", CGLErrorString(error));
+							  return;
+						  }
+					  }
+
+					  CGLContextObj cgl_ctx;
+					  {
+						  CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
+						  CGLDestroyPixelFormat(pf);
+						  if (error != kCGLNoError)
+						  {
+							  VLog("Error: %s\n", CGLErrorString(error));
+							  return;
+						  }
+					  }
+
+					  if (strcmp((const char *)glGetString(GL_RENDERER), "Intel HD Graphics 4000 OpenGL Engine") == 0)
+						  // Multisampling is known to break point rendering on Intel HD Graphics 4000.
+						  // https://b33p.net/kosada/node/8225#comment-31324
+						  multisampling = false;
+					  else
+						  multisampling = true;
+
+					  CGLDestroyContext(cgl_ctx);
+				  });
+
+
+	CGLPixelFormatAttribute pfa[13];
+	int pfaIndex = 0;
+	pfa[pfaIndex++] = kCGLPFAAccelerated;
+	pfa[pfaIndex++] = kCGLPFANoRecovery;
+	pfa[pfaIndex++] = kCGLPFADoubleBuffer;
+	pfa[pfaIndex++] = kCGLPFAColorSize; pfa[pfaIndex++] = (CGLPixelFormatAttribute) 24;
+	pfa[pfaIndex++] = kCGLPFADepthSize; pfa[pfaIndex++] = (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0);
+
+	if (multisampling)
+	{
+		pfa[pfaIndex++] = kCGLPFAMultisample;
+		pfa[pfaIndex++] = kCGLPFASampleBuffers; pfa[pfaIndex++] = (CGLPixelFormatAttribute) 1;
+		pfa[pfaIndex++] = kCGLPFASamples;       pfa[pfaIndex++] = (CGLPixelFormatAttribute) 4;
+	}
+
+	pfa[pfaIndex++] = (CGLPixelFormatAttribute) 0;
 
 	CGLPixelFormatObj pf;
 	GLint npix;

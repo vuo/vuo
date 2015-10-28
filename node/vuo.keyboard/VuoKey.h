@@ -11,7 +11,7 @@
 #define VUOKEY_H
 
 /// @{
-typedef void * VuoList_VuoKey;
+typedef const struct VuoList_VuoKey_struct { void *l; } * VuoList_VuoKey;
 #define VuoList_VuoKey_TYPE_DEFINED
 /// @}
 

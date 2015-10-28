@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Smooth with Duration",
 					  "keywords" : [ "ease", "easing", "even", "calm", "steady", "continuous", "transition", "time", "length" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]
@@ -46,34 +46,34 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) ctx,
 		VuoInputData(VuoReal, {"default":0.0}) time,
-		VuoInputEvent(VuoPortEventBlocking_Door, time) timeEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"time"}) timeEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{
 										   "VuoReal":0.,
 										   "VuoPoint2d":{"x":0.,"y":0.},
 										   "VuoPoint3d":{"x":0.,"y":0.,"z":0.}
 									   }}) setPosition,
-		VuoInputEvent(VuoPortEventBlocking_Wall, setPosition, {"hasPortAction":true}) setPositionEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"setPosition","hasPortAction":true}) setPositionEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{
 										   "VuoReal":1.,
 										   "VuoPoint2d":{"x":1.,"y":1.},
 										   "VuoPoint3d":{"x":1.,"y":1.,"z":1.}
 									   }}) setTarget,
-		VuoInputEvent(VuoPortEventBlocking_Wall, setTarget, {"hasPortAction":true}) setTargetEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"setTarget","hasPortAction":true}) setTargetEvent,
 		VuoInputData(VuoReal, {"default":1., "suggestedMin":0., "suggestedStep":0.1}) duration,
-		VuoInputEvent(VuoPortEventBlocking_Wall, duration) durationEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"duration"}) durationEvent,
 		VuoInputData(VuoCurve, {"default":"linear"}) curve,
-		VuoInputEvent(VuoPortEventBlocking_Wall, curve) curveEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"curve"}) curveEvent,
 		VuoInputData(VuoCurveEasing, {"default":"in"}) easing,
-		VuoInputEvent(VuoPortEventBlocking_Wall, easing) easingEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"easing"}) easingEvent,
 		VuoOutputData(VuoGenericType1) position,
-		VuoOutputEvent(position) positionEvent
+		VuoOutputEvent({"data":"position"}) positionEvent
 )
 {
 	if ((*ctx)->first || setPositionEvent)
 	{
 		(*ctx)->currentPosition = setPosition;
 		(*ctx)->moving = false;
-		if(setPositionEvent)	
+		if(setPositionEvent)
 			(*ctx)->updateNeededAfterSetPosition = true;
 		(*ctx)->first = false;
 	}

@@ -13,7 +13,7 @@ DisplayConsoleWindow1 [type="vuo.console.window" label="DisplayConsoleWindow1|<r
 Subtract1 [type="vuo.math.subtract.VuoInteger" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="403,367" _a="0" _b="5"];
 Subtract2 [type="vuo.math.subtract.VuoInteger" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="188,383" _a="0" _b="7"];
 ConvertIntegertoText1 [type="vuo.type.integer.text" label="ConvertIntegertoText1|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="481,285" _integer="0"];
-Hold1 [type="vuo.hold.VuoInteger" label="Hold1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="267,141" _initialValue="11" _newValue="0"];
+Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="267,141" _initialValue="11" _newValue="0"];
 FirePeriodically1 [type="vuo.time.firePeriodically" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="38,85" _seconds="1"];
 
 Hold1:heldValue -> Subtract1:a;

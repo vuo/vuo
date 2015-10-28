@@ -12,9 +12,9 @@
 VuoModuleMetadata({
 					 "title" : "Get 2D Point Values",
 					 "keywords" : [ "xy", "cartesian", "euler", "coordinates" ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
+					 "version" : "2.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

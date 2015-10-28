@@ -9,18 +9,19 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="105,131"];
-IsWithinRectangle [type="vuo.point.within.rectangle" version="1.0.0" label="Is within Rectangle|<refresh>refresh\l|<point>point\l|<center>center\l|<width>width\l|<height>height\l|<done>done\r|<withinRectangle>withinRectangle\r" pos="53,218" fillcolor="violet" _center="{\"x\":0,\"y\":0}" _width="0.500000" _height="0.500000"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="420,218" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
-MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="584,136"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedTo>movedTo\r" pos="-163,220" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="644,125" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SelectInput4 [type="vuo.select.in.VuoColor" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="262,218" _falseOption="{\"r\":0.527398,\"g\":0.449775,\"b\":0.741070,\"a\":1.000000}" _trueOption="{\"r\":0.758984,\"g\":0.717266,\"b\":0.868086,\"a\":1.000000}"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="105,131" fillcolor="yellow" _started_eventThrottling="enqueue"];
+IsWithinRectangle [type="vuo.point.within.rectangle" version="1.0.0" label="Is within Rectangle|<refresh>refresh\l|<point>point\l|<center>center\l|<width>width\l|<height>height\l|<withinRectangle>withinRectangle\r" pos="48,251" fillcolor="violet" _center="{\"x\":0,\"y\":0}" _width="0.500000" _height="0.500000"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="446,261" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="603,151" fillcolor="green"];
+MakeList2 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="573,136" fillcolor="green"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-176,251" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="644,125" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput4 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="259,256" _falseOption="{\"r\":0.527398,\"g\":0.449775,\"b\":0.741070,\"a\":1.000000}" _trueOption="{\"r\":0.758984,\"g\":0.717266,\"b\":0.868086,\"a\":1.000000}"];
 
 FireOnStart:started -> SelectInput4:refresh;
-IsWithinRectangle:done -> SelectInput4:refresh;
 IsWithinRectangle:withinRectangle -> SelectInput4:which;
 MakeColorLayer:layer -> MakeList2:1;
+MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList2:list -> RenderLayersToWindow2:layers;
 ReceiveMouseMoves:movedTo -> IsWithinRectangle:point;
 RenderLayersToWindow2:showedWindow -> ReceiveMouseMoves:window;

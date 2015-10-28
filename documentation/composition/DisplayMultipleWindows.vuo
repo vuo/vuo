@@ -9,14 +9,14 @@
 
 digraph G
 {
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="65,238"];
-GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="277,278" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/6.jpg\""];
-GetImage3 [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="279,403" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/2.jpg\""];
-ReceiveImageViaSyphon2 [type="vuo.syphon.receive" version="1.0.0" label="Receive Image via Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="131,539" _receivedImage_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="425,397" _requestedFrame_eventThrottling="drop"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="424,507" _requestedFrame_eventThrottling="drop"];
-RenderImageToWindow3 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="424,624" _requestedFrame_eventThrottling="drop"];
-RenderImagetoWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="420,278" _requestedFrame_eventThrottling="drop"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="65,238" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="277,278" _url="\"mountains.jpg\""];
+GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="279,403" _url="\"cloud.png\""];
+ReceiveImageViaSyphon2 [type="vuo.syphon.receive" version="1.0.1" label="Receive Image via Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="131,549" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="420,403" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="420,513" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderImageToWindow3 [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="420,615" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderImagetoWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="420,278" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 FireonStart:started -> GetImage3:refresh;
 FireonStart:started -> GetImage:refresh;

@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "resize", "scale", "fit", "fill", "stretch" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoSizingMode"
 					 ]
 				 });
 #endif

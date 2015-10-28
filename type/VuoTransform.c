@@ -24,7 +24,11 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoInteger",
+						"VuoPoint3d",
+						"VuoPoint4d",
+						"VuoText",
+						"VuoTransform2d"
 					 ]
 				 });
 #endif
@@ -115,6 +119,62 @@ void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatr
 }
 
 /**
+ * Returns the transform's rotation, represented as euler angles in radians (see @ref VuoTransform_makeEuler).
+ */
+VuoPoint3d VuoTransform_getEuler(const VuoTransform transform)
+{
+	if (transform.type == VuoTransformTypeEuler)
+		return transform.rotationSource.euler;
+
+	// Convert the quaternion to euler angles.
+	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
+	VuoPoint4d q = transform.rotationSource.quaternion;
+	double sqw = q.w * q.w;
+	double sqx = q.x * q.x;
+	double sqy = q.y * q.y;
+	double sqz = q.z * q.z;
+	double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+	double test = q.x * q.y + q.z * q.w;
+	if (test > 0.499 * unit)
+		// singularity at north pole
+		return VuoPoint3d_make(M_PI/2, 2 * atan2(q.x,q.w), 0);
+	if (test < -0.499*unit)
+		// singularity at south pole
+		return VuoPoint3d_make(-M_PI/2, -2 * atan2(q.x,q.w), 0);
+
+	return VuoPoint3d_make(
+				asin(2*test/unit),
+				atan2(2*q.y*q.w - 2*q.x*q.z, sqx - sqy - sqz + sqw),
+				atan2(2*q.x*q.w - 2*q.y*q.z, -sqx + sqy - sqz + sqw));
+}
+
+/**
+ * Returns the transform's rotation, represented as a quaternion (see @ref VuoTransform_makeQuaternion).
+ */
+VuoPoint4d VuoTransform_getQuaternion(const VuoTransform transform)
+{
+	if (transform.type == VuoTransformTypeQuaternion)
+		return transform.rotationSource.quaternion;
+
+	// Convert the euler angles to a quaternion.
+	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternion/
+	VuoPoint3d eu = transform.rotationSource.euler;
+	double c1 = cos(eu.y/2);
+	double s1 = sin(eu.y/2);
+	double c2 = cos(eu.x/2);
+	double s2 = sin(eu.x/2);
+	double c3 = cos(eu.z/2);
+	double s3 = sin(eu.z/2);
+	double c1c2 = c1*c2;
+	double s1s2 = s1*s2;
+	return VuoPoint4d_make(
+		c1c2*s3 + s1s2*c3,
+		s1*c2*c3 + c1*s2*s3,
+		c1*s2*c3 - s1*c2*s3,
+		c1c2*c3 - s1s2*s3);
+}
+
+/**
  * @ingroup VuoTransform
  * Start with an object pointing rightward (increasing X axis).
  * This function returns a unit vector representing the direction
@@ -175,6 +235,8 @@ VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation,
 /**
  * @ingroup VuoTransform
  * Creates a @c VuoTransform from translation, rotation (quaternion), and scale values.
+ *
+ * `VuoPoint4d_make(0,0,0,1)` (w=1, x=y=z=0) is the rotational identity.
  */
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale)
 {
@@ -357,6 +419,37 @@ void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeig
 		// Account for odd-dimensioned viewport
 		billboardMatrix[13] += (viewportWidth  % 2 ? (1./viewportWidth) : 0);
 		billboardMatrix[13] -= (viewportHeight % 2 ? (1./viewportWidth) : 0);
+}
+
+/**
+ * Returns a composite transformation, consisting of `a` followed by `b`.
+ */
+VuoTransform VuoTransform_composite(const VuoTransform a, const VuoTransform b)
+{
+	float aMatrix[16];
+	VuoTransform_getMatrix(a, aMatrix);
+
+	float bMatrix[16];
+	VuoTransform_getMatrix(b, bMatrix);
+
+	float compositeMatrix[16];
+	VuoTransform_multiplyMatrices4x4(aMatrix, bMatrix, compositeMatrix);
+
+	return VuoTransform_makeFromMatrix4x4(compositeMatrix);
+}
+
+/**
+ * Returns a quaternion representing the rotation of the specified basis matrix.
+ */
+VuoPoint4d VuoTransform_quaternionFromBasis(VuoPoint3d basis[3])
+{
+	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+	VuoPoint4d q;
+	q.w = sqrt(1 + basis[0].x + basis[1].y + basis[2].z) / 2;
+	q.x = (basis[2].y - basis[1].z) / (4 * q.w);
+	q.y = (basis[0].z - basis[2].x) / (4 * q.w);
+	q.z = (basis[1].x - basis[0].y) / (4 * q.w);
+	return q;
 }
 
 /**

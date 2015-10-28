@@ -24,6 +24,9 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoBarcode",
 					 "dependencies" : [
+						 "VuoImage",
+						 "VuoText",
+						 "VuoList_VuoText",
 						 "iconv",
 						 "zxing"
 					 ]

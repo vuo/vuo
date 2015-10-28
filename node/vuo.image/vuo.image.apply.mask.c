@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Apply Mask",
 					  "keywords" : [ "transparency", "negative", "remove", "cut", "magic", "wand" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieWithStar.vuo" ]
 					  }

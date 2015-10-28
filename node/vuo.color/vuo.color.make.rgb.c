@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Make RGB Color",
-					 "keywords" : [ "red", "green", "blue", "alpha", "opacity", "transparent", "channel", "tone", "chroma" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "alpha", "transparent", "channel", "tone", "chroma" ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -23,9 +23,9 @@ void nodeEvent
 		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) red,
 		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) green,
 		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) blue,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) opacity,
 		VuoOutputData(VuoColor) color
 )
 {
-	*color = VuoColor_makeWithRGBA(red, green, blue, alpha);
+	*color = VuoColor_makeWithRGBA(red, green, blue, opacity);
 }

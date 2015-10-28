@@ -12,21 +12,22 @@ extern "C"
 {
 #endif
 
-#include "node.h"
 #include "VuoMidiController.h"
-#include "VuoMidiDevice.h"
+#include "VuoMidiInputDevice.h"
+#include "VuoMidiOutputDevice.h"
 #include "VuoMidiNote.h"
-#include "VuoList_VuoMidiDevice.h"
+#include "VuoList_VuoMidiInputDevice.h"
+#include "VuoList_VuoMidiOutputDevice.h"
 
-VuoList_VuoMidiDevice VuoMidi_getInputDevices(void);
-VuoList_VuoMidiDevice VuoMidi_getOutputDevices(void);
+VuoList_VuoMidiInputDevice VuoMidi_getInputDevices(void);
+VuoList_VuoMidiOutputDevice VuoMidi_getOutputDevices(void);
 
 /**
  * Manages sending messages to a MIDI device.
  */
 typedef void * VuoMidiOut;
 
-VuoMidiOut VuoMidiOut_make(VuoMidiDevice md);
+VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md);
 void VuoMidiOut_sendNote(VuoMidiOut mo, VuoMidiNote note);
 void VuoMidiOut_sendController(VuoMidiOut mo, VuoMidiController controller);
 
@@ -36,12 +37,13 @@ void VuoMidiOut_sendController(VuoMidiOut mo, VuoMidiController controller);
  */
 typedef void * VuoMidiIn;
 
-VuoMidiIn VuoMidiIn_make(VuoMidiDevice md);
+VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md);
 void VuoMidiIn_enableTriggers
 (
 		VuoMidiIn mi,
-		VuoOutputTrigger(receivedNote, VuoMidiNote),
-		VuoOutputTrigger(receivedController, VuoMidiController)
+		void (*receivedNote)(void *context, VuoMidiNote note),
+		void (*receivedController)(void *context, VuoMidiController controller),
+		void *context
 );
 void VuoMidiIn_disableTriggers(VuoMidiIn mi);
 

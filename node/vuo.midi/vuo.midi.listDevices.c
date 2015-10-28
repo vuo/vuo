@@ -13,19 +13,20 @@
 VuoModuleMetadata({
 					 "title" : "List MIDI Devices",
 					 "keywords" : [ "synthesizer", "sequencer", "music", "instrument" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoMidi"
 					 ],
 					 "node": {
-						 "isInterface" : true
+						 "isInterface" : true,
+						 "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoOutputData(VuoList_VuoMidiDevice) inputDevices,
-		VuoOutputData(VuoList_VuoMidiDevice) outputDevices
+		VuoOutputData(VuoList_VuoMidiInputDevice) inputDevices,
+		VuoOutputData(VuoList_VuoMidiOutputDevice) outputDevices
 )
 {
 	*inputDevices = VuoMidi_getInputDevices();

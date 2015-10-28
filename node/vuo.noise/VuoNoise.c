@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoNoise"
 					 ]
 				 });
 #endif

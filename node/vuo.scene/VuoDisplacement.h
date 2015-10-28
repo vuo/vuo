@@ -18,8 +18,6 @@
  * @{
  */
 
-#include "VuoInteger.h"
-
 /**
  * The direction in which to move vertices.
  */

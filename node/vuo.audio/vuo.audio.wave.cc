@@ -45,11 +45,11 @@ struct nodeInstanceData *nodeInstanceInit
 void nodeInstanceEvent
 (
 //		VuoInputData(VuoReal, {"default":48000.0, "suggestedMin":0.000001}) sampleRate,
-//		VuoInputEvent(VuoPortEventBlocking_Wall, sampleRate) sampleRateEvent,
+//		VuoInputEvent({"eventBlocking":"wall","data":"sampleRate"}) sampleRateEvent,
 		VuoInputData(VuoWave, {"default":"sine"}) wave,
-		VuoInputEvent(VuoPortEventBlocking_Wall, wave) waveEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"wave"}) waveEvent,
 		VuoInputData(VuoReal, {"default":440.0, "suggestedMin":0.000001}) frequency,
-		VuoInputEvent(VuoPortEventBlocking_Wall, frequency) frequencyEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"frequency"}) frequencyEvent,
 		VuoOutputData(VuoAudioSamples) samples,
 		VuoInstanceData(struct nodeInstanceData *) context
 );
@@ -83,11 +83,11 @@ struct nodeInstanceData *nodeInstanceInit
 void nodeInstanceEvent
 (
 //		VuoInputData(VuoReal, {"default":48000.0, "suggestedMin":0.000001, "suggestedStep":100.0}) sampleRate,
-//		VuoInputEvent(VuoPortEventBlocking_Wall, sampleRate) sampleRateEvent,
+//		VuoInputEvent({"eventBlocking":"wall","data":"sampleRate"}) sampleRateEvent,
 		VuoInputData(VuoWave, {"default":"sine"}) wave,
-		VuoInputEvent(VuoPortEventBlocking_Wall, wave) waveEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"wave"}) waveEvent,
 		VuoInputData(VuoReal, {"default":440.0, "suggestedMin":0.000001}) frequency,
-		VuoInputEvent(VuoPortEventBlocking_Wall, frequency) frequencyEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"frequency"}) frequencyEvent,
 		VuoOutputData(VuoAudioSamples) samples,
 		VuoInstanceData(struct nodeInstanceData *) context
 )

@@ -31,6 +31,8 @@ const qreal VuoRendererCable::cableHighlightWidth = VuoRendererCable::cableWidth
 const qreal VuoRendererCable::cableHighlightOffset = VuoRendererCable::cableHighlightWidth * 5./8.;
 /// Radius from the endpoints of the cable in which yanking is permitted.
 const qreal VuoRendererCable::cableYankRadius = VuoRendererFonts::thickPenWidth;
+/// Length of cable stub to be painted for published cables whose connected published ports are not displayed.
+const qreal VuoRendererCable::publishedCableStubLength = 15;
 
 /**
  * Creates a renderer detail for the specified @c baseCable.
@@ -54,6 +56,7 @@ VuoRendererCable::VuoRendererCable(VuoCable *baseCable)
 
 	floatingEndpointLoc = QPointF();
 	floatingEndpointPreviousToPort = NULL;
+	floatingEndpointAboveEventPort = false;
 	isHovered = false;
 
 	this->setAcceptHoverEvents(true);
@@ -75,6 +78,8 @@ QRectF VuoRendererCable::boundingRect(void) const
 	// Include thick width of cable.
 	r.adjust(-cableWidth/2., -cableWidth/2., cableWidth/2., cableWidth/2.);
 
+	r = r.united(getPublishedAntennaCrossbarPath().boundingRect());
+
 	// Antialiasing bleed
 	r.adjust(-1,-1,1,1);
 
@@ -90,9 +95,14 @@ QPainterPath VuoRendererCable::shape() const
 	if (paintingDisabled())
 		return QPainterPath();
 
+	QPainterPath p;
+	p.addPath(getCablePath());
+	p.addPath(getPublishedAntennaCrossbarPath());
+
 	QPainterPathStroker s;
 	s.setWidth(cableWidth);
-	return s.createStroke(getCablePath());
+
+	return s.createStroke(p);
 }
 
 /**
@@ -108,8 +118,14 @@ QPointF VuoRendererCable::getStartPoint(void) const
 		VuoRendererPublishedPort *sidebarPort = fromPort->getRenderer()->getProxyPublishedSidebarPort();
 		if (sidebarPort)
 		{
-			QList<QGraphicsView *> views = scene()->views();
-			return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
+			if (sidebarPort->isVisible())
+			{
+				QList<QGraphicsView *> views = scene()->views();
+				return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
+			}
+			else
+				return (isPublishedOutputCableWithoutVisiblePublishedPort()? QPointF(0,0) :
+																			 getEndPoint() + QPointF(-publishedCableStubLength + (effectivelyCarriesData() ? 0.5 : 0 ), 0));
 		}
 
 		else if (fromNode && fromNode->hasRenderer())
@@ -132,8 +148,14 @@ QPointF VuoRendererCable::getEndPoint(void) const
 		VuoRendererPublishedPort *sidebarPort = toPort->getRenderer()->getProxyPublishedSidebarPort();
 		if (sidebarPort)
 		{
-			QList<QGraphicsView *> views = scene()->views();
-			return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
+			if (sidebarPort->isVisible())
+			{
+				QList<QGraphicsView *> views = scene()->views();
+				return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
+			}
+			else
+				return (isPublishedInputCableWithoutVisiblePublishedPort()? QPointF(0,0) :
+																			getStartPoint() + QPointF(publishedCableStubLength - (effectivelyCarriesData() ? 0.5 : 0 ), 0));
 		}
 
 		else if (toNode->hasRenderer())
@@ -156,7 +178,7 @@ QPainterPath VuoRendererCable::getCablePath(void) const
 {
 	if (paintingDisabled())
 		return QPainterPath();
-	
+
 	return getCablePathForEndpoints(getStartPoint(), getEndPoint());
 }
 
@@ -189,20 +211,13 @@ QPainterPath VuoRendererCable::getCablePathForEndpoints(QPointF from, QPointF to
 
 /**
  * Returns the tint color of the cable.
- * If the nodes on both sides of the cable have the same tint color, tint the cable with that color, too.
+ * Tint the cable with the color of its "From" node.
  */
 VuoNode::TintColor VuoRendererCable::getTintColor(void)
 {
 	VuoNode *fromNode = getBase()->getFromNode();
-	VuoNode *toNode = getBase()->getToNode();
-	if (fromNode && toNode)
-	{
-		while (toNode->hasRenderer() && toNode->getRenderer()->getProxyNode())
-			toNode = toNode->getRenderer()->getProxyNode()->getBase();
-
-		if (fromNode->getTintColor() == toNode->getTintColor())
-			return fromNode->getTintColor();
-	}
+	if (fromNode)
+		return fromNode->getTintColor();
 
 	return VuoNode::TintNone;
 }
@@ -259,13 +274,11 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
 	QPointF startPoint = getStartPoint();
 	QPointF endPoint = getEndPoint();
-	bool cableCarriesData = effectivelyCarriesData();
+	bool renderAsIfCableCarriesData = effectivelyCarriesData() && !floatingEndpointAboveEventPort;
 
 	// Etch the highlight out of the main cable.
-	QPainterPath mainOutlineMinusHighlight, upperOutline;
-	getOutlines(startPoint, endPoint, cableCarriesData, mainOutlineMinusHighlight, upperOutline);
-
-	if (mainOutlineMinusHighlight.isEmpty() && upperOutline.isEmpty())
+	QPainterPath outline = getOutline(startPoint, endPoint, renderAsIfCableCarriesData);
+	if (outline.isEmpty())
 		return;
 
 	// Highlight the yank zone when hovering.
@@ -274,19 +287,17 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 		bool toPortSupportsYanking = getBase()->getToPort()->getRenderer()->supportsDisconnectionByDragging();
 
 		QPainterPath yankZone, invertedYankZone;
-		getYankZonePaths(startPoint, endPoint, cableCarriesData, toPortSupportsYanking, yankZone, invertedYankZone);
+		getYankZonePaths(startPoint, endPoint, renderAsIfCableCarriesData, toPortSupportsYanking, yankZone, invertedYankZone);
 
 		painter->setClipPath(yankZone);
-		painter->fillPath(mainOutlineMinusHighlight, QBrush(yankZoneColors->cableUpper()));
-		painter->fillPath(upperOutline, QBrush(yankZoneColors->cableMain()));
+		painter->fillPath(outline, QBrush(yankZoneColors->cableUpper()));
 
 		// When drawing the main cable below, don't overdraw the yank zone.
 		painter->setClipPath(invertedYankZone);
 	}
 
 	// Fill the cable.
-	painter->fillPath(mainOutlineMinusHighlight, QBrush(colors->cableMain()));
-	painter->fillPath(upperOutline, QBrush(colors->cableUpper()));
+	painter->fillPath(outline, QBrush(colors->cableMain()));
 
 	if (hoverHighlightingEnabled)
 		painter->setClipping(false);
@@ -295,15 +306,13 @@ void VuoRendererCable::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 }
 
 /**
- * Determines the cable's @c mainOutlineMinusHiglight and @c upperOutline, given the
+ * Determines the cable's outline, given the
  * provided @c startPoint, @c endPoint, and @c cableCarriesData attribute values.
- * Retrieves cached versions of the outlines, if available.
+ * Retrieves cached versions of the outline, if available.
  */
-void VuoRendererCable::getOutlines(QPointF startPoint,
-								   QPointF endPoint,
-								   bool cableCarriesData,
-								   QPainterPath &mainOutlineMinusHighlight,
-								   QPainterPath &upperOutline)
+QPainterPath VuoRendererCable::getOutline(QPointF startPoint,
+										  QPointF endPoint,
+										  bool cableCarriesData)
 {
 	if ((qMakePair(startPoint, endPoint) != this->cachedEndpointsForOutlines) ||
 		(cableCarriesData != this->cachedCarriesDataValueForOutlines))
@@ -313,50 +322,27 @@ void VuoRendererCable::getOutlines(QPointF startPoint,
 
 		QPainterPath cablePath = getCablePathForEndpoints(startPoint, endPoint);
 
-		// Convert curve into line segments.
-		QList<QPolygonF> cablePolygons = cablePath.toSubpathPolygons();
-		if (cablePolygons.length() != 1)
-		{
-			mainOutlineMinusHighlight = QPainterPath();
-			upperOutline = QPainterPath();
-			return;
-		}
-
-		QPolygonF flattenedPath = cablePolygons[0];
-
-		QPainterPath upperLines;
-		for (int i=1; i<flattenedPath.count(); ++i)
-		{
-			// For each line segment...
-			QLineF l = QLineF(flattenedPath[i-1], flattenedPath[i]);
-
-			// ...make a parallel line segment, displaced along the normal.
-			QLineF normal = l.normalVector();
-			normal.setLength(cableHighlightOffset);
-			if (i==1)
-				upperLines.moveTo(normal.p2());
-
-			upperLines.lineTo(QPointF(l.dx(), l.dy()) + normal.p2());
-		}
-
-		// Turn each series of line segments into a thick outline.
-		QPainterPathStroker upperStroker;
-		upperStroker.setWidth(cableHighlightWidth);
-		upperStroker.setCapStyle(Qt::RoundCap);
-		QPainterPath upperOutline = upperStroker.createStroke(upperLines);
-
 		QPainterPathStroker mainStroker;
 		mainStroker.setWidth(cableWidth);
 		mainStroker.setCapStyle(Qt::RoundCap);
 		QPainterPath mainOutline = mainStroker.createStroke(cablePath);
 
+		QPainterPath crossbarPath = getPublishedAntennaCrossbarPath();
+		if (crossbarPath.elementCount())
+		{
+			// Union the published-cable-antenna crossbars.
+			QPainterPathStroker crossbarStroker;
+			crossbarStroker.setWidth(cableWidth*3/5);
+			crossbarStroker.setCapStyle(Qt::RoundCap);
+			mainOutline += crossbarStroker.createStroke(crossbarPath);
+		}
+
 		this->cachedEndpointsForOutlines = qMakePair(startPoint, endPoint);
 		this->cachedCarriesDataValueForOutlines = cableCarriesData;
-		this->cachedOutlines = qMakePair(mainOutline.subtracted(upperOutline), upperOutline);
+		this->cachedOutline = mainOutline;
 	}
 
-	mainOutlineMinusHighlight = this->cachedOutlines.first;
-	upperOutline = this->cachedOutlines.second;
+	return this->cachedOutline;
 }
 
 /**
@@ -390,7 +376,6 @@ void VuoRendererCable::getYankZonePaths(QPointF startPoint,
 
 		QPainterPath cablePath = getCablePathForEndpoints(startPoint, endPoint);
 		invertedYankZone.addRect(cablePath.controlPointRect().adjusted(-cableWidth, -cableWidth ,cableWidth, cableWidth));
-		invertedYankZone = invertedYankZone.subtracted(yankZone);
 
 		this->cachedEndpointsForYankZone = qMakePair(startPoint, endPoint);
 		this->cachedCarriesDataValueForYankZone = cableCarriesData;
@@ -411,7 +396,7 @@ void VuoRendererCable::getCableSpecs(bool cableCarriesData,
 										   qreal &cableHighlightWidth,
 										   qreal &cableHighlightOffset)
 {
-	const qreal dataCableToEventCableWidthRatio = 2.;
+	const qreal dataCableToEventCableWidthRatio = 2.5;
 
 	cableWidth = (cableCarriesData? VuoRendererCable::cableWidth :
 									 VuoRendererCable::cableWidth/dataCableToEventCableWidthRatio);
@@ -421,6 +406,38 @@ void VuoRendererCable::getCableSpecs(bool cableCarriesData,
 
 	cableHighlightOffset = (cableCarriesData? VuoRendererCable::cableHighlightOffset :
 											   VuoRendererCable::cableHighlightOffset/dataCableToEventCableWidthRatio);
+}
+
+/**
+ * Returns the path of the antenna crossbars for published cable whose connected published port
+ * is not currently displayed, or an empty path if not applicable.
+ */
+QPainterPath VuoRendererCable::getPublishedAntennaCrossbarPath() const
+{
+	bool paintPublishedInputCableAntenna = isPublishedInputCableWithoutVisiblePublishedPort();
+	bool paintPublishedOutputCableAntenna = isPublishedOutputCableWithoutVisiblePublishedPort();
+	if (!paintPublishedInputCableAntenna && !paintPublishedOutputCableAntenna)
+		return QPainterPath();
+
+	// Tweak outermost crossbar position so that the cable stub doesn't visibly extend beyond it.
+	qreal outerCrossbarXOffset = (effectivelyCarriesData()? 1 : 0.5);
+	const QPointF outerCrossbarPos = (paintPublishedInputCableAntenna? getStartPoint() - QPointF(outerCrossbarXOffset, 0) :
+																	   getEndPoint() + QPointF(outerCrossbarXOffset, 0));
+	const int crossbarSpacing = 5;
+	const int crossbarHeight = VuoRendererFonts::midPenWidth*5;
+
+	QPainterPath crossbars;
+	for (int i = 0; i < 2; ++i)
+	{
+		crossbars.moveTo((outerCrossbarPos +
+						 QPointF(QPointF(0, -0.5*crossbarHeight) +
+						 QPointF((paintPublishedInputCableAntenna? 1 : -1)*crossbarSpacing*i, 0))));
+		crossbars.lineTo((outerCrossbarPos +
+						 QPointF(QPointF(0, 0.5*crossbarHeight) +
+						 QPointF((paintPublishedInputCableAntenna? 1 : -1)*crossbarSpacing*i, 0))));
+	}
+
+	return crossbars;
 }
 
 /**
@@ -436,7 +453,16 @@ bool VuoRendererCable::paintingDisabled() const
 	if (getBase()->getFromNode() && getBase()->getFromNode()->hasRenderer() && dynamic_cast<VuoRendererInputAttachment *>(getBase()->getFromNode()->getRenderer()))
 		return true;
 
-	// If the cable is connected to a published output port withn the published output sidebar,
+	return false;
+}
+
+/**
+ * Returns @c true if this is a published input cable whose connected published
+ * input port is not currently displayed (e.g., if published port sidebars are hidden).
+ */
+bool VuoRendererCable::isPublishedInputCableWithoutVisiblePublishedPort() const
+{
+	// If the cable is connected to a published input port withn the published input sidebar,
 	// but the sidebar is not currently displayed, disable painting.
 	if (getBase()->getFromPort())
 	{
@@ -450,7 +476,16 @@ bool VuoRendererCable::paintingDisabled() const
 		}
 	}
 
-	// If the cable is connected to a published input port within the published input sidebar,
+	return false;
+}
+
+/**
+ * Returns @c true if this is a published output cable whose connected published
+ * output port is not currently displayed (e.g., if published port sidebars are hidden).
+ */
+bool VuoRendererCable::isPublishedOutputCableWithoutVisiblePublishedPort() const
+{
+	// If the cable is connected to a published output port within the published output sidebar,
 	// but the sidebar is not currently displayed, disable painting.
 	if (getBase()->getToPort())
 	{
@@ -539,6 +574,15 @@ void VuoRendererCable::setTo(VuoNode *toNode, VuoPort *toPort)
 void VuoRendererCable::setFloatingEndpointLoc(QPointF loc)
 {
 	floatingEndpointLoc = loc;
+}
+
+/**
+ * Sets the boolean indicating whether this cable's floating endpoint is currently
+ * hovered over an event-only port.
+ */
+void VuoRendererCable::setFloatingEndpointAboveEventPort(bool aboveEventPort)
+{
+	floatingEndpointAboveEventPort = aboveEventPort;
 }
 
 /**
@@ -660,11 +704,12 @@ void VuoRendererCable::resetTimeLastEventPropagated()
  * published ports themselves have data.  This method treats the vuoPseudoPort as if it
  * has the same data type as its associated VuoPublishedPort, whereas VuoCompilerCable::carriesData()
  * uses the vuoPseudoPort's technical data type.
- *
- * @todo: Modify or remove when cables store their own inherent types. https://b33p.net/kosada/node/6055
  */
-bool VuoRendererCable::effectivelyCarriesData(void)
+bool VuoRendererCable::effectivelyCarriesData(void) const
 {
+	if (getBase()->getCompiler()->getAlwaysEventOnly())
+		return false;
+
 	VuoRendererPort *fromPort = (getBase()->getFromPort()? getBase()->getFromPort()->getRenderer() : NULL);
 	VuoRendererPort *toPort = (getBase()->getToPort()? getBase()->getToPort()->getRenderer() : NULL);
 

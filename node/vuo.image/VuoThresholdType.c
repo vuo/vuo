@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "mask", "color" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"c"
+						"VuoList_VuoThresholdType"
 					 ]
 				 });
 #endif

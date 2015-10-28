@@ -12,18 +12,18 @@
 
 VuoModuleMetadata({
 					 "title" : "Round Up",
-					 "keywords" : [ "ceil", "near", "close", "approximate", "integer", "whole", "real" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "ceiling", "near", "close", "approximate", "integer", "whole", "real" ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoReal, {"default":0.0}) real,
-		VuoOutputData(VuoInteger) roundedUpInteger
+		VuoOutputData(VuoInteger) roundedUp
 )
 {
-	*roundedUpInteger = (VuoInteger)ceil(real);
+	*roundedUp = (VuoInteger)ceil(real);
 }

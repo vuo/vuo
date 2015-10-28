@@ -14,13 +14,13 @@
 VuoModuleMetadata({
 					 "title" : "Twirl Image",
 					 "keywords" : [ "twist", "swirl", "spin", "whirl", "pivot", "swivel", "revolve", "rotate", "curl", "coil", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "2.1.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

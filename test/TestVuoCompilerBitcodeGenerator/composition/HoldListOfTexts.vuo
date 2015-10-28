@@ -9,12 +9,12 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="0,0"];
-HoldValue [type="vuo.hold.VuoList_VuoText" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="68,63"];
-GetItemFromList [type="vuo.list.get.VuoText" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r"];
-Cut [type="vuo.text.cut" version="1.0.0" label="Cut|<refresh>refresh\l|<text>text\l|<startIndex>startIndex\l|<characterCount>characterCount\l|<done>done\r|<partialText>partialText\r"];
+Cut [type="vuo.text.cut" version="2.0.0" label="Cut Text|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="585,310" _startPosition="1" _characterCount="1"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,0" _started_eventThrottling="enqueue"];
+GetItemFromList [type="vuo.list.get.VuoText" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="392,221" _which="1"];
+HoldValue [type="vuo.data.hold.VuoList_VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="68,63"];
 
-FireOnStart:started -> HoldValue:refresh
-HoldValue:heldValue -> GetItemFromList:list
-GetItemFromList:item -> Cut:text
+FireOnStart:started -> HoldValue:refresh;
+GetItemFromList:item -> Cut:text;
+HoldValue:heldValue -> GetItemFromList:list;
 }

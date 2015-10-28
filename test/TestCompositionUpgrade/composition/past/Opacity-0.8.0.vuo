@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+GetHSLColorValues [type="vuo.color.get.hsl" version="1.0.0" label="Get HSL Color Values|<refresh>refresh\l|<color>color\l|<done>done\r|<hue>hue\r|<saturation>saturation\r|<lightness>lightness\r|<alpha>alpha\r" pos="161,101" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+GetRGBColorValues [type="vuo.color.get.rgb" version="1.0.0" label="Get RGB Color Values|<refresh>refresh\l|<color>color\l|<done>done\r|<red>red\r|<green>green\r|<blue>blue\r|<alpha>alpha\r" pos="200,251" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+Make3DObjectFromImage [type="vuo.scene.make.image" version="2.0.0" label="Make 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<object>object\r" pos="371,740" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+MakeHSLColor [type="vuo.color.make.hsl" version="1.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<alpha>alpha\l|<done>done\r|<color>color\r" pos="425,89" _hue="0.000000" _saturation="1.000000" _lightness="0.500000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="449,382" _center="{\"x\":0.000000,\"y\":0.000000}"];
+MakeLayerWithShadow [type="vuo.layer.make.realSize.shadow" version="1.0.0" label="Make Layer with Shadow|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<shadowColor>shadowColor\l|<shadowBlur>shadowBlur\l|<shadowAngle>shadowAngle\l|<shadowDistance>shadowDistance\l|<done>done\r|<layer>layer\r" pos="182,387" _center="{\"x\":0.000000,\"y\":0.000000}" _shadowColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _shadowBlur="4" _shadowAngle="315.000000" _shadowDistance="0.005000"];
+MakeRGBColor [type="vuo.color.make.rgb" version="1.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<alpha>alpha\l|<done>done\r|<color>color\r" pos="424,246" _red="1.000000" _green="0.000000" _blue="0.000000"];
+MakeScaledLayer [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="473,534" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000"];
+MakeScaledLayerWithShadow [type="vuo.layer.make.shadow" version="1.0.0" label="Make Scaled Layer with Shadow|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<shadowColor>shadowColor\l|<shadowBlur>shadowBlur\l|<shadowAngle>shadowAngle\l|<shadowDistance>shadowDistance\l|<done>done\r|<layer>layer\r" pos="154,551" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _shadowColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _shadowBlur="4.000000" _shadowAngle="315.000000" _shadowDistance="0.005000"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="1.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<object>object\r" pos="337,909" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="1.000000"];
+ShadeWithDetails [type="vuo.shader.make.image.details" version="1.0.0" label="Shade with Details|<refresh>refresh\l|<image>image\l|<alpha>alpha\l|<specularImage>specularImage\l|<normalImage>normalImage\l|<done>done\r|<shader>shader\r" pos="129,1001"];
+ShadeWithImage [type="vuo.shader.make.image" version="2.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<alpha>alpha\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="119,873" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="1.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<alpha>alpha\l|<done>done\r|<shader>shader\r" pos="121,794"];
+
+GetHSLColorValues:alpha -> MakeHSLColor:alpha;
+GetRGBColorValues:alpha -> Make3DObjectFromImage:alpha;
+GetRGBColorValues:alpha -> MakeLayer:alpha;
+GetRGBColorValues:alpha -> MakeLayerWithShadow:alpha;
+GetRGBColorValues:alpha -> MakeRGBColor:alpha;
+GetRGBColorValues:alpha -> MakeScaledLayer:alpha;
+GetRGBColorValues:alpha -> MakeScaledLayerWithShadow:alpha;
+GetRGBColorValues:alpha -> MakeUnlit3DObjectFromImage:alpha;
+GetRGBColorValues:alpha -> ShadeWithDetails:alpha;
+GetRGBColorValues:alpha -> ShadeWithImage:alpha;
+GetRGBColorValues:alpha -> ShadeWithUnlitImage:alpha;
+}

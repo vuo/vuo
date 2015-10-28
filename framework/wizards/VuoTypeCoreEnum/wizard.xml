@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard version="1" kind="class" id="A.VuoTypeCoreStack" category="C.Vuo">
+    <description>Creates an enum Vuo Type.</description>
+    <displayname>Vuo Core Type (enum)</displayname>;
+    <displaycategory>Vuo</displaycategory>
+    <files>
+        <file source="type.c" target="%TypeName%.c" openeditor="true"/>
+        <file source="type.h" target="%TypeName%.h" openeditor="true"/>
+    </files>
+    <fieldpagetitle>Type parameters</fieldpagetitle>
+    <fields>
+        <field name="TypeName">
+            <fieldcontrol class="QLineEdit" validator="^Vuo[A-Z][a-zA-Z0-9_]+$" defaulttext="VuoPairOfReals" placeholdertext="This type's C identifier"/>
+            <fielddescription>Machine name:</fielddescription>
+        </field>
+        <field name="TypeDisplayName">
+            <fieldcontrol class="QLineEdit" defaulttext="Pair of Reals" placeholdertext="This type's descriptive name"/>
+            <fielddescription>Display name:</fielddescription>
+        </field>
+        <field name="TypeDescription">
+            <fieldcontrol class="QLineEdit" defaulttext="A pair of real numbers." placeholdertext="Enter a one-sentence description of the type"/>
+            <fielddescription>Description:</fielddescription>
+        </field>
+        <field name="Type0Key">
+            <fieldcontrol class="QLineEdit" defaulttext="none" />
+            <fielddescription>Item 0 key:</fielddescription>
+        </field>
+        <field name="Type0KeyCamelCase">
+            <fieldcontrol class="QLineEdit" defaulttext="None" />
+            <fielddescription>Item 0 key (CamelCase):</fielddescription>
+        </field>
+        <field name="Type0Summary">
+            <fieldcontrol class="QLineEdit" defaulttext="(no cursor)" />
+            <fielddescription>Item 0 summary:</fielddescription>
+        </field>
+        <field name="Type1Key">
+            <fieldcontrol class="QLineEdit" defaulttext="pointer" />
+            <fielddescription>Item 1 key:</fielddescription>
+        </field>
+        <field name="Type1KeyCamelCase">
+            <fieldcontrol class="QLineEdit" defaulttext="Pointer" />
+            <fielddescription>Item 1 key (CamelCase):</fielddescription>
+        </field>
+        <field name="Type1Summary">
+            <fieldcontrol class="QLineEdit" defaulttext="Pointer" />
+            <fielddescription>Item 1 summary:</fielddescription>
+        </field>
+        <field name="Type2Key">
+            <fieldcontrol class="QLineEdit" defaulttext="hand-open" />
+            <fielddescription>Item 2 key:</fielddescription>
+        </field>
+        <field name="Type2KeyCamelCase">
+            <fieldcontrol class="QLineEdit" defaulttext="HandOpen" />
+            <fielddescription>Item 2 key (CamelCase):</fielddescription>
+        </field>
+        <field name="Type2Summary">
+            <fieldcontrol class="QLineEdit" defaulttext="Hand (open)" />
+            <fielddescription>Item 2 summary:</fielddescription>
+        </field>
+    </fields>
+</wizard>

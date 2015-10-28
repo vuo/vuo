@@ -9,14 +9,17 @@ TYPE_SOURCES += \
 	VuoBoolean.c \
 	VuoBlendMode.c \
 	VuoColor.c \
+	VuoCursor.c \
 	VuoCurve.c \
 	VuoCurveEasing.c \
 	VuoDictionary_VuoText_VuoReal.c \
 	VuoHorizontalAlignment.c \
+	VuoHorizontalSide.c \
 	VuoInteger.c \
 	VuoImage.c \
 	VuoImageColorDepth.c \
 	VuoImageWrapMode.c \
+	VuoListPosition.c \
 	VuoLoopType.c \
 #	VuoMathExpression.c \
 	VuoMathExpressionList.c \
@@ -26,6 +29,7 @@ TYPE_SOURCES += \
 	VuoPoint3d.c \
 	VuoPoint4d.c \
 	VuoReal.c \
+	VuoRealRegulation.c \
 	VuoSceneObject.c \
 	VuoScreen.c \
 	VuoShader.c \
@@ -39,19 +43,22 @@ TYPE_SOURCES += \
 	VuoWindowReference.m \
 	VuoWrapMode.c
 
-HEADERS += \
+TYPE_HEADERS = \
 	VuoAudioSamples.h \
 	VuoBoolean.h \
 	VuoBlendMode.h \
 	VuoColor.h \
+	VuoCursor.h \
 	VuoCurve.h \
 	VuoCurveEasing.h \
 	VuoDictionary_VuoText_VuoReal.h \
 	VuoHorizontalAlignment.h \
+	VuoHorizontalSide.h \
 	VuoInteger.h \
 	VuoImage.h \
 	VuoImageColorDepth.h \
 	VuoImageWrapMode.h \
+	VuoListPosition.h \
 	VuoLoopType.h \
 #	VuoMathExpression.h \
 	VuoMathExpressionList.h \
@@ -61,6 +68,7 @@ HEADERS += \
 	VuoPoint3d.h \
 	VuoPoint4d.h \
 	VuoReal.h \
+	VuoRealRegulation.h \
 	VuoSceneObject.h \
 	VuoScreen.h \
 	VuoShader.h \
@@ -86,6 +94,9 @@ INCLUDEPATH += \
 	$$ROOT/type/list
 
 HEADERS += \
+	$$TYPE_HEADERS \
 	type.h
+
+exists(coreTypes.h) HEADERS += coreTypes.h coreTypesStringify.h coreTypesStringify.hh
 
 include(../module.pri)

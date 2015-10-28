@@ -14,9 +14,8 @@
 VuoModuleMetadata({
 					 "title" : "Wave",
 					 "keywords" : [ "sine", "cosine", "sawtooth", "triangle", "phase accumulator", "oscillator", "frequency", "period", "LFO", "VCO", "DCO", "NCO" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "WaveSphere.vuo" ]
 					 }
 				 });
@@ -42,9 +41,9 @@ void nodeInstanceEvent
 (
 	VuoInputData(VuoReal, {"default":0.0}) time,
 	VuoInputData(VuoWave, {"default":"sine"}) wave,
-	VuoInputEvent(VuoPortEventBlocking_Wall, wave) waveEvent,
+	VuoInputEvent({"eventBlocking":"wall","data":"wave"}) waveEvent,
 	VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.000001}) period,
-	VuoInputEvent(VuoPortEventBlocking_Wall, period) periodEvent,
+	VuoInputEvent({"eventBlocking":"wall","data":"period"}) periodEvent,
 	VuoInputData(VuoReal, {"default":0.0}) center,
 	VuoInputData(VuoReal, {"default":1.0}) amplitude,
 	VuoOutputData(VuoReal) value,

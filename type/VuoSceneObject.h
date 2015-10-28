@@ -15,9 +15,10 @@
 #include "VuoShader.h"
 #include "VuoTransform.h"
 #include "VuoPoint3d.h"
+#include "VuoBlendMode.h"
 
 /// @{
-typedef void * VuoList_VuoSceneObject;
+typedef const struct VuoList_VuoSceneObject_struct { void *l; } * VuoList_VuoSceneObject;
 #define VuoList_VuoSceneObject_TYPE_DEFINED
 /// @}
 
@@ -60,6 +61,7 @@ typedef struct VuoSceneObject
 	VuoMesh mesh;
 	VuoShader shader;
 	bool isRealSize;	///< If the object is real-size, it ignores rotations and scales, and is sized to match the shader's first image.
+	VuoBlendMode blendMode;
 
 	// Data for group scene objects
 	VuoList_VuoSceneObject childObjects;
@@ -112,6 +114,7 @@ void VuoSceneObject_visit(VuoSceneObject object, void (^function)(VuoSceneObject
 void VuoSceneObject_apply(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]));
 
 void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int faceCullingMode);
+void VuoSceneObject_setBlendMode(VuoSceneObject *object, VuoBlendMode blendMode);
 
 VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object);
 

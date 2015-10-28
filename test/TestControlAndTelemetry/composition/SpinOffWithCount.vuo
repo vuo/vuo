@@ -9,12 +9,12 @@
 
 digraph G
 {
-Add [type="vuo.math.add.VuoInteger" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="589,197"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="121,177"];
-MakeList2 [type="vuo.list.make.1.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="529,208"];
-SpinOffWithCount [type="vuo.test.spinOffWithCount" version="1.0.0" label="Spin Off with Count|<refresh>refresh\l|<done>done\r|<spunOff>spunOff\r" pos="323,197"];
+Add [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="589,197"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="121,177"];
+MakeList2 [type="vuo.list.make.1.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="529,208"];
+SpinOffWithCount [type="vuo.test.spinOffWithCount" version="1.0.0" label="Spin Off with Count|<refresh>refresh\l|<spunOff>spunOff\r" pos="323,197"];
 
 FireOnStart:started -> SpinOffWithCount:refresh;
-MakeList2:list -> Add:terms;
+MakeList2:list -> Add:values;
 SpinOffWithCount:spunOff -> MakeList2:1;
 }

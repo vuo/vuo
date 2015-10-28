@@ -15,14 +15,15 @@
 
 /// @{
 #ifdef VUO_COMPILER
- VuoModuleMetadata({
-					"title" : "Syphon Server Description",
-					"description" : "Syphon Server information.",
-					"keywords" : ["syphon", "server", "pipe"],
-					"version" : "1.0.0",
-					"dependencies" : [
-						]
-					});
+VuoModuleMetadata({
+					  "title" : "Syphon Server Description",
+					  "description" : "Syphon Server information.",
+					  "keywords" : ["syphon", "server", "pipe"],
+					  "version" : "1.0.0",
+					  "dependencies" : [
+						"VuoText"
+					  ]
+				  });
 #endif
 /// @}
 
@@ -38,17 +39,23 @@
  */
 VuoSyphonServerDescription VuoSyphonServerDescription_valueFromJson(json_object * js)
 {
-	VuoSyphonServerDescription server = VuoSyphonServerDescription_make("", "", "") ;
+	VuoSyphonServerDescription server;
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "serverUUID", &o))
 		server.serverUUID = VuoText_valueFromJson(o);
+	else
+		server.serverUUID = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "serverName", &o))
 		server.serverName = VuoText_valueFromJson(o);
+	else
+		server.serverName = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "applicationName", &o))
 		server.applicationName = VuoText_valueFromJson(o);
+	else
+		server.applicationName = VuoText_make("");
 
 	return server;
 }

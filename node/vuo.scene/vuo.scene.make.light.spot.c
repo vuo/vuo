@@ -14,10 +14,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "draw", "opengl", "scenegraph", "graphics", "directional", "lighting", "point", "source" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions" : [
-							  "AimFlashlight.vuo",
-							  "CompareLights.vuo"
-						  ]
+						  "exampleCompositions" : [ "AimFlashlight.vuo", "CompareLights.vuo" ]
 					  }
 				 });
 

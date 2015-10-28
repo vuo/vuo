@@ -22,7 +22,8 @@ VuoModuleMetadata({
 					 "keywords" : [ "leap", "pointable" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"c"
+						"VuoLeapPointableType",
+						"VuoList_VuoLeapPointableType"
 					 ]
 				 });
 #endif

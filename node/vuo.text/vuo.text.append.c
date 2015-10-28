@@ -12,14 +12,10 @@
 #include <string.h>
 
 VuoModuleMetadata({
-					 "title" : "Append",
+					 "title" : "Append Texts",
 					 "keywords" : [ "concatenate", "strcat", "combine", "join", "merge", "string" ],
 					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "c"
-					 ],
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "RevealWord.vuo" ]
 					 }
 				 });
@@ -34,7 +30,7 @@ void nodeEvent
 
 	VuoText *textsArray = (VuoText *) malloc(textsCount * sizeof(VuoText));
 	for (unsigned long i = 1; i <= textsCount; ++i)
-		textsArray[i-1] = VuoListGetValueAtIndex_VuoText(texts, i);
+		textsArray[i-1] = VuoListGetValue_VuoText(texts, i);
 
 	*compositeText = VuoText_append(textsArray, textsCount);
 

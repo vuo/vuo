@@ -57,7 +57,11 @@ static CVReturn VuoDisplayRefresh_displayLinkCallback(CVDisplayLinkRef displayLi
 	}
 
 	if (displayRefresh->displayLinkCancelRequested)
+	{
 		CVDisplayLinkStop(displayRefresh->displayLink);
+		dispatch_semaphore_signal(displayRefresh->displayLinkCanceledAndCompleted);
+		return kCVReturnSuccess;
+	}
 
 	VuoReal timestamp = (double)(plannedFrameTime - displayRefresh->initialTime)/(double)inOutputTime->videoTimeScale;
 
@@ -66,9 +70,6 @@ static CVReturn VuoDisplayRefresh_displayLinkCallback(CVDisplayLinkRef displayLi
 
 	if (displayRefresh->requestedFrameTriggerWithContext)
 		displayRefresh->requestedFrameTriggerWithContext(timestamp, displayRefresh->triggerContext);
-
-	if (displayRefresh->displayLinkCancelRequested)
-		dispatch_semaphore_signal(displayRefresh->displayLinkCanceledAndCompleted);
 
 	return kCVReturnSuccess;
 }

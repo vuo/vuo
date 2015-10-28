@@ -23,7 +23,7 @@ class VuoRunnerDelegate;
 #ifdef VUO_CLANG_32_OR_LATER
 	#pragma clang diagnostic ignored "-Wdocumentation"
 #endif
-#include <json/json.h>
+#include "json/json.h"
 #pragma clang diagnostic pop
 
 
@@ -253,6 +253,12 @@ public:
 	virtual void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *port, bool sentData, string dataSummary) = 0;
 
 	/**
+	 * This delegate method is invoked every time any trigger port drops an event.
+	 * @param portIdentifier A unique identifier representing the port that has dropped an event (see VuoCompilerEventPort::getIdentifier()).
+	 */
+	virtual void receivedTelemetryEventDropped(string portIdentifier) = 0;
+
+	/**
 	 * This delegate method is invoked every time an uncaught error occurs in the composition.
 	 * @param message A message with information about the error.
 	 */
@@ -286,6 +292,7 @@ private:
 	virtual void receivedTelemetryInputPortUpdated(string VUO_UNUSED_VARIABLE portIdentifier, bool VUO_UNUSED_VARIABLE receivedEvent, bool VUO_UNUSED_VARIABLE receivedData, string VUO_UNUSED_VARIABLE dataSummary) { }
 	virtual void receivedTelemetryOutputPortUpdated(string VUO_UNUSED_VARIABLE portIdentifier, bool VUO_UNUSED_VARIABLE sentData, string VUO_UNUSED_VARIABLE dataSummary) { }
 	virtual void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port VUO_UNUSED_VARIABLE *port, bool VUO_UNUSED_VARIABLE sentData, string VUO_UNUSED_VARIABLE dataSummary) { }
+	virtual void receivedTelemetryEventDropped(string VUO_UNUSED_VARIABLE portIdentifier) { }
 	virtual void receivedTelemetryError(string VUO_UNUSED_VARIABLE message) { }
 	virtual void lostContactWithComposition(void) { }
 };

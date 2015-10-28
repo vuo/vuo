@@ -14,6 +14,9 @@ VuoModuleMetadata({
 					 "title" : "Get Image Size",
 					 "keywords" : [ "width", "height", "dimensions" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						 "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

@@ -133,6 +133,17 @@ void vuoInit(int argc, char **argv)
 
 	// parse commandline arguments
 	{
+		int getoptArgC = 0;
+		char **getoptArgV = (char **)malloc(sizeof(char *) * argc);
+		for(int i = 0; i < argc; ++i)
+		{
+			// Don't pass the OS X Process Serial Number argument to getopt, since it can't handle long arguments with a single hyphen.
+			if (strncmp(argv[i], "-psn_", 5) == 0)
+				continue;
+
+			getoptArgV[getoptArgC++] = argv[i];
+		}
+
 		static struct option options[] = {
 			{"help", no_argument, NULL, 0},
 			{"vuo-control", required_argument, NULL, 0},
@@ -143,7 +154,7 @@ void vuoInit(int argc, char **argv)
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
-		while((getopt_long(argc, argv, "", options, &optionIndex)) != -1)
+		while((getopt_long(getoptArgC, getoptArgV, "", options, &optionIndex)) != -1)
 		{
 			switch(optionIndex)
 			{
@@ -172,6 +183,7 @@ void vuoInit(int argc, char **argv)
 					break;
 			}
 		}
+		free(getoptArgV);
 	}
 
 	if (doPrintHelp)
@@ -211,7 +223,7 @@ void vuoInit(int argc, char **argv)
 		char executableDir[PATH_MAX+1];
 		strcpy(executableDir, dirname(cleanedExecutablePath));
 
-		const char *licensesPathFromExecutable = "/../Frameworks/Vuo.framework/Versions/" VUO_VERSION_STRING "/Licenses";
+		const char *licensesPathFromExecutable = "/../Frameworks/Vuo.framework/Versions/" VUO_VERSION_STRING "/Documentation/Licenses";
 		char rawLicensesPath[strlen(executableDir)+strlen(licensesPathFromExecutable)+1];
 		strcpy(rawLicensesPath, executableDir);
 		strcat(rawLicensesPath, licensesPathFromExecutable);
@@ -702,6 +714,20 @@ void sendOutputPortsUpdated(char *portIdentifier, bool sentData, char *portDataS
 	vuoInitMessageWithString(&messages[2], portDataSummary ? portDataSummary : "");
 
 	vuoTelemetrySend(VuoTelemetryOutputPortsUpdated, messages, 3);
+}
+
+/**
+ * Constructs and sends a message on the telemetry socket, indicating that a trigger port has dropped an event.
+ */
+void sendEventDropped(char *portIdentifier)
+{
+	if (! hasZMQConnection)
+		return;
+
+	zmq_msg_t messages[1];
+	vuoInitMessageWithString(&messages[0], portIdentifier);
+
+	vuoTelemetrySend(VuoTelemetryEventDropped, messages, 1);
 }
 
 /**

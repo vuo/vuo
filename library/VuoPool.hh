@@ -13,7 +13,6 @@
 #include <string>
 #include <map>
 #include <dispatch/dispatch.h>
-#include "module.h"
 
 /**
  * A pool of shared objects — one object per key.

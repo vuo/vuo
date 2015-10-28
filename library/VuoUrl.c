@@ -17,12 +17,11 @@
 
 #include "module.h"
 
-#include "VuoText.h"
-
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoUrl",
 					 "dependencies" : [
+						 "VuoText",
 						 "curl",
 						 "crypto",
 						 "ssl",
@@ -96,10 +95,18 @@ static bool VuoUrl_urlIsAbsoluteFilePath(const char *url)
 }
 
 /**
- * Resolves @c url (which could be an absolute URL, an absolute Unix file path, or a relative Unix file path)
- * into an absolure URL.
+ * Returns a boolean indicating whether the input `url` is relative to the user's home folder.
  */
-VuoText VuoUrl_normalize(const VuoText url)
+static bool VuoUrl_urlIsUserRelativeFilePath(const char *url)
+{
+	return ((strlen(url) >= 1) && (url[0] == '~'));
+}
+
+/**
+ * Resolves @c url (which could be an absolute URL, an absolute Unix file path, a relative Unix file path, or a user-relative Unix file path)
+ * into an absolute URL.
+ */
+VuoText VuoUrl_normalize(const VuoText url, bool shouldEscapeSpaces)
 {
 	const char *fileScheme = "file://";
 	char *resolvedUrl;
@@ -114,6 +121,16 @@ VuoText VuoUrl_normalize(const VuoText url)
 		resolvedUrl = (char *)malloc(strlen(fileScheme)+strlen(url)+1);
 		strcpy(resolvedUrl, fileScheme);
 		strcat(resolvedUrl, url);
+	}
+
+	// Case: The url contains a user-relative file path.
+	else if (VuoUrl_urlIsUserRelativeFilePath(url))
+	{
+		char *homeDir = getenv("HOME");
+		resolvedUrl = (char *)malloc(strlen(fileScheme) + strlen(homeDir) + strlen(url) - 1 + 1);
+		strcpy(resolvedUrl, fileScheme);
+		strcat(resolvedUrl, homeDir);
+		strcat(resolvedUrl, url + 1);
 	}
 
 	// Case: The url contains a relative file path.
@@ -176,8 +193,15 @@ VuoText VuoUrl_normalize(const VuoText url)
 		}
 	}
 
-	// Escape spaces.
-	VuoText escapedResolvedUrl = VuoText_replace(resolvedUrl, " ", "%20");
+	// Remove trailing slash, if any.
+	size_t lastIndex = strlen(resolvedUrl) - 1;
+	if (resolvedUrl[lastIndex] == '/')
+		resolvedUrl[lastIndex] = 0;
+
+	// Escape spaces, if needed.
+	VuoText escapedResolvedUrl = (shouldEscapeSpaces ?
+									  VuoText_replace(resolvedUrl, " ", "%20") :
+									  VuoText_make(resolvedUrl));
 	free(resolvedUrl);
 
 	return escapedResolvedUrl;
@@ -191,7 +215,7 @@ VuoText VuoUrl_normalize(const VuoText url)
  */
 bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 {
-	VuoText resolvedUrl = VuoUrl_normalize(url);
+	VuoText resolvedUrl = VuoUrl_normalize(url, true);
 	VuoRetain(resolvedUrl);
 
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};
@@ -210,6 +234,7 @@ bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength)
 
 	curl_easy_setopt(curl, CURLOPT_URL, resolvedUrl);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, VuoUrl_curlCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&buffer);

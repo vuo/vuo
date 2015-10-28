@@ -28,6 +28,7 @@ public:
 	void setModuleKey(string moduleKey);
 
 	string getDefaultTitle(void);
+	string getDefaultTitleWithoutSuffix(void);
 	void setDefaultTitle(string defaultTitle);
 
 	string getDescription(void);

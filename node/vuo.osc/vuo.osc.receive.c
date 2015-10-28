@@ -75,7 +75,7 @@ void nodeInstanceTriggerUpdate
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoInteger, {"default":0, "suggestedMin":0, "suggestedMax":65535}) udpPort,
+		VuoInputData(VuoInteger, {"name":"UDP Port", "default":0, "suggestedMin":0, "suggestedMax":65535}) udpPort,
 		VuoOutputTrigger(receivedMessage, VuoOscMessage)
 )
 {

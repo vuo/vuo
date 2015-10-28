@@ -1,0 +1,96 @@
+/**
+ * @file
+ * Expected outputs for CalculateLoudness.vuo.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* The `Adjust Volume` node lerps from the prior value to the current value.
+	   Since it starts out at 1, check that first. */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 1.0,
+			"expectedLoudness" : 0.915, /* The sine wave isn't quite full volume, to avoid clipping. */
+			"tolerance" : 0.001
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+	/* Next, change the volume to 0 and, since it's lerping, use a large tolerance. */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 0.0,
+			"expectedLoudness" : 0.7,
+			"tolerance" : 0.1
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+	/* Leaving the volume at 0, the result should now stablilze at exactly 0. */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 0.0,
+			"expectedLoudness" : 0.0,
+			"tolerance" : 0.000001
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+	/* Change to 0.5.  Lerping... */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 0.5,
+			"expectedLoudness" : 0.3,
+			"tolerance" : 0.1
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+	/* Leave at 0.5. */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 0.5,
+			"expectedLoudness" : 0.458,
+			"tolerance" : 0.001
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+	/* Change to 2.0.  Lerping... */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 2.0,
+			"expectedLoudness" : 1.4,
+			"tolerance" : 0.1
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+	/* Leave at 2.0. */
+	{
+		"firingPort": "volume",
+		"inputPortValues" : {
+			"volume" : 2.0,
+			"expectedLoudness" : 1.841,
+			"tolerance" : 0.001
+		},
+		"outputPortValues" : {
+			"equal" : true
+		}
+	},
+]}

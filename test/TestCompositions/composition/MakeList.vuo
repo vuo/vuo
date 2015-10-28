@@ -1,0 +1,29 @@
+/**
+* @file
+* Test composition.
+*
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="180,140" _1="2" _2="3"];
+MakeList2 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="180,277" _1="4" _2="5"];
+MakeList3 [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="458,311" _3="6"];
+Multiply [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="226,129"];
+Multiply2 [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="226,266"];
+Multiply3 [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="504,300"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<multiply>multiply\r" _multiply="" _multiply_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<product>product\l" _product_type="VuoInteger"];
+
+MakeList2:list -> Multiply2:values;
+MakeList3:list -> Multiply3:values;
+MakeList:list -> Multiply:values;
+Multiply2:product -> MakeList3:2;
+Multiply:product -> MakeList3:1;
+PublishedInputs:multiply -> Multiply2:refresh;
+PublishedInputs:multiply -> Multiply:refresh;
+Multiply3:product -> PublishedOutputs:product;
+}

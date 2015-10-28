@@ -95,6 +95,7 @@ private:
 	void generateNodeExecution(Function *function, BasicBlock *&currentBlock, VuoCompilerNode *node, bool shouldSendTelemetry = true);
 	void generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *sentDataValue, Value *outputDataSummaryValue);
 	void generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort, Value *sentDataValue, Value *outputDataSummaryValue);
+	void generateSendEventDropped(BasicBlock *block, VuoCompilerTriggerPort *triggerPort);
 	void generateSerializeFunction(void);
 	void generateUnserializeFunction(void);
 	Function * generateTriggerFunctionHeader(VuoCompilerTriggerPort *trigger);
@@ -107,6 +108,7 @@ private:
 
 public:
 	static VuoCompilerBitcodeGenerator * newBitcodeGeneratorFromComposition(VuoCompilerComposition *composition, VuoCompiler *compiler);
+	~VuoCompilerBitcodeGenerator(void);
 	Module * generateBitcode(void);
 	void setDebugMode(bool debugMode);
 };

@@ -24,8 +24,15 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c",
-						 "json"
+						"VuoBlendMode",
+						"VuoBoolean",
+						"VuoMesh",
+						"VuoPoint3d",
+						"VuoShader",
+						"VuoText",
+						"VuoTransform",
+						"VuoList_VuoImage",
+						"VuoList_VuoSceneObject"
 					 ]
 				 });
 #endif
@@ -42,6 +49,7 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 	o.mesh = NULL;
 	o.shader = NULL;
 	o.isRealSize = false;
+	o.blendMode = VuoBlendMode_Normal;
 
 	o.childObjects = NULL;
 
@@ -63,8 +71,14 @@ VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform 
 	VuoSceneObject o;
 
 	o.mesh = mesh;
-	o.shader = shader;
+
+	if (mesh && !shader)
+		o.shader = VuoShader_makeDefaultShader();
+	else
+		o.shader = shader;
+
 	o.isRealSize = false;
+	o.blendMode = VuoBlendMode_Normal;
 
 	o.childObjects = childObjects;
 
@@ -340,7 +354,7 @@ bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoScen
 	unsigned long childObjectCount = (so.childObjects ? VuoListGetCount_VuoSceneObject(so.childObjects) : 0);
 	for (unsigned long i = 1; i <= childObjectCount; ++i)
 	{
-		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		if (VuoSceneObject_find(childObject, nameToMatch, ancestorObjects, foundObject))
 			return true;
 	}
@@ -372,7 +386,7 @@ VuoSceneObject VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText name
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 			bool foundChildCamera;
 			VuoSceneObject childCamera = VuoSceneObject_findCameraInternal(childObject, nameToMatch, &foundChildCamera, compositeModelviewMatrix);
 			if (foundChildCamera)
@@ -583,7 +597,7 @@ static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, float modelvie
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 			VuoSceneObject_findLightsRecursive(childObject, compositeModelviewMatrix, ambientColors, ambientBrightness, pointLights, spotLights);
 		}
 	}
@@ -647,7 +661,7 @@ void VuoSceneObject_visit(const VuoSceneObject object, void (^function)(const Vu
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject o = VuoListGetValueAtIndex_VuoSceneObject(object.childObjects, i);
+			VuoSceneObject o = VuoListGetValue_VuoSceneObject(object.childObjects, i);
 			VuoSceneObject_visit(o, function);
 		}
 	}
@@ -670,9 +684,9 @@ void VuoSceneObject_applyInternal(VuoSceneObject *object, void (^function)(VuoSc
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object->childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject o = VuoListGetValueAtIndex_VuoSceneObject(object->childObjects, i);
+			VuoSceneObject o = VuoListGetValue_VuoSceneObject(object->childObjects, i);
 			VuoSceneObject_applyInternal(&o, function, compositeModelviewMatrix);
-			VuoListSetValueAtIndex_VuoSceneObject(object->childObjects, o, i);
+			VuoListSetValue_VuoSceneObject(object->childObjects, o, i);
 		}
 	}
 }
@@ -709,6 +723,25 @@ void VuoSceneObject_setFaceCullingMode(VuoSceneObject *object, unsigned int face
 }
 
 /**
+ * Sets the `blendMode` on `object` and its child objects.
+ *
+ * Only the following @ref VuoBlendMode%s are supported:
+ *
+ *    - @ref VuoBlendMode_Normal
+ *    - @ref VuoBlendMode_Multiply
+ *    - @ref VuoBlendMode_DarkerComponent
+ *    - @ref VuoBlendMode_LighterComponent
+ *    - @ref VuoBlendMode_LinearDodge
+ *    - @ref VuoBlendMode_Subtract
+ */
+void VuoSceneObject_setBlendMode(VuoSceneObject *object, VuoBlendMode blendMode)
+{
+	VuoSceneObject_apply(object, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]){
+		currentObject->blendMode = blendMode;
+	});
+}
+
+/**
  * Makes a deep copy of @c object.
  * Each mesh is copied (see @ref VuoMesh_copy),
  * and each child object is copied.
@@ -728,7 +761,7 @@ VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
 		copiedObject.childObjects = VuoListCreate_VuoSceneObject();
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
-			VuoListAppendValue_VuoSceneObject(copiedObject.childObjects, VuoSceneObject_copy(VuoListGetValueAtIndex_VuoSceneObject(object.childObjects, i)));
+			VuoListAppendValue_VuoSceneObject(copiedObject.childObjects, VuoSceneObject_copy(VuoListGetValue_VuoSceneObject(object.childObjects, i)));
 	}
 
 	copiedObject.name = VuoText_make(object.name);
@@ -755,7 +788,7 @@ bool VuoSceneObject_boundsRecursive(const VuoSceneObject so, VuoBox *bounds, flo
 		for(int i = 0; i < VuoListGetCount_VuoSceneObject(so.childObjects); i++)
 		{
 			VuoBox childBounds;
-			bool childBoundsFound = VuoSceneObject_boundsRecursive(VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i+1), &childBounds, compositeModelviewMatrix);
+			bool childBoundsFound = VuoSceneObject_boundsRecursive(VuoListGetValue_VuoSceneObject(so.childObjects, i+1), &childBounds, compositeModelviewMatrix);
 
 			if(childBoundsFound)
 			{
@@ -875,6 +908,10 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "isRealSize", &o))
 		isRealSize = VuoBoolean_valueFromJson(o);
 
+	VuoBlendMode blendMode = VuoBlendMode_Normal;
+	if (json_object_object_get_ex(js, "blendMode", &o))
+		blendMode = VuoBlendMode_valueFromJson(o);
+
 	VuoList_VuoSceneObject childObjects = NULL;
 	if (json_object_object_get_ex(js, "childObjects", &o))
 		childObjects = VuoList_VuoSceneObject_valueFromJson(o);
@@ -975,6 +1012,7 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	{
 		VuoSceneObject o = VuoSceneObject_make(mesh, shader, transform, childObjects);
 		o.isRealSize = isRealSize;
+		o.blendMode = blendMode;
 		o.name = name;
 		return o;
 	}
@@ -1046,6 +1084,12 @@ json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
 		json_object *isRealSizeObject = VuoBoolean_jsonFromValue(value.isRealSize);
 		json_object_object_add(js, "isRealSize", isRealSizeObject);
 
+		if (value.blendMode != VuoBlendMode_Normal)
+		{
+			json_object *blendModeObject = VuoBlendMode_jsonFromValue(value.blendMode);
+			json_object_object_add(js, "blendMode", blendModeObject);
+		}
+
 		if (value.childObjects)
 		{
 			json_object *childObjectsObject = VuoList_VuoSceneObject_jsonFromValue(value.childObjects);
@@ -1111,7 +1155,7 @@ void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *des
 	*totalElementCount += VuoSceneObject_getElementCount(value);
 
 	for (unsigned long i = 1; i <= childObjectCount; ++i)
-		VuoSceneObject_getStatistics(VuoListGetValueAtIndex_VuoSceneObject(value.childObjects, i), descendantCount, totalVertexCount, totalElementCount);
+		VuoSceneObject_getStatistics(VuoListGetValue_VuoSceneObject(value.childObjects, i), descendantCount, totalVertexCount, totalElementCount);
 }
 
 /**
@@ -1261,7 +1305,7 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		const char *header = "<br><br>shaders:<ul>";
 		VuoInteger shaderNameLength = strlen(header);
 		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
-			shaderNameLength += strlen("<li>") + strlen(VuoListGetValueAtIndex_VuoText(shaderNames, i)) + strlen("</li>");
+			shaderNameLength += strlen("<li>") + strlen(VuoListGetValue_VuoText(shaderNames, i)) + strlen("</li>");
 		shaderNameLength += strlen("</ul>");
 
 		shaderNamesSummary = (char *)malloc(shaderNameLength + 1);
@@ -1270,7 +1314,7 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		for (VuoInteger i = 1; i <= shaderNameCount; ++i)
 		{
 			t = strcpy(t, "<li>") + strlen("<li>");
-			t = strcpy(t, VuoListGetValueAtIndex_VuoText(shaderNames, i)) + strlen(VuoListGetValueAtIndex_VuoText(shaderNames, i));
+			t = strcpy(t, VuoListGetValue_VuoText(shaderNames, i)) + strlen(VuoListGetValue_VuoText(shaderNames, i));
 			t = strcpy(t, "</li>") + strlen("</li>");
 		}
 		t = strcpy(t, "</ul>");
@@ -1303,7 +1347,7 @@ static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int l
 	{
 		unsigned int childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 		for (unsigned int i=1; i<=childObjectCount; ++i)
-			VuoSceneObject_dump_internal(VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i), level+1);
+			VuoSceneObject_dump_internal(VuoListGetValue_VuoSceneObject(so.childObjects, i), level+1);
 	}
 }
 

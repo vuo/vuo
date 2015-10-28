@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <fstream>
 #include <iostream>
 #include <mach-o/dyld.h>
@@ -259,12 +260,12 @@ bool VuoFileUtilities::fileExists(string path)
  * @param dirPath The directory to search in. Only the top level is searched.
  * @param archiveExtensions The file extensions for archives to search in. Any archive with one of these extensions
  *		found in the top level of the directory will be searched recursively.
+ * @param shouldSearchRecursively If true, the directory will be searched searched recursively.
  * @return All files found.
  */
-set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string dirPath, set<string> archiveExtensions)
+set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string dirPath, set<string> archiveExtensions,
+																		bool shouldSearchRecursively)
 {
-	/// @todo Search recursively - https://b33p.net/kosada/node/2468
-
 	set<File *> files;
 
 	DIR *d = opendir(dirPath.c_str());
@@ -279,6 +280,10 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 	while( (de=readdir(d)) )
 	{
 		string fileName = de->d_name;
+		string relativeFilePath = dirPath + "/" + fileName;
+
+		if (fileName == "." || fileName == "..")
+			continue;
 
 		bool isArchive = false;
 		for (set<string>::iterator archiveExtension = archiveExtensions.begin(); archiveExtension != archiveExtensions.end(); ++archiveExtension)
@@ -287,7 +292,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 
 		if (isArchive)
 		{
-			set<File *> fs = findAllFilesInArchive(dirPath + "/" + fileName);
+			set<File *> fs = findAllFilesInArchive(relativeFilePath);
 			if (fs.empty())
 				isArchive = false;
 			else
@@ -296,8 +301,31 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 
 		if (! isArchive)
 		{
-			File *f = new File(dirPath, fileName);
-			files.insert(f);
+			bool shouldSearchDir = false;
+			if (shouldSearchRecursively)
+			{
+				struct stat st_buf;
+				int status = lstat(relativeFilePath.c_str(), &st_buf);  // Unlike stat, lstat doesn't follow symlinks.
+				if (! status && S_ISDIR(st_buf.st_mode))
+					shouldSearchDir = true;
+			}
+
+			if (shouldSearchDir)
+			{
+				set<File *> filesInDir = findAllFilesInDirectory(relativeFilePath, archiveExtensions, true);
+				for (set<File *>::iterator i = filesInDir.begin(); i != filesInDir.end(); ++i)
+				{
+					File *f = *i;
+					f->dirPath = dirPath;
+					f->filePath = fileName + "/" + f->filePath;
+				}
+				files.insert(filesInDir.begin(), filesInDir.end());
+			}
+			else
+			{
+				File *f = new File(dirPath, fileName);
+				files.insert(f);
+			}
 		}
 	}
 

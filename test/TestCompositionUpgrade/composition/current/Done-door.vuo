@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AreAllHit [type="vuo.event.areAllHit.2" version="1.0.0" label="Are All Hit|<refresh>refresh\l|<input1>input1\l|<input2>input2\l|<allHit>allHit\r" pos="699,117"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="874,117"];
+FindBarcodeInImage [type="vuo.image.findBarcode" version="1.0.0" label="Find Barcode in Image|<refresh>refresh\l|<image>image\l|<barcode>barcode\r|<center>center\r|<width>width\r|<height>height\r" pos="473,169"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
+ReceiveImageViaSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image via Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="216,103" _receivedImage_eventThrottling="drop"];
+
+AreAllHit:allHit -> BecameTrue:value;
+FindBarcodeInImage:barcode -> AreAllHit:input1;
+FindBarcodeInImage:barcode -> AreAllHit:input2;
+FireOnStart:started -> ReceiveImageViaSyphon:refresh;
+ReceiveImageViaSyphon:receivedImage -> AreAllHit:input1;
+ReceiveImageViaSyphon:receivedImage -> FindBarcodeInImage:image;
+}

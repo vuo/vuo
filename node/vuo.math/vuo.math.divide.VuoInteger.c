@@ -12,9 +12,9 @@
 VuoModuleMetadata({
 					 "title" : "Divide with Remainder",
 					 "keywords" : [ "quotient", "remainder", "modulus", "fraction", "/", "÷", "%", "arithmetic", "calculate" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.1",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -26,6 +26,14 @@ void nodeEvent
 	VuoOutputData(VuoInteger) remainder
 )
 {
-	*quotient = a / b;
-	*remainder = a % b;
+	if (b != 0)
+	{
+		*quotient = a / b;
+		*remainder = a % b;
+	}
+	else
+	{
+		*quotient = 0;
+		*remainder = a;
+	}
 }

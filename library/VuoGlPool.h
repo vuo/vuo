@@ -50,6 +50,7 @@ void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int line,
 void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int line, const char *func);
 
 GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format);
+GLuint VuoGlTexture_getType(GLuint format);
 
 void VuoGlTexture_retain(GLuint glTextureName);
 void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName);

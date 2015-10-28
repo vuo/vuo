@@ -11,6 +11,12 @@
 #define VUOREAL_H
 
 #include <math.h>
+struct json_object;
+
+/// @{
+typedef const struct VuoList_VuoReal_struct { void *l; } * VuoList_VuoReal;
+#define VuoList_VuoReal_TYPE_DEFINED
+/// @}
 
 /**
  * @ingroup VuoTypes
@@ -31,6 +37,12 @@ char * VuoReal_summaryFromValue(const VuoReal value);
 
 VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount);
 VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount);
+VuoReal VuoReal_average(VuoList_VuoReal values);
+
+VuoReal VuoReal_wrap(VuoReal value, VuoReal minimum, VuoReal maximum);
+
+VuoReal VuoReal_random(const VuoReal minimum, const VuoReal maximum);
+VuoReal VuoReal_randomWithState(unsigned short state[3], const VuoReal minimum, const VuoReal maximum);
 
 /// @{
 /**
@@ -76,6 +88,17 @@ static inline VuoReal VuoReal_multiply(VuoReal a, VuoReal b)
 }
 
 /**
+ * Same as @ref VuoReal_multiply.
+ *
+ * Provided for generic type equivalence with VuoPoints.
+ */
+static inline VuoReal VuoReal_scale(VuoReal a, VuoReal b) __attribute__((const));
+static inline VuoReal VuoReal_scale(VuoReal a, VuoReal b)
+{
+	return a*b;
+}
+
+/**
  * @c a/b
  *
  * Provided for generic type equivalence with VuoPoints.
@@ -84,6 +107,17 @@ static inline VuoReal VuoReal_divide(VuoReal a, VuoReal b) __attribute__((const)
 static inline VuoReal VuoReal_divide(VuoReal a, VuoReal b)
 {
 	return a/b;
+}
+
+/**
+ * If the value is zero or very close to zero, moves the value further from zero (either 0.000001 or -0.000001).
+ */
+static inline VuoReal VuoReal_makeNonzero(VuoReal a) __attribute__((const));
+static inline VuoReal VuoReal_makeNonzero(VuoReal a)
+{
+	if (fabs(a) < 0.000001)
+		return copysign(0.000001, a);
+	return a;
 }
 
 /**
@@ -143,7 +177,8 @@ static inline VuoReal VuoReal_bezier3(VuoReal p0, VuoReal p1, VuoReal p2, VuoRea
  */
 static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 {
-	return center + snap * (int)round( (a-center) / snap );
+	VuoReal nonzeroSnap = VuoReal_makeNonzero(snap);
+	return center + nonzeroSnap * (int)round( (a-center) / nonzeroSnap );
 }
 
 /**

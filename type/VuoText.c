@@ -20,7 +20,9 @@ VuoModuleMetadata({
 					 "description" : "A Unicode (UTF-8) text string.",
 					 "keywords" : [ "char *", "character" ],
 					 "version" : "1.0.0",
-					 "dependencies" : [ "Carbon.framework" ]
+					 "dependencies" : [
+						"Carbon.framework"
+					 ]
 				 });
 #endif
 /// @}
@@ -61,22 +63,33 @@ char * VuoText_summaryFromValue(const VuoText value)
 	if (!value)
 		return strdup("");
 
-	const int maxLength = 30;
+	VuoText valueWithReturn = VuoText_replace(value, "\n", "⏎");
+
+	char *summary;
+	const int maxLength = 50;
 	if (VuoText_length(value) <= maxLength)
-		return strdup(value);
+	{
+		summary = strdup(valueWithReturn);
+	}
+	else
+	{
+		VuoText abbreviation = VuoText_substring(valueWithReturn, 1, maxLength);
+		VuoText ellipsis = VuoText_make("...");
+		VuoText summaryParts[2] = { abbreviation, ellipsis };
+		VuoText summaryWhole = VuoText_append(summaryParts, 2);
+		summary = strdup(summaryWhole);
 
-	VuoText abbreviation = VuoText_substring(value, 1, maxLength);
-	VuoText ellipsis = VuoText_make("...");
-	VuoText summaryParts[2] = { abbreviation, ellipsis };
-	VuoText summaryWhole = VuoText_append(summaryParts, 2);
-	char *summary = strdup(summaryWhole);
+		VuoRetain(abbreviation);
+		VuoRelease(abbreviation);
+		VuoRetain(ellipsis);
+		VuoRelease(ellipsis);
+		VuoRetain(summaryWhole);
+		VuoRelease(summaryWhole);
+	}
 
-	VuoRetain(abbreviation);
-	VuoRelease(abbreviation);
-	VuoRetain(ellipsis);
-	VuoRelease(ellipsis);
-	VuoRetain(summaryWhole);
-	VuoRelease(summaryWhole);
+	VuoRetain(valueWithReturn);
+	VuoRelease(valueWithReturn);
+
 	return summary;
 }
 
@@ -149,11 +162,30 @@ bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 
 	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
 	CFStringRef s2 = CFStringCreateWithCString(kCFAllocatorDefault, text2, kCFStringEncodingUTF8);
-	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral);
+	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral | kCFCompareWidthInsensitive);
 
 	CFRelease(s1);
 	CFRelease(s2);
 	return (result == kCFCompareEqualTo);
+}
+
+/**
+ * @ingroup VuoText
+ * Returns true if @a text1 is ordered before @a text2 in a case-sensitive lexicographic ordering (which treats
+ * different UTF-8 encodings and Unicode character decompositions as equivalent).
+ */
+bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
+{
+	if (! text1 || ! text2)
+		return text1 && ! text2;
+
+	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
+	CFStringRef s2 = CFStringCreateWithCString(kCFAllocatorDefault, text2, kCFStringEncodingUTF8);
+	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral | kCFCompareWidthInsensitive);
+
+	CFRelease(s1);
+	CFRelease(s2);
+	return (result == kCFCompareLessThan);
 }
 
 /**

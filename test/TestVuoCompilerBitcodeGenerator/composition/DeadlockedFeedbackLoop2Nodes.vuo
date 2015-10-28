@@ -10,8 +10,8 @@
 digraph G
 {
 FirePeriodically [type="vuo.time.firePeriodically" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="57,244.5" _seconds="1"];
-Hold [type="vuo.hold.VuoInteger" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="291,331.5" _initialValue="0" _newValue="0"];
-Hold2 [type="vuo.hold.VuoInteger" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="292,187.5" _initialValue="0" _newValue="0"];
+Hold [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="291,331.5" _initialValue="0" _newValue="0"];
+Hold2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="292,187.5" _initialValue="0" _newValue="0"];
 
 FirePeriodically:fired -> Hold2:refresh;
 FirePeriodically:fired -> Hold:refresh;

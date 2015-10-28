@@ -26,6 +26,8 @@ public:
 	VuoPort * getVuoPseudoPort(void);
 	VuoCompilerTriggerPort * getTriggerPort(void);
 	void setTriggerPort(VuoCompilerTriggerPort *port);
+	string getInitialValue(void);
+	void setInitialValue(string initialValueAsString);
 };
 
 #endif // VUOCOMPILERPUBLISHEDINPUTPORT_HH

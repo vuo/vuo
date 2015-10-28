@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "loop", "overflow", "saturate", "stay" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoWrapMode"
 					 ]
 				 });
 #endif

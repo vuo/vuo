@@ -1,6 +1,6 @@
 /**
  * @file
- * Distorts an image based on hand movements detected by your [Leap Motion device](https://www.leapmotion.com/). 
+ * Distorts an image based on hand movements detected by your Leap Motion device. 
  * 
  * This composition requires a Leap Motion device. 
  *
@@ -11,27 +11,31 @@
 
 digraph G
 {
-Convert3DPointTo2DPoint [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<done>done\r|<xy>xy\r" pos="847,536"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="490,235" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Get3DPointValues [type="vuo.point.get.VuoPoint3d" version="1.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r|<z>z\r" pos="286,354" fillcolor="green"];
-GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<done>done\r|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="34,326" fillcolor="violet"];
-GetHandValues [type="vuo.leap.get.hand" version="1.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<done>done\r|<id>id\r|<direction>direction\r|<palmNormal>palmNormal\r|<palmPosition>palmPosition\r|<palmVelocity>palmVelocity\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pointables>pointables\r" pos="40,515" fillcolor="violet"];
-GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="637,274" fillcolor="green" _imageURL="\"\\/System\\/Library\\/Automator\\/Send Birthday Greetings.action\\/Contents\\/Resources\\/6.jpg\""];
-GetItemFromList [type="vuo.list.get.VuoLeapHand" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="28,433" fillcolor="violet" _which="1"];
-ReceiveLeapFrame [type="vuo.leap.receive" version="1.0.0" label="Receive Leap Frame|<refresh>refresh\l|<done>done\r|<receivedFrame>receivedFrame\r" pos="29,212" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="580,635" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale2 [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="327,448" fillcolor="green" _start="-1.000000" _end="1.000000" _scaledStart="-180.000000" _scaledEnd="180.000000"];
-TwirlImage [type="vuo.image.twirl" version="1.0.0" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<done>done\r|<twirledImage>twirledImage\r" pos="629,418" fillcolor="green"];
+Convert3DPointTo2DPoint [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="847,536"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="490,235" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Get3DPointValues [type="vuo.point.get.VuoPoint3d" version="2.0.0" label="Get 3D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r|<z>z\r" pos="366,354"];
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="34,326" fillcolor="violet"];
+GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="40,515" fillcolor="violet"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="637,274" _url="\"Sunset.jpg\""];
+GetItemFromList [type="vuo.list.get.VuoLeapHand" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="28,433" fillcolor="violet" _which="1"];
+GetTransformTranslation [type="vuo.transform.get.translation" version="1.0.0" label="Get Transform Translation|<refresh>refresh\l|<transform>transform\l|<translation>translation\r" pos="230,515" fillcolor="violet"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="772,444" fillcolor="green"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="29,212" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="813,418" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="427,448" _start="-1.000000" _end="1.000000" _scaledStart="-180.000000" _scaledEnd="180.000000"];
+TwirlImage [type="vuo.image.twirl" version="2.1.0" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="629,418"];
 
 Convert3DPointTo2DPoint:xy -> TwirlImage:center;
 FireOnStart:started -> GetImage:refresh;
 Get3DPointValues:z -> Scale2:value;
 GetFrameValues:hands -> GetItemFromList:list;
-GetHandValues:palmPosition -> Get3DPointValues:point;
 GetHandValues:sphereCenter -> Convert3DPointTo2DPoint:xyz;
 GetHandValues:sphereRadius -> TwirlImage:radius;
+GetHandValues:transform -> GetTransformTranslation:transform;
 GetImage:image -> TwirlImage:image;
 GetItemFromList:item -> GetHandValues:hand;
+GetTransformTranslation:translation -> Get3DPointValues:point;
+MakeList0:list -> RenderImageToWindow2:setWindowProperties;
 ReceiveLeapFrame:receivedFrame -> GetFrameValues:frame;
 Scale2:scaledValue -> TwirlImage:angle;
 TwirlImage:twirledImage -> RenderImageToWindow2:image;

@@ -9,33 +9,30 @@
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.0.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<verticalAlignment>verticalAlignment\l|<done>done\r|<alignedLayer>alignedLayer\r" pos="1219,331" fillcolor="green" _horizontalAlignment="\"center\"" _verticalAlignment="\"bottom\""];
-CalculateLoudness [type="vuo.audio.analyze.loudness" version="1.0.0" label="Calculate Loudness|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<loudness>loudness\r" pos="399,144" fillcolor="violet"];
-DiscardDataFromEvent [type="vuo.type.discardData.VuoWindowReference" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="890,407" fillcolor="yellow"];
-DiscardDataFromEvent5 [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="759,-10" fillcolor="yellow"];
-MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="1022,339" fillcolor="green" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
-MakeList [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<done>done\r|<list>list\r" pos="927,77" fillcolor="green" _1="{\"r\":0.758862,\"g\":0.751034,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.296162,\"g\":0.255772,\"b\":1.000000,\"a\":1.000000}"];
-MakeList8 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="1265,62" fillcolor="green"];
-MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<done>done\r|<layer>layer\r" pos="1018,51" fillcolor="green" _gradientCenter="{\"x\":0,\"y\":0}" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<done>done\r|<image>image\r" pos="843,355" fillcolor="green" _text="\"Make some noise\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
-MixAudioChannels [type="vuo.audio.mix" version="1.0.0" label="Mix Audio Channels|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<mixedSamples>mixedSamples\r" pos="200,144" fillcolor="violet"];
-ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<done>done\r|<receivedChannels>receivedChannels\r" pos="19,144" fillcolor="violet" _receivedChannels_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1328,51" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale" version="1.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<done>done\r|<scaledValue>scaledValue\r" pos="593,149" fillcolor="green" _start="0.000000" _end="1.000000" _scaledStart="0.200000" _scaledEnd="0.600000"];
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1220,324" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="522,121" fillcolor="violet"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1022,339" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+MakeList [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="944,77" _1="{\"r\":0.758862,\"g\":0.751034,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.296162,\"g\":0.255772,\"b\":1.000000,\"a\":1.000000}"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1287,77" fillcolor="green"];
+MakeList8 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1257,62" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="1018,51" _gradientCenter="{\"x\":0,\"y\":0}" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="843,355" _text="\"Make some noise\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="319,123" fillcolor="violet"];
+ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="109,122" fillcolor="violet" _receivedChannels_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1328,51" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="738,115" _start="0.000000" _end="1.000000" _scaledStart="0.200000" _scaledEnd="0.600000"];
 
 AlignLayerToWindow:alignedLayer -> MakeList8:2;
 CalculateLoudness:loudness -> Scale:value;
-DiscardDataFromEvent5:event -> MakeList:1;
-DiscardDataFromEvent:event -> MakeTextImage:refresh;
 MakeLayer:layer -> AlignLayerToWindow:layer;
+MakeList0:list -> RenderLayersToWindow:setWindowProperties;
 MakeList8:list -> RenderLayersToWindow:layers;
 MakeList:list -> MakeRadialGradientLayer:colors;
 MakeRadialGradientLayer:layer -> MakeList8:1;
 MakeTextImage:image -> MakeLayer:image;
-MixAudioChannels:mixedSamples -> CalculateLoudness:audioSamples;
-ReceiveLiveAudio:receivedChannels -> MixAudioChannels:audioSamples;
+MixAudioChannels:mixedSamples -> CalculateLoudness:samples;
+ReceiveLiveAudio:receivedChannels -> MixAudioChannels:samples;
 RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
-RenderLayersToWindow:showedWindow -> DiscardDataFromEvent:dataAndEvent;
-Scale:scaledValue -> DiscardDataFromEvent5:dataAndEvent;
+RenderLayersToWindow:showedWindow -> MakeTextImage:refresh;
 Scale:scaledValue -> MakeRadialGradientLayer:gradientRadius;
 }

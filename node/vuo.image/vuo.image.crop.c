@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Crop Image",
 					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "EnlargeMovie.vuo" ]
 					  }

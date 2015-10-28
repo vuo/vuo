@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Curve",
 					  "keywords" : [ "ease", "easing", "quadratic", "gravity", "bounce", "cubic", "circular", "exponential", "logarithmic" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]

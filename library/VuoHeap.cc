@@ -11,6 +11,7 @@
 #include <dispatch/dispatch.h>
 #include <dlfcn.h>
 #include <map>
+#include <set>
 #include <sstream>
 #include <iomanip>
 using namespace std;
@@ -28,6 +29,7 @@ void sendErrorWrapper(const char *message)
 }
 
 map<const void *, int> referenceCounts;  ///< The reference count for each pointer.
+static set<const void *> singletons;  ///< Known singleton pointers.
 map<const void *, DeallocateFunctionType> deallocateFunctions;  ///< The function to be used for deallocating each pointer.
 map<const void *, string> descriptions;  ///< A human-readable description for each pointer.
 dispatch_semaphore_t referenceCountsSemaphore = NULL;  ///< Synchronizes access to @ref referenceCounts.
@@ -160,18 +162,62 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 }
 
 /**
- * @ingroup ReferenceCountingFunctions
- * Increments the reference count for @a heapPointer (unless @a heapPointer is not being reference-counted).
- *
- * @param heapPointer A pointer to allocated memory on the heap.
- * @return The updated reference count of @a heapPointer, or -1 if @a heapPointer is not being reference-counted or is null.
+ * Instead of this function, you probably want to use VuoRegisterSingleton(). This function is used to implement
+ * the VuoRegisterSingleton() macro.
  */
-int VuoRetain(const void *heapPointer)
+int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned int line, const char *func, const char *pointerName)
+{
+	if (! heapPointer)
+		return -1;
+
+	bool isAlreadyReferenceCounted;
+
+	ostringstream sout;
+	sout << file << ":" << line << " :: " << func << "() :: " << pointerName;
+	string description = sout.str();
+	string previousDescription;
+
+	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	{
+		// Remove the singleton from the main reference-counting table, if it exists there.
+		// Enables reclassifying a pointer that was already VuoRegister()ed.
+		referenceCounts.erase(heapPointer);
+		deallocateFunctions.erase(heapPointer);
+
+		// Add the singleton to the singleton table.
+		isAlreadyReferenceCounted = (singletons.find(heapPointer) != singletons.end());
+		if (! isAlreadyReferenceCounted)
+		{
+			singletons.insert(heapPointer);
+			descriptions[heapPointer] = description;
+		}
+		else
+			previousDescription = descriptions[heapPointer];
+	}
+	dispatch_semaphore_signal(referenceCountsSemaphore);
+
+	if (isAlreadyReferenceCounted)
+	{
+		ostringstream errorMessage;
+		errorMessage << "VuoRegisterSingleton was called more than once for " << heapPointer << " " <<
+						previousDescription << " (previous call), " << description << " (current call)";
+		sendErrorWrapper(errorMessage.str().c_str());
+	}
+
+	return isAlreadyReferenceCounted ? 1 : 0;
+}
+
+/**
+ * Instead of this function, you probably want to use VuoRetain(). This function is used to implement
+ * the VuoRetain() macro.
+ */
+int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, const char *func)
 {
 	if (! heapPointer)
 		return -1;
 
 	int updatedCount = -1;
+	bool foundSingleton = false;
 	string description;
 
 	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
@@ -180,15 +226,17 @@ int VuoRetain(const void *heapPointer)
 		map<const void *, int>::iterator i = referenceCounts.find(heapPointer);
 		if (i != referenceCounts.end())
 			updatedCount = ++referenceCounts[heapPointer];
+		else
+			foundSingleton = singletons.find(heapPointer) != singletons.end();
 		description = descriptions[heapPointer];
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
 
-	if (updatedCount == -1)
+	if (updatedCount == -1 && !foundSingleton)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRetain was called for unregistered pointer " << heapPointer << " " << description;
+		errorMessage << "VuoRetain was called by " << file << ":" << line << " :: " << func << "() for unregistered pointer " << heapPointer << " " << description;
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -196,19 +244,16 @@ int VuoRetain(const void *heapPointer)
 }
 
 /**
- * @ingroup ReferenceCountingFunctions
- * Decrements the reference count for @a heapPointer (unless @a heapPointer is not being reference-counted).
- * If the reference count becomes 0, @a heapPointer is deallocated and is no longer reference-counted.
- *
- * @param heapPointer A pointer to allocated memory on the heap.
- * @return The updated reference count of @a heapPointer, or -1 if @a heapPointer is not being reference-counted, has never been retained, or is null.
+ * Instead of this function, you probably want to use VuoRelease(). This function is used to implement
+ * the VuoRelease() macro.
  */
-int VuoRelease(const void *heapPointer)
+int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, const char *func)
 {
 	if (! heapPointer)
 		return -1;
 
 	int updatedCount = -1;
+	bool foundSingleton = false;
 	bool isRegisteredWithoutRetain = false;
 	DeallocateFunctionType deallocate = NULL;
 	string description;
@@ -237,6 +282,8 @@ int VuoRelease(const void *heapPointer)
 				}
 			}
 		}
+		else
+			foundSingleton = singletons.find(heapPointer) != singletons.end();
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
@@ -245,10 +292,10 @@ int VuoRelease(const void *heapPointer)
 	{
 		deallocate((void *)heapPointer);
 	}
-	else if (updatedCount == -1)
+	else if (updatedCount == -1 && !foundSingleton)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRelease was called for "
+		errorMessage << "VuoRelease was called by " << file << ":" << line << " :: " << func << "() for "
 					 << (isRegisteredWithoutRetain ? "unretained" : "unregistered")
 					 << " pointer " << heapPointer << " " << description;
 		sendErrorWrapper(errorMessage.str().c_str());

@@ -12,8 +12,13 @@
 
 VuoModuleMetadata({
 					 "title" : "Pixellate Image",
-					 "keywords" : [ "pixels", "lofi", "simplify", "cube", "square", "filter", "overenlarge", "mosaic", "censor" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "pixels", "lofi", "simplify", "cube", "square", "filter", "overenlarge", "mosaic", "censor",
+						 "pixelate" // American spelling
+					 ],
+					 "version" : "1.1.0",
+					 "node" : {
+						 "exampleCompositions" : [ ]
+					 }
 				 });
 
 static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,

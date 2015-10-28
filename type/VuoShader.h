@@ -17,7 +17,6 @@
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
-#include "VuoColor.h"
 #include "VuoReal.h"
 #include "VuoText.h"
 #include "VuoGlContext.h"
@@ -25,8 +24,6 @@
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoColor.h"
 #include "VuoList_VuoText.h"
-
-#include <dispatch/dispatch.h>
 
 /**
  * @ingroup VuoTypes
@@ -131,7 +128,7 @@ typedef struct _VuoShader
 	VuoShaderUniform *uniforms;
 	unsigned int uniformsCount;
 
-	dispatch_semaphore_t lock;	///< Serializes operations that modify the state of this GL program object.
+	void *lock;	///< `dispatch_semaphore_t` to serialize operations that modify the state of this GL program object.
 } *VuoShader;
 
 

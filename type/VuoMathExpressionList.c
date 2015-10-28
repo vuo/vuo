@@ -18,7 +18,7 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-						"c",
+						"VuoDictionary_VuoText_VuoReal",
 						"VuoMathExpressionParser"
 					  ]
 				  });
