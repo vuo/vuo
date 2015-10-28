@@ -27,13 +27,9 @@ static const char *defaultVertexShaderSourceForGeometryShader = VUOSHADER_GLSL_S
 );
 
 /**
- * Returns a new instance of the default (unlit checkerboard) shader.
- * It's a gradient checkerboard (white in the top-left corner),
- * so you can see the object and get a feel for its texture coordinates.
- *
- * @threadAny
+ * Helper for @ref VuoShader_makeDefaultShader.
  */
-VuoShader VuoShader_makeDefaultShader(void)
+static VuoShader VuoShader_makeDefaultShaderInternal(void)
 {
 	const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, include(trianglePoint));
 	const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
@@ -96,6 +92,33 @@ VuoShader VuoShader_makeDefaultShader(void)
 	VuoShader_addSource                      (shader, VuoMesh_IndividualTriangles, NULL,                                       NULL,                      fragmentShaderSource);
 
 	return shader;
+}
+
+/**
+ * Returns a shared instance of the default (unlit checkerboard) shader.
+ * It's a gradient checkerboard (white in the top-left corner),
+ * so you can see the object and get a feel for its texture coordinates.
+ *
+ * @threadAny
+ */
+VuoShader VuoShader_makeDefaultShader(void)
+{
+	static dispatch_once_t once;
+	static VuoShader defaultShader;
+	dispatch_once(&once, ^{
+					  defaultShader = VuoShader_makeDefaultShaderInternal();
+					  VuoRegisterSingleton(defaultShader);
+					  VuoRegisterSingleton(defaultShader->name);
+					  VuoRegisterSingleton(defaultShader->pointProgram.vertexSource);
+					  VuoRegisterSingleton(defaultShader->pointProgram.geometrySource);
+					  VuoRegisterSingleton(defaultShader->pointProgram.fragmentSource);
+					  VuoRegisterSingleton(defaultShader->lineProgram.vertexSource);
+					  VuoRegisterSingleton(defaultShader->lineProgram.geometrySource);
+					  VuoRegisterSingleton(defaultShader->lineProgram.fragmentSource);
+					  VuoRegisterSingleton(defaultShader->triangleProgram.vertexSource);
+					  VuoRegisterSingleton(defaultShader->triangleProgram.fragmentSource);
+				  });
+	return defaultShader;
 }
 
 /**
@@ -686,7 +709,7 @@ VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d
 	int n = 0;
 	for(int i = 1; i <= len; i++)
 	{
-		VuoColor col = VuoListGetValueAtIndex_VuoColor(colors, i);
+		VuoColor col = VuoListGetValue_VuoColor(colors, i);
 		pixels[n++] = (unsigned int)(col.a*col.r*255);
 		pixels[n++] = (unsigned int)(col.a*col.g*255);
 		pixels[n++] = (unsigned int)(col.a*col.b*255);
@@ -743,7 +766,7 @@ VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d
 	int n = 0;
 	for(int i = 1; i <= len; i++)
 	{
-		VuoColor col = VuoListGetValueAtIndex_VuoColor(colors, i);
+		VuoColor col = VuoListGetValue_VuoColor(colors, i);
 		pixels[n++] = (unsigned int)(col.a*col.r*255);
 		pixels[n++] = (unsigned int)(col.a*col.g*255);
 		pixels[n++] = (unsigned int)(col.a*col.b*255);

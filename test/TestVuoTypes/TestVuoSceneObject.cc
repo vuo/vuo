@@ -19,8 +19,6 @@ extern "C" {
 Q_DECLARE_METATYPE(VuoPoint3d);
 Q_DECLARE_METATYPE(VuoSceneObject);
 
-#define QUOTE(...) #__VA_ARGS__
-
 /**
  * Tests the VuoSceneObject type.
  */

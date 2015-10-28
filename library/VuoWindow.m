@@ -62,7 +62,7 @@ void VuoWindowText_destroy(VuoWindowText w);
 /**
  * Creates and displays a window containing a text edit widget.
  *
- * Creates a new QApplication instance if one did not already exist.
+ * Creates a new NSApplication instance if one did not already exist.
  *
  * @threadNoMain
  */
@@ -128,7 +128,7 @@ void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
 /**
  * Closes and deallocates a @c VuoWindowText window.
  *
- * Destroys the current QApplication instance if it no longer contains any widgets.
+ * Destroys the current NSApplication instance if it no longer contains any widgets.
  *
  * @threadNoMain
  */
@@ -147,7 +147,7 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl w);
 /**
  * Creates and displays a window containing an OpenGL view.
  *
- * Creates a new QApplication instance if one did not already exist.
+ * Creates a new NSApplication instance if one did not already exist.
  *
  * @threadNoMain
  */
@@ -270,7 +270,7 @@ void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w)
 /**
  * Closes and deallocates a @c VuoWindowOpenGl window.
  *
- * Destroys the current QApplication instance if it no longer contains any widgets.
+ * Destroys the current NSApplication instance if it no longer contains any widgets.
  *
  * @threadNoMain
  */
@@ -279,6 +279,8 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl vw)
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)vw;
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  [window close];
+
+					  // Don't release the window after closing it, since isReleasedWhenClosed defaults to YES.
 //					  [window release];
 				  });
 }

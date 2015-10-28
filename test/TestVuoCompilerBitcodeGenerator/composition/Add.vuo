@@ -9,5 +9,5 @@
 
 digraph G 
 {
-Add [type="vuo.math.add.VuoInteger" label="Add|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+Add [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="33,59"];
 }

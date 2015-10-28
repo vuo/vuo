@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Align Layer to Window",
 					  "keywords" : [ "anchor", "position", "top", "right", "bottom", "left", "arrange", "snap" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "AlignLayersToWindow.vuo" ]
 					  }
@@ -24,7 +24,9 @@ void nodeEvent
 		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoLayer) layer,
 		VuoInputData(VuoHorizontalAlignment, {"default":"left"}) horizontalAlignment,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedStep":0.1}) horizontalMargin,
 		VuoInputData(VuoVerticalAlignment, {"default":"top"}) verticalAlignment,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedStep":0.1}) verticalMargin,
 		VuoOutputData(VuoLayer) alignedLayer
 )
 {
@@ -40,12 +42,12 @@ void nodeEvent
 	VuoRectangle layerBoundingRectangle = VuoLayer_getBoundingRectangle(layer, viewportWidth, viewportHeight);
 
 	if (horizontalAlignment == VuoHorizontalAlignment_Left)
-		(*alignedLayer).sceneObject.transform.translation.x -= 1. + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);
+		(*alignedLayer).sceneObject.transform.translation.x -= 1. - horizontalMargin + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);
 	else if (horizontalAlignment == VuoHorizontalAlignment_Right)
-		(*alignedLayer).sceneObject.transform.translation.x += 1. + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);
+		(*alignedLayer).sceneObject.transform.translation.x += 1. - horizontalMargin + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);
 
 	if (verticalAlignment == VuoVerticalAlignment_Top)
-		(*alignedLayer).sceneObject.transform.translation.y += 1./windowAspectRatio - (layerBoundingRectangle.center.y + layerBoundingRectangle.size.y/2.);
+		(*alignedLayer).sceneObject.transform.translation.y += 1./windowAspectRatio - verticalMargin - (layerBoundingRectangle.center.y + layerBoundingRectangle.size.y/2.);
 	else if (verticalAlignment == VuoVerticalAlignment_Bottom)
-		(*alignedLayer).sceneObject.transform.translation.y -= 1./windowAspectRatio - (layerBoundingRectangle.center.y + layerBoundingRectangle.size.y/2.);
+		(*alignedLayer).sceneObject.transform.translation.y -= 1./windowAspectRatio - verticalMargin - (layerBoundingRectangle.center.y + layerBoundingRectangle.size.y/2.);
 }

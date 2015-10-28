@@ -1,8 +1,8 @@
 Creates a checkerboard image.
 
-   - `upperLeftColor` — The color of the square to the upper left of `center` (and all alternating squares). 
-   - `upperRightColor` — The color of the square to the upper right of `center` (and all alternating squares). 
-   - `squareSize` — The width and height of each square, in Vuo coordinates. 
-   - `center` — A corner point where four squares meet. 
-   - `width` — The image's width, in pixels.
-   - `height` — The image's height, in pixels.
+   - `Upper Left Color` — The color of the square to the upper left of `Center` (and all alternating squares). 
+   - `Upper Right Color` — The color of the square to the upper right of `Center` (and all alternating squares). 
+   - `Square Size` — The width and height of each square, in Vuo coordinates. 
+   - `Center` — A corner point where four squares meet. 
+   - `Width` — The image's width, in pixels.
+   - `Height` — The image's height, in pixels.

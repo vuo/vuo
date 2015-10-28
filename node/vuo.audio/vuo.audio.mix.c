@@ -8,28 +8,23 @@
  */
 
 #include "node.h"
-#include "VuoAudio.h"
 
 VuoModuleMetadata({
 					 "title" : "Mix Audio Channels",
 					 "keywords" : [ "sound", "music", "merge", "combine" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "VuoAudio"
-					 ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "PanAudio.vuo" ],
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoAudioSamples) audioSamples,
+		VuoInputData(VuoList_VuoAudioSamples) samples,
 		VuoOutputData(VuoAudioSamples) mixedSamples
 )
 {
-	unsigned int channelCount = VuoListGetCount_VuoAudioSamples(audioSamples);
+	unsigned int channelCount = VuoListGetCount_VuoAudioSamples(samples);
 
 	*mixedSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
 
@@ -38,7 +33,7 @@ void nodeEvent
 
 	for(unsigned int i = 0; i < channelCount; i++)
 	{
-		VuoAudioSamples as = VuoListGetValueAtIndex_VuoAudioSamples(audioSamples, i+1);
+		VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(samples, i+1);
 
 		for(unsigned int n = 0; n < as.sampleCount; n++)
 			(*mixedSamples).samples[n] += as.samples[n];

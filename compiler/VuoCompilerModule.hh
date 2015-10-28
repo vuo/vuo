@@ -30,14 +30,13 @@ private:
 
 protected:
 	struct json_object *moduleDetails;  ///< This module's metadata, found in the argument to @c VuoModuleMetadata in the module definition.
-	vector<string> dependencies;  ///< The dependencies found in this module's metadata
+	set<string> dependencies;  ///< The dependencies found in this module's metadata
 	Module *module;  ///< The LLVM module that defines this node class or type
 	VuoModule *base;  ///< The (pseudo) base for this (pseudo) compiler detail class
 	VuoCompilerBitcodeParser *parser;  ///< The parser of the LLVM module
 	bool isPremium;  ///< A boolean indicating whether this module contains premium content
 
 	VuoCompilerModule(VuoModule *base, Module *module);
-	virtual ~VuoCompilerModule();
 
 	virtual void parse(void);
 	virtual void parseMetadata(void);
@@ -55,11 +54,12 @@ protected:
 
 public:
 	static VuoCompilerModule * newModule(string moduleKey, Module *module);
+	virtual ~VuoCompilerModule(void);
 
 	VuoCompilerTargetSet parseTargetSet(json_object *o, string key);
 	VuoCompilerTargetSet::MacVersion parseMacVersion(string version);
 	static Function * declareFunctionInModule(Module *module, Function *function);
-	vector<string> getDependencies(void);
+	set<string> getDependencies(void);
 	VuoCompilerTargetSet getCompatibleTargets(void);
 	Module * getModule(void);
 	VuoModule * getPseudoBase(void);

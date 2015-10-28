@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "homogenous", "xyzw", "rotation", "angle", "versor", "from", "vectors" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

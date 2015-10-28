@@ -21,7 +21,8 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-						  "c"
+						"VuoInteger",
+						"VuoText"
 					  ]
 				  });
 #endif
@@ -47,6 +48,8 @@ VuoAudioOutputDevice VuoAudioOutputDevice_valueFromJson(json_object *js)
 
 	if (json_object_object_get_ex(js, "name", &o))
 		value.name = VuoText_valueFromJson(o);
+	else
+		value.name = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "channelCount", &o))
 		value.channelCount = VuoInteger_valueFromJson(o);
@@ -83,10 +86,10 @@ char * VuoAudioOutputDevice_summaryFromValue(const VuoAudioOutputDevice value)
 	else if (value.id == -1)
 		return VuoText_format("The first audio output device whose name contains \"%s\"", value.name);
 	else if (strlen(value.name) == 0)
-		return VuoText_format("Audio output device #%ld", value.id);
+		return VuoText_format("Audio output device #%lld", value.id);
 	else
 		// An actual detected audio output device (rather than abstract criteria).
-		return VuoText_format("Audio output device #%ld (\"%s\")<br>%ld output channels", value.id, value.name, value.channelCount);
+		return VuoText_format("Audio output device #%lld (\"%s\")<br>%lld output channels", value.id, value.name, value.channelCount);
 }
 
 /**

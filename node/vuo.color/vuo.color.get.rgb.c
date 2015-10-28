@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Get RGB Color Values",
-					 "keywords" : [ "red", "green", "blue", "alpha", "opacity", "transparent", "channel", "tone", "chroma" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "alpha", "transparent", "channel", "tone", "chroma" ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -24,8 +24,8 @@ void nodeEvent
 		VuoOutputData(VuoReal) red,
 		VuoOutputData(VuoReal) green,
 		VuoOutputData(VuoReal) blue,
-		VuoOutputData(VuoReal) alpha
+		VuoOutputData(VuoReal) opacity
 )
 {
-	VuoColor_getRGBA(color, red, green, blue, alpha);
+	VuoColor_getRGBA(color, red, green, blue, opacity);
 }

@@ -11,7 +11,7 @@
 #define VUOLOOPTYPE_H
 
 /// @{
-typedef void * VuoList_VuoLoopType;
+typedef const struct VuoList_VuoLoopType_struct { void *l; } * VuoList_VuoLoopType;
 #define VuoList_VuoLoopType_TYPE_DEFINED
 /// @}
 

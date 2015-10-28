@@ -13,13 +13,13 @@
 VuoModuleMetadata({
 					  "title" : "Receive Leap Frame",
 					  "keywords" : [ "gesture", "controller", "motion", "hand", "palm", "pointable", "finger", "tool" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "dependencies" : [
 						  "VuoLeap"
 					  ],
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "CountLeapObjects.vuo", "TwirlImageWithLeap.vuo" ]
+						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "TwirlImageWithLeap.vuo" ]
 					  }
 				 });
 
@@ -38,7 +38,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(receivedFrame, VuoLeapFrame, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(receivedFrame, VuoLeapFrame, {"eventThrottling":"drop"})
 )
 {
 	(*context)->leap = VuoLeap_startListening(receivedFrame);

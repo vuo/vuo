@@ -17,6 +17,7 @@ class VuoCompilerNodeClass;
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerBitcodeGenerator.hh"
 #include "VuoCompilerType.hh"
+#include "VuoCompilerGenericType.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoRunner.hh"
 
@@ -50,6 +51,7 @@ class VuoCompiler
 private:
 	map<string, VuoCompilerNodeClass *> nodeClasses;
 	map<string, VuoCompilerType *> types;
+	set<VuoCompilerGenericType *> genericTypes;
 	map<string, VuoNodeSet *> nodeSetForName;
 	map<string, VuoCompilerModule *> libraryModules;
 	map<string, bool> isNodeClassAndTypeSearchPathLoaded;
@@ -63,9 +65,11 @@ private:
 	string telemetry;
 	string target;
 	bool isVerbose;
+	static dispatch_queue_t llvmQueue;
 
 	void loadModulesIfNeeded(void);
 	void loadModules(string path);
+	void addNodeClass(VuoCompilerNodeClass *nodeClass);
 	void reifyPortTypes(void);
 	void reifyGenericPortTypes(VuoCompilerComposition *composition);
 	void linkCompositionToCreateExecutableOrDynamicLibrary(string compiledCompositionPath, string linkedCompositionPath, bool isDylib, bool isApp=false, string rPath="");
@@ -97,12 +101,13 @@ protected:
 
 public:
 	VuoCompiler(void);
+	~VuoCompiler(void);
 	static string getUserModulesPath();
 	static string getSystemModulesPath();
 	void setLicense(string licenseContent, string licenseSignature);
 	static void preserveOriginalFileName(string &fileContents, string originalFileName);
 	static Module * readModuleFromBitcode(string inputPath);
-	void addNodeClass(VuoCompilerNodeClass *nodeClass);
+	static void deleteModule(Module *module);
 	void compileComposition(VuoCompilerComposition *composition, string outputPath);
 	void compileComposition(string inputPath, string outputPath);
 	void compileCompositionString(const string &compositionString, string outputPath);

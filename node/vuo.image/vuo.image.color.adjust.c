@@ -15,7 +15,10 @@
 VuoModuleMetadata({
 					 "title" : "Adjust Image Colors",
 					 "keywords" : [ "saturation", "desaturate", "grayscale", "greyscale", "tint", "tone", "chroma", "brightness", "contrast", "gamma", "exposure", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
+					 "node" : {
+						 "exampleCompositions" : [ ]
+					 }
 				 });
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,

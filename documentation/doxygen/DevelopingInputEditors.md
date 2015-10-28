@@ -3,6 +3,13 @@
 In the Vuo Editor, a user can edit the value of certain types of input ports by double-clicking on the port's constant flag, then using the widget that pops up. This widget is called an @term{input editor}. For example, the user can double-click on a @ref VuoText input port to pop up a text box, or a @ref VuoBoolean input port to pop up a menu, or a @ref VuoInteger input port to pop up a spin box or slider. If a port type doesn't already have an input editor, you can create one. 
 
 
+## When input editors are created for you
+
+For a port type whose underlying data type is an `enum`, Vuo automatically provides a menu input editor. The menu items are constructed by calling MyType_allowedValues() and MyType_summaryFromValue().
+
+If your port type is not an `enum`, or if you'd like to override the default input editor for an `enum` type, you can implement a custom input editor. Read on for details.
+
+
 ## Quick start
 
 The easiest way to start developing an input editor is with the example Qt project provided with the Vuo SDK. This example project includes a port type, an input editor for the port type, and a node class that demonstrates the input editor. 

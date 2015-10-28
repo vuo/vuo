@@ -20,7 +20,7 @@ class VuoInputEditorBlendModeFactory : public VuoInputEditorFactory
    Q_OBJECT
    Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorBlendMode.json")
    Q_INTERFACES(VuoInputEditorFactory)
- 
+
 public:
    virtual VuoInputEditor * newInputEditor(void);
 };
@@ -33,7 +33,7 @@ class VuoInputEditorBlendMode : public VuoInputEditorWithMenu
 	Q_OBJECT
 
 public:
-	VuoInputEditorMenuItem * setUpMenuTree();
+	VuoInputEditorMenuItem *setUpMenuTree(json_object *details);
 };
 
 #endif // VUOINPUTEDITORBLENDMODE_HH

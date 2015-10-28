@@ -45,7 +45,7 @@ void nodeEvent
 		{
 			VuoReal xPosition = center.x - width/2 + (width / columns) * (x + .5);
 
-			VuoLayer layer = VuoListGetValueAtIndex_VuoLayer(layers, currentLayer);
+			VuoLayer layer = VuoListGetValue_VuoLayer(layers, currentLayer);
 
 			if (scaleToFit)
 			{

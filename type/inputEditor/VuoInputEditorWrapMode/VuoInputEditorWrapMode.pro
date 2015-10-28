@@ -16,5 +16,6 @@ OTHER_FILES += \
 INCLUDEPATH += $$ROOT/type
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoWrapMode.o \
 	$$ROOT/type/list/VuoList_VuoWrapMode.o

@@ -10,6 +10,7 @@
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #include <OpenGL/CGLMacro.h>
 
+#define NS_RETURNS_INNER_POINTER
 #include <QuartzCore/CoreImage.h>
 #include <QuartzCore/CoreVideo.h>
 

@@ -18,6 +18,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "spin", "90", "180", "flip" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						 "VuoLayer",
 						 "VuoGlContext",
 						 "VuoSceneRenderer"
 					 ],

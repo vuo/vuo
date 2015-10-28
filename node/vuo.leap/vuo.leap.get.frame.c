@@ -19,15 +19,14 @@ VuoModuleMetadata({
 					  "keywords" : [ "gesture", "controller", "motion", "hand", "palm", "pointable", "finger", "tool" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false,
-						  "exampleCompositions" : [ "CountLeapObjects.vuo", "TwirlImageWithLeap.vuo" ]
+						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "TwirlImageWithLeap.vuo" ]
 					  }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoLeapFrame) frame,
-		VuoOutputData(VuoInteger) id,
+		VuoOutputData(VuoInteger, {"name":"ID"}) id,
 		VuoOutputData(VuoList_VuoLeapHand) hands,
 		VuoOutputData(VuoList_VuoLeapPointable) pointables
 )

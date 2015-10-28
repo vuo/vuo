@@ -52,3 +52,26 @@ void VuoCompilerPublishedInputPort::setTriggerPort(VuoCompilerTriggerPort *port)
 {
 	this->triggerPort = port;
 }
+
+/**
+ * Returns the JSON-formatted representation of the initial value of the published port data.
+ */
+string VuoCompilerPublishedInputPort::getInitialValue(void)
+{
+	json_object *value = NULL;
+	if (json_object_object_get_ex(details, "default", &value))
+		return json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
+
+	return "";
+}
+
+/**
+ * Sets the initial value of the published port data. This is the value it has from the time that
+ * the composition begins executing until the first time the port data is overwritten.
+ *
+ * @param initialValueAsString JSON-formatted representation of the initial value.
+ */
+void VuoCompilerPublishedInputPort::setInitialValue(string initialValueAsString)
+{
+	setDetail("default", initialValueAsString);
+}

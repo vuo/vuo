@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "tempo" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

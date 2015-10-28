@@ -23,27 +23,54 @@ VuoInputEditor * VuoInputEditorBlendModeFactory::newInputEditor()
 }
 
 /**
+ * Appends `blendMode` to `menu`.
+ */
+static void addBlendMode(VuoInputEditorMenuItem *menu, VuoBlendMode blendMode)
+{
+	json_object *optionAsJson = VuoBlendMode_jsonFromValue(blendMode);
+	char *optionSummary = VuoBlendMode_summaryFromValue(blendMode);
+	VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson);
+	free(optionSummary);
+	menu->addItem(optionItem);
+}
+
+/**
  * Creates the tree that models the menu.
  */
-VuoInputEditorMenuItem * VuoInputEditorBlendMode::setUpMenuTree()
+VuoInputEditorMenuItem *VuoInputEditorBlendMode::setUpMenuTree(json_object *details)
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	for(int i = 0; i < VuoBlendMode_Luminosity+1; i++)
-	{
-		json_object *optionAsJson = VuoBlendMode_jsonFromValue( (VuoBlendMode)i );
-		char *optionSummary = VuoBlendMode_summaryFromValue( (VuoBlendMode)i );
-		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson);
-		free(optionSummary);
-		optionsTree->addItem(optionItem);
+	bool restrictToOpenGlBlendModes = false;
+	json_object *o;
+	if (json_object_object_get_ex(details, "restrictToOpenGlBlendModes", &o))
+			restrictToOpenGlBlendModes = json_object_get_boolean(o);
 
-		// Add separators after the last item in each group.
-		if (i == VuoBlendMode_Normal
-				|| i == VuoBlendMode_ColorBurn
-				|| i == VuoBlendMode_ColorDodge
-				|| i == VuoBlendMode_HardMix
-				|| i == VuoBlendMode_Divide)
-			optionsTree->addSeparator();
+	if (restrictToOpenGlBlendModes)
+	{
+		addBlendMode(optionsTree, VuoBlendMode_Normal);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_LinearDodge);
+		addBlendMode(optionsTree, VuoBlendMode_LighterComponent);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_Subtract);
+		addBlendMode(optionsTree, VuoBlendMode_Multiply);
+		addBlendMode(optionsTree, VuoBlendMode_DarkerComponent);
+	}
+	else
+	{
+		for(int i = 0; i < VuoBlendMode_Luminosity+1; i++)
+		{
+			addBlendMode(optionsTree, (VuoBlendMode)i);
+
+			// Add separators after the last item in each group.
+			if (i == VuoBlendMode_Normal
+					|| i == VuoBlendMode_ColorBurn
+					|| i == VuoBlendMode_ColorDodge
+					|| i == VuoBlendMode_HardMix
+					|| i == VuoBlendMode_Divide)
+				optionsTree->addSeparator();
+		}
 	}
 
 	return optionsTree;

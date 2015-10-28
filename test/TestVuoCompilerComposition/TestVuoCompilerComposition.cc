@@ -190,6 +190,12 @@ private slots:
 		set<string> numericalTypes;
 		numericalTypes.insert("VuoInteger");
 		numericalTypes.insert("VuoReal");
+		set<string> numericalAndPointTypes;
+		numericalAndPointTypes.insert("VuoInteger");
+		numericalAndPointTypes.insert("VuoReal");
+		numericalAndPointTypes.insert("VuoPoint2d");
+		numericalAndPointTypes.insert("VuoPoint3d");
+		numericalAndPointTypes.insert("VuoPoint4d");
 		set<string> oscTypes;
 		oscTypes.insert("VuoBoolean");
 		oscTypes.insert("VuoInteger");
@@ -197,13 +203,13 @@ private slots:
 		oscTypes.insert("VuoText");
 
 		QTest::newRow("generic port, unconnected, compatible with any")										<< "HoldValue2"			<< "heldValue"	<< allTypes;
-		QTest::newRow("generic port, unconnected, compatible with some")									<< "Subtract1"			<< "a"			<< numericalTypes;
+		QTest::newRow("generic port, unconnected, compatible with some")									<< "Subtract1"			<< "a"			<< numericalAndPointTypes;
 		QTest::newRow("generic port, unconnected but on same node as connected, compatible with some")		<< "GetMessageValues1"	<< "data1"		<< oscTypes;
 		QTest::newRow("generic port, connected directly, compatible with any")								<< "HoldValue3"			<< "heldValue"	<< allTypes;
-		QTest::newRow("generic port, connected directly, was compatible with any, compatibility reduced")	<< "HoldValue5"			<< "heldValue"	<< numericalTypes;
+		QTest::newRow("generic port, connected directly, was compatible with any, compatibility reduced")	<< "HoldValue5"			<< "heldValue"	<< numericalAndPointTypes;
 		QTest::newRow("generic port, connected directly, was compatible with some, compatibility reduced")	<< "GetMessageValues1"	<< "data2"		<< numericalTypes;
 		QTest::newRow("generic port, connected indirectly, compatible with any")							<< "HoldValue6"			<< "newValue"	<< allTypes;
-		QTest::newRow("generic port, connected indirectly, was compatible with any, compatibility reduced") << "HoldValue7"			<< "newValue"	<< numericalTypes;
+		QTest::newRow("generic port, connected indirectly, was compatible with any, compatibility reduced") << "HoldValue7"			<< "newValue"	<< numericalAndPointTypes;
 	}
 	void testGenericPortTypeCompatibility()
 	{
@@ -256,7 +262,7 @@ private slots:
 	void testUpdateGenericPortTypesRepeatedly()
 	{
 		VuoCompilerComposition composition(new VuoComposition(), NULL);
-		VuoCompilerNodeClass *holdNodeClass = compiler->getNodeClass("vuo.hold");
+		VuoCompilerNodeClass *holdNodeClass = compiler->getNodeClass("vuo.data.hold");
 
 		for (unsigned int i = 1; i <= 5; ++i)
 		{
@@ -277,8 +283,6 @@ private slots:
 				for (vector<VuoPort *>::iterator k = outputPorts.begin(); k != outputPorts.end(); ++k)
 				{
 					VuoPort *port = *k;
-					if (port == node->getDonePort())
-						continue;
 
 					VuoCompilerPort *compilerPort = static_cast<VuoCompilerPort *>(port->getCompiler());
 					VuoGenericType *genericType = dynamic_cast<VuoGenericType *>(compilerPort->getDataVuoType());
@@ -295,105 +299,6 @@ private slots:
 			}
 			QVERIFY(genericTypesSeen.size() == i);
 		}
-	}
-
-	void testUnspecializeGenericPort_data()
-	{
-		QTest::addColumn<QString>("compositionFile");
-		QTest::addColumn<QString>("nodeTitle");
-		QTest::addColumn<QString>("portName");
-		QTest::addColumn< set<string> >("expectedNodesToReplace");
-		QTest::addColumn< set<string> >("expectedCablesToDelete");
-
-		{
-			set<string> expectedNodesToReplace;
-			expectedNodesToReplace.insert("HoldValue1 vuo.hold.VuoGenericType1");
-			set<string> expectedCablesToDelete;
-			QTest::newRow("Replace one node") << "Generics" << "HoldValue1" << "heldValue" << expectedNodesToReplace << expectedCablesToDelete;
-		}
-
-		{
-			set<string> expectedNodesToReplace;
-			expectedNodesToReplace.insert("Hold1 vuo.hold.VuoGenericType1");
-			expectedNodesToReplace.insert("MakeList1 vuo.list.make.2.VuoGenericType1");
-			expectedNodesToReplace.insert("Add1 vuo.math.add.VuoGenericType1");
-			set<string> expectedCablesToDelete;
-			expectedCablesToDelete.insert("Add1:sum -> ConvertIntegertoText1:integer");
-			QTest::newRow("Replace multiple nodes and remove cables") << "Recur_Hold_Add_Write_loop" << "Hold1" << "heldValue" << expectedNodesToReplace << expectedCablesToDelete;
-		}
-
-		{
-			set<string> expectedNodesToReplace;
-			expectedNodesToReplace.insert("MakeList vuo.list.make.2.VuoGenericType1");
-			expectedNodesToReplace.insert("CountItemsInList vuo.list.count.VuoGenericType1");
-			set<string> expectedCablesToDelete;
-			QTest::newRow("Replace node with VuoList and no singleton") << "CountItemsInList" << "CountItemsInList" << "list" << expectedNodesToReplace << expectedCablesToDelete;
-		}
-
-		{
-			set<string> expectedNodesToReplace;
-			expectedNodesToReplace.insert("HoldValue1 vuo.hold.VuoGenericType1");
-			set<string> expectedCablesToDelete;
-			expectedCablesToDelete.insert("PublishedInputs:newValue -> HoldValue1:newValue");
-			expectedCablesToDelete.insert("HoldValue1:heldValue -> PublishedOutputs:heldValue");
-			QTest::newRow("Replace node that has published ports") << "HoldValuePublished" << "HoldValue1" << "heldValue" << expectedNodesToReplace << expectedCablesToDelete;
-		}
-	}
-	void testUnspecializeGenericPort()
-	{
-		QFETCH(QString, compositionFile);
-		QFETCH(QString, nodeTitle);
-		QFETCH(QString, portName);
-		QFETCH(set<string>, expectedNodesToReplace);
-		QFETCH(set<string>, expectedCablesToDelete);
-
-		string compositionPath = getCompositionPath(compositionFile.toStdString() + ".vuo");
-		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
-		VuoCompilerComposition composition(new VuoComposition(), parser);
-		delete parser;
-
-		VuoPort *portToUnspecialize = NULL;
-		set<VuoNode *> nodes = composition.getBase()->getNodes();
-		for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-		{
-			VuoNode *node = *i;
-			if (node->getTitle() != nodeTitle.toStdString())
-				continue;
-
-			vector<VuoPort *> inputPorts = node->getInputPorts();
-			vector<VuoPort *> outputPorts = node->getOutputPorts();
-			vector<VuoPort *> ports;
-			ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
-			ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
-			for (vector<VuoPort *>::iterator j = ports.begin(); j != ports.end(); ++j)
-			{
-				VuoPort *port = *j;
-				if (port->getClass()->getName() != portName.toStdString())
-					continue;
-
-				portToUnspecialize = port;
-			}
-		}
-		QVERIFY(portToUnspecialize != NULL);
-
-		map<VuoNode *, string> nodesToReplace;
-		set<VuoCable *> cablesToDelete;
-		composition.createReplacementsToUnspecializePort(portToUnspecialize, nodesToReplace, cablesToDelete);
-
-		for (map<VuoNode *, string>::iterator i = nodesToReplace.begin(); i != nodesToReplace.end(); ++i)
-		{
-			string nodeAndNodeClassName = i->first->getTitle() + " " + i->second;
-			QVERIFY2(expectedNodesToReplace.find(nodeAndNodeClassName) != expectedNodesToReplace.end(), nodeAndNodeClassName.c_str());
-		}
-		QCOMPARE(nodesToReplace.size(), expectedNodesToReplace.size());
-
-		for (set<VuoCable *>::iterator i = cablesToDelete.begin(); i != cablesToDelete.end(); ++i)
-		{
-			string cable = (*i)->getFromNode()->getTitle() + ":" + (*i)->getFromPort()->getClass()->getName() + " -> " +
-						   (*i)->getToNode()->getTitle() + ":" + (*i)->getToPort()->getClass()->getName();
-			QVERIFY2(expectedCablesToDelete.find(cable) != expectedCablesToDelete.end(), cable.c_str());
-		}
-		QCOMPARE(cablesToDelete.size(), expectedCablesToDelete.size());
 	}
 
 };

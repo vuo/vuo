@@ -3,9 +3,6 @@ CONFIG += VuoNodeSet
 
 include(../../vuo.pri)
 
-GENERIC_NODE_SOURCES += \
-	vuo.type.discardData.c
-
 NODE_SOURCES += \
 	vuo.type.boolean.integer.c \
 	vuo.type.boolean.real.c \
@@ -22,6 +19,20 @@ NODE_SOURCES += \
 	vuo.type.integer.point4d.z.c \
 	vuo.type.integer.real.c \
 	vuo.type.integer.text.c \
+	vuo.type.list.integer.real.c \
+	vuo.type.list.point2d.point3d.xy.c \
+	vuo.type.list.point3d.point2d.xy.c \
+	vuo.type.list.point2d.real.x.c \
+	vuo.type.list.point2d.real.y.c \
+	vuo.type.list.point3d.real.x.c \
+	vuo.type.list.point3d.real.y.c \
+	vuo.type.list.point3d.real.z.c \
+	vuo.type.list.real.integer.c \
+	vuo.type.list.real.point2d.x.c \
+	vuo.type.list.real.point2d.y.c \
+	vuo.type.list.real.point3d.x.c \
+	vuo.type.list.real.point3d.y.c \
+	vuo.type.list.real.point3d.z.c \
 	vuo.type.point2d.point3d.xy.c \
 	vuo.type.point2d.point4d.xy.c \
 	vuo.type.point2d.real.x.c \
@@ -44,11 +55,14 @@ NODE_SOURCES += \
 	vuo.type.real.text.c \
 	vuo.type.text.boolean.c \
 	vuo.type.text.integer.c \
-	vuo.type.text.real.c
+	vuo.type.text.real.c \
+	vuo.type.videoframe.image.c \
+	vuo.type.videoframe.real.c
 
 NODE_INCLUDEPATH += \
 	../vuo.leap \
 	../vuo.midi \
+	../vuo.video \
 	../vuo.syphon
 
 include(../../module.pri)

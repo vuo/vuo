@@ -15,8 +15,14 @@
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "VuoGradientNoiseCommon"
-				 });
+					  "title" : "VuoGradientNoiseCommon",
+					  "dependencies" : [
+						"VuoReal",
+						"VuoPoint2d",
+						"VuoPoint3d",
+						"VuoPoint4d"
+					  ]
+				  });
 #endif
 
 

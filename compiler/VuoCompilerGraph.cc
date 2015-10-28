@@ -40,8 +40,13 @@ VuoCompilerGraph::VuoCompilerGraph(VuoCompilerComposition *composition, set<VuoC
 
 	set<VuoCable *> publishedInputCables = composition->getBase()->getPublishedInputCables();
 
+	set<VuoCompilerCable *> validPotentialCables;
+	for (set<VuoCompilerCable *>::iterator i = potentialCables.begin(); i != potentialCables.end(); ++i)
+		if ((*i)->getBase()->getToNode())  // Ignore published output cables.
+			validPotentialCables.insert(*i);
+
 	makeTriggers(nonPublishedNodes, publishedInputNode);
-	makeVerticesAndEdges(nonPublishedCables, publishedInputCables, potentialCables, publishedInputNode);
+	makeVerticesAndEdges(nonPublishedCables, publishedInputCables, validPotentialCables, publishedInputNode);
 	makeDownstreamVertices();
 	sortVertices();
 	makeEventlesslyDownstreamNodes(nonPublishedNodes, nonPublishedCables);
@@ -479,10 +484,6 @@ void VuoCompilerGraph::makeEventlesslyDownstreamNodes(set<VuoNode *> nonPublishe
  */
 bool VuoCompilerGraph::mayTransmit(const set<VuoCompilerCable *> &fromCables, const set<VuoCompilerCable *> &toCables)
 {
-	for (set<VuoCompilerCable *>::const_iterator i = toCables.begin(); i != toCables.end(); ++i)
-		if ((*i)->getBase()->getFromPort() == (*i)->getBase()->getFromNode()->getDonePort())
-			return true;
-
 	for (set<VuoCompilerCable *>::const_iterator i = fromCables.begin(); i != fromCables.end(); ++i)
 	{
 		VuoPort *inputPort = (*i)->getBase()->getToPort();
@@ -494,8 +495,7 @@ bool VuoCompilerGraph::mayTransmit(const set<VuoCompilerCable *> &fromCables, co
 }
 
 /**
- * Returns true if an event through the vertex will transmit to any outgoing cables from @c vertex.toNode
- * (not counting the done port).
+ * Returns true if an event through the vertex will transmit to any outgoing cables from @c vertex.toNode .
  */
 bool VuoCompilerGraph::mayTransmit(Vertex vertex, VuoCompilerTriggerPort *trigger)
 {

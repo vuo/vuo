@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Get Message Values",
 					  "keywords" : [ "address", "data" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -37,6 +37,9 @@ void nodeEvent
 		VuoOutputData(VuoGenericType2) data2
 )
 {
+	if (!message || !message->data)
+		return;
+
 	*address = message->address;
 
 	int dataCount = VuoOscMessage_getDataCount(message);

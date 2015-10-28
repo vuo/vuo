@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Decreased",
 					  "keywords" : [ "pulse", "watcher", "changed" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -20,7 +20,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node" : {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
@@ -36,7 +36,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoGenericType1 *) lastValue,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) value,
-		VuoInputEvent(VuoPortEventBlocking_Door, value) valueEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"value"}) valueEvent,
 		VuoOutputEvent() decreased
 )
 {

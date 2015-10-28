@@ -173,7 +173,7 @@ void nodeInstanceEvent
 		VuoRetain((*instance)->sceneObjectRenderer);
 	}
 
-	double nonzeroWavelength = (wavelength == 0) ? 0.000001 : wavelength;
+	double nonzeroWavelength = VuoReal_makeNonzero(wavelength);
 
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoReal    ((*instance)->shader, "angle",      angle*M_PI/180.);

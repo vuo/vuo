@@ -14,7 +14,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "scatter", "fork", "spawn", "thread", "multithread", "multicore", "parallel", "concurrent", "asynchronous", "background" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "LoadImageAsynchronously.vuo" ]
 					 }
 				 });

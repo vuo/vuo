@@ -38,13 +38,14 @@ typedef struct
 	VuoPoint3d direction;
 
 	VuoPoint3d tipPosition;
-	VuoPoint3d stabilizedTipPosition;
 	VuoPoint3d tipVelocity;
 
 	VuoReal timeVisible;
 	VuoReal touchDistance;
 
 	VuoLeapTouchZone touchZone;
+
+	VuoBoolean isExtended;
 } VuoLeapPointable;
 
 VuoLeapPointable VuoLeapPointable_valueFromJson(struct json_object * js);
@@ -58,10 +59,10 @@ VuoLeapPointable VuoLeapPointable_make(VuoInteger id,
 	VuoPoint3d direction,
 	VuoPoint3d tipPosition,
 	VuoPoint3d tipVelocity,
-	VuoPoint3d stabilizedTipPosition,
 	VuoReal timeVisible,
 	VuoReal touchDistance,
-	VuoLeapTouchZone touchZone);
+	VuoLeapTouchZone touchZone,
+	VuoBoolean isExtended);
 
 /// @{
 /**

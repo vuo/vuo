@@ -9,12 +9,14 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="134,91"];
-MakeServerDescription [type="vuo.syphon.make.serverDescription" version="1.0.0" label="Make Server Description|<refresh>refresh\l|<serverName>serverName\l|<applicationName>applicationName\l|<done>done\r|<serverDescription>serverDescription\r" pos="131,225" fillcolor="violet" _applicationName="\"Vuo\""];
-ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.0" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<done>done\r|<receivedImage>receivedImage\r" pos="363,226" _receivedImage_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<done>done\r|<requestedFrame>requestedFrame\r" pos="609,226" _requestedFrame_eventThrottling="drop"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="134,91" _started_eventThrottling="enqueue"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="578,252"];
+MakeServerDescription [type="vuo.syphon.make.serverDescription" version="1.0.0" label="Make Server Description|<refresh>refresh\l|<serverName>serverName\l|<applicationName>applicationName\l|<serverDescription>serverDescription\r" pos="131,225" fillcolor="violet" _applicationName="\"Vuo\""];
+ReceiveImageFromSyphon [type="vuo.syphon.receive" version="1.0.1" label="Receive Image from Syphon|<refresh>refresh\l|<serverDescription>serverDescription\l|<receivedImage>receivedImage\r" pos="363,226" _receivedImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="619,226" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 FireOnStart:started -> MakeServerDescription:refresh;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
 MakeServerDescription:serverDescription -> ReceiveImageFromSyphon:serverDescription;
 ReceiveImageFromSyphon:receivedImage -> RenderImageToWindow:image;
 }

@@ -28,7 +28,8 @@ class VuoNodeClass : public VuoBase<VuoCompilerNodeClass,void>, public VuoModule
 {
 public:
 	VuoNodeClass(string className, vector<string> inputPortClassNames, vector<string> outputPortClassNames);
-	VuoNodeClass(string className, VuoPortClass * refreshPortClass, VuoPortClass * donePortClass, vector<VuoPortClass *> inputPortClasses, vector<VuoPortClass *> outputPortClasses);
+	VuoNodeClass(string className, VuoPortClass * refreshPortClass, vector<VuoPortClass *> inputPortClasses, vector<VuoPortClass *> outputPortClasses);
+	~VuoNodeClass(void);
 
 	static const int unreservedInputPortStartIndex;
 	static const int unreservedOutputPortStartIndex;
@@ -52,8 +53,6 @@ public:
 
 	VuoPortClass * getRefreshPortClass(void);
 	void setRefreshPortClass(VuoPortClass * refreshPortClass);
-	VuoPortClass * getDonePortClass(void);
-	void setDonePortClass(VuoPortClass * donePortClass);
 
 	vector<VuoPortClass *> getInputPortClasses(void);
 	void setInputPortClasses(vector<VuoPortClass *> inputPortClasses);
@@ -67,9 +66,8 @@ private:
 	bool interface;
 	vector<string> exampleCompositionFileNames;
 	VuoPortClass * refreshPortClass;
-	VuoPortClass * donePortClass;
 	vector<VuoPortClass *> inputPortClasses; ///< Includes refresh port.
-	vector<VuoPortClass *> outputPortClasses; ///< Includes done port.
+	vector<VuoPortClass *> outputPortClasses;
 };
 
 #endif // VUONODECLASS_HH

@@ -9,15 +9,14 @@
 
 digraph G
 {
-Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="214,51" _increment="1" _decrement="1" _setCount="0.000000"];
-DisplayConsoleWindow2 [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="594,181"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="29,47" _seconds="1"];
-IsLessThan [type="vuo.math.isLessThan.VuoInteger" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<lessThan>lessThan\r" pos="389,53" _b="5"];
-SelectInput5 [type="vuo.select.in.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="396,183" _falseOption="\"The count is 5 or more\"" _trueOption="\"The count is less than 5\""];
+Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="214,51" _increment="1" _decrement="1" _setCount="0"];
+DisplayConsoleWindow2 [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="594,181" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="29,47" _seconds="1" _fired_eventThrottling="enqueue"];
+IsLessThan [type="vuo.math.isLessThan.VuoInteger" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="389,53" _b="5"];
+SelectInput5 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="396,183" _falseOption="\"The count is 5 or more\"" _trueOption="\"The count is less than 5\""];
 
 Count:count -> IsLessThan:a;
 FirePeriodically:fired -> Count:increment;
-IsLessThan:done -> SelectInput5:refresh;
 IsLessThan:lessThan -> SelectInput5:which;
 SelectInput5:out -> DisplayConsoleWindow2:writeLine;
 }

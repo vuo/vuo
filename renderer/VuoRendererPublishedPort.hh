@@ -15,6 +15,7 @@
 #include "VuoPort.hh"
 #include "VuoPublishedPort.hh"
 #include "VuoRendererItem.hh"
+#include "VuoRendererCable.hh"
 
 /**
  * A published input or output port.
@@ -27,11 +28,11 @@ public:
 	QRectF boundingRect(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	void setName(string name);
-	bool canAccommodateInternalPort(VuoRendererPort *internalPort);
-	bool isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *port);
-	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *port);
-	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort, VuoRendererPort **portToSpecialize, string &specializedTypeName);
-	bool canBeMergedWith(VuoPublishedPort *otherExternalPort);
+	bool canAccommodateInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection);
+	bool isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *port, bool eventOnlyConnection);
+	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *port, bool eventOnlyConnection);
+	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection, VuoRendererPort **portToSpecialize, string &specializedTypeName);
+	bool canBeMergedWith(VuoPublishedPort *otherExternalPort, bool mergeWillAddData);
 	void addConnectedPort(VuoPort *port);
 	void removeConnectedPort(VuoPort *port);
 	QPoint getCompositionViewportPos(void) const;

@@ -9,9 +9,9 @@ VUO_USER_MODULES_PATH = ~/Library/Application\ Support/Vuo/Modules
 QT_ROOT = /usr/local/Cellar/qt/5.3.1
 
 
-QMAKE_CC = $$VUO_FRAMEWORK_PATH/Vuo.framework/MacOS/Clang/bin/clang
+QMAKE_CC = $$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/llvm.framework/Helpers/clang
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CC = $$QMAKE_CC
-QMAKE_CXX = $$VUO_FRAMEWORK_PATH/Vuo.framework/MacOS/Clang/bin/clang++
+QMAKE_CXX = $$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/llvm.framework/Helpers/clang++
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
 QMAKE_LINK = $$QMAKE_CXX
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
@@ -90,6 +90,7 @@ QMAKE_CXXFLAGS += \
 	-F$$VUO_FRAMEWORK_PATH \
 	-F$$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks
 INCLUDEPATH += \
+	$$VUO_FRAMEWORK_PATH/Vuo.framework/Headers \
 	$$VUO_FRAMEWORK_PATH/resources/inputEditorWidgets
 LIBS += \
 	-L$$VUO_FRAMEWORK_PATH/resources/inputEditorWidgets -lwidget \

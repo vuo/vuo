@@ -14,40 +14,35 @@
 VuoModuleMetadata({
 					  "title" : "Get Pointable Values",
 					  "keywords" : [ "controller", "motion", "finger", "tool" ],
-					  "version" : "1.0.0",
-					  "dependencies" : [
-					  ],
+					  "version" : "2.0.0",
 					  "node": {
-						  "isInterface" : false,
-						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "PlayFingerPuppetsWithLeap.vuo" ]
+						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "PlayFingerPuppetsWithLeap.vuo" ]
 					  }
 				  });
 
 void nodeEvent
 (
 		VuoInputData(VuoLeapPointable) pointable,
-		VuoOutputData(VuoInteger) id,
+		VuoOutputData(VuoInteger, {"name":"ID"}) id,
 		VuoOutputData(VuoLeapPointableType) type,
-		VuoOutputData(VuoReal) length,
-		VuoOutputData(VuoReal) width,
-		VuoOutputData(VuoPoint3d) direction,
-		VuoOutputData(VuoPoint3d) tipPosition,
-		VuoOutputData(VuoPoint3d) stabilizedTipPosition,
+		VuoOutputData(VuoTransform) transform,
 		VuoOutputData(VuoPoint3d) tipVelocity,
 		VuoOutputData(VuoLeapTouchZone) touchZone,
 		VuoOutputData(VuoReal) touchDistance,
+		VuoOutputData(VuoBoolean) isExtended,
 		VuoOutputData(VuoReal) timeVisible
 )
 {
 	*id = pointable.id;
 	*type = pointable.type;
-	*length = pointable.length;
-	*width = pointable.width;
-	*direction	= pointable.direction;
-	*tipPosition = pointable.tipPosition;
+
+	VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(0,0,-1), pointable.direction);
+	VuoPoint3d scale = VuoPoint3d_make(pointable.width, pointable.length, pointable.width);
+	*transform = VuoTransform_makeQuaternion(pointable.tipPosition, quaternion, scale);
+
 	*tipVelocity = pointable.tipVelocity;
-	*stabilizedTipPosition = pointable.stabilizedTipPosition;
-	*timeVisible = pointable.timeVisible;
-	*touchDistance = pointable.touchDistance;
 	*touchZone = pointable.touchZone;
+	*touchDistance = pointable.touchDistance;
+	*isExtended = pointable.isExtended;
+	*timeVisible = pointable.timeVisible;
 }

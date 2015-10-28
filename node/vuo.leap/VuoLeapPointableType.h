@@ -11,7 +11,7 @@
 #define VUOLEAPPOINTABLETYPE_H
 
 /// @{
-typedef void * VuoList_VuoLeapPointableType;
+typedef const struct VuoList_VuoLeapPointableType_struct { void *l; } * VuoList_VuoLeapPointableType;
 #define VuoList_VuoLeapPointableType_TYPE_DEFINED
 /// @}
 

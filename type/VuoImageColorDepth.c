@@ -12,8 +12,8 @@
 #include <string.h>
 #include "type.h"
 #include "VuoImageColorDepth.h"
-#include "VuoList_VuoImageColorDepth.h"
 #include "VuoGlPool.h"
+#include "VuoList_VuoImageColorDepth.h"
 #include "VuoText.h"
 #include <OpenGL/CGLMacro.h>
 
@@ -25,7 +25,9 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-					  "c"
+						"VuoList_VuoImageColorDepth",
+						"VuoText",
+						"VuoGlPool"
 					  ]
 				  });
 #endif
@@ -38,6 +40,7 @@ VuoModuleMetadata({
  *
  *    - GL_RGB
  *    - GL_BGR
+ *    - GL_YCBCR_422_APPLE
  *    - GL_RGBA
  *    - GL_BGRA
  *    - GL_LUMINANCE
@@ -46,7 +49,8 @@ VuoModuleMetadata({
 unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, VuoImageColorDepth imageColorDepth)
 {
 	if (baseFormat == GL_RGB
-	 || baseFormat == GL_BGR)
+	 || baseFormat == GL_BGR
+	 || baseFormat == GL_YCBCR_422_APPLE)
 		return (imageColorDepth == VuoImageColorDepth_16) ? GL_RGB16F_ARB             : GL_RGB;
 	else if (baseFormat == GL_RGBA
 		  || baseFormat == GL_BGRA)

@@ -71,9 +71,6 @@ VuoNodeClass * VuoCompilerPublishedInputNodeClass::newNodeClass(VuoNodeClass *du
 	{
 		VuoPortClass *outputPortClass = *i;
 
-		if (outputPortClass->getName() == "done")
-			continue;
-
 		Value *arg = argIter++;
 		string argName = outputPortClass->getName();
 		arg->setName(argName);

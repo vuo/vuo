@@ -22,7 +22,12 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoCurve",
+						"VuoCurveEasing",
+						"VuoLoopType",
+						"VuoPoint2d",
+						"VuoPoint3d",
+						"VuoReal"
 					 ]
 				 });
 #endif

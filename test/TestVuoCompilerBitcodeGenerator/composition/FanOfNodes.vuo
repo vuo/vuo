@@ -1,0 +1,82 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="1035,575"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="1206,577" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
+CycleThroughList [type="vuo.list.cycle.VuoGenericType1" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="1046,721" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="36,-27" _started_eventThrottling="enqueue"];
+GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Get Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="1146,63" _url="\"\""];
+GetItemFromList [type="vuo.list.get.VuoGenericType1" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="511,391" _which="1"];
+HoldValue [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="818,733"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1065,231" _x="0.000000" _y="0.000000"];
+Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="944,60"];
+Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="857,231" _x="0.000000" _y="0.000000" _z="0.000000"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="733,57" _translation="{\"x\":0,\"y\":0,\"z\":0}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="942,388" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="275,56" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+MakeList10 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="455,402"];
+MakeList11 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="648,598"];
+MakeList12 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="989,586"];
+MakeList13 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="973,732"];
+MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="194,260"];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="143,245"];
+MakeList7 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="503,244"];
+MakeList8 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="554,274"];
+MakeList9 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="723,399"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="255,375" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeSphereMesh [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="1162,375" _rows="16" _columns="16"];
+MakeTextImage2 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="520,60" _text="\"Hello World!\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="769,388"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="445,729" _url="\"\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="694,572" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="240,234" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="600,233" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="287,558" _value="0.000000" _start="0.000000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="100.000000"];
+SelectInput [type="vuo.select.in.boolean.VuoGenericType1" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="265,735" _which="false"];
+SelectLatest [type="vuo.select.latest.2.VuoGenericType1" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1278,232"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="450,572" _color="{\"r\":1.000000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShareValue [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="642,741"];
+
+FireOnStart:started -> Add:refresh;
+FireOnStart:started -> Count:refresh;
+FireOnStart:started -> CycleThroughList:refresh;
+FireOnStart:started -> GetImage2:refresh;
+FireOnStart:started -> GetItemFromList:refresh;
+FireOnStart:started -> HoldValue:refresh;
+FireOnStart:started -> Make2DPoint2:refresh;
+FireOnStart:started -> Make3DObject2:refresh;
+FireOnStart:started -> Make3DPoint2:refresh;
+FireOnStart:started -> Make3DTransform2:refresh;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> MakeLayer2:refresh;
+FireOnStart:started -> MakeScaledLayer:refresh;
+FireOnStart:started -> MakeSphereMesh:refresh;
+FireOnStart:started -> MakeTextImage2:refresh;
+FireOnStart:started -> Multiply:refresh;
+FireOnStart:started -> PlayMovie:refresh;
+FireOnStart:started -> RenderImageToWindow:refresh;
+FireOnStart:started -> RenderLayersToWindow2:refresh;
+FireOnStart:started -> RenderSceneToWindow2:refresh;
+FireOnStart:started -> Scale:refresh;
+FireOnStart:started -> SelectInput:refresh;
+FireOnStart:started -> SelectLatest:refresh;
+FireOnStart:started -> ShadeWithColor:refresh;
+FireOnStart:started -> ShareValue:refresh;
+MakeList10:list -> GetItemFromList:list;
+MakeList11:list -> RenderImageToWindow:setWindowProperties;
+MakeList12:list -> Add:values;
+MakeList13:list -> CycleThroughList:list;
+MakeList5:list -> RenderLayersToWindow2:setWindowProperties;
+MakeList6:list -> RenderLayersToWindow2:layers;
+MakeList7:list -> RenderSceneToWindow2:objects;
+MakeList8:list -> RenderSceneToWindow2:setWindowProperties;
+MakeList9:list -> Multiply:values;
+}

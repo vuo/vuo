@@ -13,14 +13,14 @@
 // Headers commonly used by type implementations
 
 #if (__clang_major__ == 3 && __clang_minor__ >= 2) || __clang_major__ > 3
-        #define VUO_CLANG_32_OR_LATER
+	#define VUO_CLANG_32_OR_LATER
 #endif
 
 #pragma clang diagnostic push
 #ifdef VUO_CLANG_32_OR_LATER
 	#pragma clang diagnostic ignored "-Wdocumentation"
 #endif
-#include <json/json.h>
+#include "json/json.h"
 #pragma clang diagnostic pop
 
 

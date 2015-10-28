@@ -21,6 +21,13 @@ extern "C"
 VuoModuleMetadata({
 					  "title" : "VuoMathExpressionParser",
 					  "dependencies" : [
+						"VuoInteger",
+						"VuoReal",
+						"VuoText",
+						"VuoList_VuoInteger",
+						"VuoList_VuoReal",
+						"VuoList_VuoText",
+						"VuoDictionary_VuoText_VuoReal",
 						"muParser"
 					  ]
 				  });
@@ -319,7 +326,7 @@ static void checkSyntaxOfMultipleExpressions(VuoList_VuoText expressions, VuoMat
 	unsigned long count = VuoListGetCount_VuoText(expressions);
 	for (unsigned long i = 1; i <= count; ++i)
 	{
-		VuoText expression = VuoListGetValueAtIndex_VuoText(expressions, i);
+		VuoText expression = VuoListGetValue_VuoText(expressions, i);
 		checkSyntaxOfSingleExpression(expression, error);
 		if (*error)
 		{
@@ -373,7 +380,7 @@ static void parseVariablesFromMultipleExpressions(VuoList_VuoText expressions,
 	unsigned long count = VuoListGetCount_VuoText(expressions);
 	for (unsigned long i = 1; i <= count; ++i)
 	{
-		VuoText expression = VuoListGetValueAtIndex_VuoText(expressions, i);
+		VuoText expression = VuoListGetValue_VuoText(expressions, i);
 
 		vector<string> currInputVariableNames;
 		string currOutputVariableName;
@@ -481,7 +488,7 @@ VuoMathExpressionParser VuoMathExpressionParser_makeFromMultipleExpressions(VuoL
 	unsigned long count = VuoListGetCount_VuoText(expressions);
 	for (unsigned long i = 1; i <= count; ++i)
 	{
-		VuoText assignmentExpression = VuoListGetValueAtIndex_VuoText(expressions, i);
+		VuoText assignmentExpression = VuoListGetValue_VuoText(expressions, i);
 		joinedExpression += assignmentExpression;
 		if (i < count)
 			joinedExpression += separator;
@@ -541,7 +548,7 @@ VuoDictionary_VuoText_VuoReal VuoMathExpressionParser_calculate(VuoMathExpressio
 	unsigned long inputCount = VuoListGetCount_VuoText(inputVariables);
 	for (int i = 0; i < inputCount; ++i)
 	{
-		VuoText variable = VuoListGetValueAtIndex_VuoText(inputVariables, i+1);
+		VuoText variable = VuoListGetValue_VuoText(inputVariables, i+1);
 		map<string, size_t>::iterator variableIter = mi->variableNamesAndIndices.find(variable);
 		if (variableIter != mi->variableNamesAndIndices.end())
 		{

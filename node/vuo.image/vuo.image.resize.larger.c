@@ -14,7 +14,10 @@
 VuoModuleMetadata({
 					 "title" : "Resize Image if Larger",
 					 "keywords" : [ "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
+					 "node" : {
+						 "exampleCompositions" : [ ]
+					 }
 				 });
 
 static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,

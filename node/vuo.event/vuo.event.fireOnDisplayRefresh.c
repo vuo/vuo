@@ -18,7 +18,8 @@ VuoModuleMetadata({
 						 "VuoDisplayRefresh"
 					 ],
 					 "node": {
-						 "isInterface" : true
+						 "isInterface" : true,
+						 "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -31,7 +32,7 @@ VuoDisplayRefresh nodeInstanceInit(void)
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(VuoDisplayRefresh) context,
-		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
 	VuoDisplayRefresh_enableTriggers(*context, requestedFrame, NULL);

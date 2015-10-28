@@ -1,0 +1,54 @@
+/**
+ * @file
+ * Expected outputs for the vuo.select.in.2.VuoInteger node.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "option1",
+		"inputPortValues" : {
+			"which" : 1,
+			"option1" : 10,
+			"option2" : 11
+		},
+		"outputPortValues" : {
+			"out" : 10
+		}
+	},
+	{
+		"firingPort" : "option2",
+		"inputPortValues" : {
+			"which" : 1,
+			"option1" : 12,
+			"option2" : 13
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "option2",
+		"inputPortValues" : {
+			"which" : 2,
+			"option1" : 14,
+			"option2" : 15
+		},
+		"outputPortValues" : {
+			"out" : 15
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"which" : 1,
+			"option1" : 16,
+			"option2" : 17
+		},
+		"outputPortValues" : {
+			"out" : 16
+		}
+	}
+]}

@@ -11,6 +11,14 @@
 #define MODULE_H
 
 #include "VuoHeap.h"
+
+#if !defined(_json_object_h_) && !defined(DOXYGEN)
+	struct json_object;
+	extern const char* json_object_to_json_string(struct json_object *obj);
+#endif
+
+#include "coreTypes.h"
+
 #include "VuoLog.h"
 
 
@@ -54,7 +62,7 @@
  *						 }
  *					 },
  *					 "node": {
- *						 "isInterface" : false
+ *						 "exampleCompositions" : [ ]
  *					 }
  *				 });
  * }
@@ -96,7 +104,13 @@
  */
 
 
+#ifndef DISPATCH_RETURNS_RETAINED_BLOCK
+	/// Disable DISPATCH_RETURNS_RETAINED_BLOCK, which emits warnings on Mac OS 10.10.
+	/// https://b33p.net/kosada/node/9139
+	#define DISPATCH_RETURNS_RETAINED_BLOCK
+#endif
 #include <dispatch/dispatch.h>
+
 #include <dlfcn.h>
 
 /**

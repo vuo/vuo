@@ -71,10 +71,9 @@ private slots:
 		QTest::addColumn< QString >("toNodeTitle");
 		QTest::addColumn< bool >("mayTransmitThroughNode");
 
-		QTest::newRow("always-transmitting cable and never-transmitting cable") << "FireonStart1" << "SelectInput1" << true;
-		QTest::newRow("never-transmitting cable") << "FireonStart2" << "SelectInput2" << false;
-		QTest::newRow("sometimes-transmitting cable") << "FireonStart3" << "SelectInput3" << true;
-		QTest::newRow("never-transmitting cable and done port") << "FireonStart4" << "SelectInput4" << true;
+		QTest::newRow("always-transmitting cable and never-transmitting cable") << "FireonStart1" << "MeasureTime1" << true;
+		QTest::newRow("never-transmitting cable") << "FireonStart2" << "MeasureTime2" << false;
+		QTest::newRow("sometimes-transmitting cable") << "FireonStart3" << "MeasureTime3" << true;
 	}
 	void testEventMayTransmitThroughNode()
 	{
@@ -187,13 +186,12 @@ private slots:
 		{
 			map<string, set<string> > downstreamNodes;
 			downstreamNodes["FirePeriodically:fired"].insert("Hold2");
-			downstreamNodes["FirePeriodically:fired"].insert("DiscardDatafromEvent");
 			downstreamNodes["FirePeriodically:fired"].insert("Hold3");
 			downstreamNodes["FirePeriodically:fired"].insert("MakeList");
-			downstreamNodes["FirePeriodically:fired"].insert("Append");
+			downstreamNodes["FirePeriodically:fired"].insert("AppendTexts");
 			downstreamNodes["FirePeriodically:fired"].insert("CountCharacters");
 			downstreamNodes["FirePeriodically:fired"].insert("Subtract");
-			downstreamNodes["FirePeriodically:fired"].insert("Cut");
+			downstreamNodes["FirePeriodically:fired"].insert("CutText");
 			downstreamNodes["FirePeriodically:fired"].insert("DisplayConsoleWindow");
 			downstreamNodes["DisplayConsoleWindow:typedLine"];
 			downstreamNodes["DisplayConsoleWindow:typedWord"];
@@ -427,7 +425,7 @@ private slots:
 		{
 			map<string, set<string> > chains;
 			chains["FirePeriodically1:fired"].insert("Hold1");
-			chains["FirePeriodically1:fired"].insert("Subtract1 DiscardDatafromEvent2");
+			chains["FirePeriodically1:fired"].insert("Subtract1");
 			chains["FirePeriodically1:fired"].insert("Hold2");
 			chains["FirePeriodically1:fired"].insert("Subtract2");
 			chains["FirePeriodically1:fired"].insert("ConvertIntegertoText1 DisplayConsoleWindow1");
@@ -469,20 +467,13 @@ private slots:
 		{
 			map<string, set<string> > chains;
 			chains["FirePeriodically:fired"].insert("Hold2");
-			chains["FirePeriodically:fired"].insert("DiscardDatafromEvent");
 			chains["FirePeriodically:fired"].insert("Hold3");
-			chains["FirePeriodically:fired"].insert("MakeList Append");
+			chains["FirePeriodically:fired"].insert("MakeList AppendTexts");
 			chains["FirePeriodically:fired"].insert("CountCharacters Subtract");
-			chains["FirePeriodically:fired"].insert("Cut");
+			chains["FirePeriodically:fired"].insert("CutText");
 			chains["FirePeriodically:fired"].insert("Hold3");
 			chains["FirePeriodically:fired"].insert("DisplayConsoleWindow");
 			QTest::newRow("Scatters and gathers involving nodes in a feedback loop.") << "StoreRecentText.vuo" << chains;
-		}
-
-		{
-			map<string, set<string> > chains;
-			chains["FirePeriodically1:fired"].insert("Hold1 Subtract2");
-			QTest::newRow("Node with incoming cable into walled port and outgoing cable from done port.") << "DonePort.vuo" << chains;
 		}
 
 		{
@@ -641,6 +632,8 @@ private slots:
 		QTest::newRow("Passive cable carrying a struct coerced to a vector.") << "CableCarryingVuoPoint2d";
 		QTest::newRow("Passive cable carrying a struct coerced to a struct containing a vector and a singleton.") << "CableCarryingVuoPoint3d";
 		QTest::newRow("Passive cable carrying a struct coerced to a struct containing two vectors.") << "CableCarryingVuoPoint4d";
+		QTest::newRow("Event-only cable from a data-and-event trigger port to a data-and-event input port.") << "EventCableFromDataTrigger";
+		QTest::newRow("Event-only cable from a data-and-event output port to a data-and-event input port.") << "EventCableFromDataOutput";
 		QTest::newRow("Node with an input port and output port whose types are pointers to structs.") << "StructPointerPorts";
 		QTest::newRow("Make List node with 0 items.") << "AddNoTerms";
 	}
@@ -746,6 +739,7 @@ private slots:
 	void testCompilingAndLinkingWithGenericNodes()
 	{
 		QFETCH(QString, compositionName);
+		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
 
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		string dir, file, ext;
@@ -759,6 +753,69 @@ private slots:
 
 		remove(compiledCompositionPath.c_str());
 		remove(linkedCompositionPath.c_str());
+	}
+
+	void testCompilingPerformance_data()
+	{
+		QTest::addColumn< QString >("compositionName");
+
+		QTest::newRow("Empty composition") << "Empty";
+		QTest::newRow("100 non-generic nodes of the same node class") << "ChainOfNonGenericNodes";
+		QTest::newRow("50 nodes of the same generic node class specialized to different types") << "ChainOfSpecializedNodes";
+		QTest::newRow("25 nodes of different node classes") << "FanOfNodes";
+	}
+	void testCompilingPerformance()
+	{
+		QFETCH(QString, compositionName);
+		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
+
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
+
+		QBENCHMARK {
+			compiler->compileComposition(compositionPath, compiledCompositionPath);
+
+			QVERIFY(VuoFileUtilities::fileExists(compiledCompositionPath));
+			remove(compiledCompositionPath.c_str());
+		}
+	}
+
+	void testCompilingAndLinkingPerformance_data()
+	{
+		QTest::addColumn< QString >("compositionName");
+
+		QTest::newRow("Empty composition") << "Empty";
+		QTest::newRow("100 non-generic nodes of the same node class") << "ChainOfNonGenericNodes";
+		QTest::newRow("50 nodes of the same generic node class specialized to different types") << "ChainOfSpecializedNodes";
+		QTest::newRow("25 nodes of different node classes") << "FanOfNodes";
+	}
+	void testCompilingAndLinkingPerformance()
+	{
+		QFETCH(QString, compositionName);
+		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
+
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+		string linkedResourcePath = VuoFileUtilities::makeTmpFile(file + "-resource", "dylib");
+
+		QBENCHMARK {
+			compiler->compileComposition(compositionPath, compiledCompositionPath);
+
+			vector<string> alreadyLinkedResourcePaths;
+			set<string> alreadyLinkedResources;
+			compiler->linkCompositionToCreateDynamicLibraries(compiledCompositionPath, linkedCompositionPath, linkedResourcePath,
+															  alreadyLinkedResourcePaths, alreadyLinkedResources);
+
+			QVERIFY(VuoFileUtilities::fileExists(linkedCompositionPath));
+			remove(compiledCompositionPath.c_str());
+			remove(linkedCompositionPath.c_str());
+			remove(linkedResourcePath.c_str());
+		}
 	}
 
 	void testPublishedPortGetters()

@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					  "title" : "Mask Image by Brightness",
 					  "keywords" : [ "threshold", "remove", "depth", "cut", "magic", "wand", "transparent", "filter" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
 					  }

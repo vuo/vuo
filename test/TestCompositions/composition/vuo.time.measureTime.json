@@ -1,0 +1,101 @@
+/**
+ * @file
+ * Expected outputs for the vuo.time.measureTime node. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 1.0
+		}
+	},
+	{
+		"firingPort" : "start",
+		"inputPortValues" : {
+			"time" : 2.0
+		}
+	},
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 3.0
+		},
+		"outputPortValues" : {
+			"elapsedTime" : 1
+		}
+	},
+	{
+		"firingPort" : "pause",
+		"inputPortValues" : {
+			"time" : 4.0
+		}
+	},
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 5.0
+		}
+	},
+	{
+		"firingPort" : "start",
+		"inputPortValues" : {
+			"time" : 6.0
+		}
+	},
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 7.0
+		},
+		"outputPortValues" : {
+			"elapsedTime" : 3
+		}
+	},
+	{
+		"firingPort" : "reset",
+		"inputPortValues" : {
+			"time" : 8.0
+		}
+	},
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 9.0
+		},
+		"outputPortValues" : {
+			"elapsedTime" : 0
+		}
+	},
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 11.0
+		}
+	},
+	{
+		"firingPort" : "reset",
+		"inputPortValues" : {
+			"time" : 12.0
+		}
+	},
+	{
+		"firingPort" : "start",
+		"inputPortValues" : {
+			"time" : 13.0
+		}
+	},
+	{
+		"firingPort" : "time",
+		"inputPortValues" : {
+			"time" : 14.0
+		},
+		"outputPortValues" : {
+			"elapsedTime" : 1
+		}
+	},
+]}

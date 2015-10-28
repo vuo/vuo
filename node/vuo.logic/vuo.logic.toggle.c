@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Toggle",
-					 "keywords" : [ "boolean", "gate", "not", "!", "flip", "inverse", "reverse", "opposite", "switch", "0", "1", "true", "false" ],
+					 "keywords" : [ "boolean", "gate", "not", "!", "flip", "inverse", "reverse", "opposite", "alternate", "switch", "0", "1", "true", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -29,7 +29,7 @@ VuoBoolean * nodeInstanceInit(void)
 void nodeInstanceEvent
 (
 		VuoInstanceData(VuoBoolean *) state,
-		VuoInputEvent(VuoPortEventBlocking_None,) toggle,
+		VuoInputEvent({"eventBlocking":"none"}) toggle,
 		VuoOutputData(VuoBoolean) value
 )
 {

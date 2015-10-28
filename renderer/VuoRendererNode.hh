@@ -64,7 +64,7 @@ public:
 														   QPainterPath portsInsetPath,
 														   QPainterPath statefulIndicatorOutline,
 														   bool isSubcomposition);
-	static QVector<QPainterPath> getStatefulIndicatorOutlines(QRectF nodeInnerFrameRect, bool isStateful);
+	static QPainterPath getStatefulIndicatorOutline(QRectF nodeInnerFrameRect, bool isStateful);
 	static QPainterPath getAntennaPath(QRectF nodeInnerFrameRect, bool isInterface);
 	static QPair<QPainterPath, QPainterPath> getPortPaths(VuoRendererPortList *inputPorts, VuoRendererPortList *outputPorts);
 
@@ -73,6 +73,10 @@ public:
 	void setProxyNode(VuoRendererNode * proxyNode);
 	VuoRendererNode * getProxyNode(void) const;
 	VuoRendererTypecastPort * getProxyCollapsedTypecast(void) const;
+	void setAlwaysDisplayPortNames(bool displayPortNames);
+	bool nameDisplayEnabledForPort(const VuoRendererPort *port);
+	bool nameDisplayEnabledForInputPorts();
+	bool nameDisplayEnabledForOutputPorts();
 
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 	void updateGeometry(void);
@@ -120,6 +124,7 @@ protected:
 	VuoRendererPortList *inputPorts; ///<  The list of input renderer ports belonging to this renderer node.
 	VuoRendererPortList *outputPorts; ///< The list of output renderer ports belonging to this renderer node.
 	qint64 timeLastExecutionEnded; ///< The time at which this node's running counterpart last completed an execution.
+	bool alwaysDisplayPortNames; ///< Indicates whether this node's ports, even unambiguous ones, should always have their names displayed.
 
 private:
 	VuoRendererNode *proxyNode; ///< The optional node that handles the rendering for this node.
@@ -132,7 +137,7 @@ private:
 	QRectF frameRect;
 	QPair<QPainterPath, QPainterPath> nodeFrames; // (nodeOuterFrame, nodeInnerFrame)
 	QPair<QPainterPath, QPainterPath> portPaths; // (ports, portsInset)
-	QVector<QPainterPath> statefulIndicatorOutlines; // (cableOutline, highlightOutline, cableOutlineMinusHighlight)
+	QPainterPath statefulIndicatorOutline;
 	QPainterPath antennaPath;
 
 	QRectF nodeTitleBoundingRect;

@@ -12,9 +12,8 @@
 VuoModuleMetadata({
 					 "title" : "Cycle through List",
 					 "keywords" : [ "pick", "select", "choose", "count", "item", "element", "member", "index" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.2",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions": [ "CycleSeasons.vuo" ]
 					 }
 				 });
@@ -31,10 +30,10 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoInteger *) index,
 		VuoInputData(VuoList_VuoGenericType1) list,
-		VuoInputEvent(VuoPortEventBlocking_Wall,list) listEvent,
-		VuoInputEvent(VuoPortEventBlocking_None,) goForward,
-		VuoInputEvent(VuoPortEventBlocking_None,) goBackward,
-		VuoInputEvent(VuoPortEventBlocking_Wall,) goToFirst,
+		VuoInputEvent({"eventBlocking":"wall","data":"list"}) listEvent,
+		VuoInputEvent({"eventBlocking":"none"}) goForward,
+		VuoInputEvent({"eventBlocking":"none"}) goBackward,
+		VuoInputEvent({"eventBlocking":"wall"}) goToFirst,
 		VuoInputData(VuoWrapMode, {"default":"wrap"}) wrapMode,
 		VuoOutputData(VuoGenericType1) item
 )
@@ -80,9 +79,9 @@ void nodeInstanceEvent
 	}
 
 	if (goToFirst)
-		**index = 1;
+		**index = 0;
 
-	*item = VuoListGetValueAtIndex_VuoGenericType1(list, **index);
+	*item = VuoListGetValue_VuoGenericType1(list, **index);
 }
 
 void nodeInstanceFini(VuoInstanceData(VuoInteger *) index)

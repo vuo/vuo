@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

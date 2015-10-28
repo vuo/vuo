@@ -11,16 +11,16 @@
 
 VuoModuleMetadata({
 					  "title" : "Subtract",
-					  "keywords" : [ "difference", "minus", "-", "arithmetic", "calculate" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "difference", "minus", "-", "arithmetic", "calculate", "vector", "point" ],
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
+							  "compatibleTypes" : [ "VuoInteger", "VuoReal", "VuoPoint2d", "VuoPoint3d", "VuoPoint4d" ]
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
@@ -31,5 +31,5 @@ void nodeEvent
 		VuoOutputData(VuoGenericType1) difference
 )
 {
-	*difference = a - b;
+	*difference = VuoGenericType1_subtract(a, b);
 }

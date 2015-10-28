@@ -34,6 +34,8 @@ VuoMidiController VuoMidiController_valueFromJson(struct json_object * js);
 struct json_object * VuoMidiController_jsonFromValue(const VuoMidiController value);
 char * VuoMidiController_summaryFromValue(const VuoMidiController value);
 
+bool VuoMidiController_areEqual(const VuoMidiController value1, const VuoMidiController value2);
+
 /**
  * Returns a note event with the specified values.
  */

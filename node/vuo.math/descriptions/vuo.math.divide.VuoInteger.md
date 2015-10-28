@@ -1,1 +1,1 @@
-Calculates the quotient and remainder of `a` divided by `b` (`a/b`).
+Calculates the quotient and remainder of `A` divided by `B` (`A/B`).

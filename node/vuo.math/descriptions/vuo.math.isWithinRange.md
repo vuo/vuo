@@ -1,5 +1,5 @@
 Outputs *true* if the value is within a given range. 
 
-   - `value` — The value to check. 
-   - `minimum` — The lowest value in the range. 
-   - `maximum` — The highest value in the range. 
+   - `Value` — The value to check. 
+   - `Minimum` — The lowest value in the range. 
+   - `Maximum` — The highest value in the range. 

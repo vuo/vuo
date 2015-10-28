@@ -8,23 +8,26 @@
  */
 
 #include "module.h"
+#include "VuoImageRenderer.h"
 #include "VuoNSRunLoop.h"
 #include "VuoSyphon.h"
-#include "VuoImageRenderer.h"
-#include <Syphon.h>
 #include "VuoSyphonListener.h"
 #include "VuoSyphonSender.h"
+#include <Syphon.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoSyphon",
 					 "dependencies" : [
+						"VuoSyphonServerDescription",
+						"VuoList_VuoSyphonServerDescription",
+						"VuoGlContext",
+						"VuoImageRenderer",
 						"VuoNSRunLoop",
-						"Syphon.framework",
-						"objc",
+						"VuoSyphon",
 						"VuoSyphonListener",
 						"VuoSyphonSender",
-						"AppKit.framework"
+						"Syphon.framework"
 					 ]
 				 });
 #endif
@@ -65,7 +68,7 @@ VuoList_VuoSyphonServerDescription VuoSyphon_filterServerDescriptions(VuoList_Vu
 	unsigned long count = VuoListGetCount_VuoSyphonServerDescription(allDescriptions);
 	for (int i = 1; i <= count; ++i)
 	{
-		VuoSyphonServerDescription description = VuoListGetValueAtIndex_VuoSyphonServerDescription(allDescriptions, i);
+		VuoSyphonServerDescription description = VuoListGetValue_VuoSyphonServerDescription(allDescriptions, i);
 
 		/// @todo Handle UTF8 names (add VuoText function).
 		if (strstr(description.serverUUID, partialDescription.serverUUID) != NULL &&

@@ -23,6 +23,27 @@ VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(string nodeClas
 	VuoCompilerNodeClass(nodeClassName, module)
 {
 	genericNodeClass = NULL;
+
+	// Add the backing type for each generic port type as a dependency.
+	vector<VuoPortClass *> portClasses;
+	vector<VuoPortClass *> inputPortClasses = getBase()->getInputPortClasses();
+	vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();
+	portClasses.insert(portClasses.end(), inputPortClasses.begin(), inputPortClasses.end());
+	portClasses.insert(portClasses.end(), outputPortClasses.begin(), outputPortClasses.end());
+	for (vector<VuoPortClass *>::iterator i = portClasses.begin(); i != portClasses.end(); ++i)
+	{
+		VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>((*i)->getCompiler());
+		VuoGenericType *genericType = dynamic_cast<VuoGenericType *>(portClass->getDataVuoType());
+		if (genericType)
+		{
+			VuoGenericType::Compatibility compatibility;
+			set<string> compatibleTypeNames = genericType->getCompatibleSpecializedTypes(compatibility);
+			string backingTypeName = VuoCompilerGenericType::chooseBackingTypeName(genericType->getModuleKey(), compatibleTypeNames);
+			dependencies.insert(backingTypeName);
+			string innermostBackingTypeName = VuoType::extractInnermostTypeName(backingTypeName);
+			dependencies.insert(innermostBackingTypeName);
+		}
+	}
 }
 
 /**
@@ -40,19 +61,23 @@ VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(VuoCompilerSpec
 		for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
 		{
 			VuoPort *portInNode = *i;
-			VuoPortClass *portInNodeClass = compilerNodeClass->getInputPortClassWithName( portInNode->getClass()->getName() );
+			VuoPortClass *portInNodeClass = getInputPortClassWithName( portInNode->getClass()->getName() );
 			VuoCompilerPort *compilerPortInNode = dynamic_cast<VuoCompilerPort *>(portInNode->getCompiler());
 			VuoCompilerPortClass *compilerPortInNodeClass = dynamic_cast<VuoCompilerPortClass *>(portInNodeClass->getCompiler());
-			compilerPortInNodeClass->setDataVuoType( compilerPortInNode->getDataVuoType() );
+			VuoType *type = compilerPortInNode->getDataVuoType();
+			if (type)
+				compilerPortInNodeClass->setDataVuoType(type);
 		}
 		vector<VuoPort *> outputPorts = nodeToBack->getOutputPorts();
 		for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
 		{
 			VuoPort *portInNode = *i;
-			VuoPortClass *portInNodeClass = compilerNodeClass->getOutputPortClassWithName( portInNode->getClass()->getName() );
+			VuoPortClass *portInNodeClass = getOutputPortClassWithName( portInNode->getClass()->getName() );
 			VuoCompilerPort *compilerPortInNode = dynamic_cast<VuoCompilerPort *>(portInNode->getCompiler());
 			VuoCompilerPortClass *compilerPortInNodeClass = dynamic_cast<VuoCompilerPortClass *>(portInNodeClass->getCompiler());
-			compilerPortInNodeClass->setDataVuoType( compilerPortInNode->getDataVuoType() );
+			VuoType *type = compilerPortInNode->getDataVuoType();
+			if (type)
+				compilerPortInNodeClass->setDataVuoType(type);
 		}
 	}
 }
@@ -115,6 +140,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 
 	string genericNodeClassName = genericNodeClass->getBase()->getClassName();
 	string genericImplementation = genericNodeClass->getBase()->getNodeSet()->getNodeClassContents( genericNodeClassName );
+	genericImplementation.insert(VuoFileUtilities::getFirstInsertionIndex(genericImplementation), "#define VuoSpecializedNode 1\n");
 
 	string tmpDir = VuoFileUtilities::makeTmpDir(nodeClassName);
 
@@ -142,6 +168,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 		if (typeNodeSet)
 			nodeSetDependencies.insert(typeNodeSet);
 	}
+	set<string> tmpHeaders;
 	for (set<VuoNodeSet *>::iterator i = nodeSetDependencies.begin(); i != nodeSetDependencies.end(); ++i)
 	{
 		VuoNodeSet *nodeSet = *i;
@@ -152,6 +179,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 			string header = nodeSet->getHeaderContents( headerFileName );
 			string tmpHeaderFile = tmpDir + "/" + headerFileName;
 			VuoFileUtilities::writeStringToFile(header, tmpHeaderFile);
+			tmpHeaders.insert(tmpHeaderFile);
 		}
 	}
 	vector<string> includeDirs;
@@ -159,6 +187,11 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 
 	compiler->compileModule(tmpNodeClassImplementationFile, tmpNodeClassCompiledFile, includeDirs);
 	Module *module = compiler->readModuleFromBitcode(tmpNodeClassCompiledFile);
+
+	for (set<string>::iterator i = tmpHeaders.begin(); i != tmpHeaders.end(); ++i)
+		remove((*i).c_str());
+	remove(tmpNodeClassImplementationFile.c_str());
+	remove(tmpNodeClassCompiledFile.c_str());
 	remove(tmpDir.c_str());
 
 
@@ -258,6 +291,7 @@ void VuoCompilerSpecializedNodeClass::replaceGenericTypesWithBacking(string &nod
 			return;
 		map<string, string> defaultTypeForGeneric;
 		VuoCompilerNodeClass::parseGenericTypes(moduleMetadata, defaultTypeForGeneric, compatibleTypesForGeneric);
+		json_object_put(moduleMetadata);
 	}
 
 	set<string> genericTypeIdentifiers;

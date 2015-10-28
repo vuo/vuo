@@ -6,6 +6,7 @@ include(../../vuo.pri)
 NODE_SOURCES += \
 	vuo.layer.align.window.c \
 	vuo.layer.arrange.grid.c \
+	vuo.layer.blendMode.c \
 	vuo.layer.make.c \
 	vuo.layer.copy.c \
 	vuo.layer.copy.trs.c \

@@ -30,6 +30,13 @@ createMasterHeader.target = ../framework/Vuo.h
 POST_TARGETDEPS += ../framework/Vuo.h
 QMAKE_EXTRA_TARGETS += createMasterHeader
 
+createCoreTypesHeader.commands = (cd ../type ; ./generateCoreTypesHeader.sh $$TYPE_HEADERS)
+createCoreTypesHeader.depends = ../type/type.pro ../type/list/list.pro
+createCoreTypesHeader.target = ../type/coreTypes.h
+POST_TARGETDEPS += ../type/coreTypes.h
+QMAKE_EXTRA_TARGETS += createCoreTypesHeader
+QMAKE_CLEAN += ../type/coreTypes.h ../type/coreTypesStringify.h ../type/coreTypesStringify.hh
+
 QMAKE_OBJECTIVE_CFLAGS += \
 	-I../type \
 	-I../type/list \

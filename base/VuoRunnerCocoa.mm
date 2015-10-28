@@ -58,6 +58,9 @@ extern "C" {
 /**
  * Specifies an OpenGL context to be used as the base for all of Vuo's shared GL contexts.
  *
+ * The `CGLContext` must be unlocked when calling this function,
+ * but after that you may lock it at any time (Vuo doesn't require it to be locked or unlocked).
+ *
  * Must be called before any Vuo composition is loaded.
  *
  * @threadAny

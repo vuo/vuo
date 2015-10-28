@@ -8,8 +8,10 @@
  */
 
 #include "type.h"
+#include "VuoInteger.h"
 #include "VuoReal.h"
 #include "VuoText.h"
+#include "VuoList_VuoReal.h"
 #include <float.h>
 
 /// @{
@@ -20,7 +22,9 @@ VuoModuleMetadata({
 					 "keywords" : [ "double", "float", "number" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoReal",
+						"VuoInteger",
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -81,4 +85,54 @@ VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount)
 		max = MAX(max, terms[i]);
 
 	return max;
+}
+
+/**
+ * Returns the average of the values in the list, or 0 if the list is empty.
+ */
+VuoReal VuoReal_average(VuoList_VuoReal values)
+{
+	VuoInteger count = VuoListGetCount_VuoReal(values);
+	if (count == 0)
+		return 0;
+
+	VuoReal sum = 0;
+	for (VuoInteger i = 1; i <= count; ++i)
+		sum += VuoListGetValue_VuoReal(values, i);
+
+	return sum/count;
+}
+
+/**
+ * Returns @a value if it is within the range of @a minimum to @a maximum (exclusive),
+ * otherwise a value wrapped with modular arithmetic to be within the range.
+ */
+VuoReal VuoReal_wrap(VuoReal value, VuoReal minimum, VuoReal maximum)
+{
+	if (value > maximum)
+		return minimum + fmod(value-maximum, maximum-minimum);
+	else if (value < minimum)
+		return maximum - fmod(minimum-value, maximum-minimum);
+	else
+		return value;
+}
+
+/**
+ * Returns a pseudorandom value between `minimum` and `maximum`.
+ *
+ * @see VuoInteger_random
+ */
+VuoReal VuoReal_random(const VuoReal minimum, const VuoReal maximum)
+{
+	return ((VuoReal)VuoInteger_random(0, INT_MAX) / (VuoReal)(INT_MAX)) * (maximum - minimum) + minimum;
+}
+
+/**
+ * Returns a pseudorandom value between `minimum` and `maximum`.
+ *
+ * @see VuoInteger_randomWithState
+ */
+VuoReal VuoReal_randomWithState(unsigned short state[3], const VuoReal minimum, const VuoReal maximum)
+{
+	return ((VuoReal)VuoInteger_randomWithState(state, 0, INT_MAX) / (VuoReal)(INT_MAX)) * (maximum - minimum) + minimum;
 }

@@ -19,22 +19,23 @@ SUBDIRS += \
 	test_TestVuoCompilerComposition \
 	test_TestVuoCompilerGraphvizParser \
 	test_TestVuoCompilerBitcodeGenerator \
-	test_TestVuoMovie \
+	test_TestVuoVideo \
 	test_TestVuoRenderer \
 	test_TestVuoTypes \
 	test_TestCompositionExecution \
 	test_TestControlAndTelemetry \
 	test_TestControlAndTelemetry_node \
+	test_TestNodes \
 	test_TestNodeExecutionOrder \
 	test_TestNodeExecutionOrder_node \
 	test_TestReferenceCounting \
 	test_TestReferenceCounting_node \
-	test_TestCompositionOutput \
-	test_TestCompositionOutput_node \
+	test_TestCompositions \
+	test_TestCompositions_node \
 	test_TestBuiltProducts
 
 test_TestBuiltProducts.subdir = TestBuiltProducts
-test_TestBuiltProducts.depends =
+test_TestBuiltProducts.depends = test_TestCompositionExecution
 
 test_TestControlAndTelemetry.subdir = TestControlAndTelemetry
 test_TestControlAndTelemetry.depends = test_TestCompositionExecution
@@ -45,11 +46,14 @@ test_TestControlAndTelemetry_node.depends =
 test_TestCompositionExecution.subdir = TestCompositionExecution
 test_TestCompositionExecution.depends = test_TestVuoCompiler_node
 
-test_TestCompositionOutput.subdir = TestCompositionOutput
-test_TestCompositionOutput.depends = test_TestCompositionExecution
+test_TestCompositions.subdir = TestCompositions
+test_TestCompositions.depends = test_TestCompositionExecution
 
-test_TestCompositionOutput_node.subdir = TestCompositionOutput/node-TestCompositionOutput
-test_TestCompositionOutput_node.depends =
+test_TestCompositions_node.subdir = TestCompositions/node-TestCompositions
+test_TestCompositions_node.depends =
+
+test_TestNodes.subdir = TestNodes
+test_TestNodes.depends = test_TestCompositionExecution
 
 test_TestNodeExecutionOrder.subdir = TestNodeExecutionOrder
 test_TestNodeExecutionOrder.depends = test_TestCompositionExecution
@@ -90,8 +94,8 @@ test_TestVuoCompilerNodeClass.depends = test_TestVuoCompiler
 test_TestVuoCompilerType.subdir = TestVuoCompilerType
 test_TestVuoCompilerType.depends = test_TestVuoCompiler
 
-test_TestVuoMovie.subdir = TestVuoMovie
-test_TestVuoMovie.depends =
+test_TestVuoVideo.subdir = TestVuoVideo
+test_TestVuoVideo.depends =
 
 test_TestVuoRenderer.subdir = TestVuoRenderer
 test_TestVuoRenderer.depends =

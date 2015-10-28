@@ -11,11 +11,11 @@
 #include "VuoMidiController.h"
 
 VuoModuleMetadata({
-					 "title" : "Filter MIDI Controller",
+					 "title" : "Filter Controller",
 					 "keywords" : [ "CC", "custom controller", "effect", "synthesizer", "sequencer", "music", "instrument" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -23,36 +23,21 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoMidiController) controller,
-		VuoInputEvent(VuoPortEventBlocking_Door, controller) controllerEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"controller"}) controllerEvent,
 
-		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":16}) channelMin,
-		VuoInputEvent(VuoPortEventBlocking_Wall, channelMin) channelMinEvent,
-		VuoInputData(VuoInteger, {"default":16, "suggestedMin":1, "suggestedMax":16}) channelMax,
-		VuoInputEvent(VuoPortEventBlocking_Wall, channelMax) channelMaxEvent,
+		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":16}) channel,
+		VuoInputEvent({"eventBlocking":"wall", "data":"channel"}) channelEvent,
 
-		VuoInputData(VuoInteger, {"default":0, "suggestedMin":0, "suggestedMax":127}) controllerNumberMin,
-		VuoInputEvent(VuoPortEventBlocking_Wall, controllerNumberMin) controllerNumberMinEvent,
-		VuoInputData(VuoInteger, {"default":127, "suggestedMin":0, "suggestedMax":127}) controllerNumberMax,
-		VuoInputEvent(VuoPortEventBlocking_Wall, controllerNumberMax) controllerNumberMaxEvent,
+		VuoInputData(VuoInteger, {"default":1, "suggestedMin":0, "suggestedMax":127}) controllerNumber,
+		VuoInputEvent({"eventBlocking":"wall", "data":"controllerNumber"}) controllerNumberEvent,
 
-		VuoInputData(VuoInteger, {"default":0, "suggestedMin":0, "suggestedMax":127}) valueMin,
-		VuoInputEvent(VuoPortEventBlocking_Wall, valueMin) valueMinEvent,
-		VuoInputData(VuoInteger, {"default":127, "suggestedMin":0, "suggestedMax":127}) valueMax,
-		VuoInputEvent(VuoPortEventBlocking_Wall, valueMax) valueMaxEvent,
-
-		VuoOutputData(VuoMidiController) filteredController,
-		VuoOutputEvent(filteredController) filteredControllerEvent
+		VuoOutputData(VuoInteger) value,
+		VuoOutputEvent({"data":"value"}) valueEvent
 )
 {
-	if (controller.channel < channelMin || controller.channel > channelMax)
+	if (controller.channel != channel || controller.controllerNumber != controllerNumber)
 		return;
 
-	if (controller.controllerNumber < controllerNumberMin || controller.controllerNumber > controllerNumberMax)
-		return;
-
-	if (controller.value < valueMin || controller.value > valueMax)
-		return;
-
-	*filteredController = controller;
-	*filteredControllerEvent = true;
+	*value = controller.value;
+	*valueEvent = true;
 }

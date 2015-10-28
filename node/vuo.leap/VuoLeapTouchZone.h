@@ -11,7 +11,7 @@
 #define VUOLEAPTOUCHZONE_H
 
 /// @{
-typedef void * VuoList_VuoLeapTouchZone;
+typedef const struct VuoList_VuoLeapTouchZone_struct { void *l; } * VuoList_VuoLeapTouchZone;
 #define VuoList_VuoLeapTouchZone_TYPE_DEFINED
 /// @}
 

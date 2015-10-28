@@ -11,7 +11,7 @@
 #define VUOHORIZONTALALIGNMENT_H
 
 /// @{
-typedef void * VuoList_VuoHorizontalAlignment;
+typedef const struct VuoList_VuoHorizontalAlignment_struct { void *l; } * VuoList_VuoHorizontalAlignment;
 #define VuoList_VuoHorizontalAlignment_TYPE_DEFINED
 /// @}
 

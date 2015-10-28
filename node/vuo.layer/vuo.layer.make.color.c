@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Color Layer",
 					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image", "tone", "chroma" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "node": {
 						 "exampleCompositions" : [ ]
 					 }

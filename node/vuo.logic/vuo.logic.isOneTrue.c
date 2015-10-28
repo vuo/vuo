@@ -12,21 +12,21 @@
 VuoModuleMetadata({
 					 "title" : "Is One True",
 					 "keywords" : [ "boolean", "condition", "test", "check", "gate", "xor", "^", "0", "1", "false" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoBoolean) terms,
+		VuoInputData(VuoList_VuoBoolean) values,
 		VuoOutputData(VuoBoolean) oneTrue
 )
 {
 	int trueCount = 0;
-	unsigned long termsCount = VuoListGetCount_VuoBoolean(terms);
+	unsigned long termsCount = VuoListGetCount_VuoBoolean(values);
 	for (unsigned long i = 1; i <= termsCount; ++i)
-		trueCount += VuoListGetValueAtIndex_VuoBoolean(terms, i);
+		trueCount += VuoListGetValue_VuoBoolean(values, i);
 	*oneTrue = (trueCount == 1);
 }

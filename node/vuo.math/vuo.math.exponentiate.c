@@ -18,6 +18,9 @@ VuoModuleMetadata({
 							  "defaultType" : "VuoReal",
 							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
 						  }
+					  },
+					  "node" : {
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

@@ -12,8 +12,8 @@
 #include <string.h>
 #include "type.h"
 #include "VuoMidiController.h"
-#include "VuoInteger.h"
 #include "VuoBoolean.h"
+#include "VuoInteger.h"
 #include "VuoText.h"
 
 /// @{
@@ -24,7 +24,9 @@ VuoModuleMetadata({
 					 "keywords" : [ "CC", "custom controller" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoBoolean",
+						"VuoInteger",
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -87,4 +89,14 @@ char * VuoMidiController_summaryFromValue(const VuoMidiController mn)
 {
 	return VuoText_format("Channel %d, controller %d (0x%02x): value %d",
 						  mn.channel, mn.controllerNumber, mn.controllerNumber, mn.value);
+}
+
+/**
+ * Returns true if the channel, controller number, and value all match.
+ */
+bool VuoMidiController_areEqual(const VuoMidiController value1, const VuoMidiController value2)
+{
+	return (value1.channel          == value2.channel
+		 && value1.controllerNumber == value2.controllerNumber
+		 && value1.value            == value2.value);
 }

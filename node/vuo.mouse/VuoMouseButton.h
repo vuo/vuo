@@ -11,7 +11,7 @@
 #define VUOMOUSEBUTTON_H
 
 /// @{
-typedef void * VuoList_VuoMouseButton;
+typedef const struct VuoList_VuoMouseButton_struct { void *l; } * VuoList_VuoMouseButton;
 #define VuoList_VuoMouseButton_TYPE_DEFINED
 /// @}
 

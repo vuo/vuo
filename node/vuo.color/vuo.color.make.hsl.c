@@ -11,10 +11,9 @@
 
 VuoModuleMetadata({
 					 "title" : "Make HSL Color",
-					 "keywords" : [ "hue", "saturation", "lightness", "alpha", "opacity", "transparent", "channel", "tone", "chroma" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "alpha", "transparent", "channel", "tone", "chroma" ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "ExploreColorSchemes.vuo" ]
 					 }
 				 });
@@ -24,9 +23,9 @@ void nodeEvent
 		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) hue,
 		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) saturation,
 		VuoInputData(VuoReal, {"default":0.5,"suggestedMin":0,"suggestedMax":1}) lightness,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) opacity,
 		VuoOutputData(VuoColor) color
 )
 {
-	*color = VuoColor_makeWithHSLA(hue, saturation, lightness, alpha);
+	*color = VuoColor_makeWithHSLA(hue, saturation, lightness, opacity);
 }

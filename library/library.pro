@@ -9,6 +9,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoSceneObjectGet.c \
 	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
 	VuoUrl.c \
@@ -30,7 +31,8 @@ SOURCES += \
 	VuoMeshParametric.cc \
 	VuoPointsParametric.cc \
 	VuoSceneObjectRenderer.cc \
-	VuoSceneRenderer.cc
+	VuoSceneRenderer.cc \
+	VuoUrl.c
 
 HEADERS += \
 	VuoDisplayRefresh.h \
@@ -44,9 +46,11 @@ HEADERS += \
 	VuoMeshParametric.h \
 	VuoPointsParametric.h \
 	VuoPool.hh \
+	VuoSceneObjectGet.h \
 	VuoSceneObjectRenderer.h \
 	VuoSceneRenderer.h \
 	VuoScreenCommon.h \
+	VuoSmooth.h \
 	VuoTriggerSet.hh \
 	VuoUrl.h \
 	VuoWindow.h \
@@ -85,7 +89,7 @@ CLANG_NODE_LIBRARY_SHARED_NONGL_FLAGS = \
 	-headerpad_max_install_names
 CLANG_NODE_LIBRARY_SHARED_NONGL_FLAGS -= -emit-llvm
 node_library_shared_nongl.input = NODE_LIBRARY_SHARED_NONGL_SOURCES
-node_library_shared_nongl.depend_command = $$QMAKE_CXX -o /dev/null -E -MD -MF - $${CLANG_NODE_LIBRARY_SHARED_NONGL_FLAGS} ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
+node_library_shared_nongl.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node_library_shared_nongl.output = lib${QMAKE_FILE_IN_BASE}.dylib
 node_library_shared_nongl.commands = $$QMAKE_CXX $$CLANG_NODE_LIBRARY_SHARED_NONGL_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} \
 	&& install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Modules/${QMAKE_FILE_OUT} ${QMAKE_FILE_OUT}
@@ -102,7 +106,7 @@ CLANG_NODE_LIBRARY_SHARED_GL_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_NONGL_FLAGS \
 	-framework OpenGL
 node_library_shared_gl.input = NODE_LIBRARY_SHARED_GL_SOURCES
-node_library_shared_gl.depend_command = $$QMAKE_CXX -o /dev/null -E -MD -MF - $${CLANG_NODE_LIBRARY_SHARED_GL_FLAGS} ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
+node_library_shared_gl.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node_library_shared_gl.output = lib${QMAKE_FILE_IN_BASE}.dylib
 node_library_shared_gl.commands = $$QMAKE_CXX $$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} \
 	&& install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Modules/${QMAKE_FILE_OUT} ${QMAKE_FILE_OUT}
@@ -123,7 +127,7 @@ CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	-lVuoGlContext
 node_library_shared_dependent_on_context.input = NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 node_library_shared_dependent_on_context.depends = libVuoGlContext.dylib
-node_library_shared_dependent_on_context.depend_command = $$QMAKE_CXX -o /dev/null -E -MD -MF - $${CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS} ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
+node_library_shared_dependent_on_context.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node_library_shared_dependent_on_context.output = lib${QMAKE_FILE_IN_BASE}.dylib
 node_library_shared_dependent_on_context.commands = $$QMAKE_CXX $$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} \
 	&& install_name_tool -id @rpath/Vuo.framework/Versions/$$VUO_VERSION/Modules/${QMAKE_FILE_OUT} ${QMAKE_FILE_OUT}

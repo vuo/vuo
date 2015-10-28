@@ -66,6 +66,14 @@ private slots:
 			QTest::newRow("identity matrix, 2") << m[2] << VuoPoint4d_make(0,0,1,0);
 			QTest::newRow("identity matrix, 3") << m[3] << VuoPoint4d_make(0,0,0,1);
 		}
+
+		{
+			VuoPoint3d identityBasis[3] = {VuoPoint3d_make(1,0,0), VuoPoint3d_make(0,1,0), VuoPoint3d_make(0,0,1)};
+			QTest::newRow("identity basis") << VuoTransform_quaternionFromBasis(identityBasis) << VuoPoint4d_make(0,0,0,1);
+
+			VuoPoint3d x90Basis[3] = {VuoPoint3d_make(1,0,0), VuoPoint3d_make(0,0,-1), VuoPoint3d_make(0,1,0)};
+			QTest::newRow("basis 90° about X") << VuoTransform_quaternionFromBasis(x90Basis) << VuoPoint4d_make(sqrt(.5),0,0,sqrt(.5));
+		}
 	}
 	void testQuaternionVuoPoint4d()
 	{
@@ -199,27 +207,33 @@ private slots:
 	{
 		QTest::addColumn<VuoTransform>("transform");
 		QTest::addColumn<VuoPoint3d>("expectedDirection");
+		QTest::addColumn<VuoPoint3d>("expectedEuler");
+		QTest::addColumn<VuoPoint4d>("expectedQuaternion");
 
-		QTest::newRow("identity") << VuoTransform_makeIdentity() << VuoPoint3d_make(1,0,0);
+		QTest::newRow("identity") << VuoTransform_makeIdentity() << VuoPoint3d_make(1,0,0) << VuoPoint3d_make(0,0,0) << VuoPoint4d_make(0,0,0,1);
 
 		{
-			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0, M_PI/2., 0), VuoPoint3d_make(1,1,1));
-			QTest::newRow("rotate 90° around y axis (euler)") << t << VuoPoint3d_make(0,0,-1);
+			VuoPoint3d euler = VuoPoint3d_make(0, M_PI/2., 0);
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), euler, VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° around y axis (euler)") << t << VuoPoint3d_make(0,0,-1) << euler << VuoPoint4d_make(0,sqrt(.5),0,sqrt(.5));
 		}
 
 		{
-			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0, M_PI/2., 0), VuoPoint3d_make(4,5,6));
-			QTest::newRow("rotate 90° around y axis (euler), scale, transform") << t << VuoPoint3d_make(0,0,-1);
+			VuoPoint3d euler = VuoPoint3d_make(0, M_PI/2., 0);
+			VuoTransform t = VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), euler, VuoPoint3d_make(4,5,6));
+			QTest::newRow("rotate 90° around y axis (euler), scale, transform") << t << VuoPoint3d_make(0,0,-1) << euler << VuoPoint4d_make(0,sqrt(.5),0,sqrt(.5));
 		}
 
 		{
-			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0), VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.), VuoPoint3d_make(1,1,1));
-			QTest::newRow("rotate 90° around y axis (quaternion)") << t << VuoPoint3d_make(0,0,-1);
+			VuoPoint4d quaternion = VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.);
+			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0), quaternion, VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 90° around y axis (quaternion)") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
 		}
 
 		{
-			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(1,2,3), VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.), VuoPoint3d_make(4,5,6));
-			QTest::newRow("rotate 90° around y axis (quaternion), scale, transform") << t << VuoPoint3d_make(0,0,-1);
+			VuoPoint4d quaternion = VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.);
+			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(1,2,3), quaternion, VuoPoint3d_make(4,5,6));
+			QTest::newRow("rotate 90° around y axis (quaternion), scale, transform") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
 		}
 
 		{
@@ -227,7 +241,7 @@ private slots:
 			VuoPoint3d lightTarget = VuoPoint3d_make(0,0,0);
 			VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_subtract(lightTarget, lightPosition));
 			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
-			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(0,0,-1);
+			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
 		}
 
 		{
@@ -235,13 +249,15 @@ private slots:
 			VuoPoint3d lightTarget = VuoPoint3d_make(0,0,0);
 			VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_subtract(lightTarget, lightPosition));
 			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
-			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4));
+			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4)) << VuoPoint3d_make(0, M_PI/4., 0) << quaternion;
 		}
 	}
 	void testDirection()
 	{
 		QFETCH(VuoTransform, transform);
 		QFETCH(VuoPoint3d, expectedDirection);
+		QFETCH(VuoPoint3d, expectedEuler);
+		QFETCH(VuoPoint4d, expectedQuaternion);
 
 		VuoPoint3d actualDirection = VuoTransform_getDirection(transform);
 
@@ -249,6 +265,17 @@ private slots:
 		QCOMPARE(actualDirection.x+10.f, expectedDirection.x+10.f);
 		QCOMPARE(actualDirection.y+10.f, expectedDirection.y+10.f);
 		QCOMPARE(actualDirection.z+10.f, expectedDirection.z+10.f);
+
+		VuoPoint3d actualEuler = VuoTransform_getEuler(transform);
+		QCOMPARE(actualEuler.x+10.f, expectedEuler.x+10.f);
+		QCOMPARE(actualEuler.y+10.f, expectedEuler.y+10.f);
+		QCOMPARE(actualEuler.z+10.f, expectedEuler.z+10.f);
+
+		VuoPoint4d actualQuaternion = VuoTransform_getQuaternion(transform);
+		QCOMPARE(actualQuaternion.w+10.f, expectedQuaternion.w+10.f);
+		QCOMPARE(actualQuaternion.x+10.f, expectedQuaternion.x+10.f);
+		QCOMPARE(actualQuaternion.y+10.f, expectedQuaternion.y+10.f);
+		QCOMPARE(actualQuaternion.z+10.f, expectedQuaternion.z+10.f);
 	}
 
 	void testMatrixRoundtrip_data()
@@ -303,7 +330,7 @@ private slots:
 		float actualMatrix[16];
 		VuoTransform_getMatrix(expectedTransform, actualMatrix);
 		for (int i = 0; i < 16; ++i)
-		    QCOMPARE(actualMatrix[i] + 10.f, expectedMatrix[i] + 10.f);
+			QCOMPARE(actualMatrix[i] + 10.f, expectedMatrix[i] + 10.f);
 
 		VuoTransform actualTransform = VuoTransform_makeFromMatrix4x4(expectedMatrix);
 		QCOMPARE(VuoTransform_stringFromValue(actualTransform), VuoTransform_stringFromValue(expectedTransform));

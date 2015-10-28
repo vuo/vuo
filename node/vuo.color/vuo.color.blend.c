@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Blend Colors",
 					 "keywords" : [ "combine", "mix", "fade", "merge", "layer", "composite", "channel",
-						"normal", "add", "alpha", "opacity", "transparent", "transparency",
+						"normal", "add", "additive", "alpha", "opacity", "transparent", "transparency",
 						"multiply", "darker", "linear burn", "color burn", "burn",
 						"screen", "lighter", "linear dodge", "color dodge", "dodge",
 						"overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "light", "hard mix",
@@ -26,7 +26,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 					 ],
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

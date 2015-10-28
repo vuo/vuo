@@ -17,7 +17,7 @@
 #include "VuoLoopType.h"
 
 /// @{
-typedef void * VuoList_VuoCurve;
+typedef const struct VuoList_VuoCurve_struct { void *l; } * VuoList_VuoCurve;
 #define VuoList_VuoCurve_TYPE_DEFINED
 /// @}
 

@@ -11,11 +11,11 @@
 #include "VuoMidiController.h"
 
 VuoModuleMetadata({
-					 "title" : "Get MIDI Controller Values",
+					 "title" : "Get Controller Values",
 					 "keywords" : [ "CC", "custom controller", "effect", "synthesizer", "sequencer", "music", "instrument" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

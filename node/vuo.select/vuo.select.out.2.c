@@ -1,6 +1,6 @@
 /**
  * @file
- * vuo.select.out.2 node implementation.
+ * vuo.select.out node implementation.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -10,25 +10,25 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Select Output",
+					 "title" : "Select Output (2)",
 					 "keywords" : [ "switch", "demultiplexer", "if", "else", "case", "route", "condition", "control flow",
 						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door", "wall" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ "RotateOneSquareAtATime.vuo", "CountDown.vuo" ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1,"suggestedMax":2}) which,
-		VuoInputEvent(VuoPortEventBlocking_Wall,which) whichEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"which"}) whichEvent,
 		VuoInputData(VuoGenericType1) in,
-		VuoInputEvent(VuoPortEventBlocking_Door,in) inEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"in"}) inEvent,
 		VuoOutputData(VuoGenericType1) option1,
-		VuoOutputEvent(option1) option1Event,
+		VuoOutputEvent({"data":"option1"}) option1Event,
 		VuoOutputData(VuoGenericType1) option2,
-		VuoOutputEvent(option2) option2Event
+		VuoOutputEvent({"data":"option2"}) option2Event
 )
 {
 	if (which <= 1)

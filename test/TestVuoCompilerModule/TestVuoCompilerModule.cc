@@ -9,8 +9,10 @@
 
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerModule.hh"
+#include "VuoStringUtilities.hh"
 
 // Be able to use these types in QTest::addColumn()
+Q_DECLARE_METATYPE(set<string>);
 Q_DECLARE_METATYPE(vector<string>);
 
 /**
@@ -47,34 +49,78 @@ private slots:
 	void testDependencies_data()
 	{
 		QTest::addColumn< QString >("nodeClass");
-		QTest::addColumn< vector<string> >("expectedDependencies");
+		QTest::addColumn< set<string> >("expectedDependencies");
 
 		{
-			vector<string> dependencies;
-			QTest::newRow("Add does not have dependencies.") << "vuo.math.add.VuoInteger" << dependencies;
+			set<string> dependencies;
+			dependencies.insert("VuoText");
+			dependencies.insert("VuoInteger");
+			QTest::newRow("Node class with non-generic port types") << "vuo.text.countCharacters" << dependencies;
 		}
 
 		{
-			vector<string> dependencies;
-			dependencies.push_back("c");
-			QTest::newRow("Append has dependencies.") << "vuo.text.append" << dependencies;
+			set<string> dependencies;
+			dependencies.insert("VuoList_VuoReal");
+			dependencies.insert("VuoReal");
+			dependencies.insert("VuoList_VuoPoint2d");
+			dependencies.insert("VuoPoint2d");
+			QTest::newRow("Node class with non-generic list port types") << "vuo.point.merge.xy" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoPoint4d");
+			dependencies.insert("VuoReal");
+			QTest::newRow("Node class with specialized generic port type") << "vuo.point.distance.VuoPoint4d" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoPoint2d");
+			dependencies.insert("VuoReal");
+			QTest::newRow("Node class with unspecialized generic port type") << "vuo.point.distance.VuoGenericType1" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoInteger");
+			dependencies.insert("VuoList_VuoKey");
+			dependencies.insert("VuoKey");
+			QTest::newRow("Node class with specialized generic list port type") << "vuo.list.count.VuoKey" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoInteger");
+			dependencies.insert("VuoList_VuoInteger");
+			QTest::newRow("Node class with unspecialized generic list port type") << "vuo.list.count.VuoGenericType1" << dependencies;
+		}
+
+		{
+			set<string> dependencies;
+			dependencies.insert("VuoSceneObjectGet");
+			dependencies.insert("VuoText");
+			dependencies.insert("VuoBoolean");
+			dependencies.insert("VuoSceneObject");
+			QTest::newRow("Node class with dependencies in metadata") << "vuo.scene.fetch" << dependencies;
 		}
 	}
 	void testDependencies()
 	{
 		QFETCH(QString, nodeClass);
-		QFETCH(vector<string>, expectedDependencies);
+		QFETCH(set<string>, expectedDependencies);
 
 		VuoCompilerNodeClass *cnc = compiler->getNodeClass( qPrintable(nodeClass) );
-		vector<string> actualDependencies = cnc->getDependencies();
+		set<string> actualDependencies = cnc->getDependencies();
 
-		QCOMPARE(actualDependencies.size(), expectedDependencies.size());
-		for (uint i = 0; i < actualDependencies.size(); ++i)
-		{
-			string actualDependency = actualDependencies.at(i);
-			string expectedDependency = expectedDependencies.at(i);
-			QCOMPARE(QString(actualDependency.c_str()), QString(expectedDependency.c_str()));
-		}
+		vector<string> sortedActualDependencies(actualDependencies.begin(), actualDependencies.end());
+		sort(sortedActualDependencies.begin(), sortedActualDependencies.end());
+		string actualJoined = VuoStringUtilities::join(sortedActualDependencies, ' ');
+		vector<string> sortedExpectedDependencies(expectedDependencies.begin(), expectedDependencies.end());
+		sort(sortedExpectedDependencies.begin(), sortedExpectedDependencies.end());
+		string expectedJoined = VuoStringUtilities::join(sortedExpectedDependencies, ' ');
+
+		QCOMPARE(QString(actualJoined.c_str()), QString(expectedJoined.c_str()));
 	}
 
 	void testKeywords_data()

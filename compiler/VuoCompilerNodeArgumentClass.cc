@@ -28,12 +28,12 @@ VuoCompilerNodeArgumentClass::VuoCompilerNodeArgumentClass(string name, enum Vuo
 	inCallbackStopFunction = false;
 }
 
+/**
+ * Destructor.
+ */
 VuoCompilerNodeArgumentClass::~VuoCompilerNodeArgumentClass(void)
 {
 }
-
-
-#pragma mark Getters and setters
 
 /**
  * Returns the type of this argument.

@@ -31,6 +31,9 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoImageRenderer",
 					 "dependencies" : [
+						 "VuoImage",
+						 "VuoImageColorDepth",
+						 "VuoShader",
 						 "VuoGlContext",
 						 "VuoGlPool",
 						 "OpenGL.framework"
@@ -215,6 +218,10 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 
 				GLint modelviewMatrixUniform = glGetUniformLocation(programName, "modelviewMatrix");
 				glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, unityMatrix);
+
+				GLint aspectRatioUniform = glGetUniformLocation(programName, "aspectRatio");
+				if (aspectRatioUniform != -1)
+					glUniform1f(aspectRatioUniform, (float)pixelsWide/(float)pixelsHigh);
 
 				glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
 

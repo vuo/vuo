@@ -11,7 +11,7 @@
 #define VUOBLENDMODE_H
 
 /// @{
-typedef void * VuoList_VuoBlendMode;
+typedef const struct VuoList_VuoBlendMode_struct { void *l; } * VuoList_VuoBlendMode;
 #define VuoList_VuoBlendMode_TYPE_DEFINED
 /// @}
 
@@ -27,32 +27,32 @@ typedef void * VuoList_VuoBlendMode;
  * An enum defining different types of blend shaders.
  */
 typedef enum {
-	VuoBlendMode_Normal,
-	VuoBlendMode_Multiply,
-	VuoBlendMode_DarkerComponent,
-	VuoBlendMode_DarkerColor,
-	VuoBlendMode_LinearBurn,
-	VuoBlendMode_ColorBurn,
-	VuoBlendMode_Screen,
-	VuoBlendMode_LighterComponent,
-	VuoBlendMode_LighterColor,
-	VuoBlendMode_LinearDodge,
-	VuoBlendMode_ColorDodge,
-	VuoBlendMode_Overlay,
-	VuoBlendMode_SoftLight,
-	VuoBlendMode_HardLight,
-	VuoBlendMode_VividLight,
-	VuoBlendMode_LinearLight,
-	VuoBlendMode_PinLight,
-	VuoBlendMode_HardMix,
-	VuoBlendMode_Difference,
-	VuoBlendMode_Exclusion,
-	VuoBlendMode_Subtract,
-	VuoBlendMode_Divide,
-	VuoBlendMode_Hue,
-	VuoBlendMode_Saturation,
-	VuoBlendMode_Color,
-	VuoBlendMode_Luminosity
+	VuoBlendMode_Normal,			///< Standard alpha compositing.  Foreground colors replace background colors, unless they're alpha-transparent.
+	VuoBlendMode_Multiply,			///< Multiplies each component of the foreground and background colors.  Makes the composite image darker.
+	VuoBlendMode_DarkerComponent,	///< Chooses the darker of each of the foreground and background color's RGB components.
+	VuoBlendMode_DarkerColor,		///< Chooses the darker color by comparing the luminance of each color.
+	VuoBlendMode_LinearBurn,		///< Linear burn
+	VuoBlendMode_ColorBurn,			///< Color burn
+	VuoBlendMode_Screen,			///< Screen
+	VuoBlendMode_LighterComponent,	///< Chooses the lighter of each of the foreground and background color's RGB components.
+	VuoBlendMode_LighterColor,		///< Chooses the lighter color by comparing the luminance of each color.
+	VuoBlendMode_LinearDodge,		///< Adds each component of the foreground and background colors.  Makes the composite image lighter.
+	VuoBlendMode_ColorDodge,		///< Color dodge
+	VuoBlendMode_Overlay,			///< Overlay
+	VuoBlendMode_SoftLight,			///< Soft light
+	VuoBlendMode_HardLight,			///< Hard light
+	VuoBlendMode_VividLight,		///< Vivid light
+	VuoBlendMode_LinearLight,		///< Linear light
+	VuoBlendMode_PinLight,			///< Pin light
+	VuoBlendMode_HardMix,			///< Hard mix
+	VuoBlendMode_Difference,		///< Difference
+	VuoBlendMode_Exclusion,			///< Exclusion
+	VuoBlendMode_Subtract,			///< Subtracts each component of the foreground color from the background color.  Makes the composite image darker.
+	VuoBlendMode_Divide,			///< Divides each component of the background color by the foreground color.
+	VuoBlendMode_Hue,				///< Hue
+	VuoBlendMode_Saturation,		///< Saturation
+	VuoBlendMode_Color,				///< Color
+	VuoBlendMode_Luminosity			///< Luminosity
 } VuoBlendMode;
 
 VuoBlendMode VuoBlendMode_valueFromJson(struct json_object * js);

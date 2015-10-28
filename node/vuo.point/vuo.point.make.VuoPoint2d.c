@@ -12,9 +12,9 @@
 VuoModuleMetadata({
 					 "title" : "Make 2D Point",
 					 "keywords" : [ "xy", "cartesian", "euler", "coordinates", "vector" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

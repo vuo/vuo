@@ -68,7 +68,7 @@ Node classes are not the only files in Vuo that can define module metadata. You'
 
 But some module metadata are specific to node classes. The module metadata above include whether the node class is an interface, which affects how the node is rendered in a composition. 
 
-When deciding which keywords to put in the module metadata, be aware that some are added automatically, so you don't have to add them. Each word in the node's title and class name is automatically used in searches of the Node Library. If your node class has trigger ports, then the keywords "events", "trigger", and "fire" are automatically added. 
+When deciding which keywords to put in the module metadata, be aware that some are added automatically, so you don't have to add them. Each word in the node's title and class name is automatically used in searches of the Node Library. If your node class has trigger ports, then the keywords "events", "trigger", and "fire" are automatically added. If your node title begins with "Receive", the keywords "i/o", "interface", "input", and "provider" are automatically added. If your node title begins with "Send", the keywords "i/o", "interface", "output", and "consumer" are automatically added. Note that multi-word phrases are permitted as keywords, but for purposes of Node Library searches will be treated as if each word were a distinct keyword.
 
 For more information, see the documentation for @ref VuoModuleMetadata. 
 
@@ -97,7 +97,7 @@ void nodeEvent
 }
 @endcode
 
-The above @ref nodeEvent function has a @ref VuoInputData parameter for each input port and a @ref VuoOutputData parameter for each output port. (The refresh port and done port are added to each node automatically.) Both @ref VuoInputData and @ref VuoOutputData define data-and-event ports. The parameter name (@vuoPort{value} or @vuoPort{notValue}) is the port name that appears on the node. 
+The above @ref nodeEvent function has a @ref VuoInputData parameter for each input port and a @ref VuoOutputData parameter for each output port. (The refresh port is added to each node automatically.) Both @ref VuoInputData and @ref VuoOutputData define data-and-event ports. The parameter name (@vuoPort{value} or @vuoPort{notValue}) is turned into the port name that appears on the node ("Value" or "Not Value").
 
 The first argument of @ref VuoInputData or @ref VuoOutputData is the port type. Vuo comes with many built-in port types (see @ref VuoTypes), and you can also define your own (see @ref DevelopingTypes). 
 
@@ -131,7 +131,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoReal *) countState,
 		VuoInputData(VuoReal, {"default":1}) increment,
-		VuoInputEvent(VuoPortEventBlocking_None,increment) incrementEvent,
+		VuoInputEvent({"data":"increment"}) incrementEvent,
 		VuoOutputData(VuoReal) count
 )
 {
@@ -152,7 +152,7 @@ The state of the node is called @term{instance data}. It's created by @ref nodeI
 
 The call to @ref VuoRegister in @ref nodeInstanceInit is necessary to make sure that the memory allocated for @c countState is freed at the right time. For more information, see @ref ManagingMemory. 
 
-Besides the instance data, another difference between this example and the stateless example above is the @ref VuoInputEvent parameter of @ref nodeInstanceEvent. The @ref VuoInputEvent macro can represent either an event-only port or the event part of a data-and-event port. In this case, it's the latter. We can see this because the second argument of @ref VuoInputEvent is the name of the corresponding @ref VuoInputData parameter (and the port name that appears on the node). The first argument of @ref VuoInputEvent says whether the port has an event wall, an event door, or (as in this case) neither. The value of @c incrementEvent is true if the node has just received an event through its @vuoPort{increment} port. 
+Besides the instance data, another difference between this example and the stateless example above is the @ref VuoInputEvent parameter of @ref nodeInstanceEvent. The @ref VuoInputEvent macro can represent either an event-only port or the event part of a data-and-event port. In this case, it's the latter. We can see this because of the "data" key in the JSON-formatted argument of @ref VuoInputEvent. The value for that key, "increment", is the name of the corresponding @ref VuoInputData parameter (and the port name that appears on the node). The value of @c incrementEvent is true if the node has just received an event through its @vuoPort{increment} port. 
 
 The body of @ref nodeInstanceEvent defines what happens when the node receives an event. In this case, it increments the count if the event came in through the @vuoPort{increment} port, then outputs the count. 
 
@@ -281,10 +281,10 @@ Built-in Vuo nodes follow a set of naming conventions. If you develop node class
          - In summmary, the format is: @vuoNodeClass{[creator].[optional node set].[action].[optional details]}. 
       - Use lower camel case (@vuoNodeClass{vuo.math.isLessThan}). 
    - A port's name should:
+      - Use lower camel case (@vuoPort{wrapMode}). Vuo automatically turns camel-case names into capitalized port names with spaces. 
       - Consist of full words or phrases, not abbreviations (@vuoPort{increment}, not @vuoPort{incr}). 
       - If the port is a trigger port, consist of a past-tense verb phrase (@vuoPort{started}, @vuoPort{receivedNote}, @vuoPort{requestedFrame}). 
       - If the port has a port action, consist of a present-tense verb phrase (@vuoPort{sendNote}, @vuoPort{increment}). 
-      - Use lower camel case (@vuoPort{wrapMode}). 
       - Be descriptive — especially if the node may be used as a type converter, which hides the node's title (@vuoPort{roundedInteger}, not @vuoPort{integer}). 
 
 In addition to these general rules, there are some special kinds of node classes that all have similar names: 
@@ -301,6 +301,12 @@ In addition to these general rules, there are some special kinds of node classes
    - A "Get" node decomposes a structured data value (the input) into pieces (the outputs). 
       - Its node class name should have the form @vuoNodeClass{[creator].[node set].get.[optional details]} (example: @vuoNodeClass{vuo.color.get.rgb}). 
       - Its title should have the form @vuoNodeClass{Get [optional details] [thing unmade] Values} (example: @vuoNodeClass{Get RGB Color Values}). 
+   - A "Filter" node blocks events to its (non-list) first input port based on filter parameters specified by other ports.
+      - Its node class name should have the form @vuoNodeClass{[creator].[node set].filter.[optional thing filtered].[parameter]} (example: @vuoNodeClass{vuo.osc.filter.address}). 
+      - Its title should have the form @vuoNodeClass{Filter [optional thing filtered] by [parameter]} (example: @vuoNodeClass{Filter by Address}). 
+   - A "Find" node reduces its first input port (a list) by removing some of its items based on parameters specified by other ports.
+      - Its node class name should have the form @vuoNodeClass{[creator].[node set].find.[optional thing found].[parameter]} (example: @vuoNodeClass{vuo.leap.find.hand.confidence}, @vuoNodeClass{vuo.syphon.find.server.app}). 
+      - Its title should have the form @vuoNodeClass{Find [thing found] by [parameter]} (example: @vuoNodeClass{Find Hands by Confidence}, @vuoNodeClass{Find Servers by App}). 
 
 
 ## Type-converter nodes

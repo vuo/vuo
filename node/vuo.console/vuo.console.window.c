@@ -18,7 +18,7 @@
 VuoModuleMetadata({
 					 "title" : "Display Console Window",
 					 "keywords" : [ "text", "string", "print", "log", "write", "read", "input", "output", "type", "line", "word", "character" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoWindow"
 					 ],
@@ -58,7 +58,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoText, {"default":""}) writeLine,
-		VuoInputEvent(VuoPortEventBlocking_None, writeLine) writeLineEvent
+		VuoInputEvent({"eventBlocking":"none","data":"writeLine"}) writeLineEvent
 )
 {
 	if (writeLineEvent)

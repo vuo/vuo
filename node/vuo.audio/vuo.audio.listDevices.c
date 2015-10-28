@@ -18,7 +18,8 @@ VuoModuleMetadata({
 						 "VuoAudio"
 					 ],
 					 "node": {
-						 "isInterface" : true
+						 "isInterface" : true,
+						 "exampleCompositions" : [ ]
 					 }
 				 });
 

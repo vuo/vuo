@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Send MIDI Event",
 					 "keywords" : [ "note", "controller", "synthesizer", "sequencer", "music", "instrument", "device" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "VuoMidi"
 					 ],
@@ -26,15 +26,15 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	VuoMidiDevice device;
+	VuoMidiOutputDevice device;
 	VuoMidiOut midiManager;
 };
 
-static void updateDevice(struct nodeInstanceData *context, VuoMidiDevice newDevice)
+static void updateDevice(struct nodeInstanceData *context, VuoMidiOutputDevice newDevice)
 {
-	VuoMidiDevice_release(context->device);
+	VuoMidiOutputDevice_release(context->device);
 	context->device = newDevice;
-	VuoMidiDevice_retain(context->device);
+	VuoMidiOutputDevice_retain(context->device);
 
 	VuoRelease(context->midiManager);
 	context->midiManager = VuoMidiOut_make(newDevice);
@@ -44,7 +44,7 @@ static void updateDevice(struct nodeInstanceData *context, VuoMidiDevice newDevi
 
 struct nodeInstanceData * nodeInstanceInit
 (
-		VuoInputData(VuoMidiDevice) device
+		VuoInputData(VuoMidiOutputDevice) device
 )
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
@@ -56,11 +56,11 @@ struct nodeInstanceData * nodeInstanceInit
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoMidiDevice, {"default":{"isInput":false}}) device,
+		VuoInputData(VuoMidiOutputDevice) device,
 		VuoInputData(VuoMidiNote,"") sendNote,
-		VuoInputEvent(VuoPortEventBlocking_None, sendNote) sendNoteEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"sendNote"}) sendNoteEvent,
 		VuoInputData(VuoMidiController,"") sendController,
-		VuoInputEvent(VuoPortEventBlocking_None, sendController) sendControllerEvent
+		VuoInputEvent({"eventBlocking":"none","data":"sendController"}) sendControllerEvent
 //		VuoInputData(VuoMidiAftertouch,"") aftertouch,
 //		VuoInputData(VuoMidiCommand,"") command,
 //		VuoInputData(VuoMidiClock,"") clock,
@@ -68,7 +68,7 @@ void nodeInstanceEvent
 //		VuoInputData(VuoMidiSysEx,"") sysEx
 )
 {
-	if (! VuoMidiDevice_areEqual(device, (*context)->device))
+	if (! VuoMidiOutputDevice_areEqual(device, (*context)->device))
 		updateDevice(*context, device);
 
 	if (sendNoteEvent)
@@ -82,6 +82,6 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoMidiDevice_release((*context)->device);
+	VuoMidiOutputDevice_release((*context)->device);
 	VuoRelease((*context)->midiManager);
 }

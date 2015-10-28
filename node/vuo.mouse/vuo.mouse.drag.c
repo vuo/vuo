@@ -13,10 +13,11 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Drags",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "move" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : true
+						  "isInterface" : true,
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
@@ -87,7 +88,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoMouseButton, {"default":"left"}) button,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
 		VuoOutputTrigger(dragStarted, VuoPoint2d),
-		VuoOutputTrigger(dragMovedTo, VuoPoint2d, VuoPortEventThrottling_Drop),
+		VuoOutputTrigger(dragMovedTo, VuoPoint2d, {"eventThrottling":"drop"}),
 		VuoOutputTrigger(dragEnded, VuoPoint2d)
 )
 {

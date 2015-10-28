@@ -1,0 +1,34 @@
+/**
+* @file
+* Displays the current mouse position as numerical coordinates.
+*
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+CheckMouseStatus [type="vuo.mouse.status" version="1.0.0" label="Check Mouse Status|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<position>position\r|<isPressed>isPressed\r" pos="54,344" _button="\"left\"" _modifierKey="\"any\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="662,201" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+MakeLayer4 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="637,405" _center="{\"x\":0.000000,\"y\":0.550000}" _opacity="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="832,214" fillcolor="green"];
+MakeList2 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="883,229" fillcolor="green"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="475,217" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="435,419" _text="\"Move the mouse to see its curent location in Vuo coordinates.\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="929,203" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SummarizeValue8 [type="vuo.data.summarize.VuoPoint2d" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="244,217" fillcolor="violet"];
+
+CheckMouseStatus:position -> SummarizeValue8:value;
+FireOnStart:started -> MakeTextImage3:refresh;
+MakeLayer2:layer -> MakeList:1;
+MakeLayer4:layer -> MakeList:2;
+MakeList2:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeTextImage3:image -> MakeLayer4:image;
+MakeTextImage:image -> MakeLayer2:image;
+RenderLayersToWindow:requestedFrame -> CheckMouseStatus:refresh;
+RenderLayersToWindow:showedWindow -> CheckMouseStatus:window;
+SummarizeValue8:summary -> MakeTextImage:text;
+}

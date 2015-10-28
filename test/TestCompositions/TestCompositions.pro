@@ -1,0 +1,16 @@
+TEMPLATE = app
+CONFIG -= app_bundle
+CONFIG += console testcase qtTest VuoFramework TestCompositionExecution json
+TARGET = TestCompositions
+
+include(../../vuo.pri)
+
+QMAKE_RPATHDIR = $$ROOT/framework
+QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
+
+SOURCES += \
+	TestCompositions.cc \
+	PortConfiguration.cc
+
+HEADERS += \
+	PortConfiguration.hh

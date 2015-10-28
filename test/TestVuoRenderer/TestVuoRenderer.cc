@@ -71,7 +71,7 @@ private slots:
 
 		VuoPortClass * pc = new VuoPortClass(portName.toStdString(),VuoPortClass::dataAndEventPort);
 		VuoPort * p = new VuoPort(pc);
-		VuoRendererPort * rp = new VuoRendererPort(p,new VuoRendererSignaler(),true, false, false, false);
+		VuoRendererPort * rp = new VuoRendererPort(p, new VuoRendererSignaler(), true, false, false);
 		qreal portNameWidth = rp->getNameRect().width();
 		QVERIFY2( portNameWidth >= expectedWidth,
 			QString("Bounding box width %1 isn't sufficient to draw string '%2'")
@@ -119,16 +119,16 @@ private slots:
 		QTest::addColumn<bool>("expectedCarriesData");
 
 		QTest::newRow("data to data")						<< "vuo.text.cut"			<< "partialText"	<< "vuo.console.window"		<< "writeLine"	<< true;
-		QTest::newRow("data to event")						<< "vuo.text.cut"			<< "partialText"	<< "vuo.select.in.2.event"	<< "option1"		<< false;
+		QTest::newRow("data to event")						<< "vuo.text.cut"			<< "partialText"	<< "vuo.select.in.event.2"	<< "option1"		<< false;
 		QTest::newRow("data to refresh")					<< "vuo.text.cut"			<< "partialText"	<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
-		QTest::newRow("event to data")						<< "vuo.select.in.2.event"	<< "out"			<< "vuo.console.window"		<< "writeLine"	<< false;
-		QTest::newRow("event to event")						<< "vuo.select.in.2.event"	<< "out"			<< "vuo.select.in.2.event"	<< "option1"		<< false;
-		QTest::newRow("event to refresh")					<< "vuo.select.in.2.event"	<< "out"			<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
+		QTest::newRow("event to data")						<< "vuo.select.in.event.2"	<< "out"			<< "vuo.console.window"		<< "writeLine"	<< false;
+		QTest::newRow("event to event")						<< "vuo.select.in.event.2"	<< "out"			<< "vuo.select.in.event.2"	<< "option1"		<< false;
+		QTest::newRow("event to refresh")					<< "vuo.select.in.event.2"	<< "out"			<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
 		QTest::newRow("trigger with data to data")			<< "vuo.console.window"		<< "typedLine"		<< "vuo.console.window"		<< "writeLine"	<< true;
-		QTest::newRow("trigger with data to event")			<< "vuo.console.window"		<< "typedLine"		<< "vuo.select.in.2.event"	<< "option1"		<< false;
+		QTest::newRow("trigger with data to event")			<< "vuo.console.window"		<< "typedLine"		<< "vuo.select.in.event.2"	<< "option1"		<< false;
 		QTest::newRow("trigger with data to refresh")		<< "vuo.console.window"		<< "typedLine"		<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
 		QTest::newRow("trigger without data to data")		<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.console.window"		<< "writeLine"	<< false;
-		QTest::newRow("trigger without data to event")		<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.select.in.2.event"	<< "option1"		<< false;
+		QTest::newRow("trigger without data to event")		<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.select.in.event.2"	<< "option1"		<< false;
 		QTest::newRow("trigger without data to refresh")	<< "vuo.event.fireOnStart"	<< "started"		<< "vuo.event.fireOnStart"	<< "refresh"		<< false;
 	}
 	void testCableCarriesData()
@@ -158,39 +158,39 @@ private slots:
 		VuoNode *nodeGrey = compiler->getNodeClass("vuo.text.cut")->newNode();
 		new VuoRendererNode(nodeGrey, NULL);
 		VuoPort *nodeGreyInputPort = nodeGrey->getInputPortWithName("text");
-		new VuoRendererPort(nodeGreyInputPort, NULL, false, false, false, false);
+		new VuoRendererPort(nodeGreyInputPort, NULL, false, false, false);
 		VuoPort *nodeGreyOutputPort = nodeGrey->getOutputPortWithName("partialText");
-		new VuoRendererPort(nodeGreyOutputPort, NULL, true, false, false, false);
+		new VuoRendererPort(nodeGreyOutputPort, NULL, true, false, false);
 
 		VuoNode *nodeYellow = compiler->getNodeClass("vuo.text.cut")->newNode();
 		new VuoRendererNode(nodeYellow, NULL);
 		nodeYellow->setTintColor(VuoNode::TintYellow);
 		VuoPort *nodeYellowInputPort = nodeYellow->getInputPortWithName("text");
-		new VuoRendererPort(nodeYellowInputPort, NULL, false, false, false, false);
+		new VuoRendererPort(nodeYellowInputPort, NULL, false, false, false);
 		VuoPort *nodeYellowOutputPort = nodeYellow->getOutputPortWithName("partialText");
-		new VuoRendererPort(nodeYellowOutputPort, NULL, true, false, false, false);
+		new VuoRendererPort(nodeYellowOutputPort, NULL, true, false, false);
 
 		VuoNode *nodeYellow2 = compiler->getNodeClass("vuo.text.cut")->newNode();
 		new VuoRendererNode(nodeYellow2, NULL);
 		nodeYellow2->setTintColor(VuoNode::TintYellow);
 		VuoPort *nodeYellow2InputPort = nodeYellow2->getInputPortWithName("text");
-		new VuoRendererPort(nodeYellow2InputPort, NULL, false, false, false, false);
+		new VuoRendererPort(nodeYellow2InputPort, NULL, false, false, false);
 		VuoPort *nodeYellow2OutputPort = nodeYellow2->getOutputPortWithName("partialText");
-		new VuoRendererPort(nodeYellow2OutputPort, NULL, true, false, false, false);
+		new VuoRendererPort(nodeYellow2OutputPort, NULL, true, false, false);
 
-		// A cable between 2 different node tints should be untinted.
+		// A cable between 2 different node tints should be tinted with the left node's color.
 		{
 			VuoRendererCable *rc = new VuoRendererCable(new VuoCable(nodeGrey, nodeGreyOutputPort, nodeYellow, nodeYellowInputPort));
 			QCOMPARE(rc->getTintColor(), VuoNode::TintNone);
 		}
 
-		// A cable between 2 different node tints, through a collapsed type converter, should be untinted.
+		// A cable between 2 different node tints, through a collapsed type converter, should be tinted with the left node's color.
 		{
 			// yellow -> yellow2 (collapsed type converter) -> grey
 			VuoRendererCable *rc = new VuoRendererCable(new VuoCable(nodeYellow, nodeYellowOutputPort, nodeYellow2, nodeYellow2InputPort));
 			new VuoRendererCable(new VuoCable(nodeYellow2, nodeYellow2OutputPort, nodeGrey, nodeGreyInputPort));
 			nodeYellow2->getRenderer()->setProxyNode(nodeGrey->getRenderer());
-			QCOMPARE(rc->getTintColor(), VuoNode::TintNone);
+			QCOMPARE(rc->getTintColor(), VuoNode::TintYellow);
 			nodeYellow2->getRenderer()->setProxyNode(NULL);
 		}
 
@@ -223,7 +223,7 @@ private slots:
 			QCOMPARE(rc->getTintColor(), VuoNode::TintNone);
 		}
 
-		// A cable to the published output port pseudo-node should be untinted.
+		// A cable to the published output port pseudo-node should be tinted with the left node's color.
 		{
 			vector<string> publishedOutputs;
 			publishedOutputs.push_back("partialText");
@@ -232,7 +232,7 @@ private slots:
 			VuoPort *publishedOutputNodePort = publishedOutputNode->getOutputPortWithName("partialText");
 
 			VuoRendererCable *rc = new VuoRendererCable(new VuoCable(nodeYellow, nodeYellowOutputPort, publishedOutputNode, publishedOutputNodePort));
-			QCOMPARE(rc->getTintColor(), VuoNode::TintNone);
+			QCOMPARE(rc->getTintColor(), VuoNode::TintYellow);
 		}
 	}
 

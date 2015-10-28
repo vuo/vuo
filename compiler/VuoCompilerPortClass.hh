@@ -22,10 +22,15 @@ class VuoCompilerPort;
  */
 class VuoCompilerPortClass : public VuoCompilerNodeArgumentClass
 {
+private:
+	struct json_object *details;  ///< Metadata specified in the node class implementation, such as the port's display name.
+
 protected:
 	VuoCompilerPortClass(string name, VuoPortClass::PortType portType, Type *type);
 
 public:
+	~VuoCompilerPortClass(void);
+
 	/**
 	 * Factory method to construct a @c VuoCompilerPort instance from this port class, and create its corresponding base @c VuoPort.
 	 */
@@ -45,6 +50,9 @@ public:
 	 * Sets the type of data carried by this port. The type must be null if this port is event-only.
 	 */
 	virtual void setDataVuoType(VuoType *type) = 0;
+
+	void setDetails(struct json_object *details);
+	json_object * getDetails(void);
 };
 
 #endif

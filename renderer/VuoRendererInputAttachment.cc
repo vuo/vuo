@@ -18,6 +18,7 @@
 VuoRendererInputAttachment::VuoRendererInputAttachment(VuoNode *baseNode, VuoRendererSignaler *signaler)
 	: VuoRendererNode(baseNode, signaler)
 {
+	setAlwaysDisplayPortNames(true);
 }
 
 /**

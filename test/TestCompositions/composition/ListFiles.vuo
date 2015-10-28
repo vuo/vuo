@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CountItemsInList2 [type="vuo.list.count.VuoText" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="300,108"];
+ListFiles [type="vuo.file.list" version="1.0.0" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="120,108"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<folder>folder\r|<includeSubfolders>includeSubfolders\r|<fileType>fileType\r" _folder="\"\"" _folder_type="VuoText" _includeSubfolders="false" _includeSubfolders_type="VuoBoolean" _fileType="\"image\"" _fileType_type="VuoFileType"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<fileCount>fileCount\l" _fileCount_type="VuoInteger"];
+
+ListFiles:files -> CountItemsInList2:list;
+PublishedInputs:folder -> ListFiles:folder;
+PublishedInputs:includeSubfolders -> ListFiles:includeSubfolders;
+PublishedInputs:fileType -> ListFiles:fileType;
+CountItemsInList2:itemCount -> PublishedOutputs:fileCount;
+}

@@ -13,7 +13,7 @@
 #include "VuoReal.h"
 
 /// @{
-typedef void * VuoList_VuoColor;
+typedef const struct VuoList_VuoColor_struct { void *l; } * VuoList_VuoColor;
 #define VuoList_VuoColor_TYPE_DEFINED
 /// @}
 

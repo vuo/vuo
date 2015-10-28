@@ -11,7 +11,7 @@
 #define VUOGRADIENTNOISE_H
 
 /// @{
-typedef void * VuoList_VuoGradientNoise;
+typedef const struct VuoList_VuoGradientNoise_struct { void *l; } * VuoList_VuoGradientNoise;
 #define VuoList_VuoGradientNoise_TYPE_DEFINED
 /// @}
 

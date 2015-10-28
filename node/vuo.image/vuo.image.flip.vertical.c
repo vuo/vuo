@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Flip Image Vertically",
 					  "keywords" : [ "mirror", "rotate" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "FlipMovie.vuo" ]
 					  }

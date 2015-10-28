@@ -1,1 +1,1 @@
-Outputs *true* if `a` is greater than `b` (`a>b`). 
+Outputs *true* if `A` is greater than `B` (`A>B`). 

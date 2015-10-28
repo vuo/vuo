@@ -55,15 +55,12 @@ private:
 
 	VuoCompilerInputDataClass * parseInputDataParameter(string annotation, Argument *a);
 	VuoCompilerOutputDataClass * parseOutputDataParameter(string annotation, Argument *a);
-	VuoCompilerInputEventPortClass * parseInputEventParameter(string annotation, Argument *a, string &dataPortName);
-	VuoCompilerOutputEventPortClass * parseOutputEventParameter(string annotation, Argument *a, string &dataPortName);
+	VuoCompilerInputEventPortClass * parseInputEventParameter(string annotation, Argument *a);
+	VuoCompilerOutputEventPortClass * parseOutputEventParameter(string annotation, Argument *a);
 	VuoCompilerTriggerPortClass * parseTriggerParameter(string annotation, Argument *a);
 	VuoCompilerInstanceDataClass * parseInstanceDataParameter(string annotation, Argument *a);
 	VuoType * parseTypeParameter(string annotation);
-	struct json_object * parseInputDataDetailsParameter(string annotation);
-	struct json_object * parseInputEventDetailsParameter(string annotation);
-	int parseEventBlockingParameter(string annotation);
-	int parseEventThrottlingParameter(string annotation);
+	struct json_object * parseDetailsParameter(string annotation);
 	VuoPortClass * getExistingPortClass(VuoCompilerNodeArgumentClass *argumentClass, bool isInput);
 
 	friend class TestVuoCompilerType;
@@ -85,6 +82,7 @@ public:
 	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
 	static VuoNodeClass * newNodeClass(string nodeClassName, Module * module);
 	static VuoNodeClass * newNodeClassWithoutImplementation(VuoNodeClass *baseNodeClass);
+	virtual ~VuoCompilerNodeClass(void);
 
 	string getClassIdentifier(void);
 	Function * getEventFunction(void);

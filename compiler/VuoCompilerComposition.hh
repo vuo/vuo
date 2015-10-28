@@ -36,18 +36,20 @@ public:
 	friend bool operator<(const NodeReplacement &lhs, const NodeReplacement &rhs);
 
 	VuoCompilerComposition(VuoComposition *baseComposition, VuoCompilerGraphvizParser *parser);
+	~VuoCompilerComposition(void);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
 	void check(void);
 	void checkForMissingNodeClasses(void);
 	void checkFeedback(set<VuoCompilerCable *> potentialCables = set<VuoCompilerCable *>());
 	void updateGenericPortTypes(void);
+	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
 	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
-	void createReplacementsToUnspecializePort(VuoPort *port, map<VuoNode *, string> &nodesToReplace, set<VuoCable *> &cablesToDelete);
 	VuoNode * getPublishedInputNode(void);
 	VuoNode * getPublishedOutputNode(void);
 	void setPublishedInputNode(VuoNode *node);
 	void setPublishedOutputNode(VuoNode *node);
 	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
+	void setModule(Module *module);
 	string getGraphvizDeclaration(string header = "", string footer = "");
 	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts, string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
 	string diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler, const set<NodeReplacement> &nodeReplacements);
@@ -60,8 +62,8 @@ private:
 	VuoNode *publishedOutputNode;
 	map<unsigned int, bool> genericTypeSuffixUsed;
 	map<string, VuoNode *> nodeGraphvizIdentifierUsed;
+	Module *module;
 
-	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
 	string createFreshGenericTypeName(void);
 	static bool compareGraphvizIdentifiersOfNodes(VuoNode *lhs, VuoNode *rhs);
 	static bool compareGraphvizIdentifiersOfCables(VuoCable *lhs, VuoCable *rhs);

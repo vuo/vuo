@@ -31,6 +31,8 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoSceneObjectRenderer",
 					 "dependencies" : [
+						 "VuoSceneObject",
+						 "VuoShader",
 						 "VuoGlContext",
 						 "VuoGlPool",
 						 "OpenGL.framework"

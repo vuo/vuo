@@ -24,7 +24,9 @@ VuoModuleMetadata({
 					 "keywords" : [ "rgba" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoColor",
+						"VuoReal",
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -172,7 +174,7 @@ VuoColor VuoColor_average(VuoList_VuoColor colors)
 	unsigned long colorCount = VuoListGetCount_VuoColor(colors);
 	for (unsigned long i = 1; i <= colorCount; ++i)
 	{
-		VuoColor color = VuoListGetValueAtIndex_VuoColor(colors, i);
+		VuoColor color = VuoListGetValue_VuoColor(colors, i);
 		result.r += color.r * color.a;
 		result.g += color.g * color.a;
 		result.b += color.b * color.a;

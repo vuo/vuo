@@ -1,0 +1,89 @@
+/**
+ * @file
+ * Changes the blend mode of the yellow foreground sceneobject, while oscillating back and forth.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Calculate [type="vuo.math.calculate" version="1.0.0" label="Calculate|<refresh>refresh\l|<expression>expression\l|<values>values\l|<result>result\r" pos="-244,163" _expression="{\"expressions\":[\"(w\\/h)*h\"],\"inputVariables\":[\"h\",\"w\"],\"outputVariables\":[\"result\"]}"];
+Change3DObjectBlending [type="vuo.scene.blendMode" version="1.0.0" label="Change 3D Object Blending|<refresh>refresh\l|<object>object\l|<blendMode>blendMode\l|<blendedObject>blendedObject\r" pos="829,336" fillcolor="violet"];
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="134,253"];
+ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="-148,291"];
+ConvertIntegerToRealNumber3 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="-148,306"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.x" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<x>x\l|<point3d>point3d\r" pos="295,498"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="22,68" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-400,295" _url="\"EquisetumSylvaticum.jpg\""];
+GetImageSize [type="vuo.image.get.size" version="1.0.0" label="Get Image Size|<refresh>refresh\l|<image>image\l|<width>width\r|<height>height\r" pos="-240,295"];
+GetItemFromList2 [type="vuo.list.get.VuoBlendMode" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="-144,571" fillcolor="violet"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="586,151"];
+Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="582,339"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="35,143" _z="1.000000"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="269,368" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.500000,\"y\":0.500000,\"z\":0.500000}"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="273,132" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":-2.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":6.000000,\"y\":6.000000,\"z\":1.000000}"];
+MakeDictionary2 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-464,213"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="841,569" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+MakeList2 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1220,237" fillcolor="green"];
+MakeList25 [type="vuo.list.make.6.VuoBlendMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="-278,582" fillcolor="violet" _1="\"normal\"" _2="\"linear-dodge\"" _3="\"lighter-component\"" _4="\"subtract\"" _5="\"multiply\"" _6="\"darker-component\""];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="983,489"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1250,267" fillcolor="green"];
+MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-293,189"];
+MakeList8 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-464,213" _1="\"h\"" _2="\"w\""];
+MakeSquareMesh [type="vuo.mesh.make.square" version="2.0.0" label="Make Square Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="274,75"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="671,583" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="1107,613" _center="{\"x\":0.000000,\"y\":-0.550000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="2.000000" _opacity="1.000000"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1056,478" _width="1024" _height="768" _colorDepth="\"8bpc\""];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1291,226" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="-172,541"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-315,409" _start="-0.750000" _end="0.750000" _scaledStart="1.000000" _scaledEnd="6.000000"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="282,461" _color="{\"r\":0.621134,\"g\":0.555077,\"b\":0.008545,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500008}" _shininess="0.500000"];
+ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="14,245" _opacity="1.000000"];
+SummarizeValue2 [type="vuo.data.summarize.VuoBlendMode" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="509,574"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="27,368" _wave="\"sine\"" _period="20.000000" _center="0.000000" _amplitude="0.750000"];
+
+Calculate:result -> Make3DPoint:y;
+Change3DObjectBlending:blendedObject -> MakeList2:2;
+ConvertIntegerToRealNumber2:real -> MakeList7:1;
+ConvertIntegerToRealNumber3:real -> MakeList7:2;
+ConvertIntegerToRealNumber:real -> Make3DPoint:x;
+ConvertRealTo3DPoint:point3d -> Make3DTransform:translation;
+FireOnStart:started -> GetImage:refresh;
+FireOnStart:started -> Make3DTransform2:refresh;
+FireOnStart:started -> MakeSquareMesh:refresh;
+FireOnStart:started -> ShadeWithColor2:refresh;
+GetImage:image -> GetImageSize:image;
+GetImage:image -> ShadeWithUnlitImage:image;
+GetImageSize:height -> ConvertIntegerToRealNumber3:integer;
+GetImageSize:width -> ConvertIntegerToRealNumber2:integer;
+GetImageSize:width -> ConvertIntegerToRealNumber:integer;
+GetItemFromList2:item -> Change3DObjectBlending:blendMode;
+GetItemFromList2:item -> SummarizeValue2:value;
+Make3DObject2:object -> Change3DObjectBlending:object;
+Make3DObject:object -> MakeList2:1;
+Make3DTransform2:transform -> Make3DObject:transform;
+Make3DTransform:transform -> Make3DObject2:transform;
+MakeDictionary2:dictionary -> Calculate:values;
+MakeLayer:layer -> MakeList3:1;
+MakeList25:list -> GetItemFromList2:list;
+MakeList2:list -> RenderSceneToWindow:objects;
+MakeList3:list -> RenderLayersToImage:layers;
+MakeList5:list -> RenderSceneToWindow:setWindowProperties;
+MakeList7:list -> MakeDictionary2:values;
+MakeList8:list -> MakeDictionary2:keys;
+MakeSquareMesh:mesh -> Make3DObject2:mesh;
+MakeSquareMesh:mesh -> Make3DObject:mesh;
+MakeTextImage:image -> MakeLayer:image;
+MakeUnlit3DObjectFromImage:object -> MakeList2:3;
+RenderLayersToImage:image -> MakeUnlit3DObjectFromImage:image;
+RenderSceneToWindow:requestedFrame -> Wave:time;
+Round:rounded -> GetItemFromList2:which;
+Scale:scaledValue -> Round:real;
+ShadeWithColor2:shader -> Make3DObject2:shader;
+ShadeWithUnlitImage:shader -> Make3DObject:shader;
+SummarizeValue2:summary -> MakeTextImage:text;
+Wave:value -> ConvertRealTo3DPoint:x;
+Wave:value -> Scale:value;
+}

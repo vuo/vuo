@@ -19,7 +19,11 @@ class VuoInputEditorWithEnumMenu : public VuoInputEditorWithMenu
 {
 	Q_OBJECT
 
+	QString type;
+
 public:
+	VuoInputEditorWithEnumMenu(QString type);
+
 	VuoInputEditorMenuItem *setUpMenuTree();
 };
 

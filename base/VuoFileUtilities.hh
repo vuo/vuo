@@ -70,7 +70,7 @@ public:
 	static void writeRawDataToFile(const char *data, size_t numBytes, string file);
 	static void writeStringToFile(string s, string file);
 	static bool fileExists(string path);
-	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>());
+	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>(), bool shouldSearchRecursively = false);
 	static set<File *> findFilesInDirectory(string dirPath, set<string> extensions, set<string> archiveExtensions = set<string>());
 	static set<File *> findAllFilesInArchive(string archivePath);
 	static set<File *> findFilesInArchive(string archivePath, string dirPath, set<string> extensions);

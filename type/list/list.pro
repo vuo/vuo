@@ -21,13 +21,17 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoBlendMode:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
+		VuoCursor:2 \
 		VuoCurve:0 \
 		VuoCurveEasing:0 \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
+		VuoFileType:0 \
 		VuoFont:2 \
 		VuoGradientNoise:0 \
 		VuoHorizontalAlignment:0 \
+		VuoHorizontalReflection:0 \
+		VuoHorizontalSide:0 \
 		VuoImage:1 \
 		VuoImageColorDepth:0 \
 		VuoImageWrapMode:0 \
@@ -39,19 +43,23 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoLeapPointable:0 \
 		VuoLeapPointableType:0 \
 		VuoLeapTouchZone:0 \
+		VuoListPosition:2 \
 		VuoLoopType:0 \
 		VuoMesh:2 \
 		VuoMidiController:0 \
-		VuoMidiDevice:2 \
+		VuoMidiInputDevice:2 \
+		VuoMidiOutputDevice:2 \
 		VuoMidiNote:0 \
 		VuoModifierKey:0 \
 		VuoMouseButton:0 \
 		VuoNoise:0 \
+		VuoNotePriority:2 \
 		VuoOscMessage:2 \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \
 		VuoReal:0 \
+		VuoRealRegulation:2 \
 		VuoRenderedLayers:2 \
 		VuoSceneObject:2 \
 		VuoScreen:2 \
@@ -60,9 +68,12 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoSyphonServerDescription:0 \
 		VuoText:1 \
 		VuoThresholdType:0 \
-		VuoTransform:0 \
 		VuoTransform2d:0 \
+		VuoTransform:0 \
 		VuoVerticalAlignment:0 \
+		VuoVerticalReflection:0 \
+		VuoVideoFrame:2 \
+		VuoVideoInputDevice:2 \
 		VuoWave:0 \
 		VuoWindowProperty:2 \
 		VuoWindowReference:0 \
@@ -71,6 +82,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 
 TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.audio \
+	$$ROOT/node/vuo.file \
 	$$ROOT/node/vuo.font \
 	$$ROOT/node/vuo.image \
 	$$ROOT/node/vuo.keyboard \
@@ -79,7 +91,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.midi \
 	$$ROOT/node/vuo.mouse \
 	$$ROOT/node/vuo.motion \
-	$$ROOT/node/vuo.movie \
+	$$ROOT/node/vuo.video \
 	$$ROOT/node/vuo.noise \
 	$$ROOT/node/vuo.osc \
 	$$ROOT/node/vuo.scene \

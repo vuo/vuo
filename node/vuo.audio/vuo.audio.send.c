@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Send Live Audio",
-					  "keywords" : [ "sound", "output", "play", "speaker", "music", "samples", "device" ],
+					  "keywords" : [ "sound", "play", "speaker", "music", "samples", "device" ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						  "VuoAudio"
@@ -67,7 +67,7 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoAudioOutputDevice) device,
 		VuoInputData(VuoList_VuoAudioSamples) sendChannels,
-		VuoInputEvent(VuoPortEventBlocking_None, sendChannels) sendChannelsEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"sendChannels"}) sendChannelsEvent,
 		VuoOutputTrigger(requestedChannels, VuoReal)
 )
 {

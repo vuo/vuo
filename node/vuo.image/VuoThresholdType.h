@@ -11,7 +11,7 @@
 #define VUOTHRESHOLDTYPE_H
 
 /// @{
-typedef void * VuoList_VuoThresholdType;
+typedef const struct VuoList_VuoThresholdType_struct { void *l; } * VuoList_VuoThresholdType;
 #define VuoList_VuoThresholdType_TYPE_DEFINED
 /// @}
 

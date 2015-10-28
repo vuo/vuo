@@ -15,7 +15,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "constrain", "scale", "size", "fit", "center", "rectify", "shrink" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "DisplaySceneWithFloor.vuo" ]
 					 }
 				 });

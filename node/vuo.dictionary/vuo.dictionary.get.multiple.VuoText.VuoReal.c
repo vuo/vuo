@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "pick", "select", "choose", "element", "member", "key" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				 });
 
@@ -32,7 +32,7 @@ void nodeEvent
 	unsigned long count = VuoListGetCount_VuoText(keys);
 	for (unsigned long i = 1; i <= count; ++i)
 	{
-		VuoText key = VuoListGetValueAtIndex_VuoText(keys, i);
+		VuoText key = VuoListGetValue_VuoText(keys, i);
 		VuoReal value = VuoDictionaryGetValueForKey_VuoText_VuoReal(dictionary, key);
 		VuoListAppendValue_VuoReal(*values, value);
 	}

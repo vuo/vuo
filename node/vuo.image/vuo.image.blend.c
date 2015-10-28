@@ -15,19 +15,18 @@
 VuoModuleMetadata({
 					 "title" : "Blend Images",
 					 "keywords" : [ "combine", "mix", "fade", "merge", "layer", "composite", "channel",
-						"normal", "add", "alpha", "opacity", "transparent", "transparency",
+						"normal", "add", "additive", "alpha", "opacity", "transparent", "transparency",
 						"multiply", "darker", "linear burn", "color burn", "burn",
 						"screen", "lighter", "linear dodge", "color dodge", "dodge",
 						"overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "light", "hard mix",
 						"difference", "exclusion", "subtract", "divide",
 						"hue", "saturation", "desaturate", "grayscale", "greyscale", "color", "luminosity", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.2.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "BlendImages.vuo" ]
 					 }
 				 });
@@ -579,8 +578,11 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) blended
 )
 {
-	if (!background || !foreground)
+	if (!background && !foreground)
+	{
+		*blended = NULL;
 		return;
+	}
 
 	// if the blend mode has changed or is uninitialized, init here
 	if( blendMode != (*instance)->currentBlendMode )
@@ -684,14 +686,18 @@ void nodeInstanceEvent
 		(*instance)->currentBlendMode = blendMode;
 	}
 
+	VuoInteger         pixelsWide = background ? background->pixelsWide             : foreground->pixelsWide;
+	VuoInteger         pixelsHigh = background ? background->pixelsHigh             : foreground->pixelsHigh;
+	VuoImageColorDepth colorDepth = background ? VuoImage_getColorDepth(background) : VuoImage_getColorDepth(foreground);
+
 	// Associate the input image with the shader.
-	VuoShader_setUniform_VuoImage((*instance)->shader, "background", background);
-	VuoShader_setUniform_VuoImage((*instance)->shader, "foreground", foreground);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "background", background ? background : VuoImage_makeColorImage(VuoColor_makeWithRGBA(0,0,0,0),1,1));
+	VuoShader_setUniform_VuoImage((*instance)->shader, "foreground", foreground ? foreground : VuoImage_makeColorImage(VuoColor_makeWithRGBA(0,0,0,0),1,1));
 
 	VuoShader_setUniform_VuoReal((*instance)->shader, "foregroundOpacity", foregroundOpacity);
 
 	// Render.
-	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, background->pixelsWide, background->pixelsHigh, VuoImage_getColorDepth(background));
+	*blended = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, pixelsWide, pixelsHigh, colorDepth);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

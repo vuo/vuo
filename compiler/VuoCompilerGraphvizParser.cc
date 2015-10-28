@@ -86,6 +86,7 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 	makeCables();
 	makePublishedPorts();
 	setInputPortConstantValues();
+	setPublishedPortDetails();
 	setTriggerPortEventThrottling();
 	saveNodeDeclarations(compositionAsString);
 
@@ -174,10 +175,6 @@ void VuoCompilerGraphvizParser::makeDummyNodeClasses(void)
 				}
 				else	// output port
 				{
-					// Skip the done port, which is added by VuoNodeClass's constructor below.
-					 if (strcmp(nodeInfoField->id,"done") == 0)
-						 continue;
-
 					if (find(outputPortClassNames.begin(), outputPortClassNames.end(), nodeInfoField->id) == outputPortClassNames.end())
 						outputPortClassNames.push_back(nodeInfoField->id);
 				}
@@ -211,8 +208,8 @@ void VuoCompilerGraphvizParser::makeNodeClasses(set<VuoCompilerNodeClass *> extr
 		{
 			nodeClassForName[dummyNodeClassName] = nodeClass->getBase();
 
-			checkPortClasses(dummyNodeClass->getInputPortClasses(), nodeClass->getBase()->getInputPortClasses());
-			checkPortClasses(dummyNodeClass->getOutputPortClasses(), nodeClass->getBase()->getOutputPortClasses());
+			checkPortClasses(dummyNodeClassName, dummyNodeClass->getInputPortClasses(), nodeClass->getBase()->getInputPortClasses());
+			checkPortClasses(dummyNodeClassName, dummyNodeClass->getOutputPortClasses(), nodeClass->getBase()->getOutputPortClasses());
 		}
 		else if (dummyNodeClassName == VuoNodeClass::publishedInputNodeClassName)
 		{
@@ -322,8 +319,6 @@ void VuoCompilerGraphvizParser::makeCables(void)
 	map<string, bool> nodeNamesSeen;
 	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
 	{
-		string nodeClassName = agget(n, (char *)"type");
-
 		for (Agedge_t *e = agfstedge(graph, n); e; e = agnxtedge(graph, e, n))
 		{
 			string fromNodeName = e->tail->name;
@@ -337,6 +332,8 @@ void VuoCompilerGraphvizParser::makeCables(void)
 			VuoNode *fromNode = nodeForName[fromNodeName];
 			VuoNode *toNode = nodeForName[toNodeName];
 
+			VuoCompilerCable *cable = NULL;
+
 			// If dealing with a published output cable, we will need to create an associated VuoCompilerCable
 			// even though we don't currently construct a VuoCompilerNode for the published output node.
 			if (fromNode->hasCompiler() && toNode->getNodeClass()->getClassName() == VuoNodeClass::publishedOutputNodeClassName)
@@ -345,10 +342,10 @@ void VuoCompilerGraphvizParser::makeCables(void)
 				VuoPort *fromPort = fromNode->getOutputPortWithName(fromPortName);
 				VuoCompilerPort *fromCompilerPort = static_cast<VuoCompilerPort *>(fromPort->getCompiler());
 
-				VuoCompilerCable *publishedOutputCable = new VuoCompilerCable(fromNode->getCompiler(), fromCompilerPort, NULL, NULL);
-				publishedOutputCable->getBase()->setTo(toNode, toPort);
+				cable = new VuoCompilerCable(fromNode->getCompiler(), fromCompilerPort, NULL, NULL);
+				cable->getBase()->setTo(toNode, toPort);
 
-				publishedOutputCables.push_back(publishedOutputCable->getBase());
+				publishedOutputCables.push_back(cable->getBase());
 			}
 
 			// Otherwise, if there's no node class implementation, don't try to create cables.
@@ -365,13 +362,17 @@ void VuoCompilerGraphvizParser::makeCables(void)
 				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>(toBasePort->getCompiler());
 				VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>(fromBasePort->getCompiler());
 
-				VuoCompilerCable *cable = new VuoCompilerCable(fromNode->getCompiler(), fromPort, toNode->getCompiler(), toPort);
+				cable = new VuoCompilerCable(fromNode->getCompiler(), fromPort, toNode->getCompiler(), toPort);
 
 				if (fromNode->getNodeClass()->getClassName() == VuoNodeClass::publishedInputNodeClassName)
 					publishedInputCables.push_back(cable->getBase());
 				else
 					orderedCables.push_back(cable->getBase());
 			}
+
+			char *eventOnlyAttribute = agget(e, (char *)"event");
+			if (eventOnlyAttribute && strcmp(eventOnlyAttribute, "true") == 0)
+				cable->setAlwaysEventOnly(true);
 		}
 
 		nodeNamesSeen[n->name] = true;
@@ -408,7 +409,7 @@ void VuoCompilerGraphvizParser::makePublishedPorts(void)
 			{
 				VuoPort *port = *i;
 				string portName = port->getClass()->getName();
-				if (portName != VuoNodeClass::publishedInputNodeSimultaneousTriggerName && portName != "done")
+				if (portName != VuoNodeClass::publishedInputNodeSimultaneousTriggerName)
 				{
 					publishedInputPortNames.push_back(portName);
 					connectedPortsForPublishedInputName[portName] = set<VuoCompilerPort *>();
@@ -537,17 +538,28 @@ void VuoCompilerGraphvizParser::setInputPortConstantValues(void)
 	map<VuoPort *, VuoCompilerPublishedPort *> publishedInputDataPortForInputPort;
 	for (vector<VuoCompilerPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
 	{
-		VuoCompilerPublishedPort *publishedInputPort = *i;
+		VuoCompilerPublishedInputPort *publishedInputPort = static_cast<VuoCompilerPublishedInputPort *>(*i);
 
 		// A given internal input port may have multiple connected published input ports, but at most
-		// one that carries data.  That's the one whose constant value we need.
+		// one that transmits data to the port.  That's the one whose constant value we need.
 		if (publishedInputPort->getBase()->getType())
 		{
 			set<VuoPort *> connectedPorts = publishedInputPort->getBase()->getConnectedPorts();
 			for (set<VuoPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
 			{
 				VuoPort *inputPort = *j;
-				publishedInputDataPortForInputPort[inputPort] = publishedInputPort;
+
+				for (vector<VuoCable *>::iterator k = publishedInputCables.begin(); k != publishedInputCables.end(); ++k)
+				{
+					VuoCable *publishedInputCable = *k;
+					if (publishedInputCable->getFromPort() == publishedInputPort->getVuoPseudoPort() &&
+							publishedInputCable->getToPort() == inputPort)
+					{
+						if (publishedInputCable->getCompiler()->carriesData())
+							publishedInputDataPortForInputPort[inputPort] = publishedInputPort;
+						break;
+					}
+				}
 			}
 
 			// Set the constant value in association with the published input port itself.
@@ -556,7 +568,7 @@ void VuoCompilerGraphvizParser::setInputPortConstantValues(void)
 			if (hasConstant)
 			{
 				string constant = constantIter->second;
-				publishedInputPort->getBase()->setInitialValue(constant);
+				publishedInputPort->setInitialValue(constant);
 			}
 		}
 	}
@@ -600,6 +612,39 @@ void VuoCompilerGraphvizParser::setInputPortConstantValues(void)
 				VuoCompilerInputData *data = inputEventPort->getData();
 				if (data)
 					data->setInitialValue(constant);
+			}
+		}
+	}
+}
+
+/**
+ * Parses the details (metadata) for each published port.
+ */
+void VuoCompilerGraphvizParser::setPublishedPortDetails(void)
+{
+	for (Agnode_t *n = agfstnode(graph); n; n = agnxtnode(graph, n))
+	{
+		string nodeClassName = agget(n, (char *)"type");
+
+		if (nodeClassName == VuoNodeClass::publishedInputNodeClassName)
+		{
+			vector<string> detailKeys;
+			detailKeys.push_back("suggestedMin");
+			detailKeys.push_back("suggestedMax");
+			detailKeys.push_back("suggestedStep");
+
+			for (vector<VuoCompilerPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
+			{
+				VuoCompilerPublishedPort *publishedPort = *i;
+
+				for (vector<string>::iterator j = detailKeys.begin(); j != detailKeys.end(); ++j)
+				{
+					string detailKey = *j;
+					string detailValue;
+					bool foundAttribute = parseAttributeOfPort(n, publishedPort->getBase()->getName(), detailKey, detailValue);
+					if (foundAttribute)
+						publishedPort->setDetail(detailKey, detailValue);
+				}
 			}
 		}
 	}
@@ -694,13 +739,13 @@ bool VuoCompilerGraphvizParser::parseAttributeOfPort(Agnode_t *n, string portNam
 /**
  * Check that the dummy input/output port classes are a subset of the actual input/output port classes.
  */
-void VuoCompilerGraphvizParser::checkPortClasses(vector<VuoPortClass *> dummy, vector<VuoPortClass *> actual)
+void VuoCompilerGraphvizParser::checkPortClasses(string nodeClassName, vector<VuoPortClass *> dummy, vector<VuoPortClass *> actual)
 {
 	for (vector<VuoPortClass *>::iterator i = dummy.begin(); i != dummy.end(); ++i)
 	{
 		string dummyName = (*i)->getName();
 
-		if (dummyName == "refresh" || dummyName == "done")
+		if (dummyName == "refresh")
 			continue;
 
 		bool found = false;
@@ -714,14 +759,14 @@ void VuoCompilerGraphvizParser::checkPortClasses(vector<VuoPortClass *> dummy, v
 		}
 		if (! found)
 		{
-			VLog("Error: Couldn't find port '%s'.", dummyName.c_str());
+			VLog("Error: Couldn't find node %s's port '%s'.", nodeClassName.c_str(), dummyName.c_str());
 			return;
 		}
 	}
 }
 
 /**
- * Stores the Graphviz declaration for each VuoNode that lacks a VuoCompilerNode.
+ * Stores the Graphviz declaration for each node.
  */
 void VuoCompilerGraphvizParser::saveNodeDeclarations(const string &compositionAsString)
 {
@@ -739,8 +784,7 @@ void VuoCompilerGraphvizParser::saveNodeDeclarations(const string &compositionAs
 		if (nodeIter != nodeForName.end())
 		{
 			VuoNode *node = nodeIter->second;
-			if (! node->hasCompiler())
-				node->setRawGraphvizDeclaration(line);
+			node->setRawGraphvizDeclaration(line);
 			--nodesRemaining;
 		}
 	}
@@ -842,7 +886,7 @@ string VuoCompilerGraphvizParser::getCopyright(void)
  */
 VuoType * VuoCompilerGraphvizParser::inferTypeForPublishedPort(string name, const set<VuoCompilerPort *> &connectedPorts)
 {
-	if (connectedPorts.empty() || name == "refresh" || name == "done")
+	if (connectedPorts.empty() || name == "refresh")
 		return NULL;
 
 	VuoCompilerPort *connectedPort = *connectedPorts.begin();

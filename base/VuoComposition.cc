@@ -372,7 +372,11 @@ void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
 	removeNode(oldNode);
 	addNode(newNode);
 
-	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	set<VuoCable *> publishedAndInternalCables;
+	publishedAndInternalCables.insert(cables.begin(), cables.end());
+	publishedAndInternalCables.insert(publishedInputCables.begin(), publishedInputCables.end());
+	publishedAndInternalCables.insert(publishedOutputCables.begin(), publishedOutputCables.end());
+	for (set<VuoCable *>::iterator i = publishedAndInternalCables.begin(); i != publishedAndInternalCables.end(); ++i)
 	{
 		VuoCable *cable = *i;
 		if (cable->getFromNode() == oldNode)

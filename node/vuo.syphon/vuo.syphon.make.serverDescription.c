@@ -16,7 +16,6 @@ VuoModuleMetadata({
 					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false,
 						  "exampleCompositions" : [ "ReceiveImagesOnlyFromVuo.vuo" ]
 					  },
 					  "dependencies" : [
@@ -32,6 +31,6 @@ void nodeEvent
 	VuoOutputData(VuoSyphonServerDescription) serverDescription
 )
 {
-	(*serverDescription) = VuoSyphonServerDescription_make("", serverName, applicationName);
+	(*serverDescription) = VuoSyphonServerDescription_make(VuoText_make(""), serverName, applicationName);
 }
 

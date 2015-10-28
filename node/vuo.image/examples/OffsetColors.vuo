@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Offsets the red, green, and blue channels in an image with simple colors.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Curve4 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="633,432" _endPosition="{\"x\":0.050000,\"y\":0.000000}" _duration="1.000000" _curve="\"exponential\"" _easing="\"in+out\"" _loop="\"mirror\""];
+Curve6 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="634,578" _endPosition="{\"x\":0.000000,\"y\":0.050000}" _duration="1.000000" _curve="\"exponential\"" _easing="\"in+out\"" _loop="\"mirror\""];
+Curve7 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="635,724" _endPosition="{\"x\":-0.050000,\"y\":-0.050000}" _duration="1.000000" _curve="\"exponential\"" _easing="\"in+out\"" _loop="\"mirror\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="286,91" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.500000}" _rotation="0.000000" _width="2.000000" _height="1.000000"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="285,227" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.500000}" _rotation="0.000000" _width="2.000000" _height="1.000000"];
+MakeLinearGradientLayer [type="vuo.layer.make.gradient.linear" version="1.1.0" label="Make Linear Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientStart>gradientStart\l|<gradientEnd>gradientEnd\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="221,369" _gradientStart="{\"x\":-0.500000,\"y\":0.000000}" _gradientEnd="{\"x\":0.500000,\"y\":0.000000}" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="1.000000" _layerHeight="1.000000"];
+MakeList12 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="135,395" _1="{\"r\":0.219608,\"g\":0.729412,\"b\":0.000000,\"a\":1.000000}" _2="{\"r\":0.137255,\"g\":0.027451,\"b\":0.756863,\"a\":1.000000}"];
+MakeList16 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1057,297" fillcolor="green"];
+MakeList9 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="471,282"];
+OffsetImageRGBChannels [type="vuo.image.color.offset.rgb" version="1.0.0" label="Offset Image RGB Channels|<refresh>refresh\l|<image>image\l|<redOffset>redOffset\l|<greenOffset>greenOffset\l|<blueOffset>blueOffset\l|<offsetImage>offsetImage\r" pos="800,271" fillcolor="violet"];
+RenderImageToWindow3 [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1098,271" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="544,271" _width="1024" _height="768" _colorDepth="\"8bpc\""];
+
+Curve4:value -> OffsetImageRGBChannels:redOffset;
+Curve6:value -> OffsetImageRGBChannels:greenOffset;
+Curve7:value -> OffsetImageRGBChannels:blueOffset;
+FireOnStart:started -> MakeColorLayer2:refresh;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> MakeLinearGradientLayer:refresh;
+MakeColorLayer2:layer -> MakeList9:2;
+MakeColorLayer:layer -> MakeList9:1;
+MakeLinearGradientLayer:layer -> MakeList9:3;
+MakeList12:list -> MakeLinearGradientLayer:colors;
+MakeList16:list -> RenderImageToWindow3:setWindowProperties;
+MakeList9:list -> RenderLayersToImage:layers;
+OffsetImageRGBChannels:offsetImage -> RenderImageToWindow3:image;
+RenderImageToWindow3:requestedFrame -> Curve4:time;
+RenderImageToWindow3:requestedFrame -> Curve6:time;
+RenderImageToWindow3:requestedFrame -> Curve7:time;
+RenderLayersToImage:image -> OffsetImageRGBChannels:image;
+}

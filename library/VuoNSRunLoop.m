@@ -9,6 +9,7 @@
 
 #include "module.h"
 
+#define NS_RETURNS_INNER_POINTER
 #import <AppKit/AppKit.h>
 #include <dispatch/dispatch.h>
 

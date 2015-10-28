@@ -1,0 +1,114 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
+ShareValue100 [type="vuo.data.share.VuoImage" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="684,523"];
+ShareValue101 [type="vuo.data.share.VuoImageColorDepth" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="845,522"];
+ShareValue102 [type="vuo.data.share.VuoImageWrapMode" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="207,606"];
+ShareValue103 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="361,606"];
+ShareValue104 [type="vuo.data.share.VuoKey" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="528,606"];
+ShareValue105 [type="vuo.data.share.VuoLayer" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="682,606"];
+ShareValue106 [type="vuo.data.share.VuoListPosition" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="843,605"];
+ShareValue107 [type="vuo.data.share.VuoLoopType" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="206,693"];
+ShareValue108 [type="vuo.data.share.VuoMesh" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="360,693"];
+ShareValue109 [type="vuo.data.share.VuoMidiController" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="527,693"];
+ShareValue110 [type="vuo.data.share.VuoMidiInputDevice" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="681,693"];
+ShareValue111 [type="vuo.data.share.VuoMidiNote" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="842,692"];
+ShareValue112 [type="vuo.data.share.VuoMidiOutputDevice" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="204,776"];
+ShareValue113 [type="vuo.data.share.VuoModifierKey" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="358,776"];
+ShareValue114 [type="vuo.data.share.VuoMouseButton" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="525,776"];
+ShareValue115 [type="vuo.data.share.VuoNoise" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="679,776"];
+ShareValue116 [type="vuo.data.share.VuoOscMessage" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="840,775"];
+ShareValue117 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="207,851"];
+ShareValue118 [type="vuo.data.share.VuoRealRegulation" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="361,851"];
+ShareValue119 [type="vuo.data.share.VuoRenderedLayers" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="528,851"];
+ShareValue12 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="217,51"];
+ShareValue120 [type="vuo.data.share.VuoSceneObject" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="682,851"];
+ShareValue121 [type="vuo.data.share.VuoScreen" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="843,850"];
+ShareValue13 [type="vuo.data.share.VuoTransform2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="371,51"];
+ShareValue14 [type="vuo.data.share.VuoPoint3d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="538,51"];
+ShareValue15 [type="vuo.data.share.VuoTransform" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="692,51"];
+ShareValue16 [type="vuo.data.share.VuoPoint4d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="853,50"];
+ShareValue17 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="688,213"];
+ShareValue18 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="849,212"];
+ShareValue19 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="213,213"];
+ShareValue20 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="367,213"];
+ShareValue21 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="534,213"];
+ShareValue52 [type="vuo.data.share.VuoAudioInputDevice" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="215,130"];
+ShareValue53 [type="vuo.data.share.VuoAudioOutputDevice" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="369,130"];
+ShareValue54 [type="vuo.data.share.VuoAudioSamples" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="536,130"];
+ShareValue55 [type="vuo.data.share.VuoBlendMode" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="690,130"];
+ShareValue56 [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="851,129"];
+ShareValue57 [type="vuo.data.share.VuoColor" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="212,300"];
+ShareValue58 [type="vuo.data.share.VuoCursor" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="366,300"];
+ShareValue59 [type="vuo.data.share.VuoCurve" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="533,300"];
+ShareValue60 [type="vuo.data.share.VuoCurveEasing" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="687,300"];
+ShareValue61 [type="vuo.data.share.VuoDispersion" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="848,299"];
+ShareValue62 [type="vuo.data.share.VuoDisplacement" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,383"];
+ShareValue63 [type="vuo.data.share.VuoFileType" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="364,383"];
+ShareValue64 [type="vuo.data.share.VuoFont" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="531,383"];
+ShareValue65 [type="vuo.data.share.VuoGradientNoise" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="685,383"];
+ShareValue66 [type="vuo.data.share.VuoShader" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="846,382"];
+ShareValue97 [type="vuo.data.share.VuoHorizontalAlignment" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="209,523"];
+ShareValue98 [type="vuo.data.share.VuoHorizontalReflection" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="363,523"];
+ShareValue99 [type="vuo.data.share.VuoHorizontalSide" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="530,523"];
+
+FireOnStart:started -> ShareValue12:value;
+ShareValue100:sameValue -> ShareValue101:value [event=true];
+ShareValue101:sameValue -> ShareValue102:value [event=true];
+ShareValue102:sameValue -> ShareValue103:value [event=true];
+ShareValue103:sameValue -> ShareValue104:value [event=true];
+ShareValue104:sameValue -> ShareValue105:value [event=true];
+ShareValue105:sameValue -> ShareValue106:value [event=true];
+ShareValue106:sameValue -> ShareValue107:value [event=true];
+ShareValue107:sameValue -> ShareValue108:value [event=true];
+ShareValue108:sameValue -> ShareValue109:value [event=true];
+ShareValue109:sameValue -> ShareValue110:value [event=true];
+ShareValue110:sameValue -> ShareValue111:value [event=true];
+ShareValue111:sameValue -> ShareValue112:value [event=true];
+ShareValue112:sameValue -> ShareValue113:value [event=true];
+ShareValue113:sameValue -> ShareValue114:value [event=true];
+ShareValue114:sameValue -> ShareValue115:value [event=true];
+ShareValue115:sameValue -> ShareValue116:value [event=true];
+ShareValue116:sameValue -> ShareValue117:value [event=true];
+ShareValue117:sameValue -> ShareValue118:value [event=true];
+ShareValue118:sameValue -> ShareValue119:value [event=true];
+ShareValue119:sameValue -> ShareValue120:value [event=true];
+ShareValue120:sameValue -> ShareValue121:value [event=true];
+ShareValue12:sameValue -> ShareValue13:value [event=true];
+ShareValue13:sameValue -> ShareValue14:value [event=true];
+ShareValue14:sameValue -> ShareValue15:value [event=true];
+ShareValue15:sameValue -> ShareValue16:value [event=true];
+ShareValue16:sameValue -> ShareValue52:value [event=true];
+ShareValue17:sameValue -> ShareValue18:value [event=true];
+ShareValue18:sameValue -> ShareValue57:value [event=true];
+ShareValue19:sameValue -> ShareValue20:value [event=true];
+ShareValue20:sameValue -> ShareValue21:value [event=true];
+ShareValue21:sameValue -> ShareValue17:value [event=true];
+ShareValue52:sameValue -> ShareValue53:value [event=true];
+ShareValue53:sameValue -> ShareValue54:value [event=true];
+ShareValue54:sameValue -> ShareValue55:value [event=true];
+ShareValue55:sameValue -> ShareValue56:value [event=true];
+ShareValue56:sameValue -> ShareValue19:value [event=true];
+ShareValue57:sameValue -> ShareValue58:value [event=true];
+ShareValue58:sameValue -> ShareValue59:value [event=true];
+ShareValue59:sameValue -> ShareValue60:value [event=true];
+ShareValue60:sameValue -> ShareValue61:value [event=true];
+ShareValue61:sameValue -> ShareValue62:value [event=true];
+ShareValue62:sameValue -> ShareValue63:value [event=true];
+ShareValue63:sameValue -> ShareValue64:value [event=true];
+ShareValue64:sameValue -> ShareValue65:value [event=true];
+ShareValue65:sameValue -> ShareValue66:value [event=true];
+ShareValue66:sameValue -> ShareValue97:value [event=true];
+ShareValue97:sameValue -> ShareValue98:value [event=true];
+ShareValue98:sameValue -> ShareValue99:value [event=true];
+ShareValue99:sameValue -> ShareValue100:value [event=true];
+}

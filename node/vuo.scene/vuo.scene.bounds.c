@@ -15,7 +15,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "box", "aabb", "axis", "collider", "collision", "volume" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "DisplaySceneWithFloor.vuo" ]
 					 }
 				 });

@@ -12,20 +12,25 @@
 
 #include "type.h"
 #include "VuoLeapPointable.h"
-#include "VuoLeapPointableType.h"
-#include "VuoLeapTouchZone.h"
 #include "VuoText.h"
 
 /// @{
 #ifdef VUO_COMPILER
- VuoModuleMetadata({
-					"title" : "Leap Pointable",
-					"description" : "Struct of LeapPointable data.",
-					"keywords" : ["gesture", "controller", "motion", "hand", "finger", "pointable"],
-					"version" : "1.0.0",
-					"dependencies" : [
-						]
-					});
+VuoModuleMetadata({
+					  "title" : "Leap Pointable",
+					  "description" : "Struct of LeapPointable data.",
+					  "keywords" : ["gesture", "controller", "motion", "hand", "finger", "pointable"],
+					  "version" : "1.0.0",
+					  "dependencies" : [
+						"VuoInteger",
+						"VuoLeapPointable",
+						"VuoLeapPointableType",
+						"VuoLeapTouchZone",
+						"VuoPoint3d",
+						"VuoReal",
+						"VuoText"
+					  ]
+				  });
 #endif
 /// @}
 
@@ -42,10 +47,10 @@
  *     "direction" : {"x":1,"y":1,"z":1},
  *     "tipPosition" : {"x":1,"y":1,"z":1},
  *     "tipVelocity" : {"x":1,"y":1,"z":1},
- *     "stabilizedTipPosition" : {"x":1,"y":1,"z":1},
  *	   "timeVisible" : 2.3
  *	   "touchDistance" : 0.3
- *	   "touchZone" : "hovering"
+ *	   "touchZone" : "hovering",
+ *		"isExtended" : true
  *   }
  * }
  */
@@ -60,10 +65,10 @@ VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
 		VuoPoint3d_make(0,0,0),
 		VuoPoint3d_make(0,0,0),
 		VuoPoint3d_make(0,0,0),
-		VuoPoint3d_make(0,0,0),
 		0,
 		0,
-		VuoLeapTouchZone_None
+		VuoLeapTouchZone_None,
+		false
 	};
 
 	json_object *o = NULL;
@@ -89,9 +94,6 @@ VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "tipVelocity", &o))
 		pointable.tipVelocity = VuoPoint3d_valueFromJson(o);
 
-	if (json_object_object_get_ex(js, "stabilizedTipPosition", &o))
-		pointable.stabilizedTipPosition = VuoPoint3d_valueFromJson(o);
-
 	if (json_object_object_get_ex(js, "timeVisible", &o))
 		pointable.timeVisible = VuoReal_valueFromJson(o);
 
@@ -100,6 +102,9 @@ VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
 
 	if (json_object_object_get_ex(js, "touchZone", &o))
 		pointable.touchZone = VuoReal_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "isExtended", &o))
+		pointable.isExtended = VuoBoolean_valueFromJson(o);
 
 	return pointable;
 }
@@ -133,9 +138,6 @@ json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value)
 	json_object *tipVelocityObject = VuoPoint3d_jsonFromValue(value.tipVelocity);
 	json_object_object_add(js, "tipVelocity", tipVelocityObject);
 
-	json_object *stabilizedTipPositionObject = VuoPoint3d_jsonFromValue(value.stabilizedTipPosition);
-	json_object_object_add(js, "stabilizedTipPosition", stabilizedTipPositionObject);
-
 	json_object *timeVisibleObject = VuoReal_jsonFromValue(value.timeVisible);
 	json_object_object_add(js, "timeVisible", timeVisibleObject);
 
@@ -144,6 +146,9 @@ json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value)
 
 	json_object *touchZoneObject = VuoInteger_jsonFromValue(value.touchZone);
 	json_object_object_add(js, "touchZone", touchZoneObject);
+
+	json_object *isExtendedObject = VuoBoolean_jsonFromValue(value.isExtended);
+	json_object_object_add(js, "isExtended", isExtendedObject);
 
 	return js;
 }
@@ -154,7 +159,7 @@ json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value)
  */
 char * VuoLeapPointable_summaryFromValue(const VuoLeapPointable value)
 {
-	return VuoText_format("%ld", value.id);
+	return VuoText_format("%lld", value.id);
 }
 
 /**
@@ -169,10 +174,10 @@ VuoLeapPointable VuoLeapPointable_make(
 	VuoPoint3d direction,
 	VuoPoint3d tipPosition,
 	VuoPoint3d tipVelocity,
-	VuoPoint3d stabilizedTipPosition,
 	VuoReal timeVisible,
 	VuoReal touchDistance,
-	VuoLeapTouchZone touchZone)
+	VuoLeapTouchZone touchZone,
+	VuoBoolean isExtended)
 {
 	VuoLeapPointable pointable;
 
@@ -183,10 +188,10 @@ VuoLeapPointable VuoLeapPointable_make(
 	pointable.direction = direction;
 	pointable.tipPosition = tipPosition;
 	pointable.tipVelocity = tipVelocity;
-	pointable.stabilizedTipPosition = stabilizedTipPosition;
 	pointable.timeVisible = timeVisible;
 	pointable.touchDistance = touchDistance;
 	pointable.touchZone = touchZone;
+	pointable.isExtended = isExtended;
 
 	return pointable;
 }

@@ -11,18 +11,18 @@
 
 digraph G
 {
-GetItemFromList [type="vuo.list.get.VuoCurve" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="274,543" fillcolor="yellow" _which="1"];
-ShareValue [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Boolean|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,13"];
-ShareValue10 [type="vuo.data.share.VuoPoint4d" version="1.0.0" label="4D Point|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,437"];
-ShareValue11 [type="vuo.data.share.VuoImage" version="1.0.0" label="Image2|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,490"];
-ShareValue2 [type="vuo.data.share.VuoImage" version="1.0.0" label="Image|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,-40"];
-ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Integer|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,66"];
-ShareValue4 [type="vuo.data.share.VuoReal" version="1.0.0" label="Real|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,119"];
-ShareValue5 [type="vuo.data.share.VuoCurve" version="1.0.0" label="Curve|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,172"];
-ShareValue6 [type="vuo.data.share.VuoText" version="1.0.0" label="Text|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,225"];
-ShareValue7 [type="vuo.data.share.VuoColor" version="1.0.0" label="Color|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,278"];
-ShareValue8 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="2D Point|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="273,331"];
-ShareValue9 [type="vuo.data.share.VuoPoint3d" version="1.0.0" label="3D Point|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="274,384"];
+GetItemFromList [type="vuo.list.get.VuoCurve" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="274,543" fillcolor="yellow" _which="1"];
+ShareValue [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Boolean|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,13"];
+ShareValue10 [type="vuo.data.share.VuoPoint4d" version="1.0.0" label="4D Point|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,437"];
+ShareValue11 [type="vuo.data.share.VuoImage" version="1.0.0" label="Image2|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,490"];
+ShareValue2 [type="vuo.data.share.VuoImage" version="1.0.0" label="Image|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,-40"];
+ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Integer|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,66"];
+ShareValue4 [type="vuo.data.share.VuoReal" version="1.0.0" label="Real|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,119"];
+ShareValue5 [type="vuo.data.share.VuoCurve" version="1.0.0" label="Curve|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,172"];
+ShareValue6 [type="vuo.data.share.VuoText" version="1.0.0" label="Text|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,225"];
+ShareValue7 [type="vuo.data.share.VuoColor" version="1.0.0" label="Color|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,278"];
+ShareValue8 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="2D Point|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="273,331"];
+ShareValue9 [type="vuo.data.share.VuoPoint3d" version="1.0.0" label="3D Point|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="274,384"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<image>image\r|<time>time\r|<boolean>boolean\r|<integer>integer\r|<real>real\r|<curve>curve\r|<text>text\r|<color>color\r|<point2d>point2d\r|<point3d>point3d\r|<point4d>point4d\r|<image2>image2\r|<curveList>curveList\r" _image_type="VuoImage" _time_type="VuoReal" _boolean_type="VuoBoolean" _integer_type="VuoInteger" _real_type="VuoReal" _curve="null" _curve_type="VuoCurve" _text_type="VuoText" _color_type="VuoColor" _point2d_type="VuoPoint2d" _point3d_type="VuoPoint3d" _point4d_type="VuoPoint4d" _image2_type="VuoImage" _curveList_type="VuoList_VuoCurve"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l|<outputBoolean>outputBoolean\l|<outputInteger>outputInteger\l|<outputReal>outputReal\l|<outputCurve>outputCurve\l|<outputText>outputText\l|<outputColor>outputColor\l|<outputPoint2d>outputPoint2d\l|<outputPoint3d>outputPoint3d\l|<outputPoint4d>outputPoint4d\l|<outputImage2>outputImage2\l|<outputCurveList>outputCurveList\l" _outputImage_type="VuoImage" _outputBoolean_type="VuoBoolean" _outputInteger_type="VuoInteger" _outputReal_type="VuoReal" _outputCurve_type="VuoCurve" _outputText_type="VuoText" _outputColor_type="VuoColor" _outputPoint2d_type="VuoPoint2d" _outputPoint3d_type="VuoPoint3d" _outputPoint4d_type="VuoPoint4d" _outputImage2_type="VuoImage" _outputCurveList_type="VuoCurve"];
 

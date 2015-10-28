@@ -1,0 +1,117 @@
+/**
+ * @file
+ * Displays a 2D representation of the fingers on the centermost hand detected by your Leap Motion device. When you extend your fingers, they become highlighted onscreen.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlockEmptyList2 [type="vuo.event.emptyList.VuoLeapPointable" version="1.0.0" label="Block Empty List|<refresh>refresh\l|<list>list\l|<nonEmptyList>nonEmptyList\r" pos="831,55"];
+BlockEmptyList3 [type="vuo.event.emptyList.VuoLeapPointable" version="1.0.0" label="Block Empty List|<refresh>refresh\l|<list>list\l|<nonEmptyList>nonEmptyList\r" pos="840,279"];
+BlockEmptyList4 [type="vuo.event.emptyList.VuoLeapPointable" version="1.0.0" label="Block Empty List|<refresh>refresh\l|<list>list\l|<nonEmptyList>nonEmptyList\r" pos="838,505"];
+BlockEmptyList5 [type="vuo.event.emptyList.VuoLeapPointable" version="1.0.0" label="Block Empty List|<refresh>refresh\l|<list>list\l|<nonEmptyList>nonEmptyList\r" pos="840,735"];
+BlockEmptyList6 [type="vuo.event.emptyList.VuoLeapPointable" version="1.0.0" label="Block Empty List|<refresh>refresh\l|<list>list\l|<nonEmptyList>nonEmptyList\r" pos="842,961"];
+Convert3DPointTo2DPoint [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="1788,232"];
+Convert3DPointTo2DPoint2 [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="1790,458"];
+Convert3DPointTo2DPoint3 [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="1790,690"];
+Convert3DPointTo2DPoint4 [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="1792,910"];
+Convert3DPointTo2DPoint5 [type="vuo.type.point3d.point2d.xy" version="1.0.0" label="Convert 3D Point to 2D Point|<refresh>refresh\l|<xyz>xyz\l|<xy>xy\r" pos="1792,1144"];
+GetFirstItemInList [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="617,459"];
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="70,51" fillcolor="violet"];
+GetHandValues2 [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmTransform>palmTransform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="603,48" fillcolor="violet"];
+GetPointableValues [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="1252,53" fillcolor="violet"];
+GetPointableValues2 [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="1252,279" fillcolor="violet"];
+GetPointableValues3 [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="1252,505" fillcolor="violet"];
+GetPointableValues4 [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="1255,961" fillcolor="violet"];
+GetPointableValues5 [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="1255,735" fillcolor="violet"];
+GetTransformTranslation [type="vuo.transform.get.translation" version="1.0.0" label="Get Transform Translation|<refresh>refresh\l|<transform>transform\l|<translation>translation\r" pos="1442,173"];
+GetTransformTranslation2 [type="vuo.transform.get.translation" version="1.0.0" label="Get Transform Translation|<refresh>refresh\l|<transform>transform\l|<translation>translation\r" pos="1442,399"];
+GetTransformTranslation3 [type="vuo.transform.get.translation" version="1.0.0" label="Get Transform Translation|<refresh>refresh\l|<transform>transform\l|<translation>translation\r" pos="1442,625"];
+GetTransformTranslation4 [type="vuo.transform.get.translation" version="1.0.0" label="Get Transform Translation|<refresh>refresh\l|<transform>transform\l|<translation>translation\r" pos="1445,1081"];
+GetTransformTranslation5 [type="vuo.transform.get.translation" version="1.0.0" label="Get Transform Translation|<refresh>refresh\l|<transform>transform\l|<translation>translation\r" pos="1445,855"];
+MakeList10 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1616,88" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList19 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1618,314" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList23 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="2026,110" fillcolor="green"];
+MakeList25 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1618,546" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList28 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="1995,95" fillcolor="green"];
+MakeList29 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1620,766" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList30 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1620,1000" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="1718,62" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="1720,288" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+MakeRadialGradientLayer4 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="1720,520" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+MakeRadialGradientLayer5 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="1722,740" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+MakeRadialGradientLayer6 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="1722,974" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+ReceiveLeapFrame [type="vuo.leap.receive" version="2.0.0" label="Receive Leap Frame|<refresh>refresh\l|<receivedFrame>receivedFrame\r" pos="-141,45" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="2067,84" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1470,78" _falseOption="{\"r\":0.682811,\"g\":0.491203,\"b\":0.043931,\"a\":1.000000}" _trueOption="{\"r\":0.964004,\"g\":0.972412,\"b\":0.785870,\"a\":1.000000}"];
+SelectInput3 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1472,304" _falseOption="{\"r\":0.682811,\"g\":0.491203,\"b\":0.043931,\"a\":1.000000}" _trueOption="{\"r\":0.960784,\"g\":0.968627,\"b\":0.784314,\"a\":1.000000}"];
+SelectInput5 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1472,536" _falseOption="{\"r\":0.682811,\"g\":0.491203,\"b\":0.043931,\"a\":1.000000}" _trueOption="{\"r\":0.960784,\"g\":0.968627,\"b\":0.784314,\"a\":1.000000}"];
+SelectInput6 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1474,756" _falseOption="{\"r\":0.682811,\"g\":0.491203,\"b\":0.043931,\"a\":1.000000}" _trueOption="{\"r\":0.960784,\"g\":0.968627,\"b\":0.784314,\"a\":1.000000}"];
+SelectInput7 [type="vuo.select.in.boolean.VuoColor" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1474,990" _falseOption="{\"r\":0.682811,\"g\":0.491203,\"b\":0.043931,\"a\":1.000000}" _trueOption="{\"r\":0.960784,\"g\":0.968627,\"b\":0.784314,\"a\":1.000000}"];
+SortHandsByDistance2 [type="vuo.leap.hand.sort.distance" version="1.0.0" label="Sort Hands by Distance|<refresh>refresh\l|<Hands>Hands\l|<target>target\l|<sortedHands>sortedHands\r" pos="285,65" fillcolor="violet" _target="{\"x\":0,\"y\":0,\"z\":0}"];
+TakeFromList2 [type="vuo.list.take.VuoLeapPointable" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="1039,55" _position="\"beginning\""];
+TakeFromList3 [type="vuo.list.take.VuoLeapPointable" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="1048,279" _position="\"beginning\""];
+TakeFromList4 [type="vuo.list.take.VuoLeapPointable" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="1046,505" _position="\"beginning\""];
+TakeFromList5 [type="vuo.list.take.VuoLeapPointable" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="1048,735" _position="\"beginning\""];
+TakeFromList6 [type="vuo.list.take.VuoLeapPointable" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="1050,961" _position="\"beginning\""];
+
+BlockEmptyList2:nonEmptyList -> TakeFromList2:list;
+BlockEmptyList3:nonEmptyList -> TakeFromList3:list;
+BlockEmptyList4:nonEmptyList -> TakeFromList4:list;
+BlockEmptyList5:nonEmptyList -> TakeFromList5:list;
+BlockEmptyList6:nonEmptyList -> TakeFromList6:list;
+Convert3DPointTo2DPoint2:xy -> MakeRadialGradientLayer2:layerCenter;
+Convert3DPointTo2DPoint3:xy -> MakeRadialGradientLayer4:layerCenter;
+Convert3DPointTo2DPoint4:xy -> MakeRadialGradientLayer5:layerCenter;
+Convert3DPointTo2DPoint5:xy -> MakeRadialGradientLayer6:layerCenter;
+Convert3DPointTo2DPoint:xy -> MakeRadialGradientLayer:layerCenter;
+GetFirstItemInList:firstItem -> GetHandValues2:hand;
+GetFrameValues:hands -> SortHandsByDistance2:Hands;
+GetHandValues2:fingers -> BlockEmptyList2:list;
+GetPointableValues2:isExtended -> SelectInput3:which;
+GetPointableValues2:transform -> GetTransformTranslation2:transform;
+GetPointableValues3:isExtended -> SelectInput5:which;
+GetPointableValues3:transform -> GetTransformTranslation3:transform;
+GetPointableValues4:isExtended -> SelectInput7:which;
+GetPointableValues4:transform -> GetTransformTranslation4:transform;
+GetPointableValues5:isExtended -> SelectInput6:which;
+GetPointableValues5:transform -> GetTransformTranslation5:transform;
+GetPointableValues:isExtended -> SelectInput2:which;
+GetPointableValues:transform -> GetTransformTranslation:transform;
+GetTransformTranslation2:translation -> Convert3DPointTo2DPoint2:xyz;
+GetTransformTranslation3:translation -> Convert3DPointTo2DPoint3:xyz;
+GetTransformTranslation4:translation -> Convert3DPointTo2DPoint5:xyz;
+GetTransformTranslation5:translation -> Convert3DPointTo2DPoint4:xyz;
+GetTransformTranslation:translation -> Convert3DPointTo2DPoint:xyz;
+MakeList10:list -> MakeRadialGradientLayer:colors;
+MakeList19:list -> MakeRadialGradientLayer2:colors;
+MakeList23:list -> RenderLayersToWindow:setWindowProperties;
+MakeList25:list -> MakeRadialGradientLayer4:colors;
+MakeList28:list -> RenderLayersToWindow:layers;
+MakeList29:list -> MakeRadialGradientLayer5:colors;
+MakeList30:list -> MakeRadialGradientLayer6:colors;
+MakeRadialGradientLayer2:layer -> MakeList28:2;
+MakeRadialGradientLayer4:layer -> MakeList28:3;
+MakeRadialGradientLayer5:layer -> MakeList28:4;
+MakeRadialGradientLayer6:layer -> MakeList28:5;
+MakeRadialGradientLayer:layer -> MakeList28:1;
+ReceiveLeapFrame:receivedFrame -> GetFrameValues:frame;
+SelectInput2:out -> MakeList10:1;
+SelectInput3:out -> MakeList19:1;
+SelectInput5:out -> MakeList25:1;
+SelectInput6:out -> MakeList29:1;
+SelectInput7:out -> MakeList30:1;
+SortHandsByDistance2:sortedHands -> GetFirstItemInList:list;
+TakeFromList2:modifiedList -> BlockEmptyList3:list;
+TakeFromList2:removedItem -> GetPointableValues:pointable;
+TakeFromList3:modifiedList -> BlockEmptyList4:list;
+TakeFromList3:removedItem -> GetPointableValues2:pointable;
+TakeFromList4:modifiedList -> BlockEmptyList5:list;
+TakeFromList4:removedItem -> GetPointableValues3:pointable;
+TakeFromList5:modifiedList -> BlockEmptyList6:list;
+TakeFromList5:removedItem -> GetPointableValues5:pointable;
+TakeFromList6:removedItem -> GetPointableValues4:pointable;
+}

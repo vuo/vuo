@@ -6,6 +6,6 @@ When this node receives an event, it places the image in the graphics area. The 
 
 When the user resizes the window, the window's aspect ratio is kept the same as the image's.
 
-   - `windowProperties` — A list of properties that affect the appearance of the window or the way the user can interact with it. The properties are applied to the window in order from first to last in the list. Each property remains in effect until this port receives some other property that overrides it. 
-   - `showedWindow` — When the window is displayed, fires an event with a reference to the window. It can be sent to user interaction nodes (such as `Receive Mouse Clicks`) to limit their scope to this window. 
-   - `requestedFrame` — When the display is ready for the next frame, fires an event with the time at which the frame will be rendered, measured in seconds since the composition started.
+   - `Set Window Properties` — A list of properties that affect the appearance of the window or the way the user can interact with it. The properties are applied to the window in order from first to last in the list. Each property remains in effect until this port receives some other property that overrides it. 
+   - `Showed Window` — When the window is displayed, fires an event with a reference to the window. It can be sent to user interaction nodes (such as `Receive Mouse Clicks`) to limit their scope to this window. 
+   - `Requested Frame` — When the display is ready for the next frame, fires an event with the time at which the frame will be rendered, measured in seconds since the composition started.

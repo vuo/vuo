@@ -13,35 +13,21 @@
 VuoModuleMetadata({
 					 "title" : "Shade with Unlit Image",
 					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
+					 "version" : "3.0.0",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) opacity,
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeUnlitImageShader(image, alpha);
-
-	if (image)
-	{
-		VuoGlContext glContext = VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		{
-			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-			glFlushRenderAPPLE();
-		}
-
-		VuoGlContext_disuse(glContext);
-	}
+	*shader = VuoShader_makeUnlitImageShader(image, opacity);
 }

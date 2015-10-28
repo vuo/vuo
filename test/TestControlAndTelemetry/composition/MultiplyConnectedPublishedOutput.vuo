@@ -9,8 +9,8 @@
 
 digraph G
 {
-Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" _increment="1" _decrement="1" _setCount="0"];
-SelectInput [type="vuo.select.in.event" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="64,51" _which="false"];
+Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="237,89" _decrement="1" _setCount="0"];
+SelectInput [type="vuo.select.in.boolean.event" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="64,51" _which="false"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<start>start\r" _start_type="event"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<count>count\l" _count_type="VuoInteger"];
 

@@ -29,6 +29,8 @@ class TestCompositionExecution : public QObject
 public:
 	static QDir getCompositionDir(void);
 	static string getCompositionPath(string compositionFileName);
+	static string wrapNodeInComposition(VuoCompilerNodeClass *nodeClass, VuoCompiler *compiler);
+	static void printMemoryUsage(string label);
 
 protected:
 	static VuoCompiler * initCompiler(void);

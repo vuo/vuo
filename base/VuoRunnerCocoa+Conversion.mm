@@ -49,7 +49,7 @@ extern "C" {
 		unsigned long count = VuoListGetCount_VuoBoolean(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
-			[a addObject:[NSNumber numberWithBool:VuoListGetValueAtIndex_VuoBoolean(l, i+1)]];
+			[a addObject:[NSNumber numberWithBool:VuoListGetValue_VuoBoolean(l, i+1)]];
 		return a;
 	}
 
@@ -64,7 +64,7 @@ extern "C" {
 		unsigned long count = VuoListGetCount_VuoInteger(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
-			[a addObject:[NSNumber numberWithLong:VuoListGetValueAtIndex_VuoInteger(l, i+1)]];
+			[a addObject:[NSNumber numberWithLong:VuoListGetValue_VuoInteger(l, i+1)]];
 		return a;
 	}
 
@@ -79,7 +79,7 @@ extern "C" {
 		unsigned long count = VuoListGetCount_VuoReal(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
-			[a addObject:[NSNumber numberWithDouble:VuoListGetValueAtIndex_VuoReal(l, i+1)]];
+			[a addObject:[NSNumber numberWithDouble:VuoListGetValue_VuoReal(l, i+1)]];
 		return a;
 	}
 
@@ -97,7 +97,7 @@ extern "C" {
 		unsigned long count = VuoListGetCount_VuoText(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
-			[a addObject:[NSString stringWithUTF8String:VuoListGetValueAtIndex_VuoText(l, i+1)]];
+			[a addObject:[NSString stringWithUTF8String:VuoListGetValue_VuoText(l, i+1)]];
 		return a;
 	}
 
@@ -114,7 +114,7 @@ extern "C" {
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
 		{
-			VuoColor v = VuoListGetValueAtIndex_VuoColor(l, i+1);
+			VuoColor v = VuoListGetValue_VuoColor(l, i+1);
 			CGFloat c[4] = {v.r, v.g, v.b, v.a};
 			[a addObject:[NSColor colorWithColorSpace:[NSColorSpace sRGBColorSpace] components:c count:4]];
 		}
@@ -131,12 +131,12 @@ extern "C" {
 	}
 	if (type == "VuoList_VuoImage")
 	{
-		VuoList_VuoPoint2d l = VuoList_VuoPoint2d_valueFromJson(vuoValue);
-		unsigned long count = VuoListGetCount_VuoPoint2d(l);
+		VuoList_VuoImage l = VuoList_VuoImage_valueFromJson(vuoValue);
+		unsigned long count = VuoListGetCount_VuoImage(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
 		{
-			VuoImage v = VuoListGetValueAtIndex_VuoImage(l, i+1);
+			VuoImage v = VuoListGetValue_VuoImage(l, i+1);
 			VuoRetain(v);
 			[a addObject:[self nsImageWithVuoImage:v]];
 			VuoRelease(v);
@@ -156,7 +156,7 @@ extern "C" {
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
 		{
-			VuoPoint2d v = VuoListGetValueAtIndex_VuoPoint2d(l, i+1);
+			VuoPoint2d v = VuoListGetValue_VuoPoint2d(l, i+1);
 			[a addObject:[NSValue valueWithPoint:NSMakePoint(v.x, v.y)]];
 		}
 		return a;
@@ -179,7 +179,7 @@ extern "C" {
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
 		{
-			VuoPoint3d v = VuoListGetValueAtIndex_VuoPoint3d(l, i+1);
+			VuoPoint3d v = VuoListGetValue_VuoPoint3d(l, i+1);
 			size_t s = sizeof(double)*3;
 			double *d = (double *)malloc(s);
 			d[0] = v.x;
@@ -240,6 +240,9 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
  */
 + (json_object *)vuoValueWithCocoaObject:(id)value
 {
+	if (!value)
+		return NULL;
+
 	// Is this a Vuo-compatible NSObject (or CFType that's toll-free bridged to one)?
 	if ([value respondsToSelector:@selector(vuoValue)])
 		return [value vuoValue];
@@ -474,7 +477,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	typedef unsigned long (*listCountFunctionType)(void *);
 	listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_SELF, listCountFunctionName.c_str());
 
-	string listValueFunctionName = "VuoListGetValueAtIndex_" + type;
+	string listValueFunctionName = "VuoListGetValue_" + type;
 	typedef int (*listValueFunctionType)(void *, unsigned long);
 	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.c_str());
 

@@ -21,13 +21,12 @@
 VuoModuleMetadata({
 					 "title" : "Render Layers to Image",
 					 "keywords" : [ "draw", "opengl", "scenegraph", "graphics" ],
-					 "version" : "1.0.0",
+					 "version" : "1.2.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "DrawLayersWithTrails.vuo" ]
 					 }
 				 });

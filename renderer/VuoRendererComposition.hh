@@ -44,6 +44,7 @@ public:
 	void createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler);
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
 	void createAndConnectDictionaryAttachmentsForNode(VuoNode *node, VuoCompiler *compiler, set<VuoRendererNode *> &createdNodes, set<VuoRendererCable *> &createdCables);
+	vector<string> extractInputVariableListFromExpressionsConstant(string constant);
 	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput);
 	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name);
@@ -57,6 +58,7 @@ public:
 	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
 
 	static void createAutoreleasePool(void);
+	static QString insertSpacesAtCamelCaseTransitions(QString camelCaseString);
 
 	/// Potential outcomes of an app export attempt:
 	enum appExportResult

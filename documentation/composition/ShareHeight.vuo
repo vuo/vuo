@@ -9,10 +9,10 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-31,79" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<done>done\r|<image>image\r" pos="324,70" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="300"];
-MakeColorImage2 [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<done>done\r|<image>image\r" pos="324,158" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="200"];
-ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="141,100" fillcolor="violet" _value="100"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-31,79" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="324,70" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="300"];
+MakeColorImage2 [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="324,158" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="200"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="141,100" fillcolor="violet" _value="100"];
 
 FireOnStart:started -> ShareValue2:refresh;
 ShareValue2:sameValue -> MakeColorImage2:height;

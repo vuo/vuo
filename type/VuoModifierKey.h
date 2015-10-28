@@ -11,7 +11,7 @@
 #define VUOMODIFIERKEY_H
 
 /// @{
-typedef void * VuoList_VuoModifierKey;
+typedef const struct VuoList_VuoModifierKey_struct { void *l; } * VuoList_VuoModifierKey;
 #define VuoList_VuoModifierKey_TYPE_DEFINED
 /// @}
 

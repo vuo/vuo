@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "mix", "blend", "combine", "tint", "tone", "chroma" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

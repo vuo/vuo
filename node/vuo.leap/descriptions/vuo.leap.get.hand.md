@@ -1,12 +1,16 @@
 Gives information about a hand detected within a frame from a Leap Motion device.
 
-   - `id` - A unique ID for this hand. 
-   - `direction` - A unit vector pointing from `palmPosition` toward the fingers.
-   - `palmNormal` - A unit vector pointing outward from (perpendicular to) the front surface of the palm.
-   - `palmPosition` - The center of the palm, in Vuo coordinates.
-   - `palmVelocity` - The rate of change of `palmPosition`, in Vuo coordinates per second.
-   - `sphereRadius` - The radius of a ball that could be held by this hand, in Vuo coordinates.
-   - `sphereCenter` - The center of a ball that could be held by this hand, in Vuo coordinates.
-   - `pointables` - A list of all pointables (fingers and tools) attached to this hand.
+   - `ID` - A unique ID for this hand. 
+   - `Transform` - Transforms a forward-facing object so it is at the center of the palm, facing toward the fingers, scaled to the width of the palm.
+   - `Palm Velocity` - The rate of change of `Palm Position`, in Vuo coordinates per second.
+   - `Wrist Position` — The center position of the wrist, in Vuo Coordinates.
+   - `Sphere Radius` - The radius of a ball that could be held by this hand, in Vuo coordinates.
+   - `Sphere Center` - The center of a ball that could be held by this hand, in Vuo coordinates.
+   - `Pinch Amount` — The degree to which the hand is performing a pinch pose, ranging from 1 (complete pinch) to 0 (no pinch). A pinch pose is when the thumb and the closest fingertip are brought together.
+   - `Grab Amount` — The degree to which the hand is performing a grab pose, ranging from 1 (complete grab) to 0 (no grab). A grab pose is when the hand closes into a fist.
+   - `Is Left Hand` - True if this is a left hand, false if it's a right hand.
+   - `Time Visible` — The time since this pointable was detected by Leap Motion, in seconds.
+   - `Confidence` — The level of confidence that the hand and fingers have been correctly interpreted by Leap Motion, ranging from 1 (most confident) to 0 (not confident at all).
+   - `Fingers` - The fingers attached to this hand, listed in arbitrary order. The list contains as many fingers as are detected by the Leap Motion.
 
-`sphereRadius` and `sphereCenter` are based on a sphere calculated to fit the curvature of the palm and finger. It approximates the largest ball that the hand could hold in its current position.
+`Sphere Radius` and `Sphere Center` are based on a sphere calculated to fit the curvature of the palm and finger. It approximates the largest ball that the hand could hold in its current position.

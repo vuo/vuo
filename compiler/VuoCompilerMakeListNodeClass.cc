@@ -200,7 +200,8 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	Value *listVariable = argIter++;
 
 	CallInst *listValue = CallInst::Create(listCreateFunction, "", block);
-	new StoreInst(listValue, listVariable, false, block);
+	Value *listValueAsStruct = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, listValue, static_cast<PointerType *>(listVariable->getType())->getElementType());
+	new StoreInst(listValueAsStruct, listVariable, false, block);
 
 	for (unsigned long i = 0; i < itemCount; ++i)
 	{

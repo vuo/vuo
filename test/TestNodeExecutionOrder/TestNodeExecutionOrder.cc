@@ -830,7 +830,7 @@ private slots:
 		QFETCH(QString, compositionFile);
 		QFETCH(sequencesForTriggerMapping_t, sequencesForTrigger);
 
-		printf("    %s\n", compositionFile.toUtf8().constData());
+		printf("    %s\n", compositionFile.toUtf8().constData()); fflush(stdout);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompiler *compiler = initCompiler();

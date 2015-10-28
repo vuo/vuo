@@ -187,8 +187,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(receivedImage, VuoImage, VuoPortEventThrottling_Drop),
-		VuoOutputTrigger(receivedDepthImage, VuoImage, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(receivedImage, VuoImage, {"eventThrottling":"drop"}),
+		VuoOutputTrigger(receivedDepthImage, VuoImage, {"eventThrottling":"drop"})
 )
 {
 	(*context)->receivedImage = receivedImage;

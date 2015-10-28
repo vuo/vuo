@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Calculate Absolute Value",
 					  "keywords" : [ "sign", "positive" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -20,16 +20,16 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
-VuoReal VuoReal_Absolute(VuoReal val)
+static VuoReal VuoReal_Absolute(VuoReal val)
 {
 	return fabs(val);
 }
 
-VuoInteger VuoInteger_Absolute(VuoInteger val)
+static VuoInteger VuoInteger_Absolute(VuoInteger val)
 {
 	return abs(val);
 }

@@ -32,8 +32,15 @@ VuoModuleMetadata({
 					 "keywords" : [ "mesh", "vertex" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c",
-						 "json"
+						"VuoPoint2d",
+						"VuoPoint3d",
+						"VuoPoint4d",
+						"VuoList_VuoPoint2d",
+						"VuoList_VuoPoint3d",
+						"VuoText",
+						"VuoTransform",
+						"VuoGlContext",
+						"VuoGlPool"
 					 ]
 				 });
 #endif
@@ -319,6 +326,21 @@ VuoMesh VuoMesh_makeFromSingleSubmesh(VuoSubmesh submesh)
 }
 
 /**
+ * Creates and registers a singleton mesh with space for one submesh, and sets it to the given submesh.
+ * Uploads the submesh to the GPU.
+ */
+static VuoMesh VuoMesh_makeSingletonFromSingleSubmesh(VuoSubmesh submesh)
+{
+	VuoMesh m = (VuoMesh)malloc(sizeof(struct _VuoMesh));
+	VuoRegisterSingleton(m);
+	m->submeshCount = 1;
+	m->submeshes = (VuoSubmesh *)calloc(1, sizeof(VuoSubmesh));
+	m->submeshes[0] = submesh;
+	VuoMesh_upload(m);
+	return m;
+}
+
+/**
  * Returns a quad with dimensions 1x1, on the XY plane, centered at the origin.
  */
 static VuoMesh VuoMesh_makeQuadWithNormalsInternal(void)
@@ -370,7 +392,7 @@ static VuoMesh VuoMesh_makeQuadWithNormalsInternal(void)
 	sm.elements[4] = 3;
 	sm.elements[5] = 2;
 
-	return VuoMesh_makeFromSingleSubmesh(sm);
+	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
 }
 
 /**
@@ -417,7 +439,7 @@ static VuoMesh VuoMesh_makeQuadWithoutNormalsInternal(void)
 	sm.elements[4] = 3;
 	sm.elements[5] = 2;
 
-	return VuoMesh_makeFromSingleSubmesh(sm);
+	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
 }
 
 /**
@@ -428,10 +450,11 @@ static VuoMesh VuoMesh_makeEquilateralTriangleInternal(void)
 	VuoSubmesh sm = VuoSubmesh_make(3, 3);
 
 	// Positions
-	float yOffset = -sin(M_PI/3.)/2.;
-	sm.positions[0] = VuoPoint4d_make(0,   yOffset+sin(M_PI/3.), 0, 1);
-	sm.positions[1] = VuoPoint4d_make(-.5, yOffset, 0, 1);
-	sm.positions[2] = VuoPoint4d_make( .5, yOffset, 0, 1);
+	for (int i = 0; i < sm.vertexCount; ++i)
+	{
+		float angle = M_PI/2. + i * 2*M_PI/3.;
+		sm.positions[i] = VuoPoint4d_make(cos(angle)/sqrt(3), sin(angle)/sqrt(3), 0, 1);
+	}
 
 	// Normals
 	for (int i=0; i<sm.vertexCount; ++i)
@@ -456,7 +479,7 @@ static VuoMesh VuoMesh_makeEquilateralTriangleInternal(void)
 	sm.elements[1] = 1;
 	sm.elements[2] = 2;
 
-	return VuoMesh_makeFromSingleSubmesh(sm);
+	return VuoMesh_makeSingletonFromSingleSubmesh(sm);
 }
 
 /**
@@ -526,7 +549,7 @@ VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAss
 
 	for (unsigned long i = 0; i < count; ++i)
 	{
-		VuoPoint2d xy = VuoListGetValueAtIndex_VuoPoint2d(positions, i+1);
+		VuoPoint2d xy = VuoListGetValue_VuoPoint2d(positions, i+1);
 		sm.positions[i] = VuoPoint4d_make(xy.x, xy.y, 0, 1);
 		sm.elements[i] = i;
 	}
@@ -560,7 +583,7 @@ VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoMesh_ElementAss
 
 	for (unsigned long i = 0; i < count; ++i)
 	{
-		VuoPoint3d xyz = VuoListGetValueAtIndex_VuoPoint3d(positions, i+1);
+		VuoPoint3d xyz = VuoListGetValue_VuoPoint3d(positions, i+1);
 		sm.positions[i] = VuoPoint4d_make(xyz.x, xyz.y, xyz.z, 1);
 		sm.elements[i] = i;
 	}
@@ -823,7 +846,7 @@ VuoBox VuoMesh_bounds(const VuoMesh v, float matrix[16])
 	}
 
 	if(init)
-		return VuoBox_make( VuoPoint3d_divide(VuoPoint3d_add(min, max), 2.), VuoPoint3d_subtract(max, min) );
+		return VuoBox_make( VuoPoint3d_multiply(VuoPoint3d_add(min, max), 0.5), VuoPoint3d_subtract(max, min) );
 	else
 		return VuoBox_make( (VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0} );
 }

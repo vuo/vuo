@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						  "lighting", "lit", "lighted",
 						  "Blinn", "Phong", "Lambert", "normal", "bump", "specular", "map" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "dependencies" : [
 						  "VuoGlContext"
 					  ],
@@ -27,21 +27,11 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) opacity,
 		VuoInputData(VuoImage) specularImage,
 		VuoInputData(VuoImage) normalImage,
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeLitImageDetailsShader(image, alpha, specularImage, normalImage);
-
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
+	*shader = VuoShader_makeLitImageDetailsShader(image, opacity, specularImage, normalImage);
 }

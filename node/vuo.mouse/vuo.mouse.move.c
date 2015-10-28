@@ -13,10 +13,11 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Moves",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
-						  "isInterface" : true
+						  "isInterface" : true,
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
@@ -67,7 +68,7 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
-		VuoOutputTrigger(movedTo, VuoPoint2d, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(movedTo, VuoPoint2d, {"eventThrottling":"drop"})
 )
 {
 	if ((*context)->isTriggerStopped)

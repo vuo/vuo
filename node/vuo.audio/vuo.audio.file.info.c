@@ -24,14 +24,15 @@ VuoModuleMetadata({
 					  "dependencies" : [
 						  "VuoAudioFile"
 					  ],
-					  "node": {
-						  "isInterface" : true
+					  "node" : {
+						  "isInterface" : true,
+						  "exampleCompositions" : [ ]
 					  }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoText, {"default":""}) url,
+		VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
 		VuoOutputData(VuoReal) duration,
 		VuoOutputData(VuoInteger) channelCount,
 		VuoOutputData(VuoReal) sampleRate

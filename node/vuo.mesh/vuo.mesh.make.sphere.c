@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						 "VuoMeshParametric"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

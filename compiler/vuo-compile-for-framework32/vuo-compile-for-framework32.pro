@@ -14,4 +14,7 @@ SOURCES += \
 
 LIBS += -rpath @loader_path/../../../..
 
-QMAKE_POST_LINK += cp vuo-compile $$ROOT/framework/Vuo.framework/Versions/$$VUO_VERSION/MacOS
+FRAMEWORK_HELPERS_FOLDER = $$ROOT/framework/Vuo.framework/Versions/$$VUO_VERSION/Helpers
+QMAKE_POST_LINK += \
+	   mkdir -p "$$FRAMEWORK_HELPERS_FOLDER" \
+	&& cp vuo-compile "$$FRAMEWORK_HELPERS_FOLDER"

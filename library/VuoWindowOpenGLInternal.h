@@ -11,6 +11,7 @@
 #include "VuoGlContext.h"
 #include "VuoDisplayRefresh.h"
 
+#define NS_RETURNS_INNER_POINTER
 #import <AppKit/AppKit.h>
 
 
@@ -31,6 +32,9 @@
 	VuoDisplayRefresh displayRefresh;	///< Handles redrawing at the display refresh rate.  Only draws if @c callerRequestedRedraw.
 
 	NSRect viewport;
+
+	NSImage *circleImage;	///< The touch-circle mouse cursor.
+	NSRect circleRect;		///< The bounding box of `circleImage`.
 }
 
 - (id)initWithFrame:(NSRect)frame
@@ -75,6 +79,7 @@
 @property BOOL depthBuffer;  ///< Was a depth buffer requested?
 @property NSRect contentRectWhenWindowed;  ///< The position and size of the window's content area, prior to switching to full-screen.  In points (not pixels).
 @property NSUInteger styleMaskWhenWindowed;  ///< The window's style mask, prior to switching to full-screen.
+@property VuoCursor cursor;  ///< The current mouse cursor for this window.
 
 - (id)initWithDepthBuffer:(BOOL)depthBuffer
 			  initCallback:(void (*)(VuoGlContext glContext, void *))initCallback

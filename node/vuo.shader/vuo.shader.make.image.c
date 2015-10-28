@@ -15,30 +15,23 @@ VuoModuleMetadata({
 					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert" ],
-					 "version" : "2.0.0",
+					 "version" : "3.0.0",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) opacity,
 		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
 		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
 		VuoOutputData(VuoShader) shader
 )
 {
-	*shader = VuoShader_makeLitImageShader(image, alpha, highlightColor, shininess);
-
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
+	*shader = VuoShader_makeLitImageShader(image, opacity, highlightColor, shininess);
 }

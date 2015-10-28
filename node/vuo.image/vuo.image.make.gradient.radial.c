@@ -43,7 +43,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoList_VuoColor, {"default":[{"r":1,"g":1,"b":1,"a":1}, {"r":0,"g":0,"b":0,"a":1}]}) colors,
-		// VuoInputEvent(VuoPortEventBlocking_None, colors) colorsEvent,
+		// VuoInputEvent({"eventBlocking":"none","data":"colors"}) colorsEvent,
 		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedStep":0.1}) radius,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,

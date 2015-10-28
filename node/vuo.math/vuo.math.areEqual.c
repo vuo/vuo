@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Are Equal",
 					  "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "conditional" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -20,25 +20,25 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoGenericType1) terms,
+		VuoInputData(VuoList_VuoGenericType1) values,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.01}}) tolerance,
 		VuoOutputData(VuoBoolean) equal
 )
 {
-	unsigned long termsCount = VuoListGetCount_VuoGenericType1(terms);
+	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
 	if (termsCount > 1)
 	{
 		VuoGenericType1 min, max;
-		min = max = VuoListGetValueAtIndex_VuoGenericType1(terms, 1);
+		min = max = VuoListGetValue_VuoGenericType1(values, 1);
 		for (unsigned long i = 2; i <= termsCount; ++i)
 		{
-			VuoGenericType1 term = VuoListGetValueAtIndex_VuoGenericType1(terms, i);
+			VuoGenericType1 term = VuoListGetValue_VuoGenericType1(values, i);
 			if (term < min)
 				min = term;
 			if (term > max)

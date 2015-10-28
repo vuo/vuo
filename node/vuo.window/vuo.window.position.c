@@ -12,8 +12,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Window Position",
-					 "keywords" : [ "top", "right", "bottom", "left", "arrange" ],
+					 "keywords" : [ "top", "right", "bottom", "left", "arrange", "properties" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

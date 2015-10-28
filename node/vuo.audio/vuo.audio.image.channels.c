@@ -17,7 +17,10 @@
 VuoModuleMetadata({
 					 "title" : "Make Image from Channels",
 					 "keywords" : [ "waveform", "amplitudes" ],
-					 "version" : "1.0.0"
+					 "version" : "1.1.0",
+					 "node" : {
+						 "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent
@@ -33,12 +36,12 @@ void nodeEvent
 		return;
 	}
 
-	VuoInteger columns = VuoListGetValueAtIndex_VuoAudioSamples(channels, 1).sampleCount;
+	VuoInteger columns = VuoListGetValue_VuoAudioSamples(channels, 1).sampleCount;
 
 	float *pixels = (float *)calloc(1, rows*columns*sizeof(float));
 	for (VuoInteger row = 0; row < rows; ++row)
 	{
-		VuoAudioSamples rowSamples = VuoListGetValueAtIndex_VuoAudioSamples(channels, row+1);
+		VuoAudioSamples rowSamples = VuoListGetValue_VuoAudioSamples(channels, row+1);
 		for (VuoInteger column = 0; column < MIN(columns, rowSamples.sampleCount); ++column)
 			pixels[row*columns + column] = .5 + rowSamples.samples[column]*.5;
 	}

@@ -1,0 +1,58 @@
+/**
+ * @file
+ * Expected outputs for the vuo.data.hold.VuoInteger node.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"initialValue" : 1,
+			"newValue" : 2
+		},
+		"outputPortValues" : {
+			"heldValue" : 1
+		}
+	},
+	{
+		"firingPort" : "newValue",
+		"inputPortValues" : {
+			"newValue" : 2
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"initialValue" : 1,
+			"newValue" : 2
+		},
+		"outputPortValues" : {
+			"heldValue" : 2
+		}
+	},
+	{
+		"firingPort" : "newValue",
+		"inputPortValues" : {
+			"initialValue" : 3,
+			"newValue" : 4
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"initialValue" : 5,
+			"newValue" : 6
+		},
+		"outputPortValues" : {
+			"heldValue" : 6
+		}
+	}
+]}

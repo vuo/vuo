@@ -25,6 +25,7 @@ protected:
 	VuoCompilerEventPortClass(string name);
 
 public:
+	~VuoCompilerEventPortClass(void);
 	VuoCompilerDataClass * getDataClass(void);
 	void setDataClass(VuoCompilerDataClass *dataClass);
 	VuoType * getDataVuoType(void);

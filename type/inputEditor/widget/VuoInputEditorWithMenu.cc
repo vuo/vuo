@@ -15,7 +15,7 @@
 json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
 	acceptedValue = originalValue;
-	VuoInputEditorMenuItem *menuTree = setUpMenuTree();
+	VuoInputEditorMenuItem *menuTree = setUpMenuTree(details);
 
 	QMenu *menu = new QMenu();
 	menu->setSeparatorsCollapsible(false); /// @todo https://b33p.net/kosada/node/8133
@@ -50,6 +50,16 @@ json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *o
 	menu->exec(portLeftCenter);
 
 	return acceptedValue;
+}
+
+VuoInputEditorMenuItem *VuoInputEditorWithMenu::setUpMenuTree(json_object *details)
+{
+	return setUpMenuTree();
+}
+
+VuoInputEditorMenuItem *VuoInputEditorWithMenu::setUpMenuTree(void)
+{
+	return new VuoInputEditorMenuItem("root");
 }
 
 /**

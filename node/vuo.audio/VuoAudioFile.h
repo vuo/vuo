@@ -12,7 +12,12 @@ extern "C"
 {
 #endif
 
-#include "node.h"
+#include "VuoInteger.h"
+#include "VuoLoopType.h"
+#include "VuoReal.h"
+#include "VuoText.h"
+#include "VuoAudioSamples.h"
+#include "VuoList_VuoAudioSamples.h"
 
 bool VuoAudioFile_getInfo(VuoText url, VuoReal *duration, VuoInteger *channelCount, VuoReal *sampleRate);
 

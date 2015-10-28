@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition that gets Leap Hand values. 0.9.0 changes LeapHand.pointables to LeapHand.fingers.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+GetFrameValues [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="135,291"];
+GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="413,364"];
+GetItemFromList2 [type="vuo.list.get.VuoLeapHand" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="172,425" _which="1"];
+GetItemFromList4 [type="vuo.list.get.VuoLeapPointable" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="384,685" _which="1"];
+GetPointableValues [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="602,686"];
+
+GetFrameValues:hands -> GetItemFromList2:list;
+GetHandValues:fingers -> GetItemFromList4:list;
+GetItemFromList2:item -> GetHandValues:hand;
+GetItemFromList4:item -> GetPointableValues:pointable;
+}

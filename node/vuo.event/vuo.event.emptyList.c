@@ -14,16 +14,16 @@ VuoModuleMetadata({
 					 "keywords" : [ "keep", "filter", "filled", "items", "count" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoList_VuoGenericType1) list,
-		VuoInputEvent(VuoPortEventBlocking_Door, list, {"hasPortAction":true}) listEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"list","hasPortAction":true}) listEvent,
 		VuoOutputData(VuoList_VuoGenericType1) nonEmptyList,
-		VuoOutputEvent(nonEmptyList) nonEmptyListEvent
+		VuoOutputEvent({"data":"nonEmptyList"}) nonEmptyListEvent
 )
 {
 	if ( VuoListGetCount_VuoGenericType1(list) > 0 )

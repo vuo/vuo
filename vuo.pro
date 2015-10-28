@@ -46,7 +46,7 @@ compiler_vuo_link.depends = framework
 framework.subdir = framework
 framework.depends = base compiler renderer runtime node type type_input_editor type_list library
 
-library.depends = library_shader
+library.depends = base library_shader
 
 node.depends = compiler_vuo_compile type type_list
 
@@ -89,7 +89,11 @@ exists(editor) {
 
 
 # Provide "make go" for easily running the editor from the command line
-go.commands = (cd "editor/VuoEditorApp/Vuo*.app/Contents/MacOS" ; ./Vuo*)
+go.commands = @(cd "editor/VuoEditorApp/Vuo*.app/Contents/MacOS" ; ./Vuo* 2>&1 \
+	| grep --line-buffered -v "'QTextCursor::setPosition: Position .* out of range'" \
+	| grep --line-buffered -v "'^INVALID PARENT FOR INTERFACE'" \
+	| grep --line-buffered -v "'^QCoreTextFontDatabase: Failed to resolve family name for PostScript name'" \
+	; true)
 QMAKE_EXTRA_TARGETS += go
 
 # Provide "make examples" so we don't need to rebuild all the examples during development

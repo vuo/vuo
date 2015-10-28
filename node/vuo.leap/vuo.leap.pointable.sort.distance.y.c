@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "organize", "order", "nearest", "point" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
@@ -49,10 +49,10 @@ void nodeEvent
 	sortable_pointValue pointValues[count];
 
 	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValueAtIndex_VuoLeapPointable(pointables, i+1).tipPosition.y - target.y)};
+		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValue_VuoLeapPointable(pointables, i+1).tipPosition.y - target.y)};
 
 	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
 
 	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoLeapPointable(*sortedPointables, VuoListGetValueAtIndex_VuoLeapPointable(pointables, pointValues[i].index+1) );
+		VuoListAppendValue_VuoLeapPointable(*sortedPointables, VuoListGetValue_VuoLeapPointable(pointables, pointValues[i].index+1) );
 }

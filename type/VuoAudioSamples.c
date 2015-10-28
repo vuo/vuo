@@ -22,7 +22,9 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-					  "c"
+						"VuoInteger",
+						"VuoReal",
+						"VuoText"
 					  ]
 				  });
 #endif
@@ -48,10 +50,19 @@ VuoAudioSamples VuoAudioSamples_valueFromJson(json_object * js)
 
 	if (json_object_object_get_ex(js, "samples", &o))
 	{
-		value = VuoAudioSamples_alloc(json_object_array_length(o));
+		int sampleCount = json_object_array_length(o);
+		if (sampleCount)
+		{
+			value = VuoAudioSamples_alloc(sampleCount);
 
-		for (VuoInteger i=0; i<value.sampleCount; ++i)
-			value.samples[i] = json_object_get_double(json_object_array_get_idx(o, i));
+			for (VuoInteger i = 0; i < sampleCount; ++i)
+				value.samples[i] = json_object_get_double(json_object_array_get_idx(o, i));
+		}
+		else
+		{
+			value.sampleCount = 0;
+			value.samples = NULL;
+		}
 	}
 
 	if (json_object_object_get_ex(js, "samplesPerSecond", &o))
@@ -83,7 +94,7 @@ json_object * VuoAudioSamples_jsonFromValue(const VuoAudioSamples value)
  */
 char * VuoAudioSamples_summaryFromValue(const VuoAudioSamples value)
 {
-	return VuoText_format("%ld samples @ %g kHz", value.sampleCount, value.samplesPerSecond/1000);
+	return VuoText_format("%lld samples @ %g kHz", value.sampleCount, value.samplesPerSecond/1000);
 }
 
 /**
@@ -101,3 +112,19 @@ VuoAudioSamples VuoAudioSamples_alloc(VuoInteger sampleCount)
 	return value;
 }
 
+/**
+ * - If there are no audio samples, returns true.
+ * - If all audio samples have amplitude 0, returns true.
+ * - Otherwise returns false.
+ */
+bool VuoAudioSamples_isEmpty(const VuoAudioSamples samples)
+{
+	if (samples.sampleCount == 0)
+		return true;
+
+	for (VuoInteger i = 0; i < samples.sampleCount; ++i)
+		if (fabs(samples.samples[i]) >= 0.0001)
+			return false;
+
+	return true;
+}

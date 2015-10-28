@@ -4,8 +4,8 @@ This node is useful for visualizing or processing audio based on ranges of pitch
 
 This node splits a single channel into a list of channels, each composed (mostly) of frequencies within a distinct range. (Since the splitting is done using an audio filter with an envelope, some frequencies outside the range are present at very low amplitudes.) 
 
-   - `cutoffFrequencies` — The borderlines between frequency ranges, in Hz. The number of items in `splitSamples` is one more than the number of items in `cutoffFrequencies`. 
-   - `splitSamples` — The split channels, in ascending order of frequency. 
+   - `Cutoff Frequencies` — The borderlines between frequency ranges, in Hz. The number of items in `Split Samples` is one more than the number of items in `Cutoff Frequencies`. 
+   - `Split Samples` — The split channels, in ascending order of frequency. 
 
 As an example, a list of 3 frequency cutoff values — 300, 1200, 4000 — will result in 4 output channels: 
 

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Multiply",
 					  "keywords" : [ "product", "times", "*", "arithmetic", "calculate" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -20,19 +20,19 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoGenericType1) terms,
+		VuoInputData(VuoList_VuoGenericType1) values,
 		VuoOutputData(VuoGenericType1) product
 )
 {
-	unsigned long termsCount = VuoListGetCount_VuoGenericType1(terms);
+	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
 	*product = 1;
 	if (termsCount)
 		for (unsigned long i = 1; i <= termsCount; ++i)
-			*product *= VuoListGetValueAtIndex_VuoGenericType1(terms, i);
+			*product *= VuoListGetValue_VuoGenericType1(values, i);
 }

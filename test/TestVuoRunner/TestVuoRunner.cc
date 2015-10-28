@@ -228,6 +228,34 @@ private slots:
 
 		delete runner;
 	}
+
+	void testSetGlobalRootContext(void)
+	{
+		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true);
+		CGLContextObj rootContext;
+		CGLError error = CGLCreateContext(pf, NULL, &rootContext);
+		if (error != kCGLNoError)
+			QFAIL(CGLErrorString(error));
+		QVERIFY(rootContext);
+
+		VuoGlContext_setGlobalRootContext(rootContext);
+
+		CGLLockContext(rootContext);
+
+		// Ensure the test happens on another thread (since CGLLockContext() allows recursively locking on the same thread).
+		dispatch_queue_t queue = dispatch_queue_create("org.vuo.TestVuoRunner", NULL);
+		dispatch_async(queue, ^{
+						  // This call should not hang even though the CGLContextObj is locked.
+						  VuoGlContext c = VuoGlContext_use();
+						  VuoGlContext_disuse(c);
+					  });
+		// Wait for the async operation to finish.
+		dispatch_sync(queue, ^{});
+		dispatch_release(queue);
+
+		CGLUnlockContext(rootContext);
+		CGLReleaseContext(rootContext);
+	}
 };
 
 QTEST_APPLESS_MAIN(TestVuoRunner)

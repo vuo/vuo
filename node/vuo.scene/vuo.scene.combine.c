@@ -14,7 +14,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "scenegraph", "group", "join", "together", "merge" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "DisplayScene.vuo" ]
 					 }
 				 });

@@ -16,6 +16,11 @@ TEST_RUNNER_SOURCES += \
 OTHER_FILES += composition.h \
 	$$TEST_RUNNER_SOURCES
 
+QMAKE_LFLAGS += \
+	-rpath ../../framework \
+	-framework OpenGL \
+	$$ROOT/library/libVuoGlContext.dylib
+
 LLVM_LINK = $${LLVM_ROOT}/bin/llvm-link
 TEST_RUNNER_NATIVE_LIBS = \
 	"$${ZMQ_ROOT}/lib/libzmq.a \

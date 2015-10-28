@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "contains", "bounds", "limit", "test", "distance", "cube" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

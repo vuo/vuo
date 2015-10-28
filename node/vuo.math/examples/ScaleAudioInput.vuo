@@ -1,0 +1,60 @@
+/**
+ * @file
+ * Graphs the current audio loudness (on the far right) relative to the range of loudnesses observed so far (moving from right to left). When the composition starts, the graph takes up the whole vertical range. As the composition runs, background noise fades into the lower part of the vertical range, and only the loudest sounds reach the top of the range.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImages [type="vuo.image.blend" version="1.2.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="1922,736" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="622,231"];
+FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="381,726" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FitInRange2 [type="vuo.math.fit.VuoReal" version="1.0.0" label="Fit in Range|<refresh>refresh\l|<value>value\l|<tracking>tracking\l|<reset>reset\l|<fittedMin>fittedMin\l|<fittedMax>fittedMax\l|<fittedValue>fittedValue\r|<min>min\r|<max>max\r" pos="818,231" fillcolor="violet" _tracking="1.000000" _fittedMin="-0.500000" _fittedMax="0.500000"];
+HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1246,595"];
+HoldValue4 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="337,573"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="476,560" _x="0.800000"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1413,589" _center="{\"x\":-0.005000,\"y\":0.000000}" _opacity="0.990000"];
+MakeList3 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="620,491" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList4 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="597,653" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList5 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="601,817" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList6 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1572,601"];
+MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="964,757"];
+MakeList8 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1793,396" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="694,465" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerRotation="0.000000" _layerWidth="0.020000" _layerHeight="0.020000"];
+MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="691,627" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerCenter="{\"x\":0.800000,\"y\":-0.500000}" _layerRotation="0.000000" _layerWidth="0.010000" _layerHeight="0.010000"];
+MakeRadialGradientLayer3 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="692,791" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1.000000" _layerCenter="{\"x\":0.800000,\"y\":0.500000}" _layerRotation="0.000000" _layerWidth="0.010000" _layerHeight="0.010000"];
+MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="438,231"];
+ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="246,231" fillcolor="yellow" _receivedChannels_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1839,370" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1042,746" _width="1024" _height="768" _colorDepth="\"16bpc\""];
+RenderLayersToImage2 [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1650,590" _width="1024" _height="768" _colorDepth="\"16bpc\""];
+
+BlendImages:blended -> HoldValue2:newValue;
+BlendImages:blended -> RenderImageToWindow:image;
+CalculateLoudness:loudness -> FitInRange2:value;
+FireOnStart3:started -> MakeRadialGradientLayer2:refresh;
+FireOnStart3:started -> MakeRadialGradientLayer3:refresh;
+FitInRange2:fittedValue -> HoldValue4:newValue;
+HoldValue2:heldValue -> MakeLayer:image;
+HoldValue4:heldValue -> Make2DPoint:y;
+Make2DPoint:point -> MakeRadialGradientLayer:layerCenter;
+MakeLayer:layer -> MakeList6:1;
+MakeList3:list -> MakeRadialGradientLayer:colors;
+MakeList4:list -> MakeRadialGradientLayer2:colors;
+MakeList5:list -> MakeRadialGradientLayer3:colors;
+MakeList6:list -> RenderLayersToImage2:layers;
+MakeList7:list -> RenderLayersToImage:layers;
+MakeList8:list -> RenderImageToWindow:setWindowProperties;
+MakeRadialGradientLayer2:layer -> MakeList7:2;
+MakeRadialGradientLayer3:layer -> MakeList7:3;
+MakeRadialGradientLayer:layer -> MakeList7:1;
+MixAudioChannels:mixedSamples -> CalculateLoudness:samples;
+ReceiveLiveAudio:receivedChannels -> MixAudioChannels:samples;
+RenderImageToWindow:requestedFrame -> HoldValue4:refresh;
+RenderLayersToImage2:image -> BlendImages:background;
+RenderLayersToImage:image -> BlendImages:foreground;
+RenderLayersToImage:image -> HoldValue2:refresh;
+}

@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Keyboard Buttons",
 					  "keywords" : [ "type" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ "VuoKeyboard" ],
 					  "node": {
 						  "isInterface" : true,
@@ -33,6 +33,7 @@ struct nodeInstanceData * nodeInstanceInit()
 	VuoRegister(context, free);
 	context->isTriggerStopped = true;
 	context->buttonListener = VuoKeyboard_make();
+	VuoRetain(context->buttonListener);
 	return context;
 }
 

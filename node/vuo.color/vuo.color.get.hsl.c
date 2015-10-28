@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Get HSL Color Values",
-					 "keywords" : [ "hue", "saturation", "lightness", "alpha", "opacity", "transparent", "channel", "tone", "chroma" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "alpha", "transparent", "channel", "tone", "chroma" ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -24,8 +24,8 @@ void nodeEvent
 		VuoOutputData(VuoReal) hue,
 		VuoOutputData(VuoReal) saturation,
 		VuoOutputData(VuoReal) lightness,
-		VuoOutputData(VuoReal) alpha
+		VuoOutputData(VuoReal) opacity
 )
 {
-	VuoColor_getHSLA(color, hue, saturation, lightness, alpha);
+	VuoColor_getHSLA(color, hue, saturation, lightness, opacity);
 }

@@ -34,8 +34,11 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c",
-						 "json",
+						 "VuoBoolean",
+						 "VuoColor",
+						 "VuoImageColorDepth",
+						 "VuoImageWrapMode",
+						 "VuoPoint2d",
 						 "VuoGlContext",
 						 "VuoGlPool",
 						 "VuoImageRenderer",
@@ -194,6 +197,7 @@ VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, 
  * @param pixels Pointer to a buffer of pixel data.  Row-major, starting at the bottom (flipped).  Zero stride.  Premultiplied alpha.  The caller is responsible for freeing this buffer sometime after this function returns.
  * @param format An OpenGL format constant.  Supported formats include:
  *    - @c GL_RGB
+ *    - @c GL_YCBCR_422_APPLE
  *    - @c GL_RGBA
  *    - @c GL_BGRA
  *    - @c GL_LUMINANCE
@@ -214,8 +218,9 @@ VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsign
 //	VLog("Using format=%s -> internalformat=%s", VuoGl_stringForConstant(format), VuoGl_stringForConstant(internalformat));
 	GLuint glTextureName = VuoGlTexturePool_use(glContext, internalformat, pixelsWide, pixelsHigh, format);
 
+	GLuint glType = (colorDepth==VuoImageColorDepth_8 ? VuoGlTexture_getType(format) : GL_FLOAT);
 	glBindTexture(GL_TEXTURE_2D, glTextureName);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixelsWide, pixelsHigh, format, colorDepth==VuoImageColorDepth_8? GL_UNSIGNED_BYTE : GL_FLOAT, (GLvoid *)pixels);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixelsWide, pixelsHigh, format, glType, (GLvoid *)pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Since returning from this function implies that the texture is ready to use,
@@ -396,6 +401,65 @@ VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image)
 }
 
 /**
+ * Returns true if both images have the same dimensions and the same RGBA pixel data.
+ *
+ * Other attributes (pixel format, target) are ignored.
+ *
+ * Two NULL images are considered equal.
+ * A NULL image is never equal to a non-NULL image.
+ *
+ * This operation is fairly expensive — it requires downloading both images from the GPU to the CPU.
+ * It's intended primarily for use in automated tests.
+ */
+bool VuoImage_areEqual(const VuoImage a, const VuoImage b)
+{
+	if (!a && !b)
+		return true;
+	if (!a || !b)
+		return false;
+
+	if (a->pixelsWide != b->pixelsWide
+	 || a->pixelsHigh != b->pixelsHigh)
+		return false;
+
+	unsigned char *aPixels = VuoImage_copyBuffer(a, GL_RGBA);
+	unsigned char *bPixels = VuoImage_copyBuffer(b, GL_RGBA);
+	for (unsigned int i = 0; i < a->pixelsWide * a->pixelsHigh * 4; ++i)
+		if (aPixels[i] != bPixels[i])
+		{
+			free(aPixels);
+			free(bPixels);
+			return false;
+		}
+
+	free(aPixels);
+	free(bPixels);
+	return true;
+}
+
+/**
+ * - If either image dimension is 0, returns true.
+ * - If the image is fully transparent (all pixels have alpha value 0), returns true.
+ * - Otherwise returns false.
+ */
+bool VuoImage_isEmpty(const VuoImage image)
+{
+	if (image->pixelsWide == 0 || image->pixelsHigh == 0)
+		return true;
+
+	unsigned char *pixels = VuoImage_copyBuffer(image, GL_RGBA);
+	bool foundSubstantialPixel = false;
+	for (unsigned int p = 3; p < image->pixelsWide * image->pixelsHigh * 4; p += 4)
+		if (pixels[p])
+		{
+			foundSubstantialPixel = true;
+			break;
+		}
+	free(pixels);
+	return !foundSubstantialPixel;
+}
+
+/**
  * Returns a rectangle (in Vuo Coordinates) at the origin, with width 2 and height matching the image's aspect ratio.
  */
 VuoRectangle VuoImage_getRectangle(const VuoImage image)
@@ -438,8 +502,9 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
  *
  * @return If @c js contains valid data, returns a pointer to the VuoImage.  If not, returns NULL.
  *
- * @param js A JSON object containing a GL Texture Name or @c IOSurfaceID, and the texture's width and height in pixels.
+ * @param js A JSON object containing one of the following schemas:
  *
+ *    - a GL Texture Name, format, and the texture's width and height in pixels:
  * @eg{
  *	{
  *		"glTextureName": 42,
@@ -449,9 +514,19 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
  *	}
  * }
  *
+ *    - an @c IOSurfaceID and the texture's width and height in pixels:
  * @eg{
  *	{
  *		"ioSurface": 42,
+ *		"pixelsWide": 640,
+ *		"pixelsHigh": 480
+ *	}
+ * }
+ *
+ *    - a color and the texture's width and height in pixels:
+ * @eg{
+ *	{
+ *		"color": {"r":0.5, "g":1, "b":0, "a":1},
  *		"pixelsWide": 640,
  *		"pixelsHigh": 480
  *	}
@@ -483,6 +558,12 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 	}
 	if (pixelsWide == 0 || pixelsHigh == 0)
 		return NULL;
+
+	{
+		json_object * o;
+		if (json_object_object_get_ex(js, "color", &o))
+			return VuoImage_makeColorImage(VuoColor_valueFromJson(o), pixelsWide, pixelsHigh);
+	}
 
 	{
 		json_object * o;

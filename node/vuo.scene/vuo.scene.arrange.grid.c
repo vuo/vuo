@@ -50,7 +50,7 @@ void nodeEvent
 			{
 				VuoReal xPosition = center.x - width/2 + (width / columns) * (x + .5);
 
-				VuoSceneObject object = VuoListGetValueAtIndex_VuoSceneObject(objects, currentObject);
+				VuoSceneObject object = VuoListGetValue_VuoSceneObject(objects, currentObject);
 
 				object.transform.translation = VuoPoint3d_add(object.transform.translation, VuoPoint3d_make(xPosition,yPosition,zPosition));
 

@@ -8,3 +8,5 @@
  */
 
 #include "type.h"
+
+#define QUOTE(...) #__VA_ARGS__

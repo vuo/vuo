@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
@@ -52,10 +52,10 @@ void nodeEvent
 	sortable_pointValue pointValues[count];
 
 	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValueAtIndex_VuoGenericType1(list, i+1).x - point.x)};
+		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValue_VuoGenericType1(list, i+1).x - point.x)};
 
 	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
 
 	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoGenericType1(*sorted, VuoListGetValueAtIndex_VuoGenericType1(list, pointValues[i].index+1) );
+		VuoListAppendValue_VuoGenericType1(*sorted, VuoListGetValue_VuoGenericType1(list, pointValues[i].index+1) );
 }

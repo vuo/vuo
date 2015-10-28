@@ -1,9 +1,9 @@
 Outputs part of the input text.
 
-   - `text` — The original, whole text.
-   - `startIndex` — The position of the first character in the part of `text` to output. 1 is the first character in `text`, 2 is the second character in `text`, etc.
-   - `characterCount` — The number of characters in the part of `text` to output.
+   - `Text` — The original, whole text.
+   - `Start Position` — The position of the first character in the part of `Text` to output. 1 is the first character in `Text`, 2 is the second character in `Text`, etc.
+   - `Character Count` — The number of characters in the part of `Text` to output.
 
-If `startIndex` is less than 1 or `characterCount` goes past the end of `text`, then the portion of `text` that falls within the range is output. For example, if `characterCount` is too large, then the part of `text` from `startIndex` to the end is output.
+If `Start Position` is less than 1 or `Character Count` goes past the end of `Text`, then the portion of `Text` that falls within the range is output. For example, if `Character Count` is too large, then the part of `Text` from `Start Position` to the end is output.
 
-When finding the range of characters to output using `startIndex` and `characterCount`, this node counts each Unicode character in the text, including whitespace characters (spaces, tabs, line breaks).
+When finding the range of characters to output using `Start Position` and `Character Count`, this node counts each Unicode character in the text, including whitespace characters (spaces, tabs, line breaks).

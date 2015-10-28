@@ -1,0 +1,47 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Delay [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="784,521" _seconds="1"];
+Delay2 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="784,200" _seconds="1"];
+GetWallTime [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<seconds>seconds\r" pos="915,526"];
+GetWallTime2 [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<seconds>seconds\r" pos="915,585"];
+GetWallTime3 [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<seconds>seconds\r" pos="906,204"];
+GetWallTime4 [type="vuo.test.wallTime" version="1.0.0" label="Get Wall Time|<refresh>refresh\l|<seconds>seconds\r" pos="904,264"];
+IsLessThan [type="vuo.math.isLessThan.VuoReal" version="1.0.0" label="Is Less Than|<refresh>refresh\l|<a>a\l|<b>b\l|<lessThan>lessThan\r" pos="1268,385"];
+Negate [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<notValue>notValue\r" pos="263,417"];
+Negate2 [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<notValue>notValue\r" pos="444,289"];
+SelectInput3 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1104,301"];
+SelectInput4 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1108,461"];
+SelectOutput2 [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="587,251"];
+SelectOutput4 [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="584,527"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<whichOperationShouldWin>whichOperationShouldWin\r" _whichOperationShouldWin="false" _whichOperationShouldWin_type="VuoBoolean"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<whichOperationDidWin>whichOperationDidWin\l" _whichOperationDidWin_type="VuoBoolean"];
+
+Delay2:event -> GetWallTime3:refresh;
+Delay:event -> GetWallTime:refresh;
+GetWallTime2:seconds -> SelectInput4:trueOption;
+GetWallTime3:seconds -> SelectInput3:falseOption;
+GetWallTime4:seconds -> SelectInput3:trueOption;
+GetWallTime:seconds -> SelectInput4:falseOption;
+Negate2:notValue -> SelectInput3:which;
+Negate2:notValue -> SelectOutput2:which;
+Negate:notValue -> Negate2:value;
+Negate:notValue -> SelectInput4:which;
+Negate:notValue -> SelectOutput4:which;
+SelectInput3:out -> IsLessThan:a;
+SelectInput4:out -> IsLessThan:b;
+SelectOutput2:falseOption -> Delay2:refresh;
+SelectOutput2:trueOption -> GetWallTime4:refresh;
+SelectOutput4:falseOption -> Delay:refresh;
+SelectOutput4:trueOption -> GetWallTime2:refresh;
+PublishedInputs:whichOperationShouldWin -> Negate:value;
+IsLessThan:lessThan -> PublishedOutputs:whichOperationDidWin;
+}

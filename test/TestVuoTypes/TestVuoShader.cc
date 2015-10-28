@@ -37,11 +37,10 @@ private slots:
 		QTest::addColumn<QString>("summary");
 
 		{
-			QTest::newRow("empty string") << "" << "Default Shader (Checkerboard)";
+			QTest::newRow("empty string") << "" << "";
 		}
 		{
-			VuoShader shader = VuoShader_valueFromString("");
-			shader->name = strdup("test summary");
+			VuoShader shader = VuoShader_makeDefaultShader();
 			char *valueAsString = VuoShader_stringFromValue(shader);
 			QTest::newRow("VuoShader") << QString(valueAsString) << QString(shader->name);
 			free(valueAsString);
@@ -53,8 +52,10 @@ private slots:
 		QFETCH(QString, summary);
 
 		VuoShader value = VuoShader_valueFromString(valueAsString.toUtf8().data());
-		QVERIFY(value != NULL);
-		QCOMPARE(QString(value->name), summary);
+		if (value)
+			QCOMPARE(QString(value->name), summary);
+		else
+			QCOMPARE(QString(""), summary);
 	}
 
 	void testMakeDefaultShaderPerformance()
@@ -62,7 +63,7 @@ private slots:
 		VuoGlContext glContext = VuoGlContext_use();
 
 		QBENCHMARK {
-			VuoShader s = VuoShader_valueFromString("");
+			VuoShader s = VuoShader_makeDefaultShader();
 			VuoRetain(s);
 			VuoShader_getAttributeLocations(s, VuoMesh_IndividualTriangles, glContext, NULL, NULL, NULL, NULL, NULL);
 			VuoRelease(s);

@@ -15,7 +15,7 @@ VuoModuleMetadata({
 						 "angle", "yaw", "pitch", "roll", "axis", "size", "grow", "shrink" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
