@@ -9,23 +9,23 @@
 
 digraph G
 {
-Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="754,378" fillcolor="yellow"];
-ConvertRealtoText [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<done>done\r|<text>text\r" pos="824,424"];
-ConvertRealtoText2 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<done>done\r|<text>text\r" pos="824,454"];
-ConvertRealtoText3 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<done>done\r|<text>text\r" pos="824,484"];
-ConvertTexttoReal2 [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<done>done\r|<real>real\r" pos="448,417"];
-ConvertTexttoReal3 [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<done>done\r|<real>real\r" pos="449,511"];
-ConvertTexttoReal4 [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<done>done\r|<real>real\r" pos="451,607"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="435,118" fillcolor="violet"];
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="53,51" fillcolor="cyan"];
-MakeList [type="vuo.list.make.6.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<done>done\r|<list>list\r" pos="694,389" fillcolor="yellow" _1="\"15% tip: \"" _3="\", 18% tip: \"" _5="\", 20% tip: \""];
-MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="332,397" fillcolor="yellow" _2="0.15"];
-MakeList3 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="333,491" fillcolor="yellow" _2="0.18"];
-MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="335,587" fillcolor="yellow" _2="0.2"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="392,386" fillcolor="yellow"];
-Multiply2 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="393,480" fillcolor="yellow"];
-Multiply3 [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="395,576" fillcolor="yellow"];
-SelectLatest [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="275,119" fillcolor="cyan" _option1="\"How much was the bill? (Enter a number, like 42.00.)\""];
+Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="754,378"];
+ConvertRealtoText [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="824,424"];
+ConvertRealtoText2 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="824,454"];
+ConvertRealtoText3 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="824,484"];
+ConvertTexttoReal2 [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<real>real\r" pos="448,417"];
+ConvertTexttoReal3 [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<real>real\r" pos="449,511"];
+ConvertTexttoReal4 [type="vuo.type.text.real" version="1.0.0" label="Convert Text to Real|<refresh>refresh\l|<text>text\l|<real>real\r" pos="451,607"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="435,118" fillcolor="violet" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="53,51" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.6.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="707,389" _1="\"15% tip: \"" _3="\", 18% tip: \"" _5="\", 20% tip: \""];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="346,397" _2="0.15"];
+MakeList3 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="347,491" _2="0.18"];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="349,587" _2="0.2"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="392,386"];
+Multiply2 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="393,480"];
+Multiply3 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="395,576"];
+SelectLatest [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="275,119" _option1="\"How much was the bill? (Enter a number, like 42.00.)\""];
 
 Append:compositeText -> SelectLatest:option2;
 ConvertRealtoText2:text -> MakeList:4;
@@ -38,9 +38,9 @@ DisplayConsoleWindow:typedLine -> ConvertTexttoReal2:text;
 DisplayConsoleWindow:typedLine -> ConvertTexttoReal3:text;
 DisplayConsoleWindow:typedLine -> ConvertTexttoReal4:text;
 FireonStart:started -> SelectLatest:option1;
-MakeList2:list -> Multiply:terms;
-MakeList3:list -> Multiply2:terms;
-MakeList4:list -> Multiply3:terms;
+MakeList2:list -> Multiply:values;
+MakeList3:list -> Multiply2:values;
+MakeList4:list -> Multiply3:values;
 MakeList:list -> Append:texts;
 Multiply2:product -> ConvertRealtoText2:real;
 Multiply3:product -> ConvertRealtoText3:real;

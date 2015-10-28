@@ -127,7 +127,7 @@ QList<QString> VuoInputEditorMathExpressionList::convertToLineEditListFormat(jso
 	unsigned long expressionCount = VuoListGetCount_VuoText(expressionList.expressions);
 	for (unsigned long i = 1; i <= expressionCount; ++i)
 	{
-		VuoText expression = VuoListGetValueAtIndex_VuoText(expressionList.expressions, i);
+		VuoText expression = VuoListGetValue_VuoText(expressionList.expressions, i);
 		QString expressionString = convertToUserLocale(expression);
 		lineEditTexts.append(expressionString);
 	}
@@ -250,7 +250,7 @@ void VuoInputEditorMathExpressionList::validateMathExpressionList(bool shouldChe
 			unsigned long count = VuoListGetCount_VuoInteger(errorExpressions);
 			for (unsigned long i = 1; i <= count; ++i)
 			{
-				int indexIgnoringEmptyStrings = VuoListGetValueAtIndex_VuoInteger(errorExpressions, i) - 1;
+				int indexIgnoringEmptyStrings = VuoListGetValue_VuoInteger(errorExpressions, i) - 1;
 
 				int index;
 				int nonEmptyStringIndex = 0;

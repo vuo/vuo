@@ -7,7 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
-#include "node.h"
+#include "VuoScreen.h"
+#include "VuoList_VuoScreen.h"
 
 void *VuoScreen_getNSScreen(VuoScreen screen);
 VuoList_VuoScreen VuoScreen_getList(void);

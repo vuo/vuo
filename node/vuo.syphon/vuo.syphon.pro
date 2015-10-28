@@ -4,8 +4,8 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 NODE_SOURCES += \
-	vuo.syphon.filter.serverDescription.serverName.c \
-	vuo.syphon.filter.serverDescription.applicationName.c \
+	vuo.syphon.find.server.name.c \
+	vuo.syphon.find.server.app.c \
 	vuo.syphon.listServers.c \
 	vuo.syphon.get.serverDescription.c \
 	vuo.syphon.make.serverDescription.c \

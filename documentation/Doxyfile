@@ -28,6 +28,7 @@ ALIASES               += "threadAnyGL=This function may be called from any threa
 ALIASES               += "threadMain=This function may only be called on the main thread."
 ALIASES               += "threadNoMain=This function may be called on any thread _except_ the main thread."
 ALIASES               += "threadQueue{1}=This function may only be called on dispatch queue @c \1."
+ALIASES               += "threadNoQueue{1}=This function may be called on any dispatch queue _except_ @c \1."
 
 #---------------------------------------------------------------------------
 # Build related configuration options

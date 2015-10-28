@@ -22,7 +22,13 @@
 					"keywords" : ["gesture", "controller", "motion", "hand", "finger"],
 					"version" : "1.0.0",
 					"dependencies" : [
-						]
+					   "VuoInteger",
+					   "VuoLeapHand",
+					   "VuoLeapPointable",
+					   "VuoText",
+					   "VuoList_VuoLeapHand",
+					   "VuoList_VuoLeapPointable"
+					]
 					});
 #endif
 /// @}
@@ -72,7 +78,7 @@ json_object * VuoLeapFrame_jsonFromValue(const VuoLeapFrame value)
  */
 char * VuoLeapFrame_summaryFromValue(const VuoLeapFrame value)
 {
-	return VuoText_format("%ld", value.id);
+	return VuoText_format("%lld", value.id);
 }
 
 /**

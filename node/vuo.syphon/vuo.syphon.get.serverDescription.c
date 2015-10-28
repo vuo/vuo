@@ -13,9 +13,9 @@
 VuoModuleMetadata({
 					  "title" : "Get Server Description Values",
 					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  },
 					  "dependencies" : [
 						"VuoSyphon"

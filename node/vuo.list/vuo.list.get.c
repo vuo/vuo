@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "pick", "select", "choose", "element", "member", "index" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -25,5 +25,5 @@ void nodeEvent
 		VuoOutputData(VuoGenericType1) item
 )
 {
-	*item = VuoListGetValueAtIndex_VuoGenericType1(list, which);
+	*item = VuoListGetValue_VuoGenericType1(list, which);
 }

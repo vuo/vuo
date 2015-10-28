@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="652,223"];
+ConvertIntegertoText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="276,226"];
+ConvertIntegertoText2 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="273,326"];
+Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="325,218" _increment="1" _decrement="1" _setCount="0"];
+Count2 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="324,317" _increment="1" _decrement="1" _setCount="0"];
+MakeList [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="605,234" _1="\"Red Team \"" _3="\", Blue Team \""];
+SelectOutput [type="vuo.select.out.event.2" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="136,243"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<whichTeam>whichTeam\r" _whichTeam_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<scoreboard>scoreboard\l" _scoreboard_type="VuoText"];
+
+ConvertIntegertoText2:text -> MakeList:4;
+ConvertIntegertoText:text -> MakeList:2;
+Count2:count -> ConvertIntegertoText2:integer;
+Count:count -> ConvertIntegertoText:integer;
+MakeList:list -> Append:texts;
+SelectOutput:option1 -> Count2:refresh;
+SelectOutput:option1 -> Count:increment;
+SelectOutput:option2 -> Count2:increment;
+SelectOutput:option2 -> Count:refresh;
+PublishedInputs:whichTeam -> SelectOutput:which;
+Append:compositeText -> PublishedOutputs:scoreboard;
+}

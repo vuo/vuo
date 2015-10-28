@@ -9,35 +9,35 @@
 
 digraph G
 {
-DiscardDataFromEvent2 [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="525,487"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="1244,411" _started_eventThrottling="enqueue"];
-Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="1004,248"];
-Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="1004,328"];
-Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="1002,405"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="1694,273"];
-MakeLineStripVertices2D [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.0.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<done>done\r|<mesh>mesh\r" pos="1310,271" fillcolor="violet" _lineWidth="0.010000"];
-MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="289,61"];
-MakeList7 [type="vuo.list.make.4.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<done>done\r|<list>list\r" pos="1240,282" fillcolor="violet"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="339,50" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithSolidColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="1423,433" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
-ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="426,397" _value="0.500000"];
-Wave [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="785,448" _wave="\"triangle\"" _period="3.400000" _center="0.000000"];
-Wave2 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="787,215" _wave="\"triangle\"" _period="4.000000" _center="0.000000"];
-Wave3 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="785,332" _wave="\"triangle\"" _period="3.200000" _center="0.000000"];
-Wave4 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="782,565" _wave="\"triangle\"" _period="6.000000" _center="0.000000"];
-Wave5 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="779,681" _wave="\"triangle\"" _period="4.800000" _center="0.000000"];
-Wave6 [type="vuo.motion.wave" version="1.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<done>done\r|<value>value\r" pos="778,799" _wave="\"triangle\"" _period="3.800000" _center="0.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1244,411" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1004,248"];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1004,328"];
+Make2DPoint3 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="1002,405"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1694,273"];
+MakeLineStripVertices2D [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="1310,271" fillcolor="violet" _lineWidth="0.010000"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="298,91" fillcolor="green"];
+MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="268,61" fillcolor="green"];
+MakeList7 [type="vuo.list.make.4.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1240,282" fillcolor="violet"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="339,50" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithSolidColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="1423,433" _color="{\"r\":0.731777,\"g\":1.000000,\"b\":0.897917,\"a\":1.000000}"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="426,397" _value="0.500000"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="785,448" _wave="\"triangle\"" _period="3.400000" _center="0.000000"];
+Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="787,215" _wave="\"triangle\"" _period="4.000000" _center="0.000000"];
+Wave3 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="785,332" _wave="\"triangle\"" _period="3.200000" _center="0.000000"];
+Wave4 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="782,565" _wave="\"triangle\"" _period="6.000000" _center="0.000000"];
+Wave5 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="779,681" _wave="\"triangle\"" _period="4.800000" _center="0.000000"];
+Wave6 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="778,799" _wave="\"triangle\"" _period="3.800000" _center="0.000000"];
 
-DiscardDataFromEvent2:event -> ShareValue2:refresh;
 FireOnStart:started -> ShadeWithSolidColor:refresh;
 Make2DPoint2:point -> MakeList7:3;
 Make2DPoint3:point -> MakeList7:4;
 Make2DPoint:point -> MakeList7:2;
 Make3DObject:object -> MakeList6:1;
 MakeLineStripVertices2D:mesh -> Make3DObject:mesh;
+MakeList0:list -> RenderSceneToWindow:setWindowProperties;
 MakeList6:list -> RenderSceneToWindow:objects;
 MakeList7:list -> MakeLineStripVertices2D:positions;
-RenderSceneToWindow:requestedFrame -> DiscardDataFromEvent2:dataAndEvent;
+RenderSceneToWindow:requestedFrame -> ShareValue2:refresh;
 RenderSceneToWindow:requestedFrame -> Wave2:time;
 RenderSceneToWindow:requestedFrame -> Wave3:time;
 RenderSceneToWindow:requestedFrame -> Wave4:time;

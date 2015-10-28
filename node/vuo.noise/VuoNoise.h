@@ -11,7 +11,7 @@
 #define VUONOISE_H
 
 /// @{
-typedef void * VuoList_VuoNoise;
+typedef const struct VuoList_VuoNoise_struct { void *l; } * VuoList_VuoNoise;
 #define VuoList_VuoNoise_TYPE_DEFINED
 /// @}
 

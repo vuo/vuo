@@ -1,0 +1,48 @@
+/**
+ * @file
+ * Repeatedly shifts the squares to the left, moving the leftmost square to the rightmost slot.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AddToList2 [type="vuo.list.add.VuoLayer" version="1.0.0" label="Add to List|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="576,294" fillcolor="violet" _position="\"end\""];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="764,293" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="2.000000" _columns="5" _height="0.400000" _rows="1"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-222,67" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="101,9" fillcolor="yellow" _seconds="0.500000" _fired_eventThrottling="drop"];
+HoldList3 [type="vuo.data.hold.list.VuoLayer" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="301,121"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="25,121" _color="{\"r\":0.095354,\"g\":0.436866,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="26,386" _color="{\"r\":0.124788,\"g\":0.571740,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeColorLayer3 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="25,651" _color="{\"r\":0.148562,\"g\":0.680659,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeColorLayer4 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="25,254" _color="{\"r\":0.173342,\"g\":0.794141,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeColorLayer5 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="24,518" _color="{\"r\":0.209140,\"g\":0.958175,\"b\":0.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="972,305" fillcolor="green"];
+MakeList13 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1002,320" fillcolor="green"];
+MakeList24 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="254,132"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1043,294" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+TakeFromList3 [type="vuo.list.take.VuoLayer" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="351,303" fillcolor="violet" _position="\"beginning\""];
+
+AddToList2:modifiedList -> ArrangeLayersInGrid:layers;
+AddToList2:modifiedList -> HoldList3:newValue;
+ArrangeLayersInGrid:griddedLayer -> MakeList11:1;
+FireOnStart:started -> MakeColorLayer2:refresh;
+FireOnStart:started -> MakeColorLayer3:refresh;
+FireOnStart:started -> MakeColorLayer4:refresh;
+FireOnStart:started -> MakeColorLayer5:refresh;
+FireOnStart:started -> MakeColorLayer:refresh;
+FirePeriodically:fired -> HoldList3:refresh;
+HoldList3:heldValue -> TakeFromList3:list;
+MakeColorLayer2:layer -> MakeList24:3;
+MakeColorLayer3:layer -> MakeList24:5;
+MakeColorLayer4:layer -> MakeList24:2;
+MakeColorLayer5:layer -> MakeList24:4;
+MakeColorLayer:layer -> MakeList24:1;
+MakeList11:list -> RenderLayersToWindow:layers;
+MakeList13:list -> RenderLayersToWindow:setWindowProperties;
+MakeList24:list -> HoldList3:initialValue;
+TakeFromList3:modifiedList -> AddToList2:list;
+TakeFromList3:removedItem -> AddToList2:item;
+}

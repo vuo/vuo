@@ -1,6 +1,6 @@
 These nodes are for working with the windows displayed by a composition. 
 
-Nodes in other node sets — `Render Image to Window`, `Render Layers to Window`, and `Render Scene to Window` — can display a window in a composition. Each of those nodes has a `showedWindow` output port that can be used by the `vuo.window` node set to get information about a window, and a `windowProperties` input port that can be used by the `vuo.window` node set to change properties of the window. 
+Nodes in other node sets — `Render Image to Window`, `Render Layers to Window`, and `Render Scene to Window` — can display a window in a composition. Each of those nodes has a `Showed Window` output port that can be used by the `vuo.window` node set to get information about a window, and a `Set Window Properties` input port that can be used by the `vuo.window` node set to change properties of the window. 
 
 A **Window Property** affects the appearance of the window or the way that a user can interact with it. For example, the "title" Window Property sets the text displayed in the window's title bar. The "resizable" Window Property decides whether the window should change size when the user drags the window's corner. 
 

@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="10,141" _started_eventThrottling="enqueue"];
+Round [type="vuo.math.round" version="1.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="36,76" _real="0.000000"];
+Subtract1 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="225,61" _a="11"];
+Subtract2 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="222,145" _a="33" _b="44"];
+Subtract3 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract3|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="219,230" _a="55" _b="66"];
+Subtract4 [type="vuo.math.subtract.VuoInteger" version="1.0.0" label="Subtract4|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="219,316" _b="88"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<event>event\r|<dataAndEvent>dataAndEvent\r" _event="" _event_type="event" _dataAndEvent="0" _dataAndEvent_type="VuoInteger"];
+
+FireOnStart2:started -> Subtract2:a;
+Round:rounded -> Subtract1:b;
+Round:rounded -> Subtract2:b [event=true];
+PublishedInputs:event -> Subtract3:a;
+PublishedInputs:dataAndEvent -> Subtract3:b [event=true];
+PublishedInputs:dataAndEvent -> Subtract4:a;
+}

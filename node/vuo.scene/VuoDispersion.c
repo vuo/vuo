@@ -19,10 +19,7 @@ VuoModuleMetadata({
 					  "title" : "Dispersion",
 					  "description" : "The pattern over which a function is applied.",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
-					  "dependencies" : [
-						  "c"
-					  ]
+					  "version" : "1.0.0"
 				  });
 #endif
 /// @}

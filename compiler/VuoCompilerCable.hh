@@ -22,9 +22,16 @@ class VuoCompilerCable : public VuoBaseDetail<VuoCable>
 {
 public:
 	VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort * fromPort, VuoCompilerNode * toNode, VuoCompilerPort * toPort);
+	void setAlwaysEventOnly(bool isAlwaysEventOnly);
+	bool getAlwaysEventOnly(void);
 	string getGraphvizDeclaration(void);
 	bool carriesData(void);
 	void generateTransmission(Module *module, BasicBlock *block, Value *outputDataValue, bool shouldTransmitEvent=true);
+
+private:
+	bool isAlwaysEventOnly;
+
+	static bool portHasData(VuoPort *port);
 };
 
 #endif

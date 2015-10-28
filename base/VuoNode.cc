@@ -21,13 +21,12 @@
  *
  * You'll probably want to use the factories @c VuoNodeClass::newNode or @c VuoCompilerNodeClass::newNode instead, for convenience.
  */
-VuoNode::VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, VuoPort * donePort, vector<VuoPort *> inputPorts, vector<VuoPort *> outputPorts, double x, double y, bool collapsed, VuoNode::TintColor tintColor)
+VuoNode::VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, vector<VuoPort *> inputPorts, vector<VuoPort *> outputPorts, double x, double y, bool collapsed, VuoNode::TintColor tintColor)
 	: VuoBase<VuoCompilerNode,VuoRendererNode>("VuoNode")
 {
 	this->nodeClass = nodeClass;
 	this->title = title;
 	this->refreshPort = refreshPort;
-	this->donePort = donePort;
 	this->inputPorts = inputPorts;
 	this->outputPorts = outputPorts;
 	this->x = x;
@@ -74,14 +73,6 @@ VuoPort * VuoNode::getOutputPortWithName(string portName)
 VuoPort * VuoNode::getRefreshPort(void)
 {
 	return refreshPort;
-}
-
-/**
- * Returns the done port.
- */
-VuoPort * VuoNode::getDonePort(void)
-{
-	return donePort;
 }
 
 /**

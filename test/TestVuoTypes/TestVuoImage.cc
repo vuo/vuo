@@ -17,6 +17,9 @@ extern "C" {
 
 #include <OpenGL/CGLMacro.h>
 
+// Be able to use these types in QTest::addColumn()
+Q_DECLARE_METATYPE(VuoImage);
+
 /**
  * Tests the VuoImage type.
  */
@@ -102,6 +105,56 @@ private slots:
 			QCOMPARE(QString::fromUtf8(VuoImage_stringFromValue(t)), value);
 			QCOMPARE(QString::fromUtf8(VuoImage_summaryFromValue(t)), summary);
 		}
+	}
+
+	void testJsonColorImage()
+	{
+		VuoImage image = VuoImage_valueFromString(QUOTE({"color":{"r":0.5,"g":1,"b":0,"a":1},"pixelsWide":640,"pixelsHigh":480}));
+		QVERIFY(image);
+
+		VuoRetain(image);
+		unsigned char *imageBuffer = VuoImage_copyBuffer(image, GL_RGBA);
+		QVERIFY(abs(imageBuffer[0] - 127) < 2);
+		QVERIFY(abs(imageBuffer[1] - 255) < 2);
+		QVERIFY(abs(imageBuffer[2] -   0) < 2);
+		QVERIFY(abs(imageBuffer[3] - 255) < 2);
+		VuoRelease(image);
+	}
+
+	void testImageEquality_data()
+	{
+		QTest::addColumn<VuoImage>("a");
+		QTest::addColumn<VuoImage>("b");
+		QTest::addColumn<bool>("expectedEquality");
+
+		QTest::newRow("null null")			<< (VuoImage)NULL
+											<< (VuoImage)NULL
+											<< true;
+
+		QTest::newRow("null nonnull")		<< (VuoImage)NULL
+											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< false;
+
+		QTest::newRow("nonnull null")		<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< (VuoImage)NULL
+											<< false;
+
+		QTest::newRow("same color")			<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< true;
+
+		QTest::newRow("different color")	<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,.1),1,1)
+											<< false;
+	}
+	void testImageEquality()
+	{
+		QFETCH(VuoImage, a);
+		QFETCH(VuoImage, b);
+		QFETCH(bool, expectedEquality);
+
+		bool actualEquality = VuoImage_areEqual(a,b);
+		QCOMPARE(actualEquality, expectedEquality);
 	}
 
 	void testMakeFromBufferPerformance()

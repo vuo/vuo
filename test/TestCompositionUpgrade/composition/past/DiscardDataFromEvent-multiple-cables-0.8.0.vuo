@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoLayer" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="478,180"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="51,66" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="38,167" _seconds="1.000000" _fired_eventThrottling="drop"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="1.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<done>done\r|<point>point\r" pos="757,130" _x="0.000000" _y="0.000000"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="1.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<done>done\r|<point>point\r" pos="758,223" _x="0.000000" _y="0.000000" _z="0.000000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="252,189" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+SelectOutput [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="256,315" _which="false"];
+
+DiscardDataFromEvent2:event -> Make2DPoint:refresh;
+DiscardDataFromEvent2:event -> Make2DPoint:x;
+DiscardDataFromEvent2:event -> Make3DPoint:z;
+FireOnStart:started -> DiscardDataFromEvent2:refresh;
+FirePeriodically:fired -> MakeLayer:refresh;
+FirePeriodically:fired -> SelectOutput:refresh;
+MakeLayer:layer -> DiscardDataFromEvent2:dataAndEvent;
+SelectOutput:falseOption -> DiscardDataFromEvent2:dataAndEvent;
+SelectOutput:trueOption -> DiscardDataFromEvent2:dataAndEvent;
+}

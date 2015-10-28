@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Expected outputs for StoreRecentText.vuo.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "currentText",
+		"inputPortValues" : {
+			"currentText" : "123456789",
+			"characterLimit" : 10
+		},
+		"outputPortValues" : {
+			"recentText" : "123456789"
+		}
+	},
+	{
+		"firingPort" : "currentText",
+		"inputPortValues" : {
+			"currentText" : "a",
+			"characterLimit" : 10
+		},
+		"outputPortValues" : {
+			"recentText" : "123456789a"
+		}
+	},
+	{
+		"firingPort" : "currentText",
+		"inputPortValues" : {
+			"currentText" : "bc",
+			"characterLimit" : 10
+		},
+		"outputPortValues" : {
+			"recentText" : "3456789abc"
+		}
+	},
+]}

@@ -13,12 +13,15 @@
 VuoModuleMetadata({
 					  "title" : "Make Audio Input from ID",
 					  "keywords" : [ "sound", "input", "microphone", "music", "listen", "device" ],
-					  "version" : "1.0.0"
+					  "version" : "1.0.0",
+					  "node" : {
+						  "exampleCompositions" : [ ]
+					  }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoInteger, {"default":0,"suggestedMin":0}) id,
+		VuoInputData(VuoInteger, {"default":0,"suggestedMin":0,"name":"ID"}) id,
 		VuoOutputData(VuoAudioInputDevice) device
 )
 {

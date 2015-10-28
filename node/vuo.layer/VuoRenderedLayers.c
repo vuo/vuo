@@ -20,7 +20,10 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "VuoLayer"
+						 "VuoLayer",
+						 "VuoSceneObject",
+						 "VuoWindowReference",
+						 "VuoList_VuoSceneObject"
 					 ]
 				 });
 #endif
@@ -100,7 +103,7 @@ void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, Vuo
 		unsigned long ancestorObjectCount = VuoListGetCount_VuoSceneObject(ancestorObjects);
 		for (unsigned long i = ancestorObjectCount; i >= 1; --i)
 		{
-			VuoSceneObject ancestorObject = VuoListGetValueAtIndex_VuoSceneObject(ancestorObjects, i);
+			VuoSceneObject ancestorObject = VuoListGetValue_VuoSceneObject(ancestorObjects, i);
 			VuoTransform_getMatrix(ancestorObject.transform, matrix);
 			layerCenter3d = VuoTransform_transformPoint(matrix, layerCenter3d);
 		}
@@ -129,7 +132,7 @@ void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, Vuo
 		unsigned long ancestorObjectCount = VuoListGetCount_VuoSceneObject(ancestorObjects);
 		for (unsigned long i = ancestorObjectCount; i >= 1; --i)
 		{
-			VuoSceneObject ancestorObject = VuoListGetValueAtIndex_VuoSceneObject(ancestorObjects, i);
+			VuoSceneObject ancestorObject = VuoListGetValue_VuoSceneObject(ancestorObjects, i);
 			VuoTransform_getMatrix(ancestorObject.transform, matrix);
 			for (int i = 0; i < 4; ++i)
 				layerCorners3d[i] = VuoTransform_transformPoint(matrix, layerCorners3d[i]);

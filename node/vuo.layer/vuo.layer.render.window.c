@@ -24,7 +24,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Layers to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "2.0.0",
+					 "version" : "2.2.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoSceneRenderer",
@@ -32,10 +32,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [
-							 "DisplayImagesOnLayers.vuo",
-							 "RotateGears.vuo"
-						 ]
+						 "exampleCompositions" : [ "DisplayImagesOnLayers.vuo", "RotateGears.vuo" ]
 					 }
 				 });
 
@@ -103,7 +100,7 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
 	VuoWindowOpenGl_enableTriggers((*context)->window);
@@ -120,13 +117,15 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoList_VuoLayer) layers,
-		VuoInputData(VuoList_VuoWindowProperty) windowProperties,
+		VuoInputData(VuoList_VuoWindowProperty) setWindowProperties,
+		VuoInputEvent({"eventBlocking":"none","data":"setWindowProperties"}) setWindowPropertiesEvent,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
-		VuoOutputTrigger(requestedFrame, VuoReal, VuoPortEventThrottling_Drop),
+		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"}),
 		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
 {
-	VuoWindowOpenGl_setProperties((*context)->window, windowProperties);
+	if (setWindowPropertiesEvent)
+		VuoWindowOpenGl_setProperties((*context)->window, setWindowProperties);
 
 	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity()).sceneObject;
 

@@ -1,0 +1,59 @@
+/**
+ * @file
+ * Moves two vertical bars to the leftmost and rightmost point that the mouse has hovered. Resets the vertical bars to the current mouse position when the mouse is clicked.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Average [type="vuo.math.average" version="1.0.0" label="Average|<refresh>refresh\l|<values>values\l|<averageValue>averageValue\r" pos="757,440"];
+Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="420,263"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="414,424"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="660,271"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="659,407"];
+ConvertRealTo2DPoint5 [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="654,588"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="674,-9" fillcolor="yellow" _started_eventThrottling="enqueue"];
+KeepMaximum [type="vuo.math.keep.max.VuoReal" version="1.0.0" label="Keep Maximum|<refresh>refresh\l|<value>value\l|<reset>reset\l|<max>max\r" pos="397,203" fillcolor="violet"];
+KeepMinimum [type="vuo.math.keep.min.VuoReal" version="1.0.0" label="Keep Minimum|<refresh>refresh\l|<value>value\l|<reset>reset\l|<min>min\r" pos="399,330" fillcolor="violet"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="989,164" _name="\"\"" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rotation="0.000000" _width="0.050000" _height="2.000000"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="988,302" _name="\"\"" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rotation="0.000000" _width="0.050000" _height="2.000000"];
+MakeColorLayer3 [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="989,469" _color="{\"r\":1.000000,\"g\":0.549020,\"b\":0.250980,\"a\":1.000000}" _rotation="0.000000" _height="2.000000"];
+MakeList4 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1223,-32" fillcolor="green"];
+MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="711,451"];
+MakeList9 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1274,-17" fillcolor="green"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.0" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="33,164" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="42,266" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1320,-43" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="707,528"];
+
+Average:averageValue -> ConvertRealTo2DPoint5:x;
+Convert2DPointToReal2:x -> KeepMinimum:value;
+Convert2DPointToReal:x -> KeepMaximum:value;
+ConvertRealTo2DPoint2:point2d -> MakeColorLayer2:center;
+ConvertRealTo2DPoint5:point2d -> MakeColorLayer3:center;
+ConvertRealTo2DPoint:point2d -> MakeColorLayer:center;
+FireOnStart:started -> MakeColorLayer2:refresh;
+FireOnStart:started -> MakeColorLayer:refresh;
+KeepMaximum:max -> ConvertRealTo2DPoint:x;
+KeepMaximum:max -> MakeList7:1;
+KeepMaximum:max -> Subtract:a;
+KeepMinimum:min -> ConvertRealTo2DPoint2:x;
+KeepMinimum:min -> MakeList7:2;
+KeepMinimum:min -> Subtract:b;
+MakeColorLayer2:layer -> MakeList4:2;
+MakeColorLayer3:layer -> MakeList4:3;
+MakeColorLayer:layer -> MakeList4:1;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList7:list -> Average:values;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+ReceiveMouseButtons:pressed -> KeepMaximum:reset;
+ReceiveMouseButtons:pressed -> KeepMinimum:reset;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+Subtract:difference -> MakeColorLayer3:width;
+}

@@ -9,14 +9,14 @@
 
 digraph G
 {
-FirePeriodically [type="vuo.time.firePeriodically" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="26,122.5" _seconds="1"];
-Hold [type="vuo.hold.VuoInteger" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="379,35.5" _initialValue="0" _newValue="0"];
-Subtract [type="vuo.math.subtract.VuoInteger" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="373,215.5" _b="0" _b="0"];
-SelectInput [type="vuo.select.in.2.event" label="SelectInput|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="182,112.5" _which="0"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="26,122" _seconds="1" _fired_eventThrottling="enqueue"];
+Hold [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="379,35" _initialValue="0"];
+SelectInput [type="vuo.select.in.event.2" version="2.0.0" label="SelectInput|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="182,112" _which="0"];
+Subtract [type="vuo.math.subtract.VuoInteger" version="1.1.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="373,215" _b="0"];
 
 FirePeriodically:fired -> SelectInput:refresh;
 Hold:heldValue -> Subtract:a;
-Subtract:difference -> Hold:newValue;
-SelectInput:out -> Subtract:refresh;
 SelectInput:out -> Hold:refresh;
+SelectInput:out -> Subtract:refresh;
+Subtract:difference -> Hold:newValue;
 }

@@ -1,0 +1,142 @@
+/**
+ * @file
+ * Expected outputs for the vuo.noise.gradient.VuoPoint2d node.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":0,"y":0},
+			"gradientNoise" : "perlin"
+		},
+		"outputPortValues" : {
+			"value" : 0
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":5},
+			"gradientNoise" : "perlin"
+		},
+		"outputPortValues" : {
+			"value" : 0
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":0},
+			"gradientNoise" : "perlin"
+		},
+		"outputPortValues" : {
+			"value" : 0
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":7.2},
+			"gradientNoise" : "perlin"
+		},
+		"outputPortValues" : {
+			"value" : -0.234752
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":-7.2},
+			"gradientNoise" : "perlin"
+		},
+		"outputPortValues" : {
+			"value" : 0.14208
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":7.2,"y":7.2},
+			"gradientNoise" : "perlin"
+		},
+		"outputPortValues" : {
+			"value" : 0.374148
+		}
+	},
+
+		{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":0,"y":0},
+			"gradientNoise" : "simplex"
+		},
+		"outputPortValues" : {
+			"value" : 0
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":5},
+			"gradientNoise" : "simplex"
+		},
+		"outputPortValues" : {
+			"value" : -0.390107
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":0},
+			"gradientNoise" : "simplex"
+		},
+		"outputPortValues" : {
+			"value" : 0.722863
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":7.2},
+			"gradientNoise" : "simplex"
+		},
+		"outputPortValues" : {
+			"value" : 0.845135
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":5,"y":-7.2},
+			"gradientNoise" : "simplex"
+		},
+		"outputPortValues" : {
+			"value" : 0.613682
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":7.2,"y":7.2},
+			"gradientNoise" : "simplex"
+		},
+		"outputPortValues" : {
+			"value" : 0.213632
+		}
+	}
+]}

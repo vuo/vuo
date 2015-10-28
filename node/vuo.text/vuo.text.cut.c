@@ -10,11 +10,10 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Cut",
+					 "title" : "Cut Text",
 					 "keywords" : [ "character", "letter", "substring", "part", "piece", "string", "truncate", "trim" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "RevealWord.vuo" ]
 					 }
 				 });
@@ -22,10 +21,10 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":""}) text,
-		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1}) startIndex,
+		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1}) startPosition,
 		VuoInputData(VuoInteger, {"default":1,"suggestedMin":1}) characterCount,
 		VuoOutputData(VuoText) partialText
 )
 {
-	*partialText = VuoText_substring(text, startIndex, characterCount);
+	*partialText = VuoText_substring(text, startPosition, characterCount);
 }

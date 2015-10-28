@@ -1,0 +1,99 @@
+/**
+ * @file
+ * Expected outputs for ListFiles.vuo.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : false,
+			"fileType" : "any"
+		},
+		"outputPortValues" : {
+			"fileCount" : 0
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder/folder2",
+			"includeSubfolders" : false,
+			"fileType" : "any"
+		},
+		"outputPortValues" : {
+			"fileCount" : 4
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : true,
+			"fileType" : "folder"
+		},
+		"outputPortValues" : {
+			"fileCount" : 5
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : true,
+			"fileType" : "mesh"
+		},
+		"outputPortValues" : {
+			"fileCount" : 1
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : true,
+			"fileType" : "audio"
+		},
+		"outputPortValues" : {
+			"fileCount" : 2
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : true,
+			"fileType" : "image"
+		},
+		"outputPortValues" : {
+			"fileCount" : 3
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : true,
+			"fileType" : "movie"
+		},
+		"outputPortValues" : {
+			"fileCount" : 4
+		}
+	},
+	{
+		"firingPort" : "folder",
+		"inputPortValues" : {
+			"folder" : "ListFiles_folder",
+			"includeSubfolders" : true,
+			"fileType" : "scene"
+		},
+		"outputPortValues" : {
+			"fileCount" : 5
+		}
+	},
+]}

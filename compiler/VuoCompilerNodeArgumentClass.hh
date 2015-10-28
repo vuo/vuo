@@ -36,9 +36,10 @@ protected:
 	size_t indexInCallbackStopFunction; ///< Where this parameter appears in the node's callback stop function's parameter list.
 
 	VuoCompilerNodeArgumentClass(string name, VuoPortClass::PortType portType, Type *type);
-	virtual ~VuoCompilerNodeArgumentClass(void);  ///< to make this class dynamic_cast-able
 
 public:
+	virtual ~VuoCompilerNodeArgumentClass(void);  ///< to make this class dynamic_cast-able
+
 	virtual Type * getType(void);
 	bool isInEventFunction(void);
 	size_t getIndexInEventFunction(void);

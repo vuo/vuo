@@ -17,6 +17,9 @@ VuoModuleMetadata({
 					  "title" : "Make Waveform Image",
 					  "keywords" : [ "amplitudes", "oscilloscope" ],
 					  "version" : "1.0.0",
+					  "dependencies" : [
+						  "VuoCurve"
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ "ShowLiveAudioWaveform.vuo" ]
 					  }

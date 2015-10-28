@@ -9,5 +9,5 @@
 
 digraph G 
 {
-ReceiveMIDIEvents [type="vuo.midi.receive" version="100" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<done>done\r|<receivedNote>receivedNote\r|<receivedController>receivedController\r"];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="100" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r"];
 }

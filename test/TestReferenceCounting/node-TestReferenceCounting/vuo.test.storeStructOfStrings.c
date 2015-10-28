@@ -13,9 +13,9 @@ VuoModuleMetadata({
 					 "title" : "Store Struct of Strings",
 					 "description" : "",
 					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "dependencies" : [
+						"VuoText"
+					 ]
 				 });
 
 struct StructOfStrings

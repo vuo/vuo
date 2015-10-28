@@ -12,7 +12,14 @@
 #ifndef VUOCOCOA_H
 #define VUOCOCOA_H
 
+#ifdef NS_RETURNS_INNER_POINTER
+	#undef NS_RETURNS_INNER_POINTER
+#endif
+/// Disable NS_RETURNS_INNER_POINTER (new in Mac OS 10.10's system headers), since Clang 3.2 doesn't support it.
+/// https://b33p.net/kosada/node/9140
+#define NS_RETURNS_INNER_POINTER
 #import <Cocoa/Cocoa.h>
+#undef NS_RETURNS_INNER_POINTER
 
 /// @{
 #define VuoRunner void

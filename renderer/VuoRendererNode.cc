@@ -60,6 +60,8 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->getInstanceDataClass();
 	this->nodeIsSubcomposition = false;  /// @todo support subcompositions - https://b33p.net/kosada/node/2639
 	this->nodeIsMissing = !nodeClass->hasCompiler();
+	this->alwaysDisplayPortNames = false;
+
 	resetTimeLastExecuted();
 
 	this->setFlags(QGraphicsItem::ItemIsMovable |
@@ -75,7 +77,7 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 		for(vector<VuoPort *>::iterator it = inputPorts.begin(); it != inputPorts.end(); ++it)
 		{
 			bool isRefreshPort = (*it == baseNode->getRefreshPort());
-			inputs.push_back(new VuoRendererPort(*it, signaler, false, isRefreshPort, false, false));
+			inputs.push_back(new VuoRendererPort(*it, signaler, false, isRefreshPort, false));
 		}
 		setInputPorts(inputs);
 	}
@@ -85,9 +87,8 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 		vector<VuoPort *> outputPorts = baseNode->getOutputPorts();
 		for(vector<VuoPort *>::iterator it = outputPorts.begin(); it != outputPorts.end(); ++it)
 		{
-			bool isDonePort = (*it == baseNode->getDonePort());
 			bool isFunctionPort = false;
-			outputs.push_back(new VuoRendererPort(*it, signaler, true, false, isDonePort, isFunctionPort));
+			outputs.push_back(new VuoRendererPort(*it, signaler, true, false, isFunctionPort));
 		}
 		setOutputPorts(outputs);
 	}
@@ -104,7 +105,14 @@ void VuoRendererNode::setInputPorts(vector<VuoRendererPort *> inputPorts)
 	this->inputPorts = new VuoRendererPortList(this);
 
 	foreach (VuoRendererPort *p, inputPorts)
+	{
 		this->inputPorts->addToGroup(p);
+
+		// Now that the port knows what node it belongs to, it may need to update
+		// its cached display name and related structures to reflect the fact that
+		// the port name may be unambiguous within the node, and therefore not displayed.
+		p->updateNameRect();
+	}
 }
 
 void VuoRendererNode::setOutputPorts(vector<VuoRendererPort *> outputPorts)
@@ -114,14 +122,21 @@ void VuoRendererNode::setOutputPorts(vector<VuoRendererPort *> outputPorts)
 	// @@@ remove when functionPort is implemented and part of the outputPorts list.
 	// At that time, make sure that VuoNodeClass::unreservedOutputPortStartIndex is updated accordingly.
 	functionPort = new VuoRendererPort(new VuoPort(new VuoPortClass("fake function port", VuoPortClass::notAPort))
-									   , signaler, false, false, false, true);
+									   , signaler, false, false, true);
 
 	// We're not rendering the function port at the moment anyway, so don't add it to the outputPorts list --
 	// the discrepancy in the unreserved output port start index between the renderer and base makes things messy.
 	//this->outputPorts->addToGroup(functionPort);
 
 	foreach (VuoRendererPort *p, outputPorts)
+	{
 		this->outputPorts->addToGroup(p);
+
+		// Now that the port knows what node it belongs to, it may need to update
+		// its cached display name and related structures to reflect the fact that
+		// the port name may be unambiguous within the node, and therefore not displayed.
+		p->updateNameRect();
+	}
 }
 
 /**
@@ -145,7 +160,7 @@ void VuoRendererNode::layoutPorts(void)
 		p->setPos(getPortPoint(p, i++));
 
 	this->portPaths = getPortPaths(this->inputPorts, this->outputPorts);
-	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutlines[0], this->nodeIsSubcomposition);
+	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutline, this->nodeIsSubcomposition);
 }
 
 /**
@@ -249,20 +264,11 @@ void VuoRendererNode::drawNodeFrame(QPainter *painter, QRectF nodeInnerFrameRect
 
 	// Paint the stateful indicator cable.
 	if (nodeIsStateful)
-	{
-		QPainterPath highlightOutline = this->statefulIndicatorOutlines[1];
-		QPainterPath cableOutlineMinusHighlight = this->statefulIndicatorOutlines[2];
-
-		// Fill the part of the main cable that doesn't overlap with the highlight.
-		painter->fillPath(cableOutlineMinusHighlight, QBrush(colors->cableMain()));
-
-		// Fill the highlight.
-		painter->fillPath(highlightOutline, QBrush(colors->cableUpper()));
-	}
+		painter->fillPath(this->statefulIndicatorOutline, QBrush(colors->nodeFrame()));
 
 	// Paint the "Antenna" icon.
 	if (getBase()->getNodeClass()->isInterface())
-		painter->strokePath(this->antennaPath, QPen(QColor::fromRgb(255,255,255,128), VuoRendererFonts::midPenWidth, Qt::SolidLine, Qt::FlatCap));
+		painter->strokePath(this->antennaPath, QPen(QColor::fromRgb(255,255,255,128), VuoRendererFonts::midPenWidth*5/6, Qt::SolidLine, Qt::FlatCap));
 }
 
 /**
@@ -375,7 +381,7 @@ QPair<QPainterPath, QPainterPath> VuoRendererNode::getPortPaths(VuoRendererPortL
 			QPainterPath outsetPath = p->getPortPath(0).translated(p->pos());
 			QPainterPath insetPath = p->getPortPath(p->getInset()).translated(p->pos());
 			ports.addPath(outsetPath);
-			portsInset.addPath(p->getFunctionPort() || p->getDonePort() ? outsetPath : insetPath);
+			portsInset.addPath(p->getFunctionPort() ? outsetPath : insetPath);
 		}
 	}
 
@@ -383,39 +389,24 @@ QPair<QPainterPath, QPainterPath> VuoRendererNode::getPortPaths(VuoRendererPortL
 }
 
 /**
- * Returns the (cableOutline, highlightOutline, cableOutline.subtracted(highlightOutline)) paths,
+ * Returns the (cableOutline, highlightOutline) paths,
  * in that order, required to paint a stateful indicator for a node with the provided
  * @c nodeInnerFrameRect, or empty paths if @c isStateful is false.
  */
-QVector<QPainterPath> VuoRendererNode::getStatefulIndicatorOutlines(QRectF nodeInnerFrameRect, bool isStateful)
+QPainterPath VuoRendererNode::getStatefulIndicatorOutline(QRectF nodeInnerFrameRect, bool isStateful)
 {
 	if (!isStateful)
-		return QVector<QPainterPath>(3, QPainterPath());
+		return QPainterPath();
 
 	// Simplified version of VuoRendererCable::paint() —
 	QPainterPath cablePath;
-	cablePath.moveTo(nodeInnerFrameRect.bottomRight() - QPointF(VuoRendererFonts::thickPenWidth/2., 0));
-	cablePath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF(VuoRendererFonts::thickPenWidth/2., 0));
+	cablePath.moveTo(nodeInnerFrameRect.bottomRight() - QPointF(VuoRendererFonts::thickPenWidth/8., 0));
+	cablePath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF(VuoRendererFonts::thickPenWidth/8., 0));
 
 	QPainterPathStroker cableStroker;
 	cableStroker.setWidth(VuoRendererCable::cableWidth);
 	cableStroker.setCapStyle(Qt::RoundCap);
-	QPainterPath cableOutline = cableStroker.createStroke(cablePath);
-
-	QPainterPath highlightPath;
-	highlightPath.moveTo(nodeInnerFrameRect.bottomRight() + QPointF(-VuoRendererFonts::thickPenWidth/2., VuoRendererCable::cableHighlightOffset));
-	highlightPath.lineTo(nodeInnerFrameRect.bottomLeft()  + QPointF( VuoRendererFonts::thickPenWidth/2., VuoRendererCable::cableHighlightOffset));
-
-	QPainterPathStroker highlightStroker;
-	highlightStroker.setWidth(VuoRendererCable::cableHighlightWidth);
-	highlightStroker.setCapStyle(Qt::RoundCap);
-	QPainterPath highlightOutline = highlightStroker.createStroke(highlightPath);
-
-	QVector<QPainterPath> statefulIndicatorOutlines = QVector<QPainterPath>(3);
-	statefulIndicatorOutlines[0] = cableOutline;
-	statefulIndicatorOutlines[1] = highlightOutline;
-	statefulIndicatorOutlines[2] = cableOutline.subtracted(highlightOutline);
-	return statefulIndicatorOutlines;
+	return cableStroker.createStroke(cablePath);
 }
 
 /**
@@ -431,7 +422,7 @@ QPainterPath VuoRendererNode::getAntennaPath(QRectF nodeInnerFrameRect, bool isI
 	// The icon should start at the node class label's baseline, and extend to match its ascender height.
 	QPainterPath antenna;
 	QPointF center = QPointF(nodeInnerFrameRect.right()-VuoRendererNode::antennaIconWidth, -2.);
-	const double arcSize = VuoRendererFonts::midPenWidth*1.6;
+	const double arcSize = VuoRendererFonts::midPenWidth*1.5;
 	for (int i=1; i<4; ++i)
 	{
 		QRectF arcBounds = QRectF(center.x()-i*arcSize, center.y()-i*arcSize, i*arcSize*2., i*arcSize*2.);
@@ -534,7 +525,7 @@ void VuoRendererNode::updateNodeFrameRect(void)
 
 	for (int portRow=0; portRow < max(inputPorts->childItems().size(),outputPorts->childItems().size()); ++portRow)
 	{
-		// Skip port rows containing reserved (refresh/function/done) ports, which don't affect the node's width.
+		// Skip port rows containing reserved (refresh/function) ports, which don't affect the node's width.
 		int adjustedInputPortRow = portRow + VuoNodeClass::unreservedInputPortStartIndex;
 		int adjustedOutputPortRow = portRow + VuoNodeClass::unreservedOutputPortStartIndex;
 
@@ -567,7 +558,10 @@ void VuoRendererNode::updateNodeFrameRect(void)
 				nodeClassWidth + VuoRendererFonts::thickPenWidth + 4.
 			),
 			maxPortRowWidth
-				  + ((hasInputPorts && hasOutputPorts) ? VuoRendererFonts::thickPenWidth*2.0 : 0.)
+				  + ((hasInputPorts && hasOutputPorts) ? (nameDisplayEnabledForInputPorts() && nameDisplayEnabledForOutputPorts()?
+															  VuoRendererFonts::thickPenWidth*2.0 :
+															  VuoRendererFonts::thickPenWidth/2.0  + 3. + VuoRendererPort::portRadius) :
+														 0.)
 				  + 1.
 		))
 	);
@@ -577,16 +571,16 @@ void VuoRendererNode::updateNodeFrameRect(void)
 		floor(
 			max(
 				inputPorts->childItems().size() - VuoNodeClass::unreservedInputPortStartIndex,	// don't count the refresh port
-				outputPorts->childItems().size() - VuoNodeClass::unreservedOutputPortStartIndex	// don't count the done or function port
+				outputPorts->childItems().size() - VuoNodeClass::unreservedOutputPortStartIndex	// don't count the function port
 			) * VuoRendererPort::portSpacing
 			+ VuoRendererPort::portContainerMargin * 2.
 		)
 	);
 
 	this->frameRect = updatedFrameRect;
-	this->statefulIndicatorOutlines = getStatefulIndicatorOutlines(this->frameRect, this->nodeIsStateful);
+	this->statefulIndicatorOutline = getStatefulIndicatorOutline(this->frameRect, this->nodeIsStateful);
 	this->antennaPath = getAntennaPath(this->frameRect, this->getBase()->getNodeClass()->isInterface());
-	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutlines[0], this->nodeIsSubcomposition);
+	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutline, this->nodeIsSubcomposition);
 }
 
 /**
@@ -627,14 +621,14 @@ bool VuoRendererNode::paintingDisabled() const
  * Returns the center point of the specified input/output port circle.
  *
  * @param port The port.
- * @param portIndex The index of the port in the list of input/output ports (including refresh/done/function ports).
+ * @param portIndex The index of the port in the list of input/output ports (including refresh/function ports).
  */
 QPointF VuoRendererNode::getPortPoint(VuoRendererPort *port, unsigned int portIndex) const
 {
 	qreal x = (port->getOutput() ? frameRect.width()+1. : -1.);
 	qreal y;
 
-	if (port->getRefreshPort() || port->getDonePort())
+	if (port->getRefreshPort())
 	{
 		y = -VuoRendererFonts::thickPenWidth / 2.;
 	}
@@ -646,7 +640,7 @@ QPointF VuoRendererNode::getPortPoint(VuoRendererPort *port, unsigned int portIn
 	{
 		qreal adjustedPortIndex = (qreal)portIndex - (port->getOutput() ?
 														  VuoNodeClass::unreservedOutputPortStartIndex :
-														  VuoNodeClass::unreservedInputPortStartIndex);  // Skip the refresh/done/function port.
+														  VuoNodeClass::unreservedInputPortStartIndex);  // Skip the refresh/function port.
 
 		qreal portOffset = adjustedPortIndex + 0.5;  // Center the port within its space.
 		y = VuoRendererPort::portContainerMargin + portOffset * VuoRendererPort::portSpacing;
@@ -662,7 +656,7 @@ QRectF VuoRendererNode::getOuterNodeFrameBoundingRect(void) const
 {
 	if (paintingDisabled())
 		return QRectF();
-	
+
 	return nodeFrames.first.boundingRect();
 }
 
@@ -785,10 +779,18 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 		this->updateConnectedCableGeometry();
 
 		foreach (VuoRendererPort * p, inputPorts->childItems())
+		{
+			p->setCacheModeForPortAndChildren(QGraphicsItem::NoCache);
 			p->updateGeometry();
+			p->setCacheModeForPortAndChildren(getCurrentDefaultCacheMode());
+		}
 
 		foreach (VuoRendererPort * p, outputPorts->childItems())
+		{
+			p->setCacheModeForPortAndChildren(QGraphicsItem::NoCache);
 			p->updateGeometry();
+			p->setCacheModeForPortAndChildren(getCurrentDefaultCacheMode());
+		}
 
 		foreach (VuoRendererInputDrawer *n, getAttachedInputDrawers())
 			n->updateGeometry();
@@ -1244,4 +1246,79 @@ void VuoRendererNode::setCacheModeForConnectedCables(QGraphicsItem::CacheMode mo
 		VuoRendererCable *rc = (*cable)->getRenderer();
 		rc->setCacheMode(mode);
 	}
+}
+
+/**
+ * Sets the boolean indicating whether this node's ports, including unambiguous ones,
+ * should always have their names displayed.
+ *
+ * Updates the relevant cached data structures.
+ */
+void VuoRendererNode::setAlwaysDisplayPortNames(bool displayPortNames)
+{
+	if (this->alwaysDisplayPortNames != displayPortNames)
+	{
+		this->alwaysDisplayPortNames = displayPortNames;
+
+		foreach (VuoPort *p, getBase()->getInputPorts())
+			p->getRenderer()->updateNameRect();
+
+		foreach (VuoPort *p, getBase()->getOutputPorts())
+			p->getRenderer()->updateNameRect();
+
+		updateNodeFrameRect();
+		layoutPorts();
+	}
+}
+
+/**
+ * Returns a boolean indicating whether the name of the provided @c port should be rendered within the node.
+ */
+bool VuoRendererNode::nameDisplayEnabledForPort(const VuoRendererPort *port)
+{
+	if (port->getOutput())
+		return nameDisplayEnabledForOutputPorts();
+
+	else // if (!port->getOutput())
+		return nameDisplayEnabledForInputPorts();
+}
+
+/**
+ * Returns a boolean indicating whether the names of input ports should be rendered within the node.
+ */
+bool VuoRendererNode::nameDisplayEnabledForInputPorts()
+{
+	if (alwaysDisplayPortNames)
+		return true;
+
+	if (!nameDisplayEnabledForOutputPorts())
+		return true;
+
+	bool nodeHasUnambiguousInput = ((getBase()->getInputPorts().size() == VuoNodeClass::unreservedInputPortStartIndex + 1) &&
+												  (!getBase()->getInputPorts()[VuoNodeClass::unreservedInputPortStartIndex]->getRenderer()->hasPortAction()));
+	if (!nodeHasUnambiguousInput)
+		return true;
+
+	// Don't hide port labels if the node contains any trigger ports.
+	foreach (VuoPort *outputPort, getBase()->getOutputPorts())
+	{
+		if (outputPort->getClass()->getPortType() == VuoPortClass::triggerPort)
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns a boolean indicating whether the names of output ports should be rendered within the node.
+ */
+bool VuoRendererNode::nameDisplayEnabledForOutputPorts()
+{
+	if (alwaysDisplayPortNames)
+		return true;
+
+	bool nodeHasUnambiguousOutput = ((getBase()->getOutputPorts().size() == VuoNodeClass::unreservedOutputPortStartIndex + 1) &&
+												  (getBase()->getOutputPorts()[VuoNodeClass::unreservedOutputPortStartIndex]->getClass()->getPortType() != VuoPortClass::triggerPort));
+
+	return !nodeHasUnambiguousOutput;
 }

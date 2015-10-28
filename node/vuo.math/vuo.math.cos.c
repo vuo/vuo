@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "trigonometry", "angle", "triangle" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

@@ -17,5 +17,6 @@ LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoCurve.o \
 	$$ROOT/type/VuoCurveEasing.o \
+	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoCurve.o \
 	$$ROOT/type/list/VuoList_VuoCurveEasing.o

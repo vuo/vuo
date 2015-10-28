@@ -12,6 +12,7 @@
 
 #include "VuoInteger.h"
 #include "VuoPoint3d.h"
+#include "VuoPoint4d.h"
 #include "VuoReal.h"
 #include "VuoLeapPointable.h"
 #include "VuoList_VuoLeapPointable.h"
@@ -31,13 +32,21 @@
 typedef struct
 {
 	VuoInteger id;
-	VuoPoint3d direction;
-	VuoPoint3d palmNormal;
+	VuoPoint4d rotation;		// Quaternion.
 	VuoPoint3d palmPosition;
 	VuoPoint3d palmVelocity;
 	VuoReal sphereRadius;
 	VuoPoint3d sphereCenter;
-	VuoList_VuoLeapPointable pointables;
+
+	VuoReal palmWidth;			// VuoCoordinates
+	VuoPoint3d wristPosition;	// VuoCoordinates
+	VuoReal pinchAmount;		// 0,1 range
+	VuoReal grabAmount;			// 0,1 range
+	VuoReal timeVisible;
+	VuoBoolean isLeftHand;		// Is this *not* your right hand?
+	VuoReal confidence;			// 0,1 range
+
+	VuoList_VuoLeapPointable fingers;
 
 } VuoLeapHand;
 
@@ -47,13 +56,19 @@ char * VuoLeapHand_summaryFromValue(const VuoLeapHand value);
 
 VuoLeapHand VuoLeapHand_make(
 		VuoInteger id,
-		VuoPoint3d direction,
-		VuoPoint3d palmNormal,
+		VuoPoint4d rotation,
 		VuoPoint3d palmPosition,
 		VuoPoint3d palmVelocity,
 		VuoReal sphereRadius,
 		VuoPoint3d sphereCenter,
-		VuoList_VuoLeapPointable pointables);
+		VuoReal palmWidth,
+		VuoPoint3d wristPosition,
+		VuoReal pinchAmount,
+		VuoReal grabAmount,
+		VuoReal timeVisible,
+		VuoBoolean isLeftHand,
+		VuoReal confidence,
+		VuoList_VuoLeapPointable fingers);
 
 /// @{
 /**

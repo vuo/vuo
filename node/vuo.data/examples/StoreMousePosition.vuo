@@ -1,0 +1,34 @@
+/**
+* @file
+* Draws two dots that follow the mouse pointer. One dot stays with it constantly (purple), and the other only updates once per second (pink).
+*
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="157,352" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.data.hold.VuoPoint2d" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="357,415" fillcolor="violet"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="529,206" _1="{\"r\":0.500008,\"g\":0.000000,\"b\":0.500008,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="531,380" _1="{\"r\":1.000000,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="912,122" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="942,137" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="603,180" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="605,354" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.100000" _layerHeight="0.100000"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="112,180" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="983,111" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+FirePeriodically:fired -> HoldValue2:refresh;
+HoldValue2:heldValue -> MakeRadialGradientLayer2:layerCenter;
+MakeList2:list -> MakeRadialGradientLayer2:colors;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> MakeRadialGradientLayer:colors;
+MakeRadialGradientLayer2:layer -> MakeList4:2;
+MakeRadialGradientLayer:layer -> MakeList4:1;
+ReceiveMouseMoves:movedTo -> HoldValue2:newValue;
+ReceiveMouseMoves:movedTo -> MakeRadialGradientLayer:layerCenter;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+}

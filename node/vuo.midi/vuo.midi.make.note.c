@@ -11,11 +11,10 @@
 #include "VuoMidiNote.h"
 
 VuoModuleMetadata({
-					 "title" : "Make MIDI Note",
+					 "title" : "Make Note",
 					 "keywords" : [ "pitch", "tone", "synthesizer", "music", "instrument" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "SendMidiNotes.vuo" ]
 					 }
 				 });

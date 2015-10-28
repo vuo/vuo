@@ -5,6 +5,7 @@ EXAMPLE_SOURCES += \
 	AimFlashlight.vuo \
 	BendSphere.vuo \
 #	BounceStereoSphere.vuo \
+	ChangeSceneObjectBlendMode.vuo \
 	ChangeTrafficSignal.vuo \
 	Compare4Cameras.vuo \
 	CompareLights.vuo \

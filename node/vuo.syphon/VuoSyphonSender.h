@@ -9,8 +9,11 @@
  */
 
 #include "node.h"
+
+#define NS_RETURNS_INNER_POINTER
 #import <AppKit/AppKit.h>
 #import <Syphon.h>
+
 #import "VuoGlContext.h"
 
 /**

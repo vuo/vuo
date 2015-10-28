@@ -12,9 +12,10 @@
 const qreal VuoRendererColors::minNodeFrameAndFillAlpha = 0.35;
 const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
 const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = 0.75;
-const qreal VuoRendererColors::defaultCableUpperAndMainAlpha = 0.5;
+const qreal VuoRendererColors::defaultCableMainAlpha = 0.35;
+const qreal VuoRendererColors::defaultCableUpperAlpha = 0.9;
 const qreal VuoRendererColors::defaultConstantAlpha = 3./8.;
-const int VuoRendererColors::subtleHighlightingLighteningFactor = 100; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
+const int VuoRendererColors::subtleHighlightingLighteningFactor = 140; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
 const int VuoRendererColors::activityFadeDuration = 400;
 const int VuoRendererColors::activityAnimationFadeDuration = 950;
 
@@ -224,8 +225,8 @@ QColor VuoRendererColors::portTitle(void)
  */
 QColor VuoRendererColors::cableUpper(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableUpperAndMainAlpha);
-	return tint(QColor::fromHslF(0, 0, .75, adjustedAlpha), 2.);
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableUpperAlpha);
+	return tint(QColor::fromHslF(0, 0, .9, adjustedAlpha), 2.);
 }
 
 /**
@@ -233,7 +234,7 @@ QColor VuoRendererColors::cableUpper(void)
  */
 QColor VuoRendererColors::cableMain(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableUpperAndMainAlpha);
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableMainAlpha);
 	return tint(QColor::fromHslF(0, 0, .25, adjustedAlpha), 2.);
 }
 
@@ -385,10 +386,10 @@ qint64 VuoRendererColors::getVirtualFiredEventOriginForAnimationFadePercentage(q
  */
 qint64 VuoRendererColors::getVirtualPropagatedEventOrigin(void)
 {
-	qreal minCableUpperAndMainAlpha = getMinAlphaForDefault(defaultCableUpperAndMainAlpha);
-	qreal maxCableUpperAndMainAlpha = getMaxAlphaForDefault(defaultCableUpperAndMainAlpha);
+	qreal minCableMainAlpha = getMinAlphaForDefault(defaultCableMainAlpha);
+	qreal maxCableMainAlpha = getMaxAlphaForDefault(defaultCableMainAlpha);
 
-	const qreal defaultFadePercentage = (maxCableUpperAndMainAlpha-defaultCableUpperAndMainAlpha)/(maxCableUpperAndMainAlpha-minCableUpperAndMainAlpha);
+	const qreal defaultFadePercentage = (maxCableMainAlpha-defaultCableMainAlpha)/(maxCableMainAlpha-minCableMainAlpha);
 	qint64 timeNow = QDateTime::currentMSecsSinceEpoch();
 	qint64 virtualFiredEventOrigin = timeNow - defaultFadePercentage*activityFadeDuration;
 

@@ -20,11 +20,11 @@ VuoModuleMetadata({
 						  "aac", "m4a", "ac3",
 						  "3gp", "amr"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "dependencies" : [
 						  "VuoAudioFile"
 					  ],
-					  "node": {
+					  "node" : {
 						  "isInterface" : true,
 						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioFileAndLoop.vuo", "ScratchRecord.vuo" ]
 					  }
@@ -60,7 +60,7 @@ struct nodeInstanceData *nodeInstanceInit
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Drop),
+		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"}),
 		VuoOutputTrigger(finishedPlayback, void)
 )
 {
@@ -69,14 +69,14 @@ void nodeInstanceTriggerStart
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoText) url,
-		VuoInputEvent(VuoPortEventBlocking_None,url) urlEvent,
-		VuoInputEvent(VuoPortEventBlocking_None,) play,
-		VuoInputEvent(VuoPortEventBlocking_None,) pause,
+		VuoInputData(VuoText, {"name":"URL"}) url,
+		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
+		VuoInputEvent({"eventBlocking":"none"}) play,
+		VuoInputEvent({"eventBlocking":"none"}) pause,
 //		VuoInputData(VuoLoopType, {"default":"loop"}) loop,
 		VuoInputData(VuoReal, {"default":""}) setTime,
-		VuoInputEvent(VuoPortEventBlocking_None, setTime) setTimeEvent,
-		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Enqueue),
+		VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
+		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"}),
 		VuoOutputTrigger(finishedPlayback, void),
 		VuoInstanceData(struct nodeInstanceData *) context
 )

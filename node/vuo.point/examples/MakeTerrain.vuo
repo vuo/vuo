@@ -9,21 +9,23 @@
 
 digraph G
 {
-ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<done>done\r|<point3d>point3d\r" pos="346,584"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-129,51" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="340,301" fillcolor="green"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<done>done\r|<transform>transform\r" pos="114,449" fillcolor="green" _translation="{\"x\":0.000000,\"y\":-0.200000,\"z\":0.000000}" _scale="{\"x\":1.000000,\"y\":0.500000,\"z\":1.000000}"];
-MakeList4 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="492,312" fillcolor="green"];
-MakeParametricGrid [type="vuo.point.make.parametric.grid" version="1.0.0" label="Make Parametric Grid|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uMin>uMin\l|<uMax>uMax\l|<vMin>vMin\l|<vMax>vMax\l|<done>done\r|<points>points\r" pos="219,72" fillcolor="violet" _time="0.000000" _xExpression="\"u\"" _yExpression="\"sin(u*180)*cos(v*180)\"" _zExpression="\"v\"" _rows="256" _columns="256" _uMin="-1.000000" _uMax="1.000000" _vMin="-1.000000" _vMax="1.000000"];
-MakePointVertices2 [type="vuo.mesh.make.points.VuoPoint3d" version="2.0.0" label="Make Point Mesh|<refresh>refresh\l|<positions>positions\l|<pointSize>pointSize\l|<done>done\r|<mesh>mesh\r" pos="358,72" fillcolor="green" _pointSize="0.002000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="558,301" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="1.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<done>done\r|<shader>shader\r" pos="75,341" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="346,584"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-129,51" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="398,331"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="114,449" _translation="{\"x\":0.000000,\"y\":-0.200000,\"z\":0.000000}" _scale="{\"x\":1.000000,\"y\":0.500000,\"z\":1.000000}"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="606,366" fillcolor="green"];
+MakeList4 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="576,336" fillcolor="green"];
+MakeParametricGrid [type="vuo.point.make.parametric.grid" version="1.0.1" label="Make Parametric Grid|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uMin>uMin\l|<uMax>uMax\l|<vMin>vMin\l|<vMax>vMax\l|<points>points\r" pos="219,72" fillcolor="violet" _time="0.000000" _xExpression="\"u\"" _yExpression="\"sin(u*180)*cos(v*180)\"" _zExpression="\"v\"" _rows="256" _columns="256" _uMin="-1.000000" _uMax="1.000000" _vMin="-1.000000" _vMax="1.000000"];
+MakePointVertices2 [type="vuo.mesh.make.points.VuoPoint3d" version="2.1.0" label="Make Point Mesh|<refresh>refresh\l|<positions>positions\l|<pointSize>pointSize\l|<mesh>mesh\r" pos="448,72" _pointSize="0.002000"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="647,325" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="75,341" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
 
 ConvertRealTo3DPoint:point3d -> Make3DTransform:rotation;
 FireOnStart:started -> MakeParametricGrid:refresh;
 FireOnStart:started -> ShadeWithUnlitColor:refresh;
 Make3DObject:object -> MakeList4:1;
 Make3DTransform:transform -> Make3DObject:transform;
+MakeList0:list -> RenderSceneToWindow:setWindowProperties;
 MakeList4:list -> RenderSceneToWindow:objects;
 MakeParametricGrid:points -> MakePointVertices2:positions;
 MakePointVertices2:mesh -> Make3DObject:mesh;

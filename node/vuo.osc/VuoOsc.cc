@@ -26,6 +26,7 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoOsc",
 					 "dependencies" : [
+						 "VuoOscMessage",
 						 "CoreServices.framework",
 						 "oscpack"
 					 ]
@@ -112,6 +113,9 @@ protected:
 					case osc::FLOAT_TYPE_TAG:
 						json_object_array_add(jsonArguments, json_object_new_double(arg->AsFloat()));
 						break;
+					case osc::DOUBLE_TYPE_TAG:
+						json_object_array_add(jsonArguments, json_object_new_double(arg->AsDouble()));
+						break;
 					case osc::INT32_TYPE_TAG:
 						json_object_array_add(jsonArguments, json_object_new_int(arg->AsInt32()));
 						break;
@@ -159,8 +163,52 @@ class VuoOscInSocket : public UdpSocket
 	VuoOscInPacketListener *listener_;
 	CFNetServiceRef netService;
 	int uses = 0;
+	bool stopping = false;
 
 public:
+	/**
+	 * Runs the receive multiplexer until `stopping` becomes true and the multiplexer receives a `AsynchronousBreak()`.
+	 * Catches and logs exceptions, then resumes listening.
+	 */
+	void listenForMessages(void)
+	{
+		while (!stopping)
+		{
+			try
+			{
+				mux_.Run();
+			}
+			catch (osc::MalformedPacketException e)
+			{
+				VLog("Malformed OSC packet: %s", e.what());
+			}
+			catch (osc::MalformedBundleException e)
+			{
+				VLog("Malformed OSC bundle: %s", e.what());
+			}
+			catch (osc::MalformedMessageException e)
+			{
+				VLog("Malformed OSC message: %s", e.what());
+			}
+			catch (osc::WrongArgumentTypeException e)
+			{
+				VLog("OSC: Wrong argument type: %s", e.what());
+			}
+			catch (osc::MissingArgumentException e)
+			{
+				VLog("OSC: Missing argument: %s", e.what());
+			}
+			catch (osc::ExcessArgumentException e)
+			{
+				VLog("OSC: Excess argument: %s", e.what());
+			}
+			catch (...)
+			{
+				VLog("Unknown OSC exception");
+			}
+		}
+	}
+
 	/**
 	 * Creates a socket on the specified endpoint.  Invokes the specified listener when a message is received.
 	 */
@@ -183,7 +231,7 @@ public:
 		mux_.AttachSocketListener(this, listener_);
 
 		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-						   mux_.Run();
+						   listenForMessages();
 					   });
 
 
@@ -264,6 +312,7 @@ public:
 
 		if (IsBound())
 		{
+			stopping = true;
 			mux_.AsynchronousBreak();
 			mux_.DetachSocketListener(this, listener_);
 		}

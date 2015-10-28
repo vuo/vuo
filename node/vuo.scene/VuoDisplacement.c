@@ -19,10 +19,7 @@ VuoModuleMetadata({
 					  "title" : "Displacement",
 					  "description" : "The direction in which to move vertices.",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
-					  "dependencies" : [
-					  "c"
-					  ]
+					  "version" : "1.0.0"
 				  });
 #endif
 /// @}

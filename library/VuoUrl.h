@@ -14,7 +14,7 @@ extern "C"
 
 #include "VuoText.h"
 
-VuoText VuoUrl_normalize(const VuoText url);
+VuoText VuoUrl_normalize(const VuoText url, bool shouldEscapeSpaces);
 bool VuoUrl_get(const char *url, void **data, unsigned int *dataLength);
 
 #ifdef __cplusplus

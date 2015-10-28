@@ -11,7 +11,7 @@
 #define VUOIMAGECOLORDEPTH_H
 
 /// @{
-typedef void * VuoList_VuoImageColorDepth;
+typedef const struct VuoList_VuoImageColorDepth_struct { void *l; } * VuoList_VuoImageColorDepth;
 #define VuoList_VuoImageColorDepth_TYPE_DEFINED
 /// @}
 

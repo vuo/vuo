@@ -44,6 +44,14 @@ VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition 
 }
 
 /**
+ * Destructor.
+ */
+VuoCompilerBitcodeGenerator::~VuoCompilerBitcodeGenerator(void)
+{
+	delete graph;
+}
+
+/**
  * Helper function for VuoCompilerBitcodeGenerator::makeOrderedNodes().
  */
 bool VuoCompilerBitcodeGenerator::areNodeListsSortedBySize(const vector<VuoCompilerNode *> &nodes1, const vector<VuoCompilerNode *> &nodes2)
@@ -182,6 +190,9 @@ vector<VuoCompilerNode *> VuoCompilerBitcodeGenerator::getNodesToWaitOnBeforeTra
 
 /**
  * Generates bitcode that can be read in as a node class.
+ *
+ * @return The LLVM module in which bitcode has been generated. It is owned by the VuoCompilerComposition with which
+ *		this VuoCompilerBitcodeGenerator was constructed.
  */
 Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 {
@@ -229,6 +240,7 @@ Module * VuoCompilerBitcodeGenerator::generateBitcode(void)
 	generateCallbackStartFunction();
 	generateCallbackStopFunction();
 
+	composition->setModule(module);
 	return module;
 }
 
@@ -1441,128 +1453,13 @@ void VuoCompilerBitcodeGenerator::generateGetPublishedPortDetailsFunction(bool i
 	vector<string> details;
 	for (vector<VuoPublishedPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
 	{
-		set<VuoPort *> connectedPorts = (*i)->getConnectedPorts();
+		VuoCompilerPublishedPort *publishedPort = (*i)->getCompiler();
 
-		json_object *suggestedMin = NULL;
-		json_object *suggestedMax = NULL;
-		json_object *suggestedStep = NULL;
-
-		for (set<VuoPort *>::iterator connectedPort = connectedPorts.begin(); connectedPort != connectedPorts.end(); ++connectedPort)
-		{
-			/// @todo Remove temporary detail-coalescing workaround (https://b33p.net/kosada/node/8043)
-			VuoCompilerInputEventPortClass *connectedInputEventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>((*connectedPort)->getClass()->getCompiler());
-			if (connectedInputEventPortClass)
-			{
-				VuoCompilerInputDataClass *connectedInputDataClass = connectedInputEventPortClass->getDataClass();
-				if (connectedInputDataClass)
-				{
-					json_object *js = connectedInputDataClass->getDetails();
-					json_object *o;
-
-					if (json_object_object_get_ex(js, "suggestedMin", &o))
-					{
-						if (!suggestedMin)
-							suggestedMin = o;
-						else
-						{
-							// Use the larger of the current port's suggestedMin.x and all previous ports' suggestedMin.x.
-							/// @todo https://b33p.net/kosada/node/7317
-							bool newIsBetter = false;
-							string type = (*i)->getType()->getModuleKey();
-							if (type == "VuoInteger")
-								newIsBetter = json_object_get_int64(o) > json_object_get_int64(suggestedMin);
-							else if (type == "VuoReal")
-								newIsBetter = json_object_get_double(o) > json_object_get_double(suggestedMin);
-							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
-							{
-								double oldX=0,newX=0;
-								json_object *x;
-								if (json_object_object_get_ex(suggestedMin, "x", &x))
-									oldX = json_object_get_double(x);
-								if (json_object_object_get_ex(o, "x", &x))
-									newX = json_object_get_double(x);
-								newIsBetter = newX > oldX;
-							}
-
-							if (newIsBetter)
-								suggestedMin = o;
-						}
-					}
-
-					if (json_object_object_get_ex(js, "suggestedMax", &o))
-					{
-						if (!suggestedMax)
-							suggestedMax = o;
-						else
-						{
-							// Use the smaller of the current port's suggestedMax.x and all previous ports' suggestedMax.x.
-							/// @todo https://b33p.net/kosada/node/7317
-							bool newIsBetter = false;
-							string type = (*i)->getType()->getModuleKey();
-							if (type == "VuoInteger")
-								newIsBetter = json_object_get_int64(o) < json_object_get_int64(suggestedMax);
-							else if (type == "VuoReal")
-								newIsBetter = json_object_get_double(o) < json_object_get_double(suggestedMax);
-							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
-							{
-								double oldX=0,newX=0;
-								json_object *x;
-								if (json_object_object_get_ex(suggestedMax, "x", &x))
-									oldX = json_object_get_double(x);
-								if (json_object_object_get_ex(o, "x", &x))
-									newX = json_object_get_double(x);
-								newIsBetter = newX < oldX;
-							}
-
-							if (newIsBetter)
-								suggestedMax = o;
-						}
-					}
-
-					if (json_object_object_get_ex(js, "suggestedStep", &o))
-					{
-						if (!suggestedStep)
-							suggestedStep = o;
-						else
-						{
-							// Use the smaller of the current port's suggestedStep.x and all previous ports' suggestedStep.x.
-							/// @todo https://b33p.net/kosada/node/7317
-							bool newIsBetter = false;
-							string type = (*i)->getType()->getModuleKey();
-							if (type == "VuoInteger")
-								newIsBetter = json_object_get_int64(o) < json_object_get_int64(suggestedStep);
-							else if (type == "VuoReal")
-								newIsBetter = json_object_get_double(o) < json_object_get_double(suggestedStep);
-							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
-							{
-								double oldX=0,newX=0;
-								json_object *x;
-								if (json_object_object_get_ex(suggestedStep, "x", &x))
-									oldX = json_object_get_double(x);
-								if (json_object_object_get_ex(o, "x", &x))
-									newX = json_object_get_double(x);
-								newIsBetter = newX < oldX;
-							}
-
-							if (newIsBetter)
-								suggestedStep = o;
-						}
-					}
-				}
-			}
-		}
-
-		json_object *detailsObject = json_object_new_object();
-		json_object_object_add(detailsObject, "default", json_tokener_parse((*i)->getInitialValue().c_str()));
-		if (suggestedMin)
-			json_object_object_add(detailsObject, "suggestedMin", suggestedMin);
-		if (suggestedMax)
-			json_object_object_add(detailsObject, "suggestedMax", suggestedMax);
-		if (suggestedStep)
-			json_object_object_add(detailsObject, "suggestedStep", suggestedStep);
-
-		string detailsSerialized = json_object_to_json_string_ext(detailsObject, JSON_C_TO_STRING_PLAIN);
+		json_object *detailsObj = publishedPort->getDetails();
+		string detailsSerialized = json_object_to_json_string_ext(detailsObj, JSON_C_TO_STRING_PLAIN);
 		details.push_back(detailsSerialized);
+
+		json_object_put(detailsObj);
 	}
 
 	generateFunctionReturningStringArray(functionName, details);
@@ -1933,13 +1830,15 @@ void VuoCompilerBitcodeGenerator::generateSetPublishedInputPortValueFunction(voi
 		string currentName = publishedPort->getName();
 		BasicBlock *currentBlock = BasicBlock::Create(module->getContext(), currentName, function, 0);
 
-		set<VuoPort *> connectedPorts = publishedPort->getConnectedPorts();
-		for (set<VuoPort *>::iterator j = connectedPorts.begin(); j != connectedPorts.end(); ++j)
+		VuoPort *pseudoPort = publishedPort->getCompiler()->getVuoPseudoPort();
+		set<VuoCable *> publishedInputCables = composition->getBase()->getPublishedInputCables();
+		for (set<VuoCable *>::iterator j = publishedInputCables.begin(); j != publishedInputCables.end(); ++j)
 		{
-			VuoPort *port = *j;
-			if (port->getClass()->getPortType() == VuoPortClass::dataAndEventPort)
+			VuoCable *publishedCable = *j;
+			if (publishedCable->getFromPort() == pseudoPort && publishedCable->getCompiler()->carriesData())
 			{
-				string connectedPortIdentifier = static_cast<VuoCompilerEventPort *>(port->getCompiler())->getIdentifier();
+				VuoCompilerEventPort *connectedPort = static_cast<VuoCompilerEventPort *>(publishedCable->getToPort()->getCompiler());
+				string connectedPortIdentifier = connectedPort->getIdentifier();
 				Constant *connectedPortIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, connectedPortIdentifier);
 
 				vector<Value *> args;
@@ -1971,12 +1870,13 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 
 	Value *sentDataValue = NULL;
 	Value *dataSummaryValue = NULL;
+	Constant *trueValue = ConstantInt::get(boolType, 1);
+	Constant *falseValue = ConstantInt::get(boolType, 0);
 	if (shouldSendTelemetry)
 	{
 		if (dataValue)
 		{
 			// sentData = true;
-			Constant *trueValue = ConstantInt::get(boolType, 1);
 			sentDataValue = trueValue;
 
 			// dataSummary = <type>_summaryFromValue(portValue);
@@ -1986,7 +1886,6 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 		else
 		{
 			// sentData = false;
-			Constant *falseValue = ConstantInt::get(boolType, 0);
 			sentDataValue = falseValue;
 
 			// dataSummary = NULL;
@@ -2024,13 +1923,16 @@ void VuoCompilerBitcodeGenerator::generateTransmissionFromOutputPort(Function *f
 	for (set<VuoCompilerCable *>::iterator i = outgoingCables.begin(); i != outgoingCables.end(); ++i)
 	{
 		VuoCompilerCable *cable = *i;
-		cable->generateTransmission(module, transmissionBlock, dataValue, requiresEvent);
+		Value *transmittedDataValue = (cable->carriesData() ? dataValue : NULL);
+
+		cable->generateTransmission(module, transmissionBlock, transmittedDataValue, requiresEvent);
 
 		if (shouldSendTelemetry)
 		{
 			VuoCompilerPort *inputPort = static_cast<VuoCompilerPort *>(cable->getBase()->getToPort()->getCompiler());
-			Value *dataSummaryValueOrNull = (dataValue ? dataSummaryValue : NULL);
-			generateSendInputPortUpdated(transmissionBlock, inputPort, sentDataValue, dataSummaryValueOrNull);
+			Value *receivedDataValue = (transmittedDataValue ? trueValue : falseValue);
+			Value *dataSummaryValueOrNull = (transmittedDataValue ? dataSummaryValue : NULL);
+			generateSendInputPortUpdated(transmissionBlock, inputPort, receivedDataValue, dataSummaryValueOrNull);
 		}
 	}
 
@@ -2222,6 +2124,20 @@ void VuoCompilerBitcodeGenerator::generateSendInputPortUpdated(BasicBlock *block
 }
 
 /**
+ * Generates a call to @ sendEventDropped() to send telemetry.
+ */
+void VuoCompilerBitcodeGenerator::generateSendEventDropped(BasicBlock *block, VuoCompilerTriggerPort *triggerPort)
+{
+	Constant *portIdentifierValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, triggerPort->getIdentifier());
+
+	// sendEventDropped(triggerPortIdentifier);
+	Function *sendEventDroppedFunction = VuoCompilerCodeGenUtilities::getSendEventDroppedFunction(module);
+	vector<Value *> sendEventDroppedArgs;
+	sendEventDroppedArgs.push_back(portIdentifierValue);
+	CallInst::Create(sendEventDroppedFunction, sendEventDroppedArgs, "", block);
+}
+
+/**
  * Generates the vuoSerialize() function, which returns a string representation of the current state
  * of the running composition.
  *
@@ -2298,6 +2214,11 @@ void VuoCompilerBitcodeGenerator::generateUnserializeFunction(void)
 	// closeGraphvizGraph(graph);
 	Function *closeGraphvizGraphFunction = VuoCompilerCodeGenUtilities::getCloseGraphvizGraphFunction(module);
 	CallInst::Create(closeGraphvizGraphFunction, graphValue, "", block);
+
+	// If a drawer has been resized in this live-coding update, and if the list input port attached to the drawer was
+	// unserialized after the drawer, then then list input port has been reverted to the old (unresized) list value.
+	// So re-transmit the value from the drawer to the list input.
+	generateInitialEventlessTransmissions(unserializeFunction, block);
 
 	ReturnInst::Create(module->getContext(), block);
 }
@@ -2486,7 +2407,8 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 	bool canDropEvents = (trigger->getBase()->getEventThrottling() == VuoPortClass::EventThrottling_Drop);
 	Value *didClaimNodes = generateWaitForNodes(module, triggerWorker, triggerBlock, triggerWaitNodes, eventIdValueInTriggerWorker, ! canDropEvents);
 
-	// If this trigger can drop events and the downstream nodes are not immediately available, then drop this event.
+	// If this trigger can drop events and the downstream nodes are not immediately available,
+	// then drop this event, and send telemetry that the event was dropped.
 	if (canDropEvents)
 	{
 		ConstantInt *trueValue = ConstantInt::get(module->getContext(), APInt(1, 1));
@@ -2497,6 +2419,7 @@ void VuoCompilerBitcodeGenerator::generateTriggerFunctionBody(VuoCompilerTrigger
 		triggerBlock = nextTriggerBlock;
 
 		trigger->generateDataValueDiscard(module, dropEventBlock, triggerWorker);
+		generateSendEventDropped(dropEventBlock, trigger);
 		BranchInst::Create(triggerReturnBlock, dropEventBlock);
 	}
 

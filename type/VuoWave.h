@@ -11,7 +11,7 @@
 #define VUOWAVE_H
 
 /// @{
-typedef void * VuoList_VuoWave;
+typedef const struct VuoList_VuoWave_struct { void *l; } * VuoList_VuoWave;
 #define VuoList_VuoWave_TYPE_DEFINED
 /// @}
 

@@ -17,13 +17,13 @@
 VuoModuleMetadata({
 					 "title" : "Ripple Image",
 					 "keywords" : [ "wave", "sinusoidal", "sine", "cosine", "undulate", "ruffle", "swish", "swing", "flap", "sway", "billow", "water", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "2.1.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -84,7 +84,7 @@ void nodeInstanceEvent
 	if (! image)
 		return;
 
-	double nonzeroWavelength = (wavelength == 0) ? 0.000001 : wavelength;
+	double nonzeroWavelength = VuoReal_makeNonzero(wavelength);
 
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);

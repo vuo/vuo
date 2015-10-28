@@ -7,9 +7,11 @@
  * For more information, see http://vuo.org/license.
  */
 
-#include "node.h"
+#include "VuoBoolean.h"
 #include "VuoModifierKey.h"
 #include "VuoMouseButton.h"
+#include "VuoPoint2d.h"
+#include "VuoWindowReference.h"
 
 typedef void * VuoMouse;  ///< Handle returned when starting to listen for events, to be used when stopping listening.
 

@@ -43,6 +43,9 @@ VuoPoint3d VuoPoint3d_valueFromJson(struct json_object * js);
 struct json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value);
 char * VuoPoint3d_summaryFromValue(const VuoPoint3d value);
 
+VuoPoint3d VuoPoint3d_random(const VuoPoint3d minimum, const VuoPoint3d maximum);
+VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d minimum, const VuoPoint3d maximum);
+
 /// @{
 /**
  * Automatically generated function.
@@ -177,16 +180,16 @@ static inline float VuoPoint3d_squaredMagnitude(VuoPoint3d a)
 }
 
 /**
- * @c a / @c b
+ * Component-wise division.
  */
-static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, float b) __attribute__((const));
-static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, float b)
+static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, VuoPoint3d b) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_divide(VuoPoint3d a, VuoPoint3d b)
 {
 	VuoPoint3d p =
 	{
-		a.x / b,
-		a.y / b,
-		a.z / b
+		a.x / b.x,
+		a.y / b.y,
+		a.z / b.z
 	};
 	return p;
 }
@@ -204,6 +207,21 @@ static inline VuoPoint3d VuoPoint3d_multiply(VuoPoint3d a, float b)
 		a.z * b
 	};
 	return p;
+}
+
+/**
+ * If any component of the value is zero or very close to zero, moves it further from zero (either 0.000001 or -0.000001).
+ */
+static inline VuoPoint3d VuoPoint3d_makeNonzero(VuoPoint3d a) __attribute__((const));
+static inline VuoPoint3d VuoPoint3d_makeNonzero(VuoPoint3d a)
+{
+	if (fabs(a.x) < 0.000001)
+		a.x = copysign(0.000001, a.x);
+	if (fabs(a.y) < 0.000001)
+		a.y = copysign(0.000001, a.y);
+	if (fabs(a.z) < 0.000001)
+		a.z = copysign(0.000001, a.z);
+	return a;
 }
 
 /**
@@ -280,10 +298,11 @@ static inline VuoPoint3d VuoPoint3d_bezier3(VuoPoint3d p0, VuoPoint3d p1, VuoPoi
  */
 static inline VuoPoint3d VuoPoint3d_snap(VuoPoint3d a, VuoPoint3d center, VuoPoint3d snap)
 {
+	VuoPoint3d nonzeroSnap = VuoPoint3d_makeNonzero(snap);
 	return (VuoPoint3d) {
-		center.x + snap.x * (int)round( (a.x-center.x) / snap.x ),
-		center.y + snap.y * (int)round( (a.y-center.y) / snap.y ),
-		center.z + snap.z * (int)round( (a.z-center.z) / snap.z )
+		center.x + nonzeroSnap.x * (int)round( (a.x-center.x) / nonzeroSnap.x ),
+		center.y + nonzeroSnap.y * (int)round( (a.y-center.y) / nonzeroSnap.y ),
+		center.z + nonzeroSnap.z * (int)round( (a.z-center.z) / nonzeroSnap.z )
 	};
 }
 

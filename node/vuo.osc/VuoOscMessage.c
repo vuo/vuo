@@ -21,8 +21,7 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c",
-						 "json"
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -77,6 +76,9 @@ VuoOscMessage VuoOscMessage_make(VuoText address, json_object *data)
  */
 VuoOscMessage VuoOscMessage_valueFromJson(json_object * js)
 {
+	if (!js)
+		return NULL;
+
 	json_object *o = NULL;
 
 	VuoText address = NULL;
@@ -97,6 +99,9 @@ VuoOscMessage VuoOscMessage_valueFromJson(json_object * js)
 json_object * VuoOscMessage_jsonFromValue(const VuoOscMessage value)
 {
 	json_object *js = json_object_new_object();
+
+	if (!value)
+		return NULL;
 
 	if (value->address)
 		json_object_object_add(js, "address", json_object_new_string(value->address));

@@ -55,6 +55,46 @@ private slots:
 		if (testSummary)
 			QCOMPARE(VuoReal_summaryFromValue(value), initializer.toUtf8().constData());
 	}
+
+	void testRandom_data()
+	{
+		QTest::addColumn<VuoReal>("minimum");
+		QTest::addColumn<VuoReal>("maximum");
+		QTest::addColumn<VuoInteger>("expectedMinimumUniqueValueCount");
+
+		QTest::newRow("zero")			<< (VuoReal)   0 << (VuoReal) 0   << (VuoInteger) 1;
+		QTest::newRow("positive range")	<< (VuoReal)   1 << (VuoReal) 1.1 << (VuoInteger)10;	// Conservative, to keep the test from sporadically failing when we're extraordinarily lucky.
+		QTest::newRow("negative range")	<< (VuoReal)-1.1 << (VuoReal)-1   << (VuoInteger)10;
+	}
+	void testRandom()
+	{
+		QFETCH(VuoReal, minimum);
+		QFETCH(VuoReal, maximum);
+		QFETCH(VuoInteger, expectedMinimumUniqueValueCount);
+
+		unsigned short state[3];
+		VuoInteger_setRandomState(state, 0);
+
+		QSet<VuoReal> generated;
+		QSet<VuoReal> generatedWithState;
+		for (int i = 0; i < 1000; ++i)
+		{
+			{
+				VuoReal v = VuoReal_random(minimum, maximum);
+				QVERIFY(v >= minimum);
+				QVERIFY(v <= maximum);
+				generated.insert(v);
+			}
+			{
+				VuoReal v = VuoReal_randomWithState(state, minimum, maximum);
+				QVERIFY(v >= minimum);
+				QVERIFY(v <= maximum);
+				generatedWithState.insert(v);
+			}
+		}
+		QVERIFY(generated.size() >= expectedMinimumUniqueValueCount);
+		QVERIFY(generatedWithState.size() >= expectedMinimumUniqueValueCount);
+	}
 };
 
 QTEST_APPLESS_MAIN(TestVuoReal)

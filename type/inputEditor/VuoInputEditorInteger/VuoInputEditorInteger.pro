@@ -15,4 +15,5 @@ HEADERS += \
 OTHER_FILES += \
 	VuoInputEditorInteger.json
 
-LIBS += $$ROOT/type/VuoInteger.o
+LIBS += \
+	$$ROOT/type/VuoInteger.o

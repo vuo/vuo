@@ -12,9 +12,9 @@
 VuoModuleMetadata({
 					 "title" : "Make 4D Point",
 					 "keywords" : [ "homogenous", "xyzw", "coordinates", "vector" ],
-					 "version" : "1.0.0",
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

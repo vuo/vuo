@@ -41,7 +41,7 @@ public:
 		TintGreen
 	};
 
-	VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, VuoPort * donePort, vector<VuoPort *>inputPorts, vector<VuoPort *> outputPorts, double x=0, double y=0, bool collapsed=false, VuoNode::TintColor tintColor=TintNone);
+	VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, vector<VuoPort *>inputPorts, vector<VuoPort *> outputPorts, double x=0, double y=0, bool collapsed=false, VuoNode::TintColor tintColor=TintNone);
 
 	VuoNodeClass * getNodeClass(void);
 
@@ -52,7 +52,6 @@ public:
 	vector<VuoPort *> getOutputPorts(void);
 
 	VuoPort * getRefreshPort(void);
-	VuoPort * getDonePort(void);
 
 	string getTitle(void);
 	void setTitle(string title);
@@ -82,7 +81,6 @@ private:
 	vector<VuoPort *> inputPorts;
 	vector<VuoPort *> outputPorts;
 	VuoPort *refreshPort;
-	VuoPort *donePort;
 	string title;
 	int x,y;
 	bool collapsed;

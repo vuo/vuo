@@ -21,7 +21,6 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false,
 						  "exampleCompositions" : [ "Count.vuo" ]
 					  }
 				  });
@@ -42,11 +41,11 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoGenericType1 *) countState,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":1, "VuoReal":1.0}}) increment,
-		VuoInputEvent(VuoPortEventBlocking_None,increment) incrementEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"increment"}) incrementEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":1, "VuoReal":1.0}}) decrement,
-		VuoInputEvent(VuoPortEventBlocking_None,decrement) decrementEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"decrement"}) decrementEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) setCount,
-		VuoInputEvent(VuoPortEventBlocking_None,setCount) setCountEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"setCount"}) setCountEvent,
 		VuoOutputData(VuoGenericType1) count
 )
 {

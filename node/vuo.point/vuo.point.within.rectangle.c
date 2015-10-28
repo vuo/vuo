@@ -14,7 +14,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "contains", "bounds", "limit", "test", "distance", "box" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "IsMouseWithinRectangle.vuo" ]
 					 }
 				 });

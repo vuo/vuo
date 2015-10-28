@@ -75,12 +75,9 @@ void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *functi
 
 	generateFunctionCall(functionSrc, module, initialBlock);
 
-	// The output port should transmit an event if it's a done port or any non-blocking input port received the event.
+	// The output port should transmit an event if any non-blocking input port received the event.
 	// The output port should not transmit an event if no non-blocking or door input ports received the event.
 	// Otherwise, the output port's event transmission is handled by the node class implementation.
-
-	VuoCompilerOutputEventPort *donePort = dynamic_cast<VuoCompilerOutputEventPort *>( getBase()->getDonePort()->getCompiler() );
-	donePort->generateStore(true, initialBlock);
 
 	vector<VuoPort *> nonBlockingInputPorts;
 	vector<VuoPort *> doorInputPorts;
@@ -113,7 +110,7 @@ void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *functi
 	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
 	{
 		VuoCompilerOutputEventPort *eventPort = dynamic_cast<VuoCompilerOutputEventPort *>((*i)->getCompiler());
-		if (eventPort && eventPort != donePort)
+		if (eventPort)
 			eventPort->generateStore(transmitForAllOutputPorts, handleTransmissionBlock);
 	}
 

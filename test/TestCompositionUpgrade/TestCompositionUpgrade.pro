@@ -1,6 +1,6 @@
 TEMPLATE = app
 CONFIG -= app_bundle
-CONFIG += console testcase qtTest graphviz VuoFramework VuoCompiler VuoEditor TestCompositionExecution json
+CONFIG += console testcase qtCore qtGui qtTest graphviz VuoFramework VuoBase VuoCompiler VuoEditor VuoRenderer TestCompositionExecution json
 TARGET = TestCompositionUpgrade
 
 include(../../vuo.pri)

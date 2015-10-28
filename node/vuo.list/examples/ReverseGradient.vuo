@@ -1,0 +1,35 @@
+/**
+ * @file
+ * Reverses the order of colors in the gradient each time the mouse is clicked.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="56,169" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="968,255" fillcolor="green"];
+MakeList8 [type="vuo.list.make.7.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<list>list\r" pos="186,251" _1="{\"r\":1.000000,\"g\":0.000000,\"b\":0.384314,\"a\":1.000000}" _2="{\"r\":0.992157,\"g\":0.956863,\"b\":0.003922,\"a\":1.000000}" _3="{\"r\":0.321569,\"g\":1.000000,\"b\":0.003922,\"a\":1.000000}" _4="{\"r\":0.003922,\"g\":1.000000,\"b\":0.811765,\"a\":1.000000}" _5="{\"r\":0.000000,\"g\":0.494118,\"b\":1.000000,\"a\":1.000000}" _6="{\"r\":0.576471,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}" _7="{\"r\":0.866667,\"g\":0.000000,\"b\":1.000000,\"a\":1.000000}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<width>width\l|<height>height\l|<image>image\r" pos="553,211" _center="{\"x\":0,\"y\":0}" _radius="1" _width="640" _height="480"];
+MakeRadialGradientImage2 [type="vuo.image.make.gradient.radial" version="1.0.0" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<width>width\l|<height>height\l|<image>image\r" pos="555,362" _center="{\"x\":0,\"y\":0}" _radius="1" _width="640" _height="480"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="421,25" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1009,229" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ReverseList2 [type="vuo.list.reverse.VuoColor" version="1.0.0" label="Reverse List|<refresh>refresh\l|<list>list\l|<reversedList>reversedList\r" pos="396,361" fillcolor="violet"];
+SelectInput3 [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="839,228"];
+ShareList2 [type="vuo.data.share.list.VuoColor" version="1.0.0" label="Share List|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="233,240"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="658,79"];
+
+FireOnStart:started -> ShareList2:refresh;
+MakeList6:list -> RenderImageToWindow:setWindowProperties;
+MakeList8:list -> ShareList2:value;
+MakeRadialGradientImage2:image -> SelectInput3:trueOption;
+MakeRadialGradientImage:image -> SelectInput3:falseOption;
+ReceiveMouseButtons:pressed -> Toggle:toggle;
+ReverseList2:reversedList -> MakeRadialGradientImage2:colors;
+SelectInput3:out -> RenderImageToWindow:image;
+ShareList2:sameValue -> MakeRadialGradientImage:colors;
+ShareList2:sameValue -> ReverseList2:list;
+Toggle:value -> SelectInput3:which;
+}

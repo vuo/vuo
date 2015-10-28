@@ -21,7 +21,12 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-						  "c"
+						"VuoBoolean",
+						"VuoCursor",
+						"VuoInteger",
+						"VuoReal",
+						"VuoScreen",
+						"VuoText"
 					  ]
 				  });
 #endif
@@ -88,6 +93,12 @@ VuoWindowProperty VuoWindowProperty_valueFromJson(json_object * js)
 		value.resizable = VuoBoolean_valueFromJson(o);
 		return value;
 	}
+	else if (json_object_object_get_ex(js, "cursor", &o))
+	{
+		value.type = VuoWindowProperty_Cursor;
+		value.cursor = VuoCursor_valueFromJson(o);
+		return value;
+	}
 
 	return value;
 }
@@ -122,6 +133,8 @@ json_object * VuoWindowProperty_jsonFromValue(const VuoWindowProperty value)
 		json_object_object_add(js, "aspectRatioReset", VuoBoolean_jsonFromValue(true));
 	else if (value.type == VuoWindowProperty_Resizable)
 		json_object_object_add(js, "resizable", VuoBoolean_jsonFromValue(value.resizable));
+	else if (value.type == VuoWindowProperty_Cursor)
+		json_object_object_add(js, "cursor", VuoCursor_jsonFromValue(value.cursor));
 
 	return js;
 }
@@ -146,15 +159,22 @@ char * VuoWindowProperty_summaryFromValue(const VuoWindowProperty value)
 			return strdup("Change to Windowed");
 	}
 	else if (value.type == VuoWindowProperty_Position)
-		return VuoText_format("Change Window Position: (%ld, %ld)", value.left, value.top);
+		return VuoText_format("Change Window Position: (%lld, %lld)", value.left, value.top);
 	else if (value.type == VuoWindowProperty_Size)
-		return VuoText_format("Change Window Size: (%ld, %ld)", value.width, value.height);
+		return VuoText_format("Change Window Size: (%lld, %lld)", value.width, value.height);
 	else if (value.type == VuoWindowProperty_AspectRatio)
 		return VuoText_format("Change Window Aspect Ratio: %g", value.aspectRatio);
 	else if (value.type == VuoWindowProperty_AspectRatioReset)
 		return VuoText_format("Reset Window Aspect Ratio");
 	else if (value.type == VuoWindowProperty_Resizable)
 		return value.resizable ? strdup("Enable Window Resizing") : strdup("Disable Window Resizing");
+	else if (value.type == VuoWindowProperty_Cursor)
+	{
+		char *cursorSummary = VuoCursor_summaryFromValue(value.cursor);
+		char *summary = VuoText_format("Change mouse cursor to %s", cursorSummary);
+		free(cursorSummary);
+		return summary;
+	}
 
 	return strdup("(unknown window property)");
 }

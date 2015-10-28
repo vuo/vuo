@@ -15,10 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Real to Text",
 					 "keywords" : [ ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "version" : "1.0.0"
 				 });
 
 void nodeEvent

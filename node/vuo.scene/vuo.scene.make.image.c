@@ -11,10 +11,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Make 3D Object from Image",
-					 "keywords" : [ "billboard", "sprite", "projector",
+					 "keywords" : [ "quad", "rectangle", "plane", "4-gon", "4gon", "shape", "billboard", "sprite", "square",
+						 "projector",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert" ],
-					 "version" : "2.0.0",
+					 "version" : "3.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "FlipCoin.vuo" ]
 					 }
@@ -26,11 +27,11 @@ void nodeEvent
 		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
 		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMin":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMax":{"x":360.0,"y":360.0,"z":360.0}, "suggestedStep":{"x":15.0,"y":15.0,"z":15.0}}) rotation,
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
-		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) alpha,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) opacity,
 		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
 		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
 		VuoOutputData(VuoSceneObject) object
 )
 {
-	*object = VuoSceneObject_makeLitImage(image, center, rotation, width, alpha, highlightColor, shininess);
+	*object = VuoSceneObject_makeLitImage(image, center, rotation, width, opacity, highlightColor, shininess);
 }

@@ -98,7 +98,7 @@ typeAndLibraryObjects.commands = \
 	$$QMAKE_CC \
 		$$TYPE_AND_LIBRARY_FLAGS \
 		-c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
-type.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - $$TYPE_AND_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
+type.depend_command = $$QMAKE_CC -nostdinc -MM -MF - -MG $$TYPE_AND_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 typeAndLibraryObjects.CONFIG = target_predeps
 QMAKE_EXTRA_COMPILERS += typeAndLibraryObjects
 

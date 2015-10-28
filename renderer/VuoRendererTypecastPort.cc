@@ -30,7 +30,6 @@ VuoRendererTypecastPort::VuoRendererTypecastPort(VuoRendererNode *uncollapsedTyp
 					  signaler,
 					  false,
 					  replacedPort->getRefreshPort(),
-					  false,
 					  false)
 {
 	this->replacedPort = replacedPort;
@@ -51,8 +50,8 @@ void VuoRendererTypecastPort::setUncollapsedTypecastNode(VuoRendererNode *uncoll
 	VuoPort *typecastOutPort = uncollapsedTypecastNode->getBase()->getOutputPorts()[VuoNodeClass::unreservedOutputPortStartIndex];
 
 	this->uncollapsedTypecastNode = uncollapsedTypecastNode;
-	this->sourceType = QString::fromStdString(typecastInPort->getClass()->getName());
-	this->destinationType = QString::fromStdString(typecastOutPort->getClass()->getName());
+	this->sourceType = QString::fromStdString(typecastInPort->getRenderer()->getPortNameToRenderWhenDisplayed());
+	this->destinationType = QString::fromStdString(typecastOutPort->getRenderer()->getPortNameToRenderWhenDisplayed());
 	this->childPort = typecastInPort->getRenderer();
 }
 
@@ -82,7 +81,7 @@ QPainterPath VuoRendererTypecastPort::getPortPath(bool includeNormalPort, bool i
 		QRectF normalPortHybridRect = QRectF(normalPortInnerRect.x(), -0.5*VuoRendererPort::constantFlagHeight, normalPortInnerRect.width(), VuoRendererPort::constantFlagHeight);
 
 		QPainterPath outsetPathTemp;
-		p += getPortConstantPath(normalPortHybridRect, getTypecastTitle(), &outsetPathTemp, true);
+		p += getPortConstantPath(normalPortHybridRect, getCanvasTypecastTitle(), &outsetPathTemp, true);
 
 		// @ todo: Replace magic 0/1 childPortXPadding value with something more transparent.
 		VuoRendererNode *parentNode = getRenderedParentNode();
@@ -108,7 +107,7 @@ QPainterPath VuoRendererTypecastPort::getPortPath(bool includeNormalPort, bool i
  */
 QRectF VuoRendererTypecastPort::getPortConstantTextRect(void) const
 {
-	return getPortConstantTextRectForText(getTypecastTitle());
+	return getPortConstantTextRectForText(getCanvasTypecastTitle());
 }
 
 /**
@@ -116,24 +115,28 @@ QRectF VuoRendererTypecastPort::getPortConstantTextRect(void) const
  */
 qreal VuoRendererTypecastPort::getChildPortXOffset(void) const
 {
-	return getPortConstantTextRectForText(getTypecastTitle()).width() + VuoRendererFonts::thickPenWidth + 2;
+	return getPortConstantTextRectForText(getCanvasTypecastTitle()).width() + VuoRendererFonts::thickPenWidth + 2;
 }
 
 /**
- * Returns the title string for the typecast node attached to this port.
+ * Returns the title string for the typecast node attached to this port,
+ * as it should be rendered on the canvas.
  */
-QString VuoRendererTypecastPort::getTypecastTitle(void) const
+QString VuoRendererTypecastPort::getCanvasTypecastTitle(void) const
 {
-	return getTypecastTitleForPorts(sourceType, destinationType);
+	return getTypecastTitleForPorts(sourceType, destinationType, false);
 }
 
 /**
  * Returns the title string for a typecast node having the provided @c typecastSourceType and
- * @c typecastDestinationType port class names.
+ * @c typecastDestinationType port class names.  If @c inMenu is true, returns
+ * the title as it should be rendered in a menu of typecast options.  Otherwise, returns
+ * the title as it should be rendered on canvas.
  */
-QString VuoRendererTypecastPort::getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort)
+QString VuoRendererTypecastPort::getTypecastTitleForPorts(QString typecastSourcePort, QString typecastDestinationPort, bool inMenu)
 {
-	return typecastSourcePort + QString::fromUtf8(" → ") + typecastDestinationPort;
+	QString separator = (inMenu? QString::fromUtf8(" → ") : "     ");
+	return typecastSourcePort + separator + typecastDestinationPort;
 }
 
 /**
@@ -189,9 +192,6 @@ void VuoRendererTypecastPort::paint(QPainter *painter, const QStyleOptionGraphic
 	if (getRenderedParentNode()->getProxyNode())
 		return;
 
-	// Draw the normal port.
-	VuoRendererPort::paint(painter,option,widget);
-
 	// Draw the collapsed typecast...
 
 	drawBoundingRect(painter);
@@ -214,10 +214,13 @@ void VuoRendererTypecastPort::paint(QPainter *painter, const QStyleOptionGraphic
 	painter->fillPath(outerTypecastPath, colors->nodeFrame());
 
 	// Typecast description
-	QRectF textRect = getPortConstantTextRectForText(getTypecastTitle());
+	QRectF textRect = getPortConstantTextRectForText(getCanvasTypecastTitle());
 	painter->setPen(colors->portTitle());
 	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
-	painter->drawText(textRect, Qt::AlignLeft, getTypecastTitle());
+	painter->drawText(textRect, Qt::AlignLeft, getCanvasTypecastTitle());
+
+	// Draw the normal port.
+	VuoRendererPort::paint(painter,option,widget);
 
 	delete colors;
 }

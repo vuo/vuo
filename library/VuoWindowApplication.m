@@ -115,30 +115,30 @@ VuoModuleMetadata({
 
 	[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[@"<p>This composition may include software licensed under the following terms:</p>" dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
 
-	// Get the exported executable path.
-	char rawExecutablePath[PATH_MAX+1];
-	uint32_t size = sizeof(rawExecutablePath);
-	_NSGetExecutablePath(rawExecutablePath, &size);
 
-	char cleanedExecutablePath[PATH_MAX+1];
-	realpath(rawExecutablePath, cleanedExecutablePath);
+	// Find Vuo.framework.
+	char frameworkPath[PATH_MAX+1] = "";
+	for(unsigned int i=0; i<_dyld_image_count(); ++i)
+	{
+		const char *dylibPath = _dyld_get_image_name(i);
+		char *pos;
+		if ( (pos = strstr(dylibPath, "/Vuo.framework/")) )
+		{
+			strncpy(frameworkPath, dylibPath, pos-dylibPath);
+			break;
+		}
+	}
 
-	// Derive the path of the app bundle's "Licenses" directory from its executable path.
-	char executableDir[PATH_MAX+1];
-	strcpy(executableDir, dirname(cleanedExecutablePath));
+	// Derive the path of "Licenses" directory.
+	char licensesPath[PATH_MAX+1];
+	strncpy(licensesPath, frameworkPath, PATH_MAX);
+	strncat(licensesPath, "/Vuo.framework/Versions/" VUO_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
 
-	const char *licensesPathFromExecutable = "/../Frameworks/Vuo.framework/Versions/" VUO_VERSION_STRING "/Licenses";
-	char rawLicensesPath[strlen(executableDir)+strlen(licensesPathFromExecutable)+1];
-	strcpy(rawLicensesPath, executableDir);
-	strcat(rawLicensesPath, licensesPathFromExecutable);
-
-	char cleanedLicensesPath[PATH_MAX+1];
-	realpath(rawLicensesPath, cleanedLicensesPath);
 
 	bool foundLicenses = false;
-	if (access(cleanedLicensesPath, 0) == 0)
+	if (access(licensesPath, 0) == 0)
 	{
-		DIR *dirp = opendir(cleanedLicensesPath);
+		DIR *dirp = opendir(licensesPath);
 		struct dirent *dp;
 		while ((dp = readdir(dirp)) != NULL)
 		{
@@ -147,8 +147,8 @@ VuoModuleMetadata({
 
 			[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[[NSString stringWithFormat:@"<h2>%s</h2>", dp->d_name] dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
 
-			char licensePath[strlen(cleanedLicensesPath) + dp->d_namlen + 2];
-			strcpy(licensePath, cleanedLicensesPath);
+			char licensePath[strlen(licensesPath) + dp->d_namlen + 2];
+			strcpy(licensePath, licensesPath);
 			strcat(licensePath, "/");
 			strcat(licensePath, dp->d_name);
 

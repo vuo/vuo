@@ -15,22 +15,22 @@
 VuoModuleMetadata({
 					 "title" : "Filter by Address",
 					 "keywords" : [ "controller", "synthesizer", "sequencer", "music", "instrument", "device" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoOscMessage) message,
-		VuoInputEvent(VuoPortEventBlocking_Door, message) messageEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"message"}) messageEvent,
 
 		VuoInputData(VuoText, {"default":"/example"}) address,
-		VuoInputEvent(VuoPortEventBlocking_Wall, address) addressEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"address"}) addressEvent,
 
 		VuoOutputData(VuoOscMessage) filteredMessage,
-		VuoOutputEvent(filteredMessage) filteredMessageEvent
+		VuoOutputEvent({"data":"filteredMessage"}) filteredMessageEvent
 )
 {
-	if (strcmp(message->address, address))
+	if (!message || !message->address || !address || strcmp(message->address, address))
 		return;
 
 	*filteredMessage = message;

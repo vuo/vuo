@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "overlap", "repeat", "clamp", "tile" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoList_VuoImageWrapMode"
 					 ]
 				 });
 #endif

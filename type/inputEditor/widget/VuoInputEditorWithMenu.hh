@@ -27,7 +27,12 @@ protected:
 	/**
 	 * Creates the tree that models the menu.
 	 */
-	virtual VuoInputEditorMenuItem * setUpMenuTree() = 0;
+	virtual VuoInputEditorMenuItem *setUpMenuTree(json_object *details);
+
+	/**
+	 * Creates the tree that models the menu.
+	 */
+	virtual VuoInputEditorMenuItem *setUpMenuTree(void);
 
 private slots:
 	void acceptAction(QAction *action);

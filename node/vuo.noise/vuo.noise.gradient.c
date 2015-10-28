@@ -25,7 +25,6 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false,
 						  "exampleCompositions" : [ "WanderImage.vuo" ]
 					  }
 				  });

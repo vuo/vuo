@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Expected outputs for the vuo.point.sort.distance.VuoPoint2d node.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list" : [{"x":1, "y":1}, {"x":4, "y":2}],
+			"point" : {"x":0, "y":0}
+		},
+		"outputPortValues" : {
+			"sorted" : [{"x":1, "y":1}, {"x":4, "y":2}]
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list" : [{"x":1, "y":1}, {"x":4, "y":2}],
+			"point" : {"x":5, "y":3}
+		},
+		"outputPortValues" : {
+			"sorted" : [{"x":4, "y":2}, {"x":1, "y":1}]
+		}
+	},
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list" : [{"x":-1, "y":-2}, {"x":4, "y":2}],
+			"point" : {"x":0, "y":0}
+		},
+		"outputPortValues" : {
+			"sorted" : [{"x":-1, "y":-2}, {"x":4, "y":2}]
+		}
+	},
+]}

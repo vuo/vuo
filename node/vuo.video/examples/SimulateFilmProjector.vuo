@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Plays a movie, and applies filters to make it look like an old-fashioned film projection.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImages [type="vuo.image.blend" version="1.2.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="413,92" _blendMode="\"luminosity\"" _foregroundOpacity="1.000000"];
+BlendImages2 [type="vuo.image.blend" version="1.2.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="423,268" _blendMode="\"multiply\"" _foregroundOpacity="1.000000"];
+ConvertVideoFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="512,217"];
+ConvertVideoFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="522,393"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-84,69" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="151,3" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _width="640" _height="480"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="577,294" fillcolor="green"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="131,107" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+PlayMovie3 [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="131,283" fillcolor="violet" _url="\"16mm.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="618,268" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+BlendImages2:blended -> RenderImageToWindow:image;
+BlendImages:blended -> BlendImages2:background;
+ConvertVideoFrameToImage2:image -> BlendImages2:foreground;
+ConvertVideoFrameToImage:image -> BlendImages:foreground;
+FireOnStart:started -> MakeColorImage:refresh;
+FireOnStart:started -> PlayMovie3:play;
+FireOnStart:started -> PlayMovie:play;
+MakeColorImage:image -> BlendImages:background;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
+PlayMovie3:decodedVideo -> ConvertVideoFrameToImage2:frame;
+PlayMovie:decodedVideo -> ConvertVideoFrameToImage:frame;
+}

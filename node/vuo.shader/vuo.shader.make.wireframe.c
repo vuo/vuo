@@ -222,14 +222,4 @@ void nodeEvent
 	VuoShader_setUniform_VuoReal(*shader, "width", width/2.);
 	VuoShader_setUniform_VuoReal(*shader, "standoffWidth", standoffWidth/2.);
 	VuoShader_setUniform_VuoBoolean(*shader, "showThirdEdge", showThirdEdge);
-
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
 }

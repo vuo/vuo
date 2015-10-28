@@ -1,4 +1,4 @@
-VUO_VERSION = 0.8.0
+VUO_VERSION = 0.9.0
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -216,6 +216,7 @@ Carbon | VuoCompiler {
 }
 
 qtCore {
+	INCLUDEPATH += $$QT_ROOT/lib/QtCore.framework/Headers
 	LIBS += \
 		$${ZLIB_ROOT}/lib/libz.a \
 		-lm \
@@ -225,6 +226,7 @@ qtCore {
 		-framework Security \
 		-framework QtCore
 	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
+	QMAKE_OBJECTIVE_CFLAGS += -F$$QT_ROOT/lib
 	DEFINES += QT_CORE_LIB
 }
 
@@ -249,6 +251,7 @@ qtGui {
 }
 qtGuiIncludes {
 	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
+	INCLUDEPATH += $$QT_ROOT/lib/QtCore.framework/Headers
 	DEFINES += QT_GUI_LIB
 }
 
@@ -331,7 +334,14 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 	}
 
 	# For VuoLog.h
-	INCLUDEPATH += $$ROOT/library
+	PCH_INCLUDE_PATHS += \
+		$$JSONC_ROOT/include \
+		$$ROOT/library \
+		$$ROOT/type \
+		$$ROOT/type/list
+	INCLUDEPATH += $$PCH_INCLUDE_PATHS
+	DEPENDPATH += $$PCH_INCLUDE_PATHS
+	DEPENDPATH -= $$JSONC_ROOT/include
 } else {
 	QMAKE_CFLAGS_PRECOMPILE =
 	QMAKE_CXXFLAGS_PRECOMPILE =
@@ -368,7 +378,7 @@ VuoEditor {
 }
 VuoFramework {
 	DEFINES += USING_VUO_FRAMEWORK
-	QMAKE_CXX = $$ROOT/framework/Vuo.framework/MacOS/Clang/bin/clang++
+	QMAKE_CXX = $$ROOT/framework/Vuo.framework/llvm.framework/Helpers/clang++
 	QMAKE_LINK = $$QMAKE_CXX
 	QMAKE_CXXFLAGS += -F$$ROOT/framework
 	QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-private-field

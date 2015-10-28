@@ -8,13 +8,14 @@ HEADERS += \
 
 SUBDIRS += \
 	vuo.audio \
+	vuo.bcf2000 \
 	vuo.color \
 	vuo.console \
 	vuo.data \
 	vuo.dictionary \
 	vuo.event \
+	vuo.file \
 	vuo.font \
-	vuo.hold \
 	vuo_image \
 	vuo.keyboard \
 	vuo.kinect \
@@ -27,7 +28,6 @@ SUBDIRS += \
 	vuo.midi \
 	vuo.motion \
 	vuo.mouse \
-	vuo.movie \
 	vuo.noise \
 	vuo.osc \
 	vuo.point \
@@ -41,6 +41,7 @@ SUBDIRS += \
 	vuo.time \
 	vuo.transform \
 	vuo.type \
+	vuo.video \
 	vuo.window
 
 vuo_image.subdir = vuo.image

@@ -12,8 +12,6 @@
 
 #include "type.h"
 #include "VuoLeapHand.h"
-#include "VuoLeapPointable.h"
-#include "VuoList_VuoLeapPointable.h"
 #include "VuoText.h"
 
 /// @{
@@ -23,10 +21,15 @@ VuoModuleMetadata({
 					 "description" : "Data for a Leap Hand",
 					 "keywords" : [ "gesture", "controller", "hand", "finger", "motion" ],
 					 "version" : "1.0.0",
-					  "dependencies" : [],
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "dependencies" : [
+						 "VuoInteger",
+						 "VuoPoint3d",
+						 "VuoPoint4d",
+						 "VuoReal",
+						 "VuoText",
+						 "VuoLeapPointable",
+						 "VuoList_VuoLeapPointable"
+					 ]
 				 });
 #endif
 /// @}
@@ -43,13 +46,19 @@ VuoLeapHand VuoLeapHand_valueFromJson(json_object * js)
 {
 	VuoLeapHand hand = VuoLeapHand_make(
 					0,									// id
-					(VuoPoint3d){0,0,0},				// direction
-					(VuoPoint3d){0,0,0},				// palmNormal
+					(VuoPoint4d){0,0,0,0},				// rotation
 					(VuoPoint3d){0,0,0},				// palmPosition
 					(VuoPoint3d){0,0,0},				// palmVelocity
 					0.,									// sphereRadius
 					(VuoPoint3d){0,0,0},				// sphereCenter
-					VuoListCreate_VuoLeapPointable()	// pointables
+					0., 								// palmWidth
+					(VuoPoint3d){0,0,0},				// wristPosition
+					0.,		 							// pinchAmount
+					0.,		 							// grabAmount
+					0.,		 							// timeVisible
+					false, 		 						// isLeftHand
+					0.,		 							// confidence
+					VuoListCreate_VuoLeapPointable()	// fingers
 				);
 
 	json_object *o = NULL;
@@ -57,11 +66,8 @@ VuoLeapHand VuoLeapHand_valueFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "id", &o))
 		hand.id = VuoInteger_valueFromJson(o);
 
-	if (json_object_object_get_ex(js, "direction", &o))
-		hand.direction = VuoPoint3d_valueFromJson(o);
-
-	if (json_object_object_get_ex(js, "palmNormal", &o))
-		hand.palmNormal = VuoPoint3d_valueFromJson(o);
+	if (json_object_object_get_ex(js, "rotation", &o))
+		hand.rotation = VuoPoint4d_valueFromJson(o);
 
 	if (json_object_object_get_ex(js, "palmPosition", &o))
 		hand.palmPosition = VuoPoint3d_valueFromJson(o);
@@ -75,8 +81,29 @@ VuoLeapHand VuoLeapHand_valueFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "sphereCenter", &o))
 		hand.sphereCenter = VuoPoint3d_valueFromJson(o);
 
-	if (json_object_object_get_ex(js, "pointables", &o))
-		hand.pointables = VuoList_VuoLeapPointable_valueFromJson(o);
+	if (json_object_object_get_ex(js, "palmWidth", &o))
+		hand.palmWidth = VuoReal_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "wristPosition", &o))
+		hand.wristPosition = VuoPoint3d_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "pinchAmount", &o))
+		hand.pinchAmount = VuoReal_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "grabAmount", &o))
+		hand.grabAmount = VuoReal_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "timeVisible", &o))
+		hand.timeVisible = VuoReal_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "isLeftHand", &o))
+		hand.isLeftHand = VuoBoolean_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "confidence", &o))
+		hand.confidence = VuoReal_valueFromJson(o);
+
+	if (json_object_object_get_ex(js, "fingers", &o))
+		hand.fingers = VuoList_VuoLeapPointable_valueFromJson(o);
 
 	return hand;
 }
@@ -92,11 +119,8 @@ json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value)
 	json_object *idObject = VuoInteger_jsonFromValue(value.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *directionObject = VuoPoint3d_jsonFromValue(value.direction);
-	json_object_object_add(js, "direction", directionObject);
-
-	json_object *palmNormalObject = VuoPoint3d_jsonFromValue(value.palmNormal);
-	json_object_object_add(js, "palmNormal", palmNormalObject);
+	json_object *rotationObject = VuoPoint4d_jsonFromValue(value.rotation);
+	json_object_object_add(js, "rotation", rotationObject);
 
 	json_object *palmPositionObject = VuoPoint3d_jsonFromValue(value.palmPosition);
 	json_object_object_add(js, "palmPosition", palmPositionObject);
@@ -110,8 +134,29 @@ json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value)
 	json_object *sphereCenterObject = VuoPoint3d_jsonFromValue(value.sphereCenter);
 	json_object_object_add(js, "sphereCenter", sphereCenterObject);
 
-	json_object *pointablesObject = VuoList_VuoLeapPointable_jsonFromValue(value.pointables);
-	json_object_object_add(js, "pointables", pointablesObject);
+	json_object *palmWidthObject = VuoReal_jsonFromValue(value.palmWidth);
+	json_object_object_add(js, "palmWidth", palmWidthObject);
+
+	json_object *wristPositionObject = VuoPoint3d_jsonFromValue(value.wristPosition);
+	json_object_object_add(js, "wristPosition", wristPositionObject);
+
+	json_object *pinchAmountObject = VuoReal_jsonFromValue(value.pinchAmount);
+	json_object_object_add(js, "pinchAmount", pinchAmountObject);
+
+	json_object *grabAmountObject = VuoReal_jsonFromValue(value.grabAmount);
+	json_object_object_add(js, "grabAmount", grabAmountObject);
+
+	json_object *timeVisibleObject = VuoReal_jsonFromValue(value.timeVisible);
+	json_object_object_add(js, "timeVisible", timeVisibleObject);
+
+	json_object *isLeftHandObject = VuoBoolean_jsonFromValue(value.isLeftHand);
+	json_object_object_add(js, "isLeftHand", isLeftHandObject);
+
+	json_object *confidenceObject = VuoReal_jsonFromValue(value.confidence);
+	json_object_object_add(js, "confidence", confidenceObject);
+
+	json_object *pointablesObject = VuoList_VuoLeapPointable_jsonFromValue(value.fingers);
+	json_object_object_add(js, "fingers", pointablesObject);
 
 	return js;
 }
@@ -122,25 +167,44 @@ json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value)
  */
 char * VuoLeapHand_summaryFromValue(const VuoLeapHand value)
 {
-	return VuoText_format("%ld", value.id);
+	return VuoText_format("%lld", value.id);
 }
 
 /**
  * @ingroup VuoLeapPointable
  * Creates a new pointable from the specified values.
  */
-VuoLeapHand VuoLeapHand_make(VuoInteger id, VuoPoint3d direction, VuoPoint3d palmNormal, VuoPoint3d palmPosition, VuoPoint3d palmVelocity, VuoReal sphereRadius, VuoPoint3d sphereCenter, VuoList_VuoLeapPointable pointables)
+VuoLeapHand VuoLeapHand_make(	VuoInteger id,
+								VuoPoint4d rotation,
+								VuoPoint3d palmPosition,
+								VuoPoint3d palmVelocity,
+								VuoReal sphereRadius,
+								VuoPoint3d sphereCenter,
+								VuoReal palmWidth,
+								VuoPoint3d wristPosition,
+								VuoReal pinchAmount,
+								VuoReal grabAmount,
+								VuoReal timeVisible,
+								VuoBoolean isLeftHand,
+								VuoReal confidence,
+								VuoList_VuoLeapPointable fingers)
 {
 	VuoLeapHand hand;
 
-	hand.id = id;
-	hand.direction = direction;
-	hand.palmNormal = palmNormal;
-	hand.palmPosition = palmPosition;
-	hand.palmVelocity = palmVelocity;
-	hand.sphereRadius = sphereRadius;
-	hand.sphereCenter = sphereCenter;
-	hand.pointables = pointables;
+	hand.id 					= id;
+	hand.rotation               = rotation;
+	hand.palmPosition 			= palmPosition;
+	hand.palmVelocity 			= palmVelocity;
+	hand.sphereRadius 			= sphereRadius;
+	hand.sphereCenter 			= sphereCenter;
+	hand.palmWidth 				= palmWidth;
+	hand.wristPosition 			= wristPosition;
+	hand.pinchAmount 			= pinchAmount;
+	hand.grabAmount 			= grabAmount;
+	hand.timeVisible 			= timeVisible;
+	hand.isLeftHand 			= isLeftHand;
+	hand.confidence 			= confidence;
+	hand.fingers 				= fingers;
 
 	return hand;
 }

@@ -19,6 +19,7 @@
  */
 
 #include "VuoBoolean.h"
+#include "VuoCursor.h"
 #include "VuoInteger.h"
 #include "VuoReal.h"
 #include "VuoScreen.h"
@@ -35,7 +36,8 @@ typedef enum
 	VuoWindowProperty_Size,
 	VuoWindowProperty_AspectRatio,
 	VuoWindowProperty_AspectRatioReset,
-	VuoWindowProperty_Resizable
+	VuoWindowProperty_Resizable,
+	VuoWindowProperty_Cursor
 } VuoWindowPropertyType;
 
 /**
@@ -59,6 +61,8 @@ typedef struct
 	VuoReal aspectRatio;
 
 	VuoBoolean resizable;
+
+	VuoCursor cursor;
 } VuoWindowProperty;
 
 VuoWindowProperty VuoWindowProperty_valueFromJson(struct json_object * js);

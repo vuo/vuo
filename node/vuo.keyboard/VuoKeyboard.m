@@ -7,13 +7,19 @@
  * For more information, see http://vuo.org/license.
  */
 
+#define NS_RETURNS_INNER_POINTER
 #include <AppKit/AppKit.h>
+
 #include "VuoKeyboard.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					"title" : "VuoKeyboard",
 					"dependencies" : [
+						"VuoKey",
+						"VuoModifierKey",
+						"VuoText",
+						"VuoWindowReference",
 						"AppKit.framework"
 					]
 				 });
@@ -115,12 +121,18 @@ static void VuoKeyboard_fireButtonsIfNeeded(NSEvent *event,
 											bool shouldFireForRepeat)
 {
 	NSWindow *targetWindow = (NSWindow *)windowRef;
+	NSEventType type = [event type];
+
+	bool isARepeat = false;
+	if (type == NSKeyDown || type == NSKeyUp)
+		isARepeat = [event isARepeat];
+
 	if ((! targetWindow || targetWindow == [event window] || [[targetWindow contentView] isInFullScreenMode]) &&
 			(VuoKey_doesMacVirtualKeyCodeMatch([event keyCode], key)) &&
-			(shouldFireForRepeat || ! [event isARepeat]))
+			(shouldFireForRepeat || !isARepeat))
 	{
 		CGEventFlags flags = CGEventGetFlags([event CGEvent]);
-		bool isKeyInFlags = ([event type] == NSFlagsChanged &&
+		bool isKeyInFlags = (type == NSFlagsChanged &&
 							 (((key == VuoKey_Command) && (flags & kCGEventFlagMaskCommand)) ||
 							  ((key == VuoKey_CapsLock) && (flags & kCGEventFlagMaskAlphaShift)) ||
 							  ((key == VuoKey_Shift || key == VuoKey_RightShift) && (flags & kCGEventFlagMaskShift)) ||
@@ -130,7 +142,7 @@ static void VuoKeyboard_fireButtonsIfNeeded(NSEvent *event,
 
 		if (VuoModifierKey_doMacEventFlagsMatch(CGEventGetFlags([event CGEvent]), modifierKey) || isKeyInFlags)
 		{
-			if ([event type] == NSKeyDown || isKeyInFlags)
+			if (type == NSKeyDown || isKeyInFlags)
 				pressed();
 			else
 				released();

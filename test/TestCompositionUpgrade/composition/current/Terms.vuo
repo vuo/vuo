@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="505,314"];
+AddPoints [type="vuo.math.add.VuoGenericType1" version="2.0.0" label="Add Points|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="507,630"];
+AreAllTrue [type="vuo.logic.areAllTrue" version="2.0.0" label="Are All True|<refresh>refresh\l|<values>values\l|<allTrue>allTrue\r" pos="500,114"];
+AreAnyTrue [type="vuo.logic.areAnyTrue" version="2.0.0" label="Are Any True|<refresh>refresh\l|<values>values\l|<anyTrue>anyTrue\r" pos="503,182"];
+AreEqual [type="vuo.math.areEqual.VuoReal" version="2.0.0" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="505,375" _tolerance="0.010000"];
+CombineQuaternionRotations [type="vuo.quaternion.combine" version="3.0.0" label="Combine Quaternion Rotations|<refresh>refresh\l|<values>values\l|<composite>composite\r" pos="507,689"];
+FindMaximum [type="vuo.math.max.VuoReal" version="2.0.0" label="Find Maximum|<refresh>refresh\l|<values>values\l|<max>max\r" pos="508,448"];
+FindMinimum [type="vuo.math.min.VuoReal" version="2.0.0" label="Find Minimum|<refresh>refresh\l|<values>values\l|<min>min\r" pos="508,507"];
+IsOneTrue [type="vuo.logic.isOneTrue" version="2.0.0" label="Is One True|<refresh>refresh\l|<values>values\l|<oneTrue>oneTrue\r" pos="505,249"];
+MakeList [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="454,125"];
+MakeList10 [type="vuo.list.make.2.VuoPoint4d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="461,700"];
+MakeList2 [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="457,193"];
+MakeList3 [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="459,260"];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="459,325"];
+MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="435,386"];
+MakeList6 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="462,459"];
+MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="462,518"];
+MakeList8 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="462,581"];
+MakeList9 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="461,641"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="508,570"];
+
+MakeList10:list -> CombineQuaternionRotations:values;
+MakeList2:list -> AreAnyTrue:values;
+MakeList3:list -> IsOneTrue:values;
+MakeList4:list -> Add:values;
+MakeList5:list -> AreEqual:values;
+MakeList6:list -> FindMaximum:values;
+MakeList7:list -> FindMinimum:values;
+MakeList8:list -> Multiply:values;
+MakeList9:list -> AddPoints:values;
+MakeList:list -> AreAllTrue:values;
+}

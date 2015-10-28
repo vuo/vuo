@@ -7,6 +7,7 @@ NODE_SOURCES += \
 	vuo.scene.arrange.grid.c \
 	vuo.scene.back.c \
 	vuo.scene.bend.c \
+	vuo.scene.blendMode.c \
 	vuo.scene.bounds.c \
 	vuo.scene.combine.c \
 	vuo.scene.copy.c \
@@ -14,7 +15,8 @@ NODE_SOURCES += \
 	vuo.scene.divide.c \
 	vuo.scene.explode.c \
 	vuo.scene.facet.c \
-	vuo.scene.get.c \
+	vuo.scene.fetch.c \
+	vuo.scene.fetch.list.c \
 	vuo.scene.make.c \
 	vuo.scene.make.camera.orthographic.c \
 	vuo.scene.make.camera.orthographic.target.c \
@@ -33,8 +35,8 @@ NODE_SOURCES += \
 	vuo.scene.render.image.c \
 	vuo.scene.render.window.c \
 	vuo.scene.ripple.c \
-	vuo.scene.shader.set.all.c \
-	vuo.scene.shader.set.material.c \
+	vuo.scene.shader.all.c \
+	vuo.scene.shader.material.c \
 	vuo.scene.skew.c \
 	vuo.scene.spike.c \
 	vuo.scene.trim.c \

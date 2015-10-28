@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Find Minimum",
 					  "keywords" : [ "less", "least", "small", "few", "low", "<", "bottom", "lower", "limit", "bound", "range" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "defaultType" : "VuoReal",
@@ -20,21 +20,21 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoGenericType1) terms,
+		VuoInputData(VuoList_VuoGenericType1) values,
 		VuoOutputData(VuoGenericType1) min
 )
 {
-	unsigned long termsCount = VuoListGetCount_VuoGenericType1(terms);
+	unsigned long termsCount = VuoListGetCount_VuoGenericType1(values);
 
 	VuoGenericType1 *termsArray = (VuoGenericType1 *)malloc(termsCount * sizeof(VuoGenericType1));
 	for (unsigned long i = 0; i < termsCount; ++i)
-		termsArray[i] = VuoListGetValueAtIndex_VuoGenericType1(terms, i+1);
+		termsArray[i] = VuoListGetValue_VuoGenericType1(values, i+1);
 
 	*min = VuoGenericType1_min(termsArray, termsCount);
 

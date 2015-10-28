@@ -1,0 +1,16 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+MakeMIDIDeviceFromID [type="vuo.midi.make.device.id" version="1.0.0" label="Make MIDI Device from ID|<refresh>refresh\l|<id>id\l|<isInput>isInput\l|<device>device\r" pos="181,88" _id="42" _isInput="\"true\""];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="1.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="455,88"];
+
+MakeMIDIDeviceFromID:device -> ReceiveMIDIEvents:device;
+}

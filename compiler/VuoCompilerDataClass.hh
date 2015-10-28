@@ -24,6 +24,8 @@ private:
 	VuoType *vuoType;
 
 protected:
+	struct json_object *details;  ///< Metadata specified in the node class implementation, such as the default value.
+
 	VuoCompilerDataClass(string name, Type *type);
 
 public:
@@ -31,10 +33,13 @@ public:
 	 * Factory method for constructing a @c VuoCompilerData that instantiates this data class.
 	 */
 	virtual VuoCompilerData * newData(void) = 0;
+	~VuoCompilerDataClass(void);
 
 	VuoType * getVuoType(void);
 	void setVuoType(VuoType *vuoType);
 	Type * getType(void);
+	void setDetails(struct json_object *details);
+	json_object * getDetails(void);
 };
 
 

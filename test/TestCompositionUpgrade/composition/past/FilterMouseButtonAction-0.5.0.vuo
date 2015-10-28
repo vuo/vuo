@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FilterMouseButtonAction [type="vuo.mouse.filter.action" version="1.0.0" label="Filter Mouse Button Action|<refresh>refresh\l|<action>action\l|<includeLeftButton>includeLeftButton\l|<includeMiddleButton>includeMiddleButton\l|<includeRightButton>includeRightButton\l|<includePress>includePress\l|<includeRelease>includeRelease\l|<includeSingleClick>includeSingleClick\l|<includeDoubleClick>includeDoubleClick\l|<includeTripleClick>includeTripleClick\l|<done>done\r|<filteredAction>filteredAction\r" pos="316,207" _includeLeftButton="true" _includeMiddleButton="false" _includeRightButton="false" _includePress="true" _includeRelease="false" _includeSingleClick="false" _includeDoubleClick="false" _includeTripleClick="false"];
+FilterMouseButtonAction2 [type="vuo.mouse.filter.action" version="1.0.0" label="Filter Mouse Button Action|<refresh>refresh\l|<action>action\l|<includeLeftButton>includeLeftButton\l|<includeMiddleButton>includeMiddleButton\l|<includeRightButton>includeRightButton\l|<includePress>includePress\l|<includeRelease>includeRelease\l|<includeSingleClick>includeSingleClick\l|<includeDoubleClick>includeDoubleClick\l|<includeTripleClick>includeTripleClick\l|<done>done\r|<filteredAction>filteredAction\r" pos="312,504" _includeLeftButton="true" _includeMiddleButton="false" _includeRightButton="false" _includePress="true" _includeRelease="false" _includeSingleClick="false" _includeDoubleClick="false" _includeTripleClick="false"];
+Get2DPointValues [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="1023,327"];
+Get2DPointValues2 [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="1024,624"];
+GetMouse [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="92,397"];
+GetMouse3 [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="96,100"];
+GetMouseButtonActionValues [type="vuo.mouse.get.action" version="1.0.0" label="Get Mouse Button Action Values|<refresh>refresh\l|<action>action\l|<done>done\r|<isLeftButton>isLeftButton\r|<isMiddleButton>isMiddleButton\r|<isRightButton>isRightButton\r|<isPress>isPress\r|<isRelease>isRelease\r|<isSingleClick>isSingleClick\r|<isDoubleClick>isDoubleClick\r|<isTripleClick>isTripleClick\r|<position>position\r" pos="648,207"];
+GetMouseButtonActionValues2 [type="vuo.mouse.get.action" version="1.0.0" label="Get Mouse Button Action Values|<refresh>refresh\l|<action>action\l|<done>done\r|<isLeftButton>isLeftButton\r|<isMiddleButton>isMiddleButton\r|<isRightButton>isRightButton\r|<isPress>isPress\r|<isRelease>isRelease\r|<isSingleClick>isSingleClick\r|<isDoubleClick>isDoubleClick\r|<isTripleClick>isTripleClick\r|<position>position\r" pos="644,504"];
+
+FilterMouseButtonAction2:done -> GetMouseButtonActionValues2:refresh;
+FilterMouseButtonAction2:filteredAction -> GetMouseButtonActionValues2:action;
+FilterMouseButtonAction:filteredAction -> GetMouseButtonActionValues:action;
+GetMouse3:usedButton -> FilterMouseButtonAction:action;
+GetMouse:usedButton -> FilterMouseButtonAction2:action;
+GetMouseButtonActionValues2:position -> Get2DPointValues2:point;
+GetMouseButtonActionValues:position -> Get2DPointValues:point;
+}

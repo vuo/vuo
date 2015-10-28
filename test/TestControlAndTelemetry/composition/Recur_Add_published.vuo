@@ -12,13 +12,13 @@ digraph G
 PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedIn0>publishedIn0\r|<publishedIn1>publishedIn1\r|<publishedIn2>publishedIn2\r" _publishedIn2="0.050000"];
 FirePeriodically1 [type="vuo.time.firePeriodically" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" _seconds="0.001"];
 MakeList1 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList1|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" _1="0" _2="0"];
-Add1 [type="vuo.math.add.VuoInteger" label="Add1|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add1|<refresh>refresh\l|<values>values\l|<sum>sum\r"];
 MakeList2 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList2|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" _1="0" _2="1"];
-Add2 [type="vuo.math.add.VuoInteger" label="Add2|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+Add2 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add2|<refresh>refresh\l|<values>values\l|<sum>sum\r"];
 MakeList3 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList3|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" _1="0" _2="0"];
-Add3 [type="vuo.math.add.VuoInteger" label="Add3|<refresh>refresh\l|<terms>terms\l|<sum>sum\r"];
+Add3 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add3|<refresh>refresh\l|<values>values\l|<sum>sum\r"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedSum>publishedSum\l"];
-RippleImage [type="vuo.image.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<done>done\r|<rippledImage>rippledImage\r"];
+RippleImage [type="vuo.image.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r"];
 
 PublishedInputs:publishedIn0 -> MakeList1:1;
 PublishedInputs:publishedIn1 -> MakeList1:2;
@@ -26,10 +26,10 @@ PublishedInputs:publishedIn0 -> MakeList2:1;
 PublishedInputs:publishedIn2 -> RippleImage:wavelength;
 FirePeriodically1:fired -> MakeList1:refresh;
 FirePeriodically1:fired -> MakeList2:refresh;
-MakeList1:list -> Add1:terms;
-MakeList2:list -> Add2:terms;
+MakeList1:list -> Add1:values;
+MakeList2:list -> Add2:values;
 Add1:sum -> MakeList3:1;
 Add2:sum -> MakeList3:2;
-MakeList3:list -> Add3:terms;
+MakeList3:list -> Add3:values;
 Add3:sum -> PublishedOutputs:publishedSum;
 }

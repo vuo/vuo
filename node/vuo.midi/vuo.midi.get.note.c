@@ -11,11 +11,11 @@
 #include "VuoMidiNote.h"
 
 VuoModuleMetadata({
-					 "title" : "Get MIDI Note Values",
+					 "title" : "Get Note Values",
 					 "keywords" : [ "pitch", "tone", "synthesizer", "music", "instrument" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 

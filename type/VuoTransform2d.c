@@ -23,7 +23,9 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoPoint2d",
+						"VuoReal",
+						"VuoText"
 					 ]
 				 });
 #endif

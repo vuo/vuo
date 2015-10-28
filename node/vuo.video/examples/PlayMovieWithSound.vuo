@@ -1,0 +1,26 @@
+/**
+* @file
+* Plays a movie, both video and audio.
+*
+* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* This code may be modified and distributed under the terms of the MIT License.
+* For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+ConvertVideoFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="670,142"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="41,86" _started_eventThrottling="enqueue"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="530,58"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="530,58"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="293,71" fillcolor="violet" _url="\"crawling.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="571,32" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="570,120" _requestedChannels_eventThrottling="enqueue"];
+
+ConvertVideoFrameToImage:image -> RenderImageToWindow:image;
+FireOnStart:started -> PlayMovie:play;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
+MakeList6:list -> RenderImageToWindow:setWindowProperties;
+PlayMovie:decodedAudio -> SendLiveAudio:sendChannels;
+PlayMovie:decodedVideo -> ConvertVideoFrameToImage:frame;
+}

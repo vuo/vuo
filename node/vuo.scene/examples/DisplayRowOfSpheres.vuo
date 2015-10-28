@@ -9,23 +9,27 @@
 
 digraph G
 {
-Copy3DObject [type="vuo.scene.copy.trs" version="1.0.0" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<done>done\r|<copies>copies\r" pos="506,210" fillcolor="violet"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-92,51" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="316,54" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<done>done\r|<list>list\r" pos="443,251" fillcolor="violet"];
-MakePointsAlongCurve3 [type="vuo.point.make.curve.VuoPoint3d" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<done>done\r|<points>points\r" pos="82,225" fillcolor="violet" _startPosition="{\"x\":-0.750000,\"y\":0.000000,\"z\":0.000000}" _endPosition="{\"x\":0.750000,\"y\":0.000000,\"z\":0.000000}" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
-MakePointsAlongCurve4 [type="vuo.point.make.curve.VuoPoint3d" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<done>done\r|<points>points\r" pos="82,345" fillcolor="violet" _startPosition="{\"x\":0.050000,\"y\":0.050000,\"z\":0.050000}" _endPosition="{\"x\":0.150000,\"y\":0.150000,\"z\":0.150000}" _curve="\"cubic\"" _easing="\"in\"" _numberOfPoints="9"];
-MakeSphereVertices [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<done>done\r|<mesh>mesh\r" pos="105,53" fillcolor="green" _rows="16" _columns="16"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="681,210" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<done>done\r|<shader>shader\r" pos="132,126" fillcolor="green" _color="{\"r\":0.358007,\"g\":0.548424,\"b\":0.653422,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+Copy3DObject [type="vuo.scene.copy.trs" version="2.0.0" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="506,210" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-92,51" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="316,54"];
+MakeList [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="650,221" fillcolor="green"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="680,251" fillcolor="green"];
+MakeList5 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="460,251" fillcolor="violet"];
+MakePointsAlongCurve3 [type="vuo.point.make.curve.VuoPoint3d" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="82,225" _startPosition="{\"x\":-0.750000,\"y\":0.000000,\"z\":0.000000}" _endPosition="{\"x\":0.750000,\"y\":0.000000,\"z\":0.000000}" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="9"];
+MakePointsAlongCurve4 [type="vuo.point.make.curve.VuoPoint3d" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="82,345" _startPosition="{\"x\":0.050000,\"y\":0.050000,\"z\":0.050000}" _endPosition="{\"x\":0.150000,\"y\":0.150000,\"z\":0.150000}" _curve="\"cubic\"" _easing="\"in\"" _numberOfPoints="9"];
+MakeSphereVertices [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="105,53" _rows="16" _columns="16"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="721,210" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="114,126" _color="{\"r\":0.358007,\"g\":0.548424,\"b\":0.653422,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 
-Copy3DObject:copies -> RenderSceneToWindow:objects;
+Copy3DObject:copies -> MakeList:1;
 FireOnStart:started -> MakePointsAlongCurve3:refresh;
 FireOnStart:started -> MakePointsAlongCurve4:refresh;
 FireOnStart:started -> MakeSphereVertices:refresh;
 FireOnStart:started -> ShadeWithColor:refresh;
 Make3DObject:object -> Copy3DObject:object;
+MakeList0:list -> RenderSceneToWindow:setWindowProperties;
 MakeList5:list -> Copy3DObject:rotations;
+MakeList:list -> RenderSceneToWindow:objects;
 MakePointsAlongCurve3:points -> Copy3DObject:translations;
 MakePointsAlongCurve4:points -> Copy3DObject:scales;
 MakeSphereVertices:mesh -> Make3DObject:mesh;

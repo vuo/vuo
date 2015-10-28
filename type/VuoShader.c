@@ -13,7 +13,6 @@
 #include "node.h"
 #include "type.h"
 #include "VuoShader.h"
-#include "VuoGlContext.h"
 #include "VuoGlPool.h"
 
 #include <OpenGL/CGLMacro.h>
@@ -27,10 +26,22 @@ VuoModuleMetadata({
 					 "keywords" : [ "glsl", "fragment", "vertex" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c",
-						 "json",
-						 "VuoGlContext",
-						 "OpenGL.framework"
+						"VuoColor",
+						"VuoImage",
+						"VuoInteger",
+						"VuoMesh",
+						"VuoPoint2d",
+						"VuoPoint3d",
+						"VuoPoint4d",
+						"VuoReal",
+						"VuoText",
+						"VuoList_VuoInteger",
+						"VuoList_VuoImage",
+						"VuoList_VuoColor",
+						"VuoList_VuoText",
+						"VuoGlContext",
+						"VuoGlPool",
+						"OpenGL.framework"
 					 ]
 				 });
 #endif
@@ -511,11 +522,20 @@ unsigned int VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyM
 			if (strcmp(uniform.type, "VuoImage") == 0)
 			{
 				VuoImage image = uniform.value.image;
-				if (!image)
-					continue;
 
 				glActiveTexture(GL_TEXTURE0 + textureUnit);
-				glBindTexture(image->glTextureTarget, image->glTextureName);
+				if (image)
+					glBindTexture(image->glTextureTarget, image->glTextureName);
+				else
+				{
+					// When passing a null image to a shader,
+					// allocate a texture unit for it anyway and unbind all textures from it,
+					// so it samples the void instead of sampling
+					// whatever happens to be hanging out on on the texture unit associated with the sampler.
+					// https://b33p.net/kosada/node/8976
+					glBindTexture(GL_TEXTURE_2D, 0);
+					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+				}
 				glUniform1i(location, textureUnit);
 				++textureUnit;
 			}
@@ -599,6 +619,9 @@ void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod 
  */
 VuoShader VuoShader_valueFromJson(json_object *js)
 {
+	if (!js)
+		return NULL;
+
 	VuoShader s = NULL;
 
 	if (json_object_get_type(js) == json_type_int)

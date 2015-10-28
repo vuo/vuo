@@ -1,0 +1,56 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add4 [type="vuo.math.add.VuoGenericType1" version="2.0.0" label="Add 1|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="319,317"];
+Add5 [type="vuo.math.add.VuoGenericType1" version="2.0.0" label="Add 2|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="322,392"];
+Add6 [type="vuo.math.add.VuoGenericType1" version="2.0.0" label="Add 4|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="558,416"];
+Add7 [type="vuo.math.add.VuoGenericType1" version="2.0.0" label="Add 3|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="323,467"];
+Add9 [type="vuo.math.add.VuoGenericType1" version="2.0.0" label="Add 5|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="374,579"];
+Changed [type="vuo.event.changed.VuoGenericType1" version="1.0.0" label="Changed 1|<refresh>refresh\l|<value>value\l|<changed>changed\r" pos="342,667"];
+Changed2 [type="vuo.event.changed.VuoGenericType1" version="1.0.0" label="Changed 2|<refresh>refresh\l|<value>value\l|<changed>changed\r" pos="341,735"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Only I should get to keep my published data+event ports|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="377,-31"];
+HoldValue [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value 1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="268,100"];
+HoldValue2 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value 3|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="492,190"];
+HoldValue3 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value 2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="273,206"];
+HoldValue4 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="Hold Value 4|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="489,276"];
+MakeList5 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="276,403"];
+MakeList6 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="512,427"];
+MakeList7 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="277,478"];
+MakeList9 [type="vuo.list.make.2.VuoGenericType1" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="328,590"];
+ShareValue [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="683,416"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="536,669"];
+ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="505,578"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<refresh_3>refresh_3\r|<refresh_4>refresh_4\r|<setCount>setCount\r|<terms>terms\r|<dataAndEvent>dataAndEvent\r|<decrement>decrement\r|<increment>increment\r|<initialValue>initialValue\r|<initialValue_2>initialValue_2\r|<refresh_2>refresh_2\r" _refresh_3="" _refresh_3_type="event" _refresh_4="" _refresh_4_type="event" _setCount="0.000000" _setCount_type="VuoReal" _terms="" _terms_type="VuoList_VuoInteger" _dataAndEvent="" _dataAndEvent_type="VuoBoolean" _decrement="1.000000" _decrement_type="VuoReal" _increment="1.000000" _increment_type="VuoReal" _initialValue="" _initialValue_type="VuoInteger" _initialValue_2="" _initialValue_2_type="VuoInteger" _refresh_2="" _refresh_2_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<sum_2>sum_2\l|<event>event\l|<heldValue>heldValue\l|<heldValue_2>heldValue_2\l|<done_2>done_2\l|<count>count\l|<done_4>done_4\l|<sum>sum\l|<done_3>done_3\l" _sum_2_type="VuoInteger" _event_type="event" _heldValue_type="VuoInteger" _heldValue_2_type="VuoInteger" _done_2_type="event" _count_type="VuoReal" _done_4_type="event" _sum_type="VuoInteger" _done_3_type="event"];
+
+Add4:sum -> HoldValue4:initialValue;
+Add6:sum -> ShareValue:value [event=true];
+Add7:sum -> MakeList6:2;
+Add9:sum -> ShareValue3:value [event=true];
+Changed:changed -> ShareValue2:value;
+HoldValue3:heldValue -> HoldValue2:initialValue;
+MakeList5:list -> Add5:values;
+MakeList6:list -> Add6:values;
+MakeList7:list -> Add7:values;
+MakeList9:list -> Add9:values;
+PublishedInputs:refresh_3 -> Add6:refresh;
+PublishedInputs:refresh_4 -> Changed:refresh;
+PublishedInputs:refresh_4 -> ShareValue2:value;
+PublishedInputs:setCount -> Count:setCount;
+PublishedInputs:decrement -> Count:decrement;
+PublishedInputs:increment -> Count:increment;
+PublishedInputs:refresh_2 -> Add9:refresh;
+Changed2:changed -> PublishedOutputs:event;
+ShareValue3:sameValue -> PublishedOutputs:done_2;
+Count:count -> PublishedOutputs:count;
+ShareValue2:sameValue -> PublishedOutputs:done_4;
+ShareValue:sameValue -> PublishedOutputs:done_3;
+}

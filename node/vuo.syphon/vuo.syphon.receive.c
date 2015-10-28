@@ -14,15 +14,11 @@
 
 VuoModuleMetadata({
 					  "title" : "Receive Image via Syphon",
-					  "keywords" : [ "application", "client", "frame", "get", "input", "interprocess", "IOSurface", "output", "share", "video" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "application", "client", "frame", "get", "interprocess", "IOSurface", "output", "share", "video" ],
+					  "version" : "1.0.1",
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [
-							  "ReceiveImages.vuo",
-							  "ReceiveImagesPreferablyFromVuo.vuo",
-							  "ReceiveImagesOnlyFromVuo.vuo"
-						  ]
+						  "exampleCompositions" : [ "ReceiveImages.vuo", "ReceiveImagesPreferablyFromVuo.vuo", "ReceiveImagesOnlyFromVuo.vuo" ]
 					  },
 					  "dependencies" : [
 						"VuoSyphon"
@@ -36,7 +32,7 @@ struct nodeInstanceData
 	VuoSyphonServerDescription serverDescription;
 };
 
-void updateServer(struct nodeInstanceData *context, VuoSyphonServerDescription newServerDescription, VuoOutputTrigger(receivedImage, VuoImage))
+static void updateServer(struct nodeInstanceData *context, VuoSyphonServerDescription newServerDescription, VuoOutputTrigger(receivedImage, VuoImage))
 {
 	VuoSyphonServerDescription_release(context->serverDescription);
 	context->serverDescription = newServerDescription;
@@ -71,7 +67,7 @@ void nodeInstanceEvent
 (
 		VuoInputData(VuoSyphonServerDescription) serverDescription,
 		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(receivedImage, VuoImage, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(receivedImage, VuoImage, {"eventThrottling":"drop"})
 )
 {
 	if (! VuoSyphonServerDescription_areEqual(serverDescription, (*context)->serverDescription))

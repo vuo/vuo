@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="751,314"];
+ConvertIntegertoRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="684,254"];
+Hold [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="580,211"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="917,228"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="705,325" _1="1"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="963,217"];
+RoundDown [type="vuo.math.roundDown" version="1.0.0" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDown>roundedDown\r" pos="1125,219"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<apply>apply\r|<initialBalance>initialBalance\r|<interestRate>interestRate\r" _apply="" _apply_type="event" _initialBalance="" _initialBalance_type="VuoInteger" _interestRate="" _interestRate_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<balance>balance\l" _balance_type="VuoInteger"];
+
+Add:sum -> MakeList:2;
+ConvertIntegertoRealNumber:real -> MakeList:1;
+Hold:heldValue -> ConvertIntegertoRealNumber:integer;
+Hold:heldValue -> MakeList2:1 [event=true];
+MakeList2:list -> Add:values;
+MakeList:list -> Multiply:values;
+Multiply:product -> RoundDown:real;
+RoundDown:roundedDown -> Hold:newValue;
+PublishedInputs:apply -> Hold:refresh;
+PublishedInputs:initialBalance -> Hold:initialValue;
+PublishedInputs:interestRate -> MakeList2:2;
+RoundDown:roundedDown -> PublishedOutputs:balance;
+}

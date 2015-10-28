@@ -17,5 +17,7 @@ OTHER_FILES += \
 
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$ROOT/type/VuoText.o

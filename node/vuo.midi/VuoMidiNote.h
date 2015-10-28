@@ -35,6 +35,8 @@ VuoMidiNote VuoMidiNote_valueFromJson(struct json_object * js);
 struct json_object * VuoMidiNote_jsonFromValue(const VuoMidiNote value);
 char * VuoMidiNote_summaryFromValue(const VuoMidiNote value);
 
+bool VuoMidiNote_areEqual(const VuoMidiNote value1, const VuoMidiNote value2);
+
 /**
  * Returns a note event with the specified values.
  */

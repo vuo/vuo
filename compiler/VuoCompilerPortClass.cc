@@ -16,4 +16,36 @@
 VuoCompilerPortClass::VuoCompilerPortClass(string name, VuoPortClass::PortType portType, Type *type) :
 	VuoCompilerNodeArgumentClass(name, portType, type)
 {
+	details = NULL;
+}
+
+/**
+ * Destructor.
+ */
+VuoCompilerPortClass::~VuoCompilerPortClass(void)
+{
+	json_object_put(details);
+}
+
+/**
+ * Sets details for this port.
+ *
+ * @eg{
+ * {
+ *   "name":"Set URL",
+ *   "hasPortAction":true
+ * }
+ * }
+ */
+void VuoCompilerPortClass::setDetails(struct json_object *details)
+{
+	this->details = details;
+}
+
+/**
+ * Returns details for this port, set in @c setDetails().
+ */
+json_object * VuoCompilerPortClass::getDetails(void)
+{
+	return details;
 }

@@ -8,7 +8,7 @@ SOURCES += \
 
 VUO_FRAMEWORK_PATH=../../../framework
 
-QMAKE_CXX = $$VUO_FRAMEWORK_PATH/Vuo.framework/MacOS/Clang/bin/clang++
+QMAKE_CXX = $$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/llvm.framework/Helpers/clang++
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
 QMAKE_LINK = $$QMAKE_CXX
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK

@@ -10,10 +10,10 @@
 digraph G
 {
 FirePeriodically [type="vuo.time.firePeriodically" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="57,244.5" _seconds="1"];
-Hold [type="vuo.hold.VuoInteger" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="317,146.5" _initialValue="5" _newValue="0"];
+Hold [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="317,146.5" _initialValue="5" _newValue="0"];
 DisplayConsoleWindow [type="vuo.console.window" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="731,218.5"];
 ConvertIntegertoText [type="vuo.type.integer.text" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="414.5,162" _integer="0"];
-Hold2 [type="vuo.hold.VuoInteger" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="292,334.5" _initialValue="10" _heldValue="0"];
+Hold2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="292,334.5" _initialValue="10" _heldValue="0"];
 Subtract [type="vuo.math.subtract.VuoInteger" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="485,148" _a="0" _b="0"];
 
 FirePeriodically:fired -> Hold2:refresh;

@@ -13,10 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Text to Real",
 					 "keywords" : [ ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "version" : "1.0.0"
 				 });
 
 void nodeEvent

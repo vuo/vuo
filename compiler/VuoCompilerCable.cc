@@ -25,7 +25,36 @@ VuoCompilerCable::VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort *
 												toNode? toNode->getBase() : NULL,
 												toPort? toPort->getBase() : NULL))
 {
-		getBase()->setCompiler(this);
+	getBase()->setCompiler(this);
+	isAlwaysEventOnly = false;
+}
+
+/**
+ * Sets whether this cable is always event-only. If true, the cable is always event-only, even if its from-port and to-port
+ * can both carry data. If false, the cable is event-only only if its from-port and/or to-port is event-only.
+ */
+void VuoCompilerCable::setAlwaysEventOnly(bool isEventOnly)
+{
+	this->isAlwaysEventOnly = isEventOnly;
+}
+
+/**
+ * Returns a boolean indicating whether this cable is always event-only, regardless of the data-carrying status
+ * of its from-port and to-port.
+ */
+bool VuoCompilerCable::getAlwaysEventOnly()
+{
+	return this->isAlwaysEventOnly;
+}
+
+/**
+ * Returns true if the given cable endpoint can carry data.
+ */
+bool VuoCompilerCable::portHasData(VuoPort *port)
+{
+	return (port &&
+			port->getClass()->hasCompiler() &&
+			static_cast<VuoCompilerPortClass *>(port->getClass()->getCompiler())->getDataVuoType());
 }
 
 /**
@@ -44,7 +73,12 @@ string VuoCompilerCable::getGraphvizDeclaration(void)
 	if (fromNode && fromNode->hasCompiler() && toNode && toNode->hasCompiler() && fromPort && toPort)
 	{
 		declaration << fromNode->getCompiler()->getGraphvizIdentifier() << ":" << fromPort->getClass()->getName() << " -> "
-					<< toNode->getCompiler()->getGraphvizIdentifier() << ":" << toPort->getClass()->getName() << ";";
+					<< toNode->getCompiler()->getGraphvizIdentifier() << ":" << toPort->getClass()->getName();
+
+		if (isAlwaysEventOnly && portHasData( getBase()->getFromPort() ) && portHasData( getBase()->getToPort() ))
+			declaration << " [event=true]";
+
+		declaration << ";";
 	}
 
 	return declaration.str();
@@ -55,18 +89,16 @@ string VuoCompilerCable::getGraphvizDeclaration(void)
  */
 bool VuoCompilerCable::carriesData(void)
 {
+	if (isAlwaysEventOnly)
+		return false;
+
 	VuoNode *fromNode = getBase()->getFromNode();
 	VuoNode *toNode = getBase()->getToNode();
 	VuoPort *fromPort = getBase()->getFromPort();
 	VuoPort *toPort = getBase()->getToPort();
 
-	bool fromPortHasData =	fromPort &&
-							fromPort->getClass()->hasCompiler() &&
-							static_cast<VuoCompilerPortClass *>(fromPort->getClass()->getCompiler())->getDataVuoType();
-
-	bool toPortHasData =	toPort &&
-							toPort->getClass()->hasCompiler() &&
-							static_cast<VuoCompilerPortClass *>(toPort->getClass()->getCompiler())->getDataVuoType();
+	bool fromPortHasData = portHasData(fromPort);
+	bool toPortHasData = portHasData(toPort);
 
 	// If not currently connected to a 'From' port, decide on the basis of the 'To' port alone.
 	if (! fromPort)

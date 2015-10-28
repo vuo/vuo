@@ -25,14 +25,14 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":""}) triggerInfoConductive,
-		VuoInputEvent(VuoPortEventBlocking_None,triggerInfoConductive) triggerInfoConductiveEvent,
+		VuoInputEvent({"eventBlocking":"none","data":"triggerInfoConductive"}) triggerInfoConductiveEvent,
 		VuoInputData(VuoText, {"default":""}) triggerInfoNonConductive,
-		VuoInputEvent(VuoPortEventBlocking_Wall,triggerInfoNonConductive) triggerInfoNonConductiveEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"triggerInfoNonConductive"}) triggerInfoNonConductiveEvent,
 		VuoInputData(VuoText, {"default":""}) nodeTitle,
 		VuoOutputData(VuoText) triggerInfoOut,
-		VuoOutputEvent(triggerInfoOut) triggerInfoOutEvent,
+		VuoOutputEvent({"data":"triggerInfoOut"}) triggerInfoOutEvent,
 		VuoOutputData(VuoText) nodeInfo,
-		VuoOutputEvent(nodeInfo) nodeInfoEvent
+		VuoOutputEvent({"data":"nodeInfo"}) nodeInfoEvent
 )
 {
 	if (! triggerInfoConductiveEvent)

@@ -11,7 +11,7 @@
 #define VUOWRAPMODE_H
 
 /// @{
-typedef void * VuoList_VuoWrapMode;
+typedef const struct VuoList_VuoWrapMode_struct { void *l; } * VuoList_VuoWrapMode;
 #define VuoList_VuoWrapMode_TYPE_DEFINED
 /// @}
 

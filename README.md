@@ -70,12 +70,6 @@ If you're running any version of Mac OS X:
 
 If building LLVM and Clang for redistribution, also build and execute UPX (see the UPX section below).
 
-### Remove libtool
-
-(If libtool is installed, graphviz uses it, adding an unnecessary dependency.)
-
-    brew remove libtool
-
 ### Graphviz
 
 Install Graphviz 2.28.0:
@@ -113,6 +107,9 @@ Install Qt 5.3.1:
     # https://bugreports.qt-project.org/browse/QTBUG-36575
     curl -OL https://bugreports.qt-project.org/secure/attachment/37834/qmake-objcxx-cxxflags.patch
     patch -p1 < qmake-objcxx-cxxflags.patch
+    # https://bugreports.qt-project.org/browse/QTBUG-37926
+    curl -OL https://b33p.net/sites/default/files/mousebuttonstate.patch
+    patch -p1 < mousebuttonstate.patch
     cd ..
     ./configure -prefix /usr/local/Cellar/qt/5.3.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit -skip qtmultimedia
     make -j9
@@ -219,7 +216,7 @@ If you're running any version of Mac OS X:
     curl -OL http://curl.haxx.se/download/curl-7.30.0.tar.gz
     tar zxf curl-7.30.0.tar.gz
     cd curl-7.30.0
-    ./configure --prefix=/usr/local/Cellar/curl/7.30.0 --enable-shared=no --disable-ldap --without-libidn --without-ssl
+    ./configure --prefix=/usr/local/Cellar/curl/7.30.0 --enable-shared=no --disable-ldap --without-libidn
     make -j9
     make install
 
@@ -438,7 +435,7 @@ Create a symbolic link to ld64 133.3 in the same directory as Clang (to force Cl
     curl -OL http://www.openssl.org/source/openssl-1.0.1g.tar.gz
     tar zxf openssl-1.0.1g.tar.gz
     cd openssl-1.0.1g
-    ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1g --openssldir=/usr/local/etc/openssl no-zlib no-shared darwin64-x86_64-cc
+    ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1g --openssldir=/usr/local/etc/openssl no-zlib no-shared no-hw no-asm darwin64-x86_64-cc
     make CFLAG="-O0"
     make install
 
@@ -570,6 +567,7 @@ Update Qt Creator's Preferences.
 
 Set up the Vuo project.
 
+   - Place the Vuo source code in a folder without spaces in its name or in the name of any of its parent folders.
    - Open `vuo.pro`
       - If presented with message "Qt Creator can use the following kits for project vuo: No valid kits found":
             - Click the "options" link within follow-up message "Please add a kit in the options ..."
@@ -604,6 +602,8 @@ Set up the Vuo project.
 ## Build Vuo from the command line
 
 As an alternative to using Qt Creator (above), you can build from the command line.
+
+Place the Vuo source code in a folder without spaces in its name or in the name of any of its parent folders.
 
 Generate the makefiles:
 

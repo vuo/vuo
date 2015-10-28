@@ -24,10 +24,43 @@ VuoModuleMetadata({
 						 "AppKit.framework",
 						 "VuoDisplayRefresh",
 						 "VuoGLContext",
-						 "VuoScreenCommon"
+						 "VuoScreenCommon",
+						 "VuoWindowProperty",
+						 "VuoList_VuoWindowProperty",
+						 "OpenGL.framework"
 					 ]
 				 });
 #endif
+
+
+
+/**
+ * NSWindow category by Jonathan 'Wolf' Rentzsch http://rentzsch.com
+ */
+@interface NSWindow (liveFrame)
+- (NSRect)liveFrame;
+@end
+@implementation NSWindow (liveFrame)
+/**
+ * This method is because -[NSWindow frame] isn't updated continually during a drag.
+ */
+- (NSRect)liveFrame {
+	Rect qdRect;
+	extern OSStatus
+	GetWindowBounds(
+					WindowRef          window,
+					WindowRegionCode   regionCode,
+					Rect *             globalBounds);
+
+	GetWindowBounds([self windowRef], kWindowStructureRgn, &qdRect);
+
+	return NSMakeRect(qdRect.left,
+					  (float)CGDisplayPixelsHigh(kCGDirectMainDisplay) - qdRect.bottom,
+					  qdRect.right - qdRect.left,
+					  qdRect.bottom - qdRect.top);
+}
+@end
+
 
 
 @implementation VuoWindowOpenGLView
@@ -68,8 +101,27 @@ VuoModuleMetadata({
 			funcType setWantsBestResolutionOpenGLSurface = (funcType)[[self class] instanceMethodForSelector:@selector(setWantsBestResolutionOpenGLSurface:)];
 			setWantsBestResolutionOpenGLSurface(self, @selector(setWantsBestResolutionOpenGLSurface:), YES);
 		}
+
+		// Prepare the circle mouse cursor.
+		circleRect = NSMakeRect(0,0,48,48);
+		circleImage = [[NSImage alloc] initWithSize:circleRect.size];
+		[circleImage lockFocus];
+		{
+			[[NSColor colorWithDeviceWhite:1 alpha:0.75] setFill];
+			NSBezierPath *circlePath = [NSBezierPath bezierPathWithOvalInRect:circleRect];
+			[circlePath fill];
+		}
+		[circleImage unlockFocus];
 	}
 	return self;
+}
+
+/**
+ * Performs cleanup prior to closing the window (since -dealloc isn't guaranteed to be called).
+ */
+- (void)windowWillClose
+{
+	VuoRelease(displayRefresh);
 }
 
 /**
@@ -77,8 +129,8 @@ VuoModuleMetadata({
  */
 - (void)dealloc
 {
+	[circleImage release];
 	[windowedGlContext release];
-	VuoRelease(displayRefresh);
 	[super dealloc];
 }
 
@@ -165,21 +217,11 @@ void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
 /**
  * Returns YES if this window is currently fullscreen.
  *
- * Use this instead of -[NSView isInFullScreenMode], since it handles both the 10.6 and post-10.6 behavior.
+ * Use this instead of -[NSView isInFullScreenMode], since that method doesn't exist on 10.6.
  */
 - (BOOL)isFullScreen
 {
-	if ([self.window respondsToSelector:@selector(toggleFullScreen:)])
-	{
-		// On 10.7 and later, check the NSWindow's styleMask.
-		NSUInteger fullScreen = 1 << 14; // NSFullScreenWindowMask
-		return ([self.window styleMask] & fullScreen) != 0;
-	}
-	else
-	{
-		// On 10.6, check if we've disabled all the window styles.
-		return [self.window styleMask] == 0;
-	}
+	return [self.window styleMask] == 0;
 }
 
 /**
@@ -226,6 +268,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
  */
 - (void)reshape
 {
+	if (initCallbackCalled)
 	dispatch_sync(drawQueue, ^{
 					  NSOpenGLContext *glContext = [self openGLContext];
 					  CGLContextObj cgl_ctx = [glContext CGLContextObj];
@@ -275,17 +318,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 						  y = frame.size.height/2 - height/2;
 					  }
 
-					  if ([self.window respondsToSelector:@selector(toggleFullScreen:)] && [self isFullScreen])
-					  {
-						  // On 10.7 and later, when fullscreen, use the NSWindow's frame as the event-mapping viewport, since the window is automatically centered.
-						  viewport = [self.window frame];
-						  // ...and make it relative to the current screen.
-						  NSRect screenFrame = [[self.window screen] frame];
-						  viewport.origin.x -= screenFrame.origin.x;
-						  viewport.origin.y -= screenFrame.origin.y;
-					  }
-					  else
-						  viewport = convertPixelsToPoints(self, NSMakeRect(x, y, width, height));
+					  viewport = convertPixelsToPoints(self, NSMakeRect(x, y, width, height));
 
 					  glViewport(x, y, width, height);
 					  resizeCallback(cgl_ctx, drawContext, width, height);
@@ -340,25 +373,16 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 													screenFrame.origin.y + screenFrame.size.height/2 - windowFrame.size.height/2)];
 		}
 
-		if ([self.window respondsToSelector:@selector(toggleFullScreen:)])
-		{
-			// On 10.7 and later, use the new fullscreen collection behavior.
-			typedef void (*toggleFullScreenType)(id receiver, SEL selector, id sender);
-			toggleFullScreenType toggleFullScreen = (toggleFullScreenType)[[self.window class] instanceMethodForSelector:@selector(toggleFullScreen:)];
-			toggleFullScreen(self.window, @selector(toggleFullScreen:), nil);
-		}
-		else
-		{
-			// On 10.6, just make the window take up the whole screen.
-			[self.window setLevel:NSScreenSaverWindowLevel];
+		// Make the window take up the whole screen.
 
-			NSSize car = [self.window contentAspectRatio];
-			[self.window setStyleMask:0];
-			if (!NSEqualSizes(car, NSMakeSize(0,0)))
-				[self.window setContentAspectRatio:car];
+		[self.window setLevel:NSScreenSaverWindowLevel];
 
-			[self.window setFrame:[self.window screen].frame display:YES];
-		}
+		NSSize car = [self.window contentAspectRatio];
+		[self.window setStyleMask:0];
+		if (!NSEqualSizes(car, NSMakeSize(0,0)))
+			[self.window setContentAspectRatio:car];
+
+		[self.window setFrame:[self.window screen].frame display:YES];
 
 		[self reshape];
 	}
@@ -366,17 +390,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 	{
 		// Switch out of fullscreen mode.
 
-
-		if ([self.window respondsToSelector:@selector(toggleFullScreen:)])
-		{
-			// On 10.7 and later, use the new fullscreen collection behavior.
-			typedef void (*toggleFullScreenType)(id receiver, SEL selector, id sender);
-			toggleFullScreenType toggleFullScreen = (toggleFullScreenType)[[self.window class] instanceMethodForSelector:@selector(toggleFullScreen:)];
-			toggleFullScreen(self.window, @selector(toggleFullScreen:), nil);
-		}
-		else
-			// On 10.6:
-			[self.window setLevel:NSNormalWindowLevel];
+		[self.window setLevel:NSNormalWindowLevel];
 
 		NSSize car = [self.window contentAspectRatio];
 		[self.window setStyleMask:((VuoWindowOpenGLInternal *)self.window).styleMaskWhenWindowed];
@@ -397,6 +411,31 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 	[self.openGLContext update];
 	CGLUnlockContext(cgl_ctx);
 }
+
+- (void)resetCursorRects
+{
+	VuoCursor cursor = ((VuoWindowOpenGLInternal *)self.window).cursor;
+	NSCursor *nsCursor = nil;
+
+	if (cursor == VuoCursor_None)
+		nsCursor = [[[NSCursor alloc] initWithImage:[[NSImage alloc] initWithSize:NSMakeSize(1,1)] hotSpot:NSMakePoint(0,0)] autorelease];
+	else if (cursor == VuoCursor_Pointer)
+		nsCursor = [NSCursor arrowCursor];
+	else if (cursor == VuoCursor_Crosshair)
+		nsCursor = [NSCursor crosshairCursor];
+	else if (cursor == VuoCursor_HandOpen)
+		nsCursor = [NSCursor openHandCursor];
+	else if (cursor == VuoCursor_HandClosed)
+		nsCursor = [NSCursor closedHandCursor];
+	else if (cursor == VuoCursor_IBeam)
+		nsCursor = [NSCursor IBeamCursor];
+	else if (cursor == VuoCursor_Circle)
+		nsCursor = [[[NSCursor alloc] initWithImage:circleImage hotSpot:NSMakePoint(NSMidX(circleRect),NSMidY(circleRect))] autorelease];
+
+	if (nsCursor)
+		[self addCursorRect:[self visibleRect] cursor:nsCursor];
+}
+
 @end
 
 
@@ -407,6 +446,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 @synthesize depthBuffer;
 @synthesize contentRectWhenWindowed;
 @synthesize styleMaskWhenWindowed;
+@synthesize cursor;
 
 /**
  * Creates a window containing an OpenGL view.
@@ -429,16 +469,11 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		self.depthBuffer = _depthBuffer;
 		self.delegate = self;
 
+		cursor = VuoCursor_Pointer;
+
 		callbacksEnabled = NO;
 
 		[self setContentMinSize:NSMakeSize(16,16)];
-
-		if ([self respondsToSelector:@selector(toggleFullScreen:)])
-		{
-			// If we're on 10.7 or later, enable the new fullscreen collection behavior.
-			NSUInteger fullScreenPrimary = 1 << 7; // NSWindowCollectionBehaviorFullScreenPrimary
-			[self setCollectionBehavior:fullScreenPrimary];
-		}
 
 		[self setAcceptsMouseMovedEvents:YES];
 
@@ -482,6 +517,14 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		[glView.windowedGlContext setView:glView];
 	}
 	return self;
+}
+
+/**
+ * Releases instance variables.
+ */
+- (void)windowWillClose:(NSNotification *)notification
+{
+	[glView windowWillClose];
 }
 
 /**
@@ -562,7 +605,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 	unsigned int propertyCount = VuoListGetCount_VuoWindowProperty(properties);
 	for (unsigned int i = 1; i <= propertyCount; ++i)
 	{
-		VuoWindowProperty property = VuoListGetValueAtIndex_VuoWindowProperty(properties, i);
+		VuoWindowProperty property = VuoListGetValue_VuoWindowProperty(properties, i);
 //		VLog("%s",VuoWindowProperty_summaryFromValue(property));
 
 		if (property.type == VuoWindowProperty_Title)
@@ -587,6 +630,11 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 			else
 			{
 				NSRect contentRect = [self contentRectForFrameRect:[self frame]];
+
+				// Adjust the y position by the change in height, so that the window appears to be anchored in its top-left corner
+				// (instead of its bottom-left corner as the system does by default).
+				contentRect.origin.y += contentRect.size.height - property.height;
+
 				contentRect.size = NSMakeSize(property.width, property.height);
 				[self setFrame:[self frameRectForContentRect:contentRect] display:YES animate:NO];
 			}
@@ -605,6 +653,11 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 				styleMaskWhenWindowed = property.resizable ? (styleMaskWhenWindowed | NSResizableWindowMask) : (styleMaskWhenWindowed & ~NSResizableWindowMask);
 			else
 				[self setStyleMask:     property.resizable ? ([self styleMask]      | NSResizableWindowMask) : ([self styleMask]      & ~NSResizableWindowMask) ];
+		}
+		else if (property.type == VuoWindowProperty_Cursor)
+		{
+			cursor = property.cursor;
+			[self invalidateCursorRectsForView:glView];
 		}
 	}
 }
@@ -636,6 +689,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
  */
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh
 {
+	// Sets the constraint when the user resizes the window (but doesn't affect the window's current size).
 	[self setContentAspectRatio:NSMakeSize(pixelsWide, pixelsHigh)];
 
 	if ([glView isFullScreen])
@@ -643,7 +697,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 
 	CGFloat desiredWidth = pixelsWide;
 	CGFloat desiredHeight = pixelsHigh;
-	CGRect windowFrame = [self frame];
+	CGRect windowFrame = [self liveFrame];
 	CGFloat aspectRatio = (CGFloat)pixelsWide / (CGFloat)pixelsHigh;
 
 	// Adjust the width and height if the user manually resized the window.

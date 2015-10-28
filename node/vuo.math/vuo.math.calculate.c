@@ -13,6 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Calculate",
 					  "keywords" : [
+						"maths", "mathematics",
 						"add", "sum", "+", "subtract", "minus", "difference", "-", "multiply", "product", "*",
 						"divide", "quotient", "/", "power", "^", "modulus", "%", "if", "condition",
 						"and", "&&", "or", "==", "less", "<", "<=", "greater", ">", ">=", "equal", "==", "compare",
@@ -22,7 +23,6 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false,
 						  "exampleCompositions" : [ "GraphFunctions.vuo", "PaintWithMath.vuo" ]
 					  }
 				 });
@@ -39,7 +39,7 @@ void nodeEvent
 	VuoList_VuoText outputVariables = VuoDictionaryGetKeys_VuoText_VuoReal(results);
 	*result = (VuoListGetCount_VuoText(outputVariables) == 0) ?
 				  0 :
-				  VuoDictionaryGetValueForKey_VuoText_VuoReal(results, VuoListGetValueAtIndex_VuoText(outputVariables, 1));
+				  VuoDictionaryGetValueForKey_VuoText_VuoReal(results, VuoListGetValue_VuoText(outputVariables, 1));
 
 	VuoRetain(outputVariables);
 	VuoRelease(outputVariables);

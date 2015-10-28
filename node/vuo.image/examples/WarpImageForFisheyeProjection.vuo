@@ -9,21 +9,23 @@
 
 digraph G
 {
-Convert2DPointToReal4 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<done>done\r|<x>x\r" pos="348,743"];
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="225,426" _decrement="1.000000" _setCount="0.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-9,215" _started_eventThrottling="enqueue"];
-GetImage [type="vuo.image.get" version="1.0.0" label="Get Image|<refresh>refresh\l|<imageURL>imageURL\l|<done>done\r|<image>image\r" pos="142,266" _imageURL="\"redcup2-7145482357.jpg\""];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="32,437" _2="20.000000"];
-Multiply [type="vuo.math.multiply.VuoReal" version="1.0.0" label="Multiply|<refresh>refresh\l|<terms>terms\l|<done>done\r|<product>product\r" pos="78,426"];
-ReceiveMouseDeltas [type="vuo.mouse.delta" version="1.0.0" label="Receive Mouse Deltas|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<done>done\r|<movedBy>movedBy\r" pos="-210,426" _modifierKey="\"any\"" _movedBy_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="652,250" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-WarpImageWithProjectionMesh [type="vuo.image.project.dome" version="1.0.0" label="Warp Image with Projection Mesh|<refresh>refresh\l|<meshUrl>meshUrl\l|<image>image\l|<imagePosition>imagePosition\l|<imageRotation>imageRotation\l|<width>width\l|<height>height\l|<done>done\r|<warpedImage>warpedImage\r" pos="375,250" fillcolor="violet" _meshUrl="\"fisheye.data\"" _imagePosition="{\"x\":0.000000,\"y\":0.000000}" _width="960" _height="540"];
+Convert2DPointToReal4 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="348,743"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="225,426" _decrement="1.000000" _setCount="0.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-9,215" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="142,266" _url="\"redcup2-7145482357.jpg\""];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="32,437" _2="20.000000"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="621,276"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="78,426"];
+ReceiveMouseDeltas [type="vuo.mouse.delta" version="1.0.1" label="Receive Mouse Deltas|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedBy>movedBy\r" pos="-210,426" _modifierKey="\"any\"" _movedBy_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="662,250" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+WarpImageWithProjectionMesh [type="vuo.image.project.dome" version="2.0.0" label="Warp Image with Projection Mesh|<refresh>refresh\l|<url>url\l|<image>image\l|<imagePosition>imagePosition\l|<imageRotation>imageRotation\l|<width>width\l|<height>height\l|<warpedImage>warpedImage\r" pos="375,250" fillcolor="violet" _url="\"fisheye.data\"" _imagePosition="{\"x\":0.000000,\"y\":0.000000}" _width="960" _height="540"];
 
 Convert2DPointToReal4:x -> MakeList:1;
 Count:count -> WarpImageWithProjectionMesh:imageRotation;
 FireOnStart:started -> GetImage:refresh;
 GetImage:image -> WarpImageWithProjectionMesh:image;
-MakeList:list -> Multiply:terms;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
+MakeList:list -> Multiply:values;
 Multiply:product -> Count:increment;
 ReceiveMouseDeltas:movedBy -> Convert2DPointToReal4:xy;
 RenderImageToWindow:showedWindow -> ReceiveMouseDeltas:window;

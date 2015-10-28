@@ -2,6 +2,6 @@ Converts the input to a non-negative number.
 
 For example: 
 
-   - If `signedValue` -3, `absoluteValue` is 3. 
-   - If `signedValue` is 5, `absoluteValue` is 5. 
-   - If `signedValue` is 0, `absoluteValue` is 0. 
+   - If `Signed Value` -3, `Absolute Value` is 3. 
+   - If `Signed Value` is 5, `Absolute Value` is 5. 
+   - If `Signed Value` is 0, `Absolute Value` is 0. 

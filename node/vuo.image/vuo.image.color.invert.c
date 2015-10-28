@@ -13,7 +13,10 @@
 VuoModuleMetadata({
 					 "title" : "Invert Image Colors",
 					 "keywords" : [ "reverse", "negative", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
+					 "node" : {
+						 "exampleCompositions" : [ ]
+					 }
 				 });
 
 static const char * invertFragmentShader = VUOSHADER_GLSL_SOURCE(120,

@@ -24,7 +24,6 @@ VuoPublishedPort::VuoPublishedPort(string name, VuoType *type, bool isOutput, se
 	this->type = type;
 	this->isOutput = isOutput;
 	this->connectedPorts = connectedPorts;
-	this->initialValueAsString = "";
 }
 
 /**
@@ -61,14 +60,6 @@ bool VuoPublishedPort::getOutput(void) const
 }
 
 /**
- * Returns the string representation of the initial value of the published port data.
- */
-string VuoPublishedPort::getInitialValue(void) const
-{
-	return initialValueAsString;
-}
-
-/**
  * Sets the published port's name.
  */
 void VuoPublishedPort::setName(string name)
@@ -82,17 +73,6 @@ void VuoPublishedPort::setName(string name)
 void VuoPublishedPort::setType(VuoType *type)
 {
 	this->type = type;
-}
-
-/**
- * Sets the initial value of the published port data. This is the value it has from the time that
- * the composition begins executing until the first time the port data is overwritten.
- *
- * @param initialValueAsString String representation of the initial value.
- */
-void VuoPublishedPort::setInitialValue(string initialValueAsString)
-{
-	this->initialValueAsString = initialValueAsString;
 }
 
 /**

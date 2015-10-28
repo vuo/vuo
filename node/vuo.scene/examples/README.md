@@ -1,1 +1,2 @@
-   - jeep1.3ds was created by Psionic in 2002, who says "FREE for use however you like, credits are appreciated!!!"
+   - palmtree.dae was created by [Nobiax](http://nobiax.deviantart.com), who says "Absolutely free to use or to modify in any kind of work"
+   - The Benjamin Franklin Silver Dollar images are works of the United States government and are public domain — however they are subject to counterfeit law: http://www.secretservice.gov/money_illustrations.shtml

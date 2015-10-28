@@ -9,14 +9,16 @@
 
 digraph G
 {
-MakeLayer [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="648,476" fillcolor="green" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
-MakeLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="645,346" fillcolor="green" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
-MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="844,399" fillcolor="green"];
-ReceiveKinectFrame [type="vuo.kinect.receive" version="2.0.0" label="Receive Kinect Frame|<refresh>refresh\l|<done>done\r|<receivedImage>receivedImage\r|<receivedDepthImage>receivedDepthImage\r" pos="375,338" fillcolor="violet" _receivedImage_eventThrottling="drop" _receivedDepthImage_eventThrottling="drop"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="1.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="904,388" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+MakeLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="648,476" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="644,330" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="833,399" fillcolor="green"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="863,414" fillcolor="green"];
+ReceiveKinectFrame [type="vuo.kinect.receive" version="2.0.0" label="Receive Kinect Frame|<refresh>refresh\l|<receivedImage>receivedImage\r|<receivedDepthImage>receivedDepthImage\r" pos="375,338" fillcolor="violet" _receivedImage_eventThrottling="drop" _receivedDepthImage_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="904,388" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 MakeLayer2:layer -> MakeList:1;
 MakeLayer:layer -> MakeList:2;
+MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList:list -> RenderLayersToWindow2:layers;
 ReceiveKinectFrame:receivedDepthImage -> MakeLayer:image;
 ReceiveKinectFrame:receivedImage -> MakeLayer2:image;

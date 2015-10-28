@@ -9,16 +9,16 @@
 
 digraph G
 {
-Append [type="vuo.text.append" label="Append|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="285,289"];
-HoldValue [type="vuo.hold.VuoText" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="172,118" _initialValue="initial text"];
-MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="146,289" _2="appended text"];
-CountCharacters [type="vuo.text.countCharacters" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="413,118"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l"];
+Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="285,289"];
+CountCharacters [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="413,118"];
+HoldValue [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="172,118" _initialValue="initial text"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="239,300" _2="appended text"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inEvent>inEvent\r" _inEvent_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outEvent>outEvent\l" _outEvent_type="VuoInteger"];
 
+Append:compositeText -> HoldValue:newValue;
 HoldValue:heldValue -> CountCharacters:text;
 HoldValue:heldValue -> MakeList:1;
-Append:compositeText -> HoldValue:newValue;
 MakeList:list -> Append:texts;
 PublishedInputs:inEvent -> HoldValue:refresh;
 CountCharacters:characterCount -> PublishedOutputs:outEvent;

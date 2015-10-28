@@ -69,11 +69,36 @@
 	}
 }
 
+\newcommand{\tip}[1]{
+	\marginpar{
+		\begin{tikzpicture}
+			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\parbox[c][7mm][c]{7mm}{\hspace{1.5mm}\Huge +} \parbox{31mm}{\footnotesize Tip}};
+		\end{tikzpicture}%
+	}
+}
+
+\newcommand{\warning}[1]{
+	\marginpar{
+		\begin{tikzpicture}
+			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[width=7mm,height=7mm]{image/warning.eps}} \parbox{31mm}{\footnotesize Watch Out}};
+		\end{tikzpicture}%
+	}
+}
+
+\newcommand{\tutorial}[1]{
+	\marginpar{
+		\begin{tikzpicture}
+			\node[sidebox](box){\begin{minipage}{4.1cm}\footnotesize #1\end{minipage}};
+			\node[sideboxtitle, right=10pt] at (box.north west) {\raisebox{-2.5mm}{\includegraphics[width=7mm,height=7mm]{image/Stellaris_Clapper-board.eps}} \parbox{31mm}{\footnotesize Tutorial}};
+		\end{tikzpicture}%
+	}
+}
+
 \usepackage[multidot]{grffile}
 \newcommand{\doublequote}{\XeTeXglyph\XeTeXcharglyph"0022\relax}
 \newcommand{\code}[1]{{\tt #1}}
-\newcommand{\key}[1]{{\tt #1}}
-\newcommand{\menu}[1]{{\tt #1}}
 \newcommand{\term}[1]{{\color{green}\bf #1}}
 \newcommand{\vuoPort}[1]{{\bf #1}}
 \newcommand{\vuoNode}[1]{{\bf #1}}
@@ -94,9 +119,9 @@
 
 \newlength{\vuoImageWidth}
 \newcommand{\vuoScreenshot}[1]{
-	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.25]{image/#1}}
+	\settowidth{\vuoImageWidth}{\includegraphics[scale=0.5]{image/#1}}
 	\setlength{\vuoImageWidth}{\minof{\vuoImageWidth}{\textwidth}}
-	\includegraphics[scale=0.25,width=\vuoImageWidth]{image/#1.png}
+	\includegraphics[scale=0.5,width=\vuoImageWidth]{image/#1.png}
 }
 \newcommand{\vuoScreenshotWithAnnotation}[2]{
 	\begin{tikzpicture}
@@ -225,3 +250,11 @@
 \newunicodechar{↓}{{\lucidaGrande ↓}}
 \newunicodechar{←}{{\lucidaGrande ←}}
 \newunicodechar{→}{{\lucidaGrande →}}
+
+\usepackage{menukeys}
+	\renewmenumacro{\menu}[>]{roundedmenus}
+	\renewmenumacro{\keys}[+]{roundedkeys}
+	\renewmenumacro{\directory}[/]{pathswithfolder}
+	\changemenucolor{gray}{bg}{named}{base2}
+	\changemenucolor{gray}{br}{named}{base1}
+	\changemenucolor{gray}{txt}{named}{base01}

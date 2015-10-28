@@ -12,7 +12,7 @@
 
 digraph G
 {
-MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<done>done\r|<object>object\r" pos="143,57" _name="\"camera\""];
+MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="143,57" _name="\"camera\""];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<image>image\r|<time>time\r|<position>position\r|<fieldOfView>fieldOfView\r" _image_type="VuoImage" _time_type="VuoReal" _position="{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}" _position_type="VuoPoint3d" _fieldOfView="0.010000" _fieldOfView_type="VuoReal"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 

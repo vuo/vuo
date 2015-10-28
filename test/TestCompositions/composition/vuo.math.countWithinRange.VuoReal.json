@@ -1,0 +1,136 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.countWithinRange.VuoReal node.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1,
+			"minimum" : 0,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 0
+		}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1,
+			"minimum" : 1,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 1
+		}
+	},
+
+	{
+		"firingPort" : "increment",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1,
+			"minimum" : 1,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 2
+		}
+	},
+
+	{
+		"firingPort" : "increment",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1,
+			"minimum" : 1,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 1
+		}
+	},
+
+	{
+		"firingPort" : "decrement",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1,
+			"minimum" : 1,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 2
+		}
+	},
+
+	{
+		"firingPort" : "increment",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1,
+			"minimum" : 1,
+			"maximum" : 2,
+			"wrapMode" : "saturate"
+		},
+		"outputPortValues" : {
+			"count" : 2
+		}
+	},
+
+	{
+		"firingPort" : "decrement",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1.5,
+			"minimum" : 0,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 0.5
+		}
+	},
+
+	{
+		"firingPort" : "decrement",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 1.5,
+			"minimum" : 0,
+			"maximum" : 2,
+			"wrapMode" : "wrap"
+		},
+		"outputPortValues" : {
+			"count" : 1
+		}
+	},
+
+	{
+		"firingPort" : "decrement",
+		"inputPortValues" : {
+			"increment" : 1,
+			"decrement" : 100,
+			"minimum" : -1,
+			"maximum" : 2,
+			"wrapMode" : "saturate"
+		},
+		"outputPortValues" : {
+			"count" : -1
+		}
+	}
+]}

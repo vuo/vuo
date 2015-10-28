@@ -5,6 +5,11 @@
  * @copyright Copyright © 2012 Kosada Incorporated. This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
 #ifdef __cplusplus
 
 #include <string>
@@ -12,9 +17,6 @@
 #include <map>
 #include <list>
 #include <set>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 using namespace std;
 
@@ -83,6 +85,7 @@ using namespace llvm;
 #include <QtGui/QtGui>
 #include <QtWidgets/QtWidgets>
 #include <QtPrintSupport/QtPrintSupport>
+#include <QtMacExtras/QtMacExtras>
 #endif
 
 #ifdef QT_TESTLIB_LIB
@@ -95,6 +98,23 @@ using namespace llvm;
 
 #ifdef ZMQ
 #include <zmq.h>
+#endif
+
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+#include <json/json.h>
+#pragma clang diagnostic pop
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "coreTypes.h"
+
+#ifdef __cplusplus
+}
 #endif
 
 #include "VuoLog.h"

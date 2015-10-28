@@ -11,7 +11,7 @@
 #define VUOSIZINGMODE_H
 
 /// @{
-typedef void * VuoList_VuoSizingMode;
+typedef const struct VuoList_VuoSizingMode_struct { void *l; } * VuoList_VuoSizingMode;
 #define VuoList_VuoSizingMode_TYPE_DEFINED
 /// @}
 

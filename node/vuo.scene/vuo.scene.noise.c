@@ -82,7 +82,7 @@ void nodeInstanceEvent
 		VuoOutputData(VuoSceneObject) noisedObject
 )
 {
-	double nonzeroScale = (scale == 0) ? 0.000001 : scale;
+	double nonzeroScale = VuoReal_makeNonzero(scale);
 
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "time",   time);

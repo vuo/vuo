@@ -14,6 +14,9 @@ VuoModuleMetadata({
 					 "keywords" : [ "translation", "rotation", "scale", "shift", "move", "position",
 						 "angle", "roll", "axis", "size", "grow", "shrink" ],
 					 "version" : "1.0.0",
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent

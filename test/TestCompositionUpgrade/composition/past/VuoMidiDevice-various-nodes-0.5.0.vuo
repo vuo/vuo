@@ -1,0 +1,23 @@
+/**
+ * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+GetItemFromList [type="vuo.list.get.VuoMidiDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="337,256" _which="1"];
+HoldValue [type="vuo.hold.VuoMidiDevice" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="237,156" _initialValue="" _newValue=""];
+MakeList [type="vuo.list.make.2.VuoMidiDevice" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="267,267" _item1="" _item2=""];
+SelectInput [type="vuo.select.in.VuoMidiDevice" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="537,456" _which="false" _falseOption="" _trueOption=""];
+SelectInput2 [type="vuo.select.in.2.VuoMidiDevice" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="437,356" _which="1" _option1="" _option2=""];
+SelectLatest [type="vuo.select.latest.2.VuoMidiDevice" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="637,556" _option1="" _option2=""];
+SelectOutput [type="vuo.select.out.2.VuoMidiDevice" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<option1>option1\r|<option2>option2\r" pos="737,656" _which="1" _in=""];
+
+MakeList:list -> GetItemFromList:list;
+}

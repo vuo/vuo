@@ -12,10 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Real to 2D Point",
 					 "keywords" : [ ],
-					 "version" : "1.0.0",
-					 "node": {
-						 "isInterface" : false
-					 }
+					 "version" : "1.0.0"
 				 });
 
 void nodeEvent

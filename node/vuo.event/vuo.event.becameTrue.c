@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "pulse", "watcher", "change", "boolean", "0", "1", "false" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -30,7 +30,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoBoolean *) lastValue,
 		VuoInputData(VuoBoolean, {"default":false}) value,
-		VuoInputEvent(VuoPortEventBlocking_Door, value) valueEvent,
+		VuoInputEvent({"eventBlocking":"door","data":"value"}) valueEvent,
 		VuoOutputEvent() becameTrue
 )
 {

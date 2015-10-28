@@ -9,8 +9,8 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="0,0"];
-HoldValue [type="vuo.hold.VuoList_VuoBlendMode" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="68,63"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,0" _started_eventThrottling="enqueue"];
+HoldValue [type="vuo.data.hold.VuoList_VuoBlendMode" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="68,63"];
 
-FireOnStart:started -> HoldValue:refresh
+FireOnStart:started -> HoldValue:refresh;
 }

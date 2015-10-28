@@ -30,6 +30,14 @@ string VuoPortClass::getName(void)
 }
 
 /**
+ * Sets the name of this port class.
+ */
+void VuoPortClass::setName(string name)
+{
+	this->name = name;
+}
+
+/**
  * Returns this port's type.
  */
 VuoPortClass::PortType VuoPortClass::getPortType(void)

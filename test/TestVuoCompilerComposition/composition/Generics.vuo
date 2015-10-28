@@ -9,21 +9,21 @@
 
 digraph G
 {
-GetMessageValues1 [type="vuo.osc.message.get.2.VuoGenericType1.VuoGenericType2" version="1.0.0" label="GetMessageValues1|<refresh>refresh\l|<message>message\l|<done>done\r|<address>address\r|<data1>data1\r|<data2>data2\r" pos="73,554"];
-HoldValue1 [type="vuo.hold.VuoText" version="1.0.0" label="HoldValue1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="83,60"];
-HoldValue2 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="HoldValue2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="82,151"];
-HoldValue3 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="HoldValue3|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="253,339"];
-HoldValue4 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="HoldValue4|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="434,340"];
-HoldValue5 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="HoldValue5|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="254,434"];
-HoldValue6 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="HoldValue6|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="68,342"];
-HoldValue7 [type="vuo.hold.VuoGenericType1" version="1.0.0" label="HoldValue7|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="71,439"];
-Subtract1 [type="vuo.math.subtract.VuoGenericType1" version="1.0.0" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="82,241" _a="0.000000" _b="0.000000"];
-Subtract2 [type="vuo.math.subtract.VuoGenericType1" version="1.0.0" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="471,430" _b="0.000000"];
-Subtract3 [type="vuo.math.subtract.VuoGenericType1" version="1.0.0" label="Subtract3|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="411,552" _a="0.000000" _b="0.000000"];
+GetMessageValues1 [type="vuo.osc.message.get.2.VuoGenericType1.VuoGenericType2" version="1.0.0" label="GetMessageValues1|<refresh>refresh\l|<message>message\l|<address>address\r|<data1>data1\r|<data2>data2\r" pos="73,554"];
+HoldValue1 [type="vuo.data.hold.VuoText" version="2.0.0" label="HoldValue1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="83,60"];
+HoldValue2 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="HoldValue2|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="82,151"];
+HoldValue3 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="HoldValue3|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="253,339"];
+HoldValue4 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="HoldValue4|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="434,340"];
+HoldValue5 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="HoldValue5|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="254,434"];
+HoldValue6 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="HoldValue6|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="68,342"];
+HoldValue7 [type="vuo.data.hold.VuoGenericType1" version="2.0.0" label="HoldValue7|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="71,439"];
+Subtract1 [type="vuo.math.subtract.VuoGenericType1" version="1.0.0" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="82,241" _a="0.000000" _b="0.000000"];
+Subtract2 [type="vuo.math.subtract.VuoGenericType1" version="1.0.0" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="471,430" _b="0.000000"];
+Subtract3 [type="vuo.math.subtract.VuoGenericType1" version="1.0.0" label="Subtract3|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="411,552" _b="0.000000"];
 
+GetMessageValues1:data2 -> Subtract3:a;
 HoldValue3:heldValue -> HoldValue4:newValue;
 HoldValue5:heldValue -> Subtract2:a;
 HoldValue6:heldValue -> HoldValue3:newValue;
 HoldValue7:heldValue -> HoldValue5:newValue;
-GetMessageValues1:data2 -> Subtract3:a;
 }

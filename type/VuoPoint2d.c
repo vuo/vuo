@@ -12,7 +12,6 @@
 #include <string.h>
 #include "type.h"
 #include "VuoPoint2d.h"
-#include "VuoReal.h"
 #include "VuoText.h"
 
 /// @{
@@ -23,7 +22,8 @@ VuoModuleMetadata({
 					 "keywords" : [ "coordinate" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoReal",
+						"VuoText"
 					 ]
 				 });
 #endif
@@ -145,4 +145,28 @@ bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2)
 {
 	return fabs(value1.x - value2.x) < 0.00001
 		&& fabs(value1.y - value2.y) < 0.00001;
+}
+
+/**
+ * Returns a pseudorandom value where each component is between `minimum` and `maximum`.
+ *
+ * @see VuoInteger_random
+ */
+VuoPoint2d VuoPoint2d_random(const VuoPoint2d minimum, const VuoPoint2d maximum)
+{
+	return VuoPoint2d_make(
+				VuoReal_random(minimum.x, maximum.x),
+				VuoReal_random(minimum.y, maximum.y));
+}
+
+/**
+ * Returns a pseudorandom value where each component is between `minimum` and `maximum`.
+ *
+ * @see VuoInteger_randomWithState
+ */
+VuoPoint2d VuoPoint2d_randomWithState(unsigned short state[3], const VuoPoint2d minimum, const VuoPoint2d maximum)
+{
+	return VuoPoint2d_make(
+				VuoReal_randomWithState(state, minimum.x, maximum.x),
+				VuoReal_randomWithState(state, minimum.y, maximum.y));
 }

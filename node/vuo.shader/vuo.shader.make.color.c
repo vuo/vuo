@@ -21,6 +21,9 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
+					 "node" : {
+						  "exampleCompositions" : [ ]
+					 }
 				 });
 
 void nodeEvent
@@ -32,14 +35,4 @@ void nodeEvent
 )
 {
 	*shader = VuoShader_makeLitColorShader(color, highlightColor, shininess);
-
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-		// Ensure the command queue gets executed before we return,
-		// since the VuoShader might immediately be used on another context.
-		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
 }

@@ -1,1 +1,1 @@
-Calculates `base` raised to the power of `exponent`.
+Calculates `Base` raised to the power of `Exponent`.

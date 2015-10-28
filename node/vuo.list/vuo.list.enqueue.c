@@ -15,7 +15,6 @@ VuoModuleMetadata({
 						  "limit", "capacity", "queue", "fifo", "first in first out", "recent", "hold", "store" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "isInterface" : false,
 						  "exampleCompositions": [ "ShowInstantReplay.vuo" ]
 					  }
 				 });
@@ -33,10 +32,10 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoList_VuoGenericType1) listInstanceData,
 		VuoInputData(VuoInteger, { "default":10, "suggestedMin":0 }) maxItemCount,
-		VuoInputEvent(VuoPortEventBlocking_Wall, maxItemCount) maxItemCountEvent,
+		VuoInputEvent({"eventBlocking":"wall","data":"maxItemCount"}) maxItemCountEvent,
 		VuoInputData(VuoGenericType1) addItem,
-		VuoInputEvent(VuoPortEventBlocking_None, addItem) addItemEvent,
-		VuoInputEvent(VuoPortEventBlocking_None,) clearList,
+		VuoInputEvent({"eventBlocking":"none","data":"addItem"}) addItemEvent,
+		VuoInputEvent({"eventBlocking":"none"}) clearList,
 		VuoOutputData(VuoList_VuoGenericType1) list
 )
 {
@@ -53,7 +52,7 @@ void nodeInstanceEvent
 
 	*list = VuoListCreate_VuoGenericType1();
 	for (unsigned long i = 1; i <= itemCount; ++i)
-		VuoListAppendValue_VuoGenericType1( *list, VuoListGetValueAtIndex_VuoGenericType1(*listInstanceData, i) );
+		VuoListAppendValue_VuoGenericType1( *list, VuoListGetValue_VuoGenericType1(*listInstanceData, i) );
 }
 
 void nodeInstanceFini

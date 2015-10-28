@@ -17,6 +17,15 @@ VuoCompilerDataClass::VuoCompilerDataClass(string name, Type *type) :
 	VuoCompilerNodeArgumentClass(name, VuoPortClass::notAPort, type)
 {
 	vuoType = NULL;
+	details = NULL;
+}
+
+/**
+ * Destructor.
+ */
+VuoCompilerDataClass::~VuoCompilerDataClass(void)
+{
+	json_object_put(details);
 }
 
 /**
@@ -44,4 +53,34 @@ void VuoCompilerDataClass::setVuoType(VuoType *vuoType)
 Type * VuoCompilerDataClass::getType(void)
 {
 	return vuoType->getCompiler()->getType();
+}
+
+/**
+ * Sets details for this port data.
+ *
+ * @eg{
+ * {
+ *   "default":10,
+ *   "suggestedMin":0,
+ *   "suggestedMax":100
+ * }
+ * }
+ *
+ * @eg{
+ * {
+ *   "default":{"x":-0.5,"y":0.5}
+ * }
+ * }
+ */
+void VuoCompilerDataClass::setDetails(struct json_object *details)
+{
+	this->details = details;
+}
+
+/**
+ * Returns details for this port data, set in @c setDetails().
+ */
+json_object * VuoCompilerDataClass::getDetails(void)
+{
+	return details;
 }

@@ -56,8 +56,8 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compos
 	string linkedCompositionPath = compiledCompositionDir + compiledCompositionFile;
 
 	string vuoFrameworkDir = VuoFileUtilities::getVuoFrameworkPath();
-	string vuoCompilePath = vuoFrameworkDir + "/MacOS/vuo-compile";
-	string vuoLinkPath = vuoFrameworkDir + "/MacOS/vuo-link";
+	string vuoCompilePath = vuoFrameworkDir + "/Helpers/vuo-compile";
+	string vuoLinkPath = vuoFrameworkDir + "/Helpers/vuo-link";
 
 	// vuo-compile --output /tmp/composition.bc composition.vuo
 	pid_t compilePid = fork();
@@ -399,6 +399,8 @@ void VuoRunner::setUpConnections(void)
 	}
 
 	// Cache published ports so they're available whenever a caller starts listening for published port value changes.
+	arePublishedInputPortsCached = false;
+	arePublishedOutputPortsCached = false;
 	if (isInCurrentProcess())
 	{
 		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -1266,6 +1268,8 @@ void VuoRunner::listen(void)
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryOutputPortsUpdated;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
+		type = VuoTelemetryEventDropped;
+		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryError;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryStopRequested;
@@ -1406,6 +1410,16 @@ void VuoRunner::listen(void)
 						}
 						free(portIdentifier);
 					}
+					break;
+				}
+				case VuoTelemetryEventDropped:
+				{
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQTelemetry);
+					dispatch_sync(delegateQueue, ^{
+									  if (delegate)
+										  delegate->receivedTelemetryEventDropped(portIdentifier);
+								  });
+					free(portIdentifier);
 					break;
 				}
 				case VuoTelemetryError:

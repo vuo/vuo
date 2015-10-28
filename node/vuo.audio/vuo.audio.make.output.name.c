@@ -13,7 +13,10 @@
 VuoModuleMetadata({
 					  "title" : "Make Audio Output from Name",
 					  "keywords" : [ "sound", "output", "speaker", "music", "device" ],
-					  "version" : "1.0.0"
+					  "version" : "1.0.0",
+					  "node" : {
+						  "exampleCompositions" : [ ]
+					  }
 				 });
 
 void nodeEvent

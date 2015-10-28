@@ -12,21 +12,21 @@
 VuoModuleMetadata({
 					 "title" : "Combine Quaternion Rotations",
 					 "keywords" : [ "composite", "product", "multiply", "*", "homogenous", "xyzw", "rotation", "angle", "versor", "merge" ],
-					 "version" : "1.0.0",
+					 "version" : "3.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoPoint4d) terms,
+		VuoInputData(VuoList_VuoPoint4d) values,
 		VuoOutputData(VuoPoint4d) composite
 )
 {
 	*composite = VuoPoint4d_make(0,0,0,1);
 
-	unsigned long quaternionsCount = VuoListGetCount_VuoPoint4d(terms);
+	unsigned long quaternionsCount = VuoListGetCount_VuoPoint4d(values);
 	for (unsigned long i = 1; i <= quaternionsCount; ++i)
-		*composite = VuoTransform_quaternionComposite(*composite, VuoListGetValueAtIndex_VuoPoint4d(terms, i));
+		*composite = VuoTransform_quaternionComposite(*composite, VuoListGetValue_VuoPoint4d(values, i));
 }

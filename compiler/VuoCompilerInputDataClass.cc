@@ -25,7 +25,6 @@ VuoCompilerInputDataClass::VuoCompilerInputDataClass(string name, Type *type, bo
 	VuoCompilerDataClass(name, type)
 {
 	this->twoParameters = twoParameters;
-	this->details = NULL;
 }
 
 /**
@@ -34,36 +33,6 @@ VuoCompilerInputDataClass::VuoCompilerInputDataClass(string name, Type *type, bo
 VuoCompilerData * VuoCompilerInputDataClass::newData(void)
 {
 	return new VuoCompilerInputData(this);
-}
-
-/**
- * Sets details for this port data.
- *
- * @eg{
- * {
- *   "default":10,
- *   "suggestedMin":0,
- *   "suggestedMax":100
- * }
- * }
- *
- * @eg{
- * {
- *   "default":{"x":-0.5,"y":0.5}
- * }
- * }
- */
-void VuoCompilerInputDataClass::setDetails(struct json_object *details)
-{
-	this->details = details;
-}
-
-/**
- * Returns details for this port data, set in @c setDetails().
- */
-json_object * VuoCompilerInputDataClass::getDetails(void)
-{
-	return details;
 }
 
 /**

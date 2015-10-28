@@ -22,9 +22,14 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "VuoSceneObject",
-						 "c",
-						 "json"
+						"VuoColor",
+						"VuoPoint2d",
+						"VuoSceneObject",
+						"VuoTransform2d",
+						"VuoWindowReference",
+						"VuoList_VuoColor",
+						"VuoList_VuoLayer",
+						"VuoList_VuoSceneObject"
 					 ]
 				 });
 #endif
@@ -95,6 +100,13 @@ VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, 
  */
 static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance, VuoBoolean isRealSize)
 {
+	if (!image)
+	{
+		VuoLayer l;
+		l.sceneObject = VuoSceneObject_makeEmpty();
+		return l;
+	}
+
 	// Create a pair of layers, one for the main layer and one for the shadow, and put them in a group.
 	// Apply the transformation to the individual layers, rather than to the group, so that
 	// VuoRenderedLayers_getTransformedLayer() can work with the individual layers.
@@ -129,12 +141,16 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 	shadow.sceneObject.isRealSize = isRealSize;
 
 	VuoList_VuoLayer layers = VuoListCreate_VuoLayer();
+	VuoRetain(layers);
 	VuoListAppendValue_VuoLayer(layers, shadow);
 	VuoListAppendValue_VuoLayer(layers, layer);
 
 	VuoRelease(recoloredImage);
 
-	return VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity());
+	VuoLayer group = VuoLayer_makeGroup(layers, VuoTransform2d_makeIdentity());
+	VuoRelease(layers);
+
+	return group;
 }
 
 /**
@@ -263,7 +279,7 @@ VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transfo
 
 	unsigned long childLayerCount = VuoListGetCount_VuoLayer(childLayers);
 	for (unsigned long i = 1; i <= childLayerCount; ++i)
-		VuoListAppendValue_VuoSceneObject(o.sceneObject.childObjects, VuoListGetValueAtIndex_VuoLayer(childLayers, i).sceneObject);
+		VuoListAppendValue_VuoSceneObject(o.sceneObject.childObjects, VuoListGetValue_VuoLayer(childLayers, i).sceneObject);
 
 	return o;
 }
@@ -295,7 +311,7 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject child = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+			VuoSceneObject child = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 			VuoRectangle childBoundingBox = VuoLayer_getBoundingRectangleWithSceneObject(child, viewportWidth, viewportHeight);
 			childBoundingBox = VuoTransform_transformRectangle(matrix, childBoundingBox);
 			b = VuoPoint2d_rectangleUnion(b, childBoundingBox);

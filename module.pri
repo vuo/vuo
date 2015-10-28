@@ -14,8 +14,9 @@ VUOCOMPILE_NODE_DEPEND_FLAGS = \
 	$$join(VUOCOMPILE_NODE_INCLUDEPATH, " -I", "-I")
 VUOCOMPILE_NODE_FLAGS = \
 	$$join(VUOCOMPILE_NODE_INCLUDEPATH, " --header-search-path ", "--header-search-path ")
+FAKE_DEFINES_FOR_GAMMA = -Duint8_t -Dint8_t -Duint16_t -Dint16_t -Duint32_t -Dint32_t
 node.input = NODE_SOURCES
-node.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - $$VUOCOMPILE_NODE_DEPEND_FLAGS ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
+node.depend_command = $$QMAKE_CC -nostdinc -MM -MF - -MG $$FAKE_DEFINES_FOR_GAMMA $$VUOCOMPILE_NODE_DEPEND_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node.output = ${QMAKE_FILE_IN_BASE}.vuonode
 node.commands = $$VUOCOMPILE $$VUOCOMPILE_NODE_FLAGS --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += node
@@ -30,7 +31,7 @@ VUOCOMPILE_TYPE_DEPEND_FLAGS = \
 VUOCOMPILE_TYPE_FLAGS = \
 	$$join(VUOCOMPILE_TYPE_INCLUDEPATH, " --header-search-path ", "--header-search-path ")
 type.input = TYPE_SOURCES
-type.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - $$VUOCOMPILE_TYPE_DEPEND_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
+type.depend_command = $$QMAKE_CC -nostdinc -MM -MF - -MG $$VUOCOMPILE_TYPE_DEPEND_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 type.output = ${QMAKE_FILE_IN_BASE}.bc
 type.commands = $$VUOCOMPILE $$VUOCOMPILE_TYPE_FLAGS --output ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 type.variable_out = TYPE_BITCODE
@@ -47,6 +48,7 @@ QMAKE_EXTRA_COMPILERS += typeObjects
 
 CLANG_NODE_LIBRARY_INCLUDEPATH = \
 	$$MODULE_INCLUDEPATH \
+	$$JSONC_ROOT/include \
 	$$NODE_LIBRARY_INCLUDEPATH
 CLANG_NODE_LIBRARY_FLAGS = \
 	-target x86_64-apple-macosx10.6.0 \
@@ -60,7 +62,7 @@ CLANG_NODE_LIBRARY_FLAGS = \
 	$$VUO_VERSION_DEFINES \
 	-DVUO_COMPILER=1
 node_library.input = NODE_LIBRARY_SOURCES
-node_library.depend_command = $$QMAKE_CC -o /dev/null -E -MD -MF - -emit-llvm $$QMAKE_CFLAGS_X86_64 $${CLANG_NODE_LIBRARY_FLAGS} ${QMAKE_FILE_NAME} 2>&1 | sed \"s,^.*: ,,\"
+node_library.depend_command = $$QMAKE_CC -nostdinc -MM -MF - -MG $$QMAKE_CFLAGS_X86_64 $${CLANG_NODE_LIBRARY_FLAGS} ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node_library.output = ${QMAKE_FILE_IN_BASE}.bc
 node_library.commands = \
 	@if [ "${QMAKE_FILE_EXT}" == ".c" -o "${QMAKE_FILE_EXT}" == ".m" ]; then \
@@ -134,6 +136,7 @@ INCLUDEPATH += \
 
 # Enable building libraries as normal machine code (by adding them to SOURCES)
 INCLUDEPATH += \
+	$$JSONC_ROOT/include \
 	$$ROOT/library \
 	$$ROOT/node \
 	$$ROOT/runtime \

@@ -201,6 +201,11 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	catch (mu::Parser::exception_type &e)
 	{
 		VLog("Error: %s", e.GetMsg().c_str());
+		free(positions);
+		free(normals);
+		free(tangents);
+		free(bitangents);
+		free(textures);
 		return VuoMesh_make(0);
 	}
 
@@ -213,7 +218,7 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	unsigned int *triangles = (unsigned int *)malloc(sizeof(unsigned int)*triangleCount);
 
 	// Prepare an array to count how many neighboring face normals have been added to the vertex normal, so we can divide later to get the average.
-	int normalCount[vertexCount];
+	unsigned int* normalCount = (unsigned int*)calloc(sizeof(unsigned int) * vertexCount, sizeof(unsigned int));
 	for (int i=0;i<vertexCount;++i)
 		normalCount[i] = 0;
 
@@ -296,10 +301,11 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	// average normals
 	for(int i = 0; i < vertexCount; i++)
 	{
-		normals[i] = VuoPoint4d_divide(normals[i], (double)normalCount[i]);
+		normals[i] = VuoPoint4d_multiply(normals[i], 1./(double)normalCount[i]);
 //		tangents[i] = normals[i];
 //		bitangents[i] = normals[i];
 	}
+	free(normalCount);
 
 	VuoMeshParametric_calculateTangentArray(vertexCount, positions, normals, textures, triangleCount, (const int*)triangles, tangents, bitangents);
 
@@ -316,13 +322,6 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	submesh.elements = triangles;
 	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
 	submesh.faceCullingMode = GL_BACK;
-
-	VuoRegister(submesh.positions, free);
-	VuoRegister(submesh.normals, free);
-	VuoRegister(submesh.tangents, free);
-	VuoRegister(submesh.bitangents, free);
-	VuoRegister(submesh.textureCoordinates, free);
-	VuoRegister(submesh.elements, free);
 
 	return VuoMesh_makeFromSingleSubmesh(submesh);
 }

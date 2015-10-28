@@ -8,17 +8,12 @@
  */
 
 #include "node.h"
-#include "VuoAudio.h"
 
 VuoModuleMetadata({
 					 "title" : "Adjust Loudness",
 					 "keywords" : [ "sound", "music", "gain", "decibel", "volume" ],
-					 "version" : "1.0.0",
-					 "dependencies" : [
-						 "VuoAudio"
-					 ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false,
 						 "exampleCompositions" : [ "ControlLoudness.vuo", "PanAudio.vuo" ],
 					 }
 				 });
@@ -45,6 +40,7 @@ void nodeInstanceEvent
 (
 		VuoInputData(VuoList_VuoAudioSamples) samples,
 		VuoInputData(VuoReal, {"suggestedMin":0, "suggestedMax":2, "default":1}) loudness,
+		VuoInputEvent({"data":"loudness", "eventBlocking":"wall"}) loudnessEvent,
 		VuoOutputData(VuoList_VuoAudioSamples) adjustedSamples,
 		VuoInstanceData(struct nodeInstanceData *)context
 )
@@ -66,7 +62,7 @@ void nodeInstanceEvent
 
 		for(int i = 0; i < len; i++)
 		{
-			VuoAudioSamples as = VuoListGetValueAtIndex_VuoAudioSamples(samples, i+1);
+			VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(samples, i+1);
 			VuoAudioSamples nas = VuoAudioSamples_alloc(as.sampleCount);
 			nas.samplesPerSecond = as.samplesPerSecond;
 			unsigned int sampleCount = as.sampleCount;
@@ -91,7 +87,7 @@ void nodeInstanceEvent
 	{
 		for(int i = 0; i < len; i++)
 		{
-			VuoAudioSamples as = VuoListGetValueAtIndex_VuoAudioSamples(samples, i+1);
+			VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(samples, i+1);
 			VuoAudioSamples nas = VuoAudioSamples_alloc(as.sampleCount);
 			nas.samplesPerSecond = as.samplesPerSecond;
 

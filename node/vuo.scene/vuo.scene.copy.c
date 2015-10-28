@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object with Transforms",
-					  "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
-					 "version" : "1.0.0",
+					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
+					 "version" : "2.0.0",
 					 "node": {
-						 "isInterface" : false
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
@@ -22,15 +22,17 @@ void nodeEvent
 (
 	VuoInputData(VuoSceneObject) object,
 	VuoInputData(VuoList_VuoTransform) transforms,
-	VuoOutputData(VuoList_VuoSceneObject) copies
+	VuoOutputData(VuoSceneObject) copies
 )
 {
-	*copies = VuoListCreate_VuoSceneObject();
+	*copies = VuoSceneObject_makeEmpty();
+	copies->childObjects = VuoListCreate_VuoSceneObject();
+
 	for(int i = 0; i < VuoListGetCount_VuoTransform(transforms); i++)
 	{
-		VuoTransform transform = VuoListGetValueAtIndex_VuoTransform(transforms, i+1);
+		VuoTransform transform = VuoListGetValue_VuoTransform(transforms, i+1);
 
-		VuoListAppendValue_VuoSceneObject(*copies, VuoSceneObject_make(
+		VuoListAppendValue_VuoSceneObject(copies->childObjects, VuoSceneObject_make(
 			object.mesh,
 			object.shader,
 			transform,

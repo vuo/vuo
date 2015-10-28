@@ -24,7 +24,13 @@
 VuoModuleMetadata({
 					 "title" : "VuoAudioFile",
 					 "dependencies" : [
+						 "VuoAudioSamples",
+						 "VuoInteger",
+						 "VuoLoopType",
+						 "VuoReal",
+						 "VuoText",
 						 "VuoUrl",
+						 "VuoList_VuoAudioSamples",
 						 "AudioToolbox.framework",
 						 "CoreFoundation.framework"
 					 ]
@@ -152,12 +158,25 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 void VuoAudioFile_free(void *af)
 {
 	VuoAudioFileInternal afi = (VuoAudioFileInternal)af;
-	dispatch_source_cancel(afi->playbackTimer);
-	dispatch_release(afi->playbackTimer);
-	dispatch_semaphore_wait(afi->playbackTimerCanceled, DISPATCH_TIME_FOREVER);
-	dispatch_release(afi->playbackTimerCanceled);
-	dispatch_release(afi->audioFileQueue);
-	ExtAudioFileDispose(afi->audioFile);
+
+	if (afi->playbackTimer)
+	{
+		dispatch_source_cancel(afi->playbackTimer);
+		dispatch_release(afi->playbackTimer);
+	}
+
+	if (afi->playbackTimerCanceled)
+	{
+		dispatch_semaphore_wait(afi->playbackTimerCanceled, DISPATCH_TIME_FOREVER);
+		dispatch_release(afi->playbackTimerCanceled);
+	}
+
+	if (afi->audioFileQueue)
+		dispatch_release(afi->audioFileQueue);
+
+	if (afi->audioFile)
+		ExtAudioFileDispose(afi->audioFile);
+
 	free(afi);
 }
 
@@ -166,29 +185,16 @@ void VuoAudioFile_free(void *af)
  */
 VuoAudioFile VuoAudioFile_make(VuoText url)
 {
-	VuoAudioFileInternal afi = malloc(sizeof(struct VuoAudioFileInternal));
+	VuoAudioFileInternal afi = calloc(1, sizeof(struct VuoAudioFileInternal));
 	VuoRegister(afi, VuoAudioFile_free);
 
 	afi->playing = false;
 	afi->loop = VuoLoopType_None;
 	afi->decodedChannels = NULL;
 	afi->finishedPlayback = NULL;
-	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", NULL);
-	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, q);
-	afi->playbackTimerCanceled = dispatch_semaphore_create(0);
-
-	uint64_t nanoseconds = (float)VuoAudioSamples_bufferSize/VuoAudioSamples_sampleRate * NSEC_PER_SEC;	///< @todo https://b33p.net/kosada/node/4726#comment-27512
-	dispatch_source_set_timer(afi->playbackTimer, dispatch_time(DISPATCH_TIME_NOW, nanoseconds), nanoseconds, 0);
-	dispatch_source_set_event_handler(afi->playbackTimer, ^{
-										  VuoAudioFile_decodeChannels(afi);
-									  });
-	dispatch_source_set_cancel_handler(afi->playbackTimer, ^{
-										   dispatch_semaphore_signal(afi->playbackTimerCanceled);
-									   });
 
 	{
-		VuoText normalizedURL = VuoUrl_normalize(url);
+		VuoText normalizedURL = VuoUrl_normalize(url, true);
 		VuoRetain(normalizedURL);
 		CFStringRef urlCFS = CFStringCreateWithCString(NULL, normalizedURL, kCFStringEncodingUTF8);
 		CFURLRef url = CFURLCreateWithString(NULL, urlCFS, NULL);
@@ -197,7 +203,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			VLog("Couldn't open '%s': Invalid URL.", normalizedURL);
 			VuoRelease(normalizedURL);
 			CFRelease(urlCFS);
-			return NULL;
+			goto fail;
 		}
 
 		__block OSStatus err;
@@ -211,7 +217,6 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 							  err = ExtAudioFileOpenURL(url, &afi->audioFile);
 							  alreadyCalledOnMainThread = true;
 						  });
-		VuoRelease(normalizedURL);
 		CFRelease(urlCFS);
 		CFRelease(url);
 		if (err != noErr)
@@ -219,8 +224,10 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			char *errStr = stringWithOSStatus(err);
 			VLog("Couldn't open '%s': %s", normalizedURL, errStr);
 			free(errStr);
-			return NULL;
+			VuoRelease(normalizedURL);
+			goto fail;
 		}
+		VuoRelease(normalizedURL);
 	}
 
 	{
@@ -231,8 +238,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			char *errStr = stringWithOSStatus(err);
 			VLog("Error getting file format for '%s': %s", url, errStr);
 			free(errStr);
-			ExtAudioFileDispose(afi->audioFile);
-			return NULL;
+			goto fail;
 		}
 	}
 
@@ -244,8 +250,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			char *errStr = stringWithOSStatus(err);
 			VLog("Error getting frame count for '%s': %s", url, errStr);
 			free(errStr);
-			ExtAudioFileDispose(afi->audioFile);
-			return NULL;
+			goto fail;
 		}
 	}
 
@@ -265,8 +270,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			char *errStr = stringWithOSStatus(err);
 			VLog("Error setting output format for '%s': %s", url, errStr);
 			free(errStr);
-			ExtAudioFileDispose(afi->audioFile);
-			return NULL;
+			goto fail;
 		}
 	}
 
@@ -281,8 +285,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 				char *errStr = stringWithOSStatus(err);
 				VLog("Error getting audio converter info for '%s': %s", url, errStr);
 				free(errStr);
-				ExtAudioFileDispose(afi->audioFile);
-				return NULL;
+				goto fail;
 			}
 		}
 
@@ -296,12 +299,25 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 				char *errStr = stringWithOSStatus(err);
 				VLog("Error getting header info for '%s': %s", url, errStr);
 				free(errStr);
-				ExtAudioFileDispose(afi->audioFile);
-				return NULL;
+				goto fail;
 			}
 		}
 		afi->headerFrames = pi.leadingFrames;
 	}
+
+	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", NULL);
+	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, q);
+	afi->playbackTimerCanceled = dispatch_semaphore_create(0);
+
+	uint64_t nanoseconds = (float)VuoAudioSamples_bufferSize/VuoAudioSamples_sampleRate * NSEC_PER_SEC;	///< @todo https://b33p.net/kosada/node/4726#comment-27512
+	dispatch_source_set_timer(afi->playbackTimer, dispatch_time(DISPATCH_TIME_NOW, nanoseconds), nanoseconds, 0);
+	dispatch_source_set_event_handler(afi->playbackTimer, ^{
+										  VuoAudioFile_decodeChannels(afi);
+									  });
+	dispatch_source_set_cancel_handler(afi->playbackTimer, ^{
+										   dispatch_semaphore_signal(afi->playbackTimerCanceled);
+									   });
 
 	// Seek past the header.
 	VuoAudioFile_setTime((VuoAudioFile)afi, 0);
@@ -309,6 +325,11 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 	dispatch_resume(afi->playbackTimer);
 
 	return (VuoAudioFile)afi;
+
+fail:
+	VuoRetain(afi);
+	VuoRelease(afi);
+	return NULL;
 }
 
 /**

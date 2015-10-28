@@ -8,7 +8,10 @@
  */
 
 #include <string.h>
+
+#define NS_RETURNS_INNER_POINTER
 #include <AppKit/AppKit.h>
+
 #include "type.h"
 #include "VuoWindowReference.h"
 #include "VuoText.h"
@@ -16,8 +19,14 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "Window",
-					 "version" : "1.0.0"
+					  "title" : "Window",
+					  "version" : "1.0.0",
+					  "dependencies" : [
+						"VuoInteger",
+						"VuoReal",
+						"VuoText",
+						"AppKit.framework"
+					  ]
 				 });
 #endif
 /// @}

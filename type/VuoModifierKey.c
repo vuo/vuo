@@ -17,7 +17,10 @@
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					  "title" : "Modifier Key",
-					  "dependencies" : [ "Carbon.framework" ],
+					  "dependencies" : [
+						"VuoList_VuoModifierKey",
+						"Carbon.framework"
+					  ]
 				  });
 #endif
 /// @}

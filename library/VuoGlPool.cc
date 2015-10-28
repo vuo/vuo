@@ -254,6 +254,18 @@ static void __attribute__((destructor)) VuoGlTexturePool_fini(void)
 }
 
 /**
+ * Returns the OpenGL texture data type corresponding with OpenGL texture `format`.
+ * Assumes `format` refers to an 8-bits-per-channel texture.
+ */
+GLuint VuoGlTexture_getType(GLuint format)
+{
+	if (format == GL_YCBCR_422_APPLE)
+		return GL_UNSIGNED_SHORT_8_8_APPLE;
+
+	return GL_UNSIGNED_BYTE;
+}
+
+/**
  * Returns an OpenGL texture.
  *
  * If an existing, unused texture matching the specified @c internalformat, @c width, and @c height is available, it is returned.
@@ -292,7 +304,7 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 	{
 		glGenTextures(1, &name);
 		glBindTexture(GL_TEXTURE_2D, name);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, VuoGlTexture_getType(format), NULL);
 //		VLog("allocated %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
 	}
 	else
@@ -703,7 +715,7 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 
 		string combinedSource = source;
 
-		if (strcmp((const char *)(*cgl_ctx->disp.get_string)(cgl_ctx->rend,0x1F00), "ATI Technologies Inc.") == 0)
+		if (strcmp((const char *)glGetString(GL_VENDOR), "ATI Technologies Inc.") == 0)
 		{
 			// On ATI Radeon HD 5770 (and possibly others), using snoise4D3D() causes
 			// GLSL compliation to crash inside ATIRadeonX3000GLDriver,
@@ -795,6 +807,7 @@ const char * VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_DEPTH_COMPONENT);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_2D);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_RECTANGLE_ARB);
+	RETURN_STRING_IF_EQUAL(GL_YCBCR_422_APPLE);
 
 	return "(unknown)";
 }

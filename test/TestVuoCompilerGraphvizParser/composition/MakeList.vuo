@@ -9,8 +9,8 @@
 
 digraph G
 {
-MakeList [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" _1="1" _2="2" _3="3"];
-Multiply [type="vuo.math.multiply.VuoInteger" label="Multiply|<refresh>refresh\l|<terms>terms\l|<product>product\r"];
+MakeList [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="138,159" _1="1" _2="2" _3="3"];
+Multiply [type="vuo.math.multiply.VuoInteger" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="184,148"];
 
-MakeList:list -> Multiply:terms;
+MakeList:list -> Multiply:values;
 }

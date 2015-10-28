@@ -28,8 +28,7 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoImageGet",
 					 "dependencies" : [
-						 "c",
-						 "json",
+						 "VuoImage",
 						 "VuoUrl",
 						 "FreeImage"
 					 ]

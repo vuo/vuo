@@ -322,7 +322,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoMouseButton, {"default":"left"}) button,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
 		VuoOutputTrigger(startedDrag, VuoPoint2d),
-		VuoOutputTrigger(draggedCenterTo, VuoPoint2d, VuoPortEventThrottling_Drop),
+		VuoOutputTrigger(draggedCenterTo, VuoPoint2d, {"eventThrottling":"drop"}),
 		VuoOutputTrigger(endedDrag, VuoPoint2d)
 )
 {

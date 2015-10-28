@@ -17,6 +17,9 @@ VuoModuleMetadata({
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]
 						  }
+					  },
+					  "node" : {
+						  "exampleCompositions" : [ "DrawPointsAlongCurve.vuo" ]
 					  }
 				 });
 

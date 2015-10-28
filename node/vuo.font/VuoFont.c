@@ -22,7 +22,12 @@ VuoModuleMetadata({
 					 "keywords" : [ "text", "style", "bold", "italic", "sans", "serif", "monospace", "kerning", "spacing", "double-space", "alignment", "left", "center", "right" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						"VuoBoolean",
+						"VuoColor",
+						"VuoHorizontalAlignment",
+						"VuoInteger",
+						"VuoReal",
+						"VuoText"
 					 ]
 				 });
 #endif

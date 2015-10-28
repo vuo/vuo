@@ -13,6 +13,7 @@
 #include "VuoCompilerOutputEventPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerPortClass.hh"
+#include "VuoCompilerCable.hh"
 #include "VuoRendererPublishedPort.hh"
 #include "VuoRendererPort.hh"
 
@@ -36,7 +37,7 @@ VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublish
 	// The VuoPsuedoPort must nevertheless have its own associated VuoRendererPort -- not because it will
 	// be rendered (it will not), but so that cables connected to it will have a way to access this VuoPublishedPort.
 	VuoPort *pseudoPort = getBase()->getCompiler()->getVuoPseudoPort();
-	pseudoPort->setRenderer(new VuoRendererPort(pseudoPort, NULL, getBase()->getInput(), false, false, false));
+	pseudoPort->setRenderer(new VuoRendererPort(pseudoPort, NULL, getBase()->getInput(), false, false));
 	pseudoPort->getRenderer()->setProxyPublishedSidebarPort(this);
 
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -85,7 +86,6 @@ VuoRendererPort * VuoRendererPublishedPort::createPortRepresentation(string name
 		// and vice versa.
 		isPublishedInput,
 		false,
-		false,
 		false
 		);
 
@@ -119,45 +119,61 @@ void VuoRendererPublishedPort::setName(string name)
 
 /**
  * Returns a boolean indicating whether a new @c internalPort may be
- * attached to/from this externally visible published port without
- * displacing any currently connected internal data ports.
+ * attached to/from this externally visible published port without displacing
+ * any currently connected internal data ports.
+ *
+ * If @c eventOnlyConnection is true, the potential connection will be evaluated as
+ * an event-only connection, regardless of whether the connected ports themselves carry data.
  */
-bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *internalPort)
+bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection)
 {
-	if (! isCompatibleAliasWithSpecializationForInternalPort(internalPort))
+	if (! isCompatibleAliasWithSpecializationForInternalPort(internalPort, eventOnlyConnection))
 		return false;
 
-	// If this is an output port already acting as an alias for an internal port
-	// carrying data, it cannot accommodate another connected data port.
-	if (getBase()->getOutput() && internalPort->getDataType())
+	// @todo https://b33p.net/kosada/node/5142 : Until a single cable connection can accomplish both,
+	// port publication and unpublication, don't allow an internal-external port pair to be eligibility-highlighted
+	// within a single cable drag even if their previous connected cable had a different data-carrying status.
+	if (getBase()->getCompiler()->getVuoPseudoPort()->getCableConnecting(internalPort->getBase()))
+		return false;
+
+	// If this is a published output port that already has has a connected data-carrying cable,
+	// it cannot accommodate another data-carrying cable.
+	if (getBase()->getOutput() && !eventOnlyConnection)
 	{
-		foreach (VuoPort *connectedPort, getBase()->getConnectedPorts())
-			if (connectedPort->getRenderer()->getDataType())
+		foreach (VuoCable *connectedCable, getBase()->getCompiler()->getVuoPseudoPort()->getConnectedCables(true))
+			if (connectedCable->getRenderer()->effectivelyCarriesData() &&
+					connectedCable->getFromNode() &&
+					connectedCable->getToNode())
+			{
 				return false;
+			}
 	}
 
 	return true;
 }
 
 /**
- * Returns a boolean indicating whether there may be a cable
+ * Returns a boolean indicating whether a cable may be
  * attached directly between this externally visible published port
  * and the input @c internalPort, taking into account
  * the respective port types (input vs. output; event-only vs.
  * event+data; respective data types).
  *
+ * If @c eventOnlyConnection is true, the potential connection will be evaluated as
+ * an event-only connection, regardless of whether the connected ports themselves carry data.
+ *
  * If the connection would require one or both ports to be specialized, returns false.
  * (But see @c VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(...).)
  */
-bool VuoRendererPublishedPort::isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *internalPort)
+bool VuoRendererPublishedPort::isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection)
 {
 	// Temporarily disallow direct cable connections between published inputs and published outputs.
 	// @todo: Allow for https://b33p.net/kosada/node/7756 .
 	if (internalPort->getProxyPublishedSidebarPort())
 		return false;
 
-	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithoutSpecializationTo(internalPort) :
-								   internalPort->canConnectDirectlyWithoutSpecializationTo(portRepresentation));
+	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithoutSpecializationTo(internalPort, eventOnlyConnection) :
+								   internalPort->canConnectDirectlyWithoutSpecializationTo(portRepresentation, eventOnlyConnection));
 }
 
 /**
@@ -168,34 +184,41 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithoutSpecializationForInternal
  * event+data; respective data types), and the possibility that one
  * port may be specialized in preparation for the connection.
  *
+ * If @c eventOnlyConnection is true, the potential connection will be evaluated as
+ * an event-only connection, regardless of whether the connected ports themselves carry data.
+ *
  * Convenience function for VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort,
  * VuoRendererPort **portToSpecialize, string &specializedTypeName), for use
  * when only the returned boolean and none of the other output parameter values are needed.
  */
-bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort)
+bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection)
 {
 	VuoRendererPort *portToSpecialize = NULL;
 	string specializedTypeName = "";
 
-	return this->isCompatibleAliasWithSpecializationForInternalPort(internalPort, &portToSpecialize, specializedTypeName);
+	return this->isCompatibleAliasWithSpecializationForInternalPort(internalPort, eventOnlyConnection, &portToSpecialize, specializedTypeName);
 }
 
 /**
- * Returns a boolean indicating whether there may be a cable
+ * Returns a boolean indicating whether the provided @c cable may be
  * attached directly between this externally visible published port
  * and the input @c internalPort, taking into account
  * the respective port types (input vs. output; event-only vs.
  * event+data; respective data types), and the possibility that one
  * port may be specialized in preparation for the connection.
+ *
+ * If @c eventOnlyConnection is true, the potential connection will be evaluated as
+ * an event-only connection, regardless of whether the connected ports themselves carry data.
  */
 bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort,
+																				  bool eventOnlyConnection,
 																				  VuoRendererPort **portToSpecialize,
 																				  string &specializedTypeName)
 {
 	*portToSpecialize = NULL;
 	specializedTypeName = "";
 
-	if (this->isCompatibleAliasWithoutSpecializationForInternalPort(internalPort))
+	if (this->isCompatibleAliasWithoutSpecializationForInternalPort(internalPort, eventOnlyConnection))
 		return true;
 
 	// Temporarily disallow direct cable connections between published inputs and published outputs.
@@ -203,8 +226,8 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPor
 	if (internalPort->getProxyPublishedSidebarPort())
 		return false;
 
-	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithSpecializationTo(internalPort, portToSpecialize, specializedTypeName) :
-								   internalPort->canConnectDirectlyWithSpecializationTo(portRepresentation, portToSpecialize, specializedTypeName));
+	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithSpecializationTo(internalPort, eventOnlyConnection, portToSpecialize, specializedTypeName) :
+								   internalPort->canConnectDirectlyWithSpecializationTo(portRepresentation, eventOnlyConnection, portToSpecialize, specializedTypeName));
 }
 
 /**
@@ -213,8 +236,10 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPor
  * the respective port types (input vs. output; event-only vs.
  * event+data; respective data types), without
  * displacing any currently connected internal data ports.
+ * The @c mergeWillAddData input should indicate whether
+ * the @c otherExternalPort is expected to have connected data sources.
  */
-bool VuoRendererPublishedPort::canBeMergedWith(VuoPublishedPort *otherExternalPort)
+bool VuoRendererPublishedPort::canBeMergedWith(VuoPublishedPort *otherExternalPort, bool mergeWillAddData)
 {
 	// For these two externally visible published ports to be eligible for merging, they must have the same type.
 	if (! ((this->getBase()->getInput() == otherExternalPort->getInput()) &&
@@ -225,27 +250,15 @@ bool VuoRendererPublishedPort::canBeMergedWith(VuoPublishedPort *otherExternalPo
 	if (this->getBase()->getInput())
 		return true;
 
-	// If they are output published ports and their types match, make sure they
-	// have no more than one connected internal data port between the two of them.
-	bool foundConnectedDataPort = false;
-	set<VuoPort *> connectedPorts = getBase()->getConnectedPorts();
-	for (set<VuoPort *>::iterator port = connectedPorts.begin(); (! foundConnectedDataPort) && (port != connectedPorts.end()); ++port)
-	{
-		if ((static_cast<VuoCompilerPortClass *>((*port)->getClass()->getCompiler()))->getDataVuoType())
-			foundConnectedDataPort = true;
-	}
-
-	if (! foundConnectedDataPort)
+	// If they are output published ports and their types match, make sure they will
+	// have no more than one connected data-carrying cable between the two of them.
+	if (!mergeWillAddData)
 		return true;
 
-	else
+	foreach (VuoCable *connectedCable, getBase()->getCompiler()->getVuoPseudoPort()->getConnectedCables(true))
 	{
-		set<VuoPort *> otherExternalPortConnectedPorts = otherExternalPort->getConnectedPorts();
-		for (set<VuoPort *>::iterator port = otherExternalPortConnectedPorts.begin(); port != otherExternalPortConnectedPorts.end(); ++port)
-		{
-			if ((static_cast<VuoCompilerPortClass *>((*port)->getClass()->getCompiler()))->getDataVuoType())
-				return false;
-		}
+		if (connectedCable->getRenderer()->effectivelyCarriesData())
+			return false;
 	}
 
 	return true;

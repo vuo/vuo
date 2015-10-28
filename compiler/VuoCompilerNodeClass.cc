@@ -63,13 +63,15 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(string className, Module *module)
 }
 
 /**
- * Creates a new compiler node class and creates a new base @c VuoNodeClass, both from @c compilerNodeClass.
+ * Creates a new compiler node class and creates a new base @c VuoNodeClass, both from @a compilerNodeClass.
+ *
+ * Transfers ownership of the port classes and instance data class from @a compilerNodeClass to the
+ * newly constructed node class so that @a compilerNodeClass can be safely destroyed.
  */
 VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeClass)
 	: VuoBaseDetail<VuoNodeClass>("VuoCompilerNodeClass with substantial base", new VuoNodeClass(
 		compilerNodeClass->getBase()->getClassName(),
 		compilerNodeClass->getBase()->getRefreshPortClass(),
-		compilerNodeClass->getBase()->getDonePortClass(),
 		compilerNodeClass->getBase()->getInputPortClasses(),
 		compilerNodeClass->getBase()->getOutputPortClasses())),
 	  VuoCompilerModule(getBase(), compilerNodeClass->module)
@@ -92,6 +94,10 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	this->callbackStopFunction = compilerNodeClass->callbackStopFunction;
 	this->instanceDataClass = compilerNodeClass->instanceDataClass;
 	this->defaultSpecializedForGenericTypeName = compilerNodeClass->defaultSpecializedForGenericTypeName;
+
+	compilerNodeClass->getBase()->setInputPortClasses(vector<VuoPortClass *>());
+	compilerNodeClass->getBase()->setOutputPortClasses(vector<VuoPortClass *>());
+	compilerNodeClass->instanceDataClass = NULL;
 }
 
 /**
@@ -113,12 +119,28 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoNodeClass *baseNodeClass)
 }
 
 /**
+ * Destructor.
+ */
+VuoCompilerNodeClass::~VuoCompilerNodeClass(void)
+{
+	delete instanceDataClass;
+
+	vector<VuoPortClass *> inputPortClasses = getBase()->getInputPortClasses();
+	for (vector<VuoPortClass *>::iterator i = inputPortClasses.begin(); i != inputPortClasses.end(); ++i)
+		delete (*i)->getCompiler();
+
+	vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();
+	for (vector<VuoPortClass *>::iterator i = outputPortClasses.begin(); i != outputPortClasses.end(); ++i)
+		delete (*i)->getCompiler();
+}
+
+/**
  * Creates a substantial base node instance from this node class.
  */
 VuoNode * VuoCompilerNodeClass::newNode(string title, double x, double y)
 {
 	if (title.empty())
-		title = getBase()->getDefaultTitle();
+		title = getBase()->getDefaultTitleWithoutSuffix();
 
 	VuoNode *n = getBase()->newNode(title, x, y);
 	instantiateCompilerNode(n);
@@ -210,6 +232,24 @@ void VuoCompilerNodeClass::parse(void)
 		parseCallbackStartFunction();
 		parseCallbackUpdateFunction();
 		parseCallbackStopFunction();
+	}
+
+	// Add each non-generic port type as a dependency.
+	vector<VuoPortClass *> portClasses;
+	vector<VuoPortClass *> inputPortClasses = getBase()->getInputPortClasses();
+	vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();
+	portClasses.insert(portClasses.end(), inputPortClasses.begin(), inputPortClasses.end());
+	portClasses.insert(portClasses.end(), outputPortClasses.begin(), outputPortClasses.end());
+	for (vector<VuoPortClass *>::iterator i = portClasses.begin(); i != portClasses.end(); ++i)
+	{
+		VuoType *type = static_cast<VuoCompilerPortClass *>((*i)->getCompiler())->getDataVuoType();
+		if (type && ! dynamic_cast<VuoGenericType *>(type))
+		{
+			string typeName = type->getModuleKey();
+			dependencies.insert(typeName);
+			string innermostTypeName = VuoType::extractInnermostTypeName(typeName);
+			dependencies.insert(innermostTypeName);
+		}
 	}
 }
 
@@ -411,15 +451,10 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 
 	vector<VuoCompilerNodeArgumentClass *> inputArgumentClasses;
 	vector<VuoCompilerNodeArgumentClass *> outputArgumentClasses;
-	map<string, VuoCompilerInputEventPortClass *> inputEventPortClassForDataClassName;
-	map<string, VuoCompilerOutputEventPortClass *> outputEventPortClassForDataClassName;
-	map<string, json_object *> detailsForInputDataClassName;
-	map<string, json_object *> detailsForInputEventArgumentName;
 	map<string, VuoType *> vuoTypeForArgumentName;
-	map<string, enum VuoPortClass::EventBlocking> eventBlockingForArgumentName;
-	map<string, enum VuoPortClass::EventThrottling> eventThrottlingForArgumentName;
-	map<string, VuoCompilerInputEventPortClass *> inputEventPortClassForArgumentName;
-	map<string, VuoCompilerTriggerPortClass *> triggerPortClassForArgumentName;
+	map<string, json_object *> detailsForArgumentName;
+	map<string, VuoCompilerPortClass *> portClassForArgumentName;
+	map<string, VuoCompilerDataClass *> dataClassForArgumentName;
 
 	bool sawInputData = false;
 	bool sawOutputData = false;
@@ -437,18 +472,17 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 
 		VuoCompilerNodeArgumentClass *argumentClass = NULL;
 		VuoPortClass *existingPortClass = NULL;
-		string dataPortName;
-		json_object *inputDataDetails = NULL;
-		json_object *inputEventDetails = NULL;
+		json_object *details = NULL;
 		VuoType *type = NULL;
-		int eventBlocking;
-		int eventThrottling;
 
 		if ((argumentClass = parseInputDataParameter(annotation, argument)) != NULL)
 		{
 			existingPortClass = getExistingPortClass(argumentClass, true);
 			if (! existingPortClass)
+			{
 				inputArgumentClasses.push_back(argumentClass);
+				dataClassForArgumentName[argumentName] = static_cast<VuoCompilerDataClass *>(argumentClass);
+			}
 
 			sawInputData = true;
 		}
@@ -456,34 +490,31 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		{
 			existingPortClass = getExistingPortClass(argumentClass, false);
 			if (! existingPortClass)
+			{
 				outputArgumentClasses.push_back(argumentClass);
+				dataClassForArgumentName[argumentName] = static_cast<VuoCompilerDataClass *>(argumentClass);
+			}
 
 			sawOutputData = true;
 		}
-		else if ((argumentClass = parseInputEventParameter(annotation, argument, dataPortName)) != NULL)
+		else if ((argumentClass = parseInputEventParameter(annotation, argument)) != NULL)
 		{
 			existingPortClass = getExistingPortClass(argumentClass, true);
 			if (! existingPortClass)
 			{
 				inputArgumentClasses.push_back(argumentClass);
-
-				if (! dataPortName.empty())
-					inputEventPortClassForDataClassName[dataPortName] = static_cast<VuoCompilerInputEventPortClass *>(argumentClass);
-
-				inputEventPortClassForArgumentName[argumentName] = static_cast<VuoCompilerInputEventPortClass *>(argumentClass);
+				portClassForArgumentName[argumentName] = static_cast<VuoCompilerPortClass *>(argumentClass);
 			}
 
 			sawInputEvent = true;
 		}
-		else if ((argumentClass = parseOutputEventParameter(annotation, argument, dataPortName)) != NULL)
+		else if ((argumentClass = parseOutputEventParameter(annotation, argument)) != NULL)
 		{
 			existingPortClass = getExistingPortClass(argumentClass, false);
 			if (! existingPortClass)
 			{
 				outputArgumentClasses.push_back(argumentClass);
-
-				if (! dataPortName.empty())
-					outputEventPortClassForDataClassName[dataPortName] = static_cast<VuoCompilerOutputEventPortClass *>(argumentClass);
+				portClassForArgumentName[argumentName] = static_cast<VuoCompilerPortClass *>(argumentClass);
 			}
 
 			sawOutputEvent = true;
@@ -494,8 +525,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 			if (! existingPortClass)
 			{
 				outputArgumentClasses.push_back(argumentClass);
-
-				triggerPortClassForArgumentName[argumentName] = static_cast<VuoCompilerTriggerPortClass *>(argumentClass);
+				portClassForArgumentName[argumentName] = static_cast<VuoCompilerPortClass *>(argumentClass);
 			}
 
 			sawOutputTrigger = true;
@@ -513,21 +543,9 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		{
 			vuoTypeForArgumentName[argumentName] = type;
 		}
-		else if ((inputDataDetails = parseInputDataDetailsParameter(annotation)) != NULL)
+		else if ((details = parseDetailsParameter(annotation)) != NULL)
 		{
-			detailsForInputDataClassName[argumentName] = inputDataDetails;
-		}
-		else if ((inputEventDetails = parseInputEventDetailsParameter(annotation)) != NULL)
-		{
-			detailsForInputEventArgumentName[argumentName] = inputEventDetails;
-		}
-		else if ((eventBlocking = parseEventBlockingParameter(annotation)) != -1)
-		{
-			eventBlockingForArgumentName[argumentName] = (VuoPortClass::EventBlocking)eventBlocking;
-		}
-		else if ((eventThrottling = parseEventThrottlingParameter(annotation)) != -1)
-		{
-			eventThrottlingForArgumentName[argumentName] = (VuoPortClass::EventThrottling)eventThrottling;
+			detailsForArgumentName[argumentName] = details;
 		}
 
 		VuoCompilerNodeArgumentClass *argumentClassInNodeClass = (existingPortClass ? existingPortClass->getCompiler() : argumentClass);
@@ -545,6 +563,9 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 			else if (function == callbackStopFunction)
 				argumentClassInNodeClass->setIndexInCallbackStopFunction(argumentIndex);
 		}
+
+		if (existingPortClass)
+			delete argumentClass;
 	}
 
 	// Check that all required arguments and no disallowed arguments are present.
@@ -580,7 +601,43 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 			VLog("Error: %s", ("VuoInstanceData" + wronglyAbsentMessage).c_str());
 	}
 
-	// Match up data port classes with event port classes. Add event and trigger port classes to addedInputPortClasses/addedOutputPortClasses.
+	// For each event portion of a data-and-event port, find the corresponding data portion. Rename the event portion to match.
+	map<string, VuoCompilerInputEventPortClass *> inputEventPortClassForDataClassName;
+	for (map<string, VuoCompilerPortClass *>::iterator i = portClassForArgumentName.begin(); i != portClassForArgumentName.end(); ++i)
+	{
+		string argumentName = i->first;
+		VuoCompilerInputEventPortClass *eventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>( i->second );
+
+		if (eventPortClass)
+		{
+			bool isDataInDetails = false;
+			string dataPortName = parseString(detailsForArgumentName[argumentName], "data", &isDataInDetails);
+			if (isDataInDetails)
+			{
+				eventPortClass->getBase()->setName(dataPortName);
+				inputEventPortClassForDataClassName[dataPortName] = eventPortClass;
+			}
+		}
+	}
+	map<string, VuoCompilerOutputEventPortClass *> outputEventPortClassForDataClassName;
+	for (map<string, VuoCompilerPortClass *>::iterator i = portClassForArgumentName.begin(); i != portClassForArgumentName.end(); ++i)
+	{
+		string argumentName = i->first;
+		VuoCompilerOutputEventPortClass *eventPortClass = dynamic_cast<VuoCompilerOutputEventPortClass *>( i->second );
+
+		if (eventPortClass)
+		{
+			bool isDataInDetails = false;
+			string dataPortName = parseString(detailsForArgumentName[argumentName], "data", &isDataInDetails);
+			if (isDataInDetails)
+			{
+				eventPortClass->getBase()->setName(dataPortName);
+				outputEventPortClassForDataClassName[dataPortName] = eventPortClass;
+			}
+		}
+	}
+
+	// Match up data classes with event port classes. Add event and trigger port classes to addedInputPortClasses/addedOutputPortClasses.
 	vector<VuoPortClass *> addedInputPortClasses;
 	for (vector<VuoCompilerNodeArgumentClass *>::iterator i = inputArgumentClasses.begin(); i != inputArgumentClasses.end(); ++i)
 	{
@@ -654,21 +711,6 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		addedInputPortClasses.insert(addedInputPortClasses.begin(), refreshPortClass);
 	}
 
-	// Set the done port class if it hasn't been already (from a previous function).
-	if (! getBase()->getDonePortClass()->hasCompiler())
-	{
-		VuoPortClass *donePortClass = (new VuoCompilerOutputEventPortClass("done"))->getBase();
-
-		// Remove the existing dummy done port class.
-		vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();
-		outputPortClasses.erase(outputPortClasses.begin());
-		getBase()->setOutputPortClasses(outputPortClasses);
-
-		// Set the new done port class.
-		getBase()->setDonePortClass(donePortClass);
-		addedOutputPortClasses.insert(addedOutputPortClasses.begin(), donePortClass);
-	}
-
 	// Append the port classes defined in this function to the node class's list of port classes.
 	vector<VuoPortClass *> inputPortClasses = getBase()->getInputPortClasses();
 	inputPortClasses.insert(inputPortClasses.end(), addedInputPortClasses.begin(), addedInputPortClasses.end());
@@ -690,8 +732,12 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 			if (dataClass)
 			{
 				string dataClassName = dataClass->getBase()->getName();
-				VuoType *vuoType = vuoTypeForArgumentName[dataClassName];
-				dataClass->setVuoType(vuoType);
+				map<string, VuoType *>::iterator vuoTypeIter = vuoTypeForArgumentName.find(dataClassName);
+				if (vuoTypeIter != vuoTypeForArgumentName.end())
+				{
+					dataClass->setVuoType(vuoTypeIter->second);
+					vuoTypeForArgumentName.erase(vuoTypeIter);
+				}
 			}
 		}
 
@@ -699,50 +745,84 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		if (triggerPortClass)
 		{
 			string triggerName = triggerPortClass->getBase()->getName();
-			VuoType *vuoType = vuoTypeForArgumentName[triggerName];
-			triggerPortClass->setDataVuoType(vuoType);
+			map<string, VuoType *>::iterator vuoTypeIter = vuoTypeForArgumentName.find(triggerName);
+			if (vuoTypeIter != vuoTypeForArgumentName.end())
+			{
+				triggerPortClass->setDataVuoType(vuoTypeIter->second);
+				vuoTypeForArgumentName.erase(vuoTypeIter);
+			}
 		}
 	}
+	for (map<string, VuoType *>::iterator i = vuoTypeForArgumentName.begin(); i != vuoTypeForArgumentName.end(); ++i)
+		delete i->second;
 
-	// Set the default value and other data-related details for each added input port.
-	for (vector<VuoPortClass *>::iterator i = addedInputPortClasses.begin(); i != addedInputPortClasses.end(); ++i)
-	{
-		VuoCompilerInputEventPortClass *eventPortClass = static_cast<VuoCompilerInputEventPortClass *>((*i)->getCompiler());
-		VuoCompilerInputDataClass *dataClass = eventPortClass->getDataClass();
-		if (dataClass)
-		{
-			string dataClassName = dataClass->getBase()->getName();
-			json_object *details = detailsForInputDataClassName[dataClassName];
-			dataClass->setDetails(details);
-		}
-	}
-
-	// Set the event-blocking behavior and other event-related details for each added input port.
-	for (map<string, enum VuoPortClass::EventBlocking>::iterator i = eventBlockingForArgumentName.begin(); i != eventBlockingForArgumentName.end(); ++i)
+	// Set the details for each added port.
+	for (map<string, json_object *>::iterator i = detailsForArgumentName.begin(); i != detailsForArgumentName.end(); ++i)
 	{
 		string argumentName = i->first;
-		VuoPortClass::EventBlocking eventBlocking = i->second;
-		VuoCompilerInputEventPortClass *eventPortClass = inputEventPortClassForArgumentName[argumentName];
-		if (eventPortClass)
+		json_object *details = i->second;
+
+		VuoCompilerPortClass *portClass = portClassForArgumentName[argumentName];
+		if (portClass)
+			portClass->setDetails(details);
+		else
 		{
+			VuoCompilerDataClass *dataClass = dataClassForArgumentName[argumentName];
+			if (dataClass)
+				dataClass->setDetails(details);
+		}
+	}
+
+	// Set the event-blocking behavior for each added input port.
+	for (vector<VuoPortClass *>::iterator i = addedInputPortClasses.begin(); i != addedInputPortClasses.end(); ++i)
+	{
+		VuoCompilerInputEventPortClass *eventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>( (*i)->getCompiler() );
+		bool isEventBlockingInDetails = false;
+		string eventBlockingStr = parseString(eventPortClass->getDetails(), "eventBlocking", &isEventBlockingInDetails);
+		if (isEventBlockingInDetails)
+		{
+			VuoPortClass::EventBlocking eventBlocking;
+			if (eventBlockingStr == "none")
+				eventBlocking = VuoPortClass::EventBlocking_None;
+			else if (eventBlockingStr == "door")
+				eventBlocking = VuoPortClass::EventBlocking_Door;
+			else if (eventBlockingStr == "wall")
+				eventBlocking = VuoPortClass::EventBlocking_Wall;
+			else
+			{
+				VLog("Error: Unknown option for \"eventBlocking\": %s\n", eventBlockingStr.c_str());
+				continue;
+			}
 			eventPortClass->getBase()->setEventBlocking(eventBlocking);
 
 			if (eventBlocking == VuoPortClass::EventBlocking_None)
 				portsWithExplicitEventBlockingNone.insert(eventPortClass);
-
-			json_object *details = detailsForInputEventArgumentName[argumentName];
-			eventPortClass->setDetails(details);
 		}
 	}
 
 	// Set the event-throttling behavior for each added trigger port.
-	for (map<string, enum VuoPortClass::EventThrottling>::iterator i = eventThrottlingForArgumentName.begin(); i != eventThrottlingForArgumentName.end(); ++i)
+	for (vector<VuoPortClass *>::iterator i = addedOutputPortClasses.begin(); i != addedOutputPortClasses.end(); ++i)
 	{
-		string argumentName = i->first;
-		VuoPortClass::EventThrottling eventThrottling = i->second;
-		VuoCompilerTriggerPortClass *triggerPortClass = triggerPortClassForArgumentName[argumentName];
+		VuoCompilerTriggerPortClass *triggerPortClass = dynamic_cast<VuoCompilerTriggerPortClass *>( (*i)->getCompiler() );
 		if (triggerPortClass)
-			triggerPortClass->getBase()->setDefaultEventThrottling(eventThrottling);
+		{
+			bool isEventThrottlingInDetails = false;
+			string eventThrottlingStr = parseString(triggerPortClass->getDetails(), "eventThrottling", &isEventThrottlingInDetails);
+			if (isEventThrottlingInDetails)
+			{
+				VuoPortClass::EventThrottling eventThrottling;
+				if (eventThrottlingStr == "enqueue")
+					eventThrottling = VuoPortClass::EventThrottling_Enqueue;
+				else if (eventThrottlingStr == "drop")
+					eventThrottling = VuoPortClass::EventThrottling_Drop;
+				else
+				{
+					VLog("Error: Unknown option for \"throttling\": %s\n", eventThrottlingStr.c_str());
+					continue;
+				}
+				triggerPortClass->getBase()->setDefaultEventThrottling(eventThrottling);
+			}
+		}
 	}
 
 	// Update the port action status for each input port.
@@ -802,16 +882,14 @@ VuoCompilerOutputDataClass * VuoCompilerNodeClass::parseOutputDataParameter(stri
 /**
  * Parses a "vuoInputEvent" annotated function parameter. Returns null if not a "vuoInputEvent".
  */
-VuoCompilerInputEventPortClass * VuoCompilerNodeClass::parseInputEventParameter(string annotation, Argument *a, string &dataPortName)
+VuoCompilerInputEventPortClass * VuoCompilerNodeClass::parseInputEventParameter(string annotation, Argument *a)
 {
-	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEvent:"))
+	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEvent"))
 		return NULL;
 
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
-	dataPortName = VuoStringUtilities::substrAfter(annotation, "vuoInputEvent:");
-	string eventPortName = dataPortName.empty() ? argumentName : dataPortName;
 
-	VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(eventPortName,
+	VuoCompilerInputEventPortClass *portClass = new VuoCompilerInputEventPortClass(argumentName,
 																				   a->getType());
 	return portClass;
 }
@@ -819,9 +897,9 @@ VuoCompilerInputEventPortClass * VuoCompilerNodeClass::parseInputEventParameter(
 /**
  * Parses a "vuoOutputEvent" annotated function parameter. Returns null if not a "vuoOutputEvent".
  */
-VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParameter(string annotation, Argument *a, string &dataPortName)
+VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParameter(string annotation, Argument *a)
 {
-	if (! VuoStringUtilities::beginsWith(annotation, "vuoOutputEvent:"))
+	if (! VuoStringUtilities::beginsWith(annotation, "vuoOutputEvent"))
 		return NULL;
 
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
@@ -831,10 +909,7 @@ VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParamete
 		return NULL;
 	}
 
-	dataPortName = VuoStringUtilities::substrAfter(annotation, "vuoOutputEvent:");
-	string eventPortName = dataPortName.empty() ? argumentName : dataPortName;
-
-	VuoCompilerOutputEventPortClass *portClass = new VuoCompilerOutputEventPortClass(eventPortName,
+	VuoCompilerOutputEventPortClass *portClass = new VuoCompilerOutputEventPortClass(argumentName,
 																					 ((PointerType *)a->getType())->getElementType());
 	return portClass;
 }
@@ -917,82 +992,22 @@ VuoType * VuoCompilerNodeClass::parseTypeParameter(string annotation)
 }
 
 /**
- * Parses a "vuoInputDataDetails" annotated function parameter. Returns null if not a "vuoInputDataDetails".
+ * Parses a "vuoDetails" annotated function parameter. Returns null if not a "vuoDetails".
  */
-json_object * VuoCompilerNodeClass::parseInputDataDetailsParameter(string annotation)
+json_object * VuoCompilerNodeClass::parseDetailsParameter(string annotation)
 {
-	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputDataDetails:"))
+	if (! VuoStringUtilities::beginsWith(annotation, "vuoDetails:"))
 		return NULL;
 
 	json_object *detailsObj = NULL;
-	string details = VuoStringUtilities::substrAfter(annotation, "vuoInputDataDetails:");
+	string details = VuoStringUtilities::substrAfter(annotation, "vuoDetails:");
 	if (details.find_first_not_of(' ') != string::npos)
 	{
 		detailsObj = json_tokener_parse(details.c_str());
 		if (! detailsObj)
-			VLog("Error: Couldn't parse vuoInputDataDetails: %s\n", details.c_str());
+			VLog("Error: Couldn't parse vuoDetails: %s\n", details.c_str());
 	}
 	return detailsObj;
-}
-
-/**
- * Parses a "vuoInputEventDetails" annotated function parameter. Returns null if not a "vuoInputEventDetails".
- */
-json_object * VuoCompilerNodeClass::parseInputEventDetailsParameter(string annotation)
-{
-	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEventDetails:"))
-		return NULL;
-
-	json_object *detailsObj = NULL;
-	string details = VuoStringUtilities::substrAfter(annotation, "vuoInputEventDetails:");
-	if (details.find_first_not_of(' ') != string::npos)
-	{
-		detailsObj = json_tokener_parse(details.c_str());
-		if (! detailsObj)
-			VLog("Error: Couldn't parse vuoInputEventDetails: %s\n", details.c_str());
-	}
-	return detailsObj;
-}
-
-/**
- * Parses a "vuoInputEventBlocking" annotated function parameter. Returns -1 if not a "vuoInputEventBlocking".
- */
-int VuoCompilerNodeClass::parseEventBlockingParameter(string annotation)
-{
-	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEventBlocking:"))
-		return -1;
-
-	string eventBlockingName = VuoStringUtilities::substrAfter(annotation, "vuoInputEventBlocking:");
-	if (eventBlockingName == "VuoPortEventBlocking_None")
-		return VuoPortClass::EventBlocking_None;
-	else if (eventBlockingName == "VuoPortEventBlocking_Door")
-		return VuoPortClass::EventBlocking_Door;
-	else if (eventBlockingName == "VuoPortEventBlocking_Wall")
-		return VuoPortClass::EventBlocking_Wall;
-
-	VLog("Error: Unknown %s\n", annotation.c_str());
-	return -1;
-}
-
-/**
- * Parses a "vuoInputEventThrottling" annotated function parameter. Returns -1 if not a "vuoInputEventThrottling".
- */
-int VuoCompilerNodeClass::parseEventThrottlingParameter(string annotation)
-{
-	if (! VuoStringUtilities::beginsWith(annotation, "vuoInputEventThrottling:"))
-		return -1;
-
-	string eventThrottlingName = VuoStringUtilities::substrAfter(annotation, "vuoInputEventThrottling:");
-	if (! eventThrottlingName.empty())
-	{
-		if (eventThrottlingName == "VuoPortEventThrottling_Enqueue")
-			return VuoPortClass::EventThrottling_Enqueue;
-		else if (eventThrottlingName == "VuoPortEventThrottling_Drop")
-			return VuoPortClass::EventThrottling_Drop;
-		else
-			VLog("Error: Unknown %s\n", annotation.c_str());
-	}
-	return -1;
 }
 
 /**
@@ -1203,6 +1218,27 @@ vector<string> VuoCompilerNodeClass::getAutomaticKeywords(void)
 		keywords.push_back("events");
 		keywords.push_back("trigger");
 		keywords.push_back("fire");
+	}
+
+	bool nodeTitleBeginsWithSend = VuoStringUtilities::beginsWith(getBase()->getDefaultTitle(), "Send");
+	bool nodeTitleBeginsWithReceive = VuoStringUtilities::beginsWith(getBase()->getDefaultTitle(), "Receive");
+
+	if (nodeTitleBeginsWithSend || nodeTitleBeginsWithReceive)
+	{
+		keywords.push_back("i/o");
+		keywords.push_back("interface");
+
+		if (nodeTitleBeginsWithSend)
+		{
+			keywords.push_back("output");
+			keywords.push_back("consumer");
+		}
+
+		if (nodeTitleBeginsWithReceive)
+		{
+			keywords.push_back("input");
+			keywords.push_back("provider");
+		}
 	}
 
 	if (VuoStringUtilities::beginsWith(getBase()->getClassName(), "vuo.type."))

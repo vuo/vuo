@@ -1,6 +1,6 @@
 @addtogroup ManagingDependencies
 
-Node classes, port types, and library modules can use functions and data types defined in library modules and other libraries. This enables you to take existing code (such as an open-source library) and wrap it in a Vuo node class. You can also share functions between node classes (see @ref DevelopingLibraryModules). 
+Node classes, port types, and library modules can use functions and data types defined in port types, library modules, and other libraries. This enables you to take existing code (such as an open-source library) and wrap it in a Vuo node class, and to share functions between node classes. (See @ref DevelopingTypes and @ref DevelopingLibraryModules.)
 
 A library that you link to can be implemented in C, C++, Objective-C, or another language, as long as it exports C symbols. 
 
@@ -12,6 +12,10 @@ To allow a module (node class, port type, or library module) to use a library, y
 
 Read on for details. 
 
+
+## When dependencies are added for you
+
+When developing a node class, you usually don't need to list port types as dependencies. For each port on the node class, the Vuo compiler automatically adds its type as a dependency. (However, you do need to list a port type as a dependency if it's only used within the node implementation and not on any ports.)
 
 
 ## Adding a library to the module's metadata

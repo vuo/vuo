@@ -52,6 +52,27 @@ string VuoModule::getDefaultTitle(void)
 }
 
 /**
+ * Returns the default title, with the optional parenthetical suffix removed.
+ *
+ * UTF-8.
+ *
+ * @par Example:
+ *
+ * If @ref getDefaultTitle() returns `Select Event Output (Boolean)`, getDefaultTitleWithoutSuffix() returns `Select Event Output`.
+ *
+ * @see VuoModuleMetadata
+ */
+string VuoModule::getDefaultTitleWithoutSuffix(void)
+{
+	string title = defaultTitle;
+
+	if (*(title.end() - 1) == ')')
+		title = title.substr(0, title.find(" ("));
+
+	return title;
+}
+
+/**
  * Sets the default title for instances of this module.  Needn't be unique.
  *
  * UTF-8.

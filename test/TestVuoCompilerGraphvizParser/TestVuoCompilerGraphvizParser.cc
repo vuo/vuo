@@ -13,6 +13,7 @@
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerGraphvizParser.hh"
 #include "VuoCompilerOutputEventPort.hh"
+#include "VuoCompilerCable.hh"
 #include "VuoPort.hh"
 
 
@@ -43,32 +44,50 @@ private slots:
 		cleanupCompiler();
 	}
 
-	void testParsingConstants()
+	void testConstants_data()
 	{
-		string compositionPath = getCompositionPath("DifferenceOfConstants.vuo");
-		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		QTest::addColumn< QString >("compositionFile");
+		QTest::addColumn< QString >("nodeTitle");
+		QTest::addColumn< QString >("portName");
+		QTest::addColumn< QString >("expectedConstant");
 
-		VuoNode * n = parser->getNodes()[0];
-		QCOMPARE(n->getInputPorts().size(), (size_t)3);
-
-		VuoCompilerInputEventPort *a = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("a")->getCompiler());
-		QCOMPARE(a->getData()->getInitialValue().c_str(), "4444");
-		VuoCompilerInputEventPort *b = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("b")->getCompiler());
-		QCOMPARE(b->getData()->getInitialValue().c_str(), "5555");
-
-		delete parser;
+		QTest::newRow("no cable") << "Constants.vuo" << "Subtract1" << "a" << "11";
+		QTest::newRow("data-and-event cable") << "Constants.vuo" << "Subtract1" << "b" << "0";
+		QTest::newRow("event cable from event port") << "Constants.vuo" << "Subtract2" << "a" << "33";
+		QTest::newRow("event cable from event port") << "Constants.vuo" << "Subtract2" << "b" << "44";
+		QTest::newRow("non-ASCII text") << "LengthOfConstantString.vuo" << "Count Characters" << "text" << "流";
+		QTest::newRow("empty text overriding non-empty default value") << "NonEmptyDefaultString.vuo" << "UnicodeDefaultString1" << "string" << "\"\"";
+		QTest::newRow("published data-and-event cable with published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "a" << "10";
+		QTest::newRow("published data-and-event cable without published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "b" << "0";
+		QTest::newRow("published data-and-event cable") << "Constants.vuo" << "Subtract4" << "a" << "0";
+		QTest::newRow("published event cable from published event port") << "Constants.vuo" << "Subtract3" << "a" << "55";
+		QTest::newRow("published event cable from published data-and-event port") << "Constants.vuo" << "Subtract3" << "b" << "66";
 	}
-
-	void testParsingUnicodeConstant()
+	void testConstants()
 	{
-		string compositionPath = getCompositionPath("LengthOfConstantString.vuo");
+		QFETCH(QString, compositionFile);
+		QFETCH(QString, nodeTitle);
+		QFETCH(QString, portName);
+		QFETCH(QString, expectedConstant);
+
+		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		VuoNode * n = parser->getNodes()[0];
-		VuoCompilerInputEventPort *stringPort = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("text")->getCompiler());
+		bool foundNode = false;
+		foreach (VuoNode *n, parser->getNodes())
+		{
+			if (n->getTitle() == nodeTitle.toStdString())
+			{
+				VuoPort *basePort = n->getInputPortWithName(portName.toStdString());
+				VuoCompilerInputEventPort *compilerPort = dynamic_cast<VuoCompilerInputEventPort *>(basePort->getCompiler());
+				VuoCompilerInputData *data = compilerPort->getData();
+				QCOMPARE(QString(data->getInitialValue().c_str()), expectedConstant);
 
-		string valueAsString = stringPort->getData()->getInitialValue();
-		QCOMPARE(valueAsString.c_str(), "流");
+				foundNode = true;
+				break;
+			}
+		}
+		QVERIFY(foundNode);
 
 		delete parser;
 	}
@@ -102,14 +121,65 @@ private slots:
 		delete parser;
 	}
 
-	void testEmptyStringConstantOverridingNonEmptyDefaultInputPortValue()
+	void testCables_data()
 	{
-		string compositionPath = getCompositionPath("NonEmptyDefaultString.vuo");
+		QTest::addColumn< QString >("fromNodeTitle");
+		QTest::addColumn< QString >("fromPort");
+		QTest::addColumn< QString >("toNodeTitle");
+		QTest::addColumn< QString >("toPort");
+		QTest::addColumn< bool >("isFromPublishedInput");
+		QTest::addColumn< bool >("isToPublishedOutput");
+		QTest::addColumn< bool >("carriesData");
+
+		QTest::newRow("data-and-event cable") << "ShareValue1" << "sameValue" << "ShareValue2" << "value" << false << false << true;
+		QTest::newRow("event-only cable between event-only ports") << "BecameTrue1" << "becameTrue" << "ShareValue3" << "refresh" << false << false << false;
+		QTest::newRow("event-only cable between data-and-event port and event-only port") << "BecameTrue2" << "becameTrue" << "ShareValue4" << "value" << false << false << false;
+		QTest::newRow("event-only cable between data-and-event ports") << "ShareValue5" << "sameValue" << "ShareValue6" << "value" << false << false << false;
+
+		QTest::newRow("data-and-event published input cable") << "PublishedInputs" << "value1" << "ShareValue7" << "value" << true << false << true;
+		QTest::newRow("event-only published input cable between event-only ports") << "PublishedInputs" << "refresh1" << "ShareValue8" << "refresh" << true << false << false;
+		QTest::newRow("event-only published input cable between data-and-event ports") << "PublishedInputs" << "value2" << "ShareValue9" << "value" << true << false << false;
+
+		QTest::newRow("data-and-event published output cable") << "ShareValue10" << "sameValue" << "PublishedOutputs" << "sameValue1" << false << true << true;
+		QTest::newRow("event-only published output cable between event-only ports") << "BecameTrue3" << "becameTrue" << "PublishedOutputs" << "becameTrue1" << false << true << false;
+		QTest::newRow("event-only published output cable between data-and-event ports") << "ShareValue11" << "sameValue" << "PublishedOutputs" << "sameValue2" << false << true << false;
+	}
+	void testCables()
+	{
+		QFETCH(QString, fromNodeTitle);
+		QFETCH(QString, fromPort);
+		QFETCH(QString, toNodeTitle);
+		QFETCH(QString, toPort);
+		QFETCH(bool, isFromPublishedInput);
+		QFETCH(bool, isToPublishedOutput);
+		QFETCH(bool, carriesData);
+
+		string compositionPath = getCompositionPath("Cables.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		VuoNode *n = parser->getNodes()[0];
-		VuoCompilerInputEventPort *port = dynamic_cast<VuoCompilerInputEventPort *>(n->getInputPortWithName("string")->getCompiler());
-		QCOMPARE(port->getData()->getInitialValue().c_str(), "\"\"");
+		bool foundCable = false;
+		vector<VuoCable *> cables;
+		if (isFromPublishedInput)
+			cables = parser->getPublishedInputCables();
+		else if (isToPublishedOutput)
+			cables = parser->getPublishedOutputCables();
+		else
+			cables = parser->getCables();
+
+		foreach (VuoCable *cable, cables)
+		{
+			if (cable->getFromNode()->getTitle() == fromNodeTitle.toStdString() &&
+					cable->getFromPort()->getClass()->getName() == fromPort.toStdString() &&
+					cable->getToNode()->getTitle() == toNodeTitle.toStdString() &&
+					cable->getToPort()->getClass()->getName() == toPort.toStdString())
+			{
+				QVERIFY(! foundCable);
+				foundCable = true;
+
+				QVERIFY(cable->getCompiler()->carriesData() == carriesData);
+			}
+		}
+		QVERIFY(foundCable);
 
 		delete parser;
 	}
@@ -126,7 +196,6 @@ private slots:
 			inputs.push_back("refresh");
 			inputs.push_back("seconds");
 			vector<string> outputs;
-			outputs.push_back("done");
 			outputs.push_back("fired");
 			QTest::newRow("Fire Periodically node") << "FirePeriodically1" << "vuo.time.firePeriodically" << inputs << outputs;
 		}
@@ -137,7 +206,6 @@ private slots:
 			inputs.push_back("increment");
 			inputs.push_back("decrement");
 			vector<string> outputs;
-			outputs.push_back("done");
 			outputs.push_back("count");
 			QTest::newRow("Count node") << "Count1" << "vuo.math.count.VuoInteger" << inputs << outputs;
 		}
@@ -182,7 +250,6 @@ private slots:
 		}
 
 		QVERIFY(node->getRefreshPort() != NULL);
-		QVERIFY(node->getDonePort() != NULL);
 
 		delete parser;
 	}
@@ -208,7 +275,7 @@ private slots:
 		QCOMPARE(QString(publishedOutputs.at(0)->getBase()->getType()->getModuleKey().c_str()), QString("VuoInteger"));
 
 		VuoNode *publishedInputNode = parser->getPublishedInputNode();
-		QCOMPARE(publishedInputNode->getOutputPorts().size(), (size_t)4);
+		QCOMPARE(publishedInputNode->getOutputPorts().size(), (size_t)(3 + VuoNodeClass::unreservedOutputPortStartIndex));
 		QVERIFY(publishedInputNode->getOutputPortWithName("publishedA") != NULL);
 		QVERIFY(publishedInputNode->getOutputPortWithName("publishedB") != NULL);
 		QVERIFY(publishedInputNode->getOutputPortWithName(VuoNodeClass::publishedInputNodeSimultaneousTriggerName) != NULL);
@@ -216,32 +283,57 @@ private slots:
 		delete parser;
 	}
 
-	void testParsingConstantsForPublishedPorts()
+	void testPublishedPortDetails_data()
 	{
-		string compositionPath = getCompositionPath("Recur_Subtract_published.vuo");
+		QTest::addColumn< QString >("publishedPortName");
+		QTest::addColumn< bool >("isInput");
+		QTest::addColumn< QString >("expectedDetails");
+
+		QTest::newRow("all from published input port") << "hue" << true << "{\"default\":0.3,\"suggestedMin\":0.2,\"suggestedMax\":1.1,\"suggestedStep\":0.1}";
+		QTest::newRow("all from published output port") << "color" << false << "{}";
+		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.5,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":1}";
+		QTest::newRow("none from published port, no connected ports") << "image" << true << "{}";
+	}
+	void testPublishedPortDetails()
+	{
+		QFETCH(QString, publishedPortName);
+		QFETCH(bool, isInput);
+		QFETCH(QString, expectedDetails);
+
+		string compositionPath = getCompositionPath("PublishedPorts.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		bool foundNode = false;
-		foreach (VuoNode *node, parser->getNodes())
+		bool foundPublishedPort = false;
+		foreach (VuoCompilerPublishedPort *publishedPort, (isInput ? parser->getPublishedInputPorts() : parser->getPublishedOutputPorts()))
 		{
-			if (node->getTitle() == "Subtract1")
+			if (publishedPort->getBase()->getName() == publishedPortName.toStdString())
 			{
-				foundNode = true;
+				json_object *detailsObj = publishedPort->getDetails();
+				json_object *expectedDetailsObj = json_tokener_parse(expectedDetails.toUtf8().constData());
 
 				{
-					VuoPort *port = node->getInputPortWithName("a");
-					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(port->getCompiler());
-					QCOMPARE(QString::fromStdString(eventPort->getData()->getInitialValue()), QString("10"));
+					json_object_object_foreach(expectedDetailsObj, key, val)
+					{
+						json_object *o;
+						bool foundKey = json_object_object_get_ex(detailsObj, key, &o);
+						QVERIFY2(foundKey, key);
+						QCOMPARE(QString(json_object_to_json_string(val)), QString(json_object_to_json_string(o)));
+					}
+				}
+				{
+					json_object_object_foreach(detailsObj, key, val)
+					{
+						json_object *o;
+						bool foundKey = json_object_object_get_ex(expectedDetailsObj, key, &o);
+						QVERIFY2(foundKey, key);
+						QCOMPARE(QString(json_object_to_json_string(val)), QString(json_object_to_json_string(o)));
+					}
 				}
 
-				{
-					VuoPort *port = node->getInputPortWithName("b");
-					VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(port->getCompiler());
-					QCOMPARE(QString::fromStdString(eventPort->getData()->getInitialValue()), QString("0"));
-				}
+				foundPublishedPort = true;
 			}
 		}
-		QVERIFY(foundNode);
+		QVERIFY(foundPublishedPort);
 
 		delete parser;
 	}
@@ -284,7 +376,7 @@ private slots:
 				}
 
 				vector<VuoPort *> outputPorts = node->getOutputPorts();
-				QCOMPARE(outputPorts.size(), (size_t)2);
+				QCOMPARE(outputPorts.size(), (size_t)(1 + VuoNodeClass::unreservedOutputPortStartIndex));
 				{
 					VuoPort *port = outputPorts.at(VuoNodeClass::unreservedOutputPortStartIndex);
 					VuoCompilerOutputEventPort *eventPort = dynamic_cast<VuoCompilerOutputEventPort *>(port->getCompiler());

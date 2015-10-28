@@ -68,6 +68,9 @@ void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode);
 VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds);
 VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal filterOpacity);
 
+bool VuoImage_areEqual(const VuoImage a, const VuoImage b);
+bool VuoImage_isEmpty(const VuoImage image);
+
 VuoRectangle VuoImage_getRectangle(const VuoImage image);
 VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image);
 

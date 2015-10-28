@@ -18,4 +18,6 @@ LIBS += \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoColor.o \
-	$$ROOT/type/VuoReal.o
+	$$ROOT/type/VuoInteger.o \
+	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/list/VuoList_VuoReal.o

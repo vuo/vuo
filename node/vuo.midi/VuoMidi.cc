@@ -21,6 +21,12 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoMidi",
 					 "dependencies" : [
+						 "VuoMidiController",
+						 "VuoMidiInputDevice",
+						 "VuoMidiOutputDevice",
+						 "VuoMidiNote",
+						 "VuoList_VuoMidiInputDevice",
+						 "VuoList_VuoMidiOutputDevice",
 						 "RtMidi",
 						 "CoreAudio.framework",
 						 "CoreMIDI.framework"
@@ -33,15 +39,15 @@ VuoModuleMetadata({
 /**
  * Returns a list of the available MIDI input devices.
  */
-VuoList_VuoMidiDevice VuoMidi_getInputDevices(void)
+VuoList_VuoMidiInputDevice VuoMidi_getInputDevices(void)
 {
-	VuoList_VuoMidiDevice inputDevices = VuoListCreate_VuoMidiDevice();
+	VuoList_VuoMidiInputDevice inputDevices = VuoListCreate_VuoMidiInputDevice();
 	try
 	{
 		RtMidiIn *midiin = new RtMidiIn();
 		unsigned int portCount = midiin->getPortCount();
 		for (unsigned int i = 0; i < portCount; ++i)
-			VuoListAppendValue_VuoMidiDevice(inputDevices, VuoMidiDevice_make(i, VuoText_make(midiin->getPortName(i).c_str()), true));
+			VuoListAppendValue_VuoMidiInputDevice(inputDevices, VuoMidiInputDevice_make(i, VuoText_make(midiin->getPortName(i).c_str())));
 		delete midiin;
 	}
 	catch(...) {}
@@ -51,15 +57,15 @@ VuoList_VuoMidiDevice VuoMidi_getInputDevices(void)
 /**
  * Returns a list of the available MIDI output devices.
  */
-VuoList_VuoMidiDevice VuoMidi_getOutputDevices(void)
+VuoList_VuoMidiOutputDevice VuoMidi_getOutputDevices(void)
 {
-	VuoList_VuoMidiDevice outputDevices = VuoListCreate_VuoMidiDevice();
+	VuoList_VuoMidiOutputDevice outputDevices = VuoListCreate_VuoMidiOutputDevice();
 	try
 	{
 		RtMidiOut *midiout = new RtMidiOut();
 		unsigned int portCount = midiout->getPortCount();
 		for (unsigned int i = 0; i < portCount; ++i)
-			VuoListAppendValue_VuoMidiDevice(outputDevices, VuoMidiDevice_make(i, VuoText_make(midiout->getPortName(i).c_str()), false));
+			VuoListAppendValue_VuoMidiOutputDevice(outputDevices, VuoMidiOutputDevice_make(i, VuoText_make(midiout->getPortName(i).c_str())));
 		delete midiout;
 	}
 	catch(...) {}
@@ -71,22 +77,14 @@ void VuoMidiOut_destroy(VuoMidiOut mo);
 /**
  * Creates a reference-counted object to manage sending messages to a MIDI device.
  */
-VuoMidiOut VuoMidiOut_make(VuoMidiDevice md)
+VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 {
-	if (md.isInput)
-	{
-		/// @todo https://b33p.net/kosada/node/4724
-		VLog("The specified MIDI device (%s) isn't an output device.", VuoMidiDevice_summaryFromValue(md));
-		return NULL;
-	}
-
 	const char *vuoMIDIID = "VuoMidiOut_make";
 
 	RtMidiOut *midiout = NULL;
 	try
 	{
 		midiout = new RtMidiOut();
-		VuoRegister(midiout, VuoMidiOut_destroy);
 
 		if (md.id == -1 && strlen(md.name) == 0)
 			// Open the first MIDI device
@@ -111,12 +109,13 @@ VuoMidiOut VuoMidiOut_make(VuoMidiDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiDevice_summaryFromValue(md), error.what());
+		VLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_summaryFromValue(md), error.what());
 		if (midiout)
 			delete midiout;
 		return NULL;
 	}
 
+	VuoRegister(midiout, VuoMidiOut_destroy);
 	return (VuoMidiOut)midiout;
 }
 
@@ -172,8 +171,9 @@ struct VuoMidiIn_internal
 	RtMidiIn *midiin;	///< RtMidi's device pointer.
 
 	dispatch_queue_t callbackQueue;	///< Serializes access to the following callback functions.
-	void (*receivedNote)(VuoMidiNote);	///< This node instance's trigger function.
-	void (*receivedController)(VuoMidiController);	///< This node instance's trigger function.
+	void (*receivedNote)(void *, VuoMidiNote);	///< Called when a note is received.
+	void (*receivedController)(void *, VuoMidiController);	///< Called when a control change is received.
+	void *context;	///< Caller's context data, to be passed to the callbacks.
 };
 
 /**
@@ -188,7 +188,7 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 		VuoMidiNote mn = VuoMidiNote_make(channel, false, (*message)[2], (*message)[1]);
 		dispatch_async(mii->callbackQueue, ^{
 						   if (mii->receivedNote)
-								mii->receivedNote(mn);
+								mii->receivedNote(mii->context, mn);
 					   });
 	}
 	else if (((*message)[0] & 0xf0) == 0x90) // Note On
@@ -196,7 +196,7 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 		VuoMidiNote mn = VuoMidiNote_make(channel, true, (*message)[2], (*message)[1]);
 		dispatch_async(mii->callbackQueue, ^{
 						   if (mii->receivedNote)
-								mii->receivedNote(mn);
+								mii->receivedNote(mii->context, mn);
 					   });
 	}
 	else if (((*message)[0] & 0xf0) == 0xb0) // Control Change
@@ -204,7 +204,7 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 		VuoMidiController mc = VuoMidiController_make(channel, (*message)[1], (*message)[2]);
 		dispatch_async(mii->callbackQueue, ^{
 						   if (mii->receivedController)
-								mii->receivedController(mc);
+								mii->receivedController(mii->context, mc);
 					   });
 	}
 	else
@@ -225,15 +225,8 @@ void VuoMidiIn_destroy(VuoMidiIn mi);
 /**
  * Creates a reference-counted object to manage receiving messages from a MIDI device.
  */
-VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
+VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 {
-	if (!md.isInput)
-	{
-		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Error: The specified MIDI device (%s) isn't an input device.", VuoMidiDevice_summaryFromValue(md));
-		return NULL;
-	}
-
 	const char *vuoMIDIID = "VuoMidiIn_make";
 
 	struct VuoMidiIn_internal *mii;
@@ -276,7 +269,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiDevice_summaryFromValue(md), error.what());
+		VLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_summaryFromValue(md), error.what());
 		if (midiin)
 			delete midiin;
 		return NULL;
@@ -293,8 +286,9 @@ VuoMidiIn VuoMidiIn_make(VuoMidiDevice md)
 void VuoMidiIn_enableTriggers
 (
 		VuoMidiIn mi,
-		VuoOutputTrigger(receivedNote, VuoMidiNote),
-		VuoOutputTrigger(receivedController, VuoMidiController)
+		void (*receivedNote)(void *context, VuoMidiNote note),
+		void (*receivedController)(void *context, VuoMidiController controller),
+		void *context
 )
 {
 	if (!mi)
@@ -303,6 +297,7 @@ void VuoMidiIn_enableTriggers
 	dispatch_async(mii->callbackQueue, ^{
 					   mii->receivedNote = receivedNote;
 					   mii->receivedController = receivedController;
+					   mii->context = context;
 				   });
 }
 
@@ -319,6 +314,7 @@ void VuoMidiIn_disableTriggers(VuoMidiIn mi)
 	dispatch_sync(mii->callbackQueue, ^{
 					   mii->receivedNote = NULL;
 					   mii->receivedController = NULL;
+					   mii->context = NULL;
 				   });
 }
 

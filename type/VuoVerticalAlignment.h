@@ -11,7 +11,7 @@
 #define VUOVERTICALALIGNMENT_H
 
 /// @{
-typedef void * VuoList_VuoVerticalAlignment;
+typedef const struct VuoList_VuoVerticalAlignment_struct { void *l; } * VuoList_VuoVerticalAlignment;
 #define VuoList_VuoVerticalAlignment_TYPE_DEFINED
 /// @}
 
@@ -22,8 +22,6 @@ typedef void * VuoList_VuoVerticalAlignment;
  *
  * @{
  */
-
-#include "VuoInteger.h"
 
 /**
  * Vertical alignment.

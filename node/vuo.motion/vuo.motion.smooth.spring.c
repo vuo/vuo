@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Smooth with Spring",
 					  "keywords" : [ "bounce", "oscillate", "rebound", "ricochet", "wobble", "harmonic", "sine", "sinusoidial" ],
-					  "version" : "1.0.0",
+					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]
@@ -45,25 +45,25 @@ struct nodeInstanceData *nodeInstanceInit()
 void nodeInstanceEvent
 (
 	VuoInputData(VuoReal, {"default":0.0}) time,
-	VuoInputEvent(VuoPortEventBlocking_Door, time) timeEvent,
+	VuoInputEvent({"eventBlocking":"door","data":"time"}) timeEvent,
 	VuoInputData(VuoGenericType1, {"defaults":{
 									   "VuoReal":1.,
 									   "VuoPoint2d":{"x":1.,"y":1.},
 									   "VuoPoint3d":{"x":1.,"y":1.,"z":0.}
 								   }}) setPosition,
-	VuoInputEvent(VuoPortEventBlocking_Wall, setPosition, {"hasPortAction":true}) setPositionEvent,
+	VuoInputEvent({"eventBlocking":"wall","data":"setPosition","hasPortAction":true}) setPositionEvent,
 	VuoInputData(VuoGenericType1, {"defaults":{
 									   "VuoReal":0.,
 									   "VuoPoint2d":{"x":0.,"y":0.},
 									   "VuoPoint3d":{"x":0.,"y":0.,"z":0.}
 								   }}) setTarget,
-	VuoInputEvent(VuoPortEventBlocking_Wall, setTarget, {"hasPortAction":true}) setTargetEvent,
+	VuoInputEvent({"eventBlocking":"wall","data":"setTarget","hasPortAction":true}) setTargetEvent,
 	VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0.000001, "suggestedStep":0.1}) period,
-	VuoInputEvent(VuoPortEventBlocking_Wall, period) periodEvent,
+	VuoInputEvent({"eventBlocking":"wall","data":"period"}) periodEvent,
 	VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) damping,
-	VuoInputEvent(VuoPortEventBlocking_Wall, damping) dampingEvent,
+	VuoInputEvent({"eventBlocking":"wall","data":"damping"}) dampingEvent,
 	VuoOutputData(VuoGenericType1) position,
-	VuoOutputEvent(position) positionEvent,
+	VuoOutputEvent({"data":"position"}) positionEvent,
 	VuoInstanceData(struct nodeInstanceData *) ctx
 )
 {

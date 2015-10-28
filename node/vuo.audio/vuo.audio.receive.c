@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Receive Live Audio",
-					  "keywords" : [ "sound", "input", "microphone", "music", "listen", "device" ],
+					  "keywords" : [ "sound", "microphone", "music", "listen", "device" ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						  "VuoAudio"
@@ -67,7 +67,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoAudioInputDevice) device,
-		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, VuoPortEventThrottling_Drop)
+		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"})
 )
 {
 	if (! VuoAudioInputDevice_areEqual(device, (*context)->device))

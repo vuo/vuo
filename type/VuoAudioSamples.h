@@ -41,6 +41,8 @@ char * VuoAudioSamples_summaryFromValue(const VuoAudioSamples value);
 
 VuoAudioSamples VuoAudioSamples_alloc(VuoInteger sampleCount);
 
+bool VuoAudioSamples_isEmpty(const VuoAudioSamples samples);
+
 /**
  * Automatically generated function.
  */

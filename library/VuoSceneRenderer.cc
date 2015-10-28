@@ -31,6 +31,12 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoSceneRenderer",
 					 "dependencies" : [
+						 "VuoBoolean",
+						 "VuoImage",
+						 "VuoImageColorDepth",
+						 "VuoSceneObject",
+						 "VuoText",
+						 "VuoList_VuoSceneObject",
 						 "VuoGLContext"
 					 ]
 				 });
@@ -107,9 +113,6 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr);
  */
 static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
 {
-	// Multisampling breaks point rendering on some GPUs.  https://b33p.net/kosada/node/8225#comment-31324
-//	glEnable(GL_MULTISAMPLE);
-
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_BLEND);
@@ -132,6 +135,7 @@ VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext)
 	sceneRenderer->needToRegenerateProjectionMatrix = false;
 	sceneRenderer->cameraName = NULL;
 	sceneRenderer->camera = VuoSceneObject_makeDefaultCamera();
+	VuoSceneObject_retain(sceneRenderer->camera);
 	sceneRenderer->glContext = glContext;
 
 	VuoSceneRenderer_prepareContext((CGLContextObj)glContext);
@@ -363,7 +367,7 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 
 			for (int i=1; i<=pointLightCount; ++i)
 			{
-				VuoSceneObject pointLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->pointLights, i);
+				VuoSceneObject pointLight = VuoListGetValue_VuoSceneObject(sceneRenderer->pointLights, i);
 
 				snprintf(uniformName, uniformNameMaxLength, "pointLights[%d].color", i-1);
 				GLint colorUniform = glGetUniformLocation(programName, uniformName);
@@ -395,7 +399,7 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 
 			for (int i=1; i<=spotLightCount; ++i)
 			{
-				VuoSceneObject spotLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->spotLights, i);
+				VuoSceneObject spotLight = VuoListGetValue_VuoSceneObject(sceneRenderer->spotLights, i);
 
 				snprintf(uniformName, uniformNameMaxLength, "spotLights[%d].color", i-1);
 				GLint colorUniform = glGetUniformLocation(programName, uniformName);
@@ -430,6 +434,37 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 
 		free(uniformName);
 
+		if (so.blendMode != VuoBlendMode_Normal)
+		{
+			glDisable(GL_DEPTH_TEST);
+
+			if (so.blendMode == VuoBlendMode_Multiply)
+			{
+				glBlendFunc(GL_DST_COLOR, GL_ZERO);
+				glBlendEquation(GL_FUNC_ADD);
+			}
+			else if (so.blendMode == VuoBlendMode_DarkerComponent)
+			{
+				glBlendFunc(GL_ONE, GL_ONE);
+				glBlendEquationSeparate(GL_MIN, GL_FUNC_ADD);
+			}
+			else if (so.blendMode == VuoBlendMode_LighterComponent)
+			{
+				glBlendFunc(GL_ONE, GL_ONE);
+				glBlendEquationSeparate(GL_MAX, GL_FUNC_ADD);
+			}
+			else if (so.blendMode == VuoBlendMode_LinearDodge)
+			{
+				glBlendFunc(GL_ONE, GL_ONE);
+				glBlendEquation(GL_FUNC_ADD);
+			}
+			else if (so.blendMode == VuoBlendMode_Subtract)
+			{
+				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_DST_ALPHA, GL_ZERO);
+				glBlendEquationSeparate(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
+			}
+		}
+
 		unsigned int i = 0;
 		dispatch_semaphore_wait(VuoSceneRenderer_vertexArraySemaphore, DISPATCH_TIME_FOREVER);
 		for (std::list<VuoSceneRendererInternal_meshItem>::iterator vi = soi->meshItems.begin(); vi != soi->meshItems.end(); ++vi, ++i)
@@ -460,6 +495,12 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 		}
 		dispatch_semaphore_signal(VuoSceneRenderer_vertexArraySemaphore);
 
+		if (so.blendMode != VuoBlendMode_Normal)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+			glBlendEquation(GL_FUNC_ADD);
+		}
 	}
 	VuoShader_deactivate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, sceneRenderer->glContext);
 }
@@ -487,7 +528,7 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
 	{
-		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRenderer_drawSceneObjectsRecursively(childObject, &(*oi), projectionMatrix, compositeModelviewMatrix, sceneRenderer);
 	}
 }
@@ -660,7 +701,7 @@ void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
 	int pointLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->pointLights);
 	for (int i=1; i<=pointLightCount; ++i)
 	{
-		VuoSceneObject pointLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->pointLights, i);
+		VuoSceneObject pointLight = VuoListGetValue_VuoSceneObject(sceneRenderer->pointLights, i);
 		VuoPoint3d position = pointLight.transform.translation;
 		glBegin(GL_POINTS);
 			glVertex3f(position.x, position.y, position.z);
@@ -686,7 +727,7 @@ void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
 	int spotLightCount = VuoListGetCount_VuoSceneObject(sceneRenderer->spotLights);
 	for (int i=1; i<=spotLightCount; ++i)
 	{
-		VuoSceneObject spotLight = VuoListGetValueAtIndex_VuoSceneObject(sceneRenderer->spotLights, i);
+		VuoSceneObject spotLight = VuoListGetValue_VuoSceneObject(sceneRenderer->spotLights, i);
 		VuoPoint3d position = spotLight.transform.translation;
 		glBegin(GL_POINTS);
 			glVertex3f(position.x, position.y, position.z);
@@ -823,7 +864,7 @@ void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneR
 	unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 	for (unsigned long i = 1; i <= childObjectCount; ++i)
 	{
-		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRendererInternal_object childObjectInternal;
 
 		VuoSceneRenderer_uploadSceneObjectsRecursively(childObject, &childObjectInternal, glContext);
@@ -869,7 +910,7 @@ void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoScene
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
 	{
-		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRenderer_cleanupSceneObjectsRecursively(childObject, &(*oi), glContext);
 	}
 
@@ -892,7 +933,7 @@ void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so)
 		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
-			VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 			VuoSceneRenderer_releaseSceneObjectsRecursively(childObject);
 		}
 	}
@@ -917,7 +958,7 @@ void VuoSceneRenderer_retainSceneObjectsRecursively(VuoSceneObject so)
 	unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
 	for (unsigned long i = 1; i <= childObjectCount; ++i)
 	{
-		VuoSceneObject childObject = VuoListGetValueAtIndex_VuoSceneObject(so.childObjects, i);
+		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRenderer_retainSceneObjectsRecursively(childObject);
 	}
 }
@@ -999,14 +1040,17 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 	{
 		VuoSceneRenderer_cleanupSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
 		VuoSceneRenderer_releaseSceneObjectsRecursively(sceneRenderer->rootSceneObject);
+
+		VuoRelease(sceneRenderer->pointLights);
+		VuoRelease(sceneRenderer->spotLights);
 	}
 
 	if (sceneRenderer->cameraName)
 		VuoRelease(sceneRenderer->cameraName);
+	VuoSceneObject_release(sceneRenderer->camera);
 
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 	dispatch_release(sceneRenderer->scenegraphSemaphore);
-	VuoSceneObject_release(sceneRenderer->rootSceneObject);
 
 	free(sceneRenderer);
 }

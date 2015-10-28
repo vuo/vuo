@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="1.0.0" label="Calculate Loudness|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<loudness>loudness\r" pos="393,481"];
+MakeList [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="342,571"];
+MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="330,687" _1="300" _2="4000"];
+MixAudioChannels [type="vuo.audio.mix" version="1.0.0" label="Mix Audio Channels|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<mixedSamples>mixedSamples\r" pos="388,560"];
+SplitAudioByFrequency [type="vuo.audio.split.frequency" version="1.0.0" label="Split Audio by Frequency|<refresh>refresh\l|<audioSamples>audioSamples\l|<cutoffFrequencies>cutoffFrequencies\l|<done>done\r|<splitSamples>splitSamples\r" pos="376,661"];
+
+MakeList2:list -> SplitAudioByFrequency:cutoffFrequencies;
+MakeList:list -> MixAudioChannels:audioSamples;
+}

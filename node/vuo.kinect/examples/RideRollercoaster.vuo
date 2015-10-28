@@ -9,23 +9,27 @@
 
 digraph G
 {
-ApplyMask2 [type="vuo.image.apply.mask" version="1.0.0" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<done>done\r|<maskedImage>maskedImage\r" pos="308,203" fillcolor="violet"];
-BlendImages2 [type="vuo.image.blend" version="1.0.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<done>done\r|<blended>blended\r" pos="355,423" fillcolor="green" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
-BlurImage [type="vuo.image.blur" version="1.0.0" label="Blur Image|<refresh>refresh\l|<image>image\l|<radius>radius\l|<done>done\r|<blurredImage>blurredImage\r" pos="140,249" fillcolor="green" _radius="5.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="-51,391" fillcolor="yellow" _started_eventThrottling="enqueue"];
-InvertImageColors [type="vuo.image.color.invert" version="1.0.0" label="Invert Image Colors|<refresh>refresh\l|<image>image\l|<done>done\r|<invertedImage>invertedImage\r" pos="-292,248" fillcolor="green"];
-MaskImageByBrightness [type="vuo.image.color.mask.brightness" version="1.0.0" label="Mask Image by Brightness|<refresh>refresh\l|<image>image\l|<threshold>threshold\l|<thresholdType>thresholdType\l|<sharpness>sharpness\l|<done>done\r|<maskedImage>maskedImage\r" pos="-92,248" fillcolor="violet" _threshold="0.880000" _thresholdType="\"luminance\"" _sharpness="0.900000"];
-PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r|<decodedAudio>decodedAudio\r" pos="110,423" fillcolor="green" _movieURL="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedImage_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-ReceiveKinectImages [type="vuo.kinect.receive" version="2.0.0" label="Receive Kinect Images|<refresh>refresh\l|<done>done\r|<receivedImage>receivedImage\r|<receivedDepthImage>receivedDepthImage\r" pos="-300,127" fillcolor="yellow" _receivedImage_eventThrottling="drop" _receivedDepthImage_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="512,423" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ApplyMask2 [type="vuo.image.apply.mask" version="1.1.0" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<maskedImage>maskedImage\r" pos="308,203"];
+BlendImages2 [type="vuo.image.blend" version="1.2.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="355,423" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
+BlurImage [type="vuo.image.blur" version="1.1.0" label="Blur Image|<refresh>refresh\l|<image>image\l|<radius>radius\l|<blurredImage>blurredImage\r" pos="140,249" _radius="5.000000"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="454,533"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-257,438" fillcolor="yellow" _started_eventThrottling="enqueue"];
+InvertImageColors [type="vuo.image.color.invert" version="1.1.0" label="Invert Image Colors|<refresh>refresh\l|<image>image\l|<invertedImage>invertedImage\r" pos="-291,245"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="501,449" fillcolor="green"];
+MaskImageByBrightness [type="vuo.image.color.mask.brightness" version="1.1.0" label="Mask Image by Brightness|<refresh>refresh\l|<image>image\l|<threshold>threshold\l|<thresholdType>thresholdType\l|<sharpness>sharpness\l|<maskedImage>maskedImage\r" pos="-92,248" _threshold="0.880000" _thresholdType="\"luminance\"" _sharpness="0.900000"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="77,423" fillcolor="yellow" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+ReceiveKinectImages [type="vuo.kinect.receive" version="2.0.0" label="Receive Kinect Images|<refresh>refresh\l|<receivedImage>receivedImage\r|<receivedDepthImage>receivedDepthImage\r" pos="-300,127" fillcolor="violet" _receivedImage_eventThrottling="drop" _receivedDepthImage_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="542,423" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 ApplyMask2:maskedImage -> BlendImages2:foreground;
 BlendImages2:blended -> RenderImageToWindow:image;
 BlurImage:blurredImage -> ApplyMask2:mask;
+ConvertFrameToImage:image -> BlendImages2:background;
 FireOnStart:started -> PlayMovie:play;
 InvertImageColors:invertedImage -> MaskImageByBrightness:image;
+MakeList0:list -> RenderImageToWindow:setWindowProperties;
 MaskImageByBrightness:maskedImage -> BlurImage:image;
-PlayMovie:decodedImage -> BlendImages2:background;
+PlayMovie:decodedVideo -> ConvertFrameToImage:frame;
 ReceiveKinectImages:receivedDepthImage -> InvertImageColors:image;
 ReceiveKinectImages:receivedImage -> ApplyMask2:image;
 }

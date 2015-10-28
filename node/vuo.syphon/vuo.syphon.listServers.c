@@ -60,5 +60,4 @@ void nodeInstanceFini
 		VuoInstanceData(VuoSyphonServerNotifier) serverNotifierPtr
 )
 {
-	VuoRelease(*serverNotifierPtr);
 }

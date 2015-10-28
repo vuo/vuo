@@ -63,6 +63,8 @@ typedef struct
 
 void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
 void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, float *billboardMatrix);
+VuoPoint3d VuoTransform_getEuler(const VuoTransform transform);
+VuoPoint4d VuoTransform_getQuaternion(const VuoTransform transform);
 VuoPoint3d VuoTransform_getDirection(const VuoTransform transform);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
@@ -70,6 +72,7 @@ VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rota
 VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d);
 VuoTransform VuoTransform_makeFromTarget(VuoPoint3d position, VuoPoint3d target, VuoPoint3d upDirection);
 VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix);
+VuoTransform VuoTransform_composite(const VuoTransform a, const VuoTransform b);
 
 /**
  * Returns the composite of quaternion @c a with quaternion @c b (i.e., the rotation described by @c a followed by the rotation described by @c b).
@@ -99,6 +102,8 @@ static inline VuoPoint4d VuoTransform_quaternionFromAxisAngle(VuoPoint3d axis, f
 	q.w = cosf(angle/2.f);
 	return VuoPoint4d_normalize(q);
 }
+
+VuoPoint4d VuoTransform_quaternionFromBasis(VuoPoint3d basis[3]);
 
 /**
  * Returns the quaternion describing the rotation from direction a to b.

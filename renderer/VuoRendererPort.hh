@@ -34,11 +34,12 @@ class VuoRendererPort : public VuoRendererItem, public VuoBaseDetail<VuoPort>
 {
 public:
 	VuoRendererPort(VuoPort *basePort, VuoRendererSignaler *signaler,
-					bool isOutput, bool isRefreshPort, bool isDonePort, bool isFunctionPort);
+					bool isOutput, bool isRefreshPort, bool isFunctionPort);
 	~VuoRendererPort();
 
 	QRectF boundingRect(void) const;
 	QRectF getNameRect(void) const;
+	bool hasPortAction(void) const;
 	QRectF getActionIndicatorRect(void) const;
 	QPainterPath shape(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -52,15 +53,15 @@ public:
 	void extendedHoverEnterEvent(bool cableDragUnderway=false);
 	void extendedHoverMoveEvent(bool cableDragUnderway=false);
 	void extendedHoverLeaveEvent();
-	bool canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort);
-	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort);
-	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, VuoRendererPort **portToSpecialize, string &specializedTypeName);
-	bool isConnectedTo(VuoRendererPort *toPort);
+	bool canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection);
+	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection);
+	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection, VuoRendererPort **portToSpecialize, string &specializedTypeName);
+	VuoCable * getCableConnectedTo(VuoRendererPort *toPort);
 	bool getInput(void) const;
 	bool getOutput(void) const;
 	bool getRefreshPort(void) const;
-	bool getDonePort(void) const;
 	bool getFunctionPort(void) const;
+	void updateNameRect(void);
 	void updateGeometry();
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 	qreal getInset(void) const;
@@ -72,13 +73,17 @@ public:
 	virtual QRectF getPortConstantTextRect(void) const;
 	VuoType * getDataType(void) const;
 	bool isConstant(void) const;
+	bool effectivelyHasConnectedDataCable(bool includePublishedCables) const;
 	string getConstantAsString(void) const;
 	string getConstantAsStringToRender(void) const;
 	void setConstant(string constantValue);
 	string getPortNameToRender() const;
+	string getPortNameToRenderWhenDisplayed() const;
+	static string getDefaultPortNameToRenderForPortClass(VuoPortClass *portClass);
 	void setPortNameToRender(string name);
 	bool getPublishable() const;
 	vector<VuoRendererPublishedPort *> getPublishedPorts() const;
+	vector<VuoRendererPublishedPort *> getPublishedPortsConnectedByDataCarryingCables(void) const;
 
 	VuoRendererNode * getUnderlyingParentNode(void) const;
 	VuoRendererNode * getRenderedParentNode(void) const;
@@ -100,7 +105,7 @@ public:
 	static const qreal portRadius; ///< Radius, in pixels at 1:1 zoom, of a circular port.
 	static const qreal portSpacing; ///< Vertical distance, in pixels at 1:1 zoom, between the center points of two ports.
 	static const qreal portContainerMargin;	///< Vertical distance, in pixels at 1:1 zoom, between the outer edge of the first/last port and the node frame rect.
-	static const qreal portInset; ///< The vertical and horizontal inset used when rendering a circular or refresh/done port shape within its outer port rect.
+	static const qreal portInset; ///< The vertical and horizontal inset used when rendering a circular or refresh port shape within its outer port rect.
 	static const qreal portInsetTriangular; ///< The vertical and horizontal inset used when rendering a triangular port shape (in the node body) within its outer port rect.
 	static const qreal constantFlagHeight; ///< Height, in pixels at 1:1 zoom, of a constant flag.
 
@@ -132,26 +137,26 @@ private:
 
 protected:
 	bool isRefreshPort; ///< Is this port a refresh port?
-	bool isDonePort; ///< Is this port a done port?
 
 	QRectF nameRect; ///< The bounding box of the port's label when rendered on the canvas.
 	string customizedPortName; ///< The name of the port as it should be rendered.
 
 	bool portNameRenderingEnabled(void) const;
-	void updateNameRect(void);
 	void updateEnabledStatus();
-	bool hasPortAction(void) const;
 	VuoRendererInputDrawer * getAttachedInputDrawerRenderedWithHostPort(const VuoRendererPort *port) const;
 	VuoRendererInputAttachment * getUnderlyingInputAttachment(void) const;
 
+	static QString formatPortName(QString portName);
 	static QRectF getPortConstantTextRectForText(QString text);
 	static QPainterPath getPortPath(qreal inset, VuoPortClass::PortType portType, bool isInputPort, bool carriesData);
+	QRectF getEventBarrierRect(void) const;
 	QPainterPath getFunctionPortGlyph(void) const;
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors);
 	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);
 	void paintActionIndicator(QPainter *painter, VuoRendererColors *colors);
 	string getPointStringForCoords(QList<double>) const;
+	string getDefaultPortNameToRender();
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.
 };

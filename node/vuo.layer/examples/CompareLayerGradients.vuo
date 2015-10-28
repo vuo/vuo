@@ -1,0 +1,51 @@
+/**
+ * @file
+ * Displays a linear gradient and a radial gradient. When the mouse moves upward, the start and end point of the linear gradient get farther apart, and the radius of the radial gradient gets larger.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="358,406" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="26,517"];
+ConvertRealTo2DPoint3 [type="vuo.type.real.point2d.y" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<y>y\l|<point2d>point2d\r" pos="419,290"];
+ConvertRealTo2DPoint4 [type="vuo.type.real.point2d.y" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<y>y\l|<point2d>point2d\r" pos="419,305"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-327,-23" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="163,422" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+MakeLinearGradientLayer [type="vuo.layer.make.gradient.linear" version="1.1.0" label="Make Linear Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientStart>gradientStart\l|<gradientEnd>gradientEnd\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="314,-19" fillcolor="violet" _layerCenter="{\"x\":-0.500000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="0.600000" _layerHeight="0.600000"];
+MakeList10 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="606,119" fillcolor="green"];
+MakeList4 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="196,7" fillcolor="violet" _1="{\"r\":1.000000,\"g\":0.141176,\"b\":0.180392,\"a\":1.000000}" _2="{\"r\":1.000000,\"g\":0.407843,\"b\":0.419608,\"a\":1.000000}" _3="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}"];
+MakeList5 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="234,171" fillcolor="violet" _1="{\"r\":1.000000,\"g\":0.137255,\"b\":0.176471,\"a\":1.000000}" _2="{\"r\":1.000000,\"g\":0.403922,\"b\":0.419608,\"a\":1.000000}" _3="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}"];
+MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="636,134" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="316,145" fillcolor="violet" _gradientCenter="{\"x\":0,\"y\":0}" _layerCenter="{\"x\":0.500000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="0.600000" _layerHeight="0.600000"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="-25,437" _text="\"Move the mouse up and down to expand and shrink the gradients.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-368,40" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="677,108" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-116,12" _start="-1.000000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="1.000000"];
+Subtract [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="53,63" _a="0.000000"];
+
+AlignLayerToWindow:alignedLayer -> MakeList10:3;
+Convert2DPointToReal:y -> Scale:value;
+ConvertRealTo2DPoint3:point2d -> MakeLinearGradientLayer:gradientStart;
+ConvertRealTo2DPoint4:point2d -> MakeLinearGradientLayer:gradientEnd;
+FireOnStart:started -> MakeTextImage:refresh;
+FireOnStart:started -> Scale:refresh;
+MakeLayer:layer -> AlignLayerToWindow:layer;
+MakeLinearGradientLayer:layer -> MakeList10:1;
+MakeList10:list -> RenderLayersToWindow:layers;
+MakeList4:list -> MakeLinearGradientLayer:colors;
+MakeList5:list -> MakeRadialGradientLayer:colors;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+MakeRadialGradientLayer:layer -> MakeList10:2;
+MakeTextImage:image -> MakeLayer:image;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+Scale:scaledValue -> ConvertRealTo2DPoint3:y;
+Scale:scaledValue -> MakeRadialGradientLayer:gradientRadius;
+Scale:scaledValue -> Subtract:b;
+Subtract:difference -> ConvertRealTo2DPoint4:y;
+}

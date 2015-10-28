@@ -12,14 +12,14 @@
 VuoModuleMetadata({
 					  "title" : "Make Point Mesh",
 					  "keywords" : [ ],
-					  "version" : "2.0.0",
+					  "version" : "2.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoPoint2d", "VuoPoint3d" ]
 						  }
 					  },
 					  "node": {
-						  "isInterface" : false
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

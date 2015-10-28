@@ -37,6 +37,10 @@ class TelemetryLogger : public VuoRunnerDelegate
 	{
 		printf("publishedOutputPortUpdated: %s %d %s\n", port->getName().c_str(), sentData, dataSummary.c_str());
 	}
+	void receivedTelemetryEventDropped(string portIdentifier)
+	{
+		printf("eventDropped: %s\n", portIdentifier.c_str());
+	}
 	void receivedTelemetryError(string message)
 	{
 		printf("error: %s\n", message.c_str());

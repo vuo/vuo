@@ -7,7 +7,10 @@
  * For more information, see http://vuo.org/license.
  */
 
-#include "node.h"
+#include "VuoReal.h"
+#include "VuoPoint2d.h"
+#include "VuoPoint3d.h"
+#include "VuoPoint4d.h"
 
 VuoReal VuoGradientNoise_perlin_VuoReal_VuoReal(VuoReal x);
 VuoPoint2d VuoGradientNoise_perlin_VuoReal_VuoPoint2d(VuoReal x);

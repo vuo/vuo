@@ -1,0 +1,49 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FindHandsByID [type="vuo.leap.find.hand.id" version="2.0.0" label="Find Hands by ID|<refresh>refresh\l|<hands>hands\l|<id>id\l|<foundHands>foundHands\r" pos="108,51" _id="0"];
+FindHandsByID2 [type="vuo.leap.find.hand.id" version="2.0.0" label="blah|<refresh>refresh\l|<hands>hands\l|<id>id\l|<foundHands>foundHands\r" pos="505,50" _id="0"];
+FindPointablesByID [type="vuo.leap.find.pointable.id" version="2.0.0" label="Find Pointables by ID|<refresh>refresh\l|<pointables>pointables\l|<id>id\l|<foundPointables>foundPointables\r" pos="112,127" _id="0"];
+FindPointablesByID2 [type="vuo.leap.find.pointable.id" version="2.0.0" label="blahblah|<refresh>refresh\l|<pointables>pointables\l|<id>id\l|<foundPointables>foundPointables\r" pos="509,126" _id="0"];
+FindPointablesByTouchZone [type="vuo.leap.find.pointable.touchZone" version="2.0.0" label="Find Pointables by Touch Zone|<refresh>refresh\l|<pointables>pointables\l|<touchZone>touchZone\l|<foundPointables>foundPointables\r" pos="109,203" _touchZone="\"none\""];
+FindPointablesByTouchZone2 [type="vuo.leap.find.pointable.touchZone" version="2.0.0" label="blahblahblah|<refresh>refresh\l|<pointables>pointables\l|<touchZone>touchZone\l|<foundPointables>foundPointables\r" pos="506,202" _touchZone="\"none\""];
+FindPointablesByType [type="vuo.leap.find.pointable.type" version="2.0.0" label="Find Pointables by Type|<refresh>refresh\l|<pointables>pointables\l|<type>type\l|<foundPointables>foundPointables\r" pos="114,274" _type="\"finger\""];
+FindPointablesByType2 [type="vuo.leap.find.pointable.type" version="2.0.0" label="blahblahblahblah|<refresh>refresh\l|<pointables>pointables\l|<type>type\l|<foundPointables>foundPointables\r" pos="511,273" _type="\"finger\""];
+FindServerByApp [type="vuo.syphon.find.server.app" version="2.0.0" label="Find Servers by App|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<applicationName>applicationName\l|<foundServerDescriptions>foundServerDescriptions\r" pos="109,347" _applicationName="\"\""];
+FindServerByApp2 [type="vuo.syphon.find.server.app" version="2.0.0" label="blahblahblahblahblah|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<applicationName>applicationName\l|<foundServerDescriptions>foundServerDescriptions\r" pos="506,346" _applicationName="\"\""];
+FindServerByName [type="vuo.syphon.find.server.name" version="2.0.0" label="Find Servers by Name|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<serverName>serverName\l|<foundServerDescriptions>foundServerDescriptions\r" pos="108,420" _serverName="\"\""];
+FindServerByName2 [type="vuo.syphon.find.server.name" version="2.0.0" label="blahblahblahblahblahblah|<refresh>refresh\l|<serverDescriptions>serverDescriptions\l|<serverName>serverName\l|<foundServerDescriptions>foundServerDescriptions\r" pos="505,419" _serverName="\"\""];
+MakeList [type="vuo.list.make.2.VuoLeapPointable" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="36,285"];
+MakeList10 [type="vuo.list.make.2.VuoSyphonServerDescription" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="456,357"];
+MakeList11 [type="vuo.list.make.2.VuoSyphonServerDescription" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="455,430"];
+MakeList12 [type="vuo.list.make.2.VuoLeapPointable" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="433,213"];
+MakeList2 [type="vuo.list.make.2.VuoLeapHand" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="52,62"];
+MakeList3 [type="vuo.list.make.2.VuoLeapPointable" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="433,284"];
+MakeList4 [type="vuo.list.make.2.VuoLeapPointable" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="56,138"];
+MakeList5 [type="vuo.list.make.2.VuoSyphonServerDescription" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="59,358"];
+MakeList6 [type="vuo.list.make.2.VuoSyphonServerDescription" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="58,431"];
+MakeList7 [type="vuo.list.make.2.VuoLeapPointable" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="36,214"];
+MakeList8 [type="vuo.list.make.2.VuoLeapHand" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="449,61"];
+MakeList9 [type="vuo.list.make.2.VuoLeapPointable" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="453,137"];
+
+MakeList10:list -> FindServerByApp2:serverDescriptions;
+MakeList11:list -> FindServerByName2:serverDescriptions;
+MakeList12:list -> FindPointablesByTouchZone2:pointables;
+MakeList2:list -> FindHandsByID:hands;
+MakeList3:list -> FindPointablesByType2:pointables;
+MakeList4:list -> FindPointablesByID:pointables;
+MakeList5:list -> FindServerByApp:serverDescriptions;
+MakeList6:list -> FindServerByName:serverDescriptions;
+MakeList7:list -> FindPointablesByTouchZone:pointables;
+MakeList8:list -> FindHandsByID2:hands;
+MakeList9:list -> FindPointablesByID2:pointables;
+MakeList:list -> FindPointablesByType:pointables;
+}

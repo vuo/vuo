@@ -103,10 +103,10 @@ private slots:
 		QTest::addColumn< QString >("expectedErrorSubstring");
 
 		QTest::newRow("VuoRegister called on an already-registered pointer") << "RegisterTwice.vuo" << "VuoRegister was called more than once";
-		QTest::newRow("VuoRetain called on a never-registered pointer") << "RetainWithoutRegister.vuo" << "VuoRetain was called for unregistered pointer";
-		QTest::newRow("VuoRelease called on a never-registered pointer") << "ReleaseWithoutRegister.vuo" << "VuoRelease was called for unregistered pointer";
-		QTest::newRow("VuoRelease called on an already-released pointer that was never retained") << "ReleaseWithoutAnyRetains.vuo" << "VuoRelease was called for unretained pointer";
-		QTest::newRow("VuoRelease called on an already-released pointer that was previously retained") << "ReleaseWithoutEnoughRetains.vuo" << "VuoRelease was called for unregistered pointer";
+		QTest::newRow("VuoRetain called on a never-registered pointer") << "RetainWithoutRegister.vuo" << "for unregistered pointer";
+		QTest::newRow("VuoRelease called on a never-registered pointer") << "ReleaseWithoutRegister.vuo" << "for unregistered pointer";
+		QTest::newRow("VuoRelease called on an already-released pointer that was never retained") << "ReleaseWithoutAnyRetains.vuo" << "for unretained pointer";
+		QTest::newRow("VuoRelease called on an already-released pointer that was previously retained") << "ReleaseWithoutEnoughRetains.vuo" << "for unregistered pointer";
 		QTest::newRow("VuoRelease not called enough times") << "RetainWithoutRelease.vuo" << "VuoRelease was not called enough times";
 		QTest::newRow("VuoRegister called without retains or releases") << "RegisterOnly.vuo" << "VuoRelease was not called enough times";
 		QTest::newRow("VuoRegister called on a null pointer") << "RegisterNull.vuo" << "";
@@ -131,6 +131,7 @@ private slots:
 	{
 		QFETCH(QString, compositionFile);
 		QFETCH(QString, expectedErrorSubstring);
+		printf("	%s\n", compositionFile.toUtf8().data()); fflush(stdout);
 
 		string compositionPath = getCompositionPath(compositionFile.toStdString());
 		VuoCompiler *compiler = initCompiler();

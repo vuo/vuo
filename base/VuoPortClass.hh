@@ -36,7 +36,7 @@ public:
 	};
 
 	/**
-	 * Options for event-blocking behavior. See @ref VuoPortEventBlocking in node.h.
+	 * Options for event-blocking behavior. See @ref VuoInputEvent in node.h.
 	 */
 	enum EventBlocking
 	{
@@ -46,7 +46,7 @@ public:
 	};
 
 	/**
-	 * Options for event-throttling behavior. See @ref VuoPortEventThrottling in node.h.
+	 * Options for event-throttling behavior. See @ref VuoOutputTrigger in node.h.
 	 */
 	enum EventThrottling
 	{
@@ -56,6 +56,7 @@ public:
 
 	VuoPortClass(string name, enum PortType portType);
 	string getName(void);
+	void setName(string name);
 	PortType getPortType(void);
 	EventBlocking getEventBlocking(void);
 	void setEventBlocking(EventBlocking eventBlocking);
