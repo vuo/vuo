@@ -113,6 +113,9 @@ for(sourcefile, VUO_FRAMEWORK_SOURCES) {
 	VUO_FRAMEWORK_OBJECTS += $$objectfile
 }
 
+# Make sure it can run in older OS X versions.
+QMAKE_LFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+
 VUO_FRAMEWORK_BINARY_RELATIVE = Vuo.framework/Versions/$$VUO_VERSION/Vuo
 VUO_FRAMEWORK_OBJECT_FLAGS += \
 	$$join(VUO_FRAMEWORK_OBJECTS, " -Wl,-force_load,", "-Wl,-force_load,")
