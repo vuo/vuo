@@ -40,12 +40,12 @@ extern "C" {
 {
 	if (type == "VuoBoolean")
 	{
-		VuoBoolean v = VuoBoolean_valueFromJson(vuoValue);
+		VuoBoolean v = VuoBoolean_makeFromJson(vuoValue);
 		return [NSNumber numberWithBool:v];
 	}
 	if (type == "VuoList_VuoBoolean")
 	{
-		VuoList_VuoBoolean l = VuoList_VuoBoolean_valueFromJson(vuoValue);
+		VuoList_VuoBoolean l = VuoList_VuoBoolean_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoBoolean(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -55,12 +55,12 @@ extern "C" {
 
 	if (type == "VuoInteger")
 	{
-		VuoInteger v = VuoInteger_valueFromJson(vuoValue);
+		VuoInteger v = VuoInteger_makeFromJson(vuoValue);
 		return [NSNumber numberWithLong:v];
 	}
 	if (type == "VuoList_VuoInteger")
 	{
-		VuoList_VuoInteger l = VuoList_VuoInteger_valueFromJson(vuoValue);
+		VuoList_VuoInteger l = VuoList_VuoInteger_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoInteger(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -70,12 +70,12 @@ extern "C" {
 
 	if (type == "VuoReal")
 	{
-		VuoReal v = VuoReal_valueFromJson(vuoValue);
+		VuoReal v = VuoReal_makeFromJson(vuoValue);
 		return [NSNumber numberWithDouble:v];
 	}
 	if (type == "VuoList_VuoReal")
 	{
-		VuoList_VuoReal l = VuoList_VuoReal_valueFromJson(vuoValue);
+		VuoList_VuoReal l = VuoList_VuoReal_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoReal(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -85,7 +85,7 @@ extern "C" {
 
 	if (type == "VuoText")
 	{
-		VuoText v = VuoText_valueFromJson(vuoValue);
+		VuoText v = VuoText_makeFromJson(vuoValue);
 		VuoRetain(v);
 		NSString *s = [NSString stringWithUTF8String:v];
 		VuoRelease(v);
@@ -93,7 +93,7 @@ extern "C" {
 	}
 	if (type == "VuoList_VuoText")
 	{
-		VuoList_VuoText l = VuoList_VuoText_valueFromJson(vuoValue);
+		VuoList_VuoText l = VuoList_VuoText_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoText(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -103,13 +103,13 @@ extern "C" {
 
 	if (type == "VuoColor")
 	{
-		VuoColor v = VuoColor_valueFromJson(vuoValue);
+		VuoColor v = VuoColor_makeFromJson(vuoValue);
 		CGFloat c[4] = {v.r, v.g, v.b, v.a};
 		return [NSColor colorWithColorSpace:[NSColorSpace sRGBColorSpace] components:c count:4];
 	}
 	if (type == "VuoList_VuoColor")
 	{
-		VuoList_VuoColor l = VuoList_VuoColor_valueFromJson(vuoValue);
+		VuoList_VuoColor l = VuoList_VuoColor_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoColor(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -123,7 +123,7 @@ extern "C" {
 
 	if (type == "VuoImage")
 	{
-		VuoImage v = VuoImage_valueFromJson(vuoValue);
+		VuoImage v = VuoImage_makeFromJson(vuoValue);
 		VuoRetain(v);
 		NSImage *im = [self nsImageWithVuoImage:v];
 		VuoRelease(v);
@@ -131,7 +131,7 @@ extern "C" {
 	}
 	if (type == "VuoList_VuoImage")
 	{
-		VuoList_VuoImage l = VuoList_VuoImage_valueFromJson(vuoValue);
+		VuoList_VuoImage l = VuoList_VuoImage_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoImage(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -146,12 +146,12 @@ extern "C" {
 
 	if (type == "VuoPoint2d")
 	{
-		VuoPoint2d v = VuoPoint2d_valueFromJson(vuoValue);
+		VuoPoint2d v = VuoPoint2d_makeFromJson(vuoValue);
 		return [NSValue valueWithPoint:NSMakePoint(v.x, v.y)];
 	}
 	if (type == "VuoList_VuoPoint2d")
 	{
-		VuoList_VuoPoint2d l = VuoList_VuoPoint2d_valueFromJson(vuoValue);
+		VuoList_VuoPoint2d l = VuoList_VuoPoint2d_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoPoint2d(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -164,7 +164,7 @@ extern "C" {
 
 	if (type == "VuoPoint3d")
 	{
-		VuoPoint3d v = VuoPoint3d_valueFromJson(vuoValue);
+		VuoPoint3d v = VuoPoint3d_makeFromJson(vuoValue);
 		size_t s = sizeof(double)*3;
 		double *d = (double *)malloc(s);
 		d[0] = v.x;
@@ -174,7 +174,7 @@ extern "C" {
 	}
 	if (type == "VuoList_VuoPoint3d")
 	{
-		VuoList_VuoPoint3d l = VuoList_VuoPoint3d_valueFromJson(vuoValue);
+		VuoList_VuoPoint3d l = VuoList_VuoPoint3d_makeFromJson(vuoValue);
 		unsigned long count = VuoListGetCount_VuoPoint3d(l);
 		NSMutableArray *a = [[NSMutableArray new] autorelease];
 		for (unsigned long i=0; i<count; ++i)
@@ -194,7 +194,7 @@ extern "C" {
 	if (VuoStringUtilities::beginsWith(type, VuoType::listTypeNamePrefix))
 	{
 		string itemType = VuoStringUtilities::substrAfter(type, VuoType::listTypeNamePrefix);
-		string allowedValuesFunctionName = itemType + "_allowedValues";
+		string allowedValuesFunctionName = itemType + "_getAllowedValues";
 		typedef void *(*allowedValuesFunctionType)(void);
 		allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.c_str());
 		if (allowedValuesFunction)
@@ -215,7 +215,7 @@ extern "C" {
 	}
 
 	// Maybe it's an enum?
-	string allowedValuesFunctionName = type + "_allowedValues";
+	string allowedValuesFunctionName = type + "_getAllowedValues";
 	typedef void *(*allowedValuesFunctionType)(void);
 	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.c_str());
 	if (allowedValuesFunction)
@@ -311,7 +311,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			VuoRetain(vi);
 			CFRelease(data);
 
-			json_object *js = VuoImage_interprocessJsonFromValue(vi);
+			json_object *js = VuoImage_getInterprocessJson(vi);
 			VuoRelease(vi);
 			return js;
 		}
@@ -365,7 +365,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 				return NULL;
 			}
 
-			json_object *js = VuoImage_interprocessJsonFromValue(vi);
+			json_object *js = VuoImage_getInterprocessJson(vi);
 			VuoRelease(vi);
 			return js;
 		}
@@ -404,7 +404,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			}
 
 			VuoRetain(vi);
-			json_object *js = VuoImage_interprocessJsonFromValue(vi);
+			json_object *js = VuoImage_getInterprocessJson(vi);
 			VuoRelease(vi);
 			return js;
 		}
@@ -461,15 +461,15 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
  */
 + (NSArray *)menuItemsForType:(string)type
 {
-	string allowedValuesFunctionName = type + "_allowedValues";
+	string allowedValuesFunctionName = type + "_getAllowedValues";
 	typedef void *(*allowedValuesFunctionType)(void);
 	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.c_str());
 
-	string jsonFromValueFunctionName = type + "_jsonFromValue";
-	typedef json_object *(*jsonFromValueFunctionType)(int);
-	jsonFromValueFunctionType jsonFromValueFunction = (jsonFromValueFunctionType)dlsym(RTLD_SELF, jsonFromValueFunctionName.c_str());
+	string getJsonFunctionName = type + "_getJson";
+	typedef json_object *(*getJsonFunctionType)(int);
+	getJsonFunctionType getJsonFunction = (getJsonFunctionType)dlsym(RTLD_SELF, getJsonFunctionName.c_str());
 
-	string summaryFunctionName = type + "_summaryFromValue";
+	string summaryFunctionName = type + "_getSummary";
 	typedef char *(*summaryFunctionType)(int);
 	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.c_str());
 
@@ -490,7 +490,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	for (unsigned long i=1; i<=listCount; ++i)
 	{
 		int value = listValueFunction(allowedValues, i);
-		json_object *js = jsonFromValueFunction(value);
+		json_object *js = getJsonFunction(value);
 		if (!json_object_is_type(js, json_type_string))
 			continue;
 		const char *key = json_object_get_string(js);
@@ -518,14 +518,14 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	char type = [self objCType][0];
 
 	if (type == 'B')
-		return VuoBoolean_jsonFromValue([self boolValue]);
+		return VuoBoolean_getJson([self boolValue]);
 
 	if (type == 'f' || type == 'd')
-		return VuoReal_jsonFromValue([self doubleValue]);
+		return VuoReal_getJson([self doubleValue]);
 
 	if (type == 'c' || type == 'i' || type == 's' || type == 'l' || type == 'q'
 	 || type == 'C' || type == 'I' || type == 'S' || type == 'L' || type == 'Q')
-		return VuoInteger_jsonFromValue([self longLongValue]);
+		return VuoInteger_getJson([self longLongValue]);
 
 	VLog("Error: Unknown type '%s'", [self objCType]);
 	return NULL;
@@ -540,7 +540,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
  */
 - (json_object *)vuoValue
 {
-	return VuoText_jsonFromValue([self UTF8String]);
+	return VuoText_getJson([self UTF8String]);
 }
 @end
 
@@ -555,7 +555,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	CGFloat c[4] = {0,0,0,1};
 	NSColor *color = [self colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 	[color getComponents:c];
-	return VuoColor_jsonFromValue(VuoColor_makeWithRGBA(c[0], c[1], c[2], c[3]));
+	return VuoColor_getJson(VuoColor_makeWithRGBA(c[0], c[1], c[2], c[3]));
 }
 @end
 
@@ -654,7 +654,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	VuoGlContext_disuse(cgl_ctx);
 
 	VuoImage vi = VuoImage_make(texture, internalformat, [self size].width, [self size].height);
-	return VuoImage_interprocessJsonFromValue(vi);
+	return VuoImage_getInterprocessJson(vi);
 }
 @end
 
@@ -667,7 +667,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 - (json_object *)vuoValue
 {
 	NSPoint p = [self pointValue];
-	return VuoPoint2d_jsonFromValue(VuoPoint2d_make(p.x, p.y));
+	return VuoPoint2d_getJson(VuoPoint2d_make(p.x, p.y));
 }
 @end
 
@@ -681,7 +681,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 {
 	double p[3];
 	[self getBytes:p length:sizeof(double)*3];
-	return VuoPoint3d_jsonFromValue(VuoPoint3d_make(p[0], p[1], p[2]));
+	return VuoPoint3d_getJson(VuoPoint3d_make(p[0], p[1], p[2]));
 }
 @end
 

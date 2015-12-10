@@ -70,9 +70,9 @@ private slots:
 
 	void testNull()
 	{
-		QCOMPARE(QString::fromUtf8(VuoImage_stringFromValue(NULL)), QString("{}"));
-		QCOMPARE(QString::fromUtf8(VuoImage_interprocessStringFromValue(NULL)), QString("{}"));
-		QCOMPARE(QString::fromUtf8(VuoImage_summaryFromValue(NULL)), QString("(no image)"));
+		QCOMPARE(QString::fromUtf8(VuoImage_getString(NULL)), QString("{}"));
+		QCOMPARE(QString::fromUtf8(VuoImage_getInterprocessString(NULL)), QString("{}"));
+		QCOMPARE(QString::fromUtf8(VuoImage_getSummary(NULL)), QString("(no image)"));
 	}
 
 	void testSerializationAndSummary_data()
@@ -89,7 +89,7 @@ private slots:
 										<< true
 										<< "GL Texture (ID 42)<br>640x480";
 
-		QTest::newRow("make")			<< QString(VuoImage_stringFromValue(VuoImage_make(42,0,640,480)))
+		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(42,0,640,480)))
 										<< true
 										<< "GL Texture (ID 42)<br>640x480";
 	}
@@ -99,17 +99,17 @@ private slots:
 		QFETCH(bool, valid);
 		QFETCH(QString, summary);
 
-		VuoImage t = VuoImage_valueFromString(value.toUtf8().data());
+		VuoImage t = VuoImage_makeFromString(value.toUtf8().data());
 		if (valid)
 		{
-			QCOMPARE(QString::fromUtf8(VuoImage_stringFromValue(t)), value);
-			QCOMPARE(QString::fromUtf8(VuoImage_summaryFromValue(t)), summary);
+			QCOMPARE(QString::fromUtf8(VuoImage_getString(t)), value);
+			QCOMPARE(QString::fromUtf8(VuoImage_getSummary(t)), summary);
 		}
 	}
 
 	void testJsonColorImage()
 	{
-		VuoImage image = VuoImage_valueFromString(QUOTE({"color":{"r":0.5,"g":1,"b":0,"a":1},"pixelsWide":640,"pixelsHigh":480}));
+		VuoImage image = VuoImage_makeFromString(QUOTE({"color":{"r":0.5,"g":1,"b":0,"a":1},"pixelsWide":640,"pixelsHigh":480}));
 		QVERIFY(image);
 
 		VuoRetain(image);
@@ -183,8 +183,8 @@ private slots:
 		VuoRetain(localImage);
 
 		QBENCHMARK {
-			json_object *interprocessImageJson = VuoImage_interprocessJsonFromValue(localImage);
-			VuoImage remoteImage = VuoImage_valueFromJson(interprocessImageJson);
+			json_object *interprocessImageJson = VuoImage_getInterprocessJson(localImage);
+			VuoImage remoteImage = VuoImage_makeFromJson(interprocessImageJson);
 			VuoRetain(remoteImage);
 			VuoRelease(remoteImage);
 		}

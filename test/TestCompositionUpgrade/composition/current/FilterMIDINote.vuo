@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,13 +11,10 @@
 
 digraph G
 {
-FilterMIDINote [type="vuo.midi.filter.note" version="2.0.0" label="Filter MIDI Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumber>noteNumber\l|<velocity>velocity\r" pos="366,213"];
-ReceiveMIDIEvents [type="vuo.midi.receive" version="2.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="139,163" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue"];
-ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="152,306"];
-ShareValue4 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="551,297"];
-ShareValue5 [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="150,244"];
-ShareValue7 [type="vuo.data.share.VuoMidiNote" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="552,225"];
-
-ReceiveMIDIEvents:receivedNote -> FilterMIDINote:note;
-ShareValue2:sameValue -> FilterMIDINote:channel;
+FilterMIDINote [type="vuo.midi.filter.note" version="1.0.0" label="Filter MIDI Note|<refresh>refresh\l|<note>note\l|<includeNoteOn>includeNoteOn\l|<includeNoteOff>includeNoteOff\l|<channelMin>channelMin\l|<channelMax>channelMax\l|<velocityMin>velocityMin\l|<velocityMax>velocityMax\l|<noteNumberMin>noteNumberMin\l|<noteNumberMax>noteNumberMax\l|<done>done\r|<filteredNote>filteredNote\r" pos="366,213"];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="1.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<done>done\r|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="139,163" _device="{\"isInput\":true}" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="152,306"];
+ShareValue4 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="551,297"];
+ShareValue5 [type="vuo.data.share.VuoBoolean" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="150,244"];
+ShareValue7 [type="vuo.data.share.VuoMidiNote" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="552,225"];
 }

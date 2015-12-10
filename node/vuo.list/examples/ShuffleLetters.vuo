@@ -9,28 +9,26 @@
 
 digraph G
 {
-Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="536,157"];
+Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="536,157"];
 CycleThroughList2 [type="vuo.list.cycle.VuoReal" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="141,179" _wrapMode="\"wrap\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-99,53" fillcolor="yellow" _started_eventThrottling="enqueue"];
 FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-110,123" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
-MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="247,415" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeList14 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="443,440" fillcolor="green"];
-MakeList29 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="413,425" fillcolor="green"];
-MakeList35 [type="vuo.list.make.6.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="68,190" _1="1.000000" _2="0.750000" _3="0.500000" _4="0.250000" _5="0.000000"];
-MakeList40 [type="vuo.list.make.12.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<list>list\r" pos="339,169" fillcolor="violet" _1="\"S\"" _2="\"H\"" _3="\"U\"" _4="\"F\"" _5="\"F\"" _6="\"L\"" _7="\"E\"" _8="\" \"" _9="\"L\"" _10="\"I\"" _11="\"S\"" _12="\"T\""];
-MakeTextImage5 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="58,429" _font="{\"fontName\":\"Monaco\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="484,414" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+MakeList14 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="920,186" fillcolor="green"];
+MakeList29 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="890,171" fillcolor="green"];
+MakeList35 [type="vuo.list.make.6.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="71,190" _1="1.000000" _2="0.750000" _3="0.500000" _4="0.250000" _5="0.000000"];
+MakeList40 [type="vuo.list.make.12.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<10>10\l|<11>11\l|<12>12\l|<list>list\r" pos="340,169" fillcolor="violet" _1="\"S\"" _2="\"H\"" _3="\"U\"" _4="\"F\"" _5="\"F\"" _6="\"L\"" _7="\"E\"" _8="\" \"" _9="\"L\"" _10="\"I\"" _11="\"S\"" _12="\"T\""];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="729,158" _font="{\"fontName\":\"Monaco\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="961,160" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 ShuffleList2 [type="vuo.list.shuffle.VuoText" version="1.0.0" label="Shuffle List|<refresh>refresh\l|<list>list\l|<chaos>chaos\l|<shuffledList>shuffledList\r" pos="391,158" fillcolor="violet"];
 
-Append:compositeText -> MakeTextImage5:text;
+Append:compositeText -> MakeTextLayer:text;
 CycleThroughList2:item -> ShuffleList2:chaos;
 FireOnStart:started -> CycleThroughList2:refresh;
 FirePeriodically:fired -> CycleThroughList2:goForward;
-MakeLayer2:layer -> MakeList29:1;
 MakeList14:list -> RenderLayersToWindow:setWindowProperties;
 MakeList29:list -> RenderLayersToWindow:layers;
 MakeList35:list -> CycleThroughList2:list;
 MakeList40:list -> ShuffleList2:list;
-MakeTextImage5:image -> MakeLayer2:image;
+MakeTextLayer:layer -> MakeList29:1;
 ShuffleList2:shuffledList -> Append:texts;
 }

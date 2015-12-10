@@ -333,7 +333,7 @@ private slots:
 			QCOMPARE(actualMatrix[i] + 10.f, expectedMatrix[i] + 10.f);
 
 		VuoTransform actualTransform = VuoTransform_makeFromMatrix4x4(expectedMatrix);
-		QCOMPARE(VuoTransform_stringFromValue(actualTransform), VuoTransform_stringFromValue(expectedTransform));
+		QCOMPARE(VuoTransform_getString(actualTransform), VuoTransform_getString(expectedTransform));
 	}
 
 	void testSerializationAndSummary_data()
@@ -346,27 +346,27 @@ private slots:
 										<< false
 										<< "identity transform (no change)";
 
-		QTest::newRow("Euler identity")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeEuler(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,1,1)))
+		QTest::newRow("Euler identity")	<< (const char*)VuoTransform_getString(VuoTransform_makeEuler(VuoPoint3d_make(0,0,0),VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,1,1)))
 										<< true
 										<< "identity transform (no change)";
 
-		QTest::newRow("Quaternion identity")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0),VuoPoint4d_make(0,0,0,1),VuoPoint3d_make(1,1,1)))
+		QTest::newRow("Quaternion identity")	<< (const char*)VuoTransform_getString(VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0),VuoPoint4d_make(0,0,0,1),VuoPoint3d_make(1,1,1)))
 												<< true
 												<< "identity transform (no change)";
 
-		QTest::newRow("Targeted identity")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,0,0),VuoPoint3d_make(0,1,0)))
+		QTest::newRow("Targeted identity")	<< (const char*)VuoTransform_getString(VuoTransform_makeFromTarget(VuoPoint3d_make(0,0,0),VuoPoint3d_make(1,0,0),VuoPoint3d_make(0,1,0)))
 											<< true
 											<< "identity transform (no change)";
 
-		QTest::newRow("Euler transform")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeEuler(VuoPoint3d_make(1,1,1),VuoPoint3d_make(0,M_PI/2.,2.*M_PI),VuoPoint3d_make(2,2,2)))
+		QTest::newRow("Euler transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeEuler(VuoPoint3d_make(1,1,1),VuoPoint3d_make(0,M_PI/2.,2.*M_PI),VuoPoint3d_make(2,2,2)))
 											<< true
 											<< "translation (1, 1, 1)<br>rotation (0°, 90°, 360°) euler<br>scale (2, 2, 2)";
 
-		QTest::newRow("Quaternion transform")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeQuaternion(VuoPoint3d_make(1,1,1),VuoPoint4d_make(.5,.5,.5,.5),VuoPoint3d_make(2,2,2)))
+		QTest::newRow("Quaternion transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeQuaternion(VuoPoint3d_make(1,1,1),VuoPoint4d_make(.5,.5,.5,.5),VuoPoint3d_make(2,2,2)))
 												<< true
 												<< "translation (1, 1, 1)<br>rotation (0.5, 0.5, 0.5, 0.5) quaternion<br>scale (2, 2, 2)";
 
-		QTest::newRow("Targeted transform")	<< (const char*)VuoTransform_stringFromValue(VuoTransform_makeFromTarget(VuoPoint3d_make(1,2,3),VuoPoint3d_make(4,5,6),VuoPoint3d_make(0,1,0)))
+		QTest::newRow("Targeted transform")	<< (const char*)VuoTransform_getString(VuoTransform_makeFromTarget(VuoPoint3d_make(1,2,3),VuoPoint3d_make(4,5,6),VuoPoint3d_make(0,1,0)))
 											<< true
 											<< "position (1, 2, 3)<br>target (4, 5, 6)<br>up (0, 1, 0)";
 	}
@@ -376,10 +376,10 @@ private slots:
 		QFETCH(bool, testReverse);
 		QFETCH(QString, summary);
 
-		VuoTransform t = VuoTransform_valueFromString(value.toUtf8().data());
+		VuoTransform t = VuoTransform_makeFromString(value.toUtf8().data());
 		if (testReverse)
-			QCOMPARE(QString::fromUtf8(VuoTransform_stringFromValue(t)), value);
-		QCOMPARE(QString::fromUtf8(VuoTransform_summaryFromValue(t)), summary);
+			QCOMPARE(QString::fromUtf8(VuoTransform_getString(t)), value);
+		QCOMPARE(QString::fromUtf8(VuoTransform_getSummary(t)), summary);
 	}
 };
 

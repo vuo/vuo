@@ -9,10 +9,9 @@
 
 digraph G
 {
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="509,75" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="219,157" _writeLine="\"\"" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="508,85" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="194,133" _writeLine="\"\"" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
 
-FireOnStart:started -> Count:decrement;
 FireOnStart:started -> DisplayConsoleWindow:refresh;
 }

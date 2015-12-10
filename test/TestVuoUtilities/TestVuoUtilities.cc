@@ -89,6 +89,26 @@ private slots:
 		QCOMPARE(QString(actualOutputString.c_str()), expectedOutputString);
 	}
 
+	void testExpandCamelCase_data()
+	{
+		QTest::addColumn< QString >("inputString");
+		QTest::addColumn< QString >("expectedOutputString");
+
+		QTest::newRow("emptystring") << "" << "";
+		QTest::newRow("camel") << "camel" << "Camel";
+		QTest::newRow("camelCase") << "camelCase" << "Camel Case";
+		QTest::newRow("camelCaseString") << "camelCaseString" << "Camel Case String";
+		QTest::newRow("ShowWindowsOn2Screens") << "ShowWindowsOn2Screens" << "Show Windows On 2 Screens";
+	}
+	void testExpandCamelCase()
+	{
+		QFETCH(QString, inputString);
+		QFETCH(QString, expectedOutputString);
+
+		string actualOutputString = VuoStringUtilities::expandCamelCase(inputString.toUtf8().constData());
+		QCOMPARE(QString(actualOutputString.c_str()), expectedOutputString);
+	}
+
 	void testFindFilesInDirectory_data()
 	{
 		QTest::addColumn< QString >("dirPath");

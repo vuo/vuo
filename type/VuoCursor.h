@@ -37,17 +37,17 @@ typedef enum
 	VuoCursor_Circle
 } VuoCursor;
 
-VuoCursor VuoCursor_valueFromJson(struct json_object * js);
-struct json_object * VuoCursor_jsonFromValue(const VuoCursor value);
-VuoList_VuoCursor VuoCursor_allowedValues(void);
-char * VuoCursor_summaryFromValue(const VuoCursor value);
+VuoCursor VuoCursor_makeFromJson(struct json_object * js);
+struct json_object * VuoCursor_getJson(const VuoCursor value);
+VuoList_VuoCursor VuoCursor_getAllowedValues(void);
+char * VuoCursor_getSummary(const VuoCursor value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoCursor VuoCursor_valueFromString(const char *str);
-char * VuoCursor_stringFromValue(const VuoCursor value);
+VuoCursor VuoCursor_makeFromString(const char *str);
+char * VuoCursor_getString(const VuoCursor value);
 void VuoCursor_retain(VuoCursor value);
 void VuoCursor_release(VuoCursor value);
 ///@}

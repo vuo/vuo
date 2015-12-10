@@ -31,17 +31,17 @@ typedef enum {
 	VuoWrapMode_Saturate
 } VuoWrapMode;
 
-VuoWrapMode VuoWrapMode_valueFromJson(struct json_object * js);
-struct json_object * VuoWrapMode_jsonFromValue(const VuoWrapMode value);
-VuoList_VuoWrapMode VuoWrapMode_allowedValues(void);
-char * VuoWrapMode_summaryFromValue(const VuoWrapMode value);
+VuoWrapMode VuoWrapMode_makeFromJson(struct json_object * js);
+struct json_object * VuoWrapMode_getJson(const VuoWrapMode value);
+VuoList_VuoWrapMode VuoWrapMode_getAllowedValues(void);
+char * VuoWrapMode_getSummary(const VuoWrapMode value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoWrapMode VuoWrapMode_valueFromString(const char *str);
-char * VuoWrapMode_stringFromValue(const VuoWrapMode value);
+VuoWrapMode VuoWrapMode_makeFromString(const char *str);
+char * VuoWrapMode_getString(const VuoWrapMode value);
 void VuoWrapMode_retain(VuoWrapMode value);
 void VuoWrapMode_release(VuoWrapMode value);
 /// @}

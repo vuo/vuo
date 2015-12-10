@@ -36,10 +36,11 @@ void nodeEvent
 		return;
 
 	VuoInteger viewportWidth, viewportHeight;
-	VuoWindowReference_getContentSize(window, &viewportWidth, &viewportHeight);
+	float backingScaleFactor;
+	VuoWindowReference_getContentSize(window, &viewportWidth, &viewportHeight, &backingScaleFactor);
 	VuoReal windowAspectRatio = (VuoReal)viewportWidth/(VuoReal)viewportHeight;
 
-	VuoRectangle layerBoundingRectangle = VuoLayer_getBoundingRectangle(layer, viewportWidth, viewportHeight);
+	VuoRectangle layerBoundingRectangle = VuoLayer_getBoundingRectangle(layer, viewportWidth, viewportHeight, backingScaleFactor);
 
 	if (horizontalAlignment == VuoHorizontalAlignment_Left)
 		(*alignedLayer).sceneObject.transform.translation.x -= 1. - horizontalMargin + (layerBoundingRectangle.center.x - layerBoundingRectangle.size.x/2.);

@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video", "filter" ],
 					  "version" : "2.0.0",
 					  "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "ReceiveImagesPreferablyFromVuo.vuo" ]
 					  },
 					  "dependencies" : [
 						  "VuoSyphon"

@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoCurveEasing
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoCurveEasing.
  */
-VuoCurveEasing VuoCurveEasing_valueFromJson(json_object *js)
+VuoCurveEasing VuoCurveEasing_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -52,7 +52,7 @@ VuoCurveEasing VuoCurveEasing_valueFromJson(json_object *js)
  * @ingroup VuoCurveEasing
  * Encodes @c value as a JSON object.
  */
-json_object * VuoCurveEasing_jsonFromValue(const VuoCurveEasing value)
+json_object * VuoCurveEasing_getJson(const VuoCurveEasing value)
 {
 	char *valueAsString = "in";
 
@@ -69,7 +69,7 @@ json_object * VuoCurveEasing_jsonFromValue(const VuoCurveEasing value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoCurveEasing VuoCurveEasing_allowedValues(void)
+VuoList_VuoCurveEasing VuoCurveEasing_getAllowedValues(void)
 {
 	VuoList_VuoCurveEasing l = VuoListCreate_VuoCurveEasing();
 	VuoListAppendValue_VuoCurveEasing(l, VuoCurveEasing_In);
@@ -81,9 +81,9 @@ VuoList_VuoCurveEasing VuoCurveEasing_allowedValues(void)
 
 /**
  * @ingroup VuoCurveEasing
- * Same as @c %VuoCurveEasing_stringFromValue()
+ * Same as @c %VuoCurveEasing_getString()
  */
-char * VuoCurveEasing_summaryFromValue(const VuoCurveEasing value)
+char * VuoCurveEasing_getSummary(const VuoCurveEasing value)
 {
 	char *valueAsString = "In";
 

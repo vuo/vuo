@@ -22,7 +22,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoList_VuoLayer) layers,
-		VuoInputData(VuoBoolean, {"default":true}) scaleToFit,
+		VuoInputData(VuoBoolean, {"name":"Scale to Fit", "default":true}) scaleToFit,
 		VuoInputData(VuoPoint2d, {"default":[{"x":0,"y":0}], "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
 		VuoInputData(VuoInteger, {"default":2, "suggestedMin":1}) columns,

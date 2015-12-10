@@ -11,9 +11,9 @@ digraph G
 {
 Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="214,126"];
 ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="521,176"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="447,126" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="11,-21" _seconds="1" _fired_eventThrottling="enqueue"];
-Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="180,0" _initialValue="0"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="447,126" fillcolor="green" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="11,-21" fillcolor="yellow" _seconds="1" _fired_eventThrottling="enqueue"];
+Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="180,0" fillcolor="violet" _initialValue="0"];
 MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="168,137" _2="1"];
 
 Add1:sum -> ConvertIntegertoText1:integer;

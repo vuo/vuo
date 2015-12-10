@@ -229,3 +229,24 @@ string VuoStringUtilities::generateHtmlFromMarkdownLine(const string &markdownSt
 	return htmlString;
 }
 #endif
+
+/**
+ * Inserts spaces at CamelCase transitions within the input `camelCaseString`,
+ * capitalizes the first letter of the string, and returns the result.
+ */
+string VuoStringUtilities::expandCamelCase(string camelCaseString)
+{
+	string out;
+	out += toupper(camelCaseString[0]);
+
+	size_t length = camelCaseString.length();
+	for (int i = 1; i < length; ++i)
+	{
+		char c = camelCaseString[i];
+		if (isupper(c) || (isdigit(c) && !isdigit(camelCaseString[i-1])))
+			out += " ";
+		out += c;
+	}
+
+	return out;
+}

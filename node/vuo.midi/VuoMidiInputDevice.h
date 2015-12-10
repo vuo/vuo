@@ -32,17 +32,17 @@ typedef struct
 	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoMidiInputDevice;
 
-VuoMidiInputDevice VuoMidiInputDevice_valueFromJson(struct json_object * js);
-struct json_object * VuoMidiInputDevice_jsonFromValue(const VuoMidiInputDevice value);
-char * VuoMidiInputDevice_summaryFromValue(const VuoMidiInputDevice value);
+VuoMidiInputDevice VuoMidiInputDevice_makeFromJson(struct json_object * js);
+struct json_object * VuoMidiInputDevice_getJson(const VuoMidiInputDevice value);
+char * VuoMidiInputDevice_getSummary(const VuoMidiInputDevice value);
 bool VuoMidiInputDevice_areEqual(const VuoMidiInputDevice value1, const VuoMidiInputDevice value2);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoMidiInputDevice VuoMidiInputDevice_valueFromString(const char *str);
-char * VuoMidiInputDevice_stringFromValue(const VuoMidiInputDevice value);
+VuoMidiInputDevice VuoMidiInputDevice_makeFromString(const char *str);
+char * VuoMidiInputDevice_getString(const VuoMidiInputDevice value);
 void VuoMidiInputDevice_retain(VuoMidiInputDevice value);
 void VuoMidiInputDevice_release(VuoMidiInputDevice value);
 ///@}

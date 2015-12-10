@@ -7,7 +7,7 @@ EXAMPLE_SOURCES += \
 	PlayAudioFileAndLoop.vuo \
 	PlayAudioWave.vuo \
 	PlayBluesOrgan.vuo \
-	ScratchRecord.vuo \
+	ShowLiveAudioTrail.vuo \
 	ShowLiveAudioWaveform.vuo \
 	VisualizeFrequencies.vuo \
 	VisualizeLoudness.vuo

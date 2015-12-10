@@ -18,13 +18,13 @@ VuoModuleMetadata({
 						  "firewire", "1394", "usb", "iSight",
 						  "camera", "capture", "streaming", "record"
 					  ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoQTCapture"
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "ShowCamera.vuo" ]
+						 "exampleCompositions" : [ "ShowCamera.vuo", "ShowInstantReplay.vuo" ]
 					 }
 				 });
 

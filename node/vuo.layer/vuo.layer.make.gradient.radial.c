@@ -12,7 +12,8 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Radial Gradient Layer",
-					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image" ],
+					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image",
+									"circle", "oval", "ellipse", "rounded" ],
 					 "version" : "1.1.0",
 					 "node": {
 						  "exampleCompositions" : [ "CompareLayerGradients.vuo" ]

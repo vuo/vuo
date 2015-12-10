@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,19 +11,13 @@
 
 digraph G
 {
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="52,48" _seconds="1.000000" _fired_eventThrottling="drop"];
-HoldValue2 [type="vuo.data.hold.VuoBoolean" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="408,129"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="777,226" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="775,62" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-ReceiveMouseClicks [type="vuo.mouse.click" version="1.0.1" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="64,247" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
-SelectOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="530,151"];
-Switch [type="vuo.logic.switch" version="1.0.0" label="Switch|<refresh>refresh\l|<toggle>toggle\l|<turnOn>turnOn\l|<turnOff>turnOff\l|<value>value\r" pos="263,62"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoPoint2d" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="498,267"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="2,59" _seconds="1.000000" _fired_eventThrottling="drop"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.0.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<done>done\r|<layer>layer\r" pos="609,212" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeLayer [type="vuo.layer.make.realSize" version="1.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="620,62" _center="{\"x\":0.000000,\"y\":0.000000}" _alpha="1.000000"];
+ReceiveMouseClicks [type="vuo.mouse.click" version="1.0.0" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<done>done\r|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="60,233" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
+SelectOutput2 [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="399,142"];
+Switch [type="vuo.logic.switch" version="1.0.0" label="Switch|<refresh>refresh\l|<toggle>toggle\l|<turnOn>turnOn\l|<turnOff>turnOff\l|<done>done\r|<value>value\r" pos="229,68"];
 
 FirePeriodically:fired -> Switch:toggle;
-HoldValue2:heldValue -> SelectOutput:which;
-ReceiveMouseClicks:singleClicked -> HoldValue2:refresh;
-ReceiveMouseClicks:singleClicked -> SelectOutput:in;
-SelectOutput:falseOption -> MakeLayer:refresh;
-SelectOutput:trueOption -> MakeColorLayer:refresh;
-Switch:value -> HoldValue2:newValue;
 }

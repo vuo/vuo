@@ -32,17 +32,17 @@ typedef enum {
 	VuoLoopType_None
 } VuoLoopType;
 
-VuoLoopType VuoLoopType_valueFromJson(struct json_object * js);
-struct json_object * VuoLoopType_jsonFromValue(const VuoLoopType value);
-VuoList_VuoLoopType VuoLoopType_allowedValues(void);
-char * VuoLoopType_summaryFromValue(const VuoLoopType value);
+VuoLoopType VuoLoopType_makeFromJson(struct json_object * js);
+struct json_object * VuoLoopType_getJson(const VuoLoopType value);
+VuoList_VuoLoopType VuoLoopType_getAllowedValues(void);
+char * VuoLoopType_getSummary(const VuoLoopType value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoLoopType VuoLoopType_valueFromString(const char *str);
-char * VuoLoopType_stringFromValue(const VuoLoopType value);
+VuoLoopType VuoLoopType_makeFromString(const char *str);
+char * VuoLoopType_getString(const VuoLoopType value);
 void VuoLoopType_retain(VuoLoopType value);
 void VuoLoopType_release(VuoLoopType value);
 /// @}

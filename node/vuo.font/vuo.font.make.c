@@ -21,7 +21,7 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoText, {"default":"Helvetica"}) fontName,
+		VuoInputData(VuoText, {"default":"HelveticaNeue-Light"}) fontName,
 		VuoInputData(VuoReal, {"default":28.,"suggestedMin":0.0001,"suggestedMax":512.}) pointSize,
 		VuoInputData(VuoBoolean, {"default":false}) underlined,
 		VuoInputData(VuoColor,{"default":{"r":1,"g":1,"b":1,"a":1}}) color,

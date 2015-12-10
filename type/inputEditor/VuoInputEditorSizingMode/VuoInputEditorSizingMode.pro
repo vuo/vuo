@@ -13,9 +13,12 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorSizingMode.json
 
-INCLUDEPATH += $$ROOT/type
+INCLUDEPATH += \
+	$$ROOT/type \
+	$$ROOT/node/vuo.image
+
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoInteger.o \
-	$$ROOT/type/VuoSizingMode.o \
+	$$ROOT/node/vuo.image/VuoSizingMode.o \
 	$$ROOT/type/list/VuoList_VuoSizingMode.o

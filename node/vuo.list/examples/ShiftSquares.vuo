@@ -22,7 +22,7 @@ MakeColorLayer5 [type="vuo.layer.make.color" version="1.0.0" label="Make Color L
 MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="972,305" fillcolor="green"];
 MakeList13 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1002,320" fillcolor="green"];
 MakeList24 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="254,132"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1043,294" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1043,294" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 TakeFromList3 [type="vuo.list.take.VuoLayer" version="1.0.0" label="Take from List|<refresh>refresh\l|<list>list\l|<position>position\l|<removedItem>removedItem\r|<modifiedList>modifiedList\r" pos="351,303" fillcolor="violet" _position="\"beginning\""];
 
 AddToList2:modifiedList -> ArrangeLayersInGrid:layers;

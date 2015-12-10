@@ -24,12 +24,15 @@ public:
 	VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort * fromPort, VuoCompilerNode * toNode, VuoCompilerPort * toPort);
 	void setAlwaysEventOnly(bool isAlwaysEventOnly);
 	bool getAlwaysEventOnly(void);
+	void setHidden(bool hidden);
+	bool getHidden(void);
 	string getGraphvizDeclaration(void);
 	bool carriesData(void);
 	void generateTransmission(Module *module, BasicBlock *block, Value *outputDataValue, bool shouldTransmitEvent=true);
 
 private:
 	bool isAlwaysEventOnly;
+	bool isHidden;
 
 	static bool portHasData(VuoPort *port);
 };

@@ -14,12 +14,10 @@ TYPE_SOURCES += \
 	VuoCurveEasing.c \
 	VuoDictionary_VuoText_VuoReal.c \
 	VuoHorizontalAlignment.c \
-	VuoHorizontalSide.c \
 	VuoInteger.c \
 	VuoImage.c \
 	VuoImageColorDepth.c \
 	VuoImageWrapMode.c \
-	VuoListPosition.c \
 	VuoLoopType.c \
 #	VuoMathExpression.c \
 	VuoMathExpressionList.c \
@@ -29,14 +27,13 @@ TYPE_SOURCES += \
 	VuoPoint3d.c \
 	VuoPoint4d.c \
 	VuoReal.c \
-	VuoRealRegulation.c \
 	VuoSceneObject.c \
 	VuoScreen.c \
 	VuoShader.c \
-	VuoSizingMode.c \
 	VuoText.c \
 	VuoTransform.c \
 	VuoTransform2d.c \
+	VuoUrl.c \
 	VuoVerticalAlignment.c \
 	VuoWave.c \
 	VuoWindowProperty.c \
@@ -53,12 +50,10 @@ TYPE_HEADERS = \
 	VuoCurveEasing.h \
 	VuoDictionary_VuoText_VuoReal.h \
 	VuoHorizontalAlignment.h \
-	VuoHorizontalSide.h \
 	VuoInteger.h \
 	VuoImage.h \
 	VuoImageColorDepth.h \
 	VuoImageWrapMode.h \
-	VuoListPosition.h \
 	VuoLoopType.h \
 #	VuoMathExpression.h \
 	VuoMathExpressionList.h \
@@ -68,14 +63,13 @@ TYPE_HEADERS = \
 	VuoPoint3d.h \
 	VuoPoint4d.h \
 	VuoReal.h \
-	VuoRealRegulation.h \
 	VuoSceneObject.h \
 	VuoScreen.h \
 	VuoShader.h \
-	VuoSizingMode.h \
 	VuoText.h \
 	VuoTransform.h \
 	VuoTransform2d.h \
+	VuoUrl.h \
 	VuoVerticalAlignment.h \
 	VuoWave.h \
 	VuoWindowProperty.h \
@@ -90,8 +84,12 @@ OTHER_FILES += \
 INCLUDEPATH += \
 	$$ROOT/library \
 	$$ROOT/node \
+	$$ROOT/node/vuo.font \
 	$$ROOT/runtime \
 	$$ROOT/type/list
+
+TYPE_INCLUDEPATH += \
+	../node/vuo.font
 
 HEADERS += \
 	$$TYPE_HEADERS \

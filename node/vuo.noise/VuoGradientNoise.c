@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoGradientNoise
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoGradientNoise.
  */
-VuoGradientNoise VuoGradientNoise_valueFromJson(json_object *js)
+VuoGradientNoise VuoGradientNoise_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -53,7 +53,7 @@ VuoGradientNoise VuoGradientNoise_valueFromJson(json_object *js)
  * @ingroup VuoGradientNoise
  * Encodes @c value as a JSON object.
  */
-json_object * VuoGradientNoise_jsonFromValue(const VuoGradientNoise value)
+json_object * VuoGradientNoise_getJson(const VuoGradientNoise value)
 {
 	char * valueAsString = "";
 
@@ -72,7 +72,7 @@ json_object * VuoGradientNoise_jsonFromValue(const VuoGradientNoise value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoGradientNoise VuoGradientNoise_allowedValues(void)
+VuoList_VuoGradientNoise VuoGradientNoise_getAllowedValues(void)
 {
 	VuoList_VuoGradientNoise l = VuoListCreate_VuoGradientNoise();
 	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Perlin);
@@ -82,9 +82,9 @@ VuoList_VuoGradientNoise VuoGradientNoise_allowedValues(void)
 
 /**
  * @ingroup VuoGradientNoise
- * Same as @c %VuoGradientnoise_stringFromValue()
+ * Same as @c %VuoGradientnoise_getString()
  */
-char * VuoGradientNoise_summaryFromValue(const VuoGradientNoise value)
+char * VuoGradientNoise_getSummary(const VuoGradientNoise value)
 {
 	char * valueAsString = "";
 

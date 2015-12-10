@@ -9,18 +9,17 @@
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1219,508" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1210,546" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
 Convert2DPointToReal3 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="1084,1183"];
 Convert2DPointToReal4 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="1084,1213"];
 ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="1004,1060"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="375,612" fillcolor="yellow" _started_eventThrottling="enqueue"];
 MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1181,942" _center="{\"x\":0.000000,\"y\":0.250000}" _opacity="1.000000"];
-MakeLayer3 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="840,658" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1383,785" fillcolor="green"];
-MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="756,498" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="874,688" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
 MakeList3 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1353,770" fillcolor="green"];
-MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="838,472" _gradientCenter="{\"x\":0.000000,\"y\":0.700000}" _gradientRadius="2.000000" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
-MakeTextImage3 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="574,665" _text="\"The \\\"Mask Image by Brightness\\\" node outputs pixels brighter than the threshold value.\\nOther pixels are made transparent.\\n \\nMove the mouse horizontally to control the threshold.\\nMove the mouse vertically to control the sharpness.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":26.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"center\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="952,662" _gradientCenter="{\"x\":0.000000,\"y\":0.700000}" _gradientRadius="2.000000" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1001,561" _text="\"The \\\"Mask Image by Brightness\\\" node outputs pixels brighter than the threshold value.\\nOther pixels are made transparent.\\n \\nMove the mouse horizontally to control the threshold.\\nMove the mouse vertically to control the sharpness.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 MaskImageByBrightness [type="vuo.image.color.mask.brightness" version="1.1.0" label="Mask Image by Brightness|<refresh>refresh\l|<image>image\l|<threshold>threshold\l|<thresholdType>thresholdType\l|<sharpness>sharpness\l|<maskedImage>maskedImage\r" pos="905,950" fillcolor="violet" _thresholdType="\"luminance\""];
 PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="562,761" fillcolor="yellow" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
 ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="442,965" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
@@ -32,15 +31,14 @@ Convert2DPointToReal3:x -> MaskImageByBrightness:threshold;
 Convert2DPointToReal4:y -> MaskImageByBrightness:sharpness;
 ConvertFrameToImage:image -> MaskImageByBrightness:image;
 FireOnStart:started -> MakeRadialGradientLayer:refresh;
-FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
 FireOnStart:started -> PlayMovie:play;
-MakeLayer3:layer -> AlignLayerToWindow:layer;
 MakeLayer:layer -> MakeList3:3;
 MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList2:list -> MakeRadialGradientLayer:colors;
 MakeList3:list -> RenderLayersToWindow2:layers;
 MakeRadialGradientLayer:layer -> MakeList3:1;
-MakeTextImage3:image -> MakeLayer3:image;
+MakeTextLayer:layer -> AlignLayerToWindow:layer;
 MaskImageByBrightness:maskedImage -> MakeLayer:image;
 PlayMovie:decodedVideo -> ConvertFrameToImage:frame;
 ReceiveMouseMoves:movedTo -> SubtractPoints4:a;

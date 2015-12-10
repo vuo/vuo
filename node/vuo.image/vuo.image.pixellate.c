@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "pixels", "lofi", "simplify", "cube", "square", "filter", "overenlarge", "mosaic", "censor",
 						 "pixelate" // American spelling
 					 ],
-					 "version" : "1.1.0",
+					 "version" : "1.1.1",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 }
@@ -47,6 +47,7 @@ static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -60,6 +61,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Pixellation Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, pixelFragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -77,21 +82,18 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Pixellation Shader");
-	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, pixelFragmentShader);
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage(frag, "texture", image);
 
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
 	VuoPoint2d pixelSize2d = VuoPoint2d_multiply(VuoPoint2d_make(1., (float)w/h), VuoShader_samplerSizeFromVuoSize(pixelSize));
-	VuoShader_setUniform_VuoPoint2d(frag, "pixelSize",  pixelSize2d);
-	VuoShader_setUniform_VuoPoint2d(frag, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
-	*pixellatedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "pixelSize",  pixelSize2d);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
 
-	VuoRelease(frag);
+	*pixellatedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

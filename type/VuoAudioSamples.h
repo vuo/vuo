@@ -35,9 +35,9 @@ typedef struct
 	VuoReal samplesPerSecond;	///< The sample rate.  E.g., 48000.
 } VuoAudioSamples;
 
-VuoAudioSamples VuoAudioSamples_valueFromJson(struct json_object * js);
-struct json_object * VuoAudioSamples_jsonFromValue(const VuoAudioSamples value);
-char * VuoAudioSamples_summaryFromValue(const VuoAudioSamples value);
+VuoAudioSamples VuoAudioSamples_makeFromJson(struct json_object * js);
+struct json_object * VuoAudioSamples_getJson(const VuoAudioSamples value);
+char * VuoAudioSamples_getSummary(const VuoAudioSamples value);
 
 VuoAudioSamples VuoAudioSamples_alloc(VuoInteger sampleCount);
 
@@ -47,8 +47,8 @@ bool VuoAudioSamples_isEmpty(const VuoAudioSamples samples);
  * Automatically generated function.
  */
 ///@{
-VuoAudioSamples VuoAudioSamples_valueFromString(const char *str);
-char * VuoAudioSamples_stringFromValue(const VuoAudioSamples value);
+VuoAudioSamples VuoAudioSamples_makeFromString(const char *str);
+char * VuoAudioSamples_getString(const VuoAudioSamples value);
 void VuoAudioSamples_retain(VuoAudioSamples value);
 void VuoAudioSamples_release(VuoAudioSamples value);
 ///@}

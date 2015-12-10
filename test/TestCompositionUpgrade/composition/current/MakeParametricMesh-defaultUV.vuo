@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,13 +11,8 @@
 
 digraph G
 {
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="395,358"];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="532,515"];
-MakeParametricVertices [type="vuo.mesh.make.parametric" version="3.0.0" label="Make Parametric Mesh|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uMin>uMin\l|<uMax>uMax\l|<vClosed>vClosed\l|<vMin>vMin\l|<vMax>vMax\l|<mesh>mesh\r" pos="126,290" _time="0.000000" _xExpression="\"u\"" _yExpression="\"v\"" _zExpression="\"0\"" _rows="16" _columns="16" _uClosed="true" _uMin="0.000000" _uMax="1.000000" _vClosed="true" _vMin="0.000000" _vMax="1.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="582,504" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-
-Make3DObject:object -> MakeList2:1;
-MakeList2:list -> RenderSceneToWindow:objects;
-MakeParametricVertices:mesh -> Make3DObject:mesh;
-RenderSceneToWindow:requestedFrame -> MakeParametricVertices:refresh;
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="225,380"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="395,358" _shader="" _transform=""];
+MakeParametricVertices [type="vuo.vertices.make.parametric" version="1.0.0" label="Make Parametric Vertices|<refresh>refresh\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<uExpression>uExpression\l|<vExpression>vExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<vClosed>vClosed\l|<done>done\r|<vertices>vertices\r" pos="126,290" _xExpression="\"u\"" _yExpression="\"v\"" _zExpression="\"0\"" _uExpression="\"u\"" _vExpression="\"v\"" _rows="16" _columns="16" _uClosed="true" _vClosed="true"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="582,504" _cameraName=""];
 }

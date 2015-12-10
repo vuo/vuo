@@ -38,18 +38,18 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoVideoFrame VuoVideoFrame_valueFromJson(json_object *js)
+VuoVideoFrame VuoVideoFrame_makeFromJson(json_object *js)
 {
 	VuoVideoFrame value = {NULL,0.0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "image", &o))
-		value.image = VuoImage_valueFromJson(o);
+		value.image = VuoImage_makeFromJson(o);
 	else
 		value.image = NULL;
 
 	if (json_object_object_get_ex(js, "timestamp", &o))
-		value.timestamp = VuoReal_valueFromJson(o);
+		value.timestamp = VuoReal_makeFromJson(o);
 	else
 		value.timestamp = 0.0;
 
@@ -59,14 +59,14 @@ VuoVideoFrame VuoVideoFrame_valueFromJson(json_object *js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoVideoFrame_jsonFromValue(const VuoVideoFrame value)
+json_object * VuoVideoFrame_getJson(const VuoVideoFrame value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *imageObject = VuoImage_jsonFromValue(value.image);
+	json_object *imageObject = VuoImage_getJson(value.image);
 	json_object_object_add(js, "image", imageObject);
 
-	json_object *timestampObject = VuoReal_jsonFromValue(value.timestamp);
+	json_object *timestampObject = VuoReal_getJson(value.timestamp);
 	json_object_object_add(js, "timestamp", timestampObject);
 
 	return js;
@@ -75,9 +75,9 @@ json_object * VuoVideoFrame_jsonFromValue(const VuoVideoFrame value)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoVideoFrame_summaryFromValue(const VuoVideoFrame value)
+char * VuoVideoFrame_getSummary(const VuoVideoFrame value)
 {
-	return VuoText_format("%s<br />Timestamp: %f", VuoImage_summaryFromValue(value.image), value.timestamp );
+	return VuoText_format("%s<br />Timestamp: %f", VuoImage_getSummary(value.image), value.timestamp );
 }
 
 /**

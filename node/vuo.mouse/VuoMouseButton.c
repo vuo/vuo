@@ -28,7 +28,7 @@ VuoModuleMetadata({
  * @ingroup VuoMouseButton
  * Decodes the JSON object @a js, expected to contain a string, to create a new VuoMouseButton.
  */
-VuoMouseButton VuoMouseButton_valueFromJson(json_object *js)
+VuoMouseButton VuoMouseButton_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -53,7 +53,7 @@ VuoMouseButton VuoMouseButton_valueFromJson(json_object *js)
  * @ingroup VuoMouseButton
  * Encodes @a value as a JSON object.
  */
-json_object * VuoMouseButton_jsonFromValue(const VuoMouseButton value)
+json_object * VuoMouseButton_getJson(const VuoMouseButton value)
 {
 	char *valueAsString = "";
 
@@ -78,7 +78,7 @@ json_object * VuoMouseButton_jsonFromValue(const VuoMouseButton value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoMouseButton VuoMouseButton_allowedValues(void)
+VuoList_VuoMouseButton VuoMouseButton_getAllowedValues(void)
 {
 	VuoList_VuoMouseButton l = VuoListCreate_VuoMouseButton();
 	VuoListAppendValue_VuoMouseButton(l, VuoMouseButton_Left);
@@ -90,9 +90,9 @@ VuoList_VuoMouseButton VuoMouseButton_allowedValues(void)
 
 /**
  * @ingroup VuoMouseButton
- * Same as %VuoMouseButton_stringFromValue()
+ * Same as %VuoMouseButton_getString()
  */
-char * VuoMouseButton_summaryFromValue(const VuoMouseButton value)
+char * VuoMouseButton_getSummary(const VuoMouseButton value)
 {
 	char *valueAsString = "";
 

@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,8 +11,6 @@
 
 digraph G
 {
-MakeMIDIDeviceFromID [type="vuo.midi.make.output.id" version="1.0.0" label="Make MIDI Output from ID|<refresh>refresh\l|<id>id\l|<device>device\r" pos="181,88" _id="42"];
-SendMIDIEvent [type="vuo.midi.send" version="2.0.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l" pos="434,88"];
-
-MakeMIDIDeviceFromID:device -> SendMIDIEvent:device;
+MakeMIDIDeviceFromID [type="vuo.midi.make.device.id" version="1.0.0" label="Make MIDI Device from ID|<refresh>refresh\l|<id>id\l|<isInput>isInput\l|<device>device\r" pos="181,88" _id="42" _isInput="false"];
+SendMIDIEvent [type="vuo.midi.send" version="1.0.0" label="Send MIDI Event|<refresh>refresh\l|<device>device\l|<sendNote>sendNote\l|<sendController>sendController\l" pos="434,88" _sendNote="" _sendController=""];
 }

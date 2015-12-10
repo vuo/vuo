@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
+						 "VuoList_%TypeName%"
 					 ]
 				 });
 #endif
@@ -35,7 +35,7 @@ VuoModuleMetadata({
  *   "%Type1Key%"
  * }
  */
-%TypeName% %TypeName%_valueFromJson(json_object * js)
+%TypeName% %TypeName%_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -54,7 +54,7 @@ VuoModuleMetadata({
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * %TypeName%_jsonFromValue(const %TypeName% value)
+json_object *%TypeName%_getJson(const %TypeName% value)
 {
 	char *valueAsString = "%Type0Key%";
 
@@ -69,7 +69,7 @@ json_object * %TypeName%_jsonFromValue(const %TypeName% value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_%TypeName% %TypeName%_allowedValues(void)
+VuoList_%TypeName% %TypeName%_getAllowedValues(void)
 {
 	VuoList_%TypeName% l = VuoListCreate_%TypeName%();
 	VuoListAppendValue_%TypeName%(l, %TypeName%_%Type0KeyCamelCase%);
@@ -81,7 +81,7 @@ VuoList_%TypeName% %TypeName%_allowedValues(void)
 /**
  * Returns a compact string representation of @c value.
  */
-char * %TypeName%_summaryFromValue(const %TypeName% value)
+char *%TypeName%_getSummary(const %TypeName% value)
 {
 	char *valueAsString = "%Type0Summary%";
 
@@ -91,4 +91,20 @@ char * %TypeName%_summaryFromValue(const %TypeName% value)
 		valueAsString = "%Type2Summary%";
 
 	return strdup(valueAsString);
+}
+
+/**
+ * Returns true if the two values are equal.
+ */
+bool %TypeName%_areEqual(const %TypeName% valueA, const %TypeName% valueB)
+{
+	return valueA == valueB;
+}
+
+/**
+ * Returns true if `valueA` is less than `valueB`.
+ */
+bool %TypeName%_isLessThan(const %TypeName% valueA, const %TypeName% valueB)
+{
+	return valueA < valueB;
 }

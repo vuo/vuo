@@ -160,7 +160,7 @@
 		44B81A9518AD510000F27816 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = Kosada;
 			};
 			buildConfigurationList = 44B81A9818AD510000F27816 /* Build configuration list for PBXProject "VuoPluginApp" */;
@@ -325,7 +325,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../../../framework/Vuo.framework/Modules,
-					../../../framework/Vuo.framework/Frameworks/VuoRuntime.framework,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -352,7 +351,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					../../../framework/Vuo.framework/Modules,
-					../../../framework/Vuo.framework/Frameworks/VuoRuntime.framework,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				PRODUCT_NAME = "$(TARGET_NAME)";

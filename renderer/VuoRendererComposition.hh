@@ -55,10 +55,11 @@ public:
 	VuoRendererNode * uncollapseTypecastNode(VuoRendererTypecastPort *typecast);
 	void clearInternalPortEligibilityHighlighting(void);
 	bool getRenderActivity(void);
+	bool getRenderHiddenCables(void);
+	void setRenderHiddenCables(bool render);
 	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
 
 	static void createAutoreleasePool(void);
-	static QString insertSpacesAtCamelCaseTransitions(QString camelCaseString);
 
 	/// Potential outcomes of an app export attempt:
 	enum appExportResult
@@ -73,13 +74,21 @@ public:
 
 protected:
 	void setRenderActivity(bool render);
-	void updateComponentCaching();
-	void repaintAllComponents();
+	void setComponentCaching(QGraphicsItem::CacheMode);
+	void updateGeometryForAllComponents();
 	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort);
+
+	// VuoFileFormat wrapper functions
+	static bool isSupportedAudioFile(string path);
+	static bool isSupportedImageFile(string path);
+	static bool isSupportedMeshFile(string path);
+	static bool isSupportedMovieFile(string path);
+	static bool isSupportedSceneFile(string path);
 
 	VuoCompilerGraphvizParser *parser; ///< The Graphviz parser instance used by this composition.
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this composition.
 	bool cachingEnabled; ///< Should item renderings be cached?
+	bool renderHiddenCables; ///< Should cables be rendered even if they have been hidden (made "wireless")?
 
 private:
 	void addNodeInCompositionToCanvas(VuoNode *n);
@@ -94,6 +103,12 @@ private:
 	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString);
 	void bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension="");
 	void bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath);
+	void bundleResourceFiles(string targetResourceDir);
+	void bundleAuxiliaryFilesForSceneFile(QString sourceFilePath, QString targetFilePath);
+	string modifyResourcePathForAppBundle(string path);
+	void copyFileOrDirectory(string sourcePath, string targetPath);
+	bool hasURLType(VuoPort *port);
+	bool hasRelativeURLConstantValue(VuoPort *port);
 
 	bool renderMissingAsPresent; ///< Should node classes without implementations be rendered as though their implementations are present?
 	bool renderActivity; ///< Should renderings reflect recent component activity (e.g., node executions, event firings)?

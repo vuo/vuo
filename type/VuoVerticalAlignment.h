@@ -33,17 +33,17 @@ typedef enum
 	VuoVerticalAlignment_Bottom
 } VuoVerticalAlignment;
 
-VuoVerticalAlignment VuoVerticalAlignment_valueFromJson(struct json_object * js);
-struct json_object * VuoVerticalAlignment_jsonFromValue(const VuoVerticalAlignment value);
-VuoList_VuoVerticalAlignment VuoVerticalAlignment_allowedValues(void);
-char * VuoVerticalAlignment_summaryFromValue(const VuoVerticalAlignment value);
+VuoVerticalAlignment VuoVerticalAlignment_makeFromJson(struct json_object * js);
+struct json_object * VuoVerticalAlignment_getJson(const VuoVerticalAlignment value);
+VuoList_VuoVerticalAlignment VuoVerticalAlignment_getAllowedValues(void);
+char * VuoVerticalAlignment_getSummary(const VuoVerticalAlignment value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoVerticalAlignment VuoVerticalAlignment_valueFromString(const char *str);
-char * VuoVerticalAlignment_stringFromValue(const VuoVerticalAlignment value);
+VuoVerticalAlignment VuoVerticalAlignment_makeFromString(const char *str);
+char * VuoVerticalAlignment_getString(const VuoVerticalAlignment value);
 void VuoVerticalAlignment_retain(VuoVerticalAlignment value);
 void VuoVerticalAlignment_release(VuoVerticalAlignment value);
 ///@}

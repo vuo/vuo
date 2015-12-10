@@ -19,7 +19,7 @@ MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make 
 MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-66,467" _2="30.000000"];
 MakeSphereMesh5 [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="96,93" _rows="32" _columns="32"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-20,456"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="737,185" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="737,185" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="105,176" _color="{\"r\":0.127275,\"g\":0.217365,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 
 ConvertRealTo3DPoint:point3d -> Make3DTransform4:rotation;

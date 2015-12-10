@@ -35,9 +35,9 @@ typedef struct
 
 struct json_object;
 
-VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_valueFromJson(struct json_object * js);
-struct json_object * VuoDictionary_VuoText_VuoReal_jsonFromValue(const VuoDictionary_VuoText_VuoReal value);
-char * VuoDictionary_VuoText_VuoReal_summaryFromValue(const VuoDictionary_VuoText_VuoReal value);
+VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_makeFromJson(struct json_object * js);
+struct json_object * VuoDictionary_VuoText_VuoReal_getJson(const VuoDictionary_VuoText_VuoReal value);
+char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoReal value);
 
 VuoDictionary_VuoText_VuoReal VuoDictionaryCreate_VuoText_VuoReal(void);
 VuoList_VuoText VuoDictionaryGetKeys_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d);
@@ -48,8 +48,8 @@ void VuoDictionarySetKeyValue_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d, V
 /**
  * Automatically generated function.
  */
-VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_valueFromString(const char *str);
-char * VuoDictionary_VuoText_VuoReal_stringFromValue(const VuoDictionary_VuoText_VuoReal value);
+VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_makeFromString(const char *str);
+char * VuoDictionary_VuoText_VuoReal_getString(const VuoDictionary_VuoText_VuoReal value);
 void VuoDictionary_VuoText_VuoReal_retain(VuoDictionary_VuoText_VuoReal value);
 void VuoDictionary_VuoText_VuoReal_release(VuoDictionary_VuoText_VuoReal value);
 /// @}

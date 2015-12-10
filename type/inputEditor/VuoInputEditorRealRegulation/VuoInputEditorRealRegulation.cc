@@ -69,7 +69,7 @@ QLayout *VuoInputEditorRealRegulation::setUpRow(QDialog &dialog, QLineEdit *line
  */
 QList<QString> VuoInputEditorRealRegulation::convertToLineEditListFormat(json_object *value)
 {
-	VuoRealRegulation reg = VuoRealRegulation_valueFromJson(value);
+	VuoRealRegulation reg = VuoRealRegulation_makeFromJson(value);
 
 	QList<QString> lineEditTexts;
 	lineEditTexts.append(reg.name);
@@ -92,7 +92,7 @@ json_object * VuoInputEditorRealRegulation::convertFromLineEditListFormat(const 
 				lineEditTexts[3].toDouble(),
 				lineEditTexts[4].toDouble());
 
-	json_object *value = VuoRealRegulation_jsonFromValue(reg);
+	json_object *value = VuoRealRegulation_getJson(reg);
 	VuoRealRegulation_retain(reg);
 	VuoRealRegulation_release(reg);
 	return value;

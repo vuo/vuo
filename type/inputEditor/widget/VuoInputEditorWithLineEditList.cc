@@ -64,7 +64,7 @@ VuoInputEditorWithLineEditList::VuoInputEditorWithLineEditList(bool allowAddingA
 void VuoInputEditorWithLineEditList::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
 	dialogLayout = new QVBoxLayout;
-	dialogLayout->setContentsMargins(horizontalSpacing, verticalSpacing, horizontalSpacing, verticalSpacing);
+	dialogLayout->setContentsMargins(0,0,0,0);
 	dialogLayout->setSizeConstraint(QLayout::SetFixedSize);
 	//	dialog.setLayout(dialogLayout);  // This repositions the dialog for some reason. Hence the workaround below.
 	QWidget *dialogTopLevelWidget = new QWidget(&dialog);

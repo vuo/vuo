@@ -43,13 +43,13 @@
  *   }
  * }
  */
-VuoLeapFrame VuoLeapFrame_valueFromJson(json_object * js)
+VuoLeapFrame VuoLeapFrame_makeFromJson(json_object * js)
 {
 	VuoLeapFrame frame = {-1, NULL, NULL};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		frame.id = VuoInteger_valueFromJson(o);
+		frame.id = VuoInteger_makeFromJson(o);
 
 	/// @todo unserialize other values
 
@@ -60,11 +60,11 @@ VuoLeapFrame VuoLeapFrame_valueFromJson(json_object * js)
  * @ingroup VuoLeapFrame
  * Encodes @c value as a JSON object.
  */
-json_object * VuoLeapFrame_jsonFromValue(const VuoLeapFrame value)
+json_object * VuoLeapFrame_getJson(const VuoLeapFrame value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_jsonFromValue(value.id);
+	json_object *idObject = VuoInteger_getJson(value.id);
 	json_object_object_add(js, "id", idObject);
 
 	/// @todo serialize other values
@@ -76,7 +76,7 @@ json_object * VuoLeapFrame_jsonFromValue(const VuoLeapFrame value)
  * @ingroup VuoLeapFrame
  * Returns a compact string representation of @c value.
  */
-char * VuoLeapFrame_summaryFromValue(const VuoLeapFrame value)
+char * VuoLeapFrame_getSummary(const VuoLeapFrame value)
 {
 	return VuoText_format("%lld", value.id);
 }

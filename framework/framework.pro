@@ -48,6 +48,7 @@ MODULE_OBJECTS += \
 	$$LIBFREENECT_ROOT/lib/libfreenect.dylib \
 	$$OSCPACK_ROOT/lib/liboscpack.a \
 	$$ZXING_ROOT/lib/libzxing.a \
+	$$LIBXML2_ROOT/lib/libxml2.a \
 	$$ASSIMP_ROOT/lib/libassimp.a
 !equals(MAC_VERSION, "10.6") {
 	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
@@ -334,6 +335,7 @@ LIBS += \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoImageBlur.o \
 	$$ROOT/library/VuoImageMapColors.o \
+	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
@@ -342,14 +344,17 @@ LIBS += \
 
 # Turn Clang headers into a Framework.
 CLANG_FRAMEWORK_DEST_DIR = "$$FRAMEWORKS_DEST_DIR/clang.framework"
+CLANG_DYLIB_DEST = "$$CLANG_FRAMEWORK_DEST_DIR/Versions/A/clang"
 CLANG_HEADERS_DIR = "$$CLANG_FRAMEWORK_DEST_DIR/Versions/A/Headers"
 CLANG_RESOURCES_DIR = "$$CLANG_FRAMEWORK_DEST_DIR/Versions/A/Resources"
 makeClangFramework.commands = \
 	   mkdir -p "$$CLANG_HEADERS_DIR" \
+	&& touch "$$CLANG_DYLIB_DEST" \
 	&& cp -r $$LLVM_ROOT/include/clang/* "$$CLANG_HEADERS_DIR" \
 	&& mkdir "$$CLANG_RESOURCES_DIR" \
 	&& cp Info-clang.plist "$$CLANG_RESOURCES_DIR/Info.plist" \
 	&& ln -s A "$$CLANG_FRAMEWORK_DEST_DIR/Versions/Current" \
+	&& ln -s Versions/Current/clang "$$CLANG_FRAMEWORK_DEST_DIR" \
 	&& ln -s Versions/Current/Headers "$$CLANG_FRAMEWORK_DEST_DIR" \
 	&& ln -s Versions/Current/Resources "$$CLANG_FRAMEWORK_DEST_DIR"
 makeClangFramework.target = $${CLANG_FRAMEWORK_DEST_DIR}

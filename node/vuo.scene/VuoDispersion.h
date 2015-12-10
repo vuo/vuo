@@ -26,16 +26,16 @@ typedef enum {
 	VuoDispersion_Radial
 } VuoDispersion;
 
-VuoDispersion VuoDispersion_valueFromJson(struct json_object * js);
-struct json_object * VuoDispersion_jsonFromValue(const VuoDispersion value);
-char * VuoDispersion_summaryFromValue(const VuoDispersion value);
+VuoDispersion VuoDispersion_makeFromJson(struct json_object * js);
+struct json_object * VuoDispersion_getJson(const VuoDispersion value);
+char * VuoDispersion_getSummary(const VuoDispersion value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoDispersion VuoDispersion_valueFromString(const char *str);
-char * VuoDispersion_stringFromValue(const VuoDispersion value);
+VuoDispersion VuoDispersion_makeFromString(const char *str);
+char * VuoDispersion_getString(const VuoDispersion value);
 void VuoDispersion_retain(VuoDispersion value);
 void VuoDispersion_release(VuoDispersion value);
 ///@}

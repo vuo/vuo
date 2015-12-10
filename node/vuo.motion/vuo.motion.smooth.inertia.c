@@ -24,7 +24,7 @@ VuoModuleMetadata({
 				 });
 
 #define type VuoGenericType1
-#define zeroValue VuoGenericType1_valueFromString("")
+#define zeroValue VuoGenericType1_makeFromString("")
 #define add VuoGenericType1_add
 #define subtract VuoGenericType1_subtract
 #define multiply VuoGenericType1_multiply

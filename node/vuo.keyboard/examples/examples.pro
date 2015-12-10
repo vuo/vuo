@@ -1,7 +1,6 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	RotateWithArrowKeys.vuo \
-	TypeInTextLayer.vuo
+	RotateWithArrowKeys.vuo
 
 include(../../../example.pri)

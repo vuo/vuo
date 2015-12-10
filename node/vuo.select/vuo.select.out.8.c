@@ -15,7 +15,7 @@ VuoModuleMetadata({
 						"activate", "deactivate", "enable", "disable", "choose", "pick", "mode", "block", "door", "wall" ],
 					 "version" : "2.0.0",
 					 "node": {
-						  "exampleCompositions" : [ "RotateOneSquareAtATime.vuo", "CountDown.vuo" ]
+						  "exampleCompositions" : [ "RotateOneSquareAtATime.vuo" ]
 					 }
 				 });
 

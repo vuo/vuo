@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoHorizontalAlignment
  * Decodes the JSON object @c js to create a new value.
  */
-VuoHorizontalAlignment VuoHorizontalAlignment_valueFromJson(json_object * js)
+VuoHorizontalAlignment VuoHorizontalAlignment_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -50,7 +50,7 @@ VuoHorizontalAlignment VuoHorizontalAlignment_valueFromJson(json_object * js)
  * @ingroup VuoHorizontalAlignment
  * Encodes @c value as a JSON object.
  */
-json_object * VuoHorizontalAlignment_jsonFromValue(const VuoHorizontalAlignment value)
+json_object * VuoHorizontalAlignment_getJson(const VuoHorizontalAlignment value)
 {
 	char *valueAsString = "left";
 
@@ -65,7 +65,7 @@ json_object * VuoHorizontalAlignment_jsonFromValue(const VuoHorizontalAlignment 
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_allowedValues(void)
+VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_getAllowedValues(void)
 {
 	VuoList_VuoHorizontalAlignment l = VuoListCreate_VuoHorizontalAlignment();
 	VuoListAppendValue_VuoHorizontalAlignment(l, VuoHorizontalAlignment_Left);
@@ -78,7 +78,7 @@ VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_allowedValues(void)
  * @ingroup VuoHorizontalAlignment
  * Returns a compact string representation of @c value.
  */
-char * VuoHorizontalAlignment_summaryFromValue(const VuoHorizontalAlignment value)
+char * VuoHorizontalAlignment_getSummary(const VuoHorizontalAlignment value)
 {
 	char *valueAsString = "Left";
 

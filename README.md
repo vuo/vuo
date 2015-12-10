@@ -104,12 +104,23 @@ Install Qt 5.3.1:
     tar xzf qt-everywhere-opensource-src-5.3.1.tar.gz
     cd qt-everywhere-opensource-src-5.3.1
     cd qtbase
+
     # https://bugreports.qt-project.org/browse/QTBUG-36575
     curl -OL https://bugreports.qt-project.org/secure/attachment/37834/qmake-objcxx-cxxflags.patch
     patch -p1 < qmake-objcxx-cxxflags.patch
+
     # https://bugreports.qt-project.org/browse/QTBUG-37926
     curl -OL https://b33p.net/sites/default/files/mousebuttonstate.patch
     patch -p1 < mousebuttonstate.patch
+
+    # https://bugreports.qt-project.org/browse/QTBUG-26795
+    curl -OL https://bugreports.qt-project.org/secure/attachment/42769/DevicePixelsRatioImageItemCache.diff
+    patch -p1 < DevicePixelsRatioImageItemCache.diff
+
+    # https://bugreports.qt-project.org/browse/QTBUG-36383
+    curl -OL https://b33p.net/sites/default/files/fixloading2ximagesinrichtextdocuments.patch
+    patch -p1 < fixloading2ximagesinrichtextdocuments.patch
+
     cd ..
     ./configure -prefix /usr/local/Cellar/qt/5.3.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit -skip qtmultimedia
     make -j9
@@ -420,6 +431,16 @@ If you're running any version of Mac OS X:
     mkdir -p /usr/local/Cellar/zxing/2.3.0/{lib,include}
     cp libzxing.a /usr/local/Cellar/zxing/2.3.0/lib
     (cd ../core/src && find . -type f -name \*.h -exec tar cf - {} +) | (cd /usr/local/Cellar/zxing/2.3.0/include && tar xf -)
+
+### libxml2
+
+    cd /tmp
+    curl -OL ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.2.tar.gz
+    tar zxf libxml2-sources-2.9.2.tar.gz
+    cd libxml2-2.9.2
+    CFLAGS="-Oz -mmacosx-version-min=10.6" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-output --without-pattern --without-push --without-reader --without-regexps --without-schemas --without-schematron --without-tree --without-valid --without-writer --without-xinclude --without-modules --without-lzma
+    make -j9
+    make install
 
 ### ld64 133.3
 

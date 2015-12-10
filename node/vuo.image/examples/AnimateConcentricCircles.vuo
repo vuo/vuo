@@ -1,0 +1,19 @@
+/**
+ * @file
+ * This composition uses a [shadertoy](https://www.shadertoy.com/) shader to render an  effect of moving concentric colored circles on an image.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+ImageWithShadertoy [type="vuo.image.make.shadertoy" version="2.0.0" label="Image with Shadertoy|<refresh>refresh\l|<fragmentShader>fragmentShader\l|<GlobalTime>GlobalTime\l|<Channel0>Channel0\l|<Channel1>Channel1\l|<Channel2>Channel2\l|<Channel3>Channel3\l|<width>width\l|<height>height\l|<mousePosition>mousePosition\l|<shaderImage>shaderImage\r" pos="362,366" _fragmentShader="\"void main(void)\\n{\\n\\tvec2 uv = gl_FragCoord.xy \\/ iResolution.xy;\\n\\tuv -= vec2(.5,.5);\\n\\tfloat aspect = iResolution.x\\/iResolution.y;\\n\\tuv.x *= aspect;\\n\\n\\tfloat ringColor[3];\\n\\tfor (int i=0; i\<3; ++i)\\n\\t{\\n\\t\\tvec2 center = vec2(\\n\\t\\tcos(iGlobalTime\\/4. +float(i*20)  )\\/2.,\\n\\t\\tsin(iGlobalTime\\/4.3+float(i*20) + 100.)\\/2.);\\n\\n\\t\\tfloat dist = distance(uv,center);\\n\\t\\tfloat frequency = (sin(iGlobalTime\\/4.7+float(i*3))\\/2.+.6)*32.;\\n\\t\\tfloat sdist = sin(dist*frequency + 3.14\\/2.);\\n\\t\\tfloat delta = fwidth(sdist);\\n\\t\\tfloat pulseWidth = sin(iGlobalTime\\/5.+float(i*13))\\/1.01;\\n\\t\\tringColor[i] = smoothstep(sdist-delta,sdist,pulseWidth);\\n\\t}\\n\\n\\tgl_FragColor = vec4(\\n\\t\\tringColor[0],\\n\\t\\tringColor[1],\\n\\t\\tringColor[2],\\n\\t1);\\n}\"" _width="640" _height="480"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="563,392"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="604,366" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+ImageWithShadertoy:shaderImage -> RenderImageToWindow:image;
+MakeList4:list -> RenderImageToWindow:setWindowProperties;
+RenderImageToWindow:requestedFrame -> ImageWithShadertoy:GlobalTime;
+}

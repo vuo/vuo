@@ -5,8 +5,8 @@ EXAMPLE_SOURCES += \
 	CompareSmoothedData.vuo \
 	CompareSmoothedMotion.vuo \
 	DrawCurve.vuo \
+	ExplodeClay.vuo \
 	SpringBack.vuo \
-	WalkCaterpillar.vuo \
 	WaveSphere.vuo
 
 include(../../../example.pri)

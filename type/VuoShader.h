@@ -128,6 +128,8 @@ typedef struct _VuoShader
 	VuoShaderUniform *uniforms;
 	unsigned int uniformsCount;
 
+	float objectScale;	///< Typically 1.  If the shader draws an object, this specifies how large the object is relative to the quad onto which it's drawn (e.g., `VuoShader_makeUnlitCircleShader()` is 0.5 since the circle it draws is half the size of the quad).
+
 	void *lock;	///< `dispatch_semaphore_t` to serialize operations that modify the state of this GL program object.
 } *VuoShader;
 
@@ -150,7 +152,11 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha);
 VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image);
 VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha);
 VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image);
+
 VuoShader VuoShader_makeUnlitColorShader(VuoColor color);
+VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness);
+VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal sharpness, VuoReal roundness, VuoReal aspect);
+
 VuoShader VuoShader_makeLitColorShader(VuoColor diffuseColor, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, VuoImage specularImage, VuoImage normalImage);
@@ -185,14 +191,14 @@ VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize);
 
 /// @name Summary, serialization, and reference counting
 /// @{
-char * VuoShader_summaryFromValue(const VuoShader value);
-VuoShader VuoShader_valueFromJson(struct json_object * js);
-struct json_object * VuoShader_jsonFromValue(const VuoShader value);
+char * VuoShader_getSummary(const VuoShader value);
+VuoShader VuoShader_makeFromJson(struct json_object * js);
+struct json_object * VuoShader_getJson(const VuoShader value);
 
 /// Automatically generated function.
-VuoShader VuoShader_valueFromString(const char *str);
+VuoShader VuoShader_makeFromString(const char *str);
 /// Automatically generated function.
-char * VuoShader_stringFromValue(const VuoShader value);
+char * VuoShader_getString(const VuoShader value);
 /// Automatically generated function.
 void VuoShader_retain(VuoShader value);
 /// Automatically generated function.

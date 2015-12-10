@@ -11,13 +11,14 @@
 
 const qreal VuoRendererColors::minNodeFrameAndFillAlpha = 0.35;
 const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
-const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = 0.75;
+const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = .85;
 const qreal VuoRendererColors::defaultCableMainAlpha = 0.35;
 const qreal VuoRendererColors::defaultCableUpperAlpha = 0.9;
-const qreal VuoRendererColors::defaultConstantAlpha = 3./8.;
+const qreal VuoRendererColors::defaultConstantAlpha = .6;
 const int VuoRendererColors::subtleHighlightingLighteningFactor = 140; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
 const int VuoRendererColors::activityFadeDuration = 400;
 const int VuoRendererColors::activityAnimationFadeDuration = 950;
+bool VuoRendererColors::_isDark = false;
 
 /**
  * Creates a new color scheme provider, optionally tinted with @c tintColor.
@@ -59,12 +60,28 @@ VuoRendererColors *VuoRendererColors::getSharedColors(void)
 }
 
 /**
+ * Sets whether all instances return colors appropriate for a dark interface.
+ */
+void VuoRendererColors::setDark(bool isDark)
+{
+	_isDark = isDark;
+}
+
+/**
+ * Returns whether the global interface is dark.
+ */
+bool VuoRendererColors::isDark(void)
+{
+	return _isDark;
+}
+
+/**
  * Returns the color for the background of the composition canvas.
  * Can be overridden by @c VuoRendererComposition::setBackgroundTransparent.
  */
 QColor VuoRendererColors::canvasFill(void)
 {
-	return QColor::fromHslF(0, 0, 1, 1);
+	return _isDark ? QColor("#1a1a1a") : QColor::fromHslF(0, 0, 1, 1);
 }
 
 /**
@@ -75,7 +92,7 @@ QColor VuoRendererColors::nodeFill(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
 	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
-	QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
+	QColor nodeFillColor(tint(QColor::fromHslF(0, 0, _isDark ? .7 : .8, adjustedAlpha), 1., lighteningFactor));
 
 	return nodeFillColor;
 }
@@ -114,13 +131,38 @@ QColor VuoRendererColors::publishedPortFill(void)
 }
 
 /**
+ * Returns the color for the title text of ports in the published port sidebars.
+ */
+QColor VuoRendererColors::publishedPortTitle(void)
+{
+	const qreal defaultPortTitleAlpha = 1.;
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
+	return tint(QColor::fromHslF(0, 0, _isDark ? .75 : .25, adjustedAlpha));
+}
+
+/**
+ * Returns the color for the title text of protocol ports in the published port sidebars.
+ */
+QColor VuoRendererColors::publishedProtocolPortTitle(void)
+{
+	if (isDark())
+	{
+		const qreal defaultPortTitleAlpha = 1.;
+		qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
+		return tint(QColor::fromHslF(0, 0, .25, adjustedAlpha));
+	}
+	else
+		return publishedPortTitle();
+}
+
+/**
  * Returns the color for the node's outline and the background of its title bar.
  * Also used for collapsed typecast port borders.
  */
 QColor VuoRendererColors::nodeFrame(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	QColor nodeFrameColor(tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha)));
+	QColor nodeFrameColor(tint(QColor::fromHslF(0, 0, _isDark ? .44 : .57, adjustedAlpha)));
 
 	return nodeFrameColor;
 }
@@ -130,7 +172,8 @@ QColor VuoRendererColors::nodeFrame(void)
  */
 QColor VuoRendererColors::nodeTitle(void)
 {
-	return tint(QColor::fromHslF(0, 0, 1, 7./8.));
+	qreal adjustedAlpha = getCurrentAlphaForDefault(1);
+	return tint(QColor::fromHslF(0, 0, 1, min(1., adjustedAlpha + (_isDark ? 0 : .1))));
 }
 
 /**
@@ -138,7 +181,8 @@ QColor VuoRendererColors::nodeTitle(void)
  */
 QColor VuoRendererColors::nodeClass(void)
 {
-	return tint(QColor::fromHslF(0, 0, 1, .5));
+	qreal adjustedAlpha = getCurrentAlphaForDefault(.6);
+	return tint(QColor::fromHslF(0, 0, 1, adjustedAlpha));
 }
 
 /**
@@ -148,9 +192,19 @@ QColor VuoRendererColors::constantFill(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultConstantAlpha);
 	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
-	QColor color = tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor);
+	QColor color = tint(QColor::fromHslF(0, 0, _isDark ? .35 : .75, adjustedAlpha), 1., lighteningFactor);
 
 	return color;
+}
+
+/**
+ * Returns the color for the text on port constant flags.
+ */
+QColor VuoRendererColors::constantText(void)
+{
+	const qreal defaultPortTitleAlpha = 1.;
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
+	return tint(QColor::fromHslF(0, 0, _isDark ? .75 : .25, adjustedAlpha));
 }
 
 /**
@@ -177,7 +231,7 @@ QColor VuoRendererColors::portTitlebarFill(void)
 	//	return portFill();
 
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
-	return tint(QColor::fromHslF(0, 0, 1./2., adjustedAlpha));
+	return tint(QColor::fromHslF(0, 0, _isDark ? .44 : .57, adjustedAlpha));
 }
 
 /**
@@ -185,7 +239,10 @@ QColor VuoRendererColors::portTitlebarFill(void)
  */
 QColor VuoRendererColors::eventBlockingBarrier(void)
 {
-	return nodeFrame();
+	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultNodeFrameAndFillAlpha);
+	QColor nodeFrameColor(tint(QColor::fromHslF(0, 0, _isDark ? .35 : .5, adjustedAlpha)));
+
+	return nodeFrameColor;
 }
 
 /**
@@ -205,19 +262,18 @@ QColor VuoRendererColors::animatedeventBlockingBarrier(void)
  */
 QColor VuoRendererColors::actionIndicator(void)
 {
-	return nodeFrame();
+	return eventBlockingBarrier();
 }
 
 /**
  * Returns the color for the title text of ports in the main section of the node.
- * Also used for constant value flag text.
  */
 QColor VuoRendererColors::portTitle(void)
 {
 	const qreal defaultPortTitleAlpha = 1.;
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultPortTitleAlpha);
 
-	return tint(QColor::fromHslF(0, 0, 1./4., adjustedAlpha));
+	return tint(QColor::fromHslF(0, 0, _isDark ? .1 : .25, adjustedAlpha));
 }
 
 /**
@@ -235,7 +291,7 @@ QColor VuoRendererColors::cableUpper(void)
 QColor VuoRendererColors::cableMain(void)
 {
 	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultCableMainAlpha);
-	return tint(QColor::fromHslF(0, 0, .25, adjustedAlpha), 2.);
+	return tint(QColor::fromHslF(0, 0, _isDark ? .6 : .25, adjustedAlpha), 2.);
 }
 
 /**
@@ -309,18 +365,18 @@ QColor VuoRendererColors::tint(QColor color, qreal amount, int lighteningFactor)
 	bool isHighlighted = (highlightType != VuoRendererColors::noHighlight);
 	if (isHighlighted)
 	{
-		QColor highlight = QColor::fromHslF(235./360., 1., .7, 1.); // Light Blue
-		QColor extraHighlight = QColor::fromHslF(235./360., 1., .8, 1.); // Lighter Blue
+		QColor highlight      = QColor::fromHslF(235./360., _isDark ? .75 : 1, _isDark ? .6 : .7, 1.); // Light Blue
+		QColor extraHighlight = QColor::fromHslF(235./360., _isDark ? .75 : 1, _isDark ? .7 : .8, 1.); // Lighter Blue
 
 		color = lerpColor(color, (amount<=1? highlight:extraHighlight), 7./8. * amount);
-		color = color.lighter(lighteningFactor);
+		color = _isDark ? color.darker(lighteningFactor) : color.lighter(lighteningFactor);
 	}
 
 	bool isSelected = (selectionType != VuoRendererColors::noSelection);
 	bool isDirectlySelected = (selectionType == VuoRendererColors::directSelection);
 	if (isSelected || isHovered)
 	{
-		QColor selection = QColor::fromHslF(235./360., 1., .3, 1.); // Dark Blue
+		QColor selection = QColor::fromHslF(235./360., 1., _isDark ? .7 : .3, 1.); // Dark Blue
 		color = lerpColor(color, selection, (isDirectlySelected * 1./8. + isHovered * 3./8.) * amount);
 
 		if (isSelected)

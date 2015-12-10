@@ -14,14 +14,15 @@
 VuoModuleMetadata({
 					  "title" : "Make Linear Gradient Image",
 					  "keywords" : [ "backdrop", "background", "ramp", "interpolate", "color" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "CompareImageGenerators.vuo" ]
+						  "exampleCompositions" : [ "MoveLinearGradient.vuo" ]
 					  }
 				 });
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -36,7 +37,33 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
+	VuoList_VuoColor colors = VuoListCreate_VuoColor();
+	VuoRetain(colors);
+
+	instance->shader = VuoShader_makeLinearGradientShader(colors, (VuoPoint2d){0,0}, (VuoPoint2d){0,0});
+	VuoRetain(instance->shader);
+
+	VuoRelease(colors);
+
 	return instance;
+}
+
+VuoImage makeGradientStrip(VuoList_VuoColor colors)
+{
+	int len = VuoListGetCount_VuoColor(colors);
+
+	unsigned char* pixels = (unsigned char*)malloc(sizeof(char)*len*4);
+	int n = 0;
+	for(int i = 1; i <= len; i++)
+	{
+		VuoColor col = VuoListGetValue_VuoColor(colors, i);
+		pixels[n++] = (unsigned int)(col.a*col.r*255);
+		pixels[n++] = (unsigned int)(col.a*col.g*255);
+		pixels[n++] = (unsigned int)(col.a*col.b*255);
+		pixels[n++] = (unsigned int)(col.a*255);
+	}
+
+	return VuoImage_makeFromBuffer(pixels, GL_RGBA, len, 1, VuoImageColorDepth_8);
 }
 
 void nodeInstanceEvent
@@ -50,17 +77,21 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_makeLinearGradientShader(colors, start, end);
-	VuoRetain(shader);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "start", VuoPoint2d_make((start.x+1)/2, (start.y+1)/2));
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "end", VuoPoint2d_make((end.x+1)/2, (end.y+1)/2));
+
+	VuoImage gradientStrip = makeGradientStrip(colors);
+
+	VuoShader_setUniform_VuoImage  ((*instance)->shader, "gradientStrip", gradientStrip);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "gradientCount", VuoListGetCount_VuoColor(colors));
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
-
-	VuoRelease(shader);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

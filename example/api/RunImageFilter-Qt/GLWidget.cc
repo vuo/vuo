@@ -115,7 +115,7 @@ void GLWidget::initializeGL()
 	inputImagePort = runner->getPublishedInputPortWithName("inputImage");
 	VuoImage t = VuoImage_make(inputTexture, internalformat, image.width(), image.height());
 	VuoRetain(t);
-	json_object *o = VuoImage_jsonFromValue(t);
+	json_object *o = VuoImage_getJson(t);
 	runner->setPublishedInputPortValue(inputImagePort, o);
 	json_object_put(o);
 
@@ -139,7 +139,7 @@ void GLWidget::paintGL()
 	// Retrieve the output GL Texture from the Vuo Composition
 	VuoRunner::Port *outputImagePort = runner->getPublishedOutputPortWithName("outputImage");
 	json_object *o = runner->getPublishedOutputPortValue(outputImagePort);
-	VuoImage outputImage = VuoImage_valueFromJson(o);
+	VuoImage outputImage = VuoImage_makeFromJson(o);
 	json_object_put(o);
 	VuoRetain(outputImage);
 

@@ -38,21 +38,21 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoAudioOutputDevice VuoAudioOutputDevice_valueFromJson(json_object *js)
+VuoAudioOutputDevice VuoAudioOutputDevice_makeFromJson(json_object *js)
 {
 	VuoAudioOutputDevice value = {-1,"",0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		value.id = VuoInteger_valueFromJson(o);
+		value.id = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_valueFromJson(o);
+		value.name = VuoText_makeFromJson(o);
 	else
 		value.name = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "channelCount", &o))
-		value.channelCount = VuoInteger_valueFromJson(o);
+		value.channelCount = VuoInteger_makeFromJson(o);
 
 	return value;
 }
@@ -60,17 +60,17 @@ VuoAudioOutputDevice VuoAudioOutputDevice_valueFromJson(json_object *js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoAudioOutputDevice_jsonFromValue(const VuoAudioOutputDevice value)
+json_object * VuoAudioOutputDevice_getJson(const VuoAudioOutputDevice value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_jsonFromValue(value.id);
+	json_object *idObject = VuoInteger_getJson(value.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *nameObject = VuoText_jsonFromValue(value.name);
+	json_object *nameObject = VuoText_getJson(value.name);
 	json_object_object_add(js, "name", nameObject);
 
-	json_object *channelCountObject = VuoInteger_jsonFromValue(value.channelCount);
+	json_object *channelCountObject = VuoInteger_getJson(value.channelCount);
 	json_object_object_add(js, "channelCount", channelCountObject);
 
 	return js;
@@ -79,7 +79,7 @@ json_object * VuoAudioOutputDevice_jsonFromValue(const VuoAudioOutputDevice valu
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoAudioOutputDevice_summaryFromValue(const VuoAudioOutputDevice value)
+char * VuoAudioOutputDevice_getSummary(const VuoAudioOutputDevice value)
 {
 	if (value.id == -1 && strlen(value.name) == 0)
 		return strdup("The default audio output device");

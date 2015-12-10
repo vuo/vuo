@@ -72,7 +72,8 @@ void VuoCompilerTriggerPort::generateFinalization(Module *module, BasicBlock *bl
 	if (getDataType())
 	{
 		LoadInst *previousDataValue = new LoadInst(previousDataVariable, "", block);
-		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, previousDataValue);
+		VuoCompilerType *type = getClass()->getDataVuoType()->getCompiler();
+		type->generateReleaseCall(module, block, previousDataValue);
 	}
 }
 
@@ -114,7 +115,8 @@ Function * VuoCompilerTriggerPort::generateAsynchronousSubmissionToDispatchQueue
 		Value *dataValue = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, dataValueFromArg, dataType);
 		new StoreInst(dataValue, dataCopyAddress, false, block);
 		dataValueAsVoidPointer = new BitCastInst(dataCopyAddress, voidPointer, "", block);
-		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, dataValue);
+		VuoCompilerType *type = getClass()->getDataVuoType()->getCompiler();
+		type->generateRetainCall(module, block, dataValue);
 	}
 
 	VuoCompilerCodeGenUtilities::generateAsynchronousSubmissionToDispatchQueue(module, block, dispatchQueueVariable, workerFunction, dataValueAsVoidPointer);
@@ -195,7 +197,8 @@ Value * VuoCompilerTriggerPort::generateDataValueUpdate(Module *module, BasicBlo
 		// PortDataType_release(previousData);
 		// previousData = data;
 		new StoreInst(currentDataValue, previousDataVariable, block);
-		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, previousDataValue);
+		VuoCompilerType *type = getClass()->getDataVuoType()->getCompiler();
+		type->generateReleaseCall(module, block, previousDataValue);
 	}
 
 	return currentDataValue;
@@ -221,7 +224,8 @@ void VuoCompilerTriggerPort::generateDataValueDiscard(Module *module, BasicBlock
 		currentDataValue = new LoadInst(dataCopyAddress, "", false, block);
 		Function *freeFunction = VuoCompilerCodeGenUtilities::getFreeFunction(module);
 		CallInst::Create(freeFunction, dataCopyAsVoidPointer, "", block);
-		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, currentDataValue);
+		VuoCompilerType *type = getClass()->getDataVuoType()->getCompiler();
+		type->generateReleaseCall(module, block, currentDataValue);
 	}
 }
 

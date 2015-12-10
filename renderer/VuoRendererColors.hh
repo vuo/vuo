@@ -45,6 +45,8 @@ public:
 					  bool isHovered = false,
 					  VuoRendererColors::HighlightType highlightType = VuoRendererColors::noHighlight,
 					  qint64 timeOfLastActivity = VuoRendererItem::notTrackingActivity);
+	static void setDark(bool isDark);
+	static bool isDark(void);
 
 	QColor canvasFill(void);
 
@@ -54,12 +56,18 @@ public:
 	QColor nodeClass(void);
 
 	QColor constantFill(void);
+	QColor constantText(void);
+
 	QColor animatedPortFill(void);
 	QColor eventBlockingBarrier(void);
 	QColor animatedeventBlockingBarrier(void);
 	QColor actionIndicator(void);
-	QColor portFill(void);
+
 	QColor publishedPortFill(void);
+	QColor publishedPortTitle(void);
+	QColor publishedProtocolPortTitle(void);
+
+	QColor portFill(void);
 	QColor portTitlebarFill(void);
 	QColor portTitle(void);
 
@@ -83,6 +91,7 @@ private:
 	bool isHovered;
 	VuoRendererColors::HighlightType highlightType;
 	double currentFadePercentage;
+	static bool _isDark;
 
 	QColor tint(QColor color, qreal amount = 1., int lighteningFactor = 100);
 	QColor lerpColor(QColor v0, QColor v1, float t);

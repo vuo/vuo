@@ -129,24 +129,24 @@ unsigned long VuoListGetCount_ELEMENT_TYPE(const LIST_TYPE list);
  *	["uno", "dos", "tres", "catorce"]
  * }
  */
-LIST_TYPE LIST_TYPE_valueFromJson(struct json_object * js);
+LIST_TYPE LIST_TYPE_makeFromJson(struct json_object * js);
 
 /**
  * Encodes @c value as a JSON object.
  */
-struct json_object * LIST_TYPE_jsonFromValue(const LIST_TYPE value);
+struct json_object * LIST_TYPE_getJson(const LIST_TYPE value);
 
 /**
  * Produces a brief human-readable summary of @c value.
  */
-char * LIST_TYPE_summaryFromValue(const LIST_TYPE value);
+char * LIST_TYPE_getSummary(const LIST_TYPE value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-LIST_TYPE LIST_TYPE_valueFromString(const char *str);
-char * LIST_TYPE_stringFromValue(const LIST_TYPE value);
+LIST_TYPE LIST_TYPE_makeFromString(const char *str);
+char * LIST_TYPE_getString(const LIST_TYPE value);
 /// @}
 
 /**

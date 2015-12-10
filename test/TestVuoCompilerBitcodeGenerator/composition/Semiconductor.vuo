@@ -9,20 +9,24 @@
 
 digraph G 
 {
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="283,394" _seconds="1.000000" _fired_eventThrottling="drop"];
 FireonStart1 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart1|<refresh>refresh\l|<started>started\r" pos="23,58" _started_eventThrottling="enqueue"];
 FireonStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart2|<refresh>refresh\l|<started>started\r" pos="21,163" _started_eventThrottling="enqueue"];
 FireonStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart3|<refresh>refresh\l|<started>started\r" pos="23,277" _started_eventThrottling="enqueue"];
-MeasureTime [type="vuo.time.measureTime" version="1.0.0" label="MeasureTime1|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="290,39" _time="0.000000"];
-MeasureTime2 [type="vuo.time.measureTime" version="1.0.0" label="MeasureTime2|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="289,149" _time="0.000000"];
-MeasureTime3 [type="vuo.time.measureTime" version="1.0.0" label="MeasureTime3|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="288,265" _time="0.000000"];
-Subtract1 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="503,47" _b="0.000000"];
-Subtract2 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="499,152" _b="0.000000"];
-Subtract3 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract3|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="501,262" _b="0.000000"];
-Subtract4 [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract4|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="500,376" _a="0.000000" _b="0.000000"];
+FireonStart32 [type="vuo.event.fireOnStart" version="1.0.0" label="FireonStart4|<refresh>refresh\l|<started>started\r" pos="29,398" _started_eventThrottling="enqueue"];
+MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="MeasureTime1|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="290,39" _time="0.000000"];
+MeasureTime2 [type="vuo.time.measureTime" version="2.0.1" label="MeasureTime2|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="289,149" _time="0.000000"];
+MeasureTime3 [type="vuo.time.measureTime" version="2.0.1" label="MeasureTime3|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="288,265" _time="0.000000"];
+Subtract1 [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract1|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="503,47" _b="0.000000"];
+Subtract2 [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract2|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="499,152" _b="0.000000"];
+Subtract3 [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract3|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="501,262" _b="0.000000"];
+Subtract4 [type="vuo.math.subtract.VuoReal" version="1.1.0" label="Subtract4|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="506,390" _a="0.000000" _b="0.000000"];
 
+FirePeriodically:fired -> Subtract4:a;
 FireonStart1:started -> MeasureTime:refresh;
 FireonStart1:started -> MeasureTime:start;
 FireonStart2:started -> MeasureTime2:start;
+FireonStart32:started -> FirePeriodically:seconds;
 FireonStart3:started -> MeasureTime3:time;
 MeasureTime2:elapsedTime -> Subtract2:a;
 MeasureTime3:elapsedTime -> Subtract3:a;

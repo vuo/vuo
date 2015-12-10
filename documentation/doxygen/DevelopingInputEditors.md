@@ -5,7 +5,7 @@ In the Vuo Editor, a user can edit the value of certain types of input ports by 
 
 ## When input editors are created for you
 
-For a port type whose underlying data type is an `enum`, Vuo automatically provides a menu input editor. The menu items are constructed by calling MyType_allowedValues() and MyType_summaryFromValue().
+For a port type whose underlying data type is an `enum`, Vuo automatically provides a menu input editor. The menu items are constructed by calling MyType_getAllowedValues() and MyType_getSummary().
 
 If your port type is not an `enum`, or if you'd like to override the default input editor for an `enum` type, you can implement a custom input editor. Read on for details.
 

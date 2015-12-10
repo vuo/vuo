@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Vignette Image",
 					  "keywords" : [ "border", "surround", "encapsulate", "darken", "post-process", "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "filter" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
 					  }
@@ -43,6 +43,7 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -56,6 +57,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Vignette Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, vignetteFragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -74,11 +79,8 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Vignette Shader");
-	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, vignetteFragmentShader);
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage(frag, "texture", image);
-	// VuoShader_setUniform_VuoPoint2d(frag, "scale", w < h ? VuoPoint2d_make(1., h/(float)w) : VuoPoint2d_make(w/(float)h, 1.));
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	// VuoShader_setUniform_VuoPoint2d((*instance)->shader, "scale", w < h ? VuoPoint2d_make(1., h/(float)w) : VuoPoint2d_make(w/(float)h, 1.));
 
 	float radius = width/2.;
 	if(radius < 0.) radius = 0.;
@@ -93,17 +95,16 @@ void nodeInstanceEvent
 	// Make sure outerRadius is always a little larger than innerRadius, so smoothstep() doesn't invert its condition.
 	outerRadius += .0001;
 
-	VuoShader_setUniform_VuoReal (frag, "innerRadius", innerRadius);
-	VuoShader_setUniform_VuoReal (frag, "outerRadius", outerRadius);
-	VuoShader_setUniform_VuoColor(frag, "edgeColor", color);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "innerRadius", innerRadius);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "outerRadius", outerRadius);
+	VuoShader_setUniform_VuoColor((*instance)->shader, "edgeColor", color);
 
-	*vignettedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
-
-	VuoRelease(frag);
+	*vignettedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

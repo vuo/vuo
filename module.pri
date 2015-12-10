@@ -2,6 +2,7 @@ MODULE_INCLUDEPATH = \
 	$$JSONC_ROOT/include \
 	$${ROOT}/library \
 	$${ROOT}/node \
+	$${ROOT}/node/vuo.font \
 	$${ROOT}/type \
 	$${ROOT}/type/list \
 	$${ROOT}/runtime

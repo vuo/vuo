@@ -53,6 +53,8 @@ public:
 
 	void setDetails(struct json_object *details);
 	json_object * getDetails(void);
+
+	string getDisplayName(void);
 };
 
 #endif

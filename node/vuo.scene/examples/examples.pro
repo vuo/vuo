@@ -4,29 +4,27 @@ EXAMPLE_SOURCES += \
 	AddNoiseToClay.vuo \
 	AimFlashlight.vuo \
 	BendSphere.vuo \
+	BlendSphereIntoScene.vuo \
 #	BounceStereoSphere.vuo \
-	ChangeSceneObjectBlendMode.vuo \
 	ChangeTrafficSignal.vuo \
-	Compare4Cameras.vuo \
+	CompareCameras.vuo \
 	CompareLights.vuo \
 	DisplayRowOfSpheres.vuo \
 	DisplayScene.vuo \
 	DisplaySceneWithFloor.vuo \
+	DisplaySphere.vuo \
 	DisplaySquare.vuo \
 	DivideSphere.vuo \
 	ExplodeSphere.vuo \
 	FacetSphere.vuo \
-	FlipCoin.vuo \
-	FlipPhoto.vuo \
 	MoveSpinningSphere.vuo \
+	PaintSceneWithCheckerboard.vuo \
 	PinchSphere.vuo \
-	PlayTennis.vuo \
-	ReplaceShaderForScene.vuo \
 	RippleGrid.vuo \
 	RippleImageOfSphere.vuo \
 	SkewSphere.vuo \
+	ShowSpheresWithLights.vuo \
 	SpikeSphere.vuo \
-	SpinSphere.vuo \
 	SwitchCameras.vuo \
 	TrimSphere.vuo \
 	TwirlGrid.vuo 

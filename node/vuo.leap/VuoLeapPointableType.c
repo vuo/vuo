@@ -22,7 +22,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "leap", "pointable" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"VuoLeapPointableType",
 						"VuoList_VuoLeapPointableType"
 					 ]
 				 });
@@ -33,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoLeapPointableType
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoLeapPointableType.
  */
-VuoLeapPointableType VuoLeapPointableType_valueFromJson(json_object *js)
+VuoLeapPointableType VuoLeapPointableType_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -53,7 +52,7 @@ VuoLeapPointableType VuoLeapPointableType_valueFromJson(json_object *js)
  * @ingroup VuoLeapPointableType
  * Encodes @c value as a JSON object.
  */
-json_object * VuoLeapPointableType_jsonFromValue(const VuoLeapPointableType value)
+json_object * VuoLeapPointableType_getJson(const VuoLeapPointableType value)
 {
 	char *valueAsString = "";
 
@@ -73,7 +72,7 @@ json_object * VuoLeapPointableType_jsonFromValue(const VuoLeapPointableType valu
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoLeapPointableType VuoLeapPointableType_allowedValues(void)
+VuoList_VuoLeapPointableType VuoLeapPointableType_getAllowedValues(void)
 {
 	VuoList_VuoLeapPointableType l = VuoListCreate_VuoLeapPointableType();
 	VuoListAppendValue_VuoLeapPointableType(l, VuoLeapPointableType_Finger);
@@ -83,9 +82,9 @@ VuoList_VuoLeapPointableType VuoLeapPointableType_allowedValues(void)
 
 /**
  * @ingroup VuoLeapPointableType
- * Same as @c %VuoLeapPointableType_stringFromValue()
+ * Same as @c %VuoLeapPointableType_getString()
  */
-char * VuoLeapPointableType_summaryFromValue(const VuoLeapPointableType value)
+char * VuoLeapPointableType_getSummary(const VuoLeapPointableType value)
 {
 	char *valueAsString = "";
 

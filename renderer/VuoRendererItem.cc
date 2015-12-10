@@ -25,16 +25,26 @@ void VuoRendererItem::setDrawBoundingRects(bool drawBoundingRects)
  * (e.g., a node execution or event firing) by this item should be reflected
  * in its rendering.
  */
-bool VuoRendererItem::getRenderActivity()
+bool VuoRendererItem::getRenderActivity() const
 {
 	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
 	return (composition && composition->getRenderActivity());
 }
 
 /**
+ * Retrieves the composition-wide boolean indicating whether hidden ("wireless")
+ * cables should be rendered as if they were not hidden.
+ */
+bool VuoRendererItem::getRenderHiddenCables() const
+{
+	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
+	return (composition && composition->getRenderHiddenCables());
+}
+
+/**
  * Returns the current default cache mode for components of this composition.
  */
-QGraphicsItem::CacheMode VuoRendererItem::getCurrentDefaultCacheMode()
+QGraphicsItem::CacheMode VuoRendererItem::getCurrentDefaultCacheMode() const
 {
 	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
 	if (composition)

@@ -57,9 +57,9 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
 		{
-			suggestedMinForCoord[x] = VuoPoint3d_valueFromJson(suggestedMinValue).x;
-			suggestedMinForCoord[y] = VuoPoint3d_valueFromJson(suggestedMinValue).y;
-			suggestedMinForCoord[z] = VuoPoint3d_valueFromJson(suggestedMinValue).z;
+			suggestedMinForCoord[x] = VuoPoint3d_makeFromJson(suggestedMinValue).x;
+			suggestedMinForCoord[y] = VuoPoint3d_makeFromJson(suggestedMinValue).y;
+			suggestedMinForCoord[z] = VuoPoint3d_makeFromJson(suggestedMinValue).z;
 			detailsIncludeSuggestedMin = true;
 		}
 
@@ -67,9 +67,9 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		json_object *suggestedMaxValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMax", &suggestedMaxValue))
 		{
-			suggestedMaxForCoord[x] = VuoPoint3d_valueFromJson(suggestedMaxValue).x;
-			suggestedMaxForCoord[y] = VuoPoint3d_valueFromJson(suggestedMaxValue).y;
-			suggestedMaxForCoord[z] = VuoPoint3d_valueFromJson(suggestedMaxValue).z;
+			suggestedMaxForCoord[x] = VuoPoint3d_makeFromJson(suggestedMaxValue).x;
+			suggestedMaxForCoord[y] = VuoPoint3d_makeFromJson(suggestedMaxValue).y;
+			suggestedMaxForCoord[z] = VuoPoint3d_makeFromJson(suggestedMaxValue).z;
 			detailsIncludeSuggestedMax = true;
 		}
 
@@ -77,9 +77,9 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 		{
-			suggestedStepForCoord[x] = VuoPoint3d_valueFromJson(suggestedStepValue).x;
-			suggestedStepForCoord[y] = VuoPoint3d_valueFromJson(suggestedStepValue).y;
-			suggestedStepForCoord[z] = VuoPoint3d_valueFromJson(suggestedStepValue).z;
+			suggestedStepForCoord[x] = VuoPoint3d_makeFromJson(suggestedStepValue).x;
+			suggestedStepForCoord[y] = VuoPoint3d_makeFromJson(suggestedStepValue).y;
+			suggestedStepForCoord[z] = VuoPoint3d_makeFromJson(suggestedStepValue).z;
 		}
 	}
 
@@ -117,18 +117,19 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 		// X value
 		lineEditForCoord[x] = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditForCoord[x], VuoReal_jsonFromValue(VuoPoint3d_valueFromJson(originalValue).x));
+		setUpLineEdit(lineEditForCoord[x], VuoReal_getJson(VuoPoint3d_makeFromJson(originalValue).x));
 		lineEditForCoord[x]->setValidator(validator);
 		lineEditForCoord[x]->installEventFilter(this);
 
 		sliderForCoord[x] = new QSlider(&dialog);
+		sliderForCoord[x]->setAttribute(Qt::WA_MacSmallSize);
 		sliderForCoord[x]->setOrientation(Qt::Horizontal);
 		sliderForCoord[x]->setFocusPolicy(Qt::NoFocus);
 		sliderForCoord[x]->setMinimum(0);
 		sliderForCoord[x]->setMaximum(sliderForCoord[x]->width());
 		sliderForCoord[x]->setSingleStep(fmax(1, suggestedStepForCoord[x]*(sliderForCoord[x]->maximum()-sliderForCoord[x]->minimum())/(suggestedMaxForCoord[x]-suggestedMinForCoord[x])));
 
-		double lineEditValueX = VuoPoint3d_valueFromJson(originalValue).x;
+		double lineEditValueX = VuoPoint3d_makeFromJson(originalValue).x;
 		int sliderValueX = lineEditValueToScaledSliderValue(lineEditValueX, x);
 		sliderForCoord[x]->setValue(sliderValueX);
 
@@ -138,18 +139,19 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 		// Y value
 		lineEditForCoord[y] = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditForCoord[y], VuoReal_jsonFromValue(VuoPoint3d_valueFromJson(originalValue).y));
+		setUpLineEdit(lineEditForCoord[y], VuoReal_getJson(VuoPoint3d_makeFromJson(originalValue).y));
 		lineEditForCoord[y]->setValidator(validator);
 		lineEditForCoord[y]->installEventFilter(this);
 
 		sliderForCoord[y] = new QSlider(&dialog);
+		sliderForCoord[y]->setAttribute(Qt::WA_MacSmallSize);
 		sliderForCoord[y]->setOrientation(Qt::Horizontal);
 		sliderForCoord[y]->setFocusPolicy(Qt::NoFocus);
 		sliderForCoord[y]->setMinimum(0);
 		sliderForCoord[y]->setMaximum(sliderForCoord[y]->width());
 		sliderForCoord[y]->setSingleStep(fmax(1, suggestedStepForCoord[y]*(sliderForCoord[y]->maximum()-sliderForCoord[y]->minimum())/(suggestedMaxForCoord[y]-suggestedMinForCoord[y])));
 
-		double lineEditValueY = VuoPoint3d_valueFromJson(originalValue).y;
+		double lineEditValueY = VuoPoint3d_makeFromJson(originalValue).y;
 		int sliderValueY = lineEditValueToScaledSliderValue(lineEditValueY, y);
 		sliderForCoord[y]->setValue(sliderValueY);
 
@@ -159,18 +161,19 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 		// Z value
 		lineEditForCoord[z] = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditForCoord[z], VuoReal_jsonFromValue(VuoPoint3d_valueFromJson(originalValue).z));
+		setUpLineEdit(lineEditForCoord[z], VuoReal_getJson(VuoPoint3d_makeFromJson(originalValue).z));
 		lineEditForCoord[z]->setValidator(validator);
 		lineEditForCoord[z]->installEventFilter(this);
 
 		sliderForCoord[z] = new QSlider(&dialog);
+		sliderForCoord[z]->setAttribute(Qt::WA_MacSmallSize);
 		sliderForCoord[z]->setOrientation(Qt::Horizontal);
 		sliderForCoord[z]->setFocusPolicy(Qt::NoFocus);
 		sliderForCoord[z]->setMinimum(0);
 		sliderForCoord[z]->setMaximum(sliderForCoord[z]->width());
 		sliderForCoord[z]->setSingleStep(fmax(1, suggestedStepForCoord[z]*(sliderForCoord[z]->maximum()-sliderForCoord[z]->minimum())/(suggestedMaxForCoord[z]-suggestedMinForCoord[z])));
 
-		double lineEditValueZ = VuoPoint3d_valueFromJson(originalValue).z;
+		double lineEditValueZ = VuoPoint3d_makeFromJson(originalValue).z;
 		int sliderValueZ = lineEditValueToScaledSliderValue(lineEditValueZ, z);
 		sliderForCoord[z]->setValue(sliderValueZ);
 
@@ -182,17 +185,23 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		setFirstWidgetInTabOrder(lineEditForCoord[x]);
 		setLastWidgetInTabOrder(lineEditForCoord[z]);
 
-		labelForCoord[x]->move(labelForCoord[x]->pos().x()+widgetHorizontalSpacing, labelForCoord[x]->pos().y() + widgetVerticalSpacing);
-		lineEditForCoord[x]->move(labelForCoord[x]->pos().x()+labelForCoord[x]->width()+widgetHorizontalSpacing, lineEditForCoord[x]->pos().y()+widgetVerticalSpacing);
+		labelForCoord[x]->move(labelForCoord[x]->pos().x(), labelForCoord[x]->pos().y());
+		lineEditForCoord[x]->move(labelForCoord[x]->pos().x()+labelForCoord[x]->width()+widgetHorizontalSpacing, lineEditForCoord[x]->pos().y());
 		sliderForCoord[x]->move(lineEditForCoord[x]->pos().x(), lineEditForCoord[x]->pos().y() + lineEditForCoord[x]->height() + widgetVerticalSpacing);
+		sliderForCoord[x]->resize(sliderForCoord[x]->width(), sliderForCoord[x]->height() - 10);
+		lineEditForCoord[x]->resize(sliderForCoord[x]->width(), lineEditForCoord[x]->height());
 
-		labelForCoord[y]->move(labelForCoord[y]->pos().x()+widgetHorizontalSpacing, sliderForCoord[x]->pos().y() + sliderForCoord[x]->height() + widgetVerticalSpacing);
+		labelForCoord[y]->move(labelForCoord[y]->pos().x(), sliderForCoord[x]->pos().y() + sliderForCoord[x]->height());
 		lineEditForCoord[y]->move(labelForCoord[y]->pos().x()+labelForCoord[y]->width()+widgetHorizontalSpacing, sliderForCoord[x]->pos().y() + sliderForCoord[x]->height() + widgetVerticalSpacing);
 		sliderForCoord[y]->move(lineEditForCoord[y]->pos().x(), lineEditForCoord[y]->pos().y() + lineEditForCoord[y]->height() + widgetVerticalSpacing);
+		sliderForCoord[y]->resize(sliderForCoord[y]->width(), sliderForCoord[y]->height() - 10);
+		lineEditForCoord[y]->resize(sliderForCoord[y]->width(), lineEditForCoord[y]->height());
 
-		labelForCoord[z]->move(labelForCoord[z]->pos().x()+widgetHorizontalSpacing, sliderForCoord[y]->pos().y() + sliderForCoord[y]->height() + widgetVerticalSpacing);
+		labelForCoord[z]->move(labelForCoord[z]->pos().x(), sliderForCoord[y]->pos().y() + sliderForCoord[y]->height());
 		lineEditForCoord[z]->move(labelForCoord[z]->pos().x()+labelForCoord[z]->width()+widgetHorizontalSpacing, sliderForCoord[y]->pos().y() + sliderForCoord[y]->height() + widgetVerticalSpacing);
 		sliderForCoord[z]->move(lineEditForCoord[z]->pos().x(), lineEditForCoord[z]->pos().y() + lineEditForCoord[z]->height() + widgetVerticalSpacing);
+		sliderForCoord[z]->resize(sliderForCoord[z]->width(), sliderForCoord[z]->height() - 10);
+		lineEditForCoord[z]->resize(sliderForCoord[z]->width(), lineEditForCoord[z]->height());
 
 		dialog.resize(labelForCoord[x]->width()+
 					  widgetHorizontalSpacing+
@@ -219,14 +228,14 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		static_cast<VuoDoubleSpinBox *>(spinBoxForCoord[x])->setButtonMaximum(suggestedMaxForCoord[x]);
 		spinBoxForCoord[x]->setSingleStep(suggestedStepForCoord[x]);
 		spinBoxForCoord[x]->setDecimals(decimalPrecision);
-		spinBoxForCoord[x]->setValue(VuoPoint3d_valueFromJson(originalValue).x);
+		spinBoxForCoord[x]->setValue(VuoPoint3d_makeFromJson(originalValue).x);
 
 		// For some reason the VuoPoint3d input editor is extremely wide
 		// without the following resize() call:
 		spinBoxForCoord[x]->resize(spinBoxForCoord[x]->size());
 
 		lineEditForCoord[x] = spinBoxForCoord[x]->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditForCoord[x], VuoReal_jsonFromValue(VuoPoint3d_valueFromJson(originalValue).x));
+		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditForCoord[x], VuoReal_getJson(VuoPoint3d_makeFromJson(originalValue).x));
 		spinBoxForCoord[x]->setKeyboardTracking(false);
 
 		connect(spinBoxForCoord[x], SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
@@ -237,14 +246,14 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		static_cast<VuoDoubleSpinBox *>(spinBoxForCoord[y])->setButtonMaximum(suggestedMaxForCoord[y]);
 		spinBoxForCoord[y]->setSingleStep(suggestedStepForCoord[y]);
 		spinBoxForCoord[y]->setDecimals(decimalPrecision);
-		spinBoxForCoord[y]->setValue(VuoPoint3d_valueFromJson(originalValue).y);
+		spinBoxForCoord[y]->setValue(VuoPoint3d_makeFromJson(originalValue).y);
 
 		// For some reason the VuoPoint3d input editor is extremely wide
 		// without the following resize() call:
 		spinBoxForCoord[y]->resize(spinBoxForCoord[y]->size());
 
 		lineEditForCoord[y] = spinBoxForCoord[y]->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditForCoord[y], VuoReal_jsonFromValue(VuoPoint3d_valueFromJson(originalValue).y));
+		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditForCoord[y], VuoReal_getJson(VuoPoint3d_makeFromJson(originalValue).y));
 		spinBoxForCoord[y]->setKeyboardTracking(false);
 
 		connect(spinBoxForCoord[y], SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
@@ -255,14 +264,14 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		static_cast<VuoDoubleSpinBox *>(spinBoxForCoord[z])->setButtonMaximum(suggestedMaxForCoord[z]);
 		spinBoxForCoord[z]->setSingleStep(suggestedStepForCoord[z]);
 		spinBoxForCoord[z]->setDecimals(decimalPrecision);
-		spinBoxForCoord[z]->setValue(VuoPoint3d_valueFromJson(originalValue).z);
+		spinBoxForCoord[z]->setValue(VuoPoint3d_makeFromJson(originalValue).z);
 
 		// For some reason the VuoPoint3d input editor is extremely wide
 		// without the following resize() call:
 		spinBoxForCoord[z]->resize(spinBoxForCoord[z]->size());
 
 		lineEditForCoord[z] = spinBoxForCoord[z]->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditForCoord[z], VuoReal_jsonFromValue(VuoPoint3d_valueFromJson(originalValue).z));
+		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditForCoord[z], VuoReal_getJson(VuoPoint3d_makeFromJson(originalValue).z));
 		spinBoxForCoord[z]->setKeyboardTracking(false);
 
 		connect(spinBoxForCoord[z], SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
@@ -271,13 +280,13 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 		setFirstWidgetInTabOrder(spinBoxForCoord[x]);
 		setLastWidgetInTabOrder(spinBoxForCoord[z]);
 
-		labelForCoord[x]->move(labelForCoord[x]->pos().x()+widgetHorizontalSpacing, labelForCoord[x]->pos().y()+widgetVerticalSpacing);
-		spinBoxForCoord[x]->move(labelForCoord[x]->pos().x()+labelForCoord[x]->width()+widgetHorizontalSpacing, spinBoxForCoord[x]->pos().y() + widgetVerticalSpacing);
+		labelForCoord[x]->move(labelForCoord[x]->pos().x(), labelForCoord[x]->pos().y());
+		spinBoxForCoord[x]->move(labelForCoord[x]->pos().x()+labelForCoord[x]->width()+widgetHorizontalSpacing, spinBoxForCoord[x]->pos().y());
 
-		labelForCoord[y]->move(labelForCoord[y]->pos().x()+widgetHorizontalSpacing, spinBoxForCoord[x]->pos().y() + spinBoxForCoord[x]->height() + widgetVerticalSpacing);
+		labelForCoord[y]->move(labelForCoord[y]->pos().x(), spinBoxForCoord[x]->pos().y() + spinBoxForCoord[x]->height() + widgetVerticalSpacing);
 		spinBoxForCoord[y]->move(spinBoxForCoord[x]->pos().x(), labelForCoord[y]->pos().y());
 
-		labelForCoord[z]->move(labelForCoord[z]->pos().x()+widgetHorizontalSpacing, spinBoxForCoord[y]->pos().y() + spinBoxForCoord[y]->height() + widgetVerticalSpacing);
+		labelForCoord[z]->move(labelForCoord[z]->pos().x(), spinBoxForCoord[y]->pos().y() + spinBoxForCoord[y]->height() + widgetVerticalSpacing);
 		spinBoxForCoord[z]->move(spinBoxForCoord[x]->pos().x(), labelForCoord[z]->pos().y());
 
 		dialog.resize(labelForCoord[x]->pos().x() + labelForCoord[x]->width()+
@@ -367,10 +376,10 @@ json_object * VuoInputEditorPoint3d::convertFromLineEditsFormat(const QString &x
 
 	// Point
 	VuoPoint3d point;
-	point.x = VuoReal_valueFromString(xValueAsStringInDefaultLocale.toUtf8().constData());
-	point.y = VuoReal_valueFromString(yValueAsStringInDefaultLocale.toUtf8().constData());
-	point.z = VuoReal_valueFromString(zValueAsStringInDefaultLocale.toUtf8().constData());
-	return VuoPoint3d_jsonFromValue(point);
+	point.x = VuoReal_makeFromString(xValueAsStringInDefaultLocale.toUtf8().constData());
+	point.y = VuoReal_makeFromString(yValueAsStringInDefaultLocale.toUtf8().constData());
+	point.z = VuoReal_makeFromString(zValueAsStringInDefaultLocale.toUtf8().constData());
+	return VuoPoint3d_getJson(point);
 }
 
 /**
@@ -488,10 +497,10 @@ double VuoInputEditorPoint3d::sliderValueToScaledLineEditValue(int sliderValue, 
 void VuoInputEditorPoint3d::emitValueChanged()
 {
 	VuoPoint3d currentPointValue;
-	currentPointValue.x = VuoReal_valueFromString(lineEditForCoord[x]->text().toUtf8().constData());
-	currentPointValue.y = VuoReal_valueFromString(lineEditForCoord[y]->text().toUtf8().constData());
-	currentPointValue.z = VuoReal_valueFromString(lineEditForCoord[z]->text().toUtf8().constData());
-	json_object *valueAsJson = VuoPoint3d_jsonFromValue(currentPointValue);
+	currentPointValue.x = VuoReal_makeFromString(lineEditForCoord[x]->text().toUtf8().constData());
+	currentPointValue.y = VuoReal_makeFromString(lineEditForCoord[y]->text().toUtf8().constData());
+	currentPointValue.z = VuoReal_makeFromString(lineEditForCoord[z]->text().toUtf8().constData());
+	json_object *valueAsJson = VuoPoint3d_getJson(currentPointValue);
 	emit valueChanged(valueAsJson);
 	json_object_put(valueAsJson);
 }

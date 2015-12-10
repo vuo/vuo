@@ -48,9 +48,9 @@ private slots:
 		QFETCH(VuoInteger, value);
 		QFETCH(bool, testTypeValueAsString);
 
-		QCOMPARE(VuoInteger_valueFromString(initializer.toUtf8().constData()), value);
+		QCOMPARE(VuoInteger_makeFromString(initializer.toUtf8().constData()), value);
 		if (testTypeValueAsString)
-			QCOMPARE(VuoInteger_stringFromValue(value), initializer.toUtf8().constData());
+			QCOMPARE(VuoInteger_getString(value), initializer.toUtf8().constData());
 	}
 
 	void testRandom_data()

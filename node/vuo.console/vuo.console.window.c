@@ -24,7 +24,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "CalculateTip.vuo", "HelloWorld.vuo" ]
+						 "exampleCompositions" : [ "HelloWorld.vuo" ]
 					 }
 				 });
 

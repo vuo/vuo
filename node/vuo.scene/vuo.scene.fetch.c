@@ -57,7 +57,7 @@ void nodeEvent
 		VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
 		VuoInputData(VuoBoolean, {"default":true}) center,
 		VuoInputData(VuoBoolean, {"default":true}) fit,
-		VuoInputData(VuoBoolean, {"default":false}) hasLeftHandedCoordinates,
+		VuoInputData(VuoBoolean, {"name":"Has Left-handed Coordinates", "default":false}) hasLeftHandedCoordinates,
 		VuoOutputData(VuoSceneObject) scene
 )
 {

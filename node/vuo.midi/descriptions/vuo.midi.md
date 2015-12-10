@@ -19,7 +19,9 @@ A MIDI **controller** message often represents a musical effect (volume, panning
    - A **controller number**, ranging from 0 to 127. This often represents the type of effect. 
    - A **controller value**, ranging from 0 to 127. This often represents amount of the effect. Some effects use the whole range of values, while others are either on (0-63) or off (64-127).
 
-A MIDI note or controller message also includes: 
+A MIDI **pitch bend** message often represents a change in the relative pitch of all notes on a certain MIDI channel.  Its value ranges from 0 to 16,383, with 8,192 being the center point (no pitch change).  The pitch bend range varies per device and configuration, but often the full range covers a whole tone (value 0 is 2 semitones down, value 16,383 is 2 semitones up).
+
+MIDI note, controller, and pitch bend messages also include:
 
    - A **channel**, ranging from 1 to 16. Each channel has its own stream of MIDI notes and controller values. A channel often represents one musical instrument. 
 

@@ -9,6 +9,7 @@
 
 #include "node.h"
 #include "VuoMidi.h"
+#include "VuoRealRegulation.h"
 
 VuoModuleMetadata({
 					 "title" : "Receive BCF2000 Buttons Row 1",
@@ -105,7 +106,7 @@ void nodeInstanceTriggerStart
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoMidiIn_enableTriggers((*context)->inputManager, NULL, receivedController, *context);
+	VuoMidiIn_enableTriggers((*context)->inputManager, NULL, receivedController, NULL, *context);
 }
 
 void nodeInstanceEvent

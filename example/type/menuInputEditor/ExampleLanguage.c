@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.0"
 				  });
 
-ExampleLanguage ExampleLanguage_valueFromJson(json_object *js)
+ExampleLanguage ExampleLanguage_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -33,7 +33,7 @@ ExampleLanguage ExampleLanguage_valueFromJson(json_object *js)
 	return value;
 }
 
-json_object * ExampleLanguage_jsonFromValue(const ExampleLanguage value)
+json_object * ExampleLanguage_getJson(const ExampleLanguage value)
 {
 	char *valueAsString = "";
 
@@ -51,7 +51,7 @@ json_object * ExampleLanguage_jsonFromValue(const ExampleLanguage value)
 	return json_object_new_string(valueAsString);
 }
 
-char * ExampleLanguage_summaryFromValue(const ExampleLanguage value)
+char * ExampleLanguage_getSummary(const ExampleLanguage value)
 {
 	char *valueAsString = "";
 

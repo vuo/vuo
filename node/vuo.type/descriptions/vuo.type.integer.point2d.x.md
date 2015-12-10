@@ -1,1 +1,1 @@
-Creates a 2D point with coordinates (x,0)
+Creates a 2D point with coordinates (X,0)

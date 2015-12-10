@@ -156,6 +156,9 @@ static void VuoLog(const char *file, const unsigned int line, const char *functi
 	#pragma clang diagnostic ignored "-Wunused"
 		static char *VuoLog_copyCFDescription(CFTypeRef variable)
 		{
+			if (!variable)
+				return strdup("(null)");
+
 			CFStringRef d = CFCopyDescription(variable);
 			CFIndex len = CFStringGetLength(d)+1;
 			char *z = (char *)malloc(len);

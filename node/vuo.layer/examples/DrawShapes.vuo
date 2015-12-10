@@ -1,0 +1,51 @@
+/**
+ * @file
+ * Draws several shapes, with their sharpness and other parameters controlled by mouse movements.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1137,783" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1021,386" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="3" _height="1.250000" _rows="1"];
+Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="493,509"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="493,634"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="324,782" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="636,346" fillcolor="violet" _color="{\"r\":0.197314,\"g\":0.272267,\"b\":0.467399,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.300000"];
+MakeList [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="951,397"];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1221,396" fillcolor="green"];
+MakeList7 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1251,411" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="637,483" fillcolor="violet" _color="{\"r\":0.527184,\"g\":0.211734,\"b\":0.217044,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.300000"];
+MakeRoundedRectangleLayer [type="vuo.layer.make.roundedRectangle" version="1.0.0" label="Make Rounded Rectangle Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<layer>layer\r" pos="637,637" fillcolor="violet" _color="{\"r\":0.470741,\"g\":0.180453,\"b\":0.487572,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.500000" _height="0.300000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="930,798" _text="\"Move the mouse right and left to change the oval's and rounded rectangle's sharpness.\\nMove the mouse up and down to change the rounded rectangle's roundness.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.100000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="99,232" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1292,385" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="375,465" _start="-0.500000" _end="0.500000" _scaledStart="0.000000" _scaledEnd="1.000000"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="375,590" _start="-0.500000" _end="0.500000" _scaledStart="0.000000" _scaledEnd="1.000000"];
+
+AlignLayerToWindow:alignedLayer -> MakeList6:2;
+ArrangeLayersInGrid:griddedLayer -> MakeList6:1;
+Convert2DPointToReal2:y -> Scale2:value;
+Convert2DPointToReal:x -> Scale:value;
+FireOnStart2:started -> MakeColorLayer:refresh;
+FireOnStart2:started -> MakeOvalLayer:refresh;
+FireOnStart2:started -> MakeRoundedRectangleLayer:refresh;
+FireOnStart2:started -> MakeTextLayer:refresh;
+MakeColorLayer:layer -> MakeList:1;
+MakeList6:list -> RenderLayersToWindow:layers;
+MakeList7:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> ArrangeLayersInGrid:layers;
+MakeOvalLayer:layer -> MakeList:2;
+MakeRoundedRectangleLayer:layer -> MakeList:3;
+MakeTextLayer:layer -> AlignLayerToWindow:layer;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+Scale2:scaledValue -> MakeRoundedRectangleLayer:roundness;
+Scale:scaledValue -> MakeOvalLayer:sharpness;
+Scale:scaledValue -> MakeRoundedRectangleLayer:sharpness;
+}

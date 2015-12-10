@@ -41,16 +41,17 @@ typedef struct
 
 VuoFont VuoFont_make(VuoText fontName, VuoReal pointSize, VuoBoolean underline, VuoColor color, VuoHorizontalAlignment alignment, VuoReal characterSpacing, VuoReal lineSpacing);
 
-VuoFont VuoFont_valueFromJson(struct json_object * js);
-struct json_object * VuoFont_jsonFromValue(const VuoFont value);
-char * VuoFont_summaryFromValue(const VuoFont value);
+VuoFont VuoFont_makeFromJson(struct json_object * js);
+struct json_object * VuoFont_getJson(const VuoFont value);
+char * VuoFont_getSummary(const VuoFont value);
+bool VuoFont_areEqual(const VuoFont value1, const VuoFont value2);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoFont VuoFont_valueFromString(const char *str);
-char * VuoFont_stringFromValue(const VuoFont value);
+VuoFont VuoFont_makeFromString(const char *str);
+char * VuoFont_getString(const VuoFont value);
 void VuoFont_retain(VuoFont value);
 void VuoFont_release(VuoFont value);
 /// @}

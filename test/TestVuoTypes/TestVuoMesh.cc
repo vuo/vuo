@@ -54,8 +54,8 @@ private slots:
 
 /// @todo reenable, and either test interprocess serialization, or test the reconstituted vertex values (instead of comparing serialized string, since it now contains heap pointers)
 //		if (valid)
-//			QCOMPARE(QString::fromUtf8(VuoMesh_stringFromValue(m)), value);
-		QCOMPARE(QString::fromUtf8(VuoMesh_summaryFromValue(value)), summary);
+//			QCOMPARE(QString::fromUtf8(VuoMesh_getString(m)), value);
+		QCOMPARE(QString::fromUtf8(VuoMesh_getSummary(value)), summary);
 	}
 };
 

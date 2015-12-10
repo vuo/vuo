@@ -53,9 +53,9 @@ private slots:
 		QTest::addColumn<QString>("summary");
 		QTest::addColumn<QString>("json");
 
-		QTest::newRow("emptystring")	<< VuoSceneObject_valueFromString("")
+		QTest::newRow("emptystring")	<< VuoSceneObject_makeFromString("")
 										<< "0 vertices, 0 elements<br><br>identity transform (no change)<br><br>0 child objects"
-										<< QUOTE({"isRealSize":false,"transform":"identity"});
+										<< QUOTE({"type":"empty","transform":"identity"});
 
 		{
 			VuoSceneObject o = VuoSceneObject_make(
@@ -159,8 +159,8 @@ private slots:
 						20.0
 					);
 			QTest::newRow("perspective camera")		<< o
-													<< "perspective camera<br>at (42, 43, 44)<br>rotated (1, 2, 3)<br>42° field of view<br>shows objects between depth 1 and 20"
-													<< "{\"cameraType\":\"perspective\",\"cameraDistanceMin\":1.000000,\"cameraDistanceMax\":20.000000,\"cameraFieldOfView\":42.000000,\"name\":\"vuocam\",\"transform\":{\"translation\":[42.000000,43.000000,44.000000],\"eulerRotation\":[-0.017453,-0.034907,-0.052360],\"scale\":[1.000000,1.000000,1.000000]}}";
+													<< "camera-perspective<br>at (42, 43, 44)<br>rotated (1, 2, 3)<br>42° field of view<br>shows objects between depth 1 and 20"
+													<< "{\"type\":\"camera-perspective\",\"cameraDistanceMin\":1.000000,\"cameraDistanceMax\":20.000000,\"cameraFieldOfView\":42.000000,\"name\":\"vuocam\",\"transform\":{\"translation\":[42.000000,43.000000,44.000000],\"eulerRotation\":[-0.017453,-0.034907,-0.052360],\"scale\":[1.000000,1.000000,1.000000]}}";
 		}
 
 		{
@@ -177,8 +177,8 @@ private slots:
 						20.0
 					);
 			QTest::newRow("targeted perspective camera")	<< o
-															<< "perspective camera<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
-															<< QUOTE({"cameraType":"perspective","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+															<< "camera-perspective<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
+															<< QUOTE({"type":"camera-perspective","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
 		}
 
 		{
@@ -197,8 +197,8 @@ private slots:
 						0.1
 					);
 			QTest::newRow("targeted stereo camera")	<< o
-													<< "stereo camera<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view (stereoscopic)<br>shows objects between depth 1 and 20"
-													<< QUOTE({"cameraType":"stereo","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"cameraConfocalDistance":1.000000,"cameraIntraocularDistance":0.100000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+													<< "camera-stereo<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view (stereoscopic)<br>shows objects between depth 1 and 20"
+													<< QUOTE({"type":"camera-stereo","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"cameraConfocalDistance":1.000000,"cameraIntraocularDistance":0.100000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
 		}
 
 		{
@@ -215,8 +215,8 @@ private slots:
 						22.0
 					);
 			QTest::newRow("orthographic camera")	<< o
-													<< "orthographic camera<br>at (52, 53, 54)<br>rotated (4, 5, 6)<br>2 unit width<br>shows objects between depth 3 and 22"
-													<< "{\"cameraType\":\"orthographic\",\"cameraDistanceMin\":3.000000,\"cameraDistanceMax\":22.000000,\"cameraWidth\":2.000000,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52.000000,53.000000,54.000000],\"eulerRotation\":[-0.069813,-0.087266,-0.104720],\"scale\":[1.000000,1.000000,1.000000]}}";
+													<< "camera-orthographic<br>at (52, 53, 54)<br>rotated (4, 5, 6)<br>2 unit width<br>shows objects between depth 3 and 22"
+													<< "{\"type\":\"camera-orthographic\",\"cameraDistanceMin\":3.000000,\"cameraDistanceMax\":22.000000,\"cameraWidth\":2.000000,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52.000000,53.000000,54.000000],\"eulerRotation\":[-0.069813,-0.087266,-0.104720],\"scale\":[1.000000,1.000000,1.000000]}}";
 		}
 
 		{
@@ -225,8 +225,8 @@ private slots:
 						0.5
 					);
 			QTest::newRow("ambient light")	<< o
-											<< "ambient light<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5"
-											<< QUOTE({"lightType":"ambient","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000});
+											<< "light-ambient<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5"
+											<< QUOTE({"type":"light-ambient","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000});
 		}
 
 		{
@@ -238,8 +238,8 @@ private slots:
 						0.5
 					);
 			QTest::newRow("point light")	<< o
-											<< "point light<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
-											<< QUOTE({"lightType":"point","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
+											<< "light-point<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
+											<< QUOTE({"type":"light-point","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
 		}
 
 		{
@@ -252,8 +252,8 @@ private slots:
 						0.5
 					);
 			QTest::newRow("spotlight")	<< o
-											<< "spotlight<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
-											<< QUOTE({"lightType":"spot","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"lightCone":0.785398,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
+											<< "light-spot<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
+											<< QUOTE({"type":"light-spot","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"lightCone":0.785398,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
 		}
 
 		{
@@ -270,8 +270,8 @@ private slots:
 						22.0
 					);
 			QTest::newRow("targeted orthographic camera")	<< o
-															<< "orthographic camera<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
-															<< QUOTE({"cameraType":"orthographic","cameraDistanceMin":3.000000,"cameraDistanceMax":22.000000,"cameraWidth":2.000000,"name":"vuocam ortho","transform":{"translation":[52.000000,53.000000,54.000000],"target":[55.000000,56.000000,57.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+															<< "camera-orthographic<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
+															<< QUOTE({"type":"camera-orthographic","cameraDistanceMin":3.000000,"cameraDistanceMax":22.000000,"cameraWidth":2.000000,"name":"vuocam ortho","transform":{"translation":[52.000000,53.000000,54.000000],"target":[55.000000,56.000000,57.000000],"upDirection":[0.000000,1.000000,0.000000]}});
 		}
 	}
 	void testMakeAndSummaryAndSerialization()
@@ -280,11 +280,11 @@ private slots:
 		QFETCH(QString, summary);
 		QFETCH(QString, json);
 
-		QCOMPARE(QString::fromUtf8(VuoSceneObject_summaryFromValue(value)), summary);
+		QCOMPARE(QString::fromUtf8(VuoSceneObject_getSummary(value)), summary);
 		if (json.length())
 		{
-			QCOMPARE(QString::fromUtf8(VuoSceneObject_stringFromValue(value)), json);
-			QCOMPARE(QString::fromUtf8(VuoSceneObject_stringFromValue(VuoSceneObject_valueFromString(json.toUtf8().data()))), json);
+			QCOMPARE(QString::fromUtf8(VuoSceneObject_getString(value)), json);
+			QCOMPARE(QString::fromUtf8(VuoSceneObject_getString(VuoSceneObject_makeFromString(json.toUtf8().data()))), json);
 		}
 	}
 
@@ -295,7 +295,7 @@ private slots:
 		QTest::addColumn<VuoPoint3d>("expectedSize");
 		QTest::addColumn<bool>("testNormalizedBounds");
 
-		QTest::newRow("empty scene")	<< VuoSceneObject_valueFromString("")
+		QTest::newRow("empty scene")	<< VuoSceneObject_makeFromString("")
 										<< VuoPoint3d_make(0,0,0) << VuoPoint3d_make(0,0,0)
 										<< false;
 
@@ -447,7 +447,7 @@ private slots:
 		// Ensure the scene's initial bounds match the expected bounds.
 		{
 			VuoBox bounds = VuoSceneObject_bounds(scene);
-//			VLog("initial bounds		center = %s		size=%s",VuoPoint3d_summaryFromValue(bounds.center),VuoPoint3d_summaryFromValue(bounds.size));
+//			VLog("initial bounds		center = %s		size=%s",VuoPoint3d_getSummary(bounds.center),VuoPoint3d_getSummary(bounds.size));
 
 			QCOMPARE(bounds.center.x + 10, expectedCenter.x + 10);
 			QCOMPARE(bounds.center.y + 10, expectedCenter.y + 10);
@@ -461,7 +461,7 @@ private slots:
 		{
 			VuoSceneObject_center(&scene);
 			VuoBox bounds = VuoSceneObject_bounds(scene);
-//			VLog("centered bounds		center = %s		size=%s",VuoPoint3d_summaryFromValue(bounds.center),VuoPoint3d_summaryFromValue(bounds.size));
+//			VLog("centered bounds		center = %s		size=%s",VuoPoint3d_getSummary(bounds.center),VuoPoint3d_getSummary(bounds.size));
 
 			QCOMPARE(bounds.center.x + 10, 10.);
 			QCOMPARE(bounds.center.y + 10, 10.);
@@ -475,7 +475,7 @@ private slots:
 		{
 			VuoSceneObject_normalize(&scene);
 			VuoBox bounds = VuoSceneObject_bounds(scene);
-//			VLog("normalized bounds	center = %s		size=%s",VuoPoint3d_summaryFromValue(bounds.center),VuoPoint3d_summaryFromValue(bounds.size));
+//			VLog("normalized bounds	center = %s		size=%s",VuoPoint3d_getSummary(bounds.center),VuoPoint3d_getSummary(bounds.size));
 
 			QCOMPARE(bounds.center.x + 10, 10.);
 			QCOMPARE(bounds.center.y + 10, 10.);
@@ -495,7 +495,7 @@ private slots:
 	void testRenderEmptySceneToImagePerformance()
 	{
 		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
@@ -523,7 +523,7 @@ private slots:
 	void testRenderSphereToImagePerformance()
 	{
 		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
@@ -568,7 +568,7 @@ private slots:
 	void testRenderCubeToImagePerformance()
 	{
 		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
 		VuoRetain(sr);
 
 		QBENCHMARK {
@@ -598,7 +598,7 @@ private slots:
 	void testRenderStaticCubeToImagePerformance()
 	{
 		VuoGlContext glContext = VuoGlContext_use();
-		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext);
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
 		VuoRetain(sr);
 
 		VuoSceneObject rootSceneObject = makeCube();

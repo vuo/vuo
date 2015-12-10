@@ -26,7 +26,7 @@ VuoModuleMetadata({
 					  ],
 					  "node" : {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioFileAndLoop.vuo", "ScratchRecord.vuo" ]
+						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioFileAndLoop.vuo" ]
 					  }
 				 });
 

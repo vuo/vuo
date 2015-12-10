@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "boolean" ],
 					 "version" : "1.0.0",
 					 "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "RotateInSequence.vuo" ]
 					 }
 				 });
 

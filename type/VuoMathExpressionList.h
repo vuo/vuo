@@ -34,9 +34,9 @@ typedef struct
 struct json_object;
 
 VuoMathExpressionList VuoMathExpressionList_make(VuoList_VuoText expressions);
-VuoMathExpressionList VuoMathExpressionList_valueFromJson(struct json_object * js);
-struct json_object * VuoMathExpressionList_jsonFromValue(const VuoMathExpressionList value);
-char * VuoMathExpressionList_summaryFromValue(const VuoMathExpressionList value);
+VuoMathExpressionList VuoMathExpressionList_makeFromJson(struct json_object * js);
+struct json_object * VuoMathExpressionList_getJson(const VuoMathExpressionList value);
+char * VuoMathExpressionList_getSummary(const VuoMathExpressionList value);
 
 VuoDictionary_VuoText_VuoReal VuoMathExpressionList_calculate(const VuoMathExpressionList expressionList,
 															  const VuoDictionary_VuoText_VuoReal variablesAndValues);
@@ -45,8 +45,8 @@ VuoDictionary_VuoText_VuoReal VuoMathExpressionList_calculate(const VuoMathExpre
 /**
  * Automatically generated function.
  */
-VuoMathExpressionList VuoMathExpressionList_valueFromString(const char *str);
-char * VuoMathExpressionList_stringFromValue(const VuoMathExpressionList value);
+VuoMathExpressionList VuoMathExpressionList_makeFromString(const char *str);
+char * VuoMathExpressionList_getString(const VuoMathExpressionList value);
 void VuoMathExpressionList_retain(VuoMathExpressionList value);
 void VuoMathExpressionList_release(VuoMathExpressionList value);
 /// @}

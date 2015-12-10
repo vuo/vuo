@@ -38,7 +38,7 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoVerticalAlignment VuoVerticalAlignment_valueFromJson(json_object * js)
+VuoVerticalAlignment VuoVerticalAlignment_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -56,7 +56,7 @@ VuoVerticalAlignment VuoVerticalAlignment_valueFromJson(json_object * js)
  * @ingroup VuoVerticalAlignment
  * Encodes @c value as a JSON object.
  */
-json_object * VuoVerticalAlignment_jsonFromValue(const VuoVerticalAlignment value)
+json_object * VuoVerticalAlignment_getJson(const VuoVerticalAlignment value)
 {
 	char *valueAsString = "top";
 
@@ -71,7 +71,7 @@ json_object * VuoVerticalAlignment_jsonFromValue(const VuoVerticalAlignment valu
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoVerticalAlignment VuoVerticalAlignment_allowedValues(void)
+VuoList_VuoVerticalAlignment VuoVerticalAlignment_getAllowedValues(void)
 {
 	VuoList_VuoVerticalAlignment l = VuoListCreate_VuoVerticalAlignment();
 	VuoListAppendValue_VuoVerticalAlignment(l, VuoVerticalAlignment_Top);
@@ -84,7 +84,7 @@ VuoList_VuoVerticalAlignment VuoVerticalAlignment_allowedValues(void)
  * @ingroup VuoVerticalAlignment
  * Returns a compact string representation of @c value.
  */
-char * VuoVerticalAlignment_summaryFromValue(const VuoVerticalAlignment value)
+char * VuoVerticalAlignment_getSummary(const VuoVerticalAlignment value)
 {
 	char *valueAsString = "Top";
 

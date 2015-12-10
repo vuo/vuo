@@ -8,8 +8,6 @@ EXAMPLE_SOURCES += \
 	DisplayLeapHand.vuo \
 	HighlightExtendedFingers.vuo \
 	HoldEgg.vuo \
-	PlayFingerPuppetsWithLeap.vuo \
-	PlayTennisWithLeap.vuo \
 	ShowHandStatus.vuo \
 	TwirlImageWithLeap.vuo
 

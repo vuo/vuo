@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,34 +11,16 @@
 
 digraph G
 {
-ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="639,339" fillcolor="magenta"];
-ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="573,181" fillcolor="magenta"];
-CountWithinRange2 [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="412,482" _increment="0.010000" _decrement="1.000000" _setCount="0.000000" _minimum="0.000000" _wrapMode="\"wrap\""];
-DecodeMovieImage [type="vuo.video.decodeImage" version="2.0.0" label="Decode Movie Image|<refresh>refresh\l|<url>url\l|<frameTime>frameTime\l|<videoFrame>videoFrame\r" pos="398,339" fillcolor="magenta"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="57,194" _started_eventThrottling="enqueue"];
-GetMovieInfo [type="vuo.video.info" version="2.0.0" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="82,545" fillcolor="magenta"];
-MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1135,273"];
-MakeList2 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1186,288"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="844,165" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="844,310" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="403,180" fillcolor="magenta" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1232,262" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-5,345" _value="\"file:\\/\\/\\/System\\/Library\\/Compositions\\/Sunset.mov\""];
+CountWithinRange2 [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<done>done\r|<count>count\r" pos="412,482" _increment="0.010000" _decrement="1.000000" _setCount="0.000000" _minimum="0.000000" _wrapMode="\"wrap\""];
+DecodeMovieImage [type="vuo.movie.decodeImage" version="1.0.0" label="Decode Movie Image|<refresh>refresh\l|<movieURL>movieURL\l|<frameTime>frameTime\l|<done>done\r|<image>image\r" pos="398,339" fillcolor="magenta"];
+DiscardDataFromEvent4 [type="vuo.type.discardData.VuoImage" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="133,529"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="57,194" _started_eventThrottling="enqueue"];
+GetMovieInfo [type="vuo.movie.info" version="1.0.0" label="Get Movie Info|<refresh>refresh\l|<movieURL>movieURL\l|<done>done\r|<duration>duration\r" pos="82,545" fillcolor="magenta"];
+MakeScaledLayer [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="671,164" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
+MakeScaledLayer2 [type="vuo.layer.make" version="1.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<alpha>alpha\l|<done>done\r|<layer>layer\r" pos="671,309" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="1.000000" _alpha="1.000000"];
+PlayMovie [type="vuo.movie.play" version="1.0.0" label="Play Movie|<refresh>refresh\l|<movieURL>movieURL\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<done>done\r|<decodedImage>decodedImage\r|<decodedAudio>decodedAudio\r" pos="403,180" fillcolor="magenta" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedImage_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1017,284" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="-5,345" _value="\"file:\\/\\/\\/System\\/Library\\/Compositions\\/Sunset.mov\""];
 
-ConvertFrameToImage2:image -> CountWithinRange2:increment [event=true];
-ConvertFrameToImage2:image -> MakeScaledLayer:image;
-ConvertFrameToImage:image -> MakeScaledLayer2:image;
-CountWithinRange2:count -> DecodeMovieImage:frameTime;
-DecodeMovieImage:videoFrame -> ConvertFrameToImage:frame;
-FireOnStart:started -> PlayMovie:play;
 FireOnStart:started -> ShareValue2:refresh;
-GetMovieInfo:duration -> CountWithinRange2:maximum;
-MakeList2:list -> RenderLayersToWindow:setWindowProperties;
-MakeList:list -> RenderLayersToWindow:layers;
-MakeScaledLayer2:layer -> MakeList:2;
-MakeScaledLayer:layer -> MakeList:1;
-PlayMovie:decodedVideo -> ConvertFrameToImage2:frame;
-ShareValue2:sameValue -> DecodeMovieImage:url;
-ShareValue2:sameValue -> GetMovieInfo:url;
-ShareValue2:sameValue -> PlayMovie:url;
 }

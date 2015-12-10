@@ -29,17 +29,17 @@ typedef void * VuoList_VuoBoolean;
  */
 typedef unsigned long VuoBoolean;
 
-VuoBoolean VuoBoolean_valueFromJson(struct json_object * js);
-struct json_object * VuoBoolean_jsonFromValue(const VuoBoolean value);
-VuoList_VuoBoolean VuoBoolean_allowedValues(void);
-char * VuoBoolean_summaryFromValue(const VuoBoolean value);
+VuoBoolean VuoBoolean_makeFromJson(struct json_object * js);
+struct json_object * VuoBoolean_getJson(const VuoBoolean value);
+VuoList_VuoBoolean VuoBoolean_getAllowedValues(void);
+char * VuoBoolean_getSummary(const VuoBoolean value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoBoolean VuoBoolean_valueFromString(const char *str);
-char * VuoBoolean_stringFromValue(const VuoBoolean value);
+VuoBoolean VuoBoolean_makeFromString(const char *str);
+char * VuoBoolean_getString(const VuoBoolean value);
 void VuoBoolean_retain(VuoBoolean value);
 void VuoBoolean_release(VuoBoolean value);
 /// @}

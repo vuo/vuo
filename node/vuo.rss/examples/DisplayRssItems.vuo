@@ -1,0 +1,77 @@
+/**
+ * @file
+ * Cycles through the items from the RSS feed for the [Vuo composition gallery](https://vuo.org/composition).
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="431,-21"];
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="549,340"];
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="741,-247" _width="1.000000" _height="1.000000"];
+ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="504,155"];
+ConvertIntegerToText2 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="504,125"];
+CountItemsInList2 [type="vuo.list.count.VuoRssItem" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="-549,31"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-86,251" _increment="1" _decrement="1" _setCount="1" _minimum="1" _wrapMode="\"wrap\""];
+FetchRSSItems [type="vuo.rss.fetch" version="1.0.0" label="Fetch RSS Items|<refresh>refresh\l|<url>url\l|<fetchImages>fetchImages\l|<title>title\r|<description>description\r|<items>items\r" pos="-212,-115" fillcolor="violet" _url="\"https:\\/\\/vuo.org\\/composition\\/feed\"" _fetchImages="true"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-586,-434" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-527,283" fillcolor="yellow" _seconds="5.000000" _fired_eventThrottling="drop"];
+GetItemFromList2 [type="vuo.list.get.VuoRssItem" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="120,238"];
+GetRSSItemValues [type="vuo.rss.get" version="1.0.0" label="Get RSS Item Values|<refresh>refresh\l|<item>item\l|<title>title\r|<author>author\r|<description>description\r|<url>url\r|<image>image\r" pos="288,238" fillcolor="violet"];
+MakeList11 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="670,-396" _1="{\"r\":0.424674,\"g\":0.424659,\"b\":0.424674,\"a\":1.000000}" _2="{\"r\":0.191165,\"g\":0.191150,\"b\":0.191165,\"a\":1.000000}"];
+MakeList14 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="500,351" _1="\"by \""];
+MakeList2 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="382,-10" _1="\"Item \"" _3="\" of \""];
+MakeList7 [type="vuo.list.make.6.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="1019,-8" fillcolor="green"];
+MakeList9 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1056,7" fillcolor="green"];
+MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="748,-422" _gradientCenter="{\"x\":0.000000,\"y\":0.600000}" _gradientRadius="2.200000" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="811,83" _center="{\"x\":0.000000,\"y\":-0.100000}" _rotation="0.000000" _width="1.300000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="816,340" _font="{\"fontName\":\"HelveticaNeue-LightItalic\",\"pointSize\":22.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.900000}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="815,237" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.800000}"];
+MakeTextLayer3 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="812,-20" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":18.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.600000}"];
+MakeTextLayer4 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="811,-129" _font="{\"fontName\":\"HelveticaNeue-UltraLight\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.800000}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1102,-19" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectEventOutput2 [type="vuo.select.out.event.2" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="-354,268"];
+SelectLatest2 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="439,-130" _option1="\"Loading…\""];
+SpinOffEvent [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<spunOff>spunOff\r" pos="-380,-152" _spunOff_eventThrottling="enqueue"];
+
+AppendTexts2:compositeText -> MakeTextLayer:text;
+AppendTexts:compositeText -> MakeTextLayer3:text;
+ChangeWindowAspectRatio:property -> MakeList9:1;
+ConvertIntegerToText2:text -> MakeList2:2;
+ConvertIntegerToText:text -> MakeList2:4;
+CountItemsInList2:itemCount -> ConvertIntegerToText:integer;
+CountItemsInList2:itemCount -> CountWithinRange:maximum;
+CountItemsInList2:itemCount -> CountWithinRange:setCount [event=true];
+CountItemsInList2:itemCount -> SelectEventOutput2:which;
+CountWithinRange:count -> ConvertIntegerToText2:integer;
+CountWithinRange:count -> GetItemFromList2:which;
+FetchRSSItems:items -> CountItemsInList2:list;
+FetchRSSItems:items -> GetItemFromList2:list;
+FetchRSSItems:title -> SelectLatest2:option2;
+FireOnStart2:started -> ChangeWindowAspectRatio:refresh;
+FireOnStart2:started -> MakeRadialGradientLayer:refresh;
+FireOnStart2:started -> SelectLatest2:option1;
+FireOnStart2:started -> SpinOffEvent:refresh;
+FirePeriodically:fired -> SelectEventOutput2:in;
+GetItemFromList2:item -> GetRSSItemValues:item;
+GetRSSItemValues:author -> MakeList14:2;
+GetRSSItemValues:image -> MakeScaledLayer:image;
+GetRSSItemValues:title -> MakeTextLayer2:text;
+MakeList11:list -> MakeRadialGradientLayer:colors;
+MakeList14:list -> AppendTexts2:texts;
+MakeList2:list -> AppendTexts:texts;
+MakeList7:list -> RenderLayersToWindow:layers;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+MakeRadialGradientLayer:layer -> MakeList7:1;
+MakeScaledLayer:layer -> MakeList7:4;
+MakeTextLayer2:layer -> MakeList7:5;
+MakeTextLayer3:layer -> MakeList7:3;
+MakeTextLayer4:layer -> MakeList7:2;
+MakeTextLayer:layer -> MakeList7:6;
+SelectEventOutput2:option2 -> CountWithinRange:increment;
+SelectLatest2:latest -> MakeTextLayer4:text;
+SpinOffEvent:spunOff -> FetchRSSItems:refresh;
+}

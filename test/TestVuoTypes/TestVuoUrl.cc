@@ -9,7 +9,7 @@
 
 extern "C" {
 #include "TestVuoTypes.h"
-#include "VuoUrl.h"
+#include "VuoUrlFetch.h"
 }
 
 /**

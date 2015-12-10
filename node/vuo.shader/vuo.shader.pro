@@ -11,5 +11,5 @@ NODE_SOURCES += \
 	vuo.shader.make.image.unlit.c \
 	vuo.shader.make.normal.c \
 	vuo.shader.make.wireframe.c
-
+	
 include(../../module.pri)

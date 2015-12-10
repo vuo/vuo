@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Curve",
-					  "keywords" : [ "ease", "easing", "quadratic", "gravity", "bounce", "cubic", "circular", "exponential", "logarithmic" ],
+					  "keywords" : [ "ease", "easing", "quadratic", "gravity", "bounce", "cubic", "circular", "exponential", "logarithmic", "interpolation" ],
 					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "exampleCompositions" : [ "CompareEasingCurves.vuo", "DrawCurve.vuo" ]
+						  "exampleCompositions" : [ "CompareEasingCurves.vuo", "DrawCurve.vuo", "ExplodeClay.vuo" ]
 					  }
 				  });
 

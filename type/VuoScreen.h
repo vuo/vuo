@@ -39,17 +39,17 @@ typedef struct
 	VuoInteger dpiVertical;
 } VuoScreen;
 
-VuoScreen VuoScreen_valueFromJson(struct json_object * js);
-struct json_object * VuoScreen_jsonFromValue(const VuoScreen value);
-char *VuoScreen_summaryFromValue(const VuoScreen value);
+VuoScreen VuoScreen_makeFromJson(struct json_object * js);
+struct json_object * VuoScreen_getJson(const VuoScreen value);
+char *VuoScreen_getSummary(const VuoScreen value);
 bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoScreen VuoScreen_valueFromString(const char *str);
-char * VuoScreen_stringFromValue(const VuoScreen value);
+VuoScreen VuoScreen_makeFromString(const char *str);
+char * VuoScreen_getString(const VuoScreen value);
 void VuoScreen_retain(VuoScreen value);
 void VuoScreen_release(VuoScreen value);
 ///@}

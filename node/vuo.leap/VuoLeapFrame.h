@@ -43,9 +43,9 @@ typedef struct
 
 } VuoLeapFrame;
 
-VuoLeapFrame VuoLeapFrame_valueFromJson(struct json_object * js);
-struct json_object * VuoLeapFrame_jsonFromValue(const VuoLeapFrame value);
-char * VuoLeapFrame_summaryFromValue(const VuoLeapFrame value);
+VuoLeapFrame VuoLeapFrame_makeFromJson(struct json_object * js);
+struct json_object * VuoLeapFrame_getJson(const VuoLeapFrame value);
+char * VuoLeapFrame_getSummary(const VuoLeapFrame value);
 
 VuoLeapFrame VuoLeapFrame_make(VuoInteger id, VuoList_VuoLeapHand hands, VuoList_VuoLeapPointable pointables);
 
@@ -53,8 +53,8 @@ VuoLeapFrame VuoLeapFrame_make(VuoInteger id, VuoList_VuoLeapHand hands, VuoList
 /**
  * Automatically generated function.
  */
-VuoLeapFrame VuoLeapFrame_valueFromString(const char * initializer);
-char * VuoLeapFrame_stringFromValue(const VuoLeapFrame value);
+VuoLeapFrame VuoLeapFrame_makeFromString(const char * initializer);
+char * VuoLeapFrame_getString(const VuoLeapFrame value);
 void VuoLeapFrame_retain(VuoLeapFrame value);
 void VuoLeapFrame_release(VuoLeapFrame value);
  /// @}

@@ -31,7 +31,7 @@ VuoModuleMetadata({
  * @ingroup VuoText
  * Decodes the JSON object @c js, expected to contain a UTF-8 string, to create a new value.
  */
-VuoText VuoText_valueFromJson(json_object * js)
+VuoText VuoText_makeFromJson(json_object * js)
 {
 	const char *textString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -43,7 +43,7 @@ VuoText VuoText_valueFromJson(json_object * js)
  * @ingroup VuoText
  * Encodes @c value as a JSON object.
  */
-json_object * VuoText_jsonFromValue(const VuoText value)
+json_object * VuoText_getJson(const VuoText value)
 {
 	if (!value)
 		return json_object_new_string("");
@@ -52,56 +52,92 @@ json_object * VuoText_jsonFromValue(const VuoText value)
 }
 
 /**
- * @ingroup VuoText
- * Creates a new UTF-8 C string from @c value, or, if it's more than 30 Unicode characters long, creates an aposiopesis.
+ * If `subject` is less than or equal to `maxLength` Unicode characters long, returns `subject`.
  *
- * @eg{Hello World!}
- * @eg{I would like to convey my gree...}
+ * If `subject` is greater than `maxLength`, truncates `subject` to `maxLength` characters and adds a Unicode ellipsis.
  */
-char * VuoText_summaryFromValue(const VuoText value)
+VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength)
 {
-	if (!value)
-		return strdup("");
+	if (!subject)
+		return VuoText_make("");
 
-	VuoText valueWithReturn = VuoText_replace(value, "\n", "⏎");
+	VuoText valueWithReturn = VuoText_replace(subject, "\n", "⏎");
 
-	char *summary;
-	const int maxLength = 50;
-	if (VuoText_length(value) <= maxLength)
-	{
-		summary = strdup(valueWithReturn);
-	}
+	if (VuoText_length(subject) <= maxLength)
+		return valueWithReturn;
 	else
 	{
 		VuoText abbreviation = VuoText_substring(valueWithReturn, 1, maxLength);
-		VuoText ellipsis = VuoText_make("...");
+		VuoText ellipsis = VuoText_make("…");
 		VuoText summaryParts[2] = { abbreviation, ellipsis };
 		VuoText summaryWhole = VuoText_append(summaryParts, 2);
-		summary = strdup(summaryWhole);
 
+		VuoRetain(valueWithReturn);
+		VuoRelease(valueWithReturn);
 		VuoRetain(abbreviation);
 		VuoRelease(abbreviation);
 		VuoRetain(ellipsis);
 		VuoRelease(ellipsis);
-		VuoRetain(summaryWhole);
-		VuoRelease(summaryWhole);
+		return summaryWhole;
 	}
+}
 
-	VuoRetain(valueWithReturn);
-	VuoRelease(valueWithReturn);
-
+/**
+ * @ingroup VuoText
+ * Creates a new UTF-8 C string from @c value, or, if it's more than 50 Unicode characters long, creates an aposiopesis.
+ *
+ * @eg{Hello World!}
+ * @eg{I would like to convey my gree...}
+ */
+char * VuoText_getSummary(const VuoText value)
+{
+	VuoText t = VuoText_truncateWithEllipsis(value, 50);
+	VuoRetain(t);
+	char *summary = strdup(t);
+	VuoRelease(t);
 	return summary;
 }
 
 /**
  * @ingroup VuoText
- * Creates a VuoText value from an unquoted string (unlike @c VuoText_valueFromString(), which expects a quoted string).
+ * Creates a VuoText value from an unquoted string (unlike @c VuoText_makeFromString(), which expects a quoted string).
  */
 VuoText VuoText_make(const char * unquotedString)
 {
 	VuoText text;
 	if (unquotedString)
 		text = strdup(unquotedString);
+	else
+		text = strdup("");
+	VuoRegister(text, free);
+	return text;
+}
+
+/**
+ * Creates a VuoText value from an untrusted source (one that might not contain a NULL terminator within its memory page).
+ *
+ * Use this, for example, to safely handle a string that's part of a network packet.
+ *
+ * This function scans up to `maxLength` bytes in `data`.
+ * If it finds a NULL terminator, it returns text up to and including the NULL terminator.
+ * If it doesn't find a NULL terminator, it returns `maxLength` characters followed by a NULL terminator.
+ *
+ * This function does not yet respect multi-byte UTF8 characters.
+ * For now, only give it ASCII-7 input data.
+ */
+VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength)
+{
+	char *text;
+	if (data)
+	{
+		text = (char *)calloc(1, maxLength+1);
+		for (unsigned int i = 0; i < maxLength; ++i)
+		{
+			text[i] = ((char *)data)[i];
+			if (((char *)data)[i] == 0)
+				break;
+		}
+	}
 	else
 		text = strdup("");
 	VuoRegister(text, free);
@@ -151,9 +187,10 @@ size_t VuoText_length(const VuoText text)
 }
 
 /**
- * @ingroup VuoText
  * Returns true if the two texts represent the same Unicode string (even if they use different UTF-8 encodings
  * or Unicode character decompositions).
+ *
+ * Either or both of the values may be NULL.  NULL values are not equal to any string (including emptystring).
  */
 bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 {
@@ -327,4 +364,27 @@ char *VuoText_format(const char *format, ...)
 	va_end(args);
 
 	return formattedString;
+}
+
+/**
+ * Returns a new string consisting of `text` without the whitespace at the beginning and end.
+ *
+ * This function trims ASCII spaces, tabs, and linebreaks, but not other Unicode whitespace characters.
+ */
+VuoText VuoText_trim(const VuoText text)
+{
+	if (!text)
+		return NULL;
+
+	size_t len = strlen(text);
+	size_t firstNonSpace;
+	for (firstNonSpace = 0; firstNonSpace < len && isspace(text[firstNonSpace]); ++firstNonSpace);
+
+	if (firstNonSpace == len)
+		return VuoText_make("");
+
+	size_t lastNonSpace;
+	for (lastNonSpace = len-1; lastNonSpace > firstNonSpace && isspace(text[lastNonSpace]); --lastNonSpace);
+
+	return VuoText_makeWithMaxLength(text + firstNonSpace, lastNonSpace - firstNonSpace + 1);
 }

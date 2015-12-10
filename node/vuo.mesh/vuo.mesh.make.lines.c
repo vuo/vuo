@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Make Line Mesh",
-					  "keywords" : [ ],
+					  "keywords" : [ "segments", "points" ],
 					  "version" : "2.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

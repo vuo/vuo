@@ -8,18 +8,19 @@
  */
 
 #include "node.h"
+#include "VuoSyphon.h"
 #include "VuoSyphonServerNotifier.h"
 
 VuoModuleMetadata({
 					  "title" : "List Syphon Servers",
 					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "isInterface" : true,
 						  "exampleCompositions" : [ "ReceiveImagesPreferablyFromVuo.vuo" ]
 					  },
 					  "dependencies" : [
-						  "VuoSyphonServerNotifier"
+							"VuoSyphonServerNotifier"
 					  ]
 				  });
 
@@ -37,6 +38,8 @@ void nodeInstanceTriggerStart
 {
 	VuoSyphonServerNotifier_setNotificationFunction(*serverNotifierPtr, serversChanged);
 	VuoSyphonServerNotifier_start(*serverNotifierPtr);
+
+	serversChanged( VuoSyphon_getAvailableServerDescriptions() );
 }
 
 void nodeInstanceEvent

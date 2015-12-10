@@ -43,22 +43,22 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoPoint4d VuoPoint4d_valueFromJson(json_object * js)
+VuoPoint4d VuoPoint4d_makeFromJson(json_object * js)
 {
 	VuoPoint4d point = {0,0,0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "x", &o))
-		point.x = VuoReal_valueFromJson(o);
+		point.x = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "y", &o))
-		point.y = VuoReal_valueFromJson(o);
+		point.y = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "z", &o))
-		point.z = VuoReal_valueFromJson(o);
+		point.z = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "w", &o))
-		point.w = VuoReal_valueFromJson(o);
+		point.w = VuoReal_makeFromJson(o);
 
 	return point;
 }
@@ -67,20 +67,20 @@ VuoPoint4d VuoPoint4d_valueFromJson(json_object * js)
  * @ingroup VuoPoint2d
  * Encodes @c value as a JSON object.
  */
-json_object * VuoPoint4d_jsonFromValue(const VuoPoint4d value)
+json_object * VuoPoint4d_getJson(const VuoPoint4d value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *xObject = VuoReal_jsonFromValue(value.x);
+	json_object *xObject = VuoReal_getJson(value.x);
 	json_object_object_add(js, "x", xObject);
 
-	json_object *yObject = VuoReal_jsonFromValue(value.y);
+	json_object *yObject = VuoReal_getJson(value.y);
 	json_object_object_add(js, "y", yObject);
 
-	json_object *zObject = VuoReal_jsonFromValue(value.z);
+	json_object *zObject = VuoReal_getJson(value.z);
 	json_object_object_add(js, "z", zObject);
 
-	json_object *wObject = VuoReal_jsonFromValue(value.w);
+	json_object *wObject = VuoReal_getJson(value.w);
 	json_object_object_add(js, "w", wObject);
 
 	return js;
@@ -90,7 +90,7 @@ json_object * VuoPoint4d_jsonFromValue(const VuoPoint4d value)
  * @ingroup VuoPoint4d
  * Returns a compact string representation of @c value (comma-separated coordinates).
  */
-char * VuoPoint4d_summaryFromValue(const VuoPoint4d value)
+char * VuoPoint4d_getSummary(const VuoPoint4d value)
 {
 	return VuoText_format("%g, %g, %g, %g", value.x, value.y, value.z, value.w);
 }

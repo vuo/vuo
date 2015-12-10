@@ -209,16 +209,16 @@ void VuoTransform_invertMatrix4x4(const float *matrix, float *outputInvertedMatr
 VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point);
 VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle rectangle);
 
-VuoTransform VuoTransform_valueFromJson(struct json_object *js);
-struct json_object * VuoTransform_jsonFromValue(const VuoTransform value);
-char * VuoTransform_summaryFromValue(const VuoTransform value);
+VuoTransform VuoTransform_makeFromJson(struct json_object *js);
+struct json_object * VuoTransform_getJson(const VuoTransform value);
+char * VuoTransform_getSummary(const VuoTransform value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoTransform VuoTransform_valueFromString(const char *str);
-char * VuoTransform_stringFromValue(const VuoTransform value);
+VuoTransform VuoTransform_makeFromString(const char *str);
+char * VuoTransform_getString(const VuoTransform value);
 void VuoTransform_retain(VuoTransform value);
 void VuoTransform_release(VuoTransform value);
 /// @}

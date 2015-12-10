@@ -1,6 +1,6 @@
 /**
 * @file
-* Displays a cube alternately with a custom camera and the default camera. Click to switch cameras. Scroll to zoom the custom camera. 
+* Switches between the default camera looking at the front of a scene and a second camera looking down on the scene from above.
 *
 * @copyright Copyright © 2012–2014 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
@@ -9,53 +9,28 @@
 
 digraph G
 {
-Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="88,136"];
-CountWithinRange [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="78,155" _decrement="1.000000" _setCount="1.000000" _minimum="0.250000" _maximum="12.000000" _wrapMode="\"saturate\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-150,13" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="298,152" _x="0.300000" _y="-0.400000"];
-MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<cube>cube\r" pos="525,10"];
-MakeList [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="928,280" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="958,310" fillcolor="green"];
-MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-159,159" _1="0.010000"];
-MakePerspectiveCamera [type="vuo.scene.make.camera.perspective" version="1.0.0" label="Make Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<rotation>rotation\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="499,187" fillcolor="violet" _name="\"zoom\"" _rotation="{\"x\":10.000000,\"y\":30.000000,\"z\":0.000000}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="186,440" _text="\"Click to switch cameras. \\nScroll to zoom the custom camera.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="352,10" _translation="{\"x\":0,\"y\":0,\"z\":0}" _rotation="{\"x\":0,\"y\":0,\"z\":0}"];
-MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="432,440" _center="{\"x\":0.150000,\"y\":-0.550000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="1.000000" _opacity="1.000000"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-113,148"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="388,333" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-ReceiveMouseScrolls [type="vuo.mouse.scroll" version="1.0.1" label="Receive Mouse Scrolls|<refresh>refresh\l|<modifierKey>modifierKey\l|<scrolled>scrolled\r" pos="-422,163" fillcolor="yellow" _modifierKey="\"any\"" _scrolled_eventThrottling="drop"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="999,269" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale3DPoint [type="vuo.point.multiply.scalar.VuoPoint3d" version="1.0.0" label="Scale 3D Point|<refresh>refresh\l|<point>point\l|<scaleFactor>scaleFactor\l|<scaledPoint>scaledPoint\r" pos="139,34" _point="{\"x\":1,\"y\":1,\"z\":1}" _scaleFactor="0.500000"];
-SelectInput2 [type="vuo.select.in.boolean.VuoSceneObject" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="764,290"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="332,-121" _color="{\"r\":0.402975,\"g\":0.944518,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
-Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="588,333"];
+FetchScene [type="vuo.scene.fetch" version="2.0.0" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="386,200" _url="\"palmtree.dae\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-6,-65" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="875,35" fillcolor="green"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="905,65" fillcolor="green"];
+MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="387,-46" fillcolor="violet" _name="\"camera\"" _position="{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000}" _target="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _upDirection="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="257,343" _text="\"Click to switch cameras.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="503,343" _center="{\"x\":0.000000,\"y\":-0.500000,\"z\":0.100000}" _rotation="{\"x\":-45.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.800000" _opacity="1.000000"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="320,-162" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="946,24" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoSceneObject" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="697,-78"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="536,-162"];
 
-Convert2DPointToReal2:y -> MakeList4:2;
-CountWithinRange:count -> Make3DPoint:z;
-FireOnStart:started -> CountWithinRange:refresh;
-FireOnStart:started -> CountWithinRange:setCount;
+FetchScene:scene -> MakeList:2;
+FireOnStart:started -> FetchScene:refresh;
+FireOnStart:started -> MakeTargetedPerspectiveCamera:refresh;
 FireOnStart:started -> MakeTextImage:refresh;
-FireOnStart:started -> Scale3DPoint:refresh;
-FireOnStart:started -> ShadeWithColor:refresh;
-Make3DPoint:point -> MakePerspectiveCamera:position;
-MakeCube:cube -> MakeList:1;
 MakeList0:list -> RenderSceneToWindow2:setWindowProperties;
-MakeList4:list -> Multiply:values;
 MakeList:list -> RenderSceneToWindow2:objects;
-MakePerspectiveCamera:object -> SelectInput2:trueOption;
+MakeTargetedPerspectiveCamera:object -> SelectInput2:trueOption;
 MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
-MakeTransform:transform -> MakeCube:transform;
 MakeUnlit3DObjectFromImage:object -> MakeList:3;
-Multiply:product -> CountWithinRange:increment;
 ReceiveMouseButtons:pressed -> Toggle:toggle;
-ReceiveMouseScrolls:scrolled -> Convert2DPointToReal2:xy;
-Scale3DPoint:scaledPoint -> MakeTransform:scale;
-SelectInput2:out -> MakeList:2;
-ShadeWithColor:shader -> MakeCube:backShader;
-ShadeWithColor:shader -> MakeCube:bottomShader;
-ShadeWithColor:shader -> MakeCube:frontShader;
-ShadeWithColor:shader -> MakeCube:leftShader;
-ShadeWithColor:shader -> MakeCube:rightShader;
-ShadeWithColor:shader -> MakeCube:topShader;
+SelectInput2:out -> MakeList:1;
 Toggle:value -> SelectInput2:which;
 }

@@ -23,6 +23,8 @@ SUBDIRS += \
 	test_TestVuoRenderer \
 	test_TestVuoTypes \
 	test_TestCompositionExecution \
+	test_TestCompilingAndLinking \
+	test_TestCompilingAndLinking_node \
 	test_TestControlAndTelemetry \
 	test_TestControlAndTelemetry_node \
 	test_TestNodes \
@@ -36,6 +38,12 @@ SUBDIRS += \
 
 test_TestBuiltProducts.subdir = TestBuiltProducts
 test_TestBuiltProducts.depends = test_TestCompositionExecution
+
+test_TestCompilingAndLinking.subdir = TestCompilingAndLinking
+test_TestCompilingAndLinking.depends = test_TestCompositionExecution
+
+test_TestCompilingAndLinking_node.subdir = TestCompilingAndLinking/node-TestCompilingAndLinking
+test_TestCompilingAndLinking_node.depends =
 
 test_TestControlAndTelemetry.subdir = TestControlAndTelemetry
 test_TestControlAndTelemetry.depends = test_TestCompositionExecution

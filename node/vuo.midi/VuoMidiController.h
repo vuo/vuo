@@ -30,9 +30,9 @@ typedef struct
 	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoMidiController;
 
-VuoMidiController VuoMidiController_valueFromJson(struct json_object * js);
-struct json_object * VuoMidiController_jsonFromValue(const VuoMidiController value);
-char * VuoMidiController_summaryFromValue(const VuoMidiController value);
+VuoMidiController VuoMidiController_makeFromJson(struct json_object * js);
+struct json_object * VuoMidiController_getJson(const VuoMidiController value);
+char * VuoMidiController_getSummary(const VuoMidiController value);
 
 bool VuoMidiController_areEqual(const VuoMidiController value1, const VuoMidiController value2);
 
@@ -53,8 +53,8 @@ static inline VuoMidiController VuoMidiController_make(unsigned char channel, un
 /**
  * Automatically generated function.
  */
-VuoMidiController VuoMidiController_valueFromString(const char *str);
-char * VuoMidiController_stringFromValue(const VuoMidiController value);
+VuoMidiController VuoMidiController_makeFromString(const char *str);
+char * VuoMidiController_getString(const VuoMidiController value);
 /// @}
 
 /**

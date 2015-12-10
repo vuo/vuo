@@ -41,10 +41,14 @@ public:
 	void setName(string name);
 	void setType(VuoType *type);
 
+	void setProtocolPort(bool isProtocolPort);
+	bool isProtocolPort(void);
+
 private:
 	string name;
 	VuoType *type;
 	bool isOutput;
+	bool _isProtocolPort;
 	set<VuoPort *> connectedPorts;
 	string initialValueAsString;
 };

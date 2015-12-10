@@ -39,7 +39,8 @@ void nodeEvent
 	*left = -1.;
 	*right = 1.;
 
-	VuoWindowReference_getContentSize(window, pixelsWide, pixelsHigh);
+	float backingScaleFactor;
+	VuoWindowReference_getContentSize(window, pixelsWide, pixelsHigh, &backingScaleFactor);
 
 	*aspectRatio = (VuoReal)*pixelsWide / *pixelsHigh;
 	*height = *width / *aspectRatio;

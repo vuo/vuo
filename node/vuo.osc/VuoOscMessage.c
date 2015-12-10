@@ -74,7 +74,7 @@ VuoOscMessage VuoOscMessage_make(VuoText address, json_object *data)
  *   }
  * }
  */
-VuoOscMessage VuoOscMessage_valueFromJson(json_object * js)
+VuoOscMessage VuoOscMessage_makeFromJson(json_object * js)
 {
 	if (!js)
 		return NULL;
@@ -83,7 +83,7 @@ VuoOscMessage VuoOscMessage_valueFromJson(json_object * js)
 
 	VuoText address = NULL;
 	if (json_object_object_get_ex(js, "address", &o))
-		address = VuoText_valueFromJson(o);
+		address = VuoText_makeFromJson(o);
 
 	json_object *data = NULL;
 	if (json_object_object_get_ex(js, "data", &o))
@@ -96,7 +96,7 @@ VuoOscMessage VuoOscMessage_valueFromJson(json_object * js)
  * @ingroup VuoOscMessage
  * Encodes @c value as a JSON object.
  */
-json_object * VuoOscMessage_jsonFromValue(const VuoOscMessage value)
+json_object * VuoOscMessage_getJson(const VuoOscMessage value)
 {
 	json_object *js = json_object_new_object();
 
@@ -119,7 +119,7 @@ json_object * VuoOscMessage_jsonFromValue(const VuoOscMessage value)
  * @ingroup VuoOscMessage
  * Produces a brief human-readable summary of @c value.
  */
-char * VuoOscMessage_summaryFromValue(const VuoOscMessage value)
+char * VuoOscMessage_getSummary(const VuoOscMessage value)
 {
 	if (!value)
 		return strdup("(no message)");

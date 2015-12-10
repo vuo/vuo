@@ -31,7 +31,7 @@ VuoModuleMetadata({
  * @ingroup VuoBoolean
  * Decodes the JSON object @c js, expected to contain a boolean, to create a new @c VuoBoolean.
  */
-VuoBoolean VuoBoolean_valueFromJson(json_object * js)
+VuoBoolean VuoBoolean_makeFromJson(json_object * js)
 {
 	return json_object_get_boolean(js);
 }
@@ -40,7 +40,7 @@ VuoBoolean VuoBoolean_valueFromJson(json_object * js)
  * @ingroup VuoBoolean
  * Encodes @c value as a JSON object.
  */
-json_object * VuoBoolean_jsonFromValue(const VuoBoolean value)
+json_object * VuoBoolean_getJson(const VuoBoolean value)
 {
 	return json_object_new_boolean(value);
 }
@@ -48,7 +48,7 @@ json_object * VuoBoolean_jsonFromValue(const VuoBoolean value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoBoolean VuoBoolean_allowedValues(void)
+VuoList_VuoBoolean VuoBoolean_getAllowedValues(void)
 {
 	VuoList_VuoBoolean l = VuoListCreate_VuoBoolean();
 	VuoListAppendValue_VuoBoolean(l, false);
@@ -60,7 +60,7 @@ VuoList_VuoBoolean VuoBoolean_allowedValues(void)
  * @ingroup VuoBoolean
  * Always shows the full value, since it's guaranteed to be pretty short.
  */
-char * VuoBoolean_summaryFromValue(const VuoBoolean value)
+char * VuoBoolean_getSummary(const VuoBoolean value)
 {
 	return strdup(value ? "true" : "false");
 }

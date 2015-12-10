@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "title" : "Show Back of 3D Object",
 					  "keywords" : [ "interior", "inside", "behind", "backface", "culling", "disappear", "transparent", "visible", "visibility",
 						  "two-sided", "two", "sided", "twosided", "2-sided", "2",
-						  "face", "facing", "away"],
+						  "face", "facing", "away", "normal"],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ "ExplodeSphere.vuo", "TwirlGrid.vuo" ]

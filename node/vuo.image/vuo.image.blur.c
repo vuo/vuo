@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Blur Image",
 					  "keywords" : [ "gaussian", "distort", "obscure", "smudge", "filter", "censor", "smooth", "soften", "unfocus", "defocus", "detail" ],
-					  "version" : "1.1.0",
+					  "version" : "1.2.0",
 					  "node": {
 						  "exampleCompositions" : [ "BlurMovie.vuo" ]
 					  }
@@ -23,8 +23,9 @@ void nodeEvent
 (
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":4, "suggestedMin":0, "suggestedMax":20}) radius,
+		VuoInputData(VuoBoolean, {"default":false}) expandBounds,
 		VuoOutputData(VuoImage) blurredImage
 )
 {
-	*blurredImage = VuoImage_blur(image, radius, FALSE);
+	*blurredImage = VuoImage_blur(image, radius, expandBounds);
 }

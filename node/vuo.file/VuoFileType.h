@@ -37,10 +37,10 @@ typedef enum
 	VuoFileType_Folder
 } VuoFileType;
 
-VuoFileType VuoFileType_valueFromJson(struct json_object * js);
-struct json_object * VuoFileType_jsonFromValue(const VuoFileType value);
-VuoList_VuoFileType VuoFileType_allowedValues(void);
-char * VuoFileType_summaryFromValue(const VuoFileType value);
+VuoFileType VuoFileType_makeFromJson(struct json_object * js);
+struct json_object * VuoFileType_getJson(const VuoFileType value);
+VuoList_VuoFileType VuoFileType_getAllowedValues(void);
+char * VuoFileType_getSummary(const VuoFileType value);
 
 bool VuoFileType_isFileOfType(const VuoText path, VuoFileType fileType);
 
@@ -48,8 +48,8 @@ bool VuoFileType_isFileOfType(const VuoText path, VuoFileType fileType);
  * Automatically generated function.
  */
 ///@{
-VuoFileType VuoFileType_valueFromString(const char *str);
-char * VuoFileType_stringFromValue(const VuoFileType value);
+VuoFileType VuoFileType_makeFromString(const char *str);
+char * VuoFileType_getString(const VuoFileType value);
 void VuoFileType_retain(VuoFileType value);
 void VuoFileType_release(VuoFileType value);
 ///@}

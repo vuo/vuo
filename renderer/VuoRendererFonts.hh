@@ -24,10 +24,13 @@ public:
 	static const qreal midPenWidth;  ///< Width, in pixels at 1:1 zoom, of stateful indicator bars and typecast port edges.
 
 	static const qreal nodeTitleFontSize;  ///< Size, in typographic points, of the node's title.
+	static const qreal nodeDetailFontSize;  ///< Size, in typographic points, of the node's class name and port labels.
+	static const qreal portDetailFontSize;  ///< Size, in typographic points, of port constant flag and typeconverter text.
 
 	QFont nodeTitleFont(void);
 	QFont nodeClassFont(void);
 	QFont nodePortTitleFont(void);
+	QFont nodePortConstantFont(void);
 	QFont portPopoverFont(void);
 
 private:

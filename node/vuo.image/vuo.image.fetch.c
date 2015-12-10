@@ -33,7 +33,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "DisplayImage.vuo", "CompareImageGenerators.vuo" ]
+						 "exampleCompositions" : [ "DisplayImage.vuo" ]
 					 }
 				 });
 

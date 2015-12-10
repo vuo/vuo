@@ -1,0 +1,56 @@
+/**
+ * @file
+ * Displays colors of different hues and varies their saturation and lightness as the mouse moves.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="443,375" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
+Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="77,313"];
+Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="78,437"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-9,-110" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="488,-169" _center="{\"x\":-0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeColorLayer3 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="489,-36" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeColorLayer4 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="490,98" _center="{\"x\":0.500000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="275,-107" fillcolor="violet" _hue="0.000000" _opacity="1.000000"];
+MakeHSLColor2 [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="275,-5" fillcolor="violet" _hue="0.330000" _opacity="1.000000"];
+MakeHSLColor3 [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="275,99" fillcolor="violet" _hue="0.670000" _opacity="1.000000"];
+MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="781,168" fillcolor="green"];
+MakeList16 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="731,153" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="244,390" _text="\"Move the mouse right and left to change the saturation.\\nMove the mouse up and down to change the lightness.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0.000000,\"y\":0.100000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-269,290" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="827,142" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-3,-13" _start="-1.000000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="1.000000"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-2,111" _start="-1.000000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="1.000000"];
+
+AlignLayerToWindow:alignedLayer -> MakeList16:4;
+Convert2DPointToReal2:y -> Scale2:value;
+Convert2DPointToReal:x -> Scale:value;
+FireOnStart:started -> MakeHSLColor2:refresh;
+FireOnStart:started -> MakeHSLColor3:refresh;
+FireOnStart:started -> MakeHSLColor:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
+MakeColorLayer3:layer -> MakeList16:2;
+MakeColorLayer4:layer -> MakeList16:3;
+MakeColorLayer:layer -> MakeList16:1;
+MakeHSLColor2:color -> MakeColorLayer3:color;
+MakeHSLColor3:color -> MakeColorLayer4:color;
+MakeHSLColor:color -> MakeColorLayer:color;
+MakeList16:list -> RenderLayersToWindow:layers;
+MakeList:list -> RenderLayersToWindow:setWindowProperties;
+MakeTextLayer:layer -> AlignLayerToWindow:layer;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+Scale2:scaledValue -> MakeHSLColor2:lightness;
+Scale2:scaledValue -> MakeHSLColor3:lightness;
+Scale2:scaledValue -> MakeHSLColor:lightness;
+Scale:scaledValue -> MakeHSLColor2:saturation;
+Scale:scaledValue -> MakeHSLColor3:saturation;
+Scale:scaledValue -> MakeHSLColor:saturation;
+}

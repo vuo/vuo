@@ -154,7 +154,7 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl w);
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
 		bool useDepthBuffer,
-		void (*initCallback)(VuoGlContext glContext, void *),
+		void (*initCallback)(VuoGlContext glContext, float backingScaleFactor, void *),
 		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
 		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
@@ -181,12 +181,13 @@ VuoWindowOpenGl VuoWindowOpenGl_make
  */
 void VuoWindowOpenGl_enableTriggers
 (
-		VuoWindowOpenGl w
+		VuoWindowOpenGl w,
+		VuoOutputTrigger(showedWindow, VuoWindowReference)
 )
 {
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  [window enableTriggers];
+					  [window enableTriggers:showedWindow];
 				  });
 }
 

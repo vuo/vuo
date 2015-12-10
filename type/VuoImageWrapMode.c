@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoImageWrapMode
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoImageWrapMode.
  */
-VuoImageWrapMode VuoImageWrapMode_valueFromJson(json_object *js)
+VuoImageWrapMode VuoImageWrapMode_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -57,7 +57,7 @@ VuoImageWrapMode VuoImageWrapMode_valueFromJson(json_object *js)
  * @ingroup VuoImageWrapMode
  * Encodes @c value as a JSON object.
  */
-json_object * VuoImageWrapMode_jsonFromValue(const VuoImageWrapMode value)
+json_object * VuoImageWrapMode_getJson(const VuoImageWrapMode value)
 {
 	char *valueAsString = "";
 
@@ -82,7 +82,7 @@ json_object * VuoImageWrapMode_jsonFromValue(const VuoImageWrapMode value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoImageWrapMode VuoImageWrapMode_allowedValues(void)
+VuoList_VuoImageWrapMode VuoImageWrapMode_getAllowedValues(void)
 {
 	VuoList_VuoImageWrapMode l = VuoListCreate_VuoImageWrapMode();
 	VuoListAppendValue_VuoImageWrapMode(l, VuoImageWrapMode_None);
@@ -94,9 +94,9 @@ VuoList_VuoImageWrapMode VuoImageWrapMode_allowedValues(void)
 
 /**
  * @ingroup VuoImageWrapMode
- * Same as @c %VuoImageWrapMode_stringFromValue()
+ * Same as @c %VuoImageWrapMode_getString()
  */
-char * VuoImageWrapMode_summaryFromValue(const VuoImageWrapMode value)
+char * VuoImageWrapMode_getSummary(const VuoImageWrapMode value)
 {
 	char *valueAsString = "";
 

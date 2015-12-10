@@ -1,6 +1,7 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	ExploreColorSchemes.vuo
+	AverageColors.vuo \
+	ChangeSaturationAndLightness.vuo
 
 include(../../../example.pri)

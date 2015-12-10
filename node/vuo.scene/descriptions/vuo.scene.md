@@ -6,7 +6,7 @@ To load a 3D model from a file, you can use the `Fetch Scene` node. It supports 
 
 To make graphics rendering more efficient, by default Vuo only renders the front/exterior side of a 3D object. For example, with `Make Sphere Vertices`, Vuo shows the sphere when viewed from the outside — but if you move the camera inside the sphere, it disappears. You can make the back/interior of the object visible with the `Show Back of 3D Object` node. 
 
-In **Vuo coordinates**, (0,0,0) is the center of the scene. The **default camera** is at (0,0,1). When viewed through this camera, the scene has a width of 2, with x-coordinate -1 on the left edge and 1 on the right edge. The scene's height is determined by its aspect ratio, with the y-coordinate increasing from bottom to top. The z-coordinate increases from back to front. Objects are visible if their distance from the camera along the z-axis is between 0.1 and 10. 
+In **Vuo coordinates**, (0,0,0) is the center of the scene. The **default camera** is at (0,0,1). When viewed through this camera, the scene has a width of 2, with X-coordinate -1 on the left edge and 1 on the right edge. The scene's height is determined by its aspect ratio, with the Y-coordinate increasing from bottom to top. The Z-coordinate increases from back to front. Objects are visible if their distance from the camera along the Z-axis is between 0.1 and 10. 
 
 ![Vuo Coordinate System](vuo-coordinates-transparent.png)
 

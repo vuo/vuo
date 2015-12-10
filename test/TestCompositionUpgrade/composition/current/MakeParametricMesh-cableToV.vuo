@@ -11,17 +11,14 @@
 
 digraph G
 {
-Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="203,609"];
-ConvertRealToText2 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="240,735"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="395,358" _mesh="[]"];
-MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="157,620" _1="\"v*\""];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="532,515"];
-MakeParametricVertices [type="vuo.vertices.make.parametric.v1" version="" label="Make Parametric Vertices|<refresh>refresh\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<uExpression>uExpression\l|<vExpression>vExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<uMin>uMin\l|<uMax>uMax\l|<vClosed>vClosed\l|<vMin>vMin\l|<vMax>vMax\l|<vertices>vertices\r" pos="126,290" _xExpression="\"u\"" _yExpression="\"v\"" _zExpression="\"0\"" _uExpression="\"u*2\"" _rows="16" _columns="16" _uClosed="false" _uMin="0.000000" _uMax="1.000000" _vClosed="false" _vMin="0.000000" _vMax="1.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="582,504" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="203,609"];
+ConvertRealToText2 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<done>done\r|<text>text\r" pos="240,735"];
+DiscardDataFromEvent [type="vuo.type.discardData.VuoReal" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="225,380"];
+Make3DObject [type="vuo.scene.make" version="1.0.0" label="Make 3D Object|<refresh>refresh\l|<vertices>vertices\l|<shader>shader\l|<transform>transform\l|<done>done\r|<object>object\r" pos="395,358" _shader="" _transform=""];
+MakeList [type="vuo.list.make.2.VuoText" version="1.0.0" label="Make List|<refresh>refresh\l|<item1>item1\l|<item2>item2\l|<done>done\r|<list>list\r" pos="140,620" _item1="\"v*\""];
+MakeParametricVertices [type="vuo.vertices.make.parametric" version="1.0.0" label="Make Parametric Vertices|<refresh>refresh\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<uExpression>uExpression\l|<vExpression>vExpression\l|<rows>rows\l|<columns>columns\l|<uClosed>uClosed\l|<vClosed>vClosed\l|<done>done\r|<vertices>vertices\r" pos="126,290" _xExpression="\"u\"" _yExpression="\"v\"" _zExpression="\"0\"" _uExpression="\"u*2\"" _rows="16" _columns="16" _uClosed="false" _vClosed="false"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="582,504" _cameraName=""];
 
-ConvertRealToText2:text -> MakeList:2;
-Make3DObject:object -> MakeList2:1;
-MakeList2:list -> RenderSceneToWindow:objects;
+ConvertRealToText2:text -> MakeList:item2;
 MakeList:list -> Append:texts;
-RenderSceneToWindow:requestedFrame -> ConvertRealToText2:real;
 }

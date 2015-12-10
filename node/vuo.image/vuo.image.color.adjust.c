@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Adjust Image Colors",
 					 "keywords" : [ "saturation", "desaturate", "grayscale", "greyscale", "tint", "tone", "chroma", "brightness", "contrast", "gamma", "exposure", "filter" ],
-					 "version" : "1.1.0",
+					 "version" : "1.2.0",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 }
@@ -32,6 +32,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float contrast;
 	uniform float gamma;
 	uniform float exposure;
+	uniform float hueShift;
 
 	void main(void)
 	{
@@ -39,12 +40,23 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		vec4 pixelColor = texture2D(image, fragmentTextureCoordinate.xy);
 		pixelColor.rgb /= pixelColor.a;
 
-		// // Apply Exposure
+		// compensate for channels that are completely void - this allows a fully exposed pixel
+		// to always be white, regardless of starting value. .001 is the minimum resolution that
+		// enables this.
+		if( exposure > 0.)
+			pixelColor.rgb += vec3(.001);
+
+		// Apply Exposure
+		pixelColor.rgb = clamp(pixelColor.rgb * pow(2., exposure), 0., 1.);
+
 		vec3 hsl = rgbToHsl(pixelColor.rgb);
-		hsl.z = hsl.z * pow(2., exposure);
+
+		// Apply hue shift
+		hsl.x = mod(hsl.x + hueShift, 1.);
 
 		// // Apply saturation
 		hsl.y *= saturation;
+
 		pixelColor.rgb = hslToRgb(hsl);
 
 		// Apply contrast.
@@ -69,6 +81,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -82,6 +95,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Adjust Image Colors");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -97,38 +114,35 @@ void nodeInstanceEvent
 		VuoInputData(VuoImage) image,
 
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":2}) saturation,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":-180, "suggestedMax":180}) hueShift,
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1}) contrast,
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1}) brightness,
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1}) exposure,
 		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":3}) gamma,
-
 		VuoOutputData(VuoImage) adjustedImage
 )
 {
 	if(!image)
 		return;
 
-	VuoShader shader = VuoShader_make("Adjust Image Colors");
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
-	VuoRetain(shader);
-
-	VuoShader_setUniform_VuoImage(shader, "image", image);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "image", image);
 
 	// *scaledValue = (value - start) * scaledRange / range + scaledStart;
-	VuoShader_setUniform_VuoReal(shader, "saturation", saturation+1); 	// 0 - 3 values
-	VuoShader_setUniform_VuoReal(shader, "brightness", brightness);	// -1, 1 values
-	VuoShader_setUniform_VuoReal(shader, "contrast", contrast+1);		// 0, 2 values
-	VuoShader_setUniform_VuoReal(shader, "gamma", gamma);
-	VuoShader_setUniform_VuoReal(shader, "exposure", exposure*10);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "saturation", saturation+1); 	// 0 - 3 values
+	VuoShader_setUniform_VuoReal((*instance)->shader, "hueShift", hueShift/360.);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "brightness", brightness);	// -1, 1 values
+	VuoShader_setUniform_VuoReal((*instance)->shader, "contrast", contrast+1);		// 0, 2 values
+	VuoShader_setUniform_VuoReal((*instance)->shader, "gamma", gamma);
+	VuoShader_setUniform_VuoReal((*instance)->shader, "exposure", exposure*10);
 
 	// Render.
-	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	*adjustedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
-	VuoRelease(shader);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

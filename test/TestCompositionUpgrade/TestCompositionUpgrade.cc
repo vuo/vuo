@@ -245,7 +245,7 @@ private slots:
 		try
 		{
 			compiler->compileComposition(compilerComposition, compiledCompositionPath);
-			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
+			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		}
 		catch (std::runtime_error e)
 		{

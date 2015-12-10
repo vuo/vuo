@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Receive MIDI Events",
 					 "keywords" : [ "note", "controller", "synthesizer", "sequencer", "music", "instrument", "device" ],
-					 "version" : "2.0.0",
+					 "version" : "2.1.0",
 					 "dependencies" : [
 						 "VuoMidi"
 					 ],
@@ -30,6 +30,7 @@ struct nodeInstanceData
 	VuoMidiIn midiManager;
 	void (*receivedNote)(VuoMidiNote);
 	void (*receivedController)(VuoMidiController);
+	void (*receivedPitchBend)(VuoMidiPitchBend);
 };
 
 static void updateDevice(struct nodeInstanceData *context, VuoMidiInputDevice newDevice)
@@ -55,6 +56,12 @@ static void receivedControllerWrapper(void *context, VuoMidiController controlle
 	c->receivedController(controller);
 }
 
+static void receivedPitchBendWrapper(void *context, VuoMidiPitchBend pitchBend)
+{
+	struct nodeInstanceData *c = (struct nodeInstanceData *)context;
+	c->receivedPitchBend(pitchBend);
+}
+
 struct nodeInstanceData * nodeInstanceInit
 (
 		VuoInputData(VuoMidiInputDevice, {"default":{"isInput":true}}) device
@@ -70,7 +77,8 @@ void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedNote, VuoMidiNote),
-		VuoOutputTrigger(receivedController, VuoMidiController)
+		VuoOutputTrigger(receivedController, VuoMidiController),
+		VuoOutputTrigger(receivedPitchBend, VuoMidiPitchBend)
 //		VuoOutputTrigger(receivedAftertouch, VuoMidiAftertouch),
 //		VuoOutputTrigger(receivedCommand, VuoMidiCommand),
 //		VuoOutputTrigger(receivedClock, VuoMidiClock),
@@ -80,7 +88,8 @@ void nodeInstanceTriggerStart
 {
 	(*context)->receivedNote = receivedNote;
 	(*context)->receivedController = receivedController;
-	VuoMidiIn_enableTriggers((*context)->midiManager, receivedNoteWrapper, receivedControllerWrapper, *context);
+	(*context)->receivedPitchBend = receivedPitchBend;
+	VuoMidiIn_enableTriggers((*context)->midiManager, receivedNoteWrapper, receivedControllerWrapper, receivedPitchBendWrapper, *context);
 }
 
 void nodeInstanceEvent
@@ -88,7 +97,8 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoMidiInputDevice) device,
 		VuoOutputTrigger(receivedNote, VuoMidiNote),
-		VuoOutputTrigger(receivedController, VuoMidiController)
+		VuoOutputTrigger(receivedController, VuoMidiController),
+		VuoOutputTrigger(receivedPitchBend, VuoMidiPitchBend)
 )
 {
 	if (! VuoMidiInputDevice_areEqual(device, (*context)->device))
@@ -97,7 +107,8 @@ void nodeInstanceEvent
 		updateDevice(*context, device);
 		(*context)->receivedNote = receivedNote;
 		(*context)->receivedController = receivedController;
-		VuoMidiIn_enableTriggers((*context)->midiManager, receivedNoteWrapper, receivedControllerWrapper, *context);
+		(*context)->receivedPitchBend = receivedPitchBend;
+		VuoMidiIn_enableTriggers((*context)->midiManager, receivedNoteWrapper, receivedControllerWrapper, receivedPitchBendWrapper, *context);
 	}
 }
 

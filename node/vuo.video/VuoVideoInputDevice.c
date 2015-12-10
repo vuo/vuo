@@ -37,18 +37,18 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoVideoInputDevice VuoVideoInputDevice_valueFromJson(json_object *js)
+VuoVideoInputDevice VuoVideoInputDevice_makeFromJson(json_object *js)
 {
 	VuoVideoInputDevice value = {"",""};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		value.id = VuoText_valueFromJson(o);
+		value.id = VuoText_makeFromJson(o);
 	else
 		value.id = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_valueFromJson(o);
+		value.name = VuoText_makeFromJson(o);
 	else
 		value.name = VuoText_make("");
 
@@ -58,14 +58,14 @@ VuoVideoInputDevice VuoVideoInputDevice_valueFromJson(json_object *js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoVideoInputDevice_jsonFromValue(const VuoVideoInputDevice value)
+json_object * VuoVideoInputDevice_getJson(const VuoVideoInputDevice value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoText_jsonFromValue(value.id);
+	json_object *idObject = VuoText_getJson(value.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *nameObject = VuoText_jsonFromValue(value.name);
+	json_object *nameObject = VuoText_getJson(value.name);
 	json_object_object_add(js, "name", nameObject);
 
 	return js;
@@ -74,7 +74,7 @@ json_object * VuoVideoInputDevice_jsonFromValue(const VuoVideoInputDevice value)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoVideoInputDevice_summaryFromValue(const VuoVideoInputDevice value)
+char * VuoVideoInputDevice_getSummary(const VuoVideoInputDevice value)
 {
 	return VuoText_format("Video input device: \"%s\"", value.name);
 }

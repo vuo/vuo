@@ -24,7 +24,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Layers to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "2.2.0",
+					 "version" : "2.3.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoSceneRenderer",
@@ -42,14 +42,13 @@ struct nodeInstanceData
 	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer *sceneRenderer;
-	bool hasShown;
 };
 
-void vuo_layer_render_window_init(VuoGlContext glContext, void *ctx)
+void vuo_layer_render_window_init(VuoGlContext glContext, float backingScaleFactor, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	context->sceneRenderer = VuoSceneRenderer_make(glContext);
+	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 }
 
@@ -91,8 +90,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 			);
 	VuoRetain(context->window);
 
-	context->hasShown = false;
-
 	return context;
 }
 
@@ -103,14 +100,8 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window);
+	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow);
 	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
-
-	if (! (*context)->hasShown)
-	{
-		showedWindow( VuoWindowReference_make((*context)->window) );
-		(*context)->hasShown = true;
-	}
 }
 
 void nodeInstanceEvent
@@ -137,8 +128,9 @@ void nodeInstanceEvent
 	VuoWindowOpenGl_redraw((*context)->window);
 
 	VuoInteger width, height;
-	VuoWindowReference_getContentSize(VuoWindowReference_make((*context)->window), &width, &height);
-	*renderedLayers = VuoRenderedLayers_makeWithWindow(rootSceneObject, width, height, VuoWindowReference_make((*context)->window));
+	float backingScaleFactor;
+	VuoWindowReference_getContentSize(VuoWindowReference_make((*context)->window), &width, &height, &backingScaleFactor);
+	*renderedLayers = VuoRenderedLayers_makeWithWindow(rootSceneObject, width, height, backingScaleFactor, VuoWindowReference_make((*context)->window));
 }
 
 void nodeInstanceTriggerStop

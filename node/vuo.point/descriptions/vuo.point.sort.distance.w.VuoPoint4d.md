@@ -1,1 +1,1 @@
-Puts a list of points in order of nearest to farthest from a target point, comparing only the difference in w-coordinates.
+Puts a list of points in order of nearest to farthest from a target point, comparing only the difference in W-coordinates.

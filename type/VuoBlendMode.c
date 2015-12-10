@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoBlendMode
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoBlendMode.
  */
-VuoBlendMode VuoBlendMode_valueFromJson(json_object *js)
+VuoBlendMode VuoBlendMode_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -126,7 +126,7 @@ VuoBlendMode VuoBlendMode_valueFromJson(json_object *js)
  * @ingroup VuoBlendMode
  * Encodes @c value as a JSON object.
  */
-json_object * VuoBlendMode_jsonFromValue(const VuoBlendMode value)
+json_object * VuoBlendMode_getJson(const VuoBlendMode value)
 {
 	char *valueAsString = "";
 
@@ -218,7 +218,7 @@ json_object * VuoBlendMode_jsonFromValue(const VuoBlendMode value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoBlendMode VuoBlendMode_allowedValues(void)
+VuoList_VuoBlendMode VuoBlendMode_getAllowedValues(void)
 {
 	VuoList_VuoBlendMode l = VuoListCreate_VuoBlendMode();
 	for (VuoBlendMode b = VuoBlendMode_Normal; b <= VuoBlendMode_Luminosity; ++b)
@@ -228,9 +228,9 @@ VuoList_VuoBlendMode VuoBlendMode_allowedValues(void)
 
 /**
  * @ingroup VuoBlendMode
- * Same as @c %VuoBlendMode_stringFromValue()
+ * Same as @c %VuoBlendMode_getString()
  */
-char * VuoBlendMode_summaryFromValue(const VuoBlendMode value)
+char * VuoBlendMode_getSummary(const VuoBlendMode value)
 {
 	char *valueAsString = "";
 

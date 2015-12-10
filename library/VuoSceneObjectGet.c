@@ -9,7 +9,7 @@
 
 #include "VuoSceneObjectGet.h"
 
-#include "VuoUrl.h"
+#include "VuoUrlFetch.h"
 #include "VuoGlContext.h"
 #include "VuoImageGet.h"
 
@@ -31,7 +31,7 @@ VuoModuleMetadata({
 							"VuoGlContext",
 							"VuoImageGet",
 							"VuoShader",
-							"VuoUrl",
+							"VuoUrlFetch",
 							"VuoList_VuoShader",
 							"assimp",
 							"z"
@@ -166,7 +166,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 
 	void *data;
 	unsigned int dataLength;
-	if (!VuoUrl_get(sceneURL, &data, &dataLength))
+	if (!VuoUrl_fetch(sceneURL, &data, &dataLength))
 	{
 		VLog("Error: Didn't get any scene data for '%s'.", sceneURL);
 		return false;
@@ -233,12 +233,12 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		struct aiColor4D diffuseColorAI = {1,1,1,1};
 		aiGetMaterialColor(m, AI_MATKEY_COLOR_DIFFUSE, &diffuseColorAI);
 		VuoColor diffuseColor = VuoColor_makeWithRGBA(diffuseColorAI.r, diffuseColorAI.g, diffuseColorAI.b, diffuseColorAI.a);
-//		VLog("\tdiffuseColor: %s",VuoColor_summaryFromValue(diffuseColor));
+//		VLog("\tdiffuseColor: %s",VuoColor_getSummary(diffuseColor));
 
 		struct aiColor4D specularColorAI = {1,1,1,1};
 		aiGetMaterialColor(m, AI_MATKEY_COLOR_SPECULAR, &specularColorAI);
 		VuoColor specularColor = VuoColor_makeWithRGBA(specularColorAI.r, specularColorAI.g, specularColorAI.b, specularColorAI.a);
-	//		VLog("\tspecularColor: %s",VuoColor_summaryFromValue(specularColor));
+	//		VLog("\tspecularColor: %s",VuoColor_getSummary(specularColor));
 
 		float shininess = 10;
 		aiGetMaterialFloatArray(m, AI_MATKEY_SHININESS, &shininess, NULL);
@@ -391,7 +391,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 
 		shader->name = strdup(name.data);
 
-		// VLog("\tshader: %s",shader->summary);//VuoShader_summaryFromValue(shader));
+		// VLog("\tshader: %s",shader->summary);//VuoShader_getSummary(shader));
 
 		VuoListAppendValue_VuoShader(shaders, shader);
 	}

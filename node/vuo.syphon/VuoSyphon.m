@@ -24,7 +24,6 @@ VuoModuleMetadata({
 						"VuoGlContext",
 						"VuoImageRenderer",
 						"VuoNSRunLoop",
-						"VuoSyphon",
 						"VuoSyphonListener",
 						"VuoSyphonSender",
 						"Syphon.framework"

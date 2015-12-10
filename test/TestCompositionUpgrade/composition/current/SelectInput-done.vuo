@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,14 +11,12 @@
 
 digraph G
 {
-Append [type="vuo.text.append" version="1.0.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<compositeText>compositeText\r" pos="643,115"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
-IsGreaterThan [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="227,88" _a="0.000000" _b="0.000000"];
-MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="597,126" _2="\"a\""];
-SelectInput2 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="439,100" _falseOption="\"f\"" _trueOption="\"t\""];
+Append [type="vuo.text.append" version="1.0.0" label="Append|<refresh>refresh\l|<texts>texts\l|<done>done\r|<compositeText>compositeText\r" pos="651,86"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
+IsGreaterThan [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<greaterThan>greaterThan\r" pos="231,60" _a="0.000000" _b="0.000000"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<done>done\r|<list>list\r" pos="605,97" _2="\"a\""];
+SelectInput2 [type="vuo.select.in.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="454,68" _falseOption="\"f\"" _trueOption="\"t\""];
 
 FireOnStart:started -> IsGreaterThan:refresh;
-IsGreaterThan:greaterThan -> SelectInput2:which;
 MakeList:list -> Append:texts;
-SelectInput2:out -> MakeList:1;
 }

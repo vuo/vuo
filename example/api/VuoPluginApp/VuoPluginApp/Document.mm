@@ -53,7 +53,7 @@
 		[a setMessageText:@"Unable to read image."];
 		[a setInformativeText:imagePath];
 		NSWindow *w = [[[self windowControllers] objectAtIndex:0] window];
-		[a beginSheetModalForWindow:w completionHandler:^(NSModalResponse returnCode){}];
+		[a beginSheetModalForWindow:w completionHandler:^(NSInteger returnCode){}];
 		[a release];
 		return;
 	}

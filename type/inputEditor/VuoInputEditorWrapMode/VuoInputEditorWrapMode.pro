@@ -13,7 +13,10 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorWrapMode.json
 
-INCLUDEPATH += $$ROOT/type
+INCLUDEPATH += \
+	$$ROOT/type \
+	$$ROOT/node/vuo.image
+
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoInteger.o \

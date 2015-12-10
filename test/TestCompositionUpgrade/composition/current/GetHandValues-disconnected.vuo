@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,5 +11,5 @@
 
 digraph G
 {
-GetHandValues [type="vuo.leap.get.hand" version="2.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<id>id\r|<transform>transform\r|<palmTransform>palmTransform\r|<palmVelocity>palmVelocity\r|<wristPosition>wristPosition\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pinchAmount>pinchAmount\r|<grabAmount>grabAmount\r|<isLeftHand>isLeftHand\r|<timeVisible>timeVisible\r|<confidence>confidence\r|<fingers>fingers\r" pos="227,186"];
+GetHandValues [type="vuo.leap.get.hand" version="1.0.0" label="Get Hand Values|<refresh>refresh\l|<hand>hand\l|<done>done\r|<id>id\r|<direction>direction\r|<palmNormal>palmNormal\r|<palmPosition>palmPosition\r|<palmVelocity>palmVelocity\r|<sphereRadius>sphereRadius\r|<sphereCenter>sphereCenter\r|<pointables>pointables\r" pos="268,180"];
 }

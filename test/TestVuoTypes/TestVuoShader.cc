@@ -27,8 +27,8 @@ private slots:
 
 	void testNull()
 	{
-		QCOMPARE(QString::fromUtf8(VuoShader_stringFromValue(NULL)), QString("0"));
-		QCOMPARE(QString::fromUtf8(VuoShader_summaryFromValue(NULL)), QString("(no shader)"));
+		QCOMPARE(QString::fromUtf8(VuoShader_getString(NULL)), QString("0"));
+		QCOMPARE(QString::fromUtf8(VuoShader_getSummary(NULL)), QString("(no shader)"));
 	}
 
 	void testSerialization_data()
@@ -41,7 +41,7 @@ private slots:
 		}
 		{
 			VuoShader shader = VuoShader_makeDefaultShader();
-			char *valueAsString = VuoShader_stringFromValue(shader);
+			char *valueAsString = VuoShader_getString(shader);
 			QTest::newRow("VuoShader") << QString(valueAsString) << QString(shader->name);
 			free(valueAsString);
 		}
@@ -51,7 +51,7 @@ private slots:
 		QFETCH(QString, valueAsString);
 		QFETCH(QString, summary);
 
-		VuoShader value = VuoShader_valueFromString(valueAsString.toUtf8().data());
+		VuoShader value = VuoShader_makeFromString(valueAsString.toUtf8().data());
 		if (value)
 			QCOMPARE(QString(value->name), summary);
 		else

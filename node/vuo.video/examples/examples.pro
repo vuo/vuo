@@ -2,10 +2,9 @@ TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
 	PlayMovie.vuo \
-	PlayMoviesOnCube.vuo \
-	PlayMovieWithButton.vuo \
+	PlayMoviesAndCameraOnCube.vuo \
 	PlayMovieWithSound.vuo \
-	SimulateFilmProjector.vuo \
+	ShowInstantReplay.vuo \
 	SkimMovie.vuo
 
 include(../../../example.pri)

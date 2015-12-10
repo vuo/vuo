@@ -42,6 +42,7 @@ static const char * triangleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -56,6 +57,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
+	instance->shader = VuoShader_make("Triangle Shader", VuoShader_getDefaultVertexShader(), triangleFragmentShader);
+	VuoRetain(instance->shader);
+
 	return instance;
 }
 
@@ -68,24 +72,22 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_make("Triangle Shader", VuoShader_getDefaultVertexShader(), triangleFragmentShader);
-	VuoShader_setUniformColor(shader, (*instance)->glContext, "color", color);
+	VuoShader_setUniformColor((*instance)->shader, (*instance)->glContext, "color", color);
 
 	float h = sin(45.) * width/height;
 	float offset = (1-h)/2.;
-	VuoShader_setUniformPoint2d(shader, (*instance)->glContext, "a", (VuoPoint2d) { 0, offset});
-	VuoShader_setUniformPoint2d(shader, (*instance)->glContext, "b", (VuoPoint2d) { .5, h+offset});
-	VuoShader_setUniformPoint2d(shader, (*instance)->glContext, "c", (VuoPoint2d) { 1, offset });
-	VuoRetain(shader);
+
+	VuoShader_setUniformPoint2d((*instance)->shader, (*instance)->glContext, "a", (VuoPoint2d) { 0, offset});
+	VuoShader_setUniformPoint2d((*instance)->shader, (*instance)->glContext, "b", (VuoPoint2d) { .5, h+offset});
+	VuoShader_setUniformPoint2d((*instance)->shader, (*instance)->glContext, "c", (VuoPoint2d) { 1, offset });
 
 	// Render.
 	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height);
-
-	VuoRelease(shader);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

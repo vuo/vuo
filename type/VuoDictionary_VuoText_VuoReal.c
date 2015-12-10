@@ -40,16 +40,16 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_valueFromJson(json_object *js)
+VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_makeFromJson(json_object *js)
 {
 	VuoDictionary_VuoText_VuoReal d;
 	json_object *o = NULL;
 
 	bool hasKeys = json_object_object_get_ex(js, "keys", &o);
-	d.keys = VuoList_VuoText_valueFromJson(hasKeys ? o : NULL);
+	d.keys = VuoList_VuoText_makeFromJson(hasKeys ? o : NULL);
 
 	bool hasValues = json_object_object_get_ex(js, "values", &o);
-	d.values = VuoList_VuoReal_valueFromJson(hasValues ? o : NULL);
+	d.values = VuoList_VuoReal_makeFromJson(hasValues ? o : NULL);
 
 	return d;
 }
@@ -58,12 +58,12 @@ VuoDictionary_VuoText_VuoReal VuoDictionary_VuoText_VuoReal_valueFromJson(json_o
  * @ingroup VuoDictionary_VuoText_VuoReal
  * Encodes the value as a JSON object.
  */
-json_object * VuoDictionary_VuoText_VuoReal_jsonFromValue(const VuoDictionary_VuoText_VuoReal d)
+json_object * VuoDictionary_VuoText_VuoReal_getJson(const VuoDictionary_VuoText_VuoReal d)
 {
 	json_object *js = json_object_new_object();
 
-	json_object_object_add(js, "keys", VuoList_VuoText_jsonFromValue(d.keys));
-	json_object_object_add(js, "values", VuoList_VuoReal_jsonFromValue(d.values));
+	json_object_object_add(js, "keys", VuoList_VuoText_getJson(d.keys));
+	json_object_object_add(js, "values", VuoList_VuoReal_getJson(d.values));
 
 	return js;
 }
@@ -73,12 +73,12 @@ json_object * VuoDictionary_VuoText_VuoReal_jsonFromValue(const VuoDictionary_Vu
  * Returns a brief description of the value.
  *
  * (When this type is replaced with a generic VuoDictionary type, this function will be replaced with
- * a nicer implementation, more like VuoList_summaryFromValue().)
+ * a nicer implementation, more like VuoList_getSummary().)
  */
-char * VuoDictionary_VuoText_VuoReal_summaryFromValue(const VuoDictionary_VuoText_VuoReal d)
+char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoReal d)
 {
-	char *keysSummary = VuoList_VuoText_summaryFromValue(d.keys);
-	char *valuesSummary = VuoList_VuoReal_summaryFromValue(d.values);
+	char *keysSummary = VuoList_VuoText_getSummary(d.keys);
+	char *valuesSummary = VuoList_VuoReal_getSummary(d.values);
 
 	char *summary = VuoText_format("<ul><li>Keys: %s</li><li>Values: %s</li></ul>", keysSummary, valuesSummary);
 

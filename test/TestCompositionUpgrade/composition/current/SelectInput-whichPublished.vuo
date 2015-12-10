@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,12 +11,8 @@
 
 digraph G
 {
-Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="424,77"];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="378,88" _2="2.000000"];
-SelectInput2 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="215,75" _falseOption="5.000000" _trueOption="8.000000"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<which>which\r" _which_type="VuoBoolean" _which="false"];
-
-MakeList:list -> Add:values;
-SelectInput2:out -> MakeList:1;
-PublishedInputs:which -> SelectInput2:which;
+Add [type="vuo.math.add.VuoReal" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="424,123"];
+DiscardDataFromEvent2 [type="vuo.type.discardData.VuoBoolean" version="1.0.0" label="Discard Data from Event|<refresh>refresh\l|<dataAndEvent>dataAndEvent\l|<done>done\r|<event>event\r" pos="262,265"];
+SelectInput4 [type="vuo.select.in.VuoReal" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="213,122" _falseOption="5.000000" _trueOption="8.000000"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<which>which\r" _which="false" _which_type="VuoBoolean"];
 }

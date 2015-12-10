@@ -16,6 +16,7 @@
 #include "VuoTransform.h"
 #include "VuoPoint3d.h"
 #include "VuoBlendMode.h"
+#include "VuoFont.h"
 
 /// @{
 typedef const struct VuoList_VuoSceneObject_struct { void *l; } * VuoList_VuoSceneObject;
@@ -31,43 +32,43 @@ typedef const struct VuoList_VuoSceneObject_struct { void *l; } * VuoList_VuoSce
  */
 
 /**
- * The type of camera
+ * How this scene object should be rendered or how it should affect other scene objects.
  */
 typedef enum
 {
-	VuoSceneObject_NotACamera,
-	VuoSceneObject_PerspectiveCamera,
-	VuoSceneObject_StereoCamera,
-	VuoSceneObject_OrthographicCamera
-} VuoSceneObject_CameraType;
-
-/**
- * The type of light
- */
-typedef enum
-{
-	VuoSceneObject_NotALight,
-	VuoSceneObject_AmbientLight,
-	VuoSceneObject_PointLight,
-	VuoSceneObject_Spotlight
-} VuoSceneObject_LightType;
+	VuoSceneObjectType_Empty,
+	VuoSceneObjectType_Group,
+	VuoSceneObjectType_Mesh,
+	VuoSceneObjectType_PerspectiveCamera,
+	VuoSceneObjectType_StereoCamera,
+	VuoSceneObjectType_OrthographicCamera,
+	VuoSceneObjectType_AmbientLight,
+	VuoSceneObjectType_PointLight,
+	VuoSceneObjectType_Spotlight,
+	VuoSceneObjectType_Text
+} VuoSceneObjectType;
 
 /**
  * A 3D Object: visible (mesh), or virtual (group, light, camera).
  */
 typedef struct VuoSceneObject
 {
-	// Data for visible (mesh) scene objects
+	VuoSceneObjectType type;
+
+	// Data for all scene objects
+	VuoText name;
+	VuoTransform transform;
+
+	// Mesh
 	VuoMesh mesh;
 	VuoShader shader;
 	bool isRealSize;	///< If the object is real-size, it ignores rotations and scales, and is sized to match the shader's first image.
 	VuoBlendMode blendMode;
 
-	// Data for group scene objects
+	// Group
 	VuoList_VuoSceneObject childObjects;
 
-	// Data for camera scene objects
-	VuoSceneObject_CameraType cameraType;
+	// Camera
 	float cameraFieldOfView;	///< Perspective FOV, in degrees.
 	float cameraWidth;	///< Orthographic width, in scene coordinates.
 	float cameraDistanceMin;	///< Distance from camera to near clip plane.
@@ -75,17 +76,16 @@ typedef struct VuoSceneObject
 	float cameraConfocalDistance;	///< Distance from camera to stereoscopic confocal plane.
 	float cameraIntraocularDistance;	///< Distance between the stereoscopic camera pair.
 
-	// Data for light scene objects
-	VuoSceneObject_LightType lightType;
+	// Light
 	VuoColor lightColor;
 	float lightBrightness;
 	float lightRange;	///< Distance (in local coordinates) the light reaches.  Affects point lights and spotlights.
 	float lightCone;	///< Size (in radians) of the light's cone.  Affects spotlights.
 	float lightSharpness;	///< Sharpness of the light's distance/cone falloff.  0 means the light starts fading at distance/angle 0 and ends at 2*lightRange or 2*lightCone.  1 means the falloff is instant.
 
-	// Data for all scene objects
-	VuoText name;
-	VuoTransform transform;
+	// Text
+	VuoText text;
+	VuoFont font;
 } VuoSceneObject;
 
 VuoSceneObject VuoSceneObject_makeEmpty(void);
@@ -95,6 +95,7 @@ VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d c
 VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
 VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
+VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font);
 
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance);
@@ -118,9 +119,9 @@ void VuoSceneObject_setBlendMode(VuoSceneObject *object, VuoBlendMode blendMode)
 
 VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object);
 
-VuoSceneObject VuoSceneObject_valueFromJson(struct json_object * js);
-struct json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value);
-char * VuoSceneObject_summaryFromValue(const VuoSceneObject value);
+VuoSceneObject VuoSceneObject_makeFromJson(struct json_object * js);
+struct json_object * VuoSceneObject_getJson(const VuoSceneObject value);
+char * VuoSceneObject_getSummary(const VuoSceneObject value);
 
 VuoBox VuoSceneObject_bounds(const VuoSceneObject so);										///< Get the axis aligned bounding box of this sceneobject and it's children.
 bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float matrix[16]); 	///< Bounding box of the vertices for this SceneObject (taking into account transform).
@@ -134,8 +135,8 @@ unsigned long VuoSceneObject_getVertexCount(const VuoSceneObject value);
 /**
  * Automatically generated function.
  */
-VuoSceneObject VuoSceneObject_valueFromString(const char *str);
-char * VuoSceneObject_stringFromValue(const VuoSceneObject value);
+VuoSceneObject VuoSceneObject_makeFromString(const char *str);
+char * VuoSceneObject_getString(const VuoSceneObject value);
 void VuoSceneObject_retain(VuoSceneObject value);
 void VuoSceneObject_release(VuoSceneObject value);
 ///@}

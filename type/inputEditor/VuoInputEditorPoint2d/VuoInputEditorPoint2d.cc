@@ -54,8 +54,8 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
 		{
-			suggestedMinX = VuoPoint2d_valueFromJson(suggestedMinValue).x;
-			suggestedMinY = VuoPoint2d_valueFromJson(suggestedMinValue).y;
+			suggestedMinX = VuoPoint2d_makeFromJson(suggestedMinValue).x;
+			suggestedMinY = VuoPoint2d_makeFromJson(suggestedMinValue).y;
 			detailsIncludeSuggestedMin = true;
 		}
 
@@ -63,8 +63,8 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		json_object *suggestedMaxValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMax", &suggestedMaxValue))
 		{
-			suggestedMaxX = VuoPoint2d_valueFromJson(suggestedMaxValue).x;
-			suggestedMaxY = VuoPoint2d_valueFromJson(suggestedMaxValue).y;
+			suggestedMaxX = VuoPoint2d_makeFromJson(suggestedMaxValue).x;
+			suggestedMaxY = VuoPoint2d_makeFromJson(suggestedMaxValue).y;
 			detailsIncludeSuggestedMax = true;
 		}
 
@@ -72,8 +72,8 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 		{
-			suggestedStepX = VuoPoint2d_valueFromJson(suggestedStepValue).x;
-			suggestedStepY = VuoPoint2d_valueFromJson(suggestedStepValue).y;
+			suggestedStepX = VuoPoint2d_makeFromJson(suggestedStepValue).x;
+			suggestedStepY = VuoPoint2d_makeFromJson(suggestedStepValue).y;
 		}
 	}
 
@@ -104,18 +104,19 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 		// X value
 		lineEditX = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditX, VuoReal_jsonFromValue(VuoPoint2d_valueFromJson(originalValue).x));
+		setUpLineEdit(lineEditX, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).x));
 		lineEditX->setValidator(validator);
 		lineEditX->installEventFilter(this);
 
 		sliderX = new QSlider(&dialog);
+		sliderX->setAttribute(Qt::WA_MacSmallSize);
 		sliderX->setOrientation(Qt::Horizontal);
 		sliderX->setFocusPolicy(Qt::NoFocus);
 		sliderX->setMinimum(0);
 		sliderX->setMaximum(sliderX->width());
 		sliderX->setSingleStep(fmax(1, suggestedStepX*(sliderX->maximum()-sliderX->minimum())/(suggestedMaxX-suggestedMinX)));
 
-		double lineEditValueX = VuoPoint2d_valueFromJson(originalValue).x;
+		double lineEditValueX = VuoPoint2d_makeFromJson(originalValue).x;
 		int sliderValueX = lineEditValueToScaledSliderValue(lineEditValueX, x);
 		sliderX->setValue(sliderValueX);
 
@@ -125,18 +126,19 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 		// Y value
 		lineEditY = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditY, VuoReal_jsonFromValue(VuoPoint2d_valueFromJson(originalValue).y));
+		setUpLineEdit(lineEditY, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).y));
 		lineEditY->setValidator(validator);
 		lineEditY->installEventFilter(this);
 
 		sliderY = new QSlider(&dialog);
+		sliderY->setAttribute(Qt::WA_MacSmallSize);
 		sliderY->setOrientation(Qt::Horizontal);
 		sliderY->setFocusPolicy(Qt::NoFocus);
 		sliderY->setMinimum(0);
 		sliderY->setMaximum(sliderY->width());
 		sliderY->setSingleStep(fmax(1, suggestedStepY*(sliderY->maximum()-sliderY->minimum())/(suggestedMaxY-suggestedMinY)));
 
-		double lineEditValueY = VuoPoint2d_valueFromJson(originalValue).y;
+		double lineEditValueY = VuoPoint2d_makeFromJson(originalValue).y;
 		int sliderValueY = lineEditValueToScaledSliderValue(lineEditValueY, y);
 		sliderY->setValue(sliderValueY);
 
@@ -148,19 +150,17 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		setFirstWidgetInTabOrder(lineEditX);
 		setLastWidgetInTabOrder(lineEditY);
 
-		labelX->move(labelX->pos().x()+widgetHorizontalSpacing, labelX->pos().y() + widgetVerticalSpacing);
-		lineEditX->move(labelX->pos().x()+labelX->width()+widgetHorizontalSpacing, lineEditX->pos().y()+widgetVerticalSpacing);
+		labelX->move(labelX->pos().x(), labelX->pos().y());
+		lineEditX->move(labelX->pos().x()+labelX->width()+widgetHorizontalSpacing, lineEditX->pos().y());
 		sliderX->move(lineEditX->pos().x(), lineEditX->pos().y() + lineEditX->height() + widgetVerticalSpacing);
+		sliderX->resize(sliderX->width(), sliderX->height() - 10);
+		lineEditX->resize(sliderX->width(), lineEditX->height());
 
-		labelY->move(labelY->pos().x()+widgetHorizontalSpacing, sliderX->pos().y() + sliderX->height() + widgetVerticalSpacing);
+		labelY->move(labelY->pos().x(), sliderX->pos().y() + sliderX->height() + widgetVerticalSpacing);
 		lineEditY->move(labelY->pos().x()+labelY->width()+widgetHorizontalSpacing, sliderX->pos().y() + sliderX->height() + widgetVerticalSpacing);
 		sliderY->move(lineEditY->pos().x(), lineEditY->pos().y() + lineEditY->height() + widgetVerticalSpacing);
-
-		dialog.resize(labelX->width()+
-					  widgetHorizontalSpacing+
-					  sliderX->width(),
-					  sliderY->pos().y()+
-					  sliderY->height());
+		sliderY->resize(sliderY->width(), sliderY->height() - 10);
+		lineEditY->resize(sliderY->width(), lineEditY->height());
 
 		labelX->show();
 		sliderX->show();
@@ -178,14 +178,14 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		static_cast<VuoDoubleSpinBox *>(spinBoxX)->setButtonMaximum(suggestedMaxX);
 		spinBoxX->setSingleStep(suggestedStepX);
 		spinBoxX->setDecimals(decimalPrecision);
-		spinBoxX->setValue(VuoPoint2d_valueFromJson(originalValue).x);
+		spinBoxX->setValue(VuoPoint2d_makeFromJson(originalValue).x);
 
 		// For some reason the VuoPoint2d input editor is extremely wide
 		// without the following resize() call:
 		spinBoxX->resize(spinBoxX->size());
 
 		lineEditX = spinBoxX->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditX, VuoReal_jsonFromValue(VuoPoint2d_valueFromJson(originalValue).x));
+		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditX, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).x));
 		spinBoxX->setKeyboardTracking(false);
 
 		connect(spinBoxX, SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
@@ -196,14 +196,14 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		static_cast<VuoDoubleSpinBox *>(spinBoxY)->setButtonMaximum(suggestedMaxY);
 		spinBoxY->setSingleStep(suggestedStepY);
 		spinBoxY->setDecimals(decimalPrecision);
-		spinBoxY->setValue(VuoPoint2d_valueFromJson(originalValue).y);
+		spinBoxY->setValue(VuoPoint2d_makeFromJson(originalValue).y);
 
 		// For some reason the VuoPoint2d input editor is extremely wide
 		// without the following resize() call:
 		spinBoxY->resize(spinBoxY->size());
 
 		lineEditY = spinBoxY->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditY, VuoReal_jsonFromValue(VuoPoint2d_valueFromJson(originalValue).y));
+		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditY, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).y));
 		spinBoxY->setKeyboardTracking(false);
 
 		connect(spinBoxY, SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
@@ -212,18 +212,11 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		setFirstWidgetInTabOrder(spinBoxX);
 		setLastWidgetInTabOrder(spinBoxY);
 
-		labelX->move(labelX->pos().x()+widgetHorizontalSpacing, labelX->pos().y()+widgetVerticalSpacing);
-		spinBoxX->move(labelX->pos().x()+labelX->width()+widgetHorizontalSpacing, spinBoxX->pos().y() + widgetVerticalSpacing);
+		labelX->move(labelX->pos().x(), labelX->pos().y());
+		spinBoxX->move(labelX->pos().x()+labelX->width()+widgetHorizontalSpacing, spinBoxX->pos().y());
 
-		labelY->move(labelY->pos().x()+widgetHorizontalSpacing, spinBoxX->pos().y() + spinBoxX->height() + widgetVerticalSpacing);
+		labelY->move(labelY->pos().x(), spinBoxX->pos().y() + spinBoxX->height() + widgetVerticalSpacing);
 		spinBoxY->move(spinBoxX->pos().x(), labelY->pos().y());
-
-		dialog.resize(labelX->pos().x() + labelX->width()+
-					  2*widgetHorizontalSpacing+
-					  spinBoxX->width(),
-					  spinBoxY->pos().y()+
-					  spinBoxY->height()+
-					  widgetVerticalSpacing);
 
 		labelX->show();
 		spinBoxX->show();
@@ -288,9 +281,9 @@ json_object * VuoInputEditorPoint2d::convertFromLineEditsFormat(const QString &x
 
 	// Point
 	VuoPoint2d point;
-	point.x = VuoReal_valueFromString(xValueAsStringInDefaultLocale.toUtf8().constData());
-	point.y = VuoReal_valueFromString(yValueAsStringInDefaultLocale.toUtf8().constData());
-	return VuoPoint2d_jsonFromValue(point);
+	point.x = VuoReal_makeFromString(xValueAsStringInDefaultLocale.toUtf8().constData());
+	point.y = VuoReal_makeFromString(yValueAsStringInDefaultLocale.toUtf8().constData());
+	return VuoPoint2d_getJson(point);
 }
 
 /**
@@ -398,9 +391,9 @@ double VuoInputEditorPoint2d::sliderValueToScaledLineEditValue(int sliderValue, 
 void VuoInputEditorPoint2d::emitValueChanged()
 {
 	VuoPoint2d currentPointValue;
-	currentPointValue.x = VuoReal_valueFromString(lineEditX->text().toUtf8().constData());
-	currentPointValue.y = VuoReal_valueFromString(lineEditY->text().toUtf8().constData());
-	json_object *valueAsJson = VuoPoint2d_jsonFromValue(currentPointValue);
+	currentPointValue.x = VuoReal_makeFromString(lineEditX->text().toUtf8().constData());
+	currentPointValue.y = VuoReal_makeFromString(lineEditY->text().toUtf8().constData());
+	json_object *valueAsJson = VuoPoint2d_getJson(currentPointValue);
 	emit valueChanged(valueAsJson);
 	json_object_put(valueAsJson);
 }

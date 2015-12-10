@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Clicks",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "tap", "press" ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,

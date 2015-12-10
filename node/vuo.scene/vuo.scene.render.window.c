@@ -21,7 +21,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Scene to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "object", "screen", "full screen", "fullscreen" ],
-					 "version" : "2.1.0",
+					 "version" : "2.2.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoSceneRenderer",
@@ -29,7 +29,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "DisplayScene.vuo", "DisplaySquare.vuo", "SpinSphere.vuo", "MoveSpinningSphere.vuo", "SwitchCameras.vuo" ]
+						 "exampleCompositions" : [ "DisplayScene.vuo", "DisplaySquare.vuo", "DisplaySphere.vuo", "MoveSpinningSphere.vuo", "SwitchCameras.vuo" ]
 					 }
 				 });
 
@@ -39,14 +39,13 @@ struct nodeInstanceData
 	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer *sceneRenderer;
-	bool hasShown;
 };
 
-void vuo_scene_render_window_init(VuoGlContext glContext, void *ctx)
+void vuo_scene_render_window_init(VuoGlContext glContext, float backingScaleFactor, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	context->sceneRenderer = VuoSceneRenderer_make(glContext);
+	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 }
 
@@ -88,8 +87,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 			);
 	VuoRetain(context->window);
 
-	context->hasShown = false;
-
 	return context;
 }
 
@@ -100,14 +97,8 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window);
+	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow);
 	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
-
-	if (! (*context)->hasShown)
-	{
-		showedWindow( VuoWindowReference_make((*context)->window) );
-		(*context)->hasShown = true;
-	}
 }
 
 void nodeInstanceEvent

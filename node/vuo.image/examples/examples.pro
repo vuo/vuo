@@ -1,10 +1,10 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
+	AnimateConcentricCircles.vuo \
 	BlendImages.vuo \
 	BlurMovie.vuo \
 	BulgeCheckerboard.vuo \
-	CompareImageGenerators.vuo \
 	CompareKaleidoscopes.vuo \
 	DisplayImage.vuo \
 	EnhanceBlue.vuo \
@@ -13,12 +13,16 @@ EXAMPLE_SOURCES += \
 	MaskMovieByBrightness.vuo \
 	MaskMovieWithStar.vuo \
 	MirrorMovie.vuo \
+	MoveCheckerboardCenter.vuo \
+	MoveLinearGradient.vuo \
+	MoveRadialGradient.vuo \
 	OffsetColors.vuo \
 	RecolorMovie.vuo \
-	RenderText.vuo \
+	RenderTextImage.vuo \
 	RotateMovie.vuo \
 	ScanBarcodes.vuo \
 	SeparateRedGreenBlue.vuo \
+	SimulateFilmProjector.vuo \
 	TileMovie.vuo \
 	VignetteMovie.vuo \
 #	WarpImageForFisheyeProjection.vuo

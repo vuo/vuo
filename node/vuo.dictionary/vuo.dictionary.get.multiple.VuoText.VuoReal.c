@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Get Items from Dictionary",
-					  "keywords" : [ "pick", "select", "choose", "element", "member", "key" ],
+					  "keywords" : [ "pick", "select", "choose", "element", "member", "key", "index" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]

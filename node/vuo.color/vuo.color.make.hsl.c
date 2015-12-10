@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "alpha", "transparent", "channel", "tone", "chroma" ],
 					 "version" : "2.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "ExploreColorSchemes.vuo" ]
+						  "exampleCompositions" : [ "ChangeSaturationAndLightness.vuo" ]
 					 }
 				 });
 

@@ -26,9 +26,9 @@ struct json_object;
  */
 typedef int64_t VuoInteger;
 
-VuoInteger VuoInteger_valueFromJson(struct json_object * js);
-struct json_object * VuoInteger_jsonFromValue(const VuoInteger value);
-char * VuoInteger_summaryFromValue(const VuoInteger value);
+VuoInteger VuoInteger_makeFromJson(struct json_object * js);
+struct json_object * VuoInteger_getJson(const VuoInteger value);
+char * VuoInteger_getSummary(const VuoInteger value);
 
 VuoInteger VuoInteger_min(VuoInteger *terms, unsigned long termsCount);
 VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount);
@@ -86,8 +86,8 @@ static inline VuoInteger VuoInteger_snap(VuoInteger a, VuoInteger center, VuoInt
 /**
  * Automatically generated function.
  */
-VuoInteger VuoInteger_valueFromString(const char *str);
-char * VuoInteger_stringFromValue(const VuoInteger value);
+VuoInteger VuoInteger_makeFromString(const char *str);
+char * VuoInteger_getString(const VuoInteger value);
 void VuoInteger_retain(VuoInteger value);
 void VuoInteger_release(VuoInteger value);
 /// @}

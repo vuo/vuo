@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					 "title" : "Rotate Image",
 					 "keywords" : [ "spin", "90", "180", "flip" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoLayer",
 						 "VuoGlContext",
@@ -31,8 +31,8 @@ const float DEG_2_RAD = 0.0174532925;
 
 struct nodeInstanceData
 {
-	VuoSceneRenderer *sceneRenderer;
 	VuoGlContext glContext;
+	VuoSceneRenderer *sceneRenderer;
 };
 
 struct nodeInstanceData *nodeInstanceInit(void)
@@ -41,7 +41,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 
 	context->glContext = VuoGlContext_use();
 
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext);
+	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, 1);
 	VuoRetain(context->sceneRenderer);
 
 	VuoRegister(context, free);

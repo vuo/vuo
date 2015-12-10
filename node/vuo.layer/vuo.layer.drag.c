@@ -14,11 +14,11 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Drags on Layer",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "AssembleJigsawPuzzle.vuo" ]
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

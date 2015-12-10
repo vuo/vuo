@@ -20,17 +20,31 @@ OTHER_FILES += Doxyfile
 
 NODE_CLASS_IMAGES += \
 	../node/vuo.console/vuo.console.window.c \
+	../node/vuo.data/vuo.data.share.c \
+	../node/vuo.event/vuo.event.becameTrue.c \
+	../node/vuo.event/vuo.event.changed.c \
 	../node/vuo.event/vuo.event.spinOffEvent.c \
 	../node/vuo.event/vuo.event.fireOnStart.c \
 	../node/vuo.image/vuo.image.fetch.c \
+	../node/vuo.image/vuo.image.render.window.c \
+	../node/vuo.logic/vuo.logic.areAllTrue.c \
 	../node/vuo.logic/vuo.logic.isOneTrue.c \
+	../node/vuo.logic/vuo.logic.toggle.c \
+	../node/vuo.logic/vuo.logic.switch.c \
 	../node/vuo.math/vuo.math.add.c \
+	../node/vuo.list/vuo.list.build.c \
+	../node/vuo.list/vuo.list.cycle.c \
+	../node/vuo.list/vuo.list.enqueue.c \
+	../node/vuo.list/vuo.list.process.c \
 	../node/vuo.math/vuo.math.count.c \
 	../node/vuo.math/vuo.math.countWithinRange.c \
 	../node/vuo.math/vuo.math.divide.VuoInteger.c \
 	../node/vuo.math/vuo.math.isLessThan.c \
+	../node/vuo.math/vuo.math.limitToRange.c \
 	../node/vuo.math/vuo.math.subtract.c \
+	../node/vuo.motion/vuo.motion.wave.c \
 	../node/vuo.select/vuo.select.in.2.c \
+	../node/vuo.select/vuo.select.in.8.c \
 	../node/vuo.select/vuo.select.in.boolean.c \
 	../node/vuo.select/vuo.select.latest.2.c \
 	../node/vuo.select/vuo.select.out.2.c \
@@ -41,23 +55,35 @@ NODE_CLASS_IMAGES += \
 
 COMPOSITION_IMAGES += \
 	composition/2Recur.vuo \
+	composition/AreAllValuesTrue.vuo \
+	composition/BuildColoredGrid.vuo \
 	composition/CalculateBoxVolume.vuo \
+	composition/Count.vuo \
 	composition/CountAndHold.vuo \
 	composition/CountCharactersToConsole.vuo \
 	composition/CountIsLessThanToConsole.vuo \
+	composition/CountIsGreaterThanToConsole.vuo \
 	composition/CountScatter.vuo \
 	composition/CountSometimes.vuo \
 	composition/CountWithFeedback.vuo \
 	composition/CountWithInfiniteFeedback.vuo \
 	composition/DeadlockedFeedbackLoop.vuo \
+	composition/DisplayHelloWorldImage.vuo \
+	composition/DisplayandTwirlHelloWorldImage.vuo \
 	composition/DisplayMultipleWindows.vuo \
+	composition/InvertMovieColors.vuo \
 	composition/MultipleEventOnlyCables.vuo \
+	composition/SelectColor.vuo \
+	composition/SelectLatestInput.vuo \
 	composition/ShareHeight.vuo \
+	composition/SpinCube.vuo \
+	composition/SlideCheckerboard.vuo \
+	composition/SlideAndBlendCheckerboardsWithPeriodicEvents.vuo \
+	composition/SlideAndBlendCheckerboardsWithFrameEvents.vuo \
 	composition/SumAddOne.vuo \
 	../node/vuo.event/examples/LoadImageAsynchronously.vuo \
+	../node/vuo.image/examples/BlendImages.vuo \
 	../node/vuo.image/examples/DisplayImage.vuo \
-	../node/vuo.math/examples/Count.vuo \
-	../node/vuo.text/examples/CheckSmsLength.vuo  \
 	../node/vuo.video/examples/PlayMovie.vuo
 
 pandoc.commands = cat VuoManual.txt \

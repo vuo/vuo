@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Drags",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "move" ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,

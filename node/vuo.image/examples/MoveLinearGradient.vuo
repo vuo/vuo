@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Displays a linear gradient image, with the gradient's start point controlled by mouse movements.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="1269,385" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="655,416" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeLinearGradientImage [type="vuo.image.make.gradient.linear" version="1.0.1" label="Make Linear Gradient Image|<refresh>refresh\l|<colors>colors\l|<start>start\l|<end>end\l|<width>width\l|<height>height\l|<image>image\r" pos="902,245" fillcolor="violet" _end="{\"x\":0.000000,\"y\":0.000000}" _width="768" _height="768"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="832,256" fillcolor="violet" _1="{\"r\":0.111269,\"g\":0.066423,\"b\":0.475868,\"a\":1.000000}" _2="{\"r\":0.448280,\"g\":0.041245,\"b\":0.046876,\"a\":1.000000}"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1403,411" fillcolor="green"];
+MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="979,507"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="818,498" _text="\"Move the mouse to change the gradient's start point.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.500000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.2" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="616,260" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1444,385" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1048,496" _width="768" _height="768" _colorDepth="\"8bpc\""];
+
+BlendImages:blended -> RenderImageToWindow:image;
+FireOnStart:started -> MakeLinearGradientImage:refresh;
+FireOnStart:started -> MakeTextLayer2:refresh;
+MakeLinearGradientImage:image -> BlendImages:background;
+MakeList2:list -> MakeLinearGradientImage:colors;
+MakeList6:list -> RenderImageToWindow:setWindowProperties;
+MakeList8:list -> RenderLayersToImage:layers;
+MakeTextLayer2:layer -> MakeList8:1;
+ReceiveMouseMoves:movedTo -> MakeLinearGradientImage:start;
+RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
+RenderLayersToImage:image -> BlendImages:foreground;
+}

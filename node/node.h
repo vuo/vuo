@@ -62,10 +62,10 @@
  * @param type The port type. See @ref VuoTypes.
  * @param ... Optionally, a JSON object specification containing additional details about the data. Supported JSON keys include:
  *			- "default" — The default constant value for the port. It should have the format accepted by the port type's
- *			  MyType_valueFromJson() function.
+ *			  MyType_makeFromJson() function.
  *			- "defaults" — For generic ports, the default constant values for data types to which the port can be specialized.
  *			  The value for this JSON key should be a JSON object in which each key is a specialized port type name and each
- *			  value has the format accepted by that port type's MyType_valueFromJson() function.
+ *			  value has the format accepted by that port type's MyType_makeFromJson() function.
  *			- "name" (string) — Overrides the default heuristics for creating the port's displayed name in rendered compositions.
  *			  This is usually not necessary.
  *			.
