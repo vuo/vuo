@@ -13,30 +13,11 @@
 VuoModuleMetadata({
 					  "title" : "Make Checkerboard Image",
 					  "keywords" : [ "backdrop", "background", "checkers", "chess", "debug", "uvw", "mosaic" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "CompareImageGenerators.vuo" ]
+						  "exampleCompositions" : [ "MoveCheckerboardCenter.vuo" ]
 					  }
 				 });
-
-struct nodeInstanceData
-{
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
-};
-
-struct nodeInstanceData * nodeInstanceInit(void)
-{
-	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
-	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
-
-	return instance;
-}
 
 static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
@@ -68,6 +49,30 @@ static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120
 	}
 );
 
+struct nodeInstanceData
+{
+	VuoShader shader;
+	VuoGlContext glContext;
+	VuoImageRenderer imageRenderer;
+};
+
+struct nodeInstanceData * nodeInstanceInit(void)
+{
+	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
+	VuoRegister(instance, free);
+
+	instance->glContext = VuoGlContext_use();
+
+	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
+	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Checkerboard Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, checkerboardFragmentShaderSource);
+	VuoRetain(instance->shader);
+
+	return instance;
+}
+
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
@@ -80,28 +85,24 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_make("Checkerboard Shader");
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, checkerboardFragmentShaderSource);
-	VuoRetain(shader);
 
 	VuoPoint4d col1 = { upperLeftColor.r, upperLeftColor.g, upperLeftColor.b, upperLeftColor.a };
 	VuoPoint4d col2 = { upperRightColor.r, upperRightColor.g, upperRightColor.b, upperRightColor.a };
 	VuoPoint2d cen = { (center.x+1)/2., (center.y+1)/2. };
 
-	VuoShader_setUniform_VuoReal   (shader, "size", MAX(squareSize/2, .0001) );
-	VuoShader_setUniform_VuoPoint2d(shader, "center", cen);
-	VuoShader_setUniform_VuoPoint2d(shader, "imageSize", (VuoPoint2d){width, height});
-	VuoShader_setUniform_VuoPoint4d(shader, "color1", col1);
-	VuoShader_setUniform_VuoPoint4d(shader, "color2", col2);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "size", MAX(squareSize/2, .0001) );
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "center", cen);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "imageSize", (VuoPoint2d){width, height});
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "color1", col1);
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "color2", col2);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
-
-	VuoRelease(shader);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

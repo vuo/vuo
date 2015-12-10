@@ -42,10 +42,11 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoImageBlur.bc \
 	$$ROOT/library/VuoImageMapColors.o \
 	$$ROOT/library/VuoImageRenderer.o \
+	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMeshParametric.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoSceneRenderer.o \
-	$$ROOT/library/VuoUrl.o \
+	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoBlendMode.o \
@@ -69,6 +70,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/VuoTransform.o \
 	$$ROOT/type/VuoTransform2d.o \
+	$$ROOT/type/VuoUrl.o \
 	$$ROOT/type/list/VuoList_VuoAudioSamples.o \
 	$$ROOT/type/list/VuoList_VuoBoolean.o \
 	$$ROOT/type/list/VuoList_VuoBlendMode.o \

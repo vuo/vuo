@@ -32,11 +32,12 @@ struct json_object;
  */
 typedef const char * VuoText;
 
-VuoText VuoText_valueFromJson(struct json_object * js);
-struct json_object * VuoText_jsonFromValue(const VuoText value);
-char * VuoText_summaryFromValue(const VuoText value);
+VuoText VuoText_makeFromJson(struct json_object * js);
+struct json_object * VuoText_getJson(const VuoText value);
+char * VuoText_getSummary(const VuoText value);
 
 VuoText VuoText_make(const char * unquotedString);
+VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength);
 size_t VuoText_length(const VuoText text);
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);
 bool VuoText_isLessThan(const VuoText text1, const VuoText text2);
@@ -44,6 +45,8 @@ size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring)
 VuoText VuoText_substring(const VuoText string, int startIndex, int length);
 VuoText VuoText_append(VuoText *texts, size_t textsCount);
 VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement);
+VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength);
+VuoText VuoText_trim(const VuoText text);
 
 #ifndef DOXYGEN
 	#define VUOTEXT_FORMAT_ATTRIBUTE __attribute__((format(printf, 1, 2)))
@@ -56,8 +59,8 @@ char *VuoText_format(const char *format, ...) VUOTEXT_FORMAT_ATTRIBUTE;
 /**
  * Automatically generated function.
  */
-VuoText VuoText_valueFromString(const char *str);
-char * VuoText_stringFromValue(const VuoText value);
+VuoText VuoText_makeFromString(const char *str);
+char * VuoText_getString(const VuoText value);
 void VuoText_retain(VuoText value);
 void VuoText_release(VuoText value);
 /// @}

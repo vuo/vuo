@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,5 +11,5 @@
 
 digraph G
 {
-GetPointableValues [type="vuo.leap.get.pointable" version="2.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<id>id\r|<type>type\r|<transform>transform\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<isExtended>isExtended\r|<timeVisible>timeVisible\r" pos="232,408"];
+GetPointableValues [type="vuo.leap.get.pointable" version="1.0.0" label="Get Pointable Values|<refresh>refresh\l|<pointable>pointable\l|<done>done\r|<id>id\r|<type>type\r|<length>length\r|<width>width\r|<direction>direction\r|<tipPosition>tipPosition\r|<stabilizedTipPosition>stabilizedTipPosition\r|<tipVelocity>tipVelocity\r|<touchZone>touchZone\r|<touchDistance>touchDistance\r|<timeVisible>timeVisible\r" pos="375,338"];
 }

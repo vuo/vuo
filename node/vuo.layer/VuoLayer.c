@@ -13,6 +13,7 @@
 #include "type.h"
 #include "VuoLayer.h"
 #include "VuoList_VuoSceneObject.h"
+#include "VuoImageText.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -23,6 +24,7 @@ VuoModuleMetadata({
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						"VuoColor",
+						"VuoImageText",
 						"VuoPoint2d",
 						"VuoSceneObject",
 						"VuoTransform2d",
@@ -192,7 +194,7 @@ VuoLayer VuoLayer_makeRealSizeWithShadow(VuoText name, VuoImage image, VuoPoint2
 }
 
 /**
- * Creates a visible layer with the specified color
+ * Creates a rectangular layer with the specified color
  *
  * @param name The layer's name (used by, e.g., @ref VuoRenderedLayers_findLayer).
  * @param color The layer's color.
@@ -211,6 +213,65 @@ VuoLayer VuoLayer_makeColor(VuoText name, VuoColor color, VuoPoint2d center, Vuo
 				width,
 				height
 			);
+	o.sceneObject.name = name;
+	return o;
+}
+
+/**
+ * Creates an oval layer with the specified color
+ *
+ * @param name The layer's name (used by, e.g., @ref VuoRenderedLayers_findLayer).
+ * @param color The layer's color.
+ * @param center The center of the layer, in Vuo Coordinates.
+ * @param rotation The layer's angle, in degrees.
+ * @param width The width of the layer, in Vuo Coordinates.
+ * @param height The height of the layer, in Vuo Coordinates.
+ * @param sharpness How sharp the edge of the oval is, from 0 (blurry) to 1 (sharp).
+ */
+VuoLayer VuoLayer_makeOval(VuoText name, VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal sharpness)
+{
+	VuoLayer o;
+	// Since VuoShader_makeUnlitCircleShader() produces a shader that fills half the size (to leave enough room for sharpness=0),
+	// make the layer twice the specified size.
+	o.sceneObject = VuoSceneObject_makeQuad(
+				VuoShader_makeUnlitCircleShader(color, sharpness),
+				VuoPoint3d_make(center.x, center.y, 0),
+				VuoPoint3d_make(0, 0, rotation),
+				width*2,
+				height*2
+			);
+	o.sceneObject.name = name;
+	return o;
+}
+
+/**
+ * Creates a rounded rectangle layer with the specified color
+ *
+ * @param name The layer's name (used by, e.g., @ref VuoRenderedLayers_findLayer).
+ * @param color The layer's color.
+ * @param center The center of the layer, in Vuo Coordinates.
+ * @param rotation The layer's angle, in degrees.
+ * @param width The width of the layer, in Vuo Coordinates.
+ * @param height The height of the layer, in Vuo Coordinates.
+ * @param sharpness How sharp the edges of the rectangle are, from 0 (blurry) to 1 (sharp).
+ * @param roundness How round the corners of the rectangle are, from 0 (rectangular) to 1 (circular / capsular).
+ */
+VuoLayer VuoLayer_makeRoundedRectangle(VuoText name, VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal sharpness, VuoReal roundness)
+{
+	VuoLayer o;
+
+	// Adjust the rotation so the aspect is never less than 1 (since that isn't supported by the shader).
+	bool flipped = (width/height < 1);
+
+	// Since VuoShader_makeUnlitRoundedRectangleShader() produces a shader that fills half the size (to leave enough room for sharpness=0),
+	// make the layer twice the specified size.
+	o.sceneObject = VuoSceneObject_makeQuad(
+				VuoShader_makeUnlitRoundedRectangleShader(color, sharpness, roundness, (flipped ? height/width : width/height)),
+				VuoPoint3d_make(center.x, center.y, 0),
+				VuoPoint3d_make(0, 0, rotation + (flipped ? 90 : 0)),
+				(flipped ? height : width ) * 2,
+				(flipped ? width  : height) * 2
+				);
 	o.sceneObject.name = name;
 	return o;
 }
@@ -287,11 +348,17 @@ VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transfo
 /**
  * Returns a rectangle enclosing the sceneobject (which is assumed to be 2-dimensional).
  */
-static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject so, VuoInteger viewportWidth, VuoInteger viewportHeight)
+static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject so, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
 {
 	VuoRectangle b = VuoRectangle_make(0,0,0,0);
 
 	float matrix[16];
+
+	if (so.type == VuoSceneObjectType_Text)
+	{
+		b = VuoImage_getTextRectangle(so.text, so.font);
+		b.size = VuoPoint2d_multiply(b.size, backingScaleFactor * 2./(viewportWidth));
+	}
 
 	if (so.shader)
 	{
@@ -312,7 +379,7 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 		for (unsigned long i = 1; i <= childObjectCount; ++i)
 		{
 			VuoSceneObject child = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-			VuoRectangle childBoundingBox = VuoLayer_getBoundingRectangleWithSceneObject(child, viewportWidth, viewportHeight);
+			VuoRectangle childBoundingBox = VuoLayer_getBoundingRectangleWithSceneObject(child, viewportWidth, viewportHeight, backingScaleFactor);
 			childBoundingBox = VuoTransform_transformRectangle(matrix, childBoundingBox);
 			b = VuoPoint2d_rectangleUnion(b, childBoundingBox);
 		}
@@ -324,36 +391,36 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 /**
  * Returns the minimal rectangle enclosing the layer and its child layers.
  */
-VuoRectangle VuoLayer_getBoundingRectangle(VuoLayer layer, VuoInteger viewportWidth, VuoInteger viewportHeight)
+VuoRectangle VuoLayer_getBoundingRectangle(VuoLayer layer, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
 {
-	return VuoLayer_getBoundingRectangleWithSceneObject(layer.sceneObject, viewportWidth, viewportHeight);
+	return VuoLayer_getBoundingRectangleWithSceneObject(layer.sceneObject, viewportWidth, viewportHeight, backingScaleFactor);
 }
 
 /**
  * @ingroup VuoLayer
- * @see VuoSceneObject_valueFromJson
+ * @see VuoSceneObject_makeFromJson
  */
-VuoLayer VuoLayer_valueFromJson(json_object * js)
+VuoLayer VuoLayer_makeFromJson(json_object * js)
 {
 	VuoLayer o;
-	o.sceneObject = VuoSceneObject_valueFromJson(js);
+	o.sceneObject = VuoSceneObject_makeFromJson(js);
 	return o;
 }
 
 /**
  * @ingroup VuoLayer
- * @see VuoSceneObject_jsonFromValue
+ * @see VuoSceneObject_getJson
  */
-json_object * VuoLayer_jsonFromValue(const VuoLayer value)
+json_object * VuoLayer_getJson(const VuoLayer value)
 {
-	return VuoSceneObject_jsonFromValue(value.sceneObject);
+	return VuoSceneObject_getJson(value.sceneObject);
 }
 
 /**
  * @ingroup VuoLayer
- * @see VuoSceneObject_summaryFromValue
+ * @see VuoSceneObject_getSummary
  */
-char * VuoLayer_summaryFromValue(const VuoLayer value)
+char * VuoLayer_getSummary(const VuoLayer value)
 {
-	return VuoSceneObject_summaryFromValue(value.sceneObject);
+	return VuoSceneObject_getSummary(value.sceneObject);
 }

@@ -1,1 +1,1 @@
-Outputs just the (x,y) part of a 3D point (x,y,z).
+Outputs just the (X,Y) part of a 3D point (X,Y,Z).

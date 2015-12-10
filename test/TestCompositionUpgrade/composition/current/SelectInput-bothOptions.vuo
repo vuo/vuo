@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,22 +11,11 @@
 
 digraph G
 {
-AreAllHit [type="vuo.event.areAllHit.2" version="1.0.0" label="Are All Hit|<refresh>refresh\l|<input1>input1\l|<input2>input2\l|<allHit>allHit\r" pos="475,203"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="819,123" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="35,40" _seconds="1.000000" _fired_eventThrottling="drop"];
-ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="38,131" _key="\"any\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="349,118" _falseOption="\"pressed\"" _trueOption="\"released\""];
-SelectOutput4 [type="vuo.select.out.boolean.VuoText" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="634,108"];
-Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="210,40"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="513,147" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="12,82" _seconds="1.000000" _fired_eventThrottling="drop"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.0" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<done>done\r|<pressed>pressed\r|<released>released\r" pos="31,162" _key="\"any\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+SelectInput3 [type="vuo.select.in.VuoText" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="334,148" _falseOption="\"pressed\"" _trueOption="\"released\""];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<done>done\r|<value>value\r" pos="183,83"];
 
-AreAllHit:allHit -> SelectOutput4:which;
 FirePeriodically:fired -> Toggle:toggle;
-ReceiveKeyboardButtons2:pressed -> AreAllHit:input2;
-ReceiveKeyboardButtons2:pressed -> SelectInput4:falseOption;
-ReceiveKeyboardButtons2:released -> AreAllHit:input2;
-ReceiveKeyboardButtons2:released -> SelectInput4:trueOption;
-SelectInput4:out -> AreAllHit:input1;
-SelectInput4:out -> SelectOutput4:in;
-SelectOutput4:trueOption -> DisplayConsoleWindow:writeLine;
-Toggle:value -> SelectInput4:which;
 }

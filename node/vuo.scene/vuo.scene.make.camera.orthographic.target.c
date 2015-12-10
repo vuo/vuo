@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "axonometric", "elevation", "isometric", "orthogonal", "parallel", "projection", "draw", "opengl", "scenegraph", "graphics" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "Compare4Cameras.vuo" ]
+						 "exampleCompositions" : [ "CompareCameras.vuo" ]
 					 }
 				 });
 

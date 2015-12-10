@@ -433,7 +433,7 @@ extern "C" {
 		return 0;
 
 	json_object *valueJson = self.runner->getPublishedOutputPortValue(port);
-	VuoImage vuoImage = VuoImage_valueFromJson(valueJson);
+	VuoImage vuoImage = VuoImage_makeFromJson(valueJson);
 	if (!vuoImage)
 		return 0;
 	json_object_put(valueJson);
@@ -504,7 +504,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 		VuoImage image = VuoImage_makeClientOwned(textureName, GL_RGBA, pixelsWide, pixelsHigh, VuoRunnerCocoa_doNothingCallback, NULL);
 		image->glTextureTarget = target;
 		VuoRetain(image);
-		json_object *valueJson = VuoImage_interprocessJsonFromValue(image);
+		json_object *valueJson = VuoImage_getInterprocessJson(image);
 		VuoRelease(image);
 		self.runner->setPublishedInputPortValue(port, valueJson);
 		json_object_put(valueJson);
@@ -523,7 +523,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 
 	{
 		VuoRunner::Port *port = self.runner->getPublishedInputPortWithName("time");
-		json_object *valueJson = VuoReal_jsonFromValue(time);
+		json_object *valueJson = VuoReal_getJson(time);
 		self.runner->setPublishedInputPortValue(port, valueJson);
 		json_object_put(valueJson);
 	}
@@ -617,21 +617,21 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 
 	{
 		VuoRunner::Port *port = self.runner->getPublishedInputPortWithName("width");
-		json_object *valueJson = VuoInteger_jsonFromValue(suggestedPixelsWide);
+		json_object *valueJson = VuoInteger_getJson(suggestedPixelsWide);
 		self.runner->setPublishedInputPortValue(port, valueJson);
 		json_object_put(valueJson);
 	}
 
 	{
 		VuoRunner::Port *port = self.runner->getPublishedInputPortWithName("height");
-		json_object *valueJson = VuoInteger_jsonFromValue(suggestedPixelsHigh);
+		json_object *valueJson = VuoInteger_getJson(suggestedPixelsHigh);
 		self.runner->setPublishedInputPortValue(port, valueJson);
 		json_object_put(valueJson);
 	}
 
 	{
 		VuoRunner::Port *port = self.runner->getPublishedInputPortWithName("time");
-		json_object *valueJson = VuoReal_jsonFromValue(time);
+		json_object *valueJson = VuoReal_getJson(time);
 		self.runner->setPublishedInputPortValue(port, valueJson);
 		json_object_put(valueJson);
 	}

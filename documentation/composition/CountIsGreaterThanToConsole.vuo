@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertRealToText [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="544,214"];
+Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="194,39" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="423,189" fillcolor="green" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="28,-23" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
+IsGreaterThan [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="303,-64" _b="5.000000"];
+SelectOutput2 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="470,21" fillcolor="violet"];
+
+ConvertRealToText:text -> DisplayConsoleWindow:writeLine;
+Count:count -> IsGreaterThan:a;
+Count:count -> SelectOutput2:in;
+FirePeriodically:fired -> Count:increment;
+IsGreaterThan:greaterThan -> SelectOutput2:which;
+SelectOutput2:trueOption -> ConvertRealToText:real;
+}

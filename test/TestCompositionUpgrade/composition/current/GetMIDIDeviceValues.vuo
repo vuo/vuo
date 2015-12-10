@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,14 +11,9 @@
 
 digraph G
 {
-GetItemFromList [type="vuo.list.get.VuoMidiInputDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="472,96" _which="42"];
-GetItemFromList2 [type="vuo.list.get.VuoMidiOutputDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="472,211" _which="22"];
-GetMIDIDeviceValues [type="vuo.midi.get.input" version="1.0.0" label="Get MIDI Input Values|<refresh>refresh\l|<device>device\l|<id>id\r|<name>name\r" pos="678,103"];
-GetMIDIDeviceValues2 [type="vuo.midi.get.output" version="1.0.0" label="Get MIDI Output Values|<refresh>refresh\l|<device>device\l|<id>id\r|<name>name\r" pos="678,218"];
-ListMIDIDevices [type="vuo.midi.listDevices" version="2.0.0" label="List MIDI Devices|<refresh>refresh\l|<inputDevices>inputDevices\r|<outputDevices>outputDevices\r" pos="219,111"];
-
-GetItemFromList2:item -> GetMIDIDeviceValues2:device;
-GetItemFromList:item -> GetMIDIDeviceValues:device;
-ListMIDIDevices:inputDevices -> GetItemFromList:list;
-ListMIDIDevices:outputDevices -> GetItemFromList2:list;
+GetItemFromList [type="vuo.list.get.VuoMidiDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="472,96" _which="42"];
+GetItemFromList2 [type="vuo.list.get.VuoMidiDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="472,211" _which="22"];
+GetMIDIDeviceValues [type="vuo.midi.get.device" version="1.0.0" label="Get MIDI Device Values|<refresh>refresh\l|<device>device\l|<done>done\r|<id>id\r|<name>name\r|<isInput>isInput\r" pos="678,103"];
+GetMIDIDeviceValues2 [type="vuo.midi.get.device" version="1.0.0" label="Get MIDI Device Values|<refresh>refresh\l|<device>device\l|<done>done\r|<id>id\r|<name>name\r|<isInput>isInput\r" pos="678,218"];
+ListMIDIDevices [type="vuo.midi.listDevices" version="1.0.0" label="List MIDI Devices|<refresh>refresh\l|<done>done\r|<inputDevices>inputDevices\r|<outputDevices>outputDevices\r" pos="219,111"];
 }

@@ -43,7 +43,7 @@ const VuoReal VuoAudioSamples_sampleRate = 48000;	///<https://b33p.net/kosada/no
  *   }
  * }
  */
-VuoAudioSamples VuoAudioSamples_valueFromJson(json_object * js)
+VuoAudioSamples VuoAudioSamples_makeFromJson(json_object * js)
 {
 	VuoAudioSamples value = {0, NULL, 0};
 	json_object *o = NULL;
@@ -66,7 +66,7 @@ VuoAudioSamples VuoAudioSamples_valueFromJson(json_object * js)
 	}
 
 	if (json_object_object_get_ex(js, "samplesPerSecond", &o))
-		value.samplesPerSecond = VuoReal_valueFromJson(o);
+		value.samplesPerSecond = VuoReal_makeFromJson(o);
 
 	return value;
 }
@@ -74,16 +74,16 @@ VuoAudioSamples VuoAudioSamples_valueFromJson(json_object * js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoAudioSamples_jsonFromValue(const VuoAudioSamples value)
+json_object * VuoAudioSamples_getJson(const VuoAudioSamples value)
 {
 	json_object *js = json_object_new_object();
 
 	json_object *samplesObject = json_object_new_array();
 	for (VuoInteger i=0; i<value.sampleCount; ++i)
-		json_object_array_add(samplesObject, VuoReal_jsonFromValue(value.samples[i]));
+		json_object_array_add(samplesObject, VuoReal_getJson(value.samples[i]));
 	json_object_object_add(js, "samples", samplesObject);
 
-	json_object *samplesPerSecondObject = VuoReal_jsonFromValue(value.samplesPerSecond);
+	json_object *samplesPerSecondObject = VuoReal_getJson(value.samplesPerSecond);
 	json_object_object_add(js, "samplesPerSecond", samplesPerSecondObject);
 
 	return js;
@@ -92,7 +92,7 @@ json_object * VuoAudioSamples_jsonFromValue(const VuoAudioSamples value)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoAudioSamples_summaryFromValue(const VuoAudioSamples value)
+char * VuoAudioSamples_getSummary(const VuoAudioSamples value)
 {
 	return VuoText_format("%lld samples @ %g kHz", value.sampleCount, value.samplesPerSecond/1000);
 }

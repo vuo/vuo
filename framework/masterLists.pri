@@ -46,6 +46,8 @@ for(header_list, API_HEADER_LISTS) {
 FRAMEWORK_VUO_HEADERS.files += ../type/list/VuoList_*.h
 # The list headers get included via node.h, so there's no need to add them to MASTER_VUO_HEADER_LIST.
 
+FRAMEWORK_VUO_HEADERS.files += ../node/vuo.font/VuoFont.h
+
 FRAMEWORK_VUO_STUB_HEADER = "Vuo.stub.h"
 VUO_PRI_LIBS = $$LIBS
 
@@ -138,6 +140,7 @@ NODE_LIBRARY_SOURCES = ""
 NODE_SOURCES = ""
 OBJECTIVE_SOURCES = ""
 OTHER_FILES = ""
+PCH_INCLUDE_PATHS = ""
 PRE_TARGETDEPS = ""
 QMAKE_AR_CMD = ""
 QMAKE_CFLAGS = ""

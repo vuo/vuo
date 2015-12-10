@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Apply Mask",
 					  "keywords" : [ "transparency", "negative", "remove", "cut", "magic", "wand" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieWithStar.vuo" ]
 					  }
@@ -40,6 +40,7 @@ static const char *maskFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoGlContext glContext;
+	VuoShader shader;
 	VuoImageRenderer imageRenderer;
 };
 
@@ -52,6 +53,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Apply Mask");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, maskFragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -68,18 +73,15 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Apply Mask");
-	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, maskFragmentShader);
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage(frag, "texture", image);
-	VuoShader_setUniform_VuoImage(frag, "mask", mask);
-	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
-	VuoRelease(frag);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "mask", mask);
+	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

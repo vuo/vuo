@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoLoopType
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoLoopType.
  */
-VuoLoopType VuoLoopType_valueFromJson(json_object *js)
+VuoLoopType VuoLoopType_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -56,7 +56,7 @@ VuoLoopType VuoLoopType_valueFromJson(json_object *js)
  * @ingroup VuoLoopType
  * Encodes @c value as a JSON object.
  */
-json_object * VuoLoopType_jsonFromValue(const VuoLoopType value)
+json_object * VuoLoopType_getJson(const VuoLoopType value)
 {
 	char *valueAsString = "";
 
@@ -78,7 +78,7 @@ json_object * VuoLoopType_jsonFromValue(const VuoLoopType value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoLoopType VuoLoopType_allowedValues(void)
+VuoList_VuoLoopType VuoLoopType_getAllowedValues(void)
 {
 	VuoList_VuoLoopType l = VuoListCreate_VuoLoopType();
 	VuoListAppendValue_VuoLoopType(l, VuoLoopType_Loop);
@@ -89,9 +89,9 @@ VuoList_VuoLoopType VuoLoopType_allowedValues(void)
 
 /**
  * @ingroup VuoLoopType
- * Same as @c %VuoBlendMode_stringFromValue()
+ * Same as @c %VuoBlendMode_getString()
  */
-char * VuoLoopType_summaryFromValue(const VuoLoopType value)
+char * VuoLoopType_getSummary(const VuoLoopType value)
 {
 	char *valueAsString = "";
 

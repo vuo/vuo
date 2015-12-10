@@ -31,17 +31,17 @@ typedef enum {
 	VuoLeapPointableType_Tool
 } VuoLeapPointableType;
 
-VuoLeapPointableType VuoLeapPointableType_valueFromJson(struct json_object * js);
-struct json_object * VuoLeapPointableType_jsonFromValue(const VuoLeapPointableType value);
-VuoList_VuoLeapPointableType VuoLeapPointableType_allowedValues(void);
-char * VuoLeapPointableType_summaryFromValue(const VuoLeapPointableType value);
+VuoLeapPointableType VuoLeapPointableType_makeFromJson(struct json_object * js);
+struct json_object * VuoLeapPointableType_getJson(const VuoLeapPointableType value);
+VuoList_VuoLeapPointableType VuoLeapPointableType_getAllowedValues(void);
+char * VuoLeapPointableType_getSummary(const VuoLeapPointableType value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoLeapPointableType VuoLeapPointableType_valueFromString(const char *str);
-char * VuoLeapPointableType_stringFromValue(const VuoLeapPointableType value);
+VuoLeapPointableType VuoLeapPointableType_makeFromString(const char *str);
+char * VuoLeapPointableType_getString(const VuoLeapPointableType value);
 /// @}
 
 /**

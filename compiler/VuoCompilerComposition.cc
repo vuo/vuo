@@ -119,12 +119,18 @@ void VuoCompilerComposition::check(void)
 void VuoCompilerComposition::checkForMissingNodeClasses(void)
 {
 	set<string> missingNodeClasses;
+	set<string> encounteredPremiumModules = VuoCompiler::getEncounteredPremiumModules();
 	set<VuoNode *> nodes = getBase()->getNodes();
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
 		if (! node->getNodeClass()->hasCompiler())
-			missingNodeClasses.insert(node->getNodeClass()->getClassName() + " (" + node->getTitle() + ")");
+		{
+			string nodeClassDescription = node->getNodeClass()->getClassName() + " (" + node->getTitle() + ")";
+			if (encounteredPremiumModules.find(node->getNodeClass()->getClassName()) != encounteredPremiumModules.end())
+				nodeClassDescription += " [premium node]";
+			missingNodeClasses.insert(nodeClassDescription);
+		}
 	}
 	if (! missingNodeClasses.empty())
 	{

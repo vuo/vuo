@@ -67,7 +67,13 @@ char * vuoReceiveAndCopyString(void *socket)
 {
 	zmq_msg_t message;
 	zmq_msg_init(&message);
-	while (zmq_recv(socket,&message,0) != 0);
+
+	if (zmq_recv(socket, &message, 0) != 0)
+	{
+		VLog("Error: Connection timed out: %s", strerror(errno));
+		return NULL;
+	}
+
 	char *string = vuoCopyStringFromMessage(&message);
 	zmq_msg_close(&message);
 	return string;
@@ -80,11 +86,19 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
 {
 	zmq_msg_t message;
 	zmq_msg_init(&message);
-	while (zmq_recv(socket,&message,0) != 0);
+
+	if (zmq_recv(socket, &message, 0) != 0)
+	{
+		VLog("Error: Connection timed out: %s", strerror(errno));
+		bzero(data, dataSize);
+		return;
+	}
+
 	size_t messageSize = zmq_msg_size(&message);
 	if (messageSize != dataSize)
 	{
 		VLog("Error: vuoReceiveBlocking() expected %lu bytes of data, but actually received %lu.", (unsigned long)dataSize, (unsigned long)messageSize);
+		bzero(data, dataSize);
 		return;
 	}
 	memcpy(data, zmq_msg_data(&message), messageSize);

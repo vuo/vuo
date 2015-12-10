@@ -14,11 +14,12 @@ OTHER_FILES += \
 	VuoInputEditorRealRegulation.json
 
 INCLUDEPATH += \
-	$$ROOT/library
+	$$ROOT/library \
+	$$ROOT/node/vuo.bcf2000
 
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
-	$$ROOT/type/VuoRealRegulation.o \
+	$$ROOT/node/vuo.bcf2000/VuoRealRegulation.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \

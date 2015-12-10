@@ -19,11 +19,12 @@ NODE_SOURCES += \
 	vuo.type.integer.point4d.z.c \
 	vuo.type.integer.real.c \
 	vuo.type.integer.text.c \
+	vuo.type.list.audio.real.c \
 	vuo.type.list.integer.real.c \
 	vuo.type.list.point2d.point3d.xy.c \
-	vuo.type.list.point3d.point2d.xy.c \
 	vuo.type.list.point2d.real.x.c \
 	vuo.type.list.point2d.real.y.c \
+	vuo.type.list.point3d.point2d.xy.c \
 	vuo.type.list.point3d.real.x.c \
 	vuo.type.list.point3d.real.y.c \
 	vuo.type.list.point3d.real.z.c \
@@ -53,11 +54,18 @@ NODE_SOURCES += \
 	vuo.type.real.point4d.y.c \
 	vuo.type.real.point4d.z.c \
 	vuo.type.real.text.c \
+	vuo.type.rotate.point3d.transform.c \
+	vuo.type.rotate.real.transform2d.c \
+	vuo.type.scale.point2d.transform2d.c \
+	vuo.type.scale.point3d.transform.c \
 	vuo.type.text.boolean.c \
 	vuo.type.text.integer.c \
 	vuo.type.text.real.c \
+	vuo.type.translate.point2d.transform2d.c \
+	vuo.type.translate.point3d.transform.c \
 	vuo.type.videoframe.image.c \
 	vuo.type.videoframe.real.c
+
 
 NODE_INCLUDEPATH += \
 	../vuo.leap \

@@ -12,10 +12,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Change All Shaders",
-					  "keywords" : [ "swap" ],
+					  "keywords" : [ "swap", "replace", "texture", "material" ],
 					  "version" : "2.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "ReplaceShaderForScene.vuo" ]
+						  "exampleCompositions" : [ "PaintSceneWithCheckerboard.vuo", "CompareCameras.vuo" ]
 					  }
 				  });
 

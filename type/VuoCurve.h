@@ -40,17 +40,17 @@ typedef enum {
 	VuoCurve_Exponential
 } VuoCurve;
 
-VuoCurve VuoCurve_valueFromJson(struct json_object * js);
-struct json_object * VuoCurve_jsonFromValue(const VuoCurve value);
-VuoList_VuoCurve VuoCurve_allowedValues(void);
-char * VuoCurve_summaryFromValue(const VuoCurve value);
+VuoCurve VuoCurve_makeFromJson(struct json_object * js);
+struct json_object * VuoCurve_getJson(const VuoCurve value);
+VuoList_VuoCurve VuoCurve_getAllowedValues(void);
+char * VuoCurve_getSummary(const VuoCurve value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoCurve VuoCurve_valueFromString(const char *str);
-char * VuoCurve_stringFromValue(const VuoCurve value);
+VuoCurve VuoCurve_makeFromString(const char *str);
+char * VuoCurve_getString(const VuoCurve value);
 void VuoCurve_retain(VuoCurve value);
 void VuoCurve_release(VuoCurve value);
 /// @}

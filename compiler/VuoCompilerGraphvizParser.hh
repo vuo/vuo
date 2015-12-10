@@ -28,8 +28,6 @@ class VuoCompilerGraphvizParser
 private:
 	VuoCompiler *compiler;
 	graph_t *graph;
-	map<string, set<string> > dummyInputNamesForNodeClassName;
-	map<string, set<string> > dummyOutputNamesForNodeClassName;
 	map<string, VuoNodeClass *> dummyNodeClassForName;
 	map<string, VuoNodeClass *> nodeClassForName;
 	map<string, VuoNode *> nodeForName;
@@ -45,10 +43,9 @@ private:
 	string description;
 	string copyright;
 
-	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler, set<VuoCompilerNodeClass *> extraNodeClasses);
-	void makeDummyPorts(void);
+	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler);
 	void makeDummyNodeClasses(void);
-	void makeNodeClasses(set<VuoCompilerNodeClass *> extraNodeClasses);
+	void makeNodeClasses(void);
 	void makeNodes(void);
 	void makeCables(void);
 	void makePublishedPorts(void);
@@ -62,10 +59,8 @@ private:
 	static VuoType * inferTypeForPublishedPort(string name, const set<VuoCompilerPort *> &connectedPorts);
 
 public:
-	static VuoCompilerGraphvizParser * newParserFromCompositionFile(string path, VuoCompiler *compiler = NULL,
-																	set<VuoCompilerNodeClass *> extraNodeClasses = set<VuoCompilerNodeClass *>());
-	static VuoCompilerGraphvizParser * newParserFromCompositionString(const string &composition, VuoCompiler *compiler = NULL,
-																	  set<VuoCompilerNodeClass *> extraNodeClasses = set<VuoCompilerNodeClass *>());
+	static VuoCompilerGraphvizParser * newParserFromCompositionFile(string path, VuoCompiler *compiler = NULL);
+	static VuoCompilerGraphvizParser * newParserFromCompositionString(const string &composition, VuoCompiler *compiler = NULL);
 	vector<VuoNode *> getNodes(void);
 	vector<VuoCable *> getCables(void);
 	vector<VuoCompilerPublishedPort *> getPublishedInputPorts(void);

@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title": "Convert 2D Point List to Real List",
-					  "description": "Creates a list of real numbers using the x coordinate of the input list of 2D points.",
+					  "description": "Creates a list of real numbers using the X coordinate of the input list of 2D points.",
 					  "version": "1.0.0"
 				 });
 

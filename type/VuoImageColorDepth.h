@@ -33,17 +33,17 @@ typedef enum {
 
 unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, VuoImageColorDepth imageColorDepth);
 
-VuoImageColorDepth VuoImageColorDepth_valueFromJson(struct json_object * js);
-struct json_object * VuoImageColorDepth_jsonFromValue(const VuoImageColorDepth value);
-VuoList_VuoImageColorDepth VuoImageColorDepth_allowedValues(void);
-char * VuoImageColorDepth_summaryFromValue(const VuoImageColorDepth value);
+VuoImageColorDepth VuoImageColorDepth_makeFromJson(struct json_object * js);
+struct json_object * VuoImageColorDepth_getJson(const VuoImageColorDepth value);
+VuoList_VuoImageColorDepth VuoImageColorDepth_getAllowedValues(void);
+char * VuoImageColorDepth_getSummary(const VuoImageColorDepth value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoImageColorDepth VuoImageColorDepth_valueFromString(const char *str);
-char * VuoImageColorDepth_stringFromValue(const VuoImageColorDepth value);
+VuoImageColorDepth VuoImageColorDepth_makeFromString(const char *str);
+char * VuoImageColorDepth_getString(const VuoImageColorDepth value);
 void VuoImageColorDepth_retain(VuoImageColorDepth value);
 void VuoImageColorDepth_release(VuoImageColorDepth value);
 ///@}

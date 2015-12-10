@@ -65,7 +65,7 @@ void nodeEvent
 	VuoOutputData(VuoText) text
 )
 {
-	char *textAsCString = VuoInteger_stringFromValue(integer);
+	char *textAsCString = VuoInteger_getString(integer);
 	*text = VuoText_make(textAsCString);
 	free(textAsCString);
 }
@@ -80,7 +80,7 @@ void nodeEvent
 	VuoOutputTrigger(fireText, VuoText)
 )
 {
-	char *textAsCString = VuoInteger_stringFromValue(integer);
+	char *textAsCString = VuoInteger_getString(integer);
 	fireText( VuoText_make(textAsCString) );
 	free(textAsCString);
 }
@@ -100,7 +100,7 @@ If you're defining a port type that's a pointer to heap-allocated data, then you
 @code{.cc}
 typedef char * MyString;
 
-MyString MyString_valueFromJson(json_object * js)
+MyString MyString_makeFromJson(json_object * js)
 {
 	const char *s = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -122,7 +122,7 @@ typedef struct {
 	size_t elementCount;
 } ArrayOfFloats;
 
-ArrayOfFloats ArrayOfFloats_valueFromJson(json_object * js)
+ArrayOfFloats ArrayOfFloats_makeFromJson(json_object * js)
 {
 	ArrayOfFloats a;
 	a.elementCount = ...;
@@ -141,7 +141,7 @@ If you're defining a port type that's some kind of container than a struct, and 
 @code{.cc}
 typedef VuoText * PairOfStrings;
 
-PairOfStrings PairOfStrings_valueFromJson(json_object * js)
+PairOfStrings PairOfStrings_makeFromJson(json_object * js)
 {
 	PairOfStrings pair = (PairOfStrings)calloc(2, sizeof(VuoText));
 	VuoRegister(pair, PairOfStrings_destroy);
@@ -170,6 +170,6 @@ If instead of @ref VuoText this container held a struct port type such as @ref V
 
 ## Managing memory for node instance data
 
-A stateful node class needs to register its instance data before returning it from nodeInstanceInit(). Use VuoRegister(), just like in the examples above for MyType_valueFromJson() in port types. 
+A stateful node class needs to register its instance data before returning it from nodeInstanceInit(). Use VuoRegister(), just like in the examples above for MyType_makeFromJson() in port types. 
 
 If the instance data is a container for heap-allocated items, then it needs to retain items that it stores and and release items that it no longer stores. Use VuoRetain() and VuoRelease(), just like in the example above for the opaque container port type. 

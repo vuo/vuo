@@ -23,7 +23,7 @@ void nodeEvent
 	VuoOutputData(VuoText) text
 )
 {
-	char *textAsCString = VuoInteger_stringFromValue(integer);
+	char *textAsCString = VuoInteger_getString(integer);
 	*text = VuoText_make(textAsCString);
 	free(textAsCString);
 }

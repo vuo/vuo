@@ -11,13 +11,9 @@
 
 digraph G
 {
-Count [type="vuo.math.count.VuoReal" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="578,211" _increment="1.000000" _decrement="1.000000" _setCount="0.000000"];
-GetFrameRequestTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Frame Request Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<timestamp>timestamp\r" pos="276,190"];
-MakeList2 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="10,84"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="107,73" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Subtract [type="vuo.math.subtract.VuoReal" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<difference>difference\r" pos="571,57" _b="0.000000"];
-
-MakeList2:list -> RenderSceneToWindow:objects;
-RenderSceneToWindow:requestedFrame -> GetFrameRequestTimestamp2:frameRequest;
-RenderSceneToWindow:requestedFrame -> Subtract:a;
+Count [type="vuo.math.count.real" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="567,241" _increment="1" _decrement="1" _setCount="0"];
+GetFrameRequestTimestamp [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Frame Request Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="191,106"];
+GetFrameRequestTimestamp2 [type="vuo.scene.frameRequest.get.timestamp" version="1.0.0" label="Get Frame Request Timestamp|<refresh>refresh\l|<frameRequest>frameRequest\l|<done>done\r|<timestamp>timestamp\r" pos="191,238"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="1.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<done>done\r|<requestedFrame>requestedFrame\r|<movedMouseTo>movedMouseTo\r|<scrolledMouse>scrolledMouse\r|<usedMouseButton>usedMouseButton\r" pos="-159,144"];
+Subtract [type="vuo.math.subtract.real" version="1.0.0" label="Subtract|<refresh>refresh\l|<a>a\l|<b>b\l|<done>done\r|<difference>difference\r" pos="559,105" _b="0.000000"];
 }

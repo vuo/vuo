@@ -23,7 +23,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Image to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "3.1.0",
+					 "version" : "3.2.0",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoGlContext",
@@ -42,18 +42,17 @@ struct nodeInstanceData
 	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer sceneRenderer;
-	bool hasShown;
 	bool aspectRatioOverridden;
 
 	dispatch_semaphore_t scenegraphSemaphore; ///< Serializes access to @c rootSceneObject.
 	VuoSceneObject rootSceneObject;
 };
 
-void vuo_image_render_window_init(VuoGlContext glContext, void *ctx)
+void vuo_image_render_window_init(VuoGlContext glContext, float backingScaleFactor, void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
 
-	context->sceneRenderer = VuoSceneRenderer_make(glContext);
+	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 
 	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
@@ -110,7 +109,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 			);
 	VuoRetain(context->window);
 
-	context->hasShown = false;
 	context->aspectRatioOverridden = false;
 
 	return context;
@@ -123,14 +121,8 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window);
+	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow);
 	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
-
-	if (! (*context)->hasShown)
-	{
-		showedWindow( VuoWindowReference_make((*context)->window) );
-		(*context)->hasShown = true;
-	}
 }
 
 void nodeInstanceEvent

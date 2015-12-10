@@ -49,8 +49,8 @@ private slots:
 		QCOMPARE(QString(VuoListGetValue_VuoText(l,3)), QString("two"));
 
 		{
-			char *lSerialized = VuoList_VuoText_stringFromValue(l);
-			VuoList_VuoText lUnserialized = VuoList_VuoText_valueFromString(lSerialized);
+			char *lSerialized = VuoList_VuoText_getString(l);
+			VuoList_VuoText lUnserialized = VuoList_VuoText_makeFromString(lSerialized);
 			QCOMPARE(VuoListGetCount_VuoText(l), VuoListGetCount_VuoText(lUnserialized));
 			unsigned long itemCount = VuoListGetCount_VuoText(l);
 			for (unsigned long i = 1; i <= itemCount; ++i)

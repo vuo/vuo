@@ -36,6 +36,7 @@ int main (int argc, char * argv[])
 		string outputFormat = "png";
 		bool doPrintHelp = false;
 		bool doRenderMissingAsPresent = false;
+		double scale = 1;
 		VuoCompiler compiler;
 
 		static struct option options[] = {
@@ -44,6 +45,7 @@ int main (int argc, char * argv[])
 			{"output-format", required_argument, NULL, 0},
 			{"render-missing-as-present", no_argument, NULL, 0},
 			{"draw-bounding-rects", no_argument, NULL, 0},
+			{"scale", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -66,6 +68,9 @@ int main (int argc, char * argv[])
 				case 4:	 // --draw-bounding-rects
 					VuoRendererItem::setDrawBoundingRects(true);
 					break;
+				case 5:	 // --scale
+					scale = atof(optarg);
+					break;
 			}
 		}
 
@@ -79,7 +84,8 @@ int main (int argc, char * argv[])
 				   "  --output <file>              Place the rendered image into <file>.\n"
 				   "  --output-format=<format>     <format> can be 'png' or 'pdf'.\n"
 				   "  --draw-bounding-rects        Draws red bounding rectangles around items in the composition canvas.\n"
-				   "  --render-missing-as-present  Render missing node classes as though they were present.\n",
+				   "  --render-missing-as-present  Render missing node classes as though they were present.\n"
+				   "  --scale <factor>             Changes the resolution.  For example, to render a PNG at Retina resolution, use '2'.\n",
 				   argv[0]);
 		}
 		else
@@ -129,6 +135,8 @@ int main (int argc, char * argv[])
 				composition->addNode(n);
 			}
 			QRectF boundingRect = composition->itemsBoundingRect();
+			boundingRect.setWidth(boundingRect.width() * scale);
+			boundingRect.setHeight(boundingRect.height() * scale);
 
 			QPaintDevice *outputDevice = NULL;
 			if (outputFormat == "png")
@@ -153,6 +161,8 @@ int main (int argc, char * argv[])
 			painter->setRenderHint(QPainter::Antialiasing, true);
 			painter->setRenderHint(QPainter::HighQualityAntialiasing, true);
 			painter->setRenderHint(QPainter::TextAntialiasing, true);
+
+			painter->scale(scale, scale);
 
 			composition->setBackgroundTransparent(true);
 			composition->render(painter, QRectF(QPoint(),boundingRect.size()), boundingRect);

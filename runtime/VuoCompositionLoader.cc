@@ -31,6 +31,7 @@ void *dylibHandle = NULL;  ///< A handle to the running composition.
 void **resourceDylibHandles = NULL;  ///< A list of handles to the running composition's resources.
 size_t resourceDylibHandlesSize = 0;  ///< The number of items in @c resourceDylibHandles.
 size_t resourceDylibHandlesCapacity = 0;  ///< The number of items that @c resourceDylibHandlesCapacity can currently hold.
+pid_t runnerPid = 0;  ///< Process ID of the runner that started the composition.
 
 void replaceComposition(const char *dylibPath, const char *compositionDiff);
 void stopComposition(void);
@@ -74,6 +75,7 @@ int main(int argc, char **argv)
 	bool isPausedOnStart = false;
 	isPaused = (bool *)malloc(sizeof(bool));
 	*isPaused = isPausedOnStart;
+	runnerPid = getppid();
 
 	// Parse commandline arguments.
 	{
@@ -82,6 +84,7 @@ int main(int argc, char **argv)
 			{"vuo-telemetry", required_argument, NULL, 0},
 			{"vuo-pause", no_argument, NULL, 0},
 			{"vuo-loader", required_argument, NULL, 0},
+			{"vuo-runner", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -105,6 +108,9 @@ int main(int argc, char **argv)
 						free(loaderControlURL);
 					loaderControlURL = (char *)malloc(strlen(optarg) + 1);
 					strcpy(loaderControlURL, optarg);
+					break;
+				case 4: // "vuo-runner"
+					runnerPid = atoi(optarg);
 					break;
 			}
 		}
@@ -291,7 +297,7 @@ void replaceComposition(const char *dylibPath, const char *updatedCompositionDif
 			return;
 		}
 
-		typedef void(* vuoInitInProcessType)(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused);
+		typedef void(* vuoInitInProcessType)(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid);
 		vuoInitInProcessType vuoInitInProcess = NULL;
 
 		dylibHandle = dlopen(dylibPath, RTLD_NOW);
@@ -322,7 +328,7 @@ void replaceComposition(const char *dylibPath, const char *updatedCompositionDif
 			return;
 		}
 
-		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true);
+		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true, runnerPid);
 	}
 
 	// Unserialize the old composition's state (if any) into the new composition.

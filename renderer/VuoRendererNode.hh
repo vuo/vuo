@@ -94,7 +94,7 @@ public:
 	void setTitle(string title);
 
 	static QString generateNodeClassToolTipTitle(VuoNodeClass *nodeClass, VuoNode *node);
-	static QString generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass);
+	static QString generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass, string smallTextColor);
 
 	void resetTimeLastExecuted();
 	void setExecutionEnded();

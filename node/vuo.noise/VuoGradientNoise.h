@@ -31,17 +31,17 @@ typedef enum {
 	VuoGradientNoise_Simplex
 } VuoGradientNoise;
 
-VuoGradientNoise VuoGradientNoise_valueFromJson(struct json_object * js);
-struct json_object * VuoGradientNoise_jsonFromValue(const VuoGradientNoise value);
-VuoList_VuoGradientNoise VuoGradientNoise_allowedValues(void);
-char * VuoGradientNoise_summaryFromValue(const VuoGradientNoise value);
+VuoGradientNoise VuoGradientNoise_makeFromJson(struct json_object * js);
+struct json_object * VuoGradientNoise_getJson(const VuoGradientNoise value);
+VuoList_VuoGradientNoise VuoGradientNoise_getAllowedValues(void);
+char * VuoGradientNoise_getSummary(const VuoGradientNoise value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoGradientNoise VuoGradientNoise_valueFromString(const char *str);
-char * VuoGradientNoise_stringFromValue(const VuoGradientNoise value);
+VuoGradientNoise VuoGradientNoise_makeFromString(const char *str);
+char * VuoGradientNoise_getString(const VuoGradientNoise value);
 /// @}
 
 /**

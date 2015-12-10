@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Sends 3 RGB colors (encoded as 9 DMX channels) via Art-Net. Try running this composition at the same time as [ReceiveArtnetMessages.vuo](vuo-example://vuo.artnet/ReceiveArtnetMessages.vuo).
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertColorListToDMX [type="vuo.color.list.dmx" version="1.0.0" label="Convert Color List to DMX|<refresh>refresh\l|<colors>colors\l|<colorMap>colorMap\l|<dmx>dmx\r" pos="119,595" _colorMap="\"rgb\""];
+FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="-94,566" fillcolor="yellow" _requestedFrame_eventThrottling="drop"];
+MakeList3 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="56,606" _1="{\"r\":0.103731,\"g\":0.744579,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.075105,\"g\":1.000000,\"b\":0.526772,\"a\":1.000000}" _3="{\"r\":1.000000,\"g\":0.963653,\"b\":0.276646,\"a\":1.000000}"];
+SendArtNetMessages [type="vuo.artnet.send" version="1.0.0" label="Send Art-Net Messages|<refresh>refresh\l|<device>device\l|<sendDmx>sendDmx\l" pos="342,580" fillcolor="violet"];
+
+ConvertColorListToDMX:dmx -> SendArtNetMessages:sendDmx;
+FireOnDisplayRefresh:requestedFrame -> ConvertColorListToDMX:refresh;
+MakeList3:list -> ConvertColorListToDMX:colors;
+}

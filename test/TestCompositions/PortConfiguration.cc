@@ -97,8 +97,8 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 	{
 		if (type == "VuoImage")
 		{
-			VuoImage expectedImage = VuoImage_valueFromJson(expectedValue);
-			VuoImage   actualImage = VuoImage_valueFromJson(actualValue);
+			VuoImage expectedImage = VuoImage_makeFromJson(expectedValue);
+			VuoImage   actualImage = VuoImage_makeFromJson(actualValue);
 			QVERIFY(VuoImage_areEqual(actualImage, expectedImage));
 			return;
 		}

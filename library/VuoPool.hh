@@ -31,6 +31,8 @@ public:
 	VuoKeyedPool(std::string instanceTypeString, AllocateFunctionType allocate);
 	InstanceType getSharedInstance(KeyType key);
 	void removeSharedInstance(KeyType key);
+	void visit(void (^b)(KeyType,InstanceType));
+	unsigned int size(void);
 
 private:
 	std::string instanceTypeString;	///< The name of the data type this pool holds (for debugging).
@@ -102,6 +104,35 @@ void VuoKeyedPool<KeyType,InstanceType>::removeSharedInstance(KeyType key)
 	dispatch_sync(queue, ^{
 		pool.erase(key);
 	});
+}
+
+/**
+ * Invokes `block` on each item in the pool.
+ *
+ * @threadAny
+ */
+template<typename KeyType, typename InstanceType>
+void VuoKeyedPool<KeyType,InstanceType>::visit(void (^b)(KeyType,InstanceType))
+{
+	dispatch_sync(queue, ^{
+					  for (typename PoolType::iterator i = pool.begin(); i != pool.end(); ++i)
+						  b(i->first, i->second);
+	});
+}
+
+/**
+ * Returns the number of items in the pool.
+ *
+ * @threadAny
+ */
+template<typename KeyType, typename InstanceType>
+unsigned int VuoKeyedPool<KeyType,InstanceType>::size(void)
+{
+	__block unsigned int c;
+	dispatch_sync(queue, ^{
+		c = pool.size();
+	});
+	return c;
 }
 
 #endif // VUOPOOL_HH

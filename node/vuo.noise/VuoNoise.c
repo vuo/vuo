@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoNoise
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoNoise.
  */
-VuoNoise VuoNoise_valueFromJson(json_object *js)
+VuoNoise VuoNoise_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -61,7 +61,7 @@ VuoNoise VuoNoise_valueFromJson(json_object *js)
  * @ingroup VuoNoise
  * Encodes @c value as a JSON object.
  */
-json_object * VuoNoise_jsonFromValue(const VuoNoise value)
+json_object * VuoNoise_getJson(const VuoNoise value)
 {
 	char * valueAsString = "";
 
@@ -92,7 +92,7 @@ json_object * VuoNoise_jsonFromValue(const VuoNoise value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoNoise VuoNoise_allowedValues(void)
+VuoList_VuoNoise VuoNoise_getAllowedValues(void)
 {
 	VuoList_VuoNoise l = VuoListCreate_VuoNoise();
 	VuoListAppendValue_VuoNoise(l, VuoNoise_White);
@@ -106,9 +106,9 @@ VuoList_VuoNoise VuoNoise_allowedValues(void)
 
 /**
  * @ingroup VuoNoise
- * Same as @c %VuoNoise_stringFromValue()
+ * Same as @c %VuoNoise_getString()
  */
-char * VuoNoise_summaryFromValue(const VuoNoise value)
+char * VuoNoise_getSummary(const VuoNoise value)
 {
-	return VuoNoise_stringFromValue(value);
+	return VuoNoise_getString(value);
 }

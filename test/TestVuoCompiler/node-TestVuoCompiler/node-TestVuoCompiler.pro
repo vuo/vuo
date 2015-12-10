@@ -10,17 +10,8 @@ NODE_SOURCES += \
 	vuo.test.inputDataPortOrder.c \
 	vuo.test.keywords.c \
 	vuo.test.multiDigitGenericTypes.c \
-	vuo.test.triggerCarryingFloat.c \
 	vuo.test.triggerCarryingInteger.c \
-	vuo.test.triggerCarryingPoint3d.c \
-	vuo.test.triggerCarryingReal.c \
 	vuo.test.triggerWithOutput.c \
 	vuo.test.unicodeDefaultString.c
-
-HEADERS += \
-	VuoTestFloat.h
-
-TYPE_SOURCES += \
-	VuoTestFloat.c
 
 include(../../../module.pri)

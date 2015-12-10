@@ -65,16 +65,16 @@ typedef struct
 	VuoCursor cursor;
 } VuoWindowProperty;
 
-VuoWindowProperty VuoWindowProperty_valueFromJson(struct json_object * js);
-struct json_object * VuoWindowProperty_jsonFromValue(const VuoWindowProperty value);
-char * VuoWindowProperty_summaryFromValue(const VuoWindowProperty value);
+VuoWindowProperty VuoWindowProperty_makeFromJson(struct json_object * js);
+struct json_object * VuoWindowProperty_getJson(const VuoWindowProperty value);
+char * VuoWindowProperty_getSummary(const VuoWindowProperty value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoWindowProperty VuoWindowProperty_valueFromString(const char *str);
-char * VuoWindowProperty_stringFromValue(const VuoWindowProperty value);
+VuoWindowProperty VuoWindowProperty_makeFromString(const char *str);
+char * VuoWindowProperty_getString(const VuoWindowProperty value);
 void VuoWindowProperty_retain(VuoWindowProperty value);
 void VuoWindowProperty_release(VuoWindowProperty value);
 ///@}

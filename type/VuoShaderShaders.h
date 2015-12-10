@@ -363,6 +363,139 @@ VuoShader VuoShader_makeUnlitColorShader(VuoColor color)
 }
 
 /**
+ * Returns a shader that renders a solid @c color circle.
+ *
+ * When sharpness = 1, the circle takes up half the size of the texture coordinates
+ * (circumscribing a rectangle from (0.25,0.25) to (0.75,0.75)).
+ *
+ * When sharpness = 0, the circle's edge is blurred to take up the entire texture coordinate area.
+ *
+ * @threadAny
+ */
+VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness)
+{
+	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		uniform vec4 color;
+		uniform float sharpness;
+		varying vec4 fragmentTextureCoordinate;
+
+		void main(void)
+		{
+			float dist = distance(fragmentTextureCoordinate.xy, vec2(0.5,0.5));
+			float delta = fwidth(dist);
+			gl_FragColor = mix(color, vec4(color.rgb,0), smoothstep(sharpness/2 - delta, 1 - sharpness/2 + delta, dist*2));
+		}
+	);
+
+	VuoShader shader = VuoShader_make("Circle Shader");
+	shader->objectScale = 0.5;
+	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+	VuoShader_setUniform_VuoColor(shader, "color", color);
+	VuoShader_setUniform_VuoReal (shader, "sharpness", VuoReal_clamp(sharpness, 0, 1));
+	return shader;
+}
+
+/**
+ * Returns a shader that renders a solid @c color rounded rectangle.
+ *
+ * When sharpness = 1, the rounded rectangle takes up half the size of the texture coordinates
+ * (from (0.25,0.25) to (0.75,0.75)).
+ *
+ * When sharpness = 0, the rounded rectangle's edge is blurred to take up the entire texture coordinate area.
+ *
+ * `aspect` specifies the aspect ratio of the rectangle.  `aspect < 1` causes artifacts; instead, reciprocate the aspect and rotate the geometry 90°.
+ *
+ * @threadAny
+ */
+VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal sharpness, VuoReal roundness, VuoReal aspect)
+{
+	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		uniform vec4 color;
+		uniform float sharpness;
+		uniform float roundness;
+		uniform float aspect;
+		varying vec4 fragmentTextureCoordinate;
+
+		void main(void)
+		{
+			float roundness2 = min(aspect, roundness);
+			roundness2 = max(1. - sharpness, roundness2);
+			float diameter = roundness2 / 2.;
+			diameter = max(diameter, 0.001);
+			float radius = diameter / 2.;
+			vec2 r = vec2(radius/aspect, radius);
+
+			vec2 cornerCircleCenter = vec2(0.,0.);
+			if (fragmentTextureCoordinate.x > 0.75 - r.x)
+			{
+				if (fragmentTextureCoordinate.y > 0.75 - r.y)
+					// Top right corner
+					cornerCircleCenter = vec2(0.75, 0.75) + vec2(-r.x, -r.y);
+				else if (fragmentTextureCoordinate.y < 0.25 + r.y)
+					// Bottom right corner
+					cornerCircleCenter = vec2(0.75, 0.25) + vec2(-r.x,  r.y);
+			}
+			else if (fragmentTextureCoordinate.x < 0.25 + r.x)
+			{
+				if (fragmentTextureCoordinate.y > 0.75 - r.y)
+					// Top left corner
+					cornerCircleCenter = vec2(0.25, 0.75) + vec2( r.x, -r.y);
+				else if (fragmentTextureCoordinate.y < 0.25 + radius)
+					// Bottom left corner
+					cornerCircleCenter = vec2(0.25, 0.25) + vec2( r.x,  r.y);
+			}
+
+			float dist = 0.;
+			if (cornerCircleCenter.x > 0.)
+				dist = distance((fragmentTextureCoordinate.xy - cornerCircleCenter) * vec2(aspect, 1.) + cornerCircleCenter, cornerCircleCenter) / diameter;
+			else
+			{
+				float n = (fragmentTextureCoordinate.x - 0.5) / aspect * (aspect * (1. - (1. - sharpness) * (1. - sharpness)));
+
+				if (fragmentTextureCoordinate.y < 0.5 + n)
+				{
+					if (fragmentTextureCoordinate.y > 0.5 - n)
+						// Right edge
+						dist = (fragmentTextureCoordinate.x - (0.75 - r.x)) * aspect;
+					else
+						// Bottom edge
+						dist = (0.25 + r.y) - fragmentTextureCoordinate.y;
+				}
+				else
+				{
+					if (fragmentTextureCoordinate.y > 0.5 - n)
+						// Top edge
+						dist = fragmentTextureCoordinate.y - (0.75 - r.y);
+					else
+						// Left edge
+						dist = ((0.25 + r.x) - fragmentTextureCoordinate.x) * aspect;
+				}
+
+				dist /= diameter;
+			}
+
+			float delta = fwidth(dist) / 2.;
+
+			// fwidth() seems to sometimes output invalid results; this hides most of it.
+			if ((roundness2 < 0.1 && delta > 3.)
+			 || (roundness2 > 0.1 && delta > 0.1))
+				delta = 0.;
+
+			gl_FragColor = mix(color, vec4(color.rgb, 0.), smoothstep(sharpness / 2. - delta, 1. - sharpness / 2. + delta, dist));
+		}
+	);
+
+	VuoShader shader = VuoShader_make("Rounded Rectangle Shader");
+	shader->objectScale = 0.5;
+	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+	VuoShader_setUniform_VuoColor(shader, "color",     color);
+	VuoShader_setUniform_VuoReal (shader, "sharpness", VuoReal_clamp(sharpness, 0, 1));
+	VuoShader_setUniform_VuoReal (shader, "roundness", VuoReal_clamp(roundness, 0, 1));
+	VuoShader_setUniform_VuoReal (shader, "aspect",    aspect);
+	return shader;
+}
+
+/**
  * Returns a shader that renders a color with lighting.
  *
  * @param diffuseColor The primary material color.

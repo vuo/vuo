@@ -57,10 +57,6 @@ string VuoRendererValueListForReadOnlyDictionary::getRenderedPortNameFormForText
 		textWithoutQuotes = json_object_get_string(js);
 	json_object_put(js);
 
-	// Abbreviate long VuoText data with an ellipsis.
-	if (textWithoutQuotes.length() > 30)
-		textWithoutQuotes = textWithoutQuotes.substr(0, 27) + "...";
-
 	return textWithoutQuotes;
 }
 

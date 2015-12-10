@@ -47,14 +47,14 @@ private slots:
 		QFETCH(QString, initializer);
 		QFETCH(VuoPoint4d, value);
 
-		VuoPoint4d p = VuoPoint4d_valueFromString(initializer.toUtf8().constData());
+		VuoPoint4d p = VuoPoint4d_makeFromString(initializer.toUtf8().constData());
 
 		QCOMPARE(p.x,value.x);
 		QCOMPARE(p.y,value.y);
 		QCOMPARE(p.z,value.z);
 		QCOMPARE(p.w,value.w);
 
-		QCOMPARE(VuoPoint4d_stringFromValue(p), initializer.toUtf8().constData());
+		QCOMPARE(VuoPoint4d_getString(p), initializer.toUtf8().constData());
 	}
 };
 

@@ -31,7 +31,7 @@ VuoModuleMetadata({
  * @ingroup VuoFileType
  * Decodes the JSON object @a js to create a new value.
  */
-VuoFileType VuoFileType_valueFromJson(json_object * js)
+VuoFileType VuoFileType_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -59,7 +59,7 @@ VuoFileType VuoFileType_valueFromJson(json_object * js)
  * @ingroup VuoFileType
  * Encodes @a value as a JSON object.
  */
-json_object * VuoFileType_jsonFromValue(const VuoFileType value)
+json_object * VuoFileType_getJson(const VuoFileType value)
 {
 	char *valueAsString = "any";
 
@@ -82,7 +82,7 @@ json_object * VuoFileType_jsonFromValue(const VuoFileType value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoFileType VuoFileType_allowedValues(void)
+VuoList_VuoFileType VuoFileType_getAllowedValues(void)
 {
 	VuoList_VuoFileType l = VuoListCreate_VuoFileType();
 	VuoListAppendValue_VuoFileType(l, VuoFileType_AnyFile);
@@ -99,7 +99,7 @@ VuoList_VuoFileType VuoFileType_allowedValues(void)
  * @ingroup VuoFileType
  * Returns a compact string representation of @a value.
  */
-char * VuoFileType_summaryFromValue(const VuoFileType value)
+char * VuoFileType_getSummary(const VuoFileType value)
 {
 	char *valueAsString = "Any File";
 

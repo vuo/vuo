@@ -31,16 +31,16 @@ typedef struct
 
 struct json_object;
 
-VuoMathExpression VuoMathExpression_valueFromJson(struct json_object * js);
-struct json_object * VuoMathExpression_jsonFromValue(const VuoMathExpression value);
-char * VuoMathExpression_summaryFromValue(const VuoMathExpression value);
+VuoMathExpression VuoMathExpression_makeFromJson(struct json_object * js);
+struct json_object * VuoMathExpression_getJson(const VuoMathExpression value);
+char * VuoMathExpression_getSummary(const VuoMathExpression value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoMathExpression VuoMathExpression_valueFromString(const char *str);
-char * VuoMathExpression_stringFromValue(const VuoMathExpression value);
+VuoMathExpression VuoMathExpression_makeFromString(const char *str);
+char * VuoMathExpression_getString(const VuoMathExpression value);
 void VuoMathExpression_retain(VuoMathExpression value);
 void VuoMathExpression_release(VuoMathExpression value);
 /// @}

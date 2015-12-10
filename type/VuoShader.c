@@ -124,6 +124,8 @@ VuoShader VuoShader_make(const char *name)
 	t->lineProgram.expectedOutputPrimitiveCount = 1;
 	t->triangleProgram.expectedOutputPrimitiveCount = 1;
 
+	t->objectScale = 1;
+
 	t->lock = dispatch_semaphore_create(1);
 
 	return t;
@@ -617,7 +619,7 @@ void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod 
  *
  * @threadAny
  */
-VuoShader VuoShader_valueFromJson(json_object *js)
+VuoShader VuoShader_makeFromJson(json_object *js)
 {
 	if (!js)
 		return NULL;
@@ -640,7 +642,7 @@ VuoShader VuoShader_valueFromJson(json_object *js)
  *
  * @threadAny
  */
-json_object * VuoShader_jsonFromValue(const VuoShader value)
+json_object * VuoShader_getJson(const VuoShader value)
 {
 	return json_object_new_int64((int64_t)value);
 }
@@ -650,7 +652,7 @@ json_object * VuoShader_jsonFromValue(const VuoShader value)
  *
  * @threadAny
  */
-char * VuoShader_summaryFromValue(const VuoShader value)
+char * VuoShader_getSummary(const VuoShader value)
 {
 	if (!value)
 		return strdup("(no shader)");

@@ -38,6 +38,8 @@
 
 #include "VuoPort.hh"
 
+#include "VuoHeap.h"
+
 const qreal VuoRendererPort::portRadius = VuoRendererFonts::thickPenWidth*0.3625;
 const qreal VuoRendererPort::portSpacing = VuoRendererFonts::thickPenWidth*3.0/4.0;
 const qreal VuoRendererPort::portContainerMargin = VuoRendererFonts::thickPenWidth / 6.;
@@ -103,8 +105,7 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 void VuoRendererPort::updatePortConstantPath()
 {
 	QString constantText = QString::fromUtf8(getConstantAsStringToRender().c_str());
-	this->portConstantPath = getPortConstantPath(this->portHybridRect, constantText, &this->outsetPath);
-	this->outsetMinusPortConstantPath = QPainterPath(this->outsetPath) - this->portConstantPath;
+	this->portConstantInsetPath = getPortConstantPath(this->portHybridRect, constantText, &this->portConstantPath);
 }
 
 /**
@@ -333,6 +334,107 @@ QRectF VuoRendererPort::getEventBarrierRect(void) const
 }
 
 /**
+ * Returns the path of the antenna that represents any connected wireless cables, or an empty path if not applicable.
+ */
+QPainterPath VuoRendererPort::getWirelessAntennaPath() const
+{
+	bool paintDataAntenna = hasConnectedWirelessDataCable(true);
+	bool paintEventAntenna = hasConnectedWirelessEventCable(true);
+	if (!paintDataAntenna && !paintEventAntenna)
+		return QPainterPath();
+
+	// Mast
+	qreal cableWidth, cableHighlightWidth, cableHighlightOffset;
+	VuoRendererCable::getCableSpecs(paintDataAntenna, cableWidth, cableHighlightWidth, cableHighlightOffset);
+
+	const qreal mastLength = 15;
+	QPointF startPoint = (getInput()? -QPointF(mastLength - (paintDataAntenna ? 0.5 : 0 ), 0) : QPointF(0,0));
+	QPointF endPoint = (getInput()? QPointF(0,0) : QPointF(mastLength + (paintDataAntenna ? 0.5 : 0 ), 0));
+
+	QPainterPath mastPath = VuoRendererCable::getCablePathForEndpoints(startPoint, endPoint);
+
+	QPainterPathStroker mastStroker;
+	mastStroker.setWidth(cableWidth);
+	mastStroker.setCapStyle(Qt::RoundCap);
+	QPainterPath antennaOutline = mastStroker.createStroke(mastPath);
+
+	// Crossbars
+	qreal outerCrossbarXOffset = (paintDataAntenna? 1 : 0.5);
+	const QPointF outerCrossbarPos = (getInput()? startPoint - QPointF(outerCrossbarXOffset, 0) :
+												  endPoint + QPointF(outerCrossbarXOffset, 0));
+	const int crossbarSpacing = 5;
+	const int crossbarHeight = VuoRendererFonts::midPenWidth*5;
+
+	QPainterPath crossbars;
+	for (int i = 0; i < 2; ++i)
+	{
+		crossbars.moveTo((outerCrossbarPos +
+						 QPointF(QPointF(0, -0.5*crossbarHeight) +
+						 QPointF((getInput()? 1 : -1)*crossbarSpacing*i, 0))));
+		crossbars.lineTo((outerCrossbarPos +
+						 QPointF(QPointF(0, 0.5*crossbarHeight) +
+						 QPointF((getInput()? 1 : -1)*crossbarSpacing*i, 0))));
+	}
+
+	// Union the mast and crossbars.
+	QPainterPathStroker crossbarStroker;
+	crossbarStroker.setWidth(cableWidth*3/5);
+	crossbarStroker.setCapStyle(Qt::RoundCap);
+	antennaOutline += crossbarStroker.createStroke(crossbars);
+
+	return antennaOutline;
+}
+
+/**
+ * Returns true if this port has a connected data+event cable that should currently be rendered wirelessly.
+ */
+bool VuoRendererPort::hasConnectedWirelessDataCable(bool includePublishedCables) const
+{
+	vector<VuoCable *> connectedCables = getBase()->getConnectedCables(includePublishedCables);
+	for (vector<VuoCable *>::iterator cable = connectedCables.begin(); cable != connectedCables.end(); ++cable)
+		if ((*cable)->hasRenderer() && (*cable)->getRenderer()->effectivelyCarriesData() &&
+				(*cable)->getRenderer()->getEffectivelyWireless() &&
+				(*cable)->getRenderer()->paintingDisabled())
+			return true;
+	return false;
+}
+
+/**
+ * Returns true if this port has a connected event-only cable that should currently be rendered wirelessly.
+ */
+bool VuoRendererPort::hasConnectedWirelessEventCable(bool includePublishedCables) const
+{
+	vector<VuoCable *> connectedCables = getBase()->getConnectedCables(includePublishedCables);
+	for (vector<VuoCable *>::iterator cable = connectedCables.begin(); cable != connectedCables.end(); ++cable)
+		if ((*cable)->hasRenderer() && !(*cable)->getRenderer()->effectivelyCarriesData() &&
+				(*cable)->getRenderer()->getEffectivelyWireless() &&
+				(*cable)->getRenderer()->paintingDisabled())
+			return true;
+	return false;
+}
+
+/**
+ * Returns the set of ports that have antennas connected by wireless cable to this one.
+ */
+set<VuoRendererPort *> VuoRendererPort::getConnectedWirelessAntennas() const
+{
+	set<VuoRendererPort *> connectedPorts;
+	foreach (VuoCable *cable, getBase()->getConnectedCables(false))
+	{
+		if (cable->hasRenderer() &&
+				cable->getRenderer()->getEffectivelyWireless() &&
+				cable->getRenderer()->paintingDisabled())
+		{
+			VuoPort *connectedPort = (getInput()? cable->getFromPort() : cable->getToPort());
+			if (connectedPort && connectedPort->hasRenderer())
+				connectedPorts.insert(connectedPort->getRenderer());
+		}
+	}
+
+	return connectedPorts;
+}
+
+/**
  * Returns the input drawer that is rendered as if it is attached to this port
  * (whether or not it is in the underlying composition), or NULL if none.
  */
@@ -431,10 +533,10 @@ QRectF VuoRendererPort::getPortConstantTextRect(void) const
  */
 QRectF VuoRendererPort::getPortConstantTextRectForText(QString text)
 {
-	qreal textWidth = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortTitleFont()).boundingRect(QRectF(0,0,0,0), Qt::TextIncludeTrailingSpaces, text).width()+1.0;
+	qreal textWidth = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortConstantFont()).boundingRect(QRectF(0,0,0,0), Qt::TextIncludeTrailingSpaces, text).width()+1.0;
 	QRectF textRect(
 		-textWidth - getPortRect().width(),
-		-VuoRendererFonts::thickPenWidth/3.0,
+		-VuoRendererFonts::thickPenWidth/3.0 + 1,
 		textWidth,
 		VuoRendererFonts::thickPenWidth
 	);
@@ -457,8 +559,10 @@ QRectF VuoRendererPort::getNameRect() const
 void VuoRendererPort::updateNameRect()
 {
 	QString text = QString::fromUtf8(getPortNameToRender().c_str());
-	QFont font = VuoRendererFonts::getSharedFonts()->nodePortTitleFont();
+	QFont font = getPortNameFont();
 	QSizeF textSize = QFontMetricsF(font).size(0,text);
+
+	bool isPortOnDrawer = dynamic_cast<VuoRendererInputAttachment *>(getUnderlyingParentNode());
 
 	this->nameRect = QRectF(
 		(isOutput? -VuoRendererFonts::thickPenWidth/2.0 - textSize.width() - 2. :
@@ -466,7 +570,7 @@ void VuoRendererPort::updateNameRect()
 											 - VuoRendererFonts::getHorizontalOffset(font, text)
 											 + 3.
 										 ),
-		-VuoRendererFonts::thickPenWidth/3.0 - 1.,
+		-VuoRendererFonts::thickPenWidth/3.0 - (isPortOnDrawer ? 0 : 1),
 		textSize.width(),
 		textSize.height()
 	);
@@ -546,7 +650,9 @@ QRectF VuoRendererPort::boundingRect(void) const
 		r = r.united(getActionIndicatorRect());
 
 	if (isConstant())
-		r = r.united(this->outsetPath.controlPointRect());
+		r = r.united(this->portConstantPath.controlPointRect());
+
+	r = r.united(getWirelessAntennaPath().boundingRect());
 
 	// Antialiasing bleed
 	r.adjust(-1,-1,1,1);
@@ -655,18 +761,37 @@ void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *co
 }
 
 /**
+ * Returns the font to be used to render this port's label.
+ */
+QFont VuoRendererPort::getPortNameFont(void) const
+{
+	if (dynamic_cast<VuoRendererInputAttachment *>(getUnderlyingParentNode()))
+		// Use a smaller font for port labels on drawers.
+		return VuoRendererFonts::getSharedFonts()->nodePortConstantFont();
+	else
+		return VuoRendererFonts::getSharedFonts()->nodePortTitleFont();
+}
+
+/**
  * Paints the port's label.
  */
 void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors)
 {
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
 	if (!portNameRenderingEnabled())
 		return;
 
+	VuoRendererPublishedPort *rpp = getProxyPublishedSidebarPort();
+
 	string name = getPortNameToRender();
 
-	painter->setPen(sidebarPaintMode && getProxyPublishedSidebarPort()->isSelected()? Qt::white : colors->portTitle());
-	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
+	if (rpp)
+		painter->setPen(getProxyPublishedSidebarPort()->isSelected()
+						? Qt::white
+						: (rpp->getBase()->isProtocolPort() ? colors->publishedProtocolPortTitle() : colors->publishedPortTitle()));
+	else
+		painter->setPen(colors->portTitle());
+
+	painter->setFont(getPortNameFont());
 	painter->drawText(getNameRect(), isOutput? Qt::AlignRight : Qt::AlignLeft, QString::fromStdString(name));
 }
 
@@ -709,74 +834,11 @@ void VuoRendererPort::setPortNameToRender(string name)
  */
 string VuoRendererPort::getDefaultPortNameToRender()
 {
-	return getDefaultPortNameToRenderForPortClass(getBase()->getClass());
-}
-
-/**
- * Returns the default display name for a port of the provided @c portClass.
- */
-string VuoRendererPort::getDefaultPortNameToRenderForPortClass(VuoPortClass *portClass)
-{
-	bool isTriggerPort = (portClass->getPortType() == VuoPortClass::triggerPort);
-
-	// First, look for a name stored within the details of the port's data class, if applicable.
-	// Exception: Don't attempt to retrieve the details of a data class associated with a data-carrying
-	// trigger port, because it returns a non-NULL but invalid pointer.
-
-	bool carriesData = (portClass->hasCompiler() && static_cast<VuoCompilerPortClass *>(portClass->getCompiler())->getDataVuoType());
-	if (carriesData && !isTriggerPort)
-	{
-		json_object *details = static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler())->getDataClass()->getDetails();
-		json_object *nameValue = NULL;
-
-		if (details && json_object_object_get_ex(details, "name", &nameValue))
-			return json_object_get_string(nameValue);
-	}
-
-	// Failing that, look for a name stored within the details of the port class.
-	if (portClass->hasCompiler())
-	{
-		VuoCompilerPortClass *portCompilerClass = static_cast<VuoCompilerPortClass *>(portClass->getCompiler());
-		if (portCompilerClass)
-		{
-			json_object *details = portCompilerClass->getDetails();
-			if (details)
-			{
-				json_object *nameValue = NULL;
-				if (json_object_object_get_ex(details, "name", &nameValue))
-					return json_object_get_string(nameValue);
-
-			}
-		}
-	}
-
-	return formatPortName(portClass->getName().c_str()).toUtf8().constData();
-}
-
-/**
- * Inserts spaces and applies appropriate capitalization to the provided @c portName.
- */
-QString VuoRendererPort::formatPortName(QString portName)
-{
-	// Insert spaces among CamelCase transitions.
-	QString formattedString = VuoRendererComposition::insertSpacesAtCamelCaseTransitions(portName);
-
-	// Capitalize the first letter.
-	if (!formattedString.isEmpty())
-		formattedString[0] = formattedString[0].toUpper();
-
-	// Attempt to identify words, like "2D"/"3D" or strings of variables,
-	// that should receive special capitalization.
-	QStringList finalFormattedStringList;
-	foreach (QString word, formattedString.split(" "))
-	{
-		if (word.contains(QRegExp("^[\\ddxyzw]+$", Qt::CaseInsensitive)))
-			word = word.toUpper();
-
-		finalFormattedStringList.append(word);
-	}
-
-	return finalFormattedStringList.join(" ");
+	VuoPortClass *pc = getBase()->getClass();
+	if (pc->hasCompiler())
+		return static_cast<VuoCompilerPortClass *>(pc->getCompiler())->getDisplayName();
+	else
+		return "";
 }
 
 /**
@@ -799,7 +861,7 @@ bool VuoRendererPort::hasPortAction(void) const
  */
 QRectF VuoRendererPort::getActionIndicatorRect(void) const
 {
-	QFontMetricsF fontMetrics = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
+	QFontMetricsF fontMetrics = QFontMetricsF(getPortNameFont());
 	const qreal marginFromPortName = 4;
 	const qreal triangleHeight = 6;
 	const qreal triangleWidth = 5;
@@ -827,6 +889,14 @@ void VuoRendererPort::paintActionIndicator(QPainter *painter, VuoRendererColors 
 		QColor color = colors->actionIndicator();
 		painter->fillPath(p, color);
 	}
+}
+
+/**
+ * Draws the wireless antenna to represent any wireless cables connected to this port.
+ */
+void VuoRendererPort::paintWirelessAntenna(QPainter *painter, VuoRendererColors *colors)
+{
+	painter->fillPath(getWirelessAntennaPath(), QBrush(colors->cableMain()));
 }
 
 /**
@@ -863,19 +933,19 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	qint64 timeOfLastActivity =		((! getRenderActivity())? VuoRendererItem::notTrackingActivity :
 									(isTriggerPort? timeLastEventFired :
+									(getTypecastParentPort()? static_cast<VuoRendererTypecastPort *>(getTypecastParentPort())->getUncollapsedTypecastNode()->getTimeLastExecutionEnded() :
 									(renderedParentNode? renderedParentNode->getTimeLastExecutionEnded() :
-									VuoRendererItem::notTrackingActivity)));
+									VuoRendererItem::notTrackingActivity))));
 
 	VuoRendererColors *colors = new VuoRendererColors((renderedParentNode? renderedParentNode->getBase()->getTintColor() : VuoNode::TintNone),
 													  selectionType,
 													  isHovered,
 													  highlightType,
 													  timeOfLastActivity);
-
-	VuoRendererColors *untintedColors = new VuoRendererColors(VuoNode::TintNone,
+	VuoRendererColors *antennaColors = new VuoRendererColors((renderedParentNode? renderedParentNode->getBase()->getTintColor() : VuoNode::TintNone),
 													  selectionType,
 													  isHovered,
-													  highlightType,
+													  VuoRendererColors::noHighlight,
 													  timeOfLastActivity);
 
 	// Draw the port circle / constant flag
@@ -896,94 +966,85 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	if(isConstant())
 	{
-		QString constantText = QString::fromUtf8(getConstantAsStringToRender().c_str());
-		QBrush constantFlagBackgroundBrush = colors->constantFill();
-		QColor constantFlagBorderColor = colors->nodeFill();
-
 		// Display a color swatch for VuoColor data.
 		/// @todo Implement with input viewers (https://b33p.net/kosada/node/5700)
 		bool isColorPort = getDataType() && getDataType()->getModuleKey()=="VuoColor";
 		if (isColorPort)
 		{
-			double r=0, g=0, b=0, a=0;
-			json_object *o = NULL;
+			// Paint an opaque 4-layer color swatch:
+			//   _________
+			//  /  ______ \
+			// |  |    / \  \
+			// |  |  /    ⟩  ⟩
+			// |  |/_____/  /
+			//  \_________/
+			// (Provide an opaque background, so help distinguish transparent colors from opaque colors.)
 
+
+			// First, fill the outermost area to match the node frame (when in Light Interface Mode) :
+			painter->fillPath(this->portConstantPath, colors->nodeFrame());
+
+
+			// Second, fill the inner area with solid black (when in Light Interface Mode) :
+			bool isDark = colors->isDark();
+			painter->fillPath(this->portConstantInsetPath, isDark ? Qt::white : Qt::black);
+
+
+			// Third, fill the bottom-right half of the inner area with solid white (when in Light Interface Mode) :
+			{
+				QPainterPath p = this->portConstantInsetPath;
+				// getPortConstantPath() is assumed to give us points in this order:
+				QPointF topRight = p.elementAt(0);
+				QPointF rightTip = p.elementAt(1);
+				QPointF bottomRight = p.elementAt(2);
+				QPointF bottomLeftRoundedCornerBegin = p.elementAt(3);
+				QPointF bottomLeftRoundedCornerEnd = p.elementAt(6);
+				QPointF topLeftRoundedCornerBegin = p.elementAt(7);
+				QPointF topLeftRoundedCornerEnd = p.elementAt(10);
+
+				QPointF topLeftSharpEdge(topLeftRoundedCornerBegin.x(), topLeftRoundedCornerEnd.y());
+				QPointF bottomLeftSharpEdge(bottomLeftRoundedCornerEnd.x(), bottomLeftRoundedCornerBegin.y());
+
+				QPainterPath bottomHalf;
+				bottomHalf.moveTo(bottomLeftSharpEdge);
+				bottomHalf.lineTo(topRight);
+				bottomHalf.lineTo(rightTip);
+				bottomHalf.lineTo(bottomRight);
+				bottomHalf.closeSubpath();
+				painter->setClipPath(p);
+				painter->fillPath(bottomHalf, isDark ? Qt::black : Qt::white);
+				painter->setClipping(false);
+			}
+
+
+			// Fourth, fill the entire inner area with the (possibly-transparent) color:
 			string colorRGBAJsonString = getConstantAsString();
-			json_object *js = json_tokener_parse(colorRGBAJsonString.c_str());
-
-			if (json_object_object_get_ex(js, "r", &o))
-				r = json_object_get_double(o);
-			if (json_object_object_get_ex(js, "g", &o))
-				g = json_object_get_double(o);
-			if (json_object_object_get_ex(js, "b", &o))
-				b = json_object_get_double(o);
-			if (json_object_object_get_ex(js, "a", &o))
-				a = json_object_get_double(o);
-
-			QColor constantColor = QColor(r*255, g*255, b*255, a*255);
-
-			// Swatch border color
-			constantFlagBorderColor = (constantColor.lightnessF()<=0.8? constantColor:untintedColors->nodeFill());
-			constantFlagBorderColor.setAlphaF( fmax(0.2, constantFlagBorderColor.alphaF()) );  // make the border always visible
-
-			// Swatch fill color
-			constantFlagBackgroundBrush = constantColor;
+			VuoColor c = VuoColor_makeFromString(colorRGBAJsonString.c_str());
+			painter->fillPath(this->portConstantInsetPath, QColor(c.r*255, c.g*255, c.b*255, c.a*255));
 		}
-
-		if (isColorPort)
+		else
 		{
-			QPainterPath p = this->portConstantPath;
+			QString constantText = QString::fromUtf8(getConstantAsStringToRender().c_str());
+			QBrush constantFlagBackgroundBrush = colors->constantFill();
 
-			// Provide an opaque background, so transparent colors can be distinguished from opaque colors.
+			// Constant flag
+			painter->fillPath(this->portConstantPath, constantFlagBackgroundBrush);
 
-			// getPortConstantPath() is assumed to give us points in this order:
-			QPointF topRight = p.elementAt(0);
-			QPointF rightTip = p.elementAt(1);
-			QPointF bottomRight = p.elementAt(2);
-			QPointF bottomLeftRoundedCornerBegin = p.elementAt(3);
-			QPointF bottomLeftRoundedCornerEnd = p.elementAt(6);
-			QPointF topLeftRoundedCornerBegin = p.elementAt(7);
-			QPointF topLeftRoundedCornerEnd = p.elementAt(10);
-
-			QPointF topLeftSharpEdge(topLeftRoundedCornerBegin.x(), topLeftRoundedCornerEnd.y());
-			QPointF bottomLeftSharpEdge(bottomLeftRoundedCornerEnd.x(), bottomLeftRoundedCornerBegin.y());
-
-			QPainterPath topHalf;
-			topHalf.moveTo(bottomLeftSharpEdge);
-			topHalf.lineTo(topLeftSharpEdge);
-			topHalf.lineTo(topRight);
-			topHalf.closeSubpath();
-			painter->setClipPath(p);
-			painter->fillPath(topHalf, Qt::black);
-
-			QPainterPath bottomHalf;
-			bottomHalf.moveTo(bottomLeftSharpEdge);
-			bottomHalf.lineTo(topRight);
-			bottomHalf.lineTo(rightTip);
-			bottomHalf.lineTo(bottomRight);
-			bottomHalf.closeSubpath();
-			painter->setClipPath(p);
-			painter->fillPath(bottomHalf, Qt::white);
-
-			painter->setClipping(false);
+			// Constant string
+			QRectF textRect = getPortConstantTextRectForText(constantText);
+			painter->setPen(colors->constantText());
+			painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortConstantFont());
+			painter->drawText(textRect, Qt::AlignLeft, constantText);
 		}
-
-		// Constant flag
-		painter->fillPath(this->portConstantPath, constantFlagBackgroundBrush);
-		painter->fillPath(this->outsetMinusPortConstantPath, constantFlagBorderColor);
-
-		// Constant string
-		QRectF textRect = getPortConstantTextRectForText(constantText);
-		painter->setPen(colors->portTitle());
-		painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
-		painter->drawText(textRect, Qt::AlignLeft, constantText);
 	}
 
 	paintEventBarrier(painter, colors);
 	paintPortName(painter, colors);
 	paintActionIndicator(painter, colors);
+	paintWirelessAntenna(painter, antennaColors);
 
 	delete colors;
+	delete antennaColors;
 }
 
 /**
@@ -1025,9 +1086,9 @@ void VuoRendererPort::setEligibleForConnectionViaTypecast(bool eligible)
 /**
  * Handle mouse hover start events generated by custom code making use of an extended hover range.
  */
-void VuoRendererPort::extendedHoverEnterEvent(bool cableDragUnderway)
+void VuoRendererPort::extendedHoverEnterEvent(bool cableDragUnderway, bool disableConnectedCableHighlight)
 {
-	extendedHoverMoveEvent(cableDragUnderway);
+	extendedHoverMoveEvent(cableDragUnderway, disableConnectedCableHighlight);
 }
 
 /**
@@ -1035,7 +1096,7 @@ void VuoRendererPort::extendedHoverEnterEvent(bool cableDragUnderway)
  * If the optional @c highlightOnlyIfConnectable boolean is set to true, enable hover highlighting
  * for this port only if the port is eligible for connection to the cable currently being connected.
  */
-void VuoRendererPort::extendedHoverMoveEvent(bool cableDragUnderway)
+void VuoRendererPort::extendedHoverMoveEvent(bool cableDragUnderway, bool disableConnectedCableHighlight)
 {
 	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
 	setCacheMode(QGraphicsItem::NoCache);
@@ -1047,7 +1108,7 @@ void VuoRendererPort::extendedHoverMoveEvent(bool cableDragUnderway)
 
 	setFocus();
 
-	if (! cableDragUnderway)
+	if (!cableDragUnderway && !disableConnectedCableHighlight)
 	{
 		vector<VuoCable *> connectedCables = getBase()->getConnectedCables(false);
 		if (supportsDisconnectionByDragging() && (! connectedCables.empty()))
@@ -1508,7 +1569,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoImage")
 		{
-			VuoImage value = VuoImage_valueFromString(getConstantAsString().c_str());
+			VuoImage value = VuoImage_makeFromString(getConstantAsString().c_str());
 
 			if (!value)
 				return strdup("");
@@ -1517,7 +1578,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoTransform")
 		{
-			VuoTransform value = VuoTransform_valueFromString(getConstantAsString().c_str());
+			VuoTransform value = VuoTransform_makeFromString(getConstantAsString().c_str());
 
 			if (VuoTransform_isIdentity(value))
 				return strdup("≡");
@@ -1544,7 +1605,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoTransform2d")
 		{
-			VuoTransform2d value = VuoTransform2d_valueFromString(getConstantAsString().c_str());
+			VuoTransform2d value = VuoTransform2d_makeFromString(getConstantAsString().c_str());
 
 			if (VuoTransform2d_isIdentity(value))
 				return strdup("≡");
@@ -1561,12 +1622,11 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 	{
 		string textWithoutQuotes = json_object_get_string(js);
 		json_object_put(js);
-
-		// Abbreviate long strings with an ellipsis.
-		if (textWithoutQuotes.length() > 30)
-			textWithoutQuotes = textWithoutQuotes.substr(0, 27) + "…";
-
-		return textWithoutQuotes;
+		VuoText t = VuoText_truncateWithEllipsis(textWithoutQuotes.c_str(), 30);
+		VuoRetain(t);
+		char *valueAsString = strdup(t);
+		VuoRelease(t);
+		return valueAsString;
 	}
 	json_object_put(js);
 
@@ -1784,6 +1844,49 @@ void VuoRendererPort::updateEnabledStatus()
 	setEnabled(!isAnimated &&
 			   ((getBase()->hasCompiler() && getBase()->getClass()->hasCompiler()) ||
 				getProxyPublishedSidebarPort()));
+}
+
+/**
+ * Returns a string representation of the regular expression that describes valid
+ * port identifiers.
+ *
+ * See also VuoRendererPort::sanitizePortIdentifier(QString portID).
+ */
+QString VuoRendererPort::getPortIdentifierRegExp()
+{
+	// A published port name must:
+	// - Contain only alphanumeric characters; and
+	// - Either be entirely numeric or begin with an alphabetic character; and
+	// - Have a total length of 1-31 characters.
+	return QString("[A-Za-z][A-Za-z0-9]{0,30}")
+			.append("|")
+			.append("[0-9]{1,31}");
+}
+
+/**
+ * Sanitizes the provided @c portID to meet the requirements of a
+ * valid port identifier. Sanitizes only by removing characters, never adding,
+ * so it is possible for sanitization to fail, in which case this function
+ * returns the empty string.
+ *
+ * See also VuoRendererPort::getPortIdentifierRegExp().
+ */
+QString VuoRendererPort::sanitizePortIdentifier(QString portID)
+{
+	// Remove non-alphanumeric characters.
+	portID.remove(QRegExp("[^A-Za-z0-9]"));
+
+	// Unless the identifier is purely numeric, remove non-alphabetic first characters.
+	if (!portID.contains(QRegExp("^[0-9]+$")))
+	{
+		while (!portID.isEmpty() && !portID.contains(QRegExp("^[A-Za-z]")))
+			portID = portID.right(portID.size()-1);
+	}
+
+	// Remove characters beyond the 31st.
+	portID = portID.left(31);
+
+	return portID;
 }
 
 VuoRendererPort::~VuoRendererPort()

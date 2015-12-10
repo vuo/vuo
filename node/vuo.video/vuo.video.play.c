@@ -11,7 +11,7 @@
 #include "VuoLoopType.h"
 #include "VuoMovie.h"
 #include <dispatch/dispatch.h>
-#include "VuoUrl.h"
+#include "VuoUrlFetch.h"
 #include "VuoVideoFrame.h"
 
 // #define PROFILE_TIMES 1
@@ -28,14 +28,14 @@ VuoModuleMetadata({
 						  "quicktime", "qt", "aic", "prores",
 						  "video",
 					  ],
-					  "version" : "2.0.0",
+					  "version" : "2.0.1",
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "PlayMovie.vuo", "PlayMoviesOnCube.vuo", "PlayMovieWithButton.vuo", "PlayMovieWithSound.vuo", "SimulateFilmProjector.vuo" ]
+						  "exampleCompositions" : [ "PlayMovie.vuo", "PlayMoviesAndCameraOnCube.vuo", "PlayMovieWithSound.vuo" ]
 					  },
 					  "dependencies" : [
 						"VuoMovie",
-						"VuoUrl"
+						"VuoUrlFetch"
 					  ]
 				  });
 

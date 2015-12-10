@@ -37,23 +37,23 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoSyphonServerDescription VuoSyphonServerDescription_valueFromJson(json_object * js)
+VuoSyphonServerDescription VuoSyphonServerDescription_makeFromJson(json_object * js)
 {
 	VuoSyphonServerDescription server;
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "serverUUID", &o))
-		server.serverUUID = VuoText_valueFromJson(o);
+		server.serverUUID = VuoText_makeFromJson(o);
 	else
 		server.serverUUID = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "serverName", &o))
-		server.serverName = VuoText_valueFromJson(o);
+		server.serverName = VuoText_makeFromJson(o);
 	else
 		server.serverName = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "applicationName", &o))
-		server.applicationName = VuoText_valueFromJson(o);
+		server.applicationName = VuoText_makeFromJson(o);
 	else
 		server.applicationName = VuoText_make("");
 
@@ -64,17 +64,17 @@ VuoSyphonServerDescription VuoSyphonServerDescription_valueFromJson(json_object 
  * @ingroup VuoSyphonServerDescription
  * Encodes @c value as a JSON object.
  */
-json_object * VuoSyphonServerDescription_jsonFromValue(const VuoSyphonServerDescription value)
+json_object * VuoSyphonServerDescription_getJson(const VuoSyphonServerDescription value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *uuidObject = VuoText_jsonFromValue(value.serverUUID);
+	json_object *uuidObject = VuoText_getJson(value.serverUUID);
 	json_object_object_add(js, "serverUUID", uuidObject);
 
-	json_object *serverName = VuoText_jsonFromValue(value.serverName);
+	json_object *serverName = VuoText_getJson(value.serverName);
 	json_object_object_add(js, "serverName", serverName);
 
-	json_object *applicationName = VuoText_jsonFromValue(value.applicationName);
+	json_object *applicationName = VuoText_getJson(value.applicationName);
 	json_object_object_add(js, "applicationName", applicationName);
 
 	return js;
@@ -84,7 +84,7 @@ json_object * VuoSyphonServerDescription_jsonFromValue(const VuoSyphonServerDesc
  * @ingroup VuoSyphonServerDescription
  * Returns a compact string representation of @c value.
  */
-char * VuoSyphonServerDescription_summaryFromValue(const VuoSyphonServerDescription value)
+char * VuoSyphonServerDescription_getSummary(const VuoSyphonServerDescription value)
 {
 	const char *serverUUID = strlen(value.serverUUID) > 0 ? value.serverUUID : "(unknown)";
 	const char *serverName = strlen(value.serverName) > 0 ? value.serverName : "(unknown)";

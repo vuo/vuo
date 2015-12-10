@@ -31,8 +31,6 @@ const qreal VuoRendererCable::cableHighlightWidth = VuoRendererCable::cableWidth
 const qreal VuoRendererCable::cableHighlightOffset = VuoRendererCable::cableHighlightWidth * 5./8.;
 /// Radius from the endpoints of the cable in which yanking is permitted.
 const qreal VuoRendererCable::cableYankRadius = VuoRendererFonts::thickPenWidth;
-/// Length of cable stub to be painted for published cables whose connected published ports are not displayed.
-const qreal VuoRendererCable::publishedCableStubLength = 15;
 
 /**
  * Creates a renderer detail for the specified @c baseCable.
@@ -78,8 +76,6 @@ QRectF VuoRendererCable::boundingRect(void) const
 	// Include thick width of cable.
 	r.adjust(-cableWidth/2., -cableWidth/2., cableWidth/2., cableWidth/2.);
 
-	r = r.united(getPublishedAntennaCrossbarPath().boundingRect());
-
 	// Antialiasing bleed
 	r.adjust(-1,-1,1,1);
 
@@ -97,7 +93,6 @@ QPainterPath VuoRendererCable::shape() const
 
 	QPainterPath p;
 	p.addPath(getCablePath());
-	p.addPath(getPublishedAntennaCrossbarPath());
 
 	QPainterPathStroker s;
 	s.setWidth(cableWidth);
@@ -118,14 +113,8 @@ QPointF VuoRendererCable::getStartPoint(void) const
 		VuoRendererPublishedPort *sidebarPort = fromPort->getRenderer()->getProxyPublishedSidebarPort();
 		if (sidebarPort)
 		{
-			if (sidebarPort->isVisible())
-			{
-				QList<QGraphicsView *> views = scene()->views();
-				return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
-			}
-			else
-				return (isPublishedOutputCableWithoutVisiblePublishedPort()? QPointF(0,0) :
-																			 getEndPoint() + QPointF(-publishedCableStubLength + (effectivelyCarriesData() ? 0.5 : 0 ), 0));
+			QList<QGraphicsView *> views = scene()->views();
+			return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
 		}
 
 		else if (fromNode && fromNode->hasRenderer())
@@ -148,14 +137,8 @@ QPointF VuoRendererCable::getEndPoint(void) const
 		VuoRendererPublishedPort *sidebarPort = toPort->getRenderer()->getProxyPublishedSidebarPort();
 		if (sidebarPort)
 		{
-			if (sidebarPort->isVisible())
-			{
-				QList<QGraphicsView *> views = scene()->views();
-				return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
-			}
-			else
-				return (isPublishedInputCableWithoutVisiblePublishedPort()? QPointF(0,0) :
-																			getStartPoint() + QPointF(publishedCableStubLength - (effectivelyCarriesData() ? 0.5 : 0 ), 0));
+			QList<QGraphicsView *> views = scene()->views();
+			return (views.empty()? QPointF(0,0) : views[0]->mapToScene(sidebarPort->getCompositionViewportPos()));
 		}
 
 		else if (toNode->hasRenderer())
@@ -327,16 +310,6 @@ QPainterPath VuoRendererCable::getOutline(QPointF startPoint,
 		mainStroker.setCapStyle(Qt::RoundCap);
 		QPainterPath mainOutline = mainStroker.createStroke(cablePath);
 
-		QPainterPath crossbarPath = getPublishedAntennaCrossbarPath();
-		if (crossbarPath.elementCount())
-		{
-			// Union the published-cable-antenna crossbars.
-			QPainterPathStroker crossbarStroker;
-			crossbarStroker.setWidth(cableWidth*3/5);
-			crossbarStroker.setCapStyle(Qt::RoundCap);
-			mainOutline += crossbarStroker.createStroke(crossbarPath);
-		}
-
 		this->cachedEndpointsForOutlines = qMakePair(startPoint, endPoint);
 		this->cachedCarriesDataValueForOutlines = cableCarriesData;
 		this->cachedOutline = mainOutline;
@@ -409,38 +382,6 @@ void VuoRendererCable::getCableSpecs(bool cableCarriesData,
 }
 
 /**
- * Returns the path of the antenna crossbars for published cable whose connected published port
- * is not currently displayed, or an empty path if not applicable.
- */
-QPainterPath VuoRendererCable::getPublishedAntennaCrossbarPath() const
-{
-	bool paintPublishedInputCableAntenna = isPublishedInputCableWithoutVisiblePublishedPort();
-	bool paintPublishedOutputCableAntenna = isPublishedOutputCableWithoutVisiblePublishedPort();
-	if (!paintPublishedInputCableAntenna && !paintPublishedOutputCableAntenna)
-		return QPainterPath();
-
-	// Tweak outermost crossbar position so that the cable stub doesn't visibly extend beyond it.
-	qreal outerCrossbarXOffset = (effectivelyCarriesData()? 1 : 0.5);
-	const QPointF outerCrossbarPos = (paintPublishedInputCableAntenna? getStartPoint() - QPointF(outerCrossbarXOffset, 0) :
-																	   getEndPoint() + QPointF(outerCrossbarXOffset, 0));
-	const int crossbarSpacing = 5;
-	const int crossbarHeight = VuoRendererFonts::midPenWidth*5;
-
-	QPainterPath crossbars;
-	for (int i = 0; i < 2; ++i)
-	{
-		crossbars.moveTo((outerCrossbarPos +
-						 QPointF(QPointF(0, -0.5*crossbarHeight) +
-						 QPointF((paintPublishedInputCableAntenna? 1 : -1)*crossbarSpacing*i, 0))));
-		crossbars.lineTo((outerCrossbarPos +
-						 QPointF(QPointF(0, 0.5*crossbarHeight) +
-						 QPointF((paintPublishedInputCableAntenna? 1 : -1)*crossbarSpacing*i, 0))));
-	}
-
-	return crossbars;
-}
-
-/**
  * Returns a boolean indicating whether painting is currently disabled for this cable.
  */
 bool VuoRendererCable::paintingDisabled() const
@@ -451,6 +392,15 @@ bool VuoRendererCable::paintingDisabled() const
 
 	// If the cable is an outgoing cable from an input port attachment, disable painting.
 	if (getBase()->getFromNode() && getBase()->getFromNode()->hasRenderer() && dynamic_cast<VuoRendererInputAttachment *>(getBase()->getFromNode()->getRenderer()))
+		return true;
+
+	// If the cable is a published cable and published port sidebars are not currently displayed, disable painting.
+	if (isPublishedInputCableWithoutVisiblePublishedPort() || isPublishedOutputCableWithoutVisiblePublishedPort())
+		return true;
+
+	// If the cable is an internal wireless cable, disable painting unless the composition is currently
+	// in show-hidden-cables mode.
+	if (getBase()->getCompiler()->getHidden() && !getRenderHiddenCables())
 		return true;
 
 	return false;
@@ -500,6 +450,54 @@ bool VuoRendererCable::isPublishedOutputCableWithoutVisiblePublishedPort() const
 	}
 
 	return false;
+}
+
+/**
+ * Returns @c true if this cable is to be rendered as if it is wireless.
+ */
+bool VuoRendererCable::getEffectivelyWireless() const
+{
+	if (isPublishedInputCableWithoutVisiblePublishedPort() || isPublishedOutputCableWithoutVisiblePublishedPort())
+		return true;
+
+	return getBase()->getCompiler()->getHidden();
+}
+
+/**
+ * Sets the boolean indicating whether this cable has been explicitly marked
+ * by the user to be rendered as if it is wireless.
+ */
+void VuoRendererCable::setWireless(bool wireless)
+{
+	VuoRendererPort *fromPort = ((getBase()->getFromPort() && getBase()->getFromPort()->hasRenderer())?
+									getBase()->getFromPort()->getRenderer() : NULL);
+	VuoRendererPort *toPort = ((getBase()->getToPort() && getBase()->getToPort()->hasRenderer())?
+									getBase()->getToPort()->getRenderer() : NULL);
+
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+
+	if (fromPort)
+	{
+		fromPort->setCacheMode(QGraphicsItem::NoCache);
+		fromPort->updateGeometry();
+	}
+
+	if (toPort)
+	{
+		toPort->setCacheMode(QGraphicsItem::NoCache);
+		toPort->updateGeometry();
+	}
+
+	setCacheMode(QGraphicsItem::NoCache);
+	updateGeometry();
+
+	getBase()->getCompiler()->setHidden(wireless);
+
+	setCacheMode(normalCacheMode);
+	if (fromPort)
+		fromPort->setCacheMode(normalCacheMode);
+	if (toPort)
+		toPort->setCacheMode(normalCacheMode);
 }
 
 /**

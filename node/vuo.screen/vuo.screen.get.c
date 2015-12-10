@@ -22,8 +22,8 @@ void nodeEvent
 		VuoOutputData(VuoPoint2d) topLeft,
 		VuoOutputData(VuoInteger) width,
 		VuoOutputData(VuoInteger) height,
-		VuoOutputData(VuoInteger) dpiHorizontal,
-		VuoOutputData(VuoInteger) dpiVertical
+		VuoOutputData(VuoInteger, {"name":"DPI Horizontal"}) dpiHorizontal,
+		VuoOutputData(VuoInteger, {"name":"DPI Vertical"}) dpiVertical
 )
 {
 	*name = screen.name;

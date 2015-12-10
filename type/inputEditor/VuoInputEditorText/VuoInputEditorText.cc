@@ -58,7 +58,7 @@ void VuoInputEditorText::setUpDialog(QDialog &dialog, json_object *originalValue
  */
 QString VuoInputEditorText::convertToLineEditFormat(json_object *value)
 {
-	return VuoText_valueFromJson(value);
+	return VuoText_makeFromJson(value);
 }
 
 /**
@@ -66,7 +66,7 @@ QString VuoInputEditorText::convertToLineEditFormat(json_object *value)
  */
 json_object * VuoInputEditorText::convertFromLineEditFormat(const QString &valueAsString)
 {
-	return VuoText_jsonFromValue( lineEdit->text().toUtf8().constData() );
+	return VuoText_getJson( lineEdit->text().toUtf8().constData() );
 }
 
 /**

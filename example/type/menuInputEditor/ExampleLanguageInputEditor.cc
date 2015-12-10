@@ -29,12 +29,12 @@ VuoInputEditorMenuItem * ExampleLanguageInputEditor::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *rootMenuItem = new VuoInputEditorMenuItem("root");
 
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(ExampleLanguage_summaryFromValue(ExampleLanguage_English),
-													 ExampleLanguage_jsonFromValue(ExampleLanguage_English)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(ExampleLanguage_summaryFromValue(ExampleLanguage_Spanish),
-													 ExampleLanguage_jsonFromValue(ExampleLanguage_Spanish)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(ExampleLanguage_summaryFromValue(ExampleLanguage_Mandarin),
-													 ExampleLanguage_jsonFromValue(ExampleLanguage_Mandarin)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(ExampleLanguage_getSummary(ExampleLanguage_English),
+													 ExampleLanguage_getJson(ExampleLanguage_English)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(ExampleLanguage_getSummary(ExampleLanguage_Spanish),
+													 ExampleLanguage_getJson(ExampleLanguage_Spanish)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(ExampleLanguage_getSummary(ExampleLanguage_Mandarin),
+													 ExampleLanguage_getJson(ExampleLanguage_Mandarin)));
 
 	return rootMenuItem;
 }

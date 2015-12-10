@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Displays a radial gradient image, with the gradient's center controlled by mouse movements.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="1303,381" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="655,416" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="840,257" fillcolor="violet" _1="{\"r\":0.254551,\"g\":0.146487,\"b\":0.586206,\"a\":1.000000}" _2="{\"r\":0.268971,\"g\":0.015213,\"b\":0.049119,\"a\":1.000000}"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1437,407" fillcolor="green"];
+MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1013,503"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<width>width\l|<height>height\l|<image>image\r" pos="905,246" fillcolor="violet" _radius="1.000000" _width="768" _height="768"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="856,491" _text="\"Move the mouse to change the gradient's center.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.500000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.2" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="616,260" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1478,381" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1082,492" _width="768" _height="768" _colorDepth="\"8bpc\""];
+
+BlendImages:blended -> RenderImageToWindow:image;
+FireOnStart:started -> MakeRadialGradientImage:refresh;
+FireOnStart:started -> MakeTextLayer2:refresh;
+MakeList2:list -> MakeRadialGradientImage:colors;
+MakeList6:list -> RenderImageToWindow:setWindowProperties;
+MakeList8:list -> RenderLayersToImage:layers;
+MakeRadialGradientImage:image -> BlendImages:background;
+MakeTextLayer2:layer -> MakeList8:1;
+ReceiveMouseMoves:movedTo -> MakeRadialGradientImage:center;
+RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
+RenderLayersToImage:image -> BlendImages:foreground;
+}

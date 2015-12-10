@@ -31,8 +31,8 @@ VuoInputEditorMenuItem * VuoInputEditorWrapMode::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	optionsTree->addItem(new VuoInputEditorMenuItem(VuoWrapMode_summaryFromValue(VuoWrapMode_Wrap),		VuoWrapMode_jsonFromValue(VuoWrapMode_Wrap),		renderMenuIconWithWrapMode(VuoWrapMode_Wrap)));
-	optionsTree->addItem(new VuoInputEditorMenuItem(VuoWrapMode_summaryFromValue(VuoWrapMode_Saturate),	VuoWrapMode_jsonFromValue(VuoWrapMode_Saturate),	renderMenuIconWithWrapMode(VuoWrapMode_Saturate)));
+	optionsTree->addItem(new VuoInputEditorMenuItem(VuoWrapMode_getSummary(VuoWrapMode_Wrap),		VuoWrapMode_getJson(VuoWrapMode_Wrap),		renderMenuIconWithWrapMode(VuoWrapMode_Wrap)));
+	optionsTree->addItem(new VuoInputEditorMenuItem(VuoWrapMode_getSummary(VuoWrapMode_Saturate),	VuoWrapMode_getJson(VuoWrapMode_Saturate),	renderMenuIconWithWrapMode(VuoWrapMode_Saturate)));
 
 	return optionsTree;
 }

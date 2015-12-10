@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Count",
-					  "keywords" : [ "count", "add", "sum", "total", "tally", "integrator", "increment", "decrement", "increase", "decrease" ],
+					  "keywords" : [ "count", "add", "sum", "total", "tally", "integrator", "increment", "decrement", "increase", "decrease", "number" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "exampleCompositions" : [ "Count.vuo" ]
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

@@ -53,6 +53,7 @@ private:
 	QString convertToUserLocale(QString valueInStandardLocale);
 	QString convertFromUserLocale(QString valueAsString);
 	QChar getDecimalPointInUserLocale(void);
+	QChar getListSeparatorInUserLocale(void);
 	bool eventFilter(QObject *o, QEvent *event);
 
 private slots:

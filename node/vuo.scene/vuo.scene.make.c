@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "mesh", "model", "vertices", "shader", "texture", "draw", "opengl", "scenegraph", "graphics" ],
 					 "version" : "2.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "DisplaySquare.vuo", "SpinSphere.vuo" ]
+						 "exampleCompositions" : [ "DisplaySquare.vuo", "DisplaySphere.vuo" ]
 					 }
 				 });
 

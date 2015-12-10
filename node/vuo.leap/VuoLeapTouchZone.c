@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoLeapTouchZone
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoLeapTouchZone.
  */
-VuoLeapTouchZone VuoLeapTouchZone_valueFromJson(json_object *js)
+VuoLeapTouchZone VuoLeapTouchZone_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -54,7 +54,7 @@ VuoLeapTouchZone VuoLeapTouchZone_valueFromJson(json_object *js)
  * @ingroup VuoLeapTouchZone
  * Encodes @c value as a JSON object.
  */
-json_object * VuoLeapTouchZone_jsonFromValue(const VuoLeapTouchZone value)
+json_object * VuoLeapTouchZone_getJson(const VuoLeapTouchZone value)
 {
 	char *valueAsString = "";
 
@@ -78,7 +78,7 @@ json_object * VuoLeapTouchZone_jsonFromValue(const VuoLeapTouchZone value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoLeapTouchZone VuoLeapTouchZone_allowedValues(void)
+VuoList_VuoLeapTouchZone VuoLeapTouchZone_getAllowedValues(void)
 {
 	VuoList_VuoLeapTouchZone l = VuoListCreate_VuoLeapTouchZone();
 	VuoListAppendValue_VuoLeapTouchZone(l, VuoLeapTouchZone_None);
@@ -89,9 +89,9 @@ VuoList_VuoLeapTouchZone VuoLeapTouchZone_allowedValues(void)
 
 /**
  * @ingroup VuoLeapTouchZone
- * Same as @c %VuoLeapTouchZone_stringFromValue()
+ * Same as @c %VuoLeapTouchZone_getString()
  */
-char * VuoLeapTouchZone_summaryFromValue(const VuoLeapTouchZone value)
+char * VuoLeapTouchZone_getSummary(const VuoLeapTouchZone value)
 {
 	char *valueAsString = "";
 

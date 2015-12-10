@@ -45,10 +45,10 @@ private slots:
 		QFETCH(bool, valid);
 		QFETCH(QString, summary);
 
-		VuoAudioSamples v = VuoAudioSamples_valueFromString(value.toUtf8().data());
+		VuoAudioSamples v = VuoAudioSamples_makeFromString(value.toUtf8().data());
 		if (valid)
-			QCOMPARE(QString::fromUtf8(VuoAudioSamples_stringFromValue(v)), value);
-		QCOMPARE(QString::fromUtf8(VuoAudioSamples_summaryFromValue(v)), summary);
+			QCOMPARE(QString::fromUtf8(VuoAudioSamples_getString(v)), value);
+		QCOMPARE(QString::fromUtf8(VuoAudioSamples_getSummary(v)), summary);
 	}
 };
 

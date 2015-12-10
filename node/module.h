@@ -45,7 +45,7 @@
  * 					 },
  * 					 "node": {
  * 						 "isInterface" : true,
- * 						 "exampleCompositions" : [ "HelloWorld.vuo", "CalculateTip.vuo" ]
+ * 						 "exampleCompositions" : [ "HelloWorld.vuo" ]
  * 					 }
  * 				 });
  * }

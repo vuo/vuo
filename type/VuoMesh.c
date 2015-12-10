@@ -855,9 +855,9 @@ VuoBox VuoMesh_bounds(const VuoMesh v, float matrix[16])
  * @ingroup VuoMesh
  * Decodes the JSON object @c js to create a new value.
  *
- * @param js A JSON array of elements of the format parsed by VuoSubmesh_valueFromJson().
+ * @param js A JSON array of elements of the format parsed by VuoSubmesh_makeFromJson().
  */
-VuoMesh VuoMesh_valueFromJson(json_object * js)
+VuoMesh VuoMesh_makeFromJson(json_object * js)
 {
 	if (!js)
 		return NULL;
@@ -869,7 +869,7 @@ VuoMesh VuoMesh_valueFromJson(json_object * js)
  * @ingroup VuoMesh
  * Encodes @c value as a JSON object.
  */
-json_object * VuoMesh_jsonFromValue(const VuoMesh value)
+json_object * VuoMesh_getJson(const VuoMesh value)
 {
 	return json_object_new_int64((int64_t)value);
 }
@@ -883,7 +883,7 @@ json_object * VuoMesh_jsonFromValue(const VuoMesh value)
  * @eg{8 vertices, 12 triangles
  * with first position (-0.5,-0.5,-0.5,0)}
  */
-char * VuoSubmesh_summaryFromValue(const VuoSubmesh value)
+char * VuoSubmesh_getSummary(const VuoSubmesh value)
 {
 	if (value.vertexCount == 0)
 	{
@@ -939,7 +939,7 @@ char * VuoSubmesh_summaryFromValue(const VuoSubmesh value)
  * @ingroup VuoMesh
  * A brief summary of the contents of this mesh, including a list of sub-meshes.
  */
-char * VuoMesh_summaryFromValue(const VuoMesh value)
+char * VuoMesh_getSummary(const VuoMesh value)
 {
 	if (!value || value->submeshCount == 0)
 		return strdup("(empty mesh)");
@@ -953,7 +953,7 @@ char * VuoMesh_summaryFromValue(const VuoMesh value)
 	unsigned int submeshBytes = 0;
 	for (unsigned int i = 0; i < submeshCount; ++i)
 	{
-		char *s = VuoSubmesh_summaryFromValue(value->submeshes[i]);
+		char *s = VuoSubmesh_getSummary(value->submeshes[i]);
 		submeshes[i] = (char *)malloc((strlen(s) + 4 + 5 + 1));
 		submeshes[i][0] = 0;
 		strncat(submeshes[i], "<li>", 4);

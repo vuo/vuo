@@ -13,7 +13,7 @@
 #include "node.h"
 #include "VuoFileType.h"
 #include "VuoFileListSort.h"
-#include "VuoUrl.h"
+#include "VuoUrlFetch.h"
 
 VuoModuleMetadata({
 					  "title" : "List Files",
@@ -22,7 +22,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
-						  "VuoUrl",
+						  "VuoUrlFetch",
 						  "VuoFileListSort"
 					  ],
 					  "node": {

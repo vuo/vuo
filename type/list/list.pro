@@ -15,6 +15,8 @@ OTHER_FILES += \
 #    1 — type is reference counted, using VuoRetain() and VuoRelease()
 #    2 — type is reference counted, using ELEMENT_TYPE_retain() and ELEMENT_TYPE_release()
 TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
+		VuoArtNetInputDevice:2 \
+		VuoArtNetOutputDevice:2 \
 		VuoAudioInputDevice:2 \
 		VuoAudioOutputDevice:2 \
 		VuoAudioSamples:2 \
@@ -26,12 +28,14 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoCurveEasing:0 \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
+		VuoDmxColorMap:2 \
 		VuoFileType:0 \
 		VuoFont:2 \
 		VuoGradientNoise:0 \
 		VuoHorizontalAlignment:0 \
 		VuoHorizontalReflection:0 \
 		VuoHorizontalSide:0 \
+		VuoIconPosition:2 \
 		VuoImage:1 \
 		VuoImageColorDepth:0 \
 		VuoImageWrapMode:0 \
@@ -50,6 +54,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoMidiInputDevice:2 \
 		VuoMidiOutputDevice:2 \
 		VuoMidiNote:0 \
+		VuoMidiPitchBend:2 \
 		VuoModifierKey:0 \
 		VuoMouseButton:0 \
 		VuoNoise:0 \
@@ -61,6 +66,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoReal:0 \
 		VuoRealRegulation:2 \
 		VuoRenderedLayers:2 \
+		VuoRssItem:2 \
 		VuoSceneObject:2 \
 		VuoScreen:2 \
 		VuoShader:1 \
@@ -70,6 +76,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoThresholdType:0 \
 		VuoTransform2d:0 \
 		VuoTransform:0 \
+		VuoUrl:2 \
 		VuoVerticalAlignment:0 \
 		VuoVerticalReflection:0 \
 		VuoVideoFrame:2 \
@@ -81,21 +88,27 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 	)
 
 TYPE_INCLUDEPATH = \
+	$$ROOT/node/vuo.artnet \
 	$$ROOT/node/vuo.audio \
+	$$ROOT/node/vuo.bcf2000 \
+	$$ROOT/node/vuo.color \
 	$$ROOT/node/vuo.file \
 	$$ROOT/node/vuo.font \
 	$$ROOT/node/vuo.image \
 	$$ROOT/node/vuo.keyboard \
 	$$ROOT/node/vuo.layer \
 	$$ROOT/node/vuo.leap \
+	$$ROOT/node/vuo.list \
 	$$ROOT/node/vuo.midi \
 	$$ROOT/node/vuo.mouse \
 	$$ROOT/node/vuo.motion \
 	$$ROOT/node/vuo.video \
 	$$ROOT/node/vuo.noise \
 	$$ROOT/node/vuo.osc \
+	$$ROOT/node/vuo.rss \
 	$$ROOT/node/vuo.scene \
-	$$ROOT/node/vuo.syphon
+	$$ROOT/node/vuo.syphon \
+	$$ROOT/node/vuo.ui
 
 include(../../module.pri)
 

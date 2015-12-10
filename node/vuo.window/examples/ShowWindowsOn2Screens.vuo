@@ -1,6 +1,6 @@
 /**
  * @file
- * Creates 2 windows and displays each on a separate screen.  (If only a single screen is connected, you can see both fullscreen windows by activating Mission Control.)
+ * Creates 2 windows and displays each on a separate screen.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -11,42 +11,38 @@ digraph G
 {
 ChangeFullscreenStatus [type="vuo.window.fullscreen" version="1.0.0" label="Change Fullscreen Status|<refresh>refresh\l|<fullscreen>fullscreen\l|<screen>screen\l|<property>property\r" pos="695,550" fillcolor="violet" _fullscreen="true"];
 ChangeFullscreenStatus2 [type="vuo.window.fullscreen" version="1.0.0" label="Change Fullscreen Status|<refresh>refresh\l|<fullscreen>fullscreen\l|<screen>screen\l|<property>property\r" pos="698,182" fillcolor="violet" _fullscreen="true"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="32,176" _started_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="32,176" fillcolor="yellow" _started_eventThrottling="enqueue"];
 GetItemFromList [type="vuo.list.get.VuoScreen" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="381,565" _which="2"];
 GetItemFromList2 [type="vuo.list.get.VuoScreen" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="381,197" _which="1"];
 ListScreens [type="vuo.screen.list" version="1.0.0" label="List Screens|<refresh>refresh\l|<screens>screens\r" pos="201,197" fillcolor="violet"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="752,78" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="749,446" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeLayer3 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="741,300" _name="\"\"" _center="{\"x\":0.000000,\"y\":-0.100000}" _opacity="1.000000"];
-MakeList10 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="990,457"];
-MakeList11 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="978,104"];
-MakeList13 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="940,89"];
-MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="952,442"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="553,93" _text="\"First screen\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":64.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage2 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="548,461" _text="\"Second screen\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":64.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":0.999974,\"b\":0.999991,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage3 [type="vuo.image.make.text" version="1.0.0" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="412,315" _text="\"Press Esc or ⌘F to switch back to a window, or ⌘Q to quit.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":0.428139,\"g\":0.428127,\"b\":0.428134,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1036,431" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.0.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1024,78" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+MakeLayer3 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="741,300" _name="\"\"" _center="{\"x\":0.000000,\"y\":-0.400000}" _opacity="1.000000"];
+MakeList10 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="990,457" fillcolor="green"];
+MakeList11 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="974,115" fillcolor="green"];
+MakeList13 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="937,100" fillcolor="green"];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="953,442" fillcolor="green"];
+MakeTextImage3 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="412,315" _text="\"Click on a screen,\\nthen press Esc or ⌘F\\nto switch back to a window,\\nor ⌘Q to quit.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":24.000000,\"underline\":false,\"color\":{\"r\":0.428139,\"g\":0.428127,\"b\":0.428134,\"a\":1.000000},\"alignment\":\"center\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="757,88" _text="\"First screen\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="753,459" _text="\"Second screen\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1036,431" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1020,89" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 ChangeFullscreenStatus2:property -> MakeList11:1;
 ChangeFullscreenStatus:property -> MakeList10:1;
 FireOnStart:started -> ListScreens:refresh;
 FireOnStart:started -> MakeTextImage3:refresh;
 GetItemFromList2:item -> ChangeFullscreenStatus2:screen;
-GetItemFromList2:item -> MakeTextImage:refresh;
+GetItemFromList2:item -> MakeTextLayer:refresh;
 GetItemFromList:item -> ChangeFullscreenStatus:screen;
-GetItemFromList:item -> MakeTextImage2:refresh;
+GetItemFromList:item -> MakeTextLayer2:refresh;
 ListScreens:screens -> GetItemFromList2:list;
 ListScreens:screens -> GetItemFromList:list;
-MakeLayer2:layer -> MakeList6:2;
 MakeLayer3:layer -> MakeList13:2;
 MakeLayer3:layer -> MakeList6:1;
-MakeLayer:layer -> MakeList13:1;
 MakeList10:list -> RenderLayersToWindow:setWindowProperties;
 MakeList11:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList13:list -> RenderLayersToWindow2:layers;
 MakeList6:list -> RenderLayersToWindow:layers;
-MakeTextImage2:image -> MakeLayer2:image;
 MakeTextImage3:image -> MakeLayer3:image;
-MakeTextImage:image -> MakeLayer:image;
+MakeTextLayer2:layer -> MakeList6:2;
+MakeTextLayer:layer -> MakeList13:1;
 }

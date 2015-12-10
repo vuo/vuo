@@ -6,6 +6,7 @@ include(../../vuo.pri)
 GENERIC_NODE_SOURCES += \
 	vuo.list.add.c \
 	vuo.list.append.c \
+	vuo.list.build.c \
 	vuo.list.count.c \
 	vuo.list.cut.c \
 	vuo.list.cycle.c \
@@ -15,8 +16,15 @@ GENERIC_NODE_SOURCES += \
 	vuo.list.get.last.c \
 	vuo.list.get.random.c \
 	vuo.list.insert.c \
+	vuo.list.process.c \
 	vuo.list.reverse.c \
 	vuo.list.shuffle.c \
 	vuo.list.take.c
+
+TYPE_SOURCES += \
+	VuoListPosition.c
+
+HEADERS += \
+	VuoListPosition.h
 
 include(../../module.pri)

@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Send MIDI Event",
 					 "keywords" : [ "note", "controller", "synthesizer", "sequencer", "music", "instrument", "device" ],
-					 "version" : "2.0.0",
+					 "version" : "2.1.0",
 					 "dependencies" : [
 						 "VuoMidi"
 					 ],
@@ -57,10 +57,12 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoMidiOutputDevice) device,
-		VuoInputData(VuoMidiNote,"") sendNote,
+		VuoInputData(VuoMidiNote) sendNote,
 		VuoInputEvent({"eventBlocking":"none","data":"sendNote"}) sendNoteEvent,
-		VuoInputData(VuoMidiController,"") sendController,
-		VuoInputEvent({"eventBlocking":"none","data":"sendController"}) sendControllerEvent
+		VuoInputData(VuoMidiController) sendController,
+		VuoInputEvent({"eventBlocking":"none","data":"sendController"}) sendControllerEvent,
+		VuoInputData(VuoMidiPitchBend) sendPitchBend,
+		VuoInputEvent({"eventBlocking":"none","data":"sendPitchBend"}) sendPitchBendEvent
 //		VuoInputData(VuoMidiAftertouch,"") aftertouch,
 //		VuoInputData(VuoMidiCommand,"") command,
 //		VuoInputData(VuoMidiClock,"") clock,
@@ -75,6 +77,8 @@ void nodeInstanceEvent
 		VuoMidiOut_sendNote((*context)->midiManager, sendNote);
 	if (sendControllerEvent)
 		VuoMidiOut_sendController((*context)->midiManager, sendController);
+	if (sendPitchBendEvent)
+		VuoMidiOut_sendPitchBend((*context)->midiManager, sendPitchBend);
 }
 
 void nodeInstanceFini

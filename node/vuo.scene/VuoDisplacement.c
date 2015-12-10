@@ -28,7 +28,7 @@ VuoModuleMetadata({
  * @ingroup VuoDisplacement
  * Decodes the JSON object @c js to create a new value.
  */
-VuoDisplacement VuoDisplacement_valueFromJson(json_object * js)
+VuoDisplacement VuoDisplacement_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -46,7 +46,7 @@ VuoDisplacement VuoDisplacement_valueFromJson(json_object * js)
  * @ingroup VuoDisplacement
  * Encodes @c value as a JSON object.
  */
-json_object * VuoDisplacement_jsonFromValue(const VuoDisplacement value)
+json_object * VuoDisplacement_getJson(const VuoDisplacement value)
 {
 	char *valueAsString = "transverse";
 
@@ -60,7 +60,7 @@ json_object * VuoDisplacement_jsonFromValue(const VuoDisplacement value)
  * @ingroup VuoDisplacement
  * Returns a compact string representation of @c value.
  */
-char * VuoDisplacement_summaryFromValue(const VuoDisplacement value)
+char * VuoDisplacement_getSummary(const VuoDisplacement value)
 {
 	char *valueAsString = "Transverse";
 

@@ -35,7 +35,7 @@ private slots:
 										<< false
 										<< "(no font) 0pt<ul><li>color: 1, 1, 1, 1</li><li>left-aligned</li><li>character spacing: 1</li><li>line spacing: 1</li></ul>";
 
-		QTest::newRow("font")			<< (const char*)VuoFont_stringFromValue(VuoFont_make(
+		QTest::newRow("font")			<< (const char*)VuoFont_getString(VuoFont_make(
 																					"Helvetica",
 																					12,
 																					true,
@@ -52,10 +52,10 @@ private slots:
 		QFETCH(bool, testReverse);
 		QFETCH(QString, summary);
 
-		VuoFont f = VuoFont_valueFromString(value.toUtf8().data());
+		VuoFont f = VuoFont_makeFromString(value.toUtf8().data());
 		if (testReverse)
-			QCOMPARE(QString::fromUtf8(VuoFont_stringFromValue(f)), value);
-		QCOMPARE(QString::fromUtf8(VuoFont_summaryFromValue(f)), summary);
+			QCOMPARE(QString::fromUtf8(VuoFont_getString(f)), value);
+		QCOMPARE(QString::fromUtf8(VuoFont_getSummary(f)), summary);
 	}
 };
 

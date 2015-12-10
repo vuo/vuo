@@ -23,7 +23,6 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						"VuoInteger",
-						"VuoLeapPointable",
 						"VuoLeapPointableType",
 						"VuoLeapTouchZone",
 						"VuoPoint3d",
@@ -54,7 +53,7 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
+VuoLeapPointable VuoLeapPointable_makeFromJson(json_object * js)
 {
 	VuoLeapPointable pointable =
 	{
@@ -74,37 +73,37 @@ VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		pointable.id = VuoInteger_valueFromJson(o);
+		pointable.id = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "type", &o))
-		pointable.type = VuoInteger_valueFromJson(o);
+		pointable.type = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "length", &o))
-		pointable.length = VuoReal_valueFromJson(o);
+		pointable.length = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "width", &o))
-		pointable.width = VuoReal_valueFromJson(o);
+		pointable.width = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "direction", &o))
-		pointable.direction = VuoPoint3d_valueFromJson(o);
+		pointable.direction = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "tipPosition", &o))
-		pointable.tipPosition = VuoPoint3d_valueFromJson(o);
+		pointable.tipPosition = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "tipVelocity", &o))
-		pointable.tipVelocity = VuoPoint3d_valueFromJson(o);
+		pointable.tipVelocity = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "timeVisible", &o))
-		pointable.timeVisible = VuoReal_valueFromJson(o);
+		pointable.timeVisible = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "touchDistance", &o))
-		pointable.touchDistance = VuoReal_valueFromJson(o);
+		pointable.touchDistance = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "touchZone", &o))
-		pointable.touchZone = VuoReal_valueFromJson(o);
+		pointable.touchZone = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "isExtended", &o))
-		pointable.isExtended = VuoBoolean_valueFromJson(o);
+		pointable.isExtended = VuoBoolean_makeFromJson(o);
 
 	return pointable;
 }
@@ -113,41 +112,41 @@ VuoLeapPointable VuoLeapPointable_valueFromJson(json_object * js)
  * @ingroup VuoLeapPointable
  * Encodes @c value as a JSON object.
  */
-json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value)
+json_object * VuoLeapPointable_getJson(const VuoLeapPointable value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_jsonFromValue(value.id);
+	json_object *idObject = VuoInteger_getJson(value.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *typeObject = VuoInteger_jsonFromValue(value.type);
+	json_object *typeObject = VuoInteger_getJson(value.type);
 	json_object_object_add(js, "type", typeObject);
 
-	json_object *lengthObject = VuoReal_jsonFromValue(value.length);
+	json_object *lengthObject = VuoReal_getJson(value.length);
 	json_object_object_add(js, "length", lengthObject);
 
-	json_object *widthObject = VuoReal_jsonFromValue(value.width);
+	json_object *widthObject = VuoReal_getJson(value.width);
 	json_object_object_add(js, "width", widthObject);
 
-	json_object *directionObject = VuoPoint3d_jsonFromValue(value.direction);
+	json_object *directionObject = VuoPoint3d_getJson(value.direction);
 	json_object_object_add(js, "direction", directionObject);
 
-	json_object *tipPositionObject = VuoPoint3d_jsonFromValue(value.tipPosition);
+	json_object *tipPositionObject = VuoPoint3d_getJson(value.tipPosition);
 	json_object_object_add(js, "tipPosition", tipPositionObject);
 
-	json_object *tipVelocityObject = VuoPoint3d_jsonFromValue(value.tipVelocity);
+	json_object *tipVelocityObject = VuoPoint3d_getJson(value.tipVelocity);
 	json_object_object_add(js, "tipVelocity", tipVelocityObject);
 
-	json_object *timeVisibleObject = VuoReal_jsonFromValue(value.timeVisible);
+	json_object *timeVisibleObject = VuoReal_getJson(value.timeVisible);
 	json_object_object_add(js, "timeVisible", timeVisibleObject);
 
-	json_object *touchDistanceObject = VuoReal_jsonFromValue(value.touchDistance);
+	json_object *touchDistanceObject = VuoReal_getJson(value.touchDistance);
 	json_object_object_add(js, "touchDistance", touchDistanceObject);
 
-	json_object *touchZoneObject = VuoInteger_jsonFromValue(value.touchZone);
+	json_object *touchZoneObject = VuoInteger_getJson(value.touchZone);
 	json_object_object_add(js, "touchZone", touchZoneObject);
 
-	json_object *isExtendedObject = VuoBoolean_jsonFromValue(value.isExtended);
+	json_object *isExtendedObject = VuoBoolean_getJson(value.isExtended);
 	json_object_object_add(js, "isExtended", isExtendedObject);
 
 	return js;
@@ -157,7 +156,7 @@ json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value)
  * @ingroup VuoLeapPointable
  * Returns a compact string representation of @c value.
  */
-char * VuoLeapPointable_summaryFromValue(const VuoLeapPointable value)
+char * VuoLeapPointable_getSummary(const VuoLeapPointable value)
 {
 	return VuoText_format("%lld", value.id);
 }

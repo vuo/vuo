@@ -12,5 +12,7 @@
 	<string>Copyright (c) 2007-2012 University of Illinois at Urbana-Champaign</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleExecutable</key>
+	<string>clang</string>
 </dict>
 </plist>

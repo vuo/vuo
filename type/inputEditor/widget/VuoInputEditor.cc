@@ -15,7 +15,7 @@
 QFont VuoInputEditor::getDefaultFont(void)
 {
 //	return VuoRendererFonts::getSharedFonts()->nodePortTitleFont();  // This would be better, but it makes the input editors depend on VuoRendererFonts.
-	return QFont("Signika", 20.0*9.0/16.0, QFont::Normal, false);
+	return QFont("Signika", 20.0*8.0/16.0, QFont::Normal, false);
 }
 
 bool VuoInputEditor::supportsTabbingBetweenPorts(void)

@@ -46,6 +46,7 @@ public:
 		string filePath;  ///< The path of the file, relative to its directory or archive.
 		string dirPath;  ///< The path of the directory, or empty if the file is in an archive.
 		Archive *archive;  ///< The archive reference, or null if the file is in a directory.
+		int fileDescriptor;
 
 		friend class VuoFileUtilities;
 
@@ -57,19 +58,29 @@ public:
 		string getRelativePath(void);
 		char * getContentsAsRawData(size_t &numBytes);
 		string getContentsAsString(void);
+		bool lockForReading(bool nonBlocking=false);
+		bool lockForWriting(bool nonBlocking=false);
+		void unlock(void);
 	};
 
 	static void splitPath(string path, string &dir, string &file, string &extension);
 	static string makeTmpFile(string file, string extension, string directory="/tmp");
 	static string makeTmpDir(string dir);
 	static string getTmpDir(void);
+	static void makeDir(string path);
 	static string getVuoFrameworkPath(void);
+	static string getUserModulesPath(void);
+	static string getSystemModulesPath(void);
+	static string getCachePath(void);
+	static void preserveOriginalFileName(string &fileContents, string originalFileName);
 	static size_t getFirstInsertionIndex(string s);
 	static string readStdinToString(void);
 	static string readFileToString(string path);
 	static void writeRawDataToFile(const char *data, size_t numBytes, string file);
 	static void writeStringToFile(string s, string file);
 	static bool fileExists(string path);
+	static void createFile(string path);
+	static unsigned long getFileLastModifiedInSeconds(string path);
 	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>(), bool shouldSearchRecursively = false);
 	static set<File *> findFilesInDirectory(string dirPath, set<string> extensions, set<string> archiveExtensions = set<string>());
 	static set<File *> findAllFilesInArchive(string archivePath);

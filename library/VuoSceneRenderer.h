@@ -20,7 +20,7 @@ extern "C"
  */
 typedef void * VuoSceneRenderer;
 
-VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext);
+VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScaleFactor);
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sceneRenderer, unsigned int width, unsigned int height);
 
 void VuoSceneRenderer_draw(VuoSceneRenderer sceneRenderer);

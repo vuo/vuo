@@ -5,10 +5,27 @@ If you're developing an application, library, or other project, your code can bu
 To learn how to develop an application that uses Vuo, see: 
 
    - This API documentation
-   - The example Xcode project (`example/api/VuoPluginApp` included with the Vuo SDK) for using Vuo's Cocoa API
-   - The example Qt projects (`example/api/RunImageFilter` included with the Vuo SDK) for using Vuo's C++ API
+   - The example projects found in the `example/api` folder of the Vuo SDK:
+      - For Vuo's Cocoa API: `VuoPluginApp`
+      - For Vuo's C++ API: `CompileAndRunInCurrentProcess`, `CompileAndRunInNewProcess`, `ListPublishedPorts`, `RunImageFilter-GLFW`, `RunImageFilter-Qt`
    - The source code for the Vuo command-line tools
 
+
+## Choosing an API
+
+### Cocoa API
+
+If you plan to use Vuo within a Cocoa application, and the compositions you'll be using it with conform to the Image Generator or Image Filter protocol, then consider using the Cocoa API. It provides a simple Objective-C interface for retrieving images from compositions (VuoRunnerCocoa.hh) and methods for converting between Vuo types and Cocoa types (VuoRunnerCocoa+Conversion.hh).
+
+### C++ API
+
+Otherwise, you should use the C++ API (VuoRunner.hh). It offers much more flexibility for running and interacting with compositions.
+
+### 32-bit and 64-bit
+
+The Cocoa API and the C++ API can be used in both 32-bit and 64-bit applications. The Cocoa API is available in its entirety on both architectures. In the C++ API, some classes and functions are available only in 64-bit mode — specifically, classes whose names begin with `VuoCompiler`, and VuoRunner functions that involve running a composition in the current process.
+
+When running a composition from a 32-bit application, the composition always runs in a separate (64-bit) process. When running a composition from a 64-bit application with the C++ API, you have the option to run it in the current process or a separate process.
 
 
 ## Setting up your application
@@ -64,12 +81,7 @@ Vuo.framework includes the basic functions you need to build and run a Vuo compo
 See the RunImageFilter example projects (included with the Vuo SDK) for examples of using these libraries. 
 
 
-## The Cocoa API
-
-Using the VuoImageFilter and VuoImageGenerator classes, you can compile, run, interact with, and get information about a composition.  The composition runs in a separate 64-bit process.
-
-
-## The C++ API
+## Using the C++ API
 
 ### Compiling and linking a Vuo composition
 
@@ -86,7 +98,6 @@ Using the VuoRunner class, you can run and interact with a composition. The comp
 The VuoRunner::start and VuoRunner::stop functions allow you to start and stop a composition. While the composition is running, you can use other VuoRunner functions to control it and query it (such such pausing the composition, setting the values of published input ports, and getting the values of published output ports). 
 
 You can receive notifications from the running composition (such as when a published output port receives an event) by creating a derived class of VuoRunnerDelegate or VuoRunnerDelegateAdapter. Use VuoRunner::setDelegate to connect your class to the VuoRunner. Your class's VuoRunnerDelegate functions will be called whenever the VuoRunner receives messages from the running composition. 
-
 
 
 ## The Vuo framework contains encryption

@@ -41,12 +41,16 @@ void VuoWindowText_appendLine(VuoWindowText w, const char *text);
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
 		bool useDepthBuffer,
-		void (*initCallback)(VuoGlContext glContext, void *),
+		void (*initCallback)(VuoGlContext glContext, float backingScaleFactor, void *),
 		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
 		void (*drawCallback)(VuoGlContext glContext, void *),
 		void *context
 );
-void VuoWindowOpenGl_enableTriggers(VuoWindowOpenGl w);
+void VuoWindowOpenGl_enableTriggers
+(
+		VuoWindowOpenGl w,
+		VuoOutputTrigger(showedWindow, VuoWindowReference)
+);
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w);
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w);
 void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty properties);

@@ -43,6 +43,16 @@ static bool isMainThread(void)
 }
 
 /**
+ * Applies standard settings to the specified ZMQ socket.
+ */
+static void VuoRunner_configureSocket(void *zmqSocket)
+{
+	int timeout = 5 * 1000; // 5 seconds
+	zmq_setsockopt(zmqSocket, ZMQ_RCVTIMEO, &timeout, sizeof timeout);
+	zmq_setsockopt(zmqSocket, ZMQ_SNDTIMEO, &timeout, sizeof timeout);
+}
+
+/**
  * Creates a runner object that can run the composition in file @a compositionPath in a new process.
  */
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compositionPath)
@@ -150,6 +160,8 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string composi
  * @param dylibPath A linked composition dynamic library, produced by VuoCompiler::linkCompositionToCreateDynamicLibrary().
  * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
  * @param deleteDylibWhenFinished True if the runner should delete @c dylibPath when it's finished using the file.
+ *
+ * @only64Bit
  *
  * @see CompileAndRunInCurrentProcess.cc
  */
@@ -270,7 +282,7 @@ void VuoRunner::start(bool isPaused)
 			return;
 		}
 
-		typedef void(* initInProcessType)(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused);
+		typedef void(* initInProcessType)(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid);
 
 		initInProcessType vuoInitInProcess = (initInProcessType)dlsym(dylibHandle, "vuoInitInProcess");
 		if (! vuoInitInProcess)
@@ -290,7 +302,7 @@ void VuoRunner::start(bool isPaused)
 		if (!sourceDir.empty())
 			chdir(sourceDir.c_str());
 
-		vuoInitInProcess(ZMQContext, ZMQControlURL.c_str(), ZMQTelemetryURL.c_str(), isPaused);
+		vuoInitInProcess(ZMQContext, ZMQControlURL.c_str(), ZMQTelemetryURL.c_str(), isPaused, getpid());
 	}
 	else
 	{
@@ -322,6 +334,11 @@ void VuoRunner::start(bool isPaused)
 		args.push_back("--vuo-control=" + ZMQControlURL);
 		args.push_back("--vuo-telemetry=" + ZMQTelemetryURL);
 
+		pid_t pid = getpid();
+		ostringstream oss;
+		oss << pid;
+		args.push_back("--vuo-runner=" + oss.str());
+
 		if (isUsingCompositionLoader())
 		{
 			ZMQLoaderControlURL = "ipc://" + VuoFileUtilities::makeTmpFile("vuo-loader", "");
@@ -341,15 +358,52 @@ void VuoRunner::start(bool isPaused)
 		}
 		argv[args.size()] = NULL;
 
-		compositionPid = fork();
-		if (! compositionPid)
+		int fd[2];
+		int ret = pipe(fd);
+		if (ret != 0)
 		{
-			// Set the current working directory to that of the source .vuo composition so that
-			// relative URL paths are resolved correctly.
-			if (!sourceDir.empty())
-				chdir(sourceDir.c_str());
+			VLog("Error: Couldn't open pipe to parent of composition process.");
+			return;
+		}
 
-			execv(executablePath.c_str(), argv);
+		pid_t childPid = fork();
+		if (childPid == 0)
+		{
+			pid_t grandchildPid = fork();
+			if (grandchildPid == 0)
+			{
+				// Set the current working directory to that of the source .vuo composition so that
+				// relative URL paths are resolved correctly.
+				if (!sourceDir.empty())
+					chdir(sourceDir.c_str());
+
+				execv(executablePath.c_str(), argv);
+			}
+			else
+			{
+				close(fd[0]);
+				write(fd[1], &grandchildPid, sizeof(pid_t));
+			}
+
+			_exit(0);  // Can't safely call exit() in child after fork(). Instead call _exit().
+		}
+		else if (childPid > 0)
+		{
+			close(fd[1]);
+			pid_t grandchildPid;
+			read(fd[0], &grandchildPid, sizeof(pid_t));
+
+			if (grandchildPid > 0)
+				compositionPid = grandchildPid;
+			else
+			{
+				VLog("Error: Couldn't fork composition process.");
+				return;
+			}
+		}
+		else
+		{
+			VLog("Error: Couldn't fork parent of composition process.");
 			return;
 		}
 	}
@@ -358,6 +412,7 @@ void VuoRunner::start(bool isPaused)
 	if (isUsingCompositionLoader())
 	{
 		ZMQLoaderControl = zmq_socket(ZMQContext,ZMQ_REQ);
+		VuoRunner_configureSocket(ZMQLoaderControl);
 
 		// Try to connect to the composition loader. If at first we don't succeed, give the composition loader a little more time to set up the socket.
 		int numTries = 0;
@@ -385,6 +440,7 @@ void VuoRunner::start(bool isPaused)
 void VuoRunner::setUpConnections(void)
 {
 	ZMQControl = zmq_socket(ZMQContext,ZMQ_REQ);
+	VuoRunner_configureSocket(ZMQControl);
 
 	// Try to connect to the composition. If at first we don't succeed, give the composition a little more time to set up the socket.
 	int numTries = 0;
@@ -441,6 +497,8 @@ void VuoRunner::setUpConnections(void)
  * Throws a @c std::logic_error if this runner was not constructed to run the composition in the current process
  * or if this function was not called on the main thread.
  *
+ * @only64Bit
+ *
  * @see drainMainDispatchQueue(), an alternative to this function.
  */
 void VuoRunner::runOnMainThread(void)
@@ -480,6 +538,8 @@ void VuoRunner::runOnMainThread(void)
  *		// do other work on the main thread
  *   }
  * }
+ *
+ * @only64Bit
  *
  * @see runOnMainThread(), an alternative to this function.
  */
@@ -1252,6 +1312,7 @@ void VuoRunner::listen(void)
 {
 	{
 		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_SUB);
+		VuoRunner_configureSocket(ZMQTelemetry);
 		if(zmq_connect(ZMQTelemetry,ZMQTelemetryURL.c_str()))
 			VLog("Error: VuoTelemetry connect failed.");
 	}

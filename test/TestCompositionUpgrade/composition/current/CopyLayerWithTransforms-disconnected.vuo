@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,8 +11,5 @@
 
 digraph G
 {
-CopyLayerWithTransforms [type="vuo.layer.copy" version="2.0.0" label="Copy Layer with Transforms|<refresh>refresh\l|<layer>layer\l|<transforms>transforms\l|<copies>copies\r" pos="375,338"];
-MakeList7 [type="vuo.list.make.2.VuoTransform2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="329,364"];
-
-MakeList7:list -> CopyLayerWithTransforms:transforms;
+CopyLayerWithTransforms [type="vuo.layer.copy" version="1.0.0" label="Copy Layer with Transforms|<refresh>refresh\l|<layer>layer\l|<transforms>transforms\l|<done>done\r|<copies>copies\r" pos="375,338"];
 }

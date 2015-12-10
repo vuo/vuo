@@ -24,34 +24,34 @@ VuoModuleMetadata({
 					 ]
 				 });
 
-MyPairOfReals MyPairOfReals_valueFromJson(json_object * js)
+MyPairOfReals MyPairOfReals_makeFromJson(json_object * js)
 {
 	MyPairOfReals value = {0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "first", &o))
-		value.first = VuoReal_valueFromJson(o);
+		value.first = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "second", &o))
-		value.second = VuoReal_valueFromJson(o);
+		value.second = VuoReal_makeFromJson(o);
 
 	return value;
 }
 
-json_object * MyPairOfReals_jsonFromValue(const MyPairOfReals value)
+json_object * MyPairOfReals_getJson(const MyPairOfReals value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *firstObject = VuoReal_jsonFromValue(value.first);
+	json_object *firstObject = VuoReal_getJson(value.first);
 	json_object_object_add(js, "first", firstObject);
 
-	json_object *secondObject = VuoReal_jsonFromValue(value.second);
+	json_object *secondObject = VuoReal_getJson(value.second);
 	json_object_object_add(js, "second", secondObject);
 
 	return js;
 }
 
-char * MyPairOfReals_summaryFromValue(const MyPairOfReals value)
+char * MyPairOfReals_getSummary(const MyPairOfReals value)
 {
 	return VuoText_format("first = %g, second = %g", value.first, value.second);
 }

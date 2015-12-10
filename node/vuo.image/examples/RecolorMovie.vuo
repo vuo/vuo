@@ -9,32 +9,30 @@
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1111,939" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1108,885" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
 Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="1055,1225"];
 ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="1056,1060"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="375,612" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1136,612" fillcolor="green" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeLayer3 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="895,955" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="375,663" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1149,610" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
 MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1336,806" fillcolor="green"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1366,821" fillcolor="green"];
-MakeList3 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="854,648" _1="{\"r\":0.210000,\"g\":0.270000,\"b\":0.120000,\"a\":1}" _2="{\"r\":0.600000,\"g\":0.600000,\"b\":0.600000,\"a\":1}" _3="{\"r\":0.420000,\"g\":0.640000,\"b\":1.000000,\"a\":1}"];
-MakeTextImage3 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="686,971" _text="\"Move the mouse up and down to change the intensity of the new colors.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MapImageColors2 [type="vuo.image.color.map" version="1.0.0" label="Map Image Colors|<refresh>refresh\l|<image>image\l|<colors>colors\l|<filterOpacity>filterOpacity\l|<mappedImage>mappedImage\r" pos="944,622"];
-PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="497,786" fillcolor="yellow" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.3.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="858,648" fillcolor="violet" _1="{\"r\":0.210000,\"g\":0.270000,\"b\":0.120000,\"a\":1}" _2="{\"r\":0.600000,\"g\":0.600000,\"b\":0.600000,\"a\":1}" _3="{\"r\":0.420000,\"g\":0.640000,\"b\":1.000000,\"a\":1}"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="903,899" _text="\"Move the mouse up and down to change the intensity of the new colors.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+MapImageColors2 [type="vuo.image.color.map" version="1.0.0" label="Map Image Colors|<refresh>refresh\l|<image>image\l|<colors>colors\l|<filterOpacity>filterOpacity\l|<mappedImage>mappedImage\r" pos="944,622" fillcolor="violet"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="633,454" fillcolor="yellow" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
 ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="611,598" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1407,795" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 AlignLayerToWindow:alignedLayer -> MakeList:2;
 Convert2DPointToReal:y -> MapImageColors2:filterOpacity;
 ConvertFrameToImage:image -> MapImageColors2:image;
-FireOnStart:started -> MakeTextImage3:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
 FireOnStart:started -> PlayMovie:play;
-MakeLayer3:layer -> AlignLayerToWindow:layer;
 MakeLayer:layer -> MakeList:1;
 MakeList0:list -> RenderLayersToWindow:setWindowProperties;
 MakeList3:list -> MapImageColors2:colors;
 MakeList:list -> RenderLayersToWindow:layers;
-MakeTextImage3:image -> MakeLayer3:image;
+MakeTextLayer:layer -> AlignLayerToWindow:layer;
 MapImageColors2:mappedImage -> MakeLayer:image;
 PlayMovie:decodedVideo -> ConvertFrameToImage:frame;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;

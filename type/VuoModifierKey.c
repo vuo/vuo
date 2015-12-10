@@ -29,7 +29,7 @@ VuoModuleMetadata({
  * @ingroup VuoModifierKey
  * Decodes the JSON object @a js, expected to contain a string, to create a new VuoModifierKey.
  */
-VuoModifierKey VuoModifierKey_valueFromJson(json_object *js)
+VuoModifierKey VuoModifierKey_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -58,7 +58,7 @@ VuoModifierKey VuoModifierKey_valueFromJson(json_object *js)
  * @ingroup VuoModifierKey
  * Encodes @a value as a JSON object.
  */
-json_object * VuoModifierKey_jsonFromValue(const VuoModifierKey value)
+json_object * VuoModifierKey_getJson(const VuoModifierKey value)
 {
 	char *valueAsString = "";
 
@@ -89,7 +89,7 @@ json_object * VuoModifierKey_jsonFromValue(const VuoModifierKey value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoModifierKey VuoModifierKey_allowedValues(void)
+VuoList_VuoModifierKey VuoModifierKey_getAllowedValues(void)
 {
 	VuoList_VuoModifierKey l = VuoListCreate_VuoModifierKey();
 	VuoListAppendValue_VuoModifierKey(l, VuoModifierKey_Any);
@@ -105,7 +105,7 @@ VuoList_VuoModifierKey VuoModifierKey_allowedValues(void)
  * @ingroup VuoModifierKey
  * Returns a brief description of @a value.
  */
-char * VuoModifierKey_summaryFromValue(const VuoModifierKey value)
+char * VuoModifierKey_getSummary(const VuoModifierKey value)
 {
 	char *valueAsString = "";
 

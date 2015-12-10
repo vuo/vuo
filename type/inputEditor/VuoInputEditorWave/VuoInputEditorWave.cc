@@ -31,9 +31,9 @@ VuoInputEditorMenuItem * VuoInputEditorWave::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *waveTree = new VuoInputEditorMenuItem("root");
 
-	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_summaryFromValue(VuoWave_Sine),		VuoWave_jsonFromValue(VuoWave_Sine),		renderMenuIconWithWave(VuoWave_Sine)));
-	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_summaryFromValue(VuoWave_Triangle),	VuoWave_jsonFromValue(VuoWave_Triangle),	renderMenuIconWithWave(VuoWave_Triangle)));
-	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_summaryFromValue(VuoWave_Sawtooth),	VuoWave_jsonFromValue(VuoWave_Sawtooth),	renderMenuIconWithWave(VuoWave_Sawtooth)));
+	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_getSummary(VuoWave_Sine),		VuoWave_getJson(VuoWave_Sine),		renderMenuIconWithWave(VuoWave_Sine)));
+	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_getSummary(VuoWave_Triangle),	VuoWave_getJson(VuoWave_Triangle),	renderMenuIconWithWave(VuoWave_Triangle)));
+	waveTree->addItem(new VuoInputEditorMenuItem(VuoWave_getSummary(VuoWave_Sawtooth),	VuoWave_getJson(VuoWave_Sawtooth),	renderMenuIconWithWave(VuoWave_Sawtooth)));
 
 	return waveTree;
 }

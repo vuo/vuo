@@ -179,6 +179,16 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 }
 
 /**
+ * Returns true if this node class is a 'Make List' or 'Make Dictionary' node class.
+ */
+bool VuoNodeClass::isDrawerNodeClass(void)
+{
+	string nodeClassName = getClassName();
+	return (VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.make.") ||
+			VuoStringUtilities::beginsWith(nodeClassName, "vuo.dictionary.make."));
+}
+
+/**
  * If true, this node class sends data to or receives data from somewhere external to the composition
  * (e.g., input device, file, network).
  *

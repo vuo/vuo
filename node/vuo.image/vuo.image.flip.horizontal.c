@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Flip Image Horizontally",
 					  "keywords" : [ "mirror", "rotate" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "FlipMovie.vuo" ]
 					  }
@@ -32,6 +32,7 @@ static const char * horizontalFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -45,6 +46,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Horizontal Flip Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, horizontalFragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -60,17 +65,14 @@ void nodeInstanceEvent
 		return;
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
-	VuoShader frag = VuoShader_make("Horizontal Flip Shader");
-	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, horizontalFragmentShader);
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage(frag, "texture", image);
-	*flippedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
 
-	VuoRelease(frag);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	*flippedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

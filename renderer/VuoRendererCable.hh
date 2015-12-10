@@ -37,6 +37,8 @@ public:
 	void setFrom(VuoNode *fromNode, VuoPort *fromPort);
 	void setTo(VuoNode *toNode, VuoPort *toPort);
 	bool effectivelyCarriesData(void) const;
+	bool getEffectivelyWireless() const;
+	void setWireless(bool wireless);
 	void removeFromScene();
 	void extendedHoverEnterEvent();
 	void extendedHoverMoveEvent();
@@ -49,10 +51,13 @@ public:
 	void resetTimeLastEventPropagated();
 	VuoNode::TintColor getTintColor(void);
 	bool paintingDisabled(void) const;
+	static QPainterPath getCablePathForEndpoints(QPointF from, QPointF to);
+	static void getCableSpecs(	bool cableCarriesData,
+								qreal &cableWidth,
+								qreal &cableHighlightWidth,
+								qreal &cableHighlightOffset);
 
 private:
-	static const qreal publishedCableStubLength;
-
 	// Drawing configuration
 	QPainterPath getOutline(QPointF startPoint,
 							QPointF endPoint,
@@ -65,7 +70,6 @@ private:
 						QPainterPath &yankZone,
 						QPainterPath &invertedYankZone
 						);
-	QPainterPath getPublishedAntennaCrossbarPath() const;
 
 	QPointF floatingEndpointLoc;
 	VuoPort *floatingEndpointPreviousToPort;
@@ -89,11 +93,6 @@ private:
 	QPointF getEndPoint(void) const;
 	bool isPublishedInputCableWithoutVisiblePublishedPort() const;
 	bool isPublishedOutputCableWithoutVisiblePublishedPort() const;
-	static QPainterPath getCablePathForEndpoints(QPointF from, QPointF to);
-	static void getCableSpecs(	bool cableCarriesData,
-								qreal &cableWidth,
-								qreal &cableHighlightWidth,
-								qreal &cableHighlightOffset);
 	bool isConnectedToSelectedNode(void);
 };
 

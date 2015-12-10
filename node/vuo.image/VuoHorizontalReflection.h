@@ -32,17 +32,17 @@ typedef enum {
 	VuoHorizontalReflection_Right
 } VuoHorizontalReflection;
 
-VuoHorizontalReflection VuoHorizontalReflection_valueFromJson(struct json_object * js);
-struct json_object * VuoHorizontalReflection_jsonFromValue(const VuoHorizontalReflection value);
-VuoList_VuoHorizontalReflection VuoHorizontalReflection_allowedValues(void);
-char * VuoHorizontalReflection_summaryFromValue(const VuoHorizontalReflection value);
+VuoHorizontalReflection VuoHorizontalReflection_makeFromJson(struct json_object * js);
+struct json_object * VuoHorizontalReflection_getJson(const VuoHorizontalReflection value);
+VuoList_VuoHorizontalReflection VuoHorizontalReflection_getAllowedValues(void);
+char * VuoHorizontalReflection_getSummary(const VuoHorizontalReflection value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoHorizontalReflection VuoHorizontalReflection_valueFromString(const char *str);
-char * VuoHorizontalReflection_stringFromValue(const VuoHorizontalReflection value);
+VuoHorizontalReflection VuoHorizontalReflection_makeFromString(const char *str);
+char * VuoHorizontalReflection_getString(const VuoHorizontalReflection value);
 /// @}
 
 /**

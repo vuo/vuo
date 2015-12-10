@@ -15,6 +15,7 @@ OTHER_FILES += \
 
 INCLUDEPATH += \
 	$$ROOT/type \
+	$$ROOT/node/vuo.image \
 	$$ROOT/node/vuo.scene
 
 LIBS += \

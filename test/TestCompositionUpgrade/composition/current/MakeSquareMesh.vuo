@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,8 +11,6 @@
 
 digraph G
 {
-MakeSquareVertices [type="vuo.mesh.make.square" version="2.0.0" label="Make Square Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="311,583"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<vertices>vertices\l" _vertices_type="event"];
-
-MakeSquareVertices:mesh -> PublishedOutputs:vertices;
+MakeSquareVertices [type="vuo.vertices.make.square" version="1.0.0" label="Make Square Vertices|<refresh>refresh\l|<done>done\r|<vertices>vertices\r" pos="311,583"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<vertices>vertices\l" _vertices_type="VuoList_VuoVertices"];
 }

@@ -11,24 +11,24 @@ digraph G
 {
 Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="635,365"];
 ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="1099,286"];
-DecodeMovieImage [type="vuo.video.decodeImage" version="2.0.0" label="Decode Movie Image|<refresh>refresh\l|<url>url\l|<frameTime>frameTime\l|<videoFrame>videoFrame\r" pos="713,176" fillcolor="violet"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="126,76" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetMovieInfo [type="vuo.video.info" version="2.0.0" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="349,339" fillcolor="violet"];
-HoldValue [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="343,98" _initialValue="\"chess.mov\"" _newValue="\"\""];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="959,202" fillcolor="green"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="99,245" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1000,176" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="542,274" _start="-1.000000" _end="1.000000" _scaledStart="0.000000"];
+DecodeMovieImage [type="vuo.video.decodeImage" version="2.0.0" label="Decode Movie Image|<refresh>refresh\l|<url>url\l|<frameTime>frameTime\l|<videoFrame>videoFrame\r" pos="722,114" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="91,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetMovieInfo [type="vuo.video.info" version="2.0.0" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="407,304" fillcolor="violet"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="967,142" fillcolor="green"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.2" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="185,246" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1008,116" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="584,244" _start="-1.000000" _end="1.000000" _scaledStart="0.000000"];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="254,108" _value="\"chess.mov\""];
 
 Convert2DPointToReal:x -> Scale:value;
 ConvertFrameToImage2:image -> RenderImageToWindow:image;
 DecodeMovieImage:videoFrame -> ConvertFrameToImage2:frame;
-FireOnStart:started -> HoldValue:refresh;
+FireOnStart:started -> ShareValue2:refresh;
 GetMovieInfo:duration -> Scale:scaledEnd;
-HoldValue:heldValue -> DecodeMovieImage:url;
-HoldValue:heldValue -> GetMovieInfo:url;
 MakeList0:list -> RenderImageToWindow:setWindowProperties;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
 RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
 Scale:scaledValue -> DecodeMovieImage:frameTime;
+ShareValue2:sameValue -> DecodeMovieImage:url;
+ShareValue2:sameValue -> GetMovieInfo:url;
 }

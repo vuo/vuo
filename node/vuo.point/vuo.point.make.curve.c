@@ -29,7 +29,7 @@ void nodeEvent
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":0.}}}) endPosition,
 		VuoInputData(VuoCurve, {"default":"quadratic"}) curve,
 		VuoInputData(VuoCurveEasing, {"default":"in"}) easing,
-		VuoInputData(VuoInteger, {"default":32}) numberOfPoints,
+		VuoInputData(VuoInteger, {"name":"Number of Points", "default":32}) numberOfPoints,
 		VuoOutputData(VuoList_VuoGenericType1) points
 )
 {

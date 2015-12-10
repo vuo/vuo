@@ -130,19 +130,23 @@ private slots:
 		QTest::addColumn< bool >("isFromPublishedInput");
 		QTest::addColumn< bool >("isToPublishedOutput");
 		QTest::addColumn< bool >("carriesData");
+		QTest::addColumn< bool >("isHidden");
 
-		QTest::newRow("data-and-event cable") << "ShareValue1" << "sameValue" << "ShareValue2" << "value" << false << false << true;
-		QTest::newRow("event-only cable between event-only ports") << "BecameTrue1" << "becameTrue" << "ShareValue3" << "refresh" << false << false << false;
-		QTest::newRow("event-only cable between data-and-event port and event-only port") << "BecameTrue2" << "becameTrue" << "ShareValue4" << "value" << false << false << false;
-		QTest::newRow("event-only cable between data-and-event ports") << "ShareValue5" << "sameValue" << "ShareValue6" << "value" << false << false << false;
+		QTest::newRow("data-and-event cable") << "ShareValue1" << "sameValue" << "ShareValue2" << "value" << false << false << true << false;
+		QTest::newRow("event-only cable between event-only ports") << "BecameTrue1" << "becameTrue" << "ShareValue3" << "refresh" << false << false << false << false;
+		QTest::newRow("event-only cable between data-and-event port and event-only port") << "BecameTrue2" << "becameTrue" << "ShareValue4" << "value" << false << false << false << false;
+		QTest::newRow("event-only cable between data-and-event ports") << "ShareValue5" << "sameValue" << "ShareValue6" << "value" << false << false << false << false;
 
-		QTest::newRow("data-and-event published input cable") << "PublishedInputs" << "value1" << "ShareValue7" << "value" << true << false << true;
-		QTest::newRow("event-only published input cable between event-only ports") << "PublishedInputs" << "refresh1" << "ShareValue8" << "refresh" << true << false << false;
-		QTest::newRow("event-only published input cable between data-and-event ports") << "PublishedInputs" << "value2" << "ShareValue9" << "value" << true << false << false;
+		QTest::newRow("data-and-event published input cable") << "PublishedInputs" << "value1" << "ShareValue7" << "value" << true << false << true << false;
+		QTest::newRow("event-only published input cable between event-only ports") << "PublishedInputs" << "refresh1" << "ShareValue8" << "refresh" << true << false << false << false;
+		QTest::newRow("event-only published input cable between data-and-event ports") << "PublishedInputs" << "value2" << "ShareValue9" << "value" << true << false << false << false;
 
-		QTest::newRow("data-and-event published output cable") << "ShareValue10" << "sameValue" << "PublishedOutputs" << "sameValue1" << false << true << true;
-		QTest::newRow("event-only published output cable between event-only ports") << "BecameTrue3" << "becameTrue" << "PublishedOutputs" << "becameTrue1" << false << true << false;
-		QTest::newRow("event-only published output cable between data-and-event ports") << "ShareValue11" << "sameValue" << "PublishedOutputs" << "sameValue2" << false << true << false;
+		QTest::newRow("data-and-event published output cable") << "ShareValue10" << "sameValue" << "PublishedOutputs" << "sameValue1" << false << true << true << false;
+		QTest::newRow("event-only published output cable between event-only ports") << "BecameTrue3" << "becameTrue" << "PublishedOutputs" << "becameTrue1" << false << true << false << false;
+		QTest::newRow("event-only published output cable between data-and-event ports") << "ShareValue11" << "sameValue" << "PublishedOutputs" << "sameValue2" << false << true << false << false;
+		
+		QTest::newRow("hidden data-and-event cable") << "ShareValue12" << "sameValue" << "ShareValue13" << "value" << false << false << true << true;
+		QTest::newRow("hidden always-event-only cable") << "ShareValue14" << "sameValue" << "ShareValue15" << "value" << false << false << false << true;
 	}
 	void testCables()
 	{
@@ -153,6 +157,7 @@ private slots:
 		QFETCH(bool, isFromPublishedInput);
 		QFETCH(bool, isToPublishedOutput);
 		QFETCH(bool, carriesData);
+		QFETCH(bool, isHidden);
 
 		string compositionPath = getCompositionPath("Cables.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
@@ -177,6 +182,7 @@ private slots:
 				foundCable = true;
 
 				QVERIFY(cable->getCompiler()->carriesData() == carriesData);
+				QVERIFY(cable->getCompiler()->getHidden() == isHidden);
 			}
 		}
 		QVERIFY(foundCable);

@@ -63,7 +63,7 @@ void VuoIoSurfacePool_signal(VuoIoSurface ioSurface);
 
 GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source);
 
-const char *VuoGl_stringForConstant(GLenum constant);
+char *VuoGl_stringForConstant(GLenum constant);
 
 #ifdef __cplusplus
 }

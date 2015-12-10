@@ -27,7 +27,7 @@ VuoModuleMetadata({
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "DrawLayersWithTrails.vuo" ]
+						 "exampleCompositions" : [ "DrawRainbowTrail.vuo" ]
 					 }
 				 });
 
@@ -44,7 +44,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 
 	context->glContext = VuoGlContext_use();
 
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext);
+	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, 1);
 	VuoRetain(context->sceneRenderer);
 
 	VuoRegister(context, free);
@@ -68,7 +68,7 @@ void nodeInstanceEvent
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
 	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, colorDepth, NULL);
 
-	*renderedLayers = VuoRenderedLayers_make(rootSceneObject, width, height);
+	*renderedLayers = VuoRenderedLayers_make(rootSceneObject, width, height, 1);
 }
 
 void nodeInstanceFini

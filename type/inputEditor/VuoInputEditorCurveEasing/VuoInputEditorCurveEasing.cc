@@ -32,10 +32,10 @@ VuoInputEditorMenuItem * VuoInputEditorCurveEasing::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *rootMenuItem = new VuoInputEditorMenuItem("root");
 
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_summaryFromValue(VuoCurveEasing_In),		VuoCurveEasing_jsonFromValue(VuoCurveEasing_In),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_In)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_summaryFromValue(VuoCurveEasing_Out),		VuoCurveEasing_jsonFromValue(VuoCurveEasing_Out),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_Out)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_summaryFromValue(VuoCurveEasing_InOut),		VuoCurveEasing_jsonFromValue(VuoCurveEasing_InOut),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_InOut)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_summaryFromValue(VuoCurveEasing_Middle),	VuoCurveEasing_jsonFromValue(VuoCurveEasing_Middle),	renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_Middle)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_In),		VuoCurveEasing_getJson(VuoCurveEasing_In),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_In)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_Out),		VuoCurveEasing_getJson(VuoCurveEasing_Out),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_Out)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_InOut),		VuoCurveEasing_getJson(VuoCurveEasing_InOut),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_InOut)));
+	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_Middle),	VuoCurveEasing_getJson(VuoCurveEasing_Middle),	renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_Middle)));
 
 	return rootMenuItem;
 }

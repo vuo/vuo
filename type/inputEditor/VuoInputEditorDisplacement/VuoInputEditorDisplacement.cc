@@ -61,8 +61,8 @@ VuoInputEditorMenuItem * VuoInputEditorDisplacement::setUpMenuTree()
 
 	for (int i = 0; i <= VuoDisplacement_Longitudinal; ++i)
 	{
-		json_object *optionAsJson = VuoDisplacement_jsonFromValue( (VuoDisplacement)i );
-		char *optionSummary = VuoDisplacement_summaryFromValue( (VuoDisplacement)i );
+		json_object *optionAsJson = VuoDisplacement_getJson( (VuoDisplacement)i );
+		char *optionSummary = VuoDisplacement_getSummary( (VuoDisplacement)i );
 		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithDisplacement((VuoDisplacement)i));
 		free(optionSummary);
 		optionsTree->addItem(optionItem);

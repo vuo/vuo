@@ -32,6 +32,7 @@ public:
 	void setMinMacVersion(enum MacVersion min);
 	void setMaxMacVersion(enum MacVersion max);
 	void restrictToCurrentOperatingSystemVersion(void);
+	void restrictToBeCompatibleWithAllOf(const VuoCompilerTargetSet &other);
 	bool isCompatibleWithAllOf(const VuoCompilerTargetSet &other) const;
 	string toString(void);
 

@@ -55,6 +55,7 @@ VuoInputEditorMathExpressionList::VuoInputEditorMathExpressionList(void)
 
 	QString validCharacters = QString(" _0-9a-zA-Z=&|<>!+*/^%?:()");
 	validCharacters.append( getDecimalPointInUserLocale() );  // . or ,
+	validCharacters.append( getListSeparatorInUserLocale() );  // , or ;
 	QString validCharactersEscaped = QRegExp::escape(validCharacters);
 	validCharactersEscaped.append("\\-");  // not escaped by QRegExp::escape()
 	QRegExp regExp( QString("([%1])*").arg(validCharactersEscaped) );
@@ -123,7 +124,7 @@ QList<QString> VuoInputEditorMathExpressionList::convertToLineEditListFormat(jso
 {
 	QList<QString> lineEditTexts;
 
-	VuoMathExpressionList expressionList = VuoMathExpressionList_valueFromJson(value);
+	VuoMathExpressionList expressionList = VuoMathExpressionList_makeFromJson(value);
 	unsigned long expressionCount = VuoListGetCount_VuoText(expressionList.expressions);
 	for (unsigned long i = 1; i <= expressionCount; ++i)
 	{
@@ -143,7 +144,7 @@ json_object * VuoInputEditorMathExpressionList::convertFromLineEditListFormat(co
 	VuoList_VuoText expressions = getExpressionsFromLineEditTexts(lineEditTexts);
 
 	VuoMathExpressionList expressionList = VuoMathExpressionList_make(expressions);
-	json_object *value = VuoMathExpressionList_jsonFromValue(expressionList);
+	json_object *value = VuoMathExpressionList_getJson(expressionList);
 
 	VuoMathExpressionList_retain(expressionList);
 	VuoMathExpressionList_release(expressionList);
@@ -176,7 +177,9 @@ VuoList_VuoText VuoInputEditorMathExpressionList::getExpressionsFromLineEditText
  */
 QString VuoInputEditorMathExpressionList::convertToUserLocale(QString valueInStandardLocale)
 {
-	return valueInStandardLocale.replace('.', getDecimalPointInUserLocale());
+	return valueInStandardLocale
+			.replace(',', getListSeparatorInUserLocale())
+			.replace('.', getDecimalPointInUserLocale());
 }
 
 /**
@@ -184,7 +187,9 @@ QString VuoInputEditorMathExpressionList::convertToUserLocale(QString valueInSta
  */
 QString VuoInputEditorMathExpressionList::convertFromUserLocale(QString valueInUserLocale)
 {
-	return valueInUserLocale.replace(getDecimalPointInUserLocale(), '.');
+	return valueInUserLocale
+			.replace(getDecimalPointInUserLocale(), '.')
+			.replace(getListSeparatorInUserLocale(), ',');
 }
 
 /**
@@ -193,6 +198,14 @@ QString VuoInputEditorMathExpressionList::convertFromUserLocale(QString valueInU
 QChar VuoInputEditorMathExpressionList::getDecimalPointInUserLocale(void)
 {
 	return QLocale::system().decimalPoint();
+}
+
+/**
+ * Returns the character to separate function arguments in the user's system locale.
+ */
+QChar VuoInputEditorMathExpressionList::getListSeparatorInUserLocale(void)
+{
+	return getDecimalPointInUserLocale() == '.' ? ',' : ';';
 }
 
 /**

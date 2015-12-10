@@ -35,17 +35,17 @@ typedef enum {
 	VuoNoise_Violet
 } VuoNoise;
 
-VuoNoise VuoNoise_valueFromJson(struct json_object * js);
-struct json_object * VuoNoise_jsonFromValue(const VuoNoise value);
-VuoList_VuoNoise VuoNoise_allowedValues(void);
-char * VuoNoise_summaryFromValue(const VuoNoise value);
+VuoNoise VuoNoise_makeFromJson(struct json_object * js);
+struct json_object * VuoNoise_getJson(const VuoNoise value);
+VuoList_VuoNoise VuoNoise_getAllowedValues(void);
+char * VuoNoise_getSummary(const VuoNoise value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoNoise VuoNoise_valueFromString(const char *str);
-char * VuoNoise_stringFromValue(const VuoNoise value);
+VuoNoise VuoNoise_makeFromString(const char *str);
+char * VuoNoise_getString(const VuoNoise value);
 /// @}
 
 /**

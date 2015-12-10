@@ -66,7 +66,7 @@ VuoTransform2d VuoTransform2d_make(VuoPoint2d translation, VuoReal rotation, Vuo
  *   }
  * }
  */
-VuoTransform2d VuoTransform2d_valueFromJson(json_object *js)
+VuoTransform2d VuoTransform2d_makeFromJson(json_object *js)
 {
 	VuoTransform2d t = VuoTransform2d_makeIdentity();
 	json_object *o = NULL;
@@ -93,7 +93,7 @@ VuoTransform2d VuoTransform2d_valueFromJson(json_object *js)
  * @ingroup VuoTransform2d
  * Encodes @c value as a JSON object.
  */
-json_object * VuoTransform2d_jsonFromValue(const VuoTransform2d value)
+json_object * VuoTransform2d_getJson(const VuoTransform2d value)
 {
 	if (VuoTransform2d_isIdentity(value))
 		return json_object_new_string("identity");
@@ -124,7 +124,7 @@ json_object * VuoTransform2d_jsonFromValue(const VuoTransform2d value)
  * @ingroup VuoTransform2d
  * Produces a brief human-readable summary of @c value.
  */
-char * VuoTransform2d_summaryFromValue(const VuoTransform2d value)
+char * VuoTransform2d_getSummary(const VuoTransform2d value)
 {
 	if (VuoTransform2d_isIdentity(value))
 		return strdup("identity transform (no change)");

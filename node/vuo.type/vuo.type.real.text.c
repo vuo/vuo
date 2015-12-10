@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Convert Real to Text",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.1.0"
 				 });
 
 void nodeEvent
@@ -24,7 +24,6 @@ void nodeEvent
 		VuoOutputData(VuoText) text
 )
 {
-	char *textAsCString = VuoReal_stringFromValue(real);
-	*text = VuoText_make(textAsCString);
-	free(textAsCString);
+	*text = VuoText_format("%g", real);
+	VuoRegister(*text, free);
 }

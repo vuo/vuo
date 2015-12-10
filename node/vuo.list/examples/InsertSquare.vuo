@@ -1,6 +1,6 @@
 /**
  * @file
- * Inserts a square into a row of squares at the position where the mouse is.
+ * Inserts a square into a row of circles at the position where the mouse is.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,43 +9,41 @@
 
 digraph G
 {
-AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="731,637" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="592,634" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.200000"];
 ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="558,134" _scaleToFit="true" _center="{\"x\":0.000000,\"y\":0.000000}" _width="1.800000" _columns="4" _height="0.400000" _rows="1"];
 Convert2DPointToReal2 [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="628,604"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-438,-24" fillcolor="yellow" _started_eventThrottling="enqueue"];
 InsertInList2 [type="vuo.list.insert.VuoLayer" version="1.0.0" label="Insert in List|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="370,134" fillcolor="violet"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="-141,135" _color="{\"r\":0.547768,\"g\":0.547860,\"b\":0.547723,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="-138,3" _name="\"\"" _color="{\"r\":0.958129,\"g\":0.958816,\"b\":0.957748,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeColorLayer3 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="-143,269" _color="{\"r\":0.275776,\"g\":0.276020,\"b\":0.275608,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
 MakeColorLayer5 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="-145,444" _name="\"\"" _color="{\"r\":0.150759,\"g\":0.653117,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="464,653" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1137,270" fillcolor="green"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1167,285" fillcolor="green"];
-MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="220,145" fillcolor="violet"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="263,668" _text="\"position the mouse to insert a square\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="220,447" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1208,259" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="922,290" fillcolor="green"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="952,305" fillcolor="green"];
+MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="229,145" fillcolor="violet"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="-136,-49" _color="{\"r\":0.901961,\"g\":0.901961,\"b\":0.901961,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.000000"];
+MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="-141,110" _color="{\"r\":0.600000,\"g\":0.600000,\"b\":0.600000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.000000"];
+MakeOvalLayer3 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="-145,279" _color="{\"r\":0.298039,\"g\":0.298039,\"b\":0.298039,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000" _sharpness="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="378,650" _text="\"Position the mouse to insert a square.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="212,379" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="993,279" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 RoundUp [type="vuo.math.roundUp" version="2.0.0" label="Round Up|<refresh>refresh\l|<real>real\l|<roundedUp>roundedUp\r" pos="469,259"];
-Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="472,447" _start="-0.900000" _end="0.900000" _scaledStart="0.000000" _scaledEnd="4.000000"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="464,379" _start="-0.900000" _end="0.900000" _scaledStart="0.000000" _scaledEnd="4.000000"];
 
 AlignLayerToWindow:alignedLayer -> MakeList2:2;
 ArrangeLayersInGrid:griddedLayer -> MakeList2:1;
 Convert2DPointToReal2:x -> Scale2:value;
-FireOnStart2:started -> MakeColorLayer2:refresh;
-FireOnStart2:started -> MakeColorLayer3:refresh;
 FireOnStart2:started -> MakeColorLayer5:refresh;
-FireOnStart2:started -> MakeColorLayer:refresh;
-FireOnStart2:started -> MakeTextImage:refresh;
+FireOnStart2:started -> MakeOvalLayer2:refresh;
+FireOnStart2:started -> MakeOvalLayer3:refresh;
+FireOnStart2:started -> MakeOvalLayer:refresh;
+FireOnStart2:started -> MakeTextLayer:refresh;
 InsertInList2:modifiedList -> ArrangeLayersInGrid:layers;
-MakeColorLayer2:layer -> MakeList7:1;
-MakeColorLayer3:layer -> MakeList7:3;
 MakeColorLayer5:layer -> InsertInList2:item;
-MakeColorLayer:layer -> MakeList7:2;
-MakeLayer:layer -> AlignLayerToWindow:layer;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList3:list -> RenderLayersToWindow:setWindowProperties;
 MakeList7:list -> InsertInList2:list;
-MakeTextImage:image -> MakeLayer:image;
+MakeOvalLayer2:layer -> MakeList7:2;
+MakeOvalLayer3:layer -> MakeList7:3;
+MakeOvalLayer:layer -> MakeList7:1;
+MakeTextLayer:layer -> AlignLayerToWindow:layer;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
 RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
 RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;

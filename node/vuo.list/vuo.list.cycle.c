@@ -33,7 +33,7 @@ void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"wall","data":"list"}) listEvent,
 		VuoInputEvent({"eventBlocking":"none"}) goForward,
 		VuoInputEvent({"eventBlocking":"none"}) goBackward,
-		VuoInputEvent({"eventBlocking":"wall"}) goToFirst,
+		VuoInputEvent({"name":"Go to First", "eventBlocking":"wall"}) goToFirst,
 		VuoInputData(VuoWrapMode, {"default":"wrap"}) wrapMode,
 		VuoOutputData(VuoGenericType1) item
 )

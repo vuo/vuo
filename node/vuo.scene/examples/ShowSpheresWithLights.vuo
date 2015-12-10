@@ -1,0 +1,104 @@
+/**
+ * @file
+ * This composition shows a rotating camera viewing three spheres. Click to change the elevation of the camera.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CalculateCosine [type="vuo.math.cos" version="1.0.0" label="Calculate Cosine|<refresh>refresh\l|<angle>angle\l|<cosine>cosine\r" pos="352,1285"];
+CalculateSine [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="363,1346"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-248,363" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="1,526" _url="\"WinchesterTile.jpg\""];
+GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="2,676" _url="\"WinchesterTileNormal.png\""];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="492,262"];
+Make3DObject3 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="500,560"];
+Make3DObject4 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="501,864"];
+Make3DObject5 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="483,42"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="526,1133"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="183,423" _translation="{\"x\":-0.700000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
+Make3DTransform3 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="204,666" _translation="{\"x\":0,\"y\":0,\"z\":0}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
+Make3DTransform4 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="193,961" _translation="{\"x\":0.700000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
+Make3DTransform5 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="191,115" _translation="{\"x\":0.000000,\"y\":-0.500000,\"z\":-0.100000}" _rotation="{\"x\":270.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":100.000000,\"y\":100.000000,\"z\":1.000000}"];
+MakeAmbientLight [type="vuo.scene.make.light.ambient" version="1.0.0" label="Make Ambient Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<object>object\r" pos="468,-68" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="0.080000"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-24,847" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.100000" _center="{\"x\":0,\"y\":0}" _width="1280" _height="640"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="-16,585" _color="{\"r\":1.000000,\"g\":0.999969,\"b\":0.999985,\"a\":0.689998}" _width="1" _height="1"];
+MakeList [type="vuo.list.make.9.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="939,443" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="177,1326" _2="30.000000"];
+MakeList7 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="969,473" fillcolor="green"];
+MakeSphereVertices [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="186,240" _rows="32" _columns="32"];
+MakeSquareVertices [type="vuo.mesh.make.square" version="2.0.0" label="Make Square Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="189,-36"];
+MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="736,1118" _name="\"camera\"" _target="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _upDirection="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
+MakeTargetedSpotlight [type="vuo.scene.make.light.spot.target" version="1.0.0" label="Make Targeted Spotlight|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<target>target\l|<cone>cone\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="447,377" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="1.000000" _position="{\"x\":-0.700000,\"y\":1.000000,\"z\":0.000000}" _target="{\"x\":-0.700000,\"y\":0.000000,\"z\":0.000000}" _cone="32.000000" _range="1.500000" _sharpness="0.900000"];
+MakeTargetedSpotlight2 [type="vuo.scene.make.light.spot.target" version="1.0.0" label="Make Targeted Spotlight|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<target>target\l|<cone>cone\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="447,680" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="1.000000" _position="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _target="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _cone="32.000000" _range="1.500000" _sharpness="0.900000"];
+MakeTargetedSpotlight3 [type="vuo.scene.make.light.spot.target" version="1.0.0" label="Make Targeted Spotlight|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<target>target\l|<cone>cone\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="450,957" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="1.000000" _position="{\"x\":0.700000,\"y\":1.000000,\"z\":0.000000}" _target="{\"x\":0.700000,\"y\":0.000000,\"z\":0.000000}" _cone="32.000000" _range="1.500000" _sharpness="0.900000"];
+Multiply3 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="223,1315"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-167,1152" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1010,432" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoReal" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="144,1178" _falseOption="-0.400000" _trueOption="1.000000"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="186,322" _color="{\"r\":0.763500,\"g\":1.000000,\"b\":0.531060,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500000}" _shininess="0.995000"];
+ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="194,23" _color="{\"r\":0.994919,\"g\":0.994888,\"b\":0.994904,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":0.999969,\"b\":0.999985,\"a\":0.000000}" _shininess="0.000000"];
+ShadeWithDetails [type="vuo.shader.make.image.details" version="2.0.0" label="Shade with Details|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<specularImage>specularImage\l|<normalImage>normalImage\l|<shader>shader\r" pos="187,560" _opacity="1.000000"];
+ShadeWithImage2 [type="vuo.shader.make.image" version="3.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="201,856" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.500000"];
+SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.0.1" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r" pos="333,1148" _setPosition="-0.400000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in+out\""];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="27,1167"];
+
+CalculateCosine:cosine -> Make3DPoint:x;
+CalculateSine:sine -> Make3DPoint:z;
+FireOnStart:started -> GetImage3:refresh;
+FireOnStart:started -> GetImage:refresh;
+FireOnStart:started -> Make3DTransform2:refresh;
+FireOnStart:started -> Make3DTransform3:refresh;
+FireOnStart:started -> Make3DTransform4:refresh;
+FireOnStart:started -> Make3DTransform5:refresh;
+FireOnStart:started -> MakeAmbientLight:refresh;
+FireOnStart:started -> MakeCheckerboardImage:refresh;
+FireOnStart:started -> MakeColorImage:refresh;
+FireOnStart:started -> MakeSphereVertices:refresh;
+FireOnStart:started -> MakeSquareVertices:refresh;
+FireOnStart:started -> MakeTargetedSpotlight2:refresh;
+FireOnStart:started -> MakeTargetedSpotlight3:refresh;
+FireOnStart:started -> MakeTargetedSpotlight:refresh;
+FireOnStart:started -> ShadeWithColor4:refresh;
+FireOnStart:started -> ShadeWithColor:refresh;
+GetImage3:image -> ShadeWithDetails:normalImage;
+GetImage:image -> ShadeWithDetails:image;
+Make3DObject3:object -> MakeList:5;
+Make3DObject4:object -> MakeList:7;
+Make3DObject5:object -> MakeList:2;
+Make3DObject:object -> MakeList:3;
+Make3DPoint:point -> MakeTargetedPerspectiveCamera:position;
+Make3DTransform2:transform -> Make3DObject:transform;
+Make3DTransform3:transform -> Make3DObject3:transform;
+Make3DTransform4:transform -> Make3DObject4:transform;
+Make3DTransform5:transform -> Make3DObject5:transform;
+MakeAmbientLight:object -> MakeList:1;
+MakeCheckerboardImage:image -> ShadeWithImage2:image;
+MakeColorImage:image -> ShadeWithDetails:specularImage;
+MakeList5:list -> Multiply3:values;
+MakeList7:list -> RenderSceneToWindow:setWindowProperties;
+MakeList:list -> RenderSceneToWindow:objects;
+MakeSphereVertices:mesh -> Make3DObject3:mesh;
+MakeSphereVertices:mesh -> Make3DObject4:mesh;
+MakeSphereVertices:mesh -> Make3DObject:mesh;
+MakeSquareVertices:mesh -> Make3DObject5:mesh;
+MakeTargetedPerspectiveCamera:object -> MakeList:9;
+MakeTargetedSpotlight2:object -> MakeList:6;
+MakeTargetedSpotlight3:object -> MakeList:8;
+MakeTargetedSpotlight:object -> MakeList:4;
+Multiply3:product -> CalculateCosine:angle;
+Multiply3:product -> CalculateSine:angle;
+ReceiveMouseButtons:released -> Toggle:toggle;
+RenderSceneToWindow:requestedFrame -> MakeList5:1 [style=invis];
+RenderSceneToWindow:requestedFrame -> SmoothWithDuration2:time [style=invis];
+SelectInput2:out -> SmoothWithDuration2:setTarget;
+ShadeWithColor4:shader -> Make3DObject5:shader;
+ShadeWithColor:shader -> Make3DObject:shader;
+ShadeWithDetails:shader -> Make3DObject3:shader;
+ShadeWithImage2:shader -> Make3DObject4:shader;
+SmoothWithDuration2:position -> Make3DPoint:y;
+Toggle:value -> SelectInput2:which;
+}

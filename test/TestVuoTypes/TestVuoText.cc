@@ -14,6 +14,7 @@ extern "C" {
 
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoText);
+Q_DECLARE_METATYPE(void *);
 
 /**
  * Tests the VuoText type.
@@ -34,9 +35,9 @@ private slots:
 
 		QCOMPARE(QString::fromUtf8(VuoText_make(NULL)), QString(""));
 
-		QCOMPARE(QString::fromUtf8(VuoText_stringFromValue(NULL)), QString("\"\""));
+		QCOMPARE(QString::fromUtf8(VuoText_getString(NULL)), QString("\"\""));
 
-		QCOMPARE(QString::fromUtf8(VuoText_summaryFromValue(NULL)), QString(""));
+		QCOMPARE(QString::fromUtf8(VuoText_getSummary(NULL)), QString(""));
 
 		QCOMPARE(VuoText_length(NULL), (size_t)0);
 
@@ -68,17 +69,17 @@ private slots:
 		QTest::newRow("empty string")		<< ""									<< "";
 		QTest::newRow("short")				<< "a"									<< "a";
 		QTest::newRow("borderline")			<< "01234567890123456789012345678901234567890123456789"	<< "01234567890123456789012345678901234567890123456789";
-		QTest::newRow("long")				<< "012345678901234567890123456789012345678901234567890"	<< "01234567890123456789012345678901234567890123456789...";
+		QTest::newRow("long")				<< "012345678901234567890123456789012345678901234567890"	<< "01234567890123456789012345678901234567890123456789…";
 		QTest::newRow("UTF8 short")			<< QString::fromUtf8("流")				<< QString::fromUtf8("流");
 		QTest::newRow("UTF8 borderline")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾");
-		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾...");
+		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾…");
 	}
 	void testSummary()
 	{
 		QFETCH(QString, value);
 		QFETCH(QString, summary);
 
-		QCOMPARE(QString::fromUtf8(VuoText_summaryFromValue(value.toUtf8().data())), summary);
+		QCOMPARE(QString::fromUtf8(VuoText_getSummary(value.toUtf8().data())), summary);
 	}
 
 	void testLength_data()
@@ -173,32 +174,58 @@ private slots:
 
 	void testEqual_data()
 	{
-		QTest::addColumn<QString>("text1");
-		QTest::addColumn<QString>("text2");
+		QTest::addColumn<void *>("text1");
+		QTest::addColumn<void *>("text2");
 		QTest::addColumn<bool>("expectedEqual");
 
-		{
-			QTest::newRow("Different strings") << "⓪" << "①" << false;
-		}
-		{
-			QTest::newRow("Same strings, same encoding") << "⓪" << "⓪" << true;
-		}
+		QTest::newRow("both NULL")						<< (void *)NULL	<< (void *)NULL		<< true;
+		QTest::newRow("NULL, emptystring")				<< (void *)NULL	<< (void *)""		<< false;
+		QTest::newRow("NULL, string")					<< (void *)NULL	<< (void *)"foo"	<< false;
+		QTest::newRow("emptystring, NULL")				<< (void *)""	<< (void *)NULL		<< false;
+		QTest::newRow("emptystring, emptystring")		<< (void *)""	<< (void *)""		<< true;
+		QTest::newRow("different strings")				<< (void *)"⓪"	<< (void *)"①"		<< false;
+		QTest::newRow("same strings, same encoding")	<< (void *)"⓪"	<< (void *)"⓪"		<< true;
+
 		{
 			// http://en.wikipedia.org/wiki/Combining_character
 			const QChar cyrillicU_combiningBreve[] = { QChar(0x0423), QChar(0x0306) };
 			QString stringAsDecomposedCharacters(cyrillicU_combiningBreve, 2);
 			const QChar cyrillicShortU(0x040E);
 			QString stringAsComposedCharacter(cyrillicShortU);
-			QTest::newRow("Same strings, different encoding") << stringAsDecomposedCharacters << stringAsComposedCharacter << true;
+			QTest::newRow("same strings, different encoding") << (void *)strdup(stringAsDecomposedCharacters.toUtf8().data()) << (void *)strdup(stringAsComposedCharacter.toUtf8().data()) << true;
 		}
 	}
 	void testEqual()
 	{
-		QFETCH(QString, text1);
-		QFETCH(QString, text2);
+		QFETCH(void *, text1);
+		QFETCH(void *, text2);
 		QFETCH(bool, expectedEqual);
 
-		QCOMPARE(VuoText_areEqual(text1.toUtf8().data(), text2.toUtf8().data()), expectedEqual);
+		QCOMPARE(VuoText_areEqual((VuoText)text1, (VuoText)text2), expectedEqual);
+	}
+
+	void testTrim_data()
+	{
+		QTest::addColumn<void *>("text");
+		QTest::addColumn<void *>("expectedText");
+
+		QTest::newRow("NULL")						<< (void *)NULL		<< (void *)NULL;
+		QTest::newRow("emptystring")				<< (void *)""		<< (void *)"";
+		QTest::newRow("all whitespace")				<< (void *)" "		<< (void *)"";
+		QTest::newRow("all whitespace 2")			<< (void *)"      "	<< (void *)"";
+		QTest::newRow("no whitespace")				<< (void *)"foo"	<< (void *)"foo";
+		QTest::newRow("inner whitespace")			<< (void *)"a b"	<< (void *)"a b";
+		QTest::newRow("leading whitespace")			<< (void *)" a"		<< (void *)"a";
+		QTest::newRow("trailing whitespace")		<< (void *)"a "		<< (void *)"a";
+		QTest::newRow("both whitespace")			<< (void *)" a "	<< (void *)"a";
+		QTest::newRow("both whitespace 2")			<< (void *)"   a  "	<< (void *)"a";
+	}
+	void testTrim()
+	{
+		QFETCH(void *, text);
+		QFETCH(void *, expectedText);
+
+		QCOMPARE(VuoText_trim((VuoText)text), (VuoText)expectedText);
 	}
 
 	void testFind_data()

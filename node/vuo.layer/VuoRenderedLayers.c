@@ -33,12 +33,13 @@ VuoModuleMetadata({
 /**
  * Creates a VuoRenderedLayers with the given rendering root layer, rendering dimensions, and no window.
  */
-VuoRenderedLayers VuoRenderedLayers_make(VuoSceneObject rootSceneObject, unsigned long int pixelsWide, unsigned long int pixelsHigh)
+VuoRenderedLayers VuoRenderedLayers_make(VuoSceneObject rootSceneObject, unsigned long int pixelsWide, unsigned long int pixelsHigh, float backingScaleFactor)
 {
 	VuoRenderedLayers rl;
 	rl.rootSceneObject = rootSceneObject;
 	rl.pixelsWide = pixelsWide;
 	rl.pixelsHigh = pixelsHigh;
+	rl.backingScaleFactor = backingScaleFactor;
 	rl.window = 0;
 	return rl;
 }
@@ -48,12 +49,14 @@ VuoRenderedLayers VuoRenderedLayers_make(VuoSceneObject rootSceneObject, unsigne
  */
 VuoRenderedLayers VuoRenderedLayers_makeWithWindow(VuoSceneObject rootSceneObject,
 												   unsigned long int pixelsWide, unsigned long int pixelsHigh,
+												   float backingScaleFactor,
 												   VuoWindowReference window)
 {
 	VuoRenderedLayers rl;
 	rl.rootSceneObject = rootSceneObject;
 	rl.pixelsWide = pixelsWide;
 	rl.pixelsHigh = pixelsHigh;
+	rl.backingScaleFactor = backingScaleFactor;
 	rl.window = window;
 	return rl;
 }
@@ -63,7 +66,7 @@ VuoRenderedLayers VuoRenderedLayers_makeWithWindow(VuoSceneObject rootSceneObjec
  */
 VuoRenderedLayers VuoRenderedLayers_makeEmpty(void)
 {
-	return VuoRenderedLayers_make(VuoSceneObject_makeEmpty(), 0, 0);
+	return VuoRenderedLayers_make(VuoSceneObject_makeEmpty(), 0, 0, 1);
 }
 
 /**
@@ -91,6 +94,12 @@ void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, Vuo
 									VuoPoint3d_make(layerQuad.positions[1].x, layerQuad.positions[1].y, 0),
 									VuoPoint3d_make(layerQuad.positions[2].x, layerQuad.positions[2].y, 0),
 									VuoPoint3d_make(layerQuad.positions[3].x, layerQuad.positions[3].y, 0) };
+
+	for (int i = 0; i < 4; ++i)
+	{
+		layerCorners3d[i].x *= targetObject.shader->objectScale;
+		layerCorners3d[i].y *= targetObject.shader->objectScale;
+	}
 
 	// Transform the layer to the rendered layers' coordinate space.
 	VuoListAppendValue_VuoSceneObject(ancestorObjects, targetObject);
@@ -143,6 +152,31 @@ void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers, Vuo
 	for (int i = 0; i < 4; ++i)
 		layerCorners[i] = VuoPoint2d_make(layerCorners3d[i].x, layerCorners3d[i].y);
 	*layerCenter = VuoPoint2d_make(layerCenter3d.x, layerCenter3d.y);
+}
+
+/**
+ * Returns the axis-aligned bounding box for the 4 points.
+ */
+VuoRectangle VuoRenderedLayers_getBoundingBox(VuoPoint2d layerCorners[4])
+{
+	VuoPoint2d min = VuoPoint2d_make( INFINITY,  INFINITY);
+	VuoPoint2d max = VuoPoint2d_make(-INFINITY, -INFINITY);
+	for (int i = 0; i < 4; ++i)
+	{
+		if (layerCorners[i].x < min.x)
+			min.x = layerCorners[i].x;
+		if (layerCorners[i].x > max.x)
+			max.x = layerCorners[i].x;
+		if (layerCorners[i].y < min.y)
+			min.y = layerCorners[i].y;
+		if (layerCorners[i].y > max.y)
+			max.y = layerCorners[i].y;
+	}
+	return VuoRectangle_make(
+				min.x + (max.x-min.x)/2.,
+				min.y + (max.y-min.y)/2.,
+				max.x-min.x,
+				max.y-min.y);
 }
 
 /**
@@ -202,15 +236,15 @@ bool VuoRenderedLayers_isPointInLayer(VuoRenderedLayers renderedLayers, VuoText 
 
 /**
  * @ingroup VuoRenderedLayers
- * @see VuoSceneObject_valueFromJson
+ * @see VuoSceneObject_makeFromJson
  */
-VuoRenderedLayers VuoRenderedLayers_valueFromJson(json_object * js)
+VuoRenderedLayers VuoRenderedLayers_makeFromJson(json_object * js)
 {
 	json_object *o = NULL;
 
 	VuoSceneObject rootSceneObject;
 	if (json_object_object_get_ex(js, "rootSceneObject", &o))
-		rootSceneObject = VuoSceneObject_valueFromJson(o);
+		rootSceneObject = VuoSceneObject_makeFromJson(o);
 	else
 		rootSceneObject = VuoSceneObject_makeEmpty();
 
@@ -224,20 +258,24 @@ VuoRenderedLayers VuoRenderedLayers_valueFromJson(json_object * js)
 
 	VuoWindowReference window = 0;
 	if (json_object_object_get_ex(js, "window", &o))
-		window = VuoWindowReference_valueFromJson(o);
+		window = VuoWindowReference_makeFromJson(o);
 
-	return VuoRenderedLayers_makeWithWindow(rootSceneObject, pixelsWide, pixelsHigh, window);
+	float backingScaleFactor = 1;
+	if (json_object_object_get_ex(js, "backingScaleFactor", &o))
+		backingScaleFactor = VuoReal_makeFromJson(o);
+
+	return VuoRenderedLayers_makeWithWindow(rootSceneObject, pixelsWide, pixelsHigh, backingScaleFactor, window);
 }
 
 /**
  * @ingroup VuoRenderedLayers
- * @see VuoSceneObject_jsonFromValue
+ * @see VuoSceneObject_getJson
  */
-json_object * VuoRenderedLayers_jsonFromValue(const VuoRenderedLayers value)
+json_object * VuoRenderedLayers_getJson(const VuoRenderedLayers value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *rootSceneObjectObject = VuoSceneObject_jsonFromValue(value.rootSceneObject);
+	json_object *rootSceneObjectObject = VuoSceneObject_getJson(value.rootSceneObject);
 	json_object_object_add(js, "rootSceneObject", rootSceneObjectObject);
 
 	json_object *pixelsWideObject = json_object_new_int64(value.pixelsWide);
@@ -246,20 +284,23 @@ json_object * VuoRenderedLayers_jsonFromValue(const VuoRenderedLayers value)
 	json_object *pixelsHighObject = json_object_new_int64(value.pixelsHigh);
 	json_object_object_add(js, "pixelsHigh", pixelsHighObject);
 
-	json_object *windowObject = VuoWindowReference_jsonFromValue(value.window);
+	json_object *windowObject = VuoWindowReference_getJson(value.window);
 	json_object_object_add(js, "window", windowObject);
+
+	json_object *bsfObject = VuoReal_getJson(value.backingScaleFactor);
+	json_object_object_add(js, "backingScaleFactor", bsfObject);
 
 	return js;
 }
 
 /**
  * @ingroup VuoRenderedLayers
- * @see VuoSceneObject_summaryFromValue
+ * @see VuoSceneObject_getSummary
  */
-char * VuoRenderedLayers_summaryFromValue(const VuoRenderedLayers value)
+char * VuoRenderedLayers_getSummary(const VuoRenderedLayers value)
 {
-	char *rootSummary = VuoSceneObject_summaryFromValue(value.rootSceneObject);
-	char *windowSummary = VuoWindowReference_summaryFromValue(value.window);
+	char *rootSummary = VuoSceneObject_getSummary(value.rootSceneObject);
+	char *windowSummary = VuoWindowReference_getSummary(value.window);
 
 	char *summary = VuoText_format("%lux%lu<br>%s<br>%s", value.pixelsWide, value.pixelsHigh, windowSummary, rootSummary);
 

@@ -15,4 +15,10 @@ NODE_SOURCES += \
 NODE_INCLUDEPATH += \
 	../vuo.midi
 
+TYPE_SOURCES += \
+	VuoRealRegulation.c
+
+HEADERS += \
+	VuoRealRegulation.h
+
 include(../../module.pri)

@@ -33,6 +33,7 @@ NODE_LIBRARY_INCLUDEPATH = \
 	Leap
 
 TYPE_SOURCES += \
+	VuoHorizontalSide.c \
 	VuoLeapFrame.c \
 	VuoLeapHand.c \
 	VuoLeapPointable.c \
@@ -40,6 +41,7 @@ TYPE_SOURCES += \
 	VuoLeapTouchZone.c
 
 HEADERS += \
+	VuoHorizontalSide.h \
 	VuoLeapFrame.h \
 	VuoLeapHand.h \
 	VuoLeapPointable.h \

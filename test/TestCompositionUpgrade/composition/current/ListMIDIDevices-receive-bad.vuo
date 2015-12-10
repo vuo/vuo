@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,9 +11,7 @@
 
 digraph G
 {
-GetItemFromList [type="vuo.list.get.VuoMidiOutputDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="271,88" _which="1"];
-ListMIDIDevices [type="vuo.midi.listDevices" version="2.0.0" label="List MIDI Devices|<refresh>refresh\l|<inputDevices>inputDevices\r|<outputDevices>outputDevices\r" pos="57,88"];
-ReceiveMIDIEvents [type="vuo.midi.receive" version="2.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="455,88" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue"];
-
-ListMIDIDevices:outputDevices -> GetItemFromList:list;
+GetItemFromList [type="vuo.list.get.VuoMidiDevice" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<done>done\r|<item>item\r" pos="271,88" _which="1"];
+ListMIDIDevices [type="vuo.midi.listDevices" version="1.0.0" label="List MIDI Devices|<refresh>refresh\l|<done>done\r|<inputDevices>inputDevices\r|<outputDevices>outputDevices\r" pos="57,88"];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="1.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<done>done\r|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="455,88"];
 }

@@ -13,6 +13,7 @@
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerTriggerPort.hh"
+#include "VuoCompilerType.hh"
 #include "VuoPort.hh"
 
 /**
@@ -27,6 +28,7 @@ VuoCompilerCable::VuoCompilerCable(VuoCompilerNode * fromNode, VuoCompilerPort *
 {
 	getBase()->setCompiler(this);
 	isAlwaysEventOnly = false;
+	isHidden = false;
 }
 
 /**
@@ -45,6 +47,22 @@ void VuoCompilerCable::setAlwaysEventOnly(bool isEventOnly)
 bool VuoCompilerCable::getAlwaysEventOnly()
 {
 	return this->isAlwaysEventOnly;
+}
+
+/**
+ * Sets whether this cable is a hidden ("wireless") cable.
+ */
+void VuoCompilerCable::setHidden(bool hidden)
+{
+	this->isHidden = hidden;
+}
+
+/**
+ * Returns a boolean indicating whether this cable is a hidden ("wireless") cable.
+ */
+bool VuoCompilerCable::getHidden()
+{
+	return this->isHidden;
 }
 
 /**
@@ -75,8 +93,23 @@ string VuoCompilerCable::getGraphvizDeclaration(void)
 		declaration << fromNode->getCompiler()->getGraphvizIdentifier() << ":" << fromPort->getClass()->getName() << " -> "
 					<< toNode->getCompiler()->getGraphvizIdentifier() << ":" << toPort->getClass()->getName();
 
-		if (isAlwaysEventOnly && portHasData( getBase()->getFromPort() ) && portHasData( getBase()->getToPort() ))
-			declaration << " [event=true]";
+		// Cable attributes
+		bool isExplicitlyEventOnly = (isAlwaysEventOnly && portHasData( getBase()->getFromPort() ) && portHasData( getBase()->getToPort() ));
+		if (isExplicitlyEventOnly || isHidden)
+		{
+			declaration << " [";
+
+			if (isExplicitlyEventOnly)
+				declaration << "event=true";
+
+			if (isExplicitlyEventOnly && isHidden)
+				declaration << " ";
+
+			if (isHidden)
+				declaration << "style=invis";
+
+			declaration << "]";
+		}
 
 		declaration << ";";
 	}
@@ -142,9 +175,12 @@ void VuoCompilerCable::generateTransmission(Module *module, BasicBlock *block, V
 		VuoCompilerInputData *inputData = inputEventPort->getData();
 		LoadInst *oldInputDataValue = inputData->generateLoad(block);
 
-		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, outputDataValue);
+		VuoCompilerDataClass *dataClass = static_cast<VuoCompilerDataClass *>(inputData->getBase()->getClass()->getCompiler());
+		VuoCompilerType *type = dataClass->getVuoType()->getCompiler();
+
+		type->generateRetainCall(module, block, outputDataValue);
 		inputData->generateStore(outputDataValue, block);
-		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, oldInputDataValue);
+		type->generateReleaseCall(module, block, oldInputDataValue);
 	}
 
 	if (shouldTransmitEvent)

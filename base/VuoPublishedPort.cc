@@ -24,6 +24,7 @@ VuoPublishedPort::VuoPublishedPort(string name, VuoType *type, bool isOutput, se
 	this->type = type;
 	this->isOutput = isOutput;
 	this->connectedPorts = connectedPorts;
+	this->_isProtocolPort = false;
 }
 
 /**
@@ -107,3 +108,18 @@ void VuoPublishedPort::removeConnectedPort(VuoPort *port)
 	connectedPorts.erase(connectedPorts.find(port));
 }
 
+/**
+ * Sets whether this port is part of any active protocol.
+ */
+void VuoPublishedPort::setProtocolPort(bool isProtocolPort)
+{
+	_isProtocolPort = isProtocolPort;
+}
+
+/**
+ * Returns true if this port is part of any active protocol.
+ */
+bool VuoPublishedPort::isProtocolPort(void)
+{
+	return _isProtocolPort;
+}

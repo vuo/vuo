@@ -28,15 +28,15 @@ VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *rootMenuItem = new VuoInputEditorMenuItem("root");
 
-	QString allowedValuesFunctionName = this->type + "_allowedValues";
+	QString allowedValuesFunctionName = this->type + "_getAllowedValues";
 	typedef void *(*allowedValuesFunctionType)(void);
 	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.toUtf8().constData());
 
-	QString summaryFunctionName = this->type + "_summaryFromValue";
+	QString summaryFunctionName = this->type + "_getSummary";
 	typedef char *(*summaryFunctionType)(int);
 	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.toUtf8().constData());
 
-	QString jsonFunctionName = this->type + "_jsonFromValue";
+	QString jsonFunctionName = this->type + "_getJson";
 	typedef json_object *(*jsonFunctionType)(int);
 	jsonFunctionType jsonFunction = (jsonFunctionType)dlsym(RTLD_SELF, jsonFunctionName.toUtf8().constData());
 

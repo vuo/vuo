@@ -47,7 +47,7 @@ private:
 		Group groups[2];
 		for (int i = 0; i < 2; ++i)
 		{
-			if (texts[i] == VuoKey_summaryFromValue(VuoKey_Any))
+			if (texts[i] == VuoKey_getSummary(VuoKey_Any))
 			{
 				groups[i] = Any;
 			}
@@ -118,7 +118,7 @@ public:
 		vector< pair<QString, QVariant> > itemTextAndData;
 		for (VuoKey key = VuoKey_Any; key <= VuoKey_Kana; ++key)
 		{
-			char *summary = VuoKey_summaryFromValue(key);
+			char *summary = VuoKey_getSummary(key);
 			QString summaryAsUnicode = QString::fromUtf8(summary);
 			itemTextAndData.push_back( make_pair(summaryAsUnicode, key) );
 			free(summary);

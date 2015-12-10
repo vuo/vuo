@@ -767,19 +767,19 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 }
 
 /// Helper for @ref VuoGl_stringForConstant.
-#define RETURN_STRING_IF_EQUAL(value) if (constant == value) return #value
+#define RETURN_STRING_IF_EQUAL(value) if (constant == value) return strdup(#value)
 
 /**
  * Returns a string for the specified OpenGL constant.
  *
- * Don't free the string returned by this function.
+ * The caller is responsible for freeing the string returned by this function.
  */
-const char * VuoGl_stringForConstant(GLenum constant)
+char *VuoGl_stringForConstant(GLenum constant)
 {
 	if (constant == 0)
-		return "(GL_ZERO or GL_POINTS)";
+		return strdup("(GL_ZERO or GL_POINTS)");
 	if (constant == 1)
-		return "(GL_ONE or GL_LINES)";
+		return strdup("(GL_ONE or GL_LINES)");
 	RETURN_STRING_IF_EQUAL(GL_LINE_LOOP);
 	RETURN_STRING_IF_EQUAL(GL_LINE_STRIP);
 	RETURN_STRING_IF_EQUAL(GL_TRIANGLES);
@@ -793,6 +793,7 @@ const char * VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_RGB16F_ARB);
 	RETURN_STRING_IF_EQUAL(GL_RGB32F_ARB);
 	RETURN_STRING_IF_EQUAL(GL_RGBA);
+	RETURN_STRING_IF_EQUAL(GL_RGBA8);
 	RETURN_STRING_IF_EQUAL(GL_RGBA16);
 	RETURN_STRING_IF_EQUAL(GL_RGBA16F_ARB);
 	RETURN_STRING_IF_EQUAL(GL_RGBA32F_ARB);
@@ -807,7 +808,19 @@ const char * VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_DEPTH_COMPONENT);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_2D);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_RECTANGLE_ARB);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE_3_3_2);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_4_4_4_4);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_5_5_5_1);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_8_8_8_8);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_10_10_10_2);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE_2_3_3_REV);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_5_6_5);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_5_6_5_REV);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_4_4_4_4_REV);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_1_5_5_5_REV);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_8_8_8_8_REV);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_2_10_10_10_REV);
 	RETURN_STRING_IF_EQUAL(GL_YCBCR_422_APPLE);
 
-	return "(unknown)";
+	return VuoText_format("(unknown: %x)", constant);
 }

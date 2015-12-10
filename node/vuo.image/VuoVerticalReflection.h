@@ -32,17 +32,17 @@ typedef enum {
 	VuoVerticalReflection_Bottom
 } VuoVerticalReflection;
 
-VuoVerticalReflection VuoVerticalReflection_valueFromJson(struct json_object * js);
-struct json_object * VuoVerticalReflection_jsonFromValue(const VuoVerticalReflection value);
-VuoList_VuoVerticalReflection VuoVerticalReflection_allowedValues(void);
-char * VuoVerticalReflection_summaryFromValue(const VuoVerticalReflection value);
+VuoVerticalReflection VuoVerticalReflection_makeFromJson(struct json_object * js);
+struct json_object * VuoVerticalReflection_getJson(const VuoVerticalReflection value);
+VuoList_VuoVerticalReflection VuoVerticalReflection_getAllowedValues(void);
+char * VuoVerticalReflection_getSummary(const VuoVerticalReflection value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoVerticalReflection VuoVerticalReflection_valueFromString(const char *str);
-char * VuoVerticalReflection_stringFromValue(const VuoVerticalReflection value);
+VuoVerticalReflection VuoVerticalReflection_makeFromString(const char *str);
+char * VuoVerticalReflection_getString(const VuoVerticalReflection value);
 /// @}
 
 /**

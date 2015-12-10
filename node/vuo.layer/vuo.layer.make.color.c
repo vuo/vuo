@@ -12,10 +12,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Color Layer",
-					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image", "tone", "chroma" ],
+					 "keywords" : [ "backdrop", "background", "billboard", "sprite", "image", "tone", "chroma",
+									"rectangle", "square" ],
 					 "version" : "1.1.0",
 					 "node": {
-						 "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "DrawShapes.vuo" ]
 					 }
 				 });
 

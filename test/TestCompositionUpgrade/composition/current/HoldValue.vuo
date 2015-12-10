@@ -1,6 +1,8 @@
 /**
  * @file
- * Every 5 seconds, displays the number of seconds that the composition has been running. 
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
+ * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,16 +11,13 @@
 
 digraph G
 {
-ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="537,260"];
-Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,100" fillcolor="cyan" _increment="1" _decrement="1" _setCount="0"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="400,212" fillcolor="cyan" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="16,75" fillcolor="cyan" _seconds="1" _fired_eventThrottling="enqueue"];
-FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="180,0" fillcolor="cyan" _seconds="5" _fired_eventThrottling="enqueue"];
-Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="360,50" fillcolor="violet" _initialValue="0"];
+ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<done>done\r|<text>text\r" pos="537,260"];
+Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="180,100" fillcolor="cyan" _increment="1" _decrement="1" _setCount="0"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<done>done\r|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="400,212" fillcolor="cyan"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="16,75" fillcolor="cyan" _seconds="1"];
+FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<done>done\r|<fired>fired\r" pos="180,0" fillcolor="cyan" _seconds="5"];
+Hold1 [type="vuo.hold.VuoInteger" version="1.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<done>done\r|<heldValue>heldValue\r" pos="360,50" fillcolor="violet" _initialValue="0"];
 
 ConvertIntegertoText1:text -> DisplayConsoleWindow:writeLine;
-Count1:count -> Hold1:newValue;
 FirePeriodically1:fired -> Count1:increment;
-FirePeriodically2:fired -> Hold1:refresh;
-Hold1:heldValue -> ConvertIntegertoText1:integer;
 }

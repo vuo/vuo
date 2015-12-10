@@ -42,7 +42,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 
 	context->glContext = VuoGlContext_use();
 
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext);
+	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, 1);
 	VuoRetain(context->sceneRenderer);
 
 	VuoRegister(context, free);

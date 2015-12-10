@@ -13,14 +13,13 @@ digraph G
 Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="621,204"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="40,219" fillcolor="yellow" _started_eventThrottling="enqueue"];
 IsGreaterThan [type="vuo.math.isGreaterThan.VuoReal" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="510,106" _b="0.000000"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="552,635" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
 MakeLinearGradientLayer [type="vuo.layer.make.gradient.linear" version="1.1.0" label="Make Linear Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientStart>gradientStart\l|<gradientEnd>gradientEnd\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="356,221" _gradientStart="{\"x\":-1,\"y\":1}" _gradientEnd="{\"x\":1,\"y\":-1}" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
-MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="279,247" _1="{\"r\":0.596933,\"g\":0.596933,\"b\":0.596933,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
-MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="285,423" _1="{\"r\":0.596078,\"g\":0.596078,\"b\":0.596078,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
-MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="849,187" fillcolor="green"];
+MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="282,247" _1="{\"r\":0.596933,\"g\":0.596933,\"b\":0.596933,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="289,423" _1="{\"r\":0.596078,\"g\":0.596078,\"b\":0.596078,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="850,187" fillcolor="green"];
 MakeList4 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="900,202" fillcolor="green"];
 MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="359,397" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerCenter="{\"x\":0.000000,\"y\":0.000000}" _layerRotation="0.000000" _layerWidth="2.000000" _layerHeight="2.000000"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="360,649" _text="\"Move the mouse left or right to change the gradient.\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":28}"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="378,648" _text="\"Move the mouse left or right to change the gradient.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
 ReceiveMouseDeltas [type="vuo.mouse.delta" version="1.0.1" label="Receive Mouse Deltas|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedBy>movedBy\r" pos="265,103" fillcolor="yellow" _modifierKey="\"any\"" _movedBy_eventThrottling="drop"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="946,176" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SelectInput2 [type="vuo.select.in.boolean.VuoLayer" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="690,176" fillcolor="violet"];
@@ -28,16 +27,15 @@ SelectInput2 [type="vuo.select.in.boolean.VuoLayer" version="2.0.0" label="Selec
 Convert2DPointToReal:x -> IsGreaterThan:a;
 FireOnStart:started -> MakeLinearGradientLayer:refresh;
 FireOnStart:started -> MakeRadialGradientLayer:refresh;
-FireOnStart:started -> MakeTextImage:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
 IsGreaterThan:greaterThan -> SelectInput2:which;
-MakeLayer:layer -> MakeList3:2;
 MakeLinearGradientLayer:layer -> SelectInput2:falseOption;
 MakeList2:list -> MakeRadialGradientLayer:colors;
 MakeList3:list -> RenderLayersToWindow:layers;
 MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList:list -> MakeLinearGradientLayer:colors;
 MakeRadialGradientLayer:layer -> SelectInput2:trueOption;
-MakeTextImage:image -> MakeLayer:image;
+MakeTextLayer:layer -> MakeList3:2;
 ReceiveMouseDeltas:movedBy -> Convert2DPointToReal:xy;
 SelectInput2:out -> MakeList3:1;
 }

@@ -55,17 +55,17 @@ typedef enum {
 	VuoBlendMode_Luminosity			///< Luminosity
 } VuoBlendMode;
 
-VuoBlendMode VuoBlendMode_valueFromJson(struct json_object * js);
-struct json_object * VuoBlendMode_jsonFromValue(const VuoBlendMode value);
-VuoList_VuoBlendMode VuoBlendMode_allowedValues(void);
-char * VuoBlendMode_summaryFromValue(const VuoBlendMode value);
+VuoBlendMode VuoBlendMode_makeFromJson(struct json_object * js);
+struct json_object * VuoBlendMode_getJson(const VuoBlendMode value);
+VuoList_VuoBlendMode VuoBlendMode_getAllowedValues(void);
+char * VuoBlendMode_getSummary(const VuoBlendMode value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoBlendMode VuoBlendMode_valueFromString(const char *str);
-char * VuoBlendMode_stringFromValue(const VuoBlendMode value);
+VuoBlendMode VuoBlendMode_makeFromString(const char *str);
+char * VuoBlendMode_getString(const VuoBlendMode value);
 void VuoBlendMode_retain(VuoBlendMode value);
 void VuoBlendMode_release(VuoBlendMode value);
 /// @}

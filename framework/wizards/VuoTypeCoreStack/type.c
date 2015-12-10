@@ -22,7 +22,6 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "c"
 					 ]
 				 });
 #endif
@@ -37,13 +36,13 @@ VuoModuleMetadata({
  *   }
  * }
  */
-%TypeName% %TypeName%_valueFromJson(json_object * js)
+%TypeName% %TypeName%_makeFromJson(json_object *js)
 {
 	%TypeName% value = {-1};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "replaceThis", &o))
-		value.replaceThis = VuoInteger_valueFromJson(o);
+		value.replaceThis = VuoInteger_makeFromJson(o);
 
 	return value;
 }
@@ -51,20 +50,36 @@ VuoModuleMetadata({
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * %TypeName%_jsonFromValue(const %TypeName% value)
+json_object *%TypeName%_getJson(const %TypeName% value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *replaceThisObject = VuoInteger_jsonFromValue(value.replaceThis);
+	json_object *replaceThisObject = VuoInteger_getJson(value.replaceThis);
 	json_object_object_add(js, "replaceThis", replaceThisObject);
 
 	return js;
 }
 
 /**
+ * Returns true if the two values are equal.
+ */
+bool %TypeName%_areEqual(const %TypeName% valueA, const %TypeName% valueB)
+{
+	return valueA.replaceThis == valueB.replaceThis;
+}
+
+/**
+ * Returns true if `valueA` is less than `valueB`.
+ */
+bool %TypeName%_isLessThan(const %TypeName% valueA, const %TypeName% valueB)
+{
+	return valueA.replaceThis < valueB.replaceThis;
+}
+
+/**
  * Returns a compact string representation of @c value.
  */
-char * %TypeName%_summaryFromValue(const %TypeName% value)
+char *%TypeName%_getSummary(const %TypeName% value)
 {
 	return VuoText_format("%d", value.replaceThis);
 }

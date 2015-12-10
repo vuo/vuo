@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						 "tint", "tone", "chroma" ],
 					  "version" : "1.0.0",
 					  "node" : {
-						  "exampleCompositions" : [ "ChangeSceneObjectBlendMode.vuo" ]
+						  "exampleCompositions" : [ "BlendSphereIntoScene.vuo" ]
 					  }
 				 });
 

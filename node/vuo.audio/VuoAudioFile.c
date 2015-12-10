@@ -8,7 +8,7 @@
  */
 
 #include "VuoAudioFile.h"
-#include "VuoUrl.h"
+#include "VuoUrlFetch.h"
 
 #include <dispatch/dispatch.h>
 
@@ -29,7 +29,7 @@ VuoModuleMetadata({
 						 "VuoLoopType",
 						 "VuoReal",
 						 "VuoText",
-						 "VuoUrl",
+						 "VuoUrlFetch",
 						 "VuoList_VuoAudioSamples",
 						 "AudioToolbox.framework",
 						 "CoreFoundation.framework"

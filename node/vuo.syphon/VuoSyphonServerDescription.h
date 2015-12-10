@@ -31,9 +31,9 @@ typedef struct
 
 } VuoSyphonServerDescription;
 
-VuoSyphonServerDescription VuoSyphonServerDescription_valueFromJson(struct json_object * js);
-struct json_object * VuoSyphonServerDescription_jsonFromValue(const VuoSyphonServerDescription value);
-char * VuoSyphonServerDescription_summaryFromValue(const VuoSyphonServerDescription value);
+VuoSyphonServerDescription VuoSyphonServerDescription_makeFromJson(struct json_object * js);
+struct json_object * VuoSyphonServerDescription_getJson(const VuoSyphonServerDescription value);
+char * VuoSyphonServerDescription_getSummary(const VuoSyphonServerDescription value);
 bool VuoSyphonServerDescription_areEqual(const VuoSyphonServerDescription value1, const VuoSyphonServerDescription value2);
 
 VuoSyphonServerDescription VuoSyphonServerDescription_make(VuoText serverUUID, VuoText serverName, VuoText applicationName);
@@ -42,8 +42,8 @@ VuoSyphonServerDescription VuoSyphonServerDescription_make(VuoText serverUUID, V
 /**
  * Automatically generated function.
  */
-VuoSyphonServerDescription VuoSyphonServerDescription_valueFromString(const char * initializer);
-char * VuoSyphonServerDescription_stringFromValue(const VuoSyphonServerDescription value);
+VuoSyphonServerDescription VuoSyphonServerDescription_makeFromString(const char * initializer);
+char * VuoSyphonServerDescription_getString(const VuoSyphonServerDescription value);
 void VuoSyphonServerDescription_retain(VuoSyphonServerDescription value);
 void VuoSyphonServerDescription_release(VuoSyphonServerDescription value);
 /// @}

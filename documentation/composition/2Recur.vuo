@@ -9,20 +9,20 @@
 
 digraph G 
 {
-Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="407,37"];
-ConvertIntegertoText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="299,65"];
-Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,0" _increment="1" _decrement="1" _setCount="0.000000"];
-Count2 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,100" _increment="1" _decrement="1" _setCount="0.000000"];
-DisplayConsoleWindow [type="vuo.console.window" version="1.0.0" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="458,161" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
-FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,0" _seconds="1" _fired_eventThrottling="enqueue"];
-FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,100" _seconds="1" _fired_eventThrottling="enqueue"];
-MakeList [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="361,48"];
+Add2 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="407,37"];
+ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="557,271"];
+Count4 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,0" _increment="1" _decrement="1" _setCount="0"];
+Count5 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="180,100" _increment="1" _decrement="1" _setCount="0"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="458,161" fillcolor="green" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,0" fillcolor="yellow" _seconds="1" _fired_eventThrottling="enqueue"];
+FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,100" fillcolor="yellow" _seconds="1" _fired_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="361,48"];
 
-Add1:sum -> ConvertIntegertoText:integer;
-ConvertIntegertoText:text -> DisplayConsoleWindow:writeLine;
-Count1:count -> MakeList:1;
-Count2:count -> MakeList:2;
-FirePeriodically1:fired -> Count1:increment;
-FirePeriodically2:fired -> Count2:increment;
-MakeList:list -> Add1:values;
+Add2:sum -> ConvertIntegerToText:integer;
+ConvertIntegerToText:text -> DisplayConsoleWindow:writeLine;
+Count4:count -> MakeList3:1;
+Count5:count -> MakeList3:2;
+FirePeriodically1:fired -> Count4:increment;
+FirePeriodically2:fired -> Count5:increment;
+MakeList3:list -> Add2:values;
 }

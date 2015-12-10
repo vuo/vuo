@@ -30,9 +30,9 @@ typedef struct
 	float x,y;
 } VuoPoint2d;
 
-VuoPoint2d VuoPoint2d_valueFromJson(struct json_object * js);
-struct json_object * VuoPoint2d_jsonFromValue(const VuoPoint2d value);
-char * VuoPoint2d_summaryFromValue(const VuoPoint2d value);
+VuoPoint2d VuoPoint2d_makeFromJson(struct json_object * js);
+struct json_object * VuoPoint2d_getJson(const VuoPoint2d value);
+char * VuoPoint2d_getSummary(const VuoPoint2d value);
 
 bool VuoPoint2d_areEqual(const VuoPoint2d value1, const VuoPoint2d value2);
 VuoPoint2d VuoPoint2d_random(const VuoPoint2d minimum, const VuoPoint2d maximum);
@@ -42,8 +42,8 @@ VuoPoint2d VuoPoint2d_randomWithState(unsigned short state[3], const VuoPoint2d 
 /**
  * Automatically generated function.
  */
-VuoPoint2d VuoPoint2d_valueFromString(const char *str);
-char * VuoPoint2d_stringFromValue(const VuoPoint2d value);
+VuoPoint2d VuoPoint2d_makeFromString(const char *str);
+char * VuoPoint2d_getString(const VuoPoint2d value);
 void VuoPoint2d_retain(VuoPoint2d value);
 void VuoPoint2d_release(VuoPoint2d value);
 /// @}

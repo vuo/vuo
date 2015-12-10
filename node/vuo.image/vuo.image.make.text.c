@@ -8,15 +8,7 @@
  */
 
 #include "node.h"
-#include <OpenGL/CGLMacro.h>
-
-#include "VuoFont.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-#include <ApplicationServices/ApplicationServices.h>
+#include "VuoImageText.h"
 
 
 VuoModuleMetadata({
@@ -24,151 +16,19 @@ VuoModuleMetadata({
 					 "keywords" : [ "font", "glyph", "line", "string", "typeface" ],
 					 "version" : "1.0.2",
 					 "dependencies" : [
-						 "ApplicationServices.framework"
+						 "VuoImageText"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "RenderText.vuo", "CompareImageGenerators.vuo" ]
+						 "exampleCompositions" : [ "RenderTextImage.vuo" ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoText, {"default":"Hello World!"}) text,
-		VuoInputData(VuoFont, {"default":{"fontName":"Helvetica","pointSize":28}}) font,
+		VuoInputData(VuoFont, {"default":{"fontName":"HelveticaNeue-Light","pointSize":28}}) font,
 		VuoOutputData(VuoImage) image
 )
 {
-	if (!VuoText_length(text))
-	{
-		*image = NULL;
-		return;
-	}
-
-	// Find a font matching VuoFont.
-	CTFontRef ctFont;
-	if (font.fontName)
-	{
-		CFStringRef fontName = CFStringCreateWithCString(NULL, font.fontName, kCFStringEncodingUTF8);
-		ctFont = CTFontCreateWithName(fontName, font.pointSize, NULL);
-		CFRelease(fontName);
-	}
-	else
-		ctFont = CTFontCreateWithName(CFSTR(""), font.pointSize, NULL);
-
-	CGColorRef cgColor = CGColorCreateGenericRGB(font.color.r, font.color.g, font.color.b, font.color.a);
-
-	unsigned long underline = font.underline ? kCTUnderlineStyleSingle : kCTUnderlineStyleNone;
-	CFNumberRef underlineNumber = CFNumberCreate(NULL, kCFNumberCFIndexType, &underline);
-
-	float kern = (font.characterSpacing-1)*font.pointSize;
-	CFNumberRef kernNumber = CFNumberCreate(NULL, kCFNumberFloatType, &kern);
-
-	// Create a temporary context to get the bounds.
-	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-	CGContextRef cgContext = CGBitmapContextCreate(NULL, 1, 1, 8, 4, colorspace, kCGImageAlphaPremultipliedLast);
-
-	// Split the user's text into lines.
-	CFStringRef cfText = CFStringCreateWithCStringNoCopy(NULL, text, kCFStringEncodingUTF8, kCFAllocatorNull);
-	CFArrayRef lines = CFStringCreateArrayBySeparatingStrings(NULL, cfText, CFSTR("\n"));
-	CFIndex lineCount = CFArrayGetCount(lines);
-
-	// Create an attributed string and CTLine for each line of text, specifying the font, color, underline.
-	CFMutableArrayRef attributedLines = CFArrayCreateMutable(NULL, lineCount, &kCFTypeArrayCallBacks);
-	CFMutableArrayRef ctLines = CFArrayCreateMutable(NULL, lineCount, &kCFTypeArrayCallBacks);
-	for (CFIndex i=0; i<lineCount; ++i)
-	{
-		CFStringRef line = CFArrayGetValueAtIndex(lines, i);
-
-		CFAttributedStringRef attributedLine;
-		CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName, kCTUnderlineStyleAttributeName, kCTKernAttributeName };
-		CFTypeRef values[] = { ctFont, cgColor, underlineNumber, kernNumber };
-		CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), NULL, NULL);
-		attributedLine = CFAttributedStringCreate(NULL, line, attr);
-		CFRelease(attr);
-		CFArrayAppendValue(attributedLines, attributedLine);
-
-		CTLineRef ctLine = CTLineCreateWithAttributedString(attributedLine);
-		CFArrayAppendValue(ctLines, ctLine);
-	}
-
-	// Get the bounds of each line of text, and union them into bounds for the entire block of text.
-	double ascent = CTFontGetAscent(ctFont);
-	double descent = CTFontGetDescent(ctFont);
-	double leading = CTFontGetLeading(ctFont);
-	double lineHeight = ascent + descent + leading;
-	CGRect bounds = CGRectMake(0,0,0,0);
-	CGRect lineBounds[lineCount];
-	for (CFIndex i=0; i<lineCount; ++i)
-	{
-		CTLineRef ctLine = CFArrayGetValueAtIndex(ctLines, i);
-
-		// For some fonts (such as Consolas), CTLineGetImageBounds doesn't return sufficient bounds --- the right side of the text gets cut off.
-		// For other fonts (such as Zapfino), CTLineGetTypographicBounds doesn't return sufficient bounds --- the left side of its loopy "g" gets cut off.
-		// So combine the results of both.
-		double width = CTLineGetTypographicBounds(ctLine, NULL, NULL, NULL);
-		CGRect lineImageBounds = CTLineGetImageBounds(ctLine, cgContext);
-		width = fmax(width,CGRectGetWidth(lineImageBounds));
-		width += CTLineGetTrailingWhitespaceWidth(ctLine);
-		lineBounds[i] = CGRectMake(CGRectGetMinX(lineImageBounds), lineHeight*i - ascent, width, lineHeight);
-
-		// Can't use CGRectUnion since it shifts the origin to (0,0), cutting off the glyph's ascent and strokes left of the origin (e.g., Zapfino's "g").
-		if (CGRectGetMinX(lineBounds[i]) < CGRectGetMinX(bounds))
-			bounds.origin.x = CGRectGetMinX(lineBounds[i]);
-		if (CGRectGetMinY(lineBounds[i]) < CGRectGetMinY(bounds))
-			bounds.origin.y = CGRectGetMinY(lineBounds[i]);
-		if (CGRectGetWidth(lineBounds[i]) > CGRectGetWidth(bounds))
-			bounds.size.width = CGRectGetWidth(lineBounds[i]);
-
-		// Final bounds should always include the full first line's height.
-		if (i==0)
-			bounds.size.height += lineHeight;
-		else
-			bounds.size.height += lineHeight * font.lineSpacing;
-	}
-
-	// The 2 extra pixels are to account for the antialiasing on strokes that touch the edge of the glyph bounds — without those pixels, some edge strokes are slightly cut off.
-	unsigned int width = ceil(CGRectGetWidth(bounds))+2;
-	unsigned int height = ceil(CGRectGetHeight(bounds))+2;
-
-	// Release the temporary context.
-	CGContextRelease(cgContext);
-
-	// Create the rendering context.
-	// VuoImage_makeFromBuffer() expects a premultiplied buffer.
-	cgContext = CGBitmapContextCreate(NULL, width, height, 8, width*4, colorspace, kCGImageAlphaPremultipliedLast);
-
-	// Vertically flip, since VuoImage_makeFromBuffer() expects a flipped buffer.
-	CGContextSetTextMatrix(cgContext, CGAffineTransformMakeScale(1.0, -1.0));
-
-	// Draw each line of text.
-	for (CFIndex i=0; i<lineCount; ++i)
-	{
-		CTLineRef ctLine = CFArrayGetValueAtIndex(ctLines, i);
-
-		float textXPosition = 1 - CGRectGetMinX(bounds);
-		if (font.alignment == VuoHorizontalAlignment_Center)
-			textXPosition += (CGRectGetWidth(bounds) - CGRectGetWidth(lineBounds[i]))/2.;
-		else if (font.alignment == VuoHorizontalAlignment_Right)
-			textXPosition += CGRectGetWidth(bounds) - CGRectGetWidth(lineBounds[i]);
-
-		float textYPosition = 1 - CGRectGetMinY(bounds);
-		textYPosition += lineHeight*i*font.lineSpacing;
-
-		CGContextSetTextPosition(cgContext, textXPosition, textYPosition);
-		CTLineDraw(ctLine, cgContext);
-	}
-
-	// Make a VuoImage from the CGContext.
-	*image = VuoImage_makeFromBuffer(CGBitmapContextGetData(cgContext), GL_RGBA, width, height, VuoImageColorDepth_8);
-
-	CFRelease(ctLines);
-	CFRelease(attributedLines);
-	CFRelease(lines);
-	CFRelease(cfText);
-	CGContextRelease(cgContext);
-	CGColorSpaceRelease(colorspace);
-	CFRelease(kernNumber);
-	CFRelease(underlineNumber);
-	CGColorRelease(cgColor);
-	CFRelease(ctFont);
+	*image = VuoImage_makeText(text, font, 1);
 }

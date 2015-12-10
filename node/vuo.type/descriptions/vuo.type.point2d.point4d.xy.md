@@ -1,1 +1,1 @@
-Expands a 2D point (x,y) to a 4D point (x,y,0,0).
+Expands a 2D point (X,Y) to a 4D point (X,Y,0,0).

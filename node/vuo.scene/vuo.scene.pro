@@ -18,6 +18,7 @@ NODE_SOURCES += \
 	vuo.scene.fetch.c \
 	vuo.scene.fetch.list.c \
 	vuo.scene.make.c \
+	vuo.scene.make.camera.drag.c \
 	vuo.scene.make.camera.orthographic.c \
 	vuo.scene.make.camera.orthographic.target.c \
 	vuo.scene.make.camera.perspective.c \

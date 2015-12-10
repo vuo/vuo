@@ -26,6 +26,7 @@ int main (int argc, char * const argv[])
 		bool isVerbose = false;
 		vector<char *> librarySearchPaths;
 		vector<char *> frameworkSearchPaths;
+		string optimizationOption;
 		VuoCompiler compiler;
 
 		static struct option options[] = {
@@ -35,6 +36,7 @@ int main (int argc, char * const argv[])
 			{"target", required_argument, NULL, 0},
 			{"library-search-path", required_argument, NULL, 0},
 			{"framework-search-path", required_argument, NULL, 0},
+			{"optimization", required_argument, NULL, 0},
 			{"verbose", no_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
@@ -63,7 +65,10 @@ int main (int argc, char * const argv[])
 				case 5:  // --framework-search-path
 					frameworkSearchPaths.push_back(optarg);
 					break;
-				case 6:  // --verbose
+				case 6:  // --optimization
+					optimizationOption = optarg;
+					break;
+				case 7:  // --verbose
 					isVerbose = true;
 					compiler.setVerbose(true);
 					break;
@@ -88,6 +93,7 @@ int main (int argc, char * const argv[])
 				   "  --target                       Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.6.0').\n"
 				   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
 				   "  --framework-search-path <dir>  Search for Mac OS X frameworks in <dir>. This option may be specified more than once.\n"
+				   "  --optimization <arg>           Optimize for a faster build that links against a cache file ('fast-build') or a standalone binary that does not ('small-binary'). The default is 'fast-build'.\n"
 				   "  --verbose                      Output diagnostic information.\n",
 				   argv[0]);
 		}
@@ -117,7 +123,18 @@ int main (int argc, char * const argv[])
 			if (! target.empty())
 				compiler.setTarget(target);
 
-			compiler.linkCompositionToCreateExecutable(inputPath, outputPath);
+			VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild;
+			if (! optimizationOption.empty())
+			{
+				if (optimizationOption == "fast-build")
+					optimization = VuoCompiler::Optimization_FastBuild;
+				else if (optimizationOption == "small-binary")
+					optimization = VuoCompiler::Optimization_SmallBinary;
+				else
+					throw std::runtime_error("unrecognized option '" + optimizationOption + "' for --optimization");
+			}
+
+			compiler.linkCompositionToCreateExecutable(inputPath, outputPath, optimization);
 		}
 
 		return 0;

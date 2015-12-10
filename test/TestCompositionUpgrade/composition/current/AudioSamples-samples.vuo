@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,12 +11,7 @@
 
 digraph G
 {
-CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="239,232"];
-MakeList [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="191,307"];
-MakeList2 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="172,390" _1="300" _2="4000"];
-MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="237,296"];
-SplitAudioByFrequency [type="vuo.audio.split.frequency" version="2.0.0" label="Split Audio by Frequency|<refresh>refresh\l|<samples>samples\l|<cutoffFrequencies>cutoffFrequencies\l|<splitSamples>splitSamples\r" pos="218,364"];
-
-MakeList2:list -> SplitAudioByFrequency:cutoffFrequencies;
-MakeList:list -> MixAudioChannels:samples;
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="1.0.0" label="Calculate Loudness|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<loudness>loudness\r" pos="393,481"];
+MixAudioChannels [type="vuo.audio.mix" version="1.0.0" label="Mix Audio Channels|<refresh>refresh\l|<audioSamples>audioSamples\l|<done>done\r|<mixedSamples>mixedSamples\r" pos="388,560"];
+SplitAudioByFrequency [type="vuo.audio.split.frequency" version="1.0.0" label="Split Audio by Frequency|<refresh>refresh\l|<audioSamples>audioSamples\l|<cutoffFrequencies>cutoffFrequencies\l|<done>done\r|<splitSamples>splitSamples\r" pos="376,661"];
 }

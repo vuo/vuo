@@ -32,17 +32,17 @@ typedef struct
 
 } VuoVideoInputDevice;
 
-VuoVideoInputDevice VuoVideoInputDevice_valueFromJson(struct json_object * js);
-struct json_object * VuoVideoInputDevice_jsonFromValue(const VuoVideoInputDevice value);
-char * VuoVideoInputDevice_summaryFromValue(const VuoVideoInputDevice value);
+VuoVideoInputDevice VuoVideoInputDevice_makeFromJson(struct json_object * js);
+struct json_object * VuoVideoInputDevice_getJson(const VuoVideoInputDevice value);
+char * VuoVideoInputDevice_getSummary(const VuoVideoInputDevice value);
 bool VuoVideoInputDevice_areEqual(VuoVideoInputDevice value1, VuoVideoInputDevice value2);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoVideoInputDevice VuoVideoInputDevice_valueFromString(const char *str);
-char * VuoVideoInputDevice_stringFromValue(const VuoVideoInputDevice value);
+VuoVideoInputDevice VuoVideoInputDevice_makeFromString(const char *str);
+char * VuoVideoInputDevice_getString(const VuoVideoInputDevice value);
 void VuoVideoInputDevice_retain(VuoVideoInputDevice value);
 void VuoVideoInputDevice_release(VuoVideoInputDevice value);
 ///@}

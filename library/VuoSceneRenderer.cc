@@ -12,6 +12,7 @@
 #include "VuoSceneRenderer.h"
 #include "VuoSceneObject.h"
 #include "VuoGlPool.h"
+#include "VuoImageText.h"
 
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
@@ -34,6 +35,7 @@ VuoModuleMetadata({
 						 "VuoBoolean",
 						 "VuoImage",
 						 "VuoImageColorDepth",
+						 "VuoImageText",
 						 "VuoSceneObject",
 						 "VuoText",
 						 "VuoList_VuoSceneObject",
@@ -47,7 +49,7 @@ VuoModuleMetadata({
  * Work around apparent GL driver bug, wherein
  * attempting to simultaneously bind the same buffer
  * to multiple VAOs on separate contexts causes a crash.
- * (Try running Compare4Cameras.vuo without this.)
+ * (Try running CompareCameras.vuo without this.)
  */
 static dispatch_semaphore_t VuoSceneRenderer_vertexArraySemaphore;
 /**
@@ -87,6 +89,7 @@ public:
 	bool needToRegenerateProjectionMatrix;
 	unsigned int viewportWidth;
 	unsigned int viewportHeight;
+	float backingScaleFactor;
 
 	VuoSceneObject rootSceneObject;
 	VuoSceneRendererInternal_object rootSceneObjectInternal;
@@ -125,7 +128,7 @@ static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
  *
  * @threadAny
  */
-VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext)
+VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScaleFactor)
 {
 	VuoSceneRendererInternal *sceneRenderer = new VuoSceneRendererInternal;
 	VuoRegister(sceneRenderer, VuoSceneRenderer_destroy);
@@ -137,6 +140,7 @@ VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext)
 	sceneRenderer->camera = VuoSceneObject_makeDefaultCamera();
 	VuoSceneObject_retain(sceneRenderer->camera);
 	sceneRenderer->glContext = glContext;
+	sceneRenderer->backingScaleFactor = backingScaleFactor;
 
 	VuoSceneRenderer_prepareContext((CGLContextObj)glContext);
 
@@ -197,7 +201,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 
 	// Build a projection matrix for a camera located at the origin, facing along the -z axis.
 	float aspectRatio = (float)sceneRenderer->viewportWidth/(float)sceneRenderer->viewportHeight;
-	if (camera.cameraType == VuoSceneObject_PerspectiveCamera)
+	if (camera.type == VuoSceneObjectType_PerspectiveCamera)
 	{
 		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
 
@@ -223,7 +227,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
 		sceneRenderer->projectionMatrix[15] = 0;
 	}
-	else if (camera.cameraType == VuoSceneObject_StereoCamera)
+	else if (camera.type == VuoSceneObjectType_StereoCamera)
 	{
 		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
 		float top = camera.cameraDistanceMin * tanf(halfFieldOfView);
@@ -256,7 +260,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
 		sceneRenderer->projectionMatrix[15] = 0;
 	}
-	else if (camera.cameraType == VuoSceneObject_OrthographicCamera)
+	else if (camera.type == VuoSceneObjectType_OrthographicCamera)
 	{
 		float halfWidth = camera.cameraWidth / 2.f;
 
@@ -283,7 +287,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		sceneRenderer->projectionMatrix[15] = 1;
 	}
 	else
-		VLog("Unknown cameraType %d", camera.cameraType);
+		VLog("Unknown type %d", camera.type);
 
 
 	// Transform the scene by the inverse of the camera's transform.
@@ -758,6 +762,24 @@ void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
 }
 
 /**
+ * Creates a mesh and image for the specified sceneobject, if they don't already exist.
+ */
+void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so)
+{
+	so.type = VuoSceneObjectType_Mesh;
+	so.mesh = VuoMesh_makeQuadWithoutNormals();
+	so.isRealSize = true;
+
+	VuoImage textImage = VuoImage_makeText(so.text, so.font, sceneRenderer->backingScaleFactor);
+	so.shader = VuoShader_makeUnlitImageShader(textImage, 1);
+
+	// Since VuoSceneRenderer_retainSceneObjectsRecursively() was already called,
+	// manually retain the new objects we've added to the sceneobject.
+	VuoRetain(so.mesh);
+	VuoRetain(so.shader);
+}
+
+/**
  * Binds the relevant (given the current shader) parts of @c so to an OpenGL Vertex Array Object.
  * Does not traverse child objects.
  *
@@ -765,8 +787,11 @@ void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
+	if (so.type == VuoSceneObjectType_Text && VuoText_length(so.text))
+		VuoSceneRenderer_renderText(sceneRenderer, so);
+
 	if (!so.mesh || !so.mesh->submeshCount || !so.shader)
 		return;
 
@@ -854,9 +879,9 @@ void VuoSceneRenderer_uploadSceneObject(VuoSceneObject so, VuoSceneRendererInter
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
-	VuoSceneRenderer_uploadSceneObject(so, soi, glContext);
+	VuoSceneRenderer_uploadSceneObject(sceneRenderer, so, soi, glContext);
 
 	if (!so.childObjects)
 		return;
@@ -867,8 +892,9 @@ void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneObject so, VuoSceneR
 		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRendererInternal_object childObjectInternal;
 
-		VuoSceneRenderer_uploadSceneObjectsRecursively(childObject, &childObjectInternal, glContext);
+		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, childObject, &childObjectInternal, glContext);
 
+		VuoListSetValue_VuoSceneObject(so.childObjects, childObject, i);
 		soi->childObjects.push_back(childObjectInternal);
 	}
 }
@@ -986,7 +1012,7 @@ void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sr, VuoSceneObject roo
 
 	// Upload the new scenegraph.
 	sceneRenderer->rootSceneObject = rootSceneObject;
-	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+	VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
 
 	VuoSceneObject_findLights(sceneRenderer->rootSceneObject, &sceneRenderer->ambientColor, &sceneRenderer->ambientBrightness, &sceneRenderer->pointLights, &sceneRenderer->spotLights);
 	VuoRetain(sceneRenderer->pointLights);

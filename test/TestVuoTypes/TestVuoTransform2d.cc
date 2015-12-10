@@ -39,7 +39,7 @@ private slots:
 										<< true
 										<< "identity transform (no change)";
 
-		QTest::newRow("transform")		<< (const char*)VuoTransform2d_stringFromValue(VuoTransform2d_make(VuoPoint2d_make(1,1),M_PI/2.,VuoPoint2d_make(2,2)))
+		QTest::newRow("transform")		<< (const char*)VuoTransform2d_getString(VuoTransform2d_make(VuoPoint2d_make(1,1),M_PI/2.,VuoPoint2d_make(2,2)))
 										<< true
 										<< "translation (1, 1)<br>rotation 90°<br>scale (2, 2)";
 	}
@@ -49,10 +49,10 @@ private slots:
 		QFETCH(bool, testReverse);
 		QFETCH(QString, summary);
 
-		VuoTransform2d t = VuoTransform2d_valueFromString(value.toUtf8().data());
+		VuoTransform2d t = VuoTransform2d_makeFromString(value.toUtf8().data());
 		if (testReverse)
-			QCOMPARE(QString::fromUtf8(VuoTransform2d_stringFromValue(t)), value);
-		QCOMPARE(QString::fromUtf8(VuoTransform2d_summaryFromValue(t)), summary);
+			QCOMPARE(QString::fromUtf8(VuoTransform2d_getString(t)), value);
+		QCOMPARE(QString::fromUtf8(VuoTransform2d_getSummary(t)), summary);
 	}
 };
 

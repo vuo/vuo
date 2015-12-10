@@ -17,6 +17,8 @@ const qreal VuoRendererFonts::thickPenWidth = 20;
 const qreal VuoRendererFonts::midPenWidth = VuoRendererFonts::thickPenWidth/10.0;
 
 const qreal VuoRendererFonts::nodeTitleFontSize = thickPenWidth*12.0/16.0;
+const qreal VuoRendererFonts::nodeDetailFontSize = thickPenWidth*9.0/16.0;
+const qreal VuoRendererFonts::portDetailFontSize = thickPenWidth*8.0/16.0;
 
 /**
  * Returns a shared font provider.
@@ -84,15 +86,23 @@ QFont VuoRendererFonts::nodeTitleFont(void)
  */
 QFont VuoRendererFonts::nodeClassFont(void)
 {
-	return QFont("Signika", thickPenWidth*9.0/16.0, QFont::Normal, false);
+	return QFont("Signika", nodeDetailFontSize, QFont::Normal, false);
 }
 
 /**
- * Returns the font for a port's title or a constant flag's text.
+ * Returns the font for a port's title.
  */
 QFont VuoRendererFonts::nodePortTitleFont(void)
 {
-	return QFont("Signika", thickPenWidth*9.0/16.0, QFont::Normal, false);
+	return QFont("Signika", nodeDetailFontSize, QFont::Normal, false);
+}
+
+/**
+ * Returns the font for a port's constant flag or typecast.
+ */
+QFont VuoRendererFonts::nodePortConstantFont(void)
+{
+	return QFont("Signika", portDetailFontSize, QFont::Normal, false);
 }
 
 /**
@@ -100,7 +110,7 @@ QFont VuoRendererFonts::nodePortTitleFont(void)
  */
 QFont VuoRendererFonts::portPopoverFont(void)
 {
-	return QFont("Signika", thickPenWidth*9.0/16.0, QFont::Normal, false);
+	return QFont("Signika", nodeDetailFontSize, QFont::Normal, false);
 }
 
 /**

@@ -72,8 +72,8 @@ private slots:
 		QFETCH(VuoPoint2d, expectedCenter3D);
 		QFETCH(VuoPoint2d, expectedSize3D);
 
-		VuoRectangle bounds = VuoLayer_getBoundingRectangle(layer, 10, 10);
-//		VLog("bounds2d center = %s		size=%s",VuoPoint2d_summaryFromValue(bounds.center),VuoPoint2d_summaryFromValue(bounds.size));
+		VuoRectangle bounds = VuoLayer_getBoundingRectangle(layer, 10, 10, 1);
+//		VLog("bounds2d center = %s		size=%s",VuoPoint2d_getSummary(bounds.center),VuoPoint2d_getSummary(bounds.size));
 
 		QCOMPARE(bounds.center.x + 10, expectedCenter.x + 10);
 		QCOMPARE(bounds.center.y + 10, expectedCenter.y + 10);
@@ -84,7 +84,7 @@ private slots:
 		// Also test VuoSceneObject_bounds(), which is used by vuo.layer.combine.center.
 		{
 			VuoBox bounds = VuoSceneObject_bounds(layer.sceneObject);
-//			VLog("bounds3d center = %s		size=%s",VuoPoint3d_summaryFromValue(bounds.center),VuoPoint3d_summaryFromValue(bounds.size));
+//			VLog("bounds3d center = %s		size=%s",VuoPoint3d_getSummary(bounds.center),VuoPoint3d_getSummary(bounds.size));
 			QCOMPARE(bounds.center.x + 10, expectedCenter3D.x + 10.);
 			QCOMPARE(bounds.center.y + 10, expectedCenter3D.y + 10.);
 			QCOMPARE(bounds.center.z + 10,                      10.);

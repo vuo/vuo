@@ -50,8 +50,8 @@ public:
 	bool isEligibleForConnection(void);
 	void setEligibleForDirectConnection(bool eligible);
 	void setEligibleForConnectionViaTypecast(bool eligible);
-	void extendedHoverEnterEvent(bool cableDragUnderway=false);
-	void extendedHoverMoveEvent(bool cableDragUnderway=false);
+	void extendedHoverEnterEvent(bool cableDragUnderway=false, bool disableConnectedCableHighlight=false);
+	void extendedHoverMoveEvent(bool cableDragUnderway=false, bool disableConnectedCableHighlight=false);
 	void extendedHoverLeaveEvent();
 	bool canConnectDirectlyWithoutSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection);
 	bool canConnectDirectlyWithSpecializationTo(VuoRendererPort *toPort, bool eventOnlyConnection);
@@ -79,7 +79,8 @@ public:
 	void setConstant(string constantValue);
 	string getPortNameToRender() const;
 	string getPortNameToRenderWhenDisplayed() const;
-	static string getDefaultPortNameToRenderForPortClass(VuoPortClass *portClass);
+	static QString getPortIdentifierRegExp();
+	static QString sanitizePortIdentifier(QString portID);
 	void setPortNameToRender(string name);
 	bool getPublishable() const;
 	vector<VuoRendererPublishedPort *> getPublishedPorts() const;
@@ -88,6 +89,7 @@ public:
 	VuoRendererNode * getUnderlyingParentNode(void) const;
 	VuoRendererNode * getRenderedParentNode(void) const;
 	set<VuoRendererInputAttachment *> getAllUnderlyingUpstreamInputAttachments(void) const;
+	set<VuoRendererPort *> getConnectedWirelessAntennas() const;
 
 	VuoRendererPort * getTypecastParentPort() const;
 	void setTypecastParentPort(VuoRendererPort *typecastParentPort);
@@ -115,6 +117,8 @@ protected:
 
 private:
 
+	QFont getPortNameFont(void) const;
+
 	// Port attributes affecting drawing
 	bool isOutput;
 	bool isFunctionPort;
@@ -129,8 +133,7 @@ private:
 
 	QRectF portHybridRect;
 	QPainterPath portConstantPath;
-	QPainterPath outsetPath;
-	QPainterPath outsetMinusPortConstantPath;
+	QPainterPath portConstantInsetPath;	///< Like portConstantPath, but inset slightly (for painting a border around color swatches).
 
 	friend class VuoRendererPublishedPort; 	///< VuoRendererPublishedPort needs paint(...) and boundingRect()
 	friend class TestVuoRenderer;
@@ -146,15 +149,18 @@ protected:
 	VuoRendererInputDrawer * getAttachedInputDrawerRenderedWithHostPort(const VuoRendererPort *port) const;
 	VuoRendererInputAttachment * getUnderlyingInputAttachment(void) const;
 
-	static QString formatPortName(QString portName);
 	static QRectF getPortConstantTextRectForText(QString text);
 	static QPainterPath getPortPath(qreal inset, VuoPortClass::PortType portType, bool isInputPort, bool carriesData);
 	QRectF getEventBarrierRect(void) const;
 	QPainterPath getFunctionPortGlyph(void) const;
+	QPainterPath getWirelessAntennaPath() const;
+	bool hasConnectedWirelessDataCable(bool includePublishedCables) const;
+	bool hasConnectedWirelessEventCable(bool includePublishedCables) const;
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors);
 	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);
 	void paintActionIndicator(QPainter *painter, VuoRendererColors *colors);
+	void paintWirelessAntenna(QPainter *painter, VuoRendererColors *colors);
 	string getPointStringForCoords(QList<double>) const;
 	string getDefaultPortNameToRender();
 

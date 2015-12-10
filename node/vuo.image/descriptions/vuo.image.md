@@ -4,7 +4,7 @@ Many of the nodes in this node set are **image filters** — they take an input 
 
 To use an image file within a composition, you can import it with the `Fetch Image` node. The node supports files with extension .png, .jpeg, .jpg, .gif, .bmp, .exr, .ilm, .hdr, .psd, .raw, .cr2, .dng, .dcr, .nef, .raf, .mos, .kdc, .tif, .tiff, and .tga.
 
-In **Vuo coordinates**, (0,0) is the center of an image. An image has a width of 2, with x-coordinate -1 on the left edge and 1 on the right edge. An image's height is determined by its aspect ratio, with the y-coordinate increasing from bottom to top.
+In **Vuo coordinates**, (0,0) is the center of an image. An image has a width of 2, with X-coordinate -1 on the left edge and 1 on the right edge. An image's height is determined by its aspect ratio, with the Y-coordinate increasing from bottom to top.
 
 ![Vuo Coordinate System](vuo-coordinates-transparent.png)
 

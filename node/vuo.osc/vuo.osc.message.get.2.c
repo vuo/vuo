@@ -45,8 +45,8 @@ void nodeEvent
 	int dataCount = VuoOscMessage_getDataCount(message);
 
 	if (1 <= dataCount)
-		*data1 = VuoGenericType1_valueFromJson(VuoOscMessage_getDataJson(message, 1));
+		*data1 = VuoGenericType1_makeFromJson(VuoOscMessage_getDataJson(message, 1));
 
 	if (2 <= dataCount)
-		*data2 = VuoGenericType2_valueFromJson(VuoOscMessage_getDataJson(message, 2));
+		*data2 = VuoGenericType2_makeFromJson(VuoOscMessage_getDataJson(message, 2));
 }

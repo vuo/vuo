@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Cut Text",
-					 "keywords" : [ "character", "letter", "substring", "part", "piece", "string", "truncate", "trim" ],
+					 "keywords" : [ "character", "letter", "substring", "part", "piece", "string", "truncate", "trim", "subrange" ],
 					 "version" : "2.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "RevealWord.vuo" ]

@@ -74,18 +74,18 @@ bool VuoImage_isEmpty(const VuoImage image);
 VuoRectangle VuoImage_getRectangle(const VuoImage image);
 VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image);
 
-VuoImage VuoImage_valueFromJson(struct json_object * js);
-struct json_object * VuoImage_jsonFromValue(const VuoImage value);
-struct json_object * VuoImage_interprocessJsonFromValue(const VuoImage value);
-char * VuoImage_summaryFromValue(const VuoImage value);
+VuoImage VuoImage_makeFromJson(struct json_object * js);
+struct json_object * VuoImage_getJson(const VuoImage value);
+struct json_object * VuoImage_getInterprocessJson(const VuoImage value);
+char * VuoImage_getSummary(const VuoImage value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoImage VuoImage_valueFromString(const char *str);
-char * VuoImage_stringFromValue(const VuoImage value);
-char * VuoImage_interprocessStringFromValue(const VuoImage value);
+VuoImage VuoImage_makeFromString(const char *str);
+char * VuoImage_getString(const VuoImage value);
+char * VuoImage_getInterprocessString(const VuoImage value);
 void VuoImage_retain(VuoImage value);
 void VuoImage_release(VuoImage value);
 /// @}

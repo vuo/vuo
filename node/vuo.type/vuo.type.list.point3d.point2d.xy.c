@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title": "Convert 3D Point List to 2D Point List",
-					  "description": "Outputs a list of just the (x,y) part of a list of 3D points (x,y,z).",
+					  "description": "Outputs a list of just the (X,Y) part of a list of 3D points (X,Y,Z).",
 					  "version": "1.0.0"
 				 });
 

@@ -9,10 +9,11 @@ NODE_LIBRARY_SOURCES += \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoImageText.c \
 	VuoSceneObjectGet.c \
 	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
-	VuoUrl.c \
+	VuoUrlFetch.c \
 	VuoMathExpressionParser.cc \
 	VuoMeshParametric.cc \
 	VuoPointsParametric.cc \
@@ -27,12 +28,13 @@ SOURCES += \
 	VuoImageBlur.c \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoImageText.c \
 	VuoMathExpressionParser.cc \
 	VuoMeshParametric.cc \
 	VuoPointsParametric.cc \
 	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
-	VuoUrl.c
+	VuoUrlFetch.c
 
 HEADERS += \
 	VuoDisplayRefresh.h \
@@ -51,12 +53,13 @@ HEADERS += \
 	VuoSceneRenderer.h \
 	VuoScreenCommon.h \
 	VuoSmooth.h \
-	VuoTriggerSet.hh \
-	VuoUrl.h \
+	VuoUrlFetch.h \
 	VuoWindow.h \
 	VuoNSRunLoop.h
 
 OTHER_FILES += \
+	VuoImageText.h \
+	VuoTriggerSet.hh \
 	VuoWindowApplication.h \
 	VuoWindowOpenGLInternal.h \
 	VuoWindowTextInternal.h
@@ -123,8 +126,11 @@ CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS \
 	-framework CoreFoundation \
 	-framework IOSurface \
+	../type/VuoText.o \
+	$$JSONC_ROOT/lib/libjson.a \
 	-L . \
-	-lVuoGlContext
+	-lVuoGlContext \
+	-lVuoHeap
 node_library_shared_dependent_on_context.input = NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 node_library_shared_dependent_on_context.depends = libVuoGlContext.dylib
 node_library_shared_dependent_on_context.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"

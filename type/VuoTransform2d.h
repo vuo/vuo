@@ -34,16 +34,16 @@ typedef struct
 VuoTransform2d VuoTransform2d_makeIdentity(void);
 VuoTransform2d VuoTransform2d_make(VuoPoint2d translation, VuoReal rotation, VuoPoint2d scale);
 
-VuoTransform2d VuoTransform2d_valueFromJson(struct json_object *js);
-struct json_object * VuoTransform2d_jsonFromValue(const VuoTransform2d value);
-char * VuoTransform2d_summaryFromValue(const VuoTransform2d value);
+VuoTransform2d VuoTransform2d_makeFromJson(struct json_object *js);
+struct json_object * VuoTransform2d_getJson(const VuoTransform2d value);
+char * VuoTransform2d_getSummary(const VuoTransform2d value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoTransform2d VuoTransform2d_valueFromString(const char *str);
-char * VuoTransform2d_stringFromValue(const VuoTransform2d value);
+VuoTransform2d VuoTransform2d_makeFromString(const char *str);
+char * VuoTransform2d_getString(const VuoTransform2d value);
 void VuoTransform2d_retain(VuoTransform2d value);
 void VuoTransform2d_release(VuoTransform2d value);
 /// @}

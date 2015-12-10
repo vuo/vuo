@@ -62,7 +62,7 @@ VuoModuleMetadata({
 void VuoImage_free(void *texture)
 {
 	VuoImage t = (VuoImage)texture;
-//	VLog("Freeing image %p %s",t,VuoImage_summaryFromValue(t));
+//	VLog("Freeing image %p %s",t,VuoImage_getSummary(t));
 
 	if (t->freeCallback)
 		t->freeCallback(t);
@@ -89,7 +89,7 @@ VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned int glInter
 	t->freeCallback = NULL;
 	t->freeCallbackContext = NULL;
 
-//	VLog("Made image %p %s",t,VuoImage_summaryFromValue(t));
+//	VLog("Made image %p %s",t,VuoImage_getSummary(t));
 	return t;
 }
 
@@ -478,7 +478,8 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
 	if (image->glInternalFormat == GL_LUMINANCE8
 	 || image->glInternalFormat == GL_LUMINANCE8_ALPHA8
 	 || image->glInternalFormat == GL_RGB
-	 || image->glInternalFormat == GL_RGBA)
+	 || image->glInternalFormat == GL_RGBA
+	 || image->glInternalFormat == GL_RGBA8)
 		return VuoImageColorDepth_8;
 	else if (image->glInternalFormat == GL_LUMINANCE16F_ARB
 		  || image->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB
@@ -488,7 +489,9 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
 		  || image->glInternalFormat == GL_RGBA16F_ARB)
 		return VuoImageColorDepth_16;
 
-	VLog("Error: Unknown glInternalFormat %x (%s)", image->glInternalFormat, VuoGl_stringForConstant(image->glInternalFormat));
+	char *formatString = VuoGl_stringForConstant(image->glInternalFormat);
+	VLog("Error: Unknown glInternalFormat %x (%s)", image->glInternalFormat, formatString);
+	free(formatString);
 	return VuoImageColorDepth_8;
 }
 
@@ -532,7 +535,7 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
  *	}
  * }
  */
-VuoImage VuoImage_valueFromJson(json_object * js)
+VuoImage VuoImage_makeFromJson(json_object * js)
 {
 	if (!js)
 		return NULL;
@@ -562,7 +565,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
 	{
 		json_object * o;
 		if (json_object_object_get_ex(js, "color", &o))
-			return VuoImage_makeColorImage(VuoColor_valueFromJson(o), pixelsWide, pixelsHigh);
+			return VuoImage_makeColorImage(VuoColor_makeFromJson(o), pixelsWide, pixelsHigh);
 	}
 
 	{
@@ -666,7 +669,7 @@ VuoImage VuoImage_valueFromJson(json_object * js)
  *
  * @threadAny
  */
-json_object * VuoImage_jsonFromValue(const VuoImage value)
+json_object * VuoImage_getJson(const VuoImage value)
 {
 	json_object * js = json_object_new_object();
 	if (!value)
@@ -700,7 +703,7 @@ json_object * VuoImage_jsonFromValue(const VuoImage value)
  *
  * @threadAny
  */
-json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
+json_object * VuoImage_getInterprocessJson(const VuoImage value)
 {
 	json_object * js = json_object_new_object();
 	if (!value)
@@ -756,7 +759,7 @@ json_object * VuoImage_interprocessJsonFromValue(const VuoImage value)
  * @eg{GL Texture (ID 42)
  * 640x480}
  */
-char * VuoImage_summaryFromValue(const VuoImage value)
+char * VuoImage_getSummary(const VuoImage value)
 {
 	if (!value)
 		return strdup("(no image)");

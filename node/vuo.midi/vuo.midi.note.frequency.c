@@ -22,9 +22,11 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":69, "suggestedMin":0, "suggestedMax":127}) noteNumber,
+		VuoInputData(VuoInteger, {"default":8192, "suggestedMin":0, "suggestedMax":16383}) pitchBend,///< Permitted values: 0 through 16383; center=8192
+		VuoInputData(VuoInteger, {"default":2, "suggestedMin":0, "suggestedMax":24}) pitchBendRange,
 		VuoOutputData(VuoReal) frequency
 )
 {
 	// https://en.wikipedia.org/wiki/MIDI_Tuning_Standard
-	*frequency = pow(2., ((noteNumber-69)/12.) ) * 440.;
+	*frequency = pow(2., (noteNumber-69 + (pitchBend/8192. - 1.) * pitchBendRange)/12.) * 440.;
 }
