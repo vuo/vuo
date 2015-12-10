@@ -35,7 +35,7 @@ VuoModuleMetadata({
  *   "last"
  * }
  */
-VuoNotePriority VuoNotePriority_valueFromJson(json_object * js)
+VuoNotePriority VuoNotePriority_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -56,7 +56,7 @@ VuoNotePriority VuoNotePriority_valueFromJson(json_object * js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoNotePriority_jsonFromValue(const VuoNotePriority value)
+json_object * VuoNotePriority_getJson(const VuoNotePriority value)
 {
 	char *valueAsString = "first";
 
@@ -73,7 +73,7 @@ json_object * VuoNotePriority_jsonFromValue(const VuoNotePriority value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoNotePriority VuoNotePriority_allowedValues(void)
+VuoList_VuoNotePriority VuoNotePriority_getAllowedValues(void)
 {
 	VuoList_VuoNotePriority l = VuoListCreate_VuoNotePriority();
 	VuoListAppendValue_VuoNotePriority(l, VuoNotePriority_First);
@@ -86,7 +86,7 @@ VuoList_VuoNotePriority VuoNotePriority_allowedValues(void)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoNotePriority_summaryFromValue(const VuoNotePriority value)
+char * VuoNotePriority_getSummary(const VuoNotePriority value)
 {
 	char *valueAsString = "First Note";
 

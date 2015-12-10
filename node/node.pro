@@ -7,6 +7,7 @@ HEADERS += \
 	node.h
 
 SUBDIRS += \
+	vuo_artnet \
 	vuo.audio \
 	vuo.bcf2000 \
 	vuo.color \
@@ -32,6 +33,7 @@ SUBDIRS += \
 	vuo.osc \
 	vuo.point \
 	vuo.quaternion \
+	vuo.rss \
 	vuo_scene \
 	vuo.screen \
 	vuo.select \
@@ -41,8 +43,16 @@ SUBDIRS += \
 	vuo.time \
 	vuo.transform \
 	vuo.type \
+	vuo.ui \
 	vuo.video \
 	vuo.window
+
+vuo_artnet.subdir = vuo.artnet
+exists(vuo.artnet/premium) {
+	SUBDIRS += vuo_artnet_premium
+	vuo_artnet_premium.subdir = vuo.artnet/premium
+	vuo_artnet.depends = vuo_artnet_premium
+}
 
 vuo_image.subdir = vuo.image
 exists(vuo.image/premium) {

@@ -40,14 +40,11 @@ private slots:
 		QTest::newRow("MPEG Transport Stream")					<< "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts"													<<  28.7	<<  859	<<  640 <<  480	<< -2;
 		QTest::newRow("MPEG v2")								<< "/MovieGauntlet/interlaced/interlace_test2.mpeg"														<<  39.9	<<  998	<<  720 <<  576	<< -2;
 		QTest::newRow("MPEG v4 1")								<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.large1080p.mp4"								<<  24.0	<<  577	<<  320 <<  240	<<  0;
-		QTest::newRow("MPEG v4 AVC")							<< "/MovieGauntlet/audio+video synchronization/Lip Sync Test Markers.m4v"								<<  67.9	<< 2035	<<  640 <<  480	<<  0;
+//		QTest::newRow("MPEG v4 AVC")							<< "/MovieGauntlet/audio+video synchronization/Lip Sync Test Markers.m4v"								<<  67.9	<< 2035	<<  640 <<  480	<<  0;
 //hang	QTest::newRow("Ogg - Theora - Ogg LR")					<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.oggtheora.ogv"								<<  24.0	<<    0	<<  320 <<  240	<<  0;
 		QTest::newRow("Ogg - Theora - Ogg 5.1")					<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.ogg"											<<  19.5	<<  467	<<  320 <<  240	<< -6;
 		QTest::newRow("QuickTime - Animation - None")			<< "/MovieGauntlet/demo to mov3.mov"																	<<   1.0	<<   29	<<  640 <<  480	<<  0;
-
-		// testDecodeRandomPerformance fails with 'VuoMovie_seekToSecond(m, frameTime)' returned FALSE. Loc: [TestVuoVideo.cc(159)]
-//		QTest::newRow("QuickTime - H.264 - Lossless 5.1 - #1")	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov"				<<  19.5	<<  470	<< 1920 << 3240	<< -6;
-
+		QTest::newRow("QuickTime - H.264 - Lossless 5.1 - #1")	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov"				<<  19.5	<<  470	<< 1920 << 3240	<< -6;
 		QTest::newRow("QuickTime - H.264 - Lossless 5.1 - #2")	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/typewriter-barnyard — H.264 — Apple Lossless 5.1.mov"	<<  15.7	<<  377	<< 1440 <<  900	<< -6;
 		QTest::newRow("QuickTime - H.264 - Lossless LR")		<< "/MovieGauntlet/out-sd.mov"																			<< 275.2	<< 6598	<<  640 <<  360	<< -2;
 		QTest::newRow("QuickTime - Photo JPEG - None")			<< "/System/Library/Compositions/Fish.mov"																<<  13.2	<<  397	<<  640 <<  480	<<  0;

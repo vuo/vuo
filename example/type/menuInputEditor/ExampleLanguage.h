@@ -16,8 +16,8 @@ typedef enum {
 	ExampleLanguage_Mandarin
 } ExampleLanguage;
 
-ExampleLanguage ExampleLanguage_valueFromJson(struct json_object * js);
-struct json_object * ExampleLanguage_jsonFromValue(const ExampleLanguage value);
-char * ExampleLanguage_summaryFromValue(const ExampleLanguage value);
+ExampleLanguage ExampleLanguage_makeFromJson(struct json_object * js);
+struct json_object * ExampleLanguage_getJson(const ExampleLanguage value);
+char * ExampleLanguage_getSummary(const ExampleLanguage value);
 
 #endif

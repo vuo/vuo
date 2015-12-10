@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Scrolls",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "wheel" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
@@ -40,17 +40,19 @@ struct nodeInstanceData * nodeInstanceInit()
 void nodeInstanceTriggerStart
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoModifierKey) modifierKey,
 		VuoOutputTrigger(scrolled, VuoPoint2d)
 )
 {
 	(*context)->isTriggerStopped = false;
-	VuoMouse_startListeningForScrolls((*context)->scrolledListener, scrolled, modifierKey);
+	VuoMouse_startListeningForScrolls((*context)->scrolledListener, scrolled, window, modifierKey);
 }
 
 void nodeInstanceTriggerUpdate
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoModifierKey) modifierKey,
 		VuoOutputTrigger(scrolled, VuoPoint2d)
 )
@@ -58,12 +60,13 @@ void nodeInstanceTriggerUpdate
 	if ((*context)->isTriggerStopped)
 		return;
 	VuoMouse_stopListening((*context)->scrolledListener);
-	VuoMouse_startListeningForScrolls((*context)->scrolledListener, scrolled, modifierKey);
+	VuoMouse_startListeningForScrolls((*context)->scrolledListener, scrolled, window, modifierKey);
 }
 
 void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
 		VuoOutputTrigger(scrolled, VuoPoint2d, {"eventThrottling":"drop"})
 )
@@ -71,7 +74,7 @@ void nodeInstanceEvent
 	if ((*context)->isTriggerStopped)
 		return;
 	VuoMouse_stopListening((*context)->scrolledListener);
-	VuoMouse_startListeningForScrolls((*context)->scrolledListener, scrolled, modifierKey);
+	VuoMouse_startListeningForScrolls((*context)->scrolledListener, scrolled, window, modifierKey);
 }
 
 void nodeInstanceTriggerStop

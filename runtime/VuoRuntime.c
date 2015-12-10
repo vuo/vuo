@@ -49,7 +49,7 @@ dispatch_semaphore_t telemetryCanceledSemaphore;  ///< Signaled when telemetry e
 dispatch_semaphore_t controlCanceledSemaphore;  ///< Signaled when control events are no longer being processed.
 dispatch_semaphore_t waitForStopCanceledSemaphore;  ///< Signaled when no longer checking if the runner will stop the composition.
 
-static pid_t originalParentPid;  ///< Process ID of the runner that started the composition.
+static pid_t runnerPid;  ///< Process ID of the runner that started the composition.
 static void stopComposition(void);
 
 #include <graphviz/gvplugin.h>
@@ -128,6 +128,7 @@ void vuoInit(int argc, char **argv)
 	char *controlURL = NULL;
 	char *telemetryURL = NULL;
 	bool _isPaused = false;
+	pid_t _runnerPid = getppid();
 	bool doPrintHelp = false;
 	bool doPrintLicenses = false;
 
@@ -150,6 +151,7 @@ void vuoInit(int argc, char **argv)
 			{"vuo-telemetry", required_argument, NULL, 0},
 			{"vuo-pause", no_argument, NULL, 0},
 			{"vuo-loader", required_argument, NULL, 0},
+			{"vuo-runner", required_argument, NULL, 0},
 			{"vuo-licenses", no_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
@@ -178,7 +180,10 @@ void vuoInit(int argc, char **argv)
 					break;
 				case 4: // "vuo-loader" (ignored, but added here to avoid "unrecognized option" warning)
 					break;
-				case 5:  // --vuo-licenses
+				case 5: // "vuo-runner"
+					_runnerPid = atoi(optarg);
+					break;
+				case 6:  // --vuo-licenses
 					doPrintLicenses = true;
 					break;
 			}
@@ -270,7 +275,7 @@ void vuoInit(int argc, char **argv)
 	}
 
 	VuoHeap_init();
-	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused);
+	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused, _runnerPid);
 	free(controlURL);
 	free(telemetryURL);
 }
@@ -279,7 +284,7 @@ void vuoInit(int argc, char **argv)
  * Sets up ZMQ control and telemetry sockets, then calls the generated function @c setup().
  * If the composition is not paused, also calls @c nodeInstanceInit() and @c nodeInstanceTriggerStart().
  */
-void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused)
+void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid)
 {
 	if (controlURL && telemetryURL)
 	{
@@ -305,7 +310,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	isStopped = false;
 	isStopRequested = false;
 
-	originalParentPid = getppid();
+	runnerPid = _runnerPid;
 	waitForStopCanceledSemaphore = dispatch_semaphore_create(0);
 
 	// set up composition
@@ -1037,18 +1042,19 @@ void vuoStopComposition(void)
 						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
 						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC, NSEC_PER_SEC/10);
 						   dispatch_source_set_event_handler(waitForStopTimer, ^{
-																 if (getppid() != originalParentPid)
-																 {
-																	 // Runner has crashed, so composition needs to stop itself.
-																	 dispatch_sync(VuoControlQueue, ^{
-																		 stopComposition();
-																	 });
-																	 dispatch_source_cancel(waitForStopTimer);
-																 }
-															 });
+							   int ret = kill(runnerPid, 0);  // Doesn't actually kill it, just checks if it's running.
+							   if (ret != 0)
+							   {
+								   // Runner has crashed, so composition needs to stop itself.
+								   dispatch_sync(VuoControlQueue, ^{
+									   stopComposition();
+								   });
+								   dispatch_source_cancel(waitForStopTimer);
+							   }
+						   });
 						   dispatch_source_set_cancel_handler(waitForStopTimer, ^{
-																  dispatch_semaphore_signal(waitForStopCanceledSemaphore);
-															  });
+							   dispatch_semaphore_signal(waitForStopCanceledSemaphore);
+						   });
 						   dispatch_resume(waitForStopTimer);
 					   }
 					   else

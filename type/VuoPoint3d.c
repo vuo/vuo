@@ -42,7 +42,7 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoPoint3d VuoPoint3d_valueFromJson(json_object * js)
+VuoPoint3d VuoPoint3d_makeFromJson(json_object * js)
 {
 	VuoPoint3d point = {0,0,0};
 	json_object *o = NULL;
@@ -63,7 +63,7 @@ VuoPoint3d VuoPoint3d_valueFromJson(json_object * js)
  * @ingroup VuoPoint2d
  * Encodes @c value as a JSON object.
  */
-json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value)
+json_object * VuoPoint3d_getJson(const VuoPoint3d value)
 {
 	json_object *js = json_object_new_object();
 
@@ -83,7 +83,7 @@ json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value)
  * @ingroup VuoPoint3d
  * Returns a compact string representation of @c value (comma-separated coordinates).
  */
-char * VuoPoint3d_summaryFromValue(const VuoPoint3d value)
+char * VuoPoint3d_getSummary(const VuoPoint3d value)
 {
 	return VuoText_format("%g, %g, %g", value.x, value.y, value.z);
 }

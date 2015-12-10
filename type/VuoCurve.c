@@ -37,7 +37,7 @@ VuoModuleMetadata({
  * @ingroup VuoCurve
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoCurve.
  */
-VuoCurve VuoCurve_valueFromJson(json_object *js)
+VuoCurve VuoCurve_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -59,7 +59,7 @@ VuoCurve VuoCurve_valueFromJson(json_object *js)
  * @ingroup VuoCurve
  * Encodes @c value as a JSON object.
  */
-json_object * VuoCurve_jsonFromValue(const VuoCurve value)
+json_object * VuoCurve_getJson(const VuoCurve value)
 {
 	char *valueAsString = "linear";
 
@@ -78,7 +78,7 @@ json_object * VuoCurve_jsonFromValue(const VuoCurve value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoCurve VuoCurve_allowedValues(void)
+VuoList_VuoCurve VuoCurve_getAllowedValues(void)
 {
 	VuoList_VuoCurve l = VuoListCreate_VuoCurve();
 	VuoListAppendValue_VuoCurve(l, VuoCurve_Linear);
@@ -91,9 +91,9 @@ VuoList_VuoCurve VuoCurve_allowedValues(void)
 
 /**
  * @ingroup VuoCurve
- * Same as @c %VuoCurve_stringFromValue()
+ * Same as @c %VuoCurve_getString()
  */
-char * VuoCurve_summaryFromValue(const VuoCurve value)
+char * VuoCurve_getSummary(const VuoCurve value)
 {
 	char *valueAsString = "Linear";
 

@@ -8,6 +8,7 @@
  */
 
 #include "node.h"
+#include "VuoListPosition.h"
 
 VuoModuleMetadata({
 					 "title" : "Add to List",

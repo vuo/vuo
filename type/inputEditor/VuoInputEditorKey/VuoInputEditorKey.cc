@@ -25,7 +25,7 @@ void VuoInputEditorKey::setUpDialog(QDialog &dialog, json_object *originalValue,
 	comboBox = new VuoKeyComboBox(&dialog);
 	comboBox->adjustSize();
 
-	comboBox->setCurrentKey( VuoKey_valueFromJson(originalValue) );
+	comboBox->setCurrentKey( VuoKey_makeFromJson(originalValue) );
 }
 
 /**
@@ -33,5 +33,5 @@ void VuoInputEditorKey::setUpDialog(QDialog &dialog, json_object *originalValue,
  */
 json_object * VuoInputEditorKey::getAcceptedValue(void)
 {
-	return VuoKey_jsonFromValue( comboBox->getCurrentKey() );
+	return VuoKey_getJson( comboBox->getCurrentKey() );
 }

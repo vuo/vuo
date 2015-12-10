@@ -22,5 +22,5 @@ void nodeEvent
 		VuoOutputData(VuoReal) real
 )
 {
-	*real = VuoReal_valueFromString(text);
+	*real = VuoReal_makeFromString(text);
 }

@@ -109,7 +109,7 @@ VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_summaryFromValue(md), error.what());
+		VLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_getSummary(md), error.what());
 		if (midiout)
 			delete midiout;
 		return NULL;
@@ -152,6 +152,22 @@ void VuoMidiOut_sendController(VuoMidiOut mo, VuoMidiController controller)
 }
 
 /**
+ * Outputs the specified `pitchBend` event through the specified MIDI output device `mo`.
+ */
+void VuoMidiOut_sendPitchBend(VuoMidiOut mo, VuoMidiPitchBend pitchBend)
+{
+	if (!mo)
+		return;
+
+	RtMidiOut *midiout = (RtMidiOut *)mo;
+	std::vector<unsigned char> message;
+	message.push_back(0xE0 + MIN(pitchBend.channel-1,15));
+	message.push_back(pitchBend.value & 0x7f);
+	message.push_back((pitchBend.value >> 7) & 0x7f);
+	midiout->sendMessage(&message);
+}
+
+/**
  * Destroys a MIDI output device manager.
  */
 void VuoMidiOut_destroy(VuoMidiOut mo)
@@ -173,6 +189,7 @@ struct VuoMidiIn_internal
 	dispatch_queue_t callbackQueue;	///< Serializes access to the following callback functions.
 	void (*receivedNote)(void *, VuoMidiNote);	///< Called when a note is received.
 	void (*receivedController)(void *, VuoMidiController);	///< Called when a control change is received.
+	void (*receivedPitchBend)(void *, VuoMidiPitchBend);	///< Called when a pitch bend change is received.
 	void *context;	///< Caller's context data, to be passed to the callbacks.
 };
 
@@ -193,7 +210,12 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 	}
 	else if (((*message)[0] & 0xf0) == 0x90) // Note On
 	{
-		VuoMidiNote mn = VuoMidiNote_make(channel, true, (*message)[2], (*message)[1]);
+		unsigned char velocity = (*message)[2];
+
+		// Convert note-on messages with 0 velocity into note-off messages.
+		bool isNoteOn = (velocity != 0);
+
+		VuoMidiNote mn = VuoMidiNote_make(channel, isNoteOn, velocity, (*message)[1]);
 		dispatch_async(mii->callbackQueue, ^{
 						   if (mii->receivedNote)
 								mii->receivedNote(mii->context, mn);
@@ -205,6 +227,14 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 		dispatch_async(mii->callbackQueue, ^{
 						   if (mii->receivedController)
 								mii->receivedController(mii->context, mc);
+					   });
+	}
+	else if (((*message)[0] & 0xf0) == 0xe0) // Pitch Bend Change
+	{
+		VuoMidiPitchBend mp = VuoMidiPitchBend_make(channel, (*message)[1] + ((*message)[2] << 7));
+		dispatch_async(mii->callbackQueue, ^{
+						   if (mii->receivedPitchBend)
+							   mii->receivedPitchBend(mii->context, mp);
 					   });
 	}
 	else
@@ -269,7 +299,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_summaryFromValue(md), error.what());
+		VLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_getSummary(md), error.what());
 		if (midiin)
 			delete midiin;
 		return NULL;
@@ -288,6 +318,7 @@ void VuoMidiIn_enableTriggers
 		VuoMidiIn mi,
 		void (*receivedNote)(void *context, VuoMidiNote note),
 		void (*receivedController)(void *context, VuoMidiController controller),
+		void (*receivedPitchBend)(void *context, VuoMidiPitchBend pitchBend),
 		void *context
 )
 {
@@ -297,6 +328,7 @@ void VuoMidiIn_enableTriggers
 	dispatch_async(mii->callbackQueue, ^{
 					   mii->receivedNote = receivedNote;
 					   mii->receivedController = receivedController;
+					   mii->receivedPitchBend = receivedPitchBend;
 					   mii->context = context;
 				   });
 }

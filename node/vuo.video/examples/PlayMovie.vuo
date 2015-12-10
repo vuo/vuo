@@ -10,9 +10,9 @@
 digraph G
 {
 ConvertVideoFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="479,229"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-84,69" _started_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="66,74" _started_eventThrottling="enqueue"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="430,144"];
-PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="162,119" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+PlayMovie [type="vuo.video.play" version="2.0.0" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="220,117" fillcolor="violet" _url="\"\\/System\\/Library\\/Compositions\\/Sunset.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
 RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="471,118" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 ConvertVideoFrameToImage:image -> RenderImageToWindow:image;

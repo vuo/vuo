@@ -19,11 +19,11 @@ for header in $* ; do
 
 	echo "#include \"$header\"" >> $CORETYPES_HEADER
 
-	echo "__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), $TYPE), ${TYPE}_summaryFromValue(FORCETYPE(variable, $TYPE)), \\" >> $CORETYPES_STRINGIFY_C
+	echo "__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), $TYPE), ${TYPE}_getSummary(FORCETYPE(variable, $TYPE)), \\" >> $CORETYPES_STRINGIFY_C
 	PARENTHESES=")$PARENTHESES"
 
-	if [[ $header != *VuoListPosition.h ]] && [[ $header != *VuoWindowReference.h ]] ; then
-		echo "char *toString($TYPE variable) { return ${TYPE}_summaryFromValue(variable); } \\" >> $CORETYPES_STRINGIFY_CPP
+	if [[ $header != *VuoWindowReference.h ]] ; then
+		echo "char *toString($TYPE variable) { return ${TYPE}_getSummary(variable); } \\" >> $CORETYPES_STRINGIFY_CPP
 	fi
 
 	if [[ $header != VuoDictionary_* ]] && [[ $header != "VuoMathExpressionList.h" ]] ; then
@@ -31,11 +31,11 @@ for header in $* ; do
 
 		echo "#include \"VuoList_$header\"" >> $CORETYPES_HEADER
 
-		echo "__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), $TYPE), ${TYPE}_summaryFromValue(FORCETYPE(variable, $TYPE)), \\" >> $CORETYPES_STRINGIFY_C
+		echo "__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), $TYPE), ${TYPE}_getSummary(FORCETYPE(variable, $TYPE)), \\" >> $CORETYPES_STRINGIFY_C
 		PARENTHESES=")$PARENTHESES"
 
-		if [[ $header != *VuoListPosition.h ]] && [[ $header != *VuoWindowReference.h ]] ; then
-			echo "char *toString($TYPE variable) { return ${TYPE}_summaryFromValue(variable); } \\" >> $CORETYPES_STRINGIFY_CPP
+		if [[ $header != *VuoWindowReference.h ]] ; then
+			echo "char *toString($TYPE variable) { return ${TYPE}_getSummary(variable); } \\" >> $CORETYPES_STRINGIFY_CPP
 		fi
 	fi
 done

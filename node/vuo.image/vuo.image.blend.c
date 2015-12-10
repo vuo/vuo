@@ -21,13 +21,13 @@ VuoModuleMetadata({
 						"overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "light", "hard mix",
 						"difference", "exclusion", "subtract", "divide",
 						"hue", "saturation", "desaturate", "grayscale", "greyscale", "color", "luminosity", "filter" ],
-					 "version" : "1.2.0",
+					 "version" : "1.2.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "BlendImages.vuo" ]
+						 "exampleCompositions" : [ "BlendImages.vuo", "SimulateFilmProjector.vuo" ]
 					 }
 				 });
 
@@ -676,11 +676,15 @@ void nodeInstanceEvent
 				fragmentShaderSource = fragmentShaderSource_blendLuminosity;
 				break;
 		}
+
 		if( (*instance)->currentBlendMode >= 0 )
 			VuoRelease((*instance)->shader);
-		char *blendModeSummary = VuoBlendMode_summaryFromValue(blendMode);
+
+		char *blendModeSummary = VuoBlendMode_getSummary(blendMode);
 		(*instance)->shader = VuoShader_make(blendModeSummary);
+
 		free(blendModeSummary);
+
 		VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 		VuoRetain((*instance)->shader);
 		(*instance)->currentBlendMode = blendMode;

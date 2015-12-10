@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Crop Image Pixels",
 					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -37,6 +37,7 @@ static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -50,6 +51,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Crop Image Pixels Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, cropFragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -89,21 +94,18 @@ void nodeInstanceEvent
 	else
 		h = height;
 
-	VuoShader frag = VuoShader_make("Crop Image Pixels Shader");
-	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, cropFragmentShader);
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage(frag, "texture", image);
-	VuoShader_setUniform_VuoReal (frag, "x",       uv_x);
-	VuoShader_setUniform_VuoReal (frag, "y",       uv_y);
-	VuoShader_setUniform_VuoReal (frag, "width",   uv_w);
-	VuoShader_setUniform_VuoReal (frag, "height",  uv_h);
-	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "x",       uv_x);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "y",       uv_y);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "width",   uv_w);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "height",  uv_h);
 
-	VuoRelease(frag);
+	*croppedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

@@ -1,0 +1,50 @@
+/**
+ * @file
+ * Shows a live video feed from your iSight camera. When you click, it switches to a repeating instant replay of the last moment before the click.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1180,454" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="286,43"];
+ConvertFrameToImage4 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="829,256"];
+CycleThroughList2 [type="vuo.list.cycle.VuoVideoFrame" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="660,229" _wrapMode="\"wrap\""];
+Enqueue2 [type="vuo.list.enqueue.VuoVideoFrame" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="489,222" _maxItemCount="60"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-98,219" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1342,160" fillcolor="green"];
+MakeList7 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1372,175" fillcolor="green"];
+MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1120,153" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="980,468" _text="\"Click to switch between live video and instant replay.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":36.000000,\"underline\":false,\"color\":{\"r\":0.909543,\"g\":1.000000,\"b\":0.013456,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.100000}"];
+ReceiveLiveVideo [type="vuo.video.receive" version="1.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="67,159" fillcolor="violet" _receivedFrame_eventThrottling="drop"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-57,-86" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1413,149" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoVideoFrame" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="871,165"];
+SelectOutput2 [type="vuo.select.out.boolean.VuoVideoFrame" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="298,235"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="143,-64"];
+
+AlignLayerToWindow:alignedLayer -> MakeList:2;
+BecameTrue:becameTrue -> CycleThroughList2:goToFirst;
+ConvertFrameToImage4:image -> MakeScaledLayer2:image;
+CycleThroughList2:item -> SelectInput2:trueOption;
+Enqueue2:list -> CycleThroughList2:list;
+FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> ReceiveLiveVideo:start;
+MakeList7:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeScaledLayer2:layer -> MakeList:1;
+MakeTextLayer:layer -> AlignLayerToWindow:layer;
+ReceiveLiveVideo:receivedFrame -> CycleThroughList2:goForward;
+ReceiveLiveVideo:receivedFrame -> SelectInput2:falseOption;
+ReceiveLiveVideo:receivedFrame -> SelectOutput2:in;
+ReceiveMouseButtons:pressed -> Toggle:toggle;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+SelectInput2:out -> ConvertFrameToImage4:frame;
+SelectOutput2:falseOption -> Enqueue2:addItem;
+Toggle:value -> BecameTrue:value;
+Toggle:value -> SelectInput2:which;
+Toggle:value -> SelectOutput2:which;
+}

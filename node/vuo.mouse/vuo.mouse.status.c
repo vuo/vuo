@@ -12,8 +12,8 @@
 
 VuoModuleMetadata({
 					  "title" : "Check Mouse Status",
-					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "button", "press" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "button", "press", "get", "current" ],
+					  "version" : "1.0.1",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
@@ -30,6 +30,9 @@ void nodeEvent
 		VuoOutputData(VuoBoolean) isPressed
 )
 {
+	if (window && !VuoWindowReference_isFocused(window))
+		return;
+
 	*position = VuoMouse_getPosition(window);
 	*isPressed = VuoMouse_isPressed(button, modifierKey);
 }

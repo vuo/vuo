@@ -24,6 +24,6 @@ void nodeEvent
 		VuoOutputData(VuoText) summary
 )
 {
-	*summary = VuoGenericType1_summaryFromValue(value);
+	*summary = VuoGenericType1_getSummary(value);
 	VuoRegister(*summary, free);
 }

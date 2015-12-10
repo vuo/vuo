@@ -60,7 +60,7 @@ VuoModuleMetadata({
 void VuoListDestroy_ELEMENT_TYPE(void *list);
 
 
-LIST_TYPE LIST_TYPE_valueFromJson(json_object * js)
+LIST_TYPE LIST_TYPE_makeFromJson(json_object * js)
 {
 	LIST_TYPE list = VuoListCreate_ELEMENT_TYPE();
 
@@ -70,7 +70,7 @@ LIST_TYPE LIST_TYPE_valueFromJson(json_object * js)
 		for (int i = 0; i < itemCount; ++i)
 		{
 			json_object *itemObject = json_object_array_get_idx(js, i);
-			ELEMENT_TYPE item = ELEMENT_TYPE_valueFromJson(itemObject);
+			ELEMENT_TYPE item = ELEMENT_TYPE_makeFromJson(itemObject);
 			VuoListAppendValue_ELEMENT_TYPE(list, item);
 		}
 	}
@@ -78,7 +78,7 @@ LIST_TYPE LIST_TYPE_valueFromJson(json_object * js)
 	return list;
 }
 
-json_object * LIST_TYPE_jsonFromValue(const LIST_TYPE value)
+json_object * LIST_TYPE_getJson(const LIST_TYPE value)
 {
 	json_object *listObject = json_object_new_array();
 
@@ -86,14 +86,14 @@ json_object * LIST_TYPE_jsonFromValue(const LIST_TYPE value)
 	for (unsigned long i = 1; i <= itemCount; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValue_ELEMENT_TYPE(value, i);
-		json_object *itemObject = ELEMENT_TYPE_jsonFromValue(item);
+		json_object *itemObject = ELEMENT_TYPE_getJson(item);
 		json_object_array_add(listObject, itemObject);
 	}
 
 	return listObject;
 }
 
-char * LIST_TYPE_summaryFromValue(const LIST_TYPE value)
+char * LIST_TYPE_getSummary(const LIST_TYPE value)
 {
 	if (!value)
 		return strdup("(empty list)");
@@ -112,7 +112,7 @@ char * LIST_TYPE_summaryFromValue(const LIST_TYPE value)
 	for (unsigned long i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValue_ELEMENT_TYPE(value, i);
-		char *itemSummary = ELEMENT_TYPE_summaryFromValue(item);
+		char *itemSummary = ELEMENT_TYPE_getSummary(item);
 		if (strlen(itemSummary))
 			summary << "<li>" << itemSummary << "</li>";
 		else
@@ -162,7 +162,7 @@ ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned l
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	if (l->size() == 0)
-		return ELEMENT_TYPE_valueFromJson(NULL);
+		return ELEMENT_TYPE_makeFromJson(NULL);
 
 	if (index == 0)
 		return (*l)[0];

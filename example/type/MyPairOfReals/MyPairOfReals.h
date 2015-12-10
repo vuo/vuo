@@ -17,12 +17,12 @@ typedef struct
 	VuoReal first,second;
 } MyPairOfReals;
 
-MyPairOfReals MyPairOfReals_valueFromJson(struct json_object * js);
-struct json_object * MyPairOfReals_jsonFromValue(const MyPairOfReals value);
-char * MyPairOfReals_summaryFromValue(const MyPairOfReals value);
+MyPairOfReals MyPairOfReals_makeFromJson(struct json_object * js);
+struct json_object * MyPairOfReals_getJson(const MyPairOfReals value);
+char * MyPairOfReals_getSummary(const MyPairOfReals value);
 
-MyPairOfReals MyPairOfReals_valueFromString(const char *str);
-char * MyPairOfReals_stringFromValue(const MyPairOfReals value);
+MyPairOfReals MyPairOfReals_makeFromString(const char *str);
+char * MyPairOfReals_getString(const MyPairOfReals value);
 
 static inline MyPairOfReals MyPairOfReals_make(VuoReal first, VuoReal second) __attribute__((const));
 static inline MyPairOfReals MyPairOfReals_make(VuoReal first, VuoReal second)

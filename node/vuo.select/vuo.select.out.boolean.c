@@ -16,7 +16,7 @@ VuoModuleMetadata({
 						"boolean", "0", "1", "true", "false" ],
 					 "version" : "2.0.0",
 					 "node": {
-						  "exampleCompositions" : [ "RotateOneSquareAtATime.vuo", "CountDown.vuo" ]
+						  "exampleCompositions" : [ "RotateOneSquareAtATime.vuo" ]
 					 }
 				 });
 

@@ -98,16 +98,16 @@ VuoRectangle VuoPoint2d_rectangleUnion(VuoRectangle rectangleA, VuoRectangle rec
  *   }
  * }
  */
-VuoPoint2d VuoPoint2d_valueFromJson(json_object * js)
+VuoPoint2d VuoPoint2d_makeFromJson(json_object * js)
 {
 	VuoPoint2d point = {0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "x", &o))
-		point.x = VuoReal_valueFromJson(o);
+		point.x = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "y", &o))
-		point.y = VuoReal_valueFromJson(o);
+		point.y = VuoReal_makeFromJson(o);
 
 	return point;
 }
@@ -116,14 +116,14 @@ VuoPoint2d VuoPoint2d_valueFromJson(json_object * js)
  * @ingroup VuoPoint2d
  * Encodes @c value as a JSON object.
  */
-json_object * VuoPoint2d_jsonFromValue(const VuoPoint2d value)
+json_object * VuoPoint2d_getJson(const VuoPoint2d value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *xObject = VuoReal_jsonFromValue(value.x);
+	json_object *xObject = VuoReal_getJson(value.x);
 	json_object_object_add(js, "x", xObject);
 
-	json_object *yObject = VuoReal_jsonFromValue(value.y);
+	json_object *yObject = VuoReal_getJson(value.y);
 	json_object_object_add(js, "y", yObject);
 
 	return js;
@@ -133,7 +133,7 @@ json_object * VuoPoint2d_jsonFromValue(const VuoPoint2d value)
  * @ingroup VuoPoint2d
  * Returns a compact string representation of @c value (comma-separated coordinates).
  */
-char * VuoPoint2d_summaryFromValue(const VuoPoint2d value)
+char * VuoPoint2d_getSummary(const VuoPoint2d value)
 {
 	return VuoText_format("%g, %g", value.x, value.y);
 }

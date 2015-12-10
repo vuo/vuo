@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G 
+{
+Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add1|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="533,178"];
+ConvertIntegertoText1 [type="vuo.type.integer.text" version="1.0.0" label="ConvertIntegertoText1|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="711,207"];
+DisplayConsoleWindow1 [type="vuo.console.window" version="1.0.0" label="DisplayConsoleWindow1|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="957,266" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.0" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="71,59" _seconds="1" _fired_eventThrottling="enqueue"];
+Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="247,133" _initialValue="11"];
+MakeList1 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList1|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="487,189" _2="5"];
+
+Add1:sum -> ConvertIntegertoText1:integer;
+Add1:sum -> Hold1:newValue;
+ConvertIntegertoText1:text -> DisplayConsoleWindow1:writeLine;
+FirePeriodically1:fired -> Hold1:refresh;
+Hold1:heldValue -> MakeList1:1;
+MakeList1:list -> Add1:values;
+}

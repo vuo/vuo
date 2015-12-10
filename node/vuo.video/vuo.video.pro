@@ -33,6 +33,7 @@ TYPE_SOURCES += \
 	VuoVideoInputDevice.c
 
 NODE_LIBRARY_INCLUDEPATH = \
+	../vuo.font \
 	$${FFMPEG_ROOT}/include \
 	$${FFMPEG_ROOT}/include/libavcodec \
 	$${FFMPEG_ROOT}/include/libavformat \

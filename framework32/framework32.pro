@@ -87,6 +87,7 @@ TYPE_AND_LIBRARY_FLAGS = \
 	-I$$ROOT/library \
 	-I$$ROOT/library/shader \
 	-I$$ROOT/node \
+	-I$$ROOT/node/vuo.font \
 	-I$$ROOT/runtime \
 	-I$$ROOT/type \
 	-I$$ROOT/type/list \

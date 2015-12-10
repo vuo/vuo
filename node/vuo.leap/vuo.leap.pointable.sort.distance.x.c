@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "organize", "order", "nearest", "point" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "PlayTennisWithLeap.vuo" ]
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

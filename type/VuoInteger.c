@@ -27,7 +27,7 @@ VuoModuleMetadata({
  * @ingroup VuoInteger
  * Decodes the JSON object @c js, expected to contain a 64-bit integer, to create a new value.
  */
-VuoInteger VuoInteger_valueFromJson(json_object * js)
+VuoInteger VuoInteger_makeFromJson(json_object * js)
 {
 	return json_object_get_int64(js);
 }
@@ -36,7 +36,7 @@ VuoInteger VuoInteger_valueFromJson(json_object * js)
  * @ingroup VuoInteger
  * Encodes @c value as a JSON object.
  */
-json_object * VuoInteger_jsonFromValue(const VuoInteger value)
+json_object * VuoInteger_getJson(const VuoInteger value)
 {
 	return json_object_new_int64(value);
 }
@@ -45,9 +45,9 @@ json_object * VuoInteger_jsonFromValue(const VuoInteger value)
  * @ingroup VuoInteger
  * Always shows the full value, since it's guaranteed to be pretty short.
  */
-char * VuoInteger_summaryFromValue(const VuoInteger value)
+char * VuoInteger_getSummary(const VuoInteger value)
 {
-	json_object *js = VuoInteger_jsonFromValue(value);
+	json_object *js = VuoInteger_getJson(value);
 	char *summary = strdup(json_object_to_json_string_ext(js,JSON_C_TO_STRING_PLAIN));
 	json_object_put(js);
 	return summary;

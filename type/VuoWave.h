@@ -32,17 +32,17 @@ typedef enum {
 	VuoWave_Sawtooth
 } VuoWave;
 
-VuoWave VuoWave_valueFromJson(struct json_object * js);
-struct json_object * VuoWave_jsonFromValue(const VuoWave value);
-VuoList_VuoWave VuoWave_allowedValues(void);
-char * VuoWave_summaryFromValue(const VuoWave value);
+VuoWave VuoWave_makeFromJson(struct json_object * js);
+struct json_object * VuoWave_getJson(const VuoWave value);
+VuoList_VuoWave VuoWave_getAllowedValues(void);
+char * VuoWave_getSummary(const VuoWave value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoWave VuoWave_valueFromString(const char *str);
-char * VuoWave_stringFromValue(const VuoWave value);
+VuoWave VuoWave_makeFromString(const char *str);
+char * VuoWave_getString(const VuoWave value);
 void VuoWave_retain(VuoWave value);
 void VuoWave_release(VuoWave value);
 /// @}

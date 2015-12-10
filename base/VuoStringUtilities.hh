@@ -30,6 +30,8 @@ public:
 	static string transcodeFromGraphvizIdentifier(const string &graphvizIdentifier);
 	static string generateHtmlFromMarkdown(const string &markdownString);
 	static string generateHtmlFromMarkdownLine(const string &markdownString);
+
+	static string expandCamelCase(string camelCaseString);
 };
 
 

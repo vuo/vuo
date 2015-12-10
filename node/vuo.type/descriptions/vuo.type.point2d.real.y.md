@@ -1,1 +1,1 @@
-Outputs just the y-coordinate of a 2D point (x,y).
+Outputs just the Y-coordinate of a 2D point (X,Y).

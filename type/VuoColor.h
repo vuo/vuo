@@ -35,9 +35,10 @@ typedef struct
 	float r,g,b,a;
 } VuoColor;
 
-VuoColor VuoColor_valueFromJson(struct json_object * js);
-struct json_object * VuoColor_jsonFromValue(const VuoColor value);
-char * VuoColor_summaryFromValue(const VuoColor value);
+VuoColor VuoColor_makeFromJson(struct json_object * js);
+struct json_object * VuoColor_getJson(const VuoColor value);
+char * VuoColor_getSummary(const VuoColor value);
+bool VuoColor_areEqual(const VuoColor value1, const VuoColor value2);
 
 /**
  * Returns a @c VuoColor with the given red, green, blue, alpha.
@@ -73,8 +74,8 @@ VuoColor VuoColor_average(VuoList_VuoColor colors);
 /**
  * Automatically generated function.
  */
-VuoColor VuoColor_valueFromString(const char *str);
-char * VuoColor_stringFromValue(const VuoColor value);
+VuoColor VuoColor_makeFromString(const char *str);
+char * VuoColor_getString(const VuoColor value);
 void VuoColor_retain(VuoColor value);
 void VuoColor_release(VuoColor value);
 /// @}

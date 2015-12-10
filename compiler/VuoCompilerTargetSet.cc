@@ -52,6 +52,20 @@ void VuoCompilerTargetSet::restrictToCurrentOperatingSystemVersion(void)
 }
 
 /**
+ * Restricts the target set to the intersection between it and the other target set.
+ */
+void VuoCompilerTargetSet::restrictToBeCompatibleWithAllOf(const VuoCompilerTargetSet &other)
+{
+	if (! (other.macVersionRange.first == MacVersion_Any ||
+		   (macVersionRange.first != MacVersion_Any && macVersionRange.first >= other.macVersionRange.first)) )
+		macVersionRange.first = other.macVersionRange.first;
+
+	if (! (other.macVersionRange.second == MacVersion_Any ||
+		   (macVersionRange.second != MacVersion_Any && macVersionRange.second <= other.macVersionRange.second)) )
+		macVersionRange.second = other.macVersionRange.second;
+}
+
+/**
  * Returns true if this target set is a superset of the other target set.
  */
 bool VuoCompilerTargetSet::isCompatibleWithAllOf(const VuoCompilerTargetSet &other) const

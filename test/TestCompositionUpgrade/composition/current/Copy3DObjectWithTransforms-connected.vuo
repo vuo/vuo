@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,14 +11,6 @@
 
 digraph G
 {
-Copy3DObjectWithTransforms [type="vuo.scene.copy" version="2.0.0" label="Copy 3D Object with Transforms|<refresh>refresh\l|<object>object\l|<transforms>transforms\l|<copies>copies\r" pos="375,338"];
-MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="691,397"];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="640,367"];
-MakeList8 [type="vuo.list.make.2.VuoTransform" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="329,364"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="737,356" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-
-Copy3DObjectWithTransforms:copies -> MakeList2:1;
-MakeList2:list -> RenderSceneToWindow2:objects;
-MakeList8:list -> Copy3DObjectWithTransforms:transforms;
-MakeList:list -> RenderSceneToWindow2:setWindowProperties;
+Copy3DObjectWithTransforms [type="vuo.scene.copy" version="1.0.0" label="Copy 3D Object with Transforms|<refresh>refresh\l|<object>object\l|<transforms>transforms\l|<done>done\r|<copies>copies\r" pos="375,338"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.0.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<windowProperties>windowProperties\l|<done>done\r|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="737,356" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 }

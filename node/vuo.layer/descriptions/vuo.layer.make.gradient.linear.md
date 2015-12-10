@@ -2,8 +2,8 @@ Creates a gradient that transitions smoothly between the given colors along a st
 
    - `Name` — A name to identify the layer, allowing other nodes to select it from a group of layers. 
    - `Colors` — The colors to transition between, in order from start to end.
-   - `Gradient Start` - The point where the first color begins transitioning to the next color, in Vuo coordinates. 
-   - `Gradient End` - The point where the next-to-last color finishes transitioning to the last color, in Vuo coordinates.
+   - `Gradient Start` - The point where the first color begins transitioning to the next color, in Vuo coordinates relative to a layer whose corners are at (-1, -1) and (1, 1). 
+   - `Gradient End` - The point where the next-to-last color finishes transitioning to the last color, in Vuo coordinates relative to a layer whose corners are at (-1, -1) and (1, 1).
    - `Layer Center` — The center point of the output layer, in Vuo coordinates.
    - `Layer Rotation` — The output layer's rotation counterclockwise, in degrees.
    - `Layer Width` — The output layer's width, in Vuo coordinates.

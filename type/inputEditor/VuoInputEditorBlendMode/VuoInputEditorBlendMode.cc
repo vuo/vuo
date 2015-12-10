@@ -27,8 +27,8 @@ VuoInputEditor * VuoInputEditorBlendModeFactory::newInputEditor()
  */
 static void addBlendMode(VuoInputEditorMenuItem *menu, VuoBlendMode blendMode)
 {
-	json_object *optionAsJson = VuoBlendMode_jsonFromValue(blendMode);
-	char *optionSummary = VuoBlendMode_summaryFromValue(blendMode);
+	json_object *optionAsJson = VuoBlendMode_getJson(blendMode);
+	char *optionSummary = VuoBlendMode_getSummary(blendMode);
 	VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson);
 	free(optionSummary);
 	menu->addItem(optionItem);

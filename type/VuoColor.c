@@ -45,22 +45,22 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoColor VuoColor_valueFromJson(json_object * js)
+VuoColor VuoColor_makeFromJson(json_object * js)
 {
 	VuoColor color = {0,0,0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "r", &o))
-		color.r = VuoReal_valueFromJson(o);
+		color.r = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "g", &o))
-		color.g = VuoReal_valueFromJson(o);
+		color.g = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "b", &o))
-		color.b = VuoReal_valueFromJson(o);
+		color.b = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "a", &o))
-		color.a = VuoReal_valueFromJson(o);
+		color.a = VuoReal_makeFromJson(o);
 
 	return color;
 }
@@ -69,17 +69,17 @@ VuoColor VuoColor_valueFromJson(json_object * js)
  * @ingroup VuoColor
  * Encodes @c value as a JSON object.
  */
-json_object * VuoColor_jsonFromValue(const VuoColor value)
+json_object * VuoColor_getJson(const VuoColor value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object_object_add(js, "r", VuoReal_jsonFromValue(value.r));
+	json_object_object_add(js, "r", VuoReal_getJson(value.r));
 
-	json_object_object_add(js, "g", VuoReal_jsonFromValue(value.g));
+	json_object_object_add(js, "g", VuoReal_getJson(value.g));
 
-	json_object_object_add(js, "b", VuoReal_jsonFromValue(value.b));
+	json_object_object_add(js, "b", VuoReal_getJson(value.b));
 
-	json_object_object_add(js, "a", VuoReal_jsonFromValue(value.a));
+	json_object_object_add(js, "a", VuoReal_getJson(value.a));
 
 	return js;
 }
@@ -88,7 +88,7 @@ json_object * VuoColor_jsonFromValue(const VuoColor value)
  * @ingroup VuoColor
  * Returns a compact string representation of @c value (comma-separated components).
  */
-char * VuoColor_summaryFromValue(const VuoColor value)
+char * VuoColor_getSummary(const VuoColor value)
 {
 	return VuoText_format("%g, %g, %g, %g", value.r, value.g, value.b, value.a);
 }
@@ -189,4 +189,15 @@ VuoColor VuoColor_average(VuoList_VuoColor colors)
 	result.b /= result.a;
 	result.a /= colorCount;
 	return result;
+}
+
+/**
+ * Returns true if both colors have the same intensity and alpha values.
+ */
+bool VuoColor_areEqual(const VuoColor value1, const VuoColor value2)
+{
+	return VuoReal_areEqual(value1.r, value2.r)
+		&& VuoReal_areEqual(value1.g, value2.g)
+		&& VuoReal_areEqual(value1.b, value2.b)
+		&& VuoReal_areEqual(value1.a, value2.a);
 }

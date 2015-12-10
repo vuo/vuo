@@ -50,7 +50,7 @@ private:
 		{
 			compiler->compileComposition(compositionPath, bcPath);
 		}
-		compiler->linkCompositionToCreateExecutable(bcPath, exePath);
+		compiler->linkCompositionToCreateExecutable(bcPath, exePath, VuoCompiler::Optimization_FastBuild);
 		remove(bcPath.c_str());
 
 		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, "", true);
@@ -99,7 +99,7 @@ private:
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
 		compiler->compileComposition(compositionPath, bcPath);
-		compiler->linkCompositionToCreateDynamicLibrary(bcPath, dylibPath);
+		compiler->linkCompositionToCreateDynamicLibrary(bcPath, dylibPath, VuoCompiler::Optimization_FastBuild);
 		remove(bcPath.c_str());
 
 		VuoRunner * runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(dylibPath, compositionDir, true);
@@ -723,9 +723,9 @@ private:
 
 			// For this value to be in sync with valueAsString, the composition needs to have been paused before the next event fired.
 			// The firing rate of the composition is set slow enough that the composition is very likely to be paused in time.
-			VuoInteger countFromRunner = VuoInteger_valueFromJson( runner->getOutputPortValue(countPortIdentifier) );
+			VuoInteger countFromRunner = VuoInteger_makeFromJson( runner->getOutputPortValue(countPortIdentifier) );
 
-			VuoInteger incrementFromRunner = VuoInteger_valueFromJson( runner->getInputPortValue(incrementPortIdentifier) );
+			VuoInteger incrementFromRunner = VuoInteger_makeFromJson( runner->getInputPortValue(incrementPortIdentifier) );
 			VuoInteger countFromSummary = atol(dataSummary.c_str());
 
 			if (timesCountSentEvent == 0)
@@ -742,8 +742,8 @@ private:
 				QCOMPARE(countFromRunner, expectedCount);
 
 				incrementPortValue = 100;
-				runner->setInputPortValue(incrementPortIdentifier, VuoInteger_jsonFromValue(incrementPortValue));
-				runner->setInputPortValue(decrementPortIdentifier, VuoInteger_jsonFromValue(2));
+				runner->setInputPortValue(incrementPortIdentifier, VuoInteger_getJson(incrementPortValue));
+				runner->setInputPortValue(decrementPortIdentifier, VuoInteger_getJson(2));
 			}
 			else if (timesCountSentEvent == 2)
 			{
@@ -754,7 +754,7 @@ private:
 				QCOMPARE(countFromRunner, expectedCount);
 
 				incrementPortValue = 1000;
-				runner->setInputPortValue(incrementPortIdentifier, VuoInteger_jsonFromValue(incrementPortValue));
+				runner->setInputPortValue(incrementPortIdentifier, VuoInteger_getJson(incrementPortValue));
 			}
 			else if (timesCountSentEvent == 3)
 			{
@@ -843,7 +843,7 @@ private:
 
 			// For this value to be in sync with valueAsString, the composition needs to have been paused before the next event fired.
 			// The firing rate of the composition is set slow enough that the composition is very likely to be paused in time.
-			VuoInteger countFromRunner = VuoInteger_valueFromJson( runner->getOutputPortValue(firedPortIdentifier.c_str()) );
+			VuoInteger countFromRunner = VuoInteger_makeFromJson( runner->getOutputPortValue(firedPortIdentifier.c_str()) );
 
 			VuoInteger countFromSummary = atol(dataSummary.c_str());
 
@@ -1179,9 +1179,9 @@ private:
 			QVERIFY(publishedIn1 != NULL);
 			QVERIFY(publishedSum != NULL);
 
-			QCOMPARE((VuoInteger)0, VuoInteger_valueFromJson(runner->getPublishedInputPortValue(publishedIn0)));
-			runner->setPublishedInputPortValue(publishedIn0, VuoInteger_jsonFromValue(100));
-			QCOMPARE((VuoInteger)100, VuoInteger_valueFromJson(runner->getPublishedInputPortValue(publishedIn0)));
+			QCOMPARE((VuoInteger)0, VuoInteger_makeFromJson(runner->getPublishedInputPortValue(publishedIn0)));
+			runner->setPublishedInputPortValue(publishedIn0, VuoInteger_getJson(100));
+			QCOMPARE((VuoInteger)100, VuoInteger_makeFromJson(runner->getPublishedInputPortValue(publishedIn0)));
 
 			runner->unpause();
 			runner->waitUntilStopped();
@@ -1202,10 +1202,10 @@ private:
 			if (timesSumChanged == 1)
 			{
 				QCOMPARE(sumFromSummary, (VuoInteger)201);
-				VuoInteger sumFromRunner = VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) );
+				VuoInteger sumFromRunner = VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) );
 				QCOMPARE(sumFromRunner, (VuoInteger)201);
 
-				runner->setPublishedInputPortValue(publishedIn1, VuoInteger_jsonFromValue(1000));
+				runner->setPublishedInputPortValue(publishedIn1, VuoInteger_getJson(1000));
 			}
 			else
 			{
@@ -1217,7 +1217,7 @@ private:
 				else
 				{
 					QCOMPARE(sumFromSummary, (VuoInteger)1201);
-					VuoInteger sumFromRunner = VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) );
+					VuoInteger sumFromRunner = VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) );
 					QCOMPARE(sumFromRunner, (VuoInteger)1201);
 
 					dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -1293,15 +1293,15 @@ private:
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("42"));
 
-				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_jsonFromValue(3));
+				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_getJson(3));
 				runner->firePublishedInputPortEvent(publishedDecrementBoth);
 			}
 			else if (timesSumChanged == 2)
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("36"));
 
-				runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(1));
-				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_jsonFromValue(5));
+				runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1));
+				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_getJson(5));
 				runner->firePublishedInputPortEvent();
 			}
 			else if (timesSumChanged == 3)
@@ -1345,7 +1345,7 @@ private slots:
 			{
 				runner->firePublishedInputPortEvent(publishedIncrement1);
 				runner->waitForAnyPublishedOutputPortEvent();
-				VuoInteger publishedCount1Value = VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedCount1) );
+				VuoInteger publishedCount1Value = VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) );
 				QCOMPARE(publishedCount1Value, *i);
 			}
 
@@ -1372,8 +1372,8 @@ private slots:
 				runner->firePublishedInputPortEvent(publishedIncrement2);
 				sleep(1);
 				runner->waitForAnyPublishedOutputPortEvent();
-				QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), *i);
-				QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), *i);
+				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), *i);
+				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), *i);
 			}
 
 			runner->stop();
@@ -1395,13 +1395,13 @@ private slots:
 
 			runner->firePublishedInputPortEvent(publishedIncrement1);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)10);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)10);
 
 			runner->firePublishedInputPortEvent(publishedIncrement2);
 			sleep(1);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)100);
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)100);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)100);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)100);
 
 			runner->stop();
 			delete runner;
@@ -1439,11 +1439,11 @@ private slots:
 		QCOMPARE(outPorts.size(), (size_t)1);
 		VuoRunner::Port *outPort = outPorts[0];
 
-		runner->setPublishedInputPortValue(inPort, VuoInteger_jsonFromValue(49));
+		runner->setPublishedInputPortValue(inPort, VuoInteger_getJson(49));
 		runner->firePublishedInputPortEvent(inPort);
 
 		json_object *outPortValue = runner->getPublishedOutputPortValue(outPort);
-		QCOMPARE(VuoInteger_valueFromJson(outPortValue), (VuoInteger)0);
+		QCOMPARE(VuoInteger_makeFromJson(outPortValue), (VuoInteger)0);
 
 		runner->stop();
 		delete runner;
@@ -1487,12 +1487,12 @@ private:
 			if (timesCountUpdated == 1)
 			{
 				QVERIFY(sentData);
-				QCOMPARE(QString::fromStdString(dataSummary), QString(VuoInteger_summaryFromValue(1)));
+				QCOMPARE(QString::fromStdString(dataSummary), QString(VuoInteger_getSummary(1)));
 			}
 			else if (timesCountUpdated == 2)
 			{
 				QVERIFY(sentData);
-				QCOMPARE(QString::fromStdString(dataSummary), QString(VuoInteger_summaryFromValue(2)));
+				QCOMPARE(QString::fromStdString(dataSummary), QString(VuoInteger_getSummary(2)));
 
 				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 								   runner->stop();
@@ -1691,10 +1691,10 @@ private slots:
 			QVERIFY(publishedSum != NULL);
 
 			// "Count1:increment" becomes 10, "Count1:count" becomes 10, "Add1:sum" becomes 10 + 0 = 10.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(10));
+			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(10));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)10);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)10);
 		}
 
 		// Replace the composition with an identical one.
@@ -1709,10 +1709,10 @@ private slots:
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// "Count1:increment" becomes 100, "Count1:count" becomes 110, "Add1:sum" becomes 110 + 0 = 110.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(100));
+			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)110);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)110);
 		}
 
 		// Replace the composition with one in which a cable's endpoint has been changed.
@@ -1754,10 +1754,10 @@ private slots:
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// "Count1:increment" becomes 1000, "Count1:count" becomes 1110, "Add1:sum" becomes 1110 + 1110 = 2220.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(1000));
+			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1000));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)2220);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)2220);
 		}
 
 		// Replace the composition with one in which a stateful node has been added.
@@ -1804,18 +1804,18 @@ private slots:
 			// "Count1:increment" becomes 10000, "Count1:count" becomes 11110,
 			// "Count3:increment" becomes 11110, "Count3:count" becomes 11110,
 			// "Add1:sum" becomes 11110 + 11110 = 22220.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(10000));
+			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(10000));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)22220);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)22220);
 
 			// "Count1:increment" becomes 100000, "Count1:count" becomes 111110,
 			// "Count3:increment" becomes 111110, "Count3:count" becomes 122220,
 			// "Add1:sum" becomes 111110 + 122220 = 233330.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(100000));
+			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(100000));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)233330);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)233330);
 		}
 
 		// Replace the latest composition with the original composition.
@@ -1834,10 +1834,10 @@ private slots:
 			delete originalComposition;
 
 			// "Count1:increment" becomes 1000000, "Count1:count" becomes 1111110, "Add1:sum" becomes 1111110 + 122220 = 1233330.
-			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_jsonFromValue(1000000));
+			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1000000));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_valueFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)1233330);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)1233330);
 		}
 
 		runner->stop();

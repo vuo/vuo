@@ -28,7 +28,7 @@ VuoModuleMetadata({
  * @ingroup VuoDispersion
  * Decodes the JSON object @c js to create a new value.
  */
-VuoDispersion VuoDispersion_valueFromJson(json_object * js)
+VuoDispersion VuoDispersion_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -46,7 +46,7 @@ VuoDispersion VuoDispersion_valueFromJson(json_object * js)
  * @ingroup VuoDispersion
  * Encodes @c value as a JSON object.
  */
-json_object * VuoDispersion_jsonFromValue(const VuoDispersion value)
+json_object * VuoDispersion_getJson(const VuoDispersion value)
 {
 	char *valueAsString = "linear";
 
@@ -60,7 +60,7 @@ json_object * VuoDispersion_jsonFromValue(const VuoDispersion value)
  * @ingroup VuoDispersion
  * Returns a compact string representation of @c value.
  */
-char * VuoDispersion_summaryFromValue(const VuoDispersion value)
+char * VuoDispersion_getSummary(const VuoDispersion value)
 {
 	char *valueAsString = "Linear";
 

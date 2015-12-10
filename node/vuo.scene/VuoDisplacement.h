@@ -26,16 +26,16 @@ typedef enum {
 	VuoDisplacement_Longitudinal
 } VuoDisplacement;
 
-VuoDisplacement VuoDisplacement_valueFromJson(struct json_object * js);
-struct json_object * VuoDisplacement_jsonFromValue(const VuoDisplacement value);
-char * VuoDisplacement_summaryFromValue(const VuoDisplacement value);
+VuoDisplacement VuoDisplacement_makeFromJson(struct json_object * js);
+struct json_object * VuoDisplacement_getJson(const VuoDisplacement value);
+char * VuoDisplacement_getSummary(const VuoDisplacement value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoDisplacement VuoDisplacement_valueFromString(const char *str);
-char * VuoDisplacement_stringFromValue(const VuoDisplacement value);
+VuoDisplacement VuoDisplacement_makeFromString(const char *str);
+char * VuoDisplacement_getString(const VuoDisplacement value);
 void VuoDisplacement_retain(VuoDisplacement value);
 void VuoDisplacement_release(VuoDisplacement value);
 ///@}

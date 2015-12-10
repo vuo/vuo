@@ -23,14 +23,14 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "GraphFunctions.vuo", "PaintWithMath.vuo" ]
+						  "exampleCompositions" : [ "GraphFunctions.vuo" ]
 					  }
 				 });
 
 
 void nodeEvent
 (
-		VuoInputData(VuoMathExpressionList, {"default":{"expressions":["a + b"],"inputVariables":["a","b"],"outputVariables":["result"]}}) expression,
+		VuoInputData(VuoMathExpressionList, {"default":{"expressions":["A + B"],"inputVariables":["A","B"],"outputVariables":["Result"]}}) expression,
 		VuoInputData(VuoDictionary_VuoText_VuoReal) values,
 		VuoOutputData(VuoReal) result
 )

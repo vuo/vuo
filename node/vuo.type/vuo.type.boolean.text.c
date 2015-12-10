@@ -24,7 +24,7 @@ void nodeEvent
 		VuoOutputData(VuoText) text
 )
 {
-	char *textAsCString = VuoBoolean_stringFromValue(boolean);
+	char *textAsCString = VuoBoolean_getString(boolean);
 	*text = VuoText_make(textAsCString);
 	free(textAsCString);
 }

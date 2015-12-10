@@ -397,7 +397,7 @@ private:
 			int ret;
 			if ((ret = avcodec_open2(container.aCodecCtx, aCodec, NULL)) < 0)
 			{
-				VLog("Failed opening audio context: %s", av_err2str(ret));
+				VLog("Unsupported audio codec %s: %s", AVCodecIDToString(container.aCodecCtx->codec_id), av_err2str(ret));
 				container.audioStreamIndex = -1;
 			}
 			else
@@ -610,11 +610,8 @@ private:
 			} while( container.currentAudioTimestampUSEC - container.avOffset < container.currentVideoTimestampUSEC );
 		}
 
-		// VLog("vid: %f  audio: %f", container.currentVideoTimestampUSEC * SEC_PER_USEC, container.currentAudioTimestampUSEC * SEC_PER_USEC);
-
-		return container.currentVideoPTS < frame;
-
-		/// @todo (https://b33p.net/kosada/node/6598)
+		// `<=` because `0 == 0`, and in the event that we actually are a single frame too far ahead, well, that's okay too. 
+		return container.currentVideoPTS <= frame;
 	}
 
 	VuoImage vuoImageWithAvFrame(AVCodecContext *pCodecCtx, AVFrame* pFrame)

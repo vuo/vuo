@@ -32,17 +32,17 @@ typedef struct
 	VuoInteger channelCount;	///< The number of output channels on this device.
 } VuoAudioOutputDevice;
 
-VuoAudioOutputDevice VuoAudioOutputDevice_valueFromJson(struct json_object * js);
-struct json_object * VuoAudioOutputDevice_jsonFromValue(const VuoAudioOutputDevice value);
-char * VuoAudioOutputDevice_summaryFromValue(const VuoAudioOutputDevice value);
+VuoAudioOutputDevice VuoAudioOutputDevice_makeFromJson(struct json_object * js);
+struct json_object * VuoAudioOutputDevice_getJson(const VuoAudioOutputDevice value);
+char * VuoAudioOutputDevice_getSummary(const VuoAudioOutputDevice value);
 bool VuoAudioOutputDevice_areEqual(VuoAudioOutputDevice value1, VuoAudioOutputDevice value2);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoAudioOutputDevice VuoAudioOutputDevice_valueFromString(const char *str);
-char * VuoAudioOutputDevice_stringFromValue(const VuoAudioOutputDevice value);
+VuoAudioOutputDevice VuoAudioOutputDevice_makeFromString(const char *str);
+char * VuoAudioOutputDevice_getString(const VuoAudioOutputDevice value);
 void VuoAudioOutputDevice_retain(VuoAudioOutputDevice value);
 void VuoAudioOutputDevice_release(VuoAudioOutputDevice value);
 ///@}

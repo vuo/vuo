@@ -20,7 +20,6 @@
 
 @interface Document : NSDocument
 {
-    std::string compositionAsString; // The Vuo composition, represented as a .vuo source string.
 	double time; // The current filter execution time.
 	NSImage *sourceImage; // The initial, unfiltered image.
 	VuoImageFilter *imageFilter; // Used to start, stop, control, and query the composition.

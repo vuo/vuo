@@ -15,7 +15,7 @@ VuoModuleMetadata({
 						  "limit", "capacity", "queue", "fifo", "first in first out", "recent", "hold", "store" ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions": [ "ShowInstantReplay.vuo" ]
+						  "exampleCompositions": [ ]
 					  }
 				 });
 

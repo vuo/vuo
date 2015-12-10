@@ -114,16 +114,16 @@ VuoMesh VuoMesh_copy(const VuoMesh mesh);
 const char *VuoMesh_cStringForElementAssemblyMethod(VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
 VuoBox VuoMesh_bounds(const VuoMesh mesh, float matrix[16]);
 
-VuoMesh VuoMesh_valueFromJson(struct json_object * js);
-struct json_object * VuoMesh_jsonFromValue(const VuoMesh value);
-char * VuoMesh_summaryFromValue(const VuoMesh value);
+VuoMesh VuoMesh_makeFromJson(struct json_object * js);
+struct json_object * VuoMesh_getJson(const VuoMesh value);
+char * VuoMesh_getSummary(const VuoMesh value);
 
 ///@{
 /**
  * Automatically generated function.
  */
-VuoMesh VuoMesh_valueFromString(const char *str);
-char * VuoMesh_stringFromValue(const VuoMesh value);
+VuoMesh VuoMesh_makeFromString(const char *str);
+char * VuoMesh_getString(const VuoMesh value);
 void VuoMesh_retain(const VuoMesh v);
 void VuoMesh_release(const VuoMesh v);
 ///@}

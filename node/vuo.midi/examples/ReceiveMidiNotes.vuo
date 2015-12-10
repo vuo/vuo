@@ -1,25 +1,26 @@
 /**
-* @file
-* Receives MIDI notes from a MIDI device and plays them aloud. 
-*
-* @copyright Copyright © 2012–2014 Kosada Incorporated.
-* This code may be modified and distributed under the terms of the MIT License.
-* For more information, see http://vuo.org/license.
-*/
+ * @file
+ * Receives MIDI notes and pitch bend messages from MIDI Channel 1 of the default MIDI device and plays them aloud. 
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
 
 digraph G
 {
-AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="566,267"];
+AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="594,272"];
 ConvertIntegerToRealNumber3 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="295,278"];
-ConvertNoteNumberToFrequency [type="vuo.midi.note.frequency" version="2.0.0" label="Convert Note to Frequency|<refresh>refresh\l|<noteNumber>noteNumber\l|<frequency>frequency\r" pos="80,287" fillcolor="violet"];
+ConvertNoteNumberToFrequency [type="vuo.midi.note.frequency" version="2.0.0" label="Convert Note to Frequency|<refresh>refresh\l|<noteNumber>noteNumber\l|<pitchBend>pitchBend\l|<pitchBendRange>pitchBendRange\l|<frequency>frequency\r" pos="140,287" fillcolor="violet" _pitchBendRange="12"];
 Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="220,132" _b="127.000000"];
-FilterMonophonicNote [type="vuo.midi.track.note.mono" version="1.0.0" label="Track Single Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumberMin>noteNumberMin\l|<noteNumberMax>noteNumberMax\l|<notePriority>notePriority\l|<reset>reset\l|<noteNumber>noteNumber\r|<velocity>velocity\r" pos="-95,117" fillcolor="violet" _channel="1" _noteNumberMin="0" _noteNumberMax="127" _notePriority="\"last\""];
+FilterMonophonicNote [type="vuo.midi.track.note.mono" version="1.0.0" label="Track Single Note|<refresh>refresh\l|<note>note\l|<channel>channel\l|<noteNumberMin>noteNumberMin\l|<noteNumberMax>noteNumberMax\l|<notePriority>notePriority\l|<reset>reset\l|<noteNumber>noteNumber\r|<velocity>velocity\r" pos="-115,117" fillcolor="violet" _channel="1" _noteNumberMin="0" _noteNumberMax="127" _notePriority="\"last\""];
+FilterPitchBend [type="vuo.midi.filter.pitchBend" version="1.0.0" label="Filter Pitch Bend|<refresh>refresh\l|<pitchBend>pitchBend\l|<channel>channel\l|<value>value\r" pos="-94,302" fillcolor="violet" _channel="1"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="252,61" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<samples>samples\r" pos="361,267" _wave="\"sine\""];
-MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="520,278"];
-ReceiveMIDIEvents [type="vuo.midi.receive" version="2.0.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r" pos="-290,117" fillcolor="violet" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue"];
+MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<samples>samples\r" pos="389,272" _wave="\"sine\""];
+MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="548,283"];
+ReceiveMIDIEvents [type="vuo.midi.receive" version="2.1.0" label="Receive MIDI Events|<refresh>refresh\l|<device>device\l|<receivedNote>receivedNote\r|<receivedController>receivedController\r|<receivedPitchBend>receivedPitchBend\r" pos="-330,117" fillcolor="violet" _receivedNote_eventThrottling="enqueue" _receivedController_eventThrottling="enqueue" _receivedPitchBend_eventThrottling="enqueue"];
 SelectLatest6 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="401,117"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="760,252" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="758,257" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
 SmoothWithInertia2 [type="vuo.motion.smooth.inertia.VuoReal" version="1.0.1" label="Smooth with Inertia|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<position>position\r" pos="563,87" _setPosition="0.000000" _duration="0.050000"];
 
 AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
@@ -28,10 +29,12 @@ ConvertNoteNumberToFrequency:frequency -> MakeAudioWave:frequency;
 Divide:quotient -> SelectLatest6:option2;
 FilterMonophonicNote:noteNumber -> ConvertNoteNumberToFrequency:noteNumber;
 FilterMonophonicNote:velocity -> ConvertIntegerToRealNumber3:integer;
+FilterPitchBend:value -> ConvertNoteNumberToFrequency:pitchBend;
 FireOnStart:started -> SelectLatest6:option1;
 MakeAudioWave:samples -> MakeList3:1;
 MakeList3:list -> AdjustLoudness:samples;
 ReceiveMIDIEvents:receivedNote -> FilterMonophonicNote:note;
+ReceiveMIDIEvents:receivedPitchBend -> FilterPitchBend:pitchBend;
 SelectLatest6:latest -> SmoothWithInertia2:setTarget;
 SendLiveAudio:requestedChannels -> MakeAudioWave:refresh;
 SendLiveAudio:requestedChannels -> SmoothWithInertia2:time;

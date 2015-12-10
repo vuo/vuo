@@ -14,6 +14,9 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorCurve.json
 
+INCLUDEPATH += \
+	$$ROOT/node/vuo.image
+
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/type/VuoCurve.o \

@@ -1134,7 +1134,7 @@ QString VuoRendererNode::generateNodeClassToolTipTitle(VuoNodeClass *nodeClass, 
 /**
  * Generates a formatted description to be incorporated into the tooltip for the input @c nodeClass.
  */
-QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass)
+QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass, string smallTextColor)
 {
 	string className;
 	string description;
@@ -1161,20 +1161,26 @@ QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClas
 	else
 	{
 		className = nodeClass->getClassName();
-		description = "This node is not installed.";
-		string descriptionFromNodeClass = nodeClass->getDescription();
-		if (! descriptionFromNodeClass.empty())
-			description += "\n\n" + descriptionFromNodeClass;
+		description = nodeClass->getDescription();
+		if (description.empty())
+			description = "This node is not installed. "
+						  "You can either remove it from the composition or install it on your computer.";
 	}
 
 	description = VuoStringUtilities::generateHtmlFromMarkdown(description);
 
 	QString tooltipBody;
-	tooltipBody.append(QString("<font size=+1 color=\"gray\">%1</font>").arg(description.c_str()));
-	tooltipBody.append(QString("<p><font color=\"gray\">%1</font><br>").arg(className.c_str()));
+	tooltipBody.append(QString("<font size=+1 color=\"%2\">%1</font>")
+					   .arg(description.c_str())
+					   .arg(smallTextColor.c_str()));
+	tooltipBody.append(QString("<p><font color=\"%2\">%1</font><br>")
+					   .arg(className.c_str())
+					   .arg(smallTextColor.c_str()));
 
 	if (nodeClass->hasCompiler())
-		tooltipBody.append(QString("<font color=\"gray\">Version %1</font></p>").arg(version.c_str()));
+		tooltipBody.append(QString("<font color=\"%2\">Version %1</font></p>")
+						   .arg(version.c_str())
+						   .arg(smallTextColor.c_str()));
 
 	return tooltipBody;
 }

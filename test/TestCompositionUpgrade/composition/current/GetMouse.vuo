@@ -11,14 +11,10 @@
 
 digraph G
 {
-Count [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="471,230" _increment="1" _decrement="1" _setCount="0"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="50,70" _started_eventThrottling="enqueue"];
-Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="452,69"];
-Get2DPointValues2 [type="vuo.point.get.VuoPoint2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="448,346" _point="{\"x\":0,\"y\":0}"];
-GetMouse2 [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="202,263"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.0" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="146,62" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-
-FireOnStart:started -> GetMouse2:refresh;
-GetMouse2:movedTo -> Get2DPointValues2:point;
-ReceiveMouseMoves:movedTo -> Get2DPointValues:point;
+Count [type="vuo.math.count.integer" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<done>done\r|<count>count\r" pos="465,310" _increment="1" _decrement="1" _setCount="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<done>done\r|<started>started\r" pos="13,269"];
+Get2DPointValues [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="440,126"];
+Get2DPointValues3 [type="vuo.point.get.2d" version="1.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<done>done\r|<x>x\r|<y>y\r" pos="442,410"];
+GetMouse [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="188,70"];
+GetMouse2 [type="vuo.mouse" version="1.0.0" label="Get Mouse|<refresh>refresh\l|<done>done\r|<position>position\r|<isLeftPressed>isLeftPressed\r|<isMiddlePressed>isMiddlePressed\r|<isRightPressed>isRightPressed\r|<movedTo>movedTo\r|<movedBy>movedBy\r|<scrolled>scrolled\r|<usedButton>usedButton\r" pos="198,290"];
 }

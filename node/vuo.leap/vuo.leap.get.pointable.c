@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "controller", "motion", "finger", "tool" ],
 					  "version" : "2.0.0",
 					  "node": {
-						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo", "PlayFingerPuppetsWithLeap.vuo" ]
+						  "exampleCompositions" : [ "DisplayLeapHand.vuo", "HighlightExtendedFingers.vuo" ]
 					  }
 				  });
 

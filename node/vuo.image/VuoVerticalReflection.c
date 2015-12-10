@@ -31,7 +31,7 @@ VuoModuleMetadata({
  * @ingroup VuoVerticalReflection
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoVerticalReflection.
  */
-VuoVerticalReflection VuoVerticalReflection_valueFromJson(json_object *js)
+VuoVerticalReflection VuoVerticalReflection_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -51,7 +51,7 @@ VuoVerticalReflection VuoVerticalReflection_valueFromJson(json_object *js)
  * @ingroup VuoVerticalReflection
  * Encodes @c value as a JSON object.
  */
-json_object * VuoVerticalReflection_jsonFromValue(const VuoVerticalReflection value)
+json_object * VuoVerticalReflection_getJson(const VuoVerticalReflection value)
 {
 	char *valueAsString = "";
 
@@ -75,7 +75,7 @@ json_object * VuoVerticalReflection_jsonFromValue(const VuoVerticalReflection va
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoVerticalReflection VuoVerticalReflection_allowedValues(void)
+VuoList_VuoVerticalReflection VuoVerticalReflection_getAllowedValues(void)
 {
 	VuoList_VuoVerticalReflection l = VuoListCreate_VuoVerticalReflection();
 	VuoListAppendValue_VuoVerticalReflection(l, VuoVerticalReflection_None);
@@ -87,7 +87,7 @@ VuoList_VuoVerticalReflection VuoVerticalReflection_allowedValues(void)
  * @ingroup VuoVerticalReflection
  * Returns a human-readable description of @a value.
  */
-char * VuoVerticalReflection_summaryFromValue(const VuoVerticalReflection value)
+char * VuoVerticalReflection_getSummary(const VuoVerticalReflection value)
 {
 	char *valueAsString = "";
 

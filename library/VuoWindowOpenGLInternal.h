@@ -22,7 +22,7 @@
  */
 @interface VuoWindowOpenGLView : NSOpenGLView
 {
-	void (*initCallback)(VuoGlContext glContext, void *);  ///< Initializes the OpenGL context.
+	void (*initCallback)(VuoGlContext glContext, float backingScaleFactor, void *);  ///< Initializes the OpenGL context.
 	bool initCallbackCalled;	///< Has the init callback already been called?
 	void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int width, unsigned int height);  ///< Updates the OpenGL context when the view is resized.
 	void (*drawCallback)(VuoGlContext glContext, void *);  ///< Draws onto the OpenGL context.
@@ -38,7 +38,7 @@
 }
 
 - (id)initWithFrame:(NSRect)frame
-		 initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+		 initCallback:(void (*)(VuoGlContext glContext, float backingScaleFactor, void *))_initCallback
 	   resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
 		 drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 		  drawContext:(void *)_drawContext;
@@ -52,7 +52,7 @@
 
 @property(retain) VuoWindowOpenGLInternal *glWindow;  ///< The parent window; allows the view to access it while full-screen.
 @property(retain) NSOpenGLContext *windowedGlContext;  ///< The OpenGL context from Vuo's context pool; allows the windw to access it while the view is full-screen.
-@property dispatch_queue_t drawQueue;	///< Queue to ensure that multiple threads don't attempt to draw to the same window simultaneously.
+@property(assign) dispatch_queue_t drawQueue;	///< Queue to ensure that multiple threads don't attempt to draw to the same window simultaneously.
 @property NSRect viewport;	///< The viewport in which we're rendering (it might not match the view's dimensions), relative to the parent view.  In points (not pixels).
 
 @end
@@ -73,6 +73,8 @@
 
 	NSRect contentRectWhenWindowed;
 	NSUInteger styleMaskWhenWindowed;
+
+	void (*showedWindow)(VuoWindowReference window);  ///< Callback to invoke when the window is shown, moved, and resized.
 }
 
 @property(retain) VuoWindowOpenGLView *glView;  ///< The OpenGL view inside this window.
@@ -80,13 +82,14 @@
 @property NSRect contentRectWhenWindowed;  ///< The position and size of the window's content area, prior to switching to full-screen.  In points (not pixels).
 @property NSUInteger styleMaskWhenWindowed;  ///< The window's style mask, prior to switching to full-screen.
 @property VuoCursor cursor;  ///< The current mouse cursor for this window.
+@property(retain) NSString *titleBackup;	///< The window's title (stored since it gets cleared when switching to fullscreen mode).
 
 - (id)initWithDepthBuffer:(BOOL)depthBuffer
-			  initCallback:(void (*)(VuoGlContext glContext, void *))initCallback
+			  initCallback:(void (*)(VuoGlContext glContext, float backingScaleFactor, void *))initCallback
 			resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))resizeCallback
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))drawCallback
 			   drawContext:(void *)drawContext;
-- (void)enableTriggers;
+- (void)enableTriggers:(void (*)(VuoWindowReference))showedWindow;
 - (void)disableTriggers;
 - (void)scheduleRedraw;
 - (void)setProperties:(VuoList_VuoWindowProperty)properties;

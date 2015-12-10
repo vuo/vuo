@@ -4,6 +4,6 @@ When the composition starts or this node is added to a running composition, it d
 
    - `Layers` — The layers that make up the composite image. The layers are placed in the order listed, with the first layer in back and the last layer in front. 
    - `Set Window Properties` — A list of properties that affect the appearance of the window or the way the user can interact with it. The properties are applied to the window in order from first to last in the list. Each property remains in effect until this port receives some other property that overrides it. 
-   - `Showed Window` — When the window is displayed, fires an event with a reference to the window. It can be sent to user interaction nodes (such as `Receive Mouse Clicks`) to limit their scope to this window. 
+   - `Showed Window` — Fires an event with a reference to the window when it is first shown, and whenever it is moved or resized. It can be sent to user interaction nodes (such as `Receive Mouse Clicks`) to limit their scope to this window. 
    - `Requested Frame` — When the display is ready for the next frame, fires an event with the time at which the frame will be rendered, measured in seconds since the composition started.
    - `Rendered Layers` — The layers, transformed to their positions in the composite image. 

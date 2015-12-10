@@ -39,9 +39,9 @@ typedef struct
 	VuoPoint3d size;
 } VuoBox;
 
-VuoPoint3d VuoPoint3d_valueFromJson(struct json_object * js);
-struct json_object * VuoPoint3d_jsonFromValue(const VuoPoint3d value);
-char * VuoPoint3d_summaryFromValue(const VuoPoint3d value);
+VuoPoint3d VuoPoint3d_makeFromJson(struct json_object * js);
+struct json_object * VuoPoint3d_getJson(const VuoPoint3d value);
+char * VuoPoint3d_getSummary(const VuoPoint3d value);
 
 VuoPoint3d VuoPoint3d_random(const VuoPoint3d minimum, const VuoPoint3d maximum);
 VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d minimum, const VuoPoint3d maximum);
@@ -50,8 +50,8 @@ VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d 
 /**
  * Automatically generated function.
  */
-VuoPoint3d VuoPoint3d_valueFromString(const char *str);
-char * VuoPoint3d_stringFromValue(const VuoPoint3d value);
+VuoPoint3d VuoPoint3d_makeFromString(const char *str);
+char * VuoPoint3d_getString(const VuoPoint3d value);
 void VuoPoint3d_retain(VuoPoint3d value);
 void VuoPoint3d_release(VuoPoint3d value);
 /// @}

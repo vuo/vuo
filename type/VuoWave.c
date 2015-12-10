@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoWave
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoWave.
  */
-VuoWave VuoWave_valueFromJson(json_object *js)
+VuoWave VuoWave_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -54,7 +54,7 @@ VuoWave VuoWave_valueFromJson(json_object *js)
  * @ingroup VuoWave
  * Encodes @c value as a JSON object.
  */
-json_object * VuoWave_jsonFromValue(const VuoWave value)
+json_object * VuoWave_getJson(const VuoWave value)
 {
 	char *valueAsString = "";
 
@@ -76,7 +76,7 @@ json_object * VuoWave_jsonFromValue(const VuoWave value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoWave VuoWave_allowedValues(void)
+VuoList_VuoWave VuoWave_getAllowedValues(void)
 {
 	VuoList_VuoWave l = VuoListCreate_VuoWave();
 	VuoListAppendValue_VuoWave(l, VuoWave_Sine);
@@ -87,9 +87,9 @@ VuoList_VuoWave VuoWave_allowedValues(void)
 
 /**
  * @ingroup VuoWave
- * Same as @c %VuoWave_stringFromValue()
+ * Same as @c %VuoWave_getString()
  */
-char * VuoWave_summaryFromValue(const VuoWave value)
+char * VuoWave_getSummary(const VuoWave value)
 {
 	char *valueAsString = "";
 

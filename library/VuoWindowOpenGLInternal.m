@@ -26,6 +26,7 @@ VuoModuleMetadata({
 						 "VuoGLContext",
 						 "VuoScreenCommon",
 						 "VuoWindowProperty",
+						 "VuoWindowReference",
 						 "VuoList_VuoWindowProperty",
 						 "OpenGL.framework"
 					 ]
@@ -76,7 +77,7 @@ VuoModuleMetadata({
  * @threadMain
  */
 - (id)initWithFrame:(NSRect)frame
-		   initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+		   initCallback:(void (*)(VuoGlContext glContext, float backingScaleFactor, void *))_initCallback
 		 resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
 		   drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 			drawContext:(void *)_drawContext
@@ -150,7 +151,16 @@ VuoModuleMetadata({
 						  NSOpenGLContext *glContext = [self openGLContext];
 						  CGLContextObj cgl_ctx = [glContext CGLContextObj];
 						  CGLLockContext(cgl_ctx);
-						  initCallback(cgl_ctx, drawContext);
+
+						  float backingScaleFactor = 1;
+						  if ([[self window] respondsToSelector:@selector(backingScaleFactor)])
+						  {
+							  typedef double (*backingFuncType)(id receiver, SEL selector);
+							  backingFuncType backingFunc = (backingFuncType)[[[self window] class] instanceMethodForSelector:@selector(backingScaleFactor)];
+							  backingScaleFactor = backingFunc([self window], @selector(backingScaleFactor));
+						  }
+
+						  initCallback(cgl_ctx, backingScaleFactor, drawContext);
 						  [glContext flushBuffer];
 						  CGLUnlockContext(cgl_ctx);
 					  });
@@ -394,6 +404,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 
 		NSSize car = [self.window contentAspectRatio];
 		[self.window setStyleMask:((VuoWindowOpenGLInternal *)self.window).styleMaskWhenWindowed];
+		[self.window setTitle:((VuoWindowOpenGLInternal *)self.window).titleBackup];
 		if (!NSEqualSizes(car, NSMakeSize(0,0)))
 			[self.window setContentAspectRatio:car];
 
@@ -447,6 +458,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 @synthesize contentRectWhenWindowed;
 @synthesize styleMaskWhenWindowed;
 @synthesize cursor;
+@synthesize titleBackup;
 
 /**
  * Creates a window containing an OpenGL view.
@@ -454,7 +466,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
  * @threadMain
  */
 - (id)initWithDepthBuffer:(BOOL)_depthBuffer
-			  initCallback:(void (*)(VuoGlContext glContext, void *))_initCallback
+			  initCallback:(void (*)(VuoGlContext glContext, float backingScaleFactor, void *))_initCallback
 			resizeCallback:(void (*)(VuoGlContext glContext, void *, unsigned int width, unsigned int height))_resizeCallback
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 			   drawContext:(void *)_drawContext
@@ -520,6 +532,15 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 }
 
 /**
+ * Store the title, so we can re-apply it after returning from fullscreen mode.
+ */
+- (void)setTitle:(NSString *)title
+{
+	self.titleBackup = title;
+	[super setTitle:title];
+}
+
+/**
  * Releases instance variables.
  */
 - (void)windowWillClose:(NSNotification *)notification
@@ -566,10 +587,12 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
  *
  * @threadAny
  */
-- (void)enableTriggers
+- (void)enableTriggers:(void (*)(VuoWindowReference))_showedWindow
 {
 	callbacksEnabled = YES;
 
+	showedWindow = _showedWindow;
+	showedWindow(VuoWindowReference_make(self));
 	[glView enableTriggers];
 }
 
@@ -582,6 +605,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 {
 	callbacksEnabled = NO;
 
+	showedWindow = NULL;
 	[glView disableTriggers];
 }
 
@@ -606,7 +630,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 	for (unsigned int i = 1; i <= propertyCount; ++i)
 	{
 		VuoWindowProperty property = VuoListGetValue_VuoWindowProperty(properties, i);
-//		VLog("%s",VuoWindowProperty_summaryFromValue(property));
+//		VLog("%s",VuoWindowProperty_getSummary(property));
 
 		if (property.type == VuoWindowProperty_Title)
 			[self setTitle:[NSString stringWithUTF8String:property.title]];
@@ -689,11 +713,20 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
  */
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh
 {
+	NSSize newAspect = NSMakeSize(pixelsWide, pixelsHigh);
+	if (NSEqualSizes([self contentAspectRatio], newAspect))
+		return;
+
 	// Sets the constraint when the user resizes the window (but doesn't affect the window's current size).
-	[self setContentAspectRatio:NSMakeSize(pixelsWide, pixelsHigh)];
+	[self setContentAspectRatio:newAspect];
 
 	if ([glView isFullScreen])
+	{
+		if (showedWindow)
+			showedWindow(VuoWindowReference_make(self));
+		[glView reshape];
 		return;
+	}
 
 	CGFloat desiredWidth = pixelsWide;
 	CGFloat desiredHeight = pixelsHigh;
@@ -738,6 +771,9 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 	programmaticallyResizingWindow = YES;
 	[self setFrame:newWindowFrame display:YES];
 	programmaticallyResizingWindow = NO;
+
+	if (showedWindow)
+		showedWindow(VuoWindowReference_make(self));
 }
 
 /**
@@ -751,14 +787,30 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 }
 
 /**
- * Keeps track of whether the user has manually resized the window.
+ * Keeps track of whether the user has manually resized the window,
+ * and fires the window-properties-changed callback.
  *
  * @threadMain
  */
 - (void)windowDidResize:(NSNotification *)notification
 {
 	if (! programmaticallyResizingWindow)
+	{
 		userResizedWindow = YES;
+		if (showedWindow)
+			showedWindow(VuoWindowReference_make(self));
+	}
+}
+
+/**
+ * Fires the window-properties-changed callback.
+ *
+ * @threadMain
+ */
+- (void)windowDidMove:(NSNotification *)notification
+{
+	if (showedWindow && !programmaticallyResizingWindow)
+		showedWindow(VuoWindowReference_make(self));
 }
 
 /**

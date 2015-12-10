@@ -13,15 +13,17 @@
 
 VuoModuleMetadata({
 					  "title" : "Make Radial Gradient Image",
-					  "keywords" : [ "backdrop", "background", "ramp", "interpolate", "color" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "backdrop", "background", "ramp", "interpolate", "color",
+									 "circle", "oval", "ellipse", "rounded" ],
+					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "CompareImageGenerators.vuo" ]
+						  "exampleCompositions" : [ "MoveRadialGradient.vuo" ]
 					  }
 				 });
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -35,6 +37,14 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	VuoList_VuoColor colors = VuoListCreate_VuoColor();
+	VuoRetain(colors);
+
+	instance->shader = VuoShader_makeRadialGradientShader(colors, VuoPoint2d_make(0., 0.), 1., 1., 1.);
+	VuoRetain(instance->shader);
+
+	VuoRelease(colors);
 
 	return instance;
 }
@@ -51,17 +61,36 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_makeRadialGradientShader(colors, center, radius, width, height);
-	VuoRetain(shader);
+	// VuoPoint2d scale = width < height ? VuoPoint2d_make(1., height/(float)width) : VuoPoint2d_make(width/(float)height, 1.);
+	VuoPoint2d scale = VuoPoint2d_make(1., height/(float)width);
+
+	int len = VuoListGetCount_VuoColor(colors);
+	unsigned char* pixels = (unsigned char*)malloc(sizeof(char)*len*4);
+	int n = 0;
+	for(int i = 1; i <= len; i++)
+	{
+		VuoColor col = VuoListGetValue_VuoColor(colors, i);
+		pixels[n++] = (unsigned int)(col.a*col.r*255);
+		pixels[n++] = (unsigned int)(col.a*col.g*255);
+		pixels[n++] = (unsigned int)(col.a*col.b*255);
+		pixels[n++] = (unsigned int)(col.a*255);
+	}
+
+	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_RGBA, len, 1, VuoImageColorDepth_8);
+
+	VuoShader_setUniform_VuoImage  ((*instance)->shader, "gradientStrip", gradientStrip);
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "gradientCount", len);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "center", VuoPoint2d_make((center.x+1)/2, (center.y+1)/2));
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "radius", radius > 0. ? radius/2. : 0);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "scale",  VuoPoint2d_make(scale.x, scale.y));
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
-
-	VuoRelease(shader);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

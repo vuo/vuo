@@ -49,11 +49,11 @@ private slots:
 		QFETCH(bool, valid);
 		QFETCH(QString, summary);
 
-		VuoMidiNote v = VuoMidiNote_valueFromString(value.toUtf8().data());
+		VuoMidiNote v = VuoMidiNote_makeFromString(value.toUtf8().data());
 		if (valid)
 		{
-			QCOMPARE(QString::fromUtf8(VuoMidiNote_stringFromValue(v)), value);
-			QCOMPARE(QString::fromUtf8(VuoMidiNote_summaryFromValue(v)), summary);
+			QCOMPARE(QString::fromUtf8(VuoMidiNote_getString(v)), value);
+			QCOMPARE(QString::fromUtf8(VuoMidiNote_getSummary(v)), summary);
 		}
 	}
 };

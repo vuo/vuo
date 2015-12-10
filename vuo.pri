@@ -1,4 +1,4 @@
-VUO_VERSION = 0.9.1
+VUO_VERSION = 1.0.0
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -36,6 +36,7 @@ LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.9
 LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.2.0
 OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0
 ZXING_ROOT = /usr/local/Cellar/zxing/2.3.0
+LIBXML2_ROOT = /usr/local/Cellar/libxml2/2.9.2
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport
@@ -60,6 +61,7 @@ WARNING_REMOVE = -W
 WARNING_ADD = \
 #	-Weverything \
 	-Wunreachable-code \
+	-Wobjc-property-no-attribute \
 	-Wno-unused-parameter \
 	-Wno-c++11-extensions \
 	-Wno-variadic-macros \
@@ -123,6 +125,7 @@ else {
 }
 
 FLAGS = $$FLAGS_ARCH \
+	-g \
 	-fvisibility-inlines-hidden \
 	-Wdocumentation \
 	-Wno-documentation-deprecated-sync \
@@ -337,6 +340,7 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 	PCH_INCLUDE_PATHS += \
 		$$JSONC_ROOT/include \
 		$$ROOT/library \
+		$$ROOT/node/vuo.font \
 		$$ROOT/type \
 		$$ROOT/type/list
 	INCLUDEPATH += $$PCH_INCLUDE_PATHS

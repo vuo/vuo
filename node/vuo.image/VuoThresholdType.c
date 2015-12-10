@@ -32,7 +32,7 @@ VuoModuleMetadata({
  * @ingroup VuoThresholdType
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoThresholdType.
  */
-VuoThresholdType VuoThresholdType_valueFromJson(json_object *js)
+VuoThresholdType VuoThresholdType_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -58,7 +58,7 @@ VuoThresholdType VuoThresholdType_valueFromJson(json_object *js)
  * @ingroup VuoThresholdType
  * Encodes @c value as a JSON object.
  */
-json_object * VuoThresholdType_jsonFromValue(const VuoThresholdType value)
+json_object * VuoThresholdType_getJson(const VuoThresholdType value)
 {
 	char *valueAsString = "";
 
@@ -90,7 +90,7 @@ json_object * VuoThresholdType_jsonFromValue(const VuoThresholdType value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoThresholdType VuoThresholdType_allowedValues(void)
+VuoList_VuoThresholdType VuoThresholdType_getAllowedValues(void)
 {
 	VuoList_VuoThresholdType l = VuoListCreate_VuoThresholdType();
 	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Luminance);
@@ -102,9 +102,9 @@ VuoList_VuoThresholdType VuoThresholdType_allowedValues(void)
 }
 /**
  * @ingroup VuoThresholdType
- * Same as @c %VuoThresholdType_stringFromValue()
+ * Same as @c %VuoThresholdType_getString()
  */
-char * VuoThresholdType_summaryFromValue(const VuoThresholdType value)
+char * VuoThresholdType_getSummary(const VuoThresholdType value)
 {
 	char *valueAsString = "";
 

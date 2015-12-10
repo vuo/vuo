@@ -11,6 +11,7 @@
 #define VUOREAL_H
 
 #include <math.h>
+#include <stdbool.h>
 struct json_object;
 
 /// @{
@@ -31,9 +32,9 @@ typedef const struct VuoList_VuoReal_struct { void *l; } * VuoList_VuoReal;
  */
 typedef double VuoReal;
 
-VuoReal VuoReal_valueFromJson(struct json_object *js);
-struct json_object * VuoReal_jsonFromValue(const VuoReal value);
-char * VuoReal_summaryFromValue(const VuoReal value);
+VuoReal VuoReal_makeFromJson(struct json_object *js);
+struct json_object * VuoReal_getJson(const VuoReal value);
+char * VuoReal_getSummary(const VuoReal value);
 
 VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount);
 VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount);
@@ -48,8 +49,8 @@ VuoReal VuoReal_randomWithState(unsigned short state[3], const VuoReal minimum, 
 /**
  * Automatically generated function.
  */
-VuoReal VuoReal_valueFromString(const char *str);
-char * VuoReal_stringFromValue(const VuoReal value);
+VuoReal VuoReal_makeFromString(const char *str);
+char * VuoReal_getString(const VuoReal value);
 void VuoReal_retain(VuoReal value);
 void VuoReal_release(VuoReal value);
 /// @}
@@ -179,6 +180,14 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 {
 	VuoReal nonzeroSnap = VuoReal_makeNonzero(snap);
 	return center + nonzeroSnap * (int)round( (a-center) / nonzeroSnap );
+}
+
+/**
+ * Returns true if the two values are equal (within a small tolerance).
+ */
+static inline bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2)
+{
+	return fabs(value1 - value2) < 0.00001;
 }
 
 /**

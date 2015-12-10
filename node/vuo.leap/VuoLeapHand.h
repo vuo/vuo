@@ -50,9 +50,9 @@ typedef struct
 
 } VuoLeapHand;
 
-VuoLeapHand VuoLeapHand_valueFromJson(struct json_object * js);
-struct json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value);
-char * VuoLeapHand_summaryFromValue(const VuoLeapHand value);
+VuoLeapHand VuoLeapHand_makeFromJson(struct json_object * js);
+struct json_object * VuoLeapHand_getJson(const VuoLeapHand value);
+char * VuoLeapHand_getSummary(const VuoLeapHand value);
 
 VuoLeapHand VuoLeapHand_make(
 		VuoInteger id,
@@ -74,8 +74,8 @@ VuoLeapHand VuoLeapHand_make(
 /**
  * Automatically generated function.
  */
-VuoLeapHand VuoLeapHand_valueFromString(const char * initializer);
-char * VuoLeapHand_stringFromValue(const VuoLeapHand value);
+VuoLeapHand VuoLeapHand_makeFromString(const char * initializer);
+char * VuoLeapHand_getString(const VuoLeapHand value);
 void VuoLeapHand_retain(VuoLeapHand value);
 void VuoLeapHand_release(VuoLeapHand value);
 /// @}

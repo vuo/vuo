@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,13 +11,8 @@
 
 digraph G
 {
-FilterMIDIController [type="vuo.midi.filter.controller" version="2.0.0" label="Filter MIDI Controller|<refresh>refresh\l|<controller>controller\l|<channel>channel\l|<controllerNumber>controllerNumber\l|<filteredController>filteredController\r" pos="304,256"];
-ShareValue2 [type="vuo.data.share.VuoMidiController" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="85,253"];
-ShareValue3 [type="vuo.data.share.VuoMidiController" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="539,241"];
-ShareValue5 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="87,336"];
-
-FilterMIDIController:filteredController -> ShareValue3:value;
-ShareValue2:sameValue -> FilterMIDIController:controller;
-ShareValue5:sameValue -> FilterMIDIController:channel;
-ShareValue5:sameValue -> FilterMIDIController:controllerNumber;
+FilterMIDIController [type="vuo.midi.filter.controller" version="1.0.0" label="Filter MIDI Controller|<refresh>refresh\l|<controller>controller\l|<channelMin>channelMin\l|<channelMax>channelMax\l|<controllerNumberMin>controllerNumberMin\l|<controllerNumberMax>controllerNumberMax\l|<valueMin>valueMin\l|<valueMax>valueMax\l|<done>done\r|<filteredController>filteredController\r" pos="304,256"];
+ShareValue2 [type="vuo.data.share.VuoMidiController" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="85,253"];
+ShareValue3 [type="vuo.data.share.VuoMidiController" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="539,241"];
+ShareValue5 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<done>done\r|<sameValue>sameValue\r" pos="87,336"];
 }

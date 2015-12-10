@@ -1,0 +1,33 @@
+/**
+ * @file
+ * This composition shows the layer bounds of an oval layer as it gets stretched and compacted.
+ *
+ * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+GetRenderedLayerBounds [type="vuo.layer.bounds.rendered" version="1.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="144,332" fillcolor="violet" _layerName="\"Oval\""];
+HoldValue2 [type="vuo.data.hold.VuoLayer" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="596,174"];
+MakeColorLayer3 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="413,287" _color="{\"r\":0.914778,\"g\":0.464927,\"b\":0.440848,\"a\":1.000000}" _rotation="0.000000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="802,83" fillcolor="green"];
+MakeList3 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="852,98" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="594,18" _name="\"Oval\"" _color="{\"r\":0.990539,\"g\":0.995392,\"b\":1.000000,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="90.000000" _width="0.500000" _sharpness="1.000000"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="898,72" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="301,-163" _wave="\"sine\"" _period="12.000000" _center="0.700000" _amplitude="0.600000"];
+
+GetRenderedLayerBounds:center -> MakeColorLayer3:center;
+GetRenderedLayerBounds:height -> MakeColorLayer3:height;
+GetRenderedLayerBounds:width -> MakeColorLayer3:width;
+HoldValue2:heldValue -> MakeList:1;
+MakeColorLayer3:layer -> HoldValue2:newValue;
+MakeList3:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> RenderLayersToWindow:layers;
+MakeOvalLayer:layer -> MakeList:2;
+RenderLayersToWindow:renderedLayers -> GetRenderedLayerBounds:renderedLayers;
+RenderLayersToWindow:requestedFrame -> Wave:time;
+Wave:value -> HoldValue2:refresh;
+Wave:value -> MakeOvalLayer:height;
+}

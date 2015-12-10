@@ -31,7 +31,7 @@ VuoModuleMetadata({
  * @ingroup VuoHorizontalReflection
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoHorizontalReflection.
  */
-VuoHorizontalReflection VuoHorizontalReflection_valueFromJson(json_object *js)
+VuoHorizontalReflection VuoHorizontalReflection_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -51,7 +51,7 @@ VuoHorizontalReflection VuoHorizontalReflection_valueFromJson(json_object *js)
  * @ingroup VuoHorizontalReflection
  * Encodes @c value as a JSON object.
  */
-json_object * VuoHorizontalReflection_jsonFromValue(const VuoHorizontalReflection value)
+json_object * VuoHorizontalReflection_getJson(const VuoHorizontalReflection value)
 {
 	char *valueAsString = "";
 
@@ -75,7 +75,7 @@ json_object * VuoHorizontalReflection_jsonFromValue(const VuoHorizontalReflectio
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoHorizontalReflection VuoHorizontalReflection_allowedValues(void)
+VuoList_VuoHorizontalReflection VuoHorizontalReflection_getAllowedValues(void)
 {
 	VuoList_VuoHorizontalReflection l = VuoListCreate_VuoHorizontalReflection();
 	VuoListAppendValue_VuoHorizontalReflection(l, VuoHorizontalReflection_None);
@@ -87,7 +87,7 @@ VuoList_VuoHorizontalReflection VuoHorizontalReflection_allowedValues(void)
  * @ingroup VuoHorizontalReflection
  * Returns a human-readable description of @a value.
  */
-char * VuoHorizontalReflection_summaryFromValue(const VuoHorizontalReflection value)
+char * VuoHorizontalReflection_getSummary(const VuoHorizontalReflection value)
 {
 	char *valueAsString = "";
 

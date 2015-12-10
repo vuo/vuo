@@ -49,13 +49,13 @@ private slots:
 		QFETCH(QString, initializer);
 		QFETCH(VuoPoint3d, value);
 
-		VuoPoint3d p = VuoPoint3d_valueFromString(initializer.toUtf8().constData());
+		VuoPoint3d p = VuoPoint3d_makeFromString(initializer.toUtf8().constData());
 
 		QCOMPARE(p.x,value.x);
 		QCOMPARE(p.y,value.y);
 		QCOMPARE(p.z,value.z);
 
-		QCOMPARE(VuoPoint3d_stringFromValue(p), initializer.toUtf8().constData());
+		QCOMPARE(VuoPoint3d_getString(p), initializer.toUtf8().constData());
 	}
 
 	void testMakeNonzero_data()

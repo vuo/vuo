@@ -29,6 +29,7 @@ ALIASES               += "threadMain=This function may only be called on the mai
 ALIASES               += "threadNoMain=This function may be called on any thread _except_ the main thread."
 ALIASES               += "threadQueue{1}=This function may only be called on dispatch queue @c \1."
 ALIASES               += "threadNoQueue{1}=This function may be called on any dispatch queue _except_ @c \1."
+ALIASES               += "only64Bit=This can be used only in 64-bit applications, not 32-bit applications."
 
 #---------------------------------------------------------------------------
 # Build related configuration options
@@ -62,6 +63,7 @@ FILE_PATTERNS          = *.c* *.h* *.m* *.md
 EXCLUDE_PATTERNS      += moc_*.cc
 EXCLUDE_PATTERNS      += moc_*.cpp
 EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.c*
+EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.vuonode+
 EXCLUDE_PATTERNS      += */node/vuo.*/examples/*
 EXCLUDE_PATTERNS      += */node/vuo.leap/Leap/*.h
 EXCLUDE_PATTERNS      += */node/vuo.syphon/Syphon/Syphon.framework/Versions/A/Headers/*.h

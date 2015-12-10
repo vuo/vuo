@@ -88,12 +88,17 @@ VuoCompilerSpecializedNodeClass::VuoCompilerSpecializedNodeClass(VuoCompilerSpec
  * @param nodeClassName The name of the node class to generate. It should have the format
  *		"<generic node class name>.<type>.(...).<type>" (e.g. "vuo.dictionary.make.VuoText.VuoInteger").
  * @param compiler The compiler to use for looking up the generic node class and compiling the specialized node class.
+ * @param llvmQueue Synchronizes access to LLVM's global context.
  * @param nodeToBack Optionally, a 'Make List' node whose generic types should be used to determine this node class's backing types.
  * @return The generated node class, or null if the generic node class is not found.
  */
-VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack)
+VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler,
+															 dispatch_queue_t llvmQueue, VuoNode *nodeToBack)
 {
 	// Find the generic node class that the given node class should specialize
+
+	if (nodeClassName.find(".") == string::npos)
+		return NULL;
 
 	VuoCompilerNodeClass *genericNodeClass = NULL;
 	vector<string> genericTypeNames;
@@ -148,7 +153,7 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 
 	string tmpNodeClassImplementationFile = tmpDir + "/" + nodeClassName + ".c";
 	string tmpNodeClassCompiledFile = tmpDir + "/" + nodeClassName + ".vuonode";
-	VuoCompiler::preserveOriginalFileName(genericImplementation, genericNodeClassName + ".c");
+	VuoFileUtilities::preserveOriginalFileName(genericImplementation, genericNodeClassName + ".c");
 	VuoFileUtilities::writeStringToFile(genericImplementation, tmpNodeClassImplementationFile);
 
 	set<VuoNodeSet *> nodeSetDependencies;
@@ -197,9 +202,12 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 
 	// Construct the VuoCompilerSpecializedNodeClass
 
-	VuoCompilerSpecializedNodeClass *dummyNodeClass = new VuoCompilerSpecializedNodeClass(nodeClassName, module);
-	VuoCompilerSpecializedNodeClass *nodeClass = new VuoCompilerSpecializedNodeClass(dummyNodeClass, nodeToBack);
-	delete dummyNodeClass;
+	__block VuoCompilerSpecializedNodeClass *nodeClass;
+	dispatch_sync(llvmQueue, ^{
+					  VuoCompilerSpecializedNodeClass *dummyNodeClass = new VuoCompilerSpecializedNodeClass(nodeClassName, module);
+					  nodeClass = new VuoCompilerSpecializedNodeClass(dummyNodeClass, nodeToBack);
+					  delete dummyNodeClass;
+				  });
 
 	nodeClass->genericNodeClass = genericNodeClass;
 	nodeClass->specializedForGenericTypeName = specializedForGenericTypeName;

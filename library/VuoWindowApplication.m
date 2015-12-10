@@ -145,23 +145,24 @@ VuoModuleMetadata({
 			if (dp->d_name[0] == '.')
 				continue;
 
-			[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[[NSString stringWithFormat:@"<h2>%s</h2>", dp->d_name] dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
+			char *nameWithoutExtension = strdup(dp->d_name);
+			nameWithoutExtension[strlen(nameWithoutExtension) - 4] = 0;
+			[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[[NSString stringWithFormat:@"<h2>%s</h2>", nameWithoutExtension] dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
+			free(nameWithoutExtension);
 
 			char licensePath[strlen(licensesPath) + dp->d_namlen + 2];
 			strcpy(licensePath, licensesPath);
 			strcat(licensePath, "/");
 			strcat(licensePath, dp->d_name);
 
-			int fd = open(licensePath, O_RDONLY);
-			char data[1024];
-			int bytesRead;
 			NSMutableData *mdata = [NSMutableData new];
 			[mdata appendData:[[NSString stringWithFormat:@"<pre>"] dataUsingEncoding:NSUTF8StringEncoding]];
-			while((bytesRead = read(fd, data, 1024)) > 0)
-				[mdata appendBytes:data length:bytesRead];
-			close(fd);
-			[mdata appendData:[[NSString stringWithFormat:@"</pre>"] dataUsingEncoding:NSUTF8StringEncoding]];
-			[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:mdata documentAttributes:nil] autorelease]];
+			[mdata appendData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:licensePath]]];
+			[mdata appendData:[[NSString stringWithFormat:@"</pre><br>"] dataUsingEncoding:NSUTF8StringEncoding]];
+			[mas appendAttributedString:[[[NSAttributedString new]
+										   initWithHTML:mdata
+										   options:[NSDictionary dictionaryWithObject:[NSNumber numberWithInteger:NSUTF8StringEncoding] forKey:NSCharacterEncodingDocumentOption]
+										   documentAttributes:nil] autorelease]];
 			[mdata release];
 
 			foundLicenses = true;

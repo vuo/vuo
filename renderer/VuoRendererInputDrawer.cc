@@ -48,7 +48,7 @@ void VuoRendererInputDrawer::setHorizontalDrawerOffset(qreal offset)
 qreal VuoRendererInputDrawer::getMaxDrawerLabelWidth(void) const
 {
 	qreal maxLabelWidth = 0;
-	QFont labelFont = VuoRendererFonts::getSharedFonts()->nodePortTitleFont();
+	QFont labelFont = VuoRendererFonts::getSharedFonts()->nodePortConstantFont();
 	foreach (VuoRendererPort *port, drawerPorts)
 	{
 		string portTitle = port->getPortNameToRender();
@@ -69,7 +69,7 @@ qreal VuoRendererInputDrawer::getMaxDrawerLabelWidth(void) const
 qreal VuoRendererInputDrawer::getMaxDrawerChainedLabelWidth(void) const
 {
 	qreal maxLabelWidth = 0;
-	QFont labelFont = VuoRendererFonts::getSharedFonts()->nodePortTitleFont();
+	QFont labelFont = VuoRendererFonts::getSharedFonts()->nodePortConstantFont();
 	foreach (VuoRendererPort *port, drawerPorts)
 	{
 		string portTitle = port->getPortNameToRender();

@@ -13,14 +13,15 @@
 VuoModuleMetadata({
 					  "title" : "Make Color Image",
 					  "keywords" : [ "backdrop", "background", "solid", "fill", "tone", "chroma" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "CompareImageGenerators.vuo" ]
+						  "exampleCompositions" : [ ]
 					  }
 				 });
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -35,6 +36,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
+	instance->shader = VuoShader_makeUnlitColorShader( VuoColor_makeWithRGBA(1.,1.,1.,1.) );
+	VuoRetain(instance->shader);
+
 	return instance;
 }
 
@@ -47,17 +51,15 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) image
 )
 {
-	VuoShader shader = VuoShader_makeUnlitColorShader(color);
-	VuoRetain(shader);
+	VuoShader_setUniform_VuoColor((*instance)->shader, "color", color);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, shader, width, height, VuoImageColorDepth_8);
-
-	VuoRelease(shader);
+	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

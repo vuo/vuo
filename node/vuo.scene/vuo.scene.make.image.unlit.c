@@ -16,7 +16,7 @@ VuoModuleMetadata({
 						 "self illumination" ],
 					 "version" : "2.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "RippleImageOfSphere.vuo" ]
+						 "exampleCompositions" : []
 					 }
 				 });
 

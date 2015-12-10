@@ -15,6 +15,7 @@ NODE_SOURCES += \
 	vuo.event.becameTrue.c \
 	vuo.event.fireOnDisplayRefresh.c \
 	vuo.event.fireOnStart.c \
-	vuo.event.spinOffEvent.c
+	vuo.event.spinOffEvent.c \
+	vuo.event.spinOffEvents.c
 
 include(../../module.pri)

@@ -28,9 +28,9 @@ typedef struct
 	float x,y,z,w;
 } VuoPoint4d;
 
-VuoPoint4d VuoPoint4d_valueFromJson(struct json_object * js);
-struct json_object * VuoPoint4d_jsonFromValue(const VuoPoint4d value);
-char * VuoPoint4d_summaryFromValue(const VuoPoint4d value);
+VuoPoint4d VuoPoint4d_makeFromJson(struct json_object * js);
+struct json_object * VuoPoint4d_getJson(const VuoPoint4d value);
+char * VuoPoint4d_getSummary(const VuoPoint4d value);
 
 VuoPoint4d VuoPoint4d_random(const VuoPoint4d minimum, const VuoPoint4d maximum);
 VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d minimum, const VuoPoint4d maximum);
@@ -39,8 +39,8 @@ VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d 
 /**
  * Automatically generated function.
  */
-VuoPoint4d VuoPoint4d_valueFromString(const char *str);
-char * VuoPoint4d_stringFromValue(const VuoPoint4d value);
+VuoPoint4d VuoPoint4d_makeFromString(const char *str);
+char * VuoPoint4d_getString(const VuoPoint4d value);
 void VuoPoint4d_retain(VuoPoint4d value);
 void VuoPoint4d_release(VuoPoint4d value);
 /// @}

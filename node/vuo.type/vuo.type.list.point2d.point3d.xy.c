@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title": "Convert 2D Point List to 3D Point List",
-					  "description": "Expands a list of 2D points (x,y) to a list of 3D points (x,y,0).",
+					  "description": "Expands a list of 2D points (X,Y) to a list of 3D points (X,Y,0).",
 					  "version": "1.0.0"
 				 });
 

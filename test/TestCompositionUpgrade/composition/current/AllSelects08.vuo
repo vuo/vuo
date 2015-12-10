@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,13 +11,13 @@
 
 digraph G
 {
-SelectEventInput [type="vuo.select.in.event.2" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="675,664" _which="1"];
-SelectEventInput2 [type="vuo.select.in.boolean.event" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="575,564" _which="false"];
-SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1075,1064" _which="false"];
-SelectEventOutput2 [type="vuo.select.out.event.2" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="1175,1164" _which="1"];
-SelectInput [type="vuo.select.in.2.VuoGenericType1" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<out>out\r" pos="375,364" _which="1"];
-SelectInput2 [type="vuo.select.in.boolean.VuoGenericType1" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="475,464" _which="false"];
-SelectLatest [type="vuo.select.latest.2.VuoGenericType1" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="775,764"];
-SelectOutput [type="vuo.select.out.boolean.VuoGenericType1" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="975,964" _which="false"];
-SelectOutput2 [type="vuo.select.out.2.VuoGenericType1" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r" pos="875,864" _which="1"];
+SelectInput10 [type="vuo.select.in.2.VuoGenericType1" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="760,662" _which="1"];
+SelectInput11 [type="vuo.select.in.2.event" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<option1>option1\l|<option2>option2\l|<done>done\r|<out>out\r" pos="860,762" _which="1"];
+SelectInput12 [type="vuo.select.in.event" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="960,862" _which="false"];
+SelectInput9 [type="vuo.select.in.VuoGenericType1" version="1.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<done>done\r|<out>out\r" pos="660,562" _which="false"];
+SelectLatest3 [type="vuo.select.latest.2.VuoGenericType1" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<done>done\r|<latest>latest\r" pos="1060,962"];
+SelectOutput10 [type="vuo.select.out.VuoGenericType1" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1160,1062" _which="false"];
+SelectOutput11 [type="vuo.select.out.2.VuoGenericType1" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<option1>option1\r|<option2>option2\r" pos="1260,1162" _which="1"];
+SelectOutput12 [type="vuo.select.out.2.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<option1>option1\r|<option2>option2\r" pos="1360,1262" _which="1"];
+SelectOutput9 [type="vuo.select.out.event" version="1.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<done>done\r|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="560,462" _which="false"];
 }

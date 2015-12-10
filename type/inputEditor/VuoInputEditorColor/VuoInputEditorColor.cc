@@ -32,7 +32,7 @@ json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *origi
 {
 	QColorDialog dialog;
 
-	VuoColor colorVuo = VuoColor_valueFromJson(originalValue);
+	VuoColor colorVuo = VuoColor_makeFromJson(originalValue);
 	QColor colorQt;
 	colorQt.setRedF(colorVuo.r);
 	colorQt.setGreenF(colorVuo.g);
@@ -50,7 +50,7 @@ json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *origi
 	dialog.exec();
 
 	if (dialog.result() == QDialog::Accepted)
-		return VuoColor_jsonFromValue(vuoColorFromQColor(dialog.selectedColor()));
+		return VuoColor_getJson(vuoColorFromQColor(dialog.selectedColor()));
 
 	return originalValue;
 }
@@ -60,7 +60,7 @@ json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *origi
  */
 void VuoInputEditorColor::currentColorChanged(const QColor &color)
 {
-	json_object *valueAsJson = VuoColor_jsonFromValue(vuoColorFromQColor(color));
+	json_object *valueAsJson = VuoColor_getJson(vuoColorFromQColor(color));
 	emit valueChanged(valueAsJson);
 	json_object_put(valueAsJson);
 }

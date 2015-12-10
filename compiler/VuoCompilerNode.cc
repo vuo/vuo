@@ -131,7 +131,9 @@ void VuoCompilerNode::generateInitFunctionCall(Module *module, BasicBlock *block
 	Function *functionSrc = getBase()->getNodeClass()->getCompiler()->getInitFunction();
 
 	CallInst *call = generateFunctionCall(functionSrc, module, block);
-	instanceData->generateStore(call, block);
+	Type *instanceDataType = instanceData->getBase()->getClass()->getCompiler()->getType();
+	Value *callCasted = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, call, instanceDataType);
+	instanceData->generateStore(callCasted, block);
 
 	// Retain the instance data.
 	LoadInst *instanceDataValue = instanceData->generateLoad(block);
@@ -291,7 +293,8 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 		if (isArgumentInFunction(instanceData, functionSrc))
 		{
 			size_t index = getArgumentIndexInFunction(instanceData, functionSrc);
-			args[index] = instanceData->getVariable();
+			GlobalVariable *arg = instanceData->getVariable();
+			args[index] = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(arg, functionDst, index, NULL, module, block);
 		}
 	}
 
@@ -323,14 +326,19 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 	{
 		VuoCompilerOutputData *data = i->first;
 		LoadInst *outputDataValue = data->generateLoad(block);
-		VuoCompilerCodeGenUtilities::generateRetainCall(module, block, outputDataValue);
+		VuoCompilerDataClass *dataClass = static_cast<VuoCompilerDataClass *>(data->getBase()->getClass()->getCompiler());
+		VuoCompilerType *type = dataClass->getVuoType()->getCompiler();
+		type->generateRetainCall(module, block, outputDataValue);
 	}
 
 	// Release the old output port values.
 	for (map<VuoCompilerOutputData *, LoadInst *>::iterator i = oldOutputDataValues.begin(); i != oldOutputDataValues.end(); ++i)
 	{
+		VuoCompilerOutputData *data = i->first;
 		LoadInst *oldOutputPortValue = i->second;
-		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, oldOutputPortValue);
+		VuoCompilerDataClass *dataClass = static_cast<VuoCompilerDataClass *>(data->getBase()->getClass()->getCompiler());
+		VuoCompilerType *type = dataClass->getVuoType()->getCompiler();
+		type->generateReleaseCall(module, block, oldOutputPortValue);
 	}
 
 	if (oldInstanceDataValue)
@@ -458,7 +466,9 @@ void VuoCompilerNode::generateFinalization(Module *module, BasicBlock *block, bo
 			if (data)
 			{
 				LoadInst *dataValue = data->generateLoad(block);
-				VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, dataValue);
+				VuoCompilerDataClass *dataClass = static_cast<VuoCompilerDataClass *>(data->getBase()->getClass()->getCompiler());
+				VuoCompilerType *type = dataClass->getVuoType()->getCompiler();
+				type->generateReleaseCall(module, block, dataValue);
 			}
 		}
 		/// @todo release trigger port data
@@ -663,7 +673,7 @@ Value * VuoCompilerNode::generateSerializedString(Module *module, BasicBlock *bl
 		VuoCompilerInputData *data = port->getData();
 		if (data)
 		{
-			// char *serializedPort = <type>_stringFromValue(...);
+			// char *serializedPort = <type>_getString(...);
 			Value *portValue = data->generateLoad(block);
 			VuoCompilerDataClass *dataClass = static_cast<VuoCompilerDataClass *>(data->getBase()->getClass()->getCompiler());
 			VuoCompilerType *type = dataClass->getVuoType()->getCompiler();

@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					  "dependencies" : [ "VuoKeyboard" ],
 					  "node": {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "TypeInTextLayer.vuo" ]
+						  "exampleCompositions" : [ ]
 					  }
 				  });
 

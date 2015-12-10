@@ -49,11 +49,11 @@ private slots:
 		QFETCH(VuoReal, value);
 		QFETCH(bool, testSummary);
 
-		VuoReal t = VuoReal_valueFromString(initializer.toUtf8().constData());
+		VuoReal t = VuoReal_makeFromString(initializer.toUtf8().constData());
 		QCOMPARE(t, value);
 
 		if (testSummary)
-			QCOMPARE(VuoReal_summaryFromValue(value), initializer.toUtf8().constData());
+			QCOMPARE(VuoReal_getSummary(value), initializer.toUtf8().constData());
 	}
 
 	void testRandom_data()

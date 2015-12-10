@@ -34,17 +34,17 @@ typedef struct
 
 } VuoVideoFrame;
 
-VuoVideoFrame VuoVideoFrame_valueFromJson(struct json_object * js);
-struct json_object * VuoVideoFrame_jsonFromValue(const VuoVideoFrame value);
-char * VuoVideoFrame_summaryFromValue(const VuoVideoFrame value);
+VuoVideoFrame VuoVideoFrame_makeFromJson(struct json_object * js);
+struct json_object * VuoVideoFrame_getJson(const VuoVideoFrame value);
+char * VuoVideoFrame_getSummary(const VuoVideoFrame value);
 bool VuoVideoFrame_areEqual(VuoVideoFrame value1, VuoVideoFrame value2);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoVideoFrame VuoVideoFrame_valueFromString(const char *str);
-char * VuoVideoFrame_stringFromValue(const VuoVideoFrame value);
+VuoVideoFrame VuoVideoFrame_makeFromString(const char *str);
+char * VuoVideoFrame_getString(const VuoVideoFrame value);
 void VuoVideoFrame_retain(VuoVideoFrame value);
 void VuoVideoFrame_release(VuoVideoFrame value);
 ///@}

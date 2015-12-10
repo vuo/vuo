@@ -44,19 +44,19 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoMidiController VuoMidiController_valueFromJson(json_object * js)
+VuoMidiController VuoMidiController_makeFromJson(json_object * js)
 {
 	VuoMidiController mn = {1,1,127};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "channel", &o))
-		mn.channel = VuoInteger_valueFromJson(o);
+		mn.channel = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "controllerNumber", &o))
-		mn.controllerNumber = VuoInteger_valueFromJson(o);
+		mn.controllerNumber = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "value", &o))
-		mn.value = VuoInteger_valueFromJson(o);
+		mn.value = VuoInteger_makeFromJson(o);
 
 	return mn;
 }
@@ -65,17 +65,17 @@ VuoMidiController VuoMidiController_valueFromJson(json_object * js)
  * @ingroup VuoMidiController
  * Encodes @c value as a JSON object.
  */
-json_object * VuoMidiController_jsonFromValue(const VuoMidiController mn)
+json_object * VuoMidiController_getJson(const VuoMidiController mn)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *channelObject = VuoInteger_jsonFromValue(mn.channel);
+	json_object *channelObject = VuoInteger_getJson(mn.channel);
 	json_object_object_add(js, "channel", channelObject);
 
-	json_object *controllerNumberObject = VuoInteger_jsonFromValue(mn.controllerNumber);
+	json_object *controllerNumberObject = VuoInteger_getJson(mn.controllerNumber);
 	json_object_object_add(js, "controllerNumber", controllerNumberObject);
 
-	json_object *valueObject = VuoInteger_jsonFromValue(mn.value);
+	json_object *valueObject = VuoInteger_getJson(mn.value);
 	json_object_object_add(js, "value", valueObject);
 
 	return js;
@@ -85,7 +85,7 @@ json_object * VuoMidiController_jsonFromValue(const VuoMidiController mn)
  * @ingroup VuoMidiController
  * Returns a compact string representation of @c value (comma-separated coordinates).
  */
-char * VuoMidiController_summaryFromValue(const VuoMidiController mn)
+char * VuoMidiController_getSummary(const VuoMidiController mn)
 {
 	return VuoText_format("Channel %d, controller %d (0x%02x): value %d",
 						  mn.channel, mn.controllerNumber, mn.controllerNumber, mn.value);

@@ -48,8 +48,8 @@ VuoInputEditorMenuItem * VuoInputEditorDispersion::setUpMenuTree()
 
 	for (int i = 0; i <= VuoDispersion_Radial; ++i)
 	{
-		json_object *optionAsJson = VuoDispersion_jsonFromValue( (VuoDispersion)i );
-		char *optionSummary = VuoDispersion_summaryFromValue( (VuoDispersion)i );
+		json_object *optionAsJson = VuoDispersion_getJson( (VuoDispersion)i );
+		char *optionSummary = VuoDispersion_getSummary( (VuoDispersion)i );
 		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithDispersion((VuoDispersion)i));
 		free(optionSummary);
 

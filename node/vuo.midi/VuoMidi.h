@@ -16,6 +16,7 @@ extern "C"
 #include "VuoMidiInputDevice.h"
 #include "VuoMidiOutputDevice.h"
 #include "VuoMidiNote.h"
+#include "VuoMidiPitchBend.h"
 #include "VuoList_VuoMidiInputDevice.h"
 #include "VuoList_VuoMidiOutputDevice.h"
 
@@ -30,6 +31,7 @@ typedef void * VuoMidiOut;
 VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md);
 void VuoMidiOut_sendNote(VuoMidiOut mo, VuoMidiNote note);
 void VuoMidiOut_sendController(VuoMidiOut mo, VuoMidiController controller);
+void VuoMidiOut_sendPitchBend(VuoMidiOut mo, VuoMidiPitchBend pitchBend);
 
 
 /**
@@ -43,6 +45,7 @@ void VuoMidiIn_enableTriggers
 		VuoMidiIn mi,
 		void (*receivedNote)(void *context, VuoMidiNote note),
 		void (*receivedController)(void *context, VuoMidiController controller),
+		void (*receivedPitchBend)(void *context, VuoMidiPitchBend pitchBend),
 		void *context
 );
 void VuoMidiIn_disableTriggers(VuoMidiIn mi);

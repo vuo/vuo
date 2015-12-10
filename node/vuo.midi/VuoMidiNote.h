@@ -31,9 +31,9 @@ typedef struct
 	char blah[42]; ///< @todo https://b33p.net/kosada/node/4124
 } VuoMidiNote;
 
-VuoMidiNote VuoMidiNote_valueFromJson(struct json_object * js);
-struct json_object * VuoMidiNote_jsonFromValue(const VuoMidiNote value);
-char * VuoMidiNote_summaryFromValue(const VuoMidiNote value);
+VuoMidiNote VuoMidiNote_makeFromJson(struct json_object * js);
+struct json_object * VuoMidiNote_getJson(const VuoMidiNote value);
+char * VuoMidiNote_getSummary(const VuoMidiNote value);
 
 bool VuoMidiNote_areEqual(const VuoMidiNote value1, const VuoMidiNote value2);
 
@@ -55,8 +55,8 @@ static inline VuoMidiNote VuoMidiNote_make(unsigned char channel, bool isNoteOn,
 /**
  * Automatically generated function.
  */
-VuoMidiNote VuoMidiNote_valueFromString(const char *str);
-char * VuoMidiNote_stringFromValue(const VuoMidiNote value);
+VuoMidiNote VuoMidiNote_makeFromString(const char *str);
+char * VuoMidiNote_getString(const VuoMidiNote value);
 /// @}
 
 /**

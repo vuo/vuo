@@ -10,3 +10,5 @@ QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
 
 SOURCES += \
 	TestCompositionUpgrade.cc
+
+LIBS += $$ROOT/framework/Vuo.framework/Modules/libVuoHeap.dylib

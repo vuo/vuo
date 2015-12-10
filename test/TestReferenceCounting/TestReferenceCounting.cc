@@ -37,7 +37,7 @@ public:
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
 		compiler->compileComposition(compositionPath, compiledCompositionPath);
-		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
 		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
 

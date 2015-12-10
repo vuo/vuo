@@ -148,10 +148,10 @@ typedef enum {
 	VuoKey_Kana
 } VuoKey;
 
-VuoKey VuoKey_valueFromJson(struct json_object * js);
-struct json_object * VuoKey_jsonFromValue(const VuoKey value);
-VuoList_VuoKey VuoKey_allowedValues(void);
-char * VuoKey_summaryFromValue(const VuoKey value);
+VuoKey VuoKey_makeFromJson(struct json_object * js);
+struct json_object * VuoKey_getJson(const VuoKey value);
+VuoList_VuoKey VuoKey_getAllowedValues(void);
+char * VuoKey_getSummary(const VuoKey value);
 
 char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned long flags, unsigned int *deadKeyState);
 VuoKey VuoKey_makeFromMacVirtualKeyCode(unsigned short keyCode);
@@ -161,8 +161,8 @@ bool VuoKey_doesMacVirtualKeyCodeMatch(unsigned short keyCode, VuoKey key);
 /**
  * Automatically generated function.
  */
-VuoKey VuoKey_valueFromString(const char *str);
-char * VuoKey_stringFromValue(const VuoKey value);
+VuoKey VuoKey_makeFromString(const char *str);
+char * VuoKey_getString(const VuoKey value);
 /// @}
 
 /**

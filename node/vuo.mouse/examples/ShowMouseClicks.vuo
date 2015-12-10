@@ -9,16 +9,15 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="629,-6" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="973,-64" fillcolor="yellow" _started_eventThrottling="enqueue"];
 MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1180,152" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.000000}"];
 MakeLayer2 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1177,584" _name="\"\"" _center="{\"x\":0.000000,\"y\":-0.200000}"];
-MakeLayer5 [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="1170,4" _name="\"\"" _center="{\"x\":0.000000,\"y\":0.400000}" _opacity="1.000000"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1374,163" fillcolor="green"];
 MakeList10 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1374,163" fillcolor="green"];
 MakeList14 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1344,148" fillcolor="green"];
 MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="498,182" _text="\"released\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":42.000000,\"underline\":false,\"color\":{\"r\":0.989434,\"g\":0.957944,\"b\":0.864060,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
 MakeTextImage2 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="996,599" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":42.000000,\"underline\":false,\"color\":{\"r\":0.146795,\"g\":0.570824,\"b\":0.525023,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-MakeTextImage5 [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="933,16" _text="\"The \\\"Receive Mouse Buttons\\\" node fires events immediately.\\nThe \\\"Receive Mouse Clicks\\\" node waits to fire an event\\nuntil it's clear whether the mouse was clicked, double-clicked, or triple-clicked.\\n\\nClick, double-click, or triple-click to see these nodes in action.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1172,-19" _text="\"The \\\"Receive Mouse Buttons\\\" node fires events immediately.\\nThe \\\"Receive Mouse Clicks\\\" node waits to fire an event\\nuntil it's clear whether the mouse was clicked, double-clicked, or triple-clicked.\\n\\nClick, double-click, or triple-click to see these nodes in action.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.400000}"];
 ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="94,278" fillcolor="violet" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 ReceiveMouseClicks3 [type="vuo.mouse.click" version="1.0.1" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="177,474" fillcolor="violet" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1415,137" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
@@ -29,16 +28,15 @@ ShareValue5 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<r
 SmoothWithDuration2 [type="vuo.motion.smooth.duration.VuoReal" version="1.0.1" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r" pos="964,278" _setPosition="1.000000" _setTarget="0.000000" _duration="0.500000" _curve="\"quadratic\"" _easing="\"out\""];
 SmoothWithDuration3 [type="vuo.motion.smooth.duration.VuoReal" version="1.0.1" label="Smooth with Duration|<refresh>refresh\l|<time>time\l|<setPosition>setPosition\l|<setTarget>setTarget\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<position>position\r" pos="961,463" _setPosition="1.000000" _setTarget="0.000000" _duration="1.000000" _curve="\"quadratic\"" _easing="\"out\""];
 
-FireOnStart:started -> MakeTextImage5:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
 MakeLayer2:layer -> MakeList14:3;
-MakeLayer5:layer -> MakeList14:1;
 MakeLayer:layer -> MakeList14:2;
 MakeList0:list -> RenderLayersToWindow:setWindowProperties;
 MakeList10:list -> RenderLayersToWindow:setWindowProperties;
 MakeList14:list -> RenderLayersToWindow:layers;
 MakeTextImage2:image -> MakeLayer2:image;
-MakeTextImage5:image -> MakeLayer5:image;
 MakeTextImage:image -> MakeLayer:image;
+MakeTextLayer:layer -> MakeList14:1;
 ReceiveMouseButtons:released -> MakeTextImage:refresh;
 ReceiveMouseButtons:released -> SmoothWithDuration2:setPosition [event=true];
 ReceiveMouseButtons:released -> SmoothWithDuration2:setTarget [event=true];

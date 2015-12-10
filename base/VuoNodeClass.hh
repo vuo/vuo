@@ -43,7 +43,9 @@ public:
 	VuoNode * newNode(VuoNode *nodeToCopyMetadataFrom);
 
 	string getClassName(void);
+
 	bool isTypecastNodeClass(void);
+	bool isDrawerNodeClass(void);
 
 	bool isInterface(void);
 	void setInterface(bool isInterface);

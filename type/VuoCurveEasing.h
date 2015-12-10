@@ -33,17 +33,17 @@ typedef enum {
 	VuoCurveEasing_Middle
 } VuoCurveEasing;
 
-VuoCurveEasing VuoCurveEasing_valueFromJson(struct json_object * js);
-struct json_object * VuoCurveEasing_jsonFromValue(const VuoCurveEasing value);
-VuoList_VuoCurveEasing VuoCurveEasing_allowedValues(void);
-char * VuoCurveEasing_summaryFromValue(const VuoCurveEasing value);
+VuoCurveEasing VuoCurveEasing_makeFromJson(struct json_object * js);
+struct json_object * VuoCurveEasing_getJson(const VuoCurveEasing value);
+VuoList_VuoCurveEasing VuoCurveEasing_getAllowedValues(void);
+char * VuoCurveEasing_getSummary(const VuoCurveEasing value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoCurveEasing VuoCurveEasing_valueFromString(const char *str);
-char * VuoCurveEasing_stringFromValue(const VuoCurveEasing value);
+VuoCurveEasing VuoCurveEasing_makeFromString(const char *str);
+char * VuoCurveEasing_getString(const VuoCurveEasing value);
 void VuoCurveEasing_retain(VuoCurveEasing value);
 void VuoCurveEasing_release(VuoCurveEasing value);
 /// @}

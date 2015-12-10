@@ -472,7 +472,7 @@ VuoPoint4d VuoTransform_quaternionFromBasis(VuoPoint3d basis[3])
  *   }
  * }
  */
-VuoTransform VuoTransform_valueFromJson(json_object *js)
+VuoTransform VuoTransform_makeFromJson(json_object *js)
 {
 	VuoTransform t = VuoTransform_makeIdentity();
 	json_object *o = NULL;
@@ -555,7 +555,7 @@ static inline float cook(float f)
  * @ingroup VuoTransform
  * Encodes @c value as a JSON object.
  */
-json_object * VuoTransform_jsonFromValue(const VuoTransform value)
+json_object * VuoTransform_getJson(const VuoTransform value)
 {
 	if (VuoTransform_isIdentity(value))
 		return json_object_new_string("identity");
@@ -621,7 +621,7 @@ json_object * VuoTransform_jsonFromValue(const VuoTransform value)
  * @ingroup VuoTransform
  * Produces a brief human-readable summary of @c value.
  */
-char * VuoTransform_summaryFromValue(const VuoTransform value)
+char * VuoTransform_getSummary(const VuoTransform value)
 {
 	if (VuoTransform_isIdentity(value))
 		return strdup("identity transform (no change)");

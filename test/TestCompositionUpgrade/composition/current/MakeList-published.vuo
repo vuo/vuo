@@ -1,5 +1,7 @@
 /**
  * @file
+ * @brief TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes
+ *
  * Test composition.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
@@ -9,10 +11,6 @@
 
 digraph G
 {
-Add3 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="336,137"];
-MakeList4 [type="vuo.list.make.1.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="290,148"];
+Add3 [type="vuo.math.add.VuoInteger" version="1.0.0" label="Add|<refresh>refresh\l|<terms>terms\l|<done>done\r|<sum>sum\r" pos="336,137"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<item1>item1\r" _item1="" _item1_type="VuoInteger"];
-
-MakeList4:list -> Add3:values;
-PublishedInputs:item1 -> MakeList4:1;
 }

@@ -82,7 +82,7 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 		slider->setMaximum(suggestedMax);
 		slider->setSingleStep(suggestedStep);
 
-		slider->setValue(VuoInteger_valueFromJson(originalValue));
+		slider->setValue(VuoInteger_makeFromJson(originalValue));
 
 		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
 		connect(lineEdit, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
@@ -92,6 +92,10 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 
 		const int widgetVerticalSpacing = 1;
 		slider->move(slider->pos().x(), slider->pos().y() + lineEdit->height() + widgetVerticalSpacing);
+
+		slider->resize(slider->width(), slider->height() - 10);
+		lineEdit->resize(slider->width(), lineEdit->height());
+
 		slider->show();
 	}
 
@@ -102,7 +106,11 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 		static_cast<VuoSpinBox *>(spinBox)->setButtonMinimum(suggestedMin);
 		static_cast<VuoSpinBox *>(spinBox)->setButtonMaximum(suggestedMax);
 		spinBox->setSingleStep(suggestedStep);
-		spinBox->setValue(VuoInteger_valueFromJson(originalValue));
+		spinBox->setValue(VuoInteger_makeFromJson(originalValue));
+
+		// For some reason the input editor is extremely wide
+		// without the following resize() call:
+		spinBox->resize(spinBox->size());
 
 		VuoInputEditorWithLineEdit::setUpLineEdit(spinBox->findChild<QLineEdit *>(), originalValue);
 		lineEdit->setValidator(validator);
@@ -124,7 +132,7 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 void VuoInputEditorInteger::updateSliderValue(QString newTextValue)
 {
 	disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	slider->setValue(VuoInteger_valueFromString(newTextValue.toUtf8().constData()));
+	slider->setValue(VuoInteger_makeFromString(newTextValue.toUtf8().constData()));
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
 }
 
@@ -150,7 +158,7 @@ void VuoInputEditorInteger::updateLineEditValue()
 void VuoInputEditorInteger::updateLineEditValue(int newSliderValue)
 {
 	const QString originalLineEditText = lineEdit->text();
-	const QString newLineEditText = VuoInteger_stringFromValue(newSliderValue);
+	const QString newLineEditText = VuoInteger_getString(newSliderValue);
 
 	if (originalLineEditText != newLineEditText)
 	{
@@ -164,8 +172,8 @@ void VuoInputEditorInteger::updateLineEditValue(int newSliderValue)
 void VuoInputEditorInteger::emitValueChanged()
 {
 	const char *valueAsString = lineEdit->text().toUtf8().constData();
-	VuoInteger value = VuoInteger_valueFromString(valueAsString);
-	json_object *valueAsJson = VuoInteger_jsonFromValue(value);
+	VuoInteger value = VuoInteger_makeFromString(valueAsString);
+	json_object *valueAsJson = VuoInteger_getJson(value);
 	emit valueChanged(valueAsJson);
 	json_object_put(valueAsJson);
 }

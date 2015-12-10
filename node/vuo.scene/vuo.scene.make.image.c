@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						 "Blinn", "Phong", "Lambert" ],
 					 "version" : "3.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "FlipCoin.vuo" ]
+						 "exampleCompositions" : [ ]
 					 }
 				 });
 

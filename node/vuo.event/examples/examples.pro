@@ -1,6 +1,8 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	LoadImageAsynchronously.vuo
+	LoadImageAsynchronously.vuo \
+	RotateInSequence.vuo \
+	SpinPsychedelicCheckerboard.vuo
 
 include(../../../example.pri)

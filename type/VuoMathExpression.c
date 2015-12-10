@@ -37,14 +37,14 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoMathExpression VuoMathExpression_valueFromJson(json_object *js)
+VuoMathExpression VuoMathExpression_makeFromJson(json_object *js)
 {
 	VuoMathExpression me;
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "expression", &o))
 	{
-		me.expression = VuoText_valueFromJson(o);
+		me.expression = VuoText_makeFromJson(o);
 
 		VuoMathExpressionError error = NULL;
 		me.parser = VuoMathExpressionParser_makeFromSingleExpression(me.expression, &error);
@@ -64,7 +64,7 @@ VuoMathExpression VuoMathExpression_valueFromJson(json_object *js)
  * Encodes the value as a JSON object.
  *
  * Includes the expression's variables in the JSON object, to be used when generating the Calculate node class.
- * However, the variables are ignored by VuoMathExpression_valueFromJson().
+ * However, the variables are ignored by VuoMathExpression_makeFromJson().
  *
  * @eg{
  *   {
@@ -74,20 +74,20 @@ VuoMathExpression VuoMathExpression_valueFromJson(json_object *js)
  *   }
  * }
  */
-json_object * VuoMathExpression_jsonFromValue(const VuoMathExpression me)
+json_object * VuoMathExpression_getJson(const VuoMathExpression me)
 {
 	json_object *js = json_object_new_object();
 
-	json_object_object_add(js, "expression", VuoText_jsonFromValue(me.expression));
+	json_object_object_add(js, "expression", VuoText_getJson(me.expression));
 
 	if (me.parser)
 	{
 		VuoList_VuoText inputVariables = VuoMathExpressionParser_getInputVariables(me.parser);
-		json_object_object_add(js, "inputVariables", VuoList_VuoText_jsonFromValue(inputVariables));
+		json_object_object_add(js, "inputVariables", VuoList_VuoText_getJson(inputVariables));
 		VuoRelease(inputVariables);
 
 		VuoList_VuoText outputVariables = VuoMathExpressionParser_getOutputVariables(me.parser);
-		json_object_object_add(js, "outputVariables", VuoList_VuoText_jsonFromValue(outputVariables));
+		json_object_object_add(js, "outputVariables", VuoList_VuoText_getJson(outputVariables));
 		VuoRelease(outputVariables);
 	}
 
@@ -98,7 +98,7 @@ json_object * VuoMathExpression_jsonFromValue(const VuoMathExpression me)
  * @ingroup VuoMathExpression
  * Returns a string representation of the value.
  */
-char * VuoMathExpression_summaryFromValue(const VuoMathExpression me)
+char * VuoMathExpression_getSummary(const VuoMathExpression me)
 {
-	return VuoText_summaryFromValue(me.expression);
+	return VuoText_getSummary(me.expression);
 }

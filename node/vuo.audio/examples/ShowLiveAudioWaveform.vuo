@@ -9,14 +9,14 @@
 
 digraph G
 {
-GetItemFromList2 [type="vuo.list.get.VuoAudioSamples" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="224,298" _which="1"];
+GetFirstItemInList [type="vuo.list.get.first.VuoAudioSamples" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="513,408"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="590,324"];
 MakeWaveformImage [type="vuo.audio.image.waveform" version="1.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<amplitude>amplitude\l|<image>image\r" pos="414,298" fillcolor="violet" _fillColor="{\"r\":0.400000,\"g\":0.800000,\"b\":1.000000,\"a\":0.250004}" _lineColor="{\"r\":0.400000,\"g\":0.800000,\"b\":1.000000,\"a\":1.000000}" _amplitude="128"];
-ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="35,298" fillcolor="violet" _receivedChannels_eventThrottling="drop"];
+ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="135,298" fillcolor="violet" _receivedChannels_eventThrottling="drop"];
 RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="631,298" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
-GetItemFromList2:item -> MakeWaveformImage:samples;
+GetFirstItemInList:firstItem -> MakeWaveformImage:samples;
 MakeList0:list -> RenderImageToWindow:setWindowProperties;
 MakeWaveformImage:image -> RenderImageToWindow:image;
-ReceiveLiveAudio:receivedChannels -> GetItemFromList2:list;
+ReceiveLiveAudio:receivedChannels -> GetFirstItemInList:list;
 }

@@ -216,7 +216,7 @@ void VuoRendererTypecastPort::paint(QPainter *painter, const QStyleOptionGraphic
 	// Typecast description
 	QRectF textRect = getPortConstantTextRectForText(getCanvasTypecastTitle());
 	painter->setPen(colors->portTitle());
-	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortTitleFont());
+	painter->setFont(VuoRendererFonts::getSharedFonts()->nodePortConstantFont());
 	painter->drawText(textRect, Qt::AlignLeft, getCanvasTypecastTitle());
 
 	// Draw the normal port.

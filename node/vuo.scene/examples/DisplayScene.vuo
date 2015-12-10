@@ -1,6 +1,6 @@
 /**
  * @file
- * Displays and animates a 3D scene. 
+ * Displays a 3D scene which you can drag using the mouse.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,29 +9,19 @@
 
 digraph G
 {
-Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="756,210"];
-ConvertRealTo3DPoint [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="641,335"];
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="263,350" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetScene [type="vuo.scene.fetch" version="2.0.0" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="474,371" fillcolor="violet" _url="\"palmtree.dae\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="284,236" _2="20.000000"];
+FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="263,189" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetScene [type="vuo.scene.fetch" version="2.0.0" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="474,210" fillcolor="violet" _url="\"palmtree.dae\"" _center="true" _fit="true" _hasLeftHandedCoordinates="false"];
+MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.0" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="1007,408" fillcolor="violet" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000" _updatedCamera_eventThrottling="enqueue"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="962,251" fillcolor="green"];
-MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="932,221" fillcolor="green"];
-MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="710,236"];
-MakeTransform [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="542,210" _translation="{\"x\":0.000000,\"y\":-0.400000,\"z\":0.000000}" _scale="{\"x\":2.000000,\"y\":2.000000,\"z\":2.000000}"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="330,225"];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="932,221" fillcolor="green"];
 RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1003,210" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="682,371" _keepFront="true"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="682,210" _keepFront="true"];
 
-Combine3DObjects:object -> MakeList2:1;
-ConvertRealTo3DPoint:point3d -> MakeTransform:rotation;
 FireonStart:started -> GetScene:refresh;
 GetScene:scene -> ShowBackOf3DObject:object;
+MakeDraggableCamera:updatedCamera -> MakeList3:2;
 MakeList0:list -> RenderSceneToWindow2:setWindowProperties;
-MakeList2:list -> RenderSceneToWindow2:objects;
-MakeList6:list -> Combine3DObjects:childObjects;
-MakeList:list -> Multiply:values;
-MakeTransform:transform -> Combine3DObjects:transform;
-Multiply:product -> ConvertRealTo3DPoint:y;
-RenderSceneToWindow2:requestedFrame -> MakeList:1;
-ShowBackOf3DObject:backObject -> MakeList6:1;
+MakeList3:list -> RenderSceneToWindow2:objects;
+RenderSceneToWindow2:showedWindow -> MakeDraggableCamera:window;
+ShowBackOf3DObject:backObject -> MakeList3:1;
 }

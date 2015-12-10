@@ -29,7 +29,7 @@ VuoModuleMetadata({
  * @ingroup VuoKey
  * Decodes the JSON object @c js, expected to contain a string, to create a new @c VuoKey.
  */
-VuoKey VuoKey_valueFromJson(json_object *js)
+VuoKey VuoKey_makeFromJson(json_object *js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -282,7 +282,7 @@ VuoKey VuoKey_valueFromJson(json_object *js)
  * @ingroup VuoKey
  * Encodes @c value as a JSON object.
  */
-json_object * VuoKey_jsonFromValue(const VuoKey value)
+json_object * VuoKey_getJson(const VuoKey value)
 {
 	char *valueAsString = "";
 
@@ -649,7 +649,7 @@ json_object * VuoKey_jsonFromValue(const VuoKey value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoKey VuoKey_allowedValues(void)
+VuoList_VuoKey VuoKey_getAllowedValues(void)
 {
 	VuoList_VuoKey l = VuoListCreate_VuoKey();
 	for (VuoKey key = VuoKey_Any; key <= VuoKey_Kana; ++key)
@@ -661,7 +661,7 @@ VuoList_VuoKey VuoKey_allowedValues(void)
  * @ingroup VuoKey
  * Returns a string representation of the key as it would be interpreted in the user's keyboard layout.
  */
-char * VuoKey_summaryFromValue(const VuoKey value)
+char * VuoKey_getSummary(const VuoKey value)
 {
 	int keyCode;
 	bool isVisibleChar = true;
@@ -907,7 +907,7 @@ char * VuoKey_summaryFromValue(const VuoKey value)
 			summary = strdup("Keypad ,");
 		else
 		{
-			json_object *keyAsJson = VuoKey_jsonFromValue(value);
+			json_object *keyAsJson = VuoKey_getJson(value);
 			const char *keyAsString = json_object_get_string(keyAsJson);
 			summary = strdup(keyAsString);
 			json_object_put(keyAsJson);

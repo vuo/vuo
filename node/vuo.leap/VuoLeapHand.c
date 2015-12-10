@@ -42,7 +42,7 @@ VuoModuleMetadata({
  *	/// @todo write VuoLeapHand json example
  *	}
  */
-VuoLeapHand VuoLeapHand_valueFromJson(json_object * js)
+VuoLeapHand VuoLeapHand_makeFromJson(json_object * js)
 {
 	VuoLeapHand hand = VuoLeapHand_make(
 					0,									// id
@@ -64,46 +64,46 @@ VuoLeapHand VuoLeapHand_valueFromJson(json_object * js)
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		hand.id = VuoInteger_valueFromJson(o);
+		hand.id = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "rotation", &o))
-		hand.rotation = VuoPoint4d_valueFromJson(o);
+		hand.rotation = VuoPoint4d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "palmPosition", &o))
-		hand.palmPosition = VuoPoint3d_valueFromJson(o);
+		hand.palmPosition = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "palmVelocity", &o))
-		hand.palmVelocity = VuoPoint3d_valueFromJson(o);
+		hand.palmVelocity = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "sphereRadius", &o))
-		hand.sphereRadius = VuoReal_valueFromJson(o);
+		hand.sphereRadius = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "sphereCenter", &o))
-		hand.sphereCenter = VuoPoint3d_valueFromJson(o);
+		hand.sphereCenter = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "palmWidth", &o))
-		hand.palmWidth = VuoReal_valueFromJson(o);
+		hand.palmWidth = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "wristPosition", &o))
-		hand.wristPosition = VuoPoint3d_valueFromJson(o);
+		hand.wristPosition = VuoPoint3d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "pinchAmount", &o))
-		hand.pinchAmount = VuoReal_valueFromJson(o);
+		hand.pinchAmount = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "grabAmount", &o))
-		hand.grabAmount = VuoReal_valueFromJson(o);
+		hand.grabAmount = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "timeVisible", &o))
-		hand.timeVisible = VuoReal_valueFromJson(o);
+		hand.timeVisible = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "isLeftHand", &o))
-		hand.isLeftHand = VuoBoolean_valueFromJson(o);
+		hand.isLeftHand = VuoBoolean_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "confidence", &o))
-		hand.confidence = VuoReal_valueFromJson(o);
+		hand.confidence = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "fingers", &o))
-		hand.fingers = VuoList_VuoLeapPointable_valueFromJson(o);
+		hand.fingers = VuoList_VuoLeapPointable_makeFromJson(o);
 
 	return hand;
 }
@@ -112,50 +112,50 @@ VuoLeapHand VuoLeapHand_valueFromJson(json_object * js)
  * @ingroup VuoLeapHand
  * Encodes @c value as a JSON object.
  */
-json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value)
+json_object * VuoLeapHand_getJson(const VuoLeapHand value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_jsonFromValue(value.id);
+	json_object *idObject = VuoInteger_getJson(value.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *rotationObject = VuoPoint4d_jsonFromValue(value.rotation);
+	json_object *rotationObject = VuoPoint4d_getJson(value.rotation);
 	json_object_object_add(js, "rotation", rotationObject);
 
-	json_object *palmPositionObject = VuoPoint3d_jsonFromValue(value.palmPosition);
+	json_object *palmPositionObject = VuoPoint3d_getJson(value.palmPosition);
 	json_object_object_add(js, "palmPosition", palmPositionObject);
 
-	json_object *palmVelocityObject = VuoPoint3d_jsonFromValue(value.palmVelocity);
+	json_object *palmVelocityObject = VuoPoint3d_getJson(value.palmVelocity);
 	json_object_object_add(js, "palmVelocity", palmVelocityObject);
 
-	json_object *sphereRadiusObject = VuoReal_jsonFromValue(value.sphereRadius);
+	json_object *sphereRadiusObject = VuoReal_getJson(value.sphereRadius);
 	json_object_object_add(js, "sphereRadius", sphereRadiusObject);
 
-	json_object *sphereCenterObject = VuoPoint3d_jsonFromValue(value.sphereCenter);
+	json_object *sphereCenterObject = VuoPoint3d_getJson(value.sphereCenter);
 	json_object_object_add(js, "sphereCenter", sphereCenterObject);
 
-	json_object *palmWidthObject = VuoReal_jsonFromValue(value.palmWidth);
+	json_object *palmWidthObject = VuoReal_getJson(value.palmWidth);
 	json_object_object_add(js, "palmWidth", palmWidthObject);
 
-	json_object *wristPositionObject = VuoPoint3d_jsonFromValue(value.wristPosition);
+	json_object *wristPositionObject = VuoPoint3d_getJson(value.wristPosition);
 	json_object_object_add(js, "wristPosition", wristPositionObject);
 
-	json_object *pinchAmountObject = VuoReal_jsonFromValue(value.pinchAmount);
+	json_object *pinchAmountObject = VuoReal_getJson(value.pinchAmount);
 	json_object_object_add(js, "pinchAmount", pinchAmountObject);
 
-	json_object *grabAmountObject = VuoReal_jsonFromValue(value.grabAmount);
+	json_object *grabAmountObject = VuoReal_getJson(value.grabAmount);
 	json_object_object_add(js, "grabAmount", grabAmountObject);
 
-	json_object *timeVisibleObject = VuoReal_jsonFromValue(value.timeVisible);
+	json_object *timeVisibleObject = VuoReal_getJson(value.timeVisible);
 	json_object_object_add(js, "timeVisible", timeVisibleObject);
 
-	json_object *isLeftHandObject = VuoBoolean_jsonFromValue(value.isLeftHand);
+	json_object *isLeftHandObject = VuoBoolean_getJson(value.isLeftHand);
 	json_object_object_add(js, "isLeftHand", isLeftHandObject);
 
-	json_object *confidenceObject = VuoReal_jsonFromValue(value.confidence);
+	json_object *confidenceObject = VuoReal_getJson(value.confidence);
 	json_object_object_add(js, "confidence", confidenceObject);
 
-	json_object *pointablesObject = VuoList_VuoLeapPointable_jsonFromValue(value.fingers);
+	json_object *pointablesObject = VuoList_VuoLeapPointable_getJson(value.fingers);
 	json_object_object_add(js, "fingers", pointablesObject);
 
 	return js;
@@ -165,7 +165,7 @@ json_object * VuoLeapHand_jsonFromValue(const VuoLeapHand value)
  * @ingroup VuoLeapPointable
  * Returns a compact string representation of @c value.
  */
-char * VuoLeapHand_summaryFromValue(const VuoLeapHand value)
+char * VuoLeapHand_getSummary(const VuoLeapHand value)
 {
 	return VuoText_format("%lld", value.id);
 }

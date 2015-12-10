@@ -15,7 +15,7 @@ extern "C" {
 
 VuoModuleMetadata({
 					 "title" : "Split Audio by Frequency",
-					 "keywords" : [ "" ],
+					 "keywords" : [ "processor" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
 						 "Gamma"

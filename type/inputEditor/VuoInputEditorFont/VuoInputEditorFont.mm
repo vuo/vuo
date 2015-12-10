@@ -231,7 +231,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 
 	// Preset the font panel with the port's original font.
 	{
-		VuoFont originalVuoFont = VuoFont_valueFromJson(originalValue);
+		VuoFont originalVuoFont = VuoFont_makeFromJson(originalValue);
 		NSFont *originalFont;
 		if (originalVuoFont.fontName)
 		{
@@ -390,7 +390,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	currentEditor = NULL;
 
 	if (result == QDialog::Accepted)
-		return VuoFont_jsonFromValue(getCurrentVuoFont());
+		return VuoFont_getJson(getCurrentVuoFont());
 	else
 		return originalValue;
 }
@@ -400,7 +400,7 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
  */
 void VuoInputEditorFont::currentFontChanged(VuoFont font)
 {
-	json_object *valueAsJson = VuoFont_jsonFromValue(font);
+	json_object *valueAsJson = VuoFont_getJson(font);
 	emit valueChanged(valueAsJson);
 	json_object_put(valueAsJson);
 }

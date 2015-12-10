@@ -12,8 +12,12 @@ digraph G
 BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="BecameTrue1|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="195,106" _value="false"];
 BecameTrue12 [type="vuo.event.becameTrue" version="1.0.0" label="BecameTrue2|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="195,174" _value="false"];
 BecameTrue22 [type="vuo.event.becameTrue" version="1.0.0" label="BecameTrue3|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="437,412" _value="false"];
+ShareValue [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="ShareValue12|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="204,584"];
 ShareValue1 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue1|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="199,39"];
 ShareValue102 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue11|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="442,479"];
+ShareValue122 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="ShareValue13|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="393,582"];
+ShareValue123 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="ShareValue14|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="204,656"];
+ShareValue124 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="ShareValue15|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="395,654"];
 ShareValue24 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue2|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="388,39"];
 ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue3|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="385,107"];
 ShareValue4 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue4|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="385,175"];
@@ -23,13 +27,15 @@ ShareValue64 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue
 ShareValue7 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue7|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="124,348"];
 ShareValue72 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue8|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="124,415"];
 ShareValue9 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue9|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="123,482"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<value1>value1\r|<refresh1>refresh1\r|<value2>value2\r" _value1="" _value1_type="VuoInteger" _refresh1="" _refresh1_type="event" _value2="" _value2_type="VuoInteger"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<value1>value1\r|<refresh1>refresh1\r|<value2>value2\r" _value1_type="VuoInteger" _refresh1_type="event" _value2_type="VuoInteger"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<sameValue1>sameValue1\l|<becameTrue1>becameTrue1\l|<sameValue2>sameValue2\l" _sameValue1_type="VuoInteger" _becameTrue1_type="event" _sameValue2_type="VuoInteger"];
 
 BecameTrue12:becameTrue -> ShareValue4:value;
 BecameTrue:becameTrue -> ShareValue3:refresh;
+ShareValue123:sameValue -> ShareValue124:value [event=true style=invis];
 ShareValue1:sameValue -> ShareValue24:value;
 ShareValue5:sameValue -> ShareValue6:value [event=true];
+ShareValue:sameValue -> ShareValue122:value [style=invis];
 PublishedInputs:value1 -> ShareValue7:value;
 PublishedInputs:refresh1 -> ShareValue72:refresh;
 PublishedInputs:value2 -> ShareValue9:value [event=true];

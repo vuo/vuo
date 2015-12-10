@@ -13,8 +13,8 @@
 
 VuoModuleMetadata({
 					  "title" : "Resize Image",
-					  "keywords" : [ "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
-					  "version" : "1.1.0",
+					  "keywords" : [ "size", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
+					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "EnlargeMovie.vuo" ]
 					  }
@@ -35,6 +35,7 @@ static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -48,6 +49,10 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->shader = VuoShader_make("Resize Image Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, applyScaleFragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -103,20 +108,16 @@ void nodeInstanceEvent
 			break;
 	}
 
-	VuoShader frag = VuoShader_make("Resize Image Shader");
-	VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, applyScaleFragmentShader);
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage  (frag, "texture", image);
-	VuoShader_setUniform_VuoPoint2d(frag, "scale", scale);
-	VuoShader_setUniform_VuoPoint2d(frag, "offset", offset);
+	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "scale", scale);
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "offset", offset);
 
-	*resizedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, width, height, VuoImage_getColorDepth(image));
-
-	VuoRelease(frag);
+	*resizedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

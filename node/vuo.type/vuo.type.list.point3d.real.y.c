@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title": "Convert 3D Point List to Real List",
-					  "description": "Creates a list of real numbers using the y coordinate of the input list of 3D points.",
+					  "description": "Creates a list of real numbers using the Y coordinate of the input list of 3D points.",
 					  "version": "1.0.0"
 				 });
 

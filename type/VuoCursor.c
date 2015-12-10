@@ -35,7 +35,7 @@ VuoModuleMetadata({
  *   "pointer"
  * }
  */
-VuoCursor VuoCursor_valueFromJson(json_object * js)
+VuoCursor VuoCursor_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -62,7 +62,7 @@ VuoCursor VuoCursor_valueFromJson(json_object * js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoCursor_jsonFromValue(const VuoCursor value)
+json_object * VuoCursor_getJson(const VuoCursor value)
 {
 	char *valueAsString = "none";
 
@@ -85,7 +85,7 @@ json_object * VuoCursor_jsonFromValue(const VuoCursor value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoCursor VuoCursor_allowedValues(void)
+VuoList_VuoCursor VuoCursor_getAllowedValues(void)
 {
 	VuoList_VuoCursor l = VuoListCreate_VuoCursor();
 	VuoListAppendValue_VuoCursor(l, VuoCursor_None);
@@ -101,7 +101,7 @@ VuoList_VuoCursor VuoCursor_allowedValues(void)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoCursor_summaryFromValue(const VuoCursor value)
+char * VuoCursor_getSummary(const VuoCursor value)
 {
 	char *valueAsString = "(no cursor)";
 

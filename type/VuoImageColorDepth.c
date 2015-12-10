@@ -60,7 +60,9 @@ unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, Vuo
 	else if (baseFormat == GL_LUMINANCE_ALPHA)
 		return (imageColorDepth == VuoImageColorDepth_16) ? GL_LUMINANCE_ALPHA16F_ARB : GL_LUMINANCE8_ALPHA8;
 
-	VLog("Error: Unknown baseFormat %x (%s)", baseFormat, VuoGl_stringForConstant(baseFormat));
+	char *formatString = VuoGl_stringForConstant(baseFormat);
+	VLog("Error: Unknown baseFormat %x (%s)", baseFormat, formatString);
+	free(formatString);
 	return GL_RGB;
 }
 
@@ -69,7 +71,7 @@ unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, Vuo
  *
  * @eg{"8bpc"}
  */
-VuoImageColorDepth VuoImageColorDepth_valueFromJson(json_object * js)
+VuoImageColorDepth VuoImageColorDepth_makeFromJson(json_object * js)
 {
 	const char *valueAsString = "";
 	if (json_object_get_type(js) == json_type_string)
@@ -86,7 +88,7 @@ VuoImageColorDepth VuoImageColorDepth_valueFromJson(json_object * js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoImageColorDepth_jsonFromValue(const VuoImageColorDepth value)
+json_object * VuoImageColorDepth_getJson(const VuoImageColorDepth value)
 {
 	char *valueAsString = "";
 
@@ -106,7 +108,7 @@ json_object * VuoImageColorDepth_jsonFromValue(const VuoImageColorDepth value)
 /**
  * Returns a list of values that instances of this type can have.
  */
-VuoList_VuoImageColorDepth VuoImageColorDepth_allowedValues(void)
+VuoList_VuoImageColorDepth VuoImageColorDepth_getAllowedValues(void)
 {
 	VuoList_VuoImageColorDepth l = VuoListCreate_VuoImageColorDepth();
 	VuoListAppendValue_VuoImageColorDepth(l, VuoImageColorDepth_8);
@@ -117,7 +119,7 @@ VuoList_VuoImageColorDepth VuoImageColorDepth_allowedValues(void)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoImageColorDepth_summaryFromValue(const VuoImageColorDepth value)
+char * VuoImageColorDepth_getSummary(const VuoImageColorDepth value)
 {
 	int bits = 0;
 	if (value == VuoImageColorDepth_8)

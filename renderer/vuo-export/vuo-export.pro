@@ -17,6 +17,7 @@ LIBS += \
 	-rpath @loader_path/. \
 	-rpath @loader_path/resources \
 	-F../../framework/resources \
+	$$ROOT/library/libVuoHeap.dylib \
 	-lobjc \
 	-framework QtCore \
 	-framework QtGui \

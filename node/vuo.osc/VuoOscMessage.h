@@ -31,9 +31,9 @@ typedef struct _VuoOscMessage
 
 VuoOscMessage VuoOscMessage_make(VuoText address, struct json_object *data);
 
-VuoOscMessage VuoOscMessage_valueFromJson(struct json_object * js);
-struct json_object * VuoOscMessage_jsonFromValue(const VuoOscMessage value);
-char * VuoOscMessage_summaryFromValue(const VuoOscMessage value);
+VuoOscMessage VuoOscMessage_makeFromJson(struct json_object * js);
+struct json_object * VuoOscMessage_getJson(const VuoOscMessage value);
+char * VuoOscMessage_getSummary(const VuoOscMessage value);
 
 int VuoOscMessage_getDataCount(const VuoOscMessage value);
 struct json_object * VuoOscMessage_getDataJson(const VuoOscMessage value, int index);
@@ -42,8 +42,8 @@ struct json_object * VuoOscMessage_getDataJson(const VuoOscMessage value, int in
 /**
  * Automatically generated function.
  */
-VuoOscMessage VuoOscMessage_valueFromString(const char *str);
-char * VuoOscMessage_stringFromValue(const VuoOscMessage value);
+VuoOscMessage VuoOscMessage_makeFromString(const char *str);
+char * VuoOscMessage_getString(const VuoOscMessage value);
 void VuoOscMessage_retain(VuoOscMessage value);
 void VuoOscMessage_release(VuoOscMessage value);
 ///@}

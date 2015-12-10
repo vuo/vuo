@@ -17,8 +17,15 @@ typedef void * VuoMouse;  ///< Handle returned when starting to listen for event
 
 VuoMouse * VuoMouse_make(void);
 
-void VuoMouse_startListeningForScrolls(VuoMouse *mouseListener, void (*scrolled)(VuoPoint2d), VuoModifierKey modifierKey);
+void VuoMouse_GetScreenDimensions(int64_t *width, int64_t *height);
+
+void VuoMouse_startListeningForScrolls(VuoMouse *mouseListener, void (*scrolled)(VuoPoint2d),
+									   VuoWindowReference window, VuoModifierKey modifierKey);
+void VuoMouse_startListeningForScrollsWithCallback(VuoMouse *mouseListener, void (^scrolled)(VuoPoint2d),
+												   VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d),
+									 VuoWindowReference window, VuoModifierKey modifierKey);
+void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (^movedTo)(VuoPoint2d),
 									 VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForDeltas(VuoMouse *mouseListener, void (*movedBy)(VuoPoint2d),
 									  VuoWindowReference window, VuoModifierKey modifierKey);

@@ -20,8 +20,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoReal, {"default":0.5,"suggestedMin":0.0001,"suggestedMax":2.}) secondsPerBeat,
-		VuoOutputData(VuoReal) beatsPerMinute
+		VuoInputData(VuoReal, {"name":"Seconds per Beat", "default":0.5,"suggestedMin":0.0001,"suggestedMax":2.}) secondsPerBeat,
+		VuoOutputData(VuoReal, {"name":"Beats per Minute"}) beatsPerMinute
 )
 {
 	*beatsPerMinute = 60./secondsPerBeat;

@@ -29,33 +29,37 @@ typedef struct VuoRenderedLayers
 	VuoSceneObject rootSceneObject;
 	unsigned long int pixelsWide;
 	unsigned long int pixelsHigh;
+	float backingScaleFactor;
 	VuoWindowReference window;
 } VuoRenderedLayers;
 
 VuoRenderedLayers VuoRenderedLayers_makeEmpty(void);
 VuoRenderedLayers VuoRenderedLayers_make(VuoSceneObject rootSceneObject,
-										 unsigned long int pixelsWide, unsigned long int pixelsHigh);
+										 unsigned long int pixelsWide, unsigned long int pixelsHigh,
+										 float backingScaleFactor);
 VuoRenderedLayers VuoRenderedLayers_makeWithWindow(VuoSceneObject rootSceneObject,
 												   unsigned long int pixelsWide, unsigned long int pixelsHigh,
+												   float backingScaleFactor,
 												   VuoWindowReference window);
 bool VuoRenderedLayers_findLayer(VuoRenderedLayers renderedLayers, VuoText layerName,
 								 VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject);
 void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers,
 										   VuoList_VuoSceneObject ancestorObjects, VuoSceneObject targetObject,
 										   VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4]);
+VuoRectangle VuoRenderedLayers_getBoundingBox(VuoPoint2d layerCorners[4]);
 bool VuoRenderedLayers_isPointInQuad(VuoPoint2d corners[4], VuoPoint2d point);
 bool VuoRenderedLayers_isPointInLayer(VuoRenderedLayers renderedLayers, VuoText layerName, VuoPoint2d point);
 
-VuoRenderedLayers VuoRenderedLayers_valueFromJson(struct json_object * js);
-struct json_object * VuoRenderedLayers_jsonFromValue(const VuoRenderedLayers value);
-char * VuoRenderedLayers_summaryFromValue(const VuoRenderedLayers value);
+VuoRenderedLayers VuoRenderedLayers_makeFromJson(struct json_object * js);
+struct json_object * VuoRenderedLayers_getJson(const VuoRenderedLayers value);
+char * VuoRenderedLayers_getSummary(const VuoRenderedLayers value);
 
 ///@{
 /**
  * Automatically generated function.
  */
-VuoRenderedLayers VuoRenderedLayers_valueFromString(const char *str);
-char * VuoRenderedLayers_stringFromValue(const VuoRenderedLayers value);
+VuoRenderedLayers VuoRenderedLayers_makeFromString(const char *str);
+char * VuoRenderedLayers_getString(const VuoRenderedLayers value);
 void VuoRenderedLayers_retain(VuoRenderedLayers value);
 void VuoRenderedLayers_release(VuoRenderedLayers value);
 ///@}

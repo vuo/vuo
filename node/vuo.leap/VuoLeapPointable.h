@@ -48,9 +48,9 @@ typedef struct
 	VuoBoolean isExtended;
 } VuoLeapPointable;
 
-VuoLeapPointable VuoLeapPointable_valueFromJson(struct json_object * js);
-struct json_object * VuoLeapPointable_jsonFromValue(const VuoLeapPointable value);
-char * VuoLeapPointable_summaryFromValue(const VuoLeapPointable value);
+VuoLeapPointable VuoLeapPointable_makeFromJson(struct json_object * js);
+struct json_object * VuoLeapPointable_getJson(const VuoLeapPointable value);
+char * VuoLeapPointable_getSummary(const VuoLeapPointable value);
 
 VuoLeapPointable VuoLeapPointable_make(VuoInteger id,
 	VuoLeapPointableType type,
@@ -68,8 +68,8 @@ VuoLeapPointable VuoLeapPointable_make(VuoInteger id,
 /**
  * Automatically generated function.
  */
-VuoLeapPointable VuoLeapPointable_valueFromString(const char * initializer);
-char * VuoLeapPointable_stringFromValue(const VuoLeapPointable value);
+VuoLeapPointable VuoLeapPointable_makeFromString(const char * initializer);
+char * VuoLeapPointable_getString(const VuoLeapPointable value);
 /// @}
 
 /**

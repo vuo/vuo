@@ -82,13 +82,13 @@ private slots:
 		QFETCH(VuoPoint2d, value);
 		QFETCH(bool, testStringFromValue);
 
-		VuoPoint2d p = VuoPoint2d_valueFromString(initializer.toUtf8().constData());
+		VuoPoint2d p = VuoPoint2d_makeFromString(initializer.toUtf8().constData());
 
 		QCOMPARE(p.x,value.x);
 		QCOMPARE(p.y,value.y);
 
 		if (testStringFromValue)
-			QCOMPARE(VuoPoint2d_stringFromValue(p), initializer.toUtf8().constData());
+			QCOMPARE(VuoPoint2d_getString(p), initializer.toUtf8().constData());
 	}
 
 	void testRectangleIntersection_data()

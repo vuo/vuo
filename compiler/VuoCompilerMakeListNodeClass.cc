@@ -47,10 +47,12 @@ VuoCompilerMakeListNodeClass::VuoCompilerMakeListNodeClass(VuoCompilerMakeListNo
  *
  * @param nodeClassName The name of the node class to generate. It should have the format "vuo.list.make.<item count>.<item type>" (e.g. "vuo.list.make.3.VuoInteger").
  * @param compiler The compiler to use for looking up types.
+ * @param llvmQueue Synchronizes access to LLVM's global context.
  * @param nodeToBack Optionally, a 'Make List' node whose generic types should be used to determine this node class's backing types.
  * @return The generated node class, or null if the node class name does not have the correct format.
  */
-VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack)
+VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler,
+														  dispatch_queue_t llvmQueue, VuoNode *nodeToBack)
 {
 	unsigned long itemCount;
 	string itemTypeStr;
@@ -71,159 +73,166 @@ VuoNodeClass * VuoCompilerMakeListNodeClass::newNodeClass(string nodeClassName, 
 	{
 		itemType = compiler->getType(itemTypeStr);
 		listType = compiler->getType(VuoType::listTypeNamePrefix + itemTypeStr);
-	}
-	Type *pointerToListType = PointerType::get(listType->getType(), 0);
-
-	Type *itemParamSecondType = NULL;
-	Type *itemParamType = itemType->getFunctionParameterType(&itemParamSecondType);
-	Attributes itemParamAttributes = itemType->getFunctionParameterAttributes();
-
-	Module *module = new Module("", getGlobalContext());
-	Type *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-	// const char *moduleDetails = ...;
-	string moduleDetails =
-			"{ \"title\" : \"Make List\", "
-			"\"description\" : \"" + makeListNodeClassDescription + "\", "
-			"\"version\" : \"2.0.0\" }";
-	Constant *moduleDetailsValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, moduleDetails, ".str");  // VuoCompilerBitcodeParser::resolveGlobalToConst requires that the variable have a name
-	GlobalVariable *moduleDetailsVariable = new GlobalVariable(*module, pointerToCharType, false, GlobalValue::ExternalLinkage, 0, "moduleDetails");
-	moduleDetailsVariable->setInitializer(moduleDetailsValue);
-
-
-	// void nodeEvent
-	// (
-	//	VuoInputData(<item type>,<default value>) item1,
-	//	...,
-	//	VuoInputData(<item type>,<default value>) item<item count>,
-	//	VuoOutputData(VuoList_<item type>) list
-	// )
-
-	vector<Type *> eventFunctionParams;
-	for (unsigned long i = 0; i < itemCount; ++i)
-	{
-		eventFunctionParams.push_back(itemParamType);
-		if (itemParamSecondType)
-			eventFunctionParams.push_back(itemParamSecondType);
-	}
-	eventFunctionParams.push_back(pointerToListType);
-	FunctionType *eventFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), eventFunctionParams, false);
-	Function *eventFunction = Function::Create(eventFunctionType, GlobalValue::ExternalLinkage, "nodeEvent", module);
-
-	for (unsigned long i = 0; i < itemCount; ++i)
-	{
-		int attributeIndex = (itemParamSecondType ? 2*i + 1 : i + 1);
-		eventFunction->addAttribute(attributeIndex, itemParamAttributes);
-		if (itemParamSecondType)
-			eventFunction->addAttribute(attributeIndex + 1, itemParamAttributes);
+		if (! itemType || ! listType)
+			return NULL;
 	}
 
-	BasicBlock *block = BasicBlock::Create(module->getContext(), "", eventFunction, 0);
-	Function::arg_iterator argIter = eventFunction->arg_begin();
-	for (unsigned long i = 0; i < itemCount; ++i)
-	{
-		Value *arg = argIter++;
-		ostringstream oss;
-		oss << i+1;
-		string argName = oss.str();
-		arg->setName(argName);
+	__block VuoCompilerMakeListNodeClass *nodeClass;
+	dispatch_sync(llvmQueue, ^{
 
-		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoType:" + itemType->getBase()->getModuleKey(), "", 0);
-		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoInputData", "", 0);
+					  Type *pointerToListType = PointerType::get(listType->getType(), 0);
 
-		if (itemParamSecondType)
-		{
-			arg = argIter++;
-			argName += ".1";
-			arg->setName(argName);
-		}
-	}
-	{
-		Value *arg = argIter++;
-		string argName = "list";
-		arg->setName(argName);
+					  Type *itemParamSecondType = NULL;
+					  Type *itemParamType = itemType->getFunctionParameterType(&itemParamSecondType);
+					  Attributes itemParamAttributes = itemType->getFunctionParameterAttributes();
 
-		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoType:" + listType->getBase()->getModuleKey(), "", 0);
-		VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoOutputData", "", 0);
-	}
+					  Module *module = new Module("", getGlobalContext());
+					  Type *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+					  // const char *moduleDetails = ...;
+					  string moduleDetails =
+					  "{ \"title\" : \"Make List\", "
+					  "\"description\" : \"" + makeListNodeClassDescription + "\", "
+					  "\"version\" : \"2.0.0\" }";
+					  Constant *moduleDetailsValue = VuoCompilerCodeGenUtilities::generatePointerToConstantString(module, moduleDetails, ".str");  // VuoCompilerBitcodeParser::resolveGlobalToConst requires that the variable have a name
+					  GlobalVariable *moduleDetailsVariable = new GlobalVariable(*module, pointerToCharType, false, GlobalValue::ExternalLinkage, 0, "moduleDetails");
+					  moduleDetailsVariable->setInitializer(moduleDetailsValue);
 
 
-	// {
-	//		*list = VuoListCreate_<item type>();
-	//		VuoListAppendValue_<item type>(*list, item1);
-	//		...
-	//		VuoListAppendValue_<item type>(*list, item<item count>);
-	// }
+					  // void nodeEvent
+					  // (
+					  //	VuoInputData(<item type>,<default value>) item1,
+					  //	...,
+					  //	VuoInputData(<item type>,<default value>) item<item count>,
+					  //	VuoOutputData(VuoList_<item type>) list
+					  // )
 
-	PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+					  vector<Type *> eventFunctionParams;
+					  for (unsigned long i = 0; i < itemCount; ++i)
+					  {
+						  eventFunctionParams.push_back(itemParamType);
+						  if (itemParamSecondType)
+						  eventFunctionParams.push_back(itemParamSecondType);
+					  }
+					  eventFunctionParams.push_back(pointerToListType);
+					  FunctionType *eventFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), eventFunctionParams, false);
+					  Function *eventFunction = Function::Create(eventFunctionType, GlobalValue::ExternalLinkage, "nodeEvent", module);
 
-	string itemBackingTypeName;
-	if (nodeToBack)
-		itemBackingTypeName = static_cast<VuoCompilerGenericType *>(itemType)->getBackingTypeName();
-	else if (VuoGenericType::isGenericTypeName(itemTypeStr))
-		itemBackingTypeName = VuoCompilerGenericType::chooseBackingTypeName(itemTypeStr, set<string>());
-	else
-		itemBackingTypeName = itemTypeStr;
+					  for (unsigned long i = 0; i < itemCount; ++i)
+					  {
+						  int attributeIndex = (itemParamSecondType ? 2*i + 1 : i + 1);
+						  eventFunction->addAttribute(attributeIndex, itemParamAttributes);
+						  if (itemParamSecondType)
+						  eventFunction->addAttribute(attributeIndex + 1, itemParamAttributes);
+					  }
 
-	string listCreateFunctionName = "VuoListCreate_" + itemBackingTypeName;
-	Function *listCreateFunction = module->getFunction(listCreateFunctionName);
-	if (! listCreateFunction)
-	{
-		vector<Type *> functionParams;
-		FunctionType *functionType = FunctionType::get(voidPointerType, functionParams, false);
-		listCreateFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listCreateFunctionName, module);
-	}
+					  BasicBlock *block = BasicBlock::Create(module->getContext(), "", eventFunction, 0);
+					  Function::arg_iterator argIter = eventFunction->arg_begin();
+					  for (unsigned long i = 0; i < itemCount; ++i)
+					  {
+						  Value *arg = argIter++;
+						  ostringstream oss;
+						  oss << i+1;
+						  string argName = oss.str();
+						  arg->setName(argName);
 
-	string listAppendFunctionName = "VuoListAppendValue_" + itemBackingTypeName;
-	Function *listAppendFunction = module->getFunction(listAppendFunctionName);
-	if (! listAppendFunction)
-	{
-		vector<Type *> functionParams;
-		functionParams.push_back(voidPointerType);
-		functionParams.push_back(itemParamType);
-		if (itemParamSecondType)
-			functionParams.push_back(itemParamSecondType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		listAppendFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listAppendFunctionName, module);
+						  VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoType:" + itemType->getBase()->getModuleKey(), "", 0);
+						  VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoInputData", "", 0);
 
-		listAppendFunction->addAttribute(2, itemParamAttributes);
-	}
+						  if (itemParamSecondType)
+						  {
+							  arg = argIter++;
+							  argName += ".1";
+							  arg->setName(argName);
+						  }
+					  }
+					  {
+						  Value *arg = argIter++;
+						  string argName = "list";
+						  arg->setName(argName);
 
-	argIter = eventFunction->arg_begin();
-	vector<Value *> itemValues;
-	for (unsigned long i = 0; i < itemCount; ++i)
-	{
-		itemValues.push_back(argIter++);
-		if (itemParamSecondType)
-			itemValues.push_back(argIter++);
-	}
-	Value *listVariable = argIter++;
-
-	CallInst *listValue = CallInst::Create(listCreateFunction, "", block);
-	Value *listValueAsStruct = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, listValue, static_cast<PointerType *>(listVariable->getType())->getElementType());
-	new StoreInst(listValueAsStruct, listVariable, false, block);
-
-	for (unsigned long i = 0; i < itemCount; ++i)
-	{
-		int itemValuesIndex = (itemParamSecondType ? 2*i : i);
-		vector<Value *> listAppendParams;
-		listAppendParams.push_back(listValue);
-		listAppendParams.push_back(itemValues[itemValuesIndex]);
-		if (itemParamSecondType)
-			listAppendParams.push_back(itemValues[itemValuesIndex + 1]);
-		CallInst *call = CallInst::Create(listAppendFunction, listAppendParams, "", block);
-
-		call->addAttribute(2, itemType->getFunctionParameterAttributes());
-	}
-
-	ReturnInst::Create(module->getContext(), block);
+						  VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoType:" + listType->getBase()->getModuleKey(), "", 0);
+						  VuoCompilerCodeGenUtilities::generateAnnotation(module, block, arg, "vuoOutputData", "", 0);
+					  }
 
 
-	VuoCompilerMakeListNodeClass *dummyNodeClass = new VuoCompilerMakeListNodeClass(nodeClassName, module);
+					  // {
+					  //		*list = VuoListCreate_<item type>();
+					  //		VuoListAppendValue_<item type>(*list, item1);
+					  //		...
+					  //		VuoListAppendValue_<item type>(*list, item<item count>);
+					  // }
 
-	// Reconstruct, this time with a base VuoNodeClass containing actual (non-dummy) ports.
-	VuoCompilerMakeListNodeClass *nodeClass = new VuoCompilerMakeListNodeClass(dummyNodeClass, nodeToBack);
-	delete dummyNodeClass;
+					  PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+					  string itemBackingTypeName;
+					  if (nodeToBack)
+					  itemBackingTypeName = static_cast<VuoCompilerGenericType *>(itemType)->getBackingTypeName();
+					  else if (VuoGenericType::isGenericTypeName(itemTypeStr))
+					  itemBackingTypeName = VuoCompilerGenericType::chooseBackingTypeName(itemTypeStr, set<string>());
+					  else
+					  itemBackingTypeName = itemTypeStr;
+
+					  string listCreateFunctionName = "VuoListCreate_" + itemBackingTypeName;
+					  Function *listCreateFunction = module->getFunction(listCreateFunctionName);
+					  if (! listCreateFunction)
+					  {
+						  vector<Type *> functionParams;
+						  FunctionType *functionType = FunctionType::get(voidPointerType, functionParams, false);
+						  listCreateFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listCreateFunctionName, module);
+					  }
+
+					  string listAppendFunctionName = "VuoListAppendValue_" + itemBackingTypeName;
+					  Function *listAppendFunction = module->getFunction(listAppendFunctionName);
+					  if (! listAppendFunction)
+					  {
+						  vector<Type *> functionParams;
+						  functionParams.push_back(voidPointerType);
+						  functionParams.push_back(itemParamType);
+						  if (itemParamSecondType)
+						  functionParams.push_back(itemParamSecondType);
+						  FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+						  listAppendFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, listAppendFunctionName, module);
+
+						  listAppendFunction->addAttribute(2, itemParamAttributes);
+					  }
+
+					  argIter = eventFunction->arg_begin();
+					  vector<Value *> itemValues;
+					  for (unsigned long i = 0; i < itemCount; ++i)
+					  {
+						  itemValues.push_back(argIter++);
+						  if (itemParamSecondType)
+						  itemValues.push_back(argIter++);
+					  }
+					  Value *listVariable = argIter++;
+
+					  CallInst *listValue = CallInst::Create(listCreateFunction, "", block);
+					  Value *listValueAsStruct = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, listValue, static_cast<PointerType *>(listVariable->getType())->getElementType());
+					  new StoreInst(listValueAsStruct, listVariable, false, block);
+
+					  for (unsigned long i = 0; i < itemCount; ++i)
+					  {
+						  int itemValuesIndex = (itemParamSecondType ? 2*i : i);
+						  vector<Value *> listAppendParams;
+						  listAppendParams.push_back(listValue);
+						  listAppendParams.push_back(itemValues[itemValuesIndex]);
+						  if (itemParamSecondType)
+						  listAppendParams.push_back(itemValues[itemValuesIndex + 1]);
+						  CallInst *call = CallInst::Create(listAppendFunction, listAppendParams, "", block);
+
+						  call->addAttribute(2, itemType->getFunctionParameterAttributes());
+					  }
+
+					  ReturnInst::Create(module->getContext(), block);
+
+
+					  VuoCompilerMakeListNodeClass *dummyNodeClass = new VuoCompilerMakeListNodeClass(nodeClassName, module);
+
+					  // Reconstruct, this time with a base VuoNodeClass containing actual (non-dummy) ports.
+					  nodeClass = new VuoCompilerMakeListNodeClass(dummyNodeClass, nodeToBack);
+					  delete dummyNodeClass;
+				  });
 
 	nodeClass->itemCount = itemCount;
 	nodeClass->listType = listType;

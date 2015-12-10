@@ -51,12 +51,7 @@ bool TestVuoCompiler::executeFunction(Module *mod, string functionName, vector<G
 void TestVuoCompiler::initCompiler()
 {
 	compiler = new VuoCompiler();
-
 	compiler->addModuleSearchPath("../TestVuoCompiler/node-TestVuoCompiler");
-
-	compiler->addPreferredLibrarySearchPath("../../editor/VuoEditorApp/Binaries");
-
-	compiler->addPreferredFrameworkSearchPath(QT_ROOT "/lib");
 }
 
 /**

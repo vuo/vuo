@@ -28,7 +28,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "PlayMovieWithButton.vuo" ]
+						 "exampleCompositions" : [ "SkimMovie.vuo" ]
 					 }
 				 });
 

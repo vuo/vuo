@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
-						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo", "WalkCaterpillar.vuo" ]
+						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo" ]
 					  }
 				 });
 

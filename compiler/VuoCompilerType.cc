@@ -26,13 +26,13 @@ VuoCompilerType::VuoCompilerType(string typeName, Module *module)
 {
 	getBase()->setCompiler(this);
 
-	valueFromJsonFunction = NULL;
-	jsonFromValueFunction = NULL;
-	interprocessJsonFromValueFunction = NULL;
-	valueFromStringFunction = NULL;
-	stringFromValueFunction = NULL;
-	interprocessStringFromValueFunction = NULL;
-	summaryFromValueFunction = NULL;
+	makeFromJsonFunction = NULL;
+	getJsonFunction = NULL;
+	getInterprocessJsonFunction = NULL;
+	makeFromStringFunction = NULL;
+	getStringFunction = NULL;
+	getInterprocessStringFunction = NULL;
+	getSummaryFunction = NULL;
 	retainFunction = NULL;
 	releaseFunction = NULL;
 	llvmType = NULL;
@@ -58,7 +58,7 @@ VuoCompilerType * VuoCompilerType::newType(string typeName, Module *module)
  */
 bool VuoCompilerType::isType(string typeName, Module *module)
 {
-	return (module->getNamedValue(typeName + "_valueFromJson") != NULL);
+	return (module->getNamedValue(typeName + "_makeFromJson") != NULL);
 }
 
 /**
@@ -69,23 +69,23 @@ void VuoCompilerType::parse(void)
 	VuoCompilerModule::parse();
 
 	string typeName = getBase()->getModuleKey();
-	valueFromJsonFunction = parser->getFunction(typeName + "_valueFromJson");
-	jsonFromValueFunction = parser->getFunction(typeName + "_jsonFromValue");
-	interprocessJsonFromValueFunction = parser->getFunction(typeName + "_interprocessJsonFromValue");
-	summaryFromValueFunction = parser->getFunction(typeName + "_summaryFromValue");
+	makeFromJsonFunction = parser->getFunction(typeName + "_makeFromJson");
+	getJsonFunction = parser->getFunction(typeName + "_getJson");
+	getInterprocessJsonFunction = parser->getFunction(typeName + "_getInterprocessJson");
+	getSummaryFunction = parser->getFunction(typeName + "_getSummary");
 
-	if (! valueFromJsonFunction)
-		VLog("Error: Couldn't find %s_valueFromJson() function.", typeName.c_str());
-	if (! jsonFromValueFunction)
-		VLog("Error: Couldn't find %s_jsonFromValue() function.", typeName.c_str());
-	if (! summaryFromValueFunction)
-		VLog("Error: Couldn't find %s_summaryFromValueFunction() function.", typeName.c_str());
+	if (! makeFromJsonFunction)
+		VLog("Error: Couldn't find %s_makeFromJson() function.", typeName.c_str());
+	if (! getJsonFunction)
+		VLog("Error: Couldn't find %s_getJson() function.", typeName.c_str());
+	if (! getSummaryFunction)
+		VLog("Error: Couldn't find %s_getSummaryFunction() function.", typeName.c_str());
 
-	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(jsonFromValueFunction, 0, module, typeName);
+	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(getJsonFunction, 0, module, typeName);
 
 	parseOrGenerateValueFromStringFunction();
 	parseOrGenerateStringFromValueFunction(false);
-	if (interprocessJsonFromValueFunction)
+	if (getInterprocessJsonFunction)
 		parseOrGenerateStringFromValueFunction(true);
 
 	parseOrGenerateRetainOrReleaseFunction(true);
@@ -102,13 +102,13 @@ set<string> VuoCompilerType::globalsToRename(void)
 }
 
 /**
- * When compiling a type, adds a @c [Type]_valueFromString() function to the type definition.
+ * When compiling a type, adds a @c [Type]_makeFromString() function to the type definition.
  *
  * @eg{
- * VuoBoolean VuoBoolean_valueFromString(const char *str)
+ * VuoBoolean VuoBoolean_makeFromString(const char *str)
  * {
  * 	json_object * js = json_tokener_parse(str);
- * 	VuoBoolean value = VuoBoolean_valueFromJson(js);
+ * 	VuoBoolean value = VuoBoolean_makeFromJson(js);
  * 	json_object_put(js);
  * 	return value;
  * }
@@ -116,32 +116,32 @@ set<string> VuoCompilerType::globalsToRename(void)
  *
  * When parsing a compiled type, parses this function from the type definition.
  *
- * Assumes that valueFromJsonFunction has been parsed and llvmType has been set.
+ * Assumes that makeFromJsonFunction has been parsed and llvmType has been set.
  */
 void VuoCompilerType::parseOrGenerateValueFromStringFunction(void)
 {
-	string functionName = (getBase()->getModuleKey() + "_valueFromString").c_str();
+	string functionName = (getBase()->getModuleKey() + "_makeFromString").c_str();
 	Function *function = parser->getFunction(functionName);
 
-	bool isReturnInParam = VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(valueFromJsonFunction);
+	bool isReturnInParam = VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(makeFromJsonFunction);
 
 	if (! function)
 	{
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		FunctionType *valueFromJsonFunctionType = valueFromJsonFunction->getFunctionType();
+		FunctionType *makeFromJsonFunctionType = makeFromJsonFunction->getFunctionType();
 
-		Type *returnType = valueFromJsonFunctionType->getReturnType();
+		Type *returnType = makeFromJsonFunctionType->getReturnType();
 
 		vector<Type *> functionParams;
 		if (isReturnInParam)
-			functionParams.push_back(valueFromJsonFunctionType->getParamType(0));
+			functionParams.push_back(makeFromJsonFunctionType->getParamType(0));
 		functionParams.push_back(pointerToCharType);
 
 		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
 		if (isReturnInParam)
-			function->addAttribute(1, valueFromJsonFunction->getAttributes().getParamAttributes(1));
+			function->addAttribute(1, makeFromJsonFunction->getAttributes().getParamAttributes(1));
 	}
 
 	if (function->isDeclaration())
@@ -163,29 +163,29 @@ void VuoCompilerType::parseOrGenerateValueFromStringFunction(void)
 
 		CallInst *jsonTokenerParseReturn = CallInst::Create(jsonTokenerParseFunction, str, "", block);
 
-		vector<Value *> valueFromJsonArgs;
+		vector<Value *> makeFromJsonArgs;
 		if (isReturnInParam)
-			valueFromJsonArgs.push_back(result);
-		valueFromJsonArgs.push_back(jsonTokenerParseReturn);
-		Value *valueFromJsonReturn = CallInst::Create(valueFromJsonFunction, valueFromJsonArgs, "", block);
+			makeFromJsonArgs.push_back(result);
+		makeFromJsonArgs.push_back(jsonTokenerParseReturn);
+		Value *makeFromJsonReturn = CallInst::Create(makeFromJsonFunction, makeFromJsonArgs, "", block);
 
 		CallInst::Create(jsonObjectPutFunction, jsonTokenerParseReturn, "", block);
 
-		Value *returnValue = (isReturnInParam ? NULL : valueFromJsonReturn);
+		Value *returnValue = (isReturnInParam ? NULL : makeFromJsonReturn);
 		ReturnInst::Create(module->getContext(), returnValue, block);
 	}
 
-	valueFromStringFunction = function;
+	makeFromStringFunction = function;
 }
 
 /**
- * When compiling a type, adds a @c [Type]_stringFromValue() or @c [Type]_interprocessStringFromValue()
+ * When compiling a type, adds a @c [Type]_getString() or @c [Type]_getInterprocessString()
  * function to the type definition.
  *
  * @eg{
- * char * VuoBoolean_stringFromValue(const VuoBoolean value)
+ * char * VuoBoolean_getString(const VuoBoolean value)
  * {
- * 	json_object *js = VuoBoolean_jsonFromValue(value);
+ * 	json_object *js = VuoBoolean_getJson(value);
  * 	char *string = strdup(json_object_to_json_string_ext(js,JSON_C_TO_STRING_PLAIN));
  * 	json_object_put(js);
  * 	return string;
@@ -194,30 +194,30 @@ void VuoCompilerType::parseOrGenerateValueFromStringFunction(void)
  *
  * When parsing a compiled type, parses this function from the type definition.
  *
- * Assumes that jsonFromValueFunction or interprocessJsonFromValueFunction has been parsed.
+ * Assumes that getJsonFunction or getInterprocessJsonFunction has been parsed.
  */
 void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess)
 {
-	string functionName = (getBase()->getModuleKey() + (isInterprocess ? "_interprocessStringFromValue" : "_stringFromValue")).c_str();
+	string functionName = (getBase()->getModuleKey() + (isInterprocess ? "_getInterprocessString" : "_getString")).c_str();
 	Function *function = parser->getFunction(functionName);
 
-	Function *chosenJsonFromValueFunction = (isInterprocess ? interprocessJsonFromValueFunction : jsonFromValueFunction);
+	Function *chosenJsonFromValueFunction = (isInterprocess ? getInterprocessJsonFunction : getJsonFunction);
 
 	if (! function)
 	{
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		FunctionType *jsonFromValueFunctionType = chosenJsonFromValueFunction->getFunctionType();
+		FunctionType *getJsonFunctionType = chosenJsonFromValueFunction->getFunctionType();
 
 		Type *returnType = pointerToCharType;
 
 		vector<Type *> functionParams;
-		for (int i = 0; i < jsonFromValueFunctionType->getNumParams(); ++i)
-			functionParams.push_back(jsonFromValueFunctionType->getParamType(i));
+		for (int i = 0; i < getJsonFunctionType->getNumParams(); ++i)
+			functionParams.push_back(getJsonFunctionType->getParamType(i));
 
 		FunctionType *functionType = FunctionType::get(returnType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 
-		for (int i = 0; i < jsonFromValueFunctionType->getNumParams(); ++i)
+		for (int i = 0; i < getJsonFunctionType->getNumParams(); ++i)
 			function->addAttribute(i+1, chosenJsonFromValueFunction->getAttributes().getParamAttributes(1));
 	}
 
@@ -238,30 +238,30 @@ void VuoCompilerType::parseOrGenerateStringFromValueFunction(bool isInterprocess
 		Function *strdupFunction = VuoCompilerCodeGenUtilities::getStrdupFunction(module);
 		Function *jsonObjectPutFunction = VuoCompilerCodeGenUtilities::getJsonObjectPutFunction(module);
 
-		vector<Value *> jsonFromValueArgs;
+		vector<Value *> getJsonArgs;
 		for (Function::arg_iterator args = function->arg_begin(); args != function->arg_end(); ++args)
 		{
 			Value *value = args;
-			jsonFromValueArgs.push_back(value);
+			getJsonArgs.push_back(value);
 		}
-		CallInst *jsonFromValueReturn = CallInst::Create(chosenJsonFromValueFunction, jsonFromValueArgs, "", block);
+		CallInst *getJsonReturn = CallInst::Create(chosenJsonFromValueFunction, getJsonArgs, "", block);
 
 		vector<Value *> jsonObjectToJsonStringExtArgs;
-		jsonObjectToJsonStringExtArgs.push_back(jsonFromValueReturn);
+		jsonObjectToJsonStringExtArgs.push_back(getJsonReturn);
 		jsonObjectToJsonStringExtArgs.push_back(ConstantInt::get(module->getContext(), APInt(32, JSON_C_TO_STRING_PLAIN)));
 		CallInst *jsonObjectToJsonStringExtReturn = CallInst::Create(jsonObjectToJsonStringExtFunction, jsonObjectToJsonStringExtArgs, "", block);
 
 		CallInst *strdupReturn = CallInst::Create(strdupFunction, jsonObjectToJsonStringExtReturn, "", block);
 
-		CallInst::Create(jsonObjectPutFunction, jsonFromValueReturn, "", block);
+		CallInst::Create(jsonObjectPutFunction, getJsonReturn, "", block);
 
 		ReturnInst::Create(module->getContext(), strdupReturn, block);
 	}
 
 	if (isInterprocess)
-		interprocessStringFromValueFunction = function;
+		getInterprocessStringFunction = function;
 	else
-		stringFromValueFunction = function;
+		getStringFunction = function;
 }
 
 /**
@@ -323,18 +323,18 @@ void VuoCompilerType::parseOrGenerateRetainOrReleaseFunction(bool isRetain)
 }
 
 /**
- * Generates a call to @c [Type]_valueFromString().
+ * Generates a call to @c [Type]_makeFromString().
  *
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
- * @param arg The argument to pass to @c [Type]_valueFromString().
- * @return The return value of @c [Type]_valueFromString().
+ * @param arg The argument to pass to @c [Type]_makeFromString().
+ * @return The return value of @c [Type]_makeFromString().
  */
 Value * VuoCompilerType::generateValueFromStringFunctionCall(Module *module, BasicBlock *block, Value *arg)
 {
-	Function *function = declareFunctionInModule(module, valueFromStringFunction);
+	Function *function = declareFunctionInModule(module, makeFromStringFunction);
 
-	if (VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(valueFromStringFunction))
+	if (VuoCompilerCodeGenUtilities::isFunctionReturningStructViaParameter(makeFromStringFunction))
 	{
 		vector<Value *> functionArgs;
 		functionArgs.push_back(arg);
@@ -353,51 +353,67 @@ Value * VuoCompilerType::generateValueFromStringFunctionCall(Module *module, Bas
 }
 
 /**
- * Generates a call to @c [Type]_stringFromValue().
+ * Generates a call to @c [Type]_getString().
  *
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
- * @param arg The argument to pass to @c [Type]_stringFromValue().
- * @return The return value of @c [Type]_stringFromValue().
+ * @param arg The argument to pass to @c [Type]_getString().
+ * @return The return value of @c [Type]_getString().
  */
 Value * VuoCompilerType::generateStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg)
 {
-	return generateSerializationFunctionCall(module, block, arg, stringFromValueFunction);
+	return generateFunctionCallWithTypeParameter(module, block, arg, getStringFunction);
 }
 
 /**
- * Generates a call to @c [Type]_interprocessStringFromValue().
+ * Generates a call to @c [Type]_getInterprocessString().
  *
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
- * @param arg The argument to pass to @c [Type]_interprocessStringFromValue().
- * @return The return value of @c [Type]_interprocessStringFromValue(), or the return value of @c [Type]_stringFromValue() if the interprocess function doesn't exist.
+ * @param arg The argument to pass to @c [Type]_getInterprocessString().
+ * @return The return value of @c [Type]_getInterprocessString(), or the return value of @c [Type]_getString() if the interprocess function doesn't exist.
  */
 Value * VuoCompilerType::generateInterprocessStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg)
 {
-	if (interprocessStringFromValueFunction)
-		return generateSerializationFunctionCall(module, block, arg, interprocessStringFromValueFunction);
+	if (getInterprocessStringFunction)
+		return generateFunctionCallWithTypeParameter(module, block, arg, getInterprocessStringFunction);
 	else
 		return generateStringFromValueFunctionCall(module, block, arg);
 }
 
 /**
- * Generates a call to @c [Type]_summaryFromValue().
+ * Generates a call to @c [Type]_getSummary().
  *
  * @param module The destination LLVM module (i.e., generated code).
  * @param block The LLVM block to which to append the function call.
- * @param arg The argument to pass to @c [Type]_summaryFromValue().
- * @return The return value of @c [Type]_summaryFromValue().
+ * @param arg The argument to pass to @c [Type]_getSummary().
+ * @return The return value of @c [Type]_getSummary().
  */
 Value * VuoCompilerType::generateSummaryFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg)
 {
-	return generateSerializationFunctionCall(module, block, arg, summaryFromValueFunction);
+	return generateFunctionCallWithTypeParameter(module, block, arg, getSummaryFunction);
 }
 
 /**
- * Generates a call to @c [Type]_stringFromValue() or @c [Type]_summaryFromValue().
+ * Generates a call to @c [Type]_retain().
  */
-Value * VuoCompilerType::generateSerializationFunctionCall(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction)
+void VuoCompilerType::generateRetainCall(Module *module, BasicBlock *block, Value *arg)
+{
+	generateFunctionCallWithTypeParameter(module, block, arg, retainFunction);
+}
+
+/**
+ * Generates a call to @c [Type]_release().
+ */
+void VuoCompilerType::generateReleaseCall(Module *module, BasicBlock *block, Value *arg)
+{
+	generateFunctionCallWithTypeParameter(module, block, arg, releaseFunction);
+}
+
+/**
+ * Generates a call to any of the API functions for the type that takes a value of the type as its only argument.
+ */
+Value * VuoCompilerType::generateFunctionCallWithTypeParameter(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction)
 {
 	Function *function = declareFunctionInModule(module, sourceFunction);
 
@@ -410,7 +426,6 @@ Value * VuoCompilerType::generateSerializationFunctionCall(Module *module, Basic
 	if (secondArgument)
 		args.push_back(secondArgument);
 	return CallInst::Create(function, args, "", block);
-
 }
 
 /**
@@ -428,8 +443,8 @@ Type * VuoCompilerType::getType(void)
  */
 Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
 {
-	*secondType = (jsonFromValueFunction->getFunctionType()->getNumParams() == 2 ? jsonFromValueFunction->getFunctionType()->getParamType(1) : NULL);
-	return jsonFromValueFunction->getFunctionType()->getParamType(0);
+	*secondType = (getJsonFunction->getFunctionType()->getNumParams() == 2 ? getJsonFunction->getFunctionType()->getParamType(1) : NULL);
+	return getJsonFunction->getFunctionType()->getParamType(0);
 }
 
 /**
@@ -439,7 +454,7 @@ Type * VuoCompilerType::getFunctionParameterType(Type **secondType)
  */
 Attributes VuoCompilerType::getFunctionParameterAttributes(void)
 {
-	return jsonFromValueFunction->getAttributes().getParamAttributes(1);
+	return getJsonFunction->getAttributes().getParamAttributes(1);
 }
 
 /**

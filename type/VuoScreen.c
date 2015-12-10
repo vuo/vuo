@@ -39,33 +39,33 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoScreen VuoScreen_valueFromJson(json_object *js)
+VuoScreen VuoScreen_makeFromJson(json_object *js)
 {
 	VuoScreen value = {-1,"",{0,0},0,0,0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		value.id = VuoInteger_valueFromJson(o);
+		value.id = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "name", &o))
-		value.name = VuoText_valueFromJson(o);
+		value.name = VuoText_makeFromJson(o);
 	else
 		value.name = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "topLeft", &o))
-		value.topLeft = VuoPoint2d_valueFromJson(o);
+		value.topLeft = VuoPoint2d_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "width", &o))
-		value.width = VuoInteger_valueFromJson(o);
+		value.width = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "height", &o))
-		value.height = VuoInteger_valueFromJson(o);
+		value.height = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "dpiHorizontal", &o))
-		value.dpiHorizontal = VuoInteger_valueFromJson(o);
+		value.dpiHorizontal = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "dpiVertical", &o))
-		value.dpiVertical = VuoInteger_valueFromJson(o);
+		value.dpiVertical = VuoInteger_makeFromJson(o);
 
 	return value;
 }
@@ -73,29 +73,29 @@ VuoScreen VuoScreen_valueFromJson(json_object *js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoScreen_jsonFromValue(const VuoScreen value)
+json_object * VuoScreen_getJson(const VuoScreen value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_jsonFromValue(value.id);
+	json_object *idObject = VuoInteger_getJson(value.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *nameObject = VuoText_jsonFromValue(value.name);
+	json_object *nameObject = VuoText_getJson(value.name);
 	json_object_object_add(js, "name", nameObject);
 
-	json_object *topLeftObject = VuoPoint2d_jsonFromValue(value.topLeft);
+	json_object *topLeftObject = VuoPoint2d_getJson(value.topLeft);
 	json_object_object_add(js, "topLeft", topLeftObject);
 
-	json_object *widthObject = VuoInteger_jsonFromValue(value.width);
+	json_object *widthObject = VuoInteger_getJson(value.width);
 	json_object_object_add(js, "width", widthObject);
 
-	json_object *heightObject = VuoInteger_jsonFromValue(value.height);
+	json_object *heightObject = VuoInteger_getJson(value.height);
 	json_object_object_add(js, "height", heightObject);
 
-	json_object *dpiHorizontalObject = VuoInteger_jsonFromValue(value.dpiHorizontal);
+	json_object *dpiHorizontalObject = VuoInteger_getJson(value.dpiHorizontal);
 	json_object_object_add(js, "dpiHorizontal", dpiHorizontalObject);
 
-	json_object *dpiVerticalObject = VuoInteger_jsonFromValue(value.dpiVertical);
+	json_object *dpiVerticalObject = VuoInteger_getJson(value.dpiVertical);
 	json_object_object_add(js, "dpiVertical", dpiVerticalObject);
 
 	return js;
@@ -104,7 +104,7 @@ json_object * VuoScreen_jsonFromValue(const VuoScreen value)
 /**
  * Returns a compact string representation of @c value.
  */
-char * VuoScreen_summaryFromValue(const VuoScreen value)
+char * VuoScreen_getSummary(const VuoScreen value)
 {
 	if (value.id == -1 && strlen(value.name) == 0)
 		return strdup("The default screen");

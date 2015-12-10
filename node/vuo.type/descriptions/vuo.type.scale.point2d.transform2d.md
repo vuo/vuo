@@ -1,0 +1,1 @@
+Convert a 2D point to a 2D Transform with the specified scale value.  Translation and rotation are set to `(0, 0)` and `0º`.

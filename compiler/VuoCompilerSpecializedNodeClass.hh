@@ -28,10 +28,10 @@ private:
 protected:
 	map<string, string> specializedForGenericTypeName;  ///< The type name that replaces each generic type name in the original generic node class
 
-public:
 	VuoCompilerSpecializedNodeClass(string nodeClassName, Module *module);
 	VuoCompilerSpecializedNodeClass(VuoCompilerSpecializedNodeClass *compilerNodeClass, VuoNode *nodeToBack);
 
+public:
 	virtual VuoType * getOriginalPortType(VuoPortClass *portClass);
 	virtual string getOriginalGenericNodeClassName(void);
 	virtual string getOriginalGenericNodeClassDescription(void);
@@ -40,7 +40,7 @@ public:
 	virtual string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
 	string createDefaultSpecializedNodeClassName(void);
 
-	static VuoNodeClass * newNodeClass(string nodeClassName, VuoCompiler *compiler, VuoNode *nodeToBack=NULL);
+	static VuoNodeClass * newNodeClass(string nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue, VuoNode *nodeToBack=NULL);
 	static void replaceGenericTypesWithBacking(string &nodeClassSource, VuoNode *nodeToBack=NULL);
 	static vector<string> getGenericTypeNamesFromPorts(VuoCompilerNodeClass *nodeClass);
 	static map<string, string> getBackingTypeNamesFromPorts(VuoNodeClass *nodeClass);

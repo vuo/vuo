@@ -38,16 +38,16 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoMidiOutputDevice VuoMidiOutputDevice_valueFromJson(json_object * js)
+VuoMidiOutputDevice VuoMidiOutputDevice_makeFromJson(json_object * js)
 {
 	VuoMidiOutputDevice md = {-1,""};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "id", &o))
-		md.id = VuoInteger_valueFromJson(o);
+		md.id = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "name", &o))
-		md.name = VuoText_valueFromJson(o);
+		md.name = VuoText_makeFromJson(o);
 	else
 		md.name = VuoText_make("");
 
@@ -57,14 +57,14 @@ VuoMidiOutputDevice VuoMidiOutputDevice_valueFromJson(json_object * js)
 /**
  * Encodes @c value as a JSON object.
  */
-json_object * VuoMidiOutputDevice_jsonFromValue(const VuoMidiOutputDevice md)
+json_object * VuoMidiOutputDevice_getJson(const VuoMidiOutputDevice md)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_jsonFromValue(md.id);
+	json_object *idObject = VuoInteger_getJson(md.id);
 	json_object_object_add(js, "id", idObject);
 
-	json_object *nameObject = VuoText_jsonFromValue(md.name);
+	json_object *nameObject = VuoText_getJson(md.name);
 	json_object_object_add(js, "name", nameObject);
 
 	return js;
@@ -73,7 +73,7 @@ json_object * VuoMidiOutputDevice_jsonFromValue(const VuoMidiOutputDevice md)
 /**
  * Returns a compact string representation of @c value (comma-separated coordinates).
  */
-char * VuoMidiOutputDevice_summaryFromValue(const VuoMidiOutputDevice md)
+char * VuoMidiOutputDevice_getSummary(const VuoMidiOutputDevice md)
 {
 	if (md.id == -1 && strlen(md.name) == 0)
 		return VuoText_format("The first MIDI output device");

@@ -34,17 +34,17 @@ typedef enum
 	VuoNotePriority_Highest,
 } VuoNotePriority;
 
-VuoNotePriority VuoNotePriority_valueFromJson(struct json_object * js);
-struct json_object * VuoNotePriority_jsonFromValue(const VuoNotePriority value);
-VuoList_VuoNotePriority VuoNotePriority_allowedValues(void);
-char * VuoNotePriority_summaryFromValue(const VuoNotePriority value);
+VuoNotePriority VuoNotePriority_makeFromJson(struct json_object * js);
+struct json_object * VuoNotePriority_getJson(const VuoNotePriority value);
+VuoList_VuoNotePriority VuoNotePriority_getAllowedValues(void);
+char * VuoNotePriority_getSummary(const VuoNotePriority value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoNotePriority VuoNotePriority_valueFromString(const char *str);
-char * VuoNotePriority_stringFromValue(const VuoNotePriority value);
+VuoNotePriority VuoNotePriority_makeFromString(const char *str);
+char * VuoNotePriority_getString(const VuoNotePriority value);
 void VuoNotePriority_retain(VuoNotePriority value);
 void VuoNotePriority_release(VuoNotePriority value);
 ///@}

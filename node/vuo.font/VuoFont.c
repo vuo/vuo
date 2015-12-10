@@ -85,31 +85,31 @@ static VuoHorizontalAlignment getAlignmentForString(const char *s)
  * @ingroup VuoFont
  * Decodes the JSON object @c js to create a new value.
  */
-VuoFont VuoFont_valueFromJson(json_object * js)
+VuoFont VuoFont_makeFromJson(json_object * js)
 {
 	VuoFont font = {NULL, 0, false, VuoColor_makeWithRGBA(1,1,1,1), VuoHorizontalAlignment_Left, 1, 1};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "fontName", &o))
-		font.fontName = VuoText_valueFromJson(o);
+		font.fontName = VuoText_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "pointSize", &o))
-		font.pointSize = VuoReal_valueFromJson(o);
+		font.pointSize = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "underline", &o))
-		font.underline = VuoBoolean_valueFromJson(o);
+		font.underline = VuoBoolean_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "color", &o))
-		font.color = VuoColor_valueFromJson(o);
+		font.color = VuoColor_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "alignment", &o))
 		font.alignment = getAlignmentForString(json_object_get_string(o));
 
 	if (json_object_object_get_ex(js, "characterSpacing", &o))
-		font.characterSpacing = VuoReal_valueFromJson(o);
+		font.characterSpacing = VuoReal_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "lineSpacing", &o))
-		font.lineSpacing = VuoReal_valueFromJson(o);
+		font.lineSpacing = VuoReal_makeFromJson(o);
 
 	return font;
 }
@@ -118,16 +118,16 @@ VuoFont VuoFont_valueFromJson(json_object * js)
  * @ingroup VuoFont
  * Encodes @c value as a JSON object.
  */
-json_object * VuoFont_jsonFromValue(const VuoFont value)
+json_object * VuoFont_getJson(const VuoFont value)
 {
 	json_object *js = json_object_new_object();
-	json_object_object_add(js, "fontName", VuoText_jsonFromValue(value.fontName));
-	json_object_object_add(js, "pointSize", VuoReal_jsonFromValue(value.pointSize));
-	json_object_object_add(js, "underline", VuoBoolean_jsonFromValue(value.underline));
-	json_object_object_add(js, "color", VuoColor_jsonFromValue(value.color));
+	json_object_object_add(js, "fontName", VuoText_getJson(value.fontName));
+	json_object_object_add(js, "pointSize", VuoReal_getJson(value.pointSize));
+	json_object_object_add(js, "underline", VuoBoolean_getJson(value.underline));
+	json_object_object_add(js, "color", VuoColor_getJson(value.color));
 	json_object_object_add(js, "alignment", json_object_new_string(getStringForAlignment(value.alignment)));
-	json_object_object_add(js, "characterSpacing", VuoReal_jsonFromValue(value.characterSpacing));
-	json_object_object_add(js, "lineSpacing", VuoReal_jsonFromValue(value.lineSpacing));
+	json_object_object_add(js, "characterSpacing", VuoReal_getJson(value.characterSpacing));
+	json_object_object_add(js, "lineSpacing", VuoReal_getJson(value.lineSpacing));
 	return js;
 }
 
@@ -135,11 +135,11 @@ json_object * VuoFont_jsonFromValue(const VuoFont value)
  * @ingroup VuoFont
  * Returns a compact string representation of @c value (comma-separated components).
  */
-char * VuoFont_summaryFromValue(const VuoFont value)
+char * VuoFont_getSummary(const VuoFont value)
 {
 	const char *fontName = value.fontName ? value.fontName : "(no font)";
 	const char *underline = value.underline ? "<li>underlined</li>" : "";
-	char *color = VuoColor_summaryFromValue(value.color);
+	char *color = VuoColor_getSummary(value.color);
 	const char *alignment = getStringForAlignment(value.alignment);
 
 	char *summary = VuoText_format("%s %gpt<ul><li>color: %s</li>%s<li>%s-aligned</li><li>character spacing: %g</li><li>line spacing: %g</li></ul>",
@@ -147,4 +147,18 @@ char * VuoFont_summaryFromValue(const VuoFont value)
 
 	free(color);
 	return summary;
+}
+
+/**
+ * Returns true if both fonts have the same name, size, underline status, color, alignment, and character/line spacing.
+ */
+bool VuoFont_areEqual(const VuoFont value1, const VuoFont value2)
+{
+	return VuoText_areEqual(value1.fontName, value2.fontName)
+		&& VuoReal_areEqual(value1.pointSize, value2.pointSize)
+		&& (value1.underline == value2.underline)
+		&& VuoColor_areEqual(value1.color, value2.color)
+		&& (value1.alignment == value2.alignment)
+		&& VuoReal_areEqual(value1.characterSpacing, value2.characterSpacing)
+		&& VuoReal_areEqual(value1.lineSpacing, value2.lineSpacing);
 }

@@ -15,6 +15,7 @@
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoSceneObject.h"
 #include "VuoBoolean.h"
+#include "VuoFont.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -26,6 +27,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						"VuoBlendMode",
 						"VuoBoolean",
+						"VuoFont",
 						"VuoMesh",
 						"VuoPoint3d",
 						"VuoShader",
@@ -46,6 +48,8 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 {
 	VuoSceneObject o;
 
+	o.type = VuoSceneObjectType_Empty;
+
 	o.mesh = NULL;
 	o.shader = NULL;
 	o.isRealSize = false;
@@ -53,12 +57,11 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 
 	o.childObjects = NULL;
 
-	o.cameraType = VuoSceneObject_NotACamera;
-
-	o.lightType = VuoSceneObject_NotALight;
-
 	o.name = NULL;
-	o.transform = VuoTransform_valueFromJson(NULL);
+	o.transform = VuoTransform_makeFromJson(NULL);
+
+	o.text = NULL;
+	o.font = VuoFont_makeFromString("");
 
 	return o;
 }
@@ -68,7 +71,9 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
  */
 VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects)
 {
-	VuoSceneObject o;
+	VuoSceneObject o = VuoSceneObject_makeEmpty();
+
+	o.type = VuoSceneObjectType_Mesh;
 
 	o.mesh = mesh;
 
@@ -77,16 +82,8 @@ VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform 
 	else
 		o.shader = shader;
 
-	o.isRealSize = false;
-	o.blendMode = VuoBlendMode_Normal;
-
 	o.childObjects = childObjects;
 
-	o.cameraType = VuoSceneObject_NotACamera;
-
-	o.lightType = VuoSceneObject_NotALight;
-
-	o.name = NULL;
 	o.transform = transform;
 
 	return o;
@@ -267,14 +264,28 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 }
 
 /**
+ * Returns a scene object representing deferred-rendered text.
+ *
+ * @threadAny
+ */
+VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font)
+{
+	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.type = VuoSceneObjectType_Text;
+	o.text = text;
+	o.font = font;
+	return o;
+}
+
+/**
  * Returns a perspective camera having the position and negative-rotation specified by @c transform (its scale is ignored).
  */
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax)
 {
 	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.type = VuoSceneObjectType_PerspectiveCamera;
 	o.name = name;
 	o.transform = transform;
-	o.cameraType = VuoSceneObject_PerspectiveCamera;
 	o.cameraFieldOfView = fieldOfView;
 	o.cameraDistanceMin = distanceMin;
 	o.cameraDistanceMax = distanceMax;
@@ -287,9 +298,9 @@ VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform t
 VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance)
 {
 	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.type = VuoSceneObjectType_StereoCamera;
 	o.name = name;
 	o.transform = transform;
-	o.cameraType = VuoSceneObject_StereoCamera;
 	o.cameraFieldOfView = fieldOfView;
 	o.cameraDistanceMin = distanceMin;
 	o.cameraDistanceMax = distanceMax;
@@ -304,9 +315,9 @@ VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transf
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax)
 {
 	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.type = VuoSceneObjectType_OrthographicCamera;
 	o.name = name;
 	o.transform = transform;
-	o.cameraType = VuoSceneObject_OrthographicCamera;
 	o.cameraWidth = width;
 	o.cameraDistanceMin = distanceMin;
 	o.cameraDistanceMax = distanceMax;
@@ -374,7 +385,10 @@ VuoSceneObject VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText name
 	float compositeModelviewMatrix[16];
 	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
 
-	if (so.cameraType != VuoSceneObject_NotACamera && strstr(so.name,nameToMatch))
+	if ((so.type == VuoSceneObjectType_PerspectiveCamera
+	  || so.type == VuoSceneObjectType_StereoCamera
+	  || so.type == VuoSceneObjectType_OrthographicCamera)
+	  && strstr(so.name,nameToMatch))
 	{
 		*foundCamera = true;
 		so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
@@ -422,37 +436,63 @@ VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch,
 }
 
 /**
- * @ingroup VuoSceneObject
- * Returns the @c VuoSceneObject_CameraType corresponding with the string @c cameraTypeString.  If none matches, returns VuoSceneObject_NotACamera.
+ * Returns the `VuoSceneObjectType` corresponding with the `typeString`.  If none matches, returns VuoSceneObjectType_Empty.
  */
-VuoSceneObject_CameraType VuoSceneObject_cameraTypeFromCString(const char *cameraTypeString)
+VuoSceneObjectType VuoSceneObject_typeFromCString(const char *typeString)
 {
-	if (strcmp(cameraTypeString,"perspective")==0)
-		return VuoSceneObject_PerspectiveCamera;
-	else if (strcmp(cameraTypeString,"stereo")==0)
-		return VuoSceneObject_StereoCamera;
-	else if (strcmp(cameraTypeString,"orthographic")==0)
-		return VuoSceneObject_OrthographicCamera;
+	if (strcmp(typeString,"empty")==0)
+		return VuoSceneObjectType_Empty;
+	else if (strcmp(typeString,"group")==0)
+		return VuoSceneObjectType_Group;
+	else if (strcmp(typeString,"mesh")==0)
+		return VuoSceneObjectType_Mesh;
+	else if (strcmp(typeString,"camera-perspective")==0)
+		return VuoSceneObjectType_PerspectiveCamera;
+	else if (strcmp(typeString,"camera-stereo")==0)
+		return VuoSceneObjectType_StereoCamera;
+	else if (strcmp(typeString,"camera-orthographic")==0)
+		return VuoSceneObjectType_OrthographicCamera;
+	else if (strcmp(typeString,"light-ambient")==0)
+		return VuoSceneObjectType_AmbientLight;
+	else if (strcmp(typeString,"light-point")==0)
+		return VuoSceneObjectType_PointLight;
+	else if (strcmp(typeString,"light-spot")==0)
+		return VuoSceneObjectType_Spotlight;
+	else if (strcmp(typeString,"text")==0)
+		return VuoSceneObjectType_Text;
 
-	return VuoSceneObject_NotACamera;
+	return VuoSceneObjectType_Empty;
 }
 
 /**
- * @ingroup VuoSceneObject
- * Returns a string constant representing @c cameraType.
+ * Returns a string constant representing `type`.
  */
-const char * VuoSceneObject_cStringForCameraType(VuoSceneObject_CameraType cameraType)
+const char * VuoSceneObject_cStringForType(VuoSceneObjectType type)
 {
-	switch (cameraType)
+	switch (type)
 	{
-		case VuoSceneObject_PerspectiveCamera:
-			return "perspective";
-		case VuoSceneObject_StereoCamera:
-			return "stereo";
-		case VuoSceneObject_OrthographicCamera:
-			return "orthographic";
+		case VuoSceneObjectType_Empty:
+			return "empty";
+		case VuoSceneObjectType_Group:
+			return "group";
+		case VuoSceneObjectType_Mesh:
+			return "mesh";
+		case VuoSceneObjectType_PerspectiveCamera:
+			return "camera-perspective";
+		case VuoSceneObjectType_StereoCamera:
+			return "camera-stereo";
+		case VuoSceneObjectType_OrthographicCamera:
+			return "camera-orthographic";
+		case VuoSceneObjectType_AmbientLight:
+			return "light-ambient";
+		case VuoSceneObjectType_PointLight:
+			return "light-point";
+		case VuoSceneObjectType_Spotlight:
+			return "light-spot";
+		case VuoSceneObjectType_Text:
+			return "text";
 		default:
-			return "notACamera";
+			return "empty";
 	}
 }
 
@@ -463,7 +503,7 @@ const char * VuoSceneObject_cStringForCameraType(VuoSceneObject_CameraType camer
 VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness)
 {
 	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.lightType = VuoSceneObject_AmbientLight;
+	o.type = VuoSceneObjectType_AmbientLight;
 	o.lightColor = color;
 	o.lightBrightness = brightness;
 	return o;
@@ -482,7 +522,7 @@ VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness)
 VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, VuoPoint3d position, float range, float sharpness)
 {
 	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.lightType = VuoSceneObject_PointLight;
+	o.type = VuoSceneObjectType_PointLight;
 	o.lightColor = color;
 	o.lightBrightness = brightness;
 	o.lightRange = range;
@@ -505,7 +545,7 @@ VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, V
 VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, VuoTransform transform, float cone, float range, float sharpness)
 {
 	VuoSceneObject o = VuoSceneObject_makeEmpty();
-	o.lightType = VuoSceneObject_Spotlight;
+	o.type = VuoSceneObjectType_Spotlight;
 	o.lightColor = color;
 	o.lightBrightness = brightness;
 	o.lightCone = cone;
@@ -516,52 +556,17 @@ VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, Vu
 }
 
 /**
- * @ingroup VuoSceneObject
- * Returns the @c VuoSceneObject_LightType corresponding with the string @c lightTypeString.  If none matches, returns VuoSceneObject_NotALight.
- */
-VuoSceneObject_LightType VuoSceneObject_lightTypeFromCString(const char *lightTypeString)
-{
-	if (strcmp(lightTypeString,"ambient")==0)
-		return VuoSceneObject_AmbientLight;
-	else if (strcmp(lightTypeString,"point")==0)
-		return VuoSceneObject_PointLight;
-	else if (strcmp(lightTypeString,"spot")==0)
-		return VuoSceneObject_Spotlight;
-
-	return VuoSceneObject_NotALight;
-}
-
-/**
- * @ingroup VuoSceneObject
- * Returns a string constant representing @c lightType.
- */
-const char * VuoSceneObject_cStringForLightType(VuoSceneObject_LightType lightType)
-{
-	switch (lightType)
-	{
-		case VuoSceneObject_AmbientLight:
-			return "ambient";
-		case VuoSceneObject_PointLight:
-			return "point";
-		case VuoSceneObject_Spotlight:
-			return "spot";
-		default:
-			return "notALight";
-	}
-}
-
-/**
  * Helper for @ref VuoSceneObject_findLights.
  */
 static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, float modelviewMatrix[16], VuoList_VuoColor ambientColors, float *ambientBrightness, VuoList_VuoSceneObject pointLights, VuoList_VuoSceneObject spotLights)
 {
-	switch (so.lightType)
+	switch (so.type)
 	{
-		case VuoSceneObject_AmbientLight:
+		case VuoSceneObjectType_AmbientLight:
 			VuoListAppendValue_VuoColor(ambientColors, so.lightColor);
 			*ambientBrightness += so.lightBrightness;
 			return;
-		case VuoSceneObject_PointLight:
+		case VuoSceneObjectType_PointLight:
 		{
 			float localModelviewMatrix[16];
 			VuoTransform_getMatrix(so.transform, localModelviewMatrix);
@@ -572,7 +577,7 @@ static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, float modelvie
 			VuoListAppendValue_VuoSceneObject(pointLights, so);
 			return;
 		}
-		case VuoSceneObject_Spotlight:
+		case VuoSceneObjectType_Spotlight:
 		{
 			float localModelviewMatrix[16];
 			VuoTransform_getMatrix(so.transform, localModelviewMatrix);
@@ -770,7 +775,7 @@ VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
 }
 
 /**
- * Returns the bounds of a sceneobject including it's children.
+ * Returns the bounds of a sceneobject including its children.
  */
 bool VuoSceneObject_boundsRecursive(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
 {
@@ -837,7 +842,13 @@ bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float ma
 		// but we can at least include its center point.
 		*bounds = VuoBox_make(VuoPoint3d_make(matrix[12], matrix[13], matrix[14]), VuoPoint3d_make(0,0,0));
 	else
+	{
 		*bounds = VuoMesh_bounds(so.mesh, matrix);
+
+		bounds->size.x *= so.shader->objectScale;
+		bounds->size.y *= so.shader->objectScale;
+		bounds->size.z *= so.shader->objectScale;
+	}
 
 	return true;
 }
@@ -867,8 +878,8 @@ void VuoSceneObject_normalize(VuoSceneObject *so)
 	so->transform.scale       = VuoPoint3d_multiply(so->transform.scale,       1./scale);
 	so->transform.translation = VuoPoint3d_multiply(so->transform.translation, 1./scale);
 }
+
 /**
- * @ingroup VuoSceneObject
  * Decodes the JSON object @c js to create a new value.
  *
  * @eg{
@@ -883,7 +894,7 @@ void VuoSceneObject_normalize(VuoSceneObject *so)
  *
  * @eg{
  *   {
- *     "cameraType" : "perspective",
+ *     "type" : "camera-perspective",
  *     "cameraFieldOfView" : 90.0,
  *     "cameraDistanceMin" : 0.1,
  *     "cameraDistanceMax" : 10.0,
@@ -892,33 +903,33 @@ void VuoSceneObject_normalize(VuoSceneObject *so)
  *   }
  * }
  */
-VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
+VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 {
 	json_object *o = NULL;
 
+	VuoSceneObjectType type = VuoSceneObjectType_Empty;
+	if (json_object_object_get_ex(js, "type", &o))
+		type = VuoSceneObject_typeFromCString(json_object_get_string(o));
+
 	VuoMesh mesh = NULL;
 	if (json_object_object_get_ex(js, "mesh", &o))
-		mesh = VuoMesh_valueFromJson(o);
+		mesh = VuoMesh_makeFromJson(o);
 
 	VuoShader shader = NULL;
 	if (json_object_object_get_ex(js, "shader", &o))
-		shader = VuoShader_valueFromJson(o);
+		shader = VuoShader_makeFromJson(o);
 
 	bool isRealSize = false;
 	if (json_object_object_get_ex(js, "isRealSize", &o))
-		isRealSize = VuoBoolean_valueFromJson(o);
+		isRealSize = VuoBoolean_makeFromJson(o);
 
 	VuoBlendMode blendMode = VuoBlendMode_Normal;
 	if (json_object_object_get_ex(js, "blendMode", &o))
-		blendMode = VuoBlendMode_valueFromJson(o);
+		blendMode = VuoBlendMode_makeFromJson(o);
 
 	VuoList_VuoSceneObject childObjects = NULL;
 	if (json_object_object_get_ex(js, "childObjects", &o))
-		childObjects = VuoList_VuoSceneObject_valueFromJson(o);
-
-	VuoSceneObject_CameraType cameraType = VuoSceneObject_NotACamera;
-	if (json_object_object_get_ex(js, "cameraType", &o))
-		cameraType = VuoSceneObject_cameraTypeFromCString(json_object_get_string(o));
+		childObjects = VuoList_VuoSceneObject_makeFromJson(o);
 
 	float cameraFieldOfView;
 	if (json_object_object_get_ex(js, "cameraFieldOfView", &o))
@@ -944,13 +955,9 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "cameraIntraocularDistance", &o))
 		cameraIntraocularDistance = json_object_get_double(o);
 
-	VuoSceneObject_LightType lightType = VuoSceneObject_NotALight;
-	if (json_object_object_get_ex(js, "lightType", &o))
-		lightType = VuoSceneObject_lightTypeFromCString(json_object_get_string(o));
-
 	VuoColor lightColor;
 	if (json_object_object_get_ex(js, "lightColor", &o))
-		lightColor = VuoColor_valueFromJson(o);
+		lightColor = VuoColor_makeFromJson(o);
 
 	float lightBrightness;
 	if (json_object_object_get_ex(js, "lightBrightness", &o))
@@ -970,142 +977,175 @@ VuoSceneObject VuoSceneObject_valueFromJson(json_object * js)
 
 	VuoText name = NULL;
 	if (json_object_object_get_ex(js, "name", &o))
-		name = VuoText_valueFromJson(o);
+		name = VuoText_makeFromJson(o);
 
 	json_object_object_get_ex(js, "transform", &o);
-	VuoTransform transform = VuoTransform_valueFromJson(o);
+	VuoTransform transform = VuoTransform_makeFromJson(o);
+
+	VuoText text = NULL;
+	if (json_object_object_get_ex(js, "text", &o))
+		text = VuoText_makeFromJson(o);
+
+	VuoFont font;
+	if (json_object_object_get_ex(js, "font", &o))
+		font = VuoFont_makeFromJson(o);
 
 
-	if (cameraType == VuoSceneObject_PerspectiveCamera)
-		return VuoSceneObject_makePerspectiveCamera(
-					name,
-					transform,
-					cameraFieldOfView,
-					cameraDistanceMin,
-					cameraDistanceMax
-					);
-	else if (cameraType == VuoSceneObject_StereoCamera)
-		return VuoSceneObject_makeStereoCamera(
-					name,
-					transform,
-					cameraFieldOfView,
-					cameraDistanceMin,
-					cameraDistanceMax,
-					cameraConfocalDistance,
-					cameraIntraocularDistance
-					);
-	else if (cameraType == VuoSceneObject_OrthographicCamera)
-		return VuoSceneObject_makeOrthographicCamera(
-					name,
-					transform,
-					cameraWidth,
-					cameraDistanceMin,
-					cameraDistanceMax
-					);
-	else if (lightType == VuoSceneObject_AmbientLight)
-		return VuoSceneObject_makeAmbientLight(lightColor, lightBrightness);
-	else if (lightType == VuoSceneObject_PointLight)
-		return VuoSceneObject_makePointLight(lightColor, lightBrightness, transform.translation, lightRange, lightSharpness);
-	else if (lightType == VuoSceneObject_Spotlight)
-		return VuoSceneObject_makeSpotlight(lightColor, lightBrightness, transform, lightCone, lightRange, lightSharpness);
-	else
+	switch (type)
 	{
-		VuoSceneObject o = VuoSceneObject_make(mesh, shader, transform, childObjects);
-		o.isRealSize = isRealSize;
-		o.blendMode = blendMode;
-		o.name = name;
-		return o;
+		case VuoSceneObjectType_Empty:
+			return VuoSceneObject_makeEmpty();
+		case VuoSceneObjectType_Group:
+		case VuoSceneObjectType_Mesh:
+		{
+			VuoSceneObject o = VuoSceneObject_make(mesh, shader, transform, childObjects);
+			o.isRealSize = isRealSize;
+			o.blendMode = blendMode;
+			o.name = name;
+			return o;
+		}
+		case VuoSceneObjectType_PerspectiveCamera:
+			return VuoSceneObject_makePerspectiveCamera(
+						name,
+						transform,
+						cameraFieldOfView,
+						cameraDistanceMin,
+						cameraDistanceMax
+						);
+		case VuoSceneObjectType_StereoCamera:
+			return VuoSceneObject_makeStereoCamera(
+						name,
+						transform,
+						cameraFieldOfView,
+						cameraDistanceMin,
+						cameraDistanceMax,
+						cameraConfocalDistance,
+						cameraIntraocularDistance
+						);
+		case VuoSceneObjectType_OrthographicCamera:
+			return VuoSceneObject_makeOrthographicCamera(
+						name,
+						transform,
+						cameraWidth,
+						cameraDistanceMin,
+						cameraDistanceMax
+						);
+		case VuoSceneObjectType_AmbientLight:
+			return VuoSceneObject_makeAmbientLight(lightColor, lightBrightness);
+		case VuoSceneObjectType_PointLight:
+			return VuoSceneObject_makePointLight(lightColor, lightBrightness, transform.translation, lightRange, lightSharpness);
+		case VuoSceneObjectType_Spotlight:
+			return VuoSceneObject_makeSpotlight(lightColor, lightBrightness, transform, lightCone, lightRange, lightSharpness);
+		case VuoSceneObjectType_Text:
+			return VuoSceneObject_makeText(text, font);
 	}
 }
 
 /**
- * @ingroup VuoSceneObject
  * Encodes @c value as a JSON object.
  */
-json_object * VuoSceneObject_jsonFromValue(const VuoSceneObject value)
+json_object *VuoSceneObject_getJson(const VuoSceneObject value)
 {
 	json_object *js = json_object_new_object();
 
-	if (value.cameraType != VuoSceneObject_NotACamera)
+	json_object_object_add(js, "type", json_object_new_string(VuoSceneObject_cStringForType(value.type)));
+
+	switch (value.type)
 	{
-		json_object_object_add(js, "cameraType", json_object_new_string(VuoSceneObject_cStringForCameraType(value.cameraType)));
-		json_object_object_add(js, "cameraDistanceMin", json_object_new_double(value.cameraDistanceMin));
-		json_object_object_add(js, "cameraDistanceMax", json_object_new_double(value.cameraDistanceMax));
+		case VuoSceneObjectType_Empty:
+			break;
 
-		if (value.cameraType == VuoSceneObject_PerspectiveCamera
-		 || value.cameraType == VuoSceneObject_StereoCamera)
-			json_object_object_add(js, "cameraFieldOfView", json_object_new_double(value.cameraFieldOfView));
+		case VuoSceneObjectType_Group:
+		case VuoSceneObjectType_Mesh:
+			if (value.mesh)
+			{
+				json_object *meshObject = VuoMesh_getJson(value.mesh);
+				json_object_object_add(js, "mesh", meshObject);
+			}
 
-		if (value.cameraType == VuoSceneObject_StereoCamera)
-		{
-			json_object_object_add(js, "cameraConfocalDistance", json_object_new_double(value.cameraConfocalDistance));
-			json_object_object_add(js, "cameraIntraocularDistance", json_object_new_double(value.cameraIntraocularDistance));
-		}
+			if (value.shader)
+			{
+				json_object *shaderObject = VuoShader_getJson(value.shader);
+				json_object_object_add(js, "shader", shaderObject);
+			}
 
-		if (value.cameraType == VuoSceneObject_OrthographicCamera)
-			json_object_object_add(js, "cameraWidth", json_object_new_double(value.cameraWidth));
-	}
+			json_object *isRealSizeObject = VuoBoolean_getJson(value.isRealSize);
+			json_object_object_add(js, "isRealSize", isRealSizeObject);
 
-	if (value.lightType != VuoSceneObject_NotALight)
-	{
-		json_object_object_add(js, "lightType", json_object_new_string(VuoSceneObject_cStringForLightType(value.lightType)));
-		json_object_object_add(js, "lightColor", VuoColor_jsonFromValue(value.lightColor));
-		json_object_object_add(js, "lightBrightness", json_object_new_double(value.lightBrightness));
+			if (value.blendMode != VuoBlendMode_Normal)
+			{
+				json_object *blendModeObject = VuoBlendMode_getJson(value.blendMode);
+				json_object_object_add(js, "blendMode", blendModeObject);
+			}
 
-		if (value.lightType == VuoSceneObject_PointLight
-				|| value.lightType == VuoSceneObject_Spotlight)
-		{
-			json_object_object_add(js, "lightRange", json_object_new_double(value.lightRange));
-			json_object_object_add(js, "lightSharpness", json_object_new_double(value.lightSharpness));
-		}
-		if (value.lightType == VuoSceneObject_Spotlight)
-		{
-			json_object_object_add(js, "lightCone", json_object_new_double(value.lightCone));
-		}
-	}
+			if (value.childObjects)
+			{
+				json_object *childObjectsObject = VuoList_VuoSceneObject_getJson(value.childObjects);
+				json_object_object_add(js, "childObjects", childObjectsObject);
+			}
 
-	if (value.cameraType == VuoSceneObject_NotACamera
-			&& value.lightType == VuoSceneObject_NotALight)
-	{
-		// visible or group scene object
+			break;
 
-		if (value.mesh)
-		{
-			json_object *meshObject = VuoMesh_jsonFromValue(value.mesh);
-			json_object_object_add(js, "mesh", meshObject);
-		}
+		case VuoSceneObjectType_PerspectiveCamera:
+		case VuoSceneObjectType_StereoCamera:
+		case VuoSceneObjectType_OrthographicCamera:
+			json_object_object_add(js, "cameraDistanceMin", json_object_new_double(value.cameraDistanceMin));
+			json_object_object_add(js, "cameraDistanceMax", json_object_new_double(value.cameraDistanceMax));
 
-		if (value.shader)
-		{
-			json_object *shaderObject = VuoShader_jsonFromValue(value.shader);
-			json_object_object_add(js, "shader", shaderObject);
-		}
+			if (value.type == VuoSceneObjectType_PerspectiveCamera
+			 || value.type == VuoSceneObjectType_StereoCamera)
+				json_object_object_add(js, "cameraFieldOfView", json_object_new_double(value.cameraFieldOfView));
 
-		json_object *isRealSizeObject = VuoBoolean_jsonFromValue(value.isRealSize);
-		json_object_object_add(js, "isRealSize", isRealSizeObject);
+			if (value.type == VuoSceneObjectType_StereoCamera)
+			{
+				json_object_object_add(js, "cameraConfocalDistance", json_object_new_double(value.cameraConfocalDistance));
+				json_object_object_add(js, "cameraIntraocularDistance", json_object_new_double(value.cameraIntraocularDistance));
+			}
 
-		if (value.blendMode != VuoBlendMode_Normal)
-		{
-			json_object *blendModeObject = VuoBlendMode_jsonFromValue(value.blendMode);
-			json_object_object_add(js, "blendMode", blendModeObject);
-		}
+			if (value.type == VuoSceneObjectType_OrthographicCamera)
+				json_object_object_add(js, "cameraWidth", json_object_new_double(value.cameraWidth));
 
-		if (value.childObjects)
-		{
-			json_object *childObjectsObject = VuoList_VuoSceneObject_jsonFromValue(value.childObjects);
-			json_object_object_add(js, "childObjects", childObjectsObject);
-		}
+			break;
+
+		case VuoSceneObjectType_AmbientLight:
+		case VuoSceneObjectType_PointLight:
+		case VuoSceneObjectType_Spotlight:
+			json_object_object_add(js, "lightColor", VuoColor_getJson(value.lightColor));
+			json_object_object_add(js, "lightBrightness", json_object_new_double(value.lightBrightness));
+
+			if (value.type == VuoSceneObjectType_PointLight
+			 || value.type == VuoSceneObjectType_Spotlight)
+			{
+				json_object_object_add(js, "lightRange", json_object_new_double(value.lightRange));
+				json_object_object_add(js, "lightSharpness", json_object_new_double(value.lightSharpness));
+			}
+			if (value.type == VuoSceneObjectType_Spotlight)
+				json_object_object_add(js, "lightCone", json_object_new_double(value.lightCone));
+
+			break;
+
+		case VuoSceneObjectType_Text:
+			if (value.text)
+			{
+				json_object *textObject = VuoText_getJson(value.text);
+				json_object_object_add(js, "text", textObject);
+			}
+
+			json_object *fontObject = VuoFont_getJson(value.font);
+			json_object_object_add(js, "font", fontObject);
+
+			break;
 	}
 
 	if (value.name)
 	{
-		json_object *nameObject = VuoText_jsonFromValue(value.name);
+		json_object *nameObject = VuoText_getJson(value.name);
 		json_object_object_add(js, "name", nameObject);
 	}
 
-	if (value.lightType != VuoSceneObject_AmbientLight)
+	if (value.type != VuoSceneObjectType_AmbientLight)
 	{
-		json_object *transformObject = VuoTransform_jsonFromValue(value.transform);
+		json_object *transformObject = VuoTransform_getJson(value.transform);
 		json_object_object_add(js, "transform", transformObject);
 	}
 
@@ -1178,66 +1218,71 @@ VuoList_VuoText VuoSceneRenderer_findShaderNames(VuoSceneObject object)
 }
 
 /**
- * @ingroup VuoSceneObject
- * Produces a brief human-readable summary of @c value.
+ * Produces a brief human-readable summary of `value`.
  */
-char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
+char *VuoSceneObject_getSummary(const VuoSceneObject value)
 {
-	if (value.cameraType != VuoSceneObject_NotACamera)
+	if (value.type == VuoSceneObjectType_Text)
+		return VuoText_format("\"%s\"<br>%sat (%g,%g)", value.text, VuoFont_getSummary(value.font), value.transform.translation.x, value.transform.translation.y);
+
+	if (value.type == VuoSceneObjectType_PerspectiveCamera
+	 || value.type == VuoSceneObjectType_StereoCamera
+	 || value.type == VuoSceneObjectType_OrthographicCamera)
 	{
-		const char *cameraType = VuoSceneObject_cStringForCameraType(value.cameraType);
+		const char *type = VuoSceneObject_cStringForType(value.type);
 
 		float cameraViewValue = 0;
 		const char *cameraViewString = "";
-		if (value.cameraType == VuoSceneObject_PerspectiveCamera)
+		if (value.type == VuoSceneObjectType_PerspectiveCamera)
 		{
 			cameraViewValue = value.cameraFieldOfView;
 			cameraViewString = "° field of view";
 		}
-		else if (value.cameraType == VuoSceneObject_StereoCamera)
+		else if (value.type == VuoSceneObjectType_StereoCamera)
 		{
 			cameraViewValue = value.cameraFieldOfView;
 			cameraViewString = "° field of view (stereoscopic)";
 		}
-		else if (value.cameraType == VuoSceneObject_OrthographicCamera)
+		else if (value.type == VuoSceneObjectType_OrthographicCamera)
 		{
 			cameraViewValue = value.cameraWidth;
 			cameraViewString = " unit width";
 		}
 
-		char *translationString = VuoPoint3d_summaryFromValue(value.transform.translation);
+		char *translationString = VuoPoint3d_getSummary(value.transform.translation);
 
 		const char *rotationLabel;
 		char *rotationString;
 		if (value.transform.type == VuoTransformTypeEuler)
 		{
 			rotationLabel = "rotated";
-			rotationString = VuoPoint3d_summaryFromValue(VuoPoint3d_multiply(value.transform.rotationSource.euler, -180.f/M_PI));
+			rotationString = VuoPoint3d_getSummary(VuoPoint3d_multiply(value.transform.rotationSource.euler, -180.f/M_PI));
 		}
 		else
 		{
 			rotationLabel = "target";
-			rotationString = VuoPoint3d_summaryFromValue(value.transform.rotationSource.target);
+			rotationString = VuoPoint3d_getSummary(value.transform.rotationSource.target);
 		}
 
-		char *valueAsString = VuoText_format("%s camera<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g",
-											 cameraType, translationString, rotationLabel, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
+		char *valueAsString = VuoText_format("%s<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g",
+											 type, translationString, rotationLabel, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
 		free(rotationString);
 		free(translationString);
 		return valueAsString;
 	}
 
-	if (value.lightType != VuoSceneObject_NotALight)
+	if (value.type == VuoSceneObjectType_AmbientLight
+	 || value.type == VuoSceneObjectType_PointLight
+	 || value.type == VuoSceneObjectType_Spotlight)
 	{
-		const char *lightType = VuoSceneObject_cStringForLightType(value.lightType);
-		const char *space = value.lightType == VuoSceneObject_Spotlight ? "" : " ";
-		char *colorString = VuoColor_summaryFromValue(value.lightColor);
+		const char *type = VuoSceneObject_cStringForType(value.type);
+		char *colorString = VuoColor_getSummary(value.lightColor);
 
 		char *positionRangeString;
-		if (value.lightType == VuoSceneObject_PointLight
-				|| value.lightType == VuoSceneObject_Spotlight)
+		if (value.type == VuoSceneObjectType_PointLight
+		 || value.type == VuoSceneObjectType_Spotlight)
 		{
-			char *positionString = VuoPoint3d_summaryFromValue(value.transform.translation);
+			char *positionString = VuoPoint3d_getSummary(value.transform.translation);
 
 			positionRangeString = VuoText_format("<br>position (%s)<br>range %g units (%g sharpness)",
 												 positionString, value.lightRange, value.lightSharpness);
@@ -1248,10 +1293,10 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 			positionRangeString = strdup("");
 
 		char *directionConeString;
-		if (value.lightType == VuoSceneObject_Spotlight)
+		if (value.type == VuoSceneObjectType_Spotlight)
 		{
 			VuoPoint3d direction = VuoTransform_getDirection(value.transform);
-			char *directionString = VuoPoint3d_summaryFromValue(direction);
+			char *directionString = VuoPoint3d_getSummary(direction);
 
 			directionConeString = VuoText_format("<br>direction (%s)<br>cone %g°",
 												 directionString, value.lightCone * 180./M_PI);
@@ -1261,8 +1306,8 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 		else
 			directionConeString = strdup("");
 
-		char *valueAsString = VuoText_format("%s%slight<br>color (%s)<br>brightness %g%s%s",
-											 lightType, space, colorString, value.lightBrightness, positionRangeString, directionConeString);
+		char *valueAsString = VuoText_format("%s<br>color (%s)<br>brightness %g%s%s",
+											 type, colorString, value.lightBrightness, positionRangeString, directionConeString);
 
 		free(directionConeString);
 		free(positionRangeString);
@@ -1274,7 +1319,7 @@ char * VuoSceneObject_summaryFromValue(const VuoSceneObject value)
 	unsigned long vertexCount = VuoSceneObject_getVertexCount(value);
 	unsigned long elementCount = VuoSceneObject_getElementCount(value);
 
-	char *transform = VuoTransform_summaryFromValue(value.transform);
+	char *transform = VuoTransform_getSummary(value.transform);
 
 	unsigned long childObjectCount = 0;
 	if (value.childObjects)

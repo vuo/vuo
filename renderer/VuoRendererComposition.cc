@@ -8,6 +8,7 @@
  */
 
 #include <sstream>
+#include "../node/vuo.file/VuoFileFormat.h"
 
 #include "VuoRendererComposition.hh"
 
@@ -36,7 +37,10 @@
 
 #include "VuoPort.hh"
 
+#include "VuoHeap.h"
+
 #include <sys/stat.h>
+#include <regex.h>
 
 #ifdef MAC
 #include <objc/runtime.h>
@@ -60,6 +64,7 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 	setBackgroundTransparent(false);
 	this->renderMissingAsPresent = renderMissingAsPresent;
 	this->renderActivity = false;
+	this->renderHiddenCables = false;
 	this->cachingEnabled = enableCaching;
 
 	parser = NULL;
@@ -529,7 +534,9 @@ VuoRendererPublishedPort * VuoRendererComposition::createRendererForPublishedPor
 	if (! publishedPort->hasCompiler())
 		return NULL;
 
-	return new VuoRendererPublishedPort(publishedPort);
+	VuoRendererPublishedPort *rpp = new VuoRendererPublishedPort(publishedPort);
+	rpp->setVisible(false);
+	return rpp;
 }
 
 /**
@@ -700,7 +707,7 @@ string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool 
 	string uniquePortName = baseName;
 	string uniquePortNamePrefix = uniquePortName;
 	int portNameInstanceNum = 1;
-	while (isPublishedPortNameTaken(uniquePortName, isInput))
+	while (isPublishedPortNameTaken(uniquePortName, isInput) || uniquePortName.empty())
 	{
 		ostringstream oss;
 		oss << ++portNameInstanceNum;
@@ -987,7 +994,7 @@ void VuoRendererComposition::clearInternalPortEligibilityHighlighting()
 /**
  * Prepares every component in the composition to be repainted.
  */
-void VuoRendererComposition::repaintAllComponents()
+void VuoRendererComposition::updateGeometryForAllComponents()
 {
 	foreach (VuoNode *node, getBase()->getNodes())
 	{
@@ -1056,25 +1063,41 @@ void VuoRendererComposition::setRenderActivity(bool render)
 			cable->getRenderer()->resetTimeLastEventPropagated();
 	}
 
-	repaintAllComponents();
-	updateComponentCaching();
+	updateGeometryForAllComponents();
+	setComponentCaching(getCurrentDefaultCacheMode());
 }
 
 /**
- * Suspends or resumes caching for each applicable graphics item within the
- * composition, as determined by the current default cache mode returned by
- * VuoRendererComposition::getCurrentDefaultCacheMode().
+ * Returns a boolean indicating whether hidden cables within this composition are currently displayed.
  */
-void VuoRendererComposition::updateComponentCaching()
+bool VuoRendererComposition::getRenderHiddenCables()
 {
-	QGraphicsItem::CacheMode currentDefaultCacheMode = getCurrentDefaultCacheMode();
+	return this->renderHiddenCables;
+}
 
+/**
+ * Sets the boolean indicating whether hidden cables within this composition are currently displayed.
+ */
+void VuoRendererComposition::setRenderHiddenCables(bool render)
+{
+	setComponentCaching(QGraphicsItem::NoCache);
+	updateGeometryForAllComponents();
+	this->renderHiddenCables = render;
+	setComponentCaching(getCurrentDefaultCacheMode());
+}
+
+/**
+ * Sets the caching mode for each applicable graphics item within the
+ * composition to the provided cache mode.
+ */
+void VuoRendererComposition::setComponentCaching(QGraphicsItem::CacheMode cacheMode)
+{
 	// Nodes and ports
 	foreach (VuoNode *node, getBase()->getNodes())
 	{
 		VuoRendererNode *rn = node->getRenderer();
 		if (rn)
-			rn->setCacheModeForNodeAndPorts(currentDefaultCacheMode);
+			rn->setCacheModeForNodeAndPorts(cacheMode);
 	}
 
 	// Cables
@@ -1091,7 +1114,7 @@ void VuoRendererComposition::updateComponentCaching()
 	{
 		VuoRendererCable *rc = cable->getRenderer();
 		if (rc)
-			rc->setCacheMode(currentDefaultCacheMode);
+			rc->setCacheMode(cacheMode);
 	}
 }
 
@@ -1156,8 +1179,18 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	string plist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict>";
 	plist += "<key>NSHighResolutionCapable</key><true/>";
 	plist += "<key>CFBundleExecutable</key><string>" + file + "</string>";
+	plist += "<key>CFBundleIconFile</key><string>" + file + ".icns</string>";
+	plist += "<key>ATSApplicationFontsPath</key><string>Fonts</string>";
 	plist += "</dict></plist>";
 	VuoFileUtilities::writeStringToFile(plist, tmpAppPath + "/Contents/Info.plist");
+
+	// Bundle resource files referenced within the composition by relative file paths.
+	bundleResourceFiles(tmpAppPath + "/Contents/Resources/");
+
+	// Copy the default app icon if one has not been bundled already.
+	QString bundledIconPath = QString::fromStdString(tmpAppPath + "/Contents/Resources/" + file + ".icns");
+	if (!QFile(bundledIconPath).exists())
+		QFile::copy("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns", bundledIconPath);
 
 	// Bundle the essential components of Vuo.framework.
 	string sourceVuoFrameworkPath = VuoFileUtilities::getVuoFrameworkPath();
@@ -1166,12 +1199,39 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Modules", targetVuoFrameworkPath + "/Modules", "dylib");
 	bundleVuoFrameworkFolder(sourceVuoFrameworkPath + "/Documentation/Licenses", targetVuoFrameworkPath + "/Documentation/Licenses");
 
+	// Move any pre-existing app of the same name to a backup location.
+	bool nameConflict = VuoFileUtilities::fileExists(savePath.toUtf8().constData());
+	string backedUpAppPath = "";
+	if (nameConflict)
+	{
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(savePath.toUtf8().constData(), dir, file, ext);
+		backedUpAppPath = VuoFileUtilities::makeTmpDir(file);
+
+		rename(savePath.toUtf8().constData(), backedUpAppPath.c_str());
+	}
+
 	// Move the generated app bundle to the desired save path.
 	bool saveSucceeded = (! rename(tmpAppPath.c_str(), savePath.toUtf8().constData()));
-	if (!saveSucceeded)
-		return exportSaveFailure;
 
-	return exportSuccess;
+	if (!saveSucceeded)
+	{
+		// If the new app couldn't be saved in the target location for some reason,
+		// try to restore the backed-up app (if any).
+		if (nameConflict)
+			rename(backedUpAppPath.c_str(), savePath.toUtf8().constData());
+
+		return exportSaveFailure;
+	}
+
+	else
+	{
+		// If the export succeeded, delete the backed-up app (if any).
+		if (nameConflict)
+			QDir(backedUpAppPath.c_str()).removeRecursively();
+
+		return exportSuccess;
+	}
 }
 
 /**
@@ -1192,6 +1252,9 @@ string VuoRendererComposition::createAppBundleDirectoryStructure()
 
 	string resourcesPath = contentsPath + "/Resources";
 	mkdir(resourcesPath.c_str(), 0755);
+
+	string resourcesFontsPath = contentsPath + "/Resources/Fonts";
+	mkdir(resourcesFontsPath.c_str(), 0755);
 
 	string frameworksPath = contentsPath + "/Frameworks";
 	mkdir(frameworksPath.c_str(), 0755);
@@ -1234,12 +1297,31 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 	try
 	{
 		VuoCompilerComposition *compiledCompositionToExport = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(takeSnapshot(), compiler);
+
+		// Modify port constants that contain relative paths so that the paths will be
+		// resolved correctly relative to the "Resources" directory within the app bundle.
+		VuoRendererComposition *rendererCompositionToExport = new VuoRendererComposition(compiledCompositionToExport->getBase());
+		foreach (VuoNode *node, rendererCompositionToExport->getBase()->getNodes())
+		{
+			foreach (VuoPort *port, node->getInputPorts())
+			{
+				if (hasRelativeURLConstantValue(port))
+				{
+					QString origRelativeResourcePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+					string modifiedRelativeResourcePath = modifyResourcePathForAppBundle(origRelativeResourcePath.toUtf8().constData());
+					port->getRenderer()->setConstant("\"" + modifiedRelativeResourcePath + "\"");
+				}
+			}
+		}
+
+		delete rendererCompositionToExport;
+
 		string pathOfCompiledCompositionToExport = VuoFileUtilities::makeTmpFile(compiledCompositionToExport->getBase()->getName(), "bc");
 
 		compiler->compileComposition(compiledCompositionToExport, pathOfCompiledCompositionToExport);
 
 		string rPath = "@loader_path/../Frameworks";
-		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, true, rPath);
+		compiler->linkCompositionToCreateExecutable(pathOfCompiledCompositionToExport, targetExecutablePath, VuoCompiler::Optimization_SmallBinary, true, rPath);
 		remove(pathOfCompiledCompositionToExport.c_str());
 	}
 
@@ -1250,6 +1332,206 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 	}
 
 	return true;
+}
+
+/**
+ * Copies resources referenced within the composition by relative URL into the
+ * provided @c targetResourceDir.
+ *
+ * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ */
+void VuoRendererComposition::bundleResourceFiles(string targetResourceDir)
+{
+	foreach (VuoNode *node, getBase()->getNodes())
+	{
+		foreach (VuoPort *port, node->getInputPorts())
+		{
+			if (hasRelativeURLConstantValue(port))
+			{
+				QString origRelativeResourcePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+				QString modifiedRelativeResourcePath = modifyResourcePathForAppBundle(origRelativeResourcePath.toUtf8().constData()).c_str();
+
+				string origRelativeDir, modifiedRelativeDir, file, ext;
+				VuoFileUtilities::splitPath(origRelativeResourcePath.toUtf8().constData(), origRelativeDir, file, ext);
+				VuoFileUtilities::splitPath(modifiedRelativeResourcePath.toUtf8().constData(), modifiedRelativeDir, file, ext);
+				string resourceFileName = file;
+				if (!ext.empty())
+				{
+					resourceFileName += ".";
+					resourceFileName += ext;
+				}
+
+				QDir compositionDir(QDir(getBase()->getDirectory().c_str()).canonicalPath());
+				QDir appDir(QDir(targetResourceDir.c_str()).canonicalPath());
+
+				if (!modifiedRelativeDir.empty())
+					appDir.mkpath(modifiedRelativeDir.c_str());
+
+				QString sourceFilePath = compositionDir.filePath(QDir(origRelativeDir.c_str()).filePath(resourceFileName.c_str()));
+				QString targetFilePath = appDir.filePath(QDir(modifiedRelativeDir.c_str()).filePath(resourceFileName.c_str()));
+				copyFileOrDirectory(sourceFilePath.toUtf8().constData(), targetFilePath.toUtf8().constData());
+
+				if (isSupportedSceneFile(sourceFilePath.toUtf8().constData()))
+					bundleAuxiliaryFilesForSceneFile(sourceFilePath, targetFilePath);
+			}
+
+		}
+	}
+
+	// @todo https://b33p.net/kosada/node/9205 : Published input port constants?
+}
+
+/**
+ * Given a resource @c path, returns the corresponding mapped path
+ * to be used within the "Resources" directory of an exported app bundle.
+ */
+string VuoRendererComposition::modifyResourcePathForAppBundle(string path)
+{
+	if (VuoUrl_isRelativePath(path.c_str()))
+	{
+		// Replace parent-directory indicators ("../") so that resources
+		// located within the parent (or ancestor) directory of the original composition will
+		// still be copied into the exported app's "Resources" directory or a subdirectory thereof.
+		const QString originalParentDirIndicator = "/../";
+		const QString appBundleParentDirIndicator = "/VuoParentDir/";
+
+		QString modifiedPath = QString("/").append(path.c_str());
+
+		while (modifiedPath.contains(originalParentDirIndicator))
+			modifiedPath.replace(originalParentDirIndicator, appBundleParentDirIndicator);
+
+		modifiedPath.remove(0, 1); // Remove leading '/' added earlier
+
+		return modifiedPath.toUtf8().constData();
+	}
+
+	else
+		return path;
+}
+
+
+/**
+ * Recursively copies the provided file or directory from @c sourcePath to @c targetPath.
+ */
+void VuoRendererComposition::copyFileOrDirectory(string sourcePath, string targetPath)
+{
+	QFileInfo sourceFileInfo = QFileInfo(sourcePath.c_str());
+
+	if (sourceFileInfo.isFile())
+		QFile::copy(sourcePath.c_str(),targetPath.c_str());
+
+	else if (sourceFileInfo.isDir())
+	{
+		QDir sourceDir(sourcePath.c_str());
+		QDir targetDir(targetPath.c_str());
+		targetDir.mkpath(".");
+		foreach (QString file, sourceDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot))
+		{
+			QString sourceFile = QString(sourcePath.c_str()) + QDir::separator() + file;
+			QString targetFile = QString(targetPath.c_str()) + QDir::separator() + file;
+			copyFileOrDirectory(sourceFile.toUtf8().constData(), targetFile.toUtf8().constData());
+		}
+	}
+}
+
+/**
+ * Uses a heuristic to locate and bundle texture files that may be required by the
+ * provided mesh file having original path `sourceFilePath` and bundled path `targetFilePath`.
+ */
+void VuoRendererComposition::bundleAuxiliaryFilesForSceneFile(QString sourceFilePath, QString targetFilePath)
+{
+	string sourceDirName, targetDirName, file, ext;
+	VuoFileUtilities::splitPath(sourceFilePath.toUtf8().constData(), sourceDirName, file, ext);
+	VuoFileUtilities::splitPath(targetFilePath.toUtf8().constData(), targetDirName, file, ext);
+
+	// Bundle any file or folder in the same directory as the mesh file
+	// whose name begins with the mesh file's basename.
+	QDir sourceDir(sourceDirName.c_str());
+	QStringList filesWithMatchingBaseName = QStringList() << QString(file.c_str()).append("*");
+	sourceDir.setNameFilters(filesWithMatchingBaseName);
+
+	foreach (QString auxiliaryFile, sourceDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot))
+	{
+		QString sourceFile = QString(sourceDirName.c_str()) + QDir::separator() + auxiliaryFile;
+		QString targetFile = QString(targetDirName.c_str()) + QDir::separator() + auxiliaryFile;
+		if (!QFileInfo(targetFile).exists())
+			copyFileOrDirectory(sourceFile.toUtf8().constData(), targetFile.toUtf8().constData());
+	}
+
+	// Bundle texture folders in the same directory as the mesh file.
+	QStringList textureFolderNames = QStringList() << "Textures" << "_Textures";
+	sourceDir.setNameFilters(textureFolderNames);
+	foreach (QString textureFolderName, sourceDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot))
+	{
+		QString sourceTextureDir = QString(sourceDirName.c_str()) + QDir::separator() + textureFolderName;
+		QString targetTextureDir = QString(targetDirName.c_str()) + QDir::separator() + textureFolderName;
+		if (!QFileInfo(targetTextureDir).exists())
+			copyFileOrDirectory(sourceTextureDir.toUtf8().constData(), targetTextureDir.toUtf8().constData());
+	}
+
+	// @todo: Bundle texture folders in the parent directory of the mesh file.
+	// See https://b33p.net/kosada/node/9390, https://b33p.net/kosada/node/9391.
+
+	return;
+}
+
+/**
+ * Returns a boolean indicating whether the provided @c port currently has
+ * a relative file path as a constant input value.
+ *
+ * Helper function for VuoRendererComposition::bundleResourceFiles(string targetResourceDir).
+ */
+bool VuoRendererComposition::hasRelativeURLConstantValue(VuoPort *port)
+{
+	if (!(port->hasRenderer() && port->getRenderer()->isConstant() && hasURLType(port)))
+		return false;
+
+	string constant = port->getRenderer()->getConstantAsString();
+	VuoText url = VuoText_makeFromString(constant.c_str());
+	VuoRetain(url);
+	bool isRelativePath = VuoUrl_isRelativePath(url);
+	VuoRelease(url);
+	return isRelativePath;
+}
+
+/**
+ * Returns a boolean indicating whether the provided @c port expects a URL as input.
+ * @todo https://b33p.net/kosada/node/9204 Just check whether it has a VuoUrl type.
+ * For now, use hard-coded rules.
+ *
+ * Helper function for VuoRendererComposition::hasRelativeURLConstantValue(VuoPort *port).
+ */
+bool VuoRendererComposition::hasURLType(VuoPort *port)
+{
+	// For now, ports with URLs are expected to be of type "VuoText".
+	if (!(port->hasRenderer() &&
+		  port->getRenderer()->getDataType() &&
+		  port->getRenderer()->getDataType()->getModuleKey()=="VuoText"))
+		return false;
+
+
+	// Case: Port is titled "url"
+	if (port->getClass()->getName() == "url")
+		return true;
+
+	// Case: Port is an input port on a drawer attached to a port titled "urls"
+	// Relevant for vuo.image.fetch.list, vuo.scene.fetch.list nodes.
+	VuoRendererInputDrawer *drawer = dynamic_cast<VuoRendererInputDrawer *>(port->getRenderer()->getRenderedParentNode());
+	if (drawer)
+	{
+		VuoPort *hostPort = drawer->getRenderedHostPort();
+		if (hostPort && (hostPort->getClass()->getName() == "urls"))
+			return true;
+	}
+
+	// Case: Port is titled "folder"
+	// Relevant for vuo.file.list node.
+	if (port->getClass()->getName() == "folder")
+	{
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -1326,17 +1608,46 @@ void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPat
 }
 
 /**
- * Inserts spaces at CamelCase transitions within the input @c camelCaseString,
- * capitalizes the first letter of the string, and returns the result.
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported audio file.
  */
-QString VuoRendererComposition::insertSpacesAtCamelCaseTransitions(QString camelCaseString)
+bool VuoRendererComposition::isSupportedAudioFile(string path)
 {
-	QString formattedString = camelCaseString;
+	return VuoFileFormat_isSupportedAudioFile(path.c_str());
+}
 
-	// Insert spaces among CamelCase transitions.
-	while (formattedString.contains(QRegExp("\\S[A-Z]")))
-		formattedString.replace(QRegExp("(\\S)([A-Z])"), "\\1 \\2");
-	formattedString.replace(QRegExp("([^0-9])([0-9])"), "\\1 \\2");
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported image file.
+ */
+bool VuoRendererComposition::isSupportedImageFile(string path)
+{
+	return VuoFileFormat_isSupportedImageFile(path.c_str());
+}
 
-	return formattedString;
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported mesh file.
+ */
+bool VuoRendererComposition::isSupportedMeshFile(string path)
+{
+	return VuoFileFormat_isSupportedMeshFile(path.c_str());
+}
+
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported movie file.
+ */
+bool VuoRendererComposition::isSupportedMovieFile(string path)
+{
+	return VuoFileFormat_isSupportedMovieFile(path.c_str());
+}
+
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported scene file.
+ */
+bool VuoRendererComposition::isSupportedSceneFile(string path)
+{
+	return VuoFileFormat_isSupportedSceneFile(path.c_str());
 }

@@ -33,17 +33,17 @@ typedef enum {
 	VuoMouseButton_Any
 } VuoMouseButton;
 
-VuoMouseButton VuoMouseButton_valueFromJson(struct json_object * js);
-struct json_object * VuoMouseButton_jsonFromValue(const VuoMouseButton value);
-VuoList_VuoMouseButton VuoMouseButton_allowedValues(void);
-char * VuoMouseButton_summaryFromValue(const VuoMouseButton value);
+VuoMouseButton VuoMouseButton_makeFromJson(struct json_object * js);
+struct json_object * VuoMouseButton_getJson(const VuoMouseButton value);
+VuoList_VuoMouseButton VuoMouseButton_getAllowedValues(void);
+char * VuoMouseButton_getSummary(const VuoMouseButton value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoMouseButton VuoMouseButton_valueFromString(const char *str);
-char * VuoMouseButton_stringFromValue(const VuoMouseButton value);
+VuoMouseButton VuoMouseButton_makeFromString(const char *str);
+char * VuoMouseButton_getString(const VuoMouseButton value);
 /// @}
 
 /**

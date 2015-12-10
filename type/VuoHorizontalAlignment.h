@@ -33,17 +33,17 @@ typedef enum
 	VuoHorizontalAlignment_Right
 } VuoHorizontalAlignment;
 
-VuoHorizontalAlignment VuoHorizontalAlignment_valueFromJson(struct json_object * js);
-struct json_object * VuoHorizontalAlignment_jsonFromValue(const VuoHorizontalAlignment value);
-VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_allowedValues(void);
-char * VuoHorizontalAlignment_summaryFromValue(const VuoHorizontalAlignment value);
+VuoHorizontalAlignment VuoHorizontalAlignment_makeFromJson(struct json_object * js);
+struct json_object * VuoHorizontalAlignment_getJson(const VuoHorizontalAlignment value);
+VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_getAllowedValues(void);
+char * VuoHorizontalAlignment_getSummary(const VuoHorizontalAlignment value);
 
 /**
  * Automatically generated function.
  */
 ///@{
-VuoHorizontalAlignment VuoHorizontalAlignment_valueFromString(const char *str);
-char * VuoHorizontalAlignment_stringFromValue(const VuoHorizontalAlignment value);
+VuoHorizontalAlignment VuoHorizontalAlignment_makeFromString(const char *str);
+char * VuoHorizontalAlignment_getString(const VuoHorizontalAlignment value);
 void VuoHorizontalAlignment_retain(VuoHorizontalAlignment value);
 void VuoHorizontalAlignment_release(VuoHorizontalAlignment value);
 ///@}

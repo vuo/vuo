@@ -14,7 +14,7 @@
 int main(void)
 {
 	// Compile, link, and run the composition in a new process
-	VuoRunner * runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(VUO_COMPOSITION_PATH "/Count.vuo");
+	VuoRunner * runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("Count.vuo");
 	runner->start();
 
 	// Stop it after 5 seconds

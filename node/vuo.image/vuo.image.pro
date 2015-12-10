@@ -4,8 +4,7 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 NODE_SOURCES += \
-	vuo.image.crop.c \
-	vuo.image.crop.pixels.c \
+	vuo.image.apply.mask.c \
 	vuo.image.blend.c \
 	vuo.image.blur.c \
 	vuo.image.bulge.c \
@@ -16,31 +15,33 @@ NODE_SOURCES += \
 	vuo.image.color.mask.brightness.c \
 	vuo.image.color.offset.rgb.c \
 	vuo.image.color.split.rgb.c \
-	vuo.image.pixellate.c \
-	vuo.image.ripple.c \
-	vuo.image.twirl.c \
-	vuo.image.vignette.c \
+	vuo.image.crop.c \
+	vuo.image.crop.pixels.c \
+	vuo.image.fetch.c \
+	vuo.image.fetch.list.c \
 	vuo.image.findBarcode.c \
 	vuo.image.flip.horizontal.c \
 	vuo.image.flip.vertical.c \
-	vuo.image.fetch.c \
-	vuo.image.fetch.list.c \
 	vuo.image.get.size.c \
 	vuo.image.kaleidoscope.c \
 	vuo.image.make.checkerboard.c \
 	vuo.image.make.color.c \
 	vuo.image.make.gradient.linear.c \
 	vuo.image.make.gradient.radial.c \
-	vuo.image.make.text.c \
+	vuo.image.make.shadertoy.c \
 #	vuo.image.make.triangle.c \
+	vuo.image.make.text.c \
 	vuo.image.mirror.c \
-	vuo.image.apply.mask.c \
+	vuo.image.pixellate.c \
+	vuo.image.render.window.c \
 	vuo.image.resize.c \
 	vuo.image.resize.larger.c \
-	vuo.image.render.window.c \
+	vuo.image.ripple.c \
 	vuo.image.rotate.c \
-	vuo.image.wrapMode.c \
-	vuo.image.tile.c
+	vuo.image.tile.c \
+	vuo.image.twirl.c \
+	vuo.image.vignette.c \
+	vuo.image.wrapMode.c
 
 NODE_INCLUDEPATH += \
 	../vuo.audio \
@@ -59,11 +60,13 @@ NODE_LIBRARY_INCLUDEPATH += \
 TYPE_SOURCES += \
 	VuoHorizontalReflection.c \
 	VuoVerticalReflection.c \
+	VuoSizingMode.c \
 	VuoThresholdType.c
 
 HEADERS += \
 	VuoHorizontalReflection.h \
 	VuoVerticalReflection.h \
+	VuoSizingMode.h \
 	VuoThresholdType.h
 
 include(../../module.pri)

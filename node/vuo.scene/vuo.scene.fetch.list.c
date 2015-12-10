@@ -56,7 +56,7 @@ void nodeEvent
 		VuoInputData(VuoList_VuoText, {"name":"URLs"}) urls,
 		VuoInputData(VuoBoolean, {"default":true}) center,
 		VuoInputData(VuoBoolean, {"default":true}) fit,
-		VuoInputData(VuoBoolean, {"default":false}) hasLeftHandedCoordinates,
+		VuoInputData(VuoBoolean, {"name":"Has Left-handed Coordinates", "default":false}) hasLeftHandedCoordinates,
 		VuoOutputData(VuoList_VuoSceneObject) scenes
 )
 {

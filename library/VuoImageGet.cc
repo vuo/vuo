@@ -8,7 +8,7 @@
  */
 
 #include "VuoImageGet.h"
-#include "VuoUrl.h"
+#include "VuoUrlFetch.h"
 
 #include <string.h>
 
@@ -29,7 +29,7 @@ VuoModuleMetadata({
 					 "title" : "VuoImageGet",
 					 "dependencies" : [
 						 "VuoImage",
-						 "VuoUrl",
+						 "VuoUrlFetch",
 						 "FreeImage"
 					 ]
 				 });
@@ -58,7 +58,7 @@ VuoImage VuoImage_get(const char *imageURL)
 
 	void *data;
 	unsigned int dataLength;
-	if (!VuoUrl_get(imageURL, &data, &dataLength))
+	if (!VuoUrl_fetch(imageURL, &data, &dataLength))
 		return NULL;
 
 	// Decode the memory buffer into a straightforward array of BGRA pixels

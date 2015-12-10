@@ -14,6 +14,7 @@
 
 #include "type.h"
 #include "VuoWindowReference.h"
+#include "VuoWindowOpenGLInternal.h"
 #include "VuoText.h"
 
 /// @{
@@ -45,30 +46,30 @@ VuoWindowReference VuoWindowReference_make(void *window)
  * @ingroup VuoWindowReference
  * Decodes the JSON object @a js, expected to contain a string, to create a new VuoMouseButton.
  */
-VuoWindowReference VuoWindowReference_valueFromJson(json_object * js)
+VuoWindowReference VuoWindowReference_makeFromJson(json_object * js)
 {
-	return json_object_get_int64(js);
+	return (void *)json_object_get_int64(js);
 }
 
 /**
  * @ingroup VuoWindowReference
  * Encodes @a value as a JSON object.
  */
-json_object * VuoWindowReference_jsonFromValue(const VuoWindowReference value)
+json_object * VuoWindowReference_getJson(const VuoWindowReference value)
 {
-	return json_object_new_int64(value);
+	return json_object_new_int64((int64_t)value);
 }
 
 /**
  * @ingroup VuoWindowReference
  * Returns a brief human-readable summary of @a value.
  */
-char * VuoWindowReference_summaryFromValue(const VuoWindowReference value)
+char * VuoWindowReference_getSummary(const VuoWindowReference value)
 {
 	if (value == 0)
 		return strdup("(no window)");
 
-	return VuoText_format("window ID %lli", value);
+	return VuoText_format("window ID %p", value);
 }
 
 /**
@@ -77,7 +78,8 @@ char * VuoWindowReference_summaryFromValue(const VuoWindowReference value)
 VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value)
 {
 	VuoInteger width, height;
-	VuoWindowReference_getContentSize(value, &width, &height);
+	float backingScaleFactor;
+	VuoWindowReference_getContentSize(value, &width, &height, &backingScaleFactor);
 	return (VuoReal)width/(VuoReal)height;
 }
 
@@ -85,19 +87,22 @@ VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value)
  * Returns the window's current content size in pixels.
  *
  * On Retina displays, this function returns the physical number of pixels (device/backing resolution, not logical resolution).
+ *
+ * @threadNoMain
  */
-void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height)
+void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height, float *backingScaleFactor)
 {
 	__block NSRect contentRect;
-	NSWindow *window = (NSWindow *)value;
+	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)value;
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  if ([[window contentView] isInFullScreenMode])
-						  contentRect = [[window screen] frame];
-					  else
-						  contentRect = [window contentRectForFrameRect:[window frame]];
+					  contentRect = [[window glView] viewport];
 
 					  if ([window respondsToSelector:@selector(convertRectToBacking:)])
 					  {
+						  typedef double (*backingFuncType)(id receiver, SEL selector);
+						  backingFuncType backingFunc = (backingFuncType)[[window class] instanceMethodForSelector:@selector(backingScaleFactor)];
+						  *backingScaleFactor = backingFunc(window, @selector(backingScaleFactor));
+
 						  typedef NSRect (*funcType)(id receiver, SEL selector, NSRect);
 						  funcType convertRectToBacking = (funcType)[[window class] instanceMethodForSelector:@selector(convertRectToBacking:)];
 						  contentRect = convertRectToBacking(window, @selector(convertRectToBacking:), contentRect);
@@ -105,4 +110,18 @@ void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoIntege
 				  });
 	*width = contentRect.size.width;
 	*height = contentRect.size.height;
+}
+
+/**
+ * Returns true if the application is currently focused
+ * and the window is currently focused (disregarding auxiliary windows, such as the About box).
+ */
+bool VuoWindowReference_isFocused(const VuoWindowReference value)
+{
+	__block bool focused;
+	NSWindow *window = (NSWindow *)value;
+	dispatch_sync(dispatch_get_main_queue(), ^{
+					  focused = [window isMainWindow];
+				  });
+	return focused;
 }

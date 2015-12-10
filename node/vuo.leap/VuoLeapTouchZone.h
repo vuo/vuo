@@ -32,17 +32,17 @@ typedef enum {
 	VuoLeapTouchZone_Touching
 } VuoLeapTouchZone;
 
-VuoLeapTouchZone VuoLeapTouchZone_valueFromJson(struct json_object * js);
-struct json_object * VuoLeapTouchZone_jsonFromValue(const VuoLeapTouchZone value);
-VuoList_VuoLeapTouchZone VuoLeapTouchZone_allowedValues(void);
-char * VuoLeapTouchZone_summaryFromValue(const VuoLeapTouchZone value);
+VuoLeapTouchZone VuoLeapTouchZone_makeFromJson(struct json_object * js);
+struct json_object * VuoLeapTouchZone_getJson(const VuoLeapTouchZone value);
+VuoList_VuoLeapTouchZone VuoLeapTouchZone_getAllowedValues(void);
+char * VuoLeapTouchZone_getSummary(const VuoLeapTouchZone value);
 
 /// @{
 /**
  * Automatically generated function.
  */
-VuoLeapTouchZone VuoLeapTouchZone_valueFromString(const char *str);
-char * VuoLeapTouchZone_stringFromValue(const VuoLeapTouchZone value);
+VuoLeapTouchZone VuoLeapTouchZone_makeFromString(const char *str);
+char * VuoLeapTouchZone_getString(const VuoLeapTouchZone value);
 /// @}
 
 /**

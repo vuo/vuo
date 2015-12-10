@@ -80,13 +80,14 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 		lineEdit->installEventFilter(this);
 
 		slider = new QSlider(&dialog);
+		slider->setAttribute(Qt::WA_MacSmallSize);
 		slider->setOrientation(Qt::Horizontal);
 		slider->setFocusPolicy(Qt::NoFocus);
 		slider->setMinimum(0);
 		slider->setMaximum(slider->width());
 		slider->setSingleStep(fmax(1, suggestedStep*(slider->maximum()-slider->minimum())/(suggestedMax-suggestedMin)));
 
-		double lineEditValue = VuoReal_valueFromJson(originalValue);
+		double lineEditValue = VuoReal_makeFromJson(originalValue);
 		int sliderValue = lineEditValueToScaledSliderValue(lineEditValue);
 		slider->setValue(sliderValue);
 
@@ -96,8 +97,12 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 		setFirstWidgetInTabOrder(lineEdit);
 		setLastWidgetInTabOrder(lineEdit);
 
-		const int widgetVerticalSpacing = 1;
+		const int widgetVerticalSpacing = 5;
 		slider->move(slider->pos().x(), slider->pos().y() + lineEdit->height() + widgetVerticalSpacing);
+
+		slider->resize(slider->width(), slider->height() - 10);
+		lineEdit->resize(slider->width(), lineEdit->height());
+
 		slider->show();
 	}
 
@@ -109,7 +114,7 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 		static_cast<VuoDoubleSpinBox *>(spinBox)->setButtonMaximum(suggestedMax);
 		spinBox->setSingleStep(suggestedStep);
 		spinBox->setDecimals(decimalPrecision);
-		spinBox->setValue(VuoReal_valueFromJson(originalValue));
+		spinBox->setValue(VuoReal_makeFromJson(originalValue));
 
 		// For some reason the VuoReal input editor is extremely wide
 		// without the following resize() call:
@@ -156,7 +161,7 @@ json_object * VuoInputEditorReal::convertFromLineEditFormat(const QString &value
 	if (! valueAsStringInDefaultLocale.isEmpty() && valueAsStringInDefaultLocale[0] == '.')
 		valueAsStringInDefaultLocale = "0" + valueAsStringInDefaultLocale;
 
-	return VuoReal_jsonFromValue( VuoReal_valueFromString(valueAsStringInDefaultLocale.toUtf8().constData()) );
+	return VuoReal_getJson( VuoReal_makeFromString(valueAsStringInDefaultLocale.toUtf8().constData()) );
 }
 
 /**
@@ -213,8 +218,8 @@ void VuoInputEditorReal::updateLineEditValue(int newSliderValue)
 void VuoInputEditorReal::emitValueChanged()
 {
 	const char *valueAsString = lineEdit->text().toUtf8().constData();
-	VuoReal value = VuoReal_valueFromString(valueAsString);
-	json_object *valueAsJson = VuoReal_jsonFromValue(value);
+	VuoReal value = VuoReal_makeFromString(valueAsString);
+	json_object *valueAsJson = VuoReal_getJson(value);
 	emit valueChanged(valueAsJson);
 	json_object_put(valueAsJson);
 }

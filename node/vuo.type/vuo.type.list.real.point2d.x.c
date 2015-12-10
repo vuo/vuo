@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title": "Convert Real List to 2D Point List",
-					  "description": "Creates a list of 2D points using the input real numbers as the x coordinate, and 0 as the y coordinate.",
+					  "description": "Creates a list of 2D points using the input real numbers as the X coordinate, and 0 as the Y coordinate.",
 					  "version": "1.0.0"
 				 });
 

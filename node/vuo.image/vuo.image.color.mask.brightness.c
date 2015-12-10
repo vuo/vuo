@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					  "title" : "Mask Image by Brightness",
 					  "keywords" : [ "threshold", "remove", "depth", "cut", "magic", "wand", "transparent", "filter" ],
-					  "version" : "1.1.0",
+					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
 					  }
@@ -63,19 +63,23 @@ static const char *colorFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
+	VuoShader shader;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
+	int thresholdTypeCurrent;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
-	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
+	struct nodeInstanceData * instance = (struct nodeInstanceData *)calloc(1, sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
 
 	instance->glContext = VuoGlContext_use();
 
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
+
+	instance->thresholdTypeCurrent = -1;
 
 	return instance;
 }
@@ -95,50 +99,59 @@ void nodeInstanceEvent
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 
-	VuoShader frag;
-	switch(thresholdType)
+	if( (int)thresholdType != (*instance)->thresholdTypeCurrent )
 	{
-		case VuoThresholdType_Luminance:
-			frag = VuoShader_make("Threshold Shader (Luminance)");
-			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, thresholdFragmentShader);
-			break;
+		if( (*instance)->shader != NULL)
+			VuoRelease( (*instance)->shader );
 
-		case VuoThresholdType_Red:
-			frag = VuoShader_make("Threshold Shader (Red)");
-			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 1, 0, 0, 0 } );
-			break;
+		switch(thresholdType)
+		{
+			case VuoThresholdType_Luminance:
+				(*instance)->shader = VuoShader_make("Threshold Shader (Luminance)");
+				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, thresholdFragmentShader);
+				break;
 
-		case VuoThresholdType_Green:
-			frag = VuoShader_make("Threshold Shader (Green)");
-			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 0, 1, 0, 0 } );
-			break;
+			case VuoThresholdType_Red:
+				(*instance)->shader = VuoShader_make("Threshold Shader (Red)");
+				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 1, 0, 0, 0 } );
+				break;
 
-		case VuoThresholdType_Blue:
-			frag = VuoShader_make("Threshold Shader (Blue)");
-			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 0, 0, 1, 0 } );
-			break;
+			case VuoThresholdType_Green:
+				(*instance)->shader = VuoShader_make("Threshold Shader (Green)");
+				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 0, 1, 0, 0 } );
+				break;
 
-		case VuoThresholdType_Alpha:
-			frag = VuoShader_make("Threshold Shader (Alpha)");
-			VuoShader_addSource(frag, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
-			VuoShader_setUniform_VuoPoint4d(frag, "mask", (VuoPoint4d){ 0, 0, 0, 1 } );
-			break;
+			case VuoThresholdType_Blue:
+				(*instance)->shader = VuoShader_make("Threshold Shader (Blue)");
+				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 0, 0, 1, 0 } );
+				break;
+
+			case VuoThresholdType_Alpha:
+				(*instance)->shader = VuoShader_make("Threshold Shader (Alpha)");
+				VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, colorFragmentShader);
+				VuoShader_setUniform_VuoPoint4d((*instance)->shader, "mask", (VuoPoint4d){ 0, 0, 0, 1 } );
+				break;
+		}
+
+		(*instance)->thresholdTypeCurrent = (int)thresholdType;
+		VuoRetain( (*instance)->shader );
 	}
-	VuoRetain(frag);
-	VuoShader_setUniform_VuoImage(frag, "texture",   image);
-	VuoShader_setUniform_VuoReal (frag, "threshold", MAX(threshold,0));
-	VuoShader_setUniform_VuoReal (frag, "sharpness", MAX(MIN(sharpness,1),0));
 
-	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, frag, w, h, VuoImage_getColorDepth(image));
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture",   image);
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "threshold", MAX(threshold,0));
+	VuoShader_setUniform_VuoReal ((*instance)->shader, "sharpness", MAX(MIN(sharpness,1),0));
 
-	VuoRelease(frag);
+	*maskedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
+	if((*instance)->shader != NULL)
+		VuoRelease((*instance)->shader);
+
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

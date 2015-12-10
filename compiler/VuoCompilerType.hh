@@ -20,13 +20,13 @@
 class VuoCompilerType : public VuoBaseDetail<VuoType>, public VuoCompilerModule  // Order matters: VuoCompilerModule after VuoBaseDetail - http://stackoverflow.com/a/2254306/238387
 {
 private:
-	Function *valueFromJsonFunction;
-	Function *jsonFromValueFunction;
-	Function *interprocessJsonFromValueFunction;
-	Function *valueFromStringFunction;
-	Function *stringFromValueFunction;
-	Function *interprocessStringFromValueFunction;
-	Function *summaryFromValueFunction;
+	Function *makeFromJsonFunction;
+	Function *getJsonFunction;
+	Function *getInterprocessJsonFunction;
+	Function *makeFromStringFunction;
+	Function *getStringFunction;
+	Function *getInterprocessStringFunction;
+	Function *getSummaryFunction;
 	Function *retainFunction;
 	Function *releaseFunction;
 	Type *llvmType;
@@ -37,7 +37,7 @@ private:
 	void parseOrGenerateValueFromStringFunction(void);
 	void parseOrGenerateStringFromValueFunction(bool isInterprocess);
 	void parseOrGenerateRetainOrReleaseFunction(bool isRetain);
-	Value * generateSerializationFunctionCall(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction);
+	Value * generateFunctionCallWithTypeParameter(Module *module, BasicBlock *block, Value *arg, Function *sourceFunction);
 
 protected:
 	VuoCompilerType(string typeName, Module *module);
@@ -50,6 +50,8 @@ public:
 	Value * generateStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Value * generateInterprocessStringFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
 	Value * generateSummaryFromValueFunctionCall(Module *module, BasicBlock *block, Value *arg);
+	void generateRetainCall(Module *module, BasicBlock *block, Value *arg);
+	void generateReleaseCall(Module *module, BasicBlock *block, Value *arg);
 	Type * getType(void);
 	Type * getFunctionParameterType(Type **secondType);
 	Attributes getFunctionParameterAttributes(void);

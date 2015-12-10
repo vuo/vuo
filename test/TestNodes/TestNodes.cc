@@ -77,7 +77,7 @@ private:
 		try
 		{
 			compiler->compileComposition(composition, compiledCompositionPath);
-			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath);
+			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
 		}
 		catch (exception &e)
 		{
@@ -99,8 +99,8 @@ private slots:
 		compiler = initCompiler();
 
 		set<string> customModuleDirs;
-		customModuleDirs.insert( VuoCompiler::getUserModulesPath() );
-		customModuleDirs.insert( VuoCompiler::getSystemModulesPath() );
+		customModuleDirs.insert( VuoFileUtilities::getUserModulesPath() );
+		customModuleDirs.insert( VuoFileUtilities::getSystemModulesPath() );
 		for (set<string>::iterator i = customModuleDirs.begin(); i != customModuleDirs.end(); ++i)
 		{
 			string dir = *i;

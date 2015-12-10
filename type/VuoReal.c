@@ -34,7 +34,7 @@ VuoModuleMetadata({
  * @ingroup VuoSceneObject
  * Decodes the JSON object @c js, expected to contain a double, to create a new value.
  */
-VuoReal VuoReal_valueFromJson(json_object * js)
+VuoReal VuoReal_makeFromJson(json_object * js)
 {
 	return json_object_get_double(js);
 }
@@ -43,7 +43,7 @@ VuoReal VuoReal_valueFromJson(json_object * js)
  * @ingroup VuoReal
  * Encodes @c value as a JSON object.
  */
-json_object * VuoReal_jsonFromValue(const VuoReal value)
+json_object * VuoReal_getJson(const VuoReal value)
 {
 	return json_object_new_double(value);
 }
@@ -52,7 +52,7 @@ json_object * VuoReal_jsonFromValue(const VuoReal value)
  * @ingroup VuoReal
  * Returns a string representation of @c value (either decimal or scientific notation, whichever is shorter).
  */
-char * VuoReal_summaryFromValue(const VuoReal value)
+char * VuoReal_getSummary(const VuoReal value)
 {
 	return VuoText_format("%g", value);
 }

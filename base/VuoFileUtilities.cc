@@ -82,7 +82,7 @@ string VuoFileUtilities::makeTmpFile(string file, string extension, string direc
 /**
  * Creates a new temporary directory, avoiding any name conflicts with existing files.
  *
- * Returns the path of the directory.
+ * Returns the path of the directory (without a trailing slash).
  */
 string VuoFileUtilities::makeTmpDir(string dir)
 {
@@ -104,7 +104,16 @@ string VuoFileUtilities::getTmpDir(void)
 }
 
 /**
- * Returns the path of Vuo.framework, or an empty string if Vuo.framework cannot be located.
+ * Creates a new directory, if it doesn't already exist.
+ */
+void VuoFileUtilities::makeDir(string path)
+{
+	mkdir(path.c_str(), 0700);
+}
+
+/**
+ * Returns the path of Vuo.framework (without a trailing slash),
+ * or an empty string if Vuo.framework cannot be located.
  */
 string VuoFileUtilities::getVuoFrameworkPath(void)
 {
@@ -161,6 +170,43 @@ string VuoFileUtilities::getVuoFrameworkPath(void)
 
 	// Give up.
 	return "";
+}
+
+/**
+ * Returns the filesystem path to the user-specific Vuo Modules folder (without a trailing slash).
+ */
+string VuoFileUtilities::getUserModulesPath()
+{
+	return string(getenv("HOME")) + "/Library/Application Support/Vuo/Modules";
+}
+
+/**
+ * Returns the filesystem path to the system-wide Vuo Modules folder (without a trailing slash).
+ */
+string VuoFileUtilities::getSystemModulesPath()
+{
+	return "/Library/Application Support/Vuo/Modules";
+}
+
+/**
+ * Returns the filesystem path to the folder that Vuo uses to cache data (without a trailing slash).
+ */
+string VuoFileUtilities::getCachePath(void)
+{
+	return string(getenv("HOME")) + "/Library/Caches/org.vuo";
+}
+
+/**
+ * Saves @a originalFileName into @a fileContents so that, when @a fileContents is written to some other
+ * file path, @a originalFileName will still be the name that shows up in compile errors/warnings and
+ * in the @c __FILE__ macro.
+ *
+ * This function inserts a preprocessor directive at the beginning of @a fileContents. Any modifications
+ * to @a fileContents after this function is called should keep the preprocessor directive on the first line.
+ */
+void VuoFileUtilities::preserveOriginalFileName(string &fileContents, string originalFileName)
+{
+	fileContents.insert(getFirstInsertionIndex(fileContents), "#line 1 \"" + originalFileName + "\"\n");
 }
 
 /**
@@ -252,6 +298,26 @@ void VuoFileUtilities::writeStringToFile(string s, string file)
 bool VuoFileUtilities::fileExists(string path)
 {
 	return access(path.c_str(), 0) == 0;
+}
+
+/**
+ * Creates the file if it does not exist already; otherwise, has no effect on the file.
+ */
+void VuoFileUtilities::createFile(string path)
+{
+	FILE *f = fopen(path.c_str(), "a");
+	fclose(f);
+}
+
+/**
+ * Returns the time that the file was last modified, in seconds from a reference date.
+ * This is useful for checking which of two files was modified more recently.
+ */
+unsigned long VuoFileUtilities::getFileLastModifiedInSeconds(string path)
+{
+	struct stat s;
+	lstat(path.c_str(), &s);
+	return s.st_mtimespec.tv_sec;  // s.st_mtimespec.tv_nsec is always 0 on some OSes, hence the resolution of 1 second
 }
 
 /**
@@ -499,6 +565,7 @@ VuoFileUtilities::File::File(string dirPath, string filePath)
 {
 	this->filePath = filePath;
 	this->dirPath = dirPath;
+	this->fileDescriptor = -1;
 	this->archive = NULL;
 }
 
@@ -511,6 +578,7 @@ VuoFileUtilities::File::File(string dirPath, string filePath)
 VuoFileUtilities::File::File(Archive *archive, string filePath)
 {
 	this->filePath = filePath;
+	this->fileDescriptor = -1;
 	this->archive = archive;
 	++archive->referenceCount;
 }
@@ -611,4 +679,49 @@ string VuoFileUtilities::File::getContentsAsString(void)
 	string s(buffer, numBytes);
 	free(buffer);
 	return s;
+}
+
+/**
+ * Acquires a lock on the file. While this lock is held, no one else (in this or another process) can hold a lock
+ * on the file from lockForWriting(). If a lock from lockFromWriting() is already held for the file, this function
+ * downgrades the lock.
+ *
+ * @param nonBlocking True if the function should return immediately instead of waiting if the lock is not
+ *		immediately available.
+ * @return True if the lock was acquired.
+ */
+bool VuoFileUtilities::File::lockForReading(bool nonBlocking)
+{
+	if (fileDescriptor < 0)
+		fileDescriptor = open((dirPath + "/" + filePath).c_str(), O_RDONLY);
+	int ret = flock(fileDescriptor, LOCK_SH | (nonBlocking ? LOCK_NB : 0));
+	return ret == 0;
+}
+
+/**
+ * Acquires a lock on the file. While this lock is held, no one else (in this or another process) can hold a lock
+ * on the file from lockForReading() or lockForWriting(). If a lock from lockForReading() is already held for the
+ * file, this function upgrades the lock.
+ *
+ * @param nonBlocking True if the function should return immediately instead of waiting if the lock is not
+ *		immediately available.
+ * @return True if the lock was acquired.
+ */
+bool VuoFileUtilities::File::lockForWriting(bool nonBlocking)
+{
+	if (fileDescriptor < 0)
+		fileDescriptor = open((dirPath + "/" + filePath).c_str(), O_RDONLY);
+	int ret = flock(fileDescriptor, LOCK_EX | (nonBlocking ? LOCK_NB : 0));
+	return ret == 0;
+}
+
+/**
+ * Releases a lock on the file from lockForReading() or lockForWriting(). If a lock has been upgraded from reading
+ * to writing, this function fully unlocks the file (rather than downgrading the lock back to reading).
+ */
+void VuoFileUtilities::File::unlock(void)
+{
+	flock(fileDescriptor, LOCK_UN);
+	close(fileDescriptor);
+	fileDescriptor = -1;
 }

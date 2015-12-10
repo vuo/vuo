@@ -45,22 +45,22 @@ VuoModuleMetadata({
  *   }
  * }
  */
-VuoMidiNote VuoMidiNote_valueFromJson(json_object * js)
+VuoMidiNote VuoMidiNote_makeFromJson(json_object * js)
 {
 	VuoMidiNote mn = {1,true,127,60};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "channel", &o))
-		mn.channel = VuoInteger_valueFromJson(o);
+		mn.channel = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "isNoteOn", &o))
-		mn.isNoteOn = VuoBoolean_valueFromJson(o);
+		mn.isNoteOn = VuoBoolean_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "velocity", &o))
-		mn.velocity = VuoInteger_valueFromJson(o);
+		mn.velocity = VuoInteger_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "noteNumber", &o))
-		mn.noteNumber = VuoInteger_valueFromJson(o);
+		mn.noteNumber = VuoInteger_makeFromJson(o);
 
 	return mn;
 }
@@ -69,20 +69,20 @@ VuoMidiNote VuoMidiNote_valueFromJson(json_object * js)
  * @ingroup VuoMidiNote
  * Encodes @c value as a JSON object.
  */
-json_object * VuoMidiNote_jsonFromValue(const VuoMidiNote mn)
+json_object * VuoMidiNote_getJson(const VuoMidiNote mn)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *channelObject = VuoInteger_jsonFromValue(mn.channel);
+	json_object *channelObject = VuoInteger_getJson(mn.channel);
 	json_object_object_add(js, "channel", channelObject);
 
-	json_object *isNoteOnObject = VuoBoolean_jsonFromValue(mn.isNoteOn);
+	json_object *isNoteOnObject = VuoBoolean_getJson(mn.isNoteOn);
 	json_object_object_add(js, "isNoteOn", isNoteOnObject);
 
-	json_object *velocityObject = VuoInteger_jsonFromValue(mn.velocity);
+	json_object *velocityObject = VuoInteger_getJson(mn.velocity);
 	json_object_object_add(js, "velocity", velocityObject);
 
-	json_object *noteNumberObject = VuoInteger_jsonFromValue(mn.noteNumber);
+	json_object *noteNumberObject = VuoInteger_getJson(mn.noteNumber);
 	json_object_object_add(js, "noteNumber", noteNumberObject);
 
 	return js;
@@ -95,7 +95,7 @@ json_object * VuoMidiNote_jsonFromValue(const VuoMidiNote mn)
  * Includes the note name with the ASA 1939 octave designator (e.g., noteNumber 60, middle C, is "C4").
  * Journal of the Acoustical Society of America, Volume 11, Issue 1, pp. 134-139 (1939).
  */
-char * VuoMidiNote_summaryFromValue(const VuoMidiNote mn)
+char * VuoMidiNote_getSummary(const VuoMidiNote mn)
 {
 	const char *noteNames[] = { "C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B" };
 	const char *noteName = noteNames[mn.noteNumber % 12];

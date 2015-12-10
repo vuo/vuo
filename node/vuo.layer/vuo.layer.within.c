@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Is Point within Layer",
 					  "keywords" : [ "hit", "contains", "bounds" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "IsMouseWithinLayer.vuo" ]
 					  }

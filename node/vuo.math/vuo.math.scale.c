@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Scale",
-					  "keywords" : [ "convert", "unit", "range" ],
+					  "keywords" : [ "convert", "unit", "range", "split" ],
 					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

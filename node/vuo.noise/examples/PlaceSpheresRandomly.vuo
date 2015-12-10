@@ -1,6 +1,6 @@
 /**
  * @file
- * Displays a scene with many spheres in random positions. The positions are the same each time the composition is run because of the random seed.
+ * Displays a scene with many spheres in random positions. The positions are the same each time the composition is run because the random positions are generated from the same number, or seed, each time the composition is started. 
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.

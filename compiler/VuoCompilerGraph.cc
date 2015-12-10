@@ -484,14 +484,29 @@ void VuoCompilerGraph::makeEventlesslyDownstreamNodes(set<VuoNode *> nonPublishe
  */
 bool VuoCompilerGraph::mayTransmit(const set<VuoCompilerCable *> &fromCables, const set<VuoCompilerCable *> &toCables)
 {
+	bool fromCablesMayTransmit = false;
 	for (set<VuoCompilerCable *>::const_iterator i = fromCables.begin(); i != fromCables.end(); ++i)
 	{
 		VuoPort *inputPort = (*i)->getBase()->getToPort();
 		if (inputPort->getClass()->getEventBlocking() != VuoPortClass::EventBlocking_Wall)
-			return true;
+		{
+			fromCablesMayTransmit = true;
+			break;
+		}
 	}
 
-	return false;
+	bool toCablesMayTransmit = false;
+	for (set<VuoCompilerCable *>::const_iterator i = toCables.begin(); i != toCables.end(); ++i)
+	{
+		VuoPort *outputPort = (*i)->getBase()->getFromPort();
+		if (outputPort->getClass()->getPortType() != VuoPortClass::triggerPort)
+		{
+			toCablesMayTransmit = true;
+			break;
+		}
+	}
+
+	return fromCablesMayTransmit && toCablesMayTransmit;
 }
 
 /**
@@ -546,16 +561,7 @@ bool VuoCompilerGraph::mayTransmit(VuoCompilerNode *fromNode, VuoCompilerNode *t
  */
 bool VuoCompilerGraph::mayTransmitEventlessly(VuoCompilerNode *node)
 {
-	set<string> prefixes;
-	prefixes.insert("vuo.list.make.");
-	prefixes.insert("vuo.dictionary.make.");
-
-	string nodeClassName = node->getBase()->getNodeClass()->getClassName();
-	for (set<string>::iterator i = prefixes.begin(); i != prefixes.end(); ++i)
-		if (VuoStringUtilities::beginsWith(nodeClassName, *i))
-			return true;
-
-	return false;
+	return node->getBase()->getNodeClass()->isDrawerNodeClass();
 }
 
 /**

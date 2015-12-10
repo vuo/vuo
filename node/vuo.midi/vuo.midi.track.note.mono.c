@@ -85,9 +85,12 @@ void nodeInstanceEvent
 			updated = true;
 		}
 
-		// If the note is inactive, and we just got a note on, make it active.
-		if (activeNoteIndex == 0 && note.isNoteOn)
+		// If we just got a note on, either make it active or retrigger (by removing then adding to the end).
+		if (note.isNoteOn)
 		{
+			if (activeNoteIndex)
+				VuoListRemoveValue_VuoMidiNote(*activeNotes, activeNoteIndex);
+
 			VuoListAppendValue_VuoMidiNote(*activeNotes, note);
 			updated = true;
 		}

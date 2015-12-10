@@ -28,9 +28,11 @@ typedef struct
 	VuoInteger replaceThis;	///< Explain what each member does.
 } %TypeName%;
 
-%TypeName% %TypeName%_valueFromJson(struct json_object * js);
-struct json_object * %TypeName%_jsonFromValue(const %TypeName% value);
-char * %TypeName%_summaryFromValue(const %TypeName% value);
+%TypeName% %TypeName%_makeFromJson(struct json_object *js);
+struct json_object *%TypeName%_getJson(const %TypeName% value);
+char *%TypeName%_getSummary(const %TypeName% value);
+bool %TypeName%_areEqual(const %TypeName% valueA, const %TypeName% valueB);
+bool %TypeName%_isLessThan(const %TypeName% valueA, const %TypeName% valueB); 
 
 %TypeName% %TypeName%_make(VuoInteger replaceThis);
 
@@ -38,8 +40,8 @@ char * %TypeName%_summaryFromValue(const %TypeName% value);
  * Automatically generated function.
  */
 ///@{
-%TypeName% %TypeName%_valueFromString(const char *str);
-char * %TypeName%_stringFromValue(const %TypeName% value);
+%TypeName% %TypeName%_makeFromString(const char *str);
+char *%TypeName%_getString(const %TypeName% value);
 void %TypeName%_retain(%TypeName% value);
 void %TypeName%_release(%TypeName% value);
 ///@}
