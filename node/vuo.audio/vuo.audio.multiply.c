@@ -1,6 +1,6 @@
 /**
  * @file
- * vuo.audio.mix node implementation.
+ * vuo.audio.multiply node implementation.
  *
  * @copyright Copyright © 2012–2014 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
