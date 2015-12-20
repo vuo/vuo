@@ -11,10 +11,10 @@
 
 VuoModuleMetadata({
                      "title" : "Multiply 2 Audio Channels",
-                     "keywords" : [ "sound", "music", "merge", "combine", "FM Synthesis" ],
+                     "keywords" : [ "sound", "music", "merge", "combine", "FM Synthesis", "multiply" ],
                      "version" : "0.0.1",
                      "node": {
-                        "exampleCompositions" : [ ],
+                        "exampleCompositions" : [ ]
                      }
                  });
 
