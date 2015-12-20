@@ -38,7 +38,7 @@ void nodeEvent
 
   if(i == 0)
     {
-      for(unsigned int n = 0; n < as.sampleCount; n++)
+      for(unsigned int n = 0; n < as.sampleCount; n++) //
       (*multipliedSamples).samples[n] = as.samples[n];
     }
     for(unsigned int n = 0; n < as.sampleCount; n++)
