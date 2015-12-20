@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-                     "title" : "Multiply 2 Audio Channels",
+                     "title" : "Multiply Audio Channels",
                      "keywords" : [ "sound", "music", "merge", "combine", "FM Synthesis", "multiply" ],
                      "version" : "0.0.1",
                      "node": {
