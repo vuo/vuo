@@ -14,7 +14,7 @@ VuoModuleMetadata({
                      "keywords" : [ "sound", "music", "merge", "combine", "FM Synthesis" ],
                      "version" : "0.0.1",
                      "node": {
-                       //  "exampleCompositions" : [ "PanAudio.vuo" ],
+                        "exampleCompositions" : [ ],
                      }
                  });
 
