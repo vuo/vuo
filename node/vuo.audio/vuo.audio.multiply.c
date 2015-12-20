@@ -41,7 +41,10 @@ void nodeEvent
       for(unsigned int n = 0; n < as.sampleCount; n++) 
       (*multipliedSamples).samples[n] = as.samples[n]; // loading the 1st audio channel into output buffer
     }
+    else
+    {
     for(unsigned int n = 0; n < as.sampleCount; n++)
     (*multipliedSamples).samples[n] *= as.samples[n]; // multiplying the output buffer with all other audio inputs
+    }
   }
 }
