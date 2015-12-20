@@ -18,6 +18,7 @@ NODE_SOURCES += \
 	vuo.audio.make.output.id.c \
 	vuo.audio.make.output.name.c \
 	vuo.audio.mix.c \
+	vuo.audio.multiply.c \
 	vuo.audio.receive.c \
 	vuo.audio.send.c \
 	vuo.audio.split.frequency.cc \
