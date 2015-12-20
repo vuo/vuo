@@ -21,16 +21,16 @@ VuoModuleMetadata({
 void nodeEvent
 (
         VuoInputData(VuoList_VuoAudioSamples) samples,
-        VuoOutputData(VuoAudioSamples) mixedSamples
+        VuoOutputData(VuoAudioSamples) multipliedSamples
 )
 {
   unsigned int channelCount = VuoListGetCount_VuoAudioSamples(samples);
 
-  *mixedSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
+  *multipliedSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
 
-  for(unsigned int n = 0; n < (*mixedSamples).sampleCount; n++)
+  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++)
   
-  (*mixedSamples).samples[n] = 0.;
+  (*multipliedSamples).samples[n] = 0.;
 
   for(unsigned int i = 0; i < channelCount; i++)
   {
@@ -39,9 +39,9 @@ void nodeEvent
   if(i == 0)
     {
       for(unsigned int n = 0; n < as.sampleCount; n++)
-      (*mixedSamples).samples[n] = as.samples[n];
+      (*multipliedSamples).samples[n] = as.samples[n];
     }
     for(unsigned int n = 0; n < as.sampleCount; n++)
-    (*mixedSamples).samples[n] *= as.samples[n];
+    (*multipliedSamples).samples[n] *= as.samples[n];
   }
 }
