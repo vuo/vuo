@@ -38,7 +38,7 @@ void nodeEvent
   {
     VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(samples, i+1);
 
-  if(i == 0) // we need to load the first audio channel into the output buffer - otherwise the output buffer will be full of 0's when we do += next
+  if(i == 0) // we need to load the first audio channel into the output buffer - otherwise the output buffer will be full of 0's when we do *= next
     {
       for(unsigned int n = 0; n < as.sampleCount; n++) 
       (*multipliedSamples).samples[n] = as.samples[n]; // loading the 1st audio channel into output buffer
