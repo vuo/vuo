@@ -27,6 +27,8 @@ void nodeEvent
   unsigned int channelCount = VuoListGetCount_VuoAudioSamples(samples);
 
   *multipliedSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
+  
+  (*multipliedSamples).samplesPerSecond = VuoAudioSamples_sampleRate;
 
   for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++)
   
