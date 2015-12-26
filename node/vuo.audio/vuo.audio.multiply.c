@@ -46,7 +46,7 @@ void nodeEvent
     else
     {
     for(unsigned int n = 0; n < as.sampleCount; n++)
-    (*multipliedSamples).samples[n] *= as.samples[n]; // multiplying the output buffer with all other audio inputs
+    (*multipliedSamples).samples[n] *= as.samples[n];
     }
   }
 }
