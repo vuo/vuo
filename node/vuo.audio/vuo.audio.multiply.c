@@ -30,15 +30,22 @@ void nodeEvent
   
   (*multipliedSamples).samplesPerSecond = VuoAudioSamples_sampleRate;
 
-  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++)
+  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++) //clear output buffer
        (*multipliedSamples).samples[n] = 0.;
   
+  int firstAudioPort = -1;  
   
   for(unsigned int i = 0; i < channelCount; i++)
   {
     VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(samples, i+1);
+    
+    if(VuoAudioSamples_isPopulated(as) && firstAudioPort == -1){ //check if we have audio samples & if this is first time loop has run
+       firstAudioPort = i;  // get number of first audio port
+    }
+if(VuoAudioSamples_isPopulated(as)){  
 
-  if(i == 0){ // we need to load the first audio channel into the output buffer - otherwise the output buffer will be full of 0's when we do *= next
+
+  if(i == firstAudioPort){ // we need to load the first audio channel into the output buffer - otherwise the output buffer will be full of 0's when we do *= next
       for(unsigned int n = 0; n < as.sampleCount; n++) 
       (*multipliedSamples).samples[n] = as.samples[n]; // loading the 1st audio channel into output buffer
     }
@@ -46,5 +53,6 @@ void nodeEvent
     for(unsigned int n = 0; n < as.sampleCount; n++)
     (*multipliedSamples).samples[n] *= as.samples[n];
     }
+}
   }
 }
