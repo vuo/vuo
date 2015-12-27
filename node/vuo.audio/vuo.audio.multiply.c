@@ -30,9 +30,9 @@ void nodeEvent
   
   (*multipliedSamples).samplesPerSecond = VuoAudioSamples_sampleRate;
 
-  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++){
-  (*multipliedSamples).samples[n] = 0.;
-  }
+  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++)
+       (*multipliedSamples).samples[n] = 0.;
+  
   
   for(unsigned int i = 0; i < channelCount; i++)
   {
