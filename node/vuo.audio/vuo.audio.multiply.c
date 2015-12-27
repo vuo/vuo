@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
                      "title" : "Multiply Audio Channels",
-                     "keywords" : [ "sound", "music", "merge", "combine", "FM Synthesis", "multiply" ],
+                     "keywords" : [ "sound", "music", "merge", "combine", "AM Synthesis", "multiply" ],
                      "version" : "0.0.1",
                      "node": {
                         "exampleCompositions" : [ ]
