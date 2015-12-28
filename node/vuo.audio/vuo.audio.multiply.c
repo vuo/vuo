@@ -30,8 +30,8 @@ void nodeEvent
   
   (*multipliedSamples).samplesPerSecond = VuoAudioSamples_sampleRate;
 
-  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++) //clear output buffer
-       (*multipliedSamples).samples[n] = 0.;
+//  for(unsigned int n = 0; n < (*multipliedSamples).sampleCount; n++) //clear output buffer not needed due to loading output buffer first value
+//       (*multipliedSamples).samples[n] = 0.;
   
     bool firstAudioPort = true;
 
