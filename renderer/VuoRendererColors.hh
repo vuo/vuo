@@ -2,7 +2,7 @@
  * @file
  * VuoRendererColors interface.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -36,6 +36,7 @@ public:
 	{
 		directSelection,
 		indirectSelection,
+		sidebarSelection,
 		noSelection
 	};
 
@@ -106,7 +107,8 @@ private:
 	static const qreal defaultNodeFrameAndFillAlpha; ///< Alpha level assigned to each node while in non-'Show Events' mode.
 	static const qreal defaultCableMainAlpha; ///< Alpha level assigned to the main part of each cable while in non-'Show Events' mode.
 	static const qreal defaultCableUpperAlpha; ///< Alpha level assigned to the overdrawn upper part of each cable while in non-'Show Events' mode.
-	static const qreal defaultConstantAlpha; ///< Alpha level assigned to constant while in non-'Show Events' mode.
+	static const qreal defaultConstantAlphaLightMode; ///< Alpha level assigned to constant while in non-'Show Events'+'Light Interface' mode.
+	static const qreal defaultConstantAlphaDarkMode; ///< Alpha level assigned to constant while in non-'Show Events'+'Dark Interface' mode.
 	static const int subtleHighlightingLighteningFactor; ///< The factor by which lightness is increased for components drawn in @c subtleHighlight as opposed to @c standardHighlight mode.
 	static const int activityFadeDuration; ///< Time period, in ms, over which a component fades to its minimum alpha level following activity (e.g., node execution) while in 'Show Events' mode.
 };

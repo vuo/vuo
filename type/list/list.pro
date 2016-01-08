@@ -70,6 +70,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoSceneObject:2 \
 		VuoScreen:2 \
 		VuoShader:1 \
+		VuoImageFormat:0 \
 		VuoSizingMode:0 \
 		VuoSyphonServerDescription:0 \
 		VuoText:1 \
@@ -77,6 +78,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoTransform2d:0 \
 		VuoTransform:0 \
 		VuoUrl:2 \
+		VuoVertexAttribute:2 \
 		VuoVerticalAlignment:0 \
 		VuoVerticalReflection:0 \
 		VuoVideoFrame:2 \
@@ -107,6 +109,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.osc \
 	$$ROOT/node/vuo.rss \
 	$$ROOT/node/vuo.scene \
+	$$ROOT/node/vuo.shader \
 	$$ROOT/node/vuo.syphon \
 	$$ROOT/node/vuo.ui
 

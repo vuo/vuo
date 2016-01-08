@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.ripple node implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -26,7 +26,7 @@ VuoModuleMetadata({
 						 "sinusoidal", "sine", "cosine", "undulate", "displace", "filter",
 						 "linear", "radial", "circular", "spherical"
 					 ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoSceneObjectRenderer"

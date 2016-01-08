@@ -2,7 +2,7 @@
  * @file
  * VuoMouse implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -328,7 +328,7 @@ void VuoMouse_startListeningForScrollsWithCallback(VuoMouse *mouseListener, void
  */
 void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask handler:^(NSEvent *event) {
 		VuoMouse_fireMousePositionIfNeeded(event, window, modifierKey, ^(VuoPoint2d point){ movedTo(point); });
 		return event;
 	}];
@@ -343,7 +343,7 @@ void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(Vu
 void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (^movedTo)(VuoPoint2d),
 									 VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask handler:^(NSEvent *event) {
 		VuoMouse_fireMousePositionIfNeeded(event, window, modifierKey, movedTo);
 		return event;
 	}];
@@ -357,7 +357,7 @@ void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (
  */
 void VuoMouse_startListeningForDeltas(VuoMouse *mouseListener, void (*movedBy)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask handler:^(NSEvent *event) {
+	id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSMouseMovedMask|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask handler:^(NSEvent *event) {
 		VuoMouse_fireMouseDeltaIfNeeded(event, window, modifierKey, movedBy);
 		return event;
 	}];

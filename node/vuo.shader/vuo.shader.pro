@@ -11,5 +11,11 @@ NODE_SOURCES += \
 	vuo.shader.make.image.unlit.c \
 	vuo.shader.make.normal.c \
 	vuo.shader.make.wireframe.c
-	
+
+HEADERS += \
+	VuoVertexAttribute.h
+
+TYPE_SOURCES += \
+	VuoVertexAttribute.c
+
 include(../../module.pri)

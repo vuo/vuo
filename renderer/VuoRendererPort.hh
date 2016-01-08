@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort interface.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -89,7 +89,7 @@ public:
 	VuoRendererNode * getUnderlyingParentNode(void) const;
 	VuoRendererNode * getRenderedParentNode(void) const;
 	set<VuoRendererInputAttachment *> getAllUnderlyingUpstreamInputAttachments(void) const;
-	set<VuoRendererPort *> getConnectedWirelessAntennas() const;
+	set<VuoRendererPort *> getPortsConnectedWirelessly(bool includePublishedCables) const;
 
 	VuoRendererPort * getTypecastParentPort() const;
 	void setTypecastParentPort(VuoRendererPort *typecastParentPort);
@@ -156,6 +156,7 @@ protected:
 	QPainterPath getWirelessAntennaPath() const;
 	bool hasConnectedWirelessDataCable(bool includePublishedCables) const;
 	bool hasConnectedWirelessEventCable(bool includePublishedCables) const;
+	VuoNode::TintColor getWirelessAntennaTint() const;
 
 	void paintPortName(QPainter *painter, VuoRendererColors *colors);
 	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);

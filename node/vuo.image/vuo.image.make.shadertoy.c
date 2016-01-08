@@ -2,7 +2,7 @@
  * @file
  * vuo.shader.make.shadertoy node implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "opengl", "glsl", "scenegraph", "graphics",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert", "tone", "chroma" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
@@ -257,7 +257,8 @@ void nodeInstanceEvent
 	 */
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
-	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "iDate", (VuoPoint4d) { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, (tm.tm_hour * 60) + tm.tm_sec } );
+
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "iDate", (VuoPoint4d) { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, (tm.tm_hour * 60 * 60) + tm.tm_sec } );
 
 	*shaderImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
 }

@@ -2,7 +2,7 @@
 * @file
 * Draws two dots that follow the mouse pointer. One dot stays with it constantly (purple), and the other only updates once per second (violet).
 *
-* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* @copyright Copyright © 2012–2015 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
 * For more information, see http://vuo.org/license.
 */

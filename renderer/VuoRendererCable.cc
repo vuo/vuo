@@ -2,7 +2,7 @@
  * @file
  * VuoRendererCable implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -474,30 +474,39 @@ void VuoRendererCable::setWireless(bool wireless)
 	VuoRendererPort *toPort = ((getBase()->getToPort() && getBase()->getToPort()->hasRenderer())?
 									getBase()->getToPort()->getRenderer() : NULL);
 
-	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	updateGeometry();
 
 	if (fromPort)
-	{
-		fromPort->setCacheMode(QGraphicsItem::NoCache);
 		fromPort->updateGeometry();
-	}
 
 	if (toPort)
-	{
-		toPort->setCacheMode(QGraphicsItem::NoCache);
 		toPort->updateGeometry();
-	}
 
-	setCacheMode(QGraphicsItem::NoCache);
-	updateGeometry();
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+	setCacheModeForCableAndConnectedPorts(QGraphicsItem::NoCache);
 
 	getBase()->getCompiler()->setHidden(wireless);
 
-	setCacheMode(normalCacheMode);
+	setCacheModeForCableAndConnectedPorts(normalCacheMode);
+}
+
+/**
+ * Sets the cache mode of this cable and its connected ports to @c mode.
+ */
+void VuoRendererCable::setCacheModeForCableAndConnectedPorts(QGraphicsItem::CacheMode mode)
+{
+	this->setCacheMode(mode);
+	
+	VuoRendererPort *fromPort = ((getBase()->getFromPort() && getBase()->getFromPort()->hasRenderer())?
+									getBase()->getFromPort()->getRenderer() : NULL);
+	VuoRendererPort *toPort = ((getBase()->getToPort() && getBase()->getToPort()->hasRenderer())?
+									getBase()->getToPort()->getRenderer() : NULL);
+
 	if (fromPort)
-		fromPort->setCacheMode(normalCacheMode);
+		fromPort->setCacheMode(mode);
+
 	if (toPort)
-		toPort->setCacheMode(normalCacheMode);
+		toPort->setCacheMode(mode);
 }
 
 /**
@@ -517,16 +526,30 @@ void VuoRendererCable::setFrom(VuoNode *fromNode, VuoPort *fromPort)
 {
 	VuoPort *origFromPort = getBase()->getFromPort();
 
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+
 	// Prepare affected ports and cable for geometry changes
 	updateGeometry();
 
 	if (origFromPort && origFromPort->hasRenderer())
+	{
+		origFromPort->getRenderer()->setCacheModeForPortAndChildren(QGraphicsItem::NoCache);
 		origFromPort->getRenderer()->updateGeometry();
+	}
 
 	if (fromPort && fromPort->hasRenderer())
+	{
+		fromPort->getRenderer()->setCacheModeForPortAndChildren(QGraphicsItem::NoCache);
 		fromPort->getRenderer()->updateGeometry();
+	}
 
 	getBase()->setFrom(fromNode, fromPort);
+
+	if (origFromPort && origFromPort->hasRenderer())
+		origFromPort->getRenderer()->setCacheModeForPortAndChildren(normalCacheMode);
+
+	if (fromPort && fromPort->hasRenderer())
+		fromPort->getRenderer()->setCacheModeForPortAndChildren(normalCacheMode);
 }
 
 /**
@@ -537,14 +560,22 @@ void VuoRendererCable::setTo(VuoNode *toNode, VuoPort *toPort)
 {
 	VuoPort *origToPort = getBase()->getToPort();
 
+	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+
 	// Prepare affected ports and cable for geometry changes
 	updateGeometry();
 
 	if (origToPort && origToPort->hasRenderer())
+	{
+		origToPort->getRenderer()->setCacheModeForPortAndChildren(QGraphicsItem::NoCache);
 		origToPort->getRenderer()->updateGeometry();
+	}
 
 	if (toPort && toPort->hasRenderer())
+	{
+		toPort->getRenderer()->setCacheModeForPortAndChildren(QGraphicsItem::NoCache);
 		toPort->getRenderer()->updateGeometry();
+	}
 
 	getBase()->setTo(toNode, toPort);
 
@@ -555,6 +586,8 @@ void VuoRendererCable::setTo(VuoNode *toNode, VuoPort *toPort)
 
 		if (origToPort->getRenderer()->getRenderedParentNode())
 			origToPort->getRenderer()->getRenderedParentNode()->layoutConnectedInputDrawersAtAndAbovePort(origToPort->getRenderer());
+
+		origToPort->getRenderer()->setCacheModeForPortAndChildren(normalCacheMode);
 	}
 
 	if (toPort && toPort->hasRenderer())
@@ -563,6 +596,8 @@ void VuoRendererCable::setTo(VuoNode *toNode, VuoPort *toPort)
 
 		if (toPort->getRenderer()->getRenderedParentNode())
 			toPort->getRenderer()->getRenderedParentNode()->layoutConnectedInputDrawersAtAndAbovePort(toPort->getRenderer());
+
+		toPort->getRenderer()->setCacheModeForPortAndChildren(normalCacheMode);
 	}
 }
 
