@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPort implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -414,12 +414,37 @@ bool VuoRendererPort::hasConnectedWirelessEventCable(bool includePublishedCables
 }
 
 /**
+ * Returns the tint color of the wireless antenna.
+ * Tint output antennas the same color as their parent nodes.
+ * Tint input antennas the color of their wirelessly connected "From" ports, or leave untinted if there are multiple
+ * wirelessly connected "From" ports of conflicting tints.
+ */
+VuoNode::TintColor VuoRendererPort::getWirelessAntennaTint() const
+{
+	if (!getInput())
+		return (getRenderedParentNode()? getRenderedParentNode()->getBase()->getTintColor() : VuoNode::TintNone);
+
+	set<VuoNode::TintColor> connectedPortTints;
+	foreach (VuoRendererPort *port, getPortsConnectedWirelessly(true))
+	{
+		connectedPortTints.insert(port->getRenderedParentNode()? port->getRenderedParentNode()->getBase()->getTintColor() : VuoNode::TintNone);
+		if (connectedPortTints.size() > 1)
+			return VuoNode::TintNone;
+	}
+
+	if (connectedPortTints.size() == 1)
+		return *connectedPortTints.begin();
+	else
+		return VuoNode::TintNone;
+}
+
+/**
  * Returns the set of ports that have antennas connected by wireless cable to this one.
  */
-set<VuoRendererPort *> VuoRendererPort::getConnectedWirelessAntennas() const
+set<VuoRendererPort *> VuoRendererPort::getPortsConnectedWirelessly(bool includePublishedCables) const
 {
 	set<VuoRendererPort *> connectedPorts;
-	foreach (VuoCable *cable, getBase()->getConnectedCables(false))
+	foreach (VuoCable *cable, getBase()->getConnectedCables(includePublishedCables))
 	{
 		if (cable->hasRenderer() &&
 				cable->getRenderer()->getEffectivelyWireless() &&
@@ -785,7 +810,7 @@ void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors
 	string name = getPortNameToRender();
 
 	if (rpp)
-		painter->setPen(getProxyPublishedSidebarPort()->isSelected()
+		painter->setPen((getProxyPublishedSidebarPort()->isSelected() && getProxyPublishedSidebarPort()->getCurrentlyActive())
 						? Qt::white
 						: (rpp->getBase()->isProtocolPort() ? colors->publishedProtocolPortTitle() : colors->publishedPortTitle()));
 	else
@@ -919,9 +944,10 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 	bool isColorInverted = isRefreshPort || isFunctionPort;
 
-	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isSelected() && !sidebarPaintMode)?
-														  VuoRendererColors::directSelection :
-														  VuoRendererColors::noSelection);
+	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isSelected())? VuoRendererColors::directSelection :
+													   ((sidebarPaintMode && getProxyPublishedSidebarPort()->isSelected() && !getProxyPublishedSidebarPort()->getCurrentlyActive())?
+														  VuoRendererColors::sidebarSelection :
+														  VuoRendererColors::noSelection));
 
 	bool isHovered = isEligibleForSelection;
 	VuoRendererColors::HighlightType highlightType = (isEligibleForDirectConnection? VuoRendererColors::standardHighlight :
@@ -942,7 +968,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 													  isHovered,
 													  highlightType,
 													  timeOfLastActivity);
-	VuoRendererColors *antennaColors = new VuoRendererColors((renderedParentNode? renderedParentNode->getBase()->getTintColor() : VuoNode::TintNone),
+	VuoRendererColors *antennaColors = new VuoRendererColors((getWirelessAntennaTint()),
 													  selectionType,
 													  isHovered,
 													  VuoRendererColors::noHighlight,

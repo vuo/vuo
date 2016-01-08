@@ -2,7 +2,7 @@
  * @file
  * VuoSceneGet implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -77,6 +77,21 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 			VLog("Error: Mesh '%s' doesn't contain any positions.  Skipping.", meshObj->mName.data);
 			continue;
 		}
+		char *missing = NULL;
+		if (!meshObj->mNormals)
+			missing = strdup("normals");
+		if (!meshObj->mTangents)
+			missing = VuoText_format("%s%s%s", missing ? missing : "", missing ? ", " : "", "tangents");
+		if (!meshObj->mBitangents)
+			missing = VuoText_format("%s%s%s", missing ? missing : "", missing ? ", " : "", "bitangents");
+		if (!meshObj->mTextureCoords[0])
+			missing = VuoText_format("%s%s%s", missing ? missing : "", missing ? ", " : "", "texture coordinates");
+		if (missing)
+		{
+			VLog("Warning: Mesh '%s' is missing %s.  Lighting and 3D object filters probably won't work correctly.", meshObj->mName.data, missing);
+			free(missing);
+		}
+
 
 		VuoSubmesh sm = VuoSubmesh_make(meshObj->mNumVertices, meshObj->mNumFaces*3);
 		sm.elementAssemblyMethod = VuoMesh_IndividualTriangles;
@@ -92,15 +107,15 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 				sm.normals[vertex] = VuoPoint4d_make(normal.x, normal.y, normal.z, 0);
 			}
 
-			if (meshObj->mTangents)
+			if (meshObj->mNormals && meshObj->mTangents)
 			{
+				struct aiVector3D normal = meshObj->mNormals[vertex];
 				struct aiVector3D tangent = meshObj->mTangents[vertex];
 				sm.tangents[vertex] = VuoPoint4d_make(tangent.x, tangent.y, tangent.z, 0);
-			}
 
-			if (meshObj->mBitangents)
-			{
-				struct aiVector3D bitangent = meshObj->mBitangents[vertex];
+				VuoPoint3d n3 = VuoPoint3d_make(normal.x, normal.y, normal.z);
+				VuoPoint3d t3 = VuoPoint3d_make(tangent.x, tangent.y, tangent.z);
+				VuoPoint3d bitangent = VuoPoint3d_crossProduct(n3, t3);
 				sm.bitangents[vertex] = VuoPoint4d_make(bitangent.x, bitangent.y, bitangent.z, 0);
 			}
 

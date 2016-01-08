@@ -1,6 +1,6 @@
 Outputs one frame of a video. 
 
-When this node receives an event to its `Frame Time` input port, it outputs the video frame that would be playing at that time. It outputs that frame as a VideoFrame that may be cast to either an image or a timestamp. 
+When this node receives an event to its `Frame Time` input port, it outputs the video frame that would be playing at that time.
 
 This node chooses the frame that would be playing at `Frame Time` seconds after the start of the video. For example, if `Frame Time` is 2.0 and there's a frame that starts at exactly 2.0 seconds, then that frame is chosen. If `Frame Time` is 3.0 and the nearest frames start at 2.8 and 3.1 seconds, then the frame starting at 2.8 seconds is chosen. 
 

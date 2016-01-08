@@ -2,7 +2,7 @@
  * @file
  * vuo.scene.noise node implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -20,7 +20,7 @@
 VuoModuleMetadata({
 					 "title" : "Add Noise to 3D Object",
 					 "keywords" : [ "perturb", "random", "pseudorandom", "natural", "displace", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						 "exampleCompositions" : [ "AddNoiseToClay.vuo" ]
 					 },

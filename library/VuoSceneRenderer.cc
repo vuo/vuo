@@ -2,7 +2,7 @@
  * @file
  * VuoSceneRenderer implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -573,6 +573,11 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 }
 
+extern "C"
+{
+void VuoSubmeshMesh_download(VuoSubmesh *submesh);
+}
+
 /**
  * Draws all vertex normals in @c so.
  *
@@ -596,9 +601,11 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
 	glLoadMatrixf(compositeModelviewMatrix);
 
 	glBegin(GL_LINES);
+	bool first=true;
 	for (unsigned int i = 0; i < so.mesh->submeshCount; i++)
 	{
 		VuoSubmesh submesh = so.mesh->submeshes[i];
+		VuoSubmeshMesh_download(&submesh);
 
 		for(unsigned int m = 0; m < submesh.vertexCount; m++)
 		{
@@ -609,14 +616,36 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
 			{
 				case 0:	// normals
 					n = submesh.normals[m];
+					glColor3f(1,.5,.5);
 					break;
 				case 1:	// tangents
 					n = submesh.tangents[m];
+					glColor3f(.5,1,.5);
 					break;
 				case 2:	// bitangents
 					n = submesh.bitangents[m];
+					glColor3f(.5,.5,1);
 					break;
 			}
+
+			if (first)
+			{
+				VuoPoint3d n3 = VuoPoint3d_make(n.x,n.y,n.z);
+				VLog("%p [%d]: %s, length %g",&so,element,VuoPoint4d_getSummary(n),VuoPoint3d_magnitude(n3));
+
+				// Check orthogonality
+				{
+					VuoPoint3d n3 = VuoPoint3d_make(submesh.normals[m].x,submesh.normals[m].y,submesh.normals[m].z);
+					VuoPoint3d t3 = VuoPoint3d_make(submesh.tangents[m].x,submesh.tangents[m].y,submesh.tangents[m].z);
+					VuoPoint3d b3 = VuoPoint3d_make(submesh.bitangents[m].x,submesh.bitangents[m].y,submesh.bitangents[m].z);
+
+					if (VuoPoint3d_dotProduct(n3,t3) > 0.0001)
+						VLog("	n•t = %g; should be 0",VuoPoint3d_dotProduct(n3,t3));
+					if (VuoPoint3d_dotProduct(n3,b3) > 0.0001)
+						VLog("	n•b = %g; should be 0",VuoPoint3d_dotProduct(n3,b3));
+				}
+			}
+			first=false;
 
 			n = VuoPoint4d_add(v, VuoPoint4d_multiply(n, length));
 

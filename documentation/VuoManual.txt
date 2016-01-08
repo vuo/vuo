@@ -31,6 +31,8 @@ Welcome to Vuo. Get ready to create!
    - Under the \menu{Vuo Editor} section, download the Vuo Editor
    - Uncompress the ZIP file (double-click on it in Finder)
    - Move the Vuo Editor application to your \directory{Applications} folder
+   - Open the Vuo Editor application from the \directory{Applications} folder and the Vuo Editor will appear. The first time you open it, you'll see a dialog box prompting you to activate your software.
+   - Click the "Activate Vuo" button to launch a web browser and complete the activation process. Depending on your browser, the activation might happen automatically, or you might need to follow the instructions on the web page.
 
 ## Create a composition
 
@@ -38,11 +40,11 @@ Welcome to Vuo. Get ready to create!
 
 Let's make a simple composition. It will just pop up a window with the text "Hello World!"
 
-   1. Open the Vuo Editor application in your \directory{Applications} folder and the Vuo Editor will appear. If this is your first time opening the Vuo Editor, you'll see a "Welcome to Vuo" window. Either click the "Create a new composition" button in that window or go to \menu{File > New Composition}.
+   1. By default, the Vuo Editor displays a "Welcome to Vuo" window when it is first opened. Either click the "Create a new composition" button in that window or go to \menu{File > New Composition}.
    1. A composition window will appear. The Node Library will be on the left, and a canvas with a \vuoNode{Fire on Start} node will be on the right. The \vuoNode{Fire on Start} node is already on the canvas. Many compositions use a \vuoNode{Fire on Start} node, and it helps to remind you that Vuo uses events (such as the event that is fired out of the \vuoPort{Started} port) to make things happen in a Vuo composition. 
    1. In the Node Library, find the \vuoNode{Make Text Image} node. You can do this by typing part of the node title (such as "text") into the search bar at the top of the Node Library. Drag the node onto the canvas. You can see that "Hello World!" is written in next to the \vuoPort{Text} input port. The font and size are written next to the \vuoPort{Font} input port. 
    1. Double-click on the port (circle) next to the \vuoPort{Font} input port. This pops up an input editor. Change the font size to 96 by either typing it in, or using the font size slider. Click on "OK" when you're done.
-   1. In the Node Library, now find the \vuoNode{Render Image to Window} node. As before, you can do this by typing part of the node title (such as "window") into the search bar at the top of the Node Library. Drag the node onto the canvas.
+   1. In the Node Library, now find the \vuoNode{Render Image to Window} node. As before, you can do this by typing part of the node title (such as "render image") into the search bar at the top of the Node Library. Drag the node onto the canvas.
    1. Draw a cable from the \vuoPort{Started} port of the \vuoNode{Fire on Start} node to the \vuoPort{Text} port of the \vuoNode{Make Text Image} node. You can do this by pressing the mouse button while over the \vuoPort{Started} port, dragging the cable that appears, and releasing the mouse button while over the \vuoPort{Text} port.
    1. Now draw a cable from the output port on the right side of the \vuoNode{Make Text Image} to the \vuoPort{Image} port of the \vuoNode{Render Image to Window}.
 
@@ -63,7 +65,7 @@ You can modify your composition while it is running. This is called \term{live c
    1. Draw a cable to connect up the output port of the \vuoNode{Make Text Image} node to the \vuoPort{Image} port on the \vuoNode{Twirl Image} node. 
    1. Draw a cable from the output port of the \vuoNode{Twirl Image} node to the \vuoPort{Image} port on the \vuoNode{Render Image to Window} node. 
    1. Notice that nothing has happened yet in your composition. This is because Vuo uses events to drive changes in the composition. Draw a cable from the \vuoPort{Requested Frame} output port on the \vuoNode{Render Image to Window} node to the refresh port (the triangle on the top left of the \vuoNode{Twirl Image} node).
-   1. Since Vuo is event-driven, you'll need an event to push the image into the new \vuoNode{Twirl Image} node. Right click \vuoNode{Fire on Start}'s \vuoPort{Started} trigger port. You'll see a menu that includes the option, \menu{Fire Event}. Click on this option to fire an event to carry the image through the cable to the \vuoNode{Twirl Image} node.
+   1. Since Vuo is event-driven, you'll need an event to push the image into the new \vuoNode{Twirl Image} node. Right click \vuoNode{Fire on Start}'s \vuoPort{Started} trigger port. You'll see a menu that includes the option, \menu{Fire Event}. (Don't see the \menu{Fire Event} option? Make sure your composition is still running.) Click on this option to fire an event to carry the image through the cable to the \vuoNode{Twirl Image} node.
    1. Now you can see that your text is distorted. 
    1. Double-click on the \vuoPort{Angle} input port of \vuoNode{Twirl Image}. By moving the slider you can see the twirl distortion increase or decrease. This is because the \vuoPort{Requested Frame} node's output port is sending a stream of events to the \vuoNode{Twirl Image} node and these events carry the changes to the \vuoNode{Render Image to Window} node.
    1. Click on the Show Events button in the Vuo Editor toolbar and you'll see a representation of the events flowing out of the \vuoNode{Render Image to Window} to the \vuoNode{Twirl Image} node. 
@@ -613,7 +615,126 @@ You can connect a generic port to another generic port, as long as they work wit
 
 A generic node can have ports that each work with a different generic type. For example, the \vuoNode{Get Message Values} node in the \vuoNode{vuo.osc} node set has several output ports with independent generic types. You can change one output port's generic type to integer and another output port's generic type to text, for example. You can see if a node's generic ports use the same generic type or different generic types by looking at the port popover. The port popover displays a name for the port's generic type, such as "generic #1" or "generic #2". If two generic ports have the same name for their type (including if they're on separate nodes connected by cables), then changing the generic type of one port will also change the other port. If two generic ports have different names for their type, then changing one will not affect the other. 
 
-#Common Patterns - How do I… 
+
+
+# Nodes
+
+Nodes are the building blocks of Vuo, which you can assemble in any way your creative mind can think of to create compositions. When you download Vuo, it comes with a large set of nodes that support 2D and 3D graphics, video, audio, networking, user interaction, and more. If you've purchased Vuo Pro, then you have some bonus "pro nodes" available to you. Whether you're using Vuo or Vuo Pro, you can also download nodes by third-party developers to add to your collection.
+
+
+## Finding out what nodes are available
+
+The Vuo Editor has a list of all nodes called the Node Library. (If you don't see it, go to \menu{View > Show Node Library}.) You can skim through the Node Library to see what's available, or you can search by node title, port name, or keyword. For example, if you're wondering if Vuo has nodes for working with hues, search for "hue" and you'll find several nodes related to color.
+
+For a complete list of built-in nodes, you can go to the [online node documentation](http://doc.vuo.org/VUO_VERSION/).
+
+If you're interested in third-party nodes, developers share them among the [Vuo community](http://vuo.org/community).
+
+
+## Learning how to use a node
+
+Each Vuo node has documentation, or in other words, a description of how it works. You can view this description in the Node Documentation Panel (lower panel of the Node Library) after clicking on the node in the Node Library or on the composition canvas.
+
+Besides the documentation for individual nodes, there's also documentation for node sets. At the top of the Node Documentation Panel, most nodes have a link to their node set's documentation. For example, the \vuoNode{Make 3D Object} (\vuoNodeClass{vuo.scene.make}) node has a link for \vuoNodeClass{vuo.scene}, which provides documentation that applies to nodes throughout the \vuoNodeClass{vuo.scene} node set.
+
+Documentation both for nodes and for node sets is available in the [online node documentation](http://doc.vuo.org/VUO_VERSION/).
+
+Besides documentation, many nodes also come with example compositions, which demonstrate use of the node within a composition. For nodes that have them, the example compositions are listed near the bottom of the Node Documentation Panel.
+
+
+## Pro vs. non-pro nodes
+
+\term{Pro nodes} are only available in Vuo Pro, not in the regular Vuo or the free trial. If a node is pro, then the Node Documentation Panel says so at the bottom. If you try to open a composition containing pro nodes using non-Pro Vuo, then you'll be warned that you won't be able to run the composition.
+
+If you plan to share a composition that contains pro nodes, keep in mind that Vuo users without Vuo Pro can't run the composition. If you want others to be able to use your composition even if they don't have Vuo Pro, consider [exporting it to an app](#exporting-a-composition-to-an-application).
+
+Currently, pro nodes aren't available when [using compositions in other applications](#using-compositions-in-other-applications).
+
+
+## The built-in nodes
+
+This section gives an overview of some of Vuo's built-in nodes. The purpose is to give you a sense of what you can accomplish with the built-in nodes and where to start. For more details, see the node and node set documentation.
+
+### Graphics/video
+
+Vuo comes with many different nodes for working with graphics. These can be roughly divided into 2D and 3D graphics (along with some nodes to convert between them).
+
+For 2D designs and animations, the \vuoNodeClass{vuo.image} and \vuoNodeClass{vuo.layer} node sets are your starting point. These let you arrange and manipulate shapes and images, and render them in a window or composite image.
+
+For 3D models and meshes, the \vuoNodeClass{vuo.scene} node set is your starting point. It lets you load or build 3D objects, warp them, and arrange them within a scene, which you can render in a window or image. When building 3D objects, two additional node sets are helpful: \vuoNodeClass{vuo.transform} for positioning, rotating, and scaling an object, and \vuoNodeClass{vuo.shader} for painting a pattern or material on an object.
+
+When working with 2D or 3D animations, the \vuoNodeClass{vuo.motion} node set lets you control the path and speed of a moving object.
+
+For video, the \vuoNodeClass{vuo.video} node set handles playing movies and receiving video from cameras. When working specifically with the cameras on a Kinect, you can use the \vuoNodeClass{vuo.kinect} node set. If you want to send and receive video between Vuo compositions and other applications, there's the \vuoNodeClass{vuo.syphon} node set.
+
+#### Vuo Coordinates
+
+When drawing graphics to a window or image, you need to understand the \term{coordinate system} of the area you're drawing to. For example, when you use the `Render Scene to Window` node to display a 3D scene in a window, typically the point in your 3D scene with coordinates (0,0,0) will be drawn at the center of the window. (If you're not familiar with the concept of 2D and 3D coordinates, see [http://simple.wikipedia.org/wiki/Cartesian_coordinate_system](http://simple.wikipedia.org/wiki/Cartesian_coordinate_system) and other references to learn more.) 
+
+All of the built-in nodes that work with graphics use \term{Vuo Coordinates}: 
+
+\includegraphics[scale=0.55]{image/vuo-coordinates.pdf}
+
+Typically, as illustrated above, the position (0,0) for 2D graphics or (0,0,0) for 3D graphics is at the center of the rendering area. The X-coordinate -1 is along the left edge of the rendering area, and the X-coordinate 1 is along the right edge. The rendering area's height depends on the aspect ratio of the graphics being rendered, with the Y-coordinate increasing from bottom to top. In 3D graphics, the Z-coordinate increases from back to front. 
+
+When working with 3D graphics, you can change the center and bounds of the rendering area by using a `Make Perspective Camera` or `Make Orthogonal Camera` node. For example, you can use a camera to zoom out, so that the rendering area shows a larger range of X- and Y-coordinates. 
+
+### Sound/audio
+
+The \vuoNodeClass{vuo.audio} node set lets you work with audio input and output. You can use audio input to create music visualizations or control a composition with sound. You can use audio output to synthesize sounds. Together, audio input and output can be used to receive a live audio feed, process the audio, and play it aloud.
+
+To interface with with MIDI keyboards, synthesizers, and sequencers, you can use the \vuoNodeClass{vuo.midi} node set.
+
+### User interaction
+
+There are many built-in nodes you can use to make your compositions interactive, including:
+
+   - \vuoNodeClass{vuo.mouse} for getting input from a mouse or trackpad
+   - \vuoNodeClass{vuo.keyboard} for getting input from keys typed or pressed
+   - \vuoNodeClass{vuo.leap} for receiving hand and finger movements from a Leap Motion device
+   - any of the built-in nodes for networking listed below, which can be used to remotely control a composition from a phone or other device
+
+### Network
+
+Several node sets let you connect with other devices such as iPhones and iPads, Android phones and tablets, musical synthesizers and sequencers, and stage lighting.
+
+   - \vuoNodeClass{vuo.osc} for receiving OSC messages, for example from a TouchOSC interface on a mobile device
+   - \vuoNodeClass{vuo.midi} for sending and receiving MIDI events, often used with music equipment
+   - \vuoNodeClass{vuo.artnet} (pro) for sending and receiving Art-Net messages, often used with stage lighting
+
+If you want to download feeds from the internet, you can use the \vuoNodeClass{vuo.rss} node set.
+
+### Displays
+
+Two node sets let you fine-tune how a composition's windows are displayed on the available screens. The \vuoNodeClass{vuo.screen} node set provides information about the available screens. The \vuoNodeClass{vuo.window} node set controls how each window is displayed, including its aspect ratio and whether it's fullscreen.
+
+
+## Adding nodes to your Node Library
+
+You can expand the things that Vuo can do, or save yourself the work of creating the same composition pieces over and over, by adding nodes to your Node Library.
+
+### Installing a node
+
+Third-party developers have created nodes that you can download and install. Once you've downloaded a node (`.vuonode` file), you can install it with the following steps.
+
+First, place the node in one of Vuo's Modules folders. The easiest way to find these folders is, in Vuo Editor, to go to the \menu{Tools} menu and choose the option you want:
+
+   - \menu{Open User Modules Folder}
+      - Or, if you'd rather find the folder yourself: In your home folder, go to \directory{Library/Application Support/Vuo/Modules}. (On Mac OS X 10.7 and above, the \directory{Library} folder is hidden by default. To find it, go to Finder, then hold down the Option key and select the \menu{Go > Library} menu option.)
+   - \menu{Open System Modules Folder}
+      - Or, if you'd rather find the folder yourself: In the top-level folder on your hard drive, go to \directory{Library/Application Support/Vuo/Modules}.
+
+You'll typically want the User Modules folder, since yours will be the only user account on your computer that needs access to the node. Use the second option only if you have administrative access and you want all users on the computer to have access to the node.
+
+Second, restart the Vuo Editor. The node should now show up in your Node Library. 
+
+### Creating your own node
+
+Programmers can use Vuo's API to create new nodes for Vuo. See [Developing Node Classes and Types for Vuo](http://api.vuo.org/VUO_VERSION/group__DevelopingNodeClassesTypes.html). 
+
+
+
+# Common Patterns - How do I… 
 
 This section describes a few approaches to controlling data and event flow that you're likely to use in many different compositions. As you begin with an idea of what you want your composition to do, you might come up with questions on how to use Vuo's nodes and cables to create a certain result in your composition. This section of the user manual can help answer those questions. 
 
@@ -894,7 +1015,7 @@ The [Modifying and rearranging nodes and cables](#modifying-and-rearranging-node
 
 ### Node Documentation Panel
 
-The node library makes the complete set of Vuo core nodes available for you to browse as you compose. By clicking on a node in the library, a description of the node will appear in the \term{Node Documentation Panel} below the node library. It describes the general purpose of the node as well as details that will help you make use of it. In addition to the Vuo core nodes, if you have access to premium nodes, you'll see those displayed. 
+The node library makes the complete set of Vuo core nodes available for you to browse as you compose. By clicking on a node in the library, a description of the node will appear in the \term{Node Documentation Panel} below the node library. It describes the general purpose of the node as well as details that will help you make use of it. In addition to the Vuo core nodes, if you have access to pro nodes, you'll see those displayed. 
 
 If you're interested in exploring new opportunities, this is an ideal way to casually familiarize yourself with the building blocks available to you in Vuo.
 
@@ -1009,12 +1130,15 @@ As you're editing your running composition, you may want to fire extra events so
 The Vuo Editor has several [helpful tools](#helpful-tools), such as the \term{Show Events} mode and \term{Port popovers} to help you understand in more depth what is happening in your composition. These features can help you see exactly what events and data are flowing through your composition. For more information on troubleshooting steps see the section on [Troubleshooting](#troubleshooting). 
 
 
-
 ## Exporting a composition to an application
 
-Using the \menu{File > Export App...} menu item, you can turn your composition into a Mac application (`.app` file) that you can distribute to others. You don't need to have Vuo installed to run the application. 
+Using the \menu{File > Export App...} menu item, you can turn your composition into a Mac application (`.app` file) that you can distribute to others. Other people can run the application without having Vuo installed.
 
-When exporting a composition that refers to files on your computer (such as images, scenes, or movies), you need to make sure that those files also exist on the application user's computer. Typically, you'll want to do this by copying the files into the application package. For example, if your composition uses a \vuoNode{Fetch Image} node to load a file called `image.png`: 
+When exporting a composition that refers to files on your computer (such as images, scenes, or movies), typically the Vuo Editor will know to copy those into the exported app. If you've added these files to your composition by [dragging them onto the canvas](#dragging-files-onto-the-canvas-to-create-an-interface-node) (without holding down \keys{⌥}) — creating a node such as \vuoNode{Fetch Image} or \vuoNode{Play Movie} — then the files will automatically be copied into the exported app. In fact, the Vuo Editor will automatically copy files and folders for all relative paths found in ports named \vuoPort{URL}, \vuoPort{URLs}, or \vuoPort{Folder}.
+
+If you've held down \keys{⌥} while dragging a file onto the canvas, or if you've typed an absolute path into the input editor for a URL, then the Vuo Editor won't copy the file into the exported app. This is useful if you want to refer to a file that you know will be in a certain location on every computer that runs the app, such as an image that comes with the operating system.
+
+In some cases, you may want a file to be copied into the app, but the Vuo Editor may not be able to figure this out. This may happen, for example, if your composition uses an \vuoNode{Append Text} node to construct relative file paths out of smaller pieces. If the Vuo Editor doesn't copy your files into the exported app automatically, then you can copy them yourself. For example, if your composition uses a file called `image.png`:
 
    - Place `image.png` in the same folder as your composition (.vuo file). 
    - In the Vuo Editor, edit the \vuoNode{Fetch Image} node's \vuoPort{URL} input port value to *image.png*. 
@@ -1022,72 +1146,6 @@ When exporting a composition that refers to files on your computer (such as imag
    - Right-click on `MyApp.app` and choose \menu{Show Package Contents}. 
    - In the package contents, go to the \directory{Contents/Resources} folder. Copy `image.png` into that folder. 
 
-
-
-# The Built-in Nodes
-
-Right out of the box, Vuo lets you create multimedia compositions that animate graphics, display video, communicate with network devices, provide user interaction, and more. Now that you know the basics of creating Vuo compositions and using the Vuo Editor, you're ready to explore what you can create. 
-
-This section gives an overview of some of Vuo's built-in nodes. For more information, including documentation for every built-in node, you can go to the [online node documentation](http://doc.vuo.org/) or the Vuo Editor's Node Documentation Panel. In the Vuo Editor, when you search for a node by name or keyword, or when you click on a node on the canvas, the Node Documentation Panel shows helpful details about the node. 
-
-
-## Rendering graphics and video
-
-For working with 3D graphics, models, and meshes, the \vuoNodeClass{vuo.scene} node set is your starting point. It lets you put 3D objects into a scene, which you can render in a window or image. The \vuoNodeClass{vuo.mesh} node set, with the \vuoNodeClass{vuo.shader} node set and the \vuoNodeClass{vuo.transform} node set allow you to build your own 3D objects in Vuo. Other nodes in the \vuoNodeClass{vuo.scene} node set allow you to modify objects using object filters.  
-
-For working with 2D graphics, designs, and animations, the \vuoNodeClass{vuo.image} and \vuoNodeClass{vuo.layer} node sets are your starting point. These let you arrange and manipulate 2D images and render them in a window or composite image. 
-
-When animating 2D and 3D graphics, the \vuoNodeClass{vuo.motion} node set lets you control the path and speed of a moving object. 
-
-For doing calculations with 2D, 3D, and 4D points and vectors, use the \vuoNodeClass{vuo.point} node set.
-
-Several node sets let you work with video in different ways. For playing movie files, use the \vuoNodeClass{vuo.video} node set. For sending and receiving video between Vuo compositions and other applications, use the \vuoNodeClass{vuo.syphon} node set. For importing video from a [Kinect](http://en.wikipedia.org/wiki/Kinect) camera, use the \vuoNodeClass{vuo.kinect} node set. 
-
-### Vuo Coordinates
-
-When drawing graphics to a window or image, you need to understand the \term{coordinate system} of the area you're drawing to. For example, when you use the `Render Scene to Window` node to display a 3D scene in a window, typically the point in your 3D scene with coordinates (0,0,0) will be drawn at the center of the window. (If you're not familiar with the concept of 2D and 3D coordinates, see [http://simple.wikipedia.org/wiki/Cartesian_coordinate_system](http://simple.wikipedia.org/wiki/Cartesian_coordinate_system) and other references to learn more.) 
-
-All of the built-in nodes that work with graphics use \term{Vuo Coordinates}: 
-
-\includegraphics[scale=0.55]{image/vuo-coordinates.pdf}
-
-Typically, as illustrated above, the position (0,0) for 2D graphics or (0,0,0) for 3D graphics is at the center of the rendering area. The X-coordinate -1 is along the left edge of the rendering area, and the X-coordinate 1 is along the right edge. The rendering area's height depends on the aspect ratio of the graphics being rendered, with the Y-coordinate increasing from bottom to top. In 3D graphics, the Z-coordinate increases from back to front. 
-
-When working with 3D graphics, you can change the center and bounds of the rendering area by using a `Make Perspective Camera` or `Make Orthogonal Camera` node. For example, you can use a camera to zoom out, so that the rendering area shows a larger range of X- and Y-coordinates. 
-
-
-## Processing and playing audio
-
-The \vuoNodeClass{vuo.audio} node set lets you work with audio input and output. You can use audio input to create music visualizations or control a composition with sound. You can use audio output to synthesize sounds. Together, audio input and output can be used to receive a live audio feed, process the audio, and play the processed audio. 
-
-To interface with with MIDI keyboards, synthesizers, and sequencers, you can use the \vuoNodeClass{vuo.midi} node set. 
-
-
-## Communicating over a network
-
-Several node sets let you connect with other devices such as iPhones and iPads, Android phones and tablets, musical synthesizers and sequencers, and stage lighting. 
-
-For working with MIDI devices, use the \vuoNodeClass{vuo.midi} node set. 
-
-For working with OSC devices, use the \vuoNodeClass{vuo.osc} node set. 
-
-
-## Controlling compositions with devices
-
-Several node sets let users interact with your compositions using an input device. 
-
-To receive input from the mouse or trackpad, use the \vuoNodeClass{vuo.mouse} node set. 
-
-To receive keyboard buttons or typing, use the \vuoNodeClass{vuo.keyboard} node set. 
-
-To receive hand and finger movements with a [Leap Motion](https://www.leapmotion.com/) device, use the \vuoNodeClass{vuo.leap} node set. 
-
-For controlling a composition with your body movements using a [Kinect](http://en.wikipedia.org/wiki/Kinect), use the \vuoNodeClass{vuo.kinect} node set. 
-
-
-## Controlling window displays and accessing screen values
-
-To control the display of a Vuo window, including aspect ratio and full-size option, use the \vuoNodeClass{vuo.window} node set. The \vuoNodeClass{vuo.screen} node set can provide information about available screens and their values.  
 
 
 # The Command-Line Tools
@@ -1191,29 +1249,6 @@ If you run into trouble exporting a composition, you can get more information by
 
 This command is equivalent to the \menu{File > Export App...} menu item in Vuo Editor. See the section [Exporting a composition to an application](#exporting-a-composition-to-an-application) for more information. 
 
-
-
-# Adding Nodes to Your Node Library
-
-You can expand the things that Vuo can do, or save yourself the work of creating the same composition pieces over and over, by adding nodes to the Vuo Editor's Node Library. 
-
-## Installing a node
-
-If you download a node (`.vuonode` file), you can install it with these steps: 
-
-First, place the node in one of these folders: 
-
-   - In your home folder, go to \directory{Library/Application Support/Vuo/Modules}.
-      - On Mac OS X 10.7 and above, the \directory{Library} folder is hidden by default. To find it, go to Finder, then hold down the Option key and select the \menu{Go > Library} menu option. 
-   - In the top-level folder on your hard drive, go to \directory{Library/Application Support/Vuo/Modules}.
-
-You'll typically want to use the first option, since yours will be the only user account on your computer that should have access to the node class. Use the second option only if you have administrative access and you want all users on the computer to have access to the node class.    
-
-Second, restart the Vuo Editor. The node should now show up in your Node Library. 
-
-## Creating your own node
-
-Programmers can use Vuo's API to create new nodes for Vuo. See [Developing Node Classes and Types for Vuo](http://api.vuo.org/VUO_VERSION/group__DevelopingNodeClassesTypes.html). 
 
 
 # Troubleshooting

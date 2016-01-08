@@ -2,7 +2,7 @@
  * @file
  * VuoFileFormat interface.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -88,7 +88,7 @@ bool VuoFileFormat_isSupportedMovieFile(const char *path)
  */
 bool VuoFileFormat_isSupportedSceneFile(const char *path)
 {
-	const char *formats[] = {"3ds", "dae", "dxf", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn", "xml",
+	const char *formats[] = {"3ds", "dae", "obj", "dxf", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn", "xml",
 							 "irr", "irrmesh", "mdl", "md2", "md3", "pk3", "mdc", "md5", "m3", "smd", "ter",
 							 "raw", "b3d", "q3d", "q3s", "nff", "off", "3dgs", "hmp", "ndo"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);

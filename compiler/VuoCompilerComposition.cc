@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerComposition implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -128,7 +128,9 @@ void VuoCompilerComposition::checkForMissingNodeClasses(void)
 		{
 			string nodeClassDescription = node->getNodeClass()->getClassName() + " (" + node->getTitle() + ")";
 			if (encounteredPremiumModules.find(node->getNodeClass()->getClassName()) != encounteredPremiumModules.end())
-				nodeClassDescription += " [premium node]";
+				nodeClassDescription += " [pro node]";
+			else if (node->getNodeClass()->getDescription().find("This node was updated or removed in Vuo 0.9 or earlier.") != string::npos)
+				nodeClassDescription += " [Vuo 0.9 or earlier]";
 			missingNodeClasses.insert(nodeClassDescription);
 		}
 	}

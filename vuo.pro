@@ -98,7 +98,7 @@ QMAKE_EXTRA_TARGETS += go
 
 # Provide "make examples" so we don't need to rebuild all the examples during development
 DOLLAR = $
-examples.commands = (for i in example/api/* example/node/* example/type/* ; do (cd $${DOLLAR}$${DOLLAR}i && ([ -f Makefile ] || qmake) && make -j9); done)
+examples.commands = (for i in example/runner/* example/node/* ; do (cd $${DOLLAR}$${DOLLAR}i && ([ -f Makefile ] || qmake) && make -j9); done)
 examples.commands += && (for i in node/vuo.*/examples ; do (cd $${DOLLAR}$${DOLLAR}i && ([ -f Makefile ] || qmake) && make -j9); done)
 QMAKE_EXTRA_TARGETS += examples
 
@@ -118,7 +118,7 @@ QMAKE_EXTRA_TARGETS += vuo32
 
 # Provide "make cleanall", which cleans the main project and all external subprojects
 cleanall.commands = make clean
-cleanall.commands += ; (for i in example/api/* example/node/* example/type/* ; do (cd $${DOLLAR}$${DOLLAR}i ; make clean ; rm -Rf Makefile pch *.app); done)
+cleanall.commands += ; (for i in example/runner/* example/node/* ; do (cd $${DOLLAR}$${DOLLAR}i ; make clean ; rm -Rf Makefile pch *.app); done)
 cleanall.commands += ; (for i in node/vuo.*/examples; do (cd $${DOLLAR}$${DOLLAR}i && make clean); done)
 cleanall.commands += ; (cd documentation && make clean)
 cleanall.commands += ; (cd framework32 && make clean)

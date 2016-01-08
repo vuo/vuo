@@ -48,7 +48,7 @@ QUIET                  = YES
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT                  = doxygen
+INPUT                  = api
 INPUT                 += DoxygenStructure.h
 INPUT                 += ../base
 INPUT                 += ../compiler

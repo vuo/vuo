@@ -29,8 +29,8 @@ NODE_SOURCES += \
 	vuo.image.make.gradient.linear.c \
 	vuo.image.make.gradient.radial.c \
 	vuo.image.make.shadertoy.c \
-#	vuo.image.make.triangle.c \
 	vuo.image.make.text.c \
+#	vuo.image.make.triangle.c \
 	vuo.image.mirror.c \
 	vuo.image.pixellate.c \
 	vuo.image.render.window.c \
@@ -38,6 +38,7 @@ NODE_SOURCES += \
 	vuo.image.resize.larger.c \
 	vuo.image.ripple.c \
 	vuo.image.rotate.c \
+#	vuo.image.save.c \
 	vuo.image.tile.c \
 	vuo.image.twirl.c \
 	vuo.image.vignette.c \
@@ -46,7 +47,8 @@ NODE_SOURCES += \
 NODE_INCLUDEPATH += \
 	../vuo.audio \
 	../vuo.font \
-	../vuo.layer
+	../vuo.layer \
+	$${FREEIMAGE_ROOT}/include
 
 NODE_LIBRARY_SOURCES += \
 	VuoBarcode.cc
@@ -60,12 +62,14 @@ NODE_LIBRARY_INCLUDEPATH += \
 TYPE_SOURCES += \
 	VuoHorizontalReflection.c \
 	VuoVerticalReflection.c \
+	VuoImageFormat.c \
 	VuoSizingMode.c \
 	VuoThresholdType.c
 
 HEADERS += \
 	VuoHorizontalReflection.h \
 	VuoVerticalReflection.h \
+	VuoImageFormat.h \
 	VuoSizingMode.h \
 	VuoThresholdType.h
 
