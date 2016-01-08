@@ -2,7 +2,7 @@
  * @file
  * VuoRendererPublishedPort interface.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -38,6 +38,8 @@ public:
 	QPoint getCompositionViewportPos(void) const;
 	void setCompositionViewportPos(QPoint pos);
 	VuoRendererPort * getPortRepresentation();
+	void setCurrentlyActive(bool active);
+	bool getCurrentlyActive();
 
 private:
 	static VuoRendererPort * createPortRepresentation(string name, VuoType *type, bool isPublishedInput);
@@ -45,6 +47,7 @@ private:
 
 	QPoint compositionViewportPos;
 	VuoRendererPort *portRepresentation;
+	bool isActive;
 
 };
 

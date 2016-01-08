@@ -2,7 +2,7 @@
  * @file
  * VuoImageBlur implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -42,7 +42,7 @@ VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds)
 	int inset = expandBounds ? ceil(radius) : 0;
 
 	// @@@ Currently it looks like the blur actually blurs more than the specified radius..?
-	inset += 2;
+	// inset += 2;
 
 	int w = image->pixelsWide + inset*2;
 	int h = image->pixelsHigh + inset*2;

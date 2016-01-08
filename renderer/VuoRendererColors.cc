@@ -2,7 +2,7 @@
  * @file
  * VuoRendererColors implementation.
  *
- * @copyright Copyright © 2012–2014 Kosada Incorporated.
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -14,7 +14,8 @@ const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
 const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = .85;
 const qreal VuoRendererColors::defaultCableMainAlpha = 0.35;
 const qreal VuoRendererColors::defaultCableUpperAlpha = 0.9;
-const qreal VuoRendererColors::defaultConstantAlpha = .6;
+const qreal VuoRendererColors::defaultConstantAlphaLightMode = 3./8.;
+const qreal VuoRendererColors::defaultConstantAlphaDarkMode = .6;
 const int VuoRendererColors::subtleHighlightingLighteningFactor = 140; // 100 means no change. @todo: Re-evaluate for https://b33p.net/kosada/node/6855 .
 const int VuoRendererColors::activityFadeDuration = 400;
 const int VuoRendererColors::activityAnimationFadeDuration = 950;
@@ -22,7 +23,8 @@ bool VuoRendererColors::_isDark = false;
 
 /**
  * Creates a new color scheme provider, optionally tinted with @c tintColor.
- * If @c selectionType is anything other than @c VuoRendererColors::noSelection, the colors are also tinted slightly blue and have their opacity increased to indicate selection.
+ * If @c selectionType is anything other than @c VuoRendererColors::noSelection or @c VuoRendererColors::sidebarSelection,
+ * the colors are also tinted slightly blue and have their opacity increased to indicate selection.
  * If @c isHovered is true, the colors are also slightly tinted dark blue to indicate potential for selection.
  * If @c highlightType is anything other than @c VuoRendererColors::noHighlight, the colors are also tinted with light blue
  * (more easily visible at a distance) to indicate potential for cable connection.
@@ -113,8 +115,13 @@ QColor VuoRendererColors::portFill(void)
 
 	// Otherwise, use the lighter constant flag fill color.
 	else
-	{
-		qreal adjustedAlpha = getCurrentAlphaForDefault(defaultConstantAlpha);
+	{	
+		// If there are to be no modifications for (the combination of) selection and highlighting,
+		// and the interface is currenty in dark-mode, use the dark-interface-mode opacity level.
+		bool useDarkFill = (_isDark && ((selectionType == VuoRendererColors::noSelection) ||
+							(highlightType == VuoRendererColors::noHighlight)));
+
+		qreal adjustedAlpha = getCurrentAlphaForDefault(useDarkFill? defaultConstantAlphaDarkMode : defaultConstantAlphaLightMode);
 		int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
 		QColor nodeFillColor(tint(QColor::fromHslF(0, 0, 3./4., adjustedAlpha), 1., lighteningFactor));
 
@@ -127,7 +134,7 @@ QColor VuoRendererColors::portFill(void)
  */
 QColor VuoRendererColors::publishedPortFill(void)
 {
-	return nodeFill();
+	return (_isDark || (selectionType != VuoRendererColors::sidebarSelection)? nodeFill() : cableMain());
 }
 
 /**
@@ -190,7 +197,12 @@ QColor VuoRendererColors::nodeClass(void)
  */
 QColor VuoRendererColors::constantFill(void)
 {
-	qreal adjustedAlpha = getCurrentAlphaForDefault(defaultConstantAlpha);
+	// If there are to be no modifications for (the combination of) selection and highlighting,
+	// and the interface is currenty in dark-mode, use the dark-interface-mode opacity level.
+	bool useDarkFill = (_isDark && ((selectionType == VuoRendererColors::noSelection) ||
+						(highlightType == VuoRendererColors::noHighlight)));
+
+	qreal adjustedAlpha = getCurrentAlphaForDefault(useDarkFill? defaultConstantAlphaDarkMode : defaultConstantAlphaLightMode);
 	int lighteningFactor = (highlightType == VuoRendererColors::subtleHighlight? subtleHighlightingLighteningFactor : 100);
 	QColor color = tint(QColor::fromHslF(0, 0, _isDark ? .35 : .75, adjustedAlpha), 1., lighteningFactor);
 
@@ -372,7 +384,7 @@ QColor VuoRendererColors::tint(QColor color, qreal amount, int lighteningFactor)
 		color = _isDark ? color.darker(lighteningFactor) : color.lighter(lighteningFactor);
 	}
 
-	bool isSelected = (selectionType != VuoRendererColors::noSelection);
+	bool isSelected = (selectionType != VuoRendererColors::noSelection && selectionType != VuoRendererColors::sidebarSelection);
 	bool isDirectlySelected = (selectionType == VuoRendererColors::directSelection);
 	if (isSelected || isHovered)
 	{

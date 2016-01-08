@@ -1,4 +1,4 @@
-VUO_VERSION = 1.0.0
+VUO_VERSION = 1.0.1
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"

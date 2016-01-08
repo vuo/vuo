@@ -2,7 +2,7 @@
 * @file
 * Acts as a Syphon server, sending images to all connected Syphon clients. Try running this composition at the same time as [ReceiveImages.vuo](vuo-example://vuo.syphon/ReceiveImages.vuo) or [Simple Client](http://syphon.v002.info/). 
 *
-* @copyright Copyright © 2012–2014 Kosada Incorporated.
+* @copyright Copyright © 2012–2015 Kosada Incorporated.
 * This code may be modified and distributed under the terms of the MIT License.
 * For more information, see http://vuo.org/license.
 */
