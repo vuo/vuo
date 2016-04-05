@@ -86,6 +86,9 @@ private slots:
 		QFETCH(int, expectedPixelsHigh);
 		QFETCH(int, expectedAudioChannels);
 
+		if (!QFile(url).exists())
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+
 		VuoMovie m = VuoMovie_make(strdup(url.toUtf8().data()));
 		QVERIFY(m != NULL);
 
@@ -143,6 +146,9 @@ private slots:
 	void testDecodeRandomPerformance()
 	{
 		QFETCH(QString, url);
+
+		if (!QFile(url).exists())
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
 
 		VuoMovie m = VuoMovie_make(strdup(url.toUtf8().data()));
 		QVERIFY(m != NULL);

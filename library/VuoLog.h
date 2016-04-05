@@ -56,6 +56,11 @@ static double VuoLogGetElapsedTime()
 	return VuoLogGetTime() - VuoLogStartTime;
 }
 
+#ifndef DOXYGEN
+	#define VUO_FORMAT_ATTRIBUTE(formatStringIndex, formatArgumentsIndex) __attribute__((format(printf, formatStringIndex, formatArgumentsIndex)))
+#endif
+static void VuoLog(const char *file, const unsigned int line, const char *function, const char *format, ...) VUO_FORMAT_ATTRIBUTE(4,5);
+
 /**
  * Outputs a message to the system log and to `stderr`.
  */
@@ -72,9 +77,36 @@ static void VuoLog(const char *file, const unsigned int line, const char *functi
 	vsnprintf(formattedString, size+1, format, args);
 	va_end(args);
 
+	char *formattedFunction = NULL;
+
+	// This may be a mangled function name of the form `__6+[f g]_block_invoke`.
+	// Trim the prefix and suffix, since the line number is sufficient to locate the code within the function+block.
+	if (function[0] == '_' && function[1] == '_')
+	{
+		int actualFunctionLength = atoi(function + 2);
+		if (actualFunctionLength)
+			formattedFunction = strndup(function + 3 + (int)log10(actualFunctionLength), actualFunctionLength);
+		else
+			formattedFunction = strndup(function + 2, strchr(function + 2, '_') - (function + 2));
+	}
+
+	// Add a trailing `()`, unless it's an Objective-C method.
+	{
+		const char *f = formattedFunction ? formattedFunction : function;
+		if (f[strlen(f) - 1] != ']')
+		{
+			char *f2 = (char *)malloc(strlen(f) + 3);
+			strcpy(f2, f);
+			strcat(f2, "()");
+			if (formattedFunction)
+				free(formattedFunction);
+			formattedFunction = f2;
+		}
+	}
+
 	double time = VuoLogGetElapsedTime();
 
-	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4d  %39s() \t%s\033[0m\n", getpid()%212+19, getpid(), time, file, line, function, formattedString);
+	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4d  %41s \t%s\033[0m\n", getpid()%212+19, getpid(), time, file, line, formattedFunction ? formattedFunction : function, formattedString);
 
 	aslmsg msg = asl_new(ASL_TYPE_MSG);
 	asl_set(msg, ASL_KEY_READ_UID, "-1");
@@ -145,7 +177,7 @@ static void VuoLog(const char *file, const unsigned int line, const char *functi
 	#include <CoreFoundation/CoreFoundation.h>
 
 	#include <AvailabilityMacros.h>
-	#if MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_6
+	#if (MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_6) || (MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_7)
 		#include <ApplicationServices/ApplicationServices.h>
 	#else
 		#include <CoreGraphics/CoreGraphics.h>
@@ -154,6 +186,19 @@ static void VuoLog(const char *file, const unsigned int line, const char *functi
 
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wunused"
+		/**
+		 * Returns true if debug mode is enabled.
+		 *
+		 * Users can enable debug mode by executing `defaults write org.vuo.Editor debug -boolean true`,
+		 * and can disable it by executing `defaults delete org.vuo.Editor debug`.
+		 *
+		 * Nodes should use this to control verbose logging.
+		 */
+		static bool VuoIsDebugEnabled(void)
+		{
+			return CFPreferencesGetAppBooleanValue(CFSTR("debug"), CFSTR("org.vuo.Editor"), NULL);
+		}
+
 		static char *VuoLog_copyCFDescription(CFTypeRef variable)
 		{
 			if (!variable)
@@ -218,7 +263,7 @@ static void VuoLog(const char *file, const unsigned int line, const char *functi
 		#define FORCETYPE(x, type) (*(type *)(__typeof__(x) []){ x })
 		#include "coreTypesStringify.h"
 		#define VuoLog_convertToString(variable)	\
-			__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), struct json_object *), json_object_to_json_string(FORCETYPE(variable, struct json_object *)),	\
+			__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), struct json_object *), strdup(json_object_to_json_string(FORCETYPE(variable, struct json_object *))),	\
 			__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), CFStringRef),            VuoLog_copyCFDescription(FORCETYPE(variable, CFTypeRef)),				\
 			__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), CFAttributedStringRef),  VuoLog_copyCFDescription(FORCETYPE(variable, CFTypeRef)),				\
 			__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(variable), CFArrayRef),             VuoLog_copyCFDescription(FORCETYPE(variable, CFTypeRef)),				\

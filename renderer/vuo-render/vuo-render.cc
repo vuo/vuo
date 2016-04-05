@@ -12,6 +12,19 @@
 
 #include "VuoRendererComposition.hh"
 
+void printHelp(char *argv0)
+{
+	printf("Usage: %s [options] file\n"
+		   "Options:\n"
+		   "  --help                       Display this information.\n"
+		   "  --output <file>              Place the rendered image into <file>.\n"
+		   "  --output-format=<format>     <format> can be 'png' or 'pdf'.\n"
+		   "  --draw-bounding-rects        Draws red bounding rectangles around items in the composition canvas.\n"
+		   "  --render-missing-as-present  Render missing node classes as though they were present.\n"
+		   "  --scale <factor>             Changes the resolution.  For example, to render a PNG at Retina resolution, use '2'.\n",
+		   argv0);
+}
+
 /**
  * Entrypoint.
  */
@@ -77,17 +90,7 @@ int main (int argc, char * argv[])
 		hasInputFile = (optind < argc) && ! doPrintHelp;
 
 		if (doPrintHelp)
-		{
-			printf("Usage: %s [options] file\n"
-				   "Options:\n"
-				   "  --help                       Display this information.\n"
-				   "  --output <file>              Place the rendered image into <file>.\n"
-				   "  --output-format=<format>     <format> can be 'png' or 'pdf'.\n"
-				   "  --draw-bounding-rects        Draws red bounding rectangles around items in the composition canvas.\n"
-				   "  --render-missing-as-present  Render missing node classes as though they were present.\n"
-				   "  --scale <factor>             Changes the resolution.  For example, to render a PNG at Retina resolution, use '2'.\n",
-				   argv[0]);
-		}
+			printHelp(argv[0]);
 		else
 		{
 			if (! hasInputFile)
@@ -182,6 +185,11 @@ int main (int argc, char * argv[])
 	catch (std::exception &e)
 	{
 		fprintf(stderr, "%s: error: %s\n", hasInputFile ? inputPath.c_str() : argv[0], e.what());
+		if (!hasInputFile)
+		{
+			fprintf(stderr, "\n");
+			printHelp(argv[0]);
+		}
 		return 1;
 	}
 }

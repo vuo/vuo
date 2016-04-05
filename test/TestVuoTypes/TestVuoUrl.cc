@@ -28,35 +28,49 @@ private slots:
 	void testNormalize_data()
 	{
 		QTest::addColumn<QString>("url");
-		QTest::addColumn<bool>("shouldEscapeSpaces");
 		QTest::addColumn<QString>("expectedNormalizedUrl");
+		QTest::addColumn<bool>("expectedValidPosixPath");
+		QTest::addColumn<QString>("expectedPosixPath");
 
 		QString fileScheme = "file://";
-		QString baseUrl = fileScheme + getcwd(NULL,0);
+		QString basePath = getcwd(NULL,0);
+		QString baseUrl = fileScheme + basePath;
 		QString homeDir = getenv("HOME");
 
-		QTest::newRow("empty string")		<< ""						<< false << baseUrl;
-		QTest::newRow("absolute URL")		<< "http://vuo.org"			<< false << "http://vuo.org";
-		QTest::newRow("absolute URL/")		<< "http://vuo.org/"		<< false << "http://vuo.org";
-		QTest::newRow("relative file")		<< "file"					<< false << baseUrl + "/file";
-		QTest::newRow("relative dir/")		<< "dir/"					<< false << baseUrl + "/dir";
-		QTest::newRow("relative dir/file")	<< "dir/file"				<< false << baseUrl + "/dir/file";
-		QTest::newRow("absolute file")		<< "/mach_kernel"			<< false << fileScheme + "/mach_kernel";
-		QTest::newRow("absolute dir/")		<< "/usr/include/"			<< false << fileScheme + "/usr/include";
-		QTest::newRow("absolute dir/file")	<< "/usr/include/stdio.h"	<< false << fileScheme + "/usr/include/stdio.h";
-		QTest::newRow("user homedir")		<< "~"						<< false << fileScheme + homeDir;
-		QTest::newRow("user homedir/")		<< "~/"						<< false << fileScheme + homeDir;
-		QTest::newRow("user homedir/file")	<< "~/.DS_Store"			<< false << fileScheme + homeDir + "/.DS_Store";
+		QTest::newRow("empty string")		<< ""						<< baseUrl								<< true		<< basePath;
+		QTest::newRow("absolute URL")		<< "http://vuo.org"			<< "http://vuo.org"						<< false	<< "";
+		QTest::newRow("absolute URL/")		<< "http://vuo.org/"		<< "http://vuo.org"						<< false	<< "";
+		QTest::newRow("relative file")		<< "file"					<< baseUrl + "/file"					<< true		<< basePath + "/file";
+		QTest::newRow("relative file ?")	<< "file?.wav"				<< baseUrl + "/file%3f.wav"				<< true		<< basePath + "/file?.wav";
+		QTest::newRow("relative dir/")		<< "dir/"					<< baseUrl + "/dir"						<< true		<< basePath + "/dir";
+		QTest::newRow("relative dir/file")	<< "dir/file"				<< baseUrl + "/dir/file"				<< true		<< basePath + "/dir/file";
+		QTest::newRow("absolute file")		<< "/mach_kernel"			<< fileScheme + "/mach_kernel"			<< true		<< "/mach_kernel";
+		QTest::newRow("absolute dir/")		<< "/usr/include/"			<< fileScheme + "/usr/include"			<< true		<< "/usr/include";
+		QTest::newRow("absolute dir/file")	<< "/usr/include/stdio.h"	<< fileScheme + "/usr/include/stdio.h"	<< true		<< "/usr/include/stdio.h";
+		QTest::newRow("user homedir")		<< "~"						<< fileScheme + homeDir					<< true		<< homeDir;
+		QTest::newRow("user homedir/")		<< "~/"						<< fileScheme + homeDir					<< true		<< homeDir;
+		QTest::newRow("user homedir/file")	<< "~/.DS_Store"			<< fileScheme + homeDir + "/.DS_Store"	<< true		<< homeDir + "/.DS_Store";
 	}
 	void testNormalize()
 	{
 		QFETCH(QString, url);
-		QFETCH(bool, shouldEscapeSpaces);
 		QFETCH(QString, expectedNormalizedUrl);
+		QFETCH(bool, expectedValidPosixPath);
+		QFETCH(QString, expectedPosixPath);
 
-		VuoText normalizedUrl = VuoUrl_normalize(url.toUtf8().data(), shouldEscapeSpaces);
+		VuoUrl normalizedUrl = VuoUrl_normalize(url.toUtf8().data(), false);
 		VuoRetain(normalizedUrl);
 		QCOMPARE(normalizedUrl, expectedNormalizedUrl.toUtf8().data());
+
+		VuoText posixPath = VuoUrl_getPosixPath(normalizedUrl);
+		VuoRetain(posixPath);
+
+		if (expectedValidPosixPath)
+			QCOMPARE(posixPath, expectedPosixPath.toUtf8().data());
+		else
+			QCOMPARE(posixPath, (VuoText)NULL);
+
+		VuoRelease(posixPath);
 		VuoRelease(normalizedUrl);
 	}
 };

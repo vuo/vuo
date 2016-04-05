@@ -32,7 +32,7 @@ VuoModuleMetadata({
 						 "VuoSceneObjectRenderer"
 					 ],
 					 "node": {
-						 "exampleCompositions" : [ "RippleGrid.vuo" ]
+						 "exampleCompositions" : [ "MoveBeadsOnString.vuo", "RippleGrid.vuo" ]
 					 }
 				 });
 

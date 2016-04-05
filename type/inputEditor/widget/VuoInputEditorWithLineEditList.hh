@@ -21,7 +21,7 @@ class VuoInputEditorWithLineEditList : public VuoInputEditorWithDialog
 
 public:
 	VuoInputEditorWithLineEditList(bool allowAddingAndRemovingRows=false, int lineEditWidth=100);
-	bool supportsTabbingBetweenPorts(void);
+	virtual bool supportsTabbingBetweenPorts(void);
 
 protected:
 	virtual void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
@@ -32,7 +32,6 @@ protected:
 	void removeWidgetFromDialog(QWidget *widget);
 	json_object * getAcceptedValue(void);
 	QList<QString> getLineEditTexts(void);
-	bool eventFilter(QObject *object, QEvent *event);
 
 	/**
 	 * Returns the text that should appear in each of the line edits to represent @a value.
@@ -58,8 +57,6 @@ private:
 	QList<QAbstractButton *> removeButtons;
 	QAbstractButton *addButton;
 	QVBoxLayout *dialogLayout;
-	QWidget *firstWidgetInTabOrder;
-	QWidget *lastWidgetInTabOrder;
 
 	static const int horizontalSpacing;
 	static const int verticalSpacing;

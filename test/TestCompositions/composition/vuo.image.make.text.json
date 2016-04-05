@@ -8,7 +8,7 @@
  */
 
 {"portConfiguration": [
-	/* If there's no text, expect a null image as output. */
+	/* If there's no text, expect an empty image as output. */
 	{
 		"firingPort": "refresh",
 		"inputPortValues": {

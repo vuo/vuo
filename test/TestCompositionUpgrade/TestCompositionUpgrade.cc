@@ -147,6 +147,7 @@ private slots:
 		}
 	}
 
+/*
 	void testUpgradingCompositions_data()
 	{
 		QTest::addColumn<QString>("compositionFileName");
@@ -204,6 +205,7 @@ private slots:
 			checkEqual(actual, expected);
 		}
 	}
+*/
 
 	void testUpgradingAndBuildingAllNodes_data()
 	{
@@ -241,7 +243,6 @@ private slots:
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(name, "bc");
 		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(name + "-linked", "");
 
-		bool compilationFailedWithObsoleteNodes = false;
 		try
 		{
 			compiler->compileComposition(compilerComposition, compiledCompositionPath);
@@ -250,12 +251,14 @@ private slots:
 		catch (std::runtime_error e)
 		{
 			if (VuoStringUtilities::beginsWith(e.what(), "This composition contains nodes that are neither built in to this version of Vuo nor installed on this computer"))
-				compilationFailedWithObsoleteNodes = true;
+			{
+				bool compilationFailureExpected = compilerComposition->getBase()->getName().find("TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes") != std::string::npos;
+				if (!compilationFailureExpected)
+					QFAIL(e.what());
+			}
 			else
 				QFAIL(e.what());
 		}
-		bool compilationFailureExpected = compilerComposition->getBase()->getName().find("TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes") != std::string::npos;
-		QCOMPARE(compilationFailedWithObsoleteNodes, compilationFailureExpected);
 
 		QVERIFY(remove(compiledCompositionPath.c_str()) == 0);
 		QVERIFY(remove(linkedCompositionPath.c_str()) == 0);

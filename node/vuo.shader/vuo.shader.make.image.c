@@ -28,8 +28,8 @@ void nodeEvent
 (
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) opacity,
-		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
-		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
+		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,	// Keep in sync with VuoShader_make_VuoImage.
+		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,	// Keep in sync with VuoShader_make_VuoImage.
 		VuoOutputData(VuoShader) shader
 )
 {

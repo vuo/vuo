@@ -23,12 +23,27 @@
 #include "VuoText.h"
 
 /**
+ * How the screen should be selected from those available on the running system.
+ */
+typedef enum
+{
+	VuoScreenType_Active,
+	VuoScreenType_Primary,
+	VuoScreenType_Secondary,
+	VuoScreenType_MatchId,
+	VuoScreenType_MatchName
+} VuoScreenType;
+
+/**
  * Information about a display screen.
  */
 typedef struct
 {
-	VuoInteger id;	///< If `id` is non-negative, use the specified device identifier.
-	VuoText name;	///< If `id` is negative, use the first device whose name contains `name` (e.g., `Color LCD` for a built-in MacBook Pro display).
+	VuoScreenType type;
+	VuoInteger id;	///< NSScreenNumber
+	VuoText name;	///< e.g., `Color LCD` for a built-in MacBook Pro display
+
+	bool isRealized;	///< True if this VuoScreen refers to a specific screen by ID, and the following values are filled in.
 
 	VuoPoint2d topLeft;	// In points (not pixels).
 
@@ -43,6 +58,8 @@ VuoScreen VuoScreen_makeFromJson(struct json_object * js);
 struct json_object * VuoScreen_getJson(const VuoScreen value);
 char *VuoScreen_getSummary(const VuoScreen value);
 bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2);
+
+bool VuoScreen_realize(VuoScreen screen, VuoScreen *realizedScreen);
 
 /**
  * Automatically generated function.
@@ -60,8 +77,50 @@ void VuoScreen_release(VuoScreen value);
 static inline VuoScreen VuoScreen_makeFromName(VuoText name) __attribute__((const));
 static inline VuoScreen VuoScreen_makeFromName(VuoText name)
 {
-	VuoScreen s = {-1,name,{0,0},0,0,0,0};
+	VuoScreen s = {VuoScreenType_MatchName,0,name,false,{0,0},0,0,0,0};
 	return s;
+}
+
+/**
+ * Returns a string constant representing `type`.
+ */
+static inline const char * VuoScreen_cStringForType(VuoScreenType type)
+{
+	switch (type)
+	{
+		case VuoScreenType_Active:
+			return "active";
+		case VuoScreenType_Primary:
+			return "primary";
+		case VuoScreenType_Secondary:
+			return "secondary";
+		case VuoScreenType_MatchId:
+			return "match-id";
+		case VuoScreenType_MatchName:
+			return "match-name";
+		// -Wunreachable-code doesn't like it if we cover all possible enum values *and* specify a default.
+		//default:
+		//	return "primary";
+	}
+}
+
+/**
+ * Returns the `VuoScreenType` corresponding with the `typeString`.  If none matches, returns VuoScreenType_Primary.
+ */
+static inline VuoScreenType VuoScreen_typeFromCString(const char *typeString)
+{
+	if (strcmp(typeString,"active")==0)
+		return VuoScreenType_Active;
+	else if (strcmp(typeString,"primary")==0)
+		return VuoScreenType_Primary;
+	else if (strcmp(typeString,"secondary")==0)
+		return VuoScreenType_Secondary;
+	else if (strcmp(typeString,"match-id")==0)
+		return VuoScreenType_MatchId;
+	else if (strcmp(typeString,"match-name")==0)
+		return VuoScreenType_MatchName;
+
+	return VuoScreenType_Active;
 }
 
 /**

@@ -9,37 +9,36 @@
 
 digraph G
 {
-ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="445,666"];
-Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="70,125" _b="100"];
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-153,226" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="394,265"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-99,331" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0.556634,\"g\":0.826612,\"b\":0.556634,\"a\":1.000000}" _squareSize="0.100000" _center="{\"x\":0,\"y\":0}" _width="1600" _height="800"];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="153,536" _2="40.000000"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="410,91" fillcolor="green"];
-MakeList4 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="585,265" fillcolor="violet"];
-MakeSphereVertices [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="136,246" _rows="32" _columns="32"];
-MakeTransform2 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="424,510" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="199,525"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="451,65" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RenderScenetoImage2 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="658,254" fillcolor="violet" _width="1024" _height="768" _colorDepth="\"8bpc\""];
-RippleImage [type="vuo.image.ripple" version="2.1.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="261,65" _angle="135" _amplitude="0.1" _wavelength="0.05"];
-ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="139,331" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500008}" _shininess="0.500000"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-255,285" fillcolor="yellow"];
+ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="450,660"];
+Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="120,120" _b="100"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.1" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-105,330" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0.556634,\"g\":0.826612,\"b\":0.556634,\"a\":1.000000}" _squareSize="0.100000" _center="{\"x\":0,\"y\":0}" _width="1600" _height="800"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-91,191" _2="40.000000"];
+MakeList4 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="486,236" fillcolor="violet"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="330,225" _rows="32" _columns="32"];
+MakeTransform2 [type="vuo.transform.make" version="1.0.0" label="Make Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="150,225" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-45,180"];
+RenderScenetoImage2 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="555,225" fillcolor="violet" _colorDepth="\"8bpc\""];
+RippleImage [type="vuo.image.ripple" version="2.1.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="360,60" _angle="135" _amplitude="0.1" _wavelength="0.05"];
+ShadeWithImage [type="vuo.shader.make.image" version="3.0.0" label="Shade with Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="135,330" _opacity="1.000000" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.500008}" _shininess="0.500000"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<height>height\r|<time>time\r|<width>width\r" _height_type="VuoInteger" _time_type="VuoReal" _width_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
+AllowFirstEvent:firstEvent -> MakeCheckerboardImage:refresh;
 ConvertRealTo3DPoint2:point3d -> MakeTransform2:rotation;
 Divide:quotient -> RippleImage:phase;
-FireonStart:started -> MakeCheckerboardImage:refresh;
-FireonStart:started -> MakeSphereVertices:refresh;
-Make3DObject2:object -> MakeList4:1;
 MakeCheckerboardImage:image -> ShadeWithImage:image;
-MakeList0:list -> RenderImageToWindow:setWindowProperties;
 MakeList4:list -> RenderScenetoImage2:objects;
 MakeList:list -> Multiply:values;
-MakeSphereVertices:mesh -> Make3DObject2:mesh;
-MakeTransform2:transform -> Make3DObject2:transform;
+MakeSphere2:object -> MakeList4:1;
+MakeTransform2:transform -> MakeSphere2:transform;
 Multiply:product -> ConvertRealTo3DPoint2:y;
 Multiply:product -> Divide:a;
-RenderImageToWindow:requestedFrame -> MakeList:1;
 RenderScenetoImage2:image -> RippleImage:image;
-RippleImage:rippledImage -> RenderImageToWindow:image;
-ShadeWithImage:shader -> Make3DObject2:shader;
+ShadeWithImage:shader -> MakeSphere2:material;
+PublishedInputs:height -> RenderScenetoImage2:height;
+PublishedInputs:time -> MakeList:1;
+PublishedInputs:time -> AllowFirstEvent:event;
+PublishedInputs:width -> RenderScenetoImage2:width;
+RippleImage:rippledImage -> PublishedOutputs:outputImage;
 }

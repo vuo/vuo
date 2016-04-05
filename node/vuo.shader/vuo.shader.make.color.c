@@ -22,15 +22,15 @@ VuoModuleMetadata({
 						 "VuoGlContext"
 					 ],
 					 "node" : {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "CompareColorAndEdgeShaders.vuo" ]
 					 }
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoColor,{"default":{"r":1.,"g":0.8,"b":0.6,"a":1}}) color,
-		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,
-		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,
+		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) highlightColor,	// Keep in sync with VuoShader_make_VuoImage.
+		VuoInputData(VuoReal,{"default":0.9, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) shininess,	// Keep in sync with VuoShader_make_VuoImage.
 		VuoOutputData(VuoShader) shader
 )
 {

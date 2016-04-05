@@ -428,6 +428,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 		return nil;
 
 	// Allocate memory to store the image data.
+	unsigned int bytesPerRow = 4 * vi->pixelsWide;
 	NSBitmapImageRep *nbi = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
 		pixelsWide:vi->pixelsWide
 		pixelsHigh:vi->pixelsHigh
@@ -436,21 +437,31 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 		hasAlpha:YES
 		isPlanar:NO
 		colorSpaceName:NSDeviceRGBColorSpace
-		bytesPerRow:4*vi->pixelsWide
+		bytesPerRow:bytesPerRow
 		bitsPerPixel:0];
 	if (!nbi)
 		return nil;
 
 	// Download the image data from the GPU.
+	unsigned char *bitmapData = [nbi bitmapData];
 	{
 		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 		glBindTexture(GL_TEXTURE_2D, vi->glTextureName);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, [nbi bitmapData]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmapData);
 		VuoGlContext_disuse(cgl_ctx);
 	}
 
+	// Flip the image data (OpenGL returns flipped data, but NSBitmapImageRep assumes it is not flipped).
+	unsigned char *tmp = (unsigned char *)malloc(bytesPerRow);
+	for (unsigned long y = 0; y < vi->pixelsHigh / 2; ++y)
+	{
+		memcpy(tmp, bitmapData + bytesPerRow * y, bytesPerRow);
+		memcpy(bitmapData + bytesPerRow * y, bitmapData + bytesPerRow * (vi->pixelsHigh - y - 1), bytesPerRow);
+		memcpy(bitmapData + bytesPerRow * (vi->pixelsHigh - y - 1), tmp, bytesPerRow);
+	}
+	free(tmp);
+
 	NSImage *ni = [[NSImage alloc] initWithSize:[nbi size]];
-	[ni setFlipped:YES];
 	[ni addRepresentation:nbi];
 	[nbi release];
 	return [ni autorelease];
@@ -582,15 +593,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
  */
 - (json_object *)vuoValue
 {
-	float scale = 1;
-	if ([self respondsToSelector:@selector(recommendedLayerContentsScale:)])
-	{
-		// If we're on 10.7 or later, we need to check whether we're running on a retina display, and scale accordingly if so.
-		typedef CGFloat (*funcType)(id receiver, SEL selector, CGFloat);
-		funcType recommendedLayerContentsScale = (funcType)[[self class] instanceMethodForSelector:@selector(recommendedLayerContentsScale:)];
-		scale = recommendedLayerContentsScale(self, @selector(recommendedLayerContentsScale:), 0);
-	}
-
+	float scale = [self recommendedLayerContentsScale:0];
 	unsigned int pixelsWide = [self size].width  * scale;
 	unsigned int pixelsHigh = [self size].height * scale;
 
@@ -609,14 +612,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	NSGraphicsContext *ngc = [NSGraphicsContext graphicsContextWithBitmapImageRep:nbir];
 	[NSGraphicsContext saveGraphicsState];
 	[NSGraphicsContext setCurrentContext:ngc];
-	{
-		bool originalFlipped = [self isFlipped];
-		[self setFlipped:YES];
-
-		[self drawInRect:NSMakeRect(0,0,pixelsWide,pixelsHigh) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
-
-		[self setFlipped:originalFlipped];
-	}
+	[self drawInRect:NSMakeRect(0,0,pixelsWide,pixelsHigh) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1 respectFlipped:YES hints:nil];
 	[ngc flushGraphics];
 	[NSGraphicsContext setCurrentContext:nil];
 	[NSGraphicsContext restoreGraphicsState];
@@ -642,8 +638,18 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
+	// Flip the image data (OpenGL expects flipped data, but NSBitmapImageRep is not flipped).
+	unsigned char *bitmapData = [self bitmapData];
+	unsigned long width = [self size].width;
+	unsigned long height = [self size].height;
+	unsigned long bytesPerRow = width * 4;
+	unsigned char *bitmapDataFlipped = (unsigned char *)malloc(bytesPerRow * height);
+	for (unsigned long y = 0; y < height; ++y)
+		memcpy(bitmapDataFlipped + bytesPerRow * (height - y - 1), bitmapData + bytesPerRow * y, bytesPerRow);
+
 	GLenum internalformat = GL_RGBA;
-	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, [self size].width, [self size].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, [self bitmapData]);
+	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmapDataFlipped);
+	free(bitmapDataFlipped);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);

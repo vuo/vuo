@@ -89,10 +89,9 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);  // Don't use signals for the timeout logic, since they're not thread-safe.
 
-	VuoText resolvedUrl = VuoUrl_normalize(url, true);
+	VuoText resolvedUrl = VuoUrl_normalize(url, false);
 	VuoRetain(resolvedUrl);
 	curl_easy_setopt(curl, CURLOPT_URL, resolvedUrl);
-	VuoRelease(resolvedUrl);
 
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -107,8 +106,10 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 			VLog("Error: Could not read path: \"%s\"", resolvedUrl);
 		else
 			VLog("Error: cURL request failed: %s (%d)\n", curl_easy_strerror(res), res);
+		VuoRelease(resolvedUrl);
 		return false;
 	}
+	VuoRelease(resolvedUrl);
 
 	curl_easy_cleanup(curl);
 

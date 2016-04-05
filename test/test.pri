@@ -5,6 +5,7 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/library \
 	-I$$ROOT/node \
 	-I$$ROOT/node/vuo.audio \
+	-I$$ROOT/node/vuo.data \
 	-I$$ROOT/node/vuo.font \
 	-I$$ROOT/node/vuo.layer \
 	-I$$ROOT/node/vuo.midi \
@@ -39,13 +40,16 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
-	$$ROOT/library/VuoImageBlur.bc \
+	$$ROOT/library/VuoBase64.o \
+	$$ROOT/library/VuoImageBlur.o \
 	$$ROOT/library/VuoImageMapColors.o \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMeshParametric.o \
+	$$ROOT/library/VuoMeshUtility.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoSceneRenderer.o \
+	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
@@ -54,6 +58,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoImage.o \
 	$$ROOT/type/VuoImageColorDepth.o \
 	$$ROOT/type/VuoInteger.o \
+	$$ROOT/node/vuo.data/VuoData.o \
 	$$ROOT/node/vuo.font/VuoFont.o \
 	$$ROOT/node/vuo.layer/VuoLayer.o \
 	$$ROOT/node/vuo.midi/VuoMidiNote.o \
@@ -66,6 +71,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoPoint4d.o \
 	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoSceneObject.o \
+	$$ROOT/type/VuoScreen.o \
 	$$ROOT/type/VuoShader.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/VuoTransform.o \
@@ -81,7 +87,9 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/list/VuoList_VuoLayer.o \
 	$$ROOT/type/list/VuoList_VuoPoint2d.o \
 	$$ROOT/type/list/VuoList_VuoPoint3d.o \
+	$$ROOT/type/list/VuoList_VuoPoint4d.o \
 	$$ROOT/type/list/VuoList_VuoReal.o \
+	$$ROOT/type/list/VuoList_VuoScreen.o \
 	$$ROOT/type/list/VuoList_VuoSceneObject.o \
 	$$ROOT/type/list/VuoList_VuoText.o \
 	$$QMAKE_LFLAGS $$LIBS $$QMAKE_LIBS \

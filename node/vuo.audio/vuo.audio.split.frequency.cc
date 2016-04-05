@@ -16,7 +16,7 @@ extern "C" {
 VuoModuleMetadata({
 					 "title" : "Split Audio by Frequency",
 					 "keywords" : [ "processor" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "dependencies" : [
 						 "Gamma"
 					 ],
@@ -88,7 +88,7 @@ static int compare (const void * a, const void * b)
 	return x-y;
 }
 
-VuoAudioSamples SamplesWithFilterAndFrequency(const VuoAudioSamples samples, gam::Biquad<> *filter, const double frq)
+static VuoAudioSamples SamplesWithFilterAndFrequency(const VuoAudioSamples samples, gam::Biquad<> *filter, const double frq)
 {
 	(*filter).freq(frq);
 

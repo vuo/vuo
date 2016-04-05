@@ -41,7 +41,7 @@ void VuoCompilerTriggerPort::generateAllocation(Module *module, string nodeInsta
 		previousDataVariable = new GlobalVariable(*module,
 												  dataType,
 												  false,
-												  GlobalValue::InternalLinkage,
+												  GlobalValue::PrivateLinkage,
 												  0,
 												  identifier + "__previous");
 	}
@@ -128,14 +128,18 @@ Function * VuoCompilerTriggerPort::generateAsynchronousSubmissionToDispatchQueue
  * Generates code to submit a task to this trigger's dispatch queue. Returns the worker function, which will be called
  * by the dispatch queue to execute the task. The caller is responsible for filling in the body of the worker function.
  */
-Function * VuoCompilerTriggerPort::generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, string identifier)
+Function * VuoCompilerTriggerPort::generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, string identifier, Value *workerFunctionArg)
 {
 	Function *workerFunction = getWorkerFunction(module, identifier);
 
 	PointerType *voidPointer = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	Value *nullVoidPointer = ConstantPointerNull::get(voidPointer);
+	Value *argAsVoidPointer;
+	if (workerFunctionArg)
+		argAsVoidPointer = new BitCastInst(workerFunctionArg, voidPointer, "", block);
+	else
+		argAsVoidPointer = ConstantPointerNull::get(voidPointer);
 
-	VuoCompilerCodeGenUtilities::generateSynchronousSubmissionToDispatchQueue(module, block, dispatchQueueVariable, workerFunction, nullVoidPointer);
+	VuoCompilerCodeGenUtilities::generateSynchronousSubmissionToDispatchQueue(module, block, dispatchQueueVariable, workerFunction, argAsVoidPointer);
 
 	return workerFunction;
 }
@@ -157,7 +161,7 @@ Function * VuoCompilerTriggerPort::getWorkerFunction(Module *module, string iden
 	Function *workerFunction = module->getFunction(workerFunctionName);
 	if (! workerFunction) {
 		workerFunction = Function::Create(workerFunctionType,
-										  GlobalValue::ExternalLinkage,
+										  GlobalValue::PrivateLinkage,
 										  workerFunctionName,
 										  module);
 	}
@@ -266,7 +270,7 @@ Function * VuoCompilerTriggerPort::getFunction(void)
 /**
  * Returns the variable that stores the most recent data value fired from this trigger, or NULL if the trigger is event-only.
  */
-GlobalVariable * VuoCompilerTriggerPort::getPreviousDataVariable(void)
+GlobalVariable * VuoCompilerTriggerPort::getDataVariable(void)
 {
 	return previousDataVariable;
 }

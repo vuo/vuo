@@ -25,6 +25,7 @@ VuoModuleMetadata({
 						 "VuoMidiInputDevice",
 						 "VuoMidiOutputDevice",
 						 "VuoMidiNote",
+						 "VuoMidiPitchBend",
 						 "VuoList_VuoMidiInputDevice",
 						 "VuoList_VuoMidiOutputDevice",
 						 "RtMidi",

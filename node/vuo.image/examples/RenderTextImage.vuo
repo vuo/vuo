@@ -9,12 +9,12 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="91,257" _started_eventThrottling="enqueue"];
-MakeList3 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="436,331"];
-MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="270,306" fillcolor="violet" _text="\"Hello World!\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":96.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="482,305" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="60,165"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="210,210" fillcolor="violet" _text="\"Hello World!\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":96.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<time>time\r|<height>height\r" _width_type="VuoInteger" _time_type="VuoReal" _height_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-FireOnStart:started -> MakeTextImage:refresh;
-MakeList3:list -> RenderImageToWindow:setWindowProperties;
-MakeTextImage:image -> RenderImageToWindow:image;
+AllowFirstEvent:firstEvent -> MakeTextImage:refresh;
+PublishedInputs:time -> AllowFirstEvent:event;
+MakeTextImage:image -> PublishedOutputs:outputImage;
 }

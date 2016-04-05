@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <mach-o/dyld.h>
 #include "VuoFileUtilities.hh"
 #include "VuoStringUtilities.hh"
@@ -104,11 +105,25 @@ string VuoFileUtilities::getTmpDir(void)
 }
 
 /**
- * Creates a new directory, if it doesn't already exist.
+ * Creates a new directory (and parent directories if needed), if it doesn't already exist.
  */
 void VuoFileUtilities::makeDir(string path)
 {
-	mkdir(path.c_str(), 0700);
+	if (dirExists(path))
+		return;
+
+	const char FILE_SEPARATOR = '/';
+	size_t lastNonSeparator = path.find_last_not_of(FILE_SEPARATOR);
+	if (lastNonSeparator != string::npos)
+		path.resize(lastNonSeparator + 1);
+
+	string parentDir, file, ext;
+	splitPath(path, parentDir, file, ext);
+	makeDir(parentDir);
+
+	int ret = mkdir(path.c_str(), 0700);
+	if (ret != 0 && ! dirExists(path))
+		throw std::runtime_error("Couldn't create directory \"" + path + "\"");
 }
 
 /**
@@ -193,7 +208,7 @@ string VuoFileUtilities::getSystemModulesPath()
  */
 string VuoFileUtilities::getCachePath(void)
 {
-	return string(getenv("HOME")) + "/Library/Caches/org.vuo";
+	return string(getenv("HOME")) + "/Library/Caches/org.vuo/" + VUO_VERSION_STRING;
 }
 
 /**
@@ -301,6 +316,16 @@ bool VuoFileUtilities::fileExists(string path)
 }
 
 /**
+ * Returns true if the file exists and is a directory.
+ */
+bool VuoFileUtilities::dirExists(string path)
+{
+	struct stat st_buf;
+	int status = lstat(path.c_str(), &st_buf);  // Unlike stat, lstat doesn't follow symlinks.
+	return (! status && S_ISDIR(st_buf.st_mode));
+}
+
+/**
  * Creates the file if it does not exist already; otherwise, has no effect on the file.
  */
 void VuoFileUtilities::createFile(string path)
@@ -367,15 +392,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 
 		if (! isArchive)
 		{
-			bool shouldSearchDir = false;
-			if (shouldSearchRecursively)
-			{
-				struct stat st_buf;
-				int status = lstat(relativeFilePath.c_str(), &st_buf);  // Unlike stat, lstat doesn't follow symlinks.
-				if (! status && S_ISDIR(st_buf.st_mode))
-					shouldSearchDir = true;
-			}
-
+			bool shouldSearchDir = shouldSearchRecursively && dirExists(relativeFilePath);
 			if (shouldSearchDir)
 			{
 				set<File *> filesInDir = findAllFilesInDirectory(relativeFilePath, archiveExtensions, true);

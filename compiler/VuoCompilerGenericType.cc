@@ -31,7 +31,7 @@ VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *
 VuoCompilerGenericType * VuoCompilerGenericType::newGenericType(VuoGenericType *baseType, map<string, VuoCompilerType *> types)
 {
 	VuoGenericType::Compatibility compatibility;
-	set<string> compatibleTypeNames = baseType->getCompatibleSpecializedTypes(compatibility);
+	vector<string> compatibleTypeNames = baseType->getCompatibleSpecializedTypes(compatibility);
 	string backingTypeName = VuoCompilerGenericType::chooseBackingTypeName(baseType->getModuleKey(), compatibleTypeNames);
 
 	map<string, VuoCompilerType *>::iterator backingTypeIter = types.find(backingTypeName);
@@ -57,22 +57,15 @@ VuoCompilerGenericType::VuoCompilerGenericType(VuoGenericType *baseType, VuoComp
  *
  * @param genericTypeName The generic type's name.
  * @param compatibleTypeNames The compatible specialized type names, as specified in a node class's "genericTypes" metadata.
+ *		If this is non-empty, then the first item is chosen.
  *
  * @see VuoModuleMetadata
  */
-string VuoCompilerGenericType::chooseBackingTypeName(string genericTypeName, set<string> compatibleTypeNames)
+string VuoCompilerGenericType::chooseBackingTypeName(string genericTypeName, vector<string> compatibleTypeNames)
 {
-	if (! compatibleTypeNames.empty())
-	{
-		vector<string> sortedTypeNames;
-		sortedTypeNames.insert(sortedTypeNames.end(), compatibleTypeNames.begin(), compatibleTypeNames.end());
-		sort(sortedTypeNames.begin(), sortedTypeNames.end());
-		return sortedTypeNames.front();
-	}
-	else
-	{
-		return VuoGenericType::replaceInnermostGenericTypeName(genericTypeName, defaultBackingTypeName);
-	}
+	return (! compatibleTypeNames.empty() ?
+				compatibleTypeNames.front() :
+				VuoGenericType::replaceInnermostGenericTypeName(genericTypeName, defaultBackingTypeName));
 }
 
 /**

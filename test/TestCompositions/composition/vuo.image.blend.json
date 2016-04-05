@@ -22,7 +22,7 @@
 		}
 	},
 
-	/* If both input images are null, output should also be null. */
+	/* If both input images are null, output should be an empty image. */
 	{
 		"firingPort": "refresh",
 		"inputPortValues": {

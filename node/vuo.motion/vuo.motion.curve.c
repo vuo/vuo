@@ -11,7 +11,9 @@
 
 VuoModuleMetadata({
 					  "title" : "Curve",
-					  "keywords" : [ "ease", "easing", "quadratic", "gravity", "bounce", "cubic", "circular", "exponential", "logarithmic", "interpolation" ],
+					  "keywords" : [ "ease", "easing", "quadratic", "gravity", "bounce", "cubic", "circular", "exponential", "logarithmic", "interpolation",
+						  /* QC */ "LFO", "Wave Generator"
+					  ],
 					  "version" : "2.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

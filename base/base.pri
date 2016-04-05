@@ -22,6 +22,7 @@ SOURCES += \
 	miniz.c
 
 OBJECTIVE_SOURCES += \
+	VuoMovieExporter.mm \
 	VuoRunnerCocoa.mm \
 	VuoRunnerCocoa+Conversion.mm
 
@@ -43,11 +44,17 @@ HEADERS += \
 	VuoStringUtilities.hh \
 	VuoPublishedPort.hh \
 	VuoModule.hh \
+	VuoMovieExporter.hh \
 	VuoType.hh \
 	VuoGenericType.hh \
 	VuoTimeUtilities.hh \
 	VuoComposition.hh \
 	miniz.h
+
+exists($$ROOT/base/premium) {
+	DEFINES += BASE_PREMIUM_AVAILABLE
+	HEADERS += premium/VuoMovieExporterPremium.h
+}
 
 BASE_STUB_SOURCES += \
 	VuoCompositionStub.c

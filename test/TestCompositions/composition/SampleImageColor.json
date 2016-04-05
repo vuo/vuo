@@ -1,0 +1,99 @@
+/**
+ * @file
+ * Expected outputs for SampleImageColor.vuo.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+// Note - The hundreth value discrepencies in the `r` and `g` values are expected (for coordinates
+// that rest on an edge or a seam between two colors).
+// Pixel colors are interpolated at edges and seams in the checkerboard node. 
+
+{"portConfiguration" : [
+
+	/**
+	 * Sample the top left quadrant of a Red/Green checkerboard.
+	 */
+	{
+		"firingPort" : "Refresh",
+		"inputPortValues" : {
+			"Width" : 0,
+			"Center" : { "x":-0.5, "y":0.5 }
+		},
+		"outputPortValues" : {
+			"Color" : { "r":1, "g":0, "b":0, "a":1 }
+		}
+	},
+	
+	/**
+	 * Sample the center point of a Red/Green checkerboard, with a small pixel radius.
+	 */
+	{
+		"firingPort" : "Refresh",
+		"inputPortValues" : {
+			"Width" : 0.1,
+			"Center" : { "x":0.0, "y":0.0 }
+		},
+		"outputPortValues" : {
+			"Color" : { "r":0.5, "g":0.5, "b":0, "a":1 }
+		}
+	},
+
+	/**
+	 * Sample the right top point of a Red/Green checkerboard, with a small pixel radius.
+	 */
+	{
+		"firingPort" : "Refresh",
+		"inputPortValues" : {
+			"Width" : 0.1,
+			"Center" : { "x":0.5, "y":0.5 }
+		},
+		"outputPortValues" : {
+			"Color" : { "r":0, "g":1, "b":0, "a":1 }
+		}
+	},
+
+	/**
+	 * Sample an out of bounds point of a Red/Green checkerboard, with a small pixel radius.
+	 */
+	{
+		"firingPort" : "Refresh",
+		"inputPortValues" : {
+			"Width" : 0.1,
+			"Center" : { "x":2.5, "y":0.5 }
+		},
+		"outputPortValues" : {
+			"Color" : { "r":0.03, "g":0.97, "b":0, "a":1 }
+		}
+	},
+
+	/**
+	 * Sample a point on the edge of an image, with a small pixel radius.
+	 */
+	{
+		"firingPort" : "Refresh",
+		"inputPortValues" : {
+			"Width" : 0.1,
+			"Center" : { "x":1, "y":0.5 }
+		},
+		"outputPortValues" : {
+			"Color" : { "r":0.03, "g":0.97, "b":0, "a":1 }
+		}
+	},
+
+	/**
+	 * Sample a the entire an image.
+	 */
+	{
+		"firingPort" : "Refresh",
+		"inputPortValues" : {
+			"Width" : 1,
+			"Center" : { "x":0, "y":0 }
+		},
+		"outputPortValues" : {
+			"Color" : { "r":0.5, "g":0.5, "b":0, "a":1 }
+		}
+	}
+]}

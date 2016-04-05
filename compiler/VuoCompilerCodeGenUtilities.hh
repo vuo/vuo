@@ -18,7 +18,6 @@
 class VuoCompilerCodeGenUtilities
 {
 private:
-	static PointerType * getDispatchSemaphoreType(Module *module);
 	static PointerType * getDispatchGroupType(Module *module);
 	static PointerType * getDispatchQueueType(Module *module);
 	static StructType * getDispatchObjectElementType(Module *module);
@@ -27,7 +26,9 @@ private:
 	static StructType * getJsonObjectType(Module *module);
 	static PointerType * getPointerToFileType(Module *module);
 
-	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, Value *timeoutValue);
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, Value *semaphoreValue);
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, Value *semaphoreValue, Value *timeoutValue);
+	static void generateSignalForSemaphore(Module *module, BasicBlock *block, Value *semaphoreValue);
 
 	static Value * generateConversionToDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable);
 
@@ -46,13 +47,16 @@ private:
 	static bool isParameterPassedByValue(Function *function, int parameterIndex);
 
 public:
+	static PointerType * getDispatchSemaphoreType(Module *module);
 	static StructType * getDispatchObjectType(Module *module);
 
 	static GlobalVariable * generateAllocationForSemaphore(Module *module, string identifier);
 	static void generateInitializationForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, int initialValue=1);
 	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable);
-	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, int64_t timeoutInNanoseconds);
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, AllocaInst *semaphoreVariable);
+	static Value * generateWaitForSemaphore(Module *module, BasicBlock *block, AllocaInst *semaphoreVariable, Value *timeoutValue);
 	static void generateSignalForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable);
+	static void generateSignalForSemaphore(Module *module, BasicBlock *block, AllocaInst *semaphoreVariable);
 
 	static AllocaInst * generateAllocationForDispatchGroup(Module *module, BasicBlock *block, string identifier);
 	static void generateInitializationForDispatchGroup(Module *module, BasicBlock *block, AllocaInst *dispatchGroupVariable);
@@ -67,10 +71,13 @@ public:
 	static void generateRetainForDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable);
 	static void generateFinalizationForDispatchObject(Module *module, BasicBlock *block, Value *dispatchObjectVariable);
 
+	static Value * generateCreateDispatchTime(Module *module, BasicBlock *block, Value *deltaValue);
+
 	static Value * generatePointerToValue(BasicBlock *block, Value *value);
 	static Constant * generatePointerToConstantString(Module *module, string stringValue, string globalVariableName = "");
 	static Constant * generatePointerToConstantArrayOfStrings(Module *module, vector<string> stringValues, string globalVariableName = "");
 	static void generateStringMatchingCode(Module *module, Function *function, BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputStringValue, map<string, pair<BasicBlock *, BasicBlock *> > blocksForString);
+	static void generateIndexMatchingCode(Module *module, Function *function, BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputIndexValue, vector< pair<BasicBlock *, BasicBlock *> > blocksForIndex);
 	static Value * generateFormattedString(Module *module, BasicBlock *block, string formatString, vector<Value *> replacementValues);
 	static Value * generateStringConcatenation(Module *module, BasicBlock *block, vector<Value *> stringsToConcatenate);
 	static Value * generateMemoryAllocation(Module *module, BasicBlock *block, Type *elementType, Value *elementCountValue);
@@ -99,12 +106,10 @@ public:
 	static Function * getJsonTokenerParseFunction(Module *module);
 	static Function * getCallbackStartFunction(Module *module);
 	static Function * getCallbackStopFunction(Module *module);
-	static Function * getGetInputPortValueFunction(Module *module);
-	static Function * getGetInputPortValueThreadUnsafeFunction(Module *module);
-	static Function * getGetOutputPortValueFunction(Module *module);
-	static Function * getGetOutputPortValueThreadUnsafeFunction(Module *module);
-	static Function * getGetInputPortSummaryFunction(Module *module);
-	static Function * getGetOutputPortSummaryFunction(Module *module);
+	static Function * getWaitForNodeFunction(Module *module);
+	static Function * getGetPortValueFunction(Module *module);
+	static Function * getGetInputPortStringFunction(Module *module);
+	static Function * getGetOutputPortStringFunction(Module *module);
 	static Function * getSetInputPortValueFunction(Module *module);
 	static Function * getGetPublishedInputPortValueFunction(Module *module);
 	static Function * getGetPublishedOutputPortValueFunction(Module *module);

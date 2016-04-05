@@ -16,6 +16,7 @@ extern "C"
 #endif
 
 #include "VuoGlContext.h"
+#include "VuoImage.h"
 
 #include <stdint.h>
 
@@ -52,8 +53,9 @@ void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferN
 GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format);
 GLuint VuoGlTexture_getType(GLuint format);
 
-void VuoGlTexture_retain(GLuint glTextureName);
-void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName);
+void VuoGlTexture_retain(GLuint glTextureName, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
+void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName, GLuint glTextureTarget);
+void VuoGlTexture_disown(GLuint glTextureName);
 
 typedef void * VuoIoSurface;	///< A Mac OS X IOSurface.
 VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, GLuint *outputTexture);

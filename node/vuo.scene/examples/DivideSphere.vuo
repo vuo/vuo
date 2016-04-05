@@ -11,25 +11,24 @@ digraph G
 {
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="328,309" _startPosition="0.000000" _endPosition="0.500000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
 DivideObject [type="vuo.scene.divide" version="1.0.0" label="Divide 3D Object|<refresh>refresh\l|<object>object\l|<distance>distance\l|<dividedObject>dividedObject\r" pos="474,136" fillcolor="violet"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-129,49" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject3 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="288,136"];
-Make3DTransform3 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="60,242" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.500000,\"y\":0.500000,\"z\":0.500000}"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-305,31" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DTransform4 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="-106,51" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.500000,\"y\":0.500000,\"z\":0.500000}"];
 MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="681,177" fillcolor="green"];
 MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="651,147" fillcolor="green"];
-MakeSphereMesh3 [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="63,47" _rows="16" _columns="16"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="722,136" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="68,145" _color="{\"r\":0.109392,\"g\":0.864698,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="87,136" _rows="16" _columns="16"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="722,136" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="-97,151" _color="{\"r\":0.482078,\"g\":1.000000,\"b\":0.949645,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="272,136" _keepFront="true"];
 
 Curve2:value -> DivideObject:distance;
 DivideObject:dividedObject -> MakeList5:1;
-FireOnStart:started -> Make3DTransform3:refresh;
-FireOnStart:started -> MakeSphereMesh3:refresh;
-FireOnStart:started -> ShadeWithColor3:refresh;
-Make3DObject3:object -> DivideObject:object;
-Make3DTransform3:transform -> Make3DObject3:transform;
+FireOnStart2:started -> Make3DTransform4:refresh;
+FireOnStart2:started -> ShadeWithColor:refresh;
+Make3DTransform4:transform -> MakeSphere2:transform;
 MakeList3:list -> RenderSceneToWindow:setWindowProperties;
 MakeList5:list -> RenderSceneToWindow:objects;
-MakeSphereMesh3:mesh -> Make3DObject3:mesh;
+MakeSphere2:object -> ShowBackOf3DObject:object;
 RenderSceneToWindow:requestedFrame -> Curve2:time;
-ShadeWithColor3:shader -> Make3DObject3:shader;
+ShadeWithColor:shader -> MakeSphere2:material;
+ShowBackOf3DObject:backObject -> DivideObject:object;
 }

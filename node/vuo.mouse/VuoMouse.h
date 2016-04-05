@@ -47,5 +47,5 @@ void VuoMouse_startListeningForClicks(VuoMouse *mouseListener, void (*singleClic
 
 void VuoMouse_stopListening(VuoMouse *mouseListener);
 
-VuoPoint2d VuoMouse_getPosition(VuoWindowReference window);
-VuoBoolean VuoMouse_isPressed(VuoMouseButton button, VuoModifierKey modifierKey);
+void VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
+						VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);

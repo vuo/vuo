@@ -9,29 +9,24 @@
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="376,352" _endPosition="1.000000" _duration="1.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-129,49" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject4 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="324,190"];
-Make3DTransform4 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="83,314" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.800000,\"y\":0.800000,\"z\":0.800000}"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="376,352" _startPosition="-1.000000" _endPosition="1.000000" _duration="1.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-34,85" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="165,105" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.800000,\"y\":0.800000,\"z\":0.800000}"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="719,231" fillcolor="green"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="719,231" fillcolor="green"];
 MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="689,201" fillcolor="green"];
-MakeSphereMesh5 [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="96,93" _rows="32" _columns="32"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="760,190" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor4 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="105,193" _color="{\"r\":1.000000,\"g\":0.804776,\"b\":0.049958,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
-SkewObject [type="vuo.scene.skew" version="1.0.0" label="Skew 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<direction>direction\l|<skewedObject>skewedObject\r" pos="523,190" fillcolor="violet" _direction="0.000000"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="358,190" _rows="32" _columns="32"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="760,190" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="174,205" _color="{\"r\":1.000000,\"g\":0.906874,\"b\":0.402197,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+SkewObject [type="vuo.scene.skew" version="1.0.1" label="Skew 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<direction>direction\l|<skewedObject>skewedObject\r" pos="523,190" fillcolor="violet" _direction="0.000000"];
 
 Curve2:value -> SkewObject:amount;
-FireOnStart:started -> Make3DTransform4:refresh;
-FireOnStart:started -> MakeSphereMesh5:refresh;
-FireOnStart:started -> ShadeWithColor4:refresh;
-Make3DObject4:object -> SkewObject:object;
-Make3DTransform4:transform -> Make3DObject4:transform;
+FireOnStart2:started -> Make3DTransform2:refresh;
+FireOnStart2:started -> ShadeWithColor:refresh;
+Make3DTransform2:transform -> MakeSphere2:transform;
 MakeList0:list -> RenderSceneToWindow:setWindowProperties;
-MakeList3:list -> RenderSceneToWindow:setWindowProperties;
 MakeList5:list -> RenderSceneToWindow:objects;
-MakeSphereMesh5:mesh -> Make3DObject4:mesh;
+MakeSphere2:object -> SkewObject:object;
 RenderSceneToWindow:requestedFrame -> Curve2:time;
-ShadeWithColor4:shader -> Make3DObject4:shader;
+ShadeWithColor:shader -> MakeSphere2:material;
 SkewObject:skewedObject -> MakeList5:1;
 }

@@ -130,6 +130,8 @@ typedef struct _VuoShader
 
 	float objectScale;	///< Typically 1.  If the shader draws an object, this specifies how large the object is relative to the quad onto which it's drawn (e.g., `VuoShader_makeUnlitCircleShader()` is 0.5 since the circle it draws is half the size of the quad).
 
+	bool isTransparent;	///< Is this shader meant to be a transparent overlay?  If true, @ref VuoSceneRenderer disables backface culling and depth buffer writing while rendering with this shader.  In the fragment shader, use `gl_FrontFacing` to discard backfaces or treat them differently, if desired.
+
 	void *lock;	///< `dispatch_semaphore_t` to serialize operations that modify the state of this GL program object.
 } *VuoShader;
 
@@ -149,9 +151,9 @@ void VuoShader_setExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_E
 /// @{
 VuoShader VuoShader_makeDefaultShader(void);
 VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha);
-VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image);
+VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image, bool flipped);
 VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha);
-VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image);
+VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image, bool flipped);
 
 VuoShader VuoShader_makeUnlitColorShader(VuoColor color);
 VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness);
@@ -181,6 +183,10 @@ void VuoShader_setUniform_VuoPoint2d(VuoShader shader, const char *uniformIdenti
 void VuoShader_setUniform_VuoPoint3d(VuoShader shader, const char *uniformIdentifier, const VuoPoint3d point3d);
 void VuoShader_setUniform_VuoPoint4d(VuoShader shader, const char *uniformIdentifier, const VuoPoint4d point4d);
 void VuoShader_setUniform_VuoColor  (VuoShader shader, const char *uniformIdentifier, const VuoColor   color);
+
+VuoShader VuoShader_make_VuoColor(VuoColor color);
+VuoShader VuoShader_make_VuoShader(VuoShader shader);
+VuoShader VuoShader_make_VuoImage(VuoImage image);
 
 VuoImage VuoShader_getUniform_VuoImage(VuoShader shader, const char *uniformIdentifier);
 

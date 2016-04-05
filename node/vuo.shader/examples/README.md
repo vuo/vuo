@@ -1,0 +1,1 @@
+   - `einstein.3ds` is based on [a mesh from the Lincoln 3D Scans by Oliver Laric](http://lincoln3dscans.co.uk/lowenthal-bust-one/).  "All models can be downloaded and used without copyright restrictions."  It was cleaned up and decimated using [MeshLab](http://meshlab.sourceforge.net/).

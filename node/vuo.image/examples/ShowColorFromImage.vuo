@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Samples a color from an image, and shows that color in an enlarged square.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="413,-11" _width="4.000000" _height="3.000000"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="252,84" _url="\"Vista.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="107,-31" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="706,182" _name="\"\"" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _rotation="0.000000" _width="0.310000" _height="0.310000"];
+MakeColorLayer3 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="704,327" _name="\"\"" _rotation="0.000000" _width="0.300000" _height="0.300000"];
+MakeList8 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="873,80" fillcolor="green"];
+MakeList9 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="910,95" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="481,69" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="458,220" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="956,69" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.0.0" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<color>color\r" pos="435,342" fillcolor="violet" _width="0"];
+
+ChangeWindowAspectRatio:property -> MakeList9:1;
+FetchImage:image -> MakeScaledLayer:image;
+FetchImage:image -> SampleColorFromImage:image;
+FireOnStart:started -> ChangeWindowAspectRatio:refresh;
+FireOnStart:started -> FetchImage:refresh;
+MakeColorLayer2:layer -> MakeList8:2;
+MakeColorLayer3:layer -> MakeList8:3;
+MakeList8:list -> RenderLayersToWindow:layers;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+MakeScaledLayer:layer -> MakeList8:1;
+ReceiveMouseMoves:movedTo -> MakeColorLayer2:center;
+ReceiveMouseMoves:movedTo -> MakeColorLayer3:center;
+ReceiveMouseMoves:movedTo -> SampleColorFromImage:center;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+SampleColorFromImage:color -> MakeColorLayer3:color;
+}

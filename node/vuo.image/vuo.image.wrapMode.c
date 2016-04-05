@@ -39,7 +39,7 @@ void nodeEvent
 	if (!image)
 		return;
 
-	VuoImage img = VuoImage_makeCopy(image);
+	VuoImage img = VuoImage_makeCopy(image, false);
 	VuoImage_setWrapMode(img, wrapMode);
 	*outputImage = img;
 }

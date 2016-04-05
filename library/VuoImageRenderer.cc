@@ -202,8 +202,8 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 						glDeleteTextures(1, &outputTexture);
 					else
 					{
-						VuoGlTexture_retain(outputTexture);
-						VuoGlTexture_release(textureTargetInternalFormat, pixelsWide, pixelsHigh, outputTexture);
+						VuoGlTexture_retain(outputTexture, NULL, NULL);
+						VuoGlTexture_release(textureTargetInternalFormat, pixelsWide, pixelsHigh, outputTexture, outputToGlTextureRectangle ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D);
 					}
 				}
 				return 0;

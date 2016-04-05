@@ -103,11 +103,7 @@ VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, 
 static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance, VuoBoolean isRealSize)
 {
 	if (!image)
-	{
-		VuoLayer l;
-		l.sceneObject = VuoSceneObject_makeEmpty();
-		return l;
-	}
+		return VuoLayer_makeEmpty();
 
 	// Create a pair of layers, one for the main layer and one for the shadow, and put them in a group.
 	// Apply the transformation to the individual layers, rather than to the group, so that
@@ -334,9 +330,7 @@ VuoLayer VuoLayer_makeRadialGradient(VuoText name, VuoList_VuoColor colors, VuoP
 VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transform)
 {
 	VuoLayer o;
-	o.sceneObject = VuoSceneObject_makeEmpty();
-	o.sceneObject.transform = VuoTransform_makeFrom2d(transform);
-	o.sceneObject.childObjects = VuoListCreate_VuoSceneObject();
+	o.sceneObject = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeFrom2d(transform));
 
 	unsigned long childLayerCount = VuoListGetCount_VuoLayer(childLayers);
 	for (unsigned long i = 1; i <= childLayerCount; ++i)

@@ -211,7 +211,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 
 									  VuoImage image = VuoImage_makeClientOwnedGlTextureRectangle(frame.textureName, GL_RGBA, frame.textureSize.width, frame.textureSize.height, VuoSyphonListener_freeSyphonImageCallback, frame);
 									  VuoRetain(image);
-									  callback(VuoImage_makeCopy(image));
+									  callback(VuoImage_makeCopy(image, false));
 									  VuoRelease(image);
 
 									  VuoGlContext_disuse(cgl_ctx);

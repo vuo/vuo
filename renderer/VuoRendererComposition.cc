@@ -15,6 +15,7 @@
 #include "VuoCompiler.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerComposition.hh"
+#include "VuoCompilerDriver.hh"
 #include "VuoCompilerGraphvizParser.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
@@ -45,6 +46,10 @@
 #ifdef MAC
 #include <objc/runtime.h>
 #endif
+
+int VuoRendererComposition::gridLineOpacity = 0;
+const int VuoRendererComposition::minorGridLineSpacing = VuoRendererPort::portSpacing;
+const int VuoRendererComposition::majorGridLineSpacing = 4*VuoRendererComposition::minorGridLineSpacing;
 
 /**
  * Creates a canvas upon which nodes and cables can be rendered.
@@ -143,17 +148,24 @@ VuoRendererNode * VuoRendererComposition::createRendererNode(VuoNode *baseNode)
 }
 
 /**
- * Adds a node to the canvas and the underlying composition.
+ * Adds a node to the underlying composition and (if `nodeShouldBeRendered`
+ * is true), to the canvas.
  *
- * If the node doesn't have a renderer detail, one is created for it.
+ * If the node is to be added to the canvas and doesn't have a renderer detail,
+ * one is created for it.
  *
- * If a node with the same graphviz identifier as this node is already in the canvas,
- * changes the graphviz identifier of this node to be unique.
+ * If a node with the same graphviz identifier as this node is already in the
+ * composition, changes the graphviz identifier of this node to be unique.
  */
-void VuoRendererComposition::addNode(VuoNode *n)
+void VuoRendererComposition::addNode(VuoNode *n, bool nodeShouldBeRendered)
 {
+	if (getBase()->hasCompiler())
+		getBase()->getCompiler()->setUniqueGraphvizIdentifierForNode(n);
+
 	getBase()->addNode(n);
-	addNodeInCompositionToCanvas(n);
+
+	if (nodeShouldBeRendered)
+		addNodeInCompositionToCanvas(n);
 }
 
 /**
@@ -170,9 +182,6 @@ void VuoRendererComposition::addNodeInCompositionToCanvas(VuoNode *n)
 
 	if (renderMissingAsPresent)
 		rn->setMissingImplementation(false);
-
-	if (getBase()->hasCompiler())
-		getBase()->getCompiler()->setUniqueGraphvizIdentifierForNode(n);
 
 	rn->layoutConnectedInputDrawers();
 	addItem(rn);
@@ -542,7 +551,7 @@ VuoRendererPublishedPort * VuoRendererComposition::createRendererForPublishedPor
 /**
  * Adds an existing VuoPublishedPort as one of this composition's published ports.
  */
-void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, bool isInput)
+void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler)
 {
 	string name = publishedPort->getName();
 	if (isInput)
@@ -552,7 +561,7 @@ void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, b
 		{
 			int index = getBase()->getPublishedInputPorts().size();
 			getBase()->addPublishedInputPort(publishedPort, index);
-			updatePublishedInputNode();
+			updatePublishedInputNode(compiler);
 		}
 		else if (publishedPort != existingPort)
 			VLog("Error: Unhandled published port name conflict.");
@@ -577,7 +586,7 @@ void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, b
  *
  * @return The index within the list of published input port output ports at which the port was located, or -1 if not located.
  */
-int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort, bool isInput)
+int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler)
 {
 	if (isInput)
 	{
@@ -585,7 +594,7 @@ int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort,
 		if (index != -1)
 		{
 			getBase()->removePublishedInputPort(index);
-			updatePublishedInputNode();
+			updatePublishedInputNode(compiler);
 		}
 		return index;
 	}
@@ -605,11 +614,11 @@ int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort,
  * Sets the name of the provided @c publishedPort to @c name; updates the composition's
  * published pseudo-node and connected published cables accordingly.
  */
-void VuoRendererComposition::setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name)
+void VuoRendererComposition::setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name, VuoCompiler *compiler)
 {
 	bool isInput = publishedPort->getBase()->getInput();
 	publishedPort->setName(getUniquePublishedPortName(name, isInput));
-	isInput? updatePublishedInputNode() : updatePublishedOutputNode();
+	isInput? updatePublishedInputNode(compiler) : updatePublishedOutputNode();
 }
 
 /**
@@ -617,7 +626,7 @@ void VuoRendererComposition::setPublishedPortName(VuoRendererPublishedPort *publ
  * list of published input ports.
  * @todo: Incorporate type, not just name.
  */
-void VuoRendererComposition::updatePublishedInputNode()
+void VuoRendererComposition::updatePublishedInputNode(VuoCompiler *compiler)
 {
 	// Derive the new published input node class from the composition's list of published input ports.
 	vector<VuoPublishedPort *> publishedInputPorts = getBase()->getPublishedInputPorts();
@@ -626,7 +635,7 @@ void VuoRendererComposition::updatePublishedInputNode()
 		publishedInputNodeOutputPortNames.push_back(publishedPort->getName());
 
 	VuoNodeClass *dummyVuoInNodeClass = new VuoNodeClass(VuoNodeClass::publishedInputNodeClassName, vector<string>(), publishedInputNodeOutputPortNames);
-	VuoNodeClass *newVuoInNodeClass = VuoCompilerPublishedInputNodeClass::newNodeClass(dummyVuoInNodeClass);
+	VuoNodeClass *newVuoInNodeClass = compiler->createPublishedInputNodeClass(dummyVuoInNodeClass)->getBase();
 
 	// Create the new published input node.
 	VuoNode *newVuoInNode = newVuoInNodeClass->getCompiler()->newNode(VuoNodeClass::publishedInputNodeIdentifier, 0, 0);
@@ -1028,6 +1037,44 @@ bool VuoRendererComposition::getRenderActivity(void)
 }
 
 /**
+ * Draws the background of the scene using `painter`, before any items
+ * and the foreground are drawn.
+ *
+ * Reimplementation of QGraphicsScene::drawBackground(QPainter *painter, const QRectF &rect).
+ */
+void VuoRendererComposition::drawBackground(QPainter *painter, const QRectF &rect)
+{
+	QGraphicsScene::drawBackground(painter, rect);
+
+	// Draw grid lines.
+	if (VuoRendererComposition::gridLineOpacity > 0)
+	{
+		int gridSpacing = VuoRendererComposition::majorGridLineSpacing;
+
+		qreal leftmostGridLine = quantizeToNearestGridLine(rect.topLeft(), gridSpacing).x();
+		if (leftmostGridLine < rect.left())
+			leftmostGridLine += gridSpacing;
+		qreal topmostGridLine = quantizeToNearestGridLine(rect.topLeft(), gridSpacing).y();
+		if (topmostGridLine < rect.top())
+			topmostGridLine += gridSpacing;
+
+		// Correct for the fact that VuoRendererNode::paint() starts painting at (-1,0) rather than (0,0).
+		// @todo: Eliminate this correction after modifying VuoRendererNode::paint()
+		// for https://b33p.net/kosada/node/10210 .
+		const int nodeXAlignmentCorrection = -1;
+
+		QVector<QLineF> gridLines;
+		for (qreal x = leftmostGridLine; x < rect.right(); x += gridSpacing)
+			gridLines.append(QLineF(x + nodeXAlignmentCorrection, rect.top(), x + nodeXAlignmentCorrection, rect.bottom()));
+		for (qreal y = topmostGridLine; y < rect.bottom(); y += gridSpacing)
+			gridLines.append(QLineF(rect.left(), y, rect.right(), y));
+
+		painter->setPen(QColor(128, 128, 128, VuoRendererComposition::gridLineOpacity));
+		painter->drawLines(gridLines);
+	}
+}
+
+/**
  * Sets the boolean indicating whether recent activity by components within
  * this composition should be reflected in the rendering of the composition;
  * if toggling from 'false' to 'true', resets the time of last activity
@@ -1149,7 +1196,7 @@ void VuoRendererComposition::createAutoreleasePool(void)
  */
 string VuoRendererComposition::takeSnapshot(void)
 {
-	return (getBase()->hasCompiler()? getBase()->getCompiler()->getGraphvizDeclaration() : NULL);
+	return (getBase()->hasCompiler()? getBase()->getCompiler()->getGraphvizDeclaration() : "");
 }
 
 /**
@@ -1158,9 +1205,10 @@ string VuoRendererComposition::takeSnapshot(void)
  * @param[in] savePath The path where the .app is to be saved.
  * @param[in] compiler The compiler to be used to generate the composition executable.
  * @param[out] errString The error message resulting from the export process, if any.
+ * @param[in] driver The protocol driver that should be applied to the exported composition. May be NULL.
  * @return An @c appExportResult value detailing the outcome of the export attempt.
  */
-VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const QString &savePath, VuoCompiler *compiler, string &errString)
+VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const QString &savePath, VuoCompiler *compiler, string &errString, VuoCompilerDriver *driver)
 {
 	// Set up the directory structure for the app bundle in a temporary location.
 	string tmpAppPath = createAppBundleDirectoryStructure();
@@ -1169,7 +1217,7 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	string dir, file, ext;
 	VuoFileUtilities::splitPath(savePath.toUtf8().constData(), dir, file, ext);
 	string buildErrString = "";
-	if (!bundleExecutable(compiler, tmpAppPath + "/Contents/MacOS/" + file, buildErrString))
+	if (!bundleExecutable(compiler, tmpAppPath + "/Contents/MacOS/" + file, buildErrString, driver))
 	{
 		errString = buildErrString;
 		return exportBuildFailure;
@@ -1291,21 +1339,23 @@ string VuoRendererComposition::createAppBundleDirectoryStructure()
  * @param[out] errString The error message resulting from the build process, if any.
  * @return @c true on success, @c false on failure.
  */
-bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString)
+bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString, VuoCompilerDriver *driver)
 {
 	// Generate the executable.
 	try
 	{
 		VuoCompilerComposition *compiledCompositionToExport = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(takeSnapshot(), compiler);
+		if (driver)
+			driver->applyToComposition(compiledCompositionToExport);
 
 		// Modify port constants that contain relative paths so that the paths will be
 		// resolved correctly relative to the "Resources" directory within the app bundle.
-		VuoRendererComposition *rendererCompositionToExport = new VuoRendererComposition(compiledCompositionToExport->getBase());
+		VuoRendererComposition *rendererCompositionToExport = new VuoRendererComposition(VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compiledCompositionToExport->getGraphvizDeclaration(), compiler)->getBase());
 		foreach (VuoNode *node, rendererCompositionToExport->getBase()->getNodes())
 		{
 			foreach (VuoPort *port, node->getInputPorts())
 			{
-				if (hasRelativeURLConstantValue(port))
+				if (hasRelativeReadURLConstantValue(port))
 				{
 					QString origRelativeResourcePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
 					string modifiedRelativeResourcePath = modifyResourcePathForAppBundle(origRelativeResourcePath.toUtf8().constData());
@@ -1346,7 +1396,7 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir)
 	{
 		foreach (VuoPort *port, node->getInputPorts())
 		{
-			if (hasRelativeURLConstantValue(port))
+			if (hasRelativeReadURLConstantValue(port))
 			{
 				QString origRelativeResourcePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
 				QString modifiedRelativeResourcePath = modifyResourcePathForAppBundle(origRelativeResourcePath.toUtf8().constData()).c_str();
@@ -1477,13 +1527,21 @@ void VuoRendererComposition::bundleAuxiliaryFilesForSceneFile(QString sourceFile
 
 /**
  * Returns a boolean indicating whether the provided @c port currently has
- * a relative file path as a constant input value.
+ * a relative input file path as a constant value.
+ *
+ * Returns `false` if the port has an output file path -- a URL that will be written to
+ * rather than read from, as indicated by the port's `isSave:true` port detail.
  *
  * Helper function for VuoRendererComposition::bundleResourceFiles(string targetResourceDir).
  */
-bool VuoRendererComposition::hasRelativeURLConstantValue(VuoPort *port)
+bool VuoRendererComposition::hasRelativeReadURLConstantValue(VuoPort *port)
 {
 	if (!(port->hasRenderer() && port->getRenderer()->isConstant() && hasURLType(port)))
+		return false;
+
+	json_object *details = static_cast<VuoCompilerInputEventPortClass *>(port->getClass()->getCompiler())->getDataClass()->getDetails();
+	json_object *isSaveValue = NULL;
+	if (details && json_object_object_get_ex(details, "isSave", &isSaveValue) && json_object_get_boolean(isSaveValue))
 		return false;
 
 	string constant = port->getRenderer()->getConstantAsString();
@@ -1499,7 +1557,7 @@ bool VuoRendererComposition::hasRelativeURLConstantValue(VuoPort *port)
  * @todo https://b33p.net/kosada/node/9204 Just check whether it has a VuoUrl type.
  * For now, use hard-coded rules.
  *
- * Helper function for VuoRendererComposition::hasRelativeURLConstantValue(VuoPort *port).
+ * Helper function for VuoRendererComposition::hasRelativeReadURLConstantValue(VuoPort *port).
  */
 bool VuoRendererComposition::hasURLType(VuoPort *port)
 {
@@ -1650,4 +1708,31 @@ bool VuoRendererComposition::isSupportedMovieFile(string path)
 bool VuoRendererComposition::isSupportedSceneFile(string path)
 {
 	return VuoFileFormat_isSupportedSceneFile(path.c_str());
+}
+
+/**
+ * Specifies the opacity at which grid lines should be rendered on the canvas.
+ */
+void VuoRendererComposition::setGridLineOpacity(int opacity)
+{
+	VuoRendererComposition::gridLineOpacity = opacity;
+}
+
+/**
+ * Returns the opacity at which grid lines should be rendered on the canvas.
+ */
+int VuoRendererComposition::getGridLineOpacity()
+{
+	return VuoRendererComposition::gridLineOpacity;
+}
+
+
+/**
+ * Quantizes the provided `point` to the nearest horizontal and vertical gridlines
+ * with the `gridSpacing` specified.
+ */
+QPoint VuoRendererComposition::quantizeToNearestGridLine(QPointF point, int gridSpacing)
+{
+	return QPoint(floor((point.x()/(1.0*gridSpacing))+0.5)*gridSpacing,
+				  floor((point.y()/(1.0*gridSpacing))+0.5)*gridSpacing);
 }

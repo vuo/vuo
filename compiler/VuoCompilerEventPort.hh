@@ -30,6 +30,7 @@ public:
 	void generateAllocation(Module *module, string nodeInstanceIdentifier);
 	StoreInst * generateStore(Value *value, BasicBlock *block);
 	StoreInst * generateStore(bool pushed, BasicBlock *block);
+	GlobalVariable * getDataVariable(void);
 	string getIdentifier(void);
 
 	/**

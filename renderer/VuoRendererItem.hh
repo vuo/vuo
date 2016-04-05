@@ -25,13 +25,16 @@ public:
 		activityInProgress = 0
 	};
 
+	static void setSnapToGrid(bool snap);
 	static void setDrawBoundingRects(bool drawBoundingRects);
 	static void drawRect(QPainter *painter, QRectF rect);
+	static bool getSnapToGrid();
 
 	VuoRendererItem();
 
 private:
 	static bool drawBoundingRects;
+	static bool snapToGrid;
 
 protected:
 	void drawBoundingRect(QPainter *painter);

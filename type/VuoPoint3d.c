@@ -45,6 +45,14 @@ VuoModuleMetadata({
 VuoPoint3d VuoPoint3d_makeFromJson(json_object * js)
 {
 	VuoPoint3d point = {0,0,0};
+
+	if (json_object_get_type(js) == json_type_string)
+	{
+		const char *s = json_object_get_string(js);
+		sscanf(s, "%g, %g, %g", &point.x, &point.y, &point.z);
+		return point;
+	}
+
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "x", &o))

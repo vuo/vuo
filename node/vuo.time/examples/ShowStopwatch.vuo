@@ -9,42 +9,29 @@
 
 digraph G
 {
-Add3 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="65,1047"];
-ConvertIntegerToText [type="vuo.type.integer.text" version="1.0.0" label="Convert Integer to Text|<refresh>refresh\l|<integer>integer\l|<text>text\r" pos="94,1155"];
-ConvertRealToText4 [type="vuo.type.real.text" version="1.0.0" label="Convert Real to Text|<refresh>refresh\l|<real>real\l|<text>text\r" pos="514,1137"];
-CountCharacters2 [type="vuo.text.countCharacters" version="1.0.0" label="Count Characters|<refresh>refresh\l|<text>text\l|<characterCount>characterCount\r" pos="-168,1047"];
-Cut [type="vuo.text.cut" version="2.0.0" label="Cut Text|<refresh>refresh\l|<text>text\l|<startPosition>startPosition\l|<characterCount>characterCount\l|<partialText>partialText\r" pos="269,1018" _startPosition="1"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="24,637" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList11 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="19,1058" _2="3"];
-MakeList2 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="809,1095" fillcolor="green"];
-MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="759,1080" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="561,1027" _font="{\"fontName\":\"EurostileRegular\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="562,1125" _text="\"Click to start and stop.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.250000}"];
+FormatNumber [type="vuo.text.format.number" version="1.0.0" label="Format Number|<refresh>refresh\l|<value>value\l|<format>format\l|<decimalPlaces>decimalPlaces\l|<showThousandSeparator>showThousandSeparator\l|<text>text\r" pos="599,741" _format="\"decimal\"" _decimalPlaces="2" _showThousandSeparator="true"];
+MakeList2 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1080,1080" fillcolor="green"];
+MakeList7 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1030,1065" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="832,1012" _font="{\"fontName\":\"EurostileRegular\",\"pointSize\":48.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="833,1110" _text="\"Click to start and stop.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.250000}"];
 MeasureTime [type="vuo.time.measureTime" version="2.0.1" label="Measure Time|<refresh>refresh\l|<time>time\l|<start>start\l|<pause>pause\l|<reset>reset\l|<elapsedTime>elapsedTime\r" pos="392,741" fillcolor="violet"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-210,773" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="855,1069" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RoundDown [type="vuo.math.roundDown" version="2.0.0" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDown>roundedDown\r" pos="-409,1047"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.2" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-210,773" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1126,1054" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SelectOutput3 [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="153,775"];
 Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="10,774"];
 
-Add3:sum -> Cut:characterCount;
-ConvertIntegerToText:text -> CountCharacters2:text;
-ConvertRealToText4:text -> Cut:text;
-CountCharacters2:characterCount -> MakeList11:1;
-Cut:partialText -> MakeTextLayer:text;
 FireOnStart:started -> MakeTextLayer2:refresh;
 FireOnStart:started -> MeasureTime:refresh;
-MakeList11:list -> Add3:values;
+FormatNumber:text -> MakeTextLayer:text;
 MakeList2:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList7:list -> RenderLayersToWindow2:layers;
 MakeTextLayer2:layer -> MakeList7:2;
 MakeTextLayer:layer -> MakeList7:1;
-MeasureTime:elapsedTime -> ConvertRealToText4:real;
-MeasureTime:elapsedTime -> RoundDown:real;
+MeasureTime:elapsedTime -> FormatNumber:value;
 ReceiveMouseButtons:pressed -> Toggle:toggle;
 RenderLayersToWindow2:requestedFrame -> MeasureTime:time;
 RenderLayersToWindow2:showedWindow -> ReceiveMouseButtons:window;
-RoundDown:roundedDown -> ConvertIntegerToText:integer;
 SelectOutput3:falseOption -> MeasureTime:pause;
 SelectOutput3:trueOption -> MeasureTime:reset;
 SelectOutput3:trueOption -> MeasureTime:start;

@@ -34,7 +34,7 @@ void VuoCompilerNodeArgument::generateAllocation(Module *module, string nodeInst
 	variable = new GlobalVariable(*module,
 								  type,
 								  false,
-								  GlobalValue::InternalLinkage,
+								  GlobalValue::PrivateLinkage,
 								  0,
 								  variableName);
 

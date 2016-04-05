@@ -6,7 +6,10 @@ CONFIG += staticlib VuoPCH VuoRuntime graphviz json discount openssl
 TARGET = VuoBase
 
 include(../vuo.pri)
-
+exists($$ROOT/licensetools/licensetools.pro) {
+	include($$ROOT/licensetools/licensetools.pro)
+	QMAKE_OBJECTIVE_CFLAGS += -DENCRYPTED_DATE=\\\"$${ENCRYPTED_DATE}\\\"
+}
 include (base.pri)
 
 base_stub.input = BASE_STUB_SOURCES
@@ -20,6 +23,7 @@ base_stub.commands = \
 		$(CFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 		-dynamiclib \
 		-Xlinker -no_function_starts -Xlinker -no_version_load_command \
+		$$QMAKE_LFLAGS \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += base_stub

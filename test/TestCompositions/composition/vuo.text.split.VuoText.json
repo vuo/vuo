@@ -1,0 +1,188 @@
+/**
+ * @file
+ * Expected outputs for the vuo.text.split node. 
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* Empty text should result in an empty list. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "",
+			"separator": "",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": []
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "",
+			"separator": "foo",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": []
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "",
+			"separator": ",",
+			"includeEmptyParts": true
+		},
+		"outputPortValues": {
+			"splitTexts": []
+		}
+	},
+	
+	/* Text that does not contain the separator should result in a 1-item list. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "abcde",
+			"separator": "z",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "abcde" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "z",
+			"separator": "abcde",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "z" ]
+		}
+	},
+	
+	/* Text that contains the separator should be split into a multi-item list. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "split-on-hyphen",
+			"separator": "-",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "split", "on", "hyphen" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "split-on-hyphen",
+			"separator": "-",
+			"includeEmptyParts": true
+		},
+		"outputPortValues": {
+			"splitTexts": [ "split", "on", "hyphen" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "å é î ø ü",
+			"separator": " ",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "å", "é", "î", "ø", "ü" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "åéîøü",
+			"separator": "î",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "åé", "øü" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "åéîøü",
+			"separator": "îø",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "åé", "ü" ]
+		}
+	},
+	
+	/* Text should not be split on a substring of the separator. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "split-on--double---hyphen",
+			"separator": "--",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "split-on", "double", "-hyphen" ]
+		}
+	},
+
+	/* An empty separator should split the text into characters. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "①②③",
+			"separator": "",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "①", "②", "③" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": "①②③",
+			"separator": "",
+			"includeEmptyParts": true
+		},
+		"outputPortValues": {
+			"splitTexts": [ "①", "②", "③" ]
+		}
+	},
+
+	/* The list should include empty parts if and only if that port is set to true. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": ",①,,②,,,③,",
+			"separator": ",",
+			"includeEmptyParts": false
+		},
+		"outputPortValues": {
+			"splitTexts": [ "①", "②", "③" ]
+		}
+	},
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"text": ",①,,②,,,③,",
+			"separator": ",",
+			"includeEmptyParts": true
+		},
+		"outputPortValues": {
+			"splitTexts": [ "", "①", "", "②", "", "", "③", "" ]
+		}
+	},
+	
+]}

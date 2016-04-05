@@ -11,7 +11,9 @@
 
 VuoModuleMetadata({
 					 "title" : "Merge XYZ Lists",
-					 "keywords" : [ "append", "join", "together", "combine", "collate", "interleave", "match" ],
+					 "keywords" : [ "append", "join", "together", "combine", "collate", "interleave", "match",
+						 /* Swift */ "zip"
+					 ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ ]

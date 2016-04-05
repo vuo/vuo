@@ -48,6 +48,65 @@ VuoModuleMetadata({
 VuoColor VuoColor_makeFromJson(json_object * js)
 {
 	VuoColor color = {0,0,0,0};
+
+	if (json_object_get_type(js) == json_type_string)
+	{
+		const char *s = json_object_get_string(js);
+		if (s[0] == '#')
+		{
+			size_t len = strlen(s);
+			if (len == 4)	// "#rgb"
+			{
+				long r = VuoInteger_makeFromHexByte(s[1]);
+				long g = VuoInteger_makeFromHexByte(s[2]);
+				long b = VuoInteger_makeFromHexByte(s[3]);
+				color.r = (float)r / 15;
+				color.g = (float)g / 15;
+				color.b = (float)b / 15;
+				color.a = 1;
+			}
+			else if (len == 5)	// "#rgba"
+			{
+				long r = VuoInteger_makeFromHexByte(s[1]);
+				long g = VuoInteger_makeFromHexByte(s[2]);
+				long b = VuoInteger_makeFromHexByte(s[3]);
+				long a = VuoInteger_makeFromHexByte(s[4]);
+				color.r = (float)r / 15;
+				color.g = (float)g / 15;
+				color.b = (float)b / 15;
+				color.a = (float)a / 15;
+			}
+			else if (len == 7)	// "#rrggbb"
+			{
+				long r = (VuoInteger_makeFromHexByte(s[1]) << 4) + VuoInteger_makeFromHexByte(s[2]);
+				long g = (VuoInteger_makeFromHexByte(s[3]) << 4) + VuoInteger_makeFromHexByte(s[4]);
+				long b = (VuoInteger_makeFromHexByte(s[5]) << 4) + VuoInteger_makeFromHexByte(s[6]);
+				color.r = (float)r / 255;
+				color.g = (float)g / 255;
+				color.b = (float)b / 255;
+				color.a = 1;
+			}
+			else if (len == 9)	// "#rrggbbaa"
+			{
+				long r = (VuoInteger_makeFromHexByte(s[1]) << 4) + VuoInteger_makeFromHexByte(s[2]);
+				long g = (VuoInteger_makeFromHexByte(s[3]) << 4) + VuoInteger_makeFromHexByte(s[4]);
+				long b = (VuoInteger_makeFromHexByte(s[5]) << 4) + VuoInteger_makeFromHexByte(s[6]);
+				long a = (VuoInteger_makeFromHexByte(s[7]) << 4) + VuoInteger_makeFromHexByte(s[8]);
+				color.r = (float)r / 255;
+				color.g = (float)g / 255;
+				color.b = (float)b / 255;
+				color.a = (float)a / 255;
+			}
+		}
+		else
+		{
+			// "r,g,b" or "r,g,b,a"
+			color.a = 1;
+			sscanf(s, "%g, %g, %g, %g", &color.r, &color.g, &color.b, &color.a);
+		}
+		return color;
+	}
+
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "r", &o))
@@ -94,22 +153,44 @@ char * VuoColor_getSummary(const VuoColor value)
 }
 
 /**
+ * Returns a hex string (like `#445566ff`) representing the color.
+ */
+VuoText VuoColor_getHex(VuoColor color, VuoBoolean includeAlpha)
+{
+	if (includeAlpha)
+		return VuoText_make(VuoText_format("#%02x%02x%02x%02x",
+										   (unsigned int)(VuoReal_clamp(color.r,0,1) * 255),
+										   (unsigned int)(VuoReal_clamp(color.g,0,1) * 255),
+										   (unsigned int)(VuoReal_clamp(color.b,0,1) * 255),
+										   (unsigned int)(VuoReal_clamp(color.a,0,1) * 255)
+										   ));
+	else
+		return VuoText_make(VuoText_format("#%02x%02x%02x",
+										   (unsigned int)(VuoReal_clamp(color.r,0,1) * 255),
+										   (unsigned int)(VuoReal_clamp(color.g,0,1) * 255),
+										   (unsigned int)(VuoReal_clamp(color.b,0,1) * 255)
+										   ));
+}
+
+/**
  * Returns a @c VuoColor with the given hue, saturation, lightness, alpha.
  *
- * Assumes each value is in the range [0,1].
+ * @param hue Color circle from 0 (red) to 1/3 (green) to 2/3 (blue) to 1 (red).  Values beyond that range are wrapped.
+ * @param saturation 0 to 1
+ * @param luminosity 0 to 1
+ * @param alpha 0 to 1
  */
-VuoColor VuoColor_makeWithHSLA(VuoReal h, VuoReal s, VuoReal l, VuoReal a)
+VuoColor VuoColor_makeWithHSLA(VuoReal hue, VuoReal saturation, VuoReal luminosity, VuoReal alpha)
 {
 	// http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
 
 	float r, g, b;
 
-	if (s == 0)
-	{
-		r = g = b = l;
-	}
+	if (saturation < 0.00001)
+		r = g = b = luminosity;
 	else
 	{
+		VuoReal hueWrapped = fmod(hue, 1);
 		float (^hue2rgb)(float p, float q, float t) = ^(float p, float q, float t) {
 			if (t < 0.f) t += 1.f;
 			if (t > 1.f) t -= 1.f;
@@ -119,14 +200,16 @@ VuoColor VuoColor_makeWithHSLA(VuoReal h, VuoReal s, VuoReal l, VuoReal a)
 			return p;
 		};
 
-		float q = l < 0.5f ? l * (1.f + s) : l + s - l * s;
+		float l = VuoReal_clamp(luminosity, 0, 1);
+		float s = VuoReal_clamp(saturation, 0, 1);
+		float q = luminosity < 0.5f ? l * (1.f + s) : l + s - l * s;
 		float p = 2.f * l - q;
-		r = hue2rgb(p, q, h + 1.f/3.f);
-		g = hue2rgb(p, q, h);
-		b = hue2rgb(p, q, h - 1.f/3.f);
+		r = hue2rgb(p, q, hueWrapped + 1.f/3.f);
+		g = hue2rgb(p, q, hueWrapped);
+		b = hue2rgb(p, q, hueWrapped - 1.f/3.f);
 	}
 
-	return VuoColor_makeWithRGBA(r, g, b, a);
+	return VuoColor_makeWithRGBA(r, g, b, alpha);
 }
 
 /**

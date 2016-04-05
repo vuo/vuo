@@ -14,6 +14,8 @@
 
 #include "module.h"
 
+#include <pthread.h>
+
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoWindow",
@@ -25,36 +27,110 @@ VuoModuleMetadata({
 				 });
 #endif
 
-
 /**
- * Creates a VuoWindowApplication instance (if one doesn't already exist).
- *
- * @threadMain
+ * Is the current thread the main thread?
  */
-void VuoWindowApplication_init(void)
+bool VuoApp_isMainThread(void)
 {
-	[NSAutoreleasePool new];
-	if (! NSApp)
-	{
-		// http://stackoverflow.com/a/11010614/238387
-		[VuoWindowApplication sharedApplication];
-		[NSApp activateIgnoringOtherApps:YES];
-		[NSApp run];
-	}
+	static void **VuoApp_mainThread;
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		VuoApp_mainThread = (void **)dlsym(RTLD_SELF, "VuoApp_mainThread");
+		if (!VuoApp_mainThread)
+			VuoApp_mainThread = (void **)dlsym(RTLD_DEFAULT, "VuoApp_mainThread");
+
+		if (!VuoApp_mainThread)
+		{
+			VLog("Error: Couldn't find VuoApp_mainThread.");
+			exit(1);
+		}
+
+		if (!*VuoApp_mainThread)
+		{
+			VLog("Error: VuoApp_mainThread isn't set.");
+			exit(1);
+		}
+	});
+
+	return *VuoApp_mainThread == (void *)pthread_self();
 }
 
 /**
- * Called at startup. Creates a VuoWindowApplication instance for any composition that
- * uses this library.
+ * Helper for @ref VuoApp_init.
+ *
+ * @threadMain
  */
-static void __attribute__((constructor)) launchApplication()
+static void VuoApp_initNSApplication(void)
 {
-	// Wait a bit before calling `VuoWindowApplication_init()`, since -[NSApplication init] fails with
-	// `RegisterApplication(), FAILED TO REGISTER PROCESS WITH CPS/CoreGraphics in WindowServer, err=1003`
-	// apparently if it happens too early.
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.25*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-					  VuoWindowApplication_init();
-				  });
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
+	// http://stackoverflow.com/a/11010614/238387
+	NSApplication *app = [VuoWindowApplication sharedApplication];
+	[app activateIgnoringOtherApps:YES];
+	[app run];
+	[pool drain];
+}
+
+/**
+ * Creates an NSApplication instance (if one doesn't already exist).
+ *
+ * This causes the process's icon to appear in the dock.
+ *
+ * VuoWindow methods call this automatically as needed,
+ * so you only need to call this if you need an NSApplication without using VuoWindow
+ * (like, for example, @ref VuoAudioFile does).
+ *
+ * @threadAny
+ */
+void VuoApp_init(void)
+{
+	if (NSApp)
+		return;
+
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		if (VuoApp_isMainThread())
+			VuoApp_initNSApplication();
+		else
+			dispatch_sync(dispatch_get_main_queue(), ^{
+				VuoApp_initNSApplication();
+			});
+	});
+}
+
+/**
+ * Helper for @ref VuoApp_fini.
+ *
+ * @threadMain
+ */
+static void VuoApp_finiWindows(void)
+{
+	// Stop any window recordings currently in progress.
+	// This prompts the user for the save destination,
+	// so make sure these complete before shutting the composition down.
+	SEL stopRecording = @selector(stopRecording);
+	for (NSWindow *window in [NSApp windows])
+		if ([window respondsToSelector:stopRecording])
+			[window performSelector:stopRecording];
+}
+
+/**
+ * Cleanly shuts the application down.
+ *
+ * Should only be called from within @ref vuoStopComposition().
+ *
+ * @threadAny
+ */
+void VuoApp_fini(void)
+{
+	if (!NSApp)
+		return;
+
+	if (VuoApp_isMainThread())
+		VuoApp_finiWindows();
+	else
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			VuoApp_finiWindows();
+		});
 }
 
 void VuoWindowText_destroy(VuoWindowText w);
@@ -70,7 +146,7 @@ VuoWindowText VuoWindowText_make(void)
 {
 	__block VuoWindowTextInternal *window = NULL;
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VuoWindowApplication_init();
+					  VuoApp_init();
 					  window = [[VuoWindowTextInternal alloc] init];
 					  [window makeKeyAndOrderFront:NSApp];
 				   });
@@ -117,6 +193,9 @@ void VuoWindowText_disableTriggers(VuoWindowText w)
  */
 void VuoWindowText_appendLine(VuoWindowText vw, const char *text)
 {
+	if (!text)
+		return;
+
 	VuoWindowTextInternal *window = (VuoWindowTextInternal *)vw;
 	char *textCopy = strdup(text);  // ... in case the caller frees text before the asynchronous block uses it.
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -162,7 +241,7 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 {
 	__block VuoWindowOpenGLInternal *window = NULL;
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VuoWindowApplication_init();
+					  VuoApp_init();
 					  window = [[VuoWindowOpenGLInternal alloc] initWithDepthBuffer:useDepthBuffer
 						  initCallback:initCallback
 						  resizeCallback:resizeCallback

@@ -26,6 +26,7 @@ VuoModuleMetadata({
 						 "VuoGLContext",
 						 "VuoScreenCommon",
 						 "VuoWindowProperty",
+						 "VuoWindowRecorder",
 						 "VuoWindowReference",
 						 "VuoList_VuoWindowProperty",
 						 "OpenGL.framework"
@@ -96,12 +97,7 @@ VuoModuleMetadata({
 
 		viewport = NSMakeRect(0, 0, frame.size.width, frame.size.height);
 
-		if ([self respondsToSelector:@selector(setWantsBestResolutionOpenGLSurface:)])
-		{
-			typedef void (*funcType)(id receiver, SEL selector, BOOL wants);
-			funcType setWantsBestResolutionOpenGLSurface = (funcType)[[self class] instanceMethodForSelector:@selector(setWantsBestResolutionOpenGLSurface:)];
-			setWantsBestResolutionOpenGLSurface(self, @selector(setWantsBestResolutionOpenGLSurface:), YES);
-		}
+		[self setWantsBestResolutionOpenGLSurface:YES];
 
 		// Prepare the circle mouse cursor.
 		circleRect = NSMakeRect(0,0,48,48);
@@ -152,13 +148,8 @@ VuoModuleMetadata({
 						  CGLContextObj cgl_ctx = [glContext CGLContextObj];
 						  CGLLockContext(cgl_ctx);
 
-						  float backingScaleFactor = 1;
-						  if ([[self window] respondsToSelector:@selector(backingScaleFactor)])
-						  {
-							  typedef double (*backingFuncType)(id receiver, SEL selector);
-							  backingFuncType backingFunc = (backingFuncType)[[[self window] class] instanceMethodForSelector:@selector(backingScaleFactor)];
-							  backingScaleFactor = backingFunc([self window], @selector(backingScaleFactor));
-						  }
+						  float backingScaleFactor = [[self window] backingScaleFactor];
+						  [self.glWindow setBackingScaleFactorCached:backingScaleFactor];
 
 						  initCallback(cgl_ctx, backingScaleFactor, drawContext);
 						  [glContext flushBuffer];
@@ -181,6 +172,7 @@ void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
 		glView->callerRequestedRedraw = false;
 
 		dispatch_sync(glView->drawQueue, ^{
+						  NSAutoreleasePool *pool = [NSAutoreleasePool new];
 						  NSOpenGLContext *glContext = [glView openGLContext];
 						  CGLContextObj cgl_ctx = [glContext CGLContextObj];
 						  CGLLockContext(cgl_ctx);
@@ -188,7 +180,9 @@ void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
 	//					  glFlush();
 	//					  CGLFlushDrawable(CGLGetCurrentContext());
 						  [glContext flushBuffer];
+						  [[[glView glWindow] recorder] captureImageOfContext:cgl_ctx];
 						  CGLUnlockContext(cgl_ctx);
+						  [pool drain];
 					  });
 
 	}
@@ -248,13 +242,7 @@ void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
  */
 static NSRect convertPointsToPixels(NSView *view, NSRect rect)
 {
-	// On pre-retina operating systems, we can assume points=pixels.
-	if (![view respondsToSelector:@selector(convertRectToBacking:)])
-		return rect;
-
-	typedef NSRect (*funcType)(id, SEL, NSRect);
-	funcType convertRectToBacking = (funcType)[[view class] instanceMethodForSelector:@selector(convertRectToBacking:)];
-	return convertRectToBacking(view, @selector(convertRectToBacking:), rect);
+	return [view convertRectToBacking:rect];
 }
 
 /**
@@ -262,13 +250,18 @@ static NSRect convertPointsToPixels(NSView *view, NSRect rect)
  */
 static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 {
-	// On pre-retina operating systems, we can assume points=pixels.
-	if (![view respondsToSelector:@selector(convertRectFromBacking:)])
-		return rect;
+	return [view convertRectFromBacking:rect];
+}
 
-	typedef NSRect (*funcType)(id, SEL, NSRect);
-	funcType convertRectFromBacking = (funcType)[[view class] instanceMethodForSelector:@selector(convertRectFromBacking:)];
-	return convertRectFromBacking(view, @selector(convertRectFromBacking:), rect);
+/**
+ * Cocoa calls this method when it needs us to repaint the view.
+ *
+ * @threadMain
+ */
+- (void)drawRect:(NSRect)bounds
+{
+	callerRequestedRedraw = true;
+	VuoWindowOpenGLView_draw(0, self);
 }
 
 /**
@@ -278,7 +271,9 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
  */
 - (void)reshape
 {
-	if (initCallbackCalled)
+	if (!initCallbackCalled)
+		return;
+
 	dispatch_sync(drawQueue, ^{
 					  NSOpenGLContext *glContext = [self openGLContext];
 					  CGLContextObj cgl_ctx = [glContext CGLContextObj];
@@ -332,8 +327,6 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 
 					  glViewport(x, y, width, height);
 					  resizeCallback(cgl_ctx, drawContext, width, height);
-					  drawCallback(cgl_ctx, drawContext);
-					  [glContext flushBuffer];
 					  CGLUnlockContext(cgl_ctx);
 				  });
 }
@@ -429,7 +422,11 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 	NSCursor *nsCursor = nil;
 
 	if (cursor == VuoCursor_None)
-		nsCursor = [[[NSCursor alloc] initWithImage:[[NSImage alloc] initWithSize:NSMakeSize(1,1)] hotSpot:NSMakePoint(0,0)] autorelease];
+	{
+		NSImage *im = [[NSImage alloc] initWithSize:NSMakeSize(1,1)];
+		nsCursor = [[[NSCursor alloc] initWithImage:im hotSpot:NSMakePoint(0,0)] autorelease];
+		[im release];
+	}
 	else if (cursor == VuoCursor_Pointer)
 		nsCursor = [NSCursor arrowCursor];
 	else if (cursor == VuoCursor_Crosshair)
@@ -450,15 +447,44 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 @end
 
 
+/**
+ * Workaround for Radar #19509497 (see below).
+ */
+@interface NSWindow (Accessibility)
+/**
+ * Workaround for Radar #19509497 (see below).
+ */
+- (void)accessibilitySetSizeAttribute:(NSValue *)size;
+@end
 
 @implementation VuoWindowOpenGLInternal
 
 @synthesize glView;
 @synthesize depthBuffer;
+@synthesize backingScaleFactorCached;
 @synthesize contentRectWhenWindowed;
 @synthesize styleMaskWhenWindowed;
 @synthesize cursor;
 @synthesize titleBackup;
+@synthesize recordMenuItem;
+@synthesize temporaryMovieURL;
+
+/**
+ * On some GPUs, when the window is resized via the Accessiblity API, the GPU crashes when calling `glReadPixels()` the next time (Radar #19509497).
+ *
+ * Skip the Accessiblity resize operation on those GPUs.
+ *
+ * This is a private NSWindow API.
+ * I first tried `AXObserverAddNotification(,,kAXWindowResizedNotification,)`, but that notification happens too late to prevent the crash.
+ */
+- (void)accessibilitySetSizeAttribute:(NSValue *)size
+{
+	CGLContextObj cgl_ctx = [[glView openGLContext] CGLContextObj];
+	if (_recorder && strcmp((const char *)glGetString(GL_RENDERER), "NVIDIA GeForce GT 650M OpenGL Engine") == 0)
+		return;
+
+	[super accessibilitySetSizeAttribute:size];
+}
 
 /**
  * Creates a window containing an OpenGL view.
@@ -471,7 +497,8 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 			  drawCallback:(void (*)(VuoGlContext glContext, void *))_drawCallback
 			   drawContext:(void *)_drawContext
 {
-	contentRectWhenWindowed = NSMakeRect(0, 0, 1024, 768);
+	NSRect mainScreenFrame = [[NSScreen mainScreen] frame];
+	contentRectWhenWindowed = NSMakeRect(mainScreenFrame.origin.x, mainScreenFrame.origin.y, 1024, 768);
 	styleMaskWhenWindowed = NSTitledWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
 	if (self = [super initWithContentRect:contentRectWhenWindowed
 								styleMask:styleMaskWhenWindowed
@@ -493,6 +520,8 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		programmaticallyResizingWindow = NO;
 
 		[self setTitle:@"Vuo Scene"];
+
+		contentRectQueue = dispatch_queue_create("vuo.window.opengl.internal.contentrect", 0);
 
 		VuoWindowOpenGLView *_glView = [[VuoWindowOpenGLView alloc] initWithFrame:[[self contentView] frame]
 																	 initCallback:_initCallback
@@ -517,10 +546,12 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 			CGLDestroyPixelFormat(pixelFormat);
 		}
 
-		glView.windowedGlContext = [[NSOpenGLContext alloc] initWithCGLContextObj:vuoGlContext];
+		NSOpenGLContext *glc = [[NSOpenGLContext alloc] initWithCGLContextObj:vuoGlContext];
 		int swapInterval=1;
-		[glView.windowedGlContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
-		[glView setOpenGLContext:glView.windowedGlContext];
+		[glc setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+		[glView setOpenGLContext:glc];
+		glView.windowedGlContext = glc;
+		[glc release];
 
 		// 2. Add the view to the window. Do after (1) to have the desired GL context in -viewDidMoveToWindow.
 		[self setContentView:glView];
@@ -528,6 +559,9 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		// 3. Set the view for the GL context. Do after (2) to avoid an "invalid drawable" warning.
 		[glView.windowedGlContext setView:glView];
 	}
+
+	[self setContentRectCached:[[self glView] viewport]];
+
 	return self;
 }
 
@@ -573,13 +607,25 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 {
 	[super becomeMainWindow];
 
+	NSMenu *fileMenu = [[[NSMenu alloc] initWithTitle:@"File"] autorelease];
+	self.recordMenuItem = [[[NSMenuItem alloc] initWithTitle:@"" action:@selector(toggleRecording) keyEquivalent:@"e"] autorelease];
+	[self.recordMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask|NSAlternateKeyMask];
+	[fileMenu addItem:self.recordMenuItem];
+	NSMenuItem *fileMenuItem = [[NSMenuItem new] autorelease];
+	[fileMenuItem setSubmenu:fileMenu];
+
 	NSMenu *viewMenu = [[[NSMenu alloc] initWithTitle:@"View"] autorelease];
 	NSMenuItem *fullScreenMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Full Screen" action:@selector(toggleFullScreen) keyEquivalent:@"f"] autorelease];
 	[viewMenu addItem:fullScreenMenuItem];
 	NSMenuItem *viewMenuItem = [[NSMenuItem new] autorelease];
 	[viewMenuItem setSubmenu:viewMenu];
-	NSArray *windowMenuItems = [NSArray arrayWithObject:viewMenuItem];
+
+	NSMutableArray *windowMenuItems = [NSMutableArray arrayWithCapacity:3];
+	[windowMenuItems addObject:fileMenuItem];
+	[windowMenuItems addObject:viewMenuItem];
 	[(VuoWindowApplication *)NSApp replaceWindowMenu:windowMenuItems];
+
+	[self updateUI];
 }
 
 /**
@@ -635,7 +681,21 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		if (property.type == VuoWindowProperty_Title)
 			[self setTitle:[NSString stringWithUTF8String:property.title]];
 		else if (property.type == VuoWindowProperty_FullScreen)
-			[self setFullScreen:property.fullScreen onScreen:VuoScreen_getNSScreen(property.screen)];
+		{
+			NSScreen *requestedScreen = VuoScreen_getNSScreen(property.screen);
+
+			// If we're already fullscreen, and the property tells us to switch to a different screen,
+			// temporarily switch back to windowed mode, so that we can cleanly switch to fullscreen on the new screen.
+			if ([glView isFullScreen] && property.fullScreen)
+			{
+				NSInteger requestedDeviceId = [[[requestedScreen deviceDescription] objectForKey:@"NSScreenNumber"] integerValue];
+				NSInteger currentDeviceId = [[[self.screen deviceDescription] objectForKey:@"NSScreenNumber"] integerValue];
+				if (requestedDeviceId != currentDeviceId)
+					[self setFullScreen:NO onScreen:nil];
+			}
+
+			[self setFullScreen:property.fullScreen onScreen:requestedScreen];
+		}
 		else if (property.type == VuoWindowProperty_Position)
 		{
 			NSRect mainScreenRect = [[[NSScreen screens] objectAtIndex:0] frame];
@@ -800,6 +860,8 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		if (showedWindow)
 			showedWindow(VuoWindowReference_make(self));
 	}
+
+	[self setContentRectCached:[[self glView] viewport]];
 }
 
 /**
@@ -834,13 +896,128 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 }
 
 /**
- * Outputs the window's current width and height.
+ * Starts or stops recording a movie of the currently-selected window.
+ *
+ * @threadMain
  */
-- (void)getWidth:(unsigned int *)pixelsWide height:(unsigned int *)pixelsHigh
+- (void)toggleRecording
 {
-	NSSize size = [self frame].size;
-	*pixelsWide = size.width;
-	*pixelsHigh = size.height;
+	if (!self.recorder)
+	{
+		// Start recording to a temporary file (rather than first asking for the filename, to make it quicker to start recording).
+		self.temporaryMovieURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]];
+		VuoWindowRecorder *r = [[VuoWindowRecorder alloc] initWithWindow:self url:self.temporaryMovieURL];
+		self.recorder = r;
+		[r release];
+
+		[self updateUI];
+	}
+	else
+		[self stopRecording];
+}
+
+/**
+ * Ask the user for a permanent location to move the temporary movie file to.
+ */
+- (void)promptToSaveMovie
+{
+	NSSavePanel *sp = [NSSavePanel savePanel];
+	[sp setTitle:@"Save Movie"];
+	[sp setNameFieldLabel:@"Save Movie To:"];
+	[sp setPrompt:@"Save"];
+	[sp setAllowedFileTypes:@[@"mov"]];
+	if ([sp runModal] == NSFileHandlingPanelCancelButton)
+		goto done;
+
+	NSError *error;
+	if (![[NSFileManager defaultManager] moveItemAtURL:self.temporaryMovieURL toURL:[sp URL] error:&error])
+	{
+		if ([error code] == NSFileWriteFileExistsError)
+		{
+			// File exists.  Since, in the NSSavePanel, the user said to Replace, try replacing it.
+			if (![[NSFileManager defaultManager] replaceItemAtURL:[sp URL]
+					  withItemAtURL:self.temporaryMovieURL
+					 backupItemName:nil
+							options:0
+				   resultingItemURL:nil
+							  error:&error])
+			{
+				// Replacement failed; show error…
+				NSAlert *alert = [NSAlert alertWithError:error];
+				[alert runModal];
+
+				// …and give the user another chance.
+				[self promptToSaveMovie];
+			}
+			goto done;
+		}
+
+		NSAlert *alert = [NSAlert alertWithError:error];
+		[alert runModal];
+	}
+
+done:
+	self.temporaryMovieURL = nil;
+}
+
+/**
+ * Stops recording a movie of the currently-selected window.
+ *
+ * Does nothing if recording is not currently enabled.
+ *
+ * @threadMain
+ */
+- (void)stopRecording
+{
+	if (!_recorder)
+		return;
+
+	[_recorder finish];
+	[_recorder release];
+	_recorder = nil;
+
+	[self updateUI];
+
+	[glView setFullScreen:NO onScreen:nil];
+
+	[self promptToSaveMovie];
+}
+
+/**
+ * Updates various UI elements to match current internal state.
+ */
+- (void)updateUI
+{
+	if (self.recorder)
+		self.recordMenuItem.title = @"Stop Recording…";
+	else
+		self.recordMenuItem.title = @"Start Recording";
+}
+
+/**
+ * Thread-safe accessor.
+ *
+ * @threadAny
+ */
+- (NSRect)contentRectCached
+{
+	__block NSRect c;
+	dispatch_sync(contentRectQueue, ^{
+					  c = contentRectCached;
+				  });
+	return c;
+}
+
+/**
+ * Thread-safe mutator.
+ *
+ * @threadAny
+ */
+- (void)setContentRectCached:(NSRect)c
+{
+	dispatch_sync(contentRectQueue, ^{
+					  contentRectCached = c;
+				  });
 }
 
 @end

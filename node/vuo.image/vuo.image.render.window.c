@@ -23,7 +23,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Image to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "3.2.0",
+					 "version" : "3.2.1",
 					 "dependencies" : [
 						 "VuoDisplayRefresh",
 						 "VuoGlContext",
@@ -139,7 +139,8 @@ void nodeInstanceEvent
 		for (unsigned int i = 0; i < windowPropertyCount; ++i)
 		{
 			VuoWindowPropertyType type = VuoListGetValue_VuoWindowProperty(setWindowProperties, i).type;
-			if (type == VuoWindowProperty_AspectRatio)
+			if (type == VuoWindowProperty_AspectRatio
+			 || type == VuoWindowProperty_Size)
 				(*context)->aspectRatioOverridden = true;
 			else if (type == VuoWindowProperty_AspectRatioReset)
 				(*context)->aspectRatioOverridden = false;

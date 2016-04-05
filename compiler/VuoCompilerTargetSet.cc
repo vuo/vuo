@@ -46,7 +46,7 @@ void VuoCompilerTargetSet::restrictToCurrentOperatingSystemVersion(void)
 	SInt32 macMinorVersion;
 	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
 #pragma clang diagnostic pop
-	MacVersion macVersion = (MacVersion)(MacVersion_10_6 + (macMinorVersion - 6));
+	MacVersion macVersion = (MacVersion)(MacVersion_10_7 + (macMinorVersion - 7));
 	macVersionRange.first = macVersion;
 	macVersionRange.second = macVersion;
 }
@@ -100,8 +100,6 @@ string VuoCompilerTargetSet::macVersionToString(MacVersion v)
 	{
 		case MacVersion_Any:
 			return "Mac OS X (all versions)";
-		case MacVersion_10_6:
-			return "Mac OS X 10.6";
 		case MacVersion_10_7:
 			return "Mac OS X 10.7";
 		case MacVersion_10_8:

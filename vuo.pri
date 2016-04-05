@@ -1,4 +1,4 @@
-VUO_VERSION = 1.0.1
+VUO_VERSION = 1.1.0
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -11,8 +11,10 @@ CONFIG += debug
 # and since the longer DEPENDPATH adds about 10% to qmake's runtime.
 CONFIG -= depend_includepath
 
+VUO_QMAKE_CONFIG =
+
 QMAKE_CLEAN += -R
-QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a \"$${TARGET}.app\" pch *.dSYM *.o *.dylib moc_* *.moc *.vuonode *.vuonode+ *.bc *.bc+
+QMAKE_CLEAN += Makefile $$TARGET lib$${TARGET}.a \"$${TARGET}.app\" pch *.dSYM *.o *.dylib moc_* *.moc *.vuonode *.vuonode+ *.bc *.bc+ *.gcno *.gcda
 
 LLVM_ROOT = /usr/local/Cellar/llvm/3.2
 LLVM_DYLIB = libLLVM-3.2svn.dylib
@@ -37,6 +39,8 @@ LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.2.0
 OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0
 ZXING_ROOT = /usr/local/Cellar/zxing/2.3.0
 LIBXML2_ROOT = /usr/local/Cellar/libxml2/2.9.2
+GHOSTSCRIPT_ROOT = /usr/local/Cellar/ghostscript/9.15
+PNGQUANT_ROOT = /usr/local/Cellar/pngquant/2.3.1
 
 # Don't assume we want the Qt libraries, but do still invoke moc and uic.
 QT -= core gui widgets printsupport
@@ -45,8 +49,9 @@ CONFIG += moc uic
 QMAKE_CC = $${LLVM_ROOT}/bin/clang
 QMAKE_CXX = $${LLVM_ROOT}/bin/clang++
 analyze {
-	QMAKE_CC = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang
-	QMAKE_CXX = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang++
+	QMAKE_CC = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang $$ROOT
+	QMAKE_CXX = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang++ $$ROOT
+	VUO_QMAKE_CONFIG += analyze
 }
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CC = $$QMAKE_CC
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
@@ -89,7 +94,7 @@ mac {
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_function_starts
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_version_load_command
 
-	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
+	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
 	!isEmpty(VUO_INFO_PLIST) : isEmpty(API_HEADER_LISTS) {
 		# Fill in version number
@@ -130,6 +135,14 @@ FLAGS = $$FLAGS_ARCH \
 	-Wdocumentation \
 	-Wno-documentation-deprecated-sync \
 	-Oz
+
+coverage {
+	FLAGS += --coverage
+	DEFINES += COVERAGE
+	QMAKE_LFLAGS += $$LLVM_ROOT/lib/libprofile_rt.dylib
+	VUO_QMAKE_CONFIG += coverage
+}
+
 QMAKE_CFLAGS_RELEASE += $$FLAGS
 QMAKE_CFLAGS_DEBUG += $$FLAGS
 QMAKE_CXXFLAGS_RELEASE += $$FLAGS
@@ -256,6 +269,20 @@ qtGuiIncludes {
 	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
 	INCLUDEPATH += $$QT_ROOT/lib/QtCore.framework/Headers
 	DEFINES += QT_GUI_LIB
+}
+
+qtNetwork {
+	LIBS += \
+		-F$${QT_ROOT}/lib/ \
+		-framework QtCore \
+		-framework QtNetwork
+	CONFIG += qtNetworkIncludes
+}
+
+qtNetworkIncludes {
+	QMAKE_CXXFLAGS += -F$$QT_ROOT/lib
+	INCLUDEPATH += $$QT_ROOT/lib/QtNetwork.framework/Headers
+	DEFINES += QT_NETWORK_LIB
 }
 
 qtOpenGL {

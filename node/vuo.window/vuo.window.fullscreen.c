@@ -22,7 +22,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoBoolean, {"default":true}) fullscreen,
-		VuoInputData(VuoScreen) screen,
+		VuoInputData(VuoScreen, {"default":{"type":"active"}}) screen,
 		VuoOutputData(VuoWindowProperty) property
 )
 {

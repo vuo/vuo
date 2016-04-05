@@ -1,11 +1,22 @@
 #!/bin/bash
 
 CLANG=$1
-shift 1
+ROOT=$2
+shift 2
 
-$CLANG --analyze "$@" 2>&1 \
+[[ "$@" != *"-x c"*"-header"* ]] \
+&& [[ "$@" != *"miniz.c"* ]] \
+&& $CLANG \
+	--analyze \
+	-Xanalyzer -analyzer-eagerly-assume \
+	-Xanalyzer -analyzer-opt-analyze-nested-blocks \
+	-Xanalyzer -analyzer-output=html \
+	"$@" \
+	-o $ROOT/analysis \
+	2>&1 \
 	| egrep -v "^clang: warning: .+ 'linker' input unused$" \
-	| egrep -v "^clang: warning: argument unused during compilation: '-dynamiclib'$"
+	| egrep -v "^clang: warning: argument unused during compilation: '-dynamiclib'$" \
+	| egrep -v "^clang: warning: argument unused during compilation: '-Xanalyzer -analyzer-output=html'"
 
 # Run the actual clang build command last, so the shell script exits with its status
 $CLANG "$@"

@@ -23,7 +23,7 @@ GlobalVariable * VuoCompilerCodeGenUtilities::generateAllocationForSemaphore(Mod
 	GlobalVariable *semaphoreVariable = new GlobalVariable(*module,
 														   dispatch_semaphore_t_type,
 														   false,
-														   GlobalValue::InternalLinkage,
+														   GlobalValue::PrivateLinkage,
 														   nullValue,
 														   identifier);
 	return semaphoreVariable;
@@ -56,42 +56,17 @@ void VuoCompilerCodeGenUtilities::generateInitializationForSemaphore(Module *mod
 }
 
 /**
- * Generates code that waits for and claims a dispatch_semaphore_t.
+ * Generates code that waits for and claims a dispatch_semaphore_t, with a timeout of @c DISPATCH_TIME_FOREVER.
  *
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
  * @param semaphoreVariable The semaphore.
- * @param timeoutInNanoseconds The timeout to be turned into a dispatch_time_t and passed to dispatch_semaphore_wait().
  * @return The return value of dispatch_semaphore_wait().
  */
-Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, int64_t timeoutInNanoseconds)
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable)
 {
-	Type *dispatch_time_t_type = IntegerType::get(module->getContext(), 64);
-
-	vector<Type *> dispatch_time_functionParams;
-	dispatch_time_functionParams.push_back(dispatch_time_t_type);
-	dispatch_time_functionParams.push_back(IntegerType::get(module->getContext(), 64));
-	FunctionType *dispatch_time_functionType = FunctionType::get(dispatch_time_t_type,
-																 dispatch_time_functionParams,
-																 false);
-
-	Function *dispatch_time_function = module->getFunction("dispatch_time");
-	if (! dispatch_time_function) {
-		dispatch_time_function = Function::Create(dispatch_time_functionType,
-												  GlobalValue::ExternalLinkage,
-												  "dispatch_time",
-												  module);
-	}
-
-	ConstantInt *whenValue = ConstantInt::get(module->getContext(), APInt(64, DISPATCH_TIME_NOW));
-	ConstantInt *deltaValue = ConstantInt::get(module->getContext(), APInt(64, timeoutInNanoseconds, true));
-
-	vector<Value *> args;
-	args.push_back(whenValue);
-	args.push_back(deltaValue);
-	CallInst *timeoutValue = CallInst::Create(dispatch_time_function, args, "", block);
-
-	return generateWaitForSemaphore(module, block, semaphoreVariable, timeoutValue);
+	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
+	return generateWaitForSemaphore(module, block, semaphoreValue);
 }
 
 /**
@@ -102,14 +77,14 @@ Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, Ba
  * @param semaphoreVariable The semaphore.
  * @return The return value of dispatch_semaphore_wait().
  */
-Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable)
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, AllocaInst *semaphoreVariable)
 {
-	ConstantInt *timeoutValue = ConstantInt::get(module->getContext(), APInt(64, DISPATCH_TIME_FOREVER));
-	return generateWaitForSemaphore(module, block, semaphoreVariable, timeoutValue);
+	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
+	return generateWaitForSemaphore(module, block, semaphoreValue);
 }
 
 /**
- * Generates code that waits for and claims a dispatch_semaphore_t.
+ * Generates code that waits for and possibly claims a dispatch_semaphore_t.
  *
  * @param module The module in which to generate code.
  * @param block The block in which to generate code.
@@ -117,13 +92,33 @@ Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, Ba
  * @param timeoutValue A value of type dispatch_time_t to pass to dispatch_semaphore_wait().
  * @return The return value of dispatch_semaphore_wait().
  */
-Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable, Value *timeoutValue)
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, AllocaInst *semaphoreVariable, Value *timeoutValue)
+{
+	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
+	return generateWaitForSemaphore(module, block, semaphoreValue, timeoutValue);
+}
+
+/**
+ * Generates code that waits for and claims a dispatch_semaphore_t, with a timeout of @c DISPATCH_TIME_FOREVER.
+ */
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, Value *semaphoreValue)
+{
+	IntegerType *dispatch_time_t_type = IntegerType::get(module->getContext(), 64);
+	Value *timeoutValue = ConstantInt::get(dispatch_time_t_type, DISPATCH_TIME_FOREVER);
+	return generateWaitForSemaphore(module, block, semaphoreValue, timeoutValue);
+}
+
+/**
+ * Generates code that waits for and possibly claims a dispatch_semaphore_t.
+ */
+Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, BasicBlock *block, Value *semaphoreValue, Value *timeoutValue)
 {
 	PointerType *dispatch_semaphore_t_type = getDispatchSemaphoreType(module);
+	IntegerType *dispatch_time_t_type = IntegerType::get(module->getContext(), 64);
 
 	vector<Type *> dispatch_semaphore_wait_functionParams;
 	dispatch_semaphore_wait_functionParams.push_back(dispatch_semaphore_t_type);
-	dispatch_semaphore_wait_functionParams.push_back(IntegerType::get(module->getContext(), 64));
+	dispatch_semaphore_wait_functionParams.push_back(dispatch_time_t_type);
 	FunctionType *dispatch_semaphore_wait_functionType = FunctionType::get(IntegerType::get(module->getContext(), 64),
 																		   dispatch_semaphore_wait_functionParams,
 																		   false);
@@ -136,8 +131,7 @@ Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, Ba
 															module);
 	}
 
-	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
-	vector<Value*> args;
+	vector<Value *> args;
 	args.push_back(semaphoreValue);
 	args.push_back(timeoutValue);
 	return CallInst::Create(dispatch_semaphore_wait_function, args, "", block);
@@ -147,6 +141,24 @@ Value * VuoCompilerCodeGenUtilities::generateWaitForSemaphore(Module *module, Ba
  * Generates code that signals a dispatch_semaphore_t.
  */
 void VuoCompilerCodeGenUtilities::generateSignalForSemaphore(Module *module, BasicBlock *block, GlobalVariable *semaphoreVariable)
+{
+	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
+	return generateSignalForSemaphore(module, block, semaphoreValue);
+}
+
+/**
+ * Generates code that signals a dispatch_semaphore_t.
+ */
+void VuoCompilerCodeGenUtilities::generateSignalForSemaphore(Module *module, BasicBlock *block, AllocaInst *semaphoreVariable)
+{
+	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
+	return generateSignalForSemaphore(module, block, semaphoreValue);
+}
+
+/**
+ * Generates code that signals a dispatch_semaphore_t.
+ */
+void VuoCompilerCodeGenUtilities::generateSignalForSemaphore(Module *module, BasicBlock *block, Value *semaphoreValue)
 {
 	PointerType *dispatch_semaphore_t_type = getDispatchSemaphoreType(module);
 
@@ -164,10 +176,7 @@ void VuoCompilerCodeGenUtilities::generateSignalForSemaphore(Module *module, Bas
 															  module);
 	}
 
-	LoadInst *semaphoreValue = new LoadInst(semaphoreVariable, "", false, block);
-	vector<Value*> args;
-	args.push_back(semaphoreValue);
-	CallInst::Create(dispatch_semaphore_signal_function, args, "", block);
+	CallInst::Create(dispatch_semaphore_signal_function, semaphoreValue, "", block);
 }
 
 /**
@@ -322,7 +331,7 @@ GlobalVariable * VuoCompilerCodeGenUtilities::generateAllocationForDispatchQueue
 	GlobalVariable *dispatchQueueVariable = new GlobalVariable(*module,
 															   dispatch_queue_t_type,
 															   false,
-															   GlobalValue::InternalLinkage,
+															   GlobalValue::PrivateLinkage,
 															   nullValue,
 															   identifier);
 	return dispatchQueueVariable;
@@ -536,6 +545,41 @@ void VuoCompilerCodeGenUtilities::generateFinalizationForDispatchObject(Module *
 }
 
 /**
+ * Generates code that creates a dispatch_time_t by calling `dispatch_time_create(DISPATCH_TIME_NOW, ...)`.
+ *
+ * @param module The module in which to generate code.
+ * @param block The block in which to generate code.
+ * @param deltaValue The 2nd argument to `dispatch_time_create`.
+ * @return The created dispatch_time_t.
+ */
+Value * VuoCompilerCodeGenUtilities::generateCreateDispatchTime(Module *module, BasicBlock *block, Value *deltaValue)
+{
+	Type *dispatch_time_t_type = IntegerType::get(module->getContext(), 64);
+
+	vector<Type *> dispatch_time_functionParams;
+	dispatch_time_functionParams.push_back(dispatch_time_t_type);
+	dispatch_time_functionParams.push_back(IntegerType::get(module->getContext(), 64));
+	FunctionType *dispatch_time_functionType = FunctionType::get(dispatch_time_t_type,
+																 dispatch_time_functionParams,
+																 false);
+
+	Function *dispatch_time_function = module->getFunction("dispatch_time");
+	if (! dispatch_time_function) {
+		dispatch_time_function = Function::Create(dispatch_time_functionType,
+												  GlobalValue::ExternalLinkage,
+												  "dispatch_time",
+												  module);
+	}
+
+	ConstantInt *whenValue = ConstantInt::get(module->getContext(), APInt(64, DISPATCH_TIME_NOW));
+
+	vector<Value *> args;
+	args.push_back(whenValue);
+	args.push_back(deltaValue);
+	return CallInst::Create(dispatch_time_function, args, "", block);
+}
+
+/**
  * Generates code that creates a pointer to @c value (on the stack), and returns the pointer.
  */
 Value * VuoCompilerCodeGenUtilities::generatePointerToValue(BasicBlock *block, Value *value)
@@ -647,6 +691,53 @@ void VuoCompilerCodeGenUtilities::generateStringMatchingCode(Module *module, Fun
 		ICmpInst *strcmpEqualsZero = new ICmpInst(*currentBlock, ICmpInst::ICMP_EQ, strcmpCall, zeroValue, "");
 		BasicBlock *falseBlock = BasicBlock::Create(module->getContext(), string("strcmp-") + currentString, function, 0);
 		BranchInst::Create(firstTrueBlock, falseBlock, strcmpEqualsZero, currentBlock);
+
+		BranchInst::Create(finalBlock, lastTrueBlock);
+
+		currentBlock = falseBlock;
+	}
+
+	BranchInst::Create(finalBlock, currentBlock);
+}
+
+/**
+ * Generates a series of if-else statements for testing if an input index is equal to any of a
+ * set of indices, and executing the corresponding block of code if it is.
+ *
+ * Assumes that none of the blocks passed to this function contain branch instructions.
+ * (This function appends branch instructions to all but the final block.)
+ *
+ * Example:
+ *
+ * if (inputIndex == 0)
+ *   // blockForIndex[0]
+ * else if (inputIndex == 1)
+ *   // blockForIndex[1]
+ * ...
+ *
+ * @param module The module in which to generate code.
+ * @param function The function in which to generate code.
+ * @param initialBlock The block to which the first if-statement will be appended.
+ * @param finalBlock The block following the if-else statements.
+ * @param inputIndexValue The index to compare in each if-statement.
+ * @param blocksForIndex For each index, the first block and last block to execute if the input index matches that index.
+ *		The caller is responsible for branching (directly or indirectly) from the first to the last block.
+ */
+void VuoCompilerCodeGenUtilities::generateIndexMatchingCode(Module *module, Function *function,
+															BasicBlock *initialBlock, BasicBlock *finalBlock, Value *inputIndexValue,
+															vector< pair<BasicBlock *, BasicBlock *> > blocksForIndex)
+{
+	BasicBlock *currentBlock = initialBlock;
+
+	for (size_t i = 0; i < blocksForIndex.size(); ++i)
+	{
+		BasicBlock *firstTrueBlock = blocksForIndex[i].first;
+		BasicBlock *lastTrueBlock = blocksForIndex[i].second;
+
+		Constant *currentIndexValue = ConstantInt::get(inputIndexValue->getType(), i);
+		ICmpInst *indexEqualsCurrent = new ICmpInst(*currentBlock, ICmpInst::ICMP_EQ, inputIndexValue, currentIndexValue, "");
+		BasicBlock *falseBlock = BasicBlock::Create(module->getContext(), "", function, 0);
+		BranchInst::Create(firstTrueBlock, falseBlock, indexEqualsCurrent, currentBlock);
 
 		BranchInst::Create(finalBlock, lastTrueBlock);
 
@@ -1491,9 +1582,48 @@ Function * VuoCompilerCodeGenUtilities::getVuoReleaseFunction(Module *module)
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getGetInputPortValueFunction(Module *module)
+Function * VuoCompilerCodeGenUtilities::getWaitForNodeFunction(Module *module)
 {
-	const char *functionName = "getInputPortValue";
+	const char *functionName = "waitForNode";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(unsignedLongType);
+		functionParams.push_back(unsignedLongType);
+		functionParams.push_back(boolType);
+		FunctionType *functionType = FunctionType::get(boolType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getGetPortValueFunction(Module *module)
+{
+	const char *functionName = "getPortValue";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *intType = IntegerType::get(module->getContext(), 32);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(intType);
+		functionParams.push_back(intType);
+		functionParams.push_back(intType);
+		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+	return function;
+}
+
+Function * VuoCompilerCodeGenUtilities::getGetInputPortStringFunction(Module *module)
+{
+	const char *functionName = "getInputPortString";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
@@ -1509,9 +1639,9 @@ Function * VuoCompilerCodeGenUtilities::getGetInputPortValueFunction(Module *mod
 	return function;
 }
 
-Function * VuoCompilerCodeGenUtilities::getGetInputPortValueThreadUnsafeFunction(Module *module)
+Function * VuoCompilerCodeGenUtilities::getGetOutputPortStringFunction(Module *module)
 {
-	const char *functionName = "getInputPortValueThreadUnsafe";
+	const char *functionName = "getOutputPortString";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
@@ -1521,74 +1651,6 @@ Function * VuoCompilerCodeGenUtilities::getGetInputPortValueThreadUnsafeFunction
 		vector<Type *> functionParams;
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(intType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetOutputPortValueFunction(Module *module)
-{
-	const char *functionName = "getOutputPortValue";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *intType = IntegerType::get(module->getContext(), 32);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(intType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetOutputPortValueThreadUnsafeFunction(Module *module)
-{
-	const char *functionName = "getOutputPortValueThreadUnsafe";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *intType = IntegerType::get(module->getContext(), 32);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(intType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetInputPortSummaryFunction(Module *module)
-{
-	const char *functionName = "getInputPortSummary";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetOutputPortSummaryFunction(Module *module)
-{
-	const char *functionName = "getOutputPortSummary";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}

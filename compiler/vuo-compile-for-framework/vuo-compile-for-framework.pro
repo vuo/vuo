@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG -= qt app_bundle
 CONFIG += console VuoFramework
+LIBS += -framework CoreFoundation
 TARGET = vuo-compile
 
 VUO_INFO_PLIST = vuo-compile-Info.plist

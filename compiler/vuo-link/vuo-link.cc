@@ -10,6 +10,20 @@
 #include <getopt.h>
 #include <Vuo/Vuo.h>
 
+void printHelp(char *argv0)
+{
+	printf("Usage: %s [options] file\n"
+		   "Options:\n"
+		   "  --help                         Display this information.\n"
+		   "  --list-node-classes[=<arg>]    Display a list of all loaded node classes. <arg> can be 'path' or 'dot'.\n"
+		   "  --output <file>                Place the compiled code into <file>.\n"
+		   "  --target                       Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.7.0').\n"
+		   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
+		   "  --framework-search-path <dir>  Search for Mac OS X frameworks in <dir>. This option may be specified more than once.\n"
+		   "  --optimization <arg>           Optimize for a faster build that links against a cache file ('fast-build') or a standalone binary that does not ('small-binary'). The default is 'fast-build'.\n"
+		   "  --verbose                      Output diagnostic information.\n",
+		   argv0);
+}
 
 int main (int argc, char * const argv[])
 {
@@ -83,20 +97,10 @@ int main (int argc, char * const argv[])
 		for (vector<char *>::iterator i = frameworkSearchPaths.begin(); i != frameworkSearchPaths.end(); ++i)
 			compiler.addFrameworkSearchPath(*i);
 
+		compiler.loadStoredLicense();
+
 		if (doPrintHelp)
-		{
-			printf("Usage: %s [options] file\n"
-				   "Options:\n"
-				   "  --help                         Display this information.\n"
-				   "  --list-node-classes[=<arg>]    Display a list of all loaded node classes. <arg> can be 'path' or 'dot'.\n"
-				   "  --output <file>                Place the compiled code into <file>.\n"
-				   "  --target                       Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.6.0').\n"
-				   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
-				   "  --framework-search-path <dir>  Search for Mac OS X frameworks in <dir>. This option may be specified more than once.\n"
-				   "  --optimization <arg>           Optimize for a faster build that links against a cache file ('fast-build') or a standalone binary that does not ('small-binary'). The default is 'fast-build'.\n"
-				   "  --verbose                      Output diagnostic information.\n",
-				   argv[0]);
-		}
+			printHelp(argv[0]);
 		else if (doListNodeClasses)
 		{
 			if (listNodeClassesOption == "" || listNodeClassesOption == "path" || listNodeClassesOption == "dot")
@@ -128,6 +132,8 @@ int main (int argc, char * const argv[])
 			{
 				if (optimizationOption == "fast-build")
 					optimization = VuoCompiler::Optimization_FastBuild;
+				else if (optimizationOption == "fast-build-existing-cache")
+					optimization = VuoCompiler::Optimization_FastBuildExistingCache;
 				else if (optimizationOption == "small-binary")
 					optimization = VuoCompiler::Optimization_SmallBinary;
 				else
@@ -142,6 +148,11 @@ int main (int argc, char * const argv[])
 	catch (std::exception &e)
 	{
 		fprintf(stderr, "%s: error: %s\n", hasInputFile ? inputPath.c_str() : argv[0], e.what());
+		if (!hasInputFile)
+		{
+			fprintf(stderr, "\n");
+			printHelp(argv[0]);
+		}
 		return 1;
 	}
 }

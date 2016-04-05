@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object with Transforms",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "node": {
 						  "exampleCompositions" : [ ]
 					 }
@@ -25,8 +25,7 @@ void nodeEvent
 	VuoOutputData(VuoSceneObject) copies
 )
 {
-	*copies = VuoSceneObject_makeEmpty();
-	copies->childObjects = VuoListCreate_VuoSceneObject();
+	*copies = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeIdentity());
 
 	for(int i = 0; i < VuoListGetCount_VuoTransform(transforms); i++)
 	{

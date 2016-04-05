@@ -16,10 +16,10 @@ VuoModuleMetadata({
 						 "trackball", "ViewCube", "gizmo",
 						 "navigate", "view", "browse",
 						 "pan", "dolly", "roll", "yaw", "pitch" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [ "VuoMouse" ],
 					 "node": {
-						 "exampleCompositions" : [ "DisplayScene.vuo" ]
+						 "exampleCompositions" : [ "DisplayCube.vuo", "DisplayScene.vuo" ]
 					 }
 				 });
 
@@ -156,7 +156,7 @@ void resetCamera(struct nodeInstanceData* instance)
 /**
  *	Converts a screen space point to a VuoCoordinate.
  */
-VuoPoint2d convertScreenToVuoPoint(struct nodeInstanceData *instance, VuoPoint2d point)
+static VuoPoint2d convertScreenToVuoPoint(struct nodeInstanceData *instance, VuoPoint2d point)
 {
 	VuoPoint2d vuoPoint = VuoPoint2d_divide(point, instance->screenPixelDimensions);
 	vuoPoint.x *= 2.;

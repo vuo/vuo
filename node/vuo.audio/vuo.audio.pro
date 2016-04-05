@@ -5,6 +5,7 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.audio.analyze.loudness.c \
+	vuo.audio.analyze.fft.c \
 	vuo.audio.file.info.c \
 	vuo.audio.file.play.c \
 	vuo.audio.get.input.c \
@@ -28,10 +29,12 @@ NODE_INCLUDEPATH += \
 	../vuo.motion
 
 NODE_LIBRARY_SOURCES += \
+	VuoDsp.mm \
 	VuoAudio.cc \
 	VuoAudioFile.c
 
 HEADERS += \
+	VuoDsp.h \
 	VuoAudio.h \
 	VuoAudioFile.h
 
@@ -40,10 +43,14 @@ NODE_LIBRARY_INCLUDEPATH = \
 	$${RTAUDIO_ROOT}/include
 
 TYPE_SOURCES += \
+	VuoAudioBins.c \
+	VuoAudioBinAverageType.c \
 	VuoAudioInputDevice.c \
 	VuoAudioOutputDevice.c
 
 HEADERS += \
+	VuoAudioBins.h \
+	VuoAudioBinAverageType.h \
 	VuoAudioInputDevice.h \
 	VuoAudioOutputDevice.h
 

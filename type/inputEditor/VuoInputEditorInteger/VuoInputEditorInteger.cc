@@ -126,13 +126,30 @@ void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalVa
 }
 
 /**
+ * Formats the value from the line edit to conform to the JSON specification for numbers.
+ */
+json_object * VuoInputEditorInteger::convertFromLineEditFormat(const QString &valueAsString)
+{
+	QString valueAsStringCopy = valueAsString;
+	int value = QLocale::system().toInt(valueAsString);
+	QString valueAsStringInDefaultLocale = QLocale(QLocale::C).toString(value);
+
+	if (qAbs(value) >= 1000)
+		valueAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
+
+	return VuoInteger_getJson( VuoInteger_makeFromString(valueAsStringInDefaultLocale.toUtf8().constData()) );
+}
+
+/**
  * Converts the input @c newTextValue to an integer and updates this
  * input editor's @c slider widget to reflect that integer value.
  */
 void VuoInputEditorInteger::updateSliderValue(QString newTextValue)
 {
+	int newValue = QLocale::system().toInt(newTextValue);
+
 	disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	slider->setValue(VuoInteger_makeFromString(newTextValue.toUtf8().constData()));
+	slider->setValue(newValue);
 	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
 }
 
@@ -158,7 +175,10 @@ void VuoInputEditorInteger::updateLineEditValue()
 void VuoInputEditorInteger::updateLineEditValue(int newSliderValue)
 {
 	const QString originalLineEditText = lineEdit->text();
-	const QString newLineEditText = VuoInteger_getString(newSliderValue);
+	QString newLineEditText = QLocale::system().toString(newSliderValue);
+
+	if (qAbs(newSliderValue) >= 1000)
+		newLineEditText.remove(QLocale::system().groupSeparator());
 
 	if (originalLineEditText != newLineEditText)
 	{
@@ -171,11 +191,7 @@ void VuoInputEditorInteger::updateLineEditValue(int newSliderValue)
 
 void VuoInputEditorInteger::emitValueChanged()
 {
-	const char *valueAsString = lineEdit->text().toUtf8().constData();
-	VuoInteger value = VuoInteger_makeFromString(valueAsString);
-	json_object *valueAsJson = VuoInteger_getJson(value);
-	emit valueChanged(valueAsJson);
-	json_object_put(valueAsJson);
+	emit valueChanged(getAcceptedValue());
 }
 
 /**

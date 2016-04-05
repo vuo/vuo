@@ -1,0 +1,114 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
+ShareValue10 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="540,127"];
+ShareValue11 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="540,277"];
+ShareValue12 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="217,51"];
+ShareValue2 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="378,50"];
+ShareValue22 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="538,201"];
+ShareValue23 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="706,278"];
+ShareValue24 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="878,279"];
+ShareValue25 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="378,200"];
+ShareValue26 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="876,203"];
+ShareValue27 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="219,277"];
+ShareValue28 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="380,276"];
+ShareValue29 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="704,202"];
+ShareValue3 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="538,51"];
+ShareValue30 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="217,201"];
+ShareValue31 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="382,645"];
+ShareValue32 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="706,571"];
+ShareValue33 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="880,648"];
+ShareValue34 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="380,353"];
+ShareValue35 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="380,569"];
+ShareValue36 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="540,570"];
+ShareValue37 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="542,646"];
+ShareValue38 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="708,647"];
+ShareValue39 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="219,354"];
+ShareValue4 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="704,52"];
+ShareValue40 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="878,572"];
+ShareValue41 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="540,354"];
+ShareValue42 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="219,570"];
+ShareValue43 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="221,646"];
+ShareValue44 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="542,496"];
+ShareValue45 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="706,355"];
+ShareValue46 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="382,495"];
+ShareValue47 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="880,498"];
+ShareValue48 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="708,497"];
+ShareValue49 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="221,496"];
+ShareValue5 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="876,53"];
+ShareValue50 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="878,356"];
+ShareValue51 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="882,729"];
+ShareValue6 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="706,128"];
+ShareValue67 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="884,805"];
+ShareValue68 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="225,803"];
+ShareValue69 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="710,728"];
+ShareValue7 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="219,127"];
+ShareValue70 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="223,727"];
+ShareValue71 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="544,727"];
+ShareValue72 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="386,802"];
+ShareValue73 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="546,803"];
+ShareValue74 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="384,726"];
+ShareValue75 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="712,804"];
+ShareValue8 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="878,129"];
+ShareValue9 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="380,126"];
+
+FireOnStart:started -> ShareValue12:value;
+ShareValue10:sameValue -> ShareValue6:value [event=true];
+ShareValue11:sameValue -> ShareValue23:value [event=true];
+ShareValue12:sameValue -> ShareValue2:value [event=true];
+ShareValue22:sameValue -> ShareValue29:value [event=true];
+ShareValue23:sameValue -> ShareValue24:value [event=true];
+ShareValue24:sameValue -> ShareValue39:value [event=true];
+ShareValue25:sameValue -> ShareValue22:value [event=true];
+ShareValue26:sameValue -> ShareValue27:value [event=true];
+ShareValue27:sameValue -> ShareValue28:value [event=true];
+ShareValue28:sameValue -> ShareValue11:value [event=true];
+ShareValue29:sameValue -> ShareValue26:value [event=true];
+ShareValue2:sameValue -> ShareValue3:value [event=true];
+ShareValue30:sameValue -> ShareValue25:value [event=true];
+ShareValue31:sameValue -> ShareValue37:value [event=true];
+ShareValue32:sameValue -> ShareValue40:value [event=true];
+ShareValue33:sameValue -> ShareValue70:value [event=true];
+ShareValue34:sameValue -> ShareValue41:value [event=true];
+ShareValue35:sameValue -> ShareValue36:value [event=true];
+ShareValue36:sameValue -> ShareValue32:value [event=true];
+ShareValue37:sameValue -> ShareValue38:value [event=true];
+ShareValue38:sameValue -> ShareValue33:value [event=true];
+ShareValue39:sameValue -> ShareValue34:value [event=true];
+ShareValue3:sameValue -> ShareValue4:value [event=true];
+ShareValue40:sameValue -> ShareValue43:value [event=true];
+ShareValue41:sameValue -> ShareValue45:value [event=true];
+ShareValue42:sameValue -> ShareValue35:value [event=true];
+ShareValue43:sameValue -> ShareValue31:value [event=true];
+ShareValue44:sameValue -> ShareValue48:value [event=true];
+ShareValue45:sameValue -> ShareValue50:value [event=true];
+ShareValue46:sameValue -> ShareValue44:value [event=true];
+ShareValue47:sameValue -> ShareValue42:value [event=true];
+ShareValue48:sameValue -> ShareValue47:value [event=true];
+ShareValue49:sameValue -> ShareValue46:value [event=true];
+ShareValue4:sameValue -> ShareValue5:value [event=true];
+ShareValue50:sameValue -> ShareValue49:value [event=true];
+ShareValue51:sameValue -> ShareValue68:value [event=true];
+ShareValue5:sameValue -> ShareValue7:value [event=true];
+ShareValue68:sameValue -> ShareValue72:value [event=true];
+ShareValue69:sameValue -> ShareValue51:value [event=true];
+ShareValue6:sameValue -> ShareValue8:value [event=true];
+ShareValue70:sameValue -> ShareValue74:value [event=true];
+ShareValue71:sameValue -> ShareValue69:value [event=true];
+ShareValue72:sameValue -> ShareValue73:value [event=true];
+ShareValue73:sameValue -> ShareValue75:value [event=true];
+ShareValue74:sameValue -> ShareValue71:value [event=true];
+ShareValue75:sameValue -> ShareValue67:value [event=true];
+ShareValue7:sameValue -> ShareValue9:value [event=true];
+ShareValue8:sameValue -> ShareValue30:value [event=true];
+ShareValue9:sameValue -> ShareValue10:value [event=true];
+}

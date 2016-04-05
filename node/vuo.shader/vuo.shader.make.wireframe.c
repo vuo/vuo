@@ -200,7 +200,7 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 void nodeEvent
 (
 		VuoInputData(VuoColor, {"default":{"r":0.6,"g":0.8,"b":0.6,"a":1}}) frontColor,
-		VuoInputData(VuoColor, {"default":{"r":0.4,"g":0.53,"b":0.4,"a":1}}) backColor,
+		VuoInputData(VuoColor, {"default":{"r":0.3,"g":0.4,"b":0.3,"a":1}}) backColor,
 		VuoInputData(VuoReal, {"default":0.2, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.05}) width,
 		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.05}) standoffWidth,
 		VuoInputData(VuoBoolean, {"default":true}) showThirdEdge,

@@ -467,3 +467,11 @@ bool VuoCompilerType::isListType(VuoCompilerType *type)
 
 	return VuoType::isListTypeName(type->getBase()->getModuleKey());
 }
+
+/**
+ * Returns true if the type's @c getInterprocessString() function is defined.
+ */
+bool VuoCompilerType::hasInterprocessStringFunction(void)
+{
+	return getInterprocessStringFunction != NULL;
+}

@@ -7,6 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
+#pragma once
+
 #ifdef __cplusplus
 extern "C"
 {

@@ -121,7 +121,7 @@ VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoSh
 
 	// http://stackoverflow.com/questions/24112671/transform-feedback-without-a-framebuffer
 	sceneObjectRenderer->shamTexture = VuoGlTexturePool_use(cgl_ctx, GL_RGBA, 1, 1, GL_RGBA);
-	VuoGlTexture_retain(sceneObjectRenderer->shamTexture);
+	VuoGlTexture_retain(sceneObjectRenderer->shamTexture, NULL, NULL);
 	glGenFramebuffers(1, &sceneObjectRenderer->shamFramebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, sceneObjectRenderer->shamFramebuffer);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneObjectRenderer->shamTexture, 0);
@@ -137,7 +137,7 @@ VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoSh
  * Helper for @ref VuoSceneObjectRenderer_draw.
  * Applies a shader to a single @c sceneObject's VuoMesh (ignoring its childObjects).
  */
-void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoSceneObjectRendererInternal *sceneObjectRenderer, VuoSceneObject *sceneObject, float modelviewMatrix[16])
+static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoSceneObjectRendererInternal *sceneObjectRenderer, VuoSceneObject *sceneObject, float modelviewMatrix[16])
 {
 	if (!sceneObject->mesh)
 		return;
@@ -344,7 +344,7 @@ void VuoSceneObjectRenderer_destroy(VuoSceneObjectRenderer sor)
 	VuoRelease(sceneObjectRenderer->shader);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-	VuoGlTexture_release(GL_RGBA, 1, 1, sceneObjectRenderer->shamTexture);
+	VuoGlTexture_release(GL_RGBA, 1, 1, sceneObjectRenderer->shamTexture, GL_TEXTURE_2D);
 //	glBindFramebuffer(GL_FRAMEBUFFER, 0);	// handled by glDeleteFramebuffers
 	glDeleteFramebuffers(1, &sceneObjectRenderer->shamFramebuffer);
 

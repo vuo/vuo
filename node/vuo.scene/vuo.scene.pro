@@ -12,6 +12,7 @@ NODE_SOURCES += \
 	vuo.scene.combine.c \
 	vuo.scene.copy.c \
 	vuo.scene.copy.trs.c \
+	vuo.scene.displace.image.c \
 	vuo.scene.divide.c \
 	vuo.scene.explode.c \
 	vuo.scene.facet.c \
@@ -43,15 +44,26 @@ NODE_SOURCES += \
 	vuo.scene.trim.c \
 	vuo.scene.twirl.c
 
+GENERIC_NODE_SOURCES += \
+	vuo.scene.make.grid.lines.c \
+	vuo.scene.make.grid.points.c \
+	vuo.scene.make.sphere.c \
+	vuo.scene.make.square.c \
+	vuo.scene.make.cube.1.c \
+	vuo.scene.make.triangle.c \
+	vuo.scene.make.tube.c
+
 NODE_INCLUDEPATH += \
 	$${ASSIMP_ROOT}/include
 
 HEADERS += \
 	VuoDispersion.h \
+	VuoGridType.h \
 	VuoDisplacement.h
 
 TYPE_SOURCES += \
 	VuoDispersion.c \
+	VuoGridType.c \
 	VuoDisplacement.c
 
 include(../../module.pri)

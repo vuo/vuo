@@ -20,7 +20,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "folder", "directory", "path", "url",
 						  "search", "scanner", "find"
 					  ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoUrlFetch",
 						  "VuoFileListSort"
@@ -108,23 +108,18 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoText) files
 )
 {
-	VuoText folderUrl = VuoUrl_normalize(folder, false);
-
-	const char *fileProtocol = "file://";
-	VuoText protocol = VuoText_substring(folderUrl, 1, strlen(fileProtocol));
-	if (! VuoText_areEqual(protocol, fileProtocol))
+	VuoUrl folderUrl = VuoUrl_normalize(folder, false);
+	VuoText folderPath = VuoUrl_getPosixPath(folderUrl);
+	if (!folderPath)
 	{
 		VLog("Error: Couldn't list files in '%s' because remote URLs are not supported.", folderUrl);
 		*files = VuoListCreate_VuoText();
 		goto cleanup;
 	}
 
-	VuoText folderPath = VuoText_substring(folderUrl, strlen(fileProtocol)+1, VuoText_length(folderUrl));
 	*files = listFiles(folderPath, includeSubfolders, fileType);
 
 cleanup:
-	VuoRetain(protocol);
-	VuoRelease(protocol);
 	VuoRetain(folderUrl);
 	VuoRelease(folderUrl);
 	VuoRetain(folderPath);

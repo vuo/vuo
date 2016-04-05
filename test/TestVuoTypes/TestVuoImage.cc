@@ -20,6 +20,12 @@ extern "C" {
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoImage);
 
+bool TestVuoImage_freed = false;
+void TestVuoImage_freeCallback(VuoImage imageToFree)
+{
+	TestVuoImage_freed = true;
+}
+
 /**
  * Tests the VuoImage type.
  */
@@ -70,8 +76,8 @@ private slots:
 
 	void testNull()
 	{
-		QCOMPARE(QString::fromUtf8(VuoImage_getString(NULL)), QString("{}"));
-		QCOMPARE(QString::fromUtf8(VuoImage_getInterprocessString(NULL)), QString("{}"));
+		QCOMPARE(QString::fromUtf8(VuoImage_getString(NULL)), QString("null"));
+		QCOMPARE(QString::fromUtf8(VuoImage_getInterprocessString(NULL)), QString("null"));
 		QCOMPARE(QString::fromUtf8(VuoImage_getSummary(NULL)), QString("(no image)"));
 	}
 
@@ -89,9 +95,9 @@ private slots:
 										<< true
 										<< "GL Texture (ID 42)<br>640x480";
 
-		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(42,0,640,480)))
+		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(43,0,640,480)))
 										<< true
-										<< "GL Texture (ID 42)<br>640x480";
+										<< "GL Texture (ID 43)<br>640x480";
 	}
 	void testSerializationAndSummary()
 	{
@@ -155,6 +161,37 @@ private slots:
 
 		bool actualEquality = VuoImage_areEqual(a,b);
 		QCOMPARE(actualEquality, expectedEquality);
+	}
+
+	void testFreeingClientOwned()
+	{
+		unsigned int glTextureName = 44;	// For this test, it doesn't matter whether it's a valid GL texture.
+											// Should be different than the GL texture name used in testSerializationAndSummary, since that one never gets freed.
+
+		TestVuoImage_freed = false;
+		VuoImage vi = VuoImage_makeClientOwned(glTextureName, GL_RGBA, 1, 1, TestVuoImage_freeCallback, NULL);
+		VuoRetain(vi);
+		VuoRelease(vi);
+		QVERIFY(TestVuoImage_freed);
+	}
+
+	void testFreeingClientOwnedReconstituted()
+	{
+		unsigned int glTextureName = 45;	// For this test, it doesn't matter whether it's a valid GL texture.
+											// Should be different than the GL texture name used in testSerializationAndSummary, since that one never gets freed.
+
+		TestVuoImage_freed = false;
+		VuoImage vi = VuoImage_makeClientOwned(glTextureName, GL_RGBA, 1, 1, TestVuoImage_freeCallback, NULL);
+		VuoRetain(vi);
+
+		VuoImage vi2 = VuoImage_makeFromJson(VuoImage_getJson(vi));
+		VuoRetain(vi2);
+
+		VuoRelease(vi);
+		QVERIFY(!TestVuoImage_freed);
+
+		VuoRelease(vi2);
+		QVERIFY(TestVuoImage_freed);
 	}
 
 	void testMakeFromBufferPerformance()
@@ -322,7 +359,7 @@ private slots:
 
 		// Test that it worked correctly.
 		{
-			VuoImage copiedImage = VuoImage_makeCopy(sourceImage);
+			VuoImage copiedImage = VuoImage_makeCopy(sourceImage, false);
 			VuoRetain(copiedImage);
 
 			QCOMPARE(copiedImage->pixelsWide, width);
@@ -341,7 +378,7 @@ private slots:
 
 		// Test performance.
 		QBENCHMARK {
-			VuoImage copiedImage = VuoImage_makeCopy(sourceImage);
+			VuoImage copiedImage = VuoImage_makeCopy(sourceImage, false);
 			VuoRetain(copiedImage);
 			VuoRelease(copiedImage);
 		}

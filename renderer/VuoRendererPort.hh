@@ -76,6 +76,7 @@ public:
 	bool effectivelyHasConnectedDataCable(bool includePublishedCables) const;
 	string getConstantAsString(void) const;
 	string getConstantAsStringToRender(void) const;
+	string getStringForRealValue(double value) const;
 	void setConstant(string constantValue);
 	string getPortNameToRender() const;
 	string getPortNameToRenderWhenDisplayed() const;
@@ -85,6 +86,7 @@ public:
 	bool getPublishable() const;
 	vector<VuoRendererPublishedPort *> getPublishedPorts() const;
 	vector<VuoRendererPublishedPort *> getPublishedPortsConnectedByDataCarryingCables(void) const;
+	VuoNode::TintColor getPortTint() const;
 
 	VuoRendererNode * getUnderlyingParentNode(void) const;
 	VuoRendererNode * getRenderedParentNode(void) const;
@@ -162,8 +164,8 @@ protected:
 	void paintEventBarrier(QPainter *painter, VuoRendererColors *colors);
 	void paintActionIndicator(QPainter *painter, VuoRendererColors *colors);
 	void paintWirelessAntenna(QPainter *painter, VuoRendererColors *colors);
-	string getPointStringForCoords(QList<double>) const;
 	string getDefaultPortNameToRender();
+	string getPointStringForCoords(QList<double>) const;
 
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.
 };

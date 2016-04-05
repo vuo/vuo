@@ -12,6 +12,7 @@ GENERIC_NODE_SOURCES += \
 NODE_SOURCES += \
 	vuo.event.areAllHit.2.c \
 	vuo.event.becameFalse.c \
+	vuo.event.allowFirst.c \
 	vuo.event.becameTrue.c \
 	vuo.event.fireOnDisplayRefresh.c \
 	vuo.event.fireOnStart.c \

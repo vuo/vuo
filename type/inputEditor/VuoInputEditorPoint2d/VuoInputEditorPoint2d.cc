@@ -47,9 +47,15 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 	QDoubleValidator *validator = new QDoubleValidator(this);
 
+	bool tabCycleForward = true;
+
 	// Parse supported port annotations from the port's "details" JSON object:
 	if (details)
 	{
+		json_object *forwardTabTraversal = NULL;
+		if (json_object_object_get_ex(details, "forwardTabTraversal", &forwardTabTraversal))
+			tabCycleForward = json_object_get_boolean(forwardTabTraversal);
+
 		// "suggestedMin"
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
@@ -225,10 +231,11 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		spinBoxY->show();
 	}
 
-	// Return focus to the topmost line edit.
+	// Return focus to the topmost line edit by default, or to the bottommost
+	// line edit if tab-cycling backwards.
 	// To be handled properly for https://b33p.net/kosada/node/6365 .
-	lineEditX->setFocus();
-	lineEditX->selectAll();
+	(tabCycleForward? lineEditX : lineEditY)->setFocus();
+	(tabCycleForward? lineEditX : lineEditY)->selectAll();
 }
 
 /**
@@ -390,12 +397,7 @@ double VuoInputEditorPoint2d::sliderValueToScaledLineEditValue(int sliderValue, 
 
 void VuoInputEditorPoint2d::emitValueChanged()
 {
-	VuoPoint2d currentPointValue;
-	currentPointValue.x = VuoReal_makeFromString(lineEditX->text().toUtf8().constData());
-	currentPointValue.y = VuoReal_makeFromString(lineEditY->text().toUtf8().constData());
-	json_object *valueAsJson = VuoPoint2d_getJson(currentPointValue);
-	emit valueChanged(valueAsJson);
-	json_object_put(valueAsJson);
+	emit valueChanged(getAcceptedValue());
 }
 
 /**

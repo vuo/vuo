@@ -71,7 +71,8 @@ class VuoRunner
 {
 public:
 	class Port;
-	static VuoRunner * newSeparateProcessRunnerFromCompositionFile(string compositionPath);
+	static VuoRunner * newSeparateProcessRunnerFromCompositionFile(string compositionPath, bool useExistingCache = false);
+	static VuoRunner * newSeparateProcessRunnerFromCompositionString(string compositionString, string name, string sourceDir, bool useExistingCache = false);
 	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool deleteExecutableWhenFinished = false);
 	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, string resourceDylibPath, string sourceDir, bool deleteDylibsWhenFinished = false);
 	static VuoRunner * newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir, bool deleteDylibWhenFinished = false);
@@ -103,6 +104,8 @@ public:
 	string getOutputPortSummary(string portIdentifier);
 	bool isStopped(void);
 	void setDelegate(VuoRunnerDelegate *delegate);
+	void setTrialRestrictions(bool isTrial);
+	static void initializeCompilerCache();
 
 	/**
 	 * This class represents a published port in a composition. It maintains a list of the identifiers
@@ -139,13 +142,16 @@ private:
 	bool shouldDeleteBinariesWhenFinished;  ///< True if the composition binary file(s) should be deleted when the runner is finished using them.
 	string sourceDir;  ///< The directory containing the composition's .vuo source file.
 	string originalWorkingDir;  ///< The working directory before the composition was started, if running in the current process.
+	bool paused;  ///< True if the composition is in a paused state.
 	bool stopped;	///< True if the composition is in a stopped state (either never started or started then stopped).
+	bool lostContact;   ///< True if the runner stopped receiving communication from the composition.
 	bool listenCanceled;  ///< True if the listen() loop should end.
 	dispatch_semaphore_t stoppedSemaphore;  ///< Signaled when the composition stops.
 	dispatch_semaphore_t beganListeningSemaphore;  ///< Signaled when the listen() socket connects.
 	dispatch_semaphore_t endedListeningSemaphore;  ///< Signaled when the listen() loop ends.
 	dispatch_queue_t controlQueue;  ///< Synchronizes control requests, so that each control request+reply is completed before the next begins.
 	pid_t compositionPid;	///< The Unix process id of the running composition.
+	bool trialRestrictionsEnabled;	///< If true, some nodes may restrict how they can be used.
 
 	void *ZMQContext;	///< The context used to initialize sockets.
 	void *ZMQControl;	///< The control socket. Not thread-safe.
@@ -169,8 +175,8 @@ private:
 	void saturating_semaphore_wait(dispatch_semaphore_t dsema, bool *sent);
 
 	VuoRunner(void);
-	void start(bool isPaused);
-	void listen(void);
+	void startInternal(void);
+	bool listen(string &error);
 	void setUpConnections(void);
 	void cleanUpConnections(void);
 	void vuoControlRequestSend(enum VuoControlRequest request, zmq_msg_t *messages, unsigned int messageCount);
@@ -178,11 +184,13 @@ private:
 	void vuoControlReplyReceive(enum VuoControlReply expectedReply);
 	void vuoLoaderControlReplyReceive(enum VuoLoaderControlReply expectedReply);
 	bool hasMoreToReceive(void *socket);
-	vector<string> receiveListOfStrings(void *socket);
+	string receiveString(string fallbackIfNull);
+	vector<string> receiveListOfStrings(void);
 	vector<Port *> getCachedPublishedPorts(bool input);
 	vector<Port *> refreshPublishedPorts(bool input);
 	bool isInCurrentProcess(void);
 	bool isUsingCompositionLoader(void);
+	void stopBecauseLostContact(string errorMessage);
 
 	friend class TestVuoRunner;
 };

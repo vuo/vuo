@@ -186,13 +186,32 @@ private slots:
 		delete compiler;
 	}
 
+	void testStartingAndStoppingComposition_data()
+	{
+		QTest::addColumn<int>("testNum");
+
+		int testNum = 0;
+		QTest::newRow("New process, executable") << testNum++;
+		QTest::newRow("New process, dylib") << testNum++;
+		QTest::newRow("Current process, runOnMainThread()") << testNum++;
+		QTest::newRow("Current process, drainMainDispatchQueue()") << testNum++;
+		QTest::newRow("Error handling: New process, runOnMainThread()") << testNum++;
+		QTest::newRow("Error handling: Current process, runOnMainThread() on non-main thread") << testNum++;
+		QTest::newRow("Error handling: New process, non-existent executable") << testNum++;
+		QTest::newRow("Error handling: New process, non-existent dylib") << testNum++;
+		QTest::newRow("Error handling: Current process, non-existent dylib") << testNum++;
+	}
 	void testStartingAndStoppingComposition()
 	{
+		QFETCH(int, testNum);
+
 		string compositionPath = getCompositionPath("WriteTimesToFile.vuo");
 
-		{
-			printf("    New process, executable\n"); fflush(stdout);
+		string nonExistentFile = "nonexistent";
+		QVERIFY(! VuoFileUtilities::fileExists(nonExistentFile));
 
+		if (testNum == 0)  // New process, executable
+		{
 			WriteTimesToFileHelper helper;
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
@@ -205,10 +224,8 @@ private slots:
 
 			helper.checkTimesInFile(beforeStartTime, afterStopTime);
 		}
-
+		else if (testNum == 1)  // New process, dylib
 		{
-			printf("    New process, dylib\n"); fflush(stdout);
-
 			WriteTimesToFileHelper helper;
 
 			VuoRunner *runner = createRunnerInNewProcessWithDylib(compositionPath);
@@ -221,10 +238,8 @@ private slots:
 
 			helper.checkTimesInFile(beforeStartTime, afterStopTime);
 		}
-
+		else if (testNum == 2)  // Current process, runOnMainThread()
 		{
-			printf("    Current process, runOnMainThread()\n"); fflush(stdout);
-
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
 			VuoRunner *runner = createRunnerInCurrentProcess(compositionPath);
@@ -241,10 +256,8 @@ private slots:
 			helper->checkTimesInFile(beforeStartTime, afterStopTime);
 			delete helper;
 		}
-
+		else if (testNum == 3)  // Current process, drainMainDispatchQueue()
 		{
-			printf("    Current process, drainMainDispatchQueue()\n"); fflush(stdout);
-
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
 			VuoRunner *runner = createRunnerInCurrentProcess(compositionPath);
@@ -265,9 +278,7 @@ private slots:
 			helper->checkTimesInFile(beforeStartTime, afterStopTime);
 			delete helper;
 		}
-
-		printf("    Error handling\n"); fflush(stdout);
-
+		else if (testNum == 4)  // Error handling: New process, runOnMainThread()
 		{
 			WriteTimesToFileHelper helper;
 
@@ -282,7 +293,7 @@ private slots:
 			runner->stop();
 			delete runner;
 		}
-
+		else if (testNum == 5)  // Error handling: Current process, runOnMainThread() on non-main thread
 		{
 			WriteTimesToFileHelper helper;
 
@@ -304,6 +315,37 @@ private slots:
 						   });
 			runner->runOnMainThread();
 			delete runner;
+		}
+		else if (testNum == 6)  // Error handling: New process, non-existent executable
+		{
+			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(nonExistentFile, "", false);
+			runner->start();
+			runner->waitUntilStopped();
+			delete runner;
+		}
+		else if (testNum == 7)  // Error handling: New process, non-existent dylib
+		{
+			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(),
+																					  nonExistentFile, nonExistentFile,
+																					  "", false);
+			runner->start();
+			runner->waitUntilStopped();
+			delete runner;
+		}
+		else if (testNum == 8)  // Error handling: Current process, non-existent dylib
+		{
+			VuoRunner *runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(nonExistentFile, "", false);
+			runner->start();
+			while (! runner->isStopped())
+			{
+				runner->drainMainDispatchQueue();
+				usleep(USEC_PER_SEC / 1000);
+			}
+			delete runner;
+		}
+		else
+		{
+			QFAIL("");
 		}
 	}
 
@@ -455,30 +497,30 @@ private slots:
 
 private:
 
-	class TestGettingPortValuesRunnerDelegate : public TestRunnerDelegate
+	class TestGettingPortSummariesRunnerDelegate : public TestRunnerDelegate
 	{
 	private:
-		struct IdentifierAndValue
+		struct IdentifierAndSummary
 		{
 			QString identifier;
-			QString value;
+			QString summary;
 		};
 
 		VuoRunner *runner;
 		bool isStopping;
 		int firstEventCountSeen;
 		string firedPortIdentifier;
-		vector<IdentifierAndValue> actualIdentifiersAndValues;
+		vector<IdentifierAndSummary> actualIdentifiersAndSummaries;
 
 	public:
-		TestGettingPortValuesRunnerDelegate()
+		TestGettingPortSummariesRunnerDelegate()
 		{
 			runner = NULL;
 			isStopping = false;
 			firstEventCountSeen = 0;
 		}
 
-		~TestGettingPortValuesRunnerDelegate()
+		~TestGettingPortSummariesRunnerDelegate()
 		{
 			delete runner;
 		}
@@ -542,59 +584,70 @@ private:
 			delete composition;
 
 			runner->setDelegate(this);
+			runner->startPaused();
 
-			runner->start();
+			{
+				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( firedPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->getInputPortSummary( incrementPortIdentifier )), QString("1"));
+				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( countPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->getInputPortSummary( item1PortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( listPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->getInputPortSummary( valuesPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( sumPortIdentifier )), QString("0"));
+			}
+
+			runner->unpause();
 			runner->waitUntilStopped();
 
-			vector<IdentifierAndValue> expectedIdentifiersAndValues;
+			vector<IdentifierAndSummary> expectedIdentifiersAndSummaries;
 			int count = 0;
-			for (int eventCount = 1; expectedIdentifiersAndValues.size() < actualIdentifiersAndValues.size(); ++eventCount)
+			for (int eventCount = 1; expectedIdentifiersAndSummaries.size() < actualIdentifiersAndSummaries.size(); ++eventCount)
 			{
 				count += eventCount;
 				if (eventCount >= firstEventCountSeen)
 				{
-					IdentifierAndValue firedPair = { firedPortIdentifier.c_str(), QString("%1").arg(eventCount) };
-					expectedIdentifiersAndValues.push_back(firedPair);
-					IdentifierAndValue incrementPair = { incrementPortIdentifier.c_str(), QString("%1").arg(eventCount) };
-					expectedIdentifiersAndValues.push_back(incrementPair);
-					IdentifierAndValue countPair = { countPortIdentifier.c_str(), QString("%1").arg(count) };
-					expectedIdentifiersAndValues.push_back(countPair);
-					IdentifierAndValue item1Pair = { item1PortIdentifier.c_str(), QString("%1").arg(count) };
-					expectedIdentifiersAndValues.push_back(item1Pair);
-					IdentifierAndValue listPair = { listPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
-					expectedIdentifiersAndValues.push_back(listPair);
-					IdentifierAndValue valuesPair = { valuesPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
-					expectedIdentifiersAndValues.push_back(valuesPair);
-					IdentifierAndValue sumPair = { sumPortIdentifier.c_str(), QString("%1").arg(count + 10) };
-					expectedIdentifiersAndValues.push_back(sumPair);
+					IdentifierAndSummary firedPair = { firedPortIdentifier.c_str(), QString("%1").arg(eventCount) };
+					expectedIdentifiersAndSummaries.push_back(firedPair);
+					IdentifierAndSummary incrementPair = { incrementPortIdentifier.c_str(), QString("%1").arg(eventCount) };
+					expectedIdentifiersAndSummaries.push_back(incrementPair);
+					IdentifierAndSummary countPair = { countPortIdentifier.c_str(), QString("%1").arg(count) };
+					expectedIdentifiersAndSummaries.push_back(countPair);
+					IdentifierAndSummary item1Pair = { item1PortIdentifier.c_str(), QString("%1").arg(count) };
+					expectedIdentifiersAndSummaries.push_back(item1Pair);
+					IdentifierAndSummary listPair = { listPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					expectedIdentifiersAndSummaries.push_back(listPair);
+					IdentifierAndSummary valuesPair = { valuesPortIdentifier.c_str(), QString("List containing 2 items: <ul><li>%1</li><li>10</li></ul>").arg(count) };
+					expectedIdentifiersAndSummaries.push_back(valuesPair);
+					IdentifierAndSummary sumPair = { sumPortIdentifier.c_str(), QString("%1").arg(count + 10) };
+					expectedIdentifiersAndSummaries.push_back(sumPair);
 				}
 			}
 
-			for (int i = 0; i < expectedIdentifiersAndValues.size(); ++i)
+			for (int i = 0; i < expectedIdentifiersAndSummaries.size(); ++i)
 			{
-				QCOMPARE(actualIdentifiersAndValues[i].identifier + " " + actualIdentifiersAndValues[i].value,
-						 expectedIdentifiersAndValues[i].identifier + " " + expectedIdentifiersAndValues[i].value);
+				QCOMPARE(actualIdentifiersAndSummaries[i].identifier + " " + actualIdentifiersAndSummaries[i].summary,
+						 expectedIdentifiersAndSummaries[i].identifier + " " + expectedIdentifiersAndSummaries[i].summary);
 			}
 		}
 
-		void appendIdentifierAndValue(string portIdentifier, string valueAsString)
+		void appendIdentifierAndSummary(string portIdentifier, string dataSummary)
 		{
 			if (isStopping)
 				return;
 
 			// The composition may have started counting up before the runner was able to connect and start receiving telemetry.
-			if (actualIdentifiersAndValues.empty())
+			if (actualIdentifiersAndSummaries.empty())
 			{
 				if (portIdentifier != firedPortIdentifier)
 					return;
 
-				firstEventCountSeen = atoi(valueAsString.c_str());
+				firstEventCountSeen = atoi(dataSummary.c_str());
 			}
 
-			IdentifierAndValue identifierAndValue = { portIdentifier.c_str(), valueAsString.c_str() };
-			actualIdentifiersAndValues.push_back(identifierAndValue);
+			IdentifierAndSummary identifierAndSummary = { portIdentifier.c_str(), dataSummary.c_str() };
+			actualIdentifiersAndSummaries.push_back(identifierAndSummary);
 
-			if (actualIdentifiersAndValues.size() == 70)
+			if (actualIdentifiersAndSummaries.size() == 70)
 			{
 				dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 				dispatch_async(queue, ^{
@@ -606,20 +659,20 @@ private:
 
 		void receivedTelemetryInputPortUpdated(string portIdentifier, bool receivedEvent, bool receivedData, string dataSummary)
 		{
-			appendIdentifierAndValue(portIdentifier, dataSummary);
+			appendIdentifierAndSummary(portIdentifier, dataSummary);
 		}
 
 		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
 		{
-			appendIdentifierAndValue(portIdentifier, dataSummary);
+			appendIdentifierAndSummary(portIdentifier, dataSummary);
 		}
 	};
 
 private slots:
 
-	void testGettingPortValues()
+	void testGettingPortSummaries()
 	{
-		TestGettingPortValuesRunnerDelegate delegate;
+		TestGettingPortSummariesRunnerDelegate delegate;
 		delegate.runComposition(compiler);
 	}
 
@@ -932,7 +985,6 @@ private:
 			runner->setDelegate(this);
 
 			runner->start();
-			runner->fireTriggerPortEvent(startedPortIdentifier);
 			runner->waitUntilStopped();
 		}
 
@@ -943,18 +995,20 @@ private:
 
 			if (timesSumChanged == 0)
 			{
-				if (dataSummary == "1")
-					return;  // In the unlikely event that the delegate sees the initial 'Fire on Start' event, ignore it.
-
-				QCOMPARE(QString(dataSummary.c_str()), QString("2"));
+				QCOMPARE(QString(dataSummary.c_str()), QString("1"));
 				runner->fireTriggerPortEvent(startedPortIdentifier);
 			}
 			else if (timesSumChanged == 1)
 			{
+				QCOMPARE(QString(dataSummary.c_str()), QString("2"));
+				runner->fireTriggerPortEvent(startedPortIdentifier);
+			}
+			else if (timesSumChanged == 2)
+			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("3"));
 				runner->fireTriggerPortEvent(spunOffPortIdentifier);
 			}
-			else if (timesSumChanged == 2)
+			else if (timesSumChanged == 3)
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("3"));
 				dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);

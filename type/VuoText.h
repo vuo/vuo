@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSTRING_H
-#define VUOSTRING_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -38,12 +37,16 @@ char * VuoText_getSummary(const VuoText value);
 
 VuoText VuoText_make(const char * unquotedString);
 VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength);
+VuoText VuoText_makeFromCFString(const void *cfString);
+VuoText VuoText_makeFromData(unsigned char *data, unsigned long size);
 size_t VuoText_length(const VuoText text);
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);
 bool VuoText_isLessThan(const VuoText text1, const VuoText text2);
+size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring, const size_t startIndex);
 size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring);
 VuoText VuoText_substring(const VuoText string, int startIndex, int length);
 VuoText VuoText_append(VuoText *texts, size_t textsCount);
+VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts, size_t *partsCount);
 VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement);
 VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength);
 VuoText VuoText_trim(const VuoText text);
@@ -71,6 +74,4 @@ void VuoText_release(VuoText value);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

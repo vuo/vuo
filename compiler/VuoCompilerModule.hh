@@ -59,7 +59,8 @@ public:
 	VuoCompilerTargetSet parseTargetSet(json_object *o, string key);
 	VuoCompilerTargetSet::MacVersion parseMacVersion(string version);
 	static Function * declareFunctionInModule(Module *module, Function *function);
-	set<string> getDependencies(void);
+	virtual set<string> getDependencies(void);
+	virtual string getDependencyName(void);
 	VuoCompilerTargetSet getCompatibleTargets(void);
 	Module * getModule(void);
 	VuoModule * getPseudoBase(void);
