@@ -28,6 +28,7 @@ runtime_c.commands = \
 		-emit-llvm \
 		$(CFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 		$(INCPATH) \
+		-I$$ROOT/node \
 		$$VUO_VERSION_DEFINES \
 		-I$$ROOT/base \
 		-c ${QMAKE_FILE_IN} \
@@ -65,6 +66,8 @@ runtime_loader.commands = \
 		-framework Foundation \
 		-Wl,-rpath,@loader_path/../../../../.. \
 		-Wl,-sectcreate,__TEXT,__info_plist,$$VUO_INFO_PLIST_GENERATED \
+		-Wl,-exported_symbol,_VuoApp_mainThread \
+		$$QMAKE_LFLAGS \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_loader

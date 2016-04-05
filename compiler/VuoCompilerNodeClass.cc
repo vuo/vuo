@@ -83,6 +83,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	getBase()->setInterface(compilerNodeClass->getBase()->isInterface());
 	getBase()->setNodeSet(compilerNodeClass->getBase()->getNodeSet());
 	getBase()->setExampleCompositionFileNames(compilerNodeClass->getBase()->getExampleCompositionFileNames());
+	getBase()->setDeprecated(compilerNodeClass->getBase()->getDeprecated());
 	getBase()->setCompiler(this);
 
 	this->dependencies = compilerNodeClass->dependencies;
@@ -281,6 +282,7 @@ void VuoCompilerNodeClass::parseMetadata(void)
 	{
 		getBase()->setInterface( parseBool(nodeDetails, "isInterface") );
 		getBase()->setExampleCompositionFileNames( parseArrayOfStrings(nodeDetails, "exampleCompositions") );
+		getBase()->setDeprecated( parseBool(nodeDetails, "isDeprecated") );
 	}
 
 	parseGenericTypes(moduleDetails, defaultSpecializedForGenericTypeName, compatibleSpecializedForGenericTypeName);
@@ -293,7 +295,7 @@ void VuoCompilerNodeClass::parseMetadata(void)
  */
 void VuoCompilerNodeClass::parseGenericTypes(json_object *moduleDetails,
 											 map<string, string> &defaultSpecializedForGenericTypeName,
-											 map<string, set<string> > &compatibleSpecializedForGenericTypeName)
+											 map<string, vector<string> > &compatibleSpecializedForGenericTypeName)
 {
 	json_object *genericTypeDetails = NULL;
 	if (json_object_object_get_ex(moduleDetails, "genericTypes", &genericTypeDetails))
@@ -306,7 +308,7 @@ void VuoCompilerNodeClass::parseGenericTypes(json_object *moduleDetails,
 
 			vector<string> compatibleTypes = parseArrayOfStrings(genericTypeDetailsForOneType, "compatibleTypes");
 			if (! compatibleTypes.empty())
-				compatibleSpecializedForGenericTypeName[genericTypeName].insert(compatibleTypes.begin(), compatibleTypes.end());
+				compatibleSpecializedForGenericTypeName[genericTypeName] = compatibleTypes;
 		}
 	}
 }
@@ -828,6 +830,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 	// Update the port action status for each input port.
 	for (vector<VuoPortClass *>::iterator i = inputPortClasses.begin(); i != inputPortClasses.end(); ++i)
 	{
+		VuoPortClass *portClass = *i;
 		VuoCompilerInputEventPortClass *eventPortClass = static_cast<VuoCompilerInputEventPortClass *>((*i)->getCompiler());
 		if (eventPortClass->getBase() != getBase()->getRefreshPortClass())
 		{
@@ -835,10 +838,10 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 			bool hasPortAction = parseBool(eventPortClass->getDetails(), "hasPortAction", &isPortActionInDetails);
 
 			if (isPortActionInDetails)
-				eventPortClass->setPortAction(hasPortAction);
+				portClass->setPortAction(hasPortAction);
 			else if (! eventPortClass->getDataClass() ||
 					 portsWithExplicitEventBlockingNone.find(eventPortClass) != portsWithExplicitEventBlockingNone.end())
-				eventPortClass->setPortAction(true);
+				portClass->setPortAction(true);
 		}
 	}
 }
@@ -972,14 +975,14 @@ VuoType * VuoCompilerNodeClass::parseTypeParameter(string annotation)
 	else if (VuoGenericType::isGenericTypeName(typeName))
 	{
 		string innermostTypeName = VuoType::extractInnermostTypeName(typeName);
-		set<string> compatibleTypes;
-		map<string, set<string> >::iterator compatibleTypesIter = compatibleSpecializedForGenericTypeName.find(innermostTypeName);
+		vector<string> compatibleTypes;
+		map<string, vector<string> >::iterator compatibleTypesIter = compatibleSpecializedForGenericTypeName.find(innermostTypeName);
 		if (compatibleTypesIter != compatibleSpecializedForGenericTypeName.end())
 		{
 			string prefix = (VuoType::isListTypeName(typeName) ? VuoType::listTypeNamePrefix : "");
-			set<string> innermostCompatibleTypes = compatibleTypesIter->second;
-			for (set<string>::iterator i = innermostCompatibleTypes.begin(); i != innermostCompatibleTypes.end(); ++i)
-				compatibleTypes.insert(prefix + *i);
+			vector<string> innermostCompatibleTypes = compatibleTypesIter->second;
+			for (vector<string>::iterator i = innermostCompatibleTypes.begin(); i != innermostCompatibleTypes.end(); ++i)
+				compatibleTypes.push_back(prefix + *i);
 		}
 
 		type = new VuoGenericType(typeName, compatibleTypes);
@@ -1005,7 +1008,7 @@ json_object * VuoCompilerNodeClass::parseDetailsParameter(string annotation)
 	{
 		detailsObj = json_tokener_parse(details.c_str());
 		if (! detailsObj)
-			VLog("Error: Couldn't parse vuoDetails: %s\n", details.c_str());
+			VLog("Error: Couldn't parse vuoDetails for `%s`: %s\n", getBase()->getClassName().c_str(), details.c_str());
 	}
 	return detailsObj;
 }

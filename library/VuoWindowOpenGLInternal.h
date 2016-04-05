@@ -10,6 +10,7 @@
 #include "node.h"
 #include "VuoGlContext.h"
 #include "VuoDisplayRefresh.h"
+#include "VuoWindowRecorder.h"
 
 #define NS_RETURNS_INNER_POINTER
 #import <AppKit/AppKit.h>
@@ -74,15 +75,24 @@
 	NSRect contentRectWhenWindowed;
 	NSUInteger styleMaskWhenWindowed;
 
+	NSRect contentRectCached;
+	float backingScaleFactorCached;
+	dispatch_queue_t contentRectQueue;  ///< Synchronizes access to contentRectCached.
+
 	void (*showedWindow)(VuoWindowReference window);  ///< Callback to invoke when the window is shown, moved, and resized.
 }
 
 @property(retain) VuoWindowOpenGLView *glView;  ///< The OpenGL view inside this window.
 @property BOOL depthBuffer;  ///< Was a depth buffer requested?
+@property NSRect contentRectCached;  ///< The position and size of the window's content area.  In points (not pixels).
+@property float backingScaleFactorCached;  ///< The number of pixels per point in the window's content area.
 @property NSRect contentRectWhenWindowed;  ///< The position and size of the window's content area, prior to switching to full-screen.  In points (not pixels).
 @property NSUInteger styleMaskWhenWindowed;  ///< The window's style mask, prior to switching to full-screen.
 @property VuoCursor cursor;  ///< The current mouse cursor for this window.
 @property(retain) NSString *titleBackup;	///< The window's title (stored since it gets cleared when switching to fullscreen mode).
+@property(retain) VuoWindowRecorder *recorder;	///< nil if recording is inactive.
+@property(retain) NSMenuItem *recordMenuItem;	///< The record/stop menu item.
+@property(retain) NSURL *temporaryMovieURL;	///< The temporary file to which the movie is being saved.
 
 - (id)initWithDepthBuffer:(BOOL)depthBuffer
 			  initCallback:(void (*)(VuoGlContext glContext, float backingScaleFactor, void *))initCallback
@@ -97,6 +107,5 @@
 - (void)setAspectRatioToWidth:(unsigned int)pixelsWide height:(unsigned int)pixelsHigh;
 - (void)unlockAspectRatio;
 - (void)setFullScreen:(BOOL)fullScreen onScreen:(NSScreen *)screen;
-- (void)getWidth:(unsigned int *)pixelsWide height:(unsigned int *)pixelsHigh;
-
+- (void)stopRecording;
 @end

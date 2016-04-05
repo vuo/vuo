@@ -2,7 +2,7 @@ Displays a window containing an image.
 
 When the composition starts or this node is added to a running composition, it displays a window that contains a graphics area. The window provides a menu option to toggle between windowed and full-screen mode.
 
-When this node receives an event, it places the image in the graphics area. The window is resized to fit the image.
+When this node receives an event, it places the image in the graphics area. The window is resized to fit the image, unless a `Change Window Size` or `Change Window Aspect Ratio` window property is in effect (in which case the `Reset Window Aspect Ratio` window property will return the window to its original aspect ratio and resume automatic resizing).
 
 When the user resizes the window, the window's aspect ratio is kept the same as the image's.
 

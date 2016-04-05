@@ -11,6 +11,8 @@ EXAMPLE_SOURCES += \
 	ShiftSquares.vuo \
 	ShuffleLetters.vuo \
 	SpliceSquares.vuo \
+	StringAlternatingBeads.vuo \
+	StringRepeatingBeads.vuo \
 	WobbleEggs.vuo
 
 include(../../../example.pri)

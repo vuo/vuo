@@ -1,0 +1,62 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,-16" _started_eventThrottling="enqueue"];
+FireOnStart11 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="721,73" _started_eventThrottling="enqueue"];
+FireOnStart12 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="542,72" _started_eventThrottling="enqueue"];
+FireOnStart13 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="203,71" _started_eventThrottling="enqueue"];
+FireOnStart14 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="31,69" _started_eventThrottling="enqueue"];
+FireOnStart15 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="364,73" _started_eventThrottling="enqueue"];
+FireOnStart16 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="33,240" _started_eventThrottling="enqueue"];
+FireOnStart17 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="543,158" _started_eventThrottling="enqueue"];
+FireOnStart18 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="365,159" _started_eventThrottling="enqueue"];
+FireOnStart19 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="722,159" _started_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="202,-14" _started_eventThrottling="enqueue"];
+FireOnStart20 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="205,242" _started_eventThrottling="enqueue"];
+FireOnStart21 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="32,155" _started_eventThrottling="enqueue"];
+FireOnStart22 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="204,157" _started_eventThrottling="enqueue"];
+FireOnStart23 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="544,243" _started_eventThrottling="enqueue"];
+FireOnStart24 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="723,244" _started_eventThrottling="enqueue"];
+FireOnStart25 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="366,244" _started_eventThrottling="enqueue"];
+FireOnStart26 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="33,325" _started_eventThrottling="enqueue"];
+FireOnStart27 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="545,479" _started_eventThrottling="enqueue"];
+FireOnStart28 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="367,480" _started_eventThrottling="enqueue"];
+FireOnStart29 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="206,478" _started_eventThrottling="enqueue"];
+FireOnStart3 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="363,-12" _started_eventThrottling="enqueue"];
+FireOnStart30 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="34,476" _started_eventThrottling="enqueue"];
+FireOnStart31 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="205,327" _started_eventThrottling="enqueue"];
+FireOnStart32 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="366,329" _started_eventThrottling="enqueue"];
+FireOnStart33 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="544,328" _started_eventThrottling="enqueue"];
+FireOnStart34 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="723,329" _started_eventThrottling="enqueue"];
+FireOnStart35 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="724,480" _started_eventThrottling="enqueue"];
+FireOnStart36 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="35,644" _started_eventThrottling="enqueue"];
+FireOnStart37 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="207,646" _started_eventThrottling="enqueue"];
+FireOnStart38 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="546,647" _started_eventThrottling="enqueue"];
+FireOnStart39 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="725,648" _started_eventThrottling="enqueue"];
+FireOnStart4 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="541,-13" _started_eventThrottling="enqueue"];
+FireOnStart40 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="368,648" _started_eventThrottling="enqueue"];
+FireOnStart41 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="37,815" _started_eventThrottling="enqueue"];
+FireOnStart42 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="547,733" _started_eventThrottling="enqueue"];
+FireOnStart43 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="369,734" _started_eventThrottling="enqueue"];
+FireOnStart44 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="726,734" _started_eventThrottling="enqueue"];
+FireOnStart45 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="206,561" _started_eventThrottling="enqueue"];
+FireOnStart46 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="209,817" _started_eventThrottling="enqueue"];
+FireOnStart47 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="36,730" _started_eventThrottling="enqueue"];
+FireOnStart48 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="208,732" _started_eventThrottling="enqueue"];
+FireOnStart49 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="548,818" _started_eventThrottling="enqueue"];
+FireOnStart5 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="720,-12" _started_eventThrottling="enqueue"];
+FireOnStart50 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="727,819" _started_eventThrottling="enqueue"];
+FireOnStart51 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="370,819" _started_eventThrottling="enqueue"];
+FireOnStart52 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="367,563" _started_eventThrottling="enqueue"];
+FireOnStart53 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="545,562" _started_eventThrottling="enqueue"];
+FireOnStart54 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="724,563" _started_eventThrottling="enqueue"];
+FireOnStart55 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="34,559" _started_eventThrottling="enqueue"];
+}

@@ -15,13 +15,16 @@ static const char *defaultVertexShaderSourceForGeometryShader = VUOSHADER_GLSL_S
 	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
+	attribute vec4 textureCoordinate;
 
 	// Outputs to geometry shader
 	varying vec4 positionForGeometry;
+	varying vec4 textureCoordinateForGeometry;
 
 	void main()
 	{
 		positionForGeometry = modelviewMatrix * position;
+		textureCoordinateForGeometry = textureCoordinate;
 		gl_Position = projectionMatrix * positionForGeometry;
 	}
 );
@@ -202,12 +205,11 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
  *
  * @threadAny
  */
-VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image)
+VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image, bool flipped)
 {
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// Inputs from ports
 		uniform sampler2D texture;
-		uniform float alpha;
 
 		// Inputs from vertex/geometry shader
 		varying vec4 fragmentTextureCoordinate;
@@ -218,8 +220,24 @@ VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image)
 		}
 	);
 
+	const char *fragmentShaderSourceFlipped = VUOSHADER_GLSL_SOURCE(120,
+		// Inputs from ports
+		uniform sampler2D texture;
+
+		// Inputs from vertex/geometry shader
+		varying vec4 fragmentTextureCoordinate;
+
+		void main()
+		{
+			gl_FragColor = texture2D(texture, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y));
+		}
+	);
+
 	VuoShader shader = VuoShader_make("Image Shader (Unlit, AlphaPassthru)");
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+	if (flipped)
+		VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSourceFlipped);
+	else
+		VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoShader_setUniform_VuoImage(shader, "texture", image);
 	return shader;
 }
@@ -271,7 +289,7 @@ VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha)
  *
  * @threadAny
  */
-VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image)
+VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image, bool flipped)
 {
 	if (!image)
 		return NULL;
@@ -280,7 +298,6 @@ VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image)
 		// Inputs
 		uniform sampler2DRect texture;
 		uniform vec2 textureSize;
-		uniform float alpha;
 		varying vec4 fragmentTextureCoordinate;
 
 		void main()
@@ -289,8 +306,23 @@ VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image)
 		}
 	);
 
+	const char *fragmentShaderSourceFlipped = VUOSHADER_GLSL_SOURCE(120,
+		// Inputs
+		uniform sampler2DRect texture;
+		uniform vec2 textureSize;
+		varying vec4 fragmentTextureCoordinate;
+
+		void main()
+		{
+			gl_FragColor = texture2DRect(texture, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y) * textureSize);
+		}
+	);
+
 	VuoShader shader = VuoShader_make("Image Shader (GL_TEXTURE_RECTANGLE, AlphaPassthru)");
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+	if (flipped)
+		VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSourceFlipped);
+	else
+		VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
 	VuoShader_setUniform_VuoImage  (shader, "texture",     image);
 	VuoShader_setUniform_VuoPoint2d(shader, "textureSize", VuoPoint2d_make(image->pixelsWide, image->pixelsHigh));
 	return shader;
@@ -630,10 +662,12 @@ static const char *lightingVertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE
 
 	// Outputs to geometry shader
 	varying vec4 positionForGeometry;
+	varying vec4 textureCoordinateForGeometry;
 
 	void main()
 	{
 		positionForGeometry = modelviewMatrix * position;
+		textureCoordinateForGeometry = textureCoordinate;
 		gl_Position = projectionMatrix * positionForGeometry;
 	}
 );

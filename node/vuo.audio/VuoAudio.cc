@@ -11,7 +11,11 @@
 #include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
 #include "RtAudio.h"
+#pragma clang diagnostic pop
+
 #include <dispatch/dispatch.h>
 #include <map>
 #include <queue>

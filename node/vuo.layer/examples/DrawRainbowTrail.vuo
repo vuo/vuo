@@ -9,41 +9,34 @@
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="357,86" _saturation="0" _hueShift="0" _contrast="0" _brightness="-0.020000" _exposure="0" _gamma="1"];
-HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="180,88"];
-LimitToRange [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="180,419" _minimum="0.000000" _maximum="1.000000" _wrapMode="\"wrap\""];
-Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="378,575"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="571,429" _rotation="0.000000" _width="0.010000" _height="0.010000"];
-MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="378,422" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="565,131" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="190,633" _1="0.750000"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1075,326" fillcolor="green"];
-MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="790,312" fillcolor="violet"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="236,622"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1116,300" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="enqueue"];
-RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="860,301" fillcolor="violet" _width="1024" _height="768" _colorDepth="\"8bpc\""];
-ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-145,422" fillcolor="green"];
-Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="29,668" _wave="\"sine\"" _period="2.100000" _center="0.000000" _amplitude="1.000000"];
-Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="24,532" _wave="\"sine\"" _period="5.000000" _center="0.000000" _amplitude="1.000000"];
+HoldValue2 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="405,120"];
+LimitToRange [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="255,345" _minimum="0.000000" _maximum="1.000000" _wrapMode="\"wrap\""];
+Make2DPoint2 [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="420,450"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="435,345" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="570,105" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="0.970000"];
+MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="786,311" fillcolor="violet"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="615,330" _rotation="0.000000" _width="0.200000" _height="0.200000" _sharpness="0.000000"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="855,300" fillcolor="violet" _colorDepth="\"8bpc\""];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="285,570" _wave="\"sine\"" _period="2.100000" _center="0.000000" _amplitude="0.400000"];
+Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="285,450" _wave="\"sine\"" _period="5.000000" _center="0.000000" _amplitude="0.800000"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<height>height\r|<width>width\r" _time_type="VuoReal" _height_type="VuoInteger" _width_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-AdjustImageColors:adjustedImage -> MakeLayer:image;
-HoldValue2:heldValue -> AdjustImageColors:image;
+HoldValue2:heldValue -> MakeLayer:image;
 LimitToRange:limitedValue -> MakeHSLColor:hue;
-Make2DPoint2:point -> MakeColorLayer:center;
-MakeColorLayer:layer -> MakeList5:2;
-MakeHSLColor:color -> MakeColorLayer:color;
+Make2DPoint2:point -> MakeOvalLayer:center;
+MakeHSLColor:color -> MakeOvalLayer:color;
 MakeLayer:layer -> MakeList5:1;
-MakeList0:list -> RenderImageToWindow2:setWindowProperties;
 MakeList5:list -> RenderLayersToImage:layers;
-MakeList:list -> Multiply:values;
-Multiply:product -> Make2DPoint2:y;
-RenderImageToWindow2:requestedFrame -> ShareValue2:value;
+MakeOvalLayer:layer -> MakeList5:2;
 RenderLayersToImage:image -> HoldValue2:newValue;
-RenderLayersToImage:image -> RenderImageToWindow2:image;
-ShareValue2:sameValue -> HoldValue2:refresh;
-ShareValue2:sameValue -> LimitToRange:value;
-ShareValue2:sameValue -> Wave2:time;
-ShareValue2:sameValue -> Wave:time;
 Wave2:value -> Make2DPoint2:x;
-Wave:value -> MakeList:2;
+Wave:value -> Make2DPoint2:y;
+PublishedInputs:time -> HoldValue2:refresh;
+PublishedInputs:time -> LimitToRange:value;
+PublishedInputs:time -> Wave:time;
+PublishedInputs:time -> Wave2:time;
+PublishedInputs:height -> RenderLayersToImage:height;
+PublishedInputs:width -> RenderLayersToImage:width;
+RenderLayersToImage:image -> PublishedOutputs:outputImage;
 }

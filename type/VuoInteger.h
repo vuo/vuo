@@ -40,6 +40,8 @@ VuoInteger VuoInteger_random(const VuoInteger minimum, const VuoInteger maximum)
 void VuoInteger_setRandomState(unsigned short state[3], const VuoInteger seed);
 VuoInteger VuoInteger_randomWithState(unsigned short state[3], const VuoInteger minimum, const VuoInteger maximum);
 
+VuoInteger VuoInteger_makeFromHexByte(unsigned char byte);
+
 /**
  * @c a+b
  *

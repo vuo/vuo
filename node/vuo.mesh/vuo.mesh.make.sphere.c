@@ -21,7 +21,8 @@ VuoModuleMetadata({
 						 "VuoMeshParametric"
 					 ],
 					 "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ ],
+						  "isDeprecated": true
 					 }
 				 });
 

@@ -25,6 +25,11 @@ public:
 	void setDataVuoType(VuoType *dataType);
 
 	/**
+	 * Returns the variable that stores this port's data, or NULL if this port is event-only.
+	 */
+	virtual GlobalVariable * getDataVariable(void) = 0;
+
+	/**
 	 * Returns a unique, consistent identifier for this port.
 	 */
 	virtual string getIdentifier(void) = 0;

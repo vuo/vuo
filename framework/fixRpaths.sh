@@ -24,5 +24,6 @@ find $FRAMEWORKS_DEST_DIR -type f -perm +111 -print0 | while read -d $'\0' i ; d
 		fix QtPrintSupport "$i"
 		fix QtOpenGL       "$i"
 		fix QtXml          "$i"
+		fix QtNetwork      "$i"
 	fi
 done

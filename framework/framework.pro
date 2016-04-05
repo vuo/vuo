@@ -50,9 +50,7 @@ MODULE_OBJECTS += \
 	$$ZXING_ROOT/lib/libzxing.a \
 	$$LIBXML2_ROOT/lib/libxml2.a \
 	$$ASSIMP_ROOT/lib/libassimp.a
-!equals(MAC_VERSION, "10.6") {
 	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
-}
 
 
 # Create and populate Headers directory
@@ -67,8 +65,8 @@ createHeadersDir.commands += ln -s . $${HEADERS_DEST_DIR}/Vuo &&
 createHeadersDir.commands += cp $$FRAMEWORK_VUO_HEADERS.files $${HEADERS_DEST_DIR} &&
 createHeadersDir.commands += cp Vuo.h $${HEADERS_DEST_DIR}/Vuo.h
 createHeadersDir.depends += $$FRAMEWORK_VUO_HEADERS.files $$FRAMEWORK_VUO_STUB_HEADER Vuo.h
-createHeadersDir.target = $${HEADERS_DEST_DIR}
-POST_TARGETDEPS += $${HEADERS_DEST_DIR}
+createHeadersDir.target = $${HEADERS_DEST_DIR}/Vuo.h
+POST_TARGETDEPS += $${HEADERS_DEST_DIR}/Vuo.h
 QMAKE_EXTRA_TARGETS += createHeadersDir
 
 
@@ -159,9 +157,8 @@ copyModules.commands = \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
 	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavutil.dylib"
-!equals(MAC_VERSION, "10.6") {
-	copyModules.commands += && install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib"
-}
+
+copyModules.commands += && install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib"
 copyModules.commands += && chmod -w "$$MODULES_DEST_DIR/*.dylib"
 copyModules.depends += $$MODULE_OBJECTS
 copyModules.target = $${MODULES_DEST_DIR}
@@ -191,8 +188,8 @@ ZEROMQ_HEADERS_DEST_DIR = "$$HEADERS_DEST_DIR/zmq"
 copyZeroMQHeaders.commands += rm -rf $${ZEROMQ_HEADERS_DEST_DIR} &&
 copyZeroMQHeaders.commands += mkdir -p $${ZEROMQ_HEADERS_DEST_DIR} &&
 copyZeroMQHeaders.commands += cp -a $${ZMQ_ROOT}/include/* $${ZEROMQ_HEADERS_DEST_DIR}
-copyZeroMQHeaders.target = $${ZEROMQ_HEADERS_DEST_DIR}
-POST_TARGETDEPS += $${ZEROMQ_HEADERS_DEST_DIR}
+copyZeroMQHeaders.target = $${ZEROMQ_HEADERS_DEST_DIR}/zmq.h
+POST_TARGETDEPS += $${ZEROMQ_HEADERS_DEST_DIR}/zmq.h
 QMAKE_EXTRA_TARGETS += copyZeroMQHeaders
 
 
@@ -201,8 +198,8 @@ JSON_HEADERS_DEST_DIR = "$$HEADERS_DEST_DIR/json"
 copyJsonHeaders.commands += rm -rf $${JSON_HEADERS_DEST_DIR} &&
 copyJsonHeaders.commands += mkdir -p $${JSON_HEADERS_DEST_DIR} &&
 copyJsonHeaders.commands += cp -r $${JSONC_ROOT}/include/json/* $${JSON_HEADERS_DEST_DIR}
-copyJsonHeaders.target = $${JSON_HEADERS_DEST_DIR}
-POST_TARGETDEPS += $${JSON_HEADERS_DEST_DIR}
+copyJsonHeaders.target = $${JSON_HEADERS_DEST_DIR}/json.h
+POST_TARGETDEPS += $${JSON_HEADERS_DEST_DIR}/json.h
 QMAKE_EXTRA_TARGETS += copyJsonHeaders
 
 
@@ -275,6 +272,7 @@ copyAndCleanQtFrameworks.commands = \
 		$${QT_ROOT}/lib/QtPrintSupport.framework \
 		$${QT_ROOT}/lib/QtOpenGL.framework \
 		$${QT_ROOT}/lib/QtXml.framework \
+		$${QT_ROOT}/lib/QtNetwork.framework \
 		$$RESOURCES_SUBDIR \
 	&& mv "$$RESOURCES_SUBDIR/QtCore.framework/Contents" "$$RESOURCES_SUBDIR/QtCore.framework/Versions/5/Resources" \
 	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtCore.framework/Resources" \
@@ -289,6 +287,8 @@ copyAndCleanQtFrameworks.commands = \
 	&& mv "$$RESOURCES_SUBDIR/QtOpenGL.framework/Contents" "$$RESOURCES_SUBDIR/QtOpenGL.framework/Versions/5/Resources" \
 	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtXml.framework/Resources" \
 	&& mv "$$RESOURCES_SUBDIR/QtXml.framework/Contents" "$$RESOURCES_SUBDIR/QtXml.framework/Versions/5/Resources" \
+	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtNetwork.framework/Resources" \
+	&& mv "$$RESOURCES_SUBDIR/QtNetwork.framework/Contents" "$$RESOURCES_SUBDIR/QtNetwork.framework/Versions/5/Resources" \
 	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtOpenGL.framework/Resources" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Qt*.prl" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Qt*_debug" \
@@ -309,6 +309,8 @@ copyAndCleanQtFrameworks.commands = \
 	&& install_name_tool -id "@rpath/QtOpenGL.framework/QtOpenGL" "$$RESOURCES_SUBDIR/QtOpenGL.framework/QtOpenGL" \
 	&& chmod +wx "$$RESOURCES_SUBDIR/QtXml.framework/Versions/$$QT_MAJOR_VERSION/QtXml" \
 	&& install_name_tool -id "@rpath/QtXml.framework/QtXml" "$$RESOURCES_SUBDIR/QtXml.framework/QtXml" \
+	&& chmod +wx "$$RESOURCES_SUBDIR/QtNetwork.framework/Versions/$$QT_MAJOR_VERSION/QtNetwork" \
+	&& install_name_tool -id "@rpath/QtNetwork.framework/QtNetwork" "$$RESOURCES_SUBDIR/QtNetwork.framework/QtNetwork" \
 	&& rm -rf $$QTPLUGINS_DEST_DIR \
 	&& mkdir -p $$QTPLUGINS_DEST_DIR \
 	&& cp -R $$QT_ROOT/plugins/accessible $$QTPLUGINS_DEST_DIR/accessible \
@@ -325,21 +327,34 @@ QMAKE_EXTRA_TARGETS += copyAndCleanQtFrameworks
 LIBS += $$VUO_PRI_LIBS
 LIBS += \
 	-framework AppKit \
+	-framework AVFoundation \
 	-framework CoreFoundation \
+	-framework CoreMedia \
 	-framework QuartzCore \
 	-framework OpenGL \
+	-framework IOKit \
 	-framework IOSurface \
 	-F$$FRAMEWORKS_DEST_DIR \
 	-Wl,-reexport_framework,llvm \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
+	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
+	$$CURL_ROOT/lib/libcurl.a \
+	$$ROOT/library/VuoBase64.o \
 	$$ROOT/library/VuoImageRenderer.o \
+	$$ROOT/library/VuoImageResize.o \
+	$$ROOT/library/VuoImageBlend.o \
 	$$ROOT/library/VuoImageBlur.o \
+	$$ROOT/library/VuoImageGet.o \
 	$$ROOT/library/VuoImageMapColors.o \
 	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
+	$$ROOT/library/VuoScreenCommon.o \
+	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
-	$$ROOT/library/libVuoHeap.dylib
+	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/node/vuo.serial/VuoSerialDevices.o \
+	$$ROOT/node/vuo.serial/VuoSerialIO.o
 
 
 # Turn Clang headers into a Framework.
@@ -430,7 +445,7 @@ POST_TARGETDEPS += $$VUO_FRAMEWORK_BINARY
 QMAKE_EXTRA_TARGETS += linkVuoFramework
 
 
-createCurrentLink.commands = ln -sf $$VUO_VERSION $$CURRENT_LINK
+createCurrentLink.commands = [ -L $$CURRENT_LINK ] || ln -sf $$VUO_VERSION $$CURRENT_LINK
 createCurrentLink.target = $$CURRENT_LINK
 createCurrentLink.depends = $$VUO_FRAMEWORK_BINARY
 POST_TARGETDEPS += $$CURRENT_LINK
@@ -454,7 +469,7 @@ QMAKE_EXTRA_TARGETS += createLinks
 fixOtherProjects.commands = \
 	( \
 		grep -q framework/Vuo.framework/Versions/$${VUO_VERSION}/Headers/Vuo.h ../compiler/vuo-link/Makefile \
-		|| (cd .. && /usr/local/bin/qmake -spec macx-clang CONFIG+=x86_64 -r) \
+		|| (cd .. && /usr/local/bin/qmake -spec macx-clang CONFIG+="'$$VUO_QMAKE_CONFIG'" -r) \
 	) \
 	&& rm -Rf $$ROOT/editor/VuoEditorApp/pch \
 	&& touch fixedOtherProjects
@@ -472,7 +487,11 @@ QMAKE_CLEAN += \
 	"Vuo\\.framework" \
 	$$RESOURCES_SUBDIR \
 	fixedOtherProjects \
-	vuo-*
+	vuo-compile \
+	vuo-debug \
+	vuo-export \
+	vuo-link \
+	vuo-render
 
 
 # Make available in Qt Creator.

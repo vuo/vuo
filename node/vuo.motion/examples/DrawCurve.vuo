@@ -9,26 +9,23 @@
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.1.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="1037,-44" _saturation="0" _contrast="0" _brightness="-0.010000" _exposure="0" _gamma="1"];
-BlendImages [type="vuo.image.blend" version="1.2.0" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="1233,211" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="383,164" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\""];
-Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="383,322" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
-Decreased [type="vuo.event.decreased.VuoReal" version="1.0.1" label="Decreased|<refresh>refresh\l|<value>value\l|<decreased>decreased\r" pos="857,-175"];
-HoldValue6 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1366,-59"];
-Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="546,255"];
-MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="1374,-154" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.000000}" _width="1024" _height="768"];
-MakeColorLayer4 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="745,219" _color="{\"r\":0.901961,\"g\":0.901961,\"b\":0.901961,\"a\":1.000000}" _rotation="0.000000" _width="0.030000" _height="0.030000"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1391,237" fillcolor="green"];
-MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="900,237"];
-MakeList21 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1391,237" fillcolor="green"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1432,211" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RenderLayersToImage2 [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="973,226" _width="1024" _height="768" _colorDepth="\"8bpc\""];
-SelectLatest2 [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1568,-126"];
-ShareValue4 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="230,1"];
+AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="825,30" _saturation="0" _hueShift="0" _contrast="0" _brightness="-0.010000" _exposure="0" _gamma="1"];
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="1200,210" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,165" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\""];
+Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,315" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
+Decreased [type="vuo.event.decreased.VuoReal" version="1.0.1" label="Decreased|<refresh>refresh\l|<value>value\l|<decreased>decreased\r" pos="855,-105"];
+HoldValue6 [type="vuo.data.hold.VuoImage" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="1020,15"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="525,255"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="1020,-75" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.000000}" _width="1024" _height="768"];
+MakeColorLayer4 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="735,225" _color="{\"r\":0.901961,\"g\":0.901961,\"b\":0.901961,\"a\":1.000000}" _rotation="0.000000" _width="0.030000" _height="0.030000"];
+MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="891,236"];
+RenderLayersToImage2 [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="960,225" _colorDepth="\"8bpc\""];
+SelectLatest2 [type="vuo.select.latest.2.VuoImage" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1200,-30"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _height_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
 AdjustImageColors:adjustedImage -> HoldValue6:newValue;
 BlendImages:blended -> AdjustImageColors:image;
-BlendImages:blended -> RenderImageToWindow2:image;
 Curve2:value -> Decreased:value;
 Curve2:value -> Make2DPoint:x;
 Curve3:value -> Make2DPoint:y;
@@ -37,13 +34,13 @@ HoldValue6:heldValue -> SelectLatest2:option2;
 Make2DPoint:point -> MakeColorLayer4:center;
 MakeColorImage:image -> SelectLatest2:option1;
 MakeColorLayer4:layer -> MakeList11:1;
-MakeList0:list -> RenderImageToWindow2:setWindowProperties;
 MakeList11:list -> RenderLayersToImage2:layers;
-MakeList21:list -> RenderImageToWindow2:setWindowProperties;
-RenderImageToWindow2:requestedFrame -> ShareValue4:value;
 RenderLayersToImage2:image -> BlendImages:foreground;
 RenderLayersToImage2:image -> HoldValue6:refresh;
 SelectLatest2:latest -> BlendImages:background;
-ShareValue4:sameValue -> Curve2:time;
-ShareValue4:sameValue -> Curve3:time;
+PublishedInputs:time -> Curve2:time;
+PublishedInputs:time -> Curve3:time;
+PublishedInputs:width -> RenderLayersToImage2:width;
+PublishedInputs:height -> RenderLayersToImage2:height;
+BlendImages:blended -> PublishedOutputs:outputImage;
 }

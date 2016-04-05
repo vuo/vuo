@@ -10,6 +10,7 @@ EXAMPLE_SOURCES += \
 	EnhanceBlue.vuo \
 	EnlargeMovie.vuo \
 	FlipMovie.vuo \
+	GenerateCheckerboardImage.vuo \
 	MaskMovieByBrightness.vuo \
 	MaskMovieWithStar.vuo \
 	MirrorMovie.vuo \
@@ -19,9 +20,11 @@ EXAMPLE_SOURCES += \
 	OffsetColors.vuo \
 	RecolorMovie.vuo \
 	RenderTextImage.vuo \
+	RippleImageGradients.vuo \
 	RotateMovie.vuo \
 	ScanBarcodes.vuo \
 	SeparateRedGreenBlue.vuo \
+	ShowColorFromImage.vuo \
 	SimulateFilmProjector.vuo \
 	TileMovie.vuo \
 	VignetteMovie.vuo \

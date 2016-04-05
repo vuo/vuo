@@ -17,6 +17,10 @@ extern "C"
 
 #include <stdint.h>
 
+void VuoApp_init(void);
+void VuoApp_fini(void);
+bool VuoApp_isMainThread(void);
+
 /**
  * A window containing a text edit widget.
  */

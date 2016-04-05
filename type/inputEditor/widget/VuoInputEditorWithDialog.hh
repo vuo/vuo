@@ -21,12 +21,19 @@ public:
 	json_object * show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues);
 
 protected:
+	VuoInputEditorWithDialog(void);
 	QDialog * getDialog(void);
+	void setFirstWidgetInTabOrder(QWidget *widget);
+	void setLastWidgetInTabOrder(QWidget *widget);
+	bool eventFilter(QObject *object, QEvent *event);
 
 	/**
 	 * Adds widgets to the dialog and configures them to display the dialog's initial value.
 	 *
-	 * @param dialog The dialog, which is initially empty.
+	 * @param dialog The dialog, which is initially empty. It has a style sheet that makes the dialog and any
+	 *		widgets added to it default to a standard style, which depends on the Vuo Editor's "Dark Interface"
+	 *		setting. If changing fonts of widgest, you may need to use `QWidget::setStyleSheet()` instead of
+	 *		`QWidget::setFont()`, since the latter may have no effect (http://doc.qt.io/qt-5/qwidget.html#font-prop).
 	 * @param originalValue The value to display initially in the dialog.
 	 * @param details Additional details (e.g., suggested min. and max. values) pertaining to the port data.
 	 */
@@ -39,6 +46,8 @@ protected:
 
 private:
 	QDialog *dialogPointer;
+	QWidget *firstWidgetInTabOrder;
+	QWidget *lastWidgetInTabOrder;
 };
 
 #endif // VUOINPUTEDITORWITHDIALOG_HH

@@ -30,7 +30,10 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 	this->isPremium = false;
 
 	if (module)
+	{
+		module->setModuleIdentifier(getPseudoBase()->getModuleKey());
 		parse();
+	}
 }
 
 /**
@@ -214,8 +217,6 @@ VuoCompilerTargetSet VuoCompilerModule::parseTargetSet(json_object *o, string ke
  */
 VuoCompilerTargetSet::MacVersion VuoCompilerModule::parseMacVersion(string version)
 {
-	if (version == "10.6")
-		return VuoCompilerTargetSet::MacVersion_10_6;
 	if (version == "10.7")
 		return VuoCompilerTargetSet::MacVersion_10_7;
 	if (version == "10.8")
@@ -347,6 +348,15 @@ Function * VuoCompilerModule::declareFunctionInModule(Module *module, Function *
 set<string> VuoCompilerModule::getDependencies(void)
 {
 	return dependencies;
+}
+
+/**
+ * Returns the name that would represent this VuoCompilerModule in another VuoCompilerModule's
+ * list of dependencies.
+ */
+string VuoCompilerModule::getDependencyName(void)
+{
+	return base->getModuleKey();
 }
 
 /**

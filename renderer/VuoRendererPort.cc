@@ -73,7 +73,7 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 
 	const int maxAnimationsPerPort = 4;
 
-	if (getBase()->getClass()->getPortType() == VuoPortClass::triggerPort)
+	if (getInput() || (getBase()->getClass()->getPortType() == VuoPortClass::triggerPort))
 	{
 		for (int i = 0; i < maxAnimationsPerPort; ++i)
 		{
@@ -414,6 +414,28 @@ bool VuoRendererPort::hasConnectedWirelessEventCable(bool includePublishedCables
 }
 
 /**
+ * Returns the tint color to be used in rendering the port shape.
+ */
+VuoNode::TintColor VuoRendererPort::getPortTint() const
+{
+	VuoRendererNode *renderedParentNode = getRenderedParentNode();
+	if (renderedParentNode)
+		return renderedParentNode->getBase()->getTintColor();
+	else
+	{
+		// Tint protocol ports the same color as the protocol.
+		VuoRendererPublishedPort *publishedPort = getProxyPublishedSidebarPort();
+		if (publishedPort && publishedPort->getBase()->isProtocolPort())
+		{
+			// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
+			return VuoRendererColors::getActiveProtocolTint(0);
+		}
+	}
+
+	return VuoNode::TintNone;
+}
+
+/**
  * Returns the tint color of the wireless antenna.
  * Tint output antennas the same color as their parent nodes.
  * Tint input antennas the color of their wirelessly connected "From" ports, or leave untinted if there are multiple
@@ -422,12 +444,12 @@ bool VuoRendererPort::hasConnectedWirelessEventCable(bool includePublishedCables
 VuoNode::TintColor VuoRendererPort::getWirelessAntennaTint() const
 {
 	if (!getInput())
-		return (getRenderedParentNode()? getRenderedParentNode()->getBase()->getTintColor() : VuoNode::TintNone);
+		return getPortTint();
 
 	set<VuoNode::TintColor> connectedPortTints;
 	foreach (VuoRendererPort *port, getPortsConnectedWirelessly(true))
 	{
-		connectedPortTints.insert(port->getRenderedParentNode()? port->getRenderedParentNode()->getBase()->getTintColor() : VuoNode::TintNone);
+		connectedPortTints.insert(port->getPortTint());
 		if (connectedPortTints.size() > 1)
 			return VuoNode::TintNone;
 	}
@@ -871,14 +893,7 @@ string VuoRendererPort::getDefaultPortNameToRender()
  */
 bool VuoRendererPort::hasPortAction(void) const
 {
-	if (getBase()->getClass()->hasCompiler())
-	{
-		VuoCompilerInputEventPortClass *eventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>(getBase()->getClass()->getCompiler());
-		if (eventPortClass)
-			return eventPortClass->hasPortAction();
-	}
-
-	return false;
+	return getBase()->getClass()->hasPortAction();
 }
 
 /**
@@ -940,6 +955,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	if (!(scene() || sidebarPaintMode))
 		return;
 
+	painter->setRenderHint(QPainter::Antialiasing, true);
 	drawBoundingRect(painter);
 
 	bool isColorInverted = isRefreshPort || isFunctionPort;
@@ -963,7 +979,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 									(renderedParentNode? renderedParentNode->getTimeLastExecutionEnded() :
 									VuoRendererItem::notTrackingActivity))));
 
-	VuoRendererColors *colors = new VuoRendererColors((renderedParentNode? renderedParentNode->getBase()->getTintColor() : VuoNode::TintNone),
+	VuoRendererColors *colors = new VuoRendererColors(getPortTint(),
 													  selectionType,
 													  isHovered,
 													  highlightType,
@@ -983,6 +999,8 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		portBrush = colors->portTitlebarFill();
 	else if (isAnimated)
 		portBrush = colors->animatedPortFill();
+	else if (getProxyPublishedSidebarPort() && getProxyPublishedSidebarPort()->getBase()->isProtocolPort())
+		portBrush = colors->portTitlebarFill();
 	else if (sidebarPaintMode)
 		portBrush = colors->publishedPortFill();
 	else
@@ -1475,11 +1493,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			double real = json_object_get_double(js);
 			json_object_put(js);
 
-			QString valueAsStringInUserLocale = QLocale::system().toString(real);
-			if (qAbs(real) >= 1000.0)
-				valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
-
-			return valueAsStringInUserLocale.toStdString();
+			return getStringForRealValue(real);
 		}
 
 		if (getDataType()->getModuleKey()=="VuoPoint2d")
@@ -1640,6 +1654,96 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			return VuoText_format("(%g,%g) %g° %g×%g",
 								  value.translation.x, value.translation.y, rotationInDegrees, value.scale.x, value.scale.y);
 		}
+		if (getDataType()->getModuleKey()=="VuoMovieFormat")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *imageEncoding = NULL;
+			if (json_object_object_get_ex(js, "imageEncoding", &o))
+			{
+				imageEncoding = json_object_get_string(o);
+				if (strcmp(imageEncoding, "H264") == 0)
+					imageEncoding = "H.264";
+				else if (strcmp(imageEncoding, "ProRes4444") == 0)
+					imageEncoding = "ProRes 4444";
+				else if (strcmp(imageEncoding, "ProRes422") == 0)
+					imageEncoding = "ProRes 422";
+			}
+
+			const char *audioEncoding = NULL;
+			if (json_object_object_get_ex(js, "audioEncoding", &o))
+			{
+				audioEncoding = json_object_get_string(o);
+				if (strcmp(audioEncoding, "LinearPCM") == 0)
+					audioEncoding = "Linear PCM";
+			}
+
+			const char *outputString = "";
+			if (imageEncoding && audioEncoding)
+				outputString = QString("%1, %2").arg(imageEncoding).arg(audioEncoding).toUtf8().data();
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoScreen")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *label = NULL;
+
+			VuoScreenType type = VuoScreenType_Primary;
+			if (json_object_object_get_ex(js, "type", &o))
+			{
+				type = VuoScreen_typeFromCString(json_object_get_string(o));
+
+				if (type == VuoScreenType_Active)
+					label = "(active)";
+				else if (type == VuoScreenType_Primary)
+					label = "(primary)";
+				else if (type == VuoScreenType_Secondary)
+					label = "(secondary)";
+				else if (type == VuoScreenType_MatchName)
+				{
+					if (json_object_object_get_ex(js, "name", &o))
+						label = json_object_get_string(o);
+				}
+				else if (type == VuoScreenType_MatchId)
+				{
+					VuoScreen screen = VuoScreen_makeFromJson(js);
+					VuoScreen realizedScreen;
+					if (VuoScreen_realize(screen, &realizedScreen))
+						label = realizedScreen.name;
+				}
+			}
+
+			const char *outputString = "";
+			if (label)
+				outputString = strdup(label);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoSerialDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(first)";
+			if (name && strlen(name))
+				outputString = strdup(name);
+
+			json_object_put(js);
+
+			return outputString;
+		}
 	}
 
 	// If it's a JSON string (e.g., VuoText or an enum identifier), unescape and truncate it.
@@ -1711,16 +1815,23 @@ string VuoRendererPort::getPointStringForCoords(QList<double> coordList) const
 	QStringList coordStringList;
 
 	foreach (double coord, coordList)
-	{
-		QString valueAsStringInUserLocale = QLocale::system().toString(coord);
-		if (qAbs(coord) >= 1000.0)
-			valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
-
-		coordStringList.append(valueAsStringInUserLocale);
-	}
+		coordStringList.append(getStringForRealValue(coord).c_str());
 
 	QString pointString = QString("(").append(coordStringList.join(coordSeparator).append(")"));
 	return pointString.toStdString();
+}
+
+/**
+  * Given a real number, returns the string representation of the number
+  * as it should be rendered within a constant data flag.
+  */
+string VuoRendererPort::getStringForRealValue(double value) const
+{
+	QString valueAsStringInUserLocale = QLocale::system().toString(value);
+	if (qAbs(value) >= 1000.0)
+		valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
+
+	return valueAsStringInUserLocale.toStdString();
 }
 
 /**

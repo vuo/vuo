@@ -3,7 +3,7 @@ TEMPLATE = aux
 include(../../../vuo.pri)
 
 NODE_SOURCES += \
-	vuo.test.compatibleWith106.c \
+	vuo.test.compatibleWith107.c \
 	vuo.test.compatibleWith107And108.c \
 	vuo.test.compatibleWith107AndUp.c \
 	vuo.test.details.c \

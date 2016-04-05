@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG -= qt app_bundle
 CONFIG += console VuoFramework
+LIBS += -framework CoreFoundation
 TARGET = vuo-link
 
 VUO_INFO_PLIST = vuo-link-Info.plist
@@ -18,3 +19,9 @@ FRAMEWORK_HELPERS_FOLDER = $$ROOT/framework/Vuo.framework/Versions/$$VUO_VERSION
 QMAKE_POST_LINK += \
 	   mkdir -p "$$FRAMEWORK_HELPERS_FOLDER" \
 	&& cp vuo-link "$$FRAMEWORK_HELPERS_FOLDER"
+
+EDITOR_FOLDER = $$ROOT/editor/VuoEditorApp
+exists($$EDITOR_FOLDER) {
+	EDITOR_FRAMEWORK_HELPERS_FOLDER = $$EDITOR_FOLDER/Vuo\ Editor.app/Contents/Frameworks/Vuo.framework/Versions/$$VUO_VERSION/Helpers
+	QMAKE_POST_LINK += && cp vuo-link "$$EDITOR_FRAMEWORK_HELPERS_FOLDER"
+}

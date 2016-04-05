@@ -130,6 +130,7 @@ private:
 	VuoRendererNode *proxyNode; ///< The optional node that handles the rendering for this node.
 
 	// Drawing configuration
+	static const qreal outerBorderWidth;
 	static const qreal subcompositionBulge;
 	static const qreal nodeClassHeight;
 	static const qreal antennaIconWidth;

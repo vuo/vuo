@@ -579,31 +579,50 @@ void VuoMouse_stopListening(VuoMouse *mouseListener)
 
 
 /**
- * Returns the current mouse position.
+ * Outputs the current mouse position and whether the mouse is currently pressed.
+ *
+ * If the application is not active, then neither @a position nor @a isPressed is modified.
+ *
+ * If a window is given, but it's not the key window or the mouse is not within the window, then
+ * @a position is modified but @a isPressed is not.
+ *
+ * If a window is given, the mouse position is in Vuo coordinates relative to the window's content view.
+ * Otherwise, the mouse position is in screen coordinates.
  */
-VuoPoint2d VuoMouse_getPosition(VuoWindowReference windowRef)
+void VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
+						VuoMouseButton button, VuoWindowReference windowRef, VuoModifierKey modifierKey)
 {
-	VuoPoint2d convertedPoint;
+	if (! [NSApp isActive])
+		return;
+
+	bool shouldTrackPresses;
 	if (windowRef)
 	{
 		NSWindow *targetWindow = (NSWindow *)windowRef;
 		NSPoint pointInWindow = [targetWindow mouseLocationOutsideOfEventStream];
-		convertedPoint = VuoMouse_convertWindowToVuoCoordinates(pointInWindow, targetWindow);
+		*position = VuoMouse_convertWindowToVuoCoordinates(pointInWindow, targetWindow);
+
+		if ([targetWindow isKeyWindow])
+		{
+			NSView *view = [targetWindow contentView];
+			NSPoint pointInView = [view convertPoint:pointInWindow fromView:nil];
+			shouldTrackPresses = NSPointInRect(pointInView, [view frame]);
+		}
+		else
+			shouldTrackPresses = false;
 	}
 	else
 	{
 		NSPoint pointInScreen = [NSEvent mouseLocation];
 		pointInScreen.y = [[NSScreen mainScreen] frame].size.height - pointInScreen.y;
-		convertedPoint = VuoPoint2d_make(pointInScreen.x, pointInScreen.y);
-	}
-	return convertedPoint;
-}
+		*position = VuoPoint2d_make(pointInScreen.x, pointInScreen.y);
 
-/**
- * Returns true if the given mouse button is currently pressed.
- */
-VuoBoolean VuoMouse_isPressed(VuoMouseButton button, VuoModifierKey modifierKey)
-{
+		shouldTrackPresses = true;
+	}
+
+	if (! shouldTrackPresses)
+		return;
+
 	NSUInteger buttonMask = 0;
 	switch (button)
 	{
@@ -615,7 +634,10 @@ VuoBoolean VuoMouse_isPressed(VuoMouseButton button, VuoModifierKey modifierKey)
 
 			// Also return true for control-leftclicks.
 			if (([NSEvent pressedMouseButtons] & 1) && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], VuoModifierKey_Control))
-				return true;
+			{
+				*isPressed = true;
+				return;
+			}
 
 			break;
 		case VuoMouseButton_Middle:
@@ -625,5 +647,5 @@ VuoBoolean VuoMouse_isPressed(VuoMouseButton button, VuoModifierKey modifierKey)
 			buttonMask = (1 << 0) | (1 << 1) | (1 << 2);
 			break;
 	}
-	return ([NSEvent pressedMouseButtons] & buttonMask) && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], modifierKey);
+	*isPressed = ([NSEvent pressedMouseButtons] & buttonMask) && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], modifierKey);
 }

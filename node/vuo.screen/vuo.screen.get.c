@@ -11,13 +11,13 @@
 
 VuoModuleMetadata({
 					  "title" : "Get Screen Values",
-					  "keywords" : [ "display", "monitor", "device" ],
-					  "version" : "1.0.0"
+					  "keywords" : [ "display", "monitor", "device", "information" ],
+					  "version" : "1.1.0"
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoScreen) screen,
+		VuoInputData(VuoScreen, {"default":{"type":"active"}}) screen,
 		VuoOutputData(VuoText) name,
 		VuoOutputData(VuoPoint2d) topLeft,
 		VuoOutputData(VuoInteger) width,
@@ -26,10 +26,14 @@ void nodeEvent
 		VuoOutputData(VuoInteger, {"name":"DPI Vertical"}) dpiVertical
 )
 {
-	*name = screen.name;
-	*topLeft = screen.topLeft;
-	*width = screen.width;
-	*height = screen.height;
-	*dpiHorizontal = screen.dpiHorizontal;
-	*dpiVertical = screen.dpiVertical;
+	VuoScreen realizedScreen;
+	if (VuoScreen_realize(screen, &realizedScreen))
+	{
+		*name          = realizedScreen.name;
+		*topLeft       = realizedScreen.topLeft;
+		*width         = realizedScreen.width;
+		*height        = realizedScreen.height;
+		*dpiHorizontal = realizedScreen.dpiHorizontal;
+		*dpiVertical   = realizedScreen.dpiVertical;
+	}
 }

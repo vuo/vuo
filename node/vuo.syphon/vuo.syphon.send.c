@@ -46,7 +46,7 @@ static void updateServer(struct nodeInstanceData *context, VuoText newServerName
 
 struct nodeInstanceData * nodeInstanceInit
 (
-		VuoInputData(VuoText, "") serverName
+		VuoInputData(VuoText) serverName
 )
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
@@ -62,7 +62,7 @@ struct nodeInstanceData * nodeInstanceInit
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoText, "") serverName,
+		VuoInputData(VuoText) serverName,
 		VuoInputData(VuoImage) sendImage,
 		VuoInputEvent({"eventBlocking":"none","data":"sendImage"}) sendImageEvent,
 		VuoInstanceData(struct nodeInstanceData *) context

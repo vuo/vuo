@@ -11,6 +11,7 @@
 #include "VuoRendererComposition.hh"
 
 bool VuoRendererItem::drawBoundingRects = false;
+bool VuoRendererItem::snapToGrid = false;
 
 /**
  * Specifies whether bounding rects will be shown the next time the QGraphicsScene is rendered.
@@ -18,6 +19,23 @@ bool VuoRendererItem::drawBoundingRects = false;
 void VuoRendererItem::setDrawBoundingRects(bool drawBoundingRects)
 {
 	VuoRendererItem::drawBoundingRects = drawBoundingRects;
+}
+
+/**
+ * Specifies whether graphics items should be snapped to a grid.
+ */
+void VuoRendererItem::setSnapToGrid(bool snap)
+{
+	VuoRendererItem::snapToGrid = snap;
+}
+
+/**
+ * Retrieves the boolean indicating whether graphics items should be
+ * snapped to a grid.
+ */
+bool VuoRendererItem::getSnapToGrid()
+{
+	return VuoRendererItem::snapToGrid;
 }
 
 /**

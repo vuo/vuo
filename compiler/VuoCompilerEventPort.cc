@@ -60,6 +60,15 @@ StoreInst * VuoCompilerEventPort::generateStore(bool value, BasicBlock *block)
 }
 
 /**
+ * Returns the variable that stores this port's data, or NULL if this port is event-only.
+ */
+GlobalVariable * VuoCompilerEventPort::getDataVariable(void)
+{
+	VuoCompilerData *data = getData();
+	return (data == NULL ? NULL : data->getVariable());
+}
+
+/**
  * Returns constant with value @c value.
  */
 Constant * VuoCompilerEventPort::getBoolConstant(bool value)

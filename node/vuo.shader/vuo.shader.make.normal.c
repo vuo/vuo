@@ -71,13 +71,16 @@ static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
+	attribute vec4 textureCoordinate;
 
 	// Outputs to geometry shader
 	varying vec4 positionForGeometry;
+	varying vec4 textureCoordinateForGeometry;
 
 	void main()
 	{
 		positionForGeometry = modelviewMatrix * position;
+		textureCoordinateForGeometry = textureCoordinate;
 		gl_Position = projectionMatrix * positionForGeometry;
 	}
 );

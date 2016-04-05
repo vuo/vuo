@@ -13,10 +13,12 @@
 
 VuoModuleMetadata({
 					 "title" : "Wave",
-					 "keywords" : [ "sine", "cosine", "sawtooth", "triangle", "phase accumulator", "oscillator", "frequency", "period", "LFO", "VCO", "DCO", "NCO" ],
+					 "keywords" : [ "sine", "cosine", "sawtooth", "triangle", "phase accumulator", "oscillator", "frequency", "period", "VCO", "DCO", "NCO",
+						 /* QC */ "LFO", "Wave Generator"
+					 ],
 					 "version" : "2.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "WaveSphere.vuo" ]
+						 "exampleCompositions" : [ "WaveCircle.vuo" ]
 					 }
 				 });
 

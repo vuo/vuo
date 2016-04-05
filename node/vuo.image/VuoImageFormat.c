@@ -52,7 +52,14 @@ VuoImageFormat VuoImageFormat_makeFromJson(json_object *js)
 		value = VuoImageFormat_HDR;
 	} else if (! strcmp(valueAsString, "EXR")) {
 		value = VuoImageFormat_EXR;
-	}
+	} else if (! strcmp(valueAsString, "GIF")) {
+		value = VuoImageFormat_GIF;
+	} else if (! strcmp(valueAsString, "TARGA")) {
+		value = VuoImageFormat_TARGA;
+	} 
+	// else if (! strcmp(valueAsString, "WEBP")) {
+	// 	value = VuoImageFormat_WEBP;
+	// }
 
 	return value;
 }
@@ -84,6 +91,15 @@ json_object * VuoImageFormat_getJson(const VuoImageFormat value)
 		case VuoImageFormat_EXR:
 			valueAsString = "EXR";
 			break;
+		case VuoImageFormat_GIF:
+			valueAsString = "GIF";
+			break;
+		case VuoImageFormat_TARGA:
+			valueAsString = "TARGA";
+			break;
+		// case VuoImageFormat_WEBP:
+		// 	valueAsString = "WEBP";
+		// 	break;
 	}
 
 	return json_object_new_string(valueAsString);
@@ -101,6 +117,9 @@ VuoList_VuoImageFormat VuoImageFormat_getAllowedValues(void)
 	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_BMP);
 	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_HDR);
 	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_EXR);
+	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_GIF);
+	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_TARGA);
+	// VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_WEBP);
 	return l;
 }
 
@@ -131,9 +150,122 @@ char * VuoImageFormat_getSummary(const VuoImageFormat value)
 		case VuoImageFormat_EXR:
 			valueAsString = "EXR";
 			break;
+		case VuoImageFormat_GIF:
+			valueAsString = "GIF";
+			break;
+		case VuoImageFormat_TARGA:
+			valueAsString = "TARGA";
+			break;
+		// case VuoImageFormat_WEBP:
+		// 	valueAsString = "WEBP";
+		// 	break;
 	}
 
 	return strdup(valueAsString);
+}
+
+/**
+ * @ingroup VuoImageFormat
+ * Return an array of valid file extensions for this format (ex, JPEG returns {"jpeg", "jpg"}).
+ */
+char** VuoImageFormat_getValidFileExtensions(const VuoImageFormat value, int* length)
+{
+	switch (value)
+	{
+		case VuoImageFormat_PNG:
+		{
+			*length = 1;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("png"));
+			strcpy(fileExtensions[0], "png");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_JPEG:
+		{
+			*length = 2;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+
+			fileExtensions[0] = (char*)malloc(strlen("jpg") * sizeof(char));
+			fileExtensions[1] = (char*)malloc(strlen("jpeg") * sizeof(char));
+
+			strcpy(fileExtensions[0], "jpg");
+			strcpy(fileExtensions[1], "jpeg");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_TIFF:
+		{
+			*length = 2;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+
+			fileExtensions[0] = (char*)malloc(strlen("tif") * sizeof(char));
+			fileExtensions[1] = (char*)malloc(strlen("tiff") * sizeof(char));
+
+			strcpy(fileExtensions[0], "tif");
+			strcpy(fileExtensions[1], "tiff");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_BMP:
+		{
+			*length = 1;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("bmp"));
+			strcpy(fileExtensions[0], "bmp");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_HDR:
+		{
+			*length = 1;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("hdr"));
+			strcpy(fileExtensions[0], "hdr");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_EXR:
+		{
+			*length = 1;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("exr"));
+			strcpy(fileExtensions[0], "exr");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_GIF:
+		{
+			*length = 1;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("gif"));
+			strcpy(fileExtensions[0], "gif");
+			return fileExtensions;
+		}
+
+		case VuoImageFormat_TARGA:
+		{
+			*length = 2;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("tga"));
+			fileExtensions[1] = (char*)malloc(sizeof(char) * strlen("targa"));
+
+			strcpy(fileExtensions[0], "tga");
+			strcpy(fileExtensions[1], "targa");
+
+			return fileExtensions;
+		}
+
+		// case VuoImageFormat_WEBP:
+		// {
+		// 	*length = 1;
+		// 	char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+		// 	fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("webp"));
+		// 	strcpy(fileExtensions[0], "webp");
+		// 	return fileExtensions;
+		// }
+	}
 }
 
 /**
@@ -163,6 +295,15 @@ char * VuoImageFormat_getExtension(const VuoImageFormat value)
 		case VuoImageFormat_EXR:
 			valueAsString = "exr";
 			break;
+		case VuoImageFormat_GIF:
+			valueAsString = "gif";
+			break;
+		case VuoImageFormat_TARGA:
+			valueAsString = "tga";
+			break;
+		// case VuoImageFormat_WEBP:
+		// 	valueAsString = "webp";
+		// 	break;
 	}
 
 	return strdup(valueAsString);

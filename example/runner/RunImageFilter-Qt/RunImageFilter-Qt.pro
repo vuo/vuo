@@ -27,7 +27,7 @@ QMAKE_LINK = $$QMAKE_CXX
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
 QMAKE_CXXFLAGS += -F$$VUO_FRAMEWORK_PATH
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-private-field
-QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.6 \
+QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.7 \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoHeap.dylib \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoGlContext.dylib
 QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH

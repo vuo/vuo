@@ -34,19 +34,7 @@ void nodeInstanceTriggerStart(void)
 void nodeInstanceTriggerStop(void)
 {
 }
-char * getInputPortValue(char *portIdentifier)
-{
-	return NULL;
-}
-char * getOutputPortValue(char *portIdentifier)
-{
-	return NULL;
-}
-char * getInputPortSummary(char *portIdentifier)
-{
-	return NULL;
-}
-char * getOutputPortSummary(char *portIdentifier)
+char * getPortValue(char *portIdentifier, bool isInput, bool isThreadSafe, int serializationType)
 {
 	return NULL;
 }

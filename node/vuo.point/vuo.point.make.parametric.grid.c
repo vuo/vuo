@@ -20,7 +20,7 @@ VuoModuleMetadata({
 						 "VuoPointsParametric"
 					 ],
 					  "node": {
-						  "exampleCompositions" : [ "MakeTerrain.vuo" ]
+						  "exampleCompositions" : [ "MakeSmoothTerrain.vuo" ]
 					  }
 				 });
 

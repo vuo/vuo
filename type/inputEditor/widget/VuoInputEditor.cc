@@ -14,8 +14,15 @@
  */
 QFont VuoInputEditor::getDefaultFont(void)
 {
-//	return VuoRendererFonts::getSharedFonts()->nodePortTitleFont();  // This would be better, but it makes the input editors depend on VuoRendererFonts.
-	return QFont("Signika", 20.0*8.0/16.0, QFont::Normal, false);
+	return QFont("Signika", 12, QFont::Light, false);
+}
+
+/**
+ * Returns a CSS representation of the font that input editors are recommended to use.
+ */
+QString VuoInputEditor::getDefaultFontCss(void)
+{
+	return QString("font-family: Signika; font-size: 12pt; font-weight: lighter;");
 }
 
 bool VuoInputEditor::supportsTabbingBetweenPorts(void)

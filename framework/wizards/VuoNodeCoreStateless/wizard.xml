@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wizard version="1" kind="class" id="A.VuoNodeCoreStateless" category="C.Vuo">
+    <description>Creates a stateless Vuo Node.</description>
+    <displayname>Vuo Core Node (stateless)</displayname>;
+    <displaycategory>Vuo</displaycategory>
+    <files>
+        <file source="node.c" target="%NodeName%.c" openeditor="true"/>
+    </files>
+    <fieldpagetitle>Node parameters</fieldpagetitle>
+    <fields>
+        <field name="NodeName">
+            <fieldcontrol class="QLineEdit" validator="^vuo\.[a-z]+\.[a-z0-9.]+$" defaulttext="vuo.math.add" placeholdertext="This node's class name"/>
+            <fielddescription>Machine name:</fielddescription>
+        </field>
+        <field name="NodeDisplayName">
+            <fieldcontrol class="QLineEdit" defaulttext="Add" placeholdertext="This node's descriptive name"/>
+            <fielddescription>Display name:</fielddescription>
+        </field>
+    </fields>
+</wizard>

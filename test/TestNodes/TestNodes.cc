@@ -131,7 +131,7 @@ private slots:
 		runner->firePublishedInputPortEvent();
 		foreach (VuoPortClass *portClass, nodeClass->getBase()->getInputPortClasses())
 		{
-			if ( static_cast<VuoCompilerInputEventPortClass *>(portClass->getCompiler())->hasPortAction() )
+			if (portClass->hasPortAction())
 			{
 				VuoRunner::Port *port = runner->getPublishedInputPortWithName( portClass->getName() );
 				runner->firePublishedInputPortEvent(port);
@@ -147,7 +147,7 @@ private slots:
 	 */
 	void testEachNode_data()
 	{
-		QTest::addColumn< VuoCompilerNodeClass * >("nodeClass");
+		QTest::addColumn<QString>("nodeClassName");
 
 		set<VuoCompilerNodeClass *> nodeClasses = builtInNodeClasses;
 		for (set<VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
@@ -156,7 +156,7 @@ private slots:
 			string nodeClassName = nodeClass->getBase()->getClassName();
 
 			// Test each node class in its original (possibly generic) form.
-			QTest::newRow(nodeClassName.c_str()) << nodeClass;
+			QTest::newRow(nodeClassName.c_str()) << QString::fromStdString(nodeClassName);
 
 			// Test some specializations of each generic node class.
 			vector<string> genericTypeNames = VuoCompilerSpecializedNodeClass::getGenericTypeNamesFromPorts(nodeClass);
@@ -186,11 +186,11 @@ private slots:
 					}
 
 					VuoGenericType::Compatibility compatibility;
-					set<string> compatibleTypeNames = genericType->getCompatibleSpecializedTypes(compatibility);
+					vector<string> compatibleTypeNames = genericType->getCompatibleSpecializedTypes(compatibility);
 					if (compatibility == VuoGenericType::whitelistedTypes)
 					{
 						// There are a small number of compatible specialized types, so test all of them.
-						for (set<string>::iterator i = compatibleTypeNames.begin(); i != compatibleTypeNames.end(); ++i)
+						for (vector<string>::iterator i = compatibleTypeNames.begin(); i != compatibleTypeNames.end(); ++i)
 						{
 							string compatibleTypeName = VuoType::extractInnermostTypeName(*i);
 							specializedTypeNamesForGeneric[genericTypeName].push_back(compatibleTypeName);
@@ -220,20 +220,25 @@ private slots:
 
 					string specializedNodeClassName = VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(nodeClassName,
 																													  specializedTypeNames);
-					VuoCompilerNodeClass *specializedNodeClass = compiler->getNodeClass(specializedNodeClassName);
-					QVERIFY2(specializedNodeClass, specializedNodeClassName.c_str());
-					QTest::newRow(specializedNodeClassName.c_str()) << specializedNodeClass;
+					QTest::newRow(specializedNodeClassName.c_str()) << QString::fromStdString(specializedNodeClassName);
 				}
 			}
 		}
 	}
 	void testEachNode()
 	{
-		QFETCH(VuoCompilerNodeClass *, nodeClass);
-		printf("%s\n", nodeClass->getBase()->getClassName().c_str()); fflush(stdout);
+		QFETCH(QString, nodeClassName);
+		printf("%s\n", nodeClassName.toUtf8().constData()); fflush(stdout);
 
+		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
 		string composition = wrapNodeInComposition(nodeClass, compiler);
-		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionString(composition, ".");
+
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode", "bc");
+		string linkedCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode-linked", "");
+		compiler->compileCompositionString(composition, compiledCompositionPath);
+		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
+		remove(compiledCompositionPath.c_str());
+		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", true);
 
 		TestRunnerDelegate delegate;
 		runner->setDelegate(&delegate);
@@ -262,6 +267,7 @@ private slots:
 		}
 
 		runner->stop();
+		delete runner;
 	}
 
 	/**
@@ -315,7 +321,6 @@ private slots:
 		for (set<VuoCompilerNodeClass *>::iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
 		{
 			VuoCompilerNodeClass *nodeClass = *i;
-			string nodeClassName = nodeClass->getBase()->getClassName();
 
 			// Add an instance of each node class in its original (possibly generic) form.
 			VuoNode *node = compiler->createNode(nodeClass);
@@ -323,33 +328,16 @@ private slots:
 
 			// If generic, add an instance of the node class specialized with its default backing types.
 			// This checks for duplicate symbols between the generic and the specialized node class.
-			vector<string> genericTypeNames = VuoCompilerSpecializedNodeClass::getGenericTypeNamesFromPorts(nodeClass);
-			if (! genericTypeNames.empty())
+			VuoCompilerSpecializedNodeClass *s = dynamic_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
+			if (s)
 			{
-				map<string, string> backingTypeNames = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(nodeClass->getBase());
-
-				vector<string> specializedTypeNames;
-				for (vector<string>::iterator j = genericTypeNames.begin(); j != genericTypeNames.end(); ++j)
-				{
-					string genericTypeName = *j;
-					for (map<string, string>::iterator k = backingTypeNames.begin(); k != backingTypeNames.end(); ++k)
-					{
-						if (genericTypeName == VuoType::extractInnermostTypeName(k->first))
-						{
-							string backingTypeName = VuoType::extractInnermostTypeName(k->second);
-							specializedTypeNames.push_back(backingTypeName);
-							break;
-						}
-					}
-				}
-
-				string specializedNodeClassName = VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(nodeClassName,
-																												  specializedTypeNames);
+				string specializedNodeClassName = s->createFullySpecializedNodeClassName(node);
 				VuoCompilerNodeClass *specializedNodeClass = compiler->getNodeClass(specializedNodeClassName);
 				QVERIFY2(specializedNodeClass, specializedNodeClassName.c_str());
 
 				VuoNode *specializedNode = compiler->createNode(specializedNodeClass);
 				baseComposition.addNode(specializedNode);
+				composition.setUniqueGraphvizIdentifierForNode(specializedNode);
 			}
 		}
 

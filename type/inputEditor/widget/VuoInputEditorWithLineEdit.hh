@@ -19,26 +19,20 @@ class VuoInputEditorWithLineEdit : public VuoInputEditorWithDialog
 {
 public:
 	VuoInputEditorWithLineEdit(void);
+	virtual bool supportsTabbingBetweenPorts(void);
 	void setWidth(int width);
-	bool supportsTabbingBetweenPorts(void);
 
 protected:
 	virtual void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details=0);
 	void setUpLineEdit(QLineEdit *existingLineEdit, json_object *originalValue);
-	void setFirstWidgetInTabOrder(QWidget *widget);
-	void setLastWidgetInTabOrder(QWidget *widget);
 	json_object * getAcceptedValue(void);
 	virtual QString convertToLineEditFormat(json_object *value);
 	virtual json_object * convertFromLineEditFormat(const QString &valueAsString);
-
-	bool eventFilter(QObject *object, QEvent *event);
 
 	QLineEdit *lineEdit;  ///< The text field widget.
 
 private:
 	int width;
-	QWidget *firstWidgetInTabOrder;  ///< The first widget in this input editor's tab order.
-	QWidget *lastWidgetInTabOrder;  ///< The last widget in this input editor's tab order.
 };
 
 #endif // VUOINPUTEDITORWITHLINEEDIT_HH

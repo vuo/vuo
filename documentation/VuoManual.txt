@@ -1,9 +1,5 @@
-% Vuo Manual
-% Vuo VUO_VERSION
-% \ 
-
-
-\pagebreak
+% Vuo
+% VUO_VERSION
 
 # Introduction
 
@@ -22,7 +18,7 @@ If you have any feedback about this manual, please [let us know](https://vuo.org
 Welcome to Vuo. Get ready to create! 
 
 
-# Quick Start
+# Quick start
 
 ## Install Vuo
 
@@ -58,7 +54,7 @@ Now let's run your composition.
 
 You can modify your composition while it is running. This is called \term{live coding}. You can change data, rearrange cables, and even add nodes while a composition is running.
 
-\vuoCompositionImage{DisplayandTwirlHelloWorldImage}
+\vuoCompositionImage{DisplayAndTwirlHelloWorldImage}
 
    1. In the Node Library, search for the \vuoNode{Twirl Image} node, and drag it onto the canvas. 
    1. Put your mouse cursor on top of the cable that is going from \vuoNode{Make Text Image} to \vuoNode{Render Image to Window}, and click on it. It will change color to show you have selected it. Press the \keys{⌫}, or use the Editor's menu \menu{Edit > Cut} or \menu{Edit > Delete} to delete the cable. 
@@ -88,156 +84,173 @@ To see a list of descriptions for all example compositions for a node set, look 
 
 More examples are available in the Vuo [composition gallery](https://vuo.org/composition). You can filter compositions in the gallery by using the tabs. The "Helpful" tab contains compositions other users have voted helpful.
 
-# The Basics
 
-## Events are what make things happen
 
-Vuo compositions are driven by \term{events}. You can think of events as signals that cause nodes in your composition to \term{execute}. Without events, your composition won't do anything! Events are like the wind — you can't see them directly, but you can see their effects. 
+# The basics
 
-If you want to get a better idea of how events flow through your composition, you can use the Vuo Editor's \menu{Run > Show Events}, or you can use the Show Events button in the Vuo Editor toolbar.
+The previous section walked you through the steps of creating a simple composition. By now, you may know a bit about the process of composing with Vuo, but you may not understand exactly how compositions work or how make your own from scratch. This section introduces the major concepts you need to understand when working with Vuo. The sections after this — [How events and data travel through a composition](#how-events-and-data-travel-through-a-composition), [How compositions process data](#how-compositions-process-data), and [How nodes can be used as building blocks](#how-nodes-can-be-used-as-building-blocks) — go into more detail about these concepts. By the end of the section that follows — [Putting it all together in a composition](#putting-it-all-together-in-a-composition) — you should be amply prepared to create your own compositions.
+
+
+## A composition is what you create with Vuo
+
+When musicians create a piece of music, they call it a composition. When you create something in Vuo, that's also called a \term{composition}.
+
+In the [Quick Start](#quick-start) section, you saw how to create a composition that displays some text in a window and twirls the text around. That's one type of Vuo composition — an animation that displays in a window. Vuo can be used to create much more complex and interesting animations. It can also be used to create many other types of compositions. A composition could be a game. It could be an art installation. It could be a controller for stage lighting. It could be digital signage. It could be a plug-in for other software. Those are just some examples of what a composition could be.
+
+\noteTextProgrammers{A composition is a program whose source code is a visual representation of the program's data flow. It's compiled and linked to create an application or library.}
+
+One thing that all compositions have in common is the process of creating them in the Vuo Editor. Just like in the Quick Start section, you start with either a blank canvas or an existing composition, and you pick out building blocks and connect them to make many smaller pieces work together as a larger whole.
+
+Another thing that all compositions have in common is the way that they run. When you click the Run button in the Vuo Editor, all of those building blocks and connections that you laid out as a blueprint get turned into a running application. 
+
+
+## Nodes are your building blocks
+
+Each composition does something unique, and the way that you build up that something is by putting together \term{nodes}. These are your building blocks.
+
+Let's say you're creating a composition that displays a 3D model. You might use the \vuoNode{Fetch Scene} node to load the 3D model from a file and the \vuoNode{Render Scene to Window} node to render the model in a window.
+
+\noteQCUsers{A node in Vuo is like a patch in Quartz Composer.}
+
+\noteTextProgrammers{A node is like a function. It encapsulates a task. It takes inputs and produces outputs. More precisely, nodes are like class instance methods, since they can also maintain a state.}
+
+\vuoNodeClassImage{vuo.scene.fetch}
+\vuoNodeClassImage{vuo.scene.render.window}
+
+Or suppose you're creating a composition that applies a color effect to a movie. You might use the \vuoNode{Play Movie} node to bring the movie into the composition, the \vuoNode{Adjust Image Colors} node to change the movie's color, and the \vuoNode{Save to Movie} node to save the color-changed movie to a file.
+
+\vuoNodeClassImage{vuo.video.play}
+\vuoNodeClassImage{vuo.image.color.adjust}
+\vuoNodeClassImage{vuo.video.save}
+
+Part of the process of creating a composition is taking your idea of what it should do and breaking that down into smaller tasks, where each task is carried out by a node. Each node in Vuo has a specific job that it does. Some nodes do simple jobs, like adding numbers or checking if two pieces of text are the same. Other nodes do something complex, like receiving a stream of video from a camera, finding a barcode in an image, or turning a 3D object into a wiggly blob. You can browse through a list of all the nodes available in the Node Library (the panel along the left side of the Vuo Editor window) or the [online node documentation](http://doc.vuo.org/VUO_VERSION).
+
+When you start making a composition, often the first thing you'll do is pick a node from the Node Library. You can search the Node Library for what you want to do (for example, a search for "movie" brings up a list of nodes for playing, inspecting, and saving movies) and then drag the nodes you want onto the composition canvas.
+
+You can learn about a node by looking at its title, node class name, and port names, which are pointed out in the illustration below. For a detailed description of how the node works, you can look at the node's documentation, which appears in the Node Documentation Panel in the lower part of the Node Library. Many nodes come with example compositions (listed in the node's documentation) that demonstrate the node in action.
+
+\includegraphics[scale=0.8]{image/nodeportnames.pdf}
+
+
+## Events are what cause nodes to execute
+
+Let's think again about creating a composition that applies a color effect to a movie. Your first step might be to drop a \vuoNode{Play Movie} node, an \vuoNode{Adjust Image Colors} node, and a \vuoNode{Append to Movie} node onto the canvas. Then what? How do you tell the composition that, first, you want \vuoNode{Play Movie} to bring the movie into the composition, second, you want \vuoNode{Adjust Image Colors} to apply the effect, and third, you want \vuoNode{Append to Movie} to save the movie to a file? The way that you control *when* nodes do their job and *how* information flows between them is with \term{events}.
+
+In the [Quick Start](#quick-start) section, you walked through the process of creating a composition that displays some text:
+
+\noteQCUsers{If you're familiar with the way that patches execute in a Quartz Composition, then Vuo takes some getting used to. In Quartz Composer, when patches execute is largely based on the display refresh rate, and influenced by patch execution modes and interaction ports. Data is usually "pulled" through the composition by rendering patches. In Vuo, data is "pushed" through the composition by events fired from trigger ports.}
+
+\noteTextProgrammers{Vuo is event-driven. The events are generated by trigger ports, and the event handlers are implemented by the nodes executed as the event travels through the composition.}
+
+\vuoCompositionImage{DisplayHelloWorldImage}
+
+How do events come into play in this composition? This composition involves a single event that causes the text to render as soon as the composition starts running. The event is \term{fired} (originates) from the \term{trigger port} called \vuoPort{Started} on the \vuoNode{Fire on Start} node. (A trigger port is a special kind of port, which you can recognize by the thick line along its left side.) The event travels to the \vuoNode{Make Text Image} node, causing that node to \term{execute} (do its job). The event then travels onward to the \vuoNode{Render Image to Window} node, causing it to execute as well. From the \vuoNode{Make Text Image} node to the \vuoNode{Render Image to Window} node, the event carries with it the image that was created by \vuoNode{Make Text Image} and will be rendered by \vuoNode{Render Image to Window}.
+
+Here's a variation on that composition that involves multiple events:
+
+\vuoCompositionImage{DisplayAndTwirlHelloWorldContinuously}
+
+This composition displays an animation of the text becoming more and more twirled as time passes. It still has the event fired from the \vuoNode{Fire on Start} node's \vuoNode{Started} port when the composition starts. It also has events being fired from another trigger port: the \vuoNode{Render Image to Window} node's \vuoPort{Requested Frame} port. Unlike the \vuoNode{Started} port, which fires only once, the \vuoNode{Requested Frame} port fires 60 times per second (or whatever your computer display's refresh rate is). Unlike the event from \vuoNode{Started} port, which is useful for doing something once, the events from the \vuoNode{Requested Frame} port are useful for doing something continuously, such as displaying an animation that changes smoothly over time. In the composition above, each of those 60 times per second that the \vuoNode{Requested Frame} node fires an event, that event (along with a piece of information that says how long the composition has been running) travels to the \vuoNode{Multiply} node. The event (along with the result of multiplying numbers) travels to the \vuoNode{Twirl Image} node. Finally, the event (along with the twirled image) travels to the \vuoNode{Render Image to Window} node. As the event travels along its path, it causes each node to execute in turn, and carries information with it from one node to the next.
+
+Here's a composition that *doesn't* display text in the window (can you guess why?):
+
+\vuoCompositionImage{DisplayHelloWorldNoEvent}
+
+This composition doesn't have any events going into the \vuoNode{Make Text Image} node. Without any incoming events, the \vuoNode{Make Text Image} node never executes and never passes an image along to the \vuoNode{Render Image to Window} node. So no text is displayed. If you want a node to execute, make sure you feed it some events!
+
+If you'd like to watch the events moving through a composition, you can do that in the Vuo Editor by clicking the Show Events button in the toolbar. As the composition runs, you can see the events being fired from trigger ports, and you can trace the path of the event by watching each node change color as it executes.
+
+\noteQCUsers{You can use Vuo's events somewhat like you'd use Quartz Composer's signals or pulses. For example, Vuo's \vuoNode{Count} node works a lot like Quartz Composer's Counter patch.}
 
 \vuoScreenshot{editor-showevents}
 
 
-## Trigger ports fire events
+## Trigger ports fire events and sometimes data
 
-Events come from \term{trigger ports}. Trigger ports \term{Fire} events at certain times, which are different for each trigger port. 
+As you just saw, events are fired from trigger ports, which are special ports that some nodes have. Here are some examples of trigger ports:
 
-For example, the \vuoPort{Started} port of the \vuoNode{Fire on Start} node fires an event when a composition starts. A \vuoNode{Fire Periodically} node's \vuoPort{Fired} port fires each time the time period in the \vuoPort{Seconds} port has elapsed (and doesn't fire if the time period in the \vuoPort{Seconds} port is a negative number). The nodes that have a \vuoPort{Requested Frame} port, such as the \vuoNode{Render Image to Window} node, fire when the Vuo composition window is ready for its next frame. This is typically about 60 times a second. 
+\includegraphics[scale=0.6]{image/triggerports.pdf}
 
+The \vuoPort{Started} trigger port on the \vuoNode{Fire on Start} node fires a single event when the composition starts running. The \vuoPort{Fired} trigger port on the \vuoNode{Fire Periodically} node fires events at a rate determined by the node's \vuoPort{Seconds} port. The \vuoPort{Pressed} trigger port on the \vuoNode{Receive Mouse Buttons} node fires an event each time the mouse button is pressed, and the \vuoPort{Released} trigger port fires an event each time the mouse button is released. The \vuoPort{Received Frame} trigger port on the \vuoNode{Receive Live Video} node fires events as it receives a stream of images from a camera.
 
-\vuoNodeClassImageWithAnnotation{vuo.time.firePeriodically}{
-	\draw[->,line width=1,green] (5.1,.35) -- (4.6,.35); \node[right, green] at (5.1,.35) {trigger port};
-}
-\hfill
-\vuoNodeClassImageWithAnnotation{vuo.event.fireOnStart}{
-	\draw[->,line width=1,green] (4.2,.35) -- (3.7,.35); \node[right, green] at (4.2,.35) {trigger port};
-}
-\nopagebreak
-\centerline{Nodes with event trigger ports}
+Some trigger ports, like \vuoPort{Started} and \vuoPort{Fired}, fire just events. Other trigger ports, like \vuoPort{Pressed}, \vuoPort{Released}, and \vuoPort{Received Frame}, fire \term{data} (a piece of information) along with each event. The \vuoPort{Pressed} and \vuoPort{Released} ports fire the coordinates of the point where the mouse was pressed or released. The \vuoPort{Received Frame} port fires the video frame received from the camera. This data travels along with the event to the next node. When that node executes, it can use the data to do its job (such as drawing a shape at the given coordinates, or extracting an image from the given video frame).
 
-\vuoNodeClassImageWithAnnotation{vuo.image.render.window}{
-	\draw[->,line width=1,green] (7.4,.35) -- (6.9,.35); \node[right, green] at (7.4,.35) {trigger port};
-}
-\nopagebreak
-\
-\centerline{Node with a data-and-event trigger port}
+Nodes with trigger ports are often responsible for bringing information into the composition from the outside world, such as video, audio, device input, and network messages. These nodes can be a good starting point when creating a composition. You can see a list of all nodes with trigger ports by searching the Node Library for "trigger" or "fire".
 
-You can identify a trigger port by how it is displayed. All trigger ports are \term {output ports}, positioned on the right side of a node, since they generate events that flow out of a node. All trigger ports have have a thick line on the left side of the port. The thick line indicates that trigger ports can *create* events; they never *transmit* events. More information on [trigger-ports](#trigger-ports) is provided later in the manual. 
+As just mentioned, one way to watch what trigger ports are doing in a composition is to run the composition with Show Events enabled. Another way is to click on the trigger port, which opens a view called the Port Popover. As the composition runs, the Port Popover shows how recently the trigger port fired an event and what data (if any) came with the event.
 
-To place a trigger port into a composition, search for the words "fire" or "trigger" in the Node Library. Once you have found the node you want, drag it onto the canvas.
+\tip{If you click on the Port Popover, it becomes a small window that you can leave open as you continue using the Vuo Editor and perhaps open other Port Popovers.}
 
-To see a trigger port in action, use the Show Events mode or a port popover. 
-
-\vuoScreenshotWithAnnotation{editor-popover}{
-	\draw[->,line width=1,green] (5.5,2.3) -- (5.5,1.8); \node[above, green] at (5.5,2.3) {popover};
-}
-
-More information about [the Show Events mode and port popovers](#helpful-tools) is provided later in the manual.
-
-Based on how you connect these trigger ports to other nodes, you have complete control over the timing of events in your composition. 
-
-You can refer to the chapter on [Events](#events) for more detail on event flow.
-
-## Nodes execute in response to events
-
-The rectangular boxes in your composition are \term{nodes}. Each \term{node} performs a task when it receives an event, like counting numbers or displaying a window or periodically firing events. Nodes are your tools for creating --- they're the building blocks of compositions.
-
-Nodes do many different things. They can create or manipulate an image or 3D object, display an image or 3D scene, receive information from outside your composition (from your mouse, for example), send data outside your composition, perform math or logic functions, or execute a wide variety of other actions. 
-
-\noteQCUsers{A \term{node} in Vuo is analogous to a \term{patch} in Quartz Composer. Unlike Quartz Composer, which typically executes each patch once per video frame, nodes in Vuo can be executed whenever they receive an event --- whether it's 60 per second, 44,100 per second, or 1 per year.}
-
-\noteTextProgrammers{A \term{node} in Vuo is analogous to a \term{class instance method} that takes a list of inputs and returns a list of outputs.}
-
-To find a node you want to put in your composition, search the Node Library for what you want to do. The Node Library will display both exact matches and related terms. For example, if you enter "sum," into the search bar, you'll see several nodes, including \vuoNode{Count}, \vuoNode{Add}, \vuoNode{Count within Range}, and \vuoNode{Calculate}.
-
-When you look at a node, the title (large text along the top) tells you the task that the node performs. You can get more details by selecting the node in the Node Library or on the canvas. This will bring up the node's documentation in the Node Documentation Panel, which will show an in-depth description of the node. 
-
-\vuoScreenshotWithAnnotation{editor-nodelibrary}{
-	\draw[->,line width=1,green] (5.2,2.5) -- (4.7,2.5); \node[right, green] at (5.2,2.5) {node documentation panel};
-}
+\vuoScreenshot{portpopovers}
 
 
-## Events and data travel through cables and ports
+## Events and data travel through cables
 
-Nodes talk to each other by sending data and events through \term{cables} plugged into \term{ports}. Data and events flow from the \term{output port} of one node, through a cable, to the \term{input port} of another node. 
+Let's take yet another look at this composition that displays text in a window:
 
-\vuoCompositionImageWithCaption{DisplayImage}{An example composition, Display Image (under vuo.image), with three \term{nodes} and two \term{cables}}
+\vuoCompositionImage{DisplayHelloWorldImage}
 
-In the composition above, an event from the \vuoNode{Fire on Start} node travels to the \vuoNode{Fetch Image} node, which fetches the image. The image data and event then travel to the input port \vuoPort{Image} of the \vuoNode{Render Image to Window} node. This node will display the image in a window. 
+The lines connecting the nodes are called \term{cables}. Cables are the conduits that data and events travel through.
 
-### Sending events and data through cables
+In the composition above, an event travels along the cable from the \vuoPort{Started} trigger port of the \vuoNode{Fire on Start} node to the \vuoPort{Text} port of the \vuoNode{Make Text Image} node. An event and data travel along the cable from the \vuoPort{Make Text Image} node to the \vuoPort{Render Image to Window} node's \vuoPort{Image} port. Notice the difference between the two cables: the first cable is thinner since it only carries events, while the second cable is thicker since it carries both events and data.
 
-All cables carry events. In the composition above, an example of an \term{event-only} cable is the cable into the \vuoNode{Fetch Image} node, while an example of a \term{data-and-event} cable is the cable from \vuoNode{Fetch Image} to \vuoNode{Render Image to Window}. 
+Often it helps to think of cables as pipes that data and events flow through. Like water flowing through a pipe, events and data flow through the cable from one end to the other, always in the same direction. Extending the water analogy, you can think of trigger ports as being \term{upstream} and the nodes that their events flow to as being \term{downstream}.
 
-\term{Event-only cables} are thin. \term{Data-and-event cables} are thicker than event-only cables.
+But, unlike water flowing through a pipe, events and data travel as discrete packets instead of a continuous flow. Another way to think of a cable is as a one-way, one-lane road on which each event is a car. On some roads (data-and-event cables), each car carries a piece of data.
 
-### Connecting cables to ports
+Data can't travel along a cable by itself. It always needs an event.
 
-Ports are where cables are connected. You've already seen one type of port, a trigger port. Multiple data-and-event and event-only cables can be connected to an output port, since the output created by one node may be needed by more than one node downstream. In contrast, multiple event-only cables, but only one data-and-event cable, can be connected to an input port. 
+In the Vuo Editor, you can create a cable by dragging the mouse from one port to another. While you're dragging, the ports that you're allowed to connect the cable to are highlighted. If you're not allowed to connect a cable from one port to another, it's because the two ports have different, incompatible types of data. For example, you can't connect a port whose data is a number to a port whose data is a 3D model.
 
-You can connect an event-only output port to any type of data-and-event input port. You can connect a data-and-event output port to a data-and-event input port if they are expecting the same, or similar data. For example, if an input port is expecting an image, you can't connect it up to an output port for integer numbers. 
-
-\vuoCompositionImage{DisplayMultipleWindows}
-
-The composition above shows nodes with multiple output port cables. 
-
-\noteQCUsers{Unlike Quartz Composer, you may create as many or few windows as you like. This composition will create 4 separate windows.}
-
-\pagebreak
-\vuoCompositionImage{MultipleEventOnlyCables}
-
-The composition above shows multiple (two) event-only cables connected to a node's input port. 
-
-To draw a cable in a composition, pick the port where you want the cable to start or end, and drag from that port. You'll see ports that can be connected highlighted; pick the one you want to connect to. If you want to draw an event-only cable, hold down the option key while dragging (option + drag). 
-
-Some input ports let data and events flow into the node all the time, while some input ports control the flow of data and events into a node. The manual covers differences in input ports in detail in the section on [How events travel through a node](#how-events-travel-through-a-node).
-
-## Putting it together in a composition
-
-### Starting new
-
-When you create a composition, there is usually a problem you want to solve. Let's use an example to demonstrate this approach. How would I create a composite image made up of two images blended together?
-
-  1. First, you know you'll need the two images, so drag the two files onto the canvas. Vuo will create two \vuoNode{Fetch Image} nodes, with the image locations filled in. 
-  1. Search the Node Library for "composite image," and drag \vuoNode{Blend Images} onto canvas. Alternately, you could search the Node Library for "image" and see a list of all the nodes that manipulate images, and pick from that list.
-  1. Look at the Node Description Panel for the \vuoNode{Blend Images} node, and see that it expects the two images, one for foreground and one for background.
-  1. Drag a cable from one \vuoNode{Fetch Image} node's output to the \vuoPort{Foreground} input port and the other to the \vuoNode{Background} input port.
-  1. Confirm by looking at the port popover for \vuoNode{Blend Images}'s output port (by left-clicking on the output port) to see that its type is Image.
-  1. Search the Node Library for "display image," or, if you remember the quick start example, search for "window" or "render." Drag the \vuoNode{Render Image to Window} onto the canvas.
-  1. Start dragging a cable from \vuoNode{Blend Images}'s output port and drop the cable onto the \vuoPort{Image} port of the \vuoNode{Render Image to Window} node.
-  1. Run the composition — nothing shows up on screen. Why?
-  1. At this point you could check the port popover for the \vuoNode{Blend Images}'s output port. It says "Last event: (none observed)." That is the same message when tracing back to the \vuoNode{Fetch Image} input ports.
-  1.  Think about what trigger ports you can use to fire an event. \vuoNode{Fire on Start} fires once when the composition starts, which should be good for loading images. Connect up the \vuoNode{Fire on Start} node's \vuoPort{Started} port to the refresh port (top left triangle) on the \vuoNode{Fetch Image} nodes. 
-  1. Stop the composition and run it again. Now the images show up, blended.
-  1. Yet, if you change \vuoPort{Foreground Opacity}, the change doesn't affect the composition. You can either check the port popovers again to see that the most recent event was before you changed the port value, or you could remember that Vuo needs events to carry changes downstream. 
-  1. Look again at trigger ports available in composition and the corresponding node descriptions. The \vuoPort{Requested Frame} output port of \vuoNode{Render Image to Window} fires around 60 times per second (or whatever your display refresh rate is set to), so it will update the blended image in real time as you experiment with opacities and blending modes.
-  1.  Drag a cable from the \vuoPort{Requested Frame} output port to \vuoNode{Blend Images}'s (highlighted) refresh port, as when [modifying](#modify-a-composition) the quick start example.
-  1. Use the input editors on \vuoPort{Foreground Opacity} and \vuoPort{Blend Mode} to control the blending.
-  1. Now you have a blended image.
-  1. Open the Editor's example compositions, and see that your composition looks likes the example, Blend Images, under vuo.image.
-
-\vuoCompositionImage{BlendImages}
-
-### Modifying an existing composition
-
-Again, let's start with a problem you want to solve, say to display a rotating cube.
-
-  1. You have read from the [example composition section](#example-compositions) that each node set has several example compositions. You know from experience that vuo.scene likely covers 3D objects and scenes.
-  1. The example composition, Spin Sphere, sounds pretty close to what you want to do, so open that.
-  1. Run the example and see that it spins a sphere.
-  1. Search for "cube" in the node library and find \vuoNode{Make Cube}. Add it to the scene.
-  1. Now as you inspect the example composition you see that it has a \vuoNode{Make 3D Object}. This might be where to insert the \vuoNode{Make Cube} node. But, \vuoNode{Make 3D object} has three cables going into it. You don't think you'll need \vuoNode{Make Sphere Mesh}, but what about the \vuoNode{Shade with Image}?
-  1. Start by replacing the \vuoNode{Make 3D Object} node with the \vuoNode{Make Cube} node and connect it up to the \vuoNode{Render Scene to Window} node. Leave the \vuoNode{Shade with Image} node not connected. You see that there is a \vuoPort{Transform} input port on  the \vuoNode{Make Cube}, like there was on the \vuoNode{Make 3D Object}. Connect up the output port of the \vuoNode{Make Transform} node to the \vuoPort{Transform} port. 
-  1. Run the composition.
-  1. Now you see a large rotating cube, but it doesn't have any color on its sides, just a ghostly checkerboard. Let's connect up the \vuoNode{Shade with Image} to all sides of the cube, and run the composition again.
-  1. Now the cube has a black and white checkerboard on all sides, but you'd like it to be smaller.  Adjust the \vuoPort{Scale} on the \vuoNode{Make Transform} node to 0.5, 0.5, 0.5.
-  1. … and now you have a rotating cube.
-
-\vuoCompositionImage{SpinCube}
+\vuoScreenshot{portcompatibility}
 
 
-# Events
+## Events and data enter and exit a node through ports
+
+When an event (and possibly data) is fired from a trigger port and travels along a cable, what happens when it reaches the port on the other end of the cable?
+
+That port on the other end is called an \term{input port}. You can think of it as a portal that inputs (receives) information into the node.
+
+\vuoCompositionImage{DisplayHelloWorldImage}
+
+In the above composition, the \vuoPort{Text} input port of the \vuoNode{Make Text Image} node inputs an event, which causes the node to execute. The \vuoPort{Image} input port of the \vuoNode{Render Image to Window} node inputs the event and an image. When the node executes, it uses that image to do its job of rendering an image to a window.
+
+You may have noticed that, in the above composition, some input ports have data that's attached to the port rather than coming in through a cable. The \vuoPort{Text} input port has the data "Hello World!", and the \vuoPort{Font} input port has as its data a description of a Helvetica font. These are called \term{constant values} because they don't vary the way that data coming through a cable can. Like data coming in through cables, constant values are also used by the node when it executes. If a port has a constant value, you can edit it by double-clicking on it.
+
+After a node executes, it outputs (sends) information through its \term{output ports}. The information outputted — events and possibly data — can then travel along cables from the output ports to other input ports.
+
+\includegraphics[scale=0.6]{image/inputoutputports.pdf}
+
+On most nodes, every event that comes in through one or more inputs ports goes out of all of the output ports. But there are a couple of exceptions.
+
+One exception is trigger ports. Although trigger ports are output ports, events that come in through input ports are never outputted through them. Trigger ports can only fire new events, not transmit existing events.
+
+The other exception is for nodes whose input ports have thick lines along their right side, which are called \term{event walls} and \term{event doors}. If an event comes into a node only through an input port with a wall, then the event won't go out any of the node's output ports. If an event comes in only through an input port with a door, then the event may or may not go out of some or all of the node's output ports — the exact behavior depends on the node, and is explained in the node's documentation.
+
+\tip{Both for trigger ports and for walls and doors, the thick line is a hint to remind you that events may be blocked.}
+
+\includegraphics[scale=0.6]{image/wallsdoors.pdf}
+
+The composition below, Select Movie (\menu{File > Open Example > vuo.select}), demonstrates one way that event doors can be useful. This composition displays one of two movies at a time, switching between them each time the mouse is pressed. The doors on the \vuoNode{Select Input} node's \vuoPort{False Option} and \vuoPort{True Option} input ports allow the node to let the stream of events and video frames from one movie through while blocking the stream from the other movie.
+
+\vuoCompositionImage{SelectMovie}
+
+If you're not sure if a node is letting events through or blocking them, you can enable Show Events or look at Port Popovers to see where events are flowing.
+
+
+## Events and data enter and exit a composition through published ports
+
+Earlier, you learned that a composition is made up of nodes, each of which is a building block that has a specific job to perform. If you think about it, the composition as a whole also has a specific job to perform. It's like a node, but on a larger scale. A composition can even be used as a building block within another application.
+
+Just as a node can input and output information through its ports, a composition can input and output information through \term{published ports}. If a composition has published ports, the Vuo Editor shows them in sidebars along the left and right sides of the composition canvas.
+
+\vuoScreenshot{publishedports}
+
+Above is an example of a composition with published ports: Generate Checkerboard Image (\menu{File > Open Example > Image Generators}). It inputs events and data through published input ports called \vuoPort{width}, \vuoPort{height}, and \vuoPort{time}. It outputs events and data through a published output port called \vuoPort{outputImage}. If you run the composition in the Vuo Editor, it displays an animated checkerboard image. Because this composition has published ports, it's also possible to run it inside of other applications, besides the Vuo Editor, that accept Vuo compositions. For example, you could use this composition within a VJ application to generate a stream of images that you'd mix with other video streams.
+
+
+
+# How events and data travel through a composition
 
 Events are what make things happen in a composition. As you get to know Vuo, you'll be able to look at a composition and imagine how an event comes out of a trigger port, flows through a cable into a node's input port, and either gets blocked or flows through the node's output ports and into the next cables. The previous section gave an overview of how that works. This section describes the process in detail. 
 
@@ -246,9 +259,7 @@ Events are what make things happen in a composition. As you get to know Vuo, you
 
 Each event is fired from a \term{trigger port}, a special kind of output port on a node. 
 
-\vuoNodeClassImageWithAnnotation{vuo.event.fireOnStart}{
-	\draw[->,line width=1,green] (4.2,.35) -- (3.7,.35); \node[right, green] at (4.2,.35) {trigger port};
-}
+\includegraphics[scale=0.6]{image/triggerports.pdf}
 
 Some trigger ports fire events in response to things happening in the world outside your composition. For example, the \vuoNode{Receive Mouse Moves} node's trigger port fires an event each time the mouse is moved. The \vuoNode{Play Movie} node's trigger port fires a rapid series of events (for example, 30 per second), so that you can display images in rapid sequence as a movie. Similarly, the \vuoNode{Render Scene to Window} node's \vuoPort{Requested Frame} trigger port fires a rapid series of events, so that you can use these events to display scenes in rapid sequence as an animation. 
 
@@ -264,11 +275,7 @@ An event can come into a node through cables connected to one or more of its inp
 
 ### Input ports
 
-\vuoNodeClassImageWithAnnotation{vuo.math.divide.VuoInteger}{
-	\draw[->,line width=1,green] (0,1.9) -- (.5,1.4); \node[left, green] at (0,1.9) {input port};
-	\draw[->,line width=1,green] (0,1.35) -- (.5,.85); \node[left, green] at (0,1.35) {input port};
-	\draw[->,line width=1,green] (0,-.35) -- (.5,0.15); \node[left, green] at (0,-.35) {input port};
-}
+\includegraphics[scale=0.6]{image/inputports.pdf}
 
 An \term{input port} is the location on the left side of the node where you can enter data directly, connect a data-and-event cable, or connect an event-only cable. When an event arrives at an input port, it causes the node to execute and perform its function based on the data present at the node's input ports. 
 
@@ -276,18 +283,7 @@ An \term{input port} is the location on the left side of the node where you can 
 
 Some nodes, like the ones shown below, have input ports that block an event. This means the node will execute, but the event associated with that data won't travel through any output ports. Event blocking is useful when you want part of your composition to execute in response to events from one trigger port but not events from another trigger port, or when you're creating a feedback loop. 
 
-\vuoNodeClassImageWithAnnotation{vuo.video.decodeImage}{
-	\draw[->,line width=1,green] (2.2,-.25) -- (1,.6); \node[right, green] at (2.2,-.25) {event wall};
-}
-\hfill
-\vuoNodeClassImageWithAnnotation{vuo.select.out.2}{
-	\draw[->,line width=1,green] (2.2,-.25) -- (1,.6); \node[right, green] at (2.2,-.25) {event door};
-}
-\hfill
-\vuoNodeClassImageWithAnnotation{vuo.time.measureTime}{
-	\draw[->,line width=1,green] (2.2,-.3) -- (1,1.45); \node[right, green] at (2.2,-.3) {event door};
-	\draw[->,line width=1,green] (2.2,-.75) -- (1,1); \node[right, green] at (2.2,-.75) {event wall};
-}
+\includegraphics[scale=0.6]{image/wallsdoors.pdf}
 
 Ports that always block events have a solid semi-circle (like the \vuoPort{URL} port above) or a solid chevron (like the \vuoPort{Start} port above).  This is called an \term{event wall}. The node must receive an event from another port without an event wall for the results of the node's execution to be available to other nodes.
 
@@ -301,15 +297,7 @@ The manual section [How events travel through a composition](#how-events-travel-
 
 Some input ports cause the node to do something special when they receive an event. In the \vuoNode{Count within Range} node shown below, the \vuoPort{Increment}, \vuoPort{Decrement}, and \vuoPort{Set Count} ports each uniquely affect the count stored by the node — upon receiving an event, they increment the count, decrement the count, or change the count to a specific number. Likewise, in the \vuoNode{Display Console Window} node, the \vuoPort{Write Line} input port does something special when it receives an event — it writes a line of text to the console window. Each of these ports has a *port action*. 
 
-\vuoNodeClassImageWithAnnotation{vuo.math.countWithinRange.VuoReal}{
-	\draw[->,line width=1,green] (4.5,-.25) -- (3.0,2.3); \node[right, green] at (4.5,-.25) {port actions};
-	\draw[->,line width=1,green] (4.5,-.25) -- (3.0,1.8);
-	\draw[->,line width=1,green] (4.5,-.25) -- (3.0,1.5);
-}
-\hfill
-\vuoNodeClassImageWithAnnotation{vuo.console.window}{
-	\draw[->,line width=1,green] (3.4,-.25) -- (2.4,1.1); \node[right, green] at (3.4,-.25) {port action};
-}
+\includegraphics[scale=0.6]{image/portactions.pdf}
 
 If an input port has a \term{port action}, then the node does something different when that input port receives an event than it does when any other input port receives an event. What counts as "something different"? Either the node outputs different data (immediately or later) or the node affects the world outside the composition differently. 
 
@@ -323,17 +311,13 @@ You can recognize an input port with a port action by the little triangle to the
 
 Every node has a built-in event-only input port called the \term{refresh port}. The purpose of this port is to execute the node without performing any port actions.
 
-\vuoCompositionImageWithAnnotationAndCaption{CountSometimes}{
-	\draw[->,line width=1,green] (5.3,2.85) -- (4.3,1.85); \node[right, green] at (5.3,2.85) {refresh port};
-}{A composition, CountSometimes.vuo, using a \term{refresh port}}
+\includegraphics[scale=0.6]{image/CountSometimes.pdf}
 
-For example, this composition above shows how you can use the refresh port to get the \vuoNode{Count} node's current count without incrementing or decrementing it. When the lower \vuoNode{Fire Periodically} node fires an event, \vuoNode{Display Console Window} writes the incremented count. When the upper \vuoNode{Fire Periodically} node --- which is connected to the \vuoNode{Count} node's refresh port --- fires an event, the count stays the same. \vuoNode{Display Console Window} writes the same count as before. 
+For example, the composition above shows how you can use the refresh port to get the \vuoNode{Count} node's current count without incrementing or decrementing it. When the lower \vuoNode{Fire Periodically} node fires an event, \vuoNode{Display Console Window} writes the incremented count. When the upper \vuoNode{Fire Periodically} node --- which is connected to the \vuoNode{Count} node's refresh port --- fires an event, the count stays the same. \vuoNode{Display Console Window} writes the same count as before. 
 
----
+On other nodes, like \vuoNode{Hold Value}, the refresh port is the only input port that transmits events to any output ports. The \vuoNode{Hold Value} node lets you store a value during one event and use it during later events. The composition below shows how you can use a \vuoNode{Hold Value} node to update a value every 1 second and write it every 5 seconds. 
 
-\vuoCompositionImageWithCaption{CountAndHold}{A composition using a \vuoNode{Hold Value} node}
-
-On other nodes, like \vuoNode{Hold Value}, the refresh port is the only input port that transmits events to any output ports. The \vuoNode{Hold Value} node lets you store a value during one event and use it during later events. This composition shows how you can use a \vuoNode{Hold Value} node to update a value every 1 second and write it every 5 seconds. 
+\vuoCompositionImage{CountAndHold}
 
 \tip{Refresh ports are useful for allowing event flow out of nodes that have event walls. The event entering the \vuoPort{Refresh port} can travel to downstream nodes, while an event encountering an event wall cannot.}
 
@@ -345,14 +329,7 @@ When the upper \vuoNode{Fire Periodically} node executes, the count stored in th
 
 When an event executes a node, the event can travel to downstream nodes using the \term{output ports}. Like input ports, output ports can be data-and-event or event-only. 
 
-\vuoNodeClassImageWithAnnotation{vuo.image.fetch}{
-	\draw[->,line width=1,green] (4.5,.3) -- (4,.3); \node[right, green] at (4.5,.3) {data-and-event output port};
-}
-\
-\
-\vuoNodeClassImageWithAnnotation{vuo.select.out.boolean.event}{
-	\draw[->,line width=1,green] (6.0,.7) -- (5.5,.7); \node[right, green] at (6.0,.7) {event-only output port};
-}
+\includegraphics[scale=0.6]{image/outputports.pdf}
 
 #### Trigger ports
 
@@ -412,9 +389,9 @@ Compare this composition to the one above it. Since in this composition the \vuo
 
 You can use a \term{feedback loop} to do something repeatedly or iteratively. An iteration happens each time a new event travels around the feedback loop. 
 
-\vuoCompositionImageWithCaption{CountWithFeedback}{A composition, CountWithFeedback.vuo, showing a \term{feedback loop}.}
+\vuoCompositionImage{CountWithFeedback}
 
-The above composition prints a count upon a console window: 1, 2, 3, 4, . . . 
+This composition uses a feedback loop to keep track of a count, which it prints upon a console window: 1, 2, 3, 4, . . . 
 
 The first time the \vuoNode{Fire Periodically} node fires an event, the inputs of \vuoNode{Add} are 0 and 1, and the output is 1. The sum, as a data-and-event, travels along the cable to the \vuoNode{Hold Value} node. The new value is held at the \vuoPort{New Value} port, and the event is blocked, as you can see from its event wall; \vuoNode{Hold Value} doesn't transmit events from its \vuoPort{New Value} port to any output ports. 
 
@@ -424,9 +401,7 @@ The second time the \vuoNode{Fire Periodically} node fires an event, the inputs 
 
 Each event is only allowed to travel once through a feedback loop. When it comes back to the first node of the feedback loop, it needs to be blocked by a walled input port. If your composition isn't set up like this, then Vuo will tell you there's an \term{infinite feedback loop} and won't allow your composition to run. 
 
-\vuoCompositionImageWithAnnotation{CountWithInfiniteFeedback}{
-	\draw[red,line width=4] (4.7,2.1) -- (7.1,-0.3); \draw[red,line width=4] (7.1,2.1) -- (4.7,-0.3);
-}
+\vuoScreenshot{infinitefeedback}
 
 The above composition is an example of an infinite feedback loop. Any event from the \vuoNode{Fire Periodically} node would get stuck forever traveling in the feedback loop from the \vuoNode{Add} node's \vuoPort{Sum} port back to the \vuoPort{Item 1} port. Because there's no event wall in the feedback loop, there's nothing to stop the event. Every feedback loop needs a node like \vuoNode{Hold Value} to block events from looping infinitely.  
 
@@ -454,15 +429,13 @@ What about using the trigger port from the \vuoNode{Render Image to Window} node
 
 In this case, you can use the same stream of events into the \vuoNode{Count}'s \vuoPort{Increment} port, simplifying your composition. Using events from a \vuoPort{Rendered Frame} trigger port is usually the best way to provide events for any type of animation in your composition.
 
-A third approach is to insert a \vuoNode{Spin Off Event} node into your composition to generate a separate event. This is covered in the section [Generating an event that fires under certain circumstances](#generating-an-event-that-fires-under-certain-circumstances).
+A third approach is to insert a \vuoNode{Spin Off Event} node into your composition to generate a separate event. This is covered in the section [Executing slow nodes in the background](#executing-slow-nodes-in-the-background).
 
 #### Deadlocked feedback loops
 
 In most cases, an event needs to travel through all of the cables leading up to a node before it can reach the node itself. (The one exception is the node that starts and ends a feedback loop, since it has some cables leading into the feedback loop and some coming back around the loop.) A problem can arise if the nodes and cables in a composition are connected in a way that makes it impossible for an event to travel through all the cables leading up to a node before reaching the node itself. This problem is called a \term{deadlocked feedback loop}. If your composition has one, Vuo will tell you so and won't allow your composition to run. 
 
-\vuoCompositionImageWithAnnotation{DeadlockedFeedbackLoop}{
-	\draw[red,line width=4] (6.5,4.3) -- (9.4,1.9); \draw[red,line width=4] (9.4,4.3) -- (6.5,1.9);
-}
+\vuoScreenshot{deadlockedfeedback}
 
 This composition is an example of a deadlocked feedback loop. Because the top \vuoNode{Hold Value} node could receive an event from the \vuoNode{Fire on Start} node through the cable from the bottom \vuoNode{Hold Value} node, the top \vuoNode{Hold Value} node needs to execute after the bottom one. But because the bottom \vuoNode{Hold Value} node could receive an event from the \vuoNode{Fire on Start} node through the cable from the top \vuoNode{Hold Value} node, the bottom \vuoNode{Hold Value} node needs to execute after the top one. Since each \vuoNode{Hold Value} node needs to execute after the other one, it's impossible for an event to travel through the composition. To fix a deadlocked feedback loop, you need to remove some of the nodes or cables involved. 
 
@@ -478,15 +451,15 @@ What if a trigger port is firing events faster than the downstream nodes can pro
 
 Each trigger port has two options for event throttling: \term{enqueue events} or \term{drop events}. If enqueuing events, the trigger port will keep firing events regardless of whether the downstream nodes can keep up. If dropping events, the trigger port won't fire an event if the event would have to wait for the downstream nodes to finish processing a previous event (from this or another trigger port). 
 
-Each of these options is useful in different situations. For example, suppose you have a composition in which a `Play Movie` node fires events with image data and then applies a series of image filters. If you want the composition to display the resulting images in real-time, then you'd probably want the `Play Movie` node's trigger port to drop events to ensure that the movie plays at its original speed. On the other hand, if you're using the composition to apply a video post-processing effect and save the resulting images to file, then you'd probably want the trigger port to enqueue events. 
+Each of these options is useful in different situations. For example, suppose you have a composition in which a \vuoNode{Play Movie} node fires events with image data and then applies a series of image filters. If you want the composition to display the resulting images in real-time, then you'd probably want the \vuoNode{Play Movie} node's trigger port to drop events to ensure that the movie plays at its original speed. On the other hand, if you're using the composition to apply a video post-processing effect and save the resulting images to file, then you'd probably want the trigger port to enqueue events.
 
-When you add a node to a composition, each of its trigger ports may default to either enqueuing or dropping events. For example, the `Play Movie` node's trigger port defaults to dropping events, while each of the `Receive Mouse Clicks` node's trigger ports defaults to enqueuing events. 
+When you add a node to a composition, each of its trigger ports may default to either enqueuing or dropping events. For example, the \vuoNode{Play Movie} node's trigger port defaults to dropping events, while each of the \vuoNode{Receive Mouse Clicks} node's trigger ports defaults to enqueuing events.
 
 In the Vuo Editor, you can right-click on a trigger port and go to the \menu{Set Event Throttling} menu to view or change whether the port enqueues or drops events. 
 
 
 
-# Data
+# How compositions process data
 
 ## Where data comes from
 
@@ -494,19 +467,15 @@ Over time, data in your composition can remain the same (be constant), or change
 
 ### Constant input port values
 
-\vuoNodeClassImageWithAnnotation{vuo.time.firePeriodically}{
-	\draw[->,line width=1,green] (.25,-.5) -- (.25,0); \node[below, green] at (.25,-.5) {constant value};
-}
+\includegraphics[scale=0.6]{image/constantvalues.pdf}
 
 Instead of passing data through a cable, you can give a data-and-event input port a \term{constant value}. A constant value is "constant" because, unlike data coming in from a cable, which can change from time to time, a constant value remains the same unless you edit it. 
 
 For many types of data (such as integers and text), you can edit a constant value by double-clicking on the constant value attached to an input port. This will pop up an \term{input editor} that lets you change the constant value. (If nothing happens when you double-click on the constant value, then the Vuo Editor doesn't have an input editor for that data type. To change the data for that input port, you have to connect a cable.) 
 
-\vuoScreenshotWithAnnotation{editor-inputeditor}{
-	\draw[->,line width=1,green] (1,2) -- (1,1.5); \node[above, green] at (1,2) {input editor};
-}
+\includegraphics[scale=0.6]{image/inputeditor.pdf}
 
-When using an input editor to edit text, you can enter text that contains multiple lines (line breaks) by composing your text in a basic text editor (such as TextEdit), then copying and pasting it into the input editor.
+When using an input editor to edit text, you can enter multiple lines by using \keys{⌥↵} (instead of \keys{↵}) to insert a line break.
 
 If you edit a constant value for a node's input port, the node will use the new port value the next time it executes. Setting a constant value won't cause the node to execute. 
 
@@ -525,12 +494,11 @@ Some input ports accept a list of values rather than a single value. If no cable
 
 In most cases, you can change the number of items in the drawer. (The one exception is the drawer on the \vuoNode{Calculate} node's \vuoPort{Values} input port, which changes automatically when you edit the \vuoPort{Expression} input port's constant value.) To change the number of items in a drawer, you can either drag on its handle (the bar along the bottom of the drawer) or right-click on the drawer and select \menu{Add Input Port} or \menu{Remove Input Port}.
 
-In the following composition, the \vuoNode{Multiply} node and the \vuoNode{Append Texts} node have drawers.
+In the following composition, which calculates the volume of a box, the dr \vuoNode{Multiply} node and the \vuoNode{Append Texts} node have drawers.
 
-\vuoCompositionImageWithAnnotationAndCaption{CalculateBoxVolume}{
-	\draw[->,line width=1,green] (3.1,1.8) -- (3.1,2.3); \node[below, green] at (3,1.8) {drawer};
-	\draw[->,line width=1,green] (6.8,1) -- (9.0,3.0); \node[below, green] at (6.8,1) {drawer};
-}{A composition that takes the height, length, and width of a box and calculates its volume}
+Below is an example of a composition that uses drawers. It calculates the volume of a 10 x 11 x 5 box. The height, length, and width of the box are listed in the drawer on the \vuoNode{Multiply} node. The pieces of text that are combined to form the console output go into the drawer of the \vuoNode{Append Texts} node.
+
+\includegraphics[scale=0.6]{image/CalculateBoxVolume.pdf}
 
 When you edit a drawer's constant values or change the number of drawer items, this affects the attached list input port in the same way as if you had edited a constant value on the list input port itself. For example, in the composition above, the \vuoNode{Multiply} node's \vuoPort{Values} input port contains the list *10, 11, 5*. When the \vuoNode{Multiply} node receives an event from \vuoNode{Fire on Start}, it calculates the product of those numbers, *550*, and sends that through its output cable.
 
@@ -558,21 +526,13 @@ Data can't travel to another node by itself. Data travels along with events thro
 
 Data stays in a node input port until it is replaced by other data. If you detach a cable while the composition is running, the input port will keep the latest data that came through that cable. 
 
-Some nodes have \term{state}. A \term{stateful node} retains information from the last time it executed. An example of a stateful node is \vuoNode{Count}. If a \vuoNode{Count} node is told to increment, its state (the retained count) changes. 
+\includegraphics[scale=0.6]{image/statefulness.pdf}
 
-\vuoNodeClassImageWithAnnotation{vuo.math.count.VuoReal}{
-	\draw[->,line width=1,green] (2.25,-.5) -- (2.25,0); \node[below, green, align=center] at (2.25,-.5) {bar indicating stateful node};
-}
+Some nodes have \term{state}. A \term{stateful node} retains information from the last time it executed. An example of a stateful node is \vuoNode{Count}. If a \vuoNode{Count} node is told to increment, its state (the retained count) changes. 
 
 Stateful nodes have a thick bar along the bottom that resembles a \term{data-and-event cable}.  This symbolizes that the node's state data is kept after the node executes, and used next time it executes.
 
----
-
-A \term{stateless} node doesn't retain any information about previous times it executed. If you give it the same inputs, it'll always give you the same outputs.
-
-\vuoNodeClassImage{vuo.math.subtract}
-
-\term{Stateless} nodes have a thin bottom border.
+A \term{stateless node} doesn't retain any information about previous times it executed. If you give it the same inputs, it'll always give you the same outputs. Stateless nodes have a thin bottom border.
 
 ## Port data types
 
@@ -590,15 +550,15 @@ A \term{type converter node} is just a node that happens to have a single input 
 
 For some types, there's more than one way to do the conversion. For example, if you want to convert from a real number to an integer, you can round the real number to the nearest integer, round it down to the integer below, or round it up to the integer above. If you try to connect a cable from a real-number output port to an integer input port, a menu will pop up allowing you to pick the conversion you want to use. 
 
-You can see type converters used in previous compositions in this manual, such as in the section [Creating a composition](#creating-a-composition) with the Count composition. 
+The composition below, Play Movie (\menu{File > Open Example > vuo.video}), shows a type converter from a movie frame to an image.
 
-\vuoCompositionImageWithCaption{PlayMovie}{An example composition, Play Movie (under vuo.video), showing a type converter from a movie frame to an image.}
+\vuoCompositionImage{PlayMovie}
 
 ### Generic port types
 
 Some nodes can work with many different types of data. For example, a \vuoNode{Hold Value} node could hold an integer, an image, a 3D point... or really, any type of data. Rather than cluttering up the Node Library with a separate \vuoNode{Hold Value} node for each data type, Vuo lists a single \vuoNode{Hold Value} node that can be made to work with any type. 
 
-When you drag a \vuoNode{Hold Value} node from the Node Library onto the canvas, each of the node's ports has a \term{generic data type}. This means that the data type for these ports hasn't been decided yet. Right now, each of the \vuoNode{Hold Value} node's ports has the potential to connect to any type of port in the composition. You can see that a port is generic by hovering over it with the mouse and reading the [port popover](#viewing-and-using-port-popovers) that pops up. 
+When you drag a \vuoNode{Hold Value} node from the Node Library onto the canvas, each of the node's ports has a \term{generic data type}. This means that the data type for these ports hasn't been decided yet. Right now, each of the \vuoNode{Hold Value} node's ports has the potential to connect to any type of port in the composition. You can see that a port is generic by hovering over it with the mouse and reading the port popover that pops up. 
 
 When you connect one of the \vuoNode{Hold Value} node's ports to a non-generic port, then all of the \vuoNode{Hold Value} node's generic ports change to non-generic ports with the same type as the connected port. For example, if you connect the \vuoNode{Hold Value} node's \vuoPort{Held Value} port to a \vuoNode{Count Character} node's \vuoPort{Text} port, then all of the \vuoNode{Hold Value} node's generic ports change to text ports, matching the \vuoPort{Text} port. 
 
@@ -616,10 +576,36 @@ You can connect a generic port to another generic port, as long as they work wit
 A generic node can have ports that each work with a different generic type. For example, the \vuoNode{Get Message Values} node in the \vuoNode{vuo.osc} node set has several output ports with independent generic types. You can change one output port's generic type to integer and another output port's generic type to text, for example. You can see if a node's generic ports use the same generic type or different generic types by looking at the port popover. The port popover displays a name for the port's generic type, such as "generic #1" or "generic #2". If two generic ports have the same name for their type (including if they're on separate nodes connected by cables), then changing the generic type of one port will also change the other port. If two generic ports have different names for their type, then changing one will not affect the other. 
 
 
+## Making a composition input and output specific data using protocols
 
-# Nodes
+A \term{protocol} is a predetermined set of published ports with certain names and data types. Vuo supports the following protocols: 
 
-Nodes are the building blocks of Vuo, which you can assemble in any way your creative mind can think of to create compositions. When you download Vuo, it comes with a large set of nodes that support 2D and 3D graphics, video, audio, networking, user interaction, and more. If you've purchased Vuo Pro, then you have some bonus "pro nodes" available to you. Whether you're using Vuo or Vuo Pro, you can also download nodes by third-party developers to add to your collection.
+   - \term{Image Filter} — Alters an image. 
+      - Published input ports: 
+         - \vuoPort{image} (Image) — The original image. 
+         - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating Vuo compositions. 
+      - Published output ports: 
+         - \vuoPort{outputImage} — The altered image. 
+
+   - \term{Image Generator} — Creates an image. 
+      - Published input ports: 
+         - \vuoPort{width} (Integer) — The requested width of the image, in pixels. 
+         - \vuoPort{height} (Integer) — The requested height of the image, in pixels. 
+         - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating Vuo compositions. 
+      - Published output ports: 
+         - \vuoPort{outputImage} — The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports. 
+
+To create a composition that conforms to a protocol, go to \menu{File > New Composition with Protocol}. If you've already started working on a composition and want to make it conform to a protocol, go to \menu{Edit > Protocols} and choose a protocol.
+
+The Vuo Editor provides some examples of protocol-compliant compositions under \menu{File > Open Example > Image Generators}.
+
+When you run a protocol-compliant composition in the Vuo Editor, events and data are automatically fed into its input ports, and the resulting image is displayed in a window. This makes it easy to preview how your composition will look when run inside some other application.
+
+
+
+# How nodes can be used as building blocks
+
+Nodes are the building blocks of Vuo, which you can assemble in any way you can think of to create compositions. When you download Vuo, it comes with a large set of nodes that support 2D and 3D graphics, video, audio, networking, user interaction, and more. If you've purchased Vuo Pro, then you have some bonus "pro nodes" available to you. Whether you're using Vuo or Vuo Pro, you can also download nodes by third-party developers to add to your collection.
 
 
 ## Finding out what nodes are available
@@ -646,7 +632,7 @@ Besides documentation, many nodes also come with example compositions, which dem
 
 \term{Pro nodes} are only available in Vuo Pro, not in the regular Vuo or the free trial. If a node is pro, then the Node Documentation Panel says so at the bottom. If you try to open a composition containing pro nodes using non-Pro Vuo, then you'll be warned that you won't be able to run the composition.
 
-If you plan to share a composition that contains pro nodes, keep in mind that Vuo users without Vuo Pro can't run the composition. If you want others to be able to use your composition even if they don't have Vuo Pro, consider [exporting it to an app](#exporting-a-composition-to-an-application).
+If you plan to share a composition that contains pro nodes, keep in mind that Vuo users without Vuo Pro can't run the composition. If you want others to be able to use your composition even if they don't have Vuo Pro, consider [exporting it to an app](#exporting-an-application).
 
 Currently, pro nodes aren't available when [using compositions in other applications](#using-compositions-in-other-applications).
 
@@ -669,7 +655,7 @@ For video, the \vuoNodeClass{vuo.video} node set handles playing movies and rece
 
 #### Vuo Coordinates
 
-When drawing graphics to a window or image, you need to understand the \term{coordinate system} of the area you're drawing to. For example, when you use the `Render Scene to Window` node to display a 3D scene in a window, typically the point in your 3D scene with coordinates (0,0,0) will be drawn at the center of the window. (If you're not familiar with the concept of 2D and 3D coordinates, see [http://simple.wikipedia.org/wiki/Cartesian_coordinate_system](http://simple.wikipedia.org/wiki/Cartesian_coordinate_system) and other references to learn more.) 
+When drawing graphics to a window or image, you need to understand the \term{coordinate system} of the area you're drawing to. For example, when you use the \vuoNode{Render Scene to Window} node to display a 3D scene in a window, typically the point in your 3D scene with coordinates (0,0,0) will be drawn at the center of the window. (If you're not familiar with the concept of 2D and 3D coordinates, see [http://simple.wikipedia.org/wiki/Cartesian_coordinate_system](http://simple.wikipedia.org/wiki/Cartesian_coordinate_system) and other references to learn more.)
 
 All of the built-in nodes that work with graphics use \term{Vuo Coordinates}: 
 
@@ -677,32 +663,36 @@ All of the built-in nodes that work with graphics use \term{Vuo Coordinates}:
 
 Typically, as illustrated above, the position (0,0) for 2D graphics or (0,0,0) for 3D graphics is at the center of the rendering area. The X-coordinate -1 is along the left edge of the rendering area, and the X-coordinate 1 is along the right edge. The rendering area's height depends on the aspect ratio of the graphics being rendered, with the Y-coordinate increasing from bottom to top. In 3D graphics, the Z-coordinate increases from back to front. 
 
-When working with 3D graphics, you can change the center and bounds of the rendering area by using a `Make Perspective Camera` or `Make Orthogonal Camera` node. For example, you can use a camera to zoom out, so that the rendering area shows a larger range of X- and Y-coordinates. 
+When working with 3D graphics, you can change the center and bounds of the rendering area by using a \vuoNode{Make Perspective Camera} or \vuoNode{Make Orthogonal Camera} node. For example, you can use a camera to zoom out, so that the rendering area shows a larger range of X- and Y-coordinates.
 
 ### Sound/audio
 
 The \vuoNodeClass{vuo.audio} node set lets you work with audio input and output. You can use audio input to create music visualizations or control a composition with sound. You can use audio output to synthesize sounds. Together, audio input and output can be used to receive a live audio feed, process the audio, and play it aloud.
 
-To interface with with MIDI keyboards, synthesizers, and sequencers, you can use the \vuoNodeClass{vuo.midi} node set.
-
-### User interaction
+### User input devices
 
 There are many built-in nodes you can use to make your compositions interactive, including:
 
    - \vuoNodeClass{vuo.mouse} for getting input from a mouse or trackpad
    - \vuoNodeClass{vuo.keyboard} for getting input from keys typed or pressed
-   - \vuoNodeClass{vuo.leap} for receiving hand and finger movements from a Leap Motion device
-   - any of the built-in nodes for networking listed below, which can be used to remotely control a composition from a phone or other device
+   - \vuoNodeClass{vuo.leap} for controlling a composition with hand and finger movements from a Leap Motion device
+   - \vuoNodeClass{vuo.osc} for remotely controlling a composition via a TouchOSC interface on a phone or tablet
 
-### Network
+### Music and stage equipment
 
-Several node sets let you connect with other devices such as iPhones and iPads, Android phones and tablets, musical synthesizers and sequencers, and stage lighting.
+Your compositions can control and be controlled by music and stage equipment — such as keyboards, synthesizers, sequencers, and lighting — using several common protocols:
 
-   - \vuoNodeClass{vuo.osc} for receiving OSC messages, for example from a TouchOSC interface on a mobile device
-   - \vuoNodeClass{vuo.midi} for sending and receiving MIDI events, often used with music equipment
-   - \vuoNodeClass{vuo.artnet} (pro) for sending and receiving Art-Net messages, often used with stage lighting
+   - \vuoNodeClass{vuo.osc} for receiving OSC messages
+   - \vuoNodeClass{vuo.midi} for sending and receiving MIDI events
+   - \vuoNodeClass{vuo.artnet} (pro) for sending and receiving Art-Net messages
 
-If you want to download feeds from the internet, you can use the \vuoNodeClass{vuo.rss} node set.
+### Sensors, LEDs, and motors
+
+The \vuoNodeClass{vuo.serial} nodes allow your composition to connect to serial devices, including programmable microcontrollers like Arduino. Via the Arduino, your composition can receive data from sensors, and send data to control LEDs and motors.
+
+### Internet
+
+With the \vuoNodeClass{vuo.rss} nodes, your composition can download RSS feeds.
 
 ### Displays
 
@@ -733,12 +723,57 @@ Second, restart the Vuo Editor. The node should now show up in your Node Library
 Programmers can use Vuo's API to create new nodes for Vuo. See [Developing Node Classes and Types for Vuo](http://api.vuo.org/VUO_VERSION/group__DevelopingNodeClassesTypes.html). 
 
 
+# Putting it all together in a composition
 
-# Common Patterns - How do I… 
+## Designing a composition
+
+### Starting new
+
+When you create a composition, there is usually a problem you want to solve. Let's use an example to demonstrate this approach. How would I create a composite image made up of two images blended together?
+
+  1. First, you know you'll need the two images, so drag the two files onto the canvas. Vuo will create two \vuoNode{Fetch Image} nodes, with the image locations filled in. 
+  1. Search the Node Library for "composite image," and drag \vuoNode{Blend Images} onto canvas. Alternately, you could search the Node Library for "image" and see a list of all the nodes that manipulate images, and pick from that list.
+  1. Look at the Node Description Panel for the \vuoNode{Blend Images} node, and see that it expects the two images, one for foreground and one for background.
+  1. Drag a cable from one \vuoNode{Fetch Image} node's output to the \vuoPort{Foreground} input port and the other to the \vuoNode{Background} input port.
+  1. Confirm by looking at the port popover for \vuoNode{Blend Images}'s output port (by left-clicking on the output port) to see that its type is Image.
+  1. Search the Node Library for "display image," or, if you remember the quick start example, search for "window" or "render." Drag the \vuoNode{Render Image to Window} onto the canvas.
+  1. Start dragging a cable from \vuoNode{Blend Images}'s output port and drop the cable onto the \vuoPort{Image} port of the \vuoNode{Render Image to Window} node.
+  1. Run the composition — nothing shows up on screen. Why?
+  1. At this point you could check the port popover for the \vuoNode{Blend Images}'s output port. It says "Last event: (none observed)." That is the same message when tracing back to the \vuoNode{Fetch Image} input ports.
+  1.  Think about what trigger ports you can use to fire an event. \vuoNode{Fire on Start} fires once when the composition starts, which should be good for loading images. Connect up the \vuoNode{Fire on Start} node's \vuoPort{Started} port to the refresh port (top left triangle) on the \vuoNode{Fetch Image} nodes. 
+  1. Stop the composition and run it again. Now the images show up, blended.
+  1. Yet, if you change \vuoPort{Foreground Opacity}, the change doesn't affect the composition. You can either check the port popovers again to see that the most recent event was before you changed the port value, or you could remember that Vuo needs events to carry changes downstream. 
+  1. Look again at trigger ports available in composition and the corresponding node descriptions. The \vuoPort{Requested Frame} output port of \vuoNode{Render Image to Window} fires around 60 times per second (or whatever your display refresh rate is set to), so it will update the blended image in real time as you experiment with opacities and blending modes.
+  1.  Drag a cable from the \vuoPort{Requested Frame} output port to \vuoNode{Blend Images}'s (highlighted) refresh port.
+  1. Use the input editors on \vuoPort{Foreground Opacity} and \vuoPort{Blend Mode} to control the blending.
+  1. Now you have a blended image.
+  1. Open the Editor's example compositions, and see that your composition looks likes the example, Blend Images, under vuo.image.
+
+\vuoCompositionImage{BlendImages}
+
+### Modifying an existing composition
+
+Again, let's start with a problem you want to solve, say to display a rotating cube.
+
+  1. You have read from the [example composition section](#example-compositions) that each node set has several example compositions. You know from experience that vuo.scene likely covers 3D objects and scenes.
+  1. The example composition, Spin Sphere, sounds pretty close to what you want to do, so open that.
+  1. Run the example and see that it spins a sphere.
+  1. Search for "cube" in the node library and find \vuoNode{Make Cube}. Add it to the scene.
+  1. Now as you inspect the example composition you see that it has a \vuoNode{Make 3D Object}. This might be where to insert the \vuoNode{Make Cube} node. But, \vuoNode{Make 3D object} has three cables going into it. You don't think you'll need \vuoNode{Make Sphere Mesh}, but what about the \vuoNode{Shade with Image}?
+  1. Start by replacing the \vuoNode{Make 3D Object} node with the \vuoNode{Make Cube} node and connect it up to the \vuoNode{Render Scene to Window} node. Leave the \vuoNode{Shade with Image} node not connected. You see that there is a \vuoPort{Transform} input port on  the \vuoNode{Make Cube}, like there was on the \vuoNode{Make 3D Object}. Connect up the output port of the \vuoNode{Make Transform} node to the \vuoPort{Transform} port. 
+  1. Run the composition.
+  1. Now you see a large rotating cube, but it doesn't have any color on its sides, just a ghostly checkerboard. Let's connect up the \vuoNode{Shade with Image} to all sides of the cube, and run the composition again.
+  1. Now the cube has a black and white checkerboard on all sides, but you'd like it to be smaller.  Adjust the \vuoPort{Scale} on the \vuoNode{Make Transform} node to 0.5, 0.5, 0.5.
+  1. … and now you have a rotating cube.
+
+\vuoCompositionImage{SpinCube}
+
+
+## Common patterns - "How do I…" {#common-patterns}
 
 This section describes a few approaches to controlling data and event flow that you're likely to use in many different compositions. As you begin with an idea of what you want your composition to do, you might come up with questions on how to use Vuo's nodes and cables to create a certain result in your composition. This section of the user manual can help answer those questions. 
 
-## Checking if a condition is met 
+### Checking if a condition is met 
 
 Vuo has nodes that can evaluate whether a statement is \term{True} or \term{False}. True and false are called \term{Boolean values}.
 
@@ -752,13 +787,17 @@ You can execute downstream nodes based on whether an output is true or false. Lo
 
 Vuo also has nodes for evaluating if points are within certain parameters, such as the \vuoNode{Is within Circle}, or \vuoNode{Is Point within Layer} nodes.
 
-## Checking more than one condition
+### Checking more than one condition
 
-The nodes \vuoNode{Are All True}, \vuoNode{Are Any True}, and \vuoNode{Is One True} can be used to check if a certain combination of conditions have been met. If the conditions produce events, you can use the node \vuoNode{Are All Hit}. In the following composition a data + event cable can feed into the \vuoNode{Share Value: A}, and a different cable in to \vuoNode{Share Value:B}. The node \vuoNode{Are All True} will check if both the conditions are true. 
+The nodes \vuoNode{Are All True}, \vuoNode{Are Any True}, and \vuoNode{Is One True} can be used to check if a certain combination of conditions have been met. If the conditions produce events, you can use the node \vuoNode{Are All Hit}. 
+
+The node \vuoNode{Are All Hit} will become true only if each input port receives the same event. For this to happen, an event generated by a trigger port has to be sent to two or more different nodes, splitting the event. The \vuoNode{Are All Hit} node then checks that the arriving event is identical at both its input ports. Events that are generated by different trigger ports (even if they are nearly simultaneous) are not the same event and will not cause the node to output a true value.
+
+In the following composition a data + event cable can feed into the \vuoNode{Share Value: A}, and a different cable in to \vuoNode{Share Value:B}. The node \vuoNode{Are All True} will check if both the conditions are true. 
 
 \vuoCompositionImage{AreAllValuesTrue}
 
-## Checking when a condition changes
+### Checking when a condition changes
 
 You might want to know when there is a change in the data in your composition. Vuo's logic node set and math node sets include nodes to test for data changes, such as \vuoNode{Is Greater Than} and \vuoNode{Is Within Range}, which output the Boolean values True and False.
 
@@ -770,7 +809,7 @@ You might also want to control your composition based on when something changes,
 \hfill
 \vuoNodeClassImage{vuo.event.changed}
 
-## Choosing which data and events to send through the composition
+### Choosing which data and events to send through the composition
 
 A \vuoNode{Select Input} node lets you select a value from different input ports and route it to the output. There are two different classes of Select nodes. The first uses integers to control how the node functions, while the second uses Boolean true or false values. The first set of \vuoNode{Select Input} will show up in the Node Library when using Display by Name (\menu{View > Node Library > Display by name}) as \vuoNode{Select Input (2)}, or \vuoNode{Select Input (8)}, or \vuoNode{Select Input (Boolean)}. With these different options, you can control your composition based on what makes sense with respect to the rest of your composition. 
 
@@ -793,7 +832,7 @@ Here's a composition using both a logic node and a \vuoNode{Select Input} node. 
 
 \vuoCompositionImage{CountIsLessThanToConsole}
 
-## Choosing which parts of the composition to execute
+### Choosing which parts of the composition to execute
 
 A \vuoNode{Select Output} node lets you route an input value to one of several outputs. Similar to the \vuoNode{Select Input}, you pick an output port using the \vuoPort{Which} input port.  Similar to the \vuoNode{Select Input} nodes, Vuo has three different \vuoNode{Select Output} nodes, one for Boolean values and two for inputs controlled by a numeric \vuoPort{Which} port, one with two outputs and one with eight. 
 
@@ -802,7 +841,7 @@ A \vuoNode{Select Output} is useful for routing data to different parts of your 
 \vuoCompositionImage{CountIsGreaterThanToConsole}
 
 
-## Merging events from multiple triggers
+### Merging events from multiple triggers
 
 A \vuoNode{Select Latest} node lets you select the latest data and event to arrive at the node. In the following composition, Each time the mouse is scrolled or a keyboard button is pressed, the event that is generated causes the text associated with that option to be output. 
 
@@ -810,17 +849,17 @@ A \vuoNode{Select Latest} node lets you select the latest data and event to arri
 
 If an event comes into both \vuoPort{Option 1} and \vuoPort{Option 2} at the same time, then \vuoPort{Option 1} is used. 
 
-## Setting data with one trigger and using it with another
+### Setting data with one trigger and using it with another
 
-\vuoCompositionImageWithCaption{CountAndHold}{A composition showing nodes executing at different rates}
+\vuoCompositionImage{CountAndHold}
 
-This composition writes a count upon the console window every 5 seconds. The count updates every 1 second.
+This composition has two trigger ports firing at different rates. It writes a count upon the console window every 5 seconds. The count updates every 1 second.
 
 The \vuoNode{Hold Value} node prevents the count from being written each time it's updated by the 1-second \vuoNode{Fire Periodically} node. 
 
 \tip{Every 5 seconds, when the two \vuoNode{Fire Periodically} nodes fire at nearly the same time, it's unpredictable whether the count will be written before or after it's incremented.}
 
-## Stripping data from an event, or adding an event to data
+### Stripping data from an event, or adding an event to data
 
 To separate out an event, you can use the option + drag from an output port to begin an event-only cable from that port.
 
@@ -836,13 +875,13 @@ Here is part of a composition that creates a color to be used by a downstream no
 
 Another way get data and an event is to use the [refresh port](#refresh-ports) of a node that will output the data-and-event you want, such as the \vuoNode{Count} node. 
 
-## Starting with a certain data value
+### Starting with a certain data value
 
 It is often good practice to initialize node data values. You can do this by using a \vuoNode{Select Latest} with one incoming cable from a \vuoNode{Fire on Start} to initialize the node's values and another data-and-event cable from elsewhere in the composition to receive the changed data as your composition executes. 
 
 \vuoNodeClassImage{vuo.select.latest.2}
 
-## Simplifying your composition by sending the same data to multiple ports
+### Simplifying your composition by sending the same data to multiple ports
 
 What if you want to set the same value on multiple input ports? For example, suppose you want to draw several images, all having the same height. One way to accomplish this would be to go one by one to each node's height input port, open the input editor, and set it to the height you want. But what if you later decide to change the height? It would be better to set the height in one place and have it affect all nodes. 
 
@@ -852,13 +891,13 @@ You can do this with the \vuoNode{Share Value} node, as illustrated here. When t
 
 \vuoNode{Share Value} nodes can help reduce the number of cables that cross your composition by using one cable to a \vuoNode{Share Value} node, and then creating multiple output cables from that \vuoNode{Share Value} node.
 
-## Keeping numbers within a certain range
+### Keeping numbers within a certain range
 
 Vuo has nodes that limit the range of data (\vuoNode{Limit to Range}, \vuoNode{Fit in Range}, and \vuoNode{Count within Range}), and a \vuoNode{Scale} node that scales data. 
 
 \vuoNodeClassImage{vuo.math.limitToRange}
 
-## Doing something after a certain amount of time has elapsed
+### Doing something after a certain amount of time has elapsed
 
 One way to do this is to use a \vuoNode{Count} node that receives an event from a \vuoNode{Fire Periodically} node. If you set up the \vuoNode{Fire Periodically} node to fire every second, the output is the number of times (thus seconds) since the node started. 
 
@@ -868,7 +907,7 @@ If you already have a source for time in your composition (such as a \vuoNode{Re
 
 In both cases, you can test the elapsed time with a logic node, such as an \vuoNode{Is Greater Than} node, and use the result to initiate your action. 
 
-## Alternating what happens in your composition
+### Alternating what happens in your composition
  
 Vuo has two logic nodes, \vuoNode{Toggle} and \vuoNode{Switch}, which can be used to in conjunction with a \vuoNode{Select Input} node to alternate between two values or two actions.
 
@@ -876,27 +915,27 @@ Vuo has two logic nodes, \vuoNode{Toggle} and \vuoNode{Switch}, which can be use
 \hfill
 \vuoNodeClassImage{vuo.logic.switch}
 
-## Changing a data value gradually between limits
+### Changing a data value gradually between limits
 
 Vuo has two nodes, \vuoNode{Wave} and \vuoNode{Curve}, that can be used to gradually change between two different data values. The \vuoNode{Wave} output defaults to values between -1 and 1. By changing the input values, or using this node with a \vuoNode{Scale} node, you can change gradually from a first to a second value, and back to the first value again. 
 
 \vuoNodeClassImage{vuo.motion.wave}
 
-## Keeping track of the number of times that something happens
+### Keeping track of the number of times that something happens
 
 First, you will need to generate an event when the condition happens. You can then input this event into a \vuoNode{Count} node to increment its count.
 
-## Executing slow nodes in the background
+### Executing slow nodes in the background
 
-\vuoCompositionImageWithCaption{LoadImageAsynchronously}{An example composition, LoadImagesAsynchronously.vuo (under vuo.event), has nodes execute in the background}
+\vuoCompositionImage{LoadImageAsynchronously}
 
-This example shows how a composition can do some work in the background (asynchronously). It displays a colored background while downloading an image from the internet, then displays the image. 
+The example composition above, Load Images Asynchronously (\menu{File > Open Example > vuo.event}), shows how a composition can do some work in the background (asynchronously). It displays a colored background while downloading an image from the internet, then displays the image. 
 
 The \vuoNode{Spin Off Event} node is what allows the image to download in the background. When an event reaches the \vuoNode{Spin Off Event} node, the \vuoNode{Spin Off Event} node fires a new event. Because it's a new event instead of the same old event, other parts of the composition can go on executing without having to wait on the event. 
 
 Let's take a more detailed look. When the \vuoNode{Fire on Start} node fires an event, the event travels to the \vuoNode{Spin Off Event} node (where it stops) and through the upper \vuoNode{Make Color Image} node, \vuoNode{Select Latest}, \vuoNode{Render Image to Window}. All of these nodes execute without waiting for the lower \vuoNode{Fetch Image} node. Meanwhile, the \vuoNode{Spin Off Event} node fires a new event, the \vuoNode{Fetch Image} node downloads the image, and eventually the new event travels onward through \vuoNode{Select Latest} and \vuoNode{Render Image to Window}.
 
-## Doing something more than once (iteration)
+### Doing something more than once (iteration)
 
 Creating a list, and then completing actions on each item in that list is one way to perform a sequence of actions in your composition.
 
@@ -925,53 +964,94 @@ This composition builds a list using a \vuoNode{Build List} node and a \vuoNode{
 \vuoCompositionImage{BuildColoredGrid}
 
 
-## Creating a new event when needed
+### Creating a new event when needed
 
 If you're building a composition, you might run into a situation where you need an event to cause something in the composition to happen, but events from the other trigger ports in your composition will cause an infinite feedback loop, or they produce events that are not timed to solve your problem. In this case, you might be able to use a \vuoNode{Spin Off Event} node. 
 
 
-# Using Compositions in Other Applications
+
+# Exporting compositions
+
+When you create something really interesting with Vuo, you might want to share it with the world. Sometimes you may want to share the composition (.vuo) file so that other people with Vuo can see how your composition works and tweak it themselves. But other times you may want to show your work to people who don't necessarily have Vuo. The best way to do that is to export your composition to a format that other people can easily work with — a movie, an image, or an application.
+
+## Exporting a movie
+
+Vuo offers several ways to create a movie from a composition:
+
+   - For an easy way to record the graphics displayed in a window, in the composition's menu go to \menu{File > Start Recording}.
+   - For the highest-quality rendering, make your composition use the [Image Generator protocol](#making-a-composition-input-and-output-specific-data-using-protocols), and in the Vuo Editor go to \menu{File > Export > Movie...}.
+   - To control the movie export from within your composition, use the \vuoNode{Save to Movie} node. (See that node's description for details.)
+   - To control the movie export from the command line, use the `vuo-export` command-line tool. (See [Exporting a composition on the command line](#exporting-a-composition-on-the-command-line) for details.)
+
+### Recording the graphics in a window
+
+To record a movie:
+
+   - Run a composition that shows at least one window.
+   - If your composition has more than one window, click on the one you want to record to make it the active (frontmost) window.
+   - Go to \menu{File > Start Recording}. This immediately starts recording the movie.
+   - Let the composition run for as long as you want to record the movie. You can interact with the composition while it's recording.
+   - Go to \menu{File > Stop Recording}. This immediately stops recording the movie and presents a save dialog.
+   - In the save dialog, choose the file where you want to save your movie.
+
+When you start recording, the graphics showing in the window at that moment are added as a frame in the movie. After that, each time the window being recorded renders some graphics — in other words, each time the \vuoNode{Render Image to Window}, \vuoNode{Render Layers to Window}, or \vuoNode{Render Scene to Window} node receives an event — a frame is added to the movie. If your composition is rendering about 60 frames per second, then your movie will play back at about 60 frames per second. If your composition renders once, then waits 10 seconds, then renders again, your movie will do the same — show the first frame for 10 seconds, then show the second frame.
+
+The dimensions of the rendered movie match the dimensions of the window's graphics area at the moment when you start recording. If you resize the window while the recording is in progress, then the recorded images will be scaled to the movie's dimensions.
+
+If your composition has multiple windows, then the active (frontmost) window at the time when you went to \menu{File > Start Recording} will be the one recorded. Only the content displayed within the window's graphics area — not the window's title bar, not the cursor, and not any audio — will be recorded in the movie.
+
+Although recording from a composition window is an easy way to create a movie, and allows you to interact with the composition while the recording is being made, it does limit the quality of the movie. Recording a movie in real time means that your computer has to do extra processing, beyond just running the composition. Depending on how powerful your computer is, this may slow the composition down or make it render choppily, and do the same to the recorded movie.
+
+The most reliable way to avoid slowness or choppiness is to export a movie from an Image Generator composition, as described in the next section. But if you do want to record from a composition window, here are some ways to improve the quality of your recording:
+
+   - Avoid doing other processor-intensive things on your computer (such as running other compositions) while the recording is in progress.
+   - Limit the size of the window that you record. (Larger windows require more processing power.)
+   - Avoid resizing the window during a recording. (Scaling the movie frames after the window has been resized requires more processing power.)
+
+### Exporting a movie from an Image Generator composition
+
+Another way to create a movie from a composition is with \menu{File > Export > Movie...} in the Vuo Editor. Instead of recording a composition in real time, this option runs the composition invisibly and takes as long (or short) as needed to render each movie frame. The resulting movie has a precise frame rate and no dropped frames. You can choose the start and end time, frame rate, and dimensions. Optionally, you can add antialiasing and motion blur (if you have Vuo Pro).
+
+To export a movie:
+
+   - Make your composition conform to the [Image Generator protocol](#making-a-composition-input-and-output-specific-data-using-protocols).
+   - Go to \menu{File > Export > Movie...}.
+   - In the dialog that appears, choose the movie file to output to and the other settings for your movie.
+   - Click the Export button.
+
+When exporting the movie, Vuo sends a series of events through the composition's published input ports. The \vuoPort{time} published input port value increases with each event, by an amount determined by the frame rate you chose in the dialog. Each event comes in through all published input ports. Vuo waits for the event to reach the \vuoPort{outputImage} published output port, and adds that image to the movie.
+
+When setting up your composition to export a movie, make sure that, for each event that comes in through the published input ports, exactly one event goes out through the published output ports. If an event into the published input ports never reaches the published output ports, then the export will hang because Vuo will be stuck waiting for that event. If extra events go out through the published output ports (fired from triggers within the composition), then the exported movie may contain unexpected images.
+
+## Exporting an image
+
+If you want to capture an image of a composition, you can either take a screenshot (open the Preview app and go to \menu{File > Take Screen Shot}) or use the \vuoNode{Save Image} node (see the node's description for details).
+
+## Exporting an application
+
+Using the \menu{File > Export > Mac App...} menu item, you can turn your composition into an OS X application (`.app` file).
+
+When exporting a composition that refers to files on your computer (such as images, scenes, or movies), typically the Vuo Editor will know to copy those into the exported app. If you've added these files to your composition by [dragging them onto the canvas](#dragging-files-onto-the-canvas-to-create-an-interface-node) (without holding down \keys{⌥}) — creating a node such as \vuoNode{Fetch Image} or \vuoNode{Play Movie} — then the files will automatically be copied into the exported app. In fact, the Vuo Editor will automatically copy files and folders for all relative paths found in ports named \vuoPort{URL}, \vuoPort{URLs}, or \vuoPort{Folder} on nodes that read files.
+
+If you've held down \keys{⌥} while dragging a file onto the canvas, or if you've typed an absolute path into the input editor for a URL, then the Vuo Editor won't copy the file into the exported app. This is useful if you want to refer to a file that you know will be in a certain location on every computer that runs the app, such as an image that comes with the operating system.
+
+In some cases, you may want a file to be copied into the app, but the Vuo Editor may not be able to figure this out. This may happen, for example, if your composition uses an \vuoNode{Append Text} node to construct relative file paths out of smaller pieces. If the Vuo Editor doesn't copy your files into the exported app automatically, then you can copy them yourself. For example, if your composition uses a file called `image.png`:
+
+   - Place `image.png` in the same folder as your composition (.vuo file). 
+   - In the Vuo Editor, go to \menu{File > Export > Mac App...} and create `MyApp.app`. 
+   - Right-click on `MyApp.app` and choose \menu{Show Package Contents}. 
+   - In the package contents, go to the \directory{Contents/Resources} folder. Copy `image.png` into that folder. 
+
+
+
+# Using compositions in other applications
 
 Some applications can load Vuo compositions as plugins — making it possible for you to customize or add to the application's behavior. For example, [CoGe](http://cogevj.hu/), a VJ application that does media mixing and compositing, lets you mix in visual effects made with Vuo. In order for a Vuo composition to communicate with CoGe or another application, you need to create the composition in a special way using published ports and protocols.
 
-## Published ports
-
-\noteQCUsers{In Quartz Composer, there's a single, default rendering output. VJ apps typically capture that output and mix it into the VJ app's other feeds, so there is no need for a protocol for composition playback. In Vuo, an Image Filter or Image Generator protocol is necessary to produce output.} 
-
-A \term{published port} is an input port or output port for the composition as a whole. A published input port receives events and possibly data from somewhere outside the composition and passes it along to input ports on nodes inside the composition. A published output port takes events and possibly data from output ports inside the composition and sends it to somewhere outside the composition. 
-
-In the Vuo Editor, published ports appear in sidebars on the left and right of the composition canvas. (These sidebars are hidden by default if a composition has no published ports. To display them, go to \menu{Window > Show Published Ports}.) 
-
-Here's a composition with published input ports called \vuoPort{image} and \vuoPort{time} and a published output port called \vuoPort{outputImage}: 
-
-\vuoScreenshot{editor-imagefilterprotocol}
-
-This composition could be provided to an application to produce an effect. In that case, the application would feed the image into the published input port and grab the altered image from the published output port. 
-
-## Protocols
+\noteQCUsers{In Quartz Composer, there's a single, default rendering output. VJ apps typically capture that output and mix it into the VJ app's other feeds, so there is no need for a protocol for composition playback. In Vuo, use the Image Filter or Image Generator protocol to produce output.}
 
 If you're going to use a Vuo composition in an application, usually the application expects the composition to have certain published input and output ports. For example, an application that supports Vuo compositions for video effects would expect the composition to have a published input port that receives an image and a published output port that sends an altered image. To guarantee that your composition's published ports match what the application is expecting, you can use a protocol. The composition shown above adheres to a Vuo protocol. 
 
-A \term{protocol} is a predetermined set of published ports with certain names and data types. Vuo supports the following protocols: 
-
-   - \term{Image Filter} — Alters an image. 
-      - Published input ports: 
-         - \vuoPort{image} (Image) — The original image. 
-         - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating Vuo compositions. 
-      - Published output ports: 
-         - \vuoPort{outputImage} — The altered image. 
-
-The example above was created using the Vuo Editor's \menu{File > New Composition with Protocol}, and the published ports in the composition follow the protocol. 
-
-   - \term{Image Generator} — Creates an image. 
-      - Published input ports: 
-         - \vuoPort{width} (Integer) — The requested width of the image, in pixels. 
-         - \vuoPort{height} (Integer) — The requested height of the image, in pixels. 
-         - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating Vuo compositions. 
-      - Published output ports: 
-         - \vuoPort{outputImage} — The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports. 
-
-When you run a protocol-compliant composition in the Vuo Editor, events and data are automatically fed into its input ports, and the resulting image is displayed in a window. This makes it easy to preview how your composition will look when run inside some other application. (But be aware that if you [export](#exporting-a-composition-to-an-application) a protocol-compliant composition as an application, the input events and data and the output window won't automatically be added, so the exported application may not do anything.)
 
 
 # The Vuo Editor
@@ -1000,10 +1080,7 @@ Whether you have left your library docked or undocked, visible or hidden, your p
 
 Each node has two names: a title and a class name. The \term{title} is a quick description of a node's function; it's the most prominent name written on a node. The \term{class name} is a categorical name that reveals specific information about a node; it appears directly below the node's title.
 
-\vuoNodeClassImageWithAnnotation{vuo.math.count.VuoReal}{
-	\draw[->,line width=1,green] (4.0,2.0) -- (2.25,2.0); \node[right, green] at (4.0,2.0) {title};
-	\draw[->,line width=1,green] (4.0,1.65) -- (3.1,1.65); \node[right, green] at (4.0,1.65) {class name};
-}
+\includegraphics[scale=0.6]{image/nodenames.pdf}
 
 Let's use the \vuoNode{Count} node as an example. "Count" is the node's title, which reveals that the node performs the function of counting. The class name is "vuo.math.count". The class name reveals the following: Team Vuo created it, "math" is the category, and "count" is the specific function (and title name).
 
@@ -1122,33 +1199,102 @@ If you start a composition that was created using \menu{New Composition with Pro
 
 ### Firing an event manually
 
-As you're editing your running composition, you may want to fire extra events so that your changes become immediately visible, rather than waiting for the next time a trigger port happens to fire. You can cause a trigger port to fire an event by right-clicking on the trigger port to pop up a menu, then choosing \menu{Fire Event}. Or you can hold down \keys{⌘} while left-clicking on the trigger port. If the trigger port carries data, it outputs its most recent data along with the event. 
+As you're editing your running composition, you may want to fire extra events so that your changes become immediately visible, rather than waiting for the next time a trigger port happens to fire.
+
+You can cause a trigger port to fire an event by right-clicking on the trigger port to pop up a menu, then choosing \menu{Fire Event}. Or you can hold down \keys{⌘} while left-clicking on the trigger port. If the trigger port carries data, it outputs its most recent data along with the event.
+
+You can also fire an event directly into an input port (as if it had an incoming cable from an invisible trigger port). To do this, you can right-click on the input port and choose \menu{Fire Event}, or you can hold down \keys{⌘} and left-click on the input port.
+
+If you've already manually fired an event, you can fire another event through the same port by going to \menu{Run > Re-fire Event}. This fires an event through the trigger port or input port that most recently had an event manually fired.
 
 
 ### Understanding and troubleshooting a running composition
 
 The Vuo Editor has several [helpful tools](#helpful-tools), such as the \term{Show Events} mode and \term{Port popovers} to help you understand in more depth what is happening in your composition. These features can help you see exactly what events and data are flowing through your composition. For more information on troubleshooting steps see the section on [Troubleshooting](#troubleshooting). 
 
+\newpage
 
-## Exporting a composition to an application
+## Keyboard Shortcuts
 
-Using the \menu{File > Export App...} menu item, you can turn your composition into a Mac application (`.app` file) that you can distribute to others. Other people can run the application without having Vuo installed.
+Vuo has [keyboard shortcuts](http://support.apple.com/kb/ht1343) for working with your composition and the Vuo Editor.
 
-When exporting a composition that refers to files on your computer (such as images, scenes, or movies), typically the Vuo Editor will know to copy those into the exported app. If you've added these files to your composition by [dragging them onto the canvas](#dragging-files-onto-the-canvas-to-create-an-interface-node) (without holding down \keys{⌥}) — creating a node such as \vuoNode{Fetch Image} or \vuoNode{Play Movie} — then the files will automatically be copied into the exported app. In fact, the Vuo Editor will automatically copy files and folders for all relative paths found in ports named \vuoPort{URL}, \vuoPort{URLs}, or \vuoPort{Folder}.
+In the keyboard shortcuts below, these symbols represent keys in Mac OS X: 
 
-If you've held down \keys{⌥} while dragging a file onto the canvas, or if you've typed an absolute path into the input editor for a URL, then the Vuo Editor won't copy the file into the exported app. This is useful if you want to refer to a file that you know will be in a certain location on every computer that runs the app, such as an image that comes with the operating system.
+| Symbol | Definition |
+| ------:| ---------- |
+| ⌘  | Command key |
+| ⌃ | Control key |
+| ⌥ | Option key |
+| ⇧ | Shift key |
+| ⌫ | Delete key |
+| ↵ | Return key |
+| ⎋ | Escape key |
 
-In some cases, you may want a file to be copied into the app, but the Vuo Editor may not be able to figure this out. This may happen, for example, if your composition uses an \vuoNode{Append Text} node to construct relative file paths out of smaller pieces. If the Vuo Editor doesn't copy your files into the exported app automatically, then you can copy them yourself. For example, if your composition uses a file called `image.png`:
+### Working with composition files
 
-   - Place `image.png` in the same folder as your composition (.vuo file). 
-   - In the Vuo Editor, edit the \vuoNode{Fetch Image} node's \vuoPort{URL} input port value to *image.png*. 
-   - In the Vuo Editor, go to \menu{File > Export App...} and create `MyApp.app`. 
-   - Right-click on `MyApp.app` and choose \menu{Show Package Contents}. 
-   - In the package contents, go to the \directory{Contents/Resources} folder. Copy `image.png` into that folder. 
+|Shortcut  | Definition |
+| ---:| --- |
+| ⌘N | New Composition |
+| ⌘O | Open Composition |
+| ⌘S | Save Composition |
+|⇧⌘S | Save Composition As |
+| ⌘W | Close Composition |
+
+### Controlling the composition canvas
+
+| Shortcut | Definition  |
+| ---:| --- |
+| ⌘= | Zoom In |
+| ⌘- | Zoom Out |
+| ⌘9 | Zoom to Fit |
+| ⌘0 | Actual Size |
+| ⌘↵ | Show Node Library |
+| Spacebar Drag | Move the canvas viewport. |
+
+### Creating and editing compositions
+
+| Shortcut | Definition |
+| ---:| --- |
+| ⌘A | Select all |
+| ⇧⌘A | Select none |
+| ⌘C | Copy |
+| ⌘V | Paste |
+| ⌘X | Cut |
+| ⌘Z | Undo |
+| ⇧⌘Z | Redo |
+| ⌫ | Delete |
+| ⌥ Drag | Duplicate selected nodes and cables. |
+| ↑↓←→ | Move nodes and cables around on the canvas. Hold ⇧ to move further. |
+| ↵ | Hover over a node title and press ↵ to edit it. |
+| ↵ | Select one or more nodes and press ↵ to edit their titles. |
+| ↵ | \vtop{\hbox{\strut Hover the mouse over a constant value and press ↵ to edit it.}\hbox{\strut Press ↵ to accept the new value, or ⎋ to go back to the old value.}} |
+
+### Running compositions (when Vuo Editor is active)
+
+| Shortcut | Definition |
+| ---:| --- |
+| ⌘. | Stop |
+| ⌘R | Run |
+| ⌘ Click | Do this on an input port or a trigger port to manually fire an event. |
+
+### Running compositions (when the composition is active)
+
+| Shortcut | Definition                                                          |
+| -------: | ------------------------------------------------------------------- |
+|      ⌘Q | Stop the composition                                                |
+|      ⌘F | Toggle between windowed and fullscreen                              |
+|    ⌥⌘E | Toggle recording the composition's graphical output to a movie file |
+
+### Application shortcuts
+
+| Shortcut | Definition |
+| ---:| --- |
+| ⌘Q | Quit the Vuo Editor |
+| ⌘H | Hide the Vuo Editor |
 
 
 
-# The Command-Line Tools
+# The command-line tools
 
 As an alternative to using the Vuo Editor, you can use command-line tools to work with Vuo compositions. Although most Vuo users will only need the Vuo Editor, you might want to use the command-line tools if: 
 
@@ -1237,17 +1383,21 @@ vuo-debug ./RenderTextLayer
 \end{lstlisting}
 
 
-## Exporting a composition to an application on the command line
+## Exporting a composition on the command line
 
-Using the `vuo-export` command, you can turn a composition into an application: 
+Using the `vuo-export` command, you can turn a composition into a movie or an application:
+
+\begin{lstlisting}[language=bash,caption=Exporting a Vuo composition to a movie]
+vuo-export movie --output GenerateCheckerboardImage.mov GenerateCheckerboardImage.vuo
+\end{lstlisting}
 
 \begin{lstlisting}[language=bash,caption=Exporting a Vuo composition to an application]
-vuo-export --output RenderTextLayer.app RenderTextLayer.vuo
+vuo-export macosx --output RenderTextLayer.app RenderTextLayer.vuo
 \end{lstlisting}
 
 If you run into trouble exporting a composition, you can get more information by running `vuo-export` with the `--verbose` flag. 
 
-This command is equivalent to the \menu{File > Export App...} menu item in Vuo Editor. See the section [Exporting a composition to an application](#exporting-a-composition-to-an-application) for more information. 
+This command is equivalent to the \menu{File > Export > Mac App...} menu item in Vuo Editor. See the section [Exporting an application](#exporting-an-application) for more information. 
 
 
 
@@ -1294,7 +1444,7 @@ If a node doesn't become opaque in Show Events mode, or if its port popover says
 
 ### Some nodes are executing when I don't want them to. 
 
-A node executes every time an event reaches it. If you don't want the node to execute at certain times, then your composition needs to block events from reaching the node. For more information, see the section [Common patterns for event flow](#common-patterns-for-event-flow). 
+A node executes every time an event reaches it. If you don't want the node to execute at certain times, then your composition needs to block events from reaching the node. For more information, see the section [Common patterns - "How do I…"](#common-patterns). 
 
 ### Some nodes are outputting the wrong data. 
 
@@ -1312,13 +1462,13 @@ This can happen if events are not flowing through your composition often enough 
 
    - Is each trigger port firing events as often as you expected? Check its port popover to see the average number of events per second. If it's firing more slowly than you expected... 
       - Check the node description for the trigger port's node. Make sure you understand exactly when the trigger is supposed to fire. 
-      - Check for any nodes downstream of the trigger port that might take a long time to execute, for example a \vuoNode{Fetch Image} node that downloads an image from the internet. Change your composition so those nodes receive fewer events. (See the section [Common patterns for event flow](#common-patterns-for-event-flow).) 
+      - Check for any nodes downstream of the trigger port that might take a long time to execute, for example a \vuoNode{Fetch Image} node that downloads an image from the internet. Change your composition so those nodes receive fewer events. (See the section [Common patterns - "How do I…"](#common-patterns).) 
       - Check the trigger port's event throttling, which is displayed in the port popover. If it says "drop events", try changing it to "enqueue events". (See the section [Controlling the buildup of events](#controlling-the-buildup-of-events).) 
       - Check the event throttling of each other trigger port that can fire events through the same nodes as this trigger port. If the other trigger port's event throttling is "enqueue events", try changing it to "drop events". 
    - Is each node receiving events as often as you expected? If not... 
       - Check if there are any event doors that might be blocking events between the trigger and the node. (See the section [Event walls and doors](#event-walls-and-doors).) 
    - Is the composition using a lot of memory or CPU? You can check this in the Activity Monitor application. If so... 
-      - Check if any parts of the composition are executing more often than necessary, and try not to execute them as often. (See the section [Common patterns for event flow](#common-patterns-for-event-flow).) 
+      - Check if any parts of the composition are executing more often than necessary, and try not to execute them as often. (See the section [Common patterns - "How do I…"](#common-patterns).) 
       - Export the composition to an application. When run as an application instead of in Vuo Editor, compositions use less memory and CPU. 
       - Quit other applications to make more memory and CPU available. 
       - Run the composition on a computer with more memory and CPU. 
@@ -1335,74 +1485,3 @@ Finally, here are a few more tips to help you troubleshoot compositions:
    - Try rearranging your nodes and cables so you can see the flow of events more clearly. If your nodes and cables are nicely laid out, then it can be easier to spot problems. 
    - Don't be afraid to experiment (but first save a copy of your composition). If you're not sure if a node is working as you expect, try it with various inputs. 
    - Don't be afraid to ask questions. For help, go to [Vuo Support](http://vuo.org/support). 
-
-
-# Keyboard Shortcuts
-
-Vuo has [keyboard shortcuts](http://support.apple.com/kb/ht1343) for working with your composition and the Vuo Editor.
-
-In the keyboard shortcuts below, these symbols represent keys in Mac OS X: 
-
-| Symbol | Definition |
-| ------ | ---------- |
-| ⌘  | Command key |
-| ⌃ | Control key |
-| ⌥ | Option key |
-| ⇧ | Shift key |
-| ⌫ | Delete key |
-| ↵ | Return key |
-| ⎋ | Escape key |
-
-## Working with composition files
-
-|Shortcut  | Definition |
-| --- | --- |
-| ⌘N | New Composition |
-| ⌘O | Open Composition |
-| ⌘S | Save Composition |
-|⇧⌘S | Save Composition As |
-| ⌘W | Close Composition |
-
-## Controlling the composition canvas
-
-| Shortcut | Definition  |
-| --- | --- |
-| ⌘= | Zoom In |
-| ⌘- | Zoom Out |
-| ⌘9 | Zoom to Fit |
-| ⌘0 | Actual Size |
-| ⌘↵ | Show Node Library |
-| Spacebar Drag | Move the canvas viewport. |
-
-## Creating and editing compositions
-
-| Shortcut | Definition |
-| --- | --- |
-| ⌘A | Select all |
-| ⇧⌘A | Select none |
-| ⌘C | Copy |
-| ⌘V | Paste |
-| ⌘X | Cut |
-| ⌘Z | Undo |
-| ⇧⌘Z | Redo |
-| ⌫ | Delete |
-| ⌥ Drag | Duplicate selected nodes and cables. |
-| ↑↓←→ | Move nodes and cables around on the canvas. Hold ⇧ to move further. |
-| ↵ | Hover over a node title and press ↵ to edit it. |
-| ↵ | Select one or more nodes and press ↵ to edit their titles. |
-| ↵ | \vtop{\hbox{\strut Hover the mouse over a constant value and press ↵ to edit it.}\hbox{\strut Press ↵ to accept the new value, or ⎋ to go back to the old value.}} |
-
-## Running compositions
-
-| Shortcut | Definition |
-| --- | --- |
-| ⌘. | Stop |
-| ⌘R | Run |
-| ⌘ Click | Do this on a trigger port to manually fire an event. |
-
-## Application shortcuts
-
-| Shortcut | Definition |
-| --- | --- |
-| ⌘Q | Quit the Vuo Editor |
-| ⌘H | Hide the Vuo Editor |

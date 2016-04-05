@@ -92,24 +92,11 @@ VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value)
  */
 void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height, float *backingScaleFactor)
 {
-	__block NSRect contentRect;
 	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)value;
-	dispatch_sync(dispatch_get_main_queue(), ^{
-					  contentRect = [[window glView] viewport];
-
-					  if ([window respondsToSelector:@selector(convertRectToBacking:)])
-					  {
-						  typedef double (*backingFuncType)(id receiver, SEL selector);
-						  backingFuncType backingFunc = (backingFuncType)[[window class] instanceMethodForSelector:@selector(backingScaleFactor)];
-						  *backingScaleFactor = backingFunc(window, @selector(backingScaleFactor));
-
-						  typedef NSRect (*funcType)(id receiver, SEL selector, NSRect);
-						  funcType convertRectToBacking = (funcType)[[window class] instanceMethodForSelector:@selector(convertRectToBacking:)];
-						  contentRect = convertRectToBacking(window, @selector(convertRectToBacking:), contentRect);
-					  }
-				  });
+	NSRect contentRect = [window convertRectToBacking:[window contentRectCached]];
 	*width = contentRect.size.width;
 	*height = contentRect.size.height;
+	*backingScaleFactor = [window backingScaleFactorCached];
 }
 
 /**

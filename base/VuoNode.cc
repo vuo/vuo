@@ -188,16 +188,22 @@ string VuoNode::getTintColorGraphvizName(void)
 	{
 		case TintYellow:
 			return "yellow";
+		case TintTangerine:
+			return "tangerine";
 		case TintOrange:
 			return "orange";
 		case TintMagenta:
 			return "magenta";
 		case TintViolet:
 			return "violet";
+		case TintBlue:
+			return "blue";
 		case TintCyan:
 			return "cyan";
 		case TintGreen:
 			return "green";
+		case TintLime:
+			return "lime";
 		default:
 			return "";
 	}

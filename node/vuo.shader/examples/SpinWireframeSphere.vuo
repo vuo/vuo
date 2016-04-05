@@ -11,30 +11,27 @@ digraph G
 {
 ConvertRealTo3DPoint2 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="635,567"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="436,172"];
 Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="382,387" _translation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
 MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="122,413" _2="10.000000"];
 MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="840,213" fillcolor="green"];
 MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="840,213" fillcolor="green"];
 MakeList7 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="810,183" fillcolor="green"];
-MakeSphereMesh [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="219,108" _rows="16" _columns="32"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="439,172" _rows="16" _columns="32"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="168,402"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="881,172" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.0.0" label="Shade with Wireframe|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<shader>shader\r" pos="200,183" fillcolor="violet" _frontColor="{\"r\":0.600000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _backColor="{\"r\":0.400000,\"g\":0.530000,\"b\":0.400000,\"a\":1}" _width="0.200000" _standoffWidth="0.100000" _showThirdEdge="false"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="881,172" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.0.0" label="Shade with Wireframe|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<shader>shader\r" pos="225,187" fillcolor="violet" _frontColor="{\"r\":0.600000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _backColor="{\"r\":0.400000,\"g\":0.530000,\"b\":0.400000,\"a\":1}" _width="0.200000" _standoffWidth="0.100000" _showThirdEdge="false"];
 ShowBackOfObject [type="vuo.scene.back" version="1.0.0" label="Show Back of Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="617,172" _keepFront="true"];
 
 ConvertRealTo3DPoint2:point3d -> Make3DTransform:rotation;
-FireOnStart:started -> MakeSphereMesh:refresh;
 FireOnStart:started -> ShadeWithWireframe:refresh;
-Make3DObject:object -> ShowBackOfObject:object;
-Make3DTransform:transform -> Make3DObject:transform;
+Make3DTransform:transform -> MakeSphere2:transform;
 MakeList0:list -> RenderSceneToWindow2:setWindowProperties;
 MakeList6:list -> RenderSceneToWindow2:setWindowProperties;
 MakeList7:list -> RenderSceneToWindow2:objects;
 MakeList:list -> Multiply:values;
-MakeSphereMesh:mesh -> Make3DObject:mesh;
+MakeSphere2:object -> ShowBackOfObject:object;
 Multiply:product -> ConvertRealTo3DPoint2:y;
 RenderSceneToWindow2:requestedFrame -> MakeList:1;
-ShadeWithWireframe:shader -> Make3DObject:shader;
+ShadeWithWireframe:shader -> MakeSphere2:material;
 ShowBackOfObject:backObject -> MakeList7:1;
 }

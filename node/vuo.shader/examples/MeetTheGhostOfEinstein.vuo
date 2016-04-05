@@ -1,0 +1,39 @@
+/**
+ * @file
+ * Demonstrates using the `Shade Edges with Color` node for a ghostly effect.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeAllShaders [type="vuo.scene.shader.all" version="2.0.0" label="Change All Shaders|<refresh>refresh\l|<object>object\l|<shader>shader\l|<shadedObject>shadedObject\r" pos="318,482"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="302,622" _startPosition="1.000000" _endPosition="0.005000" _duration="5.000000" _curve="\"quadratic\"" _easing="\"out\"" _loop="\"mirror\""];
+Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="-25,512" _startPosition="1.000000" _endPosition="0.750000" _duration="5.000000" _curve="\"cubic\"" _easing="\"out\"" _loop="\"mirror\""];
+FetchScene [type="vuo.scene.fetch" version="2.0.1" label="Fetch Scene|<refresh>refresh\l|<url>url\l|<center>center\l|<fit>fit\l|<hasLeftHandedCoordinates>hasLeftHandedCoordinates\l|<scene>scene\r" pos="-41,358" _url="\"einstein.3ds\"" _center="false" _fit="false" _hasLeftHandedCoordinates="false"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-182,325" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList10 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="658,493" fillcolor="green"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="688,523" fillcolor="green"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="729,482" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Ripple3DObject [type="vuo.scene.ripple" version="1.0.1" label="Ripple 3D Object|<refresh>refresh\l|<object>object\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<dispersion>dispersion\l|<displacement>displacement\l|<rippledObject>rippledObject\r" pos="509,482" _angle="90.000000" _wavelength="0.010000" _dispersion="\"linear\"" _displacement="\"transverse\""];
+ShadeEdgesWithColor [type="vuo.shader.make.edge.color" version="1.0.0" label="Shade Edges with Color|<refresh>refresh\l|<color>color\l|<width>width\l|<sharpness>sharpness\l|<interiorOpacity>interiorOpacity\l|<shader>shader\r" pos="117,497" fillcolor="violet" _color="{\"r\":0.662898,\"g\":0.704799,\"b\":1.000000,\"a\":0.000000}" _sharpness="0.000000" _interiorOpacity="1.000000"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-206,623" fillcolor="yellow"];
+Trim3DObject [type="vuo.scene.trim" version="1.0.0" label="Trim 3D Object|<refresh>refresh\l|<object>object\l|<center>center\l|<width>width\l|<height>height\l|<depth>depth\l|<trimmedObject>trimmedObject\r" pos="174,358" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="1.000000" _height="1.000000" _depth="1.000000"];
+
+ChangeAllShaders:shadedObject -> Ripple3DObject:object;
+Curve2:value -> Ripple3DObject:amplitude;
+Curve3:value -> ShadeEdgesWithColor:width;
+FetchScene:scene -> Trim3DObject:object;
+FireOnStart:started -> FetchScene:refresh;
+MakeList10:list -> RenderSceneToWindow:objects;
+MakeList5:list -> RenderSceneToWindow:setWindowProperties;
+RenderSceneToWindow:requestedFrame -> ShareValue2:value [style=invis];
+Ripple3DObject:rippledObject -> MakeList10:1;
+ShadeEdgesWithColor:shader -> ChangeAllShaders:shader;
+ShareValue2:sameValue -> Curve2:time;
+ShareValue2:sameValue -> Curve3:time;
+ShareValue2:sameValue -> Ripple3DObject:phase;
+Trim3DObject:trimmedObject -> ChangeAllShaders:object;
+}

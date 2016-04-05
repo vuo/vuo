@@ -20,6 +20,7 @@ VuoModuleMetadata({
 						 "Collada", "dae",
 						 "Blender",
 						 "dxf",
+						 /* Stanford Polygon Library */ "ply",
 						 "Lightwave", "lwo",
 						 "Modo", "lxo",
 						 "DirectX",
@@ -41,7 +42,7 @@ VuoModuleMetadata({
 						 "GameStudio", "3DGS", "hmp",
 						 "Izware", "Nendo", "ndo"
 					 ],
-					 "version" : "2.0.1",
+					 "version" : "2.0.2",
 					 "dependencies" : [
 						 "VuoSceneObjectGet"
 					 ],

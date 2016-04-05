@@ -78,6 +78,16 @@ static inline VuoRectangle VuoRectangle_make(float centerX, float centerY, float
 }
 
 /**
+ * Returns a rectangle with the specified coordinates.
+ */
+static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height) __attribute__((const));
+static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height)
+{
+	VuoRectangle r = {{leftX+width/2.,topY+height/2.},{width,height}};
+	return r;
+}
+
+/**
  * @c a + @c b.
  */
 static inline VuoPoint2d VuoPoint2d_add(VuoPoint2d a, VuoPoint2d b) __attribute__((const));

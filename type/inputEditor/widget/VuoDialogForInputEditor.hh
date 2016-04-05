@@ -19,7 +19,8 @@ class VuoDialogForInputEditor : public QDialog
 
 public:
 	VuoDialogForInputEditor(bool isDark, bool showArrow);
-	QMargins getPopoverContentsMargins(void);
+	QMargins getPopoverContentsMargins(void) const;
+	QSize sizeHint(void) const;
 
 public slots:
 	virtual void keyPressEvent(QKeyEvent *e);
@@ -28,7 +29,9 @@ public slots:
 private:
 	QPainterPath getPopoverPath(void);
 	void paintEvent(QPaintEvent *event);
+	void showEvent(QShowEvent *event);
 	static const int popoverArrowHalfWidth;
+	int arrowPixelsFromTopOrLeft;
 	bool _isDark;
 	bool _showArrow;
 };

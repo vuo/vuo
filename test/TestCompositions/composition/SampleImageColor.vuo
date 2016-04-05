@@ -1,0 +1,35 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+GetRGBColorValues [type="vuo.color.get.rgb" version="2.0.0" label="Get RGB Color Values|<refresh>refresh\l|<color>color\l|<red>red\r|<green>green\r|<blue>blue\r|<opacity>opacity\r" pos="452,-205"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.1" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="107,-257" _upperLeftColor="{\"r\":1.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _upperRightColor="{\"r\":0.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000}" _squareSize="1.000000" _center="{\"x\":0,\"y\":0}" _width="640" _height="480"];
+MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="859,-215"];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.0.0" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<color>color\r" pos="413,-338"];
+SnapValue2 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="688,-240" _spacing="0.010000" _center="0.000000"];
+SnapValue3 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="687,-153" _spacing="0.010000" _center="0.000000"];
+SnapValue4 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="687,-64" _spacing="0.010000" _center="0.000000"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Center>Center\r|<Width>Width\r|<Refresh>Refresh\r" _Center_type="VuoPoint2d" _Center="{\"x\":0,\"y\":0}" _Width_type="VuoReal" _Width="0.000000" _Refresh_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Color>Color\l" _Color_type="VuoColor"];
+
+GetRGBColorValues:blue -> SnapValue4:value;
+GetRGBColorValues:green -> SnapValue3:value;
+GetRGBColorValues:opacity -> MakeRGBColor:opacity;
+GetRGBColorValues:red -> SnapValue2:value;
+MakeCheckerboardImage:image -> SampleColorFromImage:image;
+SampleColorFromImage:color -> GetRGBColorValues:color;
+SnapValue2:snappedValue -> MakeRGBColor:red;
+SnapValue3:snappedValue -> MakeRGBColor:green;
+SnapValue4:snappedValue -> MakeRGBColor:blue;
+PublishedInputs:Center -> SampleColorFromImage:center;
+PublishedInputs:Width -> SampleColorFromImage:width;
+PublishedInputs:Refresh -> MakeCheckerboardImage:refresh;
+MakeRGBColor:color -> PublishedOutputs:Color;
+}

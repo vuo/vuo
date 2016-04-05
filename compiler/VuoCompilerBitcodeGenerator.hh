@@ -49,6 +49,12 @@ private:
 	/// A semaphore to synchronize access to @ref lastEventIdVariable.
 	GlobalVariable *lastEventIdSemaphoreVariable;
 
+	/// The functions called by chain workers to execute each node.
+	map<VuoCompilerNode *, Function *> executionFunctionForNode;
+
+	/// The functions called by chain workers to transmit data and events from the outputs of each node.
+	map<VuoCompilerNode *, Function *> transmissionFunctionForNode;
+
 	bool debugMode;
 
 	VuoCompilerBitcodeGenerator(VuoCompilerComposition *composition, VuoCompiler *compiler);
@@ -67,13 +73,9 @@ private:
 	void generateCallbackStopFunction(void);
 	Value * generateGetNextEventID(Module *module, BasicBlock *block);
 	Value * generateWaitForNodes(Module *module, Function *function, BasicBlock *&block, vector<VuoCompilerNode *> nodes, Value *eventIdValue = NULL, bool shouldBlock = true);
+	void generateWaitForNodeFunction(void);
 	void generateSignalForNodes(Module *module, BasicBlock *block, vector<VuoCompilerNode *> nodes);
-	Value * generatePortSerialization(Module *module, BasicBlock *block, VuoCompilerPort *port);
-	Value * generatePortSerializationInterprocess(Module *module, BasicBlock *block, VuoCompilerPort *port);
-	Value * generatePortSummary(Module *module, BasicBlock *block, VuoCompilerPort *port);
-	Value * generatePortSerializationOrSummary(Module *module, BasicBlock *block, VuoCompilerPort *port, bool isSummary, bool isInterprocess);
-	void generateGetPortValueOrSummaryFunctions(void);
-	void generateGetPortValueOrSummaryFunction(bool isSummary, bool isInput, bool isThreadSafe);
+	void generateGetPortValueFunction(void);
 	void generateSetInputPortValueFunction(void);
 	void generateInitializationForPorts(BasicBlock *block, bool input);
 	void generateInitialEventlessTransmissions(Function *function, BasicBlock *&block);
@@ -94,12 +96,14 @@ private:
 	void generateEventlessTransmission(Function *function, BasicBlock *&currentBlock, VuoCompilerNode *firstNode, bool isCompositionStarted);
 	void generateNodeExecution(Function *function, BasicBlock *&currentBlock, VuoCompilerNode *node, bool shouldSendTelemetry = true);
 	void generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *sentDataValue, Value *outputDataSummaryValue);
-	void generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort, Value *sentDataValue, Value *outputDataSummaryValue);
+	void generateSendInputPortUpdated(BasicBlock *block, VuoCompilerPort *inputPort, Value *receivedDataValue, Value *dataSummaryValue);
 	void generateSendEventDropped(BasicBlock *block, VuoCompilerTriggerPort *triggerPort);
 	void generateSerializeFunction(void);
 	void generateUnserializeFunction(void);
 	Function * generateTriggerFunctionHeader(VuoCompilerTriggerPort *trigger);
 	void generateTriggerFunctionBody(VuoCompilerTriggerPort *trigger);
+	Function * generateNodeExecutionFunction(Module *module, VuoCompilerNode *node);
+	Function * generateNodeTransmissionFunction(Module *module, VuoCompilerNode *node);
 
 	friend class TestVuoCompilerBitcodeGenerator;
 	friend class TestVuoCompilerGraphExecution;

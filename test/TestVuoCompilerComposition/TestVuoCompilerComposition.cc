@@ -250,9 +250,9 @@ private slots:
 				QVERIFY(genericType != NULL);
 
 				VuoGenericType::Compatibility compatibility;
-				set<string> actualCompatibleTypeNames = genericType->getCompatibleSpecializedTypes(compatibility);
+				vector<string> actualCompatibleTypeNames = genericType->getCompatibleSpecializedTypes(compatibility);
 				for (set<string>::iterator k = compatibleTypeNames.begin(); k != compatibleTypeNames.end(); ++k)
-					QVERIFY2(actualCompatibleTypeNames.find(*k) != actualCompatibleTypeNames.end(), (*k).c_str());
+					QVERIFY2(find(actualCompatibleTypeNames.begin(), actualCompatibleTypeNames.end(), *k) != actualCompatibleTypeNames.end(), (*k).c_str());
 				QCOMPARE(compatibleTypeNames.size(), actualCompatibleTypeNames.size());
 			}
 		}

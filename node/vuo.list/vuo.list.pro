@@ -19,6 +19,8 @@ GENERIC_NODE_SOURCES += \
 	vuo.list.process.c \
 	vuo.list.reverse.c \
 	vuo.list.shuffle.c \
+	vuo.list.spread.c \
+	vuo.list.spread.group.c \
 	vuo.list.take.c
 
 TYPE_SOURCES += \

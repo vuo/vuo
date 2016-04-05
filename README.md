@@ -63,7 +63,7 @@ If you're running any version of Mac OS X:
     cd ..
     curl -OL https://b33p.net/sites/default/files/llvm-disable-unused-intrinsics_1.patch
     patch -p0 < llvm-disable-unused-intrinsics_1.patch
-    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.6" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-Oz" --disable-bindings --enable-targets=host --enable-shared
+    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.7" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-Oz" --disable-bindings --enable-targets=host --enable-shared
     make install -j9
     cd tools/clang
     make install -j9
@@ -78,13 +78,13 @@ Install Graphviz 2.28.0:
     tar zxf graphviz-2.28.0.tar.gz
     cd graphviz-2.28.0
 
-If you're running Mac OS 10.6:
+If you're running Mac OS 10.7:
 
-    export CFLAGS="-mmacosx-version-min=10.6 -mno-sse4 -mno-sse4.1 -mno-sse4.2"
+    export CFLAGS="-mmacosx-version-min=10.7 -mno-sse4 -mno-sse4.1 -mno-sse4.2"
 
-If you're running Mac OS 10.7 or later:
+If you're running Mac OS 10.8 or later:
 
-    export CFLAGS="-mmacosx-version-min=10.6 -mno-avx -mno-sse4 -mno-sse4.1 -mno-sse4.2"
+    export CFLAGS="-mmacosx-version-min=10.7 -mno-avx -mno-sse4 -mno-sse4.1 -mno-sse4.2"
 
 If you're running any version of Mac OS X:
 
@@ -120,6 +120,10 @@ Install Qt 5.3.1:
     # https://bugreports.qt-project.org/browse/QTBUG-36383
     curl -OL https://b33p.net/sites/default/files/fixloading2ximagesinrichtextdocuments.patch
     patch -p1 < fixloading2ximagesinrichtextdocuments.patch
+
+    # https://bugreports.qt.io/browse/QTBUG-40449
+    curl -OL https://b33p.net/sites/default/files/yosemite-dragdrop.patch
+    patch -p1 < yosemite-dragdrop.patch
 
     cd ..
     ./configure -prefix /usr/local/Cellar/qt/5.3.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit -skip qtmultimedia
@@ -179,7 +183,13 @@ Install libffi 3.0.11:
 
 Install zlib 1.2.8: 
 
-    brew install https://raw.github.com/Homebrew/homebrew-dupes/44fc867849f309ff5266e8a0092fac7a1ce81c5e/zlib.rb
+    cd /tmp
+    curl -OL http://zlib.net/zlib-1.2.8.tar.gz
+    tar zxf zlib-1.2.8.tar.gz
+    cd zlib-1.2.8
+    CFLAGS="-Oz" ./configure --prefix=/usr/local/Cellar/zlib/1.2.8 --static --archs="-arch x86_64" --64
+    make -j9
+    make install
 
 ### muParser
 
@@ -283,13 +293,6 @@ If you're running any version of Mac OS X:
     mkdir gamma-0.9.5
     cd gamma-0.9.5
     tar zxf ../gamma-0.9.5.tar.gz
-    
-If you're running Mac OS 10.6, add the following line to Makefile.config in the "Default variables" section:
-
-    EXT_CPPFLAGS = -m64
-
-If you're running any version of Mac OS X:
-
     make install DESTDIR=/usr/local/Cellar/gamma/0.9.5
 
 ### CMake
@@ -306,11 +309,6 @@ If you're running any version of Mac OS X:
 
 ### Open Asset Import
 
-If you're running Mac OS 10.9:
-
-    export CC=gcc-4.2
-    export CXX=g++-4.2
-
 If you're running any version of Mac OS X:
 
     cd /tmp
@@ -326,7 +324,17 @@ If you're running any version of Mac OS X:
     git apply c338b665ed870363d17a52d2e6e6db276934351f.patch
     curl -OL https://github.com/assimp/assimp/commit/6551fd4903628bef69f5d7bbd0f0f5b262f32d2e.patch
     git apply 6551fd4903628bef69f5d7bbd0f0f5b262f32d2e.patch
+
+If you're running Mac OS 10.9 or 10.10:
+
+    cmake -DCMAKE_C_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang' -DCMAKE_CXX_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang++' -DCMAKE_CXX_FLAGS='-Oz' -DENABLE_BOOST_WORKAROUND=ON -DBUILD_STATIC_LIB=ON -DNO_EXPORT=ON -DASSIMP_BUILD_ARCHITECTURE=x86_64 -DBUILD_ASSIMP_TOOLS=OFF -DBUILD_ASSIMP_SAMPLES=OFF -DBUILD_TESTS=OFF
+
+If you're running Mac OS 10.7 or 10.8:
+
     cmake -DCMAKE_CXX_FLAGS='-Oz' -DENABLE_BOOST_WORKAROUND=ON -DBUILD_STATIC_LIB=ON -DNO_EXPORT=ON -DASSIMP_BUILD_ARCHITECTURE=x86_64 -DBUILD_ASSIMP_TOOLS=OFF -DBUILD_ASSIMP_SAMPLES=OFF -DBUILD_TESTS=OFF
+
+If you're running any version of Mac OS X:
+
     make -j9
     mkdir -p /usr/local/Cellar/assimp/3.0.1270/{lib,include}
     cp lib/libassimp.a /usr/local/Cellar/assimp/3.0.1270/lib
@@ -438,7 +446,7 @@ If you're running any version of Mac OS X:
     curl -OL ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.2.tar.gz
     tar zxf libxml2-sources-2.9.2.tar.gz
     cd libxml2-2.9.2
-    CFLAGS="-Oz -mmacosx-version-min=10.6" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-output --without-pattern --without-push --without-reader --without-regexps --without-schemas --without-schematron --without-tree --without-valid --without-writer --without-xinclude --without-modules --without-lzma
+    CFLAGS="-Oz -mmacosx-version-min=10.7" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-output --without-pattern --without-push --without-reader --without-regexps --without-schemas --without-schematron --without-tree --without-valid --without-writer --without-xinclude --without-modules --without-lzma
     make -j9
     make install
 
@@ -543,7 +551,7 @@ Install [MacTeX](http://www.tug.org/mactex/).
 
 ### Pandoc
 
-Install [Pandoc](http://code.google.com/p/pandoc/downloads).
+Install [Pandoc](https://github.com/jgm/pandoc/releases/).
 
 ### Doxygen
 
@@ -551,6 +559,19 @@ Install Doxygen 1.8.1.2:
 
     (cd /usr/local && git checkout af32cda Library/Formula/doxygen.rb)
     brew install doxygen
+
+### Docbook
+
+    brew install docbook
+    brew install docbook-xsl
+
+### Ghostscript 9.15
+
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew/f8eb7fa8b98ba511b0136bd1f498f23c1c425499/Library/Formula/ghostscript.rb
+
+### pngquant 2.3.1
+
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew/83bea4d30b76a0ba2e5079b72d0e0ef259cd5e81/Library/Formula/pngquant.rb
 
 
 ## Install dependencies for contributing to the Vuo source code (optional)

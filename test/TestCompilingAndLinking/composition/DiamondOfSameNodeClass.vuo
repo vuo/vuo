@@ -1,0 +1,129 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CalculateSine [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="206,-10"];
+CalculateSine10 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="686,25"];
+CalculateSine100 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="1002,787"];
+CalculateSine101 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="998,716"];
+CalculateSine11 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="829,-11"];
+CalculateSine12 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="682,-47"];
+CalculateSine13 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="1141,-15"];
+CalculateSine14 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="998,21"];
+CalculateSine15 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="994,-51"];
+CalculateSine16 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="204,178"];
+CalculateSine17 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="513,178"];
+CalculateSine18 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="361,214"];
+CalculateSine19 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="684,213"];
+CalculateSine2 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="359,-46"];
+CalculateSine20 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="827,177"];
+CalculateSine21 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="1139,173"];
+CalculateSine22 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="680,142"];
+CalculateSine23 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="357,143"];
+CalculateSine24 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="996,209"];
+CalculateSine25 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="992,138"];
+CalculateSine26 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="991,332"];
+CalculateSine27 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="826,371"];
+CalculateSine28 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="683,407"];
+CalculateSine29 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="201,560"];
+CalculateSine3 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="515,-10"];
+CalculateSine30 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="1138,367"];
+CalculateSine31 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="995,403"];
+CalculateSine32 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="203,372"];
+CalculateSine5 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="363,26"];
+CalculateSine74 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="679,336"];
+CalculateSine80 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="510,560"];
+CalculateSine81 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="358,596"];
+CalculateSine82 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="681,595"];
+CalculateSine83 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="356,337"];
+CalculateSine84 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="824,559"];
+CalculateSine85 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="1136,555"];
+CalculateSine86 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="677,524"];
+CalculateSine87 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="354,525"];
+CalculateSine88 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="993,591"];
+CalculateSine89 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="989,520"];
+CalculateSine90 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="512,372"];
+CalculateSine91 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="360,408"];
+CalculateSine92 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="210,756"];
+CalculateSine93 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="519,756"];
+CalculateSine94 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="833,755"];
+CalculateSine95 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="367,792"];
+CalculateSine96 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="1145,751"];
+CalculateSine97 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="690,791"];
+CalculateSine98 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="363,721"];
+CalculateSine99 [type="vuo.math.sin" version="1.0.0" label="Calculate Sine|<refresh>refresh\l|<angle>angle\l|<sine>sine\r" pos="686,720"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="21,-9" _started_eventThrottling="enqueue"];
+
+CalculateSine100:sine -> CalculateSine96:angle;
+CalculateSine101:sine -> CalculateSine96:refresh;
+CalculateSine10:sine -> CalculateSine11:angle;
+CalculateSine11:sine -> CalculateSine14:angle;
+CalculateSine11:sine -> CalculateSine15:angle;
+CalculateSine12:sine -> CalculateSine11:refresh;
+CalculateSine13:sine -> CalculateSine16:angle;
+CalculateSine14:sine -> CalculateSine13:angle;
+CalculateSine15:sine -> CalculateSine13:refresh;
+CalculateSine16:sine -> CalculateSine18:angle;
+CalculateSine16:sine -> CalculateSine23:angle;
+CalculateSine17:sine -> CalculateSine19:angle;
+CalculateSine17:sine -> CalculateSine22:angle;
+CalculateSine18:sine -> CalculateSine17:angle;
+CalculateSine19:sine -> CalculateSine20:angle;
+CalculateSine20:sine -> CalculateSine24:angle;
+CalculateSine20:sine -> CalculateSine25:angle;
+CalculateSine21:sine -> CalculateSine32:angle;
+CalculateSine22:sine -> CalculateSine20:refresh;
+CalculateSine23:sine -> CalculateSine17:refresh;
+CalculateSine24:sine -> CalculateSine21:angle;
+CalculateSine25:sine -> CalculateSine21:refresh;
+CalculateSine26:sine -> CalculateSine30:refresh;
+CalculateSine27:sine -> CalculateSine26:angle;
+CalculateSine27:sine -> CalculateSine31:angle;
+CalculateSine28:sine -> CalculateSine27:angle;
+CalculateSine29:sine -> CalculateSine81:angle;
+CalculateSine29:sine -> CalculateSine87:angle;
+CalculateSine2:sine -> CalculateSine3:refresh;
+CalculateSine30:sine -> CalculateSine29:angle;
+CalculateSine31:sine -> CalculateSine30:angle;
+CalculateSine32:sine -> CalculateSine83:angle;
+CalculateSine32:sine -> CalculateSine91:angle;
+CalculateSine3:sine -> CalculateSine10:angle;
+CalculateSine3:sine -> CalculateSine12:angle;
+CalculateSine5:sine -> CalculateSine3:angle;
+CalculateSine74:sine -> CalculateSine27:refresh;
+CalculateSine80:sine -> CalculateSine82:angle;
+CalculateSine80:sine -> CalculateSine86:angle;
+CalculateSine81:sine -> CalculateSine80:angle;
+CalculateSine82:sine -> CalculateSine84:angle;
+CalculateSine83:sine -> CalculateSine90:refresh;
+CalculateSine84:sine -> CalculateSine88:angle;
+CalculateSine84:sine -> CalculateSine89:angle;
+CalculateSine85:sine -> CalculateSine92:angle;
+CalculateSine86:sine -> CalculateSine84:refresh;
+CalculateSine87:sine -> CalculateSine80:refresh;
+CalculateSine88:sine -> CalculateSine85:angle;
+CalculateSine89:sine -> CalculateSine85:refresh;
+CalculateSine90:sine -> CalculateSine28:angle;
+CalculateSine90:sine -> CalculateSine74:angle;
+CalculateSine91:sine -> CalculateSine90:angle;
+CalculateSine92:sine -> CalculateSine95:angle;
+CalculateSine92:sine -> CalculateSine98:angle;
+CalculateSine93:sine -> CalculateSine97:angle;
+CalculateSine93:sine -> CalculateSine99:angle;
+CalculateSine94:sine -> CalculateSine100:angle;
+CalculateSine94:sine -> CalculateSine101:angle;
+CalculateSine95:sine -> CalculateSine93:angle;
+CalculateSine97:sine -> CalculateSine94:angle;
+CalculateSine98:sine -> CalculateSine93:refresh;
+CalculateSine99:sine -> CalculateSine94:refresh;
+CalculateSine:sine -> CalculateSine2:angle;
+CalculateSine:sine -> CalculateSine5:angle;
+FireOnStart:started -> CalculateSine:angle;
+}

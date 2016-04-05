@@ -121,7 +121,7 @@ VuoInteger VuoInteger_wrap(VuoInteger value, VuoInteger minimum, VuoInteger maxi
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-u_int32_t VuoInteger_arc4random_uniform(u_int32_t upper_bound)
+static u_int32_t VuoInteger_arc4random_uniform(u_int32_t upper_bound)
 {
 	u_int32_t r, min;
 
@@ -212,4 +212,37 @@ VuoInteger VuoInteger_randomWithState(unsigned short state[3], const VuoInteger 
 		if (num >= 0 && num < maxUsable)
 			return num % topPlusOne + actualMinimum;
 	}
+}
+
+/**
+ * Convert between hex and decimal.
+ */
+static const char VuoInteger_hexToDec[256] =
+{
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   1,   2,   3,   4,   5,   6, 7, 8, 9, 0, 0, 0, 0, 0, 0,
+	0, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+/**
+ * If `byte` is a valid ASCII hex character (0–9, a–f, A–F), returns the equivalent numeric value.
+ *
+ * Otherwise returns 0.
+ */
+VuoInteger VuoInteger_makeFromHexByte(unsigned char byte)
+{
+	return VuoInteger_hexToDec[byte];
 }

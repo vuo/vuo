@@ -37,6 +37,7 @@ SUBDIRS += \
 	vuo_scene \
 	vuo.screen \
 	vuo.select \
+	vuo.serial \
 	vuo.shader \
 	vuo.syphon \
 	vuo.text \

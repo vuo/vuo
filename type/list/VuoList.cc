@@ -112,13 +112,12 @@ char * LIST_TYPE_getSummary(const LIST_TYPE value)
 	for (unsigned long i = 1; i <= itemCount && i <= maxItems && characterCount <= maxCharacters; ++i)
 	{
 		ELEMENT_TYPE item = VuoListGetValue_ELEMENT_TYPE(value, i);
-		char *itemSummary = ELEMENT_TYPE_getSummary(item);
-		if (strlen(itemSummary))
+		std::string itemSummary = ELEMENT_TYPE_getSummary(item);
+		if (itemSummary.length() && itemSummary.find_first_not_of(' ') != std::string::npos)
 			summary << "<li>" << itemSummary << "</li>";
 		else
 			summary << "<li>&nbsp;</li>";
-		characterCount += strlen(itemSummary);
-		free(itemSummary);
+		characterCount += itemSummary.length();
 	}
 
 	if (itemCount > maxItems || characterCount > maxCharacters)
@@ -138,6 +137,9 @@ LIST_TYPE VuoListCreate_ELEMENT_TYPE(void)
 
 LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list)
 {
+	if (!list)
+		return NULL;
+
 	std::vector<ELEMENT_TYPE> *oldList = (std::vector<ELEMENT_TYPE> *)list;
 
 	std::vector<ELEMENT_TYPE> *newList = new std::vector<ELEMENT_TYPE>(*oldList);
@@ -151,6 +153,9 @@ LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list)
 
 void VuoListDestroy_ELEMENT_TYPE(void *list)
 {
+	if (!list)
+		return;
+
 	VuoListRemoveAll_ELEMENT_TYPE(reinterpret_cast<LIST_TYPE>(list));
 
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
@@ -161,7 +166,7 @@ ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned l
 {
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
-	if (l->size() == 0)
+	if (!l || l->size() == 0)
 		return ELEMENT_TYPE_makeFromJson(NULL);
 
 	if (index == 0)
@@ -175,6 +180,9 @@ ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned l
 
 void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	if (l->size() == 0)
@@ -196,6 +204,9 @@ void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value
 
 void VuoListInsertValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	unsigned long clampedIndex = index - 1;
@@ -215,6 +226,9 @@ void VuoListInsertValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE va
 
 void VuoListPrependValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	RETAIN(value);
 	l->insert(l->begin(), value);
@@ -222,6 +236,9 @@ void VuoListPrependValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value)
 
 void VuoListAppendValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	RETAIN(value);
 	l->push_back(value);
@@ -229,6 +246,9 @@ void VuoListAppendValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value)
 
 void VuoListExchangeValues_ELEMENT_TYPE(LIST_TYPE list, const unsigned long indexA, const unsigned long indexB)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	size_t size = l->size();
@@ -254,6 +274,9 @@ void VuoListExchangeValues_ELEMENT_TYPE(LIST_TYPE list, const unsigned long inde
 
 void VuoListShuffle_ELEMENT_TYPE(LIST_TYPE list, const double chaos)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	size_t size = l->size();
@@ -272,12 +295,18 @@ void VuoListShuffle_ELEMENT_TYPE(LIST_TYPE list, const double chaos)
 
 void VuoListReverse_ELEMENT_TYPE(LIST_TYPE list)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	std::reverse(l->begin(), l->end());
 }
 
 void VuoListCut_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const unsigned long itemCount)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	size_t size = l->size();
@@ -307,6 +336,9 @@ void VuoListCut_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const
 
 void VuoListRemoveFirstValue_ELEMENT_TYPE(LIST_TYPE list)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	if (!l->size())
@@ -318,6 +350,9 @@ void VuoListRemoveFirstValue_ELEMENT_TYPE(LIST_TYPE list)
 
 void VuoListRemoveLastValue_ELEMENT_TYPE(LIST_TYPE list)
 {
+	if (!list)
+		return;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	if (!l->size())
@@ -329,12 +364,18 @@ void VuoListRemoveLastValue_ELEMENT_TYPE(LIST_TYPE list)
 
 void VuoListRemoveAll_ELEMENT_TYPE(LIST_TYPE list)
 {
+	if (!list)
+		return;
+
 	while (VuoListGetCount_ELEMENT_TYPE(list) > 0)
 		VuoListRemoveLastValue_ELEMENT_TYPE(list);
 }
 
 void VuoListRemoveValue_ELEMENT_TYPE(LIST_TYPE list, const unsigned long index)
 {
+	if (!list)
+		return;
+
 	if (index == 0)
 		return;
 
@@ -349,6 +390,9 @@ void VuoListRemoveValue_ELEMENT_TYPE(LIST_TYPE list, const unsigned long index)
 
 unsigned long VuoListGetCount_ELEMENT_TYPE(const LIST_TYPE list)
 {
+	if (!list)
+		return 0;
+
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	return l->size();
 }

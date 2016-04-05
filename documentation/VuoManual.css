@@ -1,0 +1,182 @@
+/*****************/
+/* Global styles */
+/*****************/
+
+@import url(http://fonts.googleapis.com/css?family=Signika:300,600);
+
+body {
+	background-color: rgb(253,246,227); /* solarized base3 */
+	color: rgb(88,110,117); /* solarized base01 */
+	font-family: 'Signika', sans-serif;
+	font-weight: 300;
+	font-size: 12pt;
+	line-height: 1.5;
+	margin: 0 auto;
+	max-width: 800px;
+}
+
+a {
+	color: rgb(38,139,210); /* solarized blue */
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+
+h2,
+h3,
+h4 {
+	color: rgb(38,139,210); /* solarized blue */
+	font-weight: 300;
+	margin: 0px;
+}
+h2 {
+	font-size: 36pt;
+}
+h3 {
+	font-size: 24pt;
+}
+h4 {
+	font-size: 18pt;
+}
+
+img {
+	max-width: 100%;
+}
+
+hr {
+	border: 2px solid rgb(238,232,213); /* solarized base2 */
+	clear: both;
+}
+
+.informaltable table {
+	border: none !important;
+	border-bottom: 1px solid rgb(88,110,117) !important; /* solarized base01 */
+	margin: 1em;
+}
+.informaltable table th {
+	border: 1px solid rgb(88,110,117) !important; /* solarized base01 */
+	border-left: none !important;
+	border-right: none !important;
+	padding: .1em .5em .1em .5em;
+}
+.informaltable table td {
+	border: none !important;
+	padding: .1em .5em .1em .5em;
+}
+
+.vuo-term {
+	color: rgb(66,153,0); /* not-solarized green */
+	font-weight: 600;
+}
+
+.vuo-port,
+.vuo-node,
+.vuo-node-class {
+	font-weight: 600;
+}
+
+.shortcut,
+.vuo-directory,
+.vuo-menu {
+	background-color: rgb(238,232,213); /* solarized base2 */
+	border: 1px solid rgb(147,161,161); /* solarized base1 */
+	border-radius: 4px;
+	padding: .1em .2em .1em .2em;
+}
+
+.vuo-tip,
+.vuo-note-text,
+.vuo-note-qc {
+	clear: right;
+	float: right;
+	width: 33%;
+	background-color: rgb(238,232,213); /* solarized base2 */
+	border-radius: 6px;
+	font-size: 11pt;
+	margin: 0 0 1em 1em;
+	padding: 1em 1em 1em 3em;
+}
+.vuo-tip:before,
+.vuo-note-text:before,
+.vuo-note-qc:before {
+	font-weight: 600;
+	display: block;
+	background-size: auto 1.3em;
+	background-repeat: no-repeat;
+	padding-bottom: 0.3em;
+}
+.vuo-tip:before {
+	content: 'Tip';
+	background-image: url("image/fa-info.svg");
+	margin-left: -1.7em;
+	padding-left: 1.7em;
+}
+.vuo-note-text:before {
+	content: 'Note for text programmers';
+	background-image: url("image/fa-code.svg");
+	margin-left: -2.2em;
+	padding-left: 2.2em;
+}
+.vuo-note-qc:before {
+	content: 'Note for Quartz Composer users';
+	background-image: url("image/fa-magic.svg");
+	margin-left: -2em;
+	padding-left: 2em;
+}
+
+
+/*******************************/
+/* Styles for particular pages */
+/*******************************/
+
+
+/* Title page */
+
+section.article > div.titlepage div {
+	display: inline;
+}
+section.article > div.titlepage h2.title:before {
+	background-image: url("image/vuo.png");
+	width: 128px;
+	height: 128px;
+	background-size: 128px;
+	display: block;
+	content: '';
+}
+section.article > div.titlepage h2.title {
+	color: rgb(0,43,54); /* solarized base03 */
+	font-size: 64pt;
+	line-height: 0;
+	display: inline;
+}
+section.article > div.titlepage p.releaseinfo {
+	color: rgb(192,196,187); /* solarized base1.5 */
+	font-size: 48pt;
+	display: inline;
+}
+section.article > div.titlepage p.pubdate {
+	float: right;
+	margin-top: 38pt;
+}
+
+div.toc {
+	background-color: rgb(238,232,213); /* solarized base2 */
+	border-radius: 6px;
+	padding: 1em;
+	float: right;
+	width: 40%;
+	margin: 0 0 1em 1em;
+}
+ul.toc {
+	margin: 0;
+	padding: 0 0 0 1em;
+}
+ul.toc li {
+	list-style: none;
+}
+
+#introduction h2 {
+	clear: none !important;
+}
+

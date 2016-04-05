@@ -224,7 +224,7 @@ set< set<VuoCompilerPort *> > VuoCompilerComposition::groupGenericPortsByType(bo
 	{
 		VuoCable *cable = *i;
 
-		if (!(cable->getFromPort() && cable->getToPort()))
+		if (!(cable->getFromPort() && cable->getToPort() && cable->getCompiler()->carriesData()))
 			continue;
 
 		VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>(cable->getFromPort()->getCompiler());
@@ -305,17 +305,17 @@ void VuoCompilerComposition::updateGenericPortTypes(void)
 
 		// Form the set of compatible types for each composition-level generic type by finding the intersection of
 		// the sets of compatible types for each node-class-level generic type.
-		set<string> compatibleTypeNames;
+		vector<string> compatibleTypeNames;
 		for (set<VuoCompilerPort *>::iterator j = connectedGenericPorts.begin(); j != connectedGenericPorts.end(); ++j)
 		{
 			VuoCompilerPort *port = *j;
 			VuoCompilerPortClass *portClass = static_cast<VuoCompilerPortClass *>(port->getBase()->getClass()->getCompiler());
 			VuoGenericType *genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
 			VuoGenericType::Compatibility compatibility;
-			set<string> compatibleTypeNamesForPort = genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibility);
-			set<string> innermostCompatibleTypeNamesForPort;
-			for (set<string>::iterator k = compatibleTypeNamesForPort.begin(); k != compatibleTypeNamesForPort.end(); ++k)
-				innermostCompatibleTypeNamesForPort.insert( VuoType::extractInnermostTypeName(*k) );
+			vector<string> compatibleTypeNamesForPort = genericTypeFromPortClass->getCompatibleSpecializedTypes(compatibility);
+			vector<string> innermostCompatibleTypeNamesForPort;
+			for (vector<string>::iterator k = compatibleTypeNamesForPort.begin(); k != compatibleTypeNamesForPort.end(); ++k)
+				innermostCompatibleTypeNamesForPort.push_back( VuoType::extractInnermostTypeName(*k) );
 
 			if (! innermostCompatibleTypeNamesForPort.empty())
 			{
@@ -323,11 +323,10 @@ void VuoCompilerComposition::updateGenericPortTypes(void)
 					compatibleTypeNames = innermostCompatibleTypeNamesForPort;
 				else
 				{
-					set<string> intersectingCompatibleTypeNames;
-					set_intersection(compatibleTypeNames.begin(), compatibleTypeNames.end(),
-									 innermostCompatibleTypeNamesForPort.begin(), innermostCompatibleTypeNamesForPort.end(),
-									 std::insert_iterator<set<string> >(intersectingCompatibleTypeNames, intersectingCompatibleTypeNames.begin() ));
-					compatibleTypeNames = intersectingCompatibleTypeNames;
+					for (int k = compatibleTypeNames.size() - 1; k >= 0; --k)
+						if (find(innermostCompatibleTypeNamesForPort.begin(), innermostCompatibleTypeNamesForPort.end(), compatibleTypeNames[k]) ==
+								innermostCompatibleTypeNamesForPort.end())
+							compatibleTypeNames.erase(compatibleTypeNames.begin() + k);
 				}
 			}
 		}
@@ -340,10 +339,10 @@ void VuoCompilerComposition::updateGenericPortTypes(void)
 			VuoGenericType *genericTypeFromPortClass = static_cast<VuoGenericType *>(portClass->getDataVuoType());
 
 			string typeNameForPort = VuoGenericType::replaceInnermostGenericTypeName(genericTypeFromPortClass->getModuleKey(), commonTypeName);
-			set<string> compatibleTypeNamesForPort;
+			vector<string> compatibleTypeNamesForPort;
 			string prefix = (VuoType::isListTypeName(typeNameForPort) ? VuoType::listTypeNamePrefix : "");
-			for (set<string>::iterator k = compatibleTypeNames.begin(); k != compatibleTypeNames.end(); ++k)
-				compatibleTypeNamesForPort.insert(prefix + *k);
+			for (vector<string>::iterator k = compatibleTypeNames.begin(); k != compatibleTypeNames.end(); ++k)
+				compatibleTypeNamesForPort.push_back(prefix + *k);
 
 			VuoGenericType *commonTypeForPort = new VuoGenericType(typeNameForPort, compatibleTypeNamesForPort);
 			port->setDataVuoType(commonTypeForPort);

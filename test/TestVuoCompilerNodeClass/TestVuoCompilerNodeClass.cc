@@ -387,11 +387,11 @@ private slots:
 			QCOMPARE(QString::fromStdString(type->getModuleKey()), expectedType);
 
 			VuoGenericType::Compatibility compatibility;
-			set<string> compatibleTypes = type->getCompatibleSpecializedTypes(compatibility);
+			vector<string> compatibleTypes = type->getCompatibleSpecializedTypes(compatibility);
 
 			QCOMPARE(compatibility, expectedCompatibility);
 
-			for (set<string>::iterator j = compatibleTypes.begin(); j != compatibleTypes.end(); ++j)
+			for (vector<string>::iterator j = compatibleTypes.begin(); j != compatibleTypes.end(); ++j)
 			{
 				string compatibleType = *j;
 				QVERIFY2(expectedCompatibleTypes.find(compatibleType) != expectedCompatibleTypes.end(), compatibleType.c_str());

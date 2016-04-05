@@ -356,7 +356,16 @@ static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat
 
 
 
-typedef map<GLuint, unsigned int> VuoGlTextureReferenceCounts;	///< The number of times each glTextureName is retained..
+/**
+ * Reference-counting information for an OpenGL texture.
+ */
+typedef struct
+{
+	unsigned int referenceCount;
+	VuoImage_freeCallback freeCallback;
+	void *freeCallbackContext;
+} VuoGlTexture;
+typedef map<GLuint, VuoGlTexture> VuoGlTextureReferenceCounts;	///< The number of times each glTextureName is retained..
 static VuoGlTextureReferenceCounts VuoGlTexture_referenceCounts __attribute__((init_priority(101)));  ///< The reference count for each OpenGL Texture Object.
 static dispatch_semaphore_t VuoGlTexture_referenceCountsSemaphore = NULL;  ///< Synchronizes access to @c VuoGlTexture_referenceCounts.
 static void __attribute__((constructor)) VuoGlTexture_init(void)
@@ -369,8 +378,9 @@ static void __attribute__((constructor)) VuoGlTexture_init(void)
  *
  * @threadAny
  */
-void VuoGlTexture_retain(GLuint glTextureName)
+void VuoGlTexture_retain(GLuint glTextureName, VuoImage_freeCallback freeCallback, void *freeCallbackContext)
 {
+//	VLog("%d", glTextureName);
 	if (glTextureName == 0)
 		return;
 
@@ -378,9 +388,9 @@ void VuoGlTexture_retain(GLuint glTextureName)
 
 	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
 	if (it == VuoGlTexture_referenceCounts.end())
-		VuoGlTexture_referenceCounts[glTextureName] = 1;
+		VuoGlTexture_referenceCounts[glTextureName] = (VuoGlTexture){1, freeCallback, freeCallbackContext};
 	else
-		++VuoGlTexture_referenceCounts[glTextureName];
+		++(*it).second.referenceCount;
 
 	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
 }
@@ -390,7 +400,7 @@ void VuoGlTexture_retain(GLuint glTextureName)
  *
  * @threadAny
  */
-void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName)
+void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName, GLuint glTextureTarget)
 {
 //	VLog("%d (%s %dx%d)", glTextureName, VuoGl_stringForConstant(internalformat), width, height);
 	if (glTextureName == 0)
@@ -403,12 +413,58 @@ void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned 
 		VLog("Error: VuoGlTexture_release() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
 	else
 	{
-		if (--VuoGlTexture_referenceCounts[glTextureName] == 0)
+		VuoGlTexture t = VuoGlTexture_referenceCounts[glTextureName];
+		if (--t.referenceCount == 0)
 		{
-			VuoGlContext glContext = VuoGlContext_use();
-			VuoGlTexurePool_disuse(glContext, internalformat, width, height, glTextureName);
-			VuoGlContext_disuse(glContext);
+			if (t.freeCallback)
+			{
+				// Client-owned texture
+				struct _VuoImage i = (struct _VuoImage){glTextureName, internalformat, glTextureTarget, width, height, t.freeCallbackContext};
+				t.freeCallback(&i);
+			}
+			else
+			{
+				// Vuo-owned texture
+				VuoGlContext glContext = VuoGlContext_use();
+				VuoGlTexurePool_disuse(glContext, internalformat, width, height, glTextureName);
+				VuoGlContext_disuse(glContext);
+			}
+			VuoGlTexture_referenceCounts.erase(it);
 		}
+		else
+			VuoGlTexture_referenceCounts[glTextureName] = t;
+	}
+
+	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
+}
+
+/**
+ * Removes `glTextureName` from Vuo's reference count table (without deleting it like @ref VuoGlTexture_release does).
+ *
+ * `glTextureName` must have a reference count of exactly 1 (i.e., a texture being used in multiple places throughout Vuo cannot be disowned).
+ *
+ * After Vuo disowns the texture, the caller is responsible for eventually deleting it.
+ *
+ * @threadAny
+ */
+void VuoGlTexture_disown(GLuint glTextureName)
+{
+//	VLog("%d", glTextureName);
+	if (glTextureName == 0)
+		return;
+
+	dispatch_semaphore_wait(VuoGlTexture_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+
+	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
+	if (it == VuoGlTexture_referenceCounts.end())
+		VLog("Error: VuoGlTexture_disown() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
+	else
+	{
+		VuoGlTexture t = VuoGlTexture_referenceCounts[glTextureName];
+		if (t.referenceCount != 1)
+			VLog("Error: VuoGlTexture_disown() was called with OpenGL Texture Object %d, which has a reference count of %d (but it should be 1).", glTextureName, t.referenceCount);
+		else
+			VuoGlTexture_referenceCounts.erase(it);
 	}
 
 	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
@@ -821,6 +877,10 @@ char *VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_8_8_8_8_REV);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_2_10_10_10_REV);
 	RETURN_STRING_IF_EQUAL(GL_YCBCR_422_APPLE);
+	RETURN_STRING_IF_EQUAL(GL_ALREADY_SIGNALED);
+	RETURN_STRING_IF_EQUAL(GL_TIMEOUT_EXPIRED);
+	RETURN_STRING_IF_EQUAL(GL_CONDITION_SATISFIED);
+	RETURN_STRING_IF_EQUAL(GL_WAIT_FAILED);
 
 	return VuoText_format("(unknown: %x)", constant);
 }

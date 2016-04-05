@@ -13,17 +13,16 @@
 VuoModuleMetadata({
 					  "title" : "Make Checkerboard Image",
 					  "keywords" : [ "backdrop", "background", "checkers", "chess", "debug", "uvw", "mosaic" ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "node": {
 						  "exampleCompositions" : [ "MoveCheckerboardCenter.vuo" ]
 					  }
 				 });
 
 static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-
 	varying vec4 fragmentTextureCoordinate;
 
-	uniform float size;
+	uniform vec2 size;
 	uniform vec4 color1;
 	uniform vec4 color2;
 	uniform vec2 center;
@@ -31,21 +30,15 @@ static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120
 
 	void main()
 	{
-		int toggle = 0;
+		// Based on the Gritz/Baldwin antialiased checkerboard shader.
 
-		// convert to pixels to avoid floating point modulus errors
-		int px = int( (fragmentTextureCoordinate.x - center.x) * imageSize.x );
-		int py = int( (fragmentTextureCoordinate.y - center.y) * imageSize.y );
-		int ps = int(size * imageSize.x);
+		vec2 filterWidth = fwidth(fragmentTextureCoordinate.xy) / size;
 
-		// strange that mod(int, int) doesn't return an int
-		int x = px - int(mod(px, ps));
-		int y = py - int(mod(py, ps));
+		vec2 checkPos = fract((fragmentTextureCoordinate.xy - center) / size);
+		vec2 p = smoothstep(vec2(0.5), filterWidth + vec2(0.5), checkPos) +
+			(1 - smoothstep(vec2(0),   filterWidth,             checkPos));
 
-		toggle += (mod(x/ps, 2) > 0 ? 1 : 0);
-		toggle += (mod(y/ps, 2) > 0 ? 1 : 0);
-
-		gl_FragColor = (toggle == 1 ? color1 : color2);
+		gl_FragColor = mix(color1, color2, p.x*p.y + (1-p.x)*(1-p.y));
 	}
 );
 
@@ -78,23 +71,21 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoColor,{"default":{"r":1,"g":1,"b":1,"a":1}}) upperLeftColor,
 		VuoInputData(VuoColor,{"default":{"r":0,"g":0,"b":0,"a":1}}) upperRightColor,
-		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0, "suggestedMax":2, "suggestedStep":0.1}) squareSize,
+		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0, "suggestedMax":1, "suggestedStep":0.01}) squareSize,
 		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,
 		VuoInputData(VuoInteger, {"default":480, "suggestedMin":1, "suggestedStep":32}) height,
 		VuoOutputData(VuoImage) image
 )
 {
+	double aspect = (float)width / (float)height;
+	double clampedSquareSize = MAX(squareSize, .001);
+	VuoPoint2d cen = { (center.x+1)/2., (center.y*aspect + 1)/2. };
 
-	VuoPoint4d col1 = { upperLeftColor.r, upperLeftColor.g, upperLeftColor.b, upperLeftColor.a };
-	VuoPoint4d col2 = { upperRightColor.r, upperRightColor.g, upperRightColor.b, upperRightColor.a };
-	VuoPoint2d cen = { (center.x+1)/2., (center.y+1)/2. };
-
-	VuoShader_setUniform_VuoReal   ((*instance)->shader, "size", MAX(squareSize/2, .0001) );
+	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "size", VuoPoint2d_make(clampedSquareSize, clampedSquareSize * aspect));
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "center", cen);
-	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "imageSize", (VuoPoint2d){width, height});
-	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "color1", col1);
-	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "color2", col2);
+	VuoShader_setUniform_VuoColor  ((*instance)->shader, "color1", upperLeftColor);
+	VuoShader_setUniform_VuoColor  ((*instance)->shader, "color2", upperRightColor);
 
 	// Render.
 	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);

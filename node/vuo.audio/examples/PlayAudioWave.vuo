@@ -1,6 +1,6 @@
 /**
  * @file
- * Generates a pitch controlled by the position of the mouse.
+ * Generates a pitch controlled by the vertical position of the mouse.
  *
  * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,22 +9,25 @@
 
 digraph G
 {
-Convert2DPointToReal2 [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="470,312"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="538,77"];
 MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<samples>samples\r" pos="371,187" fillcolor="violet" _wave="\"triangle\""];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="743,258"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="845,318"];
 MakeList11 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="585,110" fillcolor="violet"];
-MakeWaveformImage [type="vuo.audio.image.waveform" version="1.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<amplitude>amplitude\l|<image>image\r" pos="565,232" _fillColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.250000}" _lineColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _amplitude="128"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="125,201" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="784,232" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="enqueue"];
+MakeWaveformImage [type="vuo.audio.image.waveform" version="1.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<amplitude>amplitude\l|<image>image\r" pos="626,292" _fillColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.250000}" _lineColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _amplitude="128"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-63,198" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="886,292" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="176,199" _start="-2.500000" _end="1.000000" _scaledStart="0.000000" _scaledEnd="900.000000"];
 SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="631,84" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
 
-Convert2DPointToReal2:y -> MakeAudioWave:frequency;
+Convert2DPointToReal:y -> Scale:value;
 MakeAudioWave:samples -> MakeList11:1;
 MakeAudioWave:samples -> MakeList11:2;
 MakeAudioWave:samples -> MakeWaveformImage:samples;
 MakeList0:list -> RenderImageToWindow:setWindowProperties;
 MakeList11:list -> SendLiveAudio:sendChannels;
 MakeWaveformImage:image -> RenderImageToWindow:image;
-ReceiveMouseMoves:movedTo -> Convert2DPointToReal2:xy;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
+Scale:scaledValue -> MakeAudioWave:frequency;
 SendLiveAudio:requestedChannels -> MakeAudioWave:refresh;
 }

@@ -26,32 +26,38 @@ public:
 };
 
 /**
- * An input editor that displays a line edit and, if the text is outside the bounds
- * of its suggested minimum and maximum length, a warning message.
+ * An input editor that displays a text area for entering plain text.
+ *
+ * The text area has a fixed width but automatically adjusts its height (up to a point) to fit the text.
  *
  * This input editor recognizes the following keys in the JSON details object:
- *   - "suggestedMinLength" and "suggestedMaxLength" define the range of recommended lengths for the
- *		text entered. If the text has fewer or more characters, a warning message is displayed below
- *		the line edit.
- *
- * @eg{
- *   {
- *     "suggestedMinLength" : 7,
- *     "suggestedMaxLength" : 15
- *   }
- * }
+ *   - "isCodeEditor" — If true, the input editor is adapted for editing source code (wider text area,
+ *	   fixed-width font, Return and Tab keys type text instead of dismissing the input editor).
+ *     Defaults to false.
  */
-class VuoInputEditorText : public VuoInputEditorWithLineEdit
+class VuoInputEditorText : public VuoInputEditorWithDialog
 {
 	Q_OBJECT
 
+public:
+	VuoInputEditorText(void);
+	bool supportsTabbingBetweenPorts(void);
+
 protected:
 	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
-	QString convertToLineEditFormat(json_object *value);
-	json_object * convertFromLineEditFormat(const QString &valueAsString);
+	json_object * getAcceptedValue(void);
+	QString convertToTextEditFormat(json_object *value);
+	json_object * convertFromTextEditFormat(const QString &valueAsString);
 
 	bool eventFilter(QObject *object, QEvent *event);
 	bool event(QEvent *event);
+
+private slots:
+	void resizeToFitText(void);
+
+private:
+	QPlainTextEdit *textEdit;  ///< The text area widget.
+	bool isCodeEditor;
 };
 
 #endif // VUOINPUTEDITORTEXT_HH

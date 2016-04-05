@@ -10,27 +10,24 @@
 digraph G
 {
 Copy3DObject [type="vuo.scene.copy.trs" version="2.0.0" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="735,211"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="492,65"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="87,90" fillcolor="yellow" _started_eventThrottling="enqueue"];
 MakeList [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="689,267" _1="{\"x\":0.200000,\"y\":0.200000,\"z\":0.200000}"];
 MakeList2 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="884,222" fillcolor="green"];
-MakeList3 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="578,252" _1="{\"x\":0,\"y\":0,\"z\":0}"];
+MakeList3 [type="vuo.list.make.1.VuoPoint3d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="584,252" _1="{\"x\":0,\"y\":0,\"z\":0}"];
 MakeList7 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="914,252" fillcolor="green"];
 MakeRandomListWithSeed5 [type="vuo.noise.random.list.seed.VuoPoint3d" version="1.0.0" label="Make Random List with Seed|<refresh>refresh\l|<setSeed>setSeed\l|<minimum>minimum\l|<maximum>maximum\l|<count>count\l|<list>list\r" pos="256,226" fillcolor="violet" _setSeed="1" _minimum="{\"x\":-2.000000,\"y\":-1.000000,\"z\":-1.000000}" _maximum="{\"x\":2.000000,\"y\":1.000000,\"z\":0.500000}" _count="200"];
-MakeSphereMesh [type="vuo.mesh.make.sphere" version="2.0.0" label="Make Sphere Mesh|<refresh>refresh\l|<rows>rows\l|<columns>columns\l|<mesh>mesh\r" pos="307,43" _rows="16" _columns="16"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="955,211" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="306,123" _color="{\"r\":1.000000,\"g\":0.545739,\"b\":0.742992,\"a\":0.500008}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="520,96" _transform="\"identity\"" _rows="16" _columns="16"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="955,211" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="336,111" _color="{\"r\":1.000000,\"g\":0.549004,\"b\":0.764874,\"a\":0.500008}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 
 Copy3DObject:copies -> MakeList2:1;
 FireOnStart:started -> MakeRandomListWithSeed5:setSeed;
-FireOnStart:started -> MakeSphereMesh:refresh;
-FireOnStart:started -> ShadeWithColor:refresh;
-Make3DObject:object -> Copy3DObject:object;
+FireOnStart:started -> ShadeWithColor2:refresh;
 MakeList2:list -> RenderSceneToWindow:objects;
 MakeList3:list -> Copy3DObject:rotations;
 MakeList7:list -> RenderSceneToWindow:setWindowProperties;
 MakeList:list -> Copy3DObject:scales;
 MakeRandomListWithSeed5:list -> Copy3DObject:translations;
-MakeSphereMesh:mesh -> Make3DObject:mesh;
-ShadeWithColor:shader -> Make3DObject:shader;
+MakeSphere2:object -> Copy3DObject:object;
+ShadeWithColor2:shader -> MakeSphere2:material;
 }

@@ -9,24 +9,22 @@
 
 digraph G
 {
-BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="1253,363" _blendMode="\"normal\"" _foregroundOpacity="1.000000"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="655,416" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="655,366" fillcolor="yellow" _started_eventThrottling="enqueue"];
 MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.1" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="870,216" fillcolor="violet" _upperLeftColor="{\"r\":0.373159,\"g\":0.038926,\"b\":0.744823,\"a\":1.000000}" _upperRightColor="{\"r\":0.400000,\"g\":0.052796,\"b\":0.134020,\"a\":1.000000}" _squareSize="0.250000" _width="768" _height="768"];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1387,389" fillcolor="green"];
-MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="973,484"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="814,475" _text="\"Move the mouse to change the checkerboard's center.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.500000}"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.2" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="616,260" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1428,363" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="1042,473" _width="768" _height="768" _colorDepth="\"8bpc\""];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1291,381" fillcolor="green"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1321,396" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1112,201" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1127,385" _text="\"Move the mouse to change the checkerboard's center.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.500000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="616,260" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1362,370" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
-BlendImages:blended -> RenderImageToWindow:image;
 FireOnStart:started -> MakeCheckerboardImage:refresh;
 FireOnStart:started -> MakeTextLayer:refresh;
-MakeCheckerboardImage:image -> BlendImages:background;
-MakeList6:list -> RenderImageToWindow:setWindowProperties;
-MakeList8:list -> RenderLayersToImage:layers;
-MakeTextLayer:layer -> MakeList8:1;
+MakeCheckerboardImage:image -> MakeScaledLayer:image;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList5:list -> RenderLayersToWindow:setWindowProperties;
+MakeScaledLayer:layer -> MakeList2:1;
+MakeTextLayer:layer -> MakeList2:2;
 ReceiveMouseMoves:movedTo -> MakeCheckerboardImage:center;
-RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
-RenderLayersToImage:image -> BlendImages:foreground;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
 }

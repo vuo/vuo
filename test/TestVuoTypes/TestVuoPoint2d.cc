@@ -41,6 +41,7 @@ private slots:
 			QTest::newRow("zero") << "{\"x\":0.000000,\"y\":0.000000}" << p << true;
 			QTest::newRow("emptystring") << "" << p << false;
 			QTest::newRow("partial point 1") << "{\"y\":0}" << p << false;
+			QTest::newRow("zero text") << QUOTE("0,0") << p << false;
 			QTest::newRow("nonpoint") << "Otto von Bismarck" << p << false;
 		}
 
@@ -48,6 +49,7 @@ private slots:
 			VuoPoint2d p;
 			p.x = p.y = 1;
 			QTest::newRow("one") << "{\"x\":1.000000,\"y\":1.000000}" << p << true;
+			QTest::newRow("one text") << QUOTE("1,1") << p << false;
 		}
 
 		{
@@ -55,6 +57,7 @@ private slots:
 			p.x = -0.999;
 			p.y = 0.42;
 			QTest::newRow("different values") << "{\"x\":-0.999000,\"y\":0.420000}" << p << true;
+			QTest::newRow("different values text") << QUOTE("-.999, .42") << p << false;
 		}
 
 		{

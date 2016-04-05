@@ -74,7 +74,7 @@ Function * VuoCompilerChain::generateSubmissionForDispatchGroup(Module *module, 
 	Function *workerFunction = module->getFunction(workerFunctionName);
 	if (! workerFunction) {
 		workerFunction = Function::Create(workerFunctionType,
-										  GlobalValue::ExternalLinkage,
+										  GlobalValue::PrivateLinkage,
 										  workerFunctionName,
 										  module);
 	}

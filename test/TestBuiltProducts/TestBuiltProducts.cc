@@ -226,6 +226,7 @@ private slots:
 			qtPaths.insert("QtPrintSupport.framework");
 			qtPaths.insert("QtWidgets.framework");
 			qtPaths.insert("QtXml.framework");
+			qtPaths.insert("QtNetwork.framework");
 			qtPaths.insert("QtPlugins");
 			for (set<string>::iterator i = qtPaths.begin(); i != qtPaths.end(); ++i)
 			{

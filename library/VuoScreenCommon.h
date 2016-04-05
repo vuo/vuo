@@ -12,3 +12,6 @@
 
 void *VuoScreen_getNSScreen(VuoScreen screen);
 VuoList_VuoScreen VuoScreen_getList(void);
+VuoScreen VuoScreen_getActive(void);
+VuoScreen VuoScreen_getPrimary(void);
+VuoScreen VuoScreen_getSecondary(void);

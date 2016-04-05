@@ -12,9 +12,20 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <objc/runtime.h>
 #include <objc/message.h>
+#include <pthread.h>
 #include "VuoRuntime.h"
 
 extern bool isStopped;
+
+void *VuoApp_mainThread = NULL;	///< A reference to the main thread
+
+/**
+ * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
+ */
+static void __attribute__((constructor)) VuoRuntimeMain_init(void)
+{
+	VuoApp_mainThread = (void *)pthread_self();
+}
 
 /**
  * Starts a composition and runs it until the composition is stopped.

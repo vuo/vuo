@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Sends each line of text typed in the console window to a connected serial device.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertTextToData [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="840,285"];
+DisplayConsoleWindow [type="vuo.console.window" version="1.0.1" label="Display Console Window|<refresh>refresh\l|<writeLine>writeLine\l|<typedLine>typedLine\r|<typedWord>typedWord\r|<typedCharacter>typedCharacter\r" pos="450,165" _writeLine="\"Type some text, then press Return to send it.\"" _typedLine_eventThrottling="enqueue" _typedWord_eventThrottling="enqueue" _typedCharacter_eventThrottling="enqueue"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="270,120" _started_eventThrottling="enqueue"];
+SendSerialData [type="vuo.serial.send" version="1.0.0" label="Send Serial Data|<refresh>refresh\l|<device>device\l|<sendData>sendData\l" pos="750,150" fillcolor="violet"];
+
+ConvertTextToData:data -> SendSerialData:sendData;
+DisplayConsoleWindow:typedLine -> ConvertTextToData:text;
+FireOnStart:started -> DisplayConsoleWindow:writeLine;
+}
