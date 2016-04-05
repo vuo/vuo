@@ -30,19 +30,7 @@ void nodeInstanceTriggerStart(void)
 void nodeInstanceTriggerStop(void)
 {
 }
-char * getInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
-{
-	return NULL;
-}
-char * getOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
-{
-	return NULL;
-}
-char * getInputPortSummary(char *portIdentifier)
-{
-	return NULL;
-}
-char * getOutputPortSummary(char *portIdentifier)
+char * getPortValue(char *portIdentifier, bool isInput, bool isThreadSafe, int serializationType)
 {
 	return NULL;
 }

@@ -8,6 +8,7 @@
  */
 
 #include "VuoDialogForInputEditor.hh"
+#include "VuoInputEditor.hh"
 
 /// @todo copied from VuoPopover
 const int VuoDialogForInputEditor::popoverArrowHalfWidth = 8; ///< Half the width (or exactly the height) of the popover's arrow.
@@ -26,17 +27,21 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 	// Transparent background behind rounded corners
 	setAttribute(Qt::WA_TranslucentBackground, true);
 
+	arrowPixelsFromTopOrLeft = 0;
+
 	this->_isDark = isDark;
 	this->_showArrow = showArrow;
 
+	QString styleSheet = "* { " + VuoInputEditor::getDefaultFontCss() + " } ";
 	if (isDark)
-		setStyleSheet(STRINGIFY(
+		styleSheet += STRINGIFY(
 						  * {
 							  color: #cfcfcf;
 						  }
 
 
 						  QLineEdit,
+						  QPlainTextEdit,
 						  QDoubleSpinBox,
 						  QSpinBox {
 							  border: 2px solid #707070;
@@ -93,7 +98,9 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 							  height: 10px;
 							  margin: -5px -5px;
 						  }
-						  ));
+						  );
+
+	setStyleSheet(styleSheet);
 }
 
 /**
@@ -103,12 +110,11 @@ QPainterPath VuoDialogForInputEditor::getPopoverPath(void)
 {
 	/// @todo copied from VuoPopover
 	int cornerRadius = 8;
-	int arrowPixelsFromTopOrLeft = height()/2;
 	QPainterPath path;
 	path.moveTo(width()-popoverArrowHalfWidth-cornerRadius,0);
 	path.cubicTo(width()-popoverArrowHalfWidth,0, width()-popoverArrowHalfWidth,0, width()-popoverArrowHalfWidth,cornerRadius);
 	path.lineTo(width()-popoverArrowHalfWidth,arrowPixelsFromTopOrLeft-popoverArrowHalfWidth);
-	if (_showArrow)
+	if (_showArrow && arrowPixelsFromTopOrLeft+popoverArrowHalfWidth < height())
 		path.lineTo(width(),arrowPixelsFromTopOrLeft);
 	path.lineTo(width()-popoverArrowHalfWidth,arrowPixelsFromTopOrLeft+popoverArrowHalfWidth);
 	path.lineTo(width()-popoverArrowHalfWidth,height()-cornerRadius);
@@ -125,9 +131,25 @@ QPainterPath VuoDialogForInputEditor::getPopoverPath(void)
 /**
  * Returns the number of pixels on each side of the window that the input editor should avoid drawing.
  */
-QMargins VuoDialogForInputEditor::getPopoverContentsMargins(void)
+QMargins VuoDialogForInputEditor::getPopoverContentsMargins(void) const
 {
 	return QMargins(5, 5, 5 + popoverArrowHalfWidth, 5);
+}
+
+/**
+ * Returns the size that this dialog would need in order to enclose its child widgets with a margin.
+ * This enables child widgets to call `adjustSize()` on the dialog and preserve the margin.
+ */
+QSize VuoDialogForInputEditor::sizeHint(void) const
+{
+	QRect rect = childrenRect();
+	if (rect.width() > 0 && rect.height() > 0)
+	{
+		QRect rectWithMargins = rect.marginsAdded( getPopoverContentsMargins() );
+		return rectWithMargins.size();
+	}
+
+	return QDialog::sizeHint();
 }
 
 /**
@@ -151,6 +173,16 @@ void VuoDialogForInputEditor::paintEvent(QPaintEvent *event)
 
 	painter.setPen(Qt::NoPen);
 	painter.fillPath(getPopoverPath(), backgroundColor);
+}
+
+/**
+ * Shows the dialog and sets the popover arrow position.
+ */
+void VuoDialogForInputEditor::showEvent(QShowEvent *event)
+{
+	QDialog::showEvent(event);
+
+	arrowPixelsFromTopOrLeft = height()/2;
 }
 
 /**

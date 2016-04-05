@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "node": {
 						 "exampleCompositions" : [ "DisplayRowOfSpheres.vuo" ]
 					 }
@@ -44,8 +44,8 @@ void nodeEvent
 	if(len < r || len < s)
 		len = r > s ? r : s;
 
-	*copies = VuoSceneObject_makeEmpty();
-	copies->childObjects = VuoListCreate_VuoSceneObject();
+	*copies = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeIdentity());
+
 	for(int i = 0; i < len; i++)
 	{
 		VuoPoint3d translation = VuoListGetValue_VuoPoint3d(translations, i+1);

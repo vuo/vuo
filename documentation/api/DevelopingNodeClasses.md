@@ -68,9 +68,18 @@ Node classes are not the only files in Vuo that can define module metadata. You'
 
 But some module metadata are specific to node classes. The module metadata above include whether the node class is an interface, which affects how the node is rendered in a composition. 
 
-When deciding which keywords to put in the module metadata, be aware that some are added automatically, so you don't have to add them. Each word in the node's title and class name is automatically used in searches of the Node Library. If your node class has trigger ports, then the keywords "events", "trigger", and "fire" are automatically added. If your node title begins with "Receive", the keywords "i/o", "interface", "input", and "provider" are automatically added. If your node title begins with "Send", the keywords "i/o", "interface", "output", and "consumer" are automatically added. Note that multi-word phrases are permitted as keywords, but for purposes of Node Library searches will be treated as if each word were a distinct keyword.
-
 For more information, see the documentation for @ref VuoModuleMetadata. 
+
+#### Keywords
+
+When deciding which keywords to put in the module metadata, be aware that some are added automatically, so you don't have to add them:
+
+   - Each word in the node's title and class name is automatically used in searches of the Node Library.
+   - If your node class has trigger ports, then the keywords "events", "trigger", and "fire" are automatically added.
+   - If your node title begins with "Receive", the keywords "i/o", "interface", "input", and "provider" are automatically added.
+   - If your node title begins with "Send", the keywords "i/o", "interface", "output", and "consumer" are automatically added.
+
+Multi-word phrases are permitted as keywords, but for purposes of Node Library searches will be treated as if each word were a distinct keyword.
 
 
 ### The functions

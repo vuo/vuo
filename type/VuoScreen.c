@@ -12,6 +12,7 @@
 #include <string.h>
 #include "type.h"
 #include "VuoScreen.h"
+#include "VuoScreenCommon.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -21,8 +22,10 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
+						"VuoBoolean",
 						"VuoInteger",
 						"VuoPoint2d",
+						"VuoScreenCommon",
 						"VuoText"
 					  ]
 				  });
@@ -34,15 +37,18 @@ VuoModuleMetadata({
  *
  * @eg{
  *   {
- *     "id" : -1,
- *     "name" : ""
+ *     "type" : "match-name",
+ *     "name" : "lcd"
  *   }
  * }
  */
 VuoScreen VuoScreen_makeFromJson(json_object *js)
 {
-	VuoScreen value = {-1,"",{0,0},0,0,0,0};
+	VuoScreen value = {VuoScreenType_Active,-1,"",false,{0,0},0,0,0,0};
 	json_object *o = NULL;
+
+	if (json_object_object_get_ex(js, "type", &o))
+		value.type = VuoScreen_typeFromCString(json_object_get_string(o));
 
 	if (json_object_object_get_ex(js, "id", &o))
 		value.id = VuoInteger_makeFromJson(o);
@@ -51,21 +57,6 @@ VuoScreen VuoScreen_makeFromJson(json_object *js)
 		value.name = VuoText_makeFromJson(o);
 	else
 		value.name = VuoText_make("");
-
-	if (json_object_object_get_ex(js, "topLeft", &o))
-		value.topLeft = VuoPoint2d_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "width", &o))
-		value.width = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "height", &o))
-		value.height = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "dpiHorizontal", &o))
-		value.dpiHorizontal = VuoInteger_makeFromJson(o);
-
-	if (json_object_object_get_ex(js, "dpiVertical", &o))
-		value.dpiVertical = VuoInteger_makeFromJson(o);
 
 	return value;
 }
@@ -77,26 +68,18 @@ json_object * VuoScreen_getJson(const VuoScreen value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *idObject = VuoInteger_getJson(value.id);
-	json_object_object_add(js, "id", idObject);
+	json_object_object_add(js, "type", json_object_new_string(VuoScreen_cStringForType(value.type)));
 
-	json_object *nameObject = VuoText_getJson(value.name);
-	json_object_object_add(js, "name", nameObject);
-
-	json_object *topLeftObject = VuoPoint2d_getJson(value.topLeft);
-	json_object_object_add(js, "topLeft", topLeftObject);
-
-	json_object *widthObject = VuoInteger_getJson(value.width);
-	json_object_object_add(js, "width", widthObject);
-
-	json_object *heightObject = VuoInteger_getJson(value.height);
-	json_object_object_add(js, "height", heightObject);
-
-	json_object *dpiHorizontalObject = VuoInteger_getJson(value.dpiHorizontal);
-	json_object_object_add(js, "dpiHorizontal", dpiHorizontalObject);
-
-	json_object *dpiVerticalObject = VuoInteger_getJson(value.dpiVertical);
-	json_object_object_add(js, "dpiVertical", dpiVerticalObject);
+	if (value.type == VuoScreenType_MatchName)
+	{
+		json_object *nameObject = VuoText_getJson(value.name);
+		json_object_object_add(js, "name", nameObject);
+	}
+	else if (value.type == VuoScreenType_MatchId)
+	{
+		json_object *idObject = VuoInteger_getJson(value.id);
+		json_object_object_add(js, "id", idObject);
+	}
 
 	return js;
 }
@@ -106,15 +89,21 @@ json_object * VuoScreen_getJson(const VuoScreen value)
  */
 char * VuoScreen_getSummary(const VuoScreen value)
 {
-	if (value.id == -1 && strlen(value.name) == 0)
-		return strdup("The default screen");
-	else if (value.id == -1)
+	if (value.isRealized)
+		return VuoText_format("Screen \"%s\"<br>%lld x %lld points<br>%lld x %lld DPI", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
+
+	if (value.type == VuoScreenType_Active)
+		return strdup("The screen with the active window.");
+	if (value.type == VuoScreenType_Primary)
+		return strdup("The primary screen (with the menu bar).");
+	else if (value.type == VuoScreenType_Secondary)
+		return strdup("A secondary screen.");
+	else if (value.type == VuoScreenType_MatchName)
 		return VuoText_format("The first screen whose name contains \"%s\"", value.name);
-	else if (strlen(value.name) == 0)
+	else if (value.type == VuoScreenType_MatchId)
 		return VuoText_format("Screen #%lld", value.id);
 	else
-		// An actual detected screen (rather than abstract criteria).
-		return VuoText_format("Screen \"%s\"<br>%lld x %lld points<br>%lld x %lld DPI", value.name, value.width, value.height, value.dpiHorizontal, value.dpiVertical);
+		return strdup("(unknown)");
 }
 
 /**
@@ -124,9 +113,73 @@ bool VuoScreen_areEqual(VuoScreen value1, VuoScreen value2)
 {
 	return value1.id == value2.id
 		&& VuoText_areEqual(value1.name, value2.name)
+		&& value1.isRealized == value2.isRealized
 		&& VuoPoint2d_areEqual(value1.topLeft, value2.topLeft)
 		&& value1.width == value2.width
 		&& value1.height == value2.height
 		&& value1.dpiHorizontal == value2.dpiVertical
 		&& value1.dpiVertical == value2.dpiVertical;
+}
+
+/**
+ * Given any VuoScreen structure:
+ *
+ *    - If `screen` is already realized, copies it into `realizedScreen, and returns true.
+ *    - If a matching screen is found, sets `realizedScreen` to match it by ID, fills in all the details, and returns true.
+ *    - If no matching screen is found, returns false, leaving `realizedDevice` unset.
+ */
+bool VuoScreen_realize(VuoScreen screen, VuoScreen *realizedScreen)
+{
+	// Already realized nothing to do.
+	if (screen.isRealized)
+	{
+		*realizedScreen = screen;
+		realizedScreen->name = VuoText_make(screen.name);
+		return true;
+	}
+
+	// Otherwise, try to find a matching screen.
+
+	if (screen.type == VuoScreenType_Active)
+	{
+		*realizedScreen = VuoScreen_getActive();
+		return true;
+	}
+	else if (screen.type == VuoScreenType_Primary)
+	{
+		*realizedScreen = VuoScreen_getPrimary();
+		return true;
+	}
+	else if (screen.type == VuoScreenType_Secondary)
+	{
+		*realizedScreen = VuoScreen_getSecondary();
+		return true;
+	}
+	else if (screen.type == VuoScreenType_MatchName
+		  || screen.type == VuoScreenType_MatchId)
+	{
+		VuoList_VuoScreen screens = VuoScreen_getList();
+		VuoRetain(screens);
+		unsigned long screenCount = VuoListGetCount_VuoScreen(screens);
+
+		bool found = false;
+		for (unsigned long i = 1; i <= screenCount; ++i)
+		{
+			VuoScreen s = VuoListGetValue_VuoScreen(screens, i);
+			if ( (screen.type == VuoScreenType_MatchName && strstr(s.name, screen.name))
+			  || (screen.type == VuoScreenType_MatchId && s.id == screen.id) )
+			{
+				*realizedScreen = s;
+				realizedScreen->type = VuoScreenType_MatchId;
+				realizedScreen->name = VuoText_make(s.name);	// Copy, since we're releasing `screens` below.
+				found = true;
+				break;
+			}
+		}
+
+		VuoRelease(screens);
+		return found;
+	}
+
+	return false;
 }

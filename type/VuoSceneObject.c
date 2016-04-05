@@ -67,6 +67,18 @@ VuoSceneObject VuoSceneObject_makeEmpty(void)
 }
 
 /**
+ * Creates a new scene object that can contain (and transform) other scene objects, but doesn't render anything itself.
+ */
+VuoSceneObject VuoSceneObject_makeGroup(VuoList_VuoSceneObject childObjects, VuoTransform transform)
+{
+	VuoSceneObject o = VuoSceneObject_makeEmpty();
+	o.type = VuoSceneObjectType_Group;
+	o.childObjects = childObjects;
+	o.transform = transform;
+	return o;
+}
+
+/**
  * Creates a visible (mesh) scene object.
  */
 VuoSceneObject VuoSceneObject_make(VuoMesh mesh, VuoShader shader, VuoTransform transform, VuoList_VuoSceneObject childObjects)
@@ -378,7 +390,7 @@ bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoScen
 /**
  * Helper for @ref VuoSceneObject_apply.
  */
-VuoSceneObject VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera, float modelviewMatrix[16])
+static VuoSceneObject VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera, float modelviewMatrix[16])
 {
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
@@ -438,7 +450,7 @@ VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch,
 /**
  * Returns the `VuoSceneObjectType` corresponding with the `typeString`.  If none matches, returns VuoSceneObjectType_Empty.
  */
-VuoSceneObjectType VuoSceneObject_typeFromCString(const char *typeString)
+static VuoSceneObjectType VuoSceneObject_typeFromCString(const char *typeString)
 {
 	if (strcmp(typeString,"empty")==0)
 		return VuoSceneObjectType_Empty;
@@ -467,7 +479,7 @@ VuoSceneObjectType VuoSceneObject_typeFromCString(const char *typeString)
 /**
  * Returns a string constant representing `type`.
  */
-const char * VuoSceneObject_cStringForType(VuoSceneObjectType type)
+static const char * VuoSceneObject_cStringForType(VuoSceneObjectType type)
 {
 	switch (type)
 	{
@@ -675,7 +687,7 @@ void VuoSceneObject_visit(const VuoSceneObject object, void (^function)(const Vu
 /**
  * Helper for @ref VuoSceneObject_apply.
  */
-void VuoSceneObject_applyInternal(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]), float modelviewMatrix[16])
+static void VuoSceneObject_applyInternal(VuoSceneObject *object, void (^function)(VuoSceneObject *currentObject, float modelviewMatrix[16]), float modelviewMatrix[16])
 {
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(object->transform, localModelviewMatrix);
@@ -777,7 +789,7 @@ VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
 /**
  * Returns the bounds of a sceneobject including its children.
  */
-bool VuoSceneObject_boundsRecursive(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
+static bool VuoSceneObject_boundsRecursive(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
 {
 	// matrix parameter is the trickle down transformations
 	float localModelviewMatrix[16];
@@ -845,9 +857,12 @@ bool VuoSceneObject_meshBounds(const VuoSceneObject so, VuoBox *bounds, float ma
 	{
 		*bounds = VuoMesh_bounds(so.mesh, matrix);
 
-		bounds->size.x *= so.shader->objectScale;
-		bounds->size.y *= so.shader->objectScale;
-		bounds->size.z *= so.shader->objectScale;
+		if (so.shader)
+		{
+			bounds->size.x *= so.shader->objectScale;
+			bounds->size.y *= so.shader->objectScale;
+			bounds->size.z *= so.shader->objectScale;
+		}
 	}
 
 	return true;
@@ -996,6 +1011,7 @@ VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 		case VuoSceneObjectType_Empty:
 			return VuoSceneObject_makeEmpty();
 		case VuoSceneObjectType_Group:
+			return VuoSceneObject_makeGroup(childObjects, transform);
 		case VuoSceneObjectType_Mesh:
 		{
 			VuoSceneObject o = VuoSceneObject_make(mesh, shader, transform, childObjects);
@@ -1037,7 +1053,11 @@ VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 		case VuoSceneObjectType_Spotlight:
 			return VuoSceneObject_makeSpotlight(lightColor, lightBrightness, transform, lightCone, lightRange, lightSharpness);
 		case VuoSceneObjectType_Text:
-			return VuoSceneObject_makeText(text, font);
+		{
+			VuoSceneObject o = VuoSceneObject_makeText(text, font);
+			o.transform = transform;
+			return o;
+		}
 	}
 }
 
@@ -1185,7 +1205,7 @@ unsigned long VuoSceneObject_getElementCount(const VuoSceneObject value)
 /**
  * Traverses the specified scenegraph and returns statistics about it.
  */
-void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
+static void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *descendantCount, unsigned long *totalVertexCount, unsigned long *totalElementCount)
 {
 	unsigned long childObjectCount = 0;
 	if (value.childObjects)
@@ -1201,7 +1221,7 @@ void VuoSceneObject_getStatistics(const VuoSceneObject value, unsigned long *des
 /**
  * Returns a list of all unique shader names in the sceneobject and its descendants.
  */
-VuoList_VuoText VuoSceneRenderer_findShaderNames(VuoSceneObject object)
+static VuoList_VuoText VuoSceneObject_findShaderNames(VuoSceneObject object)
 {
 	// Exploit json_object's set-containing-only-unique-items data structure.
 	__block json_object *names = json_object_new_object();
@@ -1223,7 +1243,12 @@ VuoList_VuoText VuoSceneRenderer_findShaderNames(VuoSceneObject object)
 char *VuoSceneObject_getSummary(const VuoSceneObject value)
 {
 	if (value.type == VuoSceneObjectType_Text)
-		return VuoText_format("\"%s\"<br>%sat (%g,%g)", value.text, VuoFont_getSummary(value.font), value.transform.translation.x, value.transform.translation.y);
+	{
+		char *fontSummary = VuoFont_getSummary(value.font);
+		char *textSummary = VuoText_format("\"%s\"<br>%sat (%g,%g)", value.text, fontSummary, value.transform.translation.x, value.transform.translation.y);
+		free(fontSummary);
+		return textSummary;
+	}
 
 	if (value.type == VuoSceneObjectType_PerspectiveCamera
 	 || value.type == VuoSceneObjectType_StereoCamera
@@ -1341,7 +1366,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 	else
 		descendants = strdup("");
 
-	VuoList_VuoText shaderNames = VuoSceneRenderer_findShaderNames(value);
+	VuoList_VuoText shaderNames = VuoSceneObject_findShaderNames(value);
 	VuoRetain(shaderNames);
 	char *shaderNamesSummary;
 	if (VuoListGetCount_VuoText(shaderNames))

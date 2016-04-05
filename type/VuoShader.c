@@ -126,10 +126,45 @@ VuoShader VuoShader_make(const char *name)
 
 	t->objectScale = 1;
 
+	t->isTransparent = false;
+
 	t->lock = dispatch_semaphore_create(1);
 
 	return t;
 }
+
+/**
+ * Creates an unlit color shader object.
+ */
+VuoShader VuoShader_make_VuoColor(VuoColor color)
+{
+	// Keep in sync with vuo.shader.make.image.
+	VuoColor defaultHighlightColor = VuoColor_makeWithRGBA(1,1,1,1);
+	VuoReal defaultShininess = 0.9;
+
+	return VuoShader_makeLitColorShader(color, defaultHighlightColor, defaultShininess);
+}
+
+/**
+ * Returns the passed shader (does not make a copy).
+ */
+VuoShader VuoShader_make_VuoShader(VuoShader shader)
+{
+	return shader;
+}
+
+/**
+ * Creates an unlit image shader.
+ */
+VuoShader VuoShader_make_VuoImage(VuoImage image)
+{
+	// Keep in sync with vuo.shader.make.image.
+	VuoColor defaultHighlightColor = VuoColor_makeWithRGBA(1,1,1,1);
+	VuoReal defaultShininess = 0.9;
+
+	return VuoShader_makeLitImageShader(image, 1, defaultHighlightColor, defaultShininess);
+}
+
 
 /**
  * Defines a `program` variable and initializes it with the relevant program based on `inputPrimitiveMode`.
@@ -207,6 +242,7 @@ VuoShader VuoShader_make(const char *name)
  *     attribute vec4 tangent;
  *     attribute vec4 bitangent;
  *     attribute vec4 textureCoordinate;
+ *     uniform bool hasTextureCoordinates;
  *
  * @ref VuoSceneObjectRenderer renders a @ref VuoSceneObject into a @ref VuoSceneObject,
  * and automatically provides several uniform values and vertex attributes to shaders:
@@ -231,6 +267,9 @@ VuoShader VuoShader_make(const char *name)
  */
 void VuoShader_addSource(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const char *vertexShaderSource, const char *geometryShaderSource, const char *fragmentShaderSource)
 {
+	if (!shader)
+		return;
+
 	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
 
 	DEFINE_PROGRAM();
@@ -289,6 +328,9 @@ void VuoShader_addSource(VuoShader shader, const VuoMesh_ElementAssemblyMethod i
  */
 void VuoShader_setExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const unsigned int expectedOutputPrimitiveCount)
 {
+	if (!shader)
+		return;
+
 	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
 
 	DEFINE_PROGRAM();
@@ -307,6 +349,9 @@ void VuoShader_setExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_E
  */
 unsigned int VuoShader_getExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode)
 {
+	if (!shader)
+		return 0;
+
 	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
 
 	DEFINE_PROGRAM();
@@ -324,6 +369,9 @@ unsigned int VuoShader_getExpectedOutputPrimitiveCount(VuoShader shader, const V
  */
 bool VuoShader_isTransformFeedback(VuoShader shader)
 {
+	if (!shader)
+		return false;
+
 	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
 
 	if (shader->pointProgram.glFragmentShaderName
@@ -340,12 +388,15 @@ bool VuoShader_isTransformFeedback(VuoShader shader)
 
 /**
  * Ensures that the source code for the specified `inputPrimitiveMode` is compiled, linked, and uploaded.
- * If there is no source code for the specified `inputPrimitiveMode`, or it fails to compile or link, returns `false`.
+ * If the shader is NULL, or there is no source code for the specified `inputPrimitiveMode`, or it fails to compile or link, returns `false`.
  *
  * Must be called while `shader->lock` is locked.
  */
-bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext)
+static bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext)
 {
+	if (!shader)
+		return false;
+
 	DEFINE_PROGRAM();
 
 	// Is the shader already compiled/linked/uploaded?
@@ -449,12 +500,15 @@ bool VuoShader_ensureUploaded(VuoShader shader, const VuoMesh_ElementAssemblyMet
  * @param[out] tangentLocation Outputs the shader program's vertex tangent attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
  * @param[out] bitangentLocation Outputs the shader program's vertex bitangent attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
  * @param[out] textureCoordinateLocation Outputs the shader program's vertex texture coordinate attribute location (or -1 if this shader program doesn't have one).  Pass `NULL` if you don't care.
- * @return `false` if the shader doesn't support the specified `primitiveMode`.
+ * @return `false` if the shader is NULL, or if it doesn't support the specified `primitiveMode`.
  *
  * @threadAnyGL
  */
 bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, int *positionLocation, int *normalLocation, int *tangentLocation, int *bitangentLocation, int *textureCoordinateLocation)
 {
+	if (!shader)
+		return false;
+
 	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
 	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext))
 	{
@@ -492,12 +546,18 @@ bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAsse
  * @param shader The shader to activate.
  * @param inputPrimitiveMode The shader program mode to activate.
  * @param glContext The OpenGL context on which to activate the shader program.
- * @return The OpenGL Program Name (which can be used, e.g., to retrieve other uniform locations), or 0 if `inputPrimitiveMode` is invalid or if there is no shader for this `inputPrimitiveMode`.
+ * @return The OpenGL Program Name (which can be used, e.g., to retrieve other uniform locations), or 0 if:
+ *    - the shader is NULL
+ *    - or `inputPrimitiveMode` is invalid
+ *    - or if there is no shader for this `inputPrimitiveMode`
  *
  * @threadAnyGL
  */
 unsigned int VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext)
 {
+	if (!shader)
+		return 0;
+
 	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
 	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext))
 	{
@@ -576,6 +636,9 @@ unsigned int VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyM
  */
 void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext)
 {
+	if (!shader)
+		return;
+
 //	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER); --- the lock is held while the shader is active
 	if (!VuoShader_ensureUploaded(shader, inputPrimitiveMode, glContext))
 	{

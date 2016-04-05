@@ -17,33 +17,31 @@ const string VuoGenericType::genericTypeNamePrefix = "VuoGenericType";
 /**
  * Creates a generic type.
  */
-VuoGenericType::VuoGenericType(string typeName, set<string> compatibleSpecializedTypes)
+VuoGenericType::VuoGenericType(string typeName, vector<string> compatibleSpecializedTypes)
 	: VuoType(typeName)
 {
 	this->compatibleSpecializedTypes = compatibleSpecializedTypes;
 
 	string compatiblesDescription;
 	Compatibility compatibility;
-	set<string> compatibles = getCompatibleSpecializedTypes(compatibility);
+	vector<string> compatibles = getCompatibleSpecializedTypes(compatibility);
 	if (compatibility == anyType)
 		compatiblesDescription = "any type";
 	else if (compatibility == anyListType)
 		compatiblesDescription = "any list type";
 	else
 	{
-		vector<string> sortedCompatibles(compatibles.begin(), compatibles.end());
-		sort(sortedCompatibles.begin(), sortedCompatibles.end());
-		for (size_t i = 0; i < sortedCompatibles.size(); ++i)
+		for (size_t i = 0; i < compatibles.size(); ++i)
 		{
-			compatiblesDescription += sortedCompatibles[i];
-			if (sortedCompatibles.size() >= 3)
+			compatiblesDescription += compatibles[i];
+			if (compatibles.size() >= 3)
 			{
-				if (i < sortedCompatibles.size() - 2)
+				if (i < compatibles.size() - 2)
 					compatiblesDescription += ", ";
-				else if (i == sortedCompatibles.size() - 2)
+				else if (i == compatibles.size() - 2)
 					compatiblesDescription += ", or ";
 			}
-			else if (sortedCompatibles.size() == 2 && i == 0)
+			else if (compatibles.size() == 2 && i == 0)
 				compatiblesDescription += " or ";
 		}
 	}
@@ -58,13 +56,13 @@ VuoGenericType::VuoGenericType(string typeName, set<string> compatibleSpecialize
 bool VuoGenericType::isSpecializedTypeCompatible(string typeName)
 {
 	Compatibility compatibility;
-	set<string> compatibles = getCompatibleSpecializedTypes(compatibility);
+	vector<string> compatibles = getCompatibleSpecializedTypes(compatibility);
 
 	if (compatibility == anyType ||
 			(compatibility == anyListType && VuoType::isListTypeName(typeName)))
 		return true;
 
-	return compatibles.find(typeName) != compatibles.end();
+	return find(compatibles.begin(), compatibles.end(), typeName) != compatibles.end();
 }
 
 /**
@@ -73,9 +71,9 @@ bool VuoGenericType::isSpecializedTypeCompatible(string typeName)
 bool VuoGenericType::isGenericTypeCompatible(VuoGenericType *otherType)
 {
 	Compatibility thisCompatibility;
-	set<string> thisCompatibles = getCompatibleSpecializedTypes(thisCompatibility);
+	vector<string> thisCompatibles = getCompatibleSpecializedTypes(thisCompatibility);
 	Compatibility otherCompatibility;
-	set<string> otherCompatibles = otherType->getCompatibleSpecializedTypes(otherCompatibility);
+	vector<string> otherCompatibles = otherType->getCompatibleSpecializedTypes(otherCompatibility);
 
 	if (thisCompatibility == anyType || otherCompatibility == anyType ||
 			(thisCompatibility == anyListType && VuoType::isListTypeName(otherType->getModuleKey())) ||
@@ -98,7 +96,7 @@ bool VuoGenericType::isGenericTypeCompatible(VuoGenericType *otherType)
  *
  * @see VuoModuleMetadata
  */
-set<string> VuoGenericType::getCompatibleSpecializedTypes(Compatibility &compatibility)
+vector<string> VuoGenericType::getCompatibleSpecializedTypes(Compatibility &compatibility)
 {
 	compatibility = (compatibleSpecializedTypes.empty() ?
 						 (VuoType::isListTypeName(getModuleKey()) ?

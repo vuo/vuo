@@ -35,19 +35,22 @@ private slots:
 	{
 		QTest::addColumn<QString>("initializer");
 		QTest::addColumn<VuoPoint3d>("value");
+		QTest::addColumn<bool>("testStringFromValue");
 
 		{
 			VuoPoint3d p;
 			p.x = -0.999;
 			p.y = 0.42;
 			p.z = 0.22;
-			QTest::newRow("different values") << "{\"x\":-0.999000,\"y\":0.420000,\"z\":0.220000}" << p;
+			QTest::newRow("different values") << "{\"x\":-0.999000,\"y\":0.420000,\"z\":0.220000}" << p << true;
+			QTest::newRow("different values text") << QUOTE("-0.999000, 0.420000,0.220000") << p << false;
 		}
 	}
 	void testStringConversion()
 	{
 		QFETCH(QString, initializer);
 		QFETCH(VuoPoint3d, value);
+		QFETCH(bool, testStringFromValue);
 
 		VuoPoint3d p = VuoPoint3d_makeFromString(initializer.toUtf8().constData());
 
@@ -55,7 +58,8 @@ private slots:
 		QCOMPARE(p.y,value.y);
 		QCOMPARE(p.z,value.z);
 
-		QCOMPARE(VuoPoint3d_getString(p), initializer.toUtf8().constData());
+		if (testStringFromValue)
+			QCOMPARE(VuoPoint3d_getString(p), initializer.toUtf8().constData());
 	}
 
 	void testMakeNonzero_data()

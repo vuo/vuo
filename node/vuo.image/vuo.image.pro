@@ -22,6 +22,7 @@ NODE_SOURCES += \
 	vuo.image.findBarcode.c \
 	vuo.image.flip.horizontal.c \
 	vuo.image.flip.vertical.c \
+	vuo.image.sample.color.c \
 	vuo.image.get.size.c \
 	vuo.image.kaleidoscope.c \
 	vuo.image.make.checkerboard.c \
@@ -38,7 +39,7 @@ NODE_SOURCES += \
 	vuo.image.resize.larger.c \
 	vuo.image.ripple.c \
 	vuo.image.rotate.c \
-#	vuo.image.save.c \
+	vuo.image.save.c \
 	vuo.image.tile.c \
 	vuo.image.twirl.c \
 	vuo.image.vignette.c \
@@ -64,12 +65,14 @@ TYPE_SOURCES += \
 	VuoVerticalReflection.c \
 	VuoImageFormat.c \
 	VuoSizingMode.c \
+	VuoImageStereoType.c \
 	VuoThresholdType.c
 
 HEADERS += \
 	VuoHorizontalReflection.h \
 	VuoVerticalReflection.h \
 	VuoImageFormat.h \
+	VuoImageStereoType.h \
 	VuoSizingMode.h \
 	VuoThresholdType.h
 

@@ -24,6 +24,7 @@ VuoModuleMetadata({
 						"VuoList_VuoVideoInputDevice",
 						"QTKit.framework",
 						"IOKit.framework",
+						"AppKit.framework",
 						"VuoQtListener"
 					  ]
 				 });

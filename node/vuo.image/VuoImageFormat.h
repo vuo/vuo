@@ -32,14 +32,17 @@ typedef enum {
 	VuoImageFormat_TIFF,
 	VuoImageFormat_BMP,
 	VuoImageFormat_HDR,
-	VuoImageFormat_EXR
+	VuoImageFormat_EXR,
+	VuoImageFormat_GIF,
+	VuoImageFormat_TARGA
+	// VuoImageFormat_WEBP // @todo https://b33p.net/kosada/node/10022
 } VuoImageFormat;
 
 VuoImageFormat VuoImageFormat_makeFromJson(struct json_object * js);
 struct json_object * VuoImageFormat_getJson(const VuoImageFormat value);
 VuoList_VuoImageFormat VuoImageFormat_getAllowedValues(void);
 char * VuoImageFormat_getSummary(const VuoImageFormat value);
-
+char** VuoImageFormat_getValidFileExtensions(const VuoImageFormat value, int* length);
 char * VuoImageFormat_getExtension(const VuoImageFormat value);
 
 /// @{

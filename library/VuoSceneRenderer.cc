@@ -147,7 +147,7 @@ VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScal
 	return (VuoSceneRenderer)sceneRenderer;
 }
 
-void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer);
+static void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInternal *sceneRenderer);
 
 /**
  * Using the first camera found in the scene (or VuoSceneObject_makeDefaultCamera() if there is no camera in the scene),
@@ -319,7 +319,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
+static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
 {
 	if (!so.mesh || !so.mesh->submeshCount || !so.shader)
 		return;
@@ -438,6 +438,9 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 
 		free(uniformName);
 
+		if (so.shader->isTransparent)
+			glDepthMask(false);
+
 		if (so.blendMode != VuoBlendMode_Normal)
 		{
 			glDisable(GL_DEPTH_TEST);
@@ -478,11 +481,15 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 			VuoSubmesh submesh = so.mesh->submeshes[i];
 			GLenum mode = VuoSubmesh_getGlMode(submesh);
 
+			GLint hasTextureCoordinatesUniform = glGetUniformLocation(programName, "hasTextureCoordinates");
+			if (hasTextureCoordinatesUniform != -1)
+				glUniform1i(hasTextureCoordinatesUniform, submesh.glUpload.textureCoordinateOffset != NULL);
+
 			GLint primitiveHalfSizeUniform = glGetUniformLocation(programName, "primitiveHalfSize");
 			if (primitiveHalfSizeUniform != -1)
 				glUniform1f(primitiveHalfSizeUniform, submesh.primitiveSize/2);
 
-			if (submesh.faceCullingMode == GL_NONE)
+			if (submesh.faceCullingMode == GL_NONE || so.shader->isTransparent)
 				glDisable(GL_CULL_FACE);
 			else
 			{
@@ -505,11 +512,14 @@ void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInterna
 			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 			glBlendEquation(GL_FUNC_ADD);
 		}
+
+		if (so.shader->isTransparent)
+			glDepthMask(true);
 	}
 	VuoShader_deactivate(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, sceneRenderer->glContext);
 }
 
-void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length);
+//static void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length);
 
 /**
  * Draws @c so and its child objects.
@@ -518,7 +528,7 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
+static void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
 {
 	float localModelviewMatrix[16];
 	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
@@ -537,7 +547,7 @@ void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoSceneRen
 	}
 }
 
-void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer);
+//static void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer);
 
 /**
  * Renders the scene.
@@ -585,7 +595,7 @@ void VuoSubmeshMesh_download(VuoSubmesh *submesh);
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length)	// TODO Enum type for element to debug
+/*static void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16], float compositeModelviewMatrix[16], VuoGlContext glContext, int element, float length)	// TODO Enum type for element to debug
 {
 	if (!so.mesh)
 		return;
@@ -656,12 +666,12 @@ void VuoSceneRenderer_drawElement(VuoSceneObject so, float projectionMatrix[16],
 	glEnd();
 
 	glLoadIdentity();
-}
+}*/
 
 /**
  * Draws a circle using OpenGL immediate mode.  For debugging only.
  */
-static void drawCircle(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal)
+/*static void drawCircle(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal)
 {
 	glPushMatrix();
 	VuoTransform t = VuoTransform_makeQuaternion(
@@ -682,12 +692,12 @@ static void drawCircle(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, V
 	glEnd();
 
 	glPopMatrix();
-}
+}*/
 
 /**
  * Draws a cone using OpenGL immediate mode.  For debugging only.
  */
-static void drawCone(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal, float height)
+/*static void drawCone(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, VuoPoint3d normal, float height)
 {
 	glPushMatrix();
 	VuoTransform t = VuoTransform_makeQuaternion(
@@ -714,12 +724,12 @@ static void drawCone(CGLContextObj cgl_ctx, VuoPoint3d center, float radius, Vuo
 	glEnd();
 
 	glPopMatrix();
-}
+}*/
 
 /**
  * Draws the scene's point and spot lights.
  */
-void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
+/*static void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
 {
 	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
@@ -788,12 +798,12 @@ void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer)
 			drawCone(cgl_ctx, outerEndpoint, outerIntersectionRadius, direction, outerIntersectionDistance);
 		}
 	}
-}
+}*/
 
 /**
  * Creates a mesh and image for the specified sceneobject, if they don't already exist.
  */
-void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so)
+static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so)
 {
 	so.type = VuoSceneObjectType_Mesh;
 	so.mesh = VuoMesh_makeQuadWithoutNormals();
@@ -816,7 +826,7 @@ void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSce
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	if (so.type == VuoSceneObjectType_Text && VuoText_length(so.text))
 		VuoSceneRenderer_renderText(sceneRenderer, so);
@@ -908,7 +918,7 @@ void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer,
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	VuoSceneRenderer_uploadSceneObject(sceneRenderer, so, soi, glContext);
 
@@ -936,7 +946,7 @@ void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sc
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_cleanupSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_cleanupSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	if (!so.mesh)
 		return;
@@ -960,7 +970,7 @@ void VuoSceneRenderer_cleanupSceneObject(VuoSceneObject so, VuoSceneRendererInte
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
 	unsigned int i = 1;
 	for (std::list<VuoSceneRendererInternal_object>::iterator oi = soi->childObjects.begin(); oi != soi->childObjects.end(); ++oi, ++i)
@@ -981,7 +991,7 @@ void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoScene
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so)
+static void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so)
 {
 	if (so.childObjects)
 	{
@@ -1003,7 +1013,7 @@ void VuoSceneRenderer_releaseSceneObjectsRecursively(VuoSceneObject so)
  *
  * @threadAny
  */
-void VuoSceneRenderer_retainSceneObjectsRecursively(VuoSceneObject so)
+static void VuoSceneRenderer_retainSceneObjectsRecursively(VuoSceneObject so)
 {
 	VuoSceneObject_retain(so);
 

@@ -16,7 +16,10 @@ extern "C"
 #include "VuoList_VuoLeapPointable.h"
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
 #include <Leap.h>
+#pragma clang diagnostic pop
 
 extern "C"
 {
@@ -33,10 +36,7 @@ VuoModuleMetadata({
 						 "VuoList_VuoLeapPointable",
 						 "VuoTransform",
 						 "Leap"
-					 ],
-					 "compatibleOperatingSystems": {
-						 "macosx" : { "min": "10.7" }
-					 }
+					 ]
 				 });
 #endif
 }
@@ -46,7 +46,7 @@ VuoModuleMetadata({
  * Scales the specified @a milimeters into Vuo Coordinates,
  * using the width of the interaction box as a reference.
  */
-double VuoLeap_vuoDistanceFromLeapMillimeters(double millimeters, Leap::InteractionBox ibox)
+static double VuoLeap_vuoDistanceFromLeapMillimeters(double millimeters, Leap::InteractionBox ibox)
 {
 	return (millimeters / ibox.width()) * 2.;
 }
@@ -55,7 +55,7 @@ double VuoLeap_vuoDistanceFromLeapMillimeters(double millimeters, Leap::Interact
  * Transforms the specified @a vector into Vuo Coordinates,
  * using the width of the interaction box as a reference.
  */
-VuoPoint3d VuoLeap_vuoPointFromLeapVector(Leap::Vector vector, Leap::InteractionBox ibox)
+static VuoPoint3d VuoLeap_vuoPointFromLeapVector(Leap::Vector vector, Leap::InteractionBox ibox)
 {
 	return VuoPoint3d_make(
 				VuoLeap_vuoDistanceFromLeapMillimeters(vector.x, ibox),
@@ -67,7 +67,7 @@ VuoPoint3d VuoLeap_vuoPointFromLeapVector(Leap::Vector vector, Leap::Interaction
 /**
  *	Returns a VuoLeapTouchZone type with a Leap::Pointable::Zone enum.
  */
-VuoLeapTouchZone VuoLeap_vuoLeapTouchZoneFromLeapTouchZone(Leap::Pointable::Zone zone)
+static VuoLeapTouchZone VuoLeap_vuoLeapTouchZoneFromLeapTouchZone(Leap::Pointable::Zone zone)
 {
 	switch(zone)
 	{
@@ -87,7 +87,7 @@ VuoLeapTouchZone VuoLeap_vuoLeapTouchZoneFromLeapTouchZone(Leap::Pointable::Zone
  * Transforms the specified @a position into Vuo Coordinates,
  * using the center and width of the interaction box as a reference.
  */
-VuoPoint3d VuoLeap_vuoPointFromLeapPosition(Leap::Vector position, Leap::InteractionBox ibox)
+static VuoPoint3d VuoLeap_vuoPointFromLeapPosition(Leap::Vector position, Leap::InteractionBox ibox)
 {
 	return VuoLeap_vuoPointFromLeapVector(position - ibox.center(), ibox);
 }
@@ -95,7 +95,7 @@ VuoPoint3d VuoLeap_vuoPointFromLeapPosition(Leap::Vector position, Leap::Interac
 /**
  * Creates a @c VuoPoint3d from a @c Leap::Vector.
  */
-VuoPoint3d VuoPoint3dWithLeapVector(Leap::Vector vector)
+static VuoPoint3d VuoPoint3dWithLeapVector(Leap::Vector vector)
 {
 	return VuoPoint3d_make(vector.x, vector.y, vector.z);
 }

@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="74,107" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="555,247" fillcolor="green"];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="219,285" _2="10.000000"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="244,149" _text="\"Hello World!\"" _font="{\"fontName\":\"Helvetica\",\"pointSize\":96.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="265,274"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="596,221" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+TwirlImage2 [type="vuo.image.twirl" version="2.1.0" label="Twirl Image|<refresh>refresh\l|<image>image\l|<center>center\l|<angle>angle\l|<radius>radius\l|<twirledImage>twirledImage\r" pos="436,171" _center="{\"x\":0,\"y\":0}" _radius="0.500000"];
+
+FireOnStart:started -> MakeTextImage:text;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+MakeList4:list -> Multiply:values;
+MakeTextImage:image -> TwirlImage2:image;
+Multiply:product -> TwirlImage2:angle;
+RenderImageToWindow:requestedFrame -> MakeList4:1;
+TwirlImage2:twirledImage -> RenderImageToWindow:image;
+}

@@ -82,6 +82,8 @@ public:
 	static qint64 getVirtualFiredEventOriginForAnimationFadePercentage(qreal percentage);
 	static qint64 getVirtualPropagatedEventOrigin(void);
 
+	static VuoNode::TintColor getActiveProtocolTint(int protocolIndex);
+
 	static const int activityAnimationFadeDuration; ///< Time period, in ms, over which a 'Show Events'-mode animation (e.g., for trigger port firing) fades to its minimum alpha level.
 
 private:

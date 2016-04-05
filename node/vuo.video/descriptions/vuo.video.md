@@ -1,21 +1,47 @@
-These nodes are for receiving live video from cameras, and for playing movies. 
+These nodes are for working with movie files and with live video from cameras. 
 
-### Receiving live video
+### Video basics
 
-The `Receive Live Video` and `List Video Devices` nodes use QuickTime, and therefore should work with any device that works with the modern QuickTime interface — like the built-in iSight/FaceTime cameras in MacBooks and iMacs, and many other USB and FireWire cameras.
+The visual part of a video is made up of a sequence of **frames**. Each frame contains an image. Each frame also contains a time indicating when the frame was recorded or when it's intended to be played back, relative to the start of the video.
 
-### Playing movies
+The audio part of a video is made up of a sequence of **samples** on one or more **channels**. (For more information about audio, see the `vuo.audio` node set documentation.) You can play the audio from a movie, or create a movie with audio, using a combination of nodes from this node set and the `vuo.audio` node set.
 
-A movie file contains a sequence of **frames**. Each frame has an image and a time when it's supposed to be displayed. You can play frames in sequence using the `Play Movie` node. You can grab individual frames using the `Decode Movie Image` node. 
+### Cameras
 
-A movie file may also contain audio, which can be played using the `Play Movie` node. See that node's description for more information.
+The `Receive Live Video` node, and related nodes for working with cameras, support any QuickTime device. This includes the built-in iSight/FaceTime cameras in MacBooks and iMacs, and many other USB and FireWire cameras.
 
-These nodes use [FFmpeg](http://www.ffmpeg.org/) and support any of its [supported file formats](http://www.ffmpeg.org/general.html#File-Formats). This includes files with extension .mov, .avi, .dv, .mpeg, .mpg, .mp2, .m4v, .mp4, and .ogv. They don't support the proprietary AAC or MP3 audio formats. 
+### Movie URLs
 
-These nodes support both [inter-frame](http://en.wikipedia.org/wiki/Inter_frame) and [intra-frame](http://en.wikipedia.org/wiki/Intra-frame) codecs. When retrieving a frame from an inter-frame movie, these nodes output the frame as it would normally be shown (interpolated from keyframes, not as raw inter-frame data). Since this requires extra processing — especially when using `Decode Movie Image`, or `Play Movie` with mirrored looping or a negative `Playback Rate` — you'll often get better performance with an intra-frame codec (such as MJPEG, ProRes 422/4444, or DV). 
+Nodes that open or save to movie files have a URL input port. You can drag a movie file from Finder onto the input port's constant value to fill in the URL. Or drag the movie file onto the composition canvas to create a `Play Movie` node. These nodes only support file URLs, not HTTP.
 
-Currently these nodes only support URLs which are filesystem paths. (In a future release, you'll be able to use HTTP URLs.)
+### Movie file formats
 
-To load a movie from a file on the computer running the composition, use the file's location on the computer. Example: 
+A movie file has several characteristics that determine which applications (including Vuo) can play it and how efficiently it can be played.
 
-   - `/System/Library/Compositions/Fish.mov`
+The file extension (such as .mov or .mp4) tells you which **container** the movie uses. Different applications support different containers. Vuo's `Play Movie` and `Decode Movie File` nodes can open any of the [file formats supported by FFmpeg](http://www.ffmpeg.org/general.html#File-Formats), including .mov, .avi, .dv, .mpeg, .mpg, .mp2, .m4v, .mp4, and .ogv.
+
+Within the container, the way that the video and audio are stored in the file is determined by the **encoding**. As with containers, different applications support different encodings. Vuo's `Play Movie` and `Decode Movie File` nodes can read any of the [video encodings supported by FFmpeg](http://www.ffmpeg.org/general.html#Video-Codecs).
+
+Some video encodings (**delivery codecs**) are designed for playing back and sharing movie files, while others (**intermediate codecs**) are designed for video editing. Delivery codecs tend to produce videos with smaller file sizes and be more efficient when playing video frames in order (for example, with the `Play Movie` node at its default playback rate). Intermediate codecs tend to be more efficient when playing frames in reverse or otherwise out of order (for example, with the `Decode Movie Image` node).
+
+The table below summarizes some of the video codecs supported by this node set.
+
+Encoding    | Purpose      | Notes
+------------|------------- | -----
+H.264       | Delivery    
+JPEG        | Intermediate
+ProRes 422  | Intermediate | Only available on systems with Final Cut Pro installed.
+ProRes 4444 | Intermediate | Only available on systems with Final Cut Pro installed.
+
+Audio is encoded separately from video. Similarly to video encodings, audio encodings have a tradeoff between quality and file size. **Lossless** encodings preserve the original audio at the expense of larger file sizes. **Lossy** encodings tend to produce smaller file sizes but may reduce the audio quality.
+
+The `Play Movie` node can read any of the [audio encodings supported by FFmpeg](http://www.ffmpeg.org/general.html#Audio-Codecs) except certain proprietary ones. The table below summarizes some of the audio encodings supported by this node set.
+
+Encoding       | Compression             | Supported by `Play Movie`? | Supported by `Save to Movie`?
+---------------|-------------------------|----------------------------|-----------------------------
+Linear PCM     | Lossless (uncompressed) | Yes                        | Yes
+Apple Lossless | Lossless                | Yes                        | No
+AAC            | Lossy                   | No                         | Yes
+MP3            | Lossy                   | No                         | No
+
+To find out which video and audio encodings a movie file uses, you can open it in QuickTime Player and go to Window > Show Movie Inspector.

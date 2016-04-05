@@ -34,11 +34,14 @@ public:
 	{
 		TintNone,
 		TintYellow,
+		TintTangerine,
 		TintOrange,
 		TintMagenta,
 		TintViolet,
+		TintBlue,
 		TintCyan,
-		TintGreen
+		TintGreen,
+		TintLime,
 	};
 
 	VuoNode(VuoNodeClass * nodeClass, string title, VuoPort * refreshPort, vector<VuoPort *>inputPorts, vector<VuoPort *> outputPorts, double x=0, double y=0, bool collapsed=false, VuoNode::TintColor tintColor=TintNone);

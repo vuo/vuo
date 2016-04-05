@@ -17,13 +17,15 @@
 #include "VuoCompilerGenericType.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerPublishedInputNodeClass.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoNodeSet.hh"
 #include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
 
 #ifdef PREMIUM_NODE_LOADER_ENABLED
-#include "VuoPremiumNodeLoader.hh"
+#define VUO_PREMIUM_INITIALIZER
+#include "VuoPremium.hh"
 #endif
 
 bool VuoCompiler::isLlvmInitialized = false;
@@ -87,6 +89,10 @@ VuoCompiler::Environment::~Environment(void)
 
 	for (map<string, VuoNodeSet *>::iterator i = nodeSetForName.begin(); i != nodeSetForName.end(); ++i)
 		delete i->second;
+
+	for (map<string, set<VuoFileUtilities::File *> >::iterator i = moduleFilesAtSearchPath.begin(); i != moduleFilesAtSearchPath.end(); ++i)
+		for (set<VuoFileUtilities::File *>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			delete *j;
 }
 
 /**
@@ -236,22 +242,122 @@ vector<string> VuoCompiler::Environment::getFrameworkSearchPaths(void)
  *
  * This function should be called on VuoCompiler::combinedEnvironment.
  */
-void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *myEnvironment, Environment *sharedEnvironment)
+void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *myEnvironment, Environment *sharedEnvironment,
+																  bool shouldLoadAllModules, set<string> &modulesToLoad)
 {
 	dispatch_sync(environmentQueue, ^{
 					  bool wereModulesLoaded = false;
 					  Environment *envs[2] = { sharedEnvironment, myEnvironment };
 
-					  for (int i = 0; i < 2; ++i)
+					  if (shouldLoadAllModules)
 					  {
-						  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
+						  // Load all modules from all search paths.
+
+						  for (int i = 0; i < 2; ++i)
 						  {
-							  string path = *j;
-							  if (! envs[i]->isModuleSearchPathLoaded[path])
+							  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
 							  {
-								  envs[i]->loadModules(path);
-								  envs[i]->isModuleSearchPathLoaded[path] = true;
+								  string path = *j;
+								  if (! envs[i]->isModuleSearchPathLoaded[path])
+								  {
+									  set<VuoFileUtilities::File *> moduleFiles = envs[i]->listModules(path);
+									  for (set<VuoFileUtilities::File *>::iterator k = moduleFiles.begin(); k != moduleFiles.end(); ++k)
+									  {
+										  VuoFileUtilities::File *moduleFile = *k;
+										  envs[i]->loadModule(moduleFile);
+										  delete moduleFile;
+									  }
+									  envs[i]->moduleFilesAtSearchPath.erase(path);
+									  envs[i]->isModuleSearchPathLoaded[path] = true;
+									  wereModulesLoaded = true;
+								  }
+							  }
+						  }
+					  }
+					  else if (! modulesToLoad.empty())
+					  {
+						  // Load only the modules in modulesToLoad and their dependencies.
+
+						  map<string, pair<VuoFileUtilities::File *, int> > fileAndEnvForModule;
+						  for (int i = 0; i < 2; ++i)
+						  {
+							  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
+							  {
+								  string path = *j;
+								  set<VuoFileUtilities::File *> moduleFiles = envs[i]->listModules(path);
+								  for (set<VuoFileUtilities::File *>::iterator k = moduleFiles.begin(); k != moduleFiles.end(); ++k)
+								  {
+									  VuoFileUtilities::File *moduleFile = *k;
+									  string moduleKey, dir, ext;
+									  VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
+									  fileAndEnvForModule[moduleKey] = make_pair(moduleFile, i);
+								  }
+							  }
+						  }
+
+						  while (! modulesToLoad.empty())
+						  {
+							  string moduleKey = *modulesToLoad.begin();
+							  modulesToLoad.erase(moduleKey);
+
+							  bool alreadyLoadedModule = false;
+							  for (int i = 0; i < 2; ++i)
+							  {
+								  if (envs[i]->nodeClasses.find(moduleKey) != envs[i]->nodeClasses.end() ||
+									  envs[i]->types.find(moduleKey) != envs[i]->types.end() ||
+									  envs[i]->libraryModules.find(moduleKey) != envs[i]->libraryModules.end())
+								  {
+									  alreadyLoadedModule = true;
+								  }
+							  }
+							  if (alreadyLoadedModule)
+								  continue;
+
+							  map<string, pair<VuoFileUtilities::File *, int> >::iterator moduleIter = fileAndEnvForModule.find(moduleKey);
+							  if (moduleIter == fileAndEnvForModule.end())
+							  {
+								  if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(moduleKey))
+								  {
+									  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
+									  string itemType = parts.back();
+									  modulesToLoad.insert(itemType);
+									  modulesToLoad.insert(VuoType::listTypeNamePrefix + itemType);
+									  continue;
+								  }
+								  else
+								  {
+									  bool foundGenericNodeClass = false;
+
+									  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
+									  for (int i = parts.size() - 1; i >= 1; --i)
+									  {
+										  vector<string> firstParts(parts.begin(), parts.begin() + i);
+										  string genericNodeClass = VuoStringUtilities::join(firstParts, '.');
+
+										  moduleIter = fileAndEnvForModule.find(genericNodeClass);
+										  if (moduleIter != fileAndEnvForModule.end())
+										  {
+											  foundGenericNodeClass = true;
+											  modulesToLoad.insert(parts.begin() + i, parts.end());
+											  break;
+										  }
+									  }
+
+									  if (! foundGenericNodeClass)
+										  continue;
+								  }
+							  }
+
+							  VuoFileUtilities::File *moduleFile = moduleIter->second.first;
+							  int i = moduleIter->second.second;
+							  VuoCompilerModule *module = envs[i]->loadModule(moduleFile);
+
+							  if (module)
+							  {
 								  wereModulesLoaded = true;
+
+								  set<string> dependencies = module->getDependencies();
+								  modulesToLoad.insert(dependencies.begin(), dependencies.end());
 							  }
 						  }
 					  }
@@ -289,126 +395,133 @@ void VuoCompiler::Environment::addNodeClassToCombinedEnvironment(VuoCompilerNode
 }
 
 /**
- * Loads all node classes, types, and library modules in the directory at @c path.
- * Adds @c path to the list of library search paths used in linking.
+ * Returns a list of the all node classes, types, and library modules in the directory at @a path.
  *
- * The top level of the directory is searched for .vuonode and .bc files.
+ * The top level of the directory is searched for .vuonode, .vuonode+, .bc, and .bc+ files.
  * A .vuonode file may be either a module or an archive containing modules.
  * In the latter case, the .vuonode archive's top level is searched.
  *
- * If multiple definitions of a node class or type are encountered (either in different folders
- * inside of @c path or in different calls to this function), the most recently encountered
- * definition is used.
- *
- * If @c path does not exist, does nothing.
- *
  * @threadQueue{environmentQueue}
  */
-void VuoCompiler::Environment::loadModules(string path)
+set<VuoFileUtilities::File *> VuoCompiler::Environment::listModules(const string &path)
 {
-	const string premiumNodeExtension = "vuonode+";
-	const string premiumNodeLibraryExtension = "bc+";
-	/// @todo Search recursively - https://b33p.net/kosada/node/2468
+	map<string, set<VuoFileUtilities::File *> >::iterator moduleFilesIter = moduleFilesAtSearchPath.find(path);
+	if (moduleFilesIter != moduleFilesAtSearchPath.end())
+		return moduleFilesIter->second;
 
 	set<string> moduleExtensions;
-	moduleExtensions.insert("bc");
 	moduleExtensions.insert("vuonode");
-	moduleExtensions.insert(premiumNodeExtension);
-	moduleExtensions.insert(premiumNodeLibraryExtension);
+	moduleExtensions.insert("vuonode+");
+	moduleExtensions.insert("bc");
+	moduleExtensions.insert("bc+");
 	set<string> archiveExtensions;
 	archiveExtensions.insert("vuonode");
 	set<VuoFileUtilities::File *> moduleFiles = VuoFileUtilities::findFilesInDirectory(path, moduleExtensions, archiveExtensions);
-	for (set<VuoFileUtilities::File *>::iterator i = moduleFiles.begin(); i != moduleFiles.end(); ++i)
+
+	moduleFilesAtSearchPath[path] = moduleFiles;
+
+	return moduleFiles;
+}
+
+/**
+ * Loads a node class, type, or library module from a file, and adds it to the environment.
+ *
+ * If a module with the same module key as @a moduleFile has already been added to the environment,
+ * the module in @a moduleFile replaces it.
+ *
+ * @threadQueue{environmentQueue}
+ */
+VuoCompilerModule * VuoCompiler::Environment::loadModule(VuoFileUtilities::File *moduleFile)
+{
+	string moduleKey, dir, ext;
+	VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
+
+	size_t inputDataBytes;
+	char *rawInputData = moduleFile->getContentsAsRawData(inputDataBytes);
+	char *processedInputData = NULL;
+
+	bool moduleParseError = false;
+	bool premiumModule = false;
+
+	if ((ext == "vuonode+") || (ext == "bc+"))
 	{
-		bool moduleParseError = false;
-		bool premiumModule = false;
-		VuoFileUtilities::File *moduleFile = *i;
-		string moduleKey, dir, ext;
-		VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
-
-		size_t inputDataBytes;
-		char *rawInputData = moduleFile->getContentsAsRawData(inputDataBytes);
-		char *processedInputData = NULL;
-
-		if ((ext == premiumNodeExtension) || (ext == premiumNodeLibraryExtension))
-		{
-			encounteredPremiumModules.insert(moduleKey);
+		encounteredPremiumModules.insert(moduleKey);
 
 #ifdef PREMIUM_NODE_LOADER_ENABLED
-			if (inputDataBytes <= INT_MAX)
-				processedInputData = VuoPremiumNodeLoader::getPremiumDataContent(rawInputData,
-																				 static_cast<int>(inputDataBytes),
-																				 moduleKey.c_str());
+		if (inputDataBytes <= INT_MAX)
+			processedInputData = VuoPremium::getPremiumDataContent(rawInputData,
+																   static_cast<int>(inputDataBytes),
+																   moduleKey.c_str());
 #endif
 
-			if (!processedInputData)
+		if (!processedInputData)
+		{
+			moduleParseError = true;
+			//VLog("Error: Couldn't extract premium content from file '%s'.", moduleFile->getRelativePath().c_str());
+		}
+
+		free(rawInputData);
+		premiumModule = true;
+	}
+	else
+		processedInputData = rawInputData;
+
+	Module *module = NULL;
+	if (!moduleParseError)
+	{
+		string moduleReadError;
+		module = readModuleFromBitcodeData(processedInputData, inputDataBytes, moduleReadError);
+		free(processedInputData);
+
+		if (!module)
+		{
+			moduleParseError = true;
+			VLog("Error: Couldn't parse module '%s': %s.", moduleFile->getRelativePath().c_str(), moduleReadError.c_str());
+		}
+	}
+
+	if (!moduleParseError)
+	{
+		__block VuoCompilerModule *compilerModule;
+		dispatch_sync(llvmQueue, ^{
+						  compilerModule = VuoCompilerModule::newModule(moduleKey, module);
+					  });
+
+		if (compilerModule)
+		{
+			if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
+				nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
+			else if (dynamic_cast<VuoCompilerType *>(compilerModule))
+				types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
+			else
+				libraryModules[moduleKey] = compilerModule;
+
+			VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
+			if (nodeSet)
 			{
-				moduleParseError = true;
-				//VLog("Error: Couldn't extract premium content from file '%s'.", moduleFile->getRelativePath().c_str());
+				map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
+				if (nodeSetIter == nodeSetForName.end())
+				{
+					nodeSetForName[nodeSet->getName()] = nodeSet;
+				}
+				else
+				{
+					delete nodeSet;
+					nodeSet = nodeSetIter->second;
+				}
+				compilerModule->getPseudoBase()->setNodeSet(nodeSet);
 			}
 
-			free(rawInputData);
-			premiumModule = true;
+			compilerModule->setPremium(premiumModule);
+			return compilerModule;
 		}
 		else
-			processedInputData = rawInputData;
-
-		Module *module = NULL;
-		if (!moduleParseError)
 		{
-			string moduleReadError;
-			module = readModuleFromBitcodeData(processedInputData, inputDataBytes, moduleReadError);
-			free(processedInputData);
-
-			if (!module)
-			{
-				moduleParseError = true;
-				VLog("Error: Couldn't parse module '%s': %s.", moduleFile->getRelativePath().c_str(), moduleReadError.c_str());
-			}
+			deleteModule(module);
 		}
-
-		if (!moduleParseError)
-		{
-			__block VuoCompilerModule *compilerModule;
-			dispatch_sync(llvmQueue, ^{
-							  compilerModule = VuoCompilerModule::newModule(moduleKey, module);
-						  });
-
-			if (compilerModule)
-			{
-				if (dynamic_cast<VuoCompilerNodeClass *>(compilerModule))
-					nodeClasses[moduleKey] = static_cast<VuoCompilerNodeClass *>(compilerModule);
-				else if (dynamic_cast<VuoCompilerType *>(compilerModule))
-					types[moduleKey] = static_cast<VuoCompilerType *>(compilerModule);
-				else
-					libraryModules[moduleKey] = compilerModule;
-
-				VuoNodeSet *nodeSet = VuoNodeSet::createNodeSetForModule(moduleFile);
-				if (nodeSet)
-				{
-					map<string, VuoNodeSet *>::iterator nodeSetIter = nodeSetForName.find(nodeSet->getName());
-					if (nodeSetIter == nodeSetForName.end())
-					{
-						nodeSetForName[nodeSet->getName()] = nodeSet;
-					}
-					else
-					{
-						delete nodeSet;
-						nodeSet = nodeSetIter->second;
-					}
-					compilerModule->getPseudoBase()->setNodeSet(nodeSet);
-				}
-
-				compilerModule->setPremium(premiumModule);
-			}
-			else
-			{
-				deleteModule(module);
-			}
-		}
-
-		delete moduleFile;
 	}
+
+	return NULL;
 }
 
 /**
@@ -614,6 +727,7 @@ VuoCompiler::VuoCompiler(void)
 					  }
 				  });
 
+	shouldLoadAllModules = true;
 	isVerbose = false;
 
 	Environment *env = getSharedEnvironment();
@@ -662,7 +776,7 @@ VuoCompiler::Environment * VuoCompiler::getSharedEnvironment(void)
  */
 void VuoCompiler::loadModulesIfNeeded(void)
 {
-	combinedEnvironment.loadModulesIntoCombinedEnvironment( &myEnvironment, getSharedEnvironment() );
+	combinedEnvironment.loadModulesIntoCombinedEnvironment( &myEnvironment, getSharedEnvironment(), shouldLoadAllModules, modulesToLoad );
 }
 
 /**
@@ -672,25 +786,35 @@ void VuoCompiler::loadModulesIfNeeded(void)
  */
 void VuoCompiler::setLicense(string licenseContent, string licenseSignature)
 {
-	#ifdef PREMIUM_NODE_LOADER_ENABLED
-	VuoPremiumNodeLoader::initializeWithLicense(licenseContent, licenseSignature);
-	#endif
+#ifdef PREMIUM_NODE_LOADER_ENABLED
+	VuoPremium::initializeWithLicense(licenseContent, licenseSignature);
+#endif
+}
+
+/**
+ * Initializes the premium node loader with the license information stored in the user's org.vuo.Editor settings file.
+ */
+void VuoCompiler::loadStoredLicense()
+{
+#ifdef PREMIUM_NODE_LOADER_ENABLED
+	VuoPremium::loadStoredLicense();
+#endif
 }
 
 /**
  * Updates the nodes and ports of the composition to have the correct backing types for generic types.
- *
- * Generic nodes in the composition may be replaced by equivalent nodes (keeping their node class name,
- * node title, and other metadata, but using a node class that has a different LLVM module).
  */
 void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
 {
 	set<VuoNode *> nodes = composition->getBase()->getNodes();
-
-	// Set a backing type for each generic type that doesn't already have one.
 	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
+		VuoCompilerSpecializedNodeClass *nodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
+		if (! nodeClass)
+			continue;
+
+		// Reify any generic types on the node that don't already have a compiler detail.
 
 		vector<VuoPort *> inputPorts = node->getInputPorts();
 		vector<VuoPort *> outputPorts = node->getOutputPorts();
@@ -715,41 +839,10 @@ void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
 					port->setDataVuoType(reifiedType->getBase());
 			}
 		}
-	}
 
-	// For any node that needs a different backing type than its node class was compiled with,
-	// recompile the node class with the desired backing type, instantiate a replacement node
-	// from the new node class, and substitute the replacement node into the composition.
-	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-	{
-		VuoNode *node = *i;
+		// Update the node class's backing to match the node's backing.
 
-		VuoCompilerSpecializedNodeClass *nodeClass = dynamic_cast<VuoCompilerSpecializedNodeClass *>(node->getNodeClass()->getCompiler());
-		if (! nodeClass)
-			continue;
-
-		bool doBackingTypesMatch = true;
-		map<string, string> backingTypesForNodeClass = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node->getNodeClass());
-		map<string, string> backingTypesForNode = VuoCompilerSpecializedNodeClass::getBackingTypeNamesFromPorts(node);
-		for (map<string, string>::iterator j = backingTypesForNode.begin(); j != backingTypesForNode.end(); ++j)
-		{
-			string genericType = j->first;
-			string backingTypeForNode = j->second;
-
-			if (backingTypesForNodeClass[genericType] != backingTypeForNode)
-				doBackingTypesMatch = false;
-		}
-
-		if (! doBackingTypesMatch)
-		{
-			VuoNodeClass *replacementNodeClass =
-					(dynamic_cast<VuoCompilerMakeListNodeClass *>(nodeClass) ?
-						 VuoCompilerMakeListNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, llvmQueue, node) :
-						 VuoCompilerSpecializedNodeClass::newNodeClass(nodeClass->getBase()->getClassName(), this, llvmQueue, node));
-			VuoNode *replacementNode = replacementNodeClass->getCompiler()->newNode(node);
-			replacementNode->getCompiler()->setGraphvizIdentifier( node->getCompiler()->getGraphvizIdentifier() );
-			composition->getBase()->replaceNode(node, replacementNode);
-		}
+		nodeClass->updateBackingNodeClass(node, this);
 	}
 }
 
@@ -926,6 +1019,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibrary(string inputPath, string
 	linkCompositionToCreateExecutableOrDynamicLibrary(inputPath, outputPath, optimization, true);
 }
 
+#include "VuoTimeUtilities.hh"
 /**
  * Creates an executable or dynamic library that contains the composition and its dependencies.
  *
@@ -948,12 +1042,16 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
 	if (isVerbose)
 		print();
 
+	if (optimization == Optimization_FastBuildExistingCache)
+		shouldLoadAllModules = false;
+
 	set<string> dependencies = getDependenciesForComposition(compiledCompositionPath);
 	dependencies.insert(getRuntimeDependency());
 	if (! isDylib)
 		dependencies.insert(getRuntimeMainDependency());
 	if (isApp)
 	{
+		/// @todo This is obsolete now that VuoApp_init() needs to be explicitly called (instead of merely linked in and called via static initializer).
 		string applicationDependency = getApplicationDependency();
 		set<string> incompatibleDependencies;
 		getDependenciesRecursively(applicationDependency, dependencies, incompatibleDependencies);
@@ -961,7 +1059,7 @@ void VuoCompiler::linkCompositionToCreateExecutableOrDynamicLibrary(string compi
 	set<Module *> modules;
 	set<string> libraries;
 	set<string> frameworks;
-	getLinkerInputs(dependencies, optimization == Optimization_FastBuild, modules, libraries, frameworks);
+	getLinkerInputs(dependencies, optimization, modules, libraries, frameworks);
 
 	libraries.insert(compiledCompositionPath);
 
@@ -1015,7 +1113,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 
 		tmpAlreadyLinkedResources.insert(newDependencies.begin(), newDependencies.end());
 
-		getLinkerInputs(tmpAlreadyLinkedResources, true, modules, libraries, frameworks);
+		getLinkerInputs(tmpAlreadyLinkedResources, Optimization_FastBuild, modules, libraries, frameworks);
 
 		for (set<string>::iterator i = libraries.begin(); i != libraries.end(); ++i)
 			if (VuoStringUtilities::endsWith(*i, ".dylib"))
@@ -1030,7 +1128,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 
 		libraries.insert(tmpAlreadyLinkedResourcePaths.begin(), tmpAlreadyLinkedResourcePaths.end());
 		libraries.insert(dylibs.begin(), dylibs.end());
-		getLinkerInputs(newDependencies, true, modules, libraries, frameworks);
+		getLinkerInputs(newDependencies, Optimization_FastBuild, modules, libraries, frameworks);
 
 		link(tmpNewLinkedResourcePath, modules, libraries, frameworks, true);
 
@@ -1050,7 +1148,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 
 		set<string> dependencies;
 		dependencies.insert(getRuntimeDependency());
-		getLinkerInputs(dependencies, true, modules, libraries, frameworks);
+		getLinkerInputs(dependencies, Optimization_FastBuild, modules, libraries, frameworks);
 		vuoRuntimePath = *libraries.begin();
 	}
 
@@ -1082,8 +1180,6 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
  */
 set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCompositionPath)
 {
-	loadModulesIfNeeded();
-
 	set<string> dependencies;
 
 	// Add the node classes in the top-level composition and their dependencies.
@@ -1094,9 +1190,19 @@ set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCom
 					  directDependencies = parser.getStringsFromGlobalArray("moduleDependencies");
 					  delete compositionModule;
 				  });
+
+	if (! shouldLoadAllModules)
+	{
+		modulesToLoad.clear();
+		modulesToLoad.insert(directDependencies.begin(), directDependencies.end());
+	}
+
+	loadModulesIfNeeded();
+
 	for (vector<string>::iterator i = directDependencies.begin(); i != directDependencies.end(); ++i)
 	{
 		string dependency = *i;
+
 		set<string> dependenciesToAdd;
 		set<string> incompatibleDependencies;
 		getDependenciesRecursively(dependency, dependenciesToAdd, incompatibleDependencies);
@@ -1275,11 +1381,12 @@ map<string, int> VuoCompiler::getDependenciesRecursivelyWithCache(const string &
  * From a list of names of dependencies, gets the modules, library paths, and frameworks
  * to be passed to the linker.
  */
-void VuoCompiler::getLinkerInputs(const set<string> &dependencies, bool shouldUseCachedResources,
+void VuoCompiler::getLinkerInputs(const set<string> &dependencies, Optimization optimization,
 								  set<Module *> &modules, set<string> &libraries, set<string> &frameworks)
 {
+	bool shouldUseCachedResources = optimization == Optimization_FastBuild || optimization == Optimization_FastBuildExistingCache;
 	if (shouldUseCachedResources)
-		getCachedResources();
+		getCachedResources(optimization == Optimization_FastBuildExistingCache);
 
 	// Use separate linkers for custom versus system search paths to control the order in which paths are searched.
 	// Linker::addPaths() adds paths to the end, but Linker::addSystemPaths() adds them to the beginning.
@@ -1348,10 +1455,10 @@ void VuoCompiler::getLinkerInputs(const set<string> &dependencies, bool shouldUs
  *
  * @threadNoQueue{cachedResourcesQueue}
  */
-void VuoCompiler::getCachedResources(void)
+void VuoCompiler::getCachedResources(bool shouldUseExistingCache)
 {
 	dispatch_sync(cachedResourcesQueue, ^{
-					  getCachedResourcesThreadUnsafe();
+					  getCachedResourcesThreadUnsafe(shouldUseExistingCache);
 				  });
 }
 
@@ -1360,7 +1467,7 @@ void VuoCompiler::getCachedResources(void)
  *
  * @threadQueue{cachedResourcesQueue}
  */
-void VuoCompiler::getCachedResourcesThreadUnsafe(void)
+void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 {
 	if (! hasTriedCachedResources)
 	{
@@ -1374,65 +1481,69 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(void)
 		set<Module *> modules;
 		set<string> libraries;
 		set<string> frameworks;
+		Environment *env = NULL;
 
-		// Add the loaded modules, the core dependencies, and their dependencies to the list.
-
-		Environment *env = getSharedEnvironment();
-		loadModulesIfNeeded();
-
-		map<string, VuoCompilerModule *> allModules;
-		map<string, VuoCompilerNodeClass *> nodeClasses = env->getNodeClasses();
-		map<string, VuoCompilerType *> types = env->getTypes();
-		map<string, VuoCompilerModule *> libraryModules = env->getLibraryModules();
-		allModules.insert(nodeClasses.begin(), nodeClasses.end());
-		allModules.insert(types.begin(), types.end());
-		allModules.insert(libraryModules.begin(), libraryModules.end());
-
-		set<string> dependencies;
-		for (map<string, VuoCompilerModule *>::iterator i = allModules.begin(); i != allModules.end(); ++i)
+		if (! shouldUseExistingCache)
 		{
-			string moduleKey = i->first;
-			VuoCompilerModule *module = i->second;
+			// Add the loaded modules, the core dependencies, and their dependencies to the list.
 
-			if (module->getPremium())
-				continue;
+			env = getSharedEnvironment();
+			loadModulesIfNeeded();
 
-			set<string> dependenciesToAdd;
-			set<string> incompatibleDependencies;
-			getDependenciesRecursively(moduleKey, dependenciesToAdd, incompatibleDependencies);
+			map<string, VuoCompilerModule *> allModules;
+			map<string, VuoCompilerNodeClass *> nodeClasses = env->getNodeClasses();
+			map<string, VuoCompilerType *> types = env->getTypes();
+			map<string, VuoCompilerModule *> libraryModules = env->getLibraryModules();
+			allModules.insert(nodeClasses.begin(), nodeClasses.end());
+			allModules.insert(types.begin(), types.end());
+			allModules.insert(libraryModules.begin(), libraryModules.end());
 
-			if (incompatibleDependencies.empty())
+			set<string> dependencies;
+			for (map<string, VuoCompilerModule *>::iterator i = allModules.begin(); i != allModules.end(); ++i)
 			{
-				dependencies.insert(dependenciesToAdd.begin(), dependenciesToAdd.end());
-				expectedResources.insert(moduleKey);
+				string moduleKey = i->first;
+				VuoCompilerModule *module = i->second;
+
+				if (module->getPremium())
+					continue;
+
+				set<string> dependenciesToAdd;
+				set<string> incompatibleDependencies;
+				getDependenciesRecursively(moduleKey, dependenciesToAdd, incompatibleDependencies);
+
+				if (incompatibleDependencies.empty())
+				{
+					dependencies.insert(dependenciesToAdd.begin(), dependenciesToAdd.end());
+					expectedResources.insert(moduleKey);
+				}
 			}
-		}
 
-		vector<string> coreDependencies = getCoreVuoDependencies();
-		dependencies.insert(coreDependencies.begin(), coreDependencies.end());
+			vector<string> coreDependencies = getCoreVuoDependencies();
+			dependencies.insert(coreDependencies.begin(), coreDependencies.end());
 
-		for (set<string>::iterator i = dependencies.begin(); i != dependencies.end(); ++i)
-		{
-			string dependency = *i;
-			set<string> dependencySet;
-			dependencySet.insert(dependency);
-
-			set<Module *> modulesToAdd;
-			set<string> librariesToAdd;
-			set<string> frameworksToAdd;
-			getLinkerInputs(dependencySet, false, modulesToAdd, librariesToAdd, frameworksToAdd);
-
-			modules.insert(modulesToAdd.begin(), modulesToAdd.end());
-			libraries.insert(librariesToAdd.begin(), librariesToAdd.end());
-			frameworks.insert(frameworksToAdd.begin(), frameworksToAdd.end());
-
-			if (! modulesToAdd.empty())
-				expectedResources.insert(dependency);
-			else if (! librariesToAdd.empty())
+			for (set<string>::iterator i = dependencies.begin(); i != dependencies.end(); ++i)
 			{
-				sys::Path libraryPath(*librariesToAdd.begin());
-				if (libraryPath.isArchive() || libraryPath.isBitcodeFile())
+				string dependency = *i;
+				set<string> dependencySet;
+				dependencySet.insert(dependency);
+
+				set<Module *> modulesToAdd;
+				set<string> librariesToAdd;
+				set<string> frameworksToAdd;
+				getLinkerInputs(dependencySet, Optimization_SmallBinary, modulesToAdd, librariesToAdd, frameworksToAdd);
+
+				modules.insert(modulesToAdd.begin(), modulesToAdd.end());
+				libraries.insert(librariesToAdd.begin(), librariesToAdd.end());
+				frameworks.insert(frameworksToAdd.begin(), frameworksToAdd.end());
+
+				if (! modulesToAdd.empty())
 					expectedResources.insert(dependency);
+				else if (! librariesToAdd.empty())
+				{
+					sys::Path libraryPath(*librariesToAdd.begin());
+					if (libraryPath.isArchive() || libraryPath.isBitcodeFile())
+						expectedResources.insert(dependency);
+				}
 			}
 		}
 
@@ -1447,26 +1558,28 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(void)
 		const char separator = '\n';
 		bool isCacheUpToDate = true;
 
-
-		// Check if the cached files exist. If not, create them (without affecting their last modified date).
-		bool cacheDirExists = VuoFileUtilities::fileExists(cacheDir);
-		if (! cacheDirExists)
-			VuoFileUtilities::makeDir(cacheDir);
-		bool cacheFileExists = cacheDirExists && VuoFileUtilities::fileExists(cacheFilePath);
-		if (! cacheFileExists)
-			VuoFileUtilities::createFile(cacheFilePath);
-		bool indexFileExists = cacheDirExists && VuoFileUtilities::fileExists(indexFilePath);
-		if (! indexFileExists)
-			VuoFileUtilities::createFile(indexFilePath);
-		if (! cacheFileExists || ! indexFileExists)
-			isCacheUpToDate = false;
+		if (! shouldUseExistingCache)
+		{
+			// Check if the cached files exist. If not, create them (without affecting their last modified date).
+			bool cacheDirExists = VuoFileUtilities::fileExists(cacheDir);
+			if (! cacheDirExists)
+				VuoFileUtilities::makeDir(cacheDir);
+			bool cacheFileExists = cacheDirExists && VuoFileUtilities::fileExists(cacheFilePath);
+			if (! cacheFileExists)
+				VuoFileUtilities::createFile(cacheFilePath);
+			bool indexFileExists = cacheDirExists && VuoFileUtilities::fileExists(indexFilePath);
+			if (! indexFileExists)
+				VuoFileUtilities::createFile(indexFilePath);
+			if (! cacheFileExists || ! indexFileExists)
+				isCacheUpToDate = false;
+		}
 
 		// Lock the cached files for reading. The lock remain active until the process exits.
 		VuoFileUtilities::File cacheFile(cacheDir, cacheFileName);
 		cacheFile.lockForReading();
 
 		// Check if the cached dylib file is newer than all of the loaded modules and libraries.
-		if (isCacheUpToDate)
+		if (isCacheUpToDate && ! shouldUseExistingCache)
 		{
 			unsigned long cacheFileLastModified = VuoFileUtilities::getFileLastModifiedInSeconds(cacheFilePath);
 
@@ -1504,7 +1617,10 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(void)
 			VuoFileUtilities::File indexFile(cacheDir, indexFileName);
 			string index = indexFile.getContentsAsString();
 			indexedResources = VuoStringUtilities::split(index, separator);
+		}
 
+		if (isCacheUpToDate && ! shouldUseExistingCache)
+		{
 			if (indexedResources.size() != expectedResources.size())
 			{
 				isCacheUpToDate = false;
@@ -1580,6 +1696,15 @@ void VuoCompiler::prepareForFastBuild(void)
 	dispatch_async(cachedResourcesQueue, ^{
 					   getCachedResourcesThreadUnsafe();
 				   });
+}
+
+/**
+ * Controls whether the VuoCompiler should load all node classes, types, and library modules from the
+ * module search paths the first time a module is needed.
+ */
+void VuoCompiler::setLoadAllModules(bool shouldLoadAllModules)
+{
+	this->shouldLoadAllModules = shouldLoadAllModules;
 }
 
 /**
@@ -1709,7 +1834,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
 	clang::DiagnosticsEngine Diags(DiagID, diagOptions, diagClient);
 
-	clang::driver::Driver TheDriver(args[0], "x86_64-apple-macosx10.6.0", outputPath, true, Diags);
+	clang::driver::Driver TheDriver(args[0], "x86_64-apple-macosx10.7.0", outputPath, true, Diags);
 
 	TheDriver.CCCIsCXX = true;  // clang++ instead of clang
 
@@ -1927,7 +2052,7 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
 	{
 		// llvm::sys::getDefaultTargetTriple() finds a target based on the host, but the "default" target is not necessarily the
 		// same target that results from invoking command-line clang without a -target argument. That is the "effective" target.
-		// For example, the "default" target could be x86_64-apple-darwin10.8.0 and the "effective" target could be x86_64-apple-macosx10.6.0.
+		// For example, the "default" target could be x86_64-apple-darwin10.8.0 and the "effective" target could be x86_64-apple-macosx10.7.0.
 
 		llvm::sys::Path clangPath = getClangPath();
 
@@ -1946,7 +2071,7 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
 
 	module->setTargetTriple(effectiveTarget);
 */
-	module->setTargetTriple("x86_64-apple-macosx10.6.0");
+	module->setTargetTriple("x86_64-apple-macosx10.7.0");
 }
 
 /**
@@ -1962,20 +2087,20 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
  */
 VuoNode * VuoCompiler::createNode(VuoCompilerNodeClass *nodeClass, string title, double x, double y)
 {
-	vector<string> genericTypes = VuoCompilerSpecializedNodeClass::getGenericTypeNamesFromPorts(nodeClass);
+	VuoCompilerNodeClass *nodeClassForNode = VuoCompilerSpecializedNodeClass::getNodeClassForNode(nodeClass, this);
+	return nodeClassForNode->newNode(title, x, y);
+}
 
-	if (genericTypes.empty() || dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass))
-		return nodeClass->newNode(title, x, y);
-	else
-	{
-		string genericNodeClassName = nodeClass->getBase()->getClassName();
-		string genericNodeClassNameWithSuffixes = VuoCompilerSpecializedNodeClass::createSpecializedNodeClassName(genericNodeClassName, genericTypes);
-		VuoCompilerNodeClass *genericNodeClass = getNodeClass(genericNodeClassNameWithSuffixes);
-		VuoCompilerSpecializedNodeClass *genericNodeClassAsSpecialized = static_cast<VuoCompilerSpecializedNodeClass *>(genericNodeClass);
-		string specializedNodeClassName = genericNodeClassAsSpecialized->createDefaultSpecializedNodeClassName();
-		VuoCompilerNodeClass *specializedNodeClass = getNodeClass(specializedNodeClassName);
-		return specializedNodeClass->newNode(title, x, y);
-	}
+/**
+ * Creates a VuoCompilerPublishedInputNodeClass modeled on @a dummyNodeClass.
+ */
+VuoCompilerNodeClass * VuoCompiler::createPublishedInputNodeClass(VuoNodeClass *dummyNodeClass)
+{
+	__block VuoNodeClass *nodeClass;
+	dispatch_sync(llvmQueue, ^{
+					  nodeClass = VuoCompilerPublishedInputNodeClass::newNodeClass(dummyNodeClass);
+				  });
+	return nodeClass->getCompiler();
 }
 
 /**
@@ -1992,28 +2117,25 @@ VuoNode * VuoCompiler::createNode(VuoCompilerNodeClass *nodeClass, string title,
  */
 VuoCompilerNodeClass * VuoCompiler::getNodeClass(const string &id)
 {
-	loadModulesIfNeeded();
+	if (! shouldLoadAllModules)
+		modulesToLoad.insert(id);
 
-	VuoCompilerNodeClass *nodeClass = NULL;
+	loadModulesIfNeeded();
 
 	map<string, VuoCompilerNodeClass *> nodeClasses = combinedEnvironment.getNodeClasses();
 	map<string, VuoCompilerNodeClass *>::iterator nodeClassIter = nodeClasses.find(id);
 	if (nodeClassIter != nodeClasses.end())
-		nodeClass = nodeClassIter->second;
-	else
-	{
-		VuoNodeClass *baseNodeClass = VuoCompilerMakeListNodeClass::newNodeClass(id, this, llvmQueue);
-		if (! baseNodeClass)
-			baseNodeClass = VuoCompilerSpecializedNodeClass::newNodeClass(id, this, llvmQueue);
+		return nodeClassIter->second;
 
-		if (baseNodeClass)
-		{
-			nodeClass = baseNodeClass->getCompiler();
-			combinedEnvironment.addNodeClassToCombinedEnvironment( nodeClass, &myEnvironment, getSharedEnvironment() );
-		}
+	VuoNodeClass *baseNodeClass = VuoCompilerSpecializedNodeClass::newNodeClass(id, this, llvmQueue);
+	if (baseNodeClass)
+	{
+		if (static_cast<VuoCompilerSpecializedNodeClass *>(baseNodeClass->getCompiler())->isFullySpecialized())
+			combinedEnvironment.addNodeClassToCombinedEnvironment( baseNodeClass->getCompiler(), &myEnvironment, getSharedEnvironment() );
+		return baseNodeClass->getCompiler();
 	}
 
-	return nodeClass;
+	return NULL;
 }
 
 /**
@@ -2035,6 +2157,9 @@ map<string, VuoCompilerNodeClass *> VuoCompiler::getNodeClasses()
  */
 VuoCompilerType * VuoCompiler::getType(const string &id)
 {
+	if (! shouldLoadAllModules)
+		modulesToLoad.insert(id);
+
 	loadModulesIfNeeded();
 
 	__block VuoCompilerType *type = NULL;
@@ -2045,7 +2170,7 @@ VuoCompilerType * VuoCompiler::getType(const string &id)
 		type = typeIter->second;
 	else if (VuoGenericType::isGenericTypeName(id))
 	{
-		VuoGenericType *genericType = new VuoGenericType(id, set<string>());
+		VuoGenericType *genericType = new VuoGenericType(id, vector<string>());
 		dispatch_sync(llvmQueue, ^{
 						  type = VuoCompilerGenericType::newGenericType(genericType, this);
 					  });
@@ -2168,6 +2293,9 @@ vector<string> VuoCompiler::getCoreVuoDependencies(void)
 	dependencies.push_back("c");
 	dependencies.push_back("CoreFoundation.framework");
 	dependencies.push_back("Foundation.framework");
+#ifdef COVERAGE
+	dependencies.push_back(LLVM_ROOT "/lib/libprofile_rt.dylib");
+#endif
 	return dependencies;
 }
 

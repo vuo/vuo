@@ -60,18 +60,30 @@ VuoModuleMetadata({
 	// https://developer.apple.com/library/mac/documentation/quicktime/reference/QTCaptureDecompressedVideoOutput_Ref/DeprecationAppendix/AppendixADeprecatedAPI.html#//apple_ref/occ/instm/QTCaptureDecompressedVideoOutput/pixelBufferAttributes
 	// https://developer.apple.com/library/mac/qa/qa1501/_index.html
 
-	NSDictionary *pixelBufferAttributes = (NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, k32ARGBPixelFormat);
+   NSDictionary *pixelBufferAttributes = nil;
 
-	// VLog("kCVPixelBufferPixelFormatTypeKey  : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelBufferPixelFormatTypeKey] stringValue] UTF8String]);
-	// VLog("kCVPixelFormatName                : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatName] stringValue] UTF8String]);
-	// VLog("kCVPixelFormatConstant            : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatConstant] stringValue] UTF8String]);
-	// VLog("kCVPixelFormatCodecType           : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatCodecType] stringValue] UTF8String]);
-	// VLog("kCVPixelFormatFourCC              : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatFourCC] stringValue] UTF8String]);
-	// VLog("kCVPixelFormatBitsPerBlock        : %d", [[pixelBufferAttributes objectForKey:(id)kCVPixelFormatBitsPerBlock] integerValue]);
-	// VLog("kCVPixelFormatOpenGLFormat        : %s", VuoGl_stringForConstant([[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLFormat] integerValue]));
-	// VLog("kCVPixelFormatOpenGLInternalFormat: %s", VuoGl_stringForConstant([[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLInternalFormat] integerValue]));
-	// VLog("kCVPixelFormatOpenGLType          : %s", VuoGl_stringForConstant([[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLType] integerValue]));
-	// VLog("kCVPixelFormatOpenGLCompatibility : %d", [[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLCompatibility] integerValue]);
+   // @todo  https://b33p.net/kosada/node/10194
+    SInt32 macMinorVersion;
+    Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+
+    if (macMinorVersion != 8)
+            pixelBufferAttributes = (NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, kCVPixelFormatType_422YpCbCr8);
+    else
+            pixelBufferAttributes = (NSDictionary*)CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, kCVPixelFormatType_32ARGB);
+
+	if (VuoIsDebugEnabled())
+	{
+		VLog("kCVPixelBufferPixelFormatTypeKey  : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelBufferPixelFormatTypeKey] stringValue] UTF8String]);
+		VLog("kCVPixelFormatName                : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatName] stringValue] UTF8String]);
+		VLog("kCVPixelFormatConstant            : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatConstant] stringValue] UTF8String]);
+		VLog("kCVPixelFormatCodecType           : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatCodecType] stringValue] UTF8String]);
+		VLog("kCVPixelFormatFourCC              : %s", [[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatFourCC] stringValue] UTF8String]);
+		VLog("kCVPixelFormatBitsPerBlock        : %ld",[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatBitsPerBlock] integerValue]);
+		VLog("kCVPixelFormatOpenGLFormat        : %s", VuoGl_stringForConstant([[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLFormat] integerValue]));
+		VLog("kCVPixelFormatOpenGLInternalFormat: %s", VuoGl_stringForConstant([[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLInternalFormat] integerValue]));
+		VLog("kCVPixelFormatOpenGLType          : %s", VuoGl_stringForConstant([[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLType] integerValue]));
+		VLog("kCVPixelFormatOpenGLCompatibility : %ld",[[pixelBufferAttributes objectForKey:(id)kCVPixelFormatOpenGLCompatibility] integerValue]);
+	}
 
 	[mCaptureDecompressedVideoOutput setPixelBufferAttributes:pixelBufferAttributes];
 
@@ -188,7 +200,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 - (void) setCaptureDevice:(QTCaptureDevice*)device
 {
 	if(mCaptureDeviceInput)
-	{		
+	{
 		// If the device is changed to a non-default device on startup
 		// (e.g., by the initial event from `List Video Devices`),
 		// it hangs unless it executes on the main queue.
@@ -291,7 +303,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
  */
 - (void) captureOutput:(QTCaptureOutput *)captureOutput didOutputVideoFrame:(CVImageBufferRef)imageBuffer withSampleBuffer:(QTSampleBuffer *)sampleBuffer fromConnection:(QTCaptureConnection *)connection
 {
-	// static bool firstRun = true;
+	static bool firstRun = true;
 
 	GLsizei texWidth    = CVPixelBufferGetWidth(imageBuffer);
 	GLsizei texHeight   = CVPixelBufferGetHeight(imageBuffer);
@@ -312,31 +324,23 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 		}
 	}
 
-	// @todo REMOVE AFTER ALPHA
-	// unless it works, in which case,
-	// DON'T REMOVE AFTER ALPHA
-	// 
-	// CVPixelBufferGetPixelFormatType() isn't responding with anything useful on cwilms computer, so attempt to figure out the color depth
-	// using this round-about way.  4 means 4 bytes per pixel, or 16 bit, and vice-versa for 2 bytes (2yuv is what the Mac cam on my laptop sees)
-	// int colorDepth = (CVPixelBufferGetBytesPerRow(imageBuffer) / texWidth) == 4 ? VuoImageColorDepth_16 : VuoImageColorDepth_8;
+	if (firstRun && VuoIsDebugEnabled())
+	{
+		NSDictionary* outputPixelAttribs = (NSDictionary*) [(QTCaptureDecompressedVideoOutput*)captureOutput pixelBufferAttributes];
 
-	// if(firstRun)
-	// {
-	// 	NSDictionary* outputPixelAttribs = (NSDictionary*) [(QTCaptureDecompressedVideoOutput*)captureOutput pixelBufferAttributes];
+		VLog("kCVPixelBufferPixelFormatTypeKey  : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelBufferPixelFormatTypeKey] stringValue] UTF8String]);
+		VLog("kCVPixelFormatName                : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatName] stringValue] UTF8String]);
+		VLog("kCVPixelFormatConstant            : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatConstant] stringValue] UTF8String]);
+		VLog("kCVPixelFormatCodecType           : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatCodecType] stringValue] UTF8String]);
+		VLog("kCVPixelFormatFourCC              : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatFourCC] stringValue] UTF8String]);
+		VLog("kCVPixelFormatBitsPerBlock        : %ld",[[outputPixelAttribs objectForKey:(id)kCVPixelFormatBitsPerBlock] integerValue]);
+		VLog("kCVPixelFormatOpenGLFormat        : %s", VuoGl_stringForConstant([[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLFormat] integerValue]));
+		VLog("kCVPixelFormatOpenGLInternalFormat: %s", VuoGl_stringForConstant([[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLInternalFormat] integerValue]));
+		VLog("kCVPixelFormatOpenGLType          : %s", VuoGl_stringForConstant([[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLType] integerValue]));
+		VLog("kCVPixelFormatOpenGLCompatibility : %ld",[[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLCompatibility] integerValue]);
 
-	// 	VLog("kCVPixelBufferPixelFormatTypeKey  : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelBufferPixelFormatTypeKey] stringValue] UTF8String]);
-	// 	VLog("kCVPixelFormatName                : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatName] stringValue] UTF8String]);
-	// 	VLog("kCVPixelFormatConstant            : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatConstant] stringValue] UTF8String]);
-	// 	VLog("kCVPixelFormatCodecType           : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatCodecType] stringValue] UTF8String]);
-	// 	VLog("kCVPixelFormatFourCC              : %s", [[[outputPixelAttribs objectForKey:(id)kCVPixelFormatFourCC] stringValue] UTF8String]);
-	// 	VLog("kCVPixelFormatBitsPerBlock        : %d", [[outputPixelAttribs objectForKey:(id)kCVPixelFormatBitsPerBlock] integerValue]);
-	// 	VLog("kCVPixelFormatOpenGLFormat        : %s", VuoGl_stringForConstant([[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLFormat] integerValue]));
-	// 	VLog("kCVPixelFormatOpenGLInternalFormat: %s", VuoGl_stringForConstant([[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLInternalFormat] integerValue]));
-	// 	VLog("kCVPixelFormatOpenGLType          : %s", VuoGl_stringForConstant([[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLType] integerValue]));
-	// 	VLog("kCVPixelFormatOpenGLCompatibility : %d", [[outputPixelAttribs objectForKey:(id)kCVPixelFormatOpenGLCompatibility] integerValue]);
-
-	// 	VLog("--------------------------");
-	// }
+		VLog("--------------------------");
+	}
 
 	if(callback == NULL) return;
 
@@ -348,92 +352,90 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 	{
 		BOOL isFlipped = CVImageBufferIsFlipped(imageBuffer);
 
-		// if(firstRun)
-		// {
-		// 	CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(imageBuffer);
-		// 	CGColorSpaceModel model = CGColorSpaceGetModel(colorSpace);
+		if (firstRun && VuoIsDebugEnabled())
+		{
+			CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(imageBuffer);
+			CGColorSpaceModel model = CGColorSpaceGetModel(colorSpace);
 
-		// 	if( model == kCGColorSpaceModelUnknown )
-		// 		VLog("ColorSpace: kCGColorSpaceModelUnknown");
-		// 	else
-		// 	if( model == kCGColorSpaceModelMonochrome )
-		// 		VLog("ColorSpace: kCGColorSpaceModelMonochrome");
-		// 	else
-		// 	if( model == kCGColorSpaceModelRGB )
-		// 		VLog("ColorSpace: kCGColorSpaceModelRGB");
-		// 	else
-		// 	if( model == kCGColorSpaceModelCMYK )
-		// 		VLog("ColorSpace: kCGColorSpaceModelCMYK");
-		// 	else
-		// 	if( model == kCGColorSpaceModelLab )
-		// 		VLog("ColorSpace: kCGColorSpaceModelLab");
-		// 	else
-		// 	if( model == kCGColorSpaceModelDeviceN )
-		// 		VLog("ColorSpace: kCGColorSpaceModelDeviceN");
-		// 	else
-		// 	if( model == kCGColorSpaceModelIndexed )
-		// 		VLog("ColorSpace: kCGColorSpaceModelIndexed");
-		// 	else
-		// 	if( model == kCGColorSpaceModelPattern )
-		// 		VLog("ColorSpace: kCGColorSpaceModelPattern");
-		// 	else
-		// 		VLog("ColorSpace: Unknown!!");
+			if( model == kCGColorSpaceModelUnknown )
+				VLog("ColorSpace: kCGColorSpaceModelUnknown");
+			else
+			if( model == kCGColorSpaceModelMonochrome )
+				VLog("ColorSpace: kCGColorSpaceModelMonochrome");
+			else
+			if( model == kCGColorSpaceModelRGB )
+				VLog("ColorSpace: kCGColorSpaceModelRGB");
+			else
+			if( model == kCGColorSpaceModelCMYK )
+				VLog("ColorSpace: kCGColorSpaceModelCMYK");
+			else
+			if( model == kCGColorSpaceModelLab )
+				VLog("ColorSpace: kCGColorSpaceModelLab");
+			else
+			if( model == kCGColorSpaceModelDeviceN )
+				VLog("ColorSpace: kCGColorSpaceModelDeviceN");
+			else
+			if( model == kCGColorSpaceModelIndexed )
+				VLog("ColorSpace: kCGColorSpaceModelIndexed");
+			else
+			if( model == kCGColorSpaceModelPattern )
+				VLog("ColorSpace: kCGColorSpaceModelPattern");
+			else
+				VLog("ColorSpace: Unknown!!");
 
-		// 	VLog("Frame [%s] %dx%d flipped=%d bpr=%d ds=%d (planar=%d planes=%d %dx%d bpr=%d)",
-		// 		FourCC2Str(CVPixelBufferGetPixelFormatType(imageBuffer)),
-		// 		texWidth, texHeight,
-		// 		isFlipped,
-		// 		CVPixelBufferGetBytesPerRow(imageBuffer),
-		// 		CVPixelBufferGetDataSize(imageBuffer),
-		// 		CVPixelBufferIsPlanar(imageBuffer),
-		// 		CVPixelBufferGetPlaneCount(imageBuffer),
-		// 		CVPixelBufferGetWidthOfPlane(imageBuffer, 0), CVPixelBufferGetHeightOfPlane(imageBuffer, 0),
-		// 		CVPixelBufferGetBytesPerRowOfPlane(imageBuffer, 0)
-		// 	);
+			VLog("Frame [%s] %dx%d flipped=%d bpr=%ld ds=%ld (planar=%d planes=%ld %ldx%ld bpr=%ld)",
+				FourCC2Str(CVPixelBufferGetPixelFormatType(imageBuffer)),
+				texWidth, texHeight,
+				isFlipped,
+				CVPixelBufferGetBytesPerRow(imageBuffer),
+				CVPixelBufferGetDataSize(imageBuffer),
+				CVPixelBufferIsPlanar(imageBuffer),
+				CVPixelBufferGetPlaneCount(imageBuffer),
+				CVPixelBufferGetWidthOfPlane(imageBuffer, 0), CVPixelBufferGetHeightOfPlane(imageBuffer, 0),
+				CVPixelBufferGetBytesPerRowOfPlane(imageBuffer, 0)
+			);
 
-		// 	VLog("bytes per block: %i", CVPixelBufferGetBytesPerRow(imageBuffer) / texWidth);
-		// 	VLog("color depth: %s", (colorDepth == VuoImageColorDepth_8 ? "VuoImageColorDepth_8" : "VuoImageColorDepth_16") );
+			VLog("bytes per block: %li", CVPixelBufferGetBytesPerRow(imageBuffer) / texWidth);
 
-		// 	size_t extraColumnsOnLeft;
-		// 	size_t extraColumnsOnRight;
-		// 	size_t extraRowsOnTop;
-		// 	size_t extraRowsOnBottom;
+			size_t extraColumnsOnLeft;
+			size_t extraColumnsOnRight;
+			size_t extraRowsOnTop;
+			size_t extraRowsOnBottom;
 
-		// 	CVPixelBufferGetExtendedPixels(imageBuffer, &extraColumnsOnLeft, &extraColumnsOnRight, &extraRowsOnTop, &extraRowsOnBottom );
+			CVPixelBufferGetExtendedPixels(imageBuffer, &extraColumnsOnLeft, &extraColumnsOnRight, &extraRowsOnTop, &extraRowsOnBottom );
 
-		// 	VLog("extraColumnsOnLeft: %u extraColumnsOnRight: %u extraRowsOnTop: %u extraRowsOnBottom: %u", 
-		// 		extraColumnsOnLeft,
-		// 		extraColumnsOnRight,
-		// 		extraRowsOnTop,
-		// 		extraRowsOnBottom);
-		// }
+			VLog("extraColumnsOnLeft: %lu extraColumnsOnRight: %lu extraRowsOnTop: %lu extraRowsOnBottom: %lu",
+				extraColumnsOnLeft,
+				extraColumnsOnRight,
+				extraRowsOnTop,
+				extraRowsOnBottom);
+		}
 
 		CVPixelBufferLockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
 
 			GLvoid *baseAddress = CVPixelBufferGetBaseAddress(imageBuffer);
 
-			// @todo REMOVE
-			// if(firstRun)
-			// {
-			// 	CIImage *ciImage = [CIImage imageWithCVImageBuffer:imageBuffer];
-			// 	CGRect rect = [ciImage extent];
+			if (firstRun && VuoIsDebugEnabled())
+			{
+				CIImage *ciImage = [CIImage imageWithCVImageBuffer:imageBuffer];
+				CGRect rect = [ciImage extent];
 
-			// 	VLog("CIImage Size: %f, %f", rect.size.width, rect.size.height);
+				VLog("CIImage Size: %f, %f", rect.size.width, rect.size.height);
 
-			// 	NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCIImage:ciImage];
-				
-			// 	NSSize size;
-			// 	size.width = rect.size.width;
-			// 	size.width = rect.size.height;
-			// 	[newRep setSize:size];
+				NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCIImage:ciImage];
 
-			// 	NSData *pngData = [newRep representationUsingType:NSPNGFileType properties:nil];
-			// 	[newRep autorelease];
+				NSSize size;
+				size.width = rect.size.width;
+				size.width = rect.size.height;
+				[newRep setSize:size];
 
-			// 	[pngData writeToFile: [@"/tmp/Vuo-QT-Debug-Frame.png" stringByExpandingTildeInPath] atomically: YES];
+				NSData *pngData = [newRep representationUsingType:NSPNGFileType properties:nil];
+				[newRep autorelease];
 
-			// 	firstRun = false;
-			// }
+				[pngData writeToFile: [@"/tmp/Vuo-QT-Debug-Frame.png" stringByExpandingTildeInPath] atomically: YES];
+
+				firstRun = false;
+			}
 
 			if(isFlipped)
 			{

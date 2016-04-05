@@ -30,10 +30,10 @@ public:
 		whitelistedTypes ///< Compatible only with certain types.
 	};
 
-	VuoGenericType(string typeName, set<string> compatibleSpecializedTypes);
+	VuoGenericType(string typeName, vector<string> compatibleSpecializedTypes);
 	bool isSpecializedTypeCompatible(string typeName);
 	bool isGenericTypeCompatible(VuoGenericType *otherType);
-	set<string> getCompatibleSpecializedTypes(Compatibility &compatibility);
+	vector<string> getCompatibleSpecializedTypes(Compatibility &compatibility);
 
 	static bool isGenericTypeName(string typeName);
 	static size_t findGenericTypeName(string stringToSearch, size_t startPos, string &genericTypeName);
@@ -42,7 +42,7 @@ public:
 	static void sortGenericTypeNames(vector<string> &genericTypeNames);
 
 private:
-	set<string> compatibleSpecializedTypes;
+	vector<string> compatibleSpecializedTypes;
 
 	static const string genericTypeNamePrefix;
 	static bool isPairOfGenericTypesSorted(string type1, string type2);

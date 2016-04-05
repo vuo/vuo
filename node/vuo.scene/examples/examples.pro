@@ -9,17 +9,22 @@ EXAMPLE_SOURCES += \
 	ChangeTrafficSignal.vuo \
 	CompareCameras.vuo \
 	CompareLights.vuo \
+	DentRoom.vuo \
+	DisplayCube.vuo \
 	DisplayRowOfSpheres.vuo \
 	DisplayScene.vuo \
 	DisplaySceneWithFloor.vuo \
 	DisplaySphere.vuo \
-	DisplaySquare.vuo \
 	DivideSphere.vuo \
 	ExplodeSphere.vuo \
 	FacetSphere.vuo \
+	MakeRuggedTerrain.vuo \
+	MoveBeadsOnString.vuo \
 	MoveSpinningSphere.vuo \
 	PaintSceneWithCheckerboard.vuo \
+	PinchRectangles.vuo \
 	PinchSphere.vuo \
+	RewindCheckerboardExplosion.vuo \
 	RippleGrid.vuo \
 	RippleImageOfSphere.vuo \
 	SkewSphere.vuo \

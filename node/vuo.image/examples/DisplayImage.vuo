@@ -9,10 +9,12 @@
 
 digraph G
 {
-FireonStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="123,241" _started_eventThrottling="enqueue"];
-GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="277,278" fillcolor="violet" _url="\"Sunset.jpg\""];
-RenderImagetoWindow [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="420,278" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="105,150"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="270,195" fillcolor="violet" _url="\"Sunset.jpg\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<height>height\r|<width>width\r" _time_type="VuoReal" _height_type="VuoInteger" _width_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
-FireonStart:started -> GetImage:refresh;
-GetImage:image -> RenderImagetoWindow:image;
+AllowFirstEvent:firstEvent -> GetImage:refresh;
+PublishedInputs:time -> AllowFirstEvent:event;
+GetImage:image -> PublishedOutputs:outputImage;
 }

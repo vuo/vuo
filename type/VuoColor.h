@@ -10,7 +10,9 @@
 #ifndef VUOCOLOR_H
 #define VUOCOLOR_H
 
+#include "VuoBoolean.h"
 #include "VuoReal.h"
+#include "VuoText.h"
 
 /// @{
 typedef const struct VuoList_VuoColor_struct { void *l; } * VuoList_VuoColor;
@@ -65,8 +67,10 @@ static inline void VuoColor_getRGBA(VuoColor color, VuoReal *r, VuoReal *g, VuoR
 	*a = color.a;
 }
 
-VuoColor VuoColor_makeWithHSLA(VuoReal h, VuoReal s, VuoReal l, VuoReal a);
+VuoColor VuoColor_makeWithHSLA(VuoReal hue, VuoReal saturation, VuoReal luminosity, VuoReal alpha);
 void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoReal *a);
+
+VuoText VuoColor_getHex(VuoColor color, VuoBoolean includeAlpha);
 
 VuoColor VuoColor_average(VuoList_VuoColor colors);
 

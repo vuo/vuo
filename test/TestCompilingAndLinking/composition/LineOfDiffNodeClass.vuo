@@ -1,0 +1,114 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="200,673" _horizontalAlignment="\"left\"" _horizontalMargin="0.000000" _verticalAlignment="\"top\"" _verticalMargin="0.000000"];
+ApplyMask [type="vuo.image.apply.mask" version="1.1.1" label="Apply Mask|<refresh>refresh\l|<image>image\l|<mask>mask\l|<maskedImage>maskedImage\r" pos="429,490"];
+AreAllHit [type="vuo.event.areAllHit.2" version="1.0.0" label="Are All Hit|<refresh>refresh\l|<input1>input1\l|<input2>input2\l|<allHit>allHit\r" pos="222,335"];
+BecameFalse [type="vuo.event.becameFalse" version="1.0.0" label="Became False|<refresh>refresh\l|<value>value\l|<becameFalse>becameFalse\r" pos="435,351" _value="false"];
+BecameTrue [type="vuo.event.becameTrue" version="1.0.0" label="Became True|<refresh>refresh\l|<value>value\l|<becameTrue>becameTrue\r" pos="661,350" _value="false"];
+Bend3DObject [type="vuo.scene.bend" version="1.0.1" label="Bend 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<radius>radius\l|<direction>direction\l|<bentObject>bentObject\r" pos="897,1625" _amount="30.000000" _radius="0.500000" _direction="0.000000"];
+BlendColors [type="vuo.color.blend" version="1.0.0" label="Blend Colors|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blendedColor>blendedColor\r" pos="446,193" _background="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _foreground="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _blendMode="\"normal\"" _foregroundOpacity="0.500000"];
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="666,474" _blendMode="\"normal\"" _foregroundOpacity="0.500000"];
+BlurImage [type="vuo.image.blur" version="1.2.1" label="Blur Image|<refresh>refresh\l|<image>image\l|<radius>radius\l|<expandBounds>expandBounds\l|<blurredImage>blurredImage\r" pos="894,482" _radius="4" _expandBounds="false"];
+BulgeImage [type="vuo.image.bulge" version="1.0.0" label="Bulge Image|<refresh>refresh\l|<image>image\l|<center>center\l|<scale>scale\l|<radius>radius\l|<bulgedImage>bulgedImage\r" pos="1111,476" _center="{\"x\":0,\"y\":0}" _scale="0.500000" _radius="0.500000"];
+CalculateCosine [type="vuo.math.cos" version="1.0.0" label="Calculate Cosine|<refresh>refresh\l|<angle>angle\l|<cosine>cosine\r" pos="807,1158"];
+CalculateLoudness [type="vuo.audio.analyze.loudness" version="2.0.0" label="Calculate Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\r" pos="208,52"];
+Change3DObjectBlending [type="vuo.scene.blendMode" version="1.0.0" label="Change 3D Object Blending|<refresh>refresh\l|<object>object\l|<blendMode>blendMode\l|<blendedObject>blendedObject\r" pos="1129,1633" _blendMode="\"linear-dodge\""];
+ChangeLayerBlending [type="vuo.layer.blendMode" version="1.0.0" label="Change Layer Blending|<refresh>refresh\l|<layer>layer\l|<blendMode>blendMode\l|<blendedLayer>blendedLayer\r" pos="460,678" _blendMode="\"linear-dodge\""];
+ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Size|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="1080,355" _width="640" _height="480"];
+ChangeWindowTitle2 [type="vuo.window.title" version="1.0.0" label="Change Window Title|<refresh>refresh\l|<title>title\l|<property>property\r" pos="855,352"];
+CheckMouseStatus [type="vuo.mouse.status" version="1.0.1" label="Check Mouse Status|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<position>position\r|<isPressed>isPressed\r" pos="853,1458" _button="\"left\"" _modifierKey="\"any\""];
+DivideWithRemainder [type="vuo.math.divide.VuoInteger" version="2.0.1" label="Divide with Remainder|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r|<remainder>remainder\r" pos="1034,1149" _a="0" _b="1"];
+FetchRSSItems [type="vuo.rss.fetch" version="1.0.0" label="Fetch RSS Items|<refresh>refresh\l|<url>url\l|<fetchImages>fetchImages\l|<title>title\r|<description>description\r|<items>items\r" pos="172,1635" _fetchImages="true"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,50" _started_eventThrottling="enqueue"];
+Get2DPointValues [type="vuo.point.get.VuoPoint2d" version="2.0.0" label="Get 2D Point Values|<refresh>refresh\l|<point>point\l|<x>x\r|<y>y\r" pos="1087,1462" _point="{\"x\":0,\"y\":0}"];
+GetAudioFileInfo [type="vuo.audio.file.info" version="1.0.0" label="Get Audio File Info|<refresh>refresh\l|<url>url\l|<duration>duration\r|<channelCount>channelCount\r|<sampleRate>sampleRate\r" pos="410,52" _url="\"\""];
+GetAudioInputValues [type="vuo.audio.get.input" version="1.0.0" label="Get Audio Input Values|<refresh>refresh\l|<device>device\l|<id>id\r|<name>name\r|<channelCount>channelCount\r" pos="603,53"];
+GetAudioOutputValues [type="vuo.audio.get.output" version="1.0.0" label="Get Audio Output Values|<refresh>refresh\l|<device>device\l|<id>id\r|<name>name\r|<channelCount>channelCount\r" pos="819,57"];
+GetControllerValues [type="vuo.midi.get.controller" version="1.0.0" label="Get Controller Values|<refresh>refresh\l|<controller>controller\l|<channel>channel\r|<controllerNumber>controllerNumber\r|<value>value\r" pos="191,1282"];
+GetMIDIInputValues [type="vuo.midi.get.input" version="1.0.0" label="Get MIDI Input Values|<refresh>refresh\l|<device>device\l|<id>id\r|<name>name\r" pos="427,1295"];
+GetMIDIOutputValues [type="vuo.midi.get.output" version="1.0.0" label="Get MIDI Output Values|<refresh>refresh\l|<device>device\l|<id>id\r|<name>name\r" pos="840,1297"];
+GetMovieInfo [type="vuo.video.info" version="2.0.0" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="421,1462" _url="\"\""];
+GetNoteValues [type="vuo.midi.get.note" version="1.0.0" label="Get Note Values|<refresh>refresh\l|<note>note\l|<channel>channel\r|<isNoteOn>isNoteOn\r|<velocity>velocity\r|<noteNumber>noteNumber\r" pos="657,1292"];
+GetPitchBendValues [type="vuo.midi.get.pitchBend" version="1.0.0" label="Get Pitch Bend Values|<refresh>refresh\l|<pitchBend>pitchBend\l|<channel>channel\r|<value>value\r" pos="1077,1299"];
+GetRGBColorValues [type="vuo.color.get.rgb" version="2.0.0" label="Get RGB Color Values|<refresh>refresh\l|<color>color\l|<red>red\r|<green>green\r|<blue>blue\r|<opacity>opacity\r" pos="638,188" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+GetRSSItemValues [type="vuo.rss.get" version="1.0.0" label="Get RSS Item Values|<refresh>refresh\l|<item>item\l|<title>title\r|<author>author\r|<description>description\r|<url>url\r|<image>image\r" pos="403,1637"];
+GetRenderedLayerBounds [type="vuo.layer.bounds.rendered" version="1.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="677,675"];
+ListFiles [type="vuo.file.list" version="1.0.0" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="231,184" _folder="\"\"" _includeSubfolders="false" _fileType="\"image\""];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="1151,679" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _height="2.000000"];
+MakeFont [type="vuo.font.make" version="1.0.0" label="Make Font|<refresh>refresh\l|<fontName>fontName\l|<pointSize>pointSize\l|<underlined>underlined\l|<color>color\l|<characterSpacing>characterSpacing\l|<lineSpacing>lineSpacing\l|<font>font\r" pos="218,484" _fontName="\"HelveticaNeue-Light\"" _pointSize="28.000000" _underlined="false" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _characterSpacing="1.000000" _lineSpacing="1.000000"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="878,190" _hue="0.000000" _saturation="1.000000" _lightness="0.500000" _opacity="1.000000"];
+MakeRGBColor [type="vuo.color.make.rgb" version="2.0.0" label="Make RGB Color|<refresh>refresh\l|<red>red\l|<green>green\l|<blue>blue\l|<opacity>opacity\l|<color>color\r" pos="1084,194" _red="1.000000" _green="0.000000" _blue="0.000000" _opacity="1.000000"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="940,677" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+MakeSquareMesh [type="vuo.mesh.make.square" version="2.0.0" label="Make Square Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="802,1014"];
+MakeTriangleMesh [type="vuo.mesh.make.triangle" version="2.0.0" label="Make Triangle Mesh|<refresh>refresh\l|<mesh>mesh\r" pos="1023,1017"];
+MakeVideoInput [type="vuo.video.make.input" version="1.0.0" label="Make Video Input|<refresh>refresh\l|<name>name\l|<device>device\r" pos="182,1458" _name="\"\""];
+MakeWaveformImage [type="vuo.audio.image.waveform" version="1.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<amplitude>amplitude\l|<image>image\r" pos="1059,58" _fillColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":0.250000}" _lineColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _amplitude="128"];
+Negate [type="vuo.logic.negate" version="1.0.0" label="Negate|<refresh>refresh\l|<value>value\l|<notValue>notValue\r" pos="228,1020" _value="false"];
+Round [type="vuo.math.round" version="2.0.0" label="Round|<refresh>refresh\l|<real>real\l|<rounded>rounded\r" pos="227,1159" _real="0.000000"];
+RoundDown [type="vuo.math.roundDown" version="2.0.0" label="Round Down|<refresh>refresh\l|<real>real\l|<roundedDown>roundedDown\r" pos="413,1153" _real="0.000000"];
+RoundUp [type="vuo.math.roundUp" version="2.0.0" label="Round Up|<refresh>refresh\l|<real>real\l|<roundedUp>roundedUp\r" pos="624,1150" _real="0.000000"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="633,1633" _keepFront="true"];
+Switch [type="vuo.logic.switch" version="1.0.0" label="Switch|<refresh>refresh\l|<toggle>toggle\l|<turnOn>turnOn\l|<turnOff>turnOff\l|<value>value\r" pos="413,1010"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="589,1013"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="665,1447" _time="0.000000" _wave="\"sine\"" _period="1.000000" _center="0.000000" _amplitude="1.000000"];
+
+AlignLayerToWindow:alignedLayer -> ChangeLayerBlending:refresh;
+ApplyMask:maskedImage -> BlendImages:refresh;
+AreAllHit:allHit -> BecameFalse:refresh;
+BecameFalse:becameFalse -> BecameTrue:refresh;
+BecameTrue:becameTrue -> ChangeWindowTitle2:refresh;
+Bend3DObject:bentObject -> Change3DObjectBlending:refresh;
+BlendColors:blendedColor -> GetRGBColorValues:refresh;
+BlendImages:blended -> BlurImage:refresh;
+BlurImage:blurredImage -> BulgeImage:refresh;
+BulgeImage:bulgedImage -> AlignLayerToWindow:refresh;
+CalculateCosine:cosine -> DivideWithRemainder:refresh;
+CalculateLoudness:loudness -> GetAudioFileInfo:refresh;
+ChangeLayerBlending:blendedLayer -> GetRenderedLayerBounds:refresh;
+ChangeWindowSize:property -> MakeFont:refresh;
+ChangeWindowTitle2:property -> ChangeWindowSize:refresh;
+CheckMouseStatus:position -> Get2DPointValues:refresh;
+DivideWithRemainder:quotient -> GetControllerValues:refresh;
+FetchRSSItems:title -> GetRSSItemValues:refresh;
+FireOnStart:started -> CalculateLoudness:samples;
+Get2DPointValues:x -> FetchRSSItems:refresh;
+GetAudioFileInfo:duration -> GetAudioInputValues:refresh;
+GetAudioInputValues:id -> GetAudioOutputValues:refresh;
+GetAudioOutputValues:id -> MakeWaveformImage:refresh;
+GetControllerValues:channel -> GetMIDIInputValues:refresh;
+GetMIDIInputValues:id -> GetNoteValues:refresh;
+GetMIDIOutputValues:id -> GetPitchBendValues:refresh;
+GetMovieInfo:duration -> Wave:refresh;
+GetNoteValues:channel -> GetMIDIOutputValues:refresh;
+GetPitchBendValues:channel -> MakeVideoInput:refresh;
+GetRGBColorValues:red -> MakeHSLColor:refresh;
+GetRSSItemValues:title -> ShowBackOf3DObject:refresh;
+GetRenderedLayerBounds:center -> MakeScaledLayer:refresh;
+ListFiles:files -> BlendColors:refresh;
+MakeColorLayer:layer -> Negate:refresh;
+MakeFont:font -> ApplyMask:refresh;
+MakeHSLColor:color -> MakeRGBColor:refresh;
+MakeRGBColor:color -> AreAllHit:refresh;
+MakeScaledLayer:layer -> MakeColorLayer:refresh;
+MakeSquareMesh:mesh -> MakeTriangleMesh:refresh;
+MakeTriangleMesh:mesh -> Round:refresh;
+MakeVideoInput:device -> GetMovieInfo:refresh;
+MakeWaveformImage:image -> ListFiles:refresh;
+Negate:notValue -> Switch:refresh;
+Round:rounded -> RoundDown:refresh;
+RoundDown:roundedDown -> RoundUp:refresh;
+RoundUp:roundedUp -> CalculateCosine:refresh;
+ShowBackOf3DObject:backObject -> Bend3DObject:refresh;
+Switch:value -> Toggle:refresh;
+Toggle:value -> MakeSquareMesh:refresh;
+Wave:value -> CheckMouseStatus:refresh;
+}

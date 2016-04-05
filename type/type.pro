@@ -84,11 +84,13 @@ OTHER_FILES += \
 INCLUDEPATH += \
 	$$ROOT/library \
 	$$ROOT/node \
+	$$ROOT/node/vuo.data \
 	$$ROOT/node/vuo.font \
 	$$ROOT/runtime \
 	$$ROOT/type/list
 
 TYPE_INCLUDEPATH += \
+	../node/vuo.data \
 	../node/vuo.font
 
 HEADERS += \

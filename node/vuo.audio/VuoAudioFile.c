@@ -20,6 +20,8 @@
 
 #include "module.h"
 
+#include "VuoWindow.h"
+
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoAudioFile",
@@ -30,6 +32,7 @@ VuoModuleMetadata({
 						 "VuoReal",
 						 "VuoText",
 						 "VuoUrlFetch",
+						 "VuoWindow",
 						 "VuoList_VuoAudioSamples",
 						 "AudioToolbox.framework",
 						 "CoreFoundation.framework"
@@ -42,7 +45,7 @@ VuoModuleMetadata({
  */
 static char *stringWithOSStatus(OSStatus error)
 {
-	char *errorString = (char *)malloc(7);
+	char *errorString = (char *)calloc(1, 7);
 
 	*(UInt32 *)(errorString + 1) = CFSwapInt32HostToBig(error);
 	if (isprint(errorString[1]) && isprint(errorString[2]) && isprint(errorString[3]) && isprint(errorString[4]))
@@ -105,6 +108,7 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 			OSStatus err = ExtAudioFileRead(afi->audioFile, &numFrames, &bufferList);
 			if (err != noErr)
 			{
+				free(buffer);
 				char *errStr = stringWithOSStatus(err);
 				VLog("Error reading samples: %s", errStr);
 				free(errStr);
@@ -145,6 +149,7 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 
 		VuoListAppendValue_VuoAudioSamples(channels, samples);
 	}
+	free(buffer);
 
 	dispatch_sync(afi->audioFileQueue, ^{
 					  if (afi->decodedChannels)
@@ -194,7 +199,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 	afi->finishedPlayback = NULL;
 
 	{
-		VuoText normalizedURL = VuoUrl_normalize(url, true);
+		VuoText normalizedURL = VuoUrl_normalize(url, false);
 		VuoRetain(normalizedURL);
 		CFStringRef urlCFS = CFStringCreateWithCString(NULL, normalizedURL, kCFStringEncodingUTF8);
 		CFURLRef url = CFURLCreateWithString(NULL, urlCFS, NULL);
@@ -206,17 +211,10 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			goto fail;
 		}
 
-		__block OSStatus err;
-		// Make sure ExtAudioFileOpenURL()'s global initialization happens after VuoWindowApplication_init().
 		// https://b33p.net/kosada/node/7971
-		static bool alreadyCalledOnMainThread = false;
-		if (alreadyCalledOnMainThread)
-			err = ExtAudioFileOpenURL(url, &afi->audioFile);
-		else
-			dispatch_sync(dispatch_get_main_queue(), ^{
-							  err = ExtAudioFileOpenURL(url, &afi->audioFile);
-							  alreadyCalledOnMainThread = true;
-						  });
+		VuoApp_init();
+
+		OSStatus err = ExtAudioFileOpenURL(url, &afi->audioFile);
 		CFRelease(urlCFS);
 		CFRelease(url);
 		if (err != noErr)
@@ -276,33 +274,33 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 
 	{
 		AudioConverterRef ac;
+		UInt32 size = sizeof(AudioConverterRef);
+		bzero(&ac, size);
+		OSStatus err = ExtAudioFileGetProperty(afi->audioFile, kExtAudioFileProperty_AudioConverter, &size, &ac);
+		if (err != noErr)
 		{
-			UInt32 size = sizeof(AudioConverterRef);
-			bzero(&ac, size);
-			OSStatus err = ExtAudioFileGetProperty(afi->audioFile, kExtAudioFileProperty_AudioConverter, &size, &ac);
-			if (err != noErr)
-			{
-				char *errStr = stringWithOSStatus(err);
-				VLog("Error getting audio converter info for '%s': %s", url, errStr);
-				free(errStr);
-				goto fail;
-			}
+			char *errStr = stringWithOSStatus(err);
+			VLog("Error getting audio converter info for '%s': %s", url, errStr);
+			free(errStr);
 		}
-
-		AudioConverterPrimeInfo pi;
+		else
 		{
+			AudioConverterPrimeInfo pi;
 			UInt32 size = sizeof(AudioConverterPrimeInfo);
 			bzero(&pi, size);
 			OSStatus err = AudioConverterGetProperty(ac, kAudioConverterPrimeInfo, &size, &pi);
 			if (err != noErr)
 			{
-				char *errStr = stringWithOSStatus(err);
-				VLog("Error getting header info for '%s': %s", url, errStr);
-				free(errStr);
-				goto fail;
+				if (err != kAudioFormatUnsupportedPropertyError)
+				{
+					char *errStr = stringWithOSStatus(err);
+					VLog("Error getting header info for '%s': %s", url, errStr);
+					free(errStr);
+				}
 			}
+			else
+				afi->headerFrames = pi.leadingFrames;
 		}
-		afi->headerFrames = pi.leadingFrames;
 	}
 
 	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", NULL);

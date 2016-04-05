@@ -186,7 +186,6 @@ VuoModuleMetadata({
 
 	[self finishLaunching];
 
-	/// @todo event tracking run loop mode (https://b33p.net/kosada/node/5961)
 	timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,dispatch_get_main_queue());
 	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC/100, NSEC_PER_SEC/100);
 	dispatch_source_set_event_handler(timer, ^{

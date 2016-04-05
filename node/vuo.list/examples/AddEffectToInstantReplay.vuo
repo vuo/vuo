@@ -9,7 +9,7 @@
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.1.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="716,555" _saturation="0.000000" _hueShift="0" _contrast="1.000000" _brightness="0" _exposure="0.100000" _gamma="1.000000"];
+AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="716,555" _saturation="0.000000" _hueShift="0" _contrast="1.000000" _brightness="0" _exposure="0.100000" _gamma="1.000000"];
 AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1582,249" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.000000"];
 ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="981,152"];
 ConvertFrameToImage4 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="837,761"];
@@ -23,9 +23,9 @@ MakeList7 [type="vuo.list.make.0.VuoVideoFrame" version="2.0.0" label="Make List
 MakeScaledLayer2 [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1429,31" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
 MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1385,263" _text="\"Click to switch between live video and instant replay.\"" _font="{\"fontName\":\"HelveticaNeue-Bold\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":0.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.100000}"];
 ProcessList3 [type="vuo.list.process.VuoVideoFrame.VuoImage" version="1.0.0" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="684,334" fillcolor="violet" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-ReceiveLiveVideo [type="vuo.video.receive" version="1.0.0" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="141,190" _receivedFrame_eventThrottling="drop"];
-ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.1" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="250,30" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1741,29" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ReceiveLiveVideo [type="vuo.video.receive" version="1.0.1" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="141,190" _receivedFrame_eventThrottling="drop"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.2" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="250,30" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1741,29" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SelectInput3 [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1131,75"];
 Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="949,39"];
 
@@ -51,6 +51,7 @@ ReceiveLiveVideo:receivedFrame -> Enqueue2:addItem;
 ReceiveMouseButtons:pressed -> HoldList2:refresh;
 ReceiveMouseButtons:pressed -> Toggle:toggle;
 RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
 SelectInput3:out -> MakeScaledLayer2:image;
 Toggle:value -> SelectInput3:which;
 }

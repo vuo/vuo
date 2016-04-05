@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Displays the name and URL of each serial device connected to the computer.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="375,390" _separator="\"\\n\""];
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="510,195" _separator="\"\\n\\n\""];
+CountItemsInList2 [type="vuo.list.count.VuoText" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="480,75"];
+GetSerialDeviceValues [type="vuo.serial.get" version="1.0.0" label="Get Serial Device Values|<refresh>refresh\l|<device>device\l|<name>name\r|<url>url\r" pos="90,390" fillcolor="violet"];
+IsGreaterThan3 [type="vuo.math.isGreaterThan.VuoInteger" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="675,75" _b="0"];
+ListSerialDevices [type="vuo.serial.listDevices" version="1.0.0" label="List Serial Devices|<refresh>refresh\l|<devices>devices\r" pos="45,195" fillcolor="violet" _devices_eventThrottling="enqueue"];
+MakeList12 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="889,401" fillcolor="green"];
+MakeList14 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="919,416" fillcolor="green"];
+MakeList5 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="324,401"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="720,390" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+ProcessList5 [type="vuo.list.process.VuoSerialDevice.VuoText" version="1.0.0" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="255,195" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="960,390" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="855,120" _falseOption="\"No serial devices connected\""];
+
+AppendTexts2:compositeText -> SelectInput2:trueOption;
+AppendTexts:compositeText -> ProcessList5:processedItem;
+CountItemsInList2:itemCount -> IsGreaterThan3:a;
+GetSerialDeviceValues:name -> MakeList5:1;
+GetSerialDeviceValues:url -> MakeList5:2;
+IsGreaterThan3:greaterThan -> SelectInput2:which;
+ListSerialDevices:devices -> ProcessList5:fire;
+MakeList12:list -> RenderLayersToWindow:layers;
+MakeList14:list -> RenderLayersToWindow:setWindowProperties;
+MakeList5:list -> AppendTexts:texts;
+MakeTextLayer2:layer -> MakeList12:1;
+ProcessList5:processItem -> GetSerialDeviceValues:device;
+ProcessList5:processedList -> AppendTexts2:texts;
+ProcessList5:processedList -> CountItemsInList2:list;
+SelectInput2:out -> MakeTextLayer2:text;
+}

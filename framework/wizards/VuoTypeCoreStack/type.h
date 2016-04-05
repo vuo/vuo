@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef %TypeName:u%_H
-#define %TypeName:u%_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -49,5 +48,3 @@ void %TypeName%_release(%TypeName% value);
 /**
  * @}
  */
-
-#endif // %TypeName:u%_H

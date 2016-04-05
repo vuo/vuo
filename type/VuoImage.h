@@ -12,6 +12,7 @@
 
 #include "VuoBoolean.h"
 #include "VuoColor.h"
+#include "VuoGlContext.h"
 #include "VuoImageColorDepth.h"
 #include "VuoImageWrapMode.h"
 #include "VuoPoint2d.h"
@@ -51,17 +52,18 @@ struct _VuoImage
 	unsigned long int pixelsWide; ///< The horizontal size of the image, in pixels.
 	unsigned long int pixelsHigh; ///< The vertical size of the image, in pixels.
 
-	VuoImage_freeCallback freeCallback;	///< A callback to be implemented if non-Vuo code needs to retain ownership of the GL texture.  See @ref VuoImage_makeClientOwned.
 	void *freeCallbackContext;	///< User data for @c freeCallback.  See @ref VuoImage_makeClientOwned.
 };
 
 VuoImage VuoImage_make(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh);
-VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
-VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext);
-VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth colorDepth);
+VuoImage VuoImage_makeClientOwned(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext) __attribute__((nonnull(5)));
+VuoImage VuoImage_makeClientOwnedGlTextureRectangle(unsigned int glTextureName, unsigned int glInternalFormat, unsigned long int pixelsWide, unsigned long int pixelsHigh, VuoImage_freeCallback freeCallback, void *freeCallbackContext) __attribute__((nonnull(5)));
+VuoImage VuoImage_makeFromBuffer(const void *pixels, unsigned int format, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth colorDepth) __attribute__((nonnull(1)));
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh);
-VuoImage VuoImage_makeCopy(VuoImage image);
+VuoImage VuoImage_makeCopy(VuoImage image, bool flip);
+VuoImage VuoImage_makeShallowCopy(VuoImage image);
 VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image);
+VuoImage VuoImage_makeFromContextFramebuffer(VuoGlContext context);
 unsigned char *VuoImage_copyBuffer(VuoImage image, unsigned int requestedFormat);
 void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode);
 

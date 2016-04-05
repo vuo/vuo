@@ -15,6 +15,7 @@
 #include "VuoCompiler.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerException.hh"
 #include "VuoCompilerGraphvizParser.hh"
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
@@ -55,9 +56,22 @@ VuoCompilerGraphvizParser * VuoCompilerGraphvizParser::newParserFromCompositionS
 	return new VuoCompilerGraphvizParser(composition, compiler);
 }
 
+static std::string VuoCompilerGraphvizParser_lastError;	///< The most recent error from Graphviz. Set this to emptystring before calling into Graphviz.
+
+/**
+ * Graphviz callback that appends error messages to @ref VuoCompilerGraphvizParser_lastError.
+ */
+static int VuoCompilerGraphvizParser_error(char *message)
+{
+	VuoCompilerGraphvizParser_lastError += message;
+	return 0;
+}
+
 /**
  * Helper function for VuoCompilerGraphvizParser constructors.
  * Parse a .vuo @c file, using the node classes provided by the compiler.
+ *
+ * @throw VuoCompilerException Couldn't parse the composition.
  */
 VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAsString, VuoCompiler *compiler)
 {
@@ -65,11 +79,21 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 	publishedInputNode = NULL;
 	publishedOutputNode = NULL;
 
+	agseterrf(VuoCompilerGraphvizParser_error);
+	VuoCompilerGraphvizParser_lastError = "";
+
 	// Use builtin Graphviz plugins, not demand-loaded plugins.
 	bool demandLoading = false;
 	GVC_t *context = gvContextPlugins(lt_preloaded_symbols, demandLoading);
 
 	graph = agmemread((char *)compositionAsString.c_str());
+	if (!graph)
+	{
+		vector<VuoCompilerError> errors;
+		VuoCompilerError error("Couldn't parse the composition", VuoCompilerGraphvizParser_lastError, set<VuoNode *>(), set<VuoCable *>());
+		errors.push_back(error);
+		throw VuoCompilerException(errors);
+	}
 	agraphattr(graph, (char *)"rankdir", (char *)"LR");
 	agraphattr(graph, (char *)"ranksep", (char *)"0.75");
 	agnodeattr(graph, (char *)"fontsize", (char *)"18");
@@ -177,7 +201,7 @@ void VuoCompilerGraphvizParser::makeNodeClasses(void)
 		}
 		else if (dummyNodeClassName == VuoNodeClass::publishedInputNodeClassName)
 		{
-			nodeClassForName[dummyNodeClassName] = VuoCompilerPublishedInputNodeClass::newNodeClass(dummyNodeClass);
+			nodeClassForName[dummyNodeClassName] = compiler->createPublishedInputNodeClass(dummyNodeClass)->getBase();
 		}
 		else
 		{
@@ -226,7 +250,7 @@ void VuoCompilerGraphvizParser::makeNodes(void)
 
 		VuoNode *node;
 		if (nodeClass->hasCompiler())
-			node = nodeClass->getCompiler()->newNode(nodeTitle, x, y);
+			node = compiler->createNode(nodeClass->getCompiler(), nodeTitle, x, y);
 		else
 			node = nodeClass->newNode(nodeTitle, x, y);
 
@@ -235,16 +259,22 @@ void VuoCompilerGraphvizParser::makeNodes(void)
 		{
 			if (strcmp(nodeTintColor, "yellow")==0)
 				node->setTintColor(VuoNode::TintYellow);
+			else if (strcmp(nodeTintColor, "tangerine")==0)
+				node->setTintColor(VuoNode::TintTangerine);
 			else if (strcmp(nodeTintColor, "orange")==0)
 				node->setTintColor(VuoNode::TintOrange);
 			else if (strcmp(nodeTintColor, "magenta")==0)
 				node->setTintColor(VuoNode::TintMagenta);
 			else if (strcmp(nodeTintColor, "violet")==0)
 				node->setTintColor(VuoNode::TintViolet);
+			else if (strcmp(nodeTintColor, "blue")==0)
+				node->setTintColor(VuoNode::TintBlue);
 			else if (strcmp(nodeTintColor, "cyan")==0)
 				node->setTintColor(VuoNode::TintCyan);
 			else if (strcmp(nodeTintColor, "green")==0)
 				node->setTintColor(VuoNode::TintGreen);
+			else if (strcmp(nodeTintColor, "lime")==0)
+				node->setTintColor(VuoNode::TintLime);
 		}
 
 		char *nodeCollapsed = agget(n, (char *)"collapsed");

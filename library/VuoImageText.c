@@ -33,7 +33,7 @@ VuoModuleMetadata({
 /**
  * Formats the specified `text` for rendering using `font` and `backingScaleFactor`.
  */
-static CFArrayRef VuoImageText_makeCTLines(VuoText text, VuoFont font, float backingScaleFactor, CTFontRef *ctFont, CGColorRef *cgColor, CGColorSpaceRef *colorspace, unsigned int *width, unsigned int *height, double *lineHeight, CGRect *bounds, CGRect **lineBounds)
+static CFArrayRef VuoImageText_createCTLines(VuoText text, VuoFont font, float backingScaleFactor, CTFontRef *ctFont, CGColorRef *cgColor, CGColorSpaceRef *colorspace, unsigned int *width, unsigned int *height, double *lineHeight, CGRect *bounds, CGRect **lineBounds)
 {
 	if (font.fontName)
 	{
@@ -77,6 +77,8 @@ static CFArrayRef VuoImageText_makeCTLines(VuoText text, VuoFont font, float bac
 
 		CTLineRef ctLine = CTLineCreateWithAttributedString(attributedLine);
 		CFArrayAppendValue(ctLines, ctLine);
+		CFRelease(ctLine);
+		CFRelease(attributedLine);
 	}
 
 	// Get the bounds of each line of text, and union them into bounds for the entire block of text.
@@ -148,7 +150,7 @@ VuoRectangle VuoImage_getTextRectangle(VuoText text, VuoFont font)
 	double lineHeight;
 	CGRect bounds;
 	CGRect *lineBounds;
-	CFArrayRef ctLines = VuoImageText_makeCTLines(text, font, 1, &ctFont, &cgColor, &colorspace, &width, &height, &lineHeight, &bounds, &lineBounds);
+	CFArrayRef ctLines = VuoImageText_createCTLines(text, font, 1, &ctFont, &cgColor, &colorspace, &width, &height, &lineHeight, &bounds, &lineBounds);
 	CFRelease(ctLines);
 	CGColorRelease(cgColor);
 	CGColorSpaceRelease(colorspace);
@@ -174,7 +176,7 @@ VuoImage VuoImage_makeText(VuoText text, VuoFont font, float backingScaleFactor)
 	double lineHeight;
 	CGRect bounds;
 	CGRect *lineBounds;
-	CFArrayRef ctLines = VuoImageText_makeCTLines(text, font, backingScaleFactor, &ctFont, &cgColor, &colorspace, &width, &height, &lineHeight, &bounds, &lineBounds);
+	CFArrayRef ctLines = VuoImageText_createCTLines(text, font, backingScaleFactor, &ctFont, &cgColor, &colorspace, &width, &height, &lineHeight, &bounds, &lineBounds);
 
 	// Create the rendering context.
 	// VuoImage_makeFromBuffer() expects a premultiplied buffer.

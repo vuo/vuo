@@ -133,19 +133,14 @@ $for(header-includes)$
 $header-includes$
 $endfor$
 
-$if(title)$
-\title{$title$}
-$endif$
-$if(subtitle)$
-\subtitle{$subtitle$}
-$endif$
-\author{$for(author)$$author$$sep$ \and $endfor$}
-\date{$date$}
-
 \begin{document}
-$if(title)$
-\maketitle
-$endif$
+
+\begin{titlepage}
+	\vspace*{10cm}
+	\vuoScreenshot{../../editor/VuoEditorApp/Icons/vuo}\\
+	{\color{base03}\fontsize{3.3cm}{1em}\selectfont $title$} {\color{base1.5}\fontsize{2.5cm}{1em}\selectfont $author$}
+\end{titlepage}
+\addtocounter{page}{1} % Count the titlepage as page #1.
 
 $for(include-before)$
 $include-before$

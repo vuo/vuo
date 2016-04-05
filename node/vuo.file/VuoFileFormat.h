@@ -57,7 +57,7 @@ bool VuoFileFormat_isSupportedAudioFile(const char *path)
  */
 bool VuoFileFormat_isSupportedImageFile(const char *path)
 {
-	const char *formats[] = {"png", "jpeg", "jpg", "gif", "bmp", "exr", "ilm", "hdr", "psd", "raw", "cr2",
+	const char *formats[] = {"png", "jpeg", "jpg", "gif", "bmp", "exr", "hdr", "psd", "raw", "cr2",
 							 "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
@@ -88,7 +88,7 @@ bool VuoFileFormat_isSupportedMovieFile(const char *path)
  */
 bool VuoFileFormat_isSupportedSceneFile(const char *path)
 {
-	const char *formats[] = {"3ds", "dae", "obj", "dxf", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn", "xml",
+	const char *formats[] = {"3ds", "dae", "obj", "dxf", "ply", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn", "xml",
 							 "irr", "irrmesh", "mdl", "md2", "md3", "pk3", "mdc", "md5", "m3", "smd", "ter",
 							 "raw", "b3d", "q3d", "q3s", "nff", "off", "3dgs", "hmp", "ndo"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);

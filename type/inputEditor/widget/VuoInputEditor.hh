@@ -73,11 +73,14 @@ public:
 	 *
 	 * If true, this input editor should emit tabbedPastLastWidget() and tabbedBackwardPastFirstWidget()
 	 * signals when appropriate. If false, those signals are ignored.
+	 *
+	 * Unless overridden, this function always returns false.
 	 */
 	virtual bool supportsTabbingBetweenPorts(void);
 
-protected:
-	QFont getDefaultFont(void);
+	static QFont getDefaultFont(void);
+	static QString getDefaultFontCss(void);
+
 
 signals:
 	/**

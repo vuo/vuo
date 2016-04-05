@@ -23,13 +23,14 @@ VuoModuleMetadata({
 						  "quicktime", "qt", "aic", "prores",
 						  "video",
 					  ],
-					  "version" : "2.0.0",
+					  "version" : "2.0.1",
 					  "node": {
 						  "isInterface" : true,
 						  "exampleCompositions" : [ "SkimMovie.vuo" ]
 					  },
 					  "dependencies" : [
-						"VuoMovie"
+						"VuoMovie",
+						"VuoUrl"
 					  ]
 				  });
 
@@ -42,7 +43,15 @@ struct nodeInstanceData
 
 static void setMovie(struct nodeInstanceData *context, const char *movieURL)
 {
-	VuoMovie newMovie = VuoMovie_make(movieURL);
+	VuoUrl normalizedUrl = VuoUrl_normalize(movieURL, false);
+	VuoRetain(normalizedUrl);
+
+	VuoText path = VuoUrl_getPosixPath(normalizedUrl);
+	VuoRetain(path);
+	VuoRelease(normalizedUrl);
+
+	VuoMovie newMovie = VuoMovie_make(path);
+	VuoRelease(path);
 
 	// If VuoMovie_make fails to initialize properly, it cleans up after itself.
 	// No need to call VuoMovie_free()

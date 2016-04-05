@@ -10,4 +10,10 @@ GENERIC_NODE_SOURCES += \
 	vuo.data.share.list.c \
 	vuo.data.summarize.c
 
+TYPE_SOURCES += \
+	VuoData.c
+
+HEADERS += \
+	VuoData.h
+
 include(../../module.pri)

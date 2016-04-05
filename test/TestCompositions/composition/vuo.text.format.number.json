@@ -1,0 +1,35 @@
+/**
+ * @file
+ * Expected outputs for the vuo.text.format.number node.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	/* The expected values below assume System Preferences > Language & Region > Region is set to "United States". */
+	
+	{ "firingPort": "refresh", "inputPortValues": { "value":     0         , "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":      "0"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     1         , "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":      "1"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":    -1         , "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":     "-1"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":    -1         , "format": "decimal"   , "decimalPlaces": 9, "showThousandSeparator": false }, "outputPortValues": { "text":     "-1"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":      "3"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 1, "showThousandSeparator": false }, "outputPortValues": { "text":      "3.1"      } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 2, "showThousandSeparator": false }, "outputPortValues": { "text":      "3.14"     } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 3, "showThousandSeparator": false }, "outputPortValues": { "text":      "3.142"    } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 4, "showThousandSeparator": false }, "outputPortValues": { "text":      "3.1416"   } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 5, "showThousandSeparator": false }, "outputPortValues": { "text":      "3.14159"  } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     3.14159265, "format": "decimal"   , "decimalPlaces": 6, "showThousandSeparator": false }, "outputPortValues": { "text":      "3.141593" } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":    -3.14159265, "format": "decimal"   , "decimalPlaces": 6, "showThousandSeparator": false }, "outputPortValues": { "text":     "-3.141593" } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000         , "format": "decimal"   , "decimalPlaces": 0, "showThousandSeparator": true  }, "outputPortValues": { "text":  "1,000"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.1       , "format": "decimal"   , "decimalPlaces": 1, "showThousandSeparator": true  }, "outputPortValues": { "text":  "1,000.1"      } },
+
+	{ "firingPort": "refresh", "inputPortValues": { "value":     0.5       , "format": "percentage", "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":     "50%"       } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":     0.567     , "format": "percentage", "decimalPlaces": 1, "showThousandSeparator": false }, "outputPortValues": { "text":     "56.7%"     } },
+
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.5       , "format": "currency"  , "decimalPlaces": 2, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.50"     } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.567     , "format": "currency"  , "decimalPlaces": 0, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,001"        } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.567     , "format": "currency"  , "decimalPlaces": 1, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.6"      } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.567     , "format": "currency"  , "decimalPlaces": 2, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.57"     } },
+]}

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Arrange 3D Objects in Grid",
 					 "keywords" : [ "align", "place", "position", "lattice", "matrix" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						 "exampleCompositions" : [ "AddNoiseToClay.vuo" ]
 					 }
@@ -32,8 +32,7 @@ void nodeEvent
 		VuoOutputData(VuoSceneObject) griddedObject
 )
 {
-	*griddedObject = VuoSceneObject_makeEmpty();
-	(*griddedObject).childObjects = VuoListCreate_VuoSceneObject();
+	*griddedObject = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeIdentity());
 
 	unsigned long objectCount = VuoListGetCount_VuoSceneObject(objects);
 	unsigned long currentObject = 1;

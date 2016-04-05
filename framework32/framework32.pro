@@ -87,6 +87,7 @@ TYPE_AND_LIBRARY_FLAGS = \
 	-I$$ROOT/library \
 	-I$$ROOT/library/shader \
 	-I$$ROOT/node \
+	-I$$ROOT/node/vuo.data \
 	-I$$ROOT/node/vuo.font \
 	-I$$ROOT/runtime \
 	-I$$ROOT/type \
@@ -146,7 +147,11 @@ QMAKE_EXTRA_TARGETS += linkVuoFramework
 # Combine 32-bit dynamic library with existing 64-bit dynamic library for Vuo.framework
 VUO_FRAMEWORK_BINARY = $$ROOT/framework/$$VUO_FRAMEWORK_BINARY_RELATIVE
 lipoVuoFramework.commands = cp $$VUO_FRAMEWORK_BINARY libVuo64.dylib
-lipoVuoFramework.commands += && ( lipo -remove i386 libVuo64.dylib -output libVuo64.dylib || true )
+lipoVuoFramework.commands += && ( \
+	lipo -remove i386 libVuo64.dylib -output libVuo64.dylib \
+		2>&1 \
+		| grep -v "'^fatal error: .*must be a fat file when the -remove option is specified'" \
+	|| true )
 lipoVuoFramework.commands += && lipo -create libVuo32.dylib libVuo64.dylib -output libVuoUniversal.dylib
 lipoVuoFramework.commands += && cp libVuoUniversal.dylib $$VUO_FRAMEWORK_BINARY
 lipoVuoFramework.commands += && rm *.dylib

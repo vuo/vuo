@@ -4,7 +4,10 @@ CONFIG += VuoPCH
 include(../vuo.pri)
 
 NODE_LIBRARY_SOURCES += \
+	VuoBase64.cc \
 	VuoDisplayRefresh.c \
+	VuoImageResize.c \
+	VuoImageBlend.c \
 	VuoImageBlur.c \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
@@ -16,52 +19,68 @@ NODE_LIBRARY_SOURCES += \
 	VuoUrlFetch.c \
 	VuoMathExpressionParser.cc \
 	VuoMeshParametric.cc \
+	VuoMeshUtility.cc \
 	VuoPointsParametric.cc \
+	VuoScreenCapture.m \
 	VuoScreenCommon.m \
 	VuoWindow.m \
 	VuoWindowApplication.m \
 	VuoWindowOpenGLInternal.m \
-	VuoWindowTextInternal.m \
-	VuoNSRunLoop.m
+	VuoWindowRecorder.m \
+	VuoWindowTextInternal.m
 
 SOURCES += \
+	VuoBase64.cc \
+	VuoImageResize.c \
+	VuoImageBlend.c \
 	VuoImageBlur.c \
+	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
 	VuoImageText.c \
 	VuoMathExpressionParser.cc \
 	VuoMeshParametric.cc \
+	VuoMeshUtility.cc \
 	VuoPointsParametric.cc \
 	VuoSceneObjectRenderer.cc \
 	VuoSceneRenderer.cc \
 	VuoUrlFetch.c
 
+OBJECTIVE_SOURCES += \
+	VuoScreenCommon.m
+
 HEADERS += \
+	VuoBase64.h \
 	VuoDisplayRefresh.h \
 	VuoGlContext.h \
 	VuoGlPool.h \
 	VuoHeap.h \
 	VuoImageGet.h \
+	VuoImageBlend.h \
 	VuoImageRenderer.h \
 	VuoLog.h \
 	VuoMathExpressionParser.h \
 	VuoMeshParametric.h \
+	VuoMeshUtility.h \
 	VuoPointsParametric.h \
 	VuoPool.hh \
 	VuoSceneObjectGet.h \
 	VuoSceneObjectRenderer.h \
 	VuoSceneRenderer.h \
+	VuoScreenCapture.h \
 	VuoScreenCommon.h \
 	VuoSmooth.h \
 	VuoUrlFetch.h \
-	VuoWindow.h \
-	VuoNSRunLoop.h
+	VuoWindow.h
 
 OTHER_FILES += \
+	VuoImageResize.h \
 	VuoImageText.h \
+	VuoImageWatermark.h \
 	VuoTriggerSet.hh \
 	VuoWindowApplication.h \
 	VuoWindowOpenGLInternal.h \
+	VuoWindowRecorder.h \
 	VuoWindowTextInternal.h
 
 INCLUDEPATH += \

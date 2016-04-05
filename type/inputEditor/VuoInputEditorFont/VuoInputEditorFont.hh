@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORFONT_HH
-#define VUOINPUTEDITORFONT_HH
+#pragma once
 
 #include "VuoInputEditor.hh"
 
@@ -43,21 +42,3 @@ public:
 public slots:
 	void currentFontChanged(VuoFont font);
 };
-
-
-
-/**
- * Provides a text edit widget to be used as a proxy for receiving NSFontPanel's changes.
- */
-class VuoInputEditorFontTextEdit : public QTextEdit
-{
-	Q_OBJECT
-
-public:
-	VuoInputEditorFontTextEdit(QWidget *parent);
-
-private:
-	void focusInEvent(QFocusEvent *event);
-};
-
-#endif // VUOINPUTEDITORFONT_HH

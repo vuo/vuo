@@ -29,6 +29,7 @@
 
 const qreal VuoRendererNode::subcompositionBulge = VuoRendererFonts::thickPenWidth/3.0;
 const qreal VuoRendererNode::cornerRadius = VuoRendererFonts::thickPenWidth/8.0;	///< The radius of rounded corners.
+const qreal VuoRendererNode::outerBorderWidth = 1.;
 const qreal VuoRendererNode::nodeTitleHeight = round(VuoRendererFonts::nodeTitleFontSize + VuoRendererFonts::thickPenWidth*1./8.);	///< The height of the node's title.
 const qreal VuoRendererNode::nodeClassHeight = round(VuoRendererFonts::thickPenWidth*3./5.);
 const qreal VuoRendererNode::antennaIconWidth = 18.;
@@ -48,14 +49,10 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 	this->proxyNode = NULL;
 	this->nodeType = VuoRendererNode::node;
 
-	if (nodeClass->hasCompiler())
-	{
-		VuoCompilerSpecializedNodeClass *specialized = dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass->getCompiler());
-		if (specialized)
-			this->nodeClass = QString::fromUtf8(specialized->getOriginalGenericNodeClassName().c_str());
-		else
-			this->nodeClass = QString::fromUtf8(nodeClass->getClassName().c_str());
-	}
+	if (nodeClass->hasCompiler() && dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass->getCompiler()))
+		this->nodeClass = QString::fromUtf8(dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass->getCompiler())->getOriginalGenericNodeClassName().c_str());
+	else
+		this->nodeClass = QString::fromUtf8(nodeClass->getClassName().c_str());
 
 	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->getInstanceDataClass();
 	this->nodeIsSubcomposition = false;  /// @todo support subcompositions - https://b33p.net/kosada/node/2639
@@ -287,10 +284,10 @@ QPair<QPainterPath, QPainterPath> VuoRendererNode::getNodeFrames(QRectF nodeInne
 		qreal nodeHeaderHeight = VuoRendererNode::nodeTitleHeight + VuoRendererNode::nodeClassHeight;
 		qreal nodeOuterFrameTopY = nodeInnerFrameRect.top() - nodeHeaderHeight;
 		nodeOuterFrameRect = QRectF(
-					nodeInnerFrameRect.left() - 1.,
+					nodeInnerFrameRect.left() - VuoRendererNode::outerBorderWidth,
 					nodeOuterFrameTopY,
-					nodeInnerFrameRect.width() + 2.,
-					nodeInnerFrameRect.height() + nodeHeaderHeight + 1.
+					nodeInnerFrameRect.width() + 2*VuoRendererNode::outerBorderWidth,
+					nodeInnerFrameRect.height() + nodeHeaderHeight + VuoRendererNode::outerBorderWidth
 					);
 	}
 
@@ -551,7 +548,7 @@ void VuoRendererNode::updateNodeFrameRect(void)
 
 	bool hasInputPorts = inputPorts->childItems().size() > VuoNodeClass::unreservedInputPortStartIndex;
 	bool hasOutputPorts = outputPorts->childItems().size() > VuoNodeClass::unreservedOutputPortStartIndex;
-	updatedFrameRect.setWidth(
+	int unalignedFrameWidth =
 		floor(max(
 			max(
 				nodeTitleWidth + VuoRendererFonts::thickPenWidth + 4.,
@@ -563,8 +560,16 @@ void VuoRendererNode::updateNodeFrameRect(void)
 															  VuoRendererFonts::thickPenWidth/2.0  + 3. + VuoRendererPort::portRadius) :
 														 0.)
 				  + 1.
-		))
-	);
+		));
+
+	// Snap to the next-widest horizontal grid position so that node columns can be right-justified.
+	int alignedFrameWidth = VuoRendererComposition::quantizeToNearestGridLine(QPointF(unalignedFrameWidth, 0), VuoRendererComposition::minorGridLineSpacing).x()
+							- 2*VuoRendererNode::outerBorderWidth;
+
+	if (alignedFrameWidth < unalignedFrameWidth)
+		alignedFrameWidth += VuoRendererComposition::minorGridLineSpacing;
+
+	updatedFrameRect.setWidth(alignedFrameWidth);
 
 	// Height depends only on the number of input/output ports.
 	updatedFrameRect.setHeight(
@@ -630,7 +635,7 @@ QPointF VuoRendererNode::getPortPoint(VuoRendererPort *port, unsigned int portIn
 
 	if (port->getRefreshPort())
 	{
-		y = -VuoRendererFonts::thickPenWidth / 2.;
+		y = VuoRendererPort::portContainerMargin - 1.5 * VuoRendererPort::portSpacing;
 	}
 	else if (port->getFunctionPort())
 	{
@@ -773,8 +778,16 @@ QVariant VuoRendererNode::itemChange(GraphicsItemChange change, const QVariant &
 	{
 		setCacheModeForConnectedCables(QGraphicsItem::NoCache);
 
-		// Quantize position to whole pixels.
-		newValue = value.toPoint();
+		if (getSnapToGrid() && !dynamic_cast<VuoRendererInputAttachment *>(this))
+		{
+			// Quantize position to nearest minor gridline.
+			newValue = VuoRendererComposition::quantizeToNearestGridLine(value.toPointF(), VuoRendererComposition::minorGridLineSpacing);
+		}
+		else
+		{
+			// Quantize position to whole pixels.
+			newValue = value.toPoint();
+		}
 
 		this->updateConnectedCableGeometry();
 

@@ -37,14 +37,6 @@ VuoInputEditor * VuoInputEditorFontFactory::newInputEditor()
 }
 
 /**
- * Returns a value indicating which font panel widgets should be displayed.
- */
-static unsigned long validateFontPanelModes(id self, SEL _cmd, NSFontPanel *fontPanel)
-{
-   return NSFontPanelUnderlineEffectModeMask | NSFontPanelTextColorEffectModeMask | NSFontPanelCollectionModeMask | NSFontPanelFaceModeMask | NSFontPanelSizeModeMask;
-}
-
-/**
  * Returns the currently-selected font.
  */
 static VuoFont getCurrentVuoFont(void)
@@ -70,14 +62,44 @@ static NSDictionary *getCurrentAttributes(void)
 {
 	return [NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithInteger:currentUnderline?kCTUnderlineStyleSingle:kCTUnderlineStyleNone], kCTUnderlineStyleAttributeName,
-			[currentColor retain], @"NSColor",
+			[currentColor retain], NSForegroundColorAttributeName,
 			nil];
+}
+
+/**
+ * A text edit widget that receives the changes from the font panel.
+ */
+@interface VuoInputEditorFontTextEdit : NSTextView
+@end
+@implementation VuoInputEditorFontTextEdit
+/**
+ * Show the font panel.
+ */
+- (void)drawRect:(NSRect)dirtyRect
+{
+	NSFontManager *fm = [NSFontManager sharedFontManager];
+	NSFontPanel *fp = [fm fontPanel:YES];
+
+	// Show the font panel and give it focus.
+	[fp makeKeyAndOrderFront:nil];
+
+	// Need to set the font and attributes _after_ showing the panel since showing it resets everything.
+	[fm setSelectedFont:[NSFont fontWithName:currentFontName size:currentPointSize] isMultiple:NO];
+	[fm setSelectedAttributes:getCurrentAttributes() isMultiple:NO];
+}
+
+/**
+ * Returns a value indicating which font panel widgets should be displayed.
+ */
+- (NSUInteger)validModesForFontPanel:(NSFontPanel *)fontPanel
+{
+	return NSFontPanelUnderlineEffectModeMask | NSFontPanelTextColorEffectModeMask | NSFontPanelCollectionModeMask | NSFontPanelFaceModeMask | NSFontPanelSizeModeMask;
 }
 
 /**
  * Updates the composition's constant value when the user changes the selected font.
  */
-static void userChangedFont(id self, SEL _cmd, NSFontManager *fm)
+- (void)changeFont:(NSFontManager *)fm
 {
 	NSFont *oldFont = [NSFont userFontOfSize:12];
 	NSFont *newFont = [fm convertFont:oldFont];
@@ -91,7 +113,7 @@ static void userChangedFont(id self, SEL _cmd, NSFontManager *fm)
 /**
  * Updates the composition's constant value when the user changes the selected attributes.
  */
-static void userChangedAttributes(id self, SEL _cmd, NSFontManager *fm)
+- (void)changeAttributes:(NSFontManager *)fm
 {
 	NSDictionary *newAttributes = [fm convertAttributes:getCurrentAttributes()];
 
@@ -105,28 +127,7 @@ static void userChangedAttributes(id self, SEL _cmd, NSFontManager *fm)
 
 	currentEditor->currentFontChanged(getCurrentVuoFont());
 }
-
-/**
- * Creates a proxy QTextEdit widget.
- */
-VuoInputEditorFontTextEdit::VuoInputEditorFontTextEdit(QWidget *parent)
-	: QTextEdit(parent)
-{
-}
-
-/**
- * When the text edit widget becomes visible, activate the font panel.
- */
-void VuoInputEditorFontTextEdit::focusInEvent(QFocusEvent *event)
-{
-	// Show the font panel.
-	NSFontManager *fm = [NSFontManager sharedFontManager];
-	[fm orderFrontFontPanel:nil];
-
-	// Give it focus (apparently orderFrontFontPanel: alone doesn't do that).
-	NSFontPanel *fp = [fm fontPanel:YES];
-	[fp makeKeyWindow];
-}
+@end
 
 /**
  * Intercepts events from NSFontPanel and passes them to the parent QDialog.
@@ -197,13 +198,15 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	dialog->setWindowFlags(Qt::FramelessWindowHint|Qt::NoDropShadowWindowHint);
 
 	// NSFontPanel applies its changes to the first object on the responder chain.
-	// So create a text editor and inject some methods to catch NSFontPanel's changes.
+	// So create a text editor widget with some methods to catch NSFontPanel's changes.
+	VuoInputEditorFontTextEdit *textEditView;
 	{
-		VuoInputEditorFontTextEdit *textEdit = new VuoInputEditorFontTextEdit(dialog);
-		NSView *textEditView = (NSView *)textEdit->winId();
-		class_addMethod([textEditView class], @selector(validModesForFontPanel:), (IMP)validateFontPanelModes, "L@:@");
-		class_addMethod([textEditView class], @selector(changeFont:), (IMP)userChangedFont, "v@:@");
-		class_addMethod([textEditView class], @selector(changeAttributes:), (IMP)userChangedAttributes, "v@:@");
+		NSView *d = (NSView *)dialog->winId();
+		textEditView = [[[VuoInputEditorFontTextEdit alloc] initWithFrame:NSMakeRect(0,0,1,1)] autorelease];
+
+		[d addSubview:textEditView];
+		[[d window] makeFirstResponder:textEditView];
+
 		currentEditor = this;
 	}
 
@@ -232,25 +235,21 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	// Preset the font panel with the port's original font.
 	{
 		VuoFont originalVuoFont = VuoFont_makeFromJson(originalValue);
-		NSFont *originalFont;
 		if (originalVuoFont.fontName)
 		{
 			currentFontName = [NSString stringWithUTF8String:originalVuoFont.fontName];
 			currentPointSize = originalVuoFont.pointSize;
-			originalFont = [NSFont fontWithName:currentFontName size:currentPointSize];
 		}
 		else
 		{
-			originalFont = [NSFont userFontOfSize:12];
+			NSFont *originalFont = [NSFont userFontOfSize:12];
 			currentFontName = [originalFont fontName];
 			currentPointSize = [originalFont pointSize];
 		}
-		[fm setSelectedFont:originalFont isMultiple:NO];
 
 		currentColor = [[NSColor colorWithCalibratedRed:originalVuoFont.color.r green:originalVuoFont.color.g blue:originalVuoFont.color.b alpha:originalVuoFont.color.a] retain];
 
 		currentUnderline = originalVuoFont.underline;
-		[fm setSelectedAttributes:getCurrentAttributes() isMultiple:NO];
 
 		currentAlignment = originalVuoFont.alignment;
 
@@ -378,7 +377,6 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	// Wait for the user to dismiss the font panel.
 	int result = dialog->exec();
 
-
 	// Hide the color picker.
 	[[NSColorPanel sharedColorPanel] orderOut:nil];
 
@@ -386,6 +384,8 @@ json_object * VuoInputEditorFont::show(QPoint portLeftCenter, json_object *origi
 	[fp orderOut:nil];
 
 	[delegate release];
+
+	delete dialog;
 
 	currentEditor = NULL;
 

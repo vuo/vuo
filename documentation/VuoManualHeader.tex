@@ -2,6 +2,8 @@
 \usepackage{ucs}
 \usepackage{url}
 \usepackage{calc}
+\usepackage{booktabs}
+\usepackage{marginfix}
 
 \textwidth 13cm
 \setlength{\parskip}{3ex plus 2ex minus 2ex}
@@ -19,6 +21,7 @@
 	\renewcommand{\footrule}{\vskip 8mm \color{base1}\rule{\headwidth}{0.5pt}\\\vskip -8mm}
 
 \usepackage{titlesec}
+	\newcommand{\sectionbreak}{\clearpage}
 	\titleformat{\section}
 		{\color{blue}\normalfont\huge\bfseries}
 		{\hspace*{-1cm}\thesection}
@@ -164,6 +167,7 @@
 	\definecolor{base00}{RGB}{101,123,131}
 	\definecolor{base0}{RGB}{131,148,150}
 	\definecolor{base1}{RGB}{147,161,161}
+	\definecolor{base1.5}{RGB}{192,196,187}
 	\definecolor{base2}{RGB}{238,232,213}
 	\definecolor{base3}{RGB}{253,246,227}
 	\definecolor{yellow}{RGB}{181,137, 0}

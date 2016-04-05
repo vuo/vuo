@@ -7,6 +7,6 @@ EXAMPLE_SOURCES += \
 	DrawCurve.vuo \
 	ExplodeClay.vuo \
 	SpringBack.vuo \
-	WaveSphere.vuo
+	WaveCircle.vuo
 
 include(../../../example.pri)

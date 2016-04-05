@@ -217,11 +217,7 @@ void VuoInputEditorReal::updateLineEditValue(int newSliderValue)
 
 void VuoInputEditorReal::emitValueChanged()
 {
-	const char *valueAsString = lineEdit->text().toUtf8().constData();
-	VuoReal value = VuoReal_makeFromString(valueAsString);
-	json_object *valueAsJson = VuoReal_getJson(value);
-	emit valueChanged(valueAsJson);
-	json_object_put(valueAsJson);
+	emit valueChanged(getAcceptedValue());
 }
 
 /**

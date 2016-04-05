@@ -9,8 +9,8 @@
 
 digraph G
 {
-MakeHSLColor [type="vuo.color.make.hsl" version="1.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<alpha>alpha\l|<color>color\r" pos="313,58" _saturation="1.000000" _lightness="0.500000" _alpha="1.000000"];
-MakeHSLColor2 [type="vuo.color.make.hsl" version="1.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<alpha>alpha\l|<color>color\r" pos="314,306" _hue="0.000000" _lightness="0.500000" _alpha="1.000000"];
+MakeHSLColor [type="vuo.color.make.hsl" version="1.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<color>color\r" pos="313,58" _saturation="1.000000" _lightness="0.500000"];
+MakeHSLColor2 [type="vuo.color.make.hsl" version="1.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<color>color\r" pos="314,306" _hue="0.000000" _lightness="0.500000"];
 RippleImage [type="vuo.image.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="314,163" _amplitude="0.100000" _wavelength="0.050000" _phase="0.000000"];
 RippleImage2 [type="vuo.image.ripple" version="1.0.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="315,419" _amplitude="0.100000" _wavelength="0.050000" _phase="0.000000"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<hue>hue\r|<saturation>saturation\r|<image>image\r" _hue="0.3" _hue_type="VuoReal" _hue_suggestedMin="0.2" _hue_suggestedMax="1.1" _hue_suggestedStep="0.1" _saturation="0.500000" _saturation_type="VuoReal" _image_type="VuoImage"];

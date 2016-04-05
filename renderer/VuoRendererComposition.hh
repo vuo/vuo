@@ -16,6 +16,7 @@
 #include "VuoRendererPublishedPort.hh"
 
 class VuoCompiler;
+class VuoCompilerDriver;
 class VuoCompilerNode;
 class VuoRendererNode;
 class VuoRendererTypecastPort;
@@ -33,7 +34,7 @@ public:
 
 	void setBackgroundTransparent(bool transparent);
 	VuoRendererNode * createRendererNode(VuoNode *baseNode);
-	void addNode(VuoNode *node);
+	void addNode(VuoNode *node, bool nodeShouldBeRendered=true);
 	void addCable(VuoCable *cable);
 	void addPublishedInputCable(VuoCable *c);
 	void addPublishedOutputCable(VuoCable *c);
@@ -45,9 +46,10 @@ public:
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
 	void createAndConnectDictionaryAttachmentsForNode(VuoNode *node, VuoCompiler *compiler, set<VuoRendererNode *> &createdNodes, set<VuoRendererCable *> &createdCables);
 	vector<string> extractInputVariableListFromExpressionsConstant(string constant);
-	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput);
-	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput);
-	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name);
+	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler);
+	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler);
+	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort);
+	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name, VuoCompiler *compiler);
 	string getUniquePublishedPortName(string baseName, bool isInput);
 	vector<VuoRendererNode *> collapseTypecastNodes(void);
 	VuoRendererTypecastPort * collapseTypecastNode(VuoRendererNode *rn);
@@ -58,6 +60,10 @@ public:
 	bool getRenderHiddenCables(void);
 	void setRenderHiddenCables(bool render);
 	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
+
+	static void setGridLineOpacity(int opacity);
+	static int getGridLineOpacity();
+	static QPoint quantizeToNearestGridLine(QPointF point, int gridSpacing);
 
 	static void createAutoreleasePool(void);
 
@@ -70,13 +76,17 @@ public:
 	};
 
 	string takeSnapshot(void);
-	VuoRendererComposition::appExportResult exportApp(const QString &savePath, VuoCompiler *compiler, string &errString);
+	VuoRendererComposition::appExportResult exportApp(const QString &savePath, VuoCompiler *compiler, string &errString, VuoCompilerDriver *driver=NULL);
+
+	// Drawing configuration
+	static const int majorGridLineSpacing; ///< Distance, in pixels at 1:1 zoom, between major gridlines.
+	static const int minorGridLineSpacing; ///< Distance, in pixels at 1:1 zoom, between minor gridlines.
 
 protected:
+	void drawBackground(QPainter *painter, const QRectF &rect);
 	void setRenderActivity(bool render);
 	void setComponentCaching(QGraphicsItem::CacheMode);
 	void updateGeometryForAllComponents();
-	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort);
 
 	// VuoFileFormat wrapper functions
 	static bool isSupportedAudioFile(string path);
@@ -95,12 +105,12 @@ private:
 	void addCableInCompositionToCanvas(VuoCable *c);
 	void createAndConnectDrawersToListInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
 	void createAndConnectDrawersToReadOnlyDictionaryInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
-	void updatePublishedInputNode();
+	void updatePublishedInputNode(VuoCompiler *compiler);
 	void updatePublishedOutputNode();
 	bool isPublishedPortNameTaken(string name, bool isInput);
 
 	string createAppBundleDirectoryStructure();
-	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString);
+	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString, VuoCompilerDriver *driver=NULL);
 	void bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension="");
 	void bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath);
 	void bundleResourceFiles(string targetResourceDir);
@@ -108,8 +118,9 @@ private:
 	string modifyResourcePathForAppBundle(string path);
 	void copyFileOrDirectory(string sourcePath, string targetPath);
 	bool hasURLType(VuoPort *port);
-	bool hasRelativeURLConstantValue(VuoPort *port);
+	bool hasRelativeReadURLConstantValue(VuoPort *port);
 
+	static int gridLineOpacity; ///< The opacity at which grid lines should be rendered on the canvas.
 	bool renderMissingAsPresent; ///< Should node classes without implementations be rendered as though their implementations are present?
 	bool renderActivity; ///< Should renderings reflect recent component activity (e.g., node executions, event firings)?
 };

@@ -31,8 +31,16 @@ VuoModuleMetadata({
  * @ingroup VuoBoolean
  * Decodes the JSON object @c js, expected to contain a boolean, to create a new @c VuoBoolean.
  */
-VuoBoolean VuoBoolean_makeFromJson(json_object * js)
+VuoBoolean VuoBoolean_makeFromJson(json_object *js)
 {
+	if (json_object_get_type(js) == json_type_string)
+	{
+		char firstChar = tolower(json_object_get_string(js)[0]);
+		if (firstChar == 'n'  // "no"
+		 || firstChar == 'f') // "false"
+			return false;
+	}
+
 	return json_object_get_boolean(js);
 }
 

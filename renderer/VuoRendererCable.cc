@@ -198,9 +198,9 @@ QPainterPath VuoRendererCable::getCablePathForEndpoints(QPointF from, QPointF to
  */
 VuoNode::TintColor VuoRendererCable::getTintColor(void)
 {
-	VuoNode *fromNode = getBase()->getFromNode();
-	if (fromNode)
-		return fromNode->getTintColor();
+	VuoPort *fromPort = getBase()->getFromPort();
+	if (fromPort && fromPort->hasRenderer())
+		return fromPort->getRenderer()->getPortTint();
 
 	return VuoNode::TintNone;
 }
@@ -496,7 +496,7 @@ void VuoRendererCable::setWireless(bool wireless)
 void VuoRendererCable::setCacheModeForCableAndConnectedPorts(QGraphicsItem::CacheMode mode)
 {
 	this->setCacheMode(mode);
-	
+
 	VuoRendererPort *fromPort = ((getBase()->getFromPort() && getBase()->getFromPort()->hasRenderer())?
 									getBase()->getFromPort()->getRenderer() : NULL);
 	VuoRendererPort *toPort = ((getBase()->getToPort() && getBase()->getToPort()->hasRenderer())?

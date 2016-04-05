@@ -22,7 +22,6 @@ public:
 	enum MacVersion
 	{
 		MacVersion_Any,
-		MacVersion_10_6,
 		MacVersion_10_7,
 		MacVersion_10_8,
 		MacVersion_10_9

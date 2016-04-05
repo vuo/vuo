@@ -25,11 +25,6 @@ public:
 	VuoCompilerPort * newPort(void);
 	VuoCompilerPort * newPort(VuoPort *port);
 	VuoCompilerInputDataClass * getDataClass(void);
-	void setPortAction(bool portAction);
-	bool hasPortAction(void);
-
-private:
-	bool portAction;
 };
 
 

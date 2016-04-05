@@ -46,8 +46,6 @@ for(header_list, API_HEADER_LISTS) {
 FRAMEWORK_VUO_HEADERS.files += ../type/list/VuoList_*.h
 # The list headers get included via node.h, so there's no need to add them to MASTER_VUO_HEADER_LIST.
 
-FRAMEWORK_VUO_HEADERS.files += ../node/vuo.font/VuoFont.h
-
 FRAMEWORK_VUO_STUB_HEADER = "Vuo.stub.h"
 VUO_PRI_LIBS = $$LIBS
 
@@ -122,8 +120,13 @@ for(node_set, NODE_SETS) {
 	TYPE_OBJECTS ~= s/\\.cc?$/.o/g
 	TYPE_OBJECTS = $$join(TYPE_OBJECTS," ../node/$${node_set}/",../node/$${node_set}/,)
 	VUO_PRI_LIBS += $$TYPE_OBJECTS
-}
 
+	EXPLICIT_HEADERS = $$find(HEADERS, "^[^\\*]+$")  # Exclude header paths containing wildcards
+	for(header, EXPLICIT_HEADERS) {
+		FRAMEWORK_VUO_HEADERS.files += $$join(header, , ../node/$${node_set}/, )
+	}
+	HEADERS = ""
+}
 
 # Now reset variables as appropriate for building Vuo.framework
 API_HEADER_LISTS = ""

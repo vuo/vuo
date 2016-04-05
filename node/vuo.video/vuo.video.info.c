@@ -22,9 +22,10 @@ VuoModuleMetadata({
 						  "quicktime", "qt", "aic", "prores",
 						  "video",
 					  ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "dependencies" : [
-						 "VuoMovie"
+						 "VuoMovie",
+						 "VuoUrl"
 					 ],
 					 "node": {
 						 "isInterface" : true,
@@ -39,9 +40,16 @@ void nodeEvent
 //		VuoOutputData(VuoDictionary_VuoText) metadata
 )
 {
+	VuoUrl normalizedUrl = VuoUrl_normalize(url, false);
+	VuoRetain(normalizedUrl);
+
+	VuoText path = VuoUrl_getPosixPath(normalizedUrl);
+	VuoRetain(path);
+	VuoRelease(normalizedUrl);
+
 	double dur;
-	if( VuoMovie_getInfo(url, &dur) )
-	{
+	if( VuoMovie_getInfo(path, &dur) )
 		*duration = (VuoReal)dur;
-	}
+
+	VuoRelease(path);
 }

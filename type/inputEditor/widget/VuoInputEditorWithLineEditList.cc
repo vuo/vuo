@@ -54,8 +54,6 @@ VuoInputEditorWithLineEditList::VuoInputEditorWithLineEditList(bool allowAddingA
 	this->lineEditWidth = lineEditWidth;
 	addButton = NULL;
 	dialogLayout = NULL;
-	firstWidgetInTabOrder = NULL;
-	lastWidgetInTabOrder = NULL;
 }
 
 /**
@@ -301,58 +299,13 @@ void VuoInputEditorWithLineEditList::updateUI(void)
 		QLineEdit *firstLineEdit = lineEdits.front();
 		QLineEdit *lastLineEdit = lineEdits.back();
 
-		firstLineEdit->installEventFilter(this);
-		firstWidgetInTabOrder = firstLineEdit;
-
-		lastLineEdit->installEventFilter(this);
-		lastWidgetInTabOrder = lastLineEdit;
+		setFirstWidgetInTabOrder(firstLineEdit);
+		setLastWidgetInTabOrder(lastLineEdit);
 	}
 }
 
 /**
- * Handles tabbing past the last widget or reverse-tabbing past the first widget in the tab order.
- */
-bool VuoInputEditorWithLineEditList::eventFilter(QObject *object, QEvent *event)
-{
-	// If the input editor's final tab cycle element has received a 'Tab' keypress,
-	// or its first tab cycle element has received a 'Shift'+'Tab' keypress,
-	// emit the appropriate signal and then treat the 'Tab' as an 'Return' to accept and
-	// close the input editor.
-	if (event->type()==QEvent::KeyPress)
-	{
-		QKeyEvent *keyEvent = (QKeyEvent *)(event);
-		bool tabPressed = (keyEvent->key() == Qt::Key_Tab);
-		bool shiftTabPressed = (keyEvent->key() == Qt::Key_Backtab);
-
-		bool aboutToCompleteReverseTabCycle = ((object==firstWidgetInTabOrder) && shiftTabPressed);
-		bool aboutToCompleteTabCycle = ((object==lastWidgetInTabOrder) && tabPressed);
-
-		if (aboutToCompleteReverseTabCycle || aboutToCompleteTabCycle)
-		{
-			QKeyEvent modifiedKeyEvent(event->type(), Qt::Key_Return, 0);
-			QApplication::sendEvent(object, &modifiedKeyEvent);
-
-			if (aboutToCompleteReverseTabCycle)
-			{
-				emit valueChanged(getAcceptedValue());
-				emit tabbedBackwardPastFirstWidget();
-			}
-
-			else // if (aboutToCompleteTabCycle)
-			{
-				emit valueChanged(getAcceptedValue());
-				emit tabbedPastLastWidget();
-			}
-
-			return true;
-		}
-	}
-
-	return QObject::eventFilter(object, event);
-}
-
-/**
- * Since this input editor supports tabbing, always returns true.
+ * Returns true.
  */
 bool VuoInputEditorWithLineEditList::supportsTabbingBetweenPorts(void)
 {

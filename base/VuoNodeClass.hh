@@ -53,6 +53,9 @@ public:
 	vector<string> getExampleCompositionFileNames(void);
 	void setExampleCompositionFileNames(vector<string> exampleCompositionFileNames);
 
+	bool getDeprecated(void);
+	void setDeprecated(bool deprecated);
+
 	VuoPortClass * getRefreshPortClass(void);
 	void setRefreshPortClass(VuoPortClass * refreshPortClass);
 
@@ -66,6 +69,7 @@ public:
 
 private:
 	bool interface;
+	bool deprecated;
 	vector<string> exampleCompositionFileNames;
 	VuoPortClass * refreshPortClass;
 	vector<VuoPortClass *> inputPortClasses; ///< Includes refresh port.

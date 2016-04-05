@@ -55,6 +55,7 @@ public:
 	Type * getType(void);
 	Type * getFunctionParameterType(Type **secondType);
 	Attributes getFunctionParameterAttributes(void);
+	bool hasInterprocessStringFunction(void);
 };
 
 #endif // VUOCOMPILERTYPE_HH

@@ -68,8 +68,9 @@ public:
 	 */
 	enum Optimization
 	{
-		Optimization_FastBuild,  ///< Optimize for a fast build, at the expense of a larger resulting binary.
-		Optimization_SmallBinary  ///< Optimize for a small binary, at the expense of the build taking longer.
+		Optimization_FastBuild,  ///< Optimize for a fast build, at the expense of a binary that relies on a large cache library.
+		Optimization_FastBuildExistingCache,  ///< Like Optimization_FastBuild, but skips ensuring that the cache library is up to date.
+		Optimization_SmallBinary  ///< Optimize for a small self-contained binary, at the expense of the build taking longer.
 	};
 
 	/**
@@ -87,12 +88,14 @@ public:
 		map<string, VuoNodeSet *> nodeSetForName;  ///< Node sets loaded.
 		map<string, VuoCompilerModule *> libraryModules;  ///< Library modules loaded.
 		map<string, bool> isModuleSearchPathLoaded;  ///< Tracks whether modules have been loaded from each of moduleSearchPaths.
+		map<string, set<VuoFileUtilities::File *> > moduleFilesAtSearchPath;  ///< The module files seen (but not necessarily loaded) from moduleSearchPaths.
 		vector<string> moduleSearchPaths;  ///< Search paths for node classes, types, and library modules.
 		vector<string> headerSearchPaths;  ///< Search paths for header/include files.
 		vector<string> librarySearchPaths;  ///< Search paths for libraries (other than Vuo library modules).
 		vector<string> frameworkSearchPaths;  ///< Search paths for frameworks.
 
-		void loadModules(string path);
+		set<VuoFileUtilities::File *> listModules(const string &path);
+		VuoCompilerModule * loadModule(VuoFileUtilities::File *moduleFile);
 		void reifyPortTypes(Environment *outerEnvironment);
 
 	public:
@@ -110,7 +113,7 @@ public:
 		vector<string> getLibrarySearchPaths(void);
 		void addFrameworkSearchPath(const string &path);
 		vector<string> getFrameworkSearchPaths(void);
-		void loadModulesIntoCombinedEnvironment(Environment *myEnvironment, Environment *sharedEnvironment);
+		void loadModulesIntoCombinedEnvironment(Environment *myEnvironment, Environment *sharedEnvironment, bool shouldLoadAllModules, set<string> &modulesToLoad);
 		void addNodeClassToCombinedEnvironment(VuoCompilerNodeClass *nodeClass, Environment *myEnvironment, Environment *sharedEnvironment);
 		void updateCombinedEnvironment(Environment *myEnvironment, Environment *sharedEnvironment);
 		void addSearchPathsToSharedEnvironment(void);
@@ -130,6 +133,8 @@ private:
 	Environment combinedEnvironment;
 	map<string, set<string> > compatibleDependenciesCache;
 	map<string, set<string> > incompatibleDependenciesCache;
+	bool shouldLoadAllModules;
+	set<string> modulesToLoad;
 	llvm::sys::Path clangPath;
 	string telemetry;
 	string target;
@@ -142,9 +147,9 @@ private:
 	set<string> getDependenciesForComposition(const string &compiledCompositionPath);
 	void getDependenciesRecursively(const string &dependency, set<string> &compatibleDependencies, set<string> &incompatibleDependencies);
 	map<string, int> getDependenciesRecursivelyWithCache(const string &dependency, const vector<string> &ancestorsVisited);
-	void getLinkerInputs(const set<string> &dependencies, bool shouldUseCachedResources, set<Module *> &modules, set<string> &libraries, set<string> &frameworks);
-	void getCachedResources(void);
-	void getCachedResourcesThreadUnsafe(void);
+	void getLinkerInputs(const set<string> &dependencies, Optimization optimization, set<Module *> &modules, set<string> &libraries, set<string> &frameworks);
+	void getCachedResources(bool shouldUseExistingCache=false);
+	void getCachedResourcesThreadUnsafe(bool shouldUseExistingCache=false);
 	void link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath="");
 	Module * readModuleFromC(string inputPath);
 	Module * readModuleFromC(string inputPath, const vector<string> &extraArgs);
@@ -165,6 +170,7 @@ private:
 
 	friend class TestVuoCompiler;		///< TestVuoCompiler needs to add a search path for its own private nodes/types.
 	friend class TestCompositionExecution;	///< TestCompositionExecution needs to add a search path for its own private nodes.
+	friend class TestVuoCompilerModule;
 	friend class TestVuoCompilerBitcodeGenerator;
 	friend class TestCompilingAndLinking;
 
@@ -172,6 +178,7 @@ public:
 	VuoCompiler(void);
 	~VuoCompiler(void);
 	void setLicense(string licenseContent, string licenseSignature);
+	void loadStoredLicense();
 	static Module * readModuleFromBitcode(string inputPath);
 	static void deleteModule(Module *module);
 	static set<string> getEncounteredPremiumModules();
@@ -184,7 +191,9 @@ public:
 	void linkCompositionToCreateDynamicLibrary(string inputPath, string outputPath, Optimization optimization);
 	void linkCompositionToCreateDynamicLibraries(string compiledCompositionPath, string linkedCompositionPath, string &newLinkedResourcePath, vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources);
 	void prepareForFastBuild(void);
+	void setLoadAllModules(bool shouldLoadAllModules);
 	VuoNode * createNode(VuoCompilerNodeClass *nodeClass, string title="", double x=0, double y=0);
+	VuoCompilerNodeClass * createPublishedInputNodeClass(VuoNodeClass *dummyNodeClass);
 	VuoCompilerNodeClass * getNodeClass(const string &id);
 	map<string, VuoCompilerNodeClass *> getNodeClasses(void);
 	VuoCompilerType * getType(const string &id);

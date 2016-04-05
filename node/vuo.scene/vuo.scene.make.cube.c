@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Cube",
+					 "title" : "Make Cube with Materials",
 					 "keywords" : [ "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
 					 "version" : "1.0.0",
 					 "node": {

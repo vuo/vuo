@@ -20,7 +20,7 @@ Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Poi
 Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform: Orbit Cube around Circle|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="199,176" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000}"];
 Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform: Place Cube Farther from Camera|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="155,288" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _rotation="{\"x\":0.000000,\"y\":-30.000000,\"z\":0.000000}" _scale="{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000}"];
 Make3DTransform3 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform: Tilt Cube|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="299,56" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":1.000000,\"y\":1.000000,\"z\":1.000000}"];
-MakeCube [type="vuo.scene.make.cube" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<cube>cube\r" pos="887,243"];
+MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="844,196"];
 MakeDictionary6 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-420,202"];
 MakeDictionary7 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="-419,278"];
 MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="784,-183" fillcolor="green"];
@@ -35,14 +35,14 @@ MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image
 MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="272,445" _center="{\"x\":0.000000,\"y\":-0.400000,\"z\":0.200000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.800000" _opacity="1.000000"];
 Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-473,193"];
 RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="855,-194" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="58,20" _start="-2.000000" _end="2.000000" _scaledStart="45.000000" _scaledEnd="-45.000000"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="58,20" _start="-1.000000" _end="1.000000" _scaledStart="45.000000" _scaledEnd="-45.000000"];
 ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="680,374" _color="{\"r\":0.980240,\"g\":0.525948,\"b\":0.525704,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-484,273" _value="0.500000"];
 
 Calculate2:result -> Make3DPoint:y;
 Calculate3:result -> Make3DPoint:z;
 CheckMouseStatus:position -> Convert2DPointToReal2:xy;
-CombineTransforms:composite -> MakeCube:transform;
+CombineTransforms:composite -> MakeCube3:transform;
 Convert2DPointToReal2:x -> Scale:value;
 ConvertRealTo3DPoint:point3d -> Make3DTransform3:rotation;
 FireOnStart:started -> Make3DTransform2:refresh;
@@ -53,7 +53,7 @@ Make3DPoint:point -> Make3DTransform:translation;
 Make3DTransform2:transform -> MakeList24:3;
 Make3DTransform3:transform -> MakeList24:1;
 Make3DTransform:transform -> MakeList24:2;
-MakeCube:cube -> MakeList:1;
+MakeCube3:cube -> MakeList:1;
 MakeDictionary6:dictionary -> Calculate2:values;
 MakeDictionary7:dictionary -> Calculate3:values;
 MakeList17:list -> MakeDictionary6:values;
@@ -72,12 +72,7 @@ RenderSceneToWindow:requestedFrame -> CheckMouseStatus:refresh;
 RenderSceneToWindow:requestedFrame -> MakeList21:1;
 RenderSceneToWindow:showedWindow -> CheckMouseStatus:window;
 Scale:scaledValue -> ConvertRealTo3DPoint:z;
-ShadeWithColor:shader -> MakeCube:backShader;
-ShadeWithColor:shader -> MakeCube:bottomShader;
-ShadeWithColor:shader -> MakeCube:frontShader;
-ShadeWithColor:shader -> MakeCube:leftShader;
-ShadeWithColor:shader -> MakeCube:rightShader;
-ShadeWithColor:shader -> MakeCube:topShader;
+ShadeWithColor:shader -> MakeCube3:material;
 ShareValue2:sameValue -> MakeList17:2;
 ShareValue2:sameValue -> MakeList19:2;
 }

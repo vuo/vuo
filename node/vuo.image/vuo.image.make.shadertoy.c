@@ -17,7 +17,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "opengl", "glsl", "scenegraph", "graphics",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert", "tone", "chroma" ],
-					 "version" : "2.0.1",
+					 "version" : "2.1.0",
 					 "dependencies" : [
 						 "VuoGlContext"
 					 ],
@@ -149,7 +149,8 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoText, {
-				"default": "void main(void)\n{\n	vec2 uv = (gl_FragCoord.xy/iResolution.xy);\n	gl_FragColor = vec4(uv.xyx, 1.);\n}"}
+				"default": "void main(void)\n{\n	vec2 uv = (gl_FragCoord.xy/iResolution.xy);\n	gl_FragColor = vec4(uv.xyx, 1.);\n}",
+				"isCodeEditor":true}
 			) fragmentShader,
 		VuoInputEvent({"eventBlocking":"none","data":"fragmentShader"}) fragmentShaderEvent,
 		VuoInputData(VuoReal) GlobalTime,

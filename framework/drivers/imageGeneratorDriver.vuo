@@ -9,17 +9,28 @@
 
 digraph G
 {
-FireOnDisplayRefresh [type="vuo.event.fireOnDisplayRefresh" version="1.0.0" label="Fire on Display Refresh|<refresh>refresh\l|<requestedFrame>requestedFrame\r" pos="7,-20" fillcolor="cyan" _requestedFrame_eventThrottling="drop"];
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="316,187" _height="1.000000"];
+ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Size|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="66,413" _width="1024" _height="768"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-35,296" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetWindowDimensions [type="vuo.window.get.dimensions" version="1.0.0" label="Get Window Dimensions|<refresh>refresh\l|<window>window\l|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r|<aspectRatio>aspectRatio\r|<top>top\r|<right>right\r|<bottom>bottom\r|<left>left\r" pos="76,-107"];
 HoldValue2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="345,-93" fillcolor="cyan" _initialValue="800"];
 HoldValue3 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="345,30" fillcolor="cyan" _initialValue="600"];
-RenderImageToWindow [type="vuo.image.render.window" version="1.0.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="8,131" fillcolor="magenta" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<outputImage>outputImage\r" _outputImage="" _outputImage_type="VuoImage"];
+MakeList3 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="-38,157" fillcolor="magenta"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="8,131" fillcolor="magenta" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<outputImage>outputImage\r" _outputImage_type="VuoImage"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<width>width\l|<height>height\l|<time>time\l" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal"];
 
-FireOnDisplayRefresh:requestedFrame -> HoldValue2:refresh;
-FireOnDisplayRefresh:requestedFrame -> HoldValue3:refresh;
+ChangeWindowSize:property -> MakeList3:1;
+FireOnStart:started -> ChangeWindowSize:refresh;
+GetWindowDimensions:aspectRatio -> ChangeWindowAspectRatio:width;
+GetWindowDimensions:pixelsHigh -> HoldValue3:newValue;
+GetWindowDimensions:pixelsWide -> HoldValue2:newValue;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+RenderImageToWindow:requestedFrame -> HoldValue2:refresh;
+RenderImageToWindow:requestedFrame -> HoldValue3:refresh;
+RenderImageToWindow:showedWindow -> GetWindowDimensions:window;
 PublishedInputs:outputImage -> RenderImageToWindow:image;
 HoldValue2:heldValue -> PublishedOutputs:width;
 HoldValue3:heldValue -> PublishedOutputs:height;
-FireOnDisplayRefresh:requestedFrame -> PublishedOutputs:time;
+RenderImageToWindow:requestedFrame -> PublishedOutputs:time;
 }

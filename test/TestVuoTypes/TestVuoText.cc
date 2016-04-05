@@ -10,6 +10,8 @@
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoText.h"
+#include "VuoData.h"
+#include <json/json.h>
 }
 
 // Be able to use this type in QTest::addColumn()
@@ -117,7 +119,8 @@ private slots:
 		QTest::newRow("UTF8 string, startIndex too large")						<< QString::fromUtf8("⓪①②③④⑤")	<< 7	<< 1	<< "";
 		QTest::newRow("UTF8 string, startIndex zero")							<< QString::fromUtf8("⓪①②③④⑤")	<< 0	<< 3	<< QString::fromUtf8("⓪①");
 		QTest::newRow("UTF8 string, startIndex negative, length reaches")		<< QString::fromUtf8("⓪①②③④⑤")	<< -1	<< 3	<< QString::fromUtf8("⓪");
-		QTest::newRow("UTF8 string, startIndex negative, length doesn't reach")	<< QString::fromUtf8("⓪①②③④⑤")	<< -1	<< 2	<< "";
+		QTest::newRow("UTF8 string, startIndex negative, barely doesn't reach")	<< QString::fromUtf8("⓪①②③④⑤")	<< -1	<< 2	<< "";
+		QTest::newRow("UTF8 string, startIndex negative, doesn't reach")		<< QString::fromUtf8("⓪①②③④⑤")	<< -1	<< 1	<< "";
 		QTest::newRow("UTF8 string, length too large")							<< QString::fromUtf8("⓪①②③④⑤")	<< 2	<< 6	<< QString::fromUtf8("①②③④⑤");
 		QTest::newRow("UTF8 string, length negative")							<< QString::fromUtf8("⓪①②③④⑤")	<< 2	<< -1	<< "";
 	}
@@ -278,6 +281,57 @@ private slots:
 		QFETCH(QString, expectedReplacedString);
 
 		QVERIFY(VuoText_areEqual(VuoText_replace(subject.toUtf8().data(), stringToFind.toUtf8().data(), replacement.toUtf8().data()), expectedReplacedString.toUtf8().data()));
+	}
+
+	void testFromData_data()
+	{
+		QTest::addColumn<void *>("jsonData");
+		QTest::addColumn<QString>("expectedText");
+
+		QTest::newRow("null") << (void *)NULL << "";
+
+		{
+			const char *hello = "Héllo Wørld!";
+			VuoData helloData = VuoData_makeFromText(hello);
+			VuoData_retain(helloData);
+			QTest::newRow("hello") << (void *)VuoData_getJson(helloData) << hello;
+			VuoData_release(helloData);
+		}
+
+		{
+			// Byte 0xfe is not allowed in UTF-8.
+			const unsigned char bad[] = { 0xfe };
+
+			VuoData badData = VuoData_make(sizeof(bad), (unsigned char *)bad);
+			VuoData_retain(badData);
+			QTest::newRow("bad: solo 0xfe") << (void *)VuoData_getJson(badData) << "";
+			VuoData_release(badData);
+		}
+
+		{
+			// Byte 0xff is not allowed in UTF-8.
+			const unsigned char bad[] = { 'h', 'i', 0xff, 'o', 'k' };
+
+			VuoData badData = VuoData_make(sizeof(bad), (unsigned char *)bad);
+			VuoData_retain(badData);
+			QTest::newRow("bad: midstream 0xff") << (void *)VuoData_getJson(badData) << "";
+			VuoData_release(badData);
+		}
+	}
+	void testFromData()
+	{
+		QFETCH(void *, jsonData);
+		QFETCH(QString, expectedText);
+
+		VuoData data = VuoData_makeFromJson((json_object *)jsonData);
+		VuoData_retain(data);
+		VuoText text = VuoText_makeFromData((unsigned char *)data.data, data.size);
+		VuoRetain(text);
+
+		QCOMPARE(QString(text), expectedText);
+
+		VuoRelease(text);
+		VuoData_release(data);
 	}
 };
 

@@ -15,8 +15,11 @@
 #include <oscpack/osc/OscPacketListener.h>
 #include <oscpack/ip/UdpSocket.h>
 #include <CoreServices/CoreServices.h>
-#include <json/json.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+#include <json/json.h>
+#pragma clang diagnostic pop
 
 extern "C"
 {

@@ -17,6 +17,9 @@ OTHER_FILES += \
 TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoArtNetInputDevice:2 \
 		VuoArtNetOutputDevice:2 \
+		VuoAudioBins:0 \
+		VuoAudioBinAverageType:0 \
+		VuoAudioEncoding:0 \
 		VuoAudioInputDevice:2 \
 		VuoAudioOutputDevice:2 \
 		VuoAudioSamples:2 \
@@ -26,12 +29,14 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoCursor:2 \
 		VuoCurve:0 \
 		VuoCurveEasing:0 \
+		VuoData:2 \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
 		VuoDmxColorMap:2 \
 		VuoFileType:0 \
 		VuoFont:2 \
 		VuoGradientNoise:0 \
+		VuoGridType:0 \
 		VuoHorizontalAlignment:0 \
 		VuoHorizontalReflection:0 \
 		VuoHorizontalSide:0 \
@@ -39,6 +44,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoImage:1 \
 		VuoImageColorDepth:0 \
 		VuoImageWrapMode:0 \
+		VuoImageStereoType:0 \
 		VuoInteger:0 \
 		VuoKey:0 \
 		VuoLayer:2 \
@@ -57,8 +63,11 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoMidiPitchBend:2 \
 		VuoModifierKey:0 \
 		VuoMouseButton:0 \
+		VuoMovieFormat:0 \
+		VuoMovieImageEncoding:0 \
 		VuoNoise:0 \
 		VuoNotePriority:2 \
+		VuoNumberFormat:2 \
 		VuoOscMessage:2 \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
@@ -71,6 +80,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoScreen:2 \
 		VuoShader:1 \
 		VuoImageFormat:0 \
+		VuoSerialDevice:2 \
 		VuoSizingMode:0 \
 		VuoSyphonServerDescription:0 \
 		VuoText:1 \
@@ -94,6 +104,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.audio \
 	$$ROOT/node/vuo.bcf2000 \
 	$$ROOT/node/vuo.color \
+	$$ROOT/node/vuo.data \
 	$$ROOT/node/vuo.file \
 	$$ROOT/node/vuo.font \
 	$$ROOT/node/vuo.image \
@@ -109,8 +120,10 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.osc \
 	$$ROOT/node/vuo.rss \
 	$$ROOT/node/vuo.scene \
+	$$ROOT/node/vuo.serial \
 	$$ROOT/node/vuo.shader \
 	$$ROOT/node/vuo.syphon \
+	$$ROOT/node/vuo.text \
 	$$ROOT/node/vuo.ui
 
 include(../../module.pri)

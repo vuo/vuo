@@ -33,7 +33,7 @@ When running a composition from a 32-bit application, the composition always run
 To use Vuo, your application needs to link to Vuo.framework, which comes with the Vuo SDK. 
 
 
-### Xcode 4 and 5
+### Xcode 4, 5, or 6
 
 If using the Cocoa API or the C++ API:
 
@@ -48,6 +48,7 @@ If using the Cocoa API or the C++ API:
       - Drag Vuo.framework from the Project Navigator to this Build Phase. (The + button doesn't work.) 
   - Modify the target's Build Settings: 
     - All > Linking > Runpath Search Paths: `@loader_path/../Frameworks`
+    - If using Xcode 6.1.1 or later, go to Editor > Add Build Setting > Add User-Defined Setting, add `REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES`, and set it to `NO`.
   - Modify &lt;your project&gt;-Prefix.pch: 
     - Just before @code{cpp} #import <Cocoa/Cocoa.h> @endcode add @code{cpp}#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0 @endcode (This is a workaround for a bug in one of Vuo's dependencies that prevents Cocoa projects from compiling.)
 
@@ -59,8 +60,8 @@ If using the Cocoa API:
 If using the C++ API:
 
   - Modify the target's Build Settings: 
-    - All > Apple LLVM 4.2 (5.0 for Xcode 5) - Language - C++ > C++ Language Dialect: C++98
-    - All > Apple LLVM 4.2 (5.0 for Xcode 5) - Language - C++ > C++ Standard Library: libstdc++
+    - All > Apple LLVM [version] - Language - C++ > C++ Language Dialect: C++98
+    - All > Apple LLVM [version] - Language - C++ > C++ Standard Library: libstdc++
   - Set up one or more of your project's source files to be able to call Vuo API functions: 
     - Name the source file with extension ".mm" (for Objective-C++) instead of ".m". 
     - Add @code{cpp} #include <Vuo/Vuo.h> @endcode
@@ -79,6 +80,11 @@ Vuo.framework includes the basic functions you need to build and run a Vuo compo
    - For working with OpenGL contexts, use the functions declared in VuoGlContext.h and defined in `Vuo.framework/Modules/libVuoGlContext.dylib`. 
 
 See the RunImageFilter example projects (included with the Vuo SDK) for examples of using these libraries. 
+
+
+## Using the Cocoa API
+
+Depending on whether the Vuo compositions to be run by your application are Image Filters or Image Generators, you should use either the VuoImageFilter or VuoImageGenerator class. With these classes, you can set the composition's published input port values, filter or generate images based on those inputs, and retrieve the output images as NSImages or GL textures. These classes provide a high-level interface that does all of the necessary composition setup (compiling, linking, and running in a separate 64-bit process) behind the scenes.
 
 
 ## Using the C++ API

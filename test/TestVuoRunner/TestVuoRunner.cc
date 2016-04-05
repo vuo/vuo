@@ -163,16 +163,26 @@ private slots:
 		QVERIFY2(actualLines.size() >= EXPECTED_TELEMETRY_TYPES * (SLEEP_SEC * TELEMETRY_PER_SEC - 1),
 				 qPrintable(QString("actualLines: %1").arg(actualLines.size())));
 
-		// There is a delay between when the composition starts sending telemetry data (runner->start()) and
-		// when the delegate starts receiving it (listenThread). So we don't know which telemetry type
-		// the delegate will receive first. But after that, it should cycle through the telemetry types.
-		string expectedTelemetryType;
-		{
-			string line = actualLines.at(0);
-			istringstream sin(line);
-			sin >> expectedTelemetryType;
-		}
+		// When the composition is first starting, it may receive multiple telemetry stats messages
+		// in rapid succession. But after that, it should cycle through the telemetry types.
+		uint startLine = 0;
 		for (uint i = 0; i < actualLines.size(); ++i)
+		{
+			string actualTelemetryType;
+			string line = actualLines.at(i);
+			istringstream sin(line);
+			sin >> actualTelemetryType;
+			if (actualTelemetryType != "VuoTelemetryStats")
+			{
+				startLine = i;
+				break;
+			}
+		}
+		QVERIFY2(startLine > 0 && actualLines.size() - startLine >= EXPECTED_TELEMETRY_TYPES * (SLEEP_SEC * TELEMETRY_PER_SEC - 1),
+				 qPrintable(QString("actualLines from first non-VuoTelemetryStats to the end: %1").arg(actualLines.size() - startLine)));
+
+		string expectedTelemetryType = "VuoTelemetryNodeExecutionStarted";
+		for (uint i = startLine; i < actualLines.size(); ++i)
 		{
 			string line = actualLines.at(i);
 			istringstream sin(line);

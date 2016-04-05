@@ -13,11 +13,14 @@ SUBDIRS += \
 	VuoInputEditorKey \
 	VuoInputEditorLoopType \
 	VuoInputEditorMathExpressionList \
+	VuoInputEditorMovieFormat \
 	VuoInputEditorPoint2d \
 	VuoInputEditorPoint3d \
 	VuoInputEditorPoint4d \
 	VuoInputEditorReal \
 	VuoInputEditorRealRegulation \
+	VuoInputEditorScreen \
+	VuoInputEditorSerialDevice \
 	VuoInputEditorSizingMode \
 	VuoInputEditorText \
 	VuoInputEditorWave \
@@ -34,11 +37,14 @@ VuoInputEditorInteger.depends = widget
 VuoInputEditorKey.depends = widget
 VuoInputEditorLoopType.depends = widget
 VuoInputEditorMathExpressionList.depends = widget
+VuoInputEditorMovieFormat.depends = widget
 VuoInputEditorPoint2d.depends = widget
 VuoInputEditorPoint3d.depends = widget
 VuoInputEditorPoint4d.depends = widget
 VuoInputEditorReal.depends = widget
 VuoInputEditorRealRegulation.depends = widget
+VuoInputEditorScreen.depends = widget
+VuoInputEditorSerialDevice.depends = widget
 VuoInputEditorSizingMode.depends = widget
 VuoInputEditorText.depends = widget
 VuoInputEditorWave.depends = widget

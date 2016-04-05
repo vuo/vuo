@@ -13,6 +13,8 @@ To mimic the way the Shadertoy website handles interaction, connect the `Check M
 
 All Shadertoy-specific inputs are supported, except `iChannelTime` and the ability to feed audio into the `iChannel` ports.
 
+When typing in the `Fragment Shader` port's input editor, the Return and Tab keys type text as they normally would in a text editor (unlike most other text ports' input editors). To close the input editor, click away from it or press Command-Return.
+
 ### Troubleshooting
 
    - Make sure that you have images in the appropriate Channel ports.  If a shader makes use of an image and it is not provided, things may go awry.

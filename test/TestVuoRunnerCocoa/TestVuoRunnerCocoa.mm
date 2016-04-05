@@ -21,9 +21,6 @@
 #include <QtTest/QtTest>
 #pragma clang diagnostic pop
 
-#include <set>
-using namespace std;
-
 // Be able to use this type in QTest::addColumn()
 Q_DECLARE_METATYPE(VuoImage);
 
@@ -138,6 +135,11 @@ private slots:
 		return [NSURL fileURLWithPath:[NSString stringWithUTF8String:(string("composition/") + QTest::currentDataTag()).c_str()]];
 	}
 
+	NSString *compositionString(void)
+	{
+		return [NSString stringWithContentsOfURL:url() encoding:NSUTF8StringEncoding error:NULL];
+	}
+
 	QList<QString> qListQStringWithNSArray(NSArray *arrayOfStrings)
 	{
 		__block QList<QString> list;
@@ -181,8 +183,16 @@ private slots:
 		QFETCH(bool, expectedCompliance);
 
 		Class c = NSClassFromString([NSString stringWithUTF8String:className.toUtf8().data()]);
-		bool actualCompliance = [c canOpenComposition:url()];
-		QCOMPARE(actualCompliance, expectedCompliance);
+
+		{
+			bool actualCompliance = [c canOpenComposition:url()];
+			QCOMPARE(actualCompliance, expectedCompliance);
+		}
+
+		{
+			bool actualCompliance = [c canOpenCompositionString:compositionString()];
+			QCOMPARE(actualCompliance, expectedCompliance);
+		}
 	}
 
 	void testCommonMethods_data()
@@ -199,6 +209,16 @@ private slots:
 		QTest::newRow("ImageFilter.vuo")
 				<< "ImageFilter"
 				<< "An empty composition that complies with the ImageFilter protocol."
+				<< "Copyright © 2012–2015 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
+				<< QList<QString>()
+				<< QList<QString>()
+				<< QList<PortAndDetails>()
+				<< MapOfStrings()
+				<< MapOfStrings();
+
+		QTest::newRow("ImageFilter512.vuo")
+				<< "ImageFilter512"
+				<< "A large composition that complies with the ImageFilter protocol."
 				<< "Copyright © 2012–2015 Kosada Incorporated. This code may be modified and distributed under the terms of the MIT License. For more information, see http://vuo.org/license."
 				<< QList<QString>()
 				<< QList<QString>()
@@ -304,40 +324,47 @@ private slots:
 		QFETCH(MapOfStrings, expectedInputPortValues);
 		QFETCH(MapOfStrings, expectedOutputPortValues);
 
-		VuoImageFilter *vif = [[VuoImageFilter alloc] initWithComposition:url()];
-		QVERIFY(vif);
-		activeRunner = vif;
-
-		QCOMPARE(QString([[vif compositionName]        UTF8String]), expectedCompositionName);
-		QCOMPARE(QString([[vif compositionDescription] UTF8String]), expectedCompositionDescription);
-		QCOMPARE(QString([[vif compositionCopyright]   UTF8String]), expectedCompositionCopyright);
-
-		QCOMPARE(qListQStringWithNSArray([vif inputPorts]),  expectedInputPorts);
-		QCOMPARE(qListQStringWithNSArray([vif outputPorts]), expectedOutputPorts);
-
-		foreach (PortAndDetails pd, expectedPortDetails)
-			QCOMPARE(qMapQStringWithNSDictionary([vif detailsForPort:nsStringWithQString(pd.first)]), pd.second);
-
-		id propertyList = [vif propertyListFromInputValues];
-		QCOMPARE(qMapQStringWithNSDictionary(propertyList), expectedInputPortValues);
-
-		bool successfullySetPropertyList = [vif setInputValuesWithPropertyList:propertyList];
-		// If the property list has values, and any of them are null, we expect `setInputValuesWithPropertyList:` to fail.
-		bool areAllInputsValid = expectedInputPortValues.empty() || expectedInputPortValues.first() != "null";
-		QCOMPARE(successfullySetPropertyList, areAllInputsValid);
-
-		QMapIterator<QString, QString> i(expectedOutputPortValues);
-		while (i.hasNext())
+		for (int pass = 0; pass < 2; ++pass)
 		{
-			i.next();
-			QCOMPARE(QString([[[vif valueForOutputPort:[NSString stringWithUTF8String:i.key().toUtf8().data()]] stringValue] UTF8String]), i.value());
+			VuoImageFilter *vif;
+			if (pass == 0)
+				vif = [[VuoImageFilter alloc] initWithComposition:url()];
+			else
+				vif = [[VuoImageFilter alloc] initWithCompositionString:compositionString() name:[NSString stringWithUTF8String:QTest::currentDataTag()] sourcePath:@"composition"];
+			QVERIFY(vif);
+			activeRunner = vif;
+
+			QCOMPARE(QString([[vif compositionName]        UTF8String]), expectedCompositionName);
+			QCOMPARE(QString([[vif compositionDescription] UTF8String]), expectedCompositionDescription);
+			QCOMPARE(QString([[vif compositionCopyright]   UTF8String]), expectedCompositionCopyright);
+
+			QCOMPARE(qListQStringWithNSArray([vif inputPorts]),  expectedInputPorts);
+			QCOMPARE(qListQStringWithNSArray([vif outputPorts]), expectedOutputPorts);
+
+			foreach (PortAndDetails pd, expectedPortDetails)
+				QCOMPARE(qMapQStringWithNSDictionary([vif detailsForPort:nsStringWithQString(pd.first)]), pd.second);
+
+			id propertyList = [vif propertyListFromInputValues];
+			QCOMPARE(qMapQStringWithNSDictionary(propertyList), expectedInputPortValues);
+
+			bool successfullySetPropertyList = [vif setInputValuesWithPropertyList:propertyList];
+			// If the property list has values, and any of them are null, we expect `setInputValuesWithPropertyList:` to fail.
+			bool areAllInputsValid = expectedInputPortValues.empty() || expectedInputPortValues.first() != "null";
+			QCOMPARE(successfullySetPropertyList, areAllInputsValid);
+
+			QMapIterator<QString, QString> i(expectedOutputPortValues);
+			while (i.hasNext())
+			{
+				i.next();
+				QCOMPARE(QString([[[vif valueForOutputPort:[NSString stringWithUTF8String:i.key().toUtf8().data()]] stringValue] UTF8String]), i.value());
+			}
+
+			bool successfullySetValue = [vif setValue:[NSNumber numberWithFloat:42] forInputPort:@"time"];
+			QVERIFY(successfullySetValue);
+
+			[vif release];
+			activeRunner = nil;
 		}
-
-		bool successfullySetValue = [vif setValue:[NSNumber numberWithFloat:42] forInputPort:@"time"];
-		QVERIFY(successfullySetValue);
-
-		[vif release];
-		activeRunner = nil;
 	}
 
 	void testDataTypes_data()
@@ -711,7 +738,7 @@ private slots:
 		{
 			NSUInteger outputPixelsWide, outputPixelsHigh;
 			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-			for (int i = 0; i < 200; ++i)
+			for (int i = 0; i < 1000; ++i)
 			{
 				GLuint outputGLTexture = [sharedImageFilter filterGLTexture:inputVuoImage->glTextureName target:GL_TEXTURE_2D pixelsWide:inputVuoImage->pixelsWide pixelsHigh:inputVuoImage->pixelsHigh atTime:0 outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh];
 				QVERIFY(outputGLTexture);
@@ -722,7 +749,8 @@ private slots:
 		}
 
 		// Make sure we're using a reasonable number of textures.
-		QVERIFY(uniqueTextureNames.size() < 20);
+		VLog("%d unique textures",uniqueTextureNames.size());
+		QVERIFY(uniqueTextureNames.size() < 50);
 
 		VuoRelease(inputVuoImage);
 	}
@@ -744,7 +772,7 @@ private slots:
 		{
 			NSUInteger outputPixelsWide, outputPixelsHigh;
 			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-			for (int i = 0; i < 200; ++i)
+			for (int i = 0; i < 1000; ++i)
 			{
 				GLuint outputGLTexture = [sharedImageFilter filterGLTexture:inputVuoImageRectangle->glTextureName target:GL_TEXTURE_RECTANGLE_ARB pixelsWide:inputVuoImageRectangle->pixelsWide pixelsHigh:inputVuoImageRectangle->pixelsHigh atTime:0 outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh];
 				QVERIFY(outputGLTexture);
@@ -755,7 +783,8 @@ private slots:
 		}
 
 		// Make sure we're using a reasonable number of textures.
-		QVERIFY(uniqueTextureNames.size() < 20);
+		VLog("%d unique textures",uniqueTextureNames.size());
+		QVERIFY(uniqueTextureNames.size() < 10);
 
 		VuoRelease(inputVuoImageRectangle);
 	}

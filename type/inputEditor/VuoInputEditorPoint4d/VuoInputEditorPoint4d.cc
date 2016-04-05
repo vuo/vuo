@@ -54,9 +54,15 @@ void VuoInputEditorPoint4d::setUpDialog(QDialog &dialog, json_object *originalVa
 
 	QDoubleValidator *validator = new QDoubleValidator(this);
 
+	bool tabCycleForward = true;
+
 	// Parse supported port annotations from the port's "details" JSON object:
 	if (details)
 	{
+		json_object *forwardTabTraversal = NULL;
+		if (json_object_object_get_ex(details, "forwardTabTraversal", &forwardTabTraversal))
+			tabCycleForward = json_object_get_boolean(forwardTabTraversal);
+
 		// "suggestedMin"
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
@@ -375,10 +381,11 @@ void VuoInputEditorPoint4d::setUpDialog(QDialog &dialog, json_object *originalVa
 		spinBoxForCoord[w]->show();
 	}
 
-	// Return focus to the topmost line edit.
+	// Return focus to the topmost line edit by default, or to the bottommost
+	// line edit if tab-cycling backwards.
 	// To be handled properly for https://b33p.net/kosada/node/6365 .
-	lineEditForCoord[x]->setFocus();
-	lineEditForCoord[x]->selectAll();
+	(tabCycleForward? lineEditForCoord[x] : lineEditForCoord[w])->setFocus();
+	(tabCycleForward? lineEditForCoord[x] : lineEditForCoord[w])->selectAll();
 }
 
 /**
@@ -581,14 +588,7 @@ double VuoInputEditorPoint4d::sliderValueToScaledLineEditValue(int sliderValue, 
 
 void VuoInputEditorPoint4d::emitValueChanged()
 {
-	VuoPoint4d currentPointValue;
-	currentPointValue.x = VuoReal_makeFromString(lineEditForCoord[x]->text().toUtf8().constData());
-	currentPointValue.y = VuoReal_makeFromString(lineEditForCoord[y]->text().toUtf8().constData());
-	currentPointValue.z = VuoReal_makeFromString(lineEditForCoord[z]->text().toUtf8().constData());
-	currentPointValue.w = VuoReal_makeFromString(lineEditForCoord[w]->text().toUtf8().constData());
-	json_object *valueAsJson = VuoPoint4d_getJson(currentPointValue);
-	emit valueChanged(valueAsJson);
-	json_object_put(valueAsJson);
+	emit valueChanged(getAcceptedValue());
 }
 
 /**

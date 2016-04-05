@@ -11,7 +11,6 @@
 #include "VuoLoopType.h"
 #include "VuoMovie.h"
 #include <dispatch/dispatch.h>
-#include "VuoUrlFetch.h"
 #include "VuoVideoFrame.h"
 
 // #define PROFILE_TIMES 1
@@ -35,7 +34,7 @@ VuoModuleMetadata({
 					  },
 					  "dependencies" : [
 						"VuoMovie",
-						"VuoUrlFetch"
+						"VuoUrl"
 					  ]
 				  });
 
@@ -276,11 +275,15 @@ static void playMovie(struct nodeInstanceData *context, VuoOutputTrigger(decoded
 
 static void setMovie(struct nodeInstanceData *context, const char *movieURL)
 {
-	VuoText normalizedUrl = VuoUrl_normalize(movieURL, false);
-
-	VuoMovie newMovie = VuoMovie_make(normalizedUrl);
+	VuoUrl normalizedUrl = VuoUrl_normalize(movieURL, false);
 	VuoRetain(normalizedUrl);
+
+	VuoText path = VuoUrl_getPosixPath(normalizedUrl);
+	VuoRetain(path);
 	VuoRelease(normalizedUrl);
+
+	VuoMovie newMovie = VuoMovie_make(path);
+	VuoRelease(path);
 
 	// If VuoMovie_make fails to initialize properly, it cleans up after itself.
 	// No need to call VuoMovie_free()
@@ -377,7 +380,20 @@ void nodeInstanceEvent
 		VuoMovie_seekToSecond( (*context)->movie, setTime );
 
 		if ((*context)->isPlaying)
+		{
 			playMovie((*context), decodedVideo, decodedAudio);
+		}
+		else
+		{
+			// step the frame so that the image is set to match the current time
+			if( VuoMovie_getNextVideoFrame((*context)->movie, &(*context)->lastImage, &(*context)->lastVideoTimestamp) )
+			{
+				VuoRetain((*context)->lastImage);
+				decodedVideo( (VuoVideoFrame){ (*context)->lastImage, (*context)->lastVideoTimestamp } );
+				VuoRelease((*context)->lastImage);
+				(*context)->lastImage = NULL;
+			}
+		}
 	}
 
 	(*context)->loop = loop;

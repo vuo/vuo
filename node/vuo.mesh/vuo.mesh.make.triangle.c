@@ -14,7 +14,8 @@ VuoModuleMetadata({
 					 "keywords" : [ "equilateral", "3-gon", "3gon", "shape" ],
 					 "version" : "2.0.0",
 					 "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ ],
+						  "isDeprecated": true
 					 }
 				 });
 

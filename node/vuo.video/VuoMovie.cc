@@ -45,10 +45,7 @@ VuoModuleMetadata({
 						"avutil",
 						"swscale",
 						"swresample"
-					 ],
-					 "compatibleOperatingSystems": {
-						 "macosx" : { "min": "10.6" }
-					 }
+					 ]
 				 });
 #endif
 }
@@ -94,7 +91,7 @@ public:
 	 */
 	typedef struct AVContainer
 	{
-		char *path;
+		VuoText path;
 
 		AVFormatContext *pFormatCtx;
 
@@ -155,6 +152,8 @@ public:
 	 */
 	~VuoMovieDecoder()
 	{
+		VuoRelease(container.path);
+
 		if(container.pCodecCtx != NULL)
 			avcodec_close(container.pCodecCtx);
 
@@ -166,7 +165,7 @@ public:
 	 * Attempts to initialize an AVFormatContext and appropriate codec for the video @a path.
 	 * \sa @c VuoMovie_make
 	 */
-	int initWithFile(const char *path)
+	int initWithFile(VuoText path)
 	{
 		container.pFormatCtx = NULL;
 		if(avformat_open_input(&(container.pFormatCtx), path, NULL, NULL) != 0)
@@ -175,7 +174,8 @@ public:
 			return -1; // Couldn't open file
 		}
 
-		container.path = (char*)path;//(char*)malloc(sizeof(path));
+		container.path = path;
+		VuoRetain(path);
 
 		// initialize the codecs and context stuff
 		if( initCodecCtx() < 0 )
@@ -610,7 +610,7 @@ private:
 			} while( container.currentAudioTimestampUSEC - container.avOffset < container.currentVideoTimestampUSEC );
 		}
 
-		// `<=` because `0 == 0`, and in the event that we actually are a single frame too far ahead, well, that's okay too. 
+		// `<=` because `0 == 0`, and in the event that we actually are a single frame too far ahead, well, that's okay too.
 		return container.currentVideoPTS <= frame;
 	}
 
@@ -2349,10 +2349,10 @@ void VuoMovie_free(void *movie)
 
 /**
  * @brief VuoMovie_make: Creates a new VuoMovieDecoder object and returns itself.
- * @param path An absolute path to the video file to open.
+ * @param path An absolute POSIX path to the video file to open.
  * @return A new VuoMovie object, which may be used to control playback of the film.  If the video file fails to open for any reason, this returns NULL.
  */
-VuoMovie VuoMovie_make(const char *path)
+VuoMovie VuoMovie_make(VuoText path)
 {
 	if (!path || !strlen(path))
 		return NULL;
@@ -2433,9 +2433,9 @@ double VuoMovie_getDuration(VuoMovie movie)
 }
 
 /**
- * Given a @a path, this will open and close a video stream and return the duration.
+ * Given a POSIX `path`, this will open and close a video stream and return the duration.
  */
-bool VuoMovie_getInfo(const char *path, double *duration)
+bool VuoMovie_getInfo(VuoText path, double *duration)
 {
 	VuoMovie movie = VuoMovie_make(path);
 	if(movie == NULL)

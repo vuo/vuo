@@ -45,6 +45,7 @@ VuoNodeClass::VuoNodeClass(string className, vector<string> inputPortClassNames,
 	this->refreshPortClass = new VuoPortClass("refresh", VuoPortClass::eventOnlyPort);
 	inputPortClasses.push_back(this->refreshPortClass);
 	this->interface = false;
+	this->deprecated = false;
 
 	for (vector<string>::iterator i = inputPortClassNames.begin(); i != inputPortClassNames.end(); ++i)
 	{
@@ -229,6 +230,26 @@ vector<string> VuoNodeClass::getExampleCompositionFileNames(void)
 void VuoNodeClass::setExampleCompositionFileNames(vector<string> exampleCompositionFileNames)
 {
 	this->exampleCompositionFileNames = exampleCompositionFileNames;
+}
+
+/**
+ * Returns a boolean indicating whether this node is deprecated.
+ *
+ * @see VuoModuleMetadata
+ */
+bool VuoNodeClass::getDeprecated(void)
+{
+	return deprecated;
+}
+
+/**
+ * Sets the boolean indicating whether this node is deprecated.
+ *
+ * @see VuoModuleMetadata
+ */
+void VuoNodeClass::setDeprecated(bool deprecated)
+{
+	this->deprecated = deprecated;
 }
 
 /**

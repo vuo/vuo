@@ -11,9 +11,9 @@
 #include "VuoSceneObject.h"
 
 VuoModuleMetadata({
-					 "title" : "Change Shader for Material",
+					 "title" : "Change Shaders with Name",
 					  "keywords" : [ "swap", "replace", "texture" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "node": {
 						  "exampleCompositions" : [ "ChangeTrafficSignal.vuo" ]
 					 }
@@ -22,7 +22,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 	VuoInputData(VuoSceneObject) object,
-	VuoInputData(VuoText) material,
+	VuoInputData(VuoText, {"name":"Shader Name"}) material,
 	VuoInputData(VuoShader) shader,
 	VuoOutputData(VuoSceneObject) shadedObject
 )

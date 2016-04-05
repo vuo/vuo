@@ -37,7 +37,8 @@ struct json_object *VuoUrl_getJson(const VuoUrl value);
 char * VuoUrl_getSummary(const VuoUrl value);
 
 bool VuoUrl_isRelativePath(const VuoUrl url);
-VuoUrl VuoUrl_normalize(const VuoUrl url, bool shouldEscapeSpaces);
+VuoUrl VuoUrl_normalize(const VuoText url, bool isSave);
+VuoText VuoUrl_getPosixPath(const VuoUrl url);
 
 /// @{
 /**

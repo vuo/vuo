@@ -20,6 +20,8 @@
 #include <libgen.h> // for dirname()
 #include <dirent.h>
 #include <fcntl.h>
+#include <sys/mman.h>
+#include <dlfcn.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -41,6 +43,9 @@ bool hasBeenUnpaused;  ///< True if node execution was unpaused initially, or if
 bool isPaused;  ///< True if node execution is currently paused.
 bool isStopped; ///< True if composition execution has stopped.
 bool isStopRequested;  ///< True if vuoStopComposition() has been called.
+#ifndef DOXYGEN
+bool *VuoTrialRestrictionsEnabled;	///< If true, some nodes may restrict how they can be used.
+#endif
 
 dispatch_source_t telemetryTimer;  ///< Timer for sending telemetry messages.
 dispatch_source_t controlTimer;  ///< Timer for receiving control messages.
@@ -49,8 +54,14 @@ dispatch_semaphore_t telemetryCanceledSemaphore;  ///< Signaled when telemetry e
 dispatch_semaphore_t controlCanceledSemaphore;  ///< Signaled when control events are no longer being processed.
 dispatch_semaphore_t waitForStopCanceledSemaphore;  ///< Signaled when no longer checking if the runner will stop the composition.
 
+char *compositionDiff = NULL;  ///< Differences between the old and new composition, when replacing compositions for live coding.
+
 static pid_t runnerPid;  ///< Process ID of the runner that started the composition.
 static void stopComposition(void);
+char * getInputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization);
+char * getOutputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization);
+static char * getInputPortSummary(char *portIdentifier);
+static char * getOutputPortSummary(char *portIdentifier);
 
 #include <graphviz/gvplugin.h>
 
@@ -63,7 +74,7 @@ extern gvplugin_library_t gvplugin_core_LTX_library; ///< Reference to the stati
  */
 void vuoControlReplySend(enum VuoControlReply reply, zmq_msg_t *messages, unsigned int messageCount)
 {
-	vuoSend("VuoControl",ZMQControl,reply,messages,messageCount,false);
+	vuoSend("VuoControl",ZMQControl,reply,messages,messageCount,false,NULL);
 }
 
 /**
@@ -77,7 +88,7 @@ void vuoTelemetrySend(enum VuoTelemetry type, zmq_msg_t *messages, unsigned int 
 
 	dispatch_sync(VuoTelemetryQueue, ^{
 		vuoMemoryBarrier();
-		vuoSend("VuoTelemetry",ZMQTelemetry,type,messages,messageCount,true);
+		vuoSend("VuoTelemetry",ZMQTelemetry,type,messages,messageCount,true,NULL);
 	});
 }
 
@@ -95,10 +106,7 @@ extern void nodeInstanceTriggerStart(void);
 extern void nodeInstanceTriggerStop(void);
 extern void setInputPortValue(char *portIdentifier, char *valueAsString, int shouldUpdateCallbacks);
 extern void fireTriggerPortEvent(char *portIdentifier);
-extern char * getInputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
-extern char * getOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization);
-extern char * getInputPortSummary(char *portIdentifier);
-extern char * getOutputPortSummary(char *portIdentifier);
+extern char * getPortValue(char *portIdentifier, bool isInput, bool isThreadSafe, int serializationType);
 extern unsigned int getPublishedInputPortCount(void);
 extern unsigned int getPublishedOutputPortCount(void);
 extern char ** getPublishedInputPortNames(void);
@@ -125,12 +133,14 @@ extern void VuoHeap_fini();
  */
 void vuoInit(int argc, char **argv)
 {
+	bool doAppInit = false;
 	char *controlURL = NULL;
 	char *telemetryURL = NULL;
 	bool _isPaused = false;
 	pid_t _runnerPid = getppid();
 	bool doPrintHelp = false;
 	bool doPrintLicenses = false;
+	bool trialRestrictionsEnabled = false;
 
 	// parse commandline arguments
 	{
@@ -140,7 +150,12 @@ void vuoInit(int argc, char **argv)
 		{
 			// Don't pass the OS X Process Serial Number argument to getopt, since it can't handle long arguments with a single hyphen.
 			if (strncmp(argv[i], "-psn_", 5) == 0)
+			{
+				// Since we have a process serial number, we can assume this is an exported app being invoked by LaunchServices.
+				// Therefore we need to initialize the app (so it shows up in the dock).
+				doAppInit = true;
 				continue;
+			}
 
 			getoptArgV[getoptArgC++] = argv[i];
 		}
@@ -153,6 +168,7 @@ void vuoInit(int argc, char **argv)
 			{"vuo-loader", required_argument, NULL, 0},
 			{"vuo-runner", required_argument, NULL, 0},
 			{"vuo-licenses", no_argument, NULL, 0},
+			{"vuo-trial", no_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -185,6 +201,9 @@ void vuoInit(int argc, char **argv)
 					break;
 				case 6:  // --vuo-licenses
 					doPrintLicenses = true;
+					break;
+				case 7:  // --vuo-trial
+					trialRestrictionsEnabled = true;
 					break;
 			}
 		}
@@ -275,7 +294,16 @@ void vuoInit(int argc, char **argv)
 	}
 
 	VuoHeap_init();
-	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused, _runnerPid);
+
+	if (doAppInit)
+	{
+		typedef void (*vuoAppInitType)(void);
+		vuoAppInitType vuoAppInit = (vuoAppInitType) dlsym(RTLD_SELF, "VuoApp_init");
+		if (vuoAppInit)
+			vuoAppInit();
+	}
+
+	vuoInitInProcess(NULL, controlURL, telemetryURL, _isPaused, _runnerPid, trialRestrictionsEnabled);
 	free(controlURL);
 	free(telemetryURL);
 }
@@ -284,7 +312,7 @@ void vuoInit(int argc, char **argv)
  * Sets up ZMQ control and telemetry sockets, then calls the generated function @c setup().
  * If the composition is not paused, also calls @c nodeInstanceInit() and @c nodeInstanceTriggerStart().
  */
-void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid)
+void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid, bool trialRestrictionsEnabled)
 {
 	if (controlURL && telemetryURL)
 	{
@@ -294,11 +322,28 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 		ZMQControl = zmq_socket(ZMQContext,ZMQ_REP);
 		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_PUB);
 
+		bool connectionError = false;
+
 		if(zmq_bind(ZMQControl,controlURL))
-			VLog("Error: Bind '%s' failed.", controlURL);
+		{
+			VLog("The composition couldn't start because it couldn't establish communication to be controlled by the runner : %s", strerror(errno));
+			connectionError = true;
+		}
 
 		if(zmq_bind(ZMQTelemetry,telemetryURL))
-			VLog("Error: Bind '%s' failed.", telemetryURL);
+		{
+			VLog("The composition couldn't start because it couldn't establish communication to be listened to by the runner : %s", strerror(errno));
+			connectionError = true;
+		}
+
+		if (connectionError)
+		{
+			zmq_close(ZMQControl);
+			ZMQControl = NULL;
+			zmq_close(ZMQTelemetry);
+			ZMQTelemetry = NULL;
+			return;
+		}
 
 		VuoTelemetryQueue = dispatch_queue_create("org.vuo.runtime.telemetry", NULL);
 	}
@@ -309,6 +354,34 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	isPaused = _isPaused;
 	isStopped = false;
 	isStopRequested = false;
+
+
+	// Set the `VuoTrialRestrictionsEnabled` global, and protect it.
+	{
+		VuoTrialRestrictionsEnabled = NULL;
+		int pagesize = sysconf(_SC_PAGE_SIZE);
+		if (pagesize == -1)
+		{
+//			VLog("Error: Couldn't configure VuoTrialRestrictionsEnabled: %s", strerror(errno));
+		}
+		else
+		{
+			VuoTrialRestrictionsEnabled = mmap(NULL, pagesize, PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+			if (VuoTrialRestrictionsEnabled == MAP_FAILED)
+			{
+//				VLog("Error: Couldn't configure VuoTrialRestrictionsEnabled: %s", strerror(errno));
+			}
+			else
+			{
+				*VuoTrialRestrictionsEnabled = trialRestrictionsEnabled;
+				if (mprotect(VuoTrialRestrictionsEnabled, pagesize, PROT_READ) == -1)
+				{
+//					VLog("Error: Couldn't configure VuoTrialRestrictionsEnabled: %s", strerror(errno));
+				}
+			}
+		}
+	}
+
 
 	runnerPid = _runnerPid;
 	waitForStopCanceledSemaphore = dispatch_semaphore_create(0);
@@ -346,12 +419,15 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 		telemetryCanceledSemaphore = dispatch_semaphore_create(0);
 		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 		telemetryTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,queue);
-		dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/2, NSEC_PER_SEC/100);
+		dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 		dispatch_source_set_event_handler(telemetryTimer, ^{
 
 			struct rusage r;
 			if(getrusage(RUSAGE_SELF,&r))
-				VLog("Error: Failed to gather: %s", strerror(errno));
+			{
+				VLog("The composition couldn't get the information to send for VuoTelemetryStats : %s", strerror(errno));
+				return;
+			}
 
 			zmq_msg_t messages[2];
 
@@ -397,13 +473,20 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 			if(!(items[0].revents & ZMQ_POLLIN))
 				return;
 
-			enum VuoControlRequest control = (enum VuoControlRequest) vuoReceiveInt(ZMQControl);
+			enum VuoControlRequest control = (enum VuoControlRequest) vuoReceiveInt(ZMQControl, NULL);
 
 			switch (control)
 			{
+				case VuoControlRequestSlowHeartbeat:
+				{
+					dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/2, NSEC_PER_SEC/100);
+					vuoControlReplySend(VuoControlReplyHeartbeatSlowed,NULL,0);
+					break;
+				}
 				case VuoControlRequestCompositionStop:
 				{
-					int timeoutInSeconds = vuoReceiveInt(ZMQControl);
+					int timeoutInSeconds = vuoReceiveInt(ZMQControl, NULL);
+					bool isBeingReplaced = vuoReceiveBool(ZMQControl, NULL);
 
 					if (timeoutInSeconds >= 0)
 					{
@@ -414,6 +497,12 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 							zmq_close(ZMQControl);  // wait until message fully sends
 							kill(getpid(), SIGKILL);
 						});
+					}
+
+					if (! isBeingReplaced)
+					{
+						free(compositionDiff);
+						compositionDiff = NULL;
 					}
 
 					stopComposition();
@@ -450,9 +539,9 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestInputPortValueRetrieve:
 				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
-					char *valueAsString = getInputPortValue(portIdentifier, shouldUseInterprocessSerialization);
+					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
+					char *valueAsString = getInputPortString(portIdentifier, shouldUseInterprocessSerialization);
 					zmq_msg_t messages[1];
 					vuoInitMessageWithString(&messages[0], valueAsString);
 					free(valueAsString);
@@ -461,9 +550,9 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestOutputPortValueRetrieve:
 				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
-					char *valueAsString = getOutputPortValue(portIdentifier, shouldUseInterprocessSerialization);
+					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
+					char *valueAsString = getOutputPortString(portIdentifier, shouldUseInterprocessSerialization);
 					zmq_msg_t messages[1];
 					vuoInitMessageWithString(&messages[0], valueAsString);
 					free(valueAsString);
@@ -472,7 +561,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestInputPortSummaryRetrieve:
 				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
 					char *summary = getInputPortSummary(portIdentifier);
 					zmq_msg_t messages[1];
 					vuoInitMessageWithString(&messages[0], summary);
@@ -482,7 +571,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestOutputPortSummaryRetrieve:
 				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
 					char *summary = getOutputPortSummary(portIdentifier);
 					zmq_msg_t messages[1];
 					vuoInitMessageWithString(&messages[0], summary);
@@ -492,7 +581,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestTriggerPortFireEvent:
 				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
 					fireTriggerPortEvent(portIdentifier);
 					free(portIdentifier);
 					vuoControlReplySend(VuoControlReplyTriggerPortFiredEvent,NULL,0);
@@ -500,8 +589,8 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestInputPortValueModify:
 				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
-					char *valueAsString = vuoReceiveAndCopyString(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
+					char *valueAsString = vuoReceiveAndCopyString(ZMQControl, NULL);
 					setInputPortValue(portIdentifier, valueAsString, true);
 					free(portIdentifier);
 					free(valueAsString);
@@ -582,7 +671,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestPublishedInputPortConnectedIdentifiersRetrieve:
 				{
-					char *name = vuoReceiveAndCopyString(ZMQControl);
+					char *name = vuoReceiveAndCopyString(ZMQControl, NULL);
 
 					int count = getPublishedInputPortConnectedIdentifierCount(name);
 					char **identifiers = getPublishedInputPortConnectedIdentifiers(name);
@@ -596,7 +685,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestPublishedOutputPortConnectedIdentifiersRetrieve:
 				{
-					char *name = vuoReceiveAndCopyString(ZMQControl);
+					char *name = vuoReceiveAndCopyString(ZMQControl, NULL);
 
 					int count = getPublishedOutputPortConnectedIdentifierCount(name);
 					char **identifiers = getPublishedOutputPortConnectedIdentifiers(name);
@@ -610,7 +699,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestPublishedInputPortFireEvent:
 				{
-					char *name = vuoReceiveAndCopyString(ZMQControl);
+					char *name = vuoReceiveAndCopyString(ZMQControl, NULL);
 					firePublishedInputPortEvent(name);
 					free(name);
 
@@ -619,8 +708,8 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestPublishedInputPortValueModify:
 				{
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
-					char *valueAsString = vuoReceiveAndCopyString(ZMQControl);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
+					char *valueAsString = vuoReceiveAndCopyString(ZMQControl, NULL);
 					setPublishedInputPortValue(portIdentifier, valueAsString);
 					free(portIdentifier);
 					free(valueAsString);
@@ -629,8 +718,8 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestPublishedInputPortValueRetrieve:
 				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
 					char *valueAsString = getPublishedInputPortValue(portIdentifier, shouldUseInterprocessSerialization);
 					zmq_msg_t messages[1];
 					vuoInitMessageWithString(&messages[0], valueAsString);
@@ -640,8 +729,8 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 				}
 				case VuoControlRequestPublishedOutputPortValueRetrieve:
 				{
-					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl);
-					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl);
+					bool shouldUseInterprocessSerialization = vuoReceiveBool(ZMQControl, NULL);
+					char *portIdentifier = vuoReceiveAndCopyString(ZMQControl, NULL);
 					char *valueAsString = getPublishedOutputPortValue(portIdentifier, shouldUseInterprocessSerialization);
 					zmq_msg_t messages[1];
 					vuoInitMessageWithString(&messages[0], valueAsString);
@@ -659,6 +748,38 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	}
 }
 
+
+/**
+ * Returns a string representation of the input port's current value.
+ */
+char * getInputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization)
+{
+	return getPortValue(portIdentifier, true, true, shouldUseInterprocessSerialization ? 2 : 1);
+}
+
+/**
+ * Returns a string representation of the output port's current value.
+ */
+char * getOutputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization)
+{
+	return getPortValue(portIdentifier, false, true, shouldUseInterprocessSerialization ? 2 : 1);
+}
+
+/**
+ * Returns a summary of the input port's current value.
+ */
+char * getInputPortSummary(char *portIdentifier)
+{
+	return getPortValue(portIdentifier, true, true, 0);
+}
+
+/**
+ * Returns a summary of the output port's current value.
+ */
+char * getOutputPortSummary(char *portIdentifier)
+{
+	return getPortValue(portIdentifier, false, true, 0);
+}
 
 /**
  * Constructs and sends a message on the telemetry socket, indicating that a node has started execution.
@@ -773,11 +894,6 @@ char * vuoTranscodeToGraphvizIdentifier(const char *originalString)
 	return escapedString;
 }
 
-
-/**
- * A string representation of the differences between the old and new composition, when replacing compositions for live coding.
- */
-const char *compositionDiff = NULL;
 
 /**
  * Returns true if the node is found in both the old and the new composition, when replacing compositions for live coding.
@@ -1032,25 +1148,23 @@ void stopComposition(void)
  */
 void vuoStopComposition(void)
 {
+	typedef void (*vuoAppFiniType)(void);
+	vuoAppFiniType vuoAppFini = (vuoAppFiniType) dlsym(RTLD_SELF, "VuoApp_fini");
+	if (vuoAppFini)
+		vuoAppFini();
+
 	isStopRequested = true;
 	dispatch_async(VuoControlQueue, ^{
 					   if (hasZMQConnection)
 					   {
 						   vuoTelemetrySend(VuoTelemetryStopRequested, NULL, 0);
 
-						   dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC, NSEC_PER_SEC/10);
+						   // If we haven't received a response to VuoTelemetryStopRequested within 2 seconds, stop anyway.
+						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, VuoControlQueue);
+						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.), NSEC_PER_SEC * 2, NSEC_PER_SEC/10);
 						   dispatch_source_set_event_handler(waitForStopTimer, ^{
-							   int ret = kill(runnerPid, 0);  // Doesn't actually kill it, just checks if it's running.
-							   if (ret != 0)
-							   {
-								   // Runner has crashed, so composition needs to stop itself.
-								   dispatch_sync(VuoControlQueue, ^{
-									   stopComposition();
-								   });
-								   dispatch_source_cancel(waitForStopTimer);
-							   }
+							   stopComposition();
+							   dispatch_source_cancel(waitForStopTimer);
 						   });
 						   dispatch_source_set_cancel_handler(waitForStopTimer, ^{
 							   dispatch_semaphore_signal(waitForStopCanceledSemaphore);
@@ -1076,24 +1190,30 @@ void vuoFini(void)
 
 	vuoMemoryBarrier();
 
-	// Cancel telemetryTimer, wait for it to stop, and clean up.
-	dispatch_source_cancel(telemetryTimer);
-	dispatch_semaphore_wait(telemetryCanceledSemaphore, DISPATCH_TIME_FOREVER);
-	dispatch_release(telemetryCanceledSemaphore);
-	dispatch_release(telemetryTimer);
-	dispatch_sync(VuoTelemetryQueue, ^{
-		zmq_close(ZMQTelemetry);
-	});
-	dispatch_release(VuoTelemetryQueue);
+	if (ZMQTelemetry)
+	{
+		// Cancel telemetryTimer, wait for it to stop, and clean up.
+		dispatch_source_cancel(telemetryTimer);
+		dispatch_semaphore_wait(telemetryCanceledSemaphore, DISPATCH_TIME_FOREVER);
+		dispatch_release(telemetryCanceledSemaphore);
+		dispatch_release(telemetryTimer);
+		dispatch_sync(VuoTelemetryQueue, ^{
+						  zmq_close(ZMQTelemetry);
+					  });
+		dispatch_release(VuoTelemetryQueue);
+	}
 
-	// Wait for controlTimer to stop, and clean up.
-	dispatch_semaphore_wait(controlCanceledSemaphore, DISPATCH_TIME_FOREVER);
-	dispatch_release(controlCanceledSemaphore);
-	dispatch_release(controlTimer);
-	dispatch_sync(VuoControlQueue, ^{
-		zmq_close(ZMQControl);
-	});
-	dispatch_release(VuoControlQueue);
+	if (ZMQControl)
+	{
+		// Wait for controlTimer to stop, and clean up.
+		dispatch_semaphore_wait(controlCanceledSemaphore, DISPATCH_TIME_FOREVER);
+		dispatch_release(controlCanceledSemaphore);
+		dispatch_release(controlTimer);
+		dispatch_sync(VuoControlQueue, ^{
+						  zmq_close(ZMQControl);
+					  });
+		dispatch_release(VuoControlQueue);
+	}
 
 	if (waitForStopTimer)
 	{

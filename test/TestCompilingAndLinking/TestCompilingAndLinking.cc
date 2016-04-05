@@ -194,9 +194,18 @@ private slots:
 		QTest::addColumn< QString >("compositionName");
 
 		QTest::newRow("Empty composition") << "Empty";
-		QTest::newRow("100 non-generic nodes of the same node class") << "ChainOfNonGenericNodes";
-		QTest::newRow("50 nodes of the same generic node class specialized to different types") << "ChainOfSpecializedNodes";
-		QTest::newRow("25 nodes of different node classes") << "FanOfNodes";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass";
+		QTest::newRow("50 nodes of different non-generic node classes, in a line from 1 trigger") << "LineOfDiffNodeClass";
+		QTest::newRow("50 nodes of the same generic node class specialized to the same type, in a line from 1 trigger") << "LineOfSameNodeClassSameType";
+		QTest::newRow("50 nodes of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfSameNodeClassDiffType";
+		QTest::newRow("50 nodes-with-drawers of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfDrawersOfDiffType";
+		QTest::newRow("50 nodes-with-triggers of the same non-generic node class, not connected") << "UnconnectedTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, in a diamond series from 1 trigger") << "DiamondOfSameNodeClass";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 50 triggers") << "LineOfSameNodeClassMultiTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, each from one of 50 triggers") << "EachPairOfSameNodeClassMultiTriggers";
+		QTest::newRow("100 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass100";
+		QTest::newRow("200 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass200";
+		QTest::newRow("400 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass400";
 	}
 	void testCompilingPerformance()
 	{
@@ -221,9 +230,18 @@ private slots:
 		QTest::addColumn< QString >("compositionName");
 
 		QTest::newRow("Empty composition") << "Empty";
-		QTest::newRow("100 non-generic nodes of the same node class") << "ChainOfNonGenericNodes";
-		QTest::newRow("50 nodes of the same generic node class specialized to different types") << "ChainOfSpecializedNodes";
-		QTest::newRow("25 nodes of different node classes") << "FanOfNodes";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass";
+		QTest::newRow("50 nodes of different non-generic node classes, in a line from 1 trigger") << "LineOfDiffNodeClass";
+		QTest::newRow("50 nodes of the same generic node class specialized to the same type, in a line from 1 trigger") << "LineOfSameNodeClassSameType";
+		QTest::newRow("50 nodes of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfSameNodeClassDiffType";
+		QTest::newRow("50 nodes-with-drawers of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfDrawersOfDiffType";
+		QTest::newRow("50 nodes-with-triggers of the same non-generic node class, not connected") << "UnconnectedTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, in a diamond series from 1 trigger") << "DiamondOfSameNodeClass";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 50 triggers") << "LineOfSameNodeClassMultiTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, each from one of 50 triggers") << "EachPairOfSameNodeClassMultiTriggers";
+		QTest::newRow("100 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass100";
+		QTest::newRow("200 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass200";
+		QTest::newRow("400 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass400";
 	}
 	void testCompilingAndLinkingPerformance()
 	{
@@ -262,9 +280,18 @@ private slots:
 		QTest::addColumn< QString >("compositionName");
 
 		QTest::newRow("Empty composition") << "Empty";
-		QTest::newRow("100 non-generic nodes of the same node class") << "ChainOfNonGenericNodes";
-		QTest::newRow("50 nodes of the same generic node class specialized to different types") << "ChainOfSpecializedNodes";
-		QTest::newRow("25 nodes of different node classes") << "FanOfNodes";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass";
+		QTest::newRow("50 nodes of different non-generic node classes, in a line from 1 trigger") << "LineOfDiffNodeClass";
+		QTest::newRow("50 nodes of the same generic node class specialized to the same type, in a line from 1 trigger") << "LineOfSameNodeClassSameType";
+		QTest::newRow("50 nodes of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfSameNodeClassDiffType";
+		QTest::newRow("50 nodes-with-drawers of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfDrawersOfDiffType";
+		QTest::newRow("50 nodes-with-triggers of the same non-generic node class, not connected") << "UnconnectedTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, in a diamond series from 1 trigger") << "DiamondOfSameNodeClass";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 50 triggers") << "LineOfSameNodeClassMultiTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, each from one of 50 triggers") << "EachPairOfSameNodeClassMultiTriggers";
+		QTest::newRow("100 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass100";
+		QTest::newRow("200 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass200";
+		QTest::newRow("400 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass400";
 	}
 	void testLiveCodingPerformance()
 	{
@@ -319,6 +346,40 @@ private slots:
 
 		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
 			remove((*i).c_str());
+	}
+
+	void testCompilingAndLinkingInSeparateProcessPerformance_data()
+	{
+		QTest::addColumn< QString >("compositionName");
+
+		QTest::newRow("Empty composition") << "Empty";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass";
+		QTest::newRow("50 nodes of different non-generic node classes, in a line from 1 trigger") << "LineOfDiffNodeClass";
+		QTest::newRow("50 nodes of the same generic node class specialized to the same type, in a line from 1 trigger") << "LineOfSameNodeClassSameType";
+		QTest::newRow("50 nodes of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfSameNodeClassDiffType";
+		QTest::newRow("50 nodes-with-drawers of the same generic node class specialized to different types, in a line from 1 trigger") << "LineOfDrawersOfDiffType";
+		QTest::newRow("50 nodes-with-triggers of the same non-generic node class, not connected") << "UnconnectedTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, in a diamond series from 1 trigger") << "DiamondOfSameNodeClass";
+		QTest::newRow("50 nodes of the same non-generic node class, in a line from 50 triggers") << "LineOfSameNodeClassMultiTriggers";
+		QTest::newRow("50 nodes of the same non-generic node class, each from one of 50 triggers") << "EachPairOfSameNodeClassMultiTriggers";
+		QTest::newRow("100 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass100";
+		QTest::newRow("200 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass200";
+		QTest::newRow("400 nodes of the same non-generic node class, in a line from 1 trigger") << "LineOfSameNodeClass400";
+	}
+	void testCompilingAndLinkingInSeparateProcessPerformance()
+	{
+		QFETCH(QString, compositionName);
+		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
+
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+
+		compiler->getCachedResources();
+
+		QBENCHMARK {
+			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromCompositionFile(compositionPath, true);
+			QVERIFY(runner);
+			delete runner;
+		}
 	}
 
 private:

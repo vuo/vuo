@@ -63,14 +63,34 @@ void vuoInitMessageWithBool(zmq_msg_t *message, bool value)
 /**
  * Receives the next message on the socket and copies it into a newly allocated string.
  */
-char * vuoReceiveAndCopyString(void *socket)
+char * vuoReceiveAndCopyString(void *socket, char **error)
 {
 	zmq_msg_t message;
 	zmq_msg_init(&message);
 
 	if (zmq_recv(socket, &message, 0) != 0)
 	{
-		VLog("Error: Connection timed out: %s", strerror(errno));
+		int e = errno;
+		char *errorMessage;
+		if (e == EAGAIN)
+			errorMessage = strdup("The connection between the composition and runner timed out when trying to receive a message");
+		else
+		{
+			char *eStr = strerror(e);
+			const char *format = "The connection between the composition and runner failed when trying to receive a message (%s)";
+			int size = snprintf(NULL, 0, format, eStr);
+			errorMessage = malloc(size+1);
+			snprintf(errorMessage, size+1, format, eStr);
+			free(eStr);
+		}
+		if (error)
+			*error = errorMessage;
+		else
+		{
+			VLog("%s", errorMessage);
+			free(errorMessage);
+		}
+		zmq_msg_close(&message);
 		return NULL;
 	}
 
@@ -80,16 +100,36 @@ char * vuoReceiveAndCopyString(void *socket)
 }
 
 /**
- * Helper for @c vuoReceiveInt() and @c vuoReceiveUnsignedLong().
+ * Helper function for @c vuoReceive functions for numerical types.
  */
-void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
+void vuoReceiveBlocking(void *socket, void *data, size_t dataSize, char **error)
 {
 	zmq_msg_t message;
 	zmq_msg_init(&message);
 
 	if (zmq_recv(socket, &message, 0) != 0)
 	{
-		VLog("Error: Connection timed out: %s", strerror(errno));
+		int e = errno;
+		char *errorMessage;
+		if (e == EAGAIN)
+			errorMessage = strdup("The connection between the composition and runner timed out when trying to receive a message");
+		else
+		{
+			char *eStr = strerror(e);
+			const char *format = "The connection between the composition and runner failed when trying to receive a message (%s)";
+			int size = snprintf(NULL, 0, format, eStr);
+			errorMessage = malloc(size+1);
+			snprintf(errorMessage, size+1, format, eStr);
+			free(eStr);
+		}
+		if (error)
+			*error = errorMessage;
+		else
+		{
+			VLog("%s", errorMessage);
+			free(errorMessage);
+		}
+		zmq_msg_close(&message);
 		bzero(data, dataSize);
 		return;
 	}
@@ -97,10 +137,23 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
 	size_t messageSize = zmq_msg_size(&message);
 	if (messageSize != dataSize)
 	{
-		VLog("Error: vuoReceiveBlocking() expected %lu bytes of data, but actually received %lu.", (unsigned long)dataSize, (unsigned long)messageSize);
+		const char *format = "A wrong-sized message was received in the connection between the composition and runner "
+							 "(expected %lu bytes, received %lu bytes)";
+		int size = snprintf(NULL, 0, format, (unsigned long)dataSize, (unsigned long)messageSize);
+		char *errorMessage = malloc(size+1);
+		snprintf(errorMessage, size+1, format, (unsigned long)dataSize, (unsigned long)messageSize);
+		if (error)
+			*error = errorMessage;
+		else
+		{
+			VLog("%s", errorMessage);
+			free(errorMessage);
+		}
+		zmq_msg_close(&message);
 		bzero(data, dataSize);
 		return;
 	}
+
 	memcpy(data, zmq_msg_data(&message), messageSize);
 	zmq_msg_close(&message);
 }
@@ -108,30 +161,30 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize)
 /**
  * Receives the next message on the socket and copies it into an unsigned long.
  */
-unsigned long vuoReceiveUnsignedInt64(void *socket)
+unsigned long vuoReceiveUnsignedInt64(void *socket, char **error)
 {
 	uint64_t number = 0;
-	vuoReceiveBlocking(socket, (void *)&number, sizeof(number));
+	vuoReceiveBlocking(socket, (void *)&number, sizeof(number), error);
 	return number;
 }
 
 /**
  * Receives the next message on the socket and copies it into an int.
  */
-int vuoReceiveInt(void *socket)
+int vuoReceiveInt(void *socket, char **error)
 {
 	int number = 0;
-	vuoReceiveBlocking(socket, (void *)&number, sizeof(number));
+	vuoReceiveBlocking(socket, (void *)&number, sizeof(number), error);
 	return number;
 }
 
 /**
  * Receives the next message on the socket and copies it into a bool.
  */
-bool vuoReceiveBool(void *socket)
+bool vuoReceiveBool(void *socket, char **error)
 {
 	bool value = false;
-	vuoReceiveBlocking(socket, (void *)&value, sizeof(value));
+	vuoReceiveBlocking(socket, (void *)&value, sizeof(value), error);
 	return value;
 }
 
@@ -139,8 +192,10 @@ bool vuoReceiveBool(void *socket)
  * Sends the multipart message @c messages on ZMQ socket @c socket.
  * @c name is just used for printing error messages.
  */
-void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsigned int messageCount, bool isNonBlocking)
+void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsigned int messageCount, bool isNonBlocking, char **error)
 {
+	int e = 0;
+
 	// send the type message-part
 	{
 		zmq_msg_t message;
@@ -148,17 +203,47 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 		memcpy(zmq_msg_data(&message), &type, sizeof type);
 		int flags = (messageCount>0 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
 		if(zmq_send(socket, &message, flags))
-			VLog("Error: Failed to send type for '%s'.", name);
+			e = errno;
 		zmq_msg_close(&message);
 	}
 
 	// send the data message-parts
-	for(unsigned int i=0; i<messageCount; ++i)
+	for(unsigned int i=0; i<messageCount && e==0; ++i)
 	{
 		int flags = (i<messageCount-1 ? ZMQ_SNDMORE : 0) | (isNonBlocking ? ZMQ_NOBLOCK : 0);
 		if(zmq_send(socket, &messages[i], flags))
-			VLog("Error: Failed to send data %u for '%s'.", i, name);
+			e = errno;
+	}
+
+	for(unsigned int i=0; i<messageCount; ++i)
 		zmq_msg_close(&messages[i]);
+
+	if (e != 0)
+	{
+		char *errorMessage;
+		if (e == EAGAIN)
+		{
+			const char *format = "The connection between the composition and runner timed out when trying to send a message of type %i on '%s'";
+			int size = snprintf(NULL, 0, format, type, name);
+			errorMessage = malloc(size+1);
+			snprintf(errorMessage, size+1, format, type, name);
+		}
+		else
+		{
+			char *eStr = strerror(e);
+			const char *format = "The connection between the composition and runner failed when trying to send a message of type %i on '%s' (%s)";
+			int size = snprintf(NULL, 0, format, type, name, eStr);
+			errorMessage = malloc(size+1);
+			snprintf(errorMessage, size+1, format, type, name, eStr);
+			free(eStr);
+		}
+		if (error)
+			*error = errorMessage;
+		else
+		{
+			VLog("%s", errorMessage);
+			free(errorMessage);
+		}
 	}
 }
 

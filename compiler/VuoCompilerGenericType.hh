@@ -26,7 +26,7 @@ class VuoCompilerGenericType : public VuoCompilerType
 public:
 	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, map<string, VuoCompilerType *> types);
 	static VuoCompilerGenericType * newGenericType(VuoGenericType *baseType, VuoCompiler *compiler);
-	static string chooseBackingTypeName(string genericTypeName, set<string> compatibleTypeNames);
+	static string chooseBackingTypeName(string genericTypeName, vector<string> compatibleTypeNames);
 
 	string getBackingTypeName(void);
 
