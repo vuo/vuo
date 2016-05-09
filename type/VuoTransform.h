@@ -106,13 +106,18 @@ static inline VuoPoint4d VuoTransform_quaternionFromAxisAngle(VuoPoint3d axis, f
 VuoPoint4d VuoTransform_quaternionFromBasis(VuoPoint3d basis[3]);
 
 /**
- * Returns the quaternion describing the rotation from direction a to b.
+ * Returns the quaternion describing the rotation from direction @a from to @a to.
+ *
+ * If either @a from or @a to has magnitude 0, then returns the identity quaternion (no rotation).
  */
 static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, VuoPoint3d to) __attribute__((const));
 static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, VuoPoint3d to)
 {
 	// http://books.google.com/books?id=hiBFUv_FT0wC&pg=PA214&lpg=PA214&dq=Stan+Melax's+article+in+Game+Programming+Gems&source=bl&ots=OCjDPwza1h&sig=6_bDSzTrnI3qCEG9vtVV_mDBgg8&hl=en&sa=X&ei=ffReUsSaBIrMqAGg6YD4Aw&ved=0CCsQ6AEwAA#v=onepage&q=Stan%20Melax's%20article%20in%20Game%20Programming%20Gems&f=false
-	VuoPoint4d q;
+	VuoPoint4d q = { 0, 0, 0, 1 };
+
+	if (VuoPoint3d_magnitude(from) == 0 || VuoPoint3d_magnitude(to) == 0)
+		return q;
 
 	VuoPoint3d fromNormalized = VuoPoint3d_normalize(from);
 	VuoPoint3d toNormalized = VuoPoint3d_normalize(to);

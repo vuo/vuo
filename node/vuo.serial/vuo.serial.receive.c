@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					 "title" : "Receive Serial Data",
 					 "keywords" : [
 						 "read", "open", "listen",
-						 "arduino", "rs232", "rs-232"
+						 "arduino", "rs232", "rs-232", "usb", "modem"
 					 ],
 					 "version" : "1.0.0",
 					 "dependencies" : [

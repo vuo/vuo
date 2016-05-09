@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "List Serial Devices",
-					  "keywords" : [ "arduino", "rs232", "rs-232" ],
+					  "keywords" : [ "arduino", "rs232", "rs-232", "usb", "modem" ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						  "VuoSerialDevices"
