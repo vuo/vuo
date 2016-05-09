@@ -14,7 +14,7 @@ VuoModuleMetadata({
 					  "title" : "Send Serial Data",
 					  "keywords" : [
 						  "write", "open",
-						  "arduino", "rs232", "rs-232"
+						  "arduino", "rs232", "rs-232", "usb", "modem"
 					  ],
 					  "version" : "1.0.0",
 					  "dependencies" : [

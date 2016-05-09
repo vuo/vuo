@@ -11,6 +11,10 @@
 #include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
 
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <IOKit/serial/ioss.h>
+
 #include <map>
 #include <string>
 
@@ -283,4 +287,72 @@ void VuoSerial_sendData(VuoSerial device, const VuoData data)
 	dispatch_async(si->queue, ^{
 					   write(si->fileHandle, data.data, data.size);
 				   });
+}
+
+/**
+ * Changes system-wide settings for the specified serial device.
+ */
+void VuoSerial_configureDevice(VuoSerial device, VuoInteger baudRate, VuoInteger dataBits, VuoParity parity, VuoInteger stopBits)
+{
+	if (!device)
+		return;
+
+	VuoSerial_internal si = (VuoSerial_internal)device;
+//	VLog("%s", si->devicePath);
+
+
+	// Configure baud rate.
+	if (ioctl(si->fileHandle, IOSSIOSPEED, &baudRate) == -1)
+		VLog("Couldn't set %s to baud rate %lld: %s", si->devicePath, baudRate, strerror(errno));
+
+
+	// Get the current options.
+	struct termios options;
+	if (tcgetattr(si->fileHandle, &options) == -1)
+	{
+		VLog("Couldn't get TTY attributes for %s: %s", si->devicePath, strerror(errno));
+		return;
+	}
+
+
+	// Configure data bits.
+	options.c_cflag &= ~CSIZE;
+	if (dataBits == 5)
+		options.c_cflag |= CS5;
+	else if (dataBits == 6)
+		options.c_cflag |= CS6;
+	else if (dataBits == 7)
+		options.c_cflag |= CS7;
+	else if (dataBits == 8)
+		options.c_cflag |= CS8;
+	else
+		VLog("Couldn't set %s dataBits to %lld.", si->devicePath, dataBits);
+
+
+	// Configure parity.
+	if (parity == VuoParity_None)
+		options.c_cflag &= ~PARENB;	// Clear the Parity Enable bit.
+	else if (parity == VuoParity_Even)
+	{
+		options.c_cflag |= PARENB;	// Set the Parity Enable bit.
+		options.c_cflag &= ~PARODD;	// Clear the Parity Odd bit.
+	}
+	else if (parity == VuoParity_Odd)
+		options.c_cflag |= PARENB | PARODD;	// Set the Parity Enable and Parity Odd bits.
+	else
+		VLog("Couldn't set %s parity to %d.", si->devicePath, parity);
+
+
+	// Configure stop bits.
+	if (stopBits == 1)
+		options.c_cflag &= ~CSTOPB;
+	else if (stopBits == 2)
+		options.c_cflag |= CSTOPB;
+	else
+		VLog("Couldn't set %s stopBits to %lld.", si->devicePath, stopBits);
+
+
+	// Apply configuration immediately.
+	if (tcsetattr(si->fileHandle, TCSANOW, &options) == -1)
+		VLog("Couldn't configure %s: %s", si->devicePath, strerror(errno));
 }

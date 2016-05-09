@@ -23,6 +23,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoAudioInputDevice:2 \
 		VuoAudioOutputDevice:2 \
 		VuoAudioSamples:2 \
+		VuoBaudRate:2 \
 		VuoBlendMode:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
@@ -69,6 +70,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoNotePriority:2 \
 		VuoNumberFormat:2 \
 		VuoOscMessage:2 \
+		VuoParity:2 \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \

@@ -88,7 +88,7 @@ VuoList_VuoSerialDevice VuoSerial_getDeviceList(void)
 		VLog("Error: Couldn't create serial matching dictionary.");
 		return NULL;
 	}
-	CFDictionarySetValue(match, CFSTR(kIOSerialBSDTypeKey), CFSTR(kIOSerialBSDRS232Type));
+	CFDictionarySetValue(match, CFSTR(kIOSerialBSDTypeKey), CFSTR(kIOSerialBSDAllTypes));
 
 	io_iterator_t it;
 	kern_return_t ret = IOServiceGetMatchingServices(kIOMasterPortDefault, match, &it);
@@ -131,13 +131,23 @@ VuoList_VuoSerialDevice VuoSerial_getDeviceList(void)
 
 		if (vendorName && productName && serialNumber)
 			device.name = VuoText_make(VuoText_format("%s %s (%s)", vendorName, productName, serialNumber));
+		else if (vendorName && productName)
+			device.name = VuoText_make(VuoText_format("%s %s", vendorName, productName));
+		else if (vendorName && serialNumber)
+			device.name = VuoText_make(VuoText_format("%s (%s)", vendorName, serialNumber));
+		else if (productName && serialNumber)
+			device.name = VuoText_make(VuoText_format("%s (%s)", productName, serialNumber));
+		else if (vendorName)
+			device.name = VuoText_make(vendorName);
+		else if (productName)
+			device.name = VuoText_make(productName);
 		else
 		{
 			VuoText ttyDevice    = VuoSerial_getPropertyFromObjectOrAncestry(o, CFSTR(kIOTTYDeviceKey));
 			if (ttyDevice)
 				device.name = ttyDevice;
 			else
-				device.name = VuoText_make("(unknown device)");
+				device.name = VuoText_make(device.path);
 		}
 
 
@@ -202,7 +212,7 @@ void VuoSerial_use(void)
 			VLog("Error: Couldn't create serial matching dictionary.");
 			return;
 		}
-		CFDictionarySetValue(match, CFSTR(kIOSerialBSDTypeKey), CFSTR(kIOSerialBSDRS232Type));
+		CFDictionarySetValue(match, CFSTR(kIOSerialBSDTypeKey), CFSTR(kIOSerialBSDAllTypes));
 
 		// Since each IOServiceAddMatchingNotification() call releases the matching dictionary, retain it in order to make it through both calls.
 		CFRetain(match);
