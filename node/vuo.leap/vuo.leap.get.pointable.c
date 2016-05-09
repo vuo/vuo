@@ -36,7 +36,7 @@ void nodeEvent
 	*id = pointable.id;
 	*type = pointable.type;
 
-	VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(0,0,-1), pointable.direction);
+	VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(0,1,0), pointable.direction);
 	VuoPoint3d scale = VuoPoint3d_make(pointable.width, pointable.length, pointable.width);
 	*transform = VuoTransform_makeQuaternion(pointable.tipPosition, quaternion, scale);
 
