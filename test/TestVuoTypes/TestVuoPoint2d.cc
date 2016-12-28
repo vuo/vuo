@@ -24,10 +24,6 @@ class TestVuoPoint2d : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testStringConversion_data()
 	{
@@ -38,7 +34,7 @@ private slots:
 		{
 			VuoPoint2d p;
 			p.x = p.y = 0;
-			QTest::newRow("zero") << "{\"x\":0.000000,\"y\":0.000000}" << p << true;
+			QTest::newRow("zero") << "{\"x\":0,\"y\":0}" << p << true;
 			QTest::newRow("emptystring") << "" << p << false;
 			QTest::newRow("partial point 1") << "{\"y\":0}" << p << false;
 			QTest::newRow("zero text") << QUOTE("0,0") << p << false;
@@ -48,16 +44,16 @@ private slots:
 		{
 			VuoPoint2d p;
 			p.x = p.y = 1;
-			QTest::newRow("one") << "{\"x\":1.000000,\"y\":1.000000}" << p << true;
+			QTest::newRow("one") << "{\"x\":1,\"y\":1}" << p << true;
 			QTest::newRow("one text") << QUOTE("1,1") << p << false;
 		}
 
 		{
 			VuoPoint2d p;
-			p.x = -0.999;
-			p.y = 0.42;
-			QTest::newRow("different values") << "{\"x\":-0.999000,\"y\":0.420000}" << p << true;
-			QTest::newRow("different values text") << QUOTE("-.999, .42") << p << false;
+			p.x = -0.5;
+			p.y = 0.5;
+			QTest::newRow("different values") << "{\"x\":-0.5,\"y\":0.5}" << p << true;
+			QTest::newRow("different values text") << QUOTE("-.5, .5") << p << false;
 		}
 
 		{

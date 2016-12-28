@@ -9,8 +9,19 @@
 
 #include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoCompiler.hh"
+#include "VuoCompilerException.hh"
 #include "VuoCompilerGenericType.hh"
+#include "VuoCompilerInputDataClass.hh"
+#include "VuoCompilerInputEventPort.hh"
+#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
+#include "VuoCompilerNode.hh"
+#include "VuoCompilerOutputDataClass.hh"
+#include "VuoCompilerOutputEventPortClass.hh"
+#include "VuoCompilerPortClass.hh"
+#include "VuoCompilerTriggerPortClass.hh"
+#include "VuoGenericType.hh"
+#include "VuoNode.hh"
 #include "VuoNodeSet.hh"
 #include "VuoPort.hh"
 #include "VuoStringUtilities.hh"
@@ -127,7 +138,30 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 		// Compile the specialized node class (with any necessary headers for types)
 
 		string genericNodeClassName = genericNodeClass->getBase()->getClassName();
+		if (!genericNodeClass->getBase()->getNodeSet())
+		{
+			vector<VuoCompilerError> errors;
+			string details = "The <code>" + genericNodeClassName + "</code> node uses generic types, but it isn't packaged "
+					"into a node set.  In the API documentation on "
+					"<a href='http://api.vuo.org/latest/group__DevelopingNodeClasses.html'>Developing a Node Class</a>, "
+					"see the section \"Generic port types\", or contact the author of this node.";
+			VuoCompilerError error("Broken node", details, set<VuoNode *>(), set<VuoCable *>());
+			errors.push_back(error);
+			throw VuoCompilerException(errors);
+		}
+
 		string genericImplementation = genericNodeClass->getBase()->getNodeSet()->getNodeClassContents( genericNodeClassName );
+		if (genericImplementation.empty())
+		{
+			vector<VuoCompilerError> errors;
+			string details = "The <code>" + genericNodeClassName + "</code> node uses generic types, but its source code "
+					"is missing.  In the API documentation on "
+					"<a href='http://api.vuo.org/latest/group__DevelopingNodeClasses.html'>Developing a Node Class</a>, "
+					"see the section \"Generic port types\", or contact the author of this node.";
+			VuoCompilerError error("Broken node", details, set<VuoNode *>(), set<VuoCable *>());
+			errors.push_back(error);
+			throw VuoCompilerException(errors);
+		}
 		genericImplementation.insert(VuoFileUtilities::getFirstInsertionIndex(genericImplementation), "#define VuoSpecializedNode 1\n");
 
 		string tmpDir = VuoFileUtilities::makeTmpDir(nodeClassName);
@@ -351,10 +385,10 @@ void VuoCompilerSpecializedNodeClass::updateBackingNodeClass(VuoNode *nodeToBack
 			(backingNodeClass && backingNodeClassName == backingNodeClass->getBase()->getClassName()))
 		return;
 
-	backingNodeClass = compiler->getNodeClass(backingNodeClassName);
-
-	VuoCompilerNode *replacementCompilerNode = backingNodeClass->newNode(nodeToBack)->getCompiler();
+	VuoCompilerNode *replacementCompilerNode = createReplacementBackingNode(nodeToBack, backingNodeClassName, compiler);
 	replacementCompilerNode->setGraphvizIdentifier( nodeToBack->getCompiler()->getGraphvizIdentifier() );
+
+	backingNodeClass = replacementCompilerNode->getBase()->getNodeClass()->getCompiler();
 
 	// Transfer each VuoCompilerPort from the replacement to nodeToBack.
 	vector<VuoPort *> inputPortsOnReplacementNode = replacementCompilerNode->getBase()->getInputPorts();
@@ -392,6 +426,15 @@ void VuoCompilerSpecializedNodeClass::updateBackingNodeClass(VuoNode *nodeToBack
 	replacementCompilerNode->setBase(nodeToBack);
 	delete baseToDiscard;
 	delete compilerToDiscard;
+}
+
+/**
+ * Returns a fully specialized node of class @a backingNodeClassName that will replace the node class of @a nodeToBack.
+ */
+VuoCompilerNode * VuoCompilerSpecializedNodeClass::createReplacementBackingNode(VuoNode *nodeToBack, string backingNodeClassName, VuoCompiler *compiler)
+{
+	VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(backingNodeClassName);
+	return nodeClass->newNode(nodeToBack)->getCompiler();
 }
 
 /**
@@ -722,15 +765,11 @@ string VuoCompilerSpecializedNodeClass::createFullySpecializedNodeClassName(VuoN
 	map<string, string> backingForGeneric = getBackingTypeNamesFromPorts(nodeToBack);
 
 	vector<string> nodeClassNameParts = VuoStringUtilities::split(getBase()->getClassName(), '.');
-	size_t numReplaced = 0;
-	for (int i = nodeClassNameParts.size() - 1; i >= 0 && numReplaced < backingForGeneric.size(); --i)
+	for (int i = 3; i < nodeClassNameParts.size(); ++i)
 	{
-		map<string, string>::iterator backingIter = backingForGeneric.find( nodeClassNameParts[i] );
+		map<string, string>::iterator backingIter = backingForGeneric.find( VuoType::extractInnermostTypeName(nodeClassNameParts[i]) );
 		if (backingIter != backingForGeneric.end())
-		{
-			nodeClassNameParts[i] = backingIter->second;
-			++numReplaced;
-		}
+			nodeClassNameParts[i] = VuoGenericType::replaceInnermostGenericTypeName(nodeClassNameParts[i], backingIter->second);
 	}
 
 	return VuoStringUtilities::join(nodeClassNameParts, '.');
@@ -779,6 +818,24 @@ Function * VuoCompilerSpecializedNodeClass::getCallbackUpdateFunction(void)
 Function * VuoCompilerSpecializedNodeClass::getCallbackStopFunction(void)
 { return backingNodeClass ? backingNodeClass->getCallbackStopFunction() : VuoCompilerNodeClass::getCallbackStopFunction(); }
 
+Function * VuoCompilerSpecializedNodeClass::getCompositionContextInitFunction(void)
+{ return backingNodeClass ? backingNodeClass->getCompositionContextInitFunction() : VuoCompilerNodeClass::getCompositionContextInitFunction(); }
+
+Function * VuoCompilerSpecializedNodeClass::getCompositionContextFiniFunction(void)
+{ return backingNodeClass ? backingNodeClass->getCompositionContextFiniFunction() : VuoCompilerNodeClass::getCompositionContextFiniFunction(); }
+
+Function * VuoCompilerSpecializedNodeClass::getCompositionSerializeFunction(void)
+{ return backingNodeClass ? backingNodeClass->getCompositionSerializeFunction() : VuoCompilerNodeClass::getCompositionSerializeFunction(); }
+
+Function * VuoCompilerSpecializedNodeClass::getCompositionUnserializeFunction(void)
+{ return backingNodeClass ? backingNodeClass->getCompositionUnserializeFunction() : VuoCompilerNodeClass::getCompositionUnserializeFunction(); }
+
+Function * VuoCompilerSpecializedNodeClass::getTriggerWorkerFunction(string portIdentifier)
+{ return backingNodeClass ? backingNodeClass->getTriggerWorkerFunction(portIdentifier) : VuoCompilerNodeClass::getTriggerWorkerFunction(portIdentifier); }
+
+vector<VuoCompilerTriggerDescription *> VuoCompilerSpecializedNodeClass::getTriggerDescriptions(void)
+{ return backingNodeClass ? backingNodeClass->getTriggerDescriptions() : VuoCompilerNodeClass::getTriggerDescriptions(); }
+
 VuoCompilerInstanceDataClass * VuoCompilerSpecializedNodeClass::getInstanceDataClass(void)
 { return backingNodeClass ? backingNodeClass->getInstanceDataClass() : VuoCompilerNodeClass::getInstanceDataClass(); }
 
@@ -796,4 +853,7 @@ set<string> VuoCompilerSpecializedNodeClass::getDependencies(void)
 
 string VuoCompilerSpecializedNodeClass::getDependencyName(void)
 { return backingNodeClass ? backingNodeClass->getDependencyName() : VuoCompilerNodeClass::getDependencyName(); }
+
+bool VuoCompilerSpecializedNodeClass::isStateful(void)
+{ return backingNodeClass ? backingNodeClass->isStateful() : VuoCompilerNodeClass::isStateful(); }
 //@}

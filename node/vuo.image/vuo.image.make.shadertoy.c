@@ -11,6 +11,7 @@
 #include "VuoGlContext.h"
 #include "VuoImageRenderer.h"
 #include <OpenGL/CGLMacro.h>
+#include <time.h>
 
 VuoModuleMetadata({
 					 "title" : "Make Image with Shadertoy",
@@ -52,7 +53,7 @@ uniform sampler2D iChannel2;	         	\n 	\
 uniform sampler2D iChannel3;	         	\n 	\
 uniform vec4 	  iDate;					\n 	\
 const float 	  iSampleRate = 44100;      \n  \
-\n";
+#line 0\n";
 
 static const char* shadertoyVertexShader = "#version 120\n 	\
 attribute vec4 position;									\
@@ -87,16 +88,19 @@ struct nodeInstanceData * nodeInstanceInit(
 	instance->shader = VuoShader_make("Shadertoy Fragment Shader");
 	VuoRetain(instance->shader);
 
-	char* fragmentSource = (char*)malloc(strlen(ShaderHeader) + strlen(fragmentShader) + 1);
+	if (fragmentShader)
+	{
+		char *fragmentSource = (char *)malloc(strlen(ShaderHeader) + strlen(fragmentShader) + 1);
 
-	strcpy(fragmentSource, ShaderHeader);
-	strcat(fragmentSource, fragmentShader);
+		strcpy(fragmentSource, ShaderHeader);
+		strcat(fragmentSource, fragmentShader);
 
-	// VLog("\n\n=============================\n\n%s\n\n=============================\n", fragmentSource);
+		// VLog("\n\n=============================\n\n%s\n\n=============================\n", fragmentSource);
 
-	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, shadertoyVertexShader, NULL, fragmentSource);
+		VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, shadertoyVertexShader, NULL, fragmentSource);
 
-	free(fragmentSource);
+		free(fragmentSource);
+	}
 
 	instance->mousePosition = VuoPoint2d_make(0., 0.);
 	instance->mouseClickedPostion = VuoPoint2d_make(0., 0.);
@@ -126,7 +130,7 @@ static VuoImage convertAudioToImage(VuoAudioSamples audio)
 		pixels[n++] = (unsigned int)(1.);
 	}
 
-	VuoImage audioImage = VuoImage_makeFromBuffer(pixels, GL_RGBA, len, 1, VuoImageColorDepth_8);
+	VuoImage audioImage = VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 
 	return audioImage;
 }
@@ -170,7 +174,7 @@ void nodeInstanceEvent
 	/**
 	 *	If the fragment shader text has changed, reload the shader.
 	 */
-	if(fragmentShaderEvent)
+	if (fragmentShader && fragmentShaderEvent)
 	{
 		if((*instance)->shader)
 		{

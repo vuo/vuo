@@ -1,6 +1,6 @@
 /**
  * @file
- * Animates a sphere that moves side-to-side in a wave motion. Move the mouse up or down to change the sphere's speed. 
+ * Animates a circle that moves side-to-side in a wave motion. Move the mouse up or down to change the circle's speed.
  *
  * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,15 +9,15 @@
 
 digraph G
 {
-Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="-159,516"];
-ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="345,92"];
-Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="-40,219" _b="100.000000"];
-MakeList4 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="396,-37" fillcolor="green"];
-MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="426,-22" fillcolor="green"];
-MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="246,-48" _color="{\"r\":0.703441,\"g\":0.261097,\"b\":0.245014,\"a\":1.000000}" _rotation="0.000000" _width="0.100000" _height="0.100000" _sharpness="1.000000"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-275,219" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="467,-48" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="145,189" fillcolor="violet" _wave="\"sine\"" _center="0.000000" _amplitude="1.000000"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="-165,510"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="345,90"];
+Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="-45,225" _b="100.000000"];
+MakeList4 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="394,-34" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="424,-19" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="240,-45" _color="{\"r\":0.703441,\"g\":0.261097,\"b\":0.245014,\"a\":1.000000}" _rotation="0.000000" _width="0.100000" _height="0.100000" _sharpness="1.000000"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-285,225" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="465,-45" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="150,195" fillcolor="violet" _wave="\"sine\"" _center="0.000000" _amplitude="1.000000" _phase="0.000000"];
 
 Convert2DPointToReal:y -> Divide:a;
 ConvertRealTo2DPoint:point2d -> MakeOvalLayer:center;

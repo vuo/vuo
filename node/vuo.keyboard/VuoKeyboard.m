@@ -66,6 +66,8 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 		char *unicodeBytes = VuoKey_getCharactersForMacVirtualKeyCode([event keyCode],
 																	  [event modifierFlags],
 																	  &context->deadKeyState);
+		if (!unicodeBytes)
+			return;
 		NSString *unicodeString = [NSString stringWithUTF8String:unicodeBytes];
 
 		for (NSUInteger i = 0; i < [unicodeString length]; ++i)
@@ -201,7 +203,9 @@ void VuoKeyboard_stopListening(VuoKeyboard *keyboardListener)
 {
 	struct VuoKeyboardContext *context = (struct VuoKeyboardContext *)keyboardListener;
 
+	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{  // wait for any in-progress monitor handlers to complete
+						VUOLOG_PROFILE_END(mainQueue);
 						if (context->monitor)
 						{
 							[NSEvent removeMonitor:context->monitor];

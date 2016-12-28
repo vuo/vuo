@@ -79,6 +79,7 @@ class TestVuoRunnerCocoa : public QObject
 
 	NSImage *reddishImage;
 	NSColor *blueishColor;
+	NSColor *greenishColor;
 	VuoImageFilter *sharedImageFilter;
 	VuoImageFilter *sharedPassthruImageFilter;
 	VuoImageGenerator *sharedImageGenerator;
@@ -88,7 +89,7 @@ private slots:
 
 	void initTestCase()
 	{
-		// Create a reddish image.
+		// Create a reddish image with a pinkish pixel in the bottom right quadrant.
 		{
 			unsigned char *inputPixels = (unsigned char *)malloc(10*10*4);
 			for (int i = 0; i < 10*10; ++i)
@@ -98,6 +99,10 @@ private slots:
 				inputPixels[i*4+2] = 127;
 				inputPixels[i*4+3] = 255;
 			}
+			inputPixels[10*7*4 + 7*4 + 0] = 255;
+			inputPixels[10*7*4 + 7*4 + 1] = 192;
+			inputPixels[10*7*4 + 7*4 + 2] = 192;
+			inputPixels[10*7*4 + 7*4 + 3] = 255;
 			NSBitmapImageRep *inputBIR = [[NSBitmapImageRep alloc]
 					initWithBitmapDataPlanes:&inputPixels
 					pixelsWide:10
@@ -117,6 +122,9 @@ private slots:
 
 		CGFloat c[4] = {.5, .5, 1, 1};
 		blueishColor = [NSColor colorWithColorSpace:[NSColorSpace sRGBColorSpace] components:c count:4];
+
+		CGFloat greenish[4] = {.5, 1, .5, 1};
+		greenishColor = [NSColor colorWithColorSpace:[NSColorSpace sRGBColorSpace] components:greenish count:4];
 
 		sharedImageFilter = [[VuoImageFilter alloc] initWithComposition:[NSURL fileURLWithPath:@"composition/ImageFilterRipple.vuo"]];
 		QVERIFY(sharedImageFilter);
@@ -234,10 +242,10 @@ private slots:
 			curveEasingDetails["menuItems"] = "In,Out,In + Out,Middle,";
 
 			MapOfStrings inputPortValues;
-			inputPortValues["background"] = "null"; ///< @todo Currently unconnected published input ports have null initial values.  Is this correct?
-			inputPortValues["curveEasing"] = "null";
-			inputPortValues["foreground"] = "null";
-			inputPortValues["foregroundOpacity"] = "null";
+			inputPortValues["background"] = "{\"r\":1,\"g\":1,\"b\":1,\"a\":1}";
+			inputPortValues["curveEasing"] = "\"in\"";
+			inputPortValues["foreground"] = "{\"r\":0,\"g\":0,\"b\":0,\"a\":1}";
+			inputPortValues["foregroundOpacity"] = "0.5";
 
 			MapOfStrings outputPortValues;
 			outputPortValues["blendedColor"] = "0,0,0,0";
@@ -262,10 +270,10 @@ private slots:
 			curveEasingDetails["menuItems"] = "In,Out,In + Out,Middle,";
 
 			MapOfStrings inputPortValues;
-			inputPortValues["background"] = "{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}";
+			inputPortValues["background"] = "{\"r\":1,\"g\":1,\"b\":1,\"a\":1}";
 			inputPortValues["curveEasing"] = "\"middle\"";
-			inputPortValues["foreground"] = "{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}";
-			inputPortValues["foregroundOpacity"] = "0.500000";
+			inputPortValues["foreground"] = "{\"r\":0,\"g\":0,\"b\":0,\"a\":1}";
+			inputPortValues["foregroundOpacity"] = "0.5";
 
 			MapOfStrings outputPortValues;
 			outputPortValues["blendedColor"] = "0,0,0,0";
@@ -299,8 +307,8 @@ private slots:
 			fieldOfViewDetails["suggestedStep"] = "1";
 
 			MapOfStrings inputPortValues;
-			inputPortValues["fieldOfView"] = "0.010000";
-			inputPortValues["position"] = "{\"x\":0.000000,\"y\":0.000000,\"z\":1.000000}";
+			inputPortValues["fieldOfView"] = "0.01";
+			inputPortValues["position"] = "{\"x\":0,\"y\":0,\"z\":1}";
 
 			QTest::newRow("ImageFilterWithDetailCoalescing.vuo")
 					<< "ImageFilter with Detail Coalescing"
@@ -430,10 +438,10 @@ private slots:
 		QCOMPARE([outputNSImage size].width,  10.f);
 		QCOMPARE([outputNSImage size].height, 10.f);
 
-		// Check pixel (5,5).
+		// Check pixel (2,2).
 		NSBitmapImageRep *outputBIR = [NSBitmapImageRep imageRepWithData:[outputNSImage TIFFRepresentation]];
 		QVERIFY(outputBIR);
-		NSColor *color = [outputBIR colorAtX:5 y:5];
+		NSColor *color = [outputBIR colorAtX:2 y:2];
 		QVERIFY(fabs([color redComponent]   - 1          ) < 0.00001);
 		QVERIFY(fabs([color greenComponent] - 127.f/255.f) < 0.00001);
 		QVERIFY(fabs([color blueComponent]  - 127.f/255.f) < 0.00001);
@@ -453,17 +461,7 @@ private slots:
 		NSImage *outputImage2 = [sharedPassthruImageFilter valueForOutputPort:@"outputImage2"];
 		QVERIFY(outputImage2);
 
-		QCOMPARE([outputImage2 size].width,  10.f);
-		QCOMPARE([outputImage2 size].height, 10.f);
-
-		// Check pixel (5,5).
-		NSBitmapImageRep *outputBIR = [NSBitmapImageRep imageRepWithData:[outputImage2 TIFFRepresentation]];
-		QVERIFY(outputBIR);
-		NSColor *color = [outputBIR colorAtX:5 y:5];
-		QVERIFY(fabs([color redComponent]   - 1          ) < 0.00001);
-		QVERIFY(fabs([color greenComponent] - 127.f/255.f) < 0.00001);
-		QVERIFY(fabs([color blueComponent]  - 127.f/255.f) < 0.00001);
-		QVERIFY(fabs([color alphaComponent] - 1          ) < 0.00001);
+		QVERIFY([[outputImage2 TIFFRepresentation] isEqualToData:[reddishImage TIFFRepresentation]]);
 	}
 
 	void testImageFilterCGImageRef(void)
@@ -480,17 +478,7 @@ private slots:
 		NSImage *outputImage2 = [sharedPassthruImageFilter valueForOutputPort:@"outputImage2"];
 		QVERIFY(outputImage2);
 
-		QCOMPARE([outputImage2 size].width,  10.f);
-		QCOMPARE([outputImage2 size].height, 10.f);
-
-		// Check pixel (5,5).
-		NSBitmapImageRep *outputBIR = [NSBitmapImageRep imageRepWithData:[outputImage2 TIFFRepresentation]];
-		QVERIFY(outputBIR);
-		NSColor *color = [outputBIR colorAtX:5 y:5];
-		QVERIFY(fabs([color redComponent]   - 1          ) < 0.00001);
-		QVERIFY(fabs([color greenComponent] - 127.f/255.f) < 0.00001);
-		QVERIFY(fabs([color blueComponent]  - 127.f/255.f) < 0.00001);
-		QVERIFY(fabs([color alphaComponent] - 1          ) < 0.00001);
+		QVERIFY([[outputImage2 TIFFRepresentation] isEqualToData:[reddishImage TIFFRepresentation]]);
 
 		CGImageRelease(inputCGImage);
 		CFRelease(cgImageSource);
@@ -528,6 +516,65 @@ private slots:
 		QVERIFY(fabs([color alphaComponent] - 1          ) < 0.00001);
 	}
 
+	void testImageFilterCVOpenGLTexture(void)
+	{
+		// Create a CVPixelBufferRef.
+		CVPixelBufferRef inputCVPB;
+		{
+			NSBitmapImageRep *bir = [[reddishImage representations] objectAtIndex:0];
+			QVERIFY(bir);
+
+			// [bir bitmapData] is in RGBA format, but the CVPixelBufferRef expects BGRA.
+			// [bir bitmapData] is rightsideup, but the CVOpenGLTexture expects flipped.
+			// Translate both.
+			char *bitmapData = (char *)[bir bitmapData];
+			int bytesPerRow = [bir bytesPerRow];
+			int width = [reddishImage size].width;
+			int height = [reddishImage size].height;
+			char *flippedBitmapData = (char *)malloc(bytesPerRow*height);
+			for (unsigned long y = 0; y < height; ++y)
+				for (unsigned long x = 0; x < width; ++x)
+				{
+					flippedBitmapData[bytesPerRow * (height - y - 1) + x * 4 + 2] = bitmapData[bytesPerRow * y + x * 4 + 0];
+					flippedBitmapData[bytesPerRow * (height - y - 1) + x * 4 + 1] = bitmapData[bytesPerRow * y + x * 4 + 1];
+					flippedBitmapData[bytesPerRow * (height - y - 1) + x * 4 + 0] = bitmapData[bytesPerRow * y + x * 4 + 2];
+					flippedBitmapData[bytesPerRow * (height - y - 1) + x * 4 + 3] = bitmapData[bytesPerRow * y + x * 4 + 3];
+				}
+
+			CVReturn createdSuccessfully = CVPixelBufferCreateWithBytes(NULL, 10, 10, kCVPixelFormatType_32BGRA, flippedBitmapData, bytesPerRow, cvPixelBufferFreeCallback, NULL, nil, &inputCVPB);
+			QCOMPARE((long)kCVReturnSuccess, (long)createdSuccessfully);
+		}
+
+		// Create a CVOpenGLTexture.
+		CVOpenGLTextureCacheRef textureCache;
+		CVOpenGLTextureRef inputCVOGLT;
+		{
+			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false);
+			CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
+			CGLReleasePixelFormat(pf);
+			QVERIFY(ret == kCVReturnSuccess);
+
+			ret = CVOpenGLTextureCacheCreateTextureFromImage(NULL, textureCache, inputCVPB, NULL, &inputCVOGLT);
+			QVERIFY(ret == kCVReturnSuccess);
+		}
+
+		bool valueSetSuccessfully = [sharedPassthruImageFilter setValue:(id)inputCVOGLT forInputPort:@"image2"];
+		QVERIFY(valueSetSuccessfully);
+
+		NSImage *outputImage = [sharedPassthruImageFilter filterNSImage:reddishImage atTime:0];
+		QVERIFY(outputImage);
+
+		NSImage *outputImage2 = [sharedPassthruImageFilter valueForOutputPort:@"outputImage2"];
+		QVERIFY(outputImage2);
+
+		QVERIFY([[outputImage2 TIFFRepresentation] isEqualToData:[reddishImage TIFFRepresentation]]);
+
+		CVPixelBufferRelease(inputCVPB);
+		CVOpenGLTextureRelease(inputCVOGLT);
+		CVOpenGLTextureCacheRelease(textureCache);
+	}
+
 	void testImageFilterGLTexture2D(void)
 	{
 		// Create a reddish OpenGL texture.
@@ -550,17 +597,16 @@ private slots:
 		VuoImage outputVuoImage = VuoImage_make(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh);
 		QVERIFY(outputVuoImage);
 		VuoRetain(outputVuoImage);
-		unsigned char *pixels = VuoImage_copyBuffer(outputVuoImage, GL_RGBA);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 		QVERIFY(pixels);
-		VuoRelease(outputVuoImage);
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
-		free(pixels);
+		VuoRelease(outputVuoImage);
 	}
 
 	void testImageFilterGLTexture2DAlpha(void)
@@ -585,17 +631,16 @@ private slots:
 		VuoImage outputVuoImage = VuoImage_make(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh);
 		QVERIFY(outputVuoImage);
 		VuoRetain(outputVuoImage);
-		unsigned char *pixels = VuoImage_copyBuffer(outputVuoImage, GL_RGBA);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 		QVERIFY(pixels);
-		VuoRelease(outputVuoImage);
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 127) < 2);
-		free(pixels);
+		VuoRelease(outputVuoImage);
 	}
 
 	void testImageFilterGLTextureRectangle(void)
@@ -625,17 +670,129 @@ private slots:
 		VuoImage outputVuoImage = VuoImage_makeClientOwnedGlTextureRectangle(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh, freeCallback, NULL);
 		QVERIFY(outputVuoImage);
 		VuoRetain(outputVuoImage);
-		unsigned char *pixels = VuoImage_copyBuffer(outputVuoImage, GL_RGBA);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 		QVERIFY(pixels);
-		VuoRelease(outputVuoImage);
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
-		free(pixels);
+		VuoRelease(outputVuoImage);
+	}
+
+	void testImageFilterGLTextureRectangleProvider(void)
+	{
+		// Create a reddish OpenGL texture.
+		VuoImage inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,0.5,0.5,1), 10, 10);
+		QVERIFY(inputVuoImage);
+		VuoRetain(inputVuoImage);
+
+		// Create an output texture.
+		GLuint outputGLTexture;
+		{
+			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			glGenTextures(1, &outputGLTexture);
+			// Do not call glTexImage2D() on this texture, since that makes CGLTexImageIOSurface2D() throw an "invalid context state" error.
+			VuoGlContext_disuse(cgl_ctx);
+		}
+		QVERIFY(outputGLTexture);
+		GLuint (^provider)(NSUInteger, NSUInteger) = ^GLuint(NSUInteger pixelsWide, NSUInteger pixelsHigh){
+			return outputGLTexture;
+		};
+
+		// Send the image through the VuoImageFilter.
+		NSUInteger outputPixelsWide, outputPixelsHigh;
+		IOSurfaceRef outputIOSurface;
+		GLuint actualOutputGLTexture = [sharedImageFilter filterGLTexture:inputVuoImage->glTextureName target:GL_TEXTURE_2D pixelsWide:inputVuoImage->pixelsWide pixelsHigh:inputVuoImage->pixelsHigh atTime:0 withTextureProvider:provider outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh  ioSurface:&outputIOSurface];
+		QVERIFY(actualOutputGLTexture);
+		QCOMPARE(actualOutputGLTexture, outputGLTexture);
+		VuoRelease(inputVuoImage);
+
+		// ImageFilters aren't required to output an image with the same width/height as the input image,
+		// but this particular ImageFilterRipple.vuo composition does.
+		QCOMPARE(outputPixelsWide, (unsigned long)10);
+		QCOMPARE(outputPixelsHigh, (unsigned long)10);
+
+		// Fetch the pixel buffer.
+		VuoImage outputVuoImage = VuoImage_makeClientOwnedGlTextureRectangle(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh, freeCallback, NULL);
+		QVERIFY(outputVuoImage);
+		QVERIFY(outputIOSurface);
+		VuoRetain(outputVuoImage);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
+
+		// Confirm that Radar #23547737 still hasn't been fixed.
+		QVERIFY(!pixels);
+
+		// Workaround for Radar #23547737:
+		VuoImage outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		QVERIFY(outputVuoImage2);
+		VuoRetain(outputVuoImage2);
+		VuoRelease(outputVuoImage);
+		pixels = VuoImage_getBuffer(outputVuoImage2, GL_BGRA);
+		QVERIFY(pixels);
+
+		// Check pixel (5,5).
+		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoRelease(outputVuoImage2);
+
+		VuoIoSurfacePool_signal(outputIOSurface);
+		CFRelease(outputIOSurface);
+
+
+		// At this point, the host app is done with the texture.
+		// Let's reuse it to filter another image.
+
+
+		// Create a greenish OpenGL texture.
+		inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(0.5,1,0.5,1), 10, 10);
+		QVERIFY(inputVuoImage);
+		VuoRetain(inputVuoImage);
+
+		// Send the image through the VuoImageFilter.
+		actualOutputGLTexture = [sharedImageFilter filterGLTexture:inputVuoImage->glTextureName target:GL_TEXTURE_2D pixelsWide:inputVuoImage->pixelsWide pixelsHigh:inputVuoImage->pixelsHigh atTime:0 withTextureProvider:provider outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh ioSurface:&outputIOSurface];
+		QVERIFY(actualOutputGLTexture);
+		QVERIFY(outputIOSurface);
+		QCOMPARE(actualOutputGLTexture, outputGLTexture);
+		VuoRelease(inputVuoImage);
+
+		// ImageFilters aren't required to output an image with the same width/height as the input image,
+		// but this particular ImageFilterRipple.vuo composition does.
+		QCOMPARE(outputPixelsWide, (unsigned long)10);
+		QCOMPARE(outputPixelsHigh, (unsigned long)10);
+
+		// Fetch the pixel buffer.
+		outputVuoImage = VuoImage_makeClientOwnedGlTextureRectangle(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh, freeCallback, NULL);
+		QVERIFY(outputVuoImage);
+		VuoRetain(outputVuoImage);
+		pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
+
+		// Confirm that Radar #23547737 still hasn't been fixed.
+		QVERIFY(!pixels);
+
+		// Workaround for Radar #23547737:
+		outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		QVERIFY(outputVuoImage2);
+		VuoRetain(outputVuoImage2);
+		VuoRelease(outputVuoImage);
+		pixels = VuoImage_getBuffer(outputVuoImage2, GL_BGRA);
+		QVERIFY(pixels);
+
+		// Check pixel (5,5).
+		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoRelease(outputVuoImage2);
+
+		VuoIoSurfacePool_signal(outputIOSurface);
+		CFRelease(outputIOSurface);
 	}
 
 	void testImageGeneratorNSImage(void)
@@ -681,17 +838,16 @@ private slots:
 		VuoImage outputVuoImage = VuoImage_make(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh);
 		QVERIFY(outputVuoImage);
 		VuoRetain(outputVuoImage);
-		unsigned char *pixels = VuoImage_copyBuffer(outputVuoImage, GL_RGBA);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 		QVERIFY(pixels);
-		VuoRelease(outputVuoImage);
 
 		// Check pixel (5,5).
 		// For unknown reasons the red/green values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
-		free(pixels);
+		VuoRelease(outputVuoImage);
 	}
 
 	void testImageGeneratorGLTextureRectangle(void)
@@ -713,17 +869,121 @@ private slots:
 		VuoImage outputVuoImage = VuoImage_makeClientOwnedGlTextureRectangle(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh, freeCallback, NULL);
 		QVERIFY(outputVuoImage);
 		VuoRetain(outputVuoImage);
-		unsigned char *pixels = VuoImage_copyBuffer(outputVuoImage, GL_RGBA);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
 		QVERIFY(pixels);
-		VuoRelease(outputVuoImage);
 
 		// Check pixel (5,5).
 		// For unknown reasons the red/green values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
 		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
-		free(pixels);
+		VuoRelease(outputVuoImage);
+	}
+
+	void testImageGeneratorGLTextureRectangleProvider(void)
+	{
+		// Choose a color
+		[sharedImageGenerator setValue:blueishColor forInputPort:@"color"];
+
+		// Create an output texture.
+		GLuint outputGLTexture;
+		{
+			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			glGenTextures(1, &outputGLTexture);
+			// Do not call glTexImage2D() on this texture, since that makes CGLTexImageIOSurface2D() throw an "invalid context state" error.
+			VuoGlContext_disuse(cgl_ctx);
+		}
+		QVERIFY(outputGLTexture);
+		GLuint (^provider)(NSUInteger, NSUInteger) = ^GLuint(NSUInteger pixelsWide, NSUInteger pixelsHigh){
+			return outputGLTexture;
+		};
+
+		// Request an image.
+		NSUInteger outputPixelsWide, outputPixelsHigh;
+		IOSurfaceRef outputIOSurface;
+		GLuint actualOutputGLTexture = [sharedImageGenerator generateGLTextureWithProvider:provider suggestedPixelsWide:10 pixelsHigh:10 atTime:0 outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh ioSurface:&outputIOSurface];
+		QVERIFY(actualOutputGLTexture);
+		QCOMPARE(actualOutputGLTexture, outputGLTexture);
+
+		// ImageGenerators aren't required to output an image with the same width/height as the input image,
+		// but this particular composition does.
+		QCOMPARE(outputPixelsWide, (unsigned long)10);
+		QCOMPARE(outputPixelsHigh, (unsigned long)10);
+
+		// Fetch the pixel buffer.
+		VuoImage outputVuoImage = VuoImage_makeClientOwnedGlTextureRectangle(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh, freeCallback, NULL);
+		QVERIFY(outputVuoImage);
+		VuoRetain(outputVuoImage);
+		const unsigned char *pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
+
+		// Confirm that Radar #23547737 still hasn't been fixed.
+		QVERIFY(!pixels);
+
+		// Workaround for Radar #23547737:
+		VuoImage outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		QVERIFY(outputVuoImage2);
+		VuoRetain(outputVuoImage2);
+		VuoRelease(outputVuoImage);
+		pixels = VuoImage_getBuffer(outputVuoImage2, GL_BGRA);
+		QVERIFY(pixels);
+
+		// Check pixel (5,5).
+		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoRelease(outputVuoImage2);
+
+		VuoIoSurfacePool_signal(outputIOSurface);
+		CFRelease(outputIOSurface);
+
+
+		// At this point, the host app is done with the texture.
+		// Let's reuse it to filter another image.
+
+
+		// Choose a color
+		[sharedImageGenerator setValue:greenishColor forInputPort:@"color"];
+
+		// Request an image.
+		actualOutputGLTexture = [sharedImageGenerator generateGLTextureWithProvider:provider suggestedPixelsWide:10 pixelsHigh:10 atTime:0 outputPixelsWide:&outputPixelsWide pixelsHigh:&outputPixelsHigh ioSurface:&outputIOSurface];
+		QVERIFY(actualOutputGLTexture);
+		QCOMPARE(actualOutputGLTexture, outputGLTexture);
+
+		// ImageGenerators aren't required to output an image with the same width/height as the input image,
+		// but this particular composition does.
+		QCOMPARE(outputPixelsWide, (unsigned long)10);
+		QCOMPARE(outputPixelsHigh, (unsigned long)10);
+
+		// Fetch the pixel buffer.
+		outputVuoImage = VuoImage_makeClientOwnedGlTextureRectangle(outputGLTexture, GL_RGBA, outputPixelsWide, outputPixelsHigh, freeCallback, NULL);
+		QVERIFY(outputVuoImage);
+		VuoRetain(outputVuoImage);
+		pixels = VuoImage_getBuffer(outputVuoImage, GL_BGRA);
+
+		// Confirm that Radar #23547737 still hasn't been fixed.
+		QVERIFY(!pixels);
+
+		// Workaround for Radar #23547737:
+		outputVuoImage2 = VuoImage_makeCopy(outputVuoImage, false);
+		QVERIFY(outputVuoImage2);
+		VuoRetain(outputVuoImage2);
+		VuoRelease(outputVuoImage);
+		pixels = VuoImage_getBuffer(outputVuoImage2, GL_BGRA);
+		QVERIFY(pixels);
+
+		// Check pixel (5,5).
+		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoRelease(outputVuoImage2);
+
+		VuoIoSurfacePool_signal(outputIOSurface);
+		CFRelease(outputIOSurface);
 	}
 
 	void testGLTexture2DLeaksInHostApp(void)
@@ -749,7 +1009,7 @@ private slots:
 		}
 
 		// Make sure we're using a reasonable number of textures.
-		VLog("%d unique textures",uniqueTextureNames.size());
+		VUserLog("%d unique textures",uniqueTextureNames.size());
 		QVERIFY(uniqueTextureNames.size() < 50);
 
 		VuoRelease(inputVuoImage);
@@ -783,8 +1043,8 @@ private slots:
 		}
 
 		// Make sure we're using a reasonable number of textures.
-		VLog("%d unique textures",uniqueTextureNames.size());
-		QVERIFY(uniqueTextureNames.size() < 10);
+		VUserLog("%d unique textures",uniqueTextureNames.size());
+		QVERIFY(uniqueTextureNames.size() < 50);
 
 		VuoRelease(inputVuoImageRectangle);
 	}

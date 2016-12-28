@@ -43,7 +43,10 @@
 			"decrement" : 1,
 			"minimum" : 1,
 			"maximum" : 2,
-			"wrapMode" : "wrap"
+			"wrapMode" : "wrap",
+			"incrementEvent" : true,
+			"decrementEvent" : false,
+			"setCountEvent" : false
 		},
 		"outputPortValues" : {
 			"count" : 2
@@ -71,7 +74,10 @@
 			"decrement" : 1,
 			"minimum" : 1,
 			"maximum" : 2,
-			"wrapMode" : "wrap"
+			"wrapMode" : "wrap",
+			"incrementEvent" : false,
+			"decrementEvent" : true,
+			"setCountEvent" : false
 		},
 		"outputPortValues" : {
 			"count" : 2
@@ -85,7 +91,10 @@
 			"decrement" : 1,
 			"minimum" : 1,
 			"maximum" : 2,
-			"wrapMode" : "saturate"
+			"wrapMode" : "saturate",
+			"incrementEvent" : true,
+			"decrementEvent" : false,
+			"setCountEvent" : false
 		},
 		"outputPortValues" : {
 			"count" : 2
@@ -99,7 +108,10 @@
 			"decrement" : 1.5,
 			"minimum" : 0,
 			"maximum" : 2,
-			"wrapMode" : "wrap"
+			"wrapMode" : "wrap",
+			"incrementEvent" : false,
+			"decrementEvent" : true,
+			"setCountEvent" : false
 		},
 		"outputPortValues" : {
 			"count" : 0.5

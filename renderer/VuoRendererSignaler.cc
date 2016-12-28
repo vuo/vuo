@@ -50,6 +50,14 @@ void VuoRendererSignaler::signalNodeTitleEditorRequested(VuoRendererNode *node)
 }
 
 /**
+ * Emits a @c nodeTitleEditorRequested signal.
+ */
+void VuoRendererSignaler::signalSubcompositionEditRequested(VuoRendererNode *node)
+{
+	emit subcompositionEditRequested(node);
+}
+
+/**
  * Emits a @c inputPortCountAdjustmentRequested signal.
  */
 void VuoRendererSignaler::signalInputPortCountAdjustmentRequested(VuoRendererNode *node, int inputPortCountDelta, bool requestedByDragging)

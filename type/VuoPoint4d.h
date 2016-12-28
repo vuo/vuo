@@ -32,6 +32,7 @@ VuoPoint4d VuoPoint4d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint4d_getJson(const VuoPoint4d value);
 char * VuoPoint4d_getSummary(const VuoPoint4d value);
 
+bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2);
 VuoPoint4d VuoPoint4d_random(const VuoPoint4d minimum, const VuoPoint4d maximum);
 VuoPoint4d VuoPoint4d_randomWithState(unsigned short state[3], const VuoPoint4d minimum, const VuoPoint4d maximum);
 
@@ -196,6 +197,15 @@ static inline VuoPoint4d VuoPoint4d_multiply(VuoPoint4d a, float b)
 		a.w * b
 	};
 	return p;
+}
+
+/**
+ * Returns component-wise multiplication of two VuoPoint4d vectors.
+ */
+static inline VuoPoint4d VuoPoint4d_scale(VuoPoint4d a, VuoPoint4d b) __attribute__((const));
+static inline VuoPoint4d VuoPoint4d_scale(VuoPoint4d a, VuoPoint4d b)
+{
+	return (VuoPoint4d){ a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w };
 }
 
 /**

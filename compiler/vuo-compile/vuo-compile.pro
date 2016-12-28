@@ -1,7 +1,7 @@
 TEMPLATE = app
 CONFIG -= qt app_bundle
 CONFIG += console graphviz VuoLLVM VuoBase VuoRuntime VuoCompiler
-LIBS += -framework CoreFoundation
+LIBS += -framework AppKit
 
 VUO_INFO_PLIST = vuo-compile-Info.plist
 VUO_INFO_PLIST_GENERATED = vuo-compile-Info-generated.plist

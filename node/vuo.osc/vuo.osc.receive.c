@@ -18,6 +18,7 @@ VuoModuleMetadata({
 						 "VuoOsc"
 					 ],
 					 "node": {
+						 "isDeprecated": true,
 						 "isInterface" : true,
 						 "exampleCompositions": [ "ReceiveOsc.vuo" ]
 					 }
@@ -35,7 +36,8 @@ static void updatePort(struct nodeInstanceData *context, VuoInteger newUdpPort)
 	context->udpPort = newUdpPort;
 
 	VuoRelease(context->oscManager);
-	context->oscManager = VuoOscIn_make(newUdpPort);
+	VuoOscInputDevice device = {NULL, NULL, newUdpPort};
+	context->oscManager = VuoOscIn_make(device);
 	VuoRetain(context->oscManager);
 }
 

@@ -25,10 +25,6 @@ class TestVuoList : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testList()
 	{
@@ -60,6 +56,13 @@ private slots:
 				QCOMPARE(QString(lItem), QString(lUnserializedItem));
 			}
 			free(lSerialized);
+		}
+
+		{
+			VuoListSort_VuoText(l);
+			QCOMPARE(QString(VuoListGetValue_VuoText(l,1)), QString("one"));
+			QCOMPARE(QString(VuoListGetValue_VuoText(l,2)), QString("two"));
+			QCOMPARE(QString(VuoListGetValue_VuoText(l,3)), QString("zero"));
 		}
 	}
 
@@ -269,6 +272,46 @@ private slots:
 		VuoListRemoveValue_VuoText(actualList, index);
 
 		verifyEqual(actualList, expectedList);
+	}
+
+	void testComparison_data()
+	{
+		QTest::addColumn<VuoList_VuoText>("a");
+		QTest::addColumn<VuoList_VuoText>("b");
+		QTest::addColumn<bool>("expectedEqual");
+		QTest::addColumn<bool>("expectedALessThanB");
+
+		VuoList_VuoText nullList = NULL;
+		VuoList_VuoText emptyList = VuoListCreate_VuoText();
+
+		VuoList_VuoText oneTwo = VuoListCreate_VuoText();
+		VuoListAppendValue_VuoText(oneTwo, VuoText_make("one"));
+		VuoListAppendValue_VuoText(oneTwo, VuoText_make("two"));
+
+		VuoList_VuoText oneZwei = VuoListCreate_VuoText();
+		VuoListAppendValue_VuoText(oneZwei, VuoText_make("one"));
+		VuoListAppendValue_VuoText(oneZwei, VuoText_make("zwei"));
+
+		QTest::newRow("null lists")  << nullList  << nullList  << true  << false;
+		QTest::newRow("null, empty") << nullList  << emptyList << false << true;
+		QTest::newRow("empty, null") << emptyList << nullList  << false << false;
+		QTest::newRow("empty lists") << emptyList << emptyList << true  << false;
+
+		QTest::newRow("empty, oneTwo")   << emptyList << oneTwo  << false << true;
+		QTest::newRow("null, oneTwo")    << nullList  << oneTwo  << false << true;
+		QTest::newRow("oneTwo, oneTwo")  << oneTwo    << oneTwo  << true  << false;
+		QTest::newRow("oneTwo, oneZwei") << oneTwo    << oneZwei << false << true;
+		QTest::newRow("oneZwei, oneTwo") << oneZwei   << oneTwo  << false << false;
+	}
+	void testComparison()
+	{
+		QFETCH(VuoList_VuoText, a);
+		QFETCH(VuoList_VuoText, b);
+		QFETCH(bool, expectedEqual);
+		QFETCH(bool, expectedALessThanB);
+
+		QCOMPARE(VuoList_VuoText_areEqual(a,b), expectedEqual);
+		QCOMPARE(VuoList_VuoText_isLessThan(a,b), expectedALessThanB);
 	}
 };
 

@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Window Aspect Ratio",
-					 "keywords" : [ "width", "height", "dimensions", "lock", "fixed", "size", "properties" ],
+					 "keywords" : [ "width", "height", "dimensions", "lock", "fixed", "size", "properties", "set" ],
 					 "version" : "1.0.1",
 					 "node": {
 						 "exampleCompositions" : [ "ToggleAspectRatio.vuo" ]

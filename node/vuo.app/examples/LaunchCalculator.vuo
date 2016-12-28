@@ -1,0 +1,25 @@
+/**
+ * @file
+ * This composition launches an external application.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="120,45" fillcolor="yellow" _started_eventThrottling="enqueue"];
+LaunchApp [type="vuo.app.launch" version="1.0.0" label="Launch App|<refresh>refresh\l|<url>url\l" pos="510,255" fillcolor="violet" _url="\"\\/Applications\\/Calculator.app\""];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="469,101"];
+MakeList8 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="439,86"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="285,75" _text="\"Press any key to launch Calculator.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":48,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0.0,\"y\":0.0}"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="225,180" fillcolor="yellow" _key="\"any\"" _modifierKey="\"none\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="510,75" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+FireOnStart:started -> MakeTextLayer:refresh;
+MakeList4:list -> RenderLayersToWindow:setWindowProperties;
+MakeList8:list -> RenderLayersToWindow:layers;
+MakeTextLayer:layer -> MakeList8:1;
+ReceiveKeyboardButtons:pressed -> LaunchApp:url;
+}

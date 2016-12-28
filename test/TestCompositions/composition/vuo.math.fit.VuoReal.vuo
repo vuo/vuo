@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FitInRange2 [type="vuo.math.fit.VuoReal" version="1.0.0" label="Fit in Range|<refresh>refresh\l|<value>value\l|<tracking>tracking\l|<reset>reset\l|<fittedMin>fittedMin\l|<fittedMax>fittedMax\l|<fittedValue>fittedValue\r|<min>min\r|<max>max\r" pos="180,30"];
+SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-60,45"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<refresh>refresh\r|<value>value\r|<tracking>tracking\r|<resetEvent>resetEvent\r|<reset>reset\r|<fittedMin>fittedMin\r|<fittedMax>fittedMax\r" _value_type="VuoReal" _value="0.000000" _tracking_type="VuoReal" _tracking="1.000000" _resetEvent_type="VuoBoolean" _resetEvent="false" _reset_type="event" _fittedMin_type="VuoReal" _fittedMin="0.000000" _fittedMax_type="VuoReal" _fittedMax="1.000000" _refresh_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<fittedValue>fittedValue\l|<min>min\l|<max>max\l" _fittedValue_type="VuoReal" _min_type="VuoReal" _max_type="VuoReal"];
+
+SelectEventOutput:trueOption -> FitInRange2:reset;
+PublishedInputs:value -> FitInRange2:value;
+PublishedInputs:tracking -> FitInRange2:tracking;
+PublishedInputs:resetEvent -> SelectEventOutput:which;
+PublishedInputs:reset -> SelectEventOutput:in;
+PublishedInputs:fittedMin -> FitInRange2:fittedMin;
+PublishedInputs:fittedMax -> FitInRange2:fittedMax;
+PublishedInputs:refresh -> FitInRange2:refresh;
+FitInRange2:fittedValue -> PublishedOutputs:fittedValue;
+FitInRange2:min -> PublishedOutputs:min;
+FitInRange2:max -> PublishedOutputs:max;
+}

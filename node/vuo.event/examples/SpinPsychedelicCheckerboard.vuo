@@ -22,7 +22,7 @@ MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer
 ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.2" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-64,-5" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1384,176" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 RotateImage [type="vuo.image.rotate" version="1.0.1" label="Rotate Image|<refresh>refresh\l|<image>image\l|<rotation>rotation\l|<expandBounds>expandBounds\l|<rotatedImage>rotatedImage\r" pos="560,185" _rotation="0.500000" _expandBounds="false"];
-SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="165,14" fillcolor="violet" _fire="10" _spunOffIndex_eventThrottling="enqueue"];
+SpinOffEvents [type="vuo.event.spinOffEvents" version="1.0.0" label="Spin Off Events|<refresh>refresh\l|<fire>fire\l|<spunOffIndex>spunOffIndex\r" pos="165,14" fillcolor="violet" _fire="100" _spunOffIndex_eventThrottling="enqueue"];
 
 AdjustImageColors:adjustedImage -> HoldValue2:newValue;
 AdjustImageColors:adjustedImage -> MakeLayer:image;

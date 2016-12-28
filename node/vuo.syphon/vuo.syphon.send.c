@@ -57,6 +57,9 @@ struct nodeInstanceData * nodeInstanceInit
 	context->syphonServer = VuoSyphonServer_make(serverName, context->glContext);
 	VuoRetain(context->syphonServer);
 
+	context->serverName = serverName;
+	VuoRetain(context->serverName);
+
 	return context;
 }
 

@@ -9,24 +9,22 @@
 
 digraph G
 {
-Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.0.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="330,315" fillcolor="violet" _channel="\"luminance\"" _distance="1"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-315,120" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DGridLines2 [type="vuo.scene.make.grid.lines.VuoGenericType1" version="1.0.0" label="Make 3D Grid Lines|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="90,315" fillcolor="violet" _material="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.005000"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="-135,315" _translation="{\"x\":0.000000,\"y\":-0.300000,\"z\":0.000000}" _rotation="{\"x\":-60.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
+Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.0.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="330,315" fillcolor="violet" _channel="\"luminance\"" _distance="0.4"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,105" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DGridLines2 [type="vuo.scene.make.grid.lines.VuoGenericType1" version="1.0.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="75,315" fillcolor="violet" _transform="{\"translation\":[0,-0.30000001192092896,0],\"eulerRotation\":[-1.0471975803375244,0,0],\"scale\":[0.40000000596046448,0.40000000596046448,0.40000000596046448]}" _material="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.005000"];
 MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-55,161" _1="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
-MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="624,236" fillcolor="green"];
-MakeList4 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="674,266" fillcolor="green"];
-MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<width>width\l|<height>height\l|<image>image\r" pos="15,150" _center="{\"x\":0.000000,\"y\":0.000000}" _radius="1" _width="480" _height="480"];
+MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,266" fillcolor="green"];
+MakeList3 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="589,236" fillcolor="green"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="15,150" _center="{\"x\":0.000000,\"y\":0.000000}" _radius="1" _noiseAmount="0.2" _width="480" _height="480"];
 MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="315,150" _center="{\"x\":0.000000,\"y\":0.400000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _width="0.400000" _opacity="1.000000"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="720,225" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="660,225" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 Displace3DObjectWithImage:deformedObject -> MakeList3:2;
-FireOnStart:started -> Make3DTransform:refresh;
+FireOnStart:started -> Make3DGridLines2:refresh;
 FireOnStart:started -> MakeRadialGradientImage:refresh;
 Make3DGridLines2:object -> Displace3DObjectWithImage:object;
-Make3DTransform:transform -> Make3DGridLines2:transform;
+MakeList2:list -> RenderSceneToWindow:setWindowProperties;
 MakeList3:list -> RenderSceneToWindow:objects;
-MakeList4:list -> RenderSceneToWindow:setWindowProperties;
 MakeList:list -> MakeRadialGradientImage:colors;
 MakeRadialGradientImage:image -> Displace3DObjectWithImage:image;
 MakeRadialGradientImage:image -> MakeUnlit3DObjectFromImage:image;

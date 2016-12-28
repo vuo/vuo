@@ -10,15 +10,15 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title": "Convert Real List to 2D Point List",
+					  "title": "Convert Real List to 2D Point List (0,Y)",
 					  "description": "Creates a list of 2D points using the input real numbers as the Y coordinate, and 0 as the X coordinate.",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
 (
 	VuoInputData(VuoList_VuoReal) y,
-	VuoOutputData(VuoList_VuoPoint2d) point2d
+	VuoOutputData(VuoList_VuoPoint2d, {"name":"(0,Y)"}) point2d
 )
 {
 	*point2d = VuoListCreate_VuoPoint2d();

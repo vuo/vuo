@@ -1,0 +1,94 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.crop.pixels node.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* Input image is larger than requested crop area — should output entire requested area. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"image": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":0, "y":0 },
+			"width":  3,
+			"height": 3,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":3, "pixelsHigh":3 }
+		}
+	},
+
+	/* Input image is equal to requested crop area — should output entire requested area. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"image": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":0, "y":0 },
+			"width":  10,
+			"height": 10,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 }
+		}
+	},
+
+	/* Input image is horizontally smaller than requested crop area — should output part of requested area. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"image": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":5, "y":0 },
+			"width":  10,
+			"height": 10,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":5, "pixelsHigh":10 }
+		}
+	},
+
+	/* Input image is vertically smaller than requested crop area — should output part of requested area. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"image": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":0, "y":5 },
+			"width":  10,
+			"height": 10,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":5 }
+		}
+	},
+
+	/* Input image is horizontally smaller than requested crop area — should output part of requested area.  Check for floating-point error. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"image": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":6, "y":0 },
+			"width":  10,
+			"height": 10,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":4, "pixelsHigh":10 }
+		}
+	},
+
+	/* Input image is vertically smaller than requested crop area — should output part of requested area.  Check for floating-point error. */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"image": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":0, "y":6 },
+			"width":  10,
+			"height": 10,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":4 }
+		}
+	},
+]}

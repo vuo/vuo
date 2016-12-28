@@ -13,4 +13,6 @@ This is commonly used for projecting onto a dome with a spherical mirror, an ine
    - `Width` and `Height` — The size of the output image, in pixels.
    - `Warped Image` — The image warped by the mesh, ready to be output to a projector with a `Render Image to Window` node.
 
+See [vuo.url](vuo-nodeset://vuo.url) for info on how Vuo handles URLs.
+
 Thanks to [Paul Bourke](http://paulbourke.net/) for developing the image warping technique used by this node and for offering guidance for implementing it in Vuo.

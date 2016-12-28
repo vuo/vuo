@@ -11,10 +11,11 @@
 #define VUOCABLE_HH
 
 #include "VuoBase.hh"
-#include "VuoNode.hh"
 
 class VuoCompilerCable;
 class VuoRendererCable;
+class VuoNode;
+class VuoPort;
 
 /**
  * Represents a connection from a node's output port to a node's input port.
@@ -30,7 +31,7 @@ public:
 	VuoPort * getToPort(void);
 	void setFrom(VuoNode *fromNode, VuoPort *fromPort);
 	void setTo(VuoNode *toNode, VuoPort *toPort);
-	bool isPublishedCable(void);
+	bool isPublished(void);
 	bool isPublishedInputCable(void);
 	bool isPublishedOutputCable(void);
 

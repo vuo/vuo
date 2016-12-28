@@ -3,7 +3,7 @@ Creates multiple layers consisting of transformed copies of an original.
 This node is useful for displaying multiple similar layers within a composite image.
 
    - `Layer` — The original layer.
-   - `Translations` — The copy's position, in Vuo coordinates.
+   - `Translations` — The copy's position, in Vuo Coordinates.
    - `Rotations` —  The copy's rotation, in degrees.
    - `Scales` — The copy's scale.
    - `Copies` — A layer group containing the layer copies, with as many items as the longest list among `Translations`, `Rotations`, and `Scales`.

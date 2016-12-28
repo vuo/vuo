@@ -12,10 +12,16 @@
 
 #include "VuoBaseDetail.hh"
 #include "VuoComposition.hh"
-#include "VuoProtocol.hh"
 
-#include "VuoCompilerGraphvizParser.hh"
-#include "VuoCompilerGraph.hh"
+class VuoCompiler;
+class VuoCompilerCable;
+class VuoCompilerGraph;
+class VuoCompilerGraphvizParser;
+class VuoCompilerPort;
+class VuoCable;
+class VuoNode;
+class VuoPort;
+class VuoPublishedPort;
 
 /**
  * A collection of nodes and the cables connecting them.
@@ -38,16 +44,12 @@ public:
 	VuoCompilerComposition(VuoComposition *baseComposition, VuoCompilerGraphvizParser *parser);
 	~VuoCompilerComposition(void);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
-	void check(void);
-	void checkForMissingNodeClasses(void);
+	void check(const set<string> &subcompositions = set<string>());
+	void checkForMissingNodeClasses(const set<string> &subcompositions = set<string>());
 	void checkFeedback(set<VuoCompilerCable *> potentialCables = set<VuoCompilerCable *>());
 	void updateGenericPortTypes(void);
 	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
 	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
-	VuoNode * getPublishedInputNode(void);
-	VuoNode * getPublishedOutputNode(void);
-	void setPublishedInputNode(VuoNode *node);
-	void setPublishedOutputNode(VuoNode *node);
 	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
 	void setModule(Module *module);
 	string getGraphvizDeclaration(string header = "", string footer = "");
@@ -58,8 +60,6 @@ public:
 
 private:
 	VuoCompilerGraph *graph;
-	VuoNode *publishedInputNode;
-	VuoNode *publishedOutputNode;
 	map<unsigned int, bool> genericTypeSuffixUsed;
 	map<string, VuoNode *> nodeGraphvizIdentifierUsed;
 	Module *module;

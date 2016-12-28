@@ -1,0 +1,63 @@
+/**
+ * @file
+ * A recreation of [Douglas Trumbull's warp speed effect](http://web.archive.org/web/20150905122747/http://www.filmsite.org/visualeffects10.html).
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="195,735"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="150,270"];
+Convert3DPointListToRealList [type="vuo.type.list.point3d.real.z" version="1.0.1" label="Convert 3D Point List to Real List|<refresh>refresh\l|<point3d>point3d\l|<z>z\r" pos="795,465"];
+Convert3DPointListToRealList2 [type="vuo.type.list.point3d.real.z" version="1.0.1" label="Convert 3D Point List to Real List|<refresh>refresh\l|<point3d>point3d\l|<z>z\r" pos="795,645"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.xy" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="750,660"];
+ConvertRealTo2DPoint3 [type="vuo.type.real.point2d.xy" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="750,555"];
+CopyLayer [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="690,405"];
+CopyLayer2 [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="690,510"];
+Curve4 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="315,585" _endPosition="2.7000000000000002" _duration="2" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
+Curve5 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="315,735" _endPosition="2.7000000000000002" _duration="2" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="315,300" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0,\"y\":0.60000002384185791}" _rotation="0.000000" _width="0.014999999999999999" _height="0.29999999999999999"];
+MakeList10 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="816,416" fillcolor="green"];
+MakeList2 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="644,461"];
+MakeList3 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="546,431" _1="{\"x\":0,\"y\":0}"];
+MakeList4 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="644,566"];
+MakeList5 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="546,536" _1="{\"x\":0,\"y\":0}"];
+MakeList9 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="149,746" _2="1"];
+MakeParametricPoints [type="vuo.point.make.parametric" version="1.0.1" label="Make Parametric Points|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<subdivisions>subdivisions\l|<uMin>uMin\l|<uMax>uMax\l|<points>points\r" pos="315,435" _time="0.000000" _xExpression="\"u\"" _yExpression="\"u\"" _zExpression="\"u\"" _subdivisions="18" _uMin="0" _uMax="340"];
+RadiallOffsetImageRGBChannels [type="vuo.image.color.offset.radial.rgb" version="1.0.0" label="Radially Offset Image RGB Channels|<refresh>refresh\l|<image>image\l|<redOffset>redOffset\l|<greenOffset>greenOffset\l|<blueOffset>blueOffset\l|<offsetImage>offsetImage\r" pos="1125,405" fillcolor="violet" _redOffset="0.20000000000000001" _greenOffset="0" _blueOffset="-0.20000000000000001"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="885,405" fillcolor="green" _colorDepth="\"8bpc\"" _multisampling="\"4\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<width>width\r|<height>height\r|<time>time\r" _width_type="VuoInteger" _height_type="VuoInteger" _time_type="VuoReal"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
+
+Add:sum -> Curve5:time;
+AllowFirstEvent:firstEvent -> MakeColorLayer:refresh;
+AllowFirstEvent:firstEvent -> MakeParametricPoints:refresh;
+Convert3DPointListToRealList2:z -> CopyLayer2:rotations;
+Convert3DPointListToRealList:z -> CopyLayer:rotations;
+ConvertRealTo2DPoint2:point2d -> MakeList4:1;
+ConvertRealTo2DPoint3:point2d -> MakeList2:1;
+CopyLayer2:copies -> MakeList10:2;
+CopyLayer:copies -> MakeList10:1;
+Curve4:value -> ConvertRealTo2DPoint3:x;
+Curve5:value -> ConvertRealTo2DPoint2:x;
+MakeColorLayer:layer -> CopyLayer2:layer;
+MakeColorLayer:layer -> CopyLayer:layer;
+MakeList10:list -> RenderLayersToImage:layers;
+MakeList2:list -> CopyLayer:scales;
+MakeList3:list -> CopyLayer:translations;
+MakeList4:list -> CopyLayer2:scales;
+MakeList5:list -> CopyLayer2:translations;
+MakeList9:list -> Add:values;
+MakeParametricPoints:points -> Convert3DPointListToRealList2:point3d;
+MakeParametricPoints:points -> Convert3DPointListToRealList:point3d;
+PublishedInputs:height -> RenderLayersToImage:height;
+PublishedInputs:time -> AllowFirstEvent:event;
+PublishedInputs:time -> Curve4:time;
+PublishedInputs:time -> MakeList9:1;
+PublishedInputs:width -> RenderLayersToImage:width;
+RadiallOffsetImageRGBChannels:offsetImage -> PublishedOutputs:outputImage;
+RenderLayersToImage:image -> RadiallOffsetImageRGBChannels:image;
+}

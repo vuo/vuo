@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					"title" : "Make Tube",
-					"keywords" : [ "pipe", "cylinder", "capsule", "barrel", "tubular" ],
+					"keywords" : [ "3D", "pipe", "cylinder", "capsule", "barrel", "tubular" ],
 					"version" : "1.0.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {
@@ -345,8 +345,8 @@ void nodeEvent
 		VuoInputData(VuoGenericType2, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) insideMaterial,
 		VuoInputData(VuoGenericType3, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) topMaterial,
 		VuoInputData(VuoGenericType4, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) bottomMaterial,
-		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":128}) rows,
-		VuoInputData(VuoInteger, {"default":8, "suggestedMin":3, "suggestedMax":256}) columns,
+		VuoInputData(VuoInteger, {"default":16, "suggestedMin":1, "suggestedMax":128}) rows,
+		VuoInputData(VuoInteger, {"default":32, "suggestedMin":3, "suggestedMax":256}) columns,
 		VuoInputData(VuoReal, {"default":0.3, "suggestedMin":0, "suggestedMax":1, "suggestedStep":0.1}) thickness,
 		VuoOutputData(VuoSceneObject) object
 )

@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Demonstrates creating a random image, and independently controlling its color and pattern.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="75,270"];
+Count3 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="285,195" _increment="1" _decrement="1" _setCount="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-165,285" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="660,315" _color="{\"r\":0,\"g\":0,\"b\":0,\"a\":0.74999618530273438}" _center="{\"x\":0,\"y\":-0.5}" _rotation="0.0" _width="2.0" _height="0.20000000000000001"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="255,90" _saturation="1.0" _lightness="0.5" _opacity="1.0"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="859,326" fillcolor="green"];
+MakeList6 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="829,311" fillcolor="green"];
+MakeRandomImage [type="vuo.image.make.random" version="1.0.0" label="Make Random Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<seed>seed\l|<width>width\l|<height>height\l|<image>image\r" pos="435,165" fillcolor="violet" _colorB="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _width="1024" _height="768"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="645,150" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="660,450" _text="\"Move the mouse horizontally to change one of the two colors.\\nPress a key to change the random seed.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0,\"y\":-0.5}"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="45,210" fillcolor="yellow" _key="\"any\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-120,90" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="900,300" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="120,90" _start="0." _end="1400" _scaledStart="0." _scaledEnd="1"];
+
+Convert2DPointToReal:x -> Scale:value;
+Count3:count -> MakeRandomImage:seed;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
+FireOnStart:started -> Scale:refresh;
+MakeColorLayer:layer -> MakeList6:2;
+MakeHSLColor:color -> MakeRandomImage:colorA;
+MakeList5:list -> RenderLayersToWindow:setWindowProperties;
+MakeList6:list -> RenderLayersToWindow:layers;
+MakeRandomImage:image -> MakeScaledLayer:image;
+MakeScaledLayer:layer -> MakeList6:1;
+MakeTextLayer:layer -> MakeList6:3;
+ReceiveKeyboardButtons:pressed -> Count3:increment;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+Scale:scaledValue -> MakeHSLColor:hue;
+}

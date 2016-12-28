@@ -9,6 +9,7 @@
 
 #include "VuoNode.hh"
 
+#include "VuoNodeClass.hh"
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
 #include "VuoStringUtilities.hh"

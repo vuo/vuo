@@ -122,6 +122,15 @@ string VuoStringUtilities::join(vector<string> partialStrings, char delimiter)
 }
 
 /**
+ * Returns a string that starts with @a moduleKey and ends with @a symbolName.
+ * Useful for adding a unique prefix to a symbol name.
+ */
+string VuoStringUtilities::prefixSymbolName(string symbolName, string moduleKey)
+{
+	return transcodeToIdentifier(moduleKey) + "__" + symbolName;
+}
+
+/**
  * Transforms a string into a valid identifier:
  *  - Replace whitespace and '.'s with '_'s
  *  - Make sure all characters match [A-Za-z0-9_]
@@ -249,4 +258,21 @@ string VuoStringUtilities::expandCamelCase(string camelCaseString)
 	}
 
 	return out;
+}
+
+/**
+ * Returns a random sequence of alphanumeric characters.
+ */
+string VuoStringUtilities::makeRandomHash(int length)
+{
+	static const char alphanum[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
+
+	string hash(length, 0);
+	for (int i = 0; i < length; ++i)
+		hash[i] = alphanum[arc4random_uniform(sizeof(alphanum))];
+
+	return hash;
 }

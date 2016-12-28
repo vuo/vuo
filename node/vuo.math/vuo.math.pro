@@ -6,8 +6,11 @@ include(../../vuo.pri)
 GENERIC_NODE_SOURCES += \
 	vuo.math.absolute.c \
 	vuo.math.add.c \
+	vuo.math.add.list.2.c \
 	vuo.math.areEqual.c \
+	vuo.math.areNotEqual.c \
 	vuo.math.average.c \
+	vuo.math.compareNumbers.c \
 	vuo.math.cos.c \
 	vuo.math.count.c \
 	vuo.math.countWithinRange.c \
@@ -23,7 +26,10 @@ GENERIC_NODE_SOURCES += \
 	vuo.math.max.c \
 	vuo.math.min.c \
 	vuo.math.multiply.c \
+	vuo.math.multiply.list.2.c \
+	vuo.math.relative.absolute.c \
 	vuo.math.scale.c \
+	vuo.math.scale.list.c \
 	vuo.math.sin.c \
 	vuo.math.snap.c \
 	vuo.math.subtract.c \
@@ -36,5 +42,13 @@ NODE_SOURCES += \
 	vuo.math.round.c \
 	vuo.math.roundDown.c \
 	vuo.math.roundUp.c
+
+TYPE_SOURCES += \
+	VuoNumberComparison.c \
+	VuoRoundingMethod.c
+
+HEADERS += \
+	VuoNumberComparison.h \
+	VuoRoundingMethod.h
 
 include(../../module.pri)

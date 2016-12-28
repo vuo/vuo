@@ -16,6 +16,7 @@ VuoModuleMetadata({
 					  "keywords" : [
 						  "quicktime", "qt",
 						  "firewire", "1394", "usb", "iSight",
+						  "iOS", "iPhone", "iPad", "Lightning",
 						  "camera", "capture", "streaming", "record"
 					  ],
 					 "version" : "1.0.1",
@@ -67,10 +68,7 @@ void nodeInstanceEvent
 	if(start)
 	{
 		if( !VuoQTCapture_isInitialized(*movie) )
-		{
 			*movie = VuoQTCapture_make(device, receivedFrame);
-			VuoRetain(*movie);
-		}
 
 		VuoQTCapture_startListening(*movie);
 	}
@@ -93,5 +91,4 @@ void nodeInstanceFini
 		VuoInstanceData(VuoQTCapture *) movie
 )
 {
-	VuoRelease( *movie );
 }

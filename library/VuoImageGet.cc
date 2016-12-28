@@ -53,7 +53,7 @@ __attribute__((constructor)) static void VuoImageGet_init(void)
  */
 VuoImage VuoImage_get(const char *imageURL)
 {
-	if (!strlen(imageURL))
+	if (!imageURL || !strlen(imageURL))
 		return NULL;
 
 	void *data;
@@ -72,12 +72,12 @@ VuoImage VuoImage_get(const char *imageURL)
 		FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
 		if (fif == FIF_UNKNOWN)
 		{
-			VLog("Error: '%s': Couldn't determine image type.", imageURL);
+			VUserLog("Error: '%s': Couldn't determine image type.", imageURL);
 			return NULL;
 		}
 		if (!FreeImage_FIFSupportsReading(fif))
 		{
-			VLog("Error: '%s': This image type doesn't support reading.", imageURL);
+			VUserLog("Error: '%s': This image type doesn't support reading.", imageURL);
 			return NULL;
 		}
 
@@ -86,7 +86,7 @@ VuoImage VuoImage_get(const char *imageURL)
 
 		if (!dib)
 		{
-			VLog("Error: '%s': Failed to read image.", imageURL);
+			VUserLog("Error: '%s': Failed to read image.", imageURL);
 			return NULL;
 		}
 
@@ -112,6 +112,12 @@ VuoImage VuoImage_get(const char *imageURL)
 			FreeImage_Unload(dib);
 			dib = dibFloat;
 		}
+		else if (type == FIT_BITMAP && bpp == 24)
+		{
+			// Fast path for RGB images — no need to add a fully-opaque alpha channel.
+			colorDepth = VuoImageColorDepth_8;
+			format = GL_BGR;
+		}
 		else
 		{
 			// Upload other images as 8bpc.
@@ -134,12 +140,15 @@ VuoImage VuoImage_get(const char *imageURL)
 				FreeImage_Unload(dib);
 				dib = dibConverted;
 			}
+
+			if (!FreeImage_PreMultiplyWithAlpha(dib))
+				VUserLog("Warning: Premultiplication failed.");
 		}
 
 		pixels = FreeImage_GetBits(dib);
 		if (!pixels)
 		{
-			VLog("Error: '%s': Couldn't get pixels from image.", imageURL);
+			VUserLog("Error: '%s': Couldn't get pixels from image.", imageURL);
 			FreeImage_Unload(dib);
 			return NULL;
 		}
@@ -148,10 +157,10 @@ VuoImage VuoImage_get(const char *imageURL)
 	unsigned long pixelsWide = FreeImage_GetWidth(dib);
 	unsigned long pixelsHigh = FreeImage_GetHeight(dib);
 
-	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, format, pixelsWide, pixelsHigh, colorDepth);
-
-	FreeImage_Unload(dib);
-	free(data);
+	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, format, pixelsWide, pixelsHigh, colorDepth, ^(void *buffer){
+		FreeImage_Unload(dib);
+		free(data);
+	});
 
 	return vuoImage;
 }

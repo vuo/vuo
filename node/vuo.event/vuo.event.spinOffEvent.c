@@ -20,7 +20,7 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
- VuoOutputTrigger(spunOff,void)
+	VuoOutputTrigger(spunOff,void)
 )
 {
 	spunOff();

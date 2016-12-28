@@ -46,7 +46,7 @@ void nodeInstanceEvent(
 	VuoOutputTrigger(inputDevices, VuoList_VuoVideoInputDevice)
 	)
 {
-	
+
 }
 
 void nodeInstanceTriggerStop(

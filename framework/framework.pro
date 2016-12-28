@@ -23,12 +23,12 @@ QMAKE_LFLAGS += -headerpad_max_install_names
 QMAKE_LFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
 
 # Add the third-party libraries that Vuo nodes/types depend on
-MODULE_OBJECTS += \
+MODULE_LIBRARY_OBJECTS += \
 	$$ROOT/runtime/*\\.bc \
 	$$ROOT/base/VuoCompositionStub.dylib \
 	$$ROOT/compiler/binary/crt1.o \
 	$$ZMQ_ROOT/lib/libzmq.a \
-	$$JSONC_ROOT/lib/libjson.a \
+	$$JSONC_ROOT/lib/libjson-c.a \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
 	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
 	$$OPENSSL_ROOT/lib/libssl.a \
@@ -50,7 +50,7 @@ MODULE_OBJECTS += \
 	$$ZXING_ROOT/lib/libzxing.a \
 	$$LIBXML2_ROOT/lib/libxml2.a \
 	$$ASSIMP_ROOT/lib/libassimp.a
-	MODULE_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
+	MODULE_LIBRARY_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
 
 
 # Create and populate Headers directory
@@ -100,9 +100,19 @@ QMAKE_EXTRA_TARGETS += createLicensesDir
 # Update linker ids for dynamic libraries.
 MODULES_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Modules"
 copyModules.commands = \
-	   rm -rf $$MODULES_DEST_DIR \
-	&& mkdir -p $$MODULES_DEST_DIR \
-	&& cp $$MODULE_OBJECTS $$MODULES_DEST_DIR \
+	   mkdir -p $$MODULES_DEST_DIR \
+	&& ( [ -f $$MODULES_DEST_DIR/libVuoHeap.dylib ] && chmod +w $$MODULES_DEST_DIR/libVuo*.dylib ; true ) \
+	&& rsync --archive --delete $$MODULE_OBJECTS $$MODULES_DEST_DIR
+copyModules.depends += $$MODULE_OBJECTS
+copyModules.target = $$MODULES_DEST_DIR
+POST_TARGETDEPS += $$MODULES_DEST_DIR
+QMAKE_EXTRA_TARGETS += copyModules
+
+# Separately copy the libraries that change less frequently, to make the above MODULE_OBJECTS copying go faster.
+copyLibraryModules.commands = \
+	   mkdir -p $$MODULES_DEST_DIR \
+	&& ( [ -f $$MODULES_DEST_DIR/libgvplugin_dot_layout.dylib ] && chmod +w $$MODULES_DEST_DIR/*.dylib $$MODULES_DEST_DIR/lib*.a ; true ) \
+	&& cp $$MODULE_LIBRARY_OBJECTS $$MODULES_DEST_DIR \
 	&& cp "$$GRAPHVIZ_ROOT/lib/graphviz/libgvplugin_dot_layout.6.dylib" "$$MODULES_DEST_DIR/libgvplugin_dot_layout.dylib" \
 	&& cp "$$GRAPHVIZ_ROOT/lib/graphviz/libgvplugin_core.6.dylib"       "$$MODULES_DEST_DIR/libgvplugin_core.dylib"       \
 	&& cp "$$GRAPHVIZ_ROOT/lib/libcdt.5.dylib"                          "$$MODULES_DEST_DIR/libcdt.dylib"                 \
@@ -110,7 +120,6 @@ copyModules.commands = \
 	&& cp "$$GRAPHVIZ_ROOT/lib/libgvc.6.dylib"                          "$$MODULES_DEST_DIR/libgvc.dylib"                 \
 	&& cp "$$GRAPHVIZ_ROOT/lib/libpathplan.4.dylib"                     "$$MODULES_DEST_DIR/libpathplan.dylib"            \
 	&& cp "$$GRAPHVIZ_ROOT/lib/libxdot.4.dylib"                         "$$MODULES_DEST_DIR/libxdot.dylib"                \
-	&& chmod +w "$$MODULES_DEST_DIR/*.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libgvplugin_core.dylib"                                          "$$MODULES_DEST_DIR/libgvplugin_core.dylib"       \
 	&& install_name_tool -change "$$GRAPHVIZ_ROOT/lib/libcdt.5.dylib"      "@rpath/$$MODULES_DEST_DIR/libcdt.dylib"      "$$MODULES_DEST_DIR/libgvplugin_core.dylib"       \
 	&& install_name_tool -change "$$GRAPHVIZ_ROOT/lib/libgraph.5.dylib"    "@rpath/$$MODULES_DEST_DIR/libgraph.dylib"    "$$MODULES_DEST_DIR/libgvplugin_core.dylib"       \
@@ -156,14 +165,13 @@ copyModules.commands = \
 	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswresample.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libswscale.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
 	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
-	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavutil.dylib"
-
-copyModules.commands += && install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib"
-copyModules.commands += && chmod -w "$$MODULES_DEST_DIR/*.dylib"
-copyModules.depends += $$MODULE_OBJECTS
-copyModules.target = $${MODULES_DEST_DIR}
-POST_TARGETDEPS += $${MODULES_DEST_DIR}
-QMAKE_EXTRA_TARGETS += copyModules
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavutil.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib" \
+	&& chmod -w "$$MODULES_DEST_DIR/*.dylib"
+copyLibraryModules.depends += $$MODULE_LIBRARY_OBJECTS
+copyLibraryModules.target = $$MODULES_DEST_DIR/libLeap.dylib
+POST_TARGETDEPS += $$MODULES_DEST_DIR/libLeap.dylib
+QMAKE_EXTRA_TARGETS += copyLibraryModules
 
 
 # Copy VuoCompositionLoader.app to the Helpers directory.
@@ -194,10 +202,10 @@ QMAKE_EXTRA_TARGETS += copyZeroMQHeaders
 
 
 # Copy JSON-C headers to the Headers directory.
-JSON_HEADERS_DEST_DIR = "$$HEADERS_DEST_DIR/json"
+JSON_HEADERS_DEST_DIR = "$$HEADERS_DEST_DIR/json-c"
 copyJsonHeaders.commands += rm -rf $${JSON_HEADERS_DEST_DIR} &&
 copyJsonHeaders.commands += mkdir -p $${JSON_HEADERS_DEST_DIR} &&
-copyJsonHeaders.commands += cp -r $${JSONC_ROOT}/include/json/* $${JSON_HEADERS_DEST_DIR}
+copyJsonHeaders.commands += cp -r $${JSONC_ROOT}/include/json-c/* $${JSON_HEADERS_DEST_DIR}
 copyJsonHeaders.target = $${JSON_HEADERS_DEST_DIR}/json.h
 POST_TARGETDEPS += $${JSON_HEADERS_DEST_DIR}/json.h
 QMAKE_EXTRA_TARGETS += copyJsonHeaders
@@ -283,13 +291,13 @@ copyAndCleanQtFrameworks.commands = \
 	&& mv "$$RESOURCES_SUBDIR/QtMacExtras.framework/Contents" "$$RESOURCES_SUBDIR/QtMacExtras.framework/Versions/5/Resources" \
 	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtMacExtras.framework/Resources" \
 	&& mv "$$RESOURCES_SUBDIR/QtPrintSupport.framework/Contents" "$$RESOURCES_SUBDIR/QtPrintSupport.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtOpenGL.framework/Resources" \
+	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtPrintSupport.framework/Resources" \
 	&& mv "$$RESOURCES_SUBDIR/QtOpenGL.framework/Contents" "$$RESOURCES_SUBDIR/QtOpenGL.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtXml.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtXml.framework/Contents" "$$RESOURCES_SUBDIR/QtXml.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtNetwork.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtNetwork.framework/Contents" "$$RESOURCES_SUBDIR/QtNetwork.framework/Versions/5/Resources" \
 	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtOpenGL.framework/Resources" \
+	&& mv "$$RESOURCES_SUBDIR/QtXml.framework/Contents" "$$RESOURCES_SUBDIR/QtXml.framework/Versions/5/Resources" \
+	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtXml.framework/Resources" \
+	&& mv "$$RESOURCES_SUBDIR/QtNetwork.framework/Contents" "$$RESOURCES_SUBDIR/QtNetwork.framework/Versions/5/Resources" \
+	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtNetwork.framework/Resources" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Qt*.prl" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Qt*_debug" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Versions/$$QT_MAJOR_VERSION/Qt*_debug" \
@@ -340,6 +348,7 @@ LIBS += \
 	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
 	$$CURL_ROOT/lib/libcurl.a \
 	$$ROOT/library/VuoBase64.o \
+	$$ROOT/library/VuoIOReturn.o \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoImageResize.o \
 	$$ROOT/library/VuoImageBlend.o \
@@ -348,11 +357,18 @@ LIBS += \
 	$$ROOT/library/VuoImageMapColors.o \
 	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
+	$$ROOT/library/VuoOsStatus.o \
 	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoUrlFetch.o \
+	$$ROOT/library/VuoUrlParser.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/node/vuo.noise/VuoGradientNoiseCommon.bc \
+	$$ROOT/node/vuo.hid/VuoHidDevices.o \
+	$$ROOT/node/vuo.hid/VuoHidIo.o \
+	$$ROOT/node/vuo.hid/VuoHidUsage.o \
+	$$ROOT/node/vuo.hid/VuoUsbVendor.o \
 	$$ROOT/node/vuo.serial/VuoSerialDevices.o \
 	$$ROOT/node/vuo.serial/VuoSerialIO.o
 
@@ -430,6 +446,10 @@ linkVuoFramework.commands = \
 	&& install_name_tool -change "$$GRAPHVIZ_ROOT/lib/libxdot.4.dylib"                         "@rpath/$$MODULES_DEST_DIR/libxdot.dylib"                "$$VUO_FRAMEWORK_BINARY" \
 	&& install_name_tool -change "@executable_path/../lib/$$LLVM_DYLIB"                        "@rpath/$$LLVM_DYLIB_DEST"                               "$$VUO_FRAMEWORK_BINARY" \
 	&& rm -f $$CURRENT_LINK
+coverage {
+	linkVuoFramework.commands += && install_name_tool -change @executable_path/../lib/libprofile_rt.dylib $$LLVM_ROOT/lib/libprofile_rt.dylib "$$VUO_FRAMEWORK_BINARY"
+}
+
 linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
 	$$LLVM_DYLIB_DEST \
@@ -445,7 +465,9 @@ POST_TARGETDEPS += $$VUO_FRAMEWORK_BINARY
 QMAKE_EXTRA_TARGETS += linkVuoFramework
 
 
-createCurrentLink.commands = [ -L $$CURRENT_LINK ] || ln -sf $$VUO_VERSION $$CURRENT_LINK
+createCurrentLink.commands = \
+	( [ -L $$CURRENT_LINK ] || ln -sf $$VUO_VERSION $$CURRENT_LINK ) \
+	&& touch $$CURRENT_LINK
 createCurrentLink.target = $$CURRENT_LINK
 createCurrentLink.depends = $$VUO_FRAMEWORK_BINARY
 POST_TARGETDEPS += $$CURRENT_LINK

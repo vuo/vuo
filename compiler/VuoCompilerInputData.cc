@@ -8,7 +8,7 @@
  */
 
 #include "VuoCompilerInputData.hh"
-
+#include "VuoCompilerInputDataClass.hh"
 #include "VuoPort.hh"
 
 /**
@@ -19,9 +19,6 @@ VuoCompilerInputData::VuoCompilerInputData(VuoCompilerInputDataClass *dataClass)
 {
 	setInitialValue( dataClass->getDefaultValue() );
 }
-
-
-#pragma mark Getters and setters
 
 /**
  * Sets the initial value of the port data. This is the value it has from the time that

@@ -102,7 +102,7 @@ VuoColor VuoColor_makeFromJson(json_object * js)
 		{
 			// "r,g,b" or "r,g,b,a"
 			color.a = 1;
-			sscanf(s, "%g, %g, %g, %g", &color.r, &color.g, &color.b, &color.a);
+			sscanf(s, "%20g, %20g, %20g, %20g", &color.r, &color.g, &color.b, &color.a);
 		}
 		return color;
 	}
@@ -283,4 +283,24 @@ bool VuoColor_areEqual(const VuoColor value1, const VuoColor value2)
 		&& VuoReal_areEqual(value1.g, value2.g)
 		&& VuoReal_areEqual(value1.b, value2.b)
 		&& VuoReal_areEqual(value1.a, value2.a);
+}
+
+/**
+ * Returns true if a < b.
+ */
+bool VuoColor_isLessThan(const VuoColor a, const VuoColor b)
+{
+	if (a.r < b.r) return true;
+	if (a.r > b.r) return false;
+
+	if (a.g < b.g) return true;
+	if (a.g > b.g) return false;
+
+	if (a.b < b.b) return true;
+	if (a.b > b.b) return false;
+
+	if (a.a < b.a) return true;
+//	if (a.a > b.a) return false;
+
+	return false;
 }

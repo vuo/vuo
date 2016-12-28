@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="255,225" _started_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="225,300" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="285,150"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<EventOnlyInput>EventOnlyInput\r|<DataAndEventInput>DataAndEventInput\r" _EventOnlyInput_type="event" _DataAndEventInput_type="VuoInteger" _DataAndEventInput="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<EventOnlyOutput>EventOnlyOutput\l|<DataAndEventOutput>DataAndEventOutput\l|<EventOnlyTrigger>EventOnlyTrigger\l|<DataAndEventTrigger>DataAndEventTrigger\l" _EventOnlyOutput_type="event" _DataAndEventOutput_type="VuoInteger" _EventOnlyTrigger_type="event" _DataAndEventTrigger_type="VuoPoint2d"];
+
+PublishedInputs:EventOnlyInput -> ShareValue2:refresh;
+PublishedInputs:DataAndEventInput -> ShareValue2:value;
+ShareValue2:sameValue -> PublishedOutputs:EventOnlyOutput;
+ShareValue2:sameValue -> PublishedOutputs:DataAndEventOutput;
+FireOnStart:started -> PublishedOutputs:EventOnlyTrigger;
+ReceiveMouseMoves:movedTo -> PublishedOutputs:DataAndEventTrigger;
+}

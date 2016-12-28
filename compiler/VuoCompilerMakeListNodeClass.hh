@@ -12,6 +12,8 @@
 
 #include "VuoCompilerSpecializedNodeClass.hh"
 
+class VuoCompilerType;
+
 /**
  * A "Make List" node class.
  */

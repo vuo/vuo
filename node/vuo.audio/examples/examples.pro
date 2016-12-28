@@ -1,7 +1,9 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
+	BounceDotsToTheBeat.vuo \
 	ControlLoudness.vuo \
+   JumpDotToTheBeat.vuo \
 	PanAudio.vuo \
 	PlayAudioFile.vuo \
 	PlayAudioFileAndLoop.vuo \

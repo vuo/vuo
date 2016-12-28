@@ -24,6 +24,7 @@
 #include "VuoList_VuoImage.h"
 #include "VuoList_VuoColor.h"
 #include "VuoList_VuoText.h"
+#include "VuoGlPool.h"
 
 /**
  * @ingroup VuoTypes
@@ -87,11 +88,12 @@ typedef struct
 	VuoText geometrySource;
 	unsigned int glGeometryShaderName;
 	unsigned int expectedOutputPrimitiveCount;
+	bool mayChangeOutputPrimitiveCount;
 
 	VuoText fragmentSource;
 	unsigned int glFragmentShaderName;
 
-	unsigned int glProgramName;
+	VuoGlProgram program;
 } VuoSubshader;
 
 /**
@@ -132,6 +134,9 @@ typedef struct _VuoShader
 
 	bool isTransparent;	///< Is this shader meant to be a transparent overlay?  If true, @ref VuoSceneRenderer disables backface culling and depth buffer writing while rendering with this shader.  In the fragment shader, use `gl_FrontFacing` to discard backfaces or treat them differently, if desired.
 
+	VuoImage colorBuffer;	///< The renderbuffer color texture captured for this shader (if any).
+	VuoImage depthBuffer;	///< The renderbuffer depth texture captured for this shader (if any).
+
 	void *lock;	///< `dispatch_semaphore_t` to serialize operations that modify the state of this GL program object.
 } *VuoShader;
 
@@ -141,6 +146,7 @@ typedef struct _VuoShader
 VuoShader VuoShader_make(const char *name);
 void VuoShader_addSource(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const char *vertexShaderSource, const char *geometryShaderSource, const char *fragmentShaderSource);
 void VuoShader_setExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const unsigned int expectedOutputPrimitiveCount);
+void VuoShader_setMayChangeOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, const bool mayChangeOutputPrimitiveCount);
 
 /// A macro to facilitate defining a GLSL shader in a C source file.
 #define VUOSHADER_GLSL_SOURCE(version,source) "#version " #version "\n" #source
@@ -162,8 +168,11 @@ VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal shar
 VuoShader VuoShader_makeLitColorShader(VuoColor diffuseColor, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, VuoImage specularImage, VuoImage normalImage);
-VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end);
-VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height);
+VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount);
+VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount);
+
+VuoShader VuoShader_makeFrostedGlassShader(void);
+void VuoShader_setFrostedGlassShaderValues(VuoShader shader, VuoColor color, VuoReal brightness, VuoReal noiseTime, VuoReal noiseAmount, VuoReal noiseScale, VuoReal chromaticAberration, VuoInteger iterations);
 /// @}
 
 
@@ -171,9 +180,11 @@ VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d
 /// @{
 bool VuoShader_isTransformFeedback(VuoShader shader);
 unsigned int VuoShader_getExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode);
+bool VuoShader_getMayChangeOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode);
 bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, int *positionLocation, int *normalLocation, int *tangentLocation, int *bitangentLocation, int *textureCoordinateLocation);
-unsigned int VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext);
+bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, VuoGlProgram *outputProgram);
 void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext);
+void VuoShader_cleanupContext(VuoGlContext glContext);
 
 void VuoShader_setUniform_VuoImage  (VuoShader shader, const char *uniformIdentifier, const VuoImage   image);
 void VuoShader_setUniform_VuoBoolean(VuoShader shader, const char *uniformIdentifier, const VuoBoolean boolean);

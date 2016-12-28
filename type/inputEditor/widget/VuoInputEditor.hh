@@ -12,7 +12,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include "json/json.h"
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
 class VuoInputEditor;

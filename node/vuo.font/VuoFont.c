@@ -77,7 +77,7 @@ static VuoHorizontalAlignment getAlignmentForString(const char *s)
 	if (strcmp(s, getStringForAlignment(VuoHorizontalAlignment_Right))==0)
 		return VuoHorizontalAlignment_Right;
 
-	VLog("no alignment for [%s]",s);
+	VUserLog("no alignment for [%s]",s);
 	return VuoHorizontalAlignment_Left;
 }
 
@@ -161,4 +161,40 @@ bool VuoFont_areEqual(const VuoFont value1, const VuoFont value2)
 		&& (value1.alignment == value2.alignment)
 		&& VuoReal_areEqual(value1.characterSpacing, value2.characterSpacing)
 		&& VuoReal_areEqual(value1.lineSpacing, value2.lineSpacing);
+}
+
+/**
+ * Returns true if a < b.
+ */
+bool VuoFont_isLessThan(const VuoFont a, const VuoFont b)
+{
+	if (a.fontName == NULL && b.fontName != NULL) return true;
+	if (a.fontName != NULL && b.fontName == NULL) return false;
+
+	if (a.fontName && b.fontName)
+	{
+		int fontNameComparison = strcmp(a.fontName, b.fontName);
+		if (fontNameComparison < 0) return true;
+		if (fontNameComparison > 0) return false;
+	}
+
+	if (a.pointSize < b.pointSize) return true;
+	if (a.pointSize > b.pointSize) return false;
+
+	if (a.underline < b.underline) return true;
+	if (a.underline > b.underline) return false;
+
+	if (VuoColor_isLessThan(a.color, b.color)) return true;
+	if (VuoColor_isLessThan(b.color, a.color)) return false;
+
+	if (a.alignment < b.alignment) return true;
+	if (a.alignment > b.alignment) return false;
+
+	if (a.characterSpacing < b.characterSpacing) return true;
+	if (a.characterSpacing > b.characterSpacing) return false;
+
+	if (a.lineSpacing < b.lineSpacing) return true;
+//	if (a.lineSpacing > b.lineSpacing) return false;
+
+	return false;
 }

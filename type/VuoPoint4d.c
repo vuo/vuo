@@ -50,7 +50,7 @@ VuoPoint4d VuoPoint4d_makeFromJson(json_object * js)
 	if (json_object_get_type(js) == json_type_string)
 	{
 		const char *s = json_object_get_string(js);
-		sscanf(s, "%g, %g, %g, %g", &point.x, &point.y, &point.z, &point.w);
+		sscanf(s, "%20g, %20g, %20g, %20g", &point.x, &point.y, &point.z, &point.w);
 		return point;
 	}
 
@@ -101,6 +101,17 @@ json_object * VuoPoint4d_getJson(const VuoPoint4d value)
 char * VuoPoint4d_getSummary(const VuoPoint4d value)
 {
 	return VuoText_format("%g, %g, %g, %g", value.x, value.y, value.z, value.w);
+}
+
+/**
+ * Returns true if the two points are equal (within tolerance).
+ */
+bool VuoPoint4d_areEqual(const VuoPoint4d value1, const VuoPoint4d value2)
+{
+	return VuoReal_areEqual(value1.x, value2.x)
+		&& VuoReal_areEqual(value1.y, value2.y)
+		&& VuoReal_areEqual(value1.z, value2.z)
+		&& VuoReal_areEqual(value1.w, value2.w);
 }
 
 /**

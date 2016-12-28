@@ -45,6 +45,14 @@ void VuoBoolean_release(VuoBoolean value);
 /// @}
 
 /**
+ * Returns true if the two values are equal.
+ */
+static inline bool VuoBoolean_areEqual(const VuoBoolean value1, const VuoBoolean value2)
+{
+	return value1 == value2;
+}
+
+/**
  * @}
  */
 

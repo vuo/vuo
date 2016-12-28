@@ -8,7 +8,8 @@ NODE_SOURCES += \
 	vuo.text.areEqual.c \
 	vuo.text.countCharacters.c \
 	vuo.text.cut.c \
-	vuo.text.format.number.c
+	vuo.text.format.number.c \
+	vuo.text.populated.c
 
 GENERIC_NODE_SOURCES += \
 	vuo.text.split.c \

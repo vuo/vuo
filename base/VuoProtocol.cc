@@ -13,7 +13,7 @@
 
 #include <dispatch/dispatch.h>
 
-static dispatch_once_t VuoProtocolsCreated;	///< Make sure this process only has a single instance of each protocol.
+static dispatch_once_t VuoProtocolsCreated = 0;	///< Make sure this process only has a single instance of each protocol.
 
 vector<VuoProtocol *> VuoProtocol::protocols;
 string VuoProtocol::imageFilter = "VuoImageFilter";			///< Processes an existing image.
@@ -53,7 +53,7 @@ VuoProtocol *VuoProtocol::getProtocol(string id)
 		if ((*it)->getId() == id)
 			return *it;
 
-	VLog("Error: Couldn't find protocol '%s'.", id.c_str());
+	VUserLog("Error: Couldn't find protocol '%s'.", id.c_str());
 
 	return NULL;
 }
@@ -147,7 +147,7 @@ string VuoProtocol::getTypeForInputPort(string portName)
 			return currentPortType;
 	}
 
-	VLog("Error: Protocol '%s' has no input port with name '%s'.", this->name.c_str(), portName.c_str());
+	VUserLog("Error: Protocol '%s' has no input port with name '%s'.", this->name.c_str(), portName.c_str());
 	return NULL;
 }
 
@@ -164,7 +164,7 @@ string VuoProtocol::getTypeForOutputPort(string portName)
 			return currentPortType;
 	}
 
-	VLog("Error: Protocol '%s' has no output port with name '%s'.", this->name.c_str(), portName.c_str());
+	VUserLog("Error: Protocol '%s' has no output port with name '%s'.", this->name.c_str(), portName.c_str());
 	return NULL;
 }
 
@@ -316,7 +316,7 @@ void VuoProtocol::addInputPort(string portName, string portType)
 		string currentPortName = i->first;
 		if (currentPortName == portName)
 		{
-			VLog("Error: Protocol '%s' already had an input port with name '%s'.", this->name.c_str(), portName.c_str());
+			VUserLog("Error: Protocol '%s' already had an input port with name '%s'.", this->name.c_str(), portName.c_str());
 			return;
 		}
 	}
@@ -339,7 +339,7 @@ void VuoProtocol::addOutputPort(string portName, string portType)
 		string currentPortName = i->first;
 		if (currentPortName == portName)
 		{
-			VLog("Error: Protocol '%s' already had an output port with name '%s'.", this->name.c_str(), portName.c_str());
+			VUserLog("Error: Protocol '%s' already had an output port with name '%s'.", this->name.c_str(), portName.c_str());
 			return;
 		}
 	}

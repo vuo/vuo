@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Displays an image with blended feedback. 
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BlendImageWithFeedback [type="vuo.image.feedback" version="1.0.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="-75,390" fillcolor="violet" _feedbackTransform="{\"translation\":[0.010000,0.010000],\"rotation\":0.017453,\"scale\":[1.000000,1.000000]}" _feedbackOpacity="0.600000" _imageInForeground="false" _width="1024" _height="768" _colorDepth="\"8bpc\""];
+ConvertIntegerToRealNumber4 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="375,270"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-255,165" _increment="1" _decrement="1" _setCount="0" _minimum="0" _maximum="100" _wrapMode="\"wrap\""];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.0.2" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="390,135" _upperLeftColor="{\"r\":0.423011,\"g\":0.423011,\"b\":0.423011,\"a\":1.000000}" _center="{\"x\":0,\"y\":0}" _width="1024" _height="768"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="195,105" _saturation="0.590000" _lightness="0.620000" _opacity="1.000000"];
+MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="164,416" fillcolor="green"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="210,390" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="15,165" _start="0.000000" _end="100.000000" _scaledStart="0.000000" _scaledEnd="1.000000"];
+
+BlendImageWithFeedback:feedbackImage -> RenderImageToWindow:image;
+ConvertIntegerToRealNumber4:real -> Scale:value;
+CountWithinRange:count -> ConvertIntegerToRealNumber4:integer;
+MakeCheckerboardImage:image -> BlendImageWithFeedback:image;
+MakeHSLColor:color -> MakeCheckerboardImage:upperRightColor;
+MakeList:list -> RenderImageToWindow:setWindowProperties;
+RenderImageToWindow:requestedFrame -> CountWithinRange:increment [event=true];
+Scale:scaledValue -> MakeCheckerboardImage:squareSize;
+Scale:scaledValue -> MakeHSLColor:hue;
+}

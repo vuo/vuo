@@ -18,7 +18,7 @@ VuoModuleMetadata({
 					 "title" : "Offset Image RGB Channels",
 					 "keywords" : [ "red", "green", "blue", "colors",
 						 "separate", "move",
-						 "prism", "chromatic", "aberration",
+						 "prism", "chromatic", "aberration", "shift",
 						 "filter" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [

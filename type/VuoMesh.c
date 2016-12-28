@@ -539,6 +539,7 @@ VuoMesh VuoMesh_makeEquilateralTriangle(void)
 VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize)
 {
 	unsigned long count = VuoListGetCount_VuoPoint2d(positions);
+	VuoPoint2d *positionValues = VuoListGetData_VuoPoint2d(positions);
 	VuoSubmesh sm;
 
 	sm.vertexCount = count;
@@ -549,8 +550,8 @@ VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAss
 
 	for (unsigned long i = 0; i < count; ++i)
 	{
-		VuoPoint2d xy = VuoListGetValue_VuoPoint2d(positions, i+1);
-		sm.positions[i] = VuoPoint4d_make(xy.x, xy.y, 0, 1);
+		VuoPoint2d xy = positionValues[i];
+		sm.positions[i] = (VuoPoint4d){xy.x, xy.y, 0, 1};
 		sm.elements[i] = i;
 	}
 
@@ -573,6 +574,7 @@ VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAss
 VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize)
 {
 	unsigned long count = VuoListGetCount_VuoPoint3d(positions);
+	VuoPoint3d *positionValues = VuoListGetData_VuoPoint3d(positions);
 	VuoSubmesh sm;
 
 	sm.vertexCount = count;
@@ -583,8 +585,8 @@ VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoMesh_ElementAss
 
 	for (unsigned long i = 0; i < count; ++i)
 	{
-		VuoPoint3d xyz = VuoListGetValue_VuoPoint3d(positions, i+1);
-		sm.positions[i] = VuoPoint4d_make(xyz.x, xyz.y, xyz.z, 1);
+		VuoPoint3d xyz = positionValues[i];
+		sm.positions[i] = (VuoPoint4d){xyz.x, xyz.y, xyz.z, 1};
 		sm.elements[i] = i;
 	}
 
@@ -835,13 +837,13 @@ VuoBox VuoMesh_bounds(const VuoMesh v, float matrix[16])
 		{
 			VuoPoint3d p = VuoTransform_transformPoint((float*)matrix, VuoPoint3d_make(v->submeshes[i].positions[n].x, v->submeshes[i].positions[n].y, v->submeshes[i].positions[n].z));
 
-			min.x = fmin(p.x, min.x);
-			min.y = fmin(p.y, min.y);
-			min.z = fmin(p.z, min.z);
+			min.x = MIN(p.x, min.x);
+			min.y = MIN(p.y, min.y);
+			min.z = MIN(p.z, min.z);
 
-			max.x = fmax(p.x, max.x);
-			max.y = fmax(p.y, max.y);
-			max.z = fmax(p.z, max.z);
+			max.x = MAX(p.x, max.x);
+			max.y = MAX(p.y, max.y);
+			max.z = MAX(p.z, max.z);
 		}
 	}
 
@@ -849,6 +851,24 @@ VuoBox VuoMesh_bounds(const VuoMesh v, float matrix[16])
 		return VuoBox_make( VuoPoint3d_multiply(VuoPoint3d_add(min, max), 0.5), VuoPoint3d_subtract(max, min) );
 	else
 		return VuoBox_make( (VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0} );
+}
+
+/**
+ * Returns true if the mesh has at least one submesh with a non-zero vertex count.
+ */
+bool VuoMesh_isPopulated(const VuoMesh mesh)
+{
+	if (!mesh)
+		return false;
+
+	for (unsigned long i = 0; i < mesh->submeshCount; ++i)
+	{
+		VuoSubmesh meshItem = mesh->submeshes[i];
+		if (meshItem.vertexCount > 0)
+			return true;
+	}
+
+	return false;
 }
 
 /**

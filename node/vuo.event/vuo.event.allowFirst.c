@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Allow First Event",
-					  "keywords" : [ "filter", "hold", "block", "prevent", "once", "single", "start", "initialize" ],
+					  "keywords" : [ "filter", "hold", "block", "prevent", "pass", "once", "single", "start", "initialize" ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ "SpinKaleidoscope.vuo" ]
@@ -26,11 +26,11 @@ VuoBoolean * nodeInstanceInit()
 	return receivedEvent;
 }
 
- void nodeInstanceEvent
+void nodeInstanceEvent
 (
 		VuoInstanceData(VuoBoolean *) receivedEvent,
 		VuoInputEvent({"eventBlocking":"door","hasPortAction":true}) event,
-		VuoInputEvent({"eventBlocking":"none"}) reset,
+		VuoInputEvent({"eventBlocking":"wall"}) reset,
 		VuoOutputEvent() firstEvent
 )
 {

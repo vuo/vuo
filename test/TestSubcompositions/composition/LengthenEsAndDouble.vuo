@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendWithSpaces [type="vuo.test.appendWithSpaces" version="" label="Append With Spaces|<refresh>refresh\l|<Texts>Texts\l|<CompositeText>CompositeText\r" pos="330,105"];
+LengthenEs [type="vuo.test.lengthenEs" version="" label="Lengthen Es|<refresh>refresh\l|<Lengthen>Lengthen\l|<Es>Es\r" pos="105,105"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="284,116"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Lengthen>Lengthen\r" _Lengthen_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<CompositeText>CompositeText\l" _CompositeText_type="VuoText"];
+
+AppendWithSpaces:CompositeText -> PublishedOutputs:CompositeText;
+LengthenEs:Es -> MakeList:1;
+LengthenEs:Es -> MakeList:2;
+MakeList:list -> AppendWithSpaces:Texts;
+PublishedInputs:Lengthen -> LengthenEs:Lengthen;
+}

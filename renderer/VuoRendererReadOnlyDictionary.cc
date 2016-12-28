@@ -8,6 +8,7 @@
  */
 
 #include "VuoRendererReadOnlyDictionary.hh"
+#include "VuoNodeClass.hh"
 #include "VuoStringUtilities.hh"
 
 /**

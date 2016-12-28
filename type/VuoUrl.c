@@ -9,10 +9,14 @@
 
 #include "type.h"
 #include "VuoUrl.h"
+#include "VuoOsStatus.h"
 
 #include <regex.h>
 #include <mach-o/dyld.h> // for _NSGetExecutablePath()
 #include <libgen.h> // for dirname()
+#include <sys/syslimits.h> // for PATH_MAX
+#include <CoreServices/CoreServices.h>
+#include "VuoUrlParser.h"
 
 
 /// @{
@@ -23,7 +27,11 @@ VuoModuleMetadata({
 					 "keywords" : [ "link" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"VuoText"
+						"CoreServices.framework",
+						"VuoInteger",
+						"VuoOsStatus",
+						"VuoText",
+						"VuoUrlParser"
 					 ]
 				 });
 #endif
@@ -72,6 +80,133 @@ char *VuoUrl_getSummary(const VuoUrl value)
 }
 
 /**
+ * Attempts to parse `url` and outputs its parts.
+ *
+ * Returns true if parsing succeeded (which implies all output parameters have been populated, though possibly with NULL or zero-length strings).
+ */
+bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *host, VuoInteger *port, VuoText *path, VuoText *query, VuoText *fragment)
+{
+	if (!url || url[0] == 0)
+		return false;
+
+	struct http_parser_url parsedUrl;
+	if (http_parser_parse_url(url, strlen(url), false, &parsedUrl))
+		return false;
+
+	if (parsedUrl.field_set & (1 << UF_SCHEMA))
+		*scheme = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_SCHEMA  ].off, parsedUrl.field_data[UF_SCHEMA  ].len);
+	else
+		*scheme = NULL;
+
+	if (parsedUrl.field_set & (1 << UF_USERINFO))
+		*user   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_USERINFO].off, parsedUrl.field_data[UF_USERINFO].len);
+	else
+		*user   = NULL;
+
+	if (parsedUrl.field_set & (1 << UF_HOST))
+		*host   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_HOST    ].off, parsedUrl.field_data[UF_HOST    ].len);
+	else
+		*host   = NULL;
+
+	if (parsedUrl.field_set & (1 << UF_PORT))
+		// Explicitly-specified port
+		*port = parsedUrl.port;
+	else
+	{
+		// Guess the port from the scheme
+		*port = 0;
+		if (strcmp(*scheme, "http") == 0)
+			*port = 80;
+		else if (strcmp(*scheme, "https") == 0)
+			*port = 443;
+	}
+
+	if (parsedUrl.field_set & (1 << UF_PATH))
+		*path     = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_PATH    ].off, parsedUrl.field_data[UF_PATH    ].len);
+	else
+		*path     = NULL;
+
+	if (parsedUrl.field_set & (1 << UF_QUERY))
+		*query    = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_QUERY   ].off, parsedUrl.field_data[UF_QUERY   ].len);
+	else
+		*query    = NULL;
+
+	if (parsedUrl.field_set & (1 << UF_FRAGMENT))
+		*fragment = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_FRAGMENT].off, parsedUrl.field_data[UF_FRAGMENT].len);
+	else
+		*fragment = NULL;
+
+	return true;
+}
+
+/**
+ * Attempts to parse `url` as a `file:///` URL, and outputs its parts.
+ *
+ * Returns true if parsing succeeded (which implies all output parameters have been populated, though possibly with NULL or zero-length strings).
+ *
+ * @see VuoFileUtilities::splitPath
+ */
+bool VuoUrl_getFileParts(const VuoUrl url, VuoText *path, VuoText *folder, VuoText *filename, VuoText *extension)
+{
+	if (!url || url[0] == 0)
+		return false;
+
+	*path = VuoUrl_getPosixPath(url);
+	if (!*path)
+		return false;
+
+	size_t separatorIndex = VuoText_findLastOccurrence(*path, "/");
+	VuoText fileAndExtension;
+	if (separatorIndex)
+	{
+		*folder = VuoText_substring(*path, 1, separatorIndex);
+		size_t length = VuoText_length(*path);
+		if (separatorIndex < length)
+			fileAndExtension = VuoText_substring(*path, separatorIndex + 1, length);
+		else
+			fileAndExtension = NULL;
+	}
+	else
+	{
+		*folder = NULL;
+		fileAndExtension = VuoText_make(*path);
+	}
+	VuoRetain(fileAndExtension);
+
+	size_t dotIndex = VuoText_findLastOccurrence(fileAndExtension, ".");
+	if (dotIndex)
+	{
+		*filename = VuoText_substring(fileAndExtension, 1, dotIndex - 1);
+		*extension = VuoText_substring(fileAndExtension, dotIndex + 1, VuoText_length(fileAndExtension));
+	}
+	else
+	{
+		*filename = VuoText_make(fileAndExtension);
+		*extension = NULL;
+	}
+
+	VuoRelease(fileAndExtension);
+
+	return true;
+}
+
+/**
+ * Returns true if a == b.
+ */
+bool VuoUrl_areEqual(const VuoText a, const VuoText b)
+{
+	return VuoText_areEqual(a,b);
+}
+
+/**
+ * Returns true if a < b.
+ */
+bool VuoUrl_isLessThan(const VuoText a, const VuoText b)
+{
+	return VuoText_isLessThan(a,b);
+}
+
+/**
  * Returns a boolean indicating whether the input @c url contains a scheme.
  */
 static bool VuoUrl_urlContainsScheme(const char *url)
@@ -82,8 +217,9 @@ static bool VuoUrl_urlContainsScheme(const char *url)
 	regmatch_t pmatch[0];
 
 	regcomp(&urlWithSchemeRegExp, urlWithSchemePattern, REG_EXTENDED);
-
 	bool matchFound = !regexec(&urlWithSchemeRegExp, url, nmatch, pmatch, 0);
+	regfree(&urlWithSchemeRegExp);
+
 	return matchFound;
 }
 
@@ -132,9 +268,9 @@ static const char VuoUrl_reservedCharacters[] =
 static const char VuoUrl_decToHex[] = "0123456789abcdef";
 
 /**
- * URL-escapes characters in `path` to make it a valid URL.
+ * URL-escapes characters in `path` to make it a valid URL path.
  */
-static VuoUrl VuoUrl_escapePosixPath(const VuoText path)
+VuoText VuoUrl_escapePosixPath(const VuoText path)
 {
 	// Figure out how many characters we need to allocate for the escaped string.
 	unsigned long inLength = strlen(path);
@@ -404,4 +540,48 @@ VuoText VuoUrl_getPosixPath(const VuoUrl url)
 	free(unescapedUrl);
 
 	return unescapedUrlVT;
+}
+
+/**
+ * Returns true if the `url` refers to an OS X bundle folder.
+ *
+ * This function mirrors the behavior of Finder —
+ * `.app` bundles return true (in Finder, double-clicking launches the app);
+ * `.framework` bundles return false (in Finder, double-clicking opens the folder).
+ *
+ * Returns false if the URL is non-local or is local but doesn't exist.
+ */
+bool VuoUrl_isBundle(const VuoUrl url)
+{
+	if (!url || url[0] == 0)
+		return false;
+
+	{
+		VuoText path = VuoUrl_getPosixPath(url);
+		if (!path)
+			return false;
+		VuoRetain(path);
+		VuoRelease(path);
+	}
+
+	CFStringRef urlCFS = CFStringCreateWithCString(NULL, url, kCFStringEncodingUTF8);
+	CFURLRef cfurl = CFURLCreateWithString(NULL, urlCFS, NULL);
+	CFRelease(urlCFS);
+	if (!cfurl)
+	{
+		VUserLog("Error: Couldn't check '%s': Invalid URL.", url);
+		return false;
+	}
+
+	LSItemInfoRecord outItemInfo;
+	OSStatus ret = LSCopyItemInfoForURL(cfurl, kLSRequestAllFlags, &outItemInfo);
+	CFRelease(cfurl);
+	if (ret)
+	{
+		char *errorString = VuoOsStatus_getText(ret);
+		VUserLog("Error: Couldn't check '%s': %s", url, errorString);
+		free(errorString);
+		return false;
+	}
+	return outItemInfo.flags & kLSItemInfoIsPackage;
 }

@@ -30,10 +30,11 @@ class VuoPort : public VuoBase<VuoCompilerNodeArgument,VuoRendererPort>
 {
 public:
 	VuoPort(VuoPortClass *portClass);
+	virtual ~VuoPort(void);  ///< to make this class dynamic_cast-able
 
 	VuoPortClass * getClass(void);
 
-	vector<VuoCable *> getConnectedCables(bool includePublishedCables);
+	vector<VuoCable *> getConnectedCables(bool includePublishedCables=true);
 	void addConnectedCable(VuoCable *cable);
 	void removeConnectedCable(VuoCable *cable);
 	VuoCable * getCableConnecting(VuoPort *otherPort);

@@ -9,69 +9,55 @@
 
 #include <sstream>
 #include "VuoCompilerEventPort.hh"
+#include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
+#include "VuoCompilerPublishedPortClass.hh"
+#include "VuoCable.hh"
 #include "VuoGenericType.hh"
 #include "VuoPort.hh"
+#include "VuoPublishedPort.hh"
 #include "VuoStringUtilities.hh"
+
 
 /**
  * Creates a published port that is not connected to any port in a running composition.
+ */
+VuoCompilerPublishedPort::VuoCompilerPublishedPort(VuoPort *basePort)
+	: VuoCompilerPort(basePort)
+{
+}
+
+/**
+ * Returns a unique, consistent identifier for this port.
+ */
+string VuoCompilerPublishedPort::getIdentifier(void)
+{
+	return getBase()->getClass()->getName();
+}
+
+/**
+ * Sets the initial value of the port data. This is the value it has from the time that
+ * the composition begins executing until the first time the port data is overwritten.
  *
- * @param name A name for the published port.
- * @param type A type for the published port.
- * @param isOutput A boolean indicating whether the published port is an output port, as opposed to an input port.
- * @param connectedPorts The set of ports within the composition for which this published port is an alias.
+ * @param initialValueAsString String representation of the initial value.
  */
-VuoCompilerPublishedPort::VuoCompilerPublishedPort(string name, VuoType *type, bool isOutput, const set<VuoCompilerPort *> &connectedPorts)
-	: VuoBaseDetail<VuoPublishedPort>("VuoCompilerPublishedPort",
-									  new VuoPublishedPort(	name,
-															type,
-															isOutput,
-															getBasePorts(connectedPorts)))
+void VuoCompilerPublishedPort::setInitialValue(string initialValueAsString)
 {
-	getBase()->setCompiler(this);
-	details = json_object_new_object();
+	static_cast<VuoCompilerPublishedPortClass *>(getBase()->getClass()->getCompiler())->setDetail("default", initialValueAsString);
 }
 
 /**
- * Destructor.
+ * Returns the string representation of the initial value of the port data.
  */
-VuoCompilerPublishedPort::~VuoCompilerPublishedPort(void)
+string VuoCompilerPublishedPort::getInitialValue(void)
 {
-	json_object_put(details);
-}
+	json_object *details = static_cast<VuoCompilerPublishedPortClass *>(getBase()->getClass()->getCompiler())->getDetails();
+	json_object *value = NULL;
+	if (json_object_object_get_ex(details, "default", &value))
+		return json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
 
-/**
- * Returns the identifiers of the internal ports for which this published port is an alias.
- *
- * Assumes @c generateAllocation has been called on each @c VuoCompilerPort that was passed to the constructor.
- */
-set<string> VuoCompilerPublishedPort::getConnectedPortIdentifiers(void)
-{
-	set<string> identifiers;
-	set<VuoPort *> connectedPorts = getBase()->getConnectedPorts();
-	for (set<VuoPort *>::iterator port = connectedPorts.begin(); port != connectedPorts.end(); ++port)
-	{
-		VuoCompilerPort *compilerPort = (VuoCompilerPort *)(*port)->getCompiler();
-		VuoCompilerEventPort *eventPort = dynamic_cast<VuoCompilerEventPort *>(compilerPort);
-		if (eventPort)
-			identifiers.insert(eventPort->getIdentifier());
-	}
-
-	return identifiers;
-}
-
-/**
- * Returns the set of VuoPort pointers corresponding to the input @c set of VuoCompilerPort pointers.
- */
-set<VuoPort *> VuoCompilerPublishedPort::getBasePorts(set<VuoCompilerPort *>list)
-{
-	set<VuoPort *> baseList;
-	for (set<VuoCompilerPort *>::iterator i = list.begin(); i != list.end(); ++i)
-		baseList.insert((*i)->getBase());
-
-	return baseList;
+	return "";
 }
 
 /**
@@ -80,22 +66,23 @@ set<VuoPort *> VuoCompilerPublishedPort::getBasePorts(set<VuoCompilerPort *>list
  * If the detail was set by a call to setDetail(), then that value is used. Otherwise, the detail's value
  * is coalesced across all connected ports.
  */
-json_object * VuoCompilerPublishedPort::getDetails(void)
+json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 {
 	// Coalesce the details across all connected ports.
-
 	json_object *coalescedDetails = json_object_new_object();
 
-	if (getBase()->getInput())
+	VuoType *type = static_cast<VuoCompilerPortClass *>(getBase()->getClass()->getCompiler())->getDataVuoType();
+	if (isInput && type)
 	{
 		json_object *coalescedSuggestedMin = NULL;
 		json_object *coalescedSuggestedMax = NULL;
 		json_object *coalescedSuggestedStep = NULL;
 
-		set<VuoPort *> connectedPorts = getBase()->getConnectedPorts();
-		for (set<VuoPort *>::iterator connectedPort = connectedPorts.begin(); connectedPort != connectedPorts.end(); ++connectedPort)
+		vector<VuoCable *> connectedCables = getBase()->getConnectedCables();
+		for (vector<VuoCable *>::iterator i = connectedCables.begin(); i != connectedCables.end(); ++i)
 		{
-			VuoCompilerInputEventPortClass *connectedInputEventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>((*connectedPort)->getClass()->getCompiler());
+			VuoPort *connectedPort = (*i)->getToPort();
+			VuoCompilerInputEventPortClass *connectedInputEventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>(connectedPort->getClass()->getCompiler());
 			if (connectedInputEventPortClass)
 			{
 				VuoCompilerInputDataClass *connectedInputDataClass = connectedInputEventPortClass->getDataClass();
@@ -103,6 +90,8 @@ json_object * VuoCompilerPublishedPort::getDetails(void)
 				{
 					json_object *js = connectedInputDataClass->getDetails();
 					json_object *o;
+
+					string typeName = type->getModuleKey();
 
 					if (json_object_object_get_ex(js, "suggestedMin", &o))
 					{
@@ -113,12 +102,11 @@ json_object * VuoCompilerPublishedPort::getDetails(void)
 							// Use the larger of the current port's suggestedMin.x and all previous ports' suggestedMin.x.
 							/// @todo https://b33p.net/kosada/node/7317
 							bool newIsBetter = false;
-							string type = getBase()->getType()->getModuleKey();
-							if (type == "VuoInteger")
+							if (typeName == "VuoInteger")
 								newIsBetter = json_object_get_int64(o) > json_object_get_int64(coalescedSuggestedMin);
-							else if (type == "VuoReal")
+							else if (typeName == "VuoReal")
 								newIsBetter = json_object_get_double(o) > json_object_get_double(coalescedSuggestedMin);
-							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
+							else if (typeName == "VuoPoint2d" || typeName == "VuoPoint3d" || typeName == "VuoPoint4d")
 							{
 								double oldX=0,newX=0;
 								json_object *x;
@@ -143,12 +131,11 @@ json_object * VuoCompilerPublishedPort::getDetails(void)
 							// Use the smaller of the current port's suggestedMax.x and all previous ports' suggestedMax.x.
 							/// @todo https://b33p.net/kosada/node/7317
 							bool newIsBetter = false;
-							string type = getBase()->getType()->getModuleKey();
-							if (type == "VuoInteger")
+							if (typeName == "VuoInteger")
 								newIsBetter = json_object_get_int64(o) < json_object_get_int64(coalescedSuggestedMax);
-							else if (type == "VuoReal")
+							else if (typeName == "VuoReal")
 								newIsBetter = json_object_get_double(o) < json_object_get_double(coalescedSuggestedMax);
-							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
+							else if (typeName == "VuoPoint2d" || typeName == "VuoPoint3d" || typeName == "VuoPoint4d")
 							{
 								double oldX=0,newX=0;
 								json_object *x;
@@ -173,12 +160,11 @@ json_object * VuoCompilerPublishedPort::getDetails(void)
 							// Use the smaller of the current port's suggestedStep.x and all previous ports' suggestedStep.x.
 							/// @todo https://b33p.net/kosada/node/7317
 							bool newIsBetter = false;
-							string type = getBase()->getType()->getModuleKey();
-							if (type == "VuoInteger")
+							if (typeName == "VuoInteger")
 								newIsBetter = json_object_get_int64(o) < json_object_get_int64(coalescedSuggestedStep);
-							else if (type == "VuoReal")
+							else if (typeName == "VuoReal")
 								newIsBetter = json_object_get_double(o) < json_object_get_double(coalescedSuggestedStep);
-							else if (type == "VuoPoint2d" || type == "VuoPoint3d" || type == "VuoPoint4d")
+							else if (typeName == "VuoPoint2d" || typeName == "VuoPoint3d" || typeName == "VuoPoint4d")
 							{
 								double oldX=0,newX=0;
 								json_object *x;
@@ -212,6 +198,7 @@ json_object * VuoCompilerPublishedPort::getDetails(void)
 
 	// Override the coalesced details for any details explicitly set for this published port.
 
+	json_object *details = static_cast<VuoCompilerPublishedPortClass *>(getBase()->getClass()->getCompiler())->getDetails();
 	json_object_object_foreach(details, key, val)
 	{
 		json_object_object_add(coalescedDetails, key, val);
@@ -223,24 +210,6 @@ json_object * VuoCompilerPublishedPort::getDetails(void)
 }
 
 /**
- * Sets the value of a detail for this published port.
- * The previous detail value for @a key (if any) is replaced by @a value.
- */
-void VuoCompilerPublishedPort::setDetail(string key, string value)
-{
-	json_object_object_add(details, key.c_str(), json_tokener_parse(value.c_str()));
-}
-
-/**
- * Unsets the value of a detail for this published port.
- * The previous detail value for @a key (if any) is removed.
- */
-void VuoCompilerPublishedPort::unsetDetail(string key)
-{
-	json_object_object_del(details, key.c_str());
-}
-
-/**
  * Returns a string representation of this published port's type and details, as they would appear
  * in the attributes list of a published node declaration within a .vuo (Graphviz DOT format) file.
  */
@@ -248,9 +217,10 @@ string VuoCompilerPublishedPort::getGraphvizAttributes(void)
 {
 	ostringstream output;
 
-	string attributePrefix = " _" + getBase()->getName();
+	string attributePrefix = " _" + getBase()->getClass()->getName();
 
-	string typeName = getBase()->getType() ? getBase()->getType()->getModuleKey() : "event";
+	VuoType *type = getDataVuoType();
+	string typeName = type ? type->getModuleKey() : "event";
 	string escapedTypeName = VuoStringUtilities::transcodeToGraphvizIdentifier(typeName);
 
 	// @todo: The following check may be removed once it is impossible for a published port
@@ -262,6 +232,7 @@ string VuoCompilerPublishedPort::getGraphvizAttributes(void)
 	if (! VuoGenericType::isGenericTypeName(typeName))
 		output << attributePrefix << "_type=\"" << escapedTypeName << "\"";
 
+	json_object *details = static_cast<VuoCompilerPublishedPortClass *>(getBase()->getClass()->getCompiler())->getDetails();
 	json_object_object_foreach(details, key, val)
 	{
 		string attributeSuffix = (strcmp(key, "default") == 0 ? "" : string("_") + key);
@@ -273,4 +244,12 @@ string VuoCompilerPublishedPort::getGraphvizAttributes(void)
 	}
 
 	return output.str();
+}
+
+/**
+ * Returns null, since VuoCompilerPort::generateCreatePortContext() doesn't mean anything for published ports.
+ */
+Value * VuoCompilerPublishedPort::generateCreatePortContext(Module *module, BasicBlock *block)
+{
+	return NULL;
 }

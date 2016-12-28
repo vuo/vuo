@@ -306,23 +306,31 @@ void onMouseScrolled(struct nodeInstanceData *instance, VuoPoint2d delta)
  */
 void startMouseListeners(struct nodeInstanceData* instance, VuoModifierKey modifier)
 {
+	// Only fire drag events within the window content area, so dragging the titlebar doesn't cause the scene to rotate.
+	// (Especially bad when you drag the window to the top of the screen, and the menu bar stops the window from moving up further, yet you can still rotate the scene.)
+	// https://b33p.net/kosada/node/8934#comment-48225
+	bool fireRegardlessOfPosition = false;
+
 	VuoMouse_startListeningForDragsWithCallback( instance->leftMouseDraggedListener,
 											^(VuoPoint2d point) { onLeftMouseDragged(instance, point); },
 											VuoMouseButton_Left,
 											instance->window,
-											modifier);
+											modifier,
+											fireRegardlessOfPosition);
 
 	VuoMouse_startListeningForDragsWithCallback( instance->middleMouseDraggedListener,
 											^(VuoPoint2d point) { onMiddleMouseDragged(instance, point); },
 											VuoMouseButton_Middle,
 											instance->window,
-											modifier);
+											modifier,
+											fireRegardlessOfPosition);
 
 	VuoMouse_startListeningForDragsWithCallback( instance->rightMouseDraggedListener,
 											^(VuoPoint2d point) { onRightMouseDragged(instance, point); },
 											VuoMouseButton_Right,
 											instance->window,
-											modifier);
+											modifier,
+											fireRegardlessOfPosition);
 
 	VuoMouse_startListeningForPressesWithCallback( instance->mousePressedListener,
 											^(VuoPoint2d point) {onMousePressed(instance, point); },

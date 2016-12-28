@@ -9,33 +9,27 @@
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="310,721" _endPosition="0.200000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\""];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-160,273" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DGridLines2 [type="vuo.scene.make.grid.lines.VuoColor" version="1.0.0" label="Make 3D Grid Lines|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="280,294" fillcolor="violet" _material="{\"r\":0.309758,\"g\":0.372854,\"b\":0.487587,\"a\":1.000000}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.010000"];
-Make3DGridPoints2 [type="vuo.scene.make.grid.points.VuoColor" version="1.0.0" label="Make 3D Grid Points|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<pointSize>pointSize\l|<object>object\r" pos="272,473" fillcolor="violet" _material="{\"r\":0.448753,\"g\":0.540795,\"b\":0.713390,\"a\":1.000000}" _rows="32" _columns="32" _pointSize="0.010000"];
-Make3DSquare2 [type="vuo.scene.make.square.VuoColor" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="285,138" fillcolor="violet" _material="{\"r\":0.211978,\"g\":0.254994,\"b\":0.336233,\"a\":1.000000}" _rows="32" _columns="32"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="64,139" _translation="{\"x\":-0.600000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.500000,\"y\":1.000000,\"z\":1.000000}"];
-Make3DTransform4 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="62,295" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.500000,\"y\":1.000000,\"z\":1.000000}"];
-Make3DTransform5 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="55,472" _translation="{\"x\":0.600000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.500000,\"y\":1.000000,\"z\":1.000000}"];
-MakeList3 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="713,290" fillcolor="green"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="743,320" fillcolor="green"];
-Pinch3DObject [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="520,138" _center="{\"x\":-0.400000,\"y\":0.000000,\"z\":0.500000}"];
-Pinch3DObject2 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="521,295" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.500000}"];
-Pinch3DObject3 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="519,473" _center="{\"x\":0.400000,\"y\":0.000000,\"z\":0.500000}"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="784,279" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="315,675" _endPosition="0.200000" _duration="2.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="120,150" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DGridLines2 [type="vuo.scene.make.grid.lines.VuoColor" version="1.0.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="270,300" fillcolor="violet" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.5,1,1]}" _material="{\"r\":0.309758,\"g\":0.372854,\"b\":0.487587,\"a\":1.000000}" _rows="32" _columns="32" _gridType="\"horizontal-vertical\"" _lineWidth="0.010000"];
+Make3DGridPoints2 [type="vuo.scene.make.grid.points.VuoColor" version="1.0.0" label="Make Grid Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<pointSize>pointSize\l|<object>object\r" pos="270,435" fillcolor="violet" _transform="{\"translation\":[0.60000002384185791,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.5,1,1]}" _material="{\"r\":0.448753,\"g\":0.540795,\"b\":0.713390,\"a\":1.000000}" _rows="32" _columns="32" _pointSize="0.010000"];
+Make3DSquare2 [type="vuo.scene.make.square.VuoColor" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="270,195" fillcolor="violet" _transform="{\"translation\":[-0.60000002384185791,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.5,1,1]}" _material="{\"r\":0.211978,\"g\":0.254994,\"b\":0.336233,\"a\":1.000000}" _rows="32" _columns="32"];
+MakeList3 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="709,296" fillcolor="green"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="739,326" fillcolor="green"];
+Pinch3DObject [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="540,195" _center="{\"x\":-0.400000,\"y\":0.000000,\"z\":0.500000}"];
+Pinch3DObject2 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="540,300" _center="{\"x\":0.000000,\"y\":0.000000,\"z\":0.500000}"];
+Pinch3DObject3 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="540,435" _center="{\"x\":0.400000,\"y\":0.000000,\"z\":0.500000}"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="780,285" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 Curve2:value -> Pinch3DObject2:amount;
 Curve2:value -> Pinch3DObject3:amount;
 Curve2:value -> Pinch3DObject:amount;
-FireOnStart:started -> Make3DTransform4:refresh;
-FireOnStart:started -> Make3DTransform5:refresh;
-FireOnStart:started -> Make3DTransform:refresh;
+FireOnStart:started -> Make3DGridLines2:refresh;
+FireOnStart:started -> Make3DGridPoints2:refresh;
+FireOnStart:started -> Make3DSquare2:refresh;
 Make3DGridLines2:object -> Pinch3DObject2:object;
 Make3DGridPoints2:object -> Pinch3DObject3:object;
 Make3DSquare2:object -> Pinch3DObject:object;
-Make3DTransform4:transform -> Make3DGridLines2:transform;
-Make3DTransform5:transform -> Make3DGridPoints2:transform;
-Make3DTransform:transform -> Make3DSquare2:transform;
 MakeList3:list -> RenderSceneToWindow:objects;
 MakeList5:list -> RenderSceneToWindow:setWindowProperties;
 Pinch3DObject2:pinchedObject -> MakeList3:2;

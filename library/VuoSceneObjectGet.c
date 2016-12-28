@@ -26,7 +26,6 @@
 
 	// cfileio.h won't compile without these.
 	#ifndef DOXYGEN
-		typedef enum aiReturn aiReturn;
 		typedef enum aiOrigin aiOrigin;
 		typedef struct aiFile aiFile;
 		typedef struct aiFileIO aiFileIO;
@@ -138,7 +137,7 @@ static aiFile *VuoSceneObjectGet_open(aiFileIO *afio, const char *filename, cons
 
 	if (strcmp(mode, "rb") != 0)
 	{
-		VLog("Error: Unknown file mode '%s'",mode);
+		VUserLog("Error: Unknown file mode '%s'",mode);
 		return NULL;
 	}
 
@@ -150,7 +149,7 @@ static aiFile *VuoSceneObjectGet_open(aiFileIO *afio, const char *filename, cons
 	if (dataLength == 0)
 	{
 		free(data);
-		VLog("Warning: '%s' is empty", filename);
+		VUserLog("Warning: '%s' is empty", filename);
 		return NULL;
 	}
 
@@ -220,7 +219,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 
 		if (!meshObj->mVertices)
 		{
-			VLog("Error: Mesh '%s' doesn't contain any positions.  Skipping.", meshObj->mName.data);
+			VUserLog("Error: Mesh '%s' doesn't contain any positions.  Skipping.", meshObj->mName.data);
 			continue;
 		}
 		char *missing = NULL;
@@ -236,7 +235,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 
 		if (missing)
 		{
-			VLog("Warning: Mesh '%s' is missing %s.  These channels will be automatically generated, but lighting and 3D object filters may not work correctly.", meshObj->mName.data, missing);
+			VUserLog("Warning: Mesh '%s' is missing %s.  These channels will be automatically generated, but lighting and 3D object filters may not work correctly.", meshObj->mName.data, missing);
 			free(missing);
 		}
 
@@ -282,7 +281,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 			const struct aiFace *faceObj = &meshObj->mFaces[face];
 			if (faceObj->mNumIndices != 3)
 			{
-				VLog("Warning: Face %u isn't a triangle (it has %u indices); skipping.",face,faceObj->mNumIndices);
+				VUserLog("Warning: Face %u isn't a triangle (it has %u indices); skipping.",face,faceObj->mNumIndices);
 				continue;
 			}
 
@@ -325,7 +324,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 	{
 		VuoSceneObject childSceneObject = VuoSceneObject_makeEmpty();
 		convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], shaders, &childSceneObject);
-		if (sceneObject->type != VuoSceneObjectType_Empty)
+		if (childSceneObject.type != VuoSceneObjectType_Empty)
 			VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, childSceneObject);
 	}
 }
@@ -340,7 +339,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 {
 	*scene = VuoSceneObject_makeEmpty();
 
-	if (!strlen(sceneURL))
+	if (!sceneURL || sceneURL[0] == 0)
 		return false;
 
 	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
@@ -374,9 +373,12 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 	aiReleasePropertyStore(props);
 	if (!ais)
 	{
-		VLog("Error: %s\n", aiGetErrorString());
+		VUserLog("Error: %s\n", aiGetErrorString());
 		return false;
 	}
+
+	if (ais->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
+		VUserLog("Warning: Open Asset Import wasn't able to parse everything in this file.");
 
 	VuoText normalizedSceneURL = VuoUrl_normalize(sceneURL, false);
 	VuoRetain(normalizedSceneURL);
@@ -479,7 +481,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_AMBIENT, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\tambient: %s",path.data);
+			VUserLog("\tambient: %s",path.data);
 		}
 
 		int emissiveTextures = aiGetMaterialTextureCount(m, aiTextureType_EMISSIVE);
@@ -487,7 +489,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_EMISSIVE, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\temissive: %s",path.data);
+			VUserLog("\temissive: %s",path.data);
 		}
 
 		int opacityTextures = aiGetMaterialTextureCount(m, aiTextureType_OPACITY);
@@ -495,7 +497,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_OPACITY, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\topacity: %s",path.data);
+			VUserLog("\topacity: %s",path.data);
 		}
 
 		int lightmapTextures = aiGetMaterialTextureCount(m, aiTextureType_LIGHTMAP);
@@ -503,7 +505,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_LIGHTMAP, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\tlightmap: %s",path.data);
+			VUserLog("\tlightmap: %s",path.data);
 		}
 
 		int reflectionTextures = aiGetMaterialTextureCount(m, aiTextureType_REFLECTION);
@@ -511,7 +513,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_REFLECTION, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\treflection: %s",path.data);
+			VUserLog("\treflection: %s",path.data);
 		}
 
 		int displacementTextures = aiGetMaterialTextureCount(m, aiTextureType_DISPLACEMENT);
@@ -519,7 +521,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_DISPLACEMENT, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\tdisplacement: %s",path.data);
+			VUserLog("\tdisplacement: %s",path.data);
 		}
 
 		int heightTextures = aiGetMaterialTextureCount(m, aiTextureType_HEIGHT);
@@ -527,7 +529,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_HEIGHT, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\theight: %s",path.data);
+			VUserLog("\theight: %s",path.data);
 		}
 
 		int unknownTextures = aiGetMaterialTextureCount(m, aiTextureType_UNKNOWN);
@@ -535,7 +537,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		{
 			struct aiString path;
 			aiGetMaterialTexture(m, aiTextureType_UNKNOWN, 0, &path, NULL, NULL, NULL, NULL, NULL, NULL);
-			VLog("\tunknown: %s",path.data);
+			VUserLog("\tunknown: %s",path.data);
 		}
 #endif
 

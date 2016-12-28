@@ -15,6 +15,7 @@
 #include "miniz.h"
 #pragma clang diagnostic pop
 
+#import <string>
 #import <set>
 using namespace std;
 
@@ -83,7 +84,13 @@ public:
 	static void writeStringToFile(string s, string file);
 	static bool fileExists(string path);
 	static bool dirExists(string path);
+	static bool fileIsReadable(string path);
+	static bool fileContainsReadableData(string path);
 	static void createFile(string path);
+	static void deleteFile(string path);
+	static void moveFile(string fromPath, string toPath);
+	static void moveFileToTrash(string filePath);
+	static void copyFile(string fromPath, string toPath);
 	static unsigned long getFileLastModifiedInSeconds(string path);
 	static set<File *> findAllFilesInDirectory(string dirPath, set<string> archiveExtensions = set<string>(), bool shouldSearchRecursively = false);
 	static set<File *> findFilesInDirectory(string dirPath, set<string> extensions, set<string> archiveExtensions = set<string>());

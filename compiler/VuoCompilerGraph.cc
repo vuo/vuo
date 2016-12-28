@@ -9,14 +9,21 @@
 
 #include "VuoCompilerGraph.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerChain.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerException.hh"
+#include "VuoCompilerNode.hh"
+#include "VuoCompilerTriggerPort.hh"
+#include "VuoNodeClass.hh"
 #include "VuoPort.hh"
+#include "VuoPublishedPort.hh"
 #include "VuoStringUtilities.hh"
 #include <stdexcept>
+#include <stack>
 
 /**
- * Creates a graph representation of the (current state of) the composition.
+ * Creates a graph representation of the (current state of) the composition, to be used for checking the validity
+ * of the composition.
  *
  * @param composition The composition to represent. The graph representation is a snapshot of the composition passed
  *		into this constructor, and does not update if the composition is modified.
@@ -24,46 +31,66 @@
  */
 VuoCompilerGraph::VuoCompilerGraph(VuoCompilerComposition *composition, set<VuoCompilerCable *> potentialCables)
 {
-	set<VuoNode *> nonPublishedNodesIncludingInvalid = composition->getBase()->getNodes();
-	set<VuoNode *> nonPublishedNodes;
-	for (set<VuoNode *>::iterator i = nonPublishedNodesIncludingInvalid.begin(); i != nonPublishedNodesIncludingInvalid.end(); ++i)
-		if ((*i)->hasCompiler())  // Ignore nodes with missing node classes.
-			nonPublishedNodes.insert(*i);
-
-	VuoNode *publishedInputNode = composition->getPublishedInputNode();
-
-	set<VuoCable *> nonPublishedCablesIncludingInvalid = composition->getBase()->getCables();
-	set<VuoCable *> nonPublishedCables;
-	for (set<VuoCable *>::iterator i = nonPublishedCablesIncludingInvalid.begin(); i != nonPublishedCablesIncludingInvalid.end(); ++i)
-		if ((*i)->getFromNode() && (*i)->getToNode())  // Ignore disconnected cables.
-			nonPublishedCables.insert(*i);
-
-	set<VuoCable *> publishedInputCables = composition->getBase()->getPublishedInputCables();
-
-	set<VuoCompilerCable *> validPotentialCables;
-	for (set<VuoCompilerCable *>::iterator i = potentialCables.begin(); i != potentialCables.end(); ++i)
-		if ((*i)->getBase()->getToNode())  // Ignore published output cables.
-			validPotentialCables.insert(*i);
-
-	makeTriggers(nonPublishedNodes, publishedInputNode);
-	makeVerticesAndEdges(nonPublishedCables, publishedInputCables, validPotentialCables, publishedInputNode);
-	makeDownstreamVertices();
-	sortVertices();
-	makeEventlesslyDownstreamNodes(nonPublishedNodes, nonPublishedCables);
+	initialize(composition, potentialCables, NULL, NULL);
 }
 
 /**
- * Sets up VuoCompilerGraph::triggers.
+ * Creates a graph representation of the (current state of) the composition, to be used for generating code for
+ * the composition.
+ *
+ * @param composition The composition to represent. The graph representation is a snapshot of the composition passed
+ *		into this constructor, and does not update if the composition is modified.
+ * @param publishedInputNode A node instantiated from VuoCompilerPublishedInputNodeClass, used to add a
+ *		representation of the composition's published input ports and published input trigger to the graph representation.
+ * @param publishedOutputNode A node instantiated from VuoCompilerPublishedOutputNodeClass, used to add a
+ *		representation of the composition's published output ports to the graph representation.
  */
-void VuoCompilerGraph::makeTriggers(set<VuoNode *> nonPublishedNodes, VuoNode *publishedInputNode)
+VuoCompilerGraph::VuoCompilerGraph(VuoCompilerComposition *composition, VuoCompilerNode *publishedInputNode, VuoCompilerNode *publishedOutputNode)
 {
-	vector<VuoNode *> nodes;
-	nodes.insert(nodes.end(), nonPublishedNodes.begin(), nonPublishedNodes.end());
-	if (publishedInputNode)
-		nodes.push_back(publishedInputNode);
+	initialize(composition, set<VuoCompilerCable *>(), publishedInputNode, publishedOutputNode);
+}
 
-	VuoCompilerTriggerPort *simultaneousTrigger = NULL;
-	for (vector<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+/**
+ * Shared by constructors.
+ */
+void VuoCompilerGraph::initialize(VuoCompilerComposition *composition, set<VuoCompilerCable *> potentialCables,
+								  VuoCompilerNode *publishedInputNode, VuoCompilerNode *publishedOutputNode)
+{
+	publishedInputTrigger = NULL;
+	this->publishedInputNode = publishedInputNode;
+	this->publishedOutputNode = publishedOutputNode;
+
+	set<VuoNode *> nodesIncludingInvalid = composition->getBase()->getNodes();
+	set<VuoNode *> nodes;
+	for (set<VuoNode *>::iterator i = nodesIncludingInvalid.begin(); i != nodesIncludingInvalid.end(); ++i)
+		if ((*i)->hasCompiler())  // Ignore nodes with missing node classes.
+			nodes.insert(*i);
+
+	set<VuoCable *> cablesIncludingInvalidAndPublished = composition->getBase()->getCables();
+	set<VuoCable *> nonPublishedCables;
+	for (set<VuoCable *>::iterator i = cablesIncludingInvalidAndPublished.begin(); i != cablesIncludingInvalidAndPublished.end(); ++i)
+		if ((*i)->getFromNode() && (*i)->getToNode() && ! (*i)->isPublished())  // Ignore disconnected cables and published cables.
+			nonPublishedCables.insert(*i);
+
+	set<VuoCable *> validPotentialCables;
+	for (set<VuoCompilerCable *>::iterator i = potentialCables.begin(); i != potentialCables.end(); ++i)
+		if (! (*i)->getBase()->isPublished())  // Ignore published cables.
+			validPotentialCables.insert( (*i)->getBase() );
+
+	makeTriggers(nodes);
+	makeVerticesAndEdges(nodes, nonPublishedCables, validPotentialCables,
+						 composition->getBase()->getPublishedInputPorts(), composition->getBase()->getPublishedOutputPorts());
+	makeDownstreamVertices();
+	sortVertices();
+	makeEventlesslyDownstreamNodes(nodes, nonPublishedCables);
+}
+
+/**
+ * Sets up VuoCompilerGraph::triggers and VuoCompilerGraph::publishedInputTrigger.
+ */
+void VuoCompilerGraph::makeTriggers(set<VuoNode *> nodes)
+{
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoNode *node = *i;
 		vector<VuoPort *> outputPorts = node->getOutputPorts();
@@ -73,32 +100,32 @@ void VuoCompilerGraph::makeTriggers(set<VuoNode *> nonPublishedNodes, VuoNode *p
 			if (trigger)
 			{
 				nodeForTrigger[trigger] = node->getCompiler();
-
-				if (node == publishedInputNode &&
-						trigger->getBase()->getClass()->getName() == VuoNodeClass::publishedInputNodeSimultaneousTriggerName)
-					simultaneousTrigger = trigger;
-				else
-					triggers.push_back(trigger);
+				triggers.push_back(trigger);
 			}
 		}
 	}
-	if (simultaneousTrigger)
-		triggers.push_back(simultaneousTrigger);
+
+	if (publishedInputNode)
+	{
+		VuoPort *port = publishedInputNode->getBase()->getOutputPorts().at( VuoNodeClass::unreservedOutputPortStartIndex );
+		publishedInputTrigger = static_cast<VuoCompilerTriggerPort *>(port->getCompiler());
+		nodeForTrigger[publishedInputTrigger] = publishedInputNode;
+		triggers.push_back(publishedInputTrigger);
+	}
 }
 
 /**
- * Sets up VuoCompilerGraph::vertices (not yet in topological order) and VuoCompilerGraph::edges.
+ * Sets up VuoCompilerGraph::vertices (not yet in topological order), VuoCompilerGraph::edges, and
+ * VuoCompilerGraph::verticesNonBlocking.
  */
-void VuoCompilerGraph::makeVerticesAndEdges(set<VuoCable *> nonPublishedCables, set<VuoCable *> publishedInputCables,
-											set<VuoCompilerCable *> potentialCables, VuoNode *publishedInputNode)
+void VuoCompilerGraph::makeVerticesAndEdges(set<VuoNode *> nodes, set<VuoCable *> cables, set<VuoCable *> potentialCables,
+											vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts)
 {
-	// Create vertices to visit for all internal and published input cables in the composition (except for vuoSimultaneous).
+	// Create vertices to visit for all internal cables in the composition.
 
 	set<VuoCable *> cablesInComposition;
-	cablesInComposition.insert(nonPublishedCables.begin(), nonPublishedCables.end());
-	cablesInComposition.insert(publishedInputCables.begin(), publishedInputCables.end());
-	for (set<VuoCompilerCable *>::iterator i = potentialCables.begin(); i != potentialCables.end(); ++i)
-		cablesInComposition.insert((*i)->getBase());
+	cablesInComposition.insert(cables.begin(), cables.end());
+	cablesInComposition.insert(potentialCables.begin(), potentialCables.end());
 
 	set<Vertex> allVertices;
 	for (set<VuoCable *>::iterator i = cablesInComposition.begin(); i != cablesInComposition.end(); ++i)
@@ -118,6 +145,116 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoCable *> nonPublishedCables, 
 		vertex.cableBundle.insert(cable->getCompiler());
 		allVertices.insert(vertex);
 	}
+
+
+	// Create cables and vertices to visit for all published input cables in the composition.
+	// For each published input cable in the composition, the graph gets a cable and vertex from publishedInputNode.
+	if (publishedInputNode)
+	{
+		for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
+		{
+			vector<VuoCable *> publishedInputCables = (*i)->getConnectedCables();
+			for (vector<VuoCable *>::iterator j = publishedInputCables.begin(); j != publishedInputCables.end(); ++j)
+			{
+				VuoCable *publishedInputCable = *j;
+				int fromPortIndex = VuoNodeClass::unreservedOutputPortStartIndex;
+
+				VuoCompilerNode *fromNode = publishedInputNode;
+				VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>( publishedInputNode->getBase()->getOutputPorts().at(fromPortIndex)->getCompiler() );
+				VuoCompilerNode *toNode = publishedInputCable->getToNode()->getCompiler();
+				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>( publishedInputCable->getToPort()->getCompiler() );
+				VuoCompilerCable *cable = new VuoCompilerCable(fromNode, fromPort, toNode, toPort);
+
+				VuoCompilerTriggerPort *fromTrigger = static_cast<VuoCompilerTriggerPort *>(fromPort);
+				Vertex vertex(fromTrigger, toNode);
+				set<Vertex>::iterator vertexIter = allVertices.find(vertex);
+				if (vertexIter != allVertices.end())
+				{
+					vertex.cableBundle = (*vertexIter).cableBundle;
+					allVertices.erase(vertexIter);
+				}
+				vertex.cableBundle.insert(cable);
+				allVertices.insert(vertex);
+			}
+		}
+	}
+
+
+	// Create cables and vertices to visit for all published output cables in the composition.
+	// For each published output cable in the composition, the graph gets a cable and vertex to publishedOutputNode.
+
+	if (publishedOutputNode)
+	{
+		for (size_t i = 0; i < publishedOutputPorts.size(); ++i)
+		{
+			vector<VuoCable *> publishedOutputCables = publishedOutputPorts[i]->getConnectedCables();
+			for (vector<VuoCable *>::iterator j = publishedOutputCables.begin(); j != publishedOutputCables.end(); ++j)
+			{
+				VuoCable *publishedOutputCable = *j;
+				int toPortIndex = VuoNodeClass::unreservedInputPortStartIndex + i;
+
+				VuoCompilerNode *fromNode = publishedOutputCable->getFromNode()->getCompiler();
+				VuoCompilerPort *fromPort = static_cast<VuoCompilerPort *>( publishedOutputCable->getFromPort()->getCompiler() );
+				VuoCompilerNode *toNode = publishedOutputNode;
+				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>( publishedOutputNode->getBase()->getInputPorts().at(toPortIndex)->getCompiler() );
+				VuoCompilerCable *cable = new VuoCompilerCable(fromNode, fromPort, toNode, toPort);
+				VuoCompilerTriggerPort *fromTrigger = dynamic_cast<VuoCompilerTriggerPort *>(fromPort);
+
+				Vertex vertex = (fromTrigger ? Vertex(fromTrigger, toNode) : Vertex(fromNode, toNode));
+				set<Vertex>::iterator vertexIter = allVertices.find(vertex);
+				if (vertexIter != allVertices.end())
+				{
+					vertex.cableBundle = (*vertexIter).cableBundle;
+					allVertices.erase(vertexIter);
+				}
+				vertex.cableBundle.insert(cable);
+				allVertices.insert(vertex);
+			}
+		}
+	}
+
+
+	// Create cable-less vertices to visit between each leaf node in the composition and the published output node.
+	// These are used to ensure that events from the published input trigger gather at the published output node.
+
+	set<Vertex> publishedOutputVertices;
+	if (publishedOutputNode)
+	{
+		map<VuoCompilerNode *, bool> nodeHasIncomingVertices;
+		map<VuoCompilerNode *, bool> nodeHasOutgoingVertices;
+		map<VuoCompilerTriggerPort *, bool> triggerHasOutgoingVertices;
+		for (set<Vertex>::iterator i = allVertices.begin(); i != allVertices.end(); ++i)
+		{
+			Vertex vertex = *i;
+
+			nodeHasIncomingVertices[vertex.toNode] = true;
+			if (vertex.fromTrigger)
+				triggerHasOutgoingVertices[vertex.fromTrigger] = true;
+			else
+				nodeHasOutgoingVertices[vertex.fromNode] = true;
+		}
+
+		if (! triggerHasOutgoingVertices[publishedInputTrigger])
+		{
+			Vertex gatherVertex(publishedInputTrigger, publishedOutputNode);
+			publishedOutputVertices.insert(gatherVertex);
+		}
+
+		for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+		{
+			if (! (*i)->hasCompiler())
+				continue;
+			VuoCompilerNode *node = (*i)->getCompiler();
+
+			if (nodeHasIncomingVertices[node] && ! nodeHasOutgoingVertices[node])
+			{
+				Vertex gatherVertex(node, publishedOutputNode);
+				publishedOutputVertices.insert(gatherVertex);
+			}
+		}
+	}
+
+	allVertices.insert(publishedOutputVertices.begin(), publishedOutputVertices.end());
 
 
 	// For each trigger, add all vertices reachable from it.
@@ -147,7 +284,9 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoCable *> nonPublishedCables, 
 			{
 				Vertex outgoingVertex = *j;
 
-				if (vertex.toNode == outgoingVertex.fromNode && mayTransmit(vertex.cableBundle, outgoingVertex.cableBundle))
+				if (vertex.toNode == outgoingVertex.fromNode &&
+						(mayTransmit(vertex.cableBundle, outgoingVertex.cableBundle) ||
+						 (trigger == publishedInputTrigger && publishedOutputVertices.find(outgoingVertex) != publishedOutputVertices.end())))
 				{
 					Edge outgoingEdge(vertex, outgoingVertex);
 					if (edgesVisited.find(outgoingEdge) == edgesVisited.end())  // Avoid infinite feedback loops.
@@ -163,64 +302,40 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoCable *> nonPublishedCables, 
 	}
 
 
-	// Add cables, vertices, and edges for the vuoSimultaneous trigger (copying from the other published input ports).
-	// This creates additional VuoCompilerCable objects that are not in the composition.
+	// For the published input trigger, add all vertices that are reached by every event from it.
 
 	if (publishedInputNode)
 	{
-		VuoPort *simultaneousPort = publishedInputNode->getOutputPortWithName(VuoNodeClass::publishedInputNodeSimultaneousTriggerName);
-		VuoCompilerTriggerPort *simultaneousTrigger = static_cast<VuoCompilerTriggerPort *>(simultaneousPort->getCompiler());
+		set<Vertex> verticesToVisit;
+		set<Edge> edgesVisited;
 
-		for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = nodeForTrigger.begin(); i != nodeForTrigger.end(); ++i)
+		for (set<Vertex>::iterator j = allVertices.begin(); j != allVertices.end(); ++j)
 		{
-			VuoCompilerTriggerPort *trigger = i->first;
-			VuoCompilerNode *node = i->second;
+			Vertex vertex = *j;
+			if (vertex.fromTrigger == publishedInputTrigger && ! vertex.cableBundle.empty())
+				verticesToVisit.insert(vertex);
+		}
 
-			if (node->getBase() == publishedInputNode && trigger != simultaneousTrigger)
+		while (! verticesToVisit.empty())
+		{
+			Vertex vertex = *verticesToVisit.begin();
+			if (find(verticesNonBlocking.begin(), verticesNonBlocking.end(), vertex) == verticesNonBlocking.end())
+				verticesNonBlocking.push_back(vertex);
+			verticesToVisit.erase(verticesToVisit.begin());
+
+			for (set<Vertex>::iterator j = allVertices.begin(); j != allVertices.end(); ++j)
 			{
-				for (vector<Vertex>::iterator j = vertices[trigger].begin(); j != vertices[trigger].end(); ++j)
+				Vertex outgoingVertex = *j;
+
+				if (vertex.toNode == outgoingVertex.fromNode && mustTransmit(vertex.cableBundle, outgoingVertex.cableBundle))
 				{
-					Vertex vertex = *j;
-
-					Vertex vertexCopy;
-					if (vertex.fromTrigger)
+					Edge outgoingEdge(vertex, outgoingVertex);
+					if (edgesVisited.find(outgoingEdge) == edgesVisited.end())  // Avoid infinite feedback loops.
 					{
-						vertexCopy = Vertex(simultaneousTrigger, vertex.toNode);
-						for (set<VuoCompilerCable *>::iterator k = vertex.cableBundle.begin(); k != vertex.cableBundle.end(); ++k)
-						{
-							VuoCompilerCable *cable = *k;
-							VuoCompilerNode *toNode = cable->getBase()->getToNode()->getCompiler();
-							VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>(cable->getBase()->getToPort()->getCompiler());
-							VuoCompilerCable *cableCopy = new VuoCompilerCable(publishedInputNode->getCompiler(), simultaneousTrigger,
-																			   toNode, toPort);
-							simultaneousTrigger->getBase()->removeConnectedCable(cableCopy->getBase());
-							toPort->getBase()->removeConnectedCable(cableCopy->getBase());
-							vertexCopy.cableBundle.insert(cableCopy);
-						}
-					}
-					else
-					{
-						vertexCopy = vertex;
-					}
+						edgesVisited.insert(outgoingEdge);
 
-					vector<Vertex>::iterator existingVertexIter =
-							find(vertices[simultaneousTrigger].begin(), vertices[simultaneousTrigger].end(), vertexCopy);
-					if (existingVertexIter != vertices[simultaneousTrigger].end())
-					{
-						vertexCopy.cableBundle.insert( existingVertexIter->cableBundle.begin(), existingVertexIter->cableBundle.end() );
-						vertices[simultaneousTrigger].erase(existingVertexIter);
+						verticesToVisit.insert(outgoingVertex);
 					}
-
-					vertices[simultaneousTrigger].push_back(vertexCopy);
-				}
-
-				for (set<Edge>::iterator j = edges[trigger].begin(); j != edges[trigger].end(); ++j)
-				{
-					Edge edge = *j;
-					Edge edgeCopy = (edge.fromVertex.fromTrigger ?
-										 Edge(Vertex(simultaneousTrigger, edge.fromVertex.toNode), edge.toVertex) :
-										 edge);
-					edges[simultaneousTrigger].insert(edgeCopy);
 				}
 			}
 		}
@@ -299,6 +414,32 @@ void VuoCompilerGraph::makeDownstreamVertices(void)
 			}
 		}
 	}
+
+	// For the published input trigger, add a cable-less vertex from the repeated node in each feedback loop to the
+	// published output node. This ensures that events from the published input trigger gather at the published output node.
+	if (publishedOutputNode)
+	{
+		vector<Vertex> verticesCopy = vertices[publishedInputTrigger];
+		for (vector<Vertex>::iterator i = verticesCopy.begin(); i != verticesCopy.end(); ++i)
+		{
+			Vertex vertex = *i;
+
+			if (vertex.toNode != publishedOutputNode && downstreamVertices[publishedInputTrigger][vertex].empty())
+			{
+				Vertex gatherVertex(vertex.toNode, publishedOutputNode);
+				vertices[publishedInputTrigger].push_back(gatherVertex);
+
+				for (map<Vertex, set<Vertex> >::iterator j = downstreamVertices[publishedInputTrigger].begin(); j != downstreamVertices[publishedInputTrigger].end(); ++j)
+				{
+					Vertex potentialUpstreamVertex = j->first;
+					set<Vertex> downstreamVerticesForVertex = j->second;
+
+					if (find(downstreamVerticesForVertex.begin(), downstreamVerticesForVertex.end(), potentialUpstreamVertex) != downstreamVerticesForVertex.end())
+						downstreamVertices[publishedInputTrigger][potentialUpstreamVertex].insert(gatherVertex);
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -306,51 +447,72 @@ void VuoCompilerGraph::makeDownstreamVertices(void)
  */
 void VuoCompilerGraph::sortVertices(void)
 {
-	map<VuoCompilerTriggerPort *, map<Vertex, set<Vertex> > > dependentVertices = downstreamVertices;
-
 	for (map<VuoCompilerTriggerPort *, vector<Vertex> >::iterator i = vertices.begin(); i != vertices.end(); ++i)
 	{
 		VuoCompilerTriggerPort *trigger = i->first;
 		vector<Vertex> verticesToSort = i->second;
 
-		// For each vertex, create a list of all vertices that can't be reached until after the vertex.
-		// This includes all vertices downstream of the vertex, plus all vertices downstream of gathers
-		// involving the vertex (even if the vertex itself hits a wall).
+		map<Vertex, set<Vertex> > dependentVertices;
+		list<Vertex> verticesToVisit;  // Used as a stack, except for a call to find().
+		map<Vertex, bool> verticesCompleted;
 
 		for (vector<Vertex>::iterator j = verticesToSort.begin(); j != verticesToSort.end(); ++j)
+			if ((*j).fromTrigger == trigger)
+				verticesToVisit.push_back(*j);
+
+		while (! verticesToVisit.empty())
 		{
-			Vertex vertex = *j;
+			// Visit the vertex at the top of the stack.
+			Vertex currentVertex = verticesToVisit.back();
 
-			if (mayTransmit(vertex.toNode, trigger))
+			set<Vertex> currentDependentVertices;
+			bool areDependentVerticesComplete = true;
+
+			// Form a list of vertices immediately dependent on this vertex's to-node.
+			// This includes vertices that are not downstream of this vertex because of a wall.
+			// But, if this vertex is at the end of a feedback loop, it doesn't include vertices
+			// beyond the end of the feedback loop.
+			set<Vertex> outgoingVertices;
+			for (vector<Vertex>::iterator j = verticesToSort.begin(); j != verticesToSort.end(); ++j)
 			{
-				vector<VuoCompilerNode *> downstreamNodes = getNodesDownstream(vertex.toNode, trigger);
-				if (find(downstreamNodes.begin(), downstreamNodes.end(), vertex.fromNode) == downstreamNodes.end())
+				Vertex outgoingVertex = *j;
+				if (currentVertex.toNode == outgoingVertex.fromNode)
 				{
-					set<Vertex> dependentVerticesForToNode;
-					for (vector<Vertex>::iterator k = vertices[trigger].begin(); k != vertices[trigger].end(); ++k)
+					set<Vertex> furtherDownstreamVertices = downstreamVertices[trigger][outgoingVertex];
+					if (furtherDownstreamVertices.find(currentVertex) == furtherDownstreamVertices.end())
+						outgoingVertices.insert(outgoingVertex);
+					else
 					{
-						Vertex otherVertex = *k;
-
-						if (vertex.toNode == otherVertex.fromNode)
-						{
-							dependentVerticesForToNode.insert( otherVertex );
-							dependentVerticesForToNode.insert( dependentVertices[trigger][otherVertex].begin(),
-															   dependentVertices[trigger][otherVertex].end());
-						}
-					}
-
-					for (vector<Vertex>::iterator k = vertices[trigger].begin(); k != vertices[trigger].end(); ++k)
-					{
-						Vertex otherVertex = *k;
-
-						if (otherVertex == vertex ||
-								dependentVertices[trigger][otherVertex].find(vertex) != dependentVertices[trigger][otherVertex].end())
-						{
-							dependentVertices[trigger][otherVertex].insert( dependentVerticesForToNode.begin(),
-																			dependentVerticesForToNode.end() );
-						}
+						outgoingVertices.clear();
+						break;
 					}
 				}
+			}
+
+			for (set<Vertex>::iterator j = outgoingVertices.begin(); j != outgoingVertices.end(); ++j)
+			{
+				Vertex outgoingVertex = *j;
+				currentDependentVertices.insert(outgoingVertex);
+
+				if (verticesCompleted[outgoingVertex])
+				{
+					// The dependent vertex has already been visited, so add its dependent vertices to this vertex's.
+					set<Vertex> furtherDependentVertices = dependentVertices[outgoingVertex];
+					currentDependentVertices.insert( furtherDependentVertices.begin(), furtherDependentVertices.end() );
+				}
+				else if (find(verticesToVisit.begin(), verticesToVisit.end(), outgoingVertex) == verticesToVisit.end())
+				{
+					// The dependent vertex has not yet been visited, so add it to the stack.
+					verticesToVisit.push_back(outgoingVertex);
+					areDependentVerticesComplete = false;
+				}
+			}
+
+			if (areDependentVerticesComplete)
+			{
+				dependentVertices[currentVertex] = currentDependentVertices;
+				verticesToVisit.pop_back();
+				verticesCompleted[currentVertex] = true;
 			}
 		}
 
@@ -363,7 +525,7 @@ void VuoCompilerGraph::sortVertices(void)
 			size_t maxIndex = 0;
 			for (size_t j = 0; j < verticesToSort.size(); ++j)
 			{
-				size_t currSize = dependentVertices[trigger][verticesToSort[j]].size();
+				size_t currSize = dependentVertices[verticesToSort[j]].size();
 				if (currSize > maxSize)
 				{
 					maxSize = currSize;
@@ -381,12 +543,12 @@ void VuoCompilerGraph::sortVertices(void)
 /**
  * Sets up VuoCompilerGraph::eventlesslyDownstreamNodes.
  */
-void VuoCompilerGraph::makeEventlesslyDownstreamNodes(set<VuoNode *> nonPublishedNodes, set<VuoCable *> nonPublishedCables)
+void VuoCompilerGraph::makeEventlesslyDownstreamNodes(set<VuoNode *> nodes, set<VuoCable *> cables)
 {
 	// Find all nodes that can transmit through their output data cables without an event.
 
 	set<VuoCompilerNode *> eventlesslyTransmittingNodes;
-	for (set<VuoNode *>::iterator i = nonPublishedNodes.begin(); i != nonPublishedNodes.end(); ++i)
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
 		VuoCompilerNode *node = (*i)->getCompiler();
 		if (mayTransmitEventlessly(node))
@@ -402,7 +564,7 @@ void VuoCompilerGraph::makeEventlesslyDownstreamNodes(set<VuoNode *> nonPublishe
 	for (set<VuoCompilerNode *>::iterator i = eventlesslyTransmittingNodes.begin(); i != eventlesslyTransmittingNodes.end(); ++i)
 	{
 		VuoCompilerNode *node = *i;
-		for (set<VuoCable *>::iterator j = nonPublishedCables.begin(); j != nonPublishedCables.end(); ++j)
+		for (set<VuoCable *>::iterator j = cables.begin(); j != cables.end(); ++j)
 		{
 			VuoCable *cable = *j;
 
@@ -474,6 +636,39 @@ void VuoCompilerGraph::makeEventlesslyDownstreamNodes(set<VuoNode *> nonPublishe
 			}
 		}
 	}
+}
+
+/**
+ * Returns true if an event coming into a node through @a fromCables must always transmit to outgoing @a toCables, based
+ * on the event-blocking behavior of the ports in the node.
+ *
+ * Assumes that the @c toNode of all @a fromCables and the @a fromNode of all @a toCables are the same.
+ */
+bool VuoCompilerGraph::mustTransmit(const set<VuoCompilerCable *> &fromCables, const set<VuoCompilerCable *> &toCables)
+{
+	bool fromCablesMustTransmit = false;
+	for (set<VuoCompilerCable *>::const_iterator i = fromCables.begin(); i != fromCables.end(); ++i)
+	{
+		VuoPort *inputPort = (*i)->getBase()->getToPort();
+		if (inputPort->getClass()->getEventBlocking() == VuoPortClass::EventBlocking_None)
+		{
+			fromCablesMustTransmit = true;
+			break;
+		}
+	}
+
+	bool toCablesMayTransmit = false;
+	for (set<VuoCompilerCable *>::const_iterator i = toCables.begin(); i != toCables.end(); ++i)
+	{
+		VuoPort *outputPort = (*i)->getBase()->getFromPort();
+		if (outputPort->getClass()->getPortType() != VuoPortClass::triggerPort)
+		{
+			toCablesMayTransmit = true;
+			break;
+		}
+	}
+
+	return fromCablesMustTransmit && toCablesMayTransmit;
 }
 
 /**
@@ -565,7 +760,7 @@ bool VuoCompilerGraph::mayTransmitEventlessly(VuoCompilerNode *node)
 }
 
 /**
- * Returns all trigger ports, including those for published input ports (including vuoSimultaneous).
+ * Returns all trigger ports, including those for published input ports.
  */
 vector<VuoCompilerTriggerPort *> VuoCompilerGraph::getTriggerPorts(void)
 {
@@ -612,11 +807,20 @@ size_t VuoCompilerGraph::getNumVerticesWithFromNode(VuoCompilerNode *fromNode, V
  */
 size_t VuoCompilerGraph::getNumVerticesWithToNode(VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger)
 {
-	int numVertices = 0;
+	map<VuoCompilerTriggerPort *, map<VuoCompilerNode *, size_t> >::iterator triggerIter = numVerticesWithToNode.find(trigger);
+	if (triggerIter != numVerticesWithToNode.end())
+	{
+		map<VuoCompilerNode *, size_t>::iterator nodeIter = triggerIter->second.find(toNode);
+		if (nodeIter != triggerIter->second.end())
+			return nodeIter->second;
+	}
+
+	size_t numVertices = 0;
 	for (vector<Vertex>::iterator i = vertices[trigger].begin(); i != vertices[trigger].end(); ++i)
 		if ((*i).toNode == toNode)
 			++numVertices;
 
+	numVerticesWithToNode[trigger][toNode] = numVertices;
 	return numVertices;
 }
 
@@ -736,6 +940,10 @@ vector<VuoCompilerNode *> VuoCompilerGraph::getNodesImmediatelyDownstream(VuoCom
  */
 vector<VuoCompilerNode *> VuoCompilerGraph::getNodesDownstream(VuoCompilerTriggerPort *trigger)
 {
+	map<VuoCompilerTriggerPort *, vector<VuoCompilerNode *> >::iterator triggerIter = downstreamNodesForTrigger.find(trigger);
+	if (triggerIter != downstreamNodesForTrigger.end())
+		return triggerIter->second;
+
 	set<VuoCompilerNode *> downstreamNodes;
 	vector<VuoCompilerNode *> immediatelyDownstreamNodes = getNodesImmediatelyDownstream(trigger);
 	downstreamNodes.insert(immediatelyDownstreamNodes.begin(), immediatelyDownstreamNodes.end());
@@ -746,7 +954,9 @@ vector<VuoCompilerNode *> VuoCompilerGraph::getNodesDownstream(VuoCompilerTrigge
 		downstreamNodes.insert(furtherDownstreamNodes.begin(), furtherDownstreamNodes.end());
 	}
 
-	return vector<VuoCompilerNode *>(downstreamNodes.begin(), downstreamNodes.end());
+	vector<VuoCompilerNode *> downstreamNodesVector(downstreamNodes.begin(), downstreamNodes.end());
+	downstreamNodesForTrigger[trigger] = downstreamNodesVector;
+	return downstreamNodesVector;
 }
 
 /**
@@ -754,6 +964,14 @@ vector<VuoCompilerNode *> VuoCompilerGraph::getNodesDownstream(VuoCompilerTrigge
  */
 vector<VuoCompilerNode *> VuoCompilerGraph::getNodesDownstream(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
 {
+	map<VuoCompilerTriggerPort *, map<VuoCompilerNode *, vector<VuoCompilerNode *> > >::iterator triggerIter = downstreamNodesForNode.find(trigger);
+	if (triggerIter != downstreamNodesForNode.end())
+	{
+		map<VuoCompilerNode *, vector<VuoCompilerNode *> >::iterator nodeIter = triggerIter->second.find(node);
+		if (nodeIter != triggerIter->second.end())
+			return nodeIter->second;
+	}
+
 	set<Vertex> verticesWithDownstreamNodes;
 	for (vector<Vertex>::iterator i = vertices[trigger].begin(); i != vertices[trigger].end(); ++i)
 	{
@@ -770,7 +988,9 @@ vector<VuoCompilerNode *> VuoCompilerGraph::getNodesDownstream(VuoCompilerNode *
 	for (set<Vertex>::iterator i = verticesWithDownstreamNodes.begin(); i != verticesWithDownstreamNodes.end(); ++i)
 		downstreamNodes.insert((*i).toNode);
 
-	return vector<VuoCompilerNode *>(downstreamNodes.begin(), downstreamNodes.end());
+	vector<VuoCompilerNode *> downstreamNodesVector(downstreamNodes.begin(), downstreamNodes.end());
+	downstreamNodesForNode[trigger][node] = downstreamNodesVector;
+	return downstreamNodesVector;
 }
 
 /**
@@ -784,7 +1004,7 @@ vector<VuoCompilerNode *> VuoCompilerGraph::getNodesEventlesslyDownstream(VuoCom
 
 /**
  * Returns the outgoing cables from @a outputPort, including any that were created by this class (but not added to the
- * composition) for the @c vuoSimultaneous port.
+ * composition) for published ports.
  */
 set<VuoCompilerCable *> VuoCompilerGraph::getCablesImmediatelyDownstream(VuoCompilerPort *outputPort)
 {
@@ -813,11 +1033,92 @@ set<VuoCompilerCable *> VuoCompilerGraph::getCablesImmediatelyEventlesslyDownstr
 {
 	set<VuoCompilerCable *> downstreamCables;
 
-	vector<VuoCable *> downstreamCablesList = outputPort->getBase()->getConnectedCables(false);
+	vector<VuoCable *> downstreamCablesList = outputPort->getBase()->getConnectedCables();
 	for (vector<VuoCable *>::iterator i = downstreamCablesList.begin(); i != downstreamCablesList.end(); ++i)
-		downstreamCables.insert( (*i)->getCompiler() );
+		if (! (*i)->isPublished())
+			downstreamCables.insert( (*i)->getCompiler() );
 
 	return downstreamCables;
+}
+
+/**
+ * Returns the type of event blocking for the published input ports, based on whether an event from the
+ * published input trigger always (none), never (wall), or sometimes (door) reaches the published output ports.
+ * If there are no event-only or data-and-event published output ports to reach, returns "none".
+ *
+ * For certain compositions that contain nodes with door input ports, the analysis is imprecise.
+ * For example, if both the False Option and True Option outputs of a `Select Output` node have cables
+ * to published output ports, then all events into the node will reach the published output ports.
+ * But this function can't reason about the implementation of the node. It can only reason about the
+ * fact that the node's input ports are marked as doors. So it returns "door" instead of "none".
+ */
+VuoPortClass::EventBlocking VuoCompilerGraph::getPublishedInputEventBlocking(void)
+{
+	size_t publishedOutputCount = publishedOutputNode->getBase()->getInputPorts().size() - VuoNodeClass::unreservedInputPortStartIndex;
+	size_t publishedOutputTriggerCount = getPublishedOutputTriggers().size();
+	if (publishedOutputCount - publishedOutputTriggerCount == 0)
+		return VuoPortClass::EventBlocking_None;
+
+	bool mayReachOutput = false;
+	for (vector<Vertex>::iterator i = vertices[publishedInputTrigger].begin(); i != vertices[publishedInputTrigger].end(); ++i)
+	{
+		Vertex vertex = *i;
+		if (vertex.toNode == publishedOutputNode && ! vertex.cableBundle.empty())
+		{
+			mayReachOutput = true;
+			break;
+		}
+	}
+
+	bool mustReachOutput = false;
+	for (vector<Vertex>::iterator i = verticesNonBlocking.begin(); i != verticesNonBlocking.end(); ++i)
+	{
+		Vertex vertex = *i;
+		if (vertex.toNode == publishedOutputNode)
+		{
+			mustReachOutput = true;
+			break;
+		}
+	}
+
+	if (mustReachOutput)
+		return VuoPortClass::EventBlocking_None;
+	else if (mayReachOutput)
+		return VuoPortClass::EventBlocking_Door;
+	else
+		return VuoPortClass::EventBlocking_Wall;
+}
+
+/**
+ * Returns the name of each published output port that may be reached by an event from a trigger other than the
+ * published input trigger.
+ */
+set<string> VuoCompilerGraph::getPublishedOutputTriggers(void)
+{
+	set<string> publishedOutputPortNames;
+
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
+	{
+		VuoCompilerTriggerPort *trigger = *i;
+		if (trigger == publishedInputTrigger)
+			continue;
+
+		for (vector<Vertex>::iterator j = vertices[trigger].begin(); j != vertices[trigger].end(); ++j)
+		{
+			Vertex vertex = *j;
+			if (vertex.toNode == publishedOutputNode)
+			{
+				for (set<VuoCompilerCable *>::iterator j = vertex.cableBundle.begin(); j != vertex.cableBundle.end(); ++j)
+				{
+					VuoCompilerCable *cable = *j;
+					string toPortName = cable->getBase()->getToPort()->getClass()->getName();
+					publishedOutputPortNames.insert(toPortName);
+				}
+			}
+		}
+	}
+
+	return publishedOutputPortNames;
 }
 
 /**
@@ -832,11 +1133,73 @@ bool VuoCompilerGraph::isRepeatedInFeedbackLoop(VuoCompilerNode *node, VuoCompil
 /**
  * Returns true if @a trigger has a gather (node with multiple incoming vertices) somewhere downstream.
  */
-bool VuoCompilerGraph::hasGatherDownstream(VuoCompilerTriggerPort *trigger)
+bool VuoCompilerGraph::hasGatherDownstream(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
 {
-	for (vector<Vertex>::iterator i = vertices[trigger].begin(); i != vertices[trigger].end(); ++i)
-		if (getNumVerticesWithToNode((*i).toNode, trigger) > 1)
+	vector<VuoCompilerNode *> downstreamNodes = getNodesDownstream(node, trigger);
+	for (vector<VuoCompilerNode *>::iterator i = downstreamNodes.begin(); i != downstreamNodes.end(); ++i)
+		if (getNumVerticesWithToNode(*i, trigger) > 1)
 			return true;
+
+	return false;
+}
+
+/**
+ * Returns true if there's a scatter originating at @a trigger, a gather downstream of the scatter,
+ * and another trigger's path overlapping some nodes downstream of the scatter and upstream of a gather.
+ */
+bool VuoCompilerGraph::hasGatherOverlappedByAnotherTrigger(VuoCompilerTriggerPort *trigger)
+{
+	bool isScatterAtTrigger = getNodesImmediatelyDownstream(trigger).size() > 1;
+	if (isScatterAtTrigger)
+	{
+		vector<VuoCompilerNode *> downstreamNodes = getNodesDownstream(trigger);
+		return hasGatherOverlappedByAnotherTrigger(downstreamNodes, trigger);
+	}
+
+	return false;
+}
+
+/**
+ * Returns true if there's a scatter originating at @a node for events from @a trigger, a gather downstream of the scatter,
+ * and another trigger's path overlapping some nodes downstream of the scatter and upstream of a gather.
+ */
+bool VuoCompilerGraph::hasGatherOverlappedByAnotherTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
+{
+	bool isScatterAtNode = getNodesImmediatelyDownstream(node, trigger).size() > 1;
+	if (isScatterAtNode)
+	{
+		vector<VuoCompilerNode *> downstreamNodes = getNodesDownstream(node, trigger);
+		return hasGatherOverlappedByAnotherTrigger(downstreamNodes, trigger);
+	}
+
+	return false;
+}
+
+/**
+ * Returns true if there's a gather downstream of any of @a downstreamNodes for events from @a trigger,
+ * and another trigger's path overlapping some nodes including or downstream of @a downstreamNodes and upstream of a gather.
+ */
+bool VuoCompilerGraph::hasGatherOverlappedByAnotherTrigger(const vector<VuoCompilerNode *> &downstreamNodes, VuoCompilerTriggerPort *trigger)
+{
+	for (vector<VuoCompilerNode *>::const_iterator i = downstreamNodes.begin(); i != downstreamNodes.end(); ++i)
+	{
+		VuoCompilerNode *downstreamNode = *i;
+
+		bool isGatherDownstreamOfNode = hasGatherDownstream(downstreamNode, trigger);
+		if (isGatherDownstreamOfNode)
+		{
+			for (vector<VuoCompilerTriggerPort *>::iterator j = triggers.begin(); j != triggers.end(); ++j)
+			{
+				VuoCompilerTriggerPort *otherTrigger = *j;
+				if (otherTrigger == trigger)
+					continue;
+
+				vector<VuoCompilerNode *> nodesDownstreamOfOtherTrigger = getNodesDownstream(otherTrigger);
+				if (find(nodesDownstreamOfOtherTrigger.begin(), nodesDownstreamOfOtherTrigger.end(), downstreamNode) != nodesDownstreamOfOtherTrigger.end())
+					return true;
+			}
+		}
+	}
 
 	return false;
 }

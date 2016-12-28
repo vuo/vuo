@@ -9,7 +9,6 @@
 
 #include "VuoCompilerOutputEventPort.hh"
 
-
 /**
  * Creates a passive (non-trigger) output port based on @c portClass.
  */

@@ -138,5 +138,18 @@
 		"outputPortValues" : {
 			"value" : 0.213632
 		}
-	}
+	},
+
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"position" : {"x":7.2,"y":7.2},
+			"gradientNoise" : "simplex",
+			"scaledStart" : 0,
+			"scaledEnd" : 1
+		},
+		"outputPortValues" : {
+			"value" : 0.606816
+		}
+	},
 ]}

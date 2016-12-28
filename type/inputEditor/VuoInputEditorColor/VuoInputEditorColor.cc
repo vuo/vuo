@@ -42,7 +42,8 @@ json_object *VuoInputEditorColor::show(QPoint portLeftCenter, json_object *origi
 	dialog.setOption(QColorDialog::ShowAlphaChannel);
 
 	// Position the right center of the dialog at the left center of the port.
-	QPoint dialogTopLeft = portLeftCenter - QPoint(dialog.childrenRect().width(), dialog.childrenRect().height()/2.);
+	// Estimate the dialog size, since QColorDialog doesn't report its actual size.
+	QPoint dialogTopLeft = portLeftCenter - QPoint(250, 400/2) /*QPoint(dialog.childrenRect().width(), dialog.childrenRect().height()/2.)*/;
 	dialog.move(dialogTopLeft);
 
 	connect(&dialog, SIGNAL(currentColorChanged(const QColor &)), this, SLOT(currentColorChanged(const QColor &)));

@@ -25,10 +25,6 @@ class TestVuoColor : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testStringConversion_data()
 	{
@@ -38,13 +34,13 @@ private slots:
 
 		VuoColor transparentBlack = VuoColor_makeWithRGBA(0,0,0,0);
 		QTest::newRow("emptystring")            << ""                                                           << transparentBlack << false;
-		QTest::newRow("transparent black")      << QUOTE({"r":0.000000,"g":0.000000,"b":0.000000,"a":0.000000}) << transparentBlack << true;
+		QTest::newRow("transparent black")      << QUOTE({"r":0,"g":0,"b":0,"a":0})								<< transparentBlack << true;
 		QTest::newRow("transparent black text") << QUOTE("0,0,0,0")                                             << transparentBlack << false;
 		QTest::newRow("transparent black hex4") << QUOTE("#0000")                                               << transparentBlack << false;
 		QTest::newRow("transparent black hex8") << QUOTE("#00000000")                                           << transparentBlack << false;
 
 		VuoColor opaqueWhite = VuoColor_makeWithRGBA(1,1,1,1);
-		QTest::newRow("opaque white")           << QUOTE({"r":1.000000,"g":1.000000,"b":1.000000,"a":1.000000}) << opaqueWhite      << true;
+		QTest::newRow("opaque white")           << QUOTE({"r":1,"g":1,"b":1,"a":1})								<< opaqueWhite      << true;
 		QTest::newRow("opaque white text3")     << QUOTE("1,1,1")                                               << opaqueWhite      << false;
 		QTest::newRow("opaque white text4")     << QUOTE("1,1,1,1")                                             << opaqueWhite      << false;
 		QTest::newRow("opaque white hex3")      << QUOTE("#fff")                                                << opaqueWhite      << false;
@@ -55,10 +51,9 @@ private slots:
 		VuoColor transparentWhite = VuoColor_makeWithRGBA(1,1,1,0);
 		QTest::newRow("invalid white hex8")     << QUOTE("#ffffffgg")                                           << transparentWhite << false;
 
-		VuoColor aquamarine = VuoColor_makeWithRGBA(.333333, 1, .666667, .333333);
-		QTest::newRow("aquamarine")             << QUOTE({"r":0.333333,"g":1.000000,"b":0.666667,"a":0.333333}) << aquamarine       << true;
-		QTest::newRow("aquamarine text")        << QUOTE(".333333,1,.666667,.333333")                           << aquamarine       << false;
-		QTest::newRow("aquamarine hex8")        << QUOTE("#55ffaa55")                                           << aquamarine       << false;
+		VuoColor aquamarine = VuoColor_makeWithRGBA(.5, 1, .75, .5);
+		QTest::newRow("aquamarine")             << QUOTE({"r":0.5,"g":1,"b":0.75,"a":0.5})						<< aquamarine       << true;
+		QTest::newRow("aquamarine text")        << QUOTE(".5,1,.75,.5")											<< aquamarine       << false;
 	}
 	void testStringConversion()
 	{

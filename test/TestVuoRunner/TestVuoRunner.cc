@@ -19,6 +19,9 @@
 #include "VuoRunner.hh"
 #include "VuoFileUtilities.hh"
 
+extern "C" {
+#include "VuoGlContext.h"
+}
 
 /**
  * Outputs to file the telemetry data received by some tests.
@@ -58,6 +61,8 @@ public:
 		QFAIL("lostContactWithComposition");
 	}
 };
+
+#define STRINGIFY(...) #__VA_ARGS__
 
 
 /**
@@ -266,6 +271,43 @@ private slots:
 		CGLUnlockContext(rootContext);
 		CGLReleaseContext(rootContext);
 	}
+
+	void testPortDetails(void)
+	{
+		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable("PublishedPorts", ".");
+		QVERIFY(runner);
+
+		runner->start();
+
+		// A port with no suggestions.
+		{
+			VuoRunner::Port *timePort = runner->getPublishedInputPortWithName("Time");
+			QCOMPARE(timePort->getName().c_str(), "Time");
+			QCOMPARE(timePort->getType().c_str(), "VuoReal");
+			QCOMPARE(json_object_get_string(timePort->getDetails()), STRINGIFY({ "default": 0.0 }));
+		}
+
+		// A port with standard suggestions.
+		{
+			VuoRunner::Port *phasePort = runner->getPublishedInputPortWithName("Phase");
+			QCOMPARE(phasePort->getName().c_str(), "Phase");
+			QCOMPARE(phasePort->getType().c_str(), "VuoReal");
+			QCOMPARE(json_object_get_string(phasePort->getDetails()), STRINGIFY({ "suggestedMin": 0, "suggestedMax": 1, "default": 0.0, "suggestedStep": 0.1 }));
+		}
+
+		// A port with an enum menu.
+		{
+			VuoRunner::Port *wavePort = runner->getPublishedInputPortWithName("Wave");
+			QCOMPARE(wavePort->getName().c_str(), "Wave");
+			QCOMPARE(wavePort->getType().c_str(), "VuoWave");
+			QCOMPARE(json_object_get_string(wavePort->getDetails()), STRINGIFY({ "default": "sine", "menuItems": [ { "value": "sine", "name": "Sine" }, { "value": "triangle", "name": "Triangle" }, { "value": "sawtooth", "name": "Sawtooth" } ] }));
+		}
+
+		runner->stop();
+
+		delete runner;
+	}
+
 };
 
 QTEST_APPLESS_MAIN(TestVuoRunner)

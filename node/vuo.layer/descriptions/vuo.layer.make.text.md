@@ -4,4 +4,4 @@ This node makes it easy to create sharp text — it always renders text at pixel
 
    - `Text` — The text to render.
    - `Font` — The font used to render the text.  See also the `Make Font` node.
-   - `Center` — The center point of the text, in Vuo coordinates.  The center point is snapped so that it aligns exactly with a pixel.
+   - `Center` — The center point of the text, in Vuo Coordinates.  The center point is snapped so that it aligns exactly with a pixel.

@@ -14,7 +14,18 @@ extern "C"
 
 #include "node.h"
 
-VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, VuoText zExp, VuoInteger uSubdivisions, VuoInteger vSubdivisions, bool closeU, VuoReal uMin, VuoReal uMax, bool closeV, VuoReal vMin, VuoReal vMax);
+VuoMesh VuoMeshParametric_generate(VuoReal time,
+	VuoText xExp,
+	VuoText yExp,
+	VuoText zExp,
+	VuoInteger uSubdivisions,
+	VuoInteger vSubdivisions,
+	bool closeU,
+	VuoReal uMin,
+	VuoReal uMax,
+	bool closeV,
+	VuoReal vMin,
+	VuoReal vMax);
 
 #ifdef __cplusplus
 }

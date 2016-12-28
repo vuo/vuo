@@ -12,8 +12,8 @@
 
 VuoModuleMetadata({
 					  "title" : "Smooth with Spring",
-					  "keywords" : [ "bounce", "oscillate", "rebound", "ricochet", "wobble", "harmonic", "sine", "sinusoidial" ],
-					  "version" : "2.0.0",
+					  "keywords" : [ "bounce", "elastic", "oscillate", "rebound", "ricochet", "wobble", "harmonic", "sine", "sinusoidial" ],
+					  "version" : "2.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]
@@ -62,8 +62,11 @@ void nodeInstanceEvent
 	VuoInputEvent({"eventBlocking":"wall","data":"period"}) periodEvent,
 	VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) damping,
 	VuoInputEvent({"eventBlocking":"wall","data":"damping"}) dampingEvent,
+
 	VuoOutputData(VuoGenericType1) position,
 	VuoOutputEvent({"data":"position"}) positionEvent,
+	VuoOutputEvent() reachedTarget,
+
 	VuoInstanceData(struct nodeInstanceData *) ctx
 )
 {
@@ -97,7 +100,10 @@ void nodeInstanceEvent
 		(*ctx)->currentPosition = VuoGenericType1_spring(timeSinceStart, (*ctx)->startPosition, setTarget, period, clampedDamping);
 
 		if (timeSinceStart > 2.*period/clampedDamping)
+		{
 			(*ctx)->moving = false;
+			*reachedTarget = true;
+		}
 	}
 
 	*position = (*ctx)->currentPosition;

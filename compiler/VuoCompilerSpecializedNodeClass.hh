@@ -11,7 +11,12 @@
 #define VUOCOMPILERSPECIALIZEDNODECLASS_H
 
 #include "VuoCompilerNodeClass.hh"
-#include "VuoGenericType.hh"
+
+class VuoCompiler;
+class VuoCompilerInstanceDataClass;
+class VuoCompilerNode;
+class VuoCompilerNodeClass;
+class VuoNode;
 
 /**
  * A specialization of a generic node class.
@@ -57,11 +62,18 @@ private:
 	Function * getCallbackStartFunction(void);
 	Function * getCallbackUpdateFunction(void);
 	Function * getCallbackStopFunction(void);
+	Function * getCompositionContextInitFunction(void);
+	Function * getCompositionContextFiniFunction(void);
+	Function * getCompositionSerializeFunction(void);
+	Function * getCompositionUnserializeFunction(void);
+	Function * getTriggerWorkerFunction(string portIdentifier);
+	vector<VuoCompilerTriggerDescription *> getTriggerDescriptions(void);
 	VuoCompilerInstanceDataClass * getInstanceDataClass(void);
 	string getDoxygenDocumentation(void);
 	string getDefaultSpecializedTypeName(string genericTypeName);
 	vector<string> getAutomaticKeywords(void);
 	set<string> getDependencies(void);
+	bool isStateful(void);
 
 protected:
 	map<string, string> specializedForGenericTypeName;  ///< The type name that replaces each generic type name in the original generic node class
@@ -75,6 +87,7 @@ protected:
 
 public:
 	void updateBackingNodeClass(VuoNode *nodeToBack, VuoCompiler *compiler);
+	virtual VuoCompilerNode * createReplacementBackingNode(VuoNode *nodeToBack, string backingNodeClassName, VuoCompiler *compiler);
 	bool isFullySpecialized(void);
 	virtual VuoType * getOriginalPortType(VuoPortClass *portClass);
 	virtual string getOriginalGenericNodeClassName(void);

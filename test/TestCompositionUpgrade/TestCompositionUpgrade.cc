@@ -12,6 +12,7 @@
 
 #include "TestCompositionExecution.hh"
 
+#include "VuoCompilerException.hh"
 #include "VuoModuleUpgradeManager.hh"
 #include "VuoRendererComposition.hh"
 
@@ -142,8 +143,9 @@ private slots:
 		{
 			QVERIFY(i < ports1.size());
 			QVERIFY(i < ports2.size());
-			QCOMPARE(QString::fromStdString(ports1[i]->getName()), QString::fromStdString(ports2[i]->getName()));
-			QCOMPARE(ports1[i]->getType(), ports2[i]->getType());
+			QCOMPARE(QString::fromStdString(ports1[i]->getClass()->getName()), QString::fromStdString(ports2[i]->getClass()->getName()));
+			QCOMPARE(static_cast<VuoCompilerEventPortClass *>(ports1[i]->getClass()->getCompiler())->getDataVuoType(),
+					 static_cast<VuoCompilerEventPortClass *>(ports2[i]->getClass()->getCompiler())->getDataVuoType());
 		}
 	}
 
@@ -248,9 +250,9 @@ private slots:
 			compiler->compileComposition(compilerComposition, compiledCompositionPath);
 			compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		}
-		catch (std::runtime_error e)
+		catch (const VuoCompilerException &e)
 		{
-			if (VuoStringUtilities::beginsWith(e.what(), "This composition contains nodes that are neither built in to this version of Vuo nor installed on this computer"))
+			if (e.getErrors().size() == 1 && e.getErrors().at(0).getSummary() == "Node not installed")
 			{
 				bool compilationFailureExpected = compilerComposition->getBase()->getName().find("TestCompositionUpgrade:ExpectCompilationToFailDueToObsoleteNodes") != std::string::npos;
 				if (!compilationFailureExpected)

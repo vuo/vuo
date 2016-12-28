@@ -8,8 +8,11 @@
  */
 
 #include "VuoComposition.hh"
+#include "VuoCable.hh"
+#include "VuoNode.hh"
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
+#include "VuoPublishedPort.hh"
 
 /**
  * Creates an empty composition.
@@ -142,64 +145,6 @@ set<VuoCable *> VuoComposition::getCables(void)
 }
 
 /**
- * Adds a published input cable to the composition.
- *
- * The caller is responsible for adding the cable's "To" node to the composition.
- */
-void VuoComposition::addPublishedInputCable(VuoCable *cable)
-{
-	publishedInputCables.insert(cable);
-}
-
-/**
- * Disconnects and removes a published input cable from the composition.
- */
-void VuoComposition::removePublishedInputCable(VuoCable *cable)
-{
-	cable->setFrom(NULL, NULL);
-	cable->setTo(NULL, NULL);
-
-	publishedInputCables.erase(cable);
-}
-
-/**
- * Returns the psuedo-cables attached to the output ports of the published input pseudo-node, if any.
- */
-set<VuoCable *> VuoComposition::getPublishedInputCables(void)
-{
-	return publishedInputCables;
-}
-
-/**
- * Adds a published output cable to the composition.
- *
- * The caller is responsible for adding the cable's "From" node to the composition.
- */
-void VuoComposition::addPublishedOutputCable(VuoCable *cable)
-{
-	publishedOutputCables.insert(cable);
-}
-
-/**
- * Disconnects and removes a published output cable from the composition.
- */
-void VuoComposition::removePublishedOutputCable(VuoCable *cable)
-{
-	cable->setFrom(NULL, NULL);
-	cable->setTo(NULL, NULL);
-
-	publishedOutputCables.erase(cable);
-}
-
-/**
- * Returns the psuedo-cables attached to the input ports of the published output pseudo-node, if any.
- */
-set<VuoCable *> VuoComposition::getPublishedOutputCables(void)
-{
-	return publishedOutputCables;
-}
-
-/**
  * Adds a published port to this composition's list of published input ports at the given index.
  */
 void VuoComposition::addPublishedInputPort(VuoPublishedPort *port, int index)
@@ -272,82 +217,10 @@ VuoPublishedPort * VuoComposition::getPublishedPortWithName(string name, bool is
 	for (vector<VuoPublishedPort *>::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
 	{
 		VuoPublishedPort *port = *i;
-		if (port->getName() == name)
+		if (port->getClass()->getName() == name)
 			return port;
 	}
 	return NULL;
-}
-
-/**
- * Returns the set of published input ports connected to the given port.
- */
-set<VuoPublishedPort *> VuoComposition::getPublishedInputPortsConnectedToPort(VuoPort *port)
-{
-	set<VuoPublishedPort *> publishedPortsConnectedToPort;
-	for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
-	{
-		VuoPublishedPort *publishedPort = *i;
-		set<VuoPort *> connectedPorts = publishedPort->getConnectedPorts();
-		if (connectedPorts.find(port) != connectedPorts.end())
-			publishedPortsConnectedToPort.insert(publishedPort);
-	}
-	return publishedPortsConnectedToPort;
-}
-
-/**
- * Returns the set of published output ports connected to the given port.
- */
-set<VuoPublishedPort *> VuoComposition::getPublishedOutputPortsConnectedToPort(VuoPort *port)
-{
-	set<VuoPublishedPort *> publishedPortsConnectedToPort;
-	for (vector<VuoPublishedPort *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
-	{
-		VuoPublishedPort *publishedPort = *i;
-		set<VuoPort *> connectedPorts = publishedPort->getConnectedPorts();
-		if (connectedPorts.find(port) != connectedPorts.end())
-			publishedPortsConnectedToPort.insert(publishedPort);
-	}
-	return publishedPortsConnectedToPort;
-}
-
-/**
- * Returns the set of published input ports connected to the node, and the port on the node to which each is connected.
- */
-set<pair<VuoPublishedPort *, VuoPort *> > VuoComposition::getPublishedInputPortsConnectedToNode(VuoNode *node)
-{
-	set<pair<VuoPublishedPort *, VuoPort *> > publishedPortsConnectedToNode;
-	vector<VuoPort *> ports = node->getInputPorts();
-	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
-	{
-		VuoPort *port = *i;
-		set<VuoPublishedPort *> publishedPorts = getPublishedInputPortsConnectedToPort(port);
-		for (set<VuoPublishedPort *>::iterator j = publishedPorts.begin(); j != publishedPorts.end(); ++j)
-		{
-			VuoPublishedPort *publishedPort = *j;
-			publishedPortsConnectedToNode.insert(make_pair(publishedPort, port));
-		}
-	}
-	return publishedPortsConnectedToNode;
-}
-
-/**
- * Returns the set of published output ports connected to the node, and the port on the node to which each is connected.
- */
-set<pair<VuoPublishedPort *, VuoPort *> > VuoComposition::getPublishedOutputPortsConnectedToNode(VuoNode *node)
-{
-	set<pair<VuoPublishedPort *, VuoPort *> > publishedPortsConnectedToNode;
-	vector<VuoPort *> ports = node->getOutputPorts();
-	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
-	{
-		VuoPort *port = *i;
-		set<VuoPublishedPort *> publishedPorts = getPublishedOutputPortsConnectedToPort(port);
-		for (set<VuoPublishedPort *>::iterator j = publishedPorts.begin(); j != publishedPorts.end(); ++j)
-		{
-			VuoPublishedPort *publishedPort = *j;
-			publishedPortsConnectedToNode.insert(make_pair(publishedPort, port));
-		}
-	}
-	return publishedPortsConnectedToNode;
 }
 
 /**
@@ -372,11 +245,7 @@ void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
 	removeNode(oldNode);
 	addNode(newNode);
 
-	set<VuoCable *> publishedAndInternalCables;
-	publishedAndInternalCables.insert(cables.begin(), cables.end());
-	publishedAndInternalCables.insert(publishedInputCables.begin(), publishedInputCables.end());
-	publishedAndInternalCables.insert(publishedOutputCables.begin(), publishedOutputCables.end());
-	for (set<VuoCable *>::iterator i = publishedAndInternalCables.begin(); i != publishedAndInternalCables.end(); ++i)
+	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
 	{
 		VuoCable *cable = *i;
 		if (cable->getFromNode() == oldNode)
@@ -392,22 +261,6 @@ void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
 			cable->setTo(newNode, newPort);
 		}
 	}
-
-	set<pair<VuoPublishedPort *, VuoPort *> > publishedPorts;
-	set<pair<VuoPublishedPort *, VuoPort *> > publishedInputPortsForNode = getPublishedInputPortsConnectedToNode(oldNode);
-	set<pair<VuoPublishedPort *, VuoPort *> > publishedOutputPortsForNode = getPublishedOutputPortsConnectedToNode(oldNode);
-	publishedPorts.insert(publishedInputPortsForNode.begin(), publishedInputPortsForNode.end());
-	publishedPorts.insert(publishedOutputPortsForNode.begin(), publishedOutputPortsForNode.end());
-	for (set<pair<VuoPublishedPort *, VuoPort *> >::iterator i = publishedPorts.begin(); i != publishedPorts.end(); ++i)
-	{
-		VuoPublishedPort *publishedPort = i->first;
-		VuoPort *oldPort = i->second;
-		VuoPort *newPort = publishedPort->getInput() ?
-							   newNode->getInputPortWithName( oldPort->getClass()->getName() ) :
-							   newNode->getOutputPortWithName( oldPort->getClass()->getName() );
-		publishedPort->removeConnectedPort(oldPort);
-		publishedPort->addConnectedPort(newPort);
-	}
 }
 
 /**
@@ -422,7 +275,7 @@ void VuoComposition::replaceNode(VuoNode *oldNode, VuoNode *newNode)
 void VuoComposition::parseHeader(const string &compositionAsString, string &name, string &description, string &copyright)
 {
 	__block int charNum = 0;
-	string (^getNextLine)() = ^{
+	string (^getNextLine)(void) = ^{
 			string line;
 			while (true)
 			{

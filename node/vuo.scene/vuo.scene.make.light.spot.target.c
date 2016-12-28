@@ -21,7 +21,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) color,
-		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) brightness,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0., "suggestedMax":2., "suggestedStep":0.1}) brightness,
 		VuoInputData(VuoPoint3d, {"default":{"x":0.,"y":0.,"z":1.}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) position,
 		VuoInputData(VuoPoint3d, {"default":{"x":0.,"y":0.,"z":-1.}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) target,
 		VuoInputData(VuoReal, {"default":30., "suggestedMin":0., "suggestedMax":180., "suggestedStep":15.}) cone,

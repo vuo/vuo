@@ -41,18 +41,19 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec4 channel;
 	uniform sampler2D heightmap;
 
-	float sum(vec4 invec)
+	float sum(vec3 invec)
 	{
-		return invec.x + invec.y + invec.z + invec.w;
+		return invec.x + invec.y + invec.z;
 	}
 
 	vec3 deform(vec3 position)
 	{
 		// position is in world space, so also translate the normal into world
-		vec3 nrm = mat4to3(modelviewMatrix) * normal.xyz;
+		vec3 nrm = normalize( mat4to3(modelviewMatrix) * normal.xyz );
 
 		vec4 pixel = texture2D(heightmap, textureCoordinate.xy);
-		float grayscale = sum(pixel * channel) / sum(channel);
+		float mask_sum = sum(channel.rgb);
+		float grayscale = mask_sum > 0 ? sum((pixel.rgb * pixel.a) * channel.rgb) / mask_sum : pixel.a / 1.;
 
 		vec3 transformed = position + (nrm * grayscale * amount);
 
@@ -109,18 +110,11 @@ void nodeInstanceEvent
 										channel == VuoThresholdType_Luminance || channel == VuoThresholdType_Blue ? 1 : 0,
 										channel == VuoThresholdType_Luminance || channel == VuoThresholdType_Alpha ? 1 : 0 );
 
-	VuoImage copy = VuoImage_makeCopy(image, false);
-	VuoRetain(copy);
-
-	VuoImage_setWrapMode(copy, VuoImageWrapMode_ClampEdge);
-
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "channel", mask);
 	VuoShader_setUniform_VuoReal((*instance)->shader, "amount", distance);
-	VuoShader_setUniform_VuoImage((*instance)->shader, "heightmap", copy);
+	VuoShader_setUniform_VuoImage((*instance)->shader, "heightmap", image);
 
 	*deformedObject = VuoSceneObjectRenderer_draw((*instance)->sceneObjectRenderer, object);
-
-	VuoRelease(copy);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

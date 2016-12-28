@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Copy Layer",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "node": {
 						  "exampleCompositions" : [ ]
 					 }
@@ -70,10 +70,11 @@ void nodeEvent
 
 		VuoLayer o;
 		o.sceneObject = layer.sceneObject;
-		o.sceneObject.transform = VuoTransform_makeEuler(
-									VuoPoint3d_make(translation.x, translation.y, 0),
-									VuoPoint3d_make(0, 0, rotation * DEG2RAD),
-									VuoPoint3d_make(scale.x, scale.y, 1));
+		o.sceneObject.transform = VuoTransform_composite(o.sceneObject.transform,
+														 VuoTransform_makeEuler(
+															 VuoPoint3d_make(translation.x, translation.y, 0),
+															 VuoPoint3d_make(0, 0, rotation * DEG2RAD),
+															 VuoPoint3d_make(scale.x, scale.y, 1)));
 
 		VuoListAppendValue_VuoLayer(layers, o);
 	}

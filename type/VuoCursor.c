@@ -120,3 +120,11 @@ char * VuoCursor_getSummary(const VuoCursor value)
 
 	return strdup(valueAsString);
 }
+
+/**
+ * Returns true if the cursor is anything other than `none`.
+ */
+bool VuoCursor_isPopulated(const VuoCursor value)
+{
+	return (value != VuoCursor_None);
+}

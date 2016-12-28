@@ -38,10 +38,13 @@ char * VuoText_getSummary(const VuoText value);
 VuoText VuoText_make(const char * unquotedString);
 VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength);
 VuoText VuoText_makeFromCFString(const void *cfString);
-VuoText VuoText_makeFromData(unsigned char *data, unsigned long size);
+VuoText VuoText_makeFromData(const unsigned char *data, const unsigned long size);
 size_t VuoText_length(const VuoText text);
+
+#define VuoText_SUPPORTS_COMPARISON
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);
 bool VuoText_isLessThan(const VuoText text1, const VuoText text2);
+
 size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring, const size_t startIndex);
 size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring);
 VuoText VuoText_substring(const VuoText string, int startIndex, int length);

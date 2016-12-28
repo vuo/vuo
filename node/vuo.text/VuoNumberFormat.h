@@ -37,6 +37,8 @@ VuoNumberFormat VuoNumberFormat_makeFromJson(struct json_object *js);
 struct json_object *VuoNumberFormat_getJson(const VuoNumberFormat value);
 VuoList_VuoNumberFormat VuoNumberFormat_getAllowedValues(void);
 char *VuoNumberFormat_getSummary(const VuoNumberFormat value);
+
+#define VuoNumberFormat_SUPPORTS_COMPARISON
 bool VuoNumberFormat_areEqual(const VuoNumberFormat valueA, const VuoNumberFormat valueB);
 bool VuoNumberFormat_isLessThan(const VuoNumberFormat valueA, const VuoNumberFormat valueB);
 

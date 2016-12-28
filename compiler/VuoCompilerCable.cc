@@ -11,9 +11,15 @@
 
 #include "VuoCompilerCable.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
+#include "VuoCompilerDataClass.hh"
+#include "VuoCompilerInputEventPort.hh"
+#include "VuoCompilerNode.hh"
 #include "VuoCompilerOutputEventPort.hh"
+#include "VuoCompilerPortClass.hh"
 #include "VuoCompilerTriggerPort.hh"
 #include "VuoCompilerType.hh"
+#include "VuoNode.hh"
+#include "VuoNodeClass.hh"
 #include "VuoPort.hh"
 
 /**
@@ -88,10 +94,19 @@ string VuoCompilerCable::getGraphvizDeclaration(void)
 	VuoNode *toNode = getBase()->getToNode();
 	VuoPort *toPort = getBase()->getToPort();
 
-	if (fromNode && fromNode->hasCompiler() && toNode && toNode->hasCompiler() && fromPort && toPort)
+	if (fromNode && (fromNode->hasCompiler() || getBase()->isPublishedInputCable())
+			&& toNode && (toNode->hasCompiler() || getBase()->isPublishedOutputCable())
+			&& fromPort && toPort)
 	{
-		declaration << fromNode->getCompiler()->getGraphvizIdentifier() << ":" << fromPort->getClass()->getName() << " -> "
-					<< toNode->getCompiler()->getGraphvizIdentifier() << ":" << toPort->getClass()->getName();
+		string fromNodeIdentifier = (fromNode && fromNode->hasCompiler() ?
+										 fromNode->getCompiler()->getGraphvizIdentifier() :
+										 VuoNodeClass::publishedInputNodeIdentifier);
+		string toNodeIdentifier = (toNode && toNode->hasCompiler() ?
+									   toNode->getCompiler()->getGraphvizIdentifier() :
+									   VuoNodeClass::publishedOutputNodeIdentifier);
+
+		declaration << fromNodeIdentifier << ":" << fromPort->getClass()->getName() << " -> "
+					<< toNodeIdentifier << ":" << toPort->getClass()->getName();
 
 		// Cable attributes
 		bool isExplicitlyEventOnly = (isAlwaysEventOnly && portHasData( getBase()->getFromPort() ) && portHasData( getBase()->getToPort() ));
@@ -125,8 +140,6 @@ bool VuoCompilerCable::carriesData(void)
 	if (isAlwaysEventOnly)
 		return false;
 
-	VuoNode *fromNode = getBase()->getFromNode();
-	VuoNode *toNode = getBase()->getToNode();
 	VuoPort *fromPort = getBase()->getFromPort();
 	VuoPort *toPort = getBase()->getToPort();
 
@@ -141,20 +154,7 @@ bool VuoCompilerCable::carriesData(void)
 	else if (! toPort)
 		return fromPortHasData;
 
-	// If connected at both ends, but the 'From' port is a published input port (guaranteed not to technically carry data),
-	// decide on the basis of the 'To' port alone.
-	// @todo: Instead take into account the inherent type of the published input port.
-	else if (fromNode && fromNode->getNodeClass()->getClassName() == VuoNodeClass::publishedInputNodeClassName)
-		return toPortHasData;
-
-	// If connected at both ends, but the 'To' port is a published output port (guaranteed not to technically carry data),
-	// decide on the basis of the 'From' port alone.
-	// @todo: Instead take into account the inherent type of the published output port.
-	else if (toNode && toNode->getNodeClass()->getClassName() == VuoNodeClass::publishedOutputNodeClassName)
-		return fromPortHasData;
-
-	// If connected at both ends and neither connected port is a published port, the cable carries
-	// data if and only if each of its connected ports contain data.
+	// If connected at both ends, the cable carries data if and only if each of its connected ports contain data.
 	else
 		return (fromPortHasData && toPortHasData);
 }
@@ -162,27 +162,14 @@ bool VuoCompilerCable::carriesData(void)
 /**
  * Generates code to transmit the data (if any) and an event (if any) from an output port to an input port.
  */
-void VuoCompilerCable::generateTransmission(Module *module, BasicBlock *block, Value *outputDataValue, bool shouldTransmitEvent)
+void VuoCompilerCable::generateTransmission(Module *module, BasicBlock *block, Value *toNodeContextValue, Value *toPortContextValue,
+											Value *outputDataValue, bool shouldTransmitEvent)
 {
 	VuoCompilerInputEventPort *inputEventPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getToPort()->getCompiler());
 
 	if (outputDataValue)
-	{
-		// PortDataType_retain(outputData);
-		// PortDataType_release(inputData);
-		// inputData = outputData;
-
-		VuoCompilerInputData *inputData = inputEventPort->getData();
-		LoadInst *oldInputDataValue = inputData->generateLoad(block);
-
-		VuoCompilerDataClass *dataClass = static_cast<VuoCompilerDataClass *>(inputData->getBase()->getClass()->getCompiler());
-		VuoCompilerType *type = dataClass->getVuoType()->getCompiler();
-
-		type->generateRetainCall(module, block, outputDataValue);
-		inputData->generateStore(outputDataValue, block);
-		type->generateReleaseCall(module, block, oldInputDataValue);
-	}
+		inputEventPort->generateReplaceData(module, block, toNodeContextValue, outputDataValue, toPortContextValue);
 
 	if (shouldTransmitEvent)
-		inputEventPort->generateStore(true, block);
+		inputEventPort->generateStoreEvent(module, block, toNodeContextValue, true, toPortContextValue);
 }

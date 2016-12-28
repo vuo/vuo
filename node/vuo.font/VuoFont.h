@@ -44,7 +44,10 @@ VuoFont VuoFont_make(VuoText fontName, VuoReal pointSize, VuoBoolean underline, 
 VuoFont VuoFont_makeFromJson(struct json_object * js);
 struct json_object * VuoFont_getJson(const VuoFont value);
 char * VuoFont_getSummary(const VuoFont value);
-bool VuoFont_areEqual(const VuoFont value1, const VuoFont value2);
+
+#define VuoFont_SUPPORTS_COMPARISON
+bool VuoFont_areEqual(const VuoFont a, const VuoFont b);
+bool VuoFont_isLessThan(const VuoFont a, const VuoFont b);
 
 /// @{
 /**

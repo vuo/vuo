@@ -23,5 +23,5 @@ VuoCompilerInputEventPort::VuoCompilerInputEventPort(VuoPort * basePort)
  */
 VuoCompilerInputData * VuoCompilerInputEventPort::getData(void)
 {
-	return (VuoCompilerInputData *)data;
+	return static_cast<VuoCompilerInputData *>(data);
 }

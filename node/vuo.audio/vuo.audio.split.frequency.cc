@@ -123,7 +123,6 @@ void nodeInstanceEvent
 
 	if(len < 1) return;
 
-	unsigned int sampleCount = samples.sampleCount;
 	*splitSamples = VuoListCreate_VuoAudioSamples();
 
 	(*context)->sync->spu(VuoAudioSamples_sampleRate);
@@ -137,13 +136,13 @@ void nodeInstanceEvent
 	qsort (freq, len, sizeof(double), compare);
 
 	gam::Biquad<> *low = (*context)->biquad_low;
-	gam::Biquad<> *mid = (*context)->biquad_band;
 	gam::Biquad<> *high = (*context)->biquad_high;
 
 	VuoListAppendValue_VuoAudioSamples( (*splitSamples), SamplesWithFilterAndFrequency( samples, low, freq[0]) );
 
 	if(len > 1)
 	{
+		gam::Biquad<> *mid = (*context)->biquad_band;
 		for(int n = 0; n < len-1; n++)
 		{
 			double lowCutoff = freq[n];

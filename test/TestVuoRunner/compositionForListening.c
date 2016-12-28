@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "composition.h"
+#include "VuoEventLoop.h"
 
 dispatch_source_t timer = NULL;
 
@@ -45,11 +46,11 @@ int main(int argc, char **argv)
 	}
 
 	while (! isStopped)
-		CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
+		VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
 	return 0;
 }
 
-void nodeInstanceFini(void)
+void vuoInstanceFini(void)
 {
 	dispatch_source_cancel(timer);
 	dispatch_release(timer);

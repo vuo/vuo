@@ -12,6 +12,7 @@
 #include "VuoUrlFetch.h"
 #include "VuoRssItem.h"
 #include "VuoList_VuoRssItem.h"
+#include "VuoTime.h"
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>
@@ -19,7 +20,7 @@
 VuoModuleMetadata({
 					  "title" : "Fetch RSS Items",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ "DisplayRssItems.vuo" ]
 					  },
@@ -38,7 +39,7 @@ static void __attribute__((constructor)) init()
 void nodeEvent
 (
 		VuoInputData(VuoText, {"name":"URL"}) url,
-		VuoInputData(VuoBoolean, {"default":true}) fetchImages,
+		VuoInputData(VuoBoolean, {"default":false}) fetchImages,
 		VuoOutputData(VuoText) title,
 		VuoOutputData(VuoText) description,
 		VuoOutputData(VuoList_VuoRssItem) items
@@ -57,7 +58,7 @@ void nodeEvent
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 	if (!root || strcmp((const char *)root->name, "rss") != 0)
 	{
-		VLog("Error: The feed's root element isn't <rss>.");
+		VUserLog("Error: The feed's root element isn't <rss>.");
 		xmlFreeDoc(doc);
 		goto fail;
 	}
@@ -69,7 +70,7 @@ void nodeEvent
 
 	if (!channel)
 	{
-		VLog("Error: The feed doesn't contain a <channel> element inside its <rss> element.");
+		VUserLog("Error: The feed doesn't contain a <channel> element inside its <rss> element.");
 		xmlFreeDoc(doc);
 		goto fail;
 	}
@@ -87,8 +88,7 @@ void nodeEvent
 			*description = VuoText_make((const char *)cur->children->content);
 		else if (strcmp((const char *)cur->name, "item") == 0)
 		{
-			VuoRssItem rssItem = {NULL, NULL, NULL, NULL, NULL};
-			const char *image = NULL;
+			VuoRssItem rssItem = {NULL, NULL, NULL, NULL, NAN, NULL, NULL};
 
 			for (xmlNodePtr itemCur = cur->children; itemCur; itemCur = itemCur->next)
 			{
@@ -97,25 +97,27 @@ void nodeEvent
 
 				if (!itemCur->ns && strcmp((const char *)itemCur->name, "title") == 0 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
 					rssItem.title = VuoText_make((const char *)itemCur->children->content);
-				else if (!itemCur->ns && strcmp((const char *)itemCur->name, "author") == 0 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
+				else if (((!itemCur->ns && strcmp((const char *)itemCur->name, "author") == 0)
+						 || (itemCur->ns && strcmp((const char *)itemCur->ns->prefix, "dc") == 0 && strcmp((const char *)itemCur->name, "creator") == 0))
+						 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
 					rssItem.author = VuoText_make((const char *)itemCur->children->content);
 				else if (!itemCur->ns && strcmp((const char *)itemCur->name, "description") == 0 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
 					rssItem.description = VuoText_make((const char *)itemCur->children->content);
 				else if (!itemCur->ns && strcmp((const char *)itemCur->name, "link") == 0 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
 					rssItem.url = VuoText_make((const char *)itemCur->children->content);
-//				else if (!itemCur->ns && strcmp((const char *)itemCur->name, "pubDate") == 0 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
-//					fprintf(stderr, "\tpubDate: %s\n", itemCur->children->content);
+				else if (!itemCur->ns && strcmp((const char *)itemCur->name, "pubDate") == 0 && itemCur->children && itemCur->children->type == XML_TEXT_NODE)
+					rssItem.dateTime = VuoTime_makeFromRFC822((char *)itemCur->children->content);
 				else if (!itemCur->ns && strcmp((const char *)itemCur->name, "enclosure") == 0 && itemCur->properties)
 				{
 					for (xmlAttrPtr attrCur = itemCur->properties; attrCur; attrCur = attrCur->next)
 						if (strcmp((const char *)attrCur->name, "url") == 0 && attrCur->children && attrCur->children->type == XML_TEXT_NODE)
-							image = (const char *)attrCur->children->content;
+							rssItem.imageUrl = VuoText_make((const char *)attrCur->children->content);
 				}
 				else if (itemCur->ns && strcmp((const char *)itemCur->ns->prefix, "media") == 0 && strcmp((const char *)itemCur->name, "content") == 0)
 				{
 					for (xmlAttrPtr attrCur = itemCur->properties; attrCur; attrCur = attrCur->next)
 						if (strcmp((const char *)attrCur->name, "url") == 0 && attrCur->children && attrCur->children->type == XML_TEXT_NODE)
-							image = (const char *)attrCur->children->content;
+							rssItem.imageUrl = VuoText_make((const char *)attrCur->children->content);
 				}
 				else if (itemCur->ns && strcmp((const char *)itemCur->ns->prefix, "media") == 0 && strcmp((const char *)itemCur->name, "group") == 0 && itemCur->children)
 				{
@@ -129,14 +131,14 @@ void nodeEvent
 							for (xmlAttrPtr attrCur = groupItemCur->properties; attrCur; attrCur = attrCur->next)
 								if (strcmp((const char *)attrCur->name, "url") == 0 && attrCur->children && attrCur->children->type == XML_TEXT_NODE)
 									// Overwrite the old image, so we keep the last one we find (which is typically the highest quality).
-									image = (const char *)attrCur->children->content;
+									rssItem.imageUrl = VuoText_make((const char *)attrCur->children->content);
 						}
 					}
 				}
 			}
 
-			if (fetchImages && image)
-				rssItem.image = VuoImage_get(image);
+			if (fetchImages && rssItem.imageUrl)
+				rssItem.image = VuoImage_get(rssItem.imageUrl);
 
 			VuoListAppendValue_VuoRssItem(*items, rssItem);
 		}

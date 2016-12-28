@@ -81,13 +81,12 @@ char * vuoReceiveAndCopyString(void *socket, char **error)
 			int size = snprintf(NULL, 0, format, eStr);
 			errorMessage = malloc(size+1);
 			snprintf(errorMessage, size+1, format, eStr);
-			free(eStr);
 		}
 		if (error)
 			*error = errorMessage;
 		else
 		{
-			VLog("%s", errorMessage);
+			VUserLog("%s", errorMessage);
 			free(errorMessage);
 		}
 		zmq_msg_close(&message);
@@ -113,6 +112,8 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize, char **error)
 		char *errorMessage;
 		if (e == EAGAIN)
 			errorMessage = strdup("The connection between the composition and runner timed out when trying to receive a message");
+		else if (e == ETERM)
+			errorMessage = strdup("The connection between the composition and runner failed because the context was terminated when trying to receive a message");
 		else
 		{
 			char *eStr = strerror(e);
@@ -120,13 +121,12 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize, char **error)
 			int size = snprintf(NULL, 0, format, eStr);
 			errorMessage = malloc(size+1);
 			snprintf(errorMessage, size+1, format, eStr);
-			free(eStr);
 		}
 		if (error)
 			*error = errorMessage;
 		else
 		{
-			VLog("%s", errorMessage);
+			VUserLog("%s", errorMessage);
 			free(errorMessage);
 		}
 		zmq_msg_close(&message);
@@ -146,7 +146,7 @@ void vuoReceiveBlocking(void *socket, void *data, size_t dataSize, char **error)
 			*error = errorMessage;
 		else
 		{
-			VLog("%s", errorMessage);
+			VUserLog("%s", errorMessage);
 			free(errorMessage);
 		}
 		zmq_msg_close(&message);
@@ -235,13 +235,12 @@ void vuoSend(const char *name, void *socket, int type, zmq_msg_t *messages, unsi
 			int size = snprintf(NULL, 0, format, type, name, eStr);
 			errorMessage = malloc(size+1);
 			snprintf(errorMessage, size+1, format, type, name, eStr);
-			free(eStr);
 		}
 		if (error)
 			*error = errorMessage;
 		else
 		{
-			VLog("%s", errorMessage);
+			VUserLog("%s", errorMessage);
 			free(errorMessage);
 		}
 	}

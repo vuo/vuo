@@ -10,11 +10,11 @@
 #ifndef VUOCOMPILERMODULE_HH
 #define VUOCOMPILERMODULE_HH
 
-#include "VuoBaseDetail.hh"
-#include "VuoModule.hh"
 #include "VuoCompilerTargetSet.hh"
 
-#include "VuoCompilerBitcodeParser.hh"
+class VuoCompilerBitcodeParser;
+class VuoCompilerModule;
+class VuoModule;
 
 /**
  * A node class or type defined in an LLVM module.
@@ -25,6 +25,7 @@ class VuoCompilerModule
 {
 private:
 	VuoCompilerTargetSet compatibleTargets;  ///< The set of targets with which this module is compatible.
+	bool builtIn;
 
 	static bool isModule(Module *module, string moduleKey);
 
@@ -66,6 +67,8 @@ public:
 	VuoModule * getPseudoBase(void);
 	bool getPremium(void);
 	void setPremium(bool premium);
+	bool isBuiltIn(void);
+	void setBuiltIn(bool builtIn);
 };
 
 #endif // VUOCOMPILERMODULE_HH

@@ -8,7 +8,7 @@ The audio part of a video is made up of a sequence of **samples** on one or more
 
 ### Cameras
 
-The `Receive Live Video` node, and related nodes for working with cameras, support any QuickTime device. This includes the built-in iSight/FaceTime cameras in MacBooks and iMacs, and many other USB and FireWire cameras.
+The `Receive Live Video` node, and related nodes for working with cameras, support any QuickTime device. This includes the built-in iSight/FaceTime cameras in MacBooks and iMacs, iOS devices when connected via a Lightning cable, and many other USB and FireWire cameras.
 
 ### Movie URLs
 
@@ -35,13 +35,13 @@ ProRes 4444 | Intermediate | Only available on systems with Final Cut Pro instal
 
 Audio is encoded separately from video. Similarly to video encodings, audio encodings have a tradeoff between quality and file size. **Lossless** encodings preserve the original audio at the expense of larger file sizes. **Lossy** encodings tend to produce smaller file sizes but may reduce the audio quality.
 
-The `Play Movie` node can read any of the [audio encodings supported by FFmpeg](http://www.ffmpeg.org/general.html#Audio-Codecs) except certain proprietary ones. The table below summarizes some of the audio encodings supported by this node set.
+The `Play Movie` node can read any of the [audio encodings supported by FFmpeg](http://www.ffmpeg.org/general.html#Audio-Codecs). The table below summarizes some of the audio encodings supported by this node set.
 
 Encoding       | Compression             | Supported by `Play Movie`? | Supported by `Save to Movie`?
 ---------------|-------------------------|----------------------------|-----------------------------
 Linear PCM     | Lossless (uncompressed) | Yes                        | Yes
 Apple Lossless | Lossless                | Yes                        | No
-AAC            | Lossy                   | No                         | Yes
-MP3            | Lossy                   | No                         | No
+AAC            | Lossy                   | Yes                        | Yes
+MP3            | Lossy                   | Yes                        | No
 
 To find out which video and audio encodings a movie file uses, you can open it in QuickTime Player and go to Window > Show Movie Inspector.

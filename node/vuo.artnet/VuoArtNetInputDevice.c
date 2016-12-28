@@ -148,20 +148,18 @@ bool VuoArtNetInputDevice_areEqual(const VuoArtNetInputDevice value1, const VuoA
 /**
  * Returns true if value1 < value2.
  */
-bool VuoArtNetInputDevice_isLessThan(const VuoArtNetInputDevice value1, const VuoArtNetInputDevice value2)
+bool VuoArtNetInputDevice_isLessThan(const VuoArtNetInputDevice a, const VuoArtNetInputDevice b)
 {
-	// If both are unicast, sort by IP address.
-	if (value1.ipAddress && value2.ipAddress)
-		return (strcmp(value1.ipAddress, value2.ipAddress) < 0);
+	if (VuoText_isLessThan(a.name, b.name)) return true;
+	if (VuoText_isLessThan(b.name, a.name)) return false;
 
-	// Sort unicast on top.
-	if (value1.ipAddress && !value2.ipAddress)
-		return true;
-	if (!value1.ipAddress && value2.ipAddress)
-		return false;
+	if (VuoText_isLessThan(a.ipAddress, b.ipAddress)) return true;
+	if (VuoText_isLessThan(b.ipAddress, a.ipAddress)) return false;
 
-	// Both are broadcast; just compare Art-Net address.
-	return VuoArtNetAddress_isLessThan(value1.address, value2.address);
+	if (VuoText_isLessThan(a.ethernetAddress, b.ethernetAddress)) return true;
+	if (VuoText_isLessThan(b.ethernetAddress, a.ethernetAddress)) return false;
+
+	return VuoArtNetAddress_isLessThan(a.address, b.address);
 }
 
 /**

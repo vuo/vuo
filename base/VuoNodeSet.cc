@@ -7,6 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include "VuoModule.hh"
 #include "VuoNodeSet.hh"
 
 /**
@@ -216,6 +217,7 @@ void VuoNodeSet::extractResourcesFromSubdirectory(string archiveSubdir, string d
 	extensions.insert("data");
 	extensions.insert("3ds");
 	extensions.insert("dae");
+	extensions.insert("csv");
 	set<VuoFileUtilities::File *> files = VuoFileUtilities::findFilesInArchive(archivePath, archiveSubdir, extensions);
 
 	for (set<VuoFileUtilities::File *>::iterator i = files.begin(); i != files.end(); ++i)

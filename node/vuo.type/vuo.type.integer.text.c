@@ -14,7 +14,11 @@
 VuoModuleMetadata({
 					 "title" : "Convert Integer to Text",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.0",
+					 "node": {
+						   "exampleCompositions" : [ ],
+						   "isDeprecated": true
+					  }
 				 });
 
 void nodeEvent

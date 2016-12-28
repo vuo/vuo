@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Resizable Status",
-					 "keywords" : [ "resize", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify", "lock", "fixed", "size", "properties" ],
+					 "keywords" : [ "resize", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify", "lock", "fixed", "size", "properties", "set" ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ ]

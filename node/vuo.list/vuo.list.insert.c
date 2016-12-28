@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Insert in List",
-					 "keywords" : [ "place", "middle" ],
+					 "keywords" : [ "push", "append", "prepend", "insert", "combine", "place", "middle" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions": [ "InsertSquare.vuo" ]

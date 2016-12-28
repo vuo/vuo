@@ -8,7 +8,7 @@
  */
 
 #import "VuoWindowTextInternal.h"
-#import "VuoWindowApplication.h"
+#import "VuoWindow.h"
 
 #include <dispatch/dispatch.h>
 
@@ -18,7 +18,8 @@
 VuoModuleMetadata({
 					 "title" : "VuoWindowTextInternal",
 					 "dependencies" : [
-						"AppKit.framework"
+						"AppKit.framework",
+						"VuoWindow"
 					 ]
 				 });
 #endif
@@ -29,6 +30,8 @@ VuoModuleMetadata({
 @synthesize textView;
 @synthesize scrollView;
 @synthesize textFont;
+@synthesize editCopyMenuItem;
+@synthesize editSelectAllMenuItem;
 
 /**
  * Creates a window containing a text view.
@@ -51,6 +54,9 @@ VuoModuleMetadata({
 		typedWord = NULL;
 		typedCharacter = NULL;
 
+		self.delegate = self;
+		self.releasedWhenClosed = NO;
+
 		[self setTitle:@"Vuo Console"];
 
 		NSFont *_textFont = [NSFont fontWithName:@"Monaco" size:0];
@@ -72,6 +78,17 @@ VuoModuleMetadata({
 		[textView setAllowsUndo:NO];
 		[textView setAutoresizingMask:NSViewWidthSizable];
 		[scrollView setDocumentView:textView];
+
+		// Remove the "Cut" option from the context menu.
+		NSMenu *textViewContextMenu = [textView menu];
+		int cutItemIndex = [textViewContextMenu indexOfItemWithTitle: @"Cut"];
+		if (cutItemIndex >= 0)
+			[textViewContextMenu removeItemAtIndex: cutItemIndex];
+
+		// Remove the "Paste" option from the context menu.
+		int pasteItemIndex = [textViewContextMenu indexOfItemWithTitle: @"Paste"];
+		if (pasteItemIndex >= 0)
+			[textViewContextMenu removeItemAtIndex: pasteItemIndex];
 
 		textView.delegate = self;
 	}
@@ -148,13 +165,54 @@ VuoModuleMetadata({
 }
 
 /**
- * Updates the menu bar with this window's (lack of) menus.
+ * Updates the menu bar with this window's menus.
  */
 - (void)becomeMainWindow
 {
 	[super becomeMainWindow];
 
-	[(VuoWindowApplication *)NSApp replaceWindowMenu:nil];
+	NSMenu *editMenu = [[[NSMenu alloc] initWithTitle:@"Edit"] autorelease];
+
+	// "Edit > Copy"
+	self.editCopyMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Copy" action:@selector(copyText) keyEquivalent:@"c"] autorelease];
+	[self.editCopyMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+	[editMenu addItem:self.editCopyMenuItem];
+
+	// "Edit > Select All"
+	self.editSelectAllMenuItem = [[[NSMenuItem alloc] initWithTitle:@"Select All" action:@selector(selectAllText) keyEquivalent:@"a"] autorelease];
+	[self.editSelectAllMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+	[editMenu addItem:self.editSelectAllMenuItem];
+
+	NSMenuItem *editMenuItem = [[NSMenuItem new] autorelease];
+	[editMenuItem setSubmenu:editMenu];
+
+	NSMutableArray *windowMenuItems = [NSMutableArray arrayWithCapacity:2];
+	[windowMenuItems addObject:editMenuItem];
+	oldMenu = [(NSMenu *)VuoApp_setMenuItems(windowMenuItems) retain];
+}
+
+/**
+ * Updates the menu bar with the host app's menu prior to when this window was activated.
+ */
+- (void)resignMainWindow
+{
+	[super resignMainWindow];
+
+	VuoApp_setMenu(oldMenu);
+	[oldMenu release];
+	oldMenu = nil;
+}
+
+/**
+ * Updates the menu bar with the host app's menu prior to when this window was activated.
+ */
+- (void)windowWillClose:(NSNotification *)notification
+{
+	[super resignMainWindow];
+
+	VuoApp_setMenu(oldMenu);
+	[oldMenu release];
+	oldMenu = nil;
 }
 
 /**
@@ -186,6 +244,9 @@ VuoModuleMetadata({
  */
 - (void)appendLine:(const char *)text
 {
+	// Autoscroll the window only if the viewport was already at the end.
+	BOOL autoscroll = abs(NSMaxY(textView.visibleRect) - NSMaxY(textView.bounds)) < 1;
+
 	NSString *line = [[NSString stringWithUTF8String:text] stringByAppendingString:@"\n"];
 	NSDictionary *attributes = [NSDictionary dictionaryWithObject:textFont forKey:NSFontAttributeName];
 	NSAttributedString *attributedLine = [[NSAttributedString alloc] initWithString:line attributes:attributes];
@@ -198,7 +259,42 @@ VuoModuleMetadata({
 	NSRect frameToFitText = [layoutManager usedRectForTextContainer:textContainer];
 	[textView setFrame:frameToFitText];
 
-	[textView scrollRangeToVisible:NSMakeRange([[textView string] length], 0)];
+	if (autoscroll)
+		[textView scrollRangeToVisible:NSMakeRange([[textView string] length], 0)];
+}
+
+/**
+ * Copies the currently selected text.
+ */
+- (void)copyText
+{
+	bool hasSelectedText = ([textView selectedRange].length > 0);
+	if (hasSelectedText)
+		[self.textView copy:self];
+}
+
+/**
+ * Selects all text.
+ */
+- (void)selectAllText
+{
+	[self.textView selectAll:self];
+}
+
+/**
+ * Decides whether or not a given user interface element should be enabled,
+ * given the current state of the text window.
+ */
+- (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem
+{
+	SEL theAction = [anItem action];
+	if (theAction == @selector(copyText)) {
+
+		bool hasSelectedText = ([textView selectedRange].length > 0);
+		return hasSelectedText;
+	}
+
+	return [super validateUserInterfaceItem:anItem];
 }
 
 @end

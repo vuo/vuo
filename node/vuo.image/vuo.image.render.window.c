@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoDisplayRefresh.h"
 #include "VuoWindow.h"
 #include "VuoSceneRenderer.h"
 
@@ -25,21 +24,19 @@ VuoModuleMetadata({
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
 					 "version" : "3.2.1",
 					 "dependencies" : [
-						 "VuoDisplayRefresh",
 						 "VuoGlContext",
 						 "VuoSceneRenderer",
 						 "VuoWindow"
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ "DisplayImage.vuo" ]
+						 "exampleCompositions" : [ "SimulateFilmProjector.vuo" ]
 					 }
 				 });
 
 
 struct nodeInstanceData
 {
-	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer sceneRenderer;
 	bool aspectRatioOverridden;
@@ -64,8 +61,21 @@ void vuo_image_render_window_init(VuoGlContext glContext, float backingScaleFact
 				VuoListCreate_VuoSceneObject()
 			);
 	context->rootSceneObject.transform.scale.x = 2;
+	VuoSceneObject_retain(context->rootSceneObject);
 
 	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
+}
+
+void vuo_image_render_window_updateBacking(VuoGlContext glContext, void *ctx, float backingScaleFactor)
+{
+	struct nodeInstanceData *context = ctx;
+
+	dispatch_semaphore_wait(context->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+	VuoRelease(context->sceneRenderer);
+	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
+	VuoRetain(context->sceneRenderer);
+	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
+	dispatch_semaphore_signal(context->scenegraphSemaphore);
 }
 
 void vuo_image_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
@@ -95,14 +105,12 @@ struct nodeInstanceData *nodeInstanceInit(void)
 
 	context->sceneRenderer = NULL;
 
-	context->displayRefresh = VuoDisplayRefresh_make(context);
-	VuoRetain(context->displayRefresh);
-
 	context->scenegraphSemaphore = dispatch_semaphore_create(1);
 
 	context->window = VuoWindowOpenGl_make(
 				false,
 				vuo_image_render_window_init,
+				vuo_image_render_window_updateBacking,
 				vuo_image_render_window_resize,
 				vuo_image_render_window_draw,
 				(void *)context
@@ -121,8 +129,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow);
-	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
+	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow, requestedFrame);
 }
 
 void nodeInstanceEvent
@@ -149,21 +156,19 @@ void nodeInstanceEvent
 		VuoWindowOpenGl_setProperties((*context)->window, setWindowProperties);
 	}
 
-	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
-												 dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait((*context)->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+	{
+		if (image && image->pixelsWide && image->pixelsHigh)
+		{
+			VuoShader_setUniform_VuoImage((*context)->rootSceneObject.shader, "texture", image);
+			(*context)->rootSceneObject.transform.scale.y = 2. * (float)image->pixelsHigh/(float)image->pixelsWide;
+			if (!(*context)->aspectRatioOverridden)
+				VuoWindowOpenGl_setAspectRatio((*context)->window, image->pixelsWide, image->pixelsHigh);
+		}
 
-												 if (image && image->pixelsWide && image->pixelsHigh)
-												 {
-													 VuoShader_setUniform_VuoImage((*context)->rootSceneObject.shader, "texture", image);
-													 (*context)->rootSceneObject.transform.scale.y = 2. * (float)image->pixelsHigh/(float)image->pixelsWide;
-													 if (!(*context)->aspectRatioOverridden)
-														 VuoWindowOpenGl_setAspectRatio((*context)->window, image->pixelsWide, image->pixelsHigh);
-												 }
-
-												 VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, (*context)->rootSceneObject);
-
-												 dispatch_semaphore_signal((*context)->scenegraphSemaphore);
-											 });
+		VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, (*context)->rootSceneObject);
+	}
+	dispatch_semaphore_signal((*context)->scenegraphSemaphore);
 
 	// Schedule a redraw.
 	VuoWindowOpenGl_redraw((*context)->window);
@@ -174,7 +179,6 @@ void nodeInstanceTriggerStop
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoDisplayRefresh_disableTriggers((*context)->displayRefresh);
 	VuoWindowOpenGl_disableTriggers((*context)->window);
 }
 
@@ -183,8 +187,9 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	VuoWindowOpenGl_close((*context)->window);
 	VuoRelease((*context)->window);
 	VuoRelease((*context)->sceneRenderer);
+	VuoSceneObject_release((*context)->rootSceneObject);
 	dispatch_release((*context)->scenegraphSemaphore);
-	VuoRelease((*context)->displayRefresh);
 }

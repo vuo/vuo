@@ -12,3 +12,4 @@ The `Curve` and `Easing` ports select the smoothing curve. This is the easing cu
    - `Rate` — How fast the smooth movement should be. This is distance between `Set Position` and `Set Target` covered per unit of time, based on the values coming into the `Time` port.
    - `Curve` — The shape of the smoothing curve.
    - `Easing` — Which part of the smoothing curve is shallow.
+   - `Reached Target` — Outputs an event when the transition has reached the target and stopped moving.

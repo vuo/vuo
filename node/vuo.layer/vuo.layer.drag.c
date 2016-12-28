@@ -227,10 +227,10 @@ void vuo_layer_drag_startTriggers(struct nodeInstanceData * context,
 												  button, context->renderedLayers.window, modifierKey);
 	VuoMouse_startListeningForDragsWithCallback(context->dragMovedToListener,
 												^(VuoPoint2d point){ vuo_layer_drag_dragMovedTo(point, draggedCenterTo, context); },
-												button, context->renderedLayers.window, modifierKey);
+												button, context->renderedLayers.window, modifierKey, true);
 	VuoMouse_startListeningForReleasesWithCallback(context->dragEndedListener,
 												   ^(VuoPoint2d point){ vuo_layer_drag_dragEnded(point, endedDrag, context); },
-												   button, context->renderedLayers.window, modifierKey);
+												   button, context->renderedLayers.window, modifierKey, true);
 }
 
 void vuo_layer_drag_stopTriggers(struct nodeInstanceData *context)

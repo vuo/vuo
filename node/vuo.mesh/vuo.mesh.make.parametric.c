@@ -13,7 +13,7 @@
 #include "VuoMeshParametric.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Parametric Mesh",
+					 "title" : "Make Parametric Grid Mesh",
 					 "keywords" : [ "math", "expression", "shape", "surface", "plane", "grid" ],
 					 "version" : "3.0.0",
 					 "dependencies" : [

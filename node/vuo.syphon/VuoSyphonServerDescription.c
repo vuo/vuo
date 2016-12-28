@@ -39,23 +39,17 @@ VuoModuleMetadata({
  */
 VuoSyphonServerDescription VuoSyphonServerDescription_makeFromJson(json_object * js)
 {
-	VuoSyphonServerDescription server;
+	VuoSyphonServerDescription server = {NULL, NULL, NULL};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "serverUUID", &o))
 		server.serverUUID = VuoText_makeFromJson(o);
-	else
-		server.serverUUID = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "serverName", &o))
 		server.serverName = VuoText_makeFromJson(o);
-	else
-		server.serverName = VuoText_make("");
 
 	if (json_object_object_get_ex(js, "applicationName", &o))
 		server.applicationName = VuoText_makeFromJson(o);
-	else
-		server.applicationName = VuoText_make("");
 
 	return server;
 }
@@ -86,9 +80,9 @@ json_object * VuoSyphonServerDescription_getJson(const VuoSyphonServerDescriptio
  */
 char * VuoSyphonServerDescription_getSummary(const VuoSyphonServerDescription value)
 {
-	const char *serverUUID = strlen(value.serverUUID) > 0 ? value.serverUUID : "(unknown)";
-	const char *serverName = strlen(value.serverName) > 0 ? value.serverName : "(unknown)";
-	const char *applicationName = strlen(value.applicationName) > 0 ? value.applicationName : "(unknown)";
+	const char *serverUUID      = (value.serverUUID      && strlen(value.serverUUID     ) > 0) ? value.serverUUID      : "(unknown)";
+	const char *serverName      = (value.serverName      && strlen(value.serverName     ) > 0) ? value.serverName      : "(unknown)";
+	const char *applicationName = (value.applicationName && strlen(value.applicationName)) > 0 ? value.applicationName : "(unknown)";
 
 	return VuoText_format("Syphon server \"%s\" in application \"%s\"<br>UUID: %s",
 						  serverName, applicationName, serverUUID);

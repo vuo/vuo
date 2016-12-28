@@ -24,7 +24,7 @@ class VuoInputEditorWithEnumMenu : public VuoInputEditorWithMenu
 public:
 	VuoInputEditorWithEnumMenu(QString type);
 
-	VuoInputEditorMenuItem *setUpMenuTree();
+	VuoInputEditorMenuItem *setUpMenuTree(json_object *details);
 };
 
 #endif // VUOINPUTEDITORWITHENUMMENU_HH

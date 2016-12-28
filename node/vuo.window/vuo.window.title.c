@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Window Title",
-					 "keywords" : [ "label", "name", "properties" ],
+					 "keywords" : [ "label", "name", "properties", "set" ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ ]

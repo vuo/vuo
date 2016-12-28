@@ -6,6 +6,7 @@ include(../../vuo.pri)
 NODE_SOURCES += \
 	vuo.audio.analyze.loudness.c \
 	vuo.audio.analyze.fft.c \
+	vuo.audio.detectBeats.cc \
 	vuo.audio.file.info.c \
 	vuo.audio.file.play.c \
 	vuo.audio.get.input.c \
@@ -19,6 +20,7 @@ NODE_SOURCES += \
 	vuo.audio.make.output.id.c \
 	vuo.audio.make.output.name.c \
 	vuo.audio.mix.c \
+	vuo.audio.populated.c \
 	vuo.audio.receive.c \
 	vuo.audio.send.c \
 	vuo.audio.split.frequency.cc \
@@ -29,11 +31,13 @@ NODE_INCLUDEPATH += \
 	../vuo.motion
 
 NODE_LIBRARY_SOURCES += \
+	VuoBeatDetektor.cc \
 	VuoDsp.mm \
 	VuoAudio.cc \
 	VuoAudioFile.c
 
 HEADERS += \
+	VuoBeatDetektor.hh \
 	VuoDsp.h \
 	VuoAudio.h \
 	VuoAudioFile.h
@@ -46,12 +50,14 @@ TYPE_SOURCES += \
 	VuoAudioBins.c \
 	VuoAudioBinAverageType.c \
 	VuoAudioInputDevice.c \
-	VuoAudioOutputDevice.c
+	VuoAudioOutputDevice.c \
+	VuoTempoRange.c
 
 HEADERS += \
 	VuoAudioBins.h \
 	VuoAudioBinAverageType.h \
 	VuoAudioInputDevice.h \
-	VuoAudioOutputDevice.h
+	VuoAudioOutputDevice.h \
+	VuoTempoRange.h
 
 include(../../module.pri)

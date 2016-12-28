@@ -11,27 +11,23 @@
 #define VUOCOMPILEREVENTPORT_H
 
 #include "VuoCompilerPort.hh"
-#include "VuoCompilerEventPortClass.hh"
-#include "VuoCompilerData.hh"
+
+class VuoCompilerData;
+class VuoCompilerType;
 
 /**
  * A passive (non-trigger) port, optionally with data.
  */
 class VuoCompilerEventPort : public VuoCompilerPort
 {
-protected:
-	VuoCompilerData *data; ///< Optional data stored in this port.
-
-	VuoCompilerEventPort(VuoPort *basePort);
-	Constant * getBoolConstant(bool value);
-	string getVariableBaseName(void);
-
 public:
-	void generateAllocation(Module *module, string nodeInstanceIdentifier);
-	StoreInst * generateStore(Value *value, BasicBlock *block);
-	StoreInst * generateStore(bool pushed, BasicBlock *block);
-	GlobalVariable * getDataVariable(void);
-	string getIdentifier(void);
+	Value * generateCreatePortContext(Module *module, BasicBlock *block);
+	Value * generateLoadEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue=NULL);
+	void generateStoreEvent(Module *module, BasicBlock *block, Value *nodeContextValue, Value *eventValue, Value *portContextValue=NULL);
+	void generateStoreEvent(Module *module, BasicBlock *block, Value *nodeContextValue, bool event, Value *portContextValue=NULL);
+	Value * generateLoadData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *portContextValue=NULL);
+	void generateStoreData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataValue);
+	void generateReplaceData(Module *module, BasicBlock *block, Value *nodeContextValue, Value *dataValue, Value *portContextValue=NULL);
 
 	/**
 	 * Returns this port's data, or NULL if none.
@@ -39,6 +35,11 @@ public:
 	virtual VuoCompilerData * getData(void) = 0;
 
 	VuoCompilerType * getDataType(void);
+
+protected:
+	VuoCompilerData *data; ///< Optional data stored in this port.
+
+	VuoCompilerEventPort(VuoPort *basePort);
 };
 
 #endif

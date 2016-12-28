@@ -9,22 +9,20 @@
 
 digraph G
 {
-BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="381,92" fillcolor="violet" _blendMode="\"luminosity\"" _foregroundOpacity="1.000000"];
-BlendImages2 [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="584,180" fillcolor="violet" _blendMode="\"multiply\"" _foregroundOpacity="1.000000"];
-ChangeWrapMode [type="vuo.image.wrapMode" version="2.0.0" label="Change Wrap Mode|<refresh>refresh\l|<image>image\l|<wrapMode>wrapMode\l|<outputImage>outputImage\r" pos="372,250" _wrapMode="\"repeat\""];
-ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="623,431"];
-ConvertVideoFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="512,217"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-84,69" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="151,3" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _width="640" _height="480"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="706,206" fillcolor="green"];
-PlayMovie [type="vuo.video.play" version="2.0.1" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="131,107" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-PlayMovie3 [type="vuo.video.play" version="2.0.1" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="129,250" _url="\"16mm.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
-RenderImageToWindow [type="vuo.image.render.window" version="3.2.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="747,180" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+BlendImages [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="390,90" fillcolor="violet" _blendMode="\"luminosity\"" _foregroundOpacity="1.000000"];
+BlendImages2 [type="vuo.image.blend" version="1.2.1" label="Blend Images|<refresh>refresh\l|<background>background\l|<foreground>foreground\l|<blendMode>blendMode\l|<foregroundOpacity>foregroundOpacity\l|<blended>blended\r" pos="555,240" fillcolor="violet" _blendMode="\"multiply\"" _foregroundOpacity="1.000000"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="690,300"];
+ConvertVideoFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Video Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="510,210"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="135,0" _color="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":1.000000}" _width="640" _height="480"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="679,266" fillcolor="green"];
+PlayMovie [type="vuo.video.play" version="2.0.1" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="135,105" _url="\"\\/System\\/Library\\/Compositions\\/Rollercoaster.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+PlayMovie3 [type="vuo.video.play" version="2.0.1" label="Play Movie|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<playbackRate>playbackRate\l|<setTime>setTime\l|<decodedVideo>decodedVideo\r|<decodedAudio>decodedAudio\r" pos="135,255" _url="\"16mm.mov\"" _loop="\"loop\"" _playbackRate="1.000000" _setTime="\"\"" _decodedVideo_eventThrottling="drop" _decodedAudio_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="720,240" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
 BlendImages2:blended -> RenderImageToWindow:image;
 BlendImages:blended -> BlendImages2:background;
-ChangeWrapMode:outputImage -> BlendImages2:foreground;
-ConvertFrameToImage:image -> ChangeWrapMode:image;
+ConvertFrameToImage:image -> BlendImages2:foreground;
 ConvertVideoFrameToImage:image -> BlendImages:foreground;
 FireOnStart:started -> MakeColorImage:refresh;
 FireOnStart:started -> PlayMovie3:play;

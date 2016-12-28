@@ -37,12 +37,12 @@ VuoModuleMetadata({
 	DSPSplitComplex _split;	///< Holds the DSPSplitComplex values per-bucket.
 	float* _frequency;		///< Hold the real values from the split complex array.
 	unsigned int _frameSize;	///< The number of frames per-bucket to analyze.  Must be a power of 2.
-	unsigned int _windowMode;	///< What type of windowing to apply to sample data.
+	VuoWindowing _windowMode;	///< What type of windowing to apply to sample data.
 	float* _window;			///< Holds windowed real values from samples.
 }
 
-- (NSArray*) frequenciesForSampleData:(float*) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode;
-- (id) initWithSize:(unsigned int)frameSize windowing:(unsigned int)windowMode;
+- (VuoReal *) frequenciesForSampleData:(float *) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count;
+- (id) initWithSize:(unsigned int)frameSize windowing:(VuoWindowing)windowMode;
 @end
 
 @implementation VuoDspObject
@@ -51,9 +51,9 @@ VuoModuleMetadata({
  * Initialize a new VuoDspObject that will analyze samples of frameSize buckets.
  * To change the frameSize, you must release and re-initialize this object.
  */
-- (id) initWithSize:(unsigned int)frameSize windowing:(unsigned int)windowMode
+- (id) initWithSize:(unsigned int)frameSize windowing:(VuoWindowing)windowMode
 {
-	if(!self) 
+	if(!self)
 		self = [super init];
 
 	_fftSetup = vDSP_create_fftsetup( log2f(frameSize), kFFTRadix2 );
@@ -71,17 +71,17 @@ VuoModuleMetadata({
 
 	switch(windowMode)
 	{
-		case 1:
+		case VuoWindowing_Hamming:
 			_window = (float *) malloc(sizeof(float) * frameSize);
 			vDSP_hamm_window(_window, frameSize, 0);
 			break;
-		
-		case 2:
+
+		case VuoWindowing_Hann:
 			_window = (float *) malloc(sizeof(float) * frameSize);
 			vDSP_hann_window(_window, frameSize, 0);
 			break;
 
-		case 3:
+		case VuoWindowing_Blackman:
 			_window = (float *) malloc(sizeof(float) * frameSize);
 			vDSP_blkman_window(_window, frameSize, 0);
 			break;
@@ -97,9 +97,9 @@ VuoModuleMetadata({
 /**
  * ...
  */
-- (NSArray*) frequenciesForSampleData:(float*) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode
+- (VuoReal *) frequenciesForSampleData:(float *) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count
 {
-	NSMutableArray *freqChannel = [(NSMutableArray*)[NSMutableArray allocWithZone:NULL] initWithCapacity:frames];
+	VuoReal *freqChannel = (VuoReal *)malloc(sizeof(VuoReal) * frames/2);
 	// see vDSP_Library.pdf, page 20
 
 	// apply windowing
@@ -118,7 +118,7 @@ VuoModuleMetadata({
 		lSplit.imagp[i] = sampleData[offset];
 		offset++;
 	}
-	
+
 	// perform real-to-complex FFT.
 	vDSP_fft_zrip( _fftSetup, &lSplit, 1, log2f(_frameSize), kFFTDirection_Forward );
 
@@ -129,31 +129,27 @@ VuoModuleMetadata({
 		const float scale = 1.0f/frames;
 
 		vDSP_vsmul( lSplit.realp, 1, &scale, lSplit.realp, 1, frames/2 );
-		vDSP_vsmul( lSplit.imagp, 1, &scale, lSplit.imagp, 1, frames/2 );				
+		vDSP_vsmul( lSplit.imagp, 1, &scale, lSplit.imagp, 1, frames/2 );
 	}
 
 	// vDSP_zvmags(&lSplit, 1, lSplit.realp, 1, frames/2);
-	
+
 	// collapse split complex array into a real array.
 	// split[0] contains the DC, and the values we're interested in are split[1] to split[len/2] (since the rest are complex conjugates)
 	vDSP_zvabs( &lSplit, 1, _frequency, 1, frames/2 );
 
 	float *lFrequency = _frequency;
-	id num;
 	int n = 0;
 	switch(frequencyMode)
 	{
 		case VuoAudioBinAverageType_None:	// Linear Raw
 		{
-			IMP addObject = [freqChannel methodForSelector:@selector(addObject:)];
 			for( i=1; i<frames/2; ++i )
 			{
 				n++;
-				float val = lFrequency[i] * ((float)sqrtf(i)*2.f + 1.f);
-				CFNumberRef num = CFNumberCreate(NULL, kCFNumberFloatType, &val);
-				addObject(freqChannel, @selector(addObject:), num);
-				CFRelease(num);
+				freqChannel[i-1] = lFrequency[i] * ((float)sqrtf(i)*2.f + 1.f);
 			}
+			*count = frames/2 - 1;
 			break;
 		}
 		case VuoAudioBinAverageType_Quadratic:	// Quadratic Average
@@ -176,12 +172,11 @@ VuoModuleMetadata({
 					sum += lFrequency[k];
 				sum /= (float)(upperFrequency-lowerFrequency+1);
 				sum *= (float)i*2.f + 1.f;
-				num = [[NSNumber allocWithZone:NULL] initWithFloat:sum];
-				[freqChannel addObject: num ];
-				[num release];
+				freqChannel[i] = sum;
 				lowerFrequency = upperFrequency;
 				++i;
 			}
+			*count = i;
 			break;
 		}
 		case VuoAudioBinAverageType_Logarithmic:	// Logarithmic Average
@@ -202,10 +197,9 @@ VuoModuleMetadata({
 					sum += lFrequency[k];
 				sum /= (float)(upperFrequency-lowerFrequency+1);
 				sum *= (float)powf(i,1.5f) + 1.f;
-				num = [[NSNumber allocWithZone:NULL] initWithFloat:sum];
-				[freqChannel addObject: num ];
-				[num release];
+				freqChannel[i] = sum;
 			}
+			*count = numBuckets;
 		}
 	}
 
@@ -233,7 +227,7 @@ VuoModuleMetadata({
  */
 void VuoDsp_free(VuoDsp dspObject);
 
-VuoDsp VuoDsp_make(unsigned int frameSize, unsigned int windowing)
+VuoDsp VuoDsp_make(unsigned int frameSize, VuoWindowing windowing)
 {
 	VuoDspObject* fft = [[VuoDspObject alloc] initWithSize:frameSize windowing:windowing];
 	VuoRegister(fft, VuoDsp_free);
@@ -253,18 +247,8 @@ VuoReal* VuoDsp_frequenciesForSamples(VuoDsp dspObject, VuoReal* audio, unsigned
 	float* vals = (float*)malloc(sizeof(float)*sampleCount);
 	for(int i = 0; i < sampleCount; i++) vals[i] = (float)audio[i];
 
-	NSArray* frequencies = [dsp frequenciesForSampleData:vals numFrames:sampleCount mode:binAveraging];
-	
+	VuoReal *freq = [dsp frequenciesForSampleData:vals numFrames:sampleCount mode:binAveraging outputCount:spectrumSize];
 	free(vals);
-
-	unsigned int len = [frequencies count];
-	VuoReal* freq = (VuoReal*)malloc(sizeof(VuoReal)*len);
-
-	for(int i = 0; i < len; i++) {
-		freq[i] = [[frequencies objectAtIndex:i] doubleValue];
-	}
-
-	*spectrumSize = len;
 
 	return freq;
 }

@@ -300,13 +300,13 @@ static void startTriggers(struct nodeInstanceData *context)
 												context->renderedLayers.window, VuoModifierKey_Any);
 	VuoMouse_startListeningForDragsWithCallback(context->mouseDraggedListener,
 												^(VuoPoint2d point) { mouseMoved(context, point); },
-												VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any);
+												VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any, true);
 	VuoMouse_startListeningForPressesWithCallback(context->mousePressedListener,
 												  ^(VuoPoint2d point) { mousePressed(context, point); },
 												  VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any);
 	VuoMouse_startListeningForReleasesWithCallback(context->mouseReleasedListener,
 												   ^(VuoPoint2d point) { mouseReleased(context, point); },
-												   VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any);
+												   VuoMouseButton_Left, context->renderedLayers.window, VuoModifierKey_Any, true);
 }
 
 static void stopTriggers(struct nodeInstanceData *context)

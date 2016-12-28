@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AddToList [type="vuo.list.add.VuoBoolean" version="1.0.0" label="AddToList|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="225,540" _position="\"end\"" _item="true"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="FireOnStart|<refresh>refresh\l|<started>started\r" pos="195,300" _started_eventThrottling="enqueue"];
+HoldList [type="vuo.data.hold.list.VuoBoolean" version="1.0.0" label="HoldList|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="225,420"];
+HoldValue [type="vuo.data.hold.VuoInteger" version="2.0.0" label="HoldValue|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="210,165"];
+MakeList [type="vuo.list.make.0.VuoBoolean" version="2.0.0" label="MakeList|<refresh>refresh\l|<list>list\r" pos="184,431"];
+ShareValue [type="vuo.data.share.VuoText" version="1.0.0" label="ShareValue|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="210,60"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<In>In\r" _In_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Out>Out\l" _Out_type="VuoText"];
+
+AddToList:modifiedList -> HoldList:newValue;
+HoldList:heldValue -> AddToList:list;
+MakeList:list -> HoldList:initialValue;
+PublishedInputs:In -> FireOnStart:refresh;
+PublishedInputs:In -> HoldList:refresh;
+PublishedInputs:In -> HoldValue:newValue;
+PublishedInputs:In -> ShareValue:refresh;
+ShareValue:sameValue -> PublishedOutputs:Out;
+}

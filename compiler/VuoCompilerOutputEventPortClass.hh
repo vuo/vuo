@@ -11,8 +11,10 @@
 #define VUOCOMPILEROUTPUTEVENTPORTCLASS_H
 
 #include "VuoCompilerEventPortClass.hh"
-#include "VuoCompilerOutputDataClass.hh"
 
+class VuoCompilerOutputDataClass;
+class VuoCompilerPort;
+class VuoPort;
 
 /**
  * A passive (non-trigger) output port type, optionally with data.

@@ -8,43 +8,105 @@
  */
 
 {"portConfiguration": [
-	{	"firingPort": "refresh",
-		"inputPortValues": {"list": [1,2,3,4], "wrapMode": "wrap"},
-		"outputPortValues": {"item": 1}
+	{	
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"list": [1,2,3,4], 
+			"wrapMode": "wrap"
+		},
+		"outputPortValues": {
+			"item": 1
+		}
 	},
-	{	"firingPort": "refresh",
-		"outputPortValues": {"item": 1}
+	{	
+		"firingPort": "refresh",
+		"outputPortValues": {
+			"item": 1
+		}
 	},
 
 	/* The first goForward should output the first item. */
-	{	"firingPort": "goForward",
-		"outputPortValues": {"item": 1}
+	{	
+		"firingPort": "goForward",
+		"inputPortValues": {
+			"goForwardEvent": true,
+			"goBackwardEvent": false,
+			"goToFirstEvent": false
+		},
+		"outputPortValues": {
+			"item": 1
+		}
 	},
 
 	/* After a goToFirst, goForward should output the first item. */
-	{	"firingPort": "goToFirst"},
-	{	"firingPort": "refresh",
-		"outputPortValues": {"item": 1}
+	{	
+		"firingPort": "goToFirst",
+		"inputPortValues": {
+			"goForwardEvent": false,
+			"goBackwardEvent": false,
+			"goToFirstEvent": true
+		},
+		"outputPortValues": {
+			"item": 1
+		}
 	},
-	{	"firingPort": "goForward",
-		"outputPortValues": {"item": 1}
+	{	
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"goForwardEvent": false,
+			"goBackwardEvent": false,
+			"goToFirstEvent": false
+		},
+		"outputPortValues": {
+			"item": 1
+		}
+	},
+	{	
+		"firingPort": "goForward",
+		"inputPortValues": {
+			"goForwardEvent": true,
+			"goBackwardEvent": false,
+			"goToFirstEvent": false
+		},
+		"outputPortValues": {
+			"item": 1
+		}
 	},
 
-	{	"firingPort": "goForward",
-		"outputPortValues": {"item": 2}
+	{	
+		"firingPort": "goForward",
+		"outputPortValues": {
+			"item": 2
+		}
+	},
+	{	
+		"firingPort": "goForward",
+		"outputPortValues": {
+			"item": 3
+		}
 	},
 	{	"firingPort": "goForward",
-		"outputPortValues": {"item": 3}
-	},
-	{	"firingPort": "goForward",
-		"outputPortValues": {"item": 4}
+		"outputPortValues": {
+			"item": 4
+		}
 	},
 
 	/* Wrap */
-	{	"firingPort": "goForward",
-		"outputPortValues": {"item": 1}
+	{	
+		"firingPort": "goForward",
+		"outputPortValues": {
+			"item": 1
+		}
 	},
-	{	"firingPort": "goBackward",
-		"outputPortValues": {"item": 4}
+	{	
+		"firingPort": "goBackward",
+		"inputPortValues": {
+			"goForwardEvent": false,
+			"goBackwardEvent": true,
+			"goToFirstEvent": false
+		},
+		"outputPortValues": {
+			"item": 4
+		}
 	},
 ]}

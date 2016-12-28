@@ -91,7 +91,9 @@ void VuoScreenCapture_free(void *p)
 {
 	VuoScreenCaptureInternal *sci = (VuoScreenCaptureInternal *)p;
 
+	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
+					  VUOLOG_PROFILE_END(mainQueue);
 					  [sci->session stopRunning];
 				  });
 	dispatch_sync(sci->queue, ^{});
@@ -123,7 +125,9 @@ VuoScreenCapture VuoScreenCapture_make(VuoScreen screen, VuoRectangle rectangle,
 
 	sci->queue = dispatch_queue_create("org.vuo.VuoScreenCapture", NULL);
 
+	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
+					  VUOLOG_PROFILE_END(mainQueue);
 					  sci->delegate = [VuoScreenCaptureDelegate new];
 					  sci->delegate.sci = sci;
 
@@ -169,15 +173,19 @@ VuoScreenCapture VuoScreenCapture_make(VuoScreen screen, VuoRectangle rectangle,
 
 		if (ret != kCVReturnSuccess)
 		{
-			VLog("Error: Couldn't create texture cache: %d", ret);
+			VUserLog("Error: Couldn't create texture cache: %d", ret);
 			VuoScreenCapture_free(sci);
 			return NULL;
 		}
 	}
 
+	{
+	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
+					  VUOLOG_PROFILE_END(mainQueue);
 					  [sci->session startRunning];
 				  });
+	}
 
 	return (VuoScreenCapture)sci;
 }

@@ -97,7 +97,7 @@ int main (int argc, char * argv[])
 		vector<char *> librarySearchPaths;
 		vector<char *> frameworkSearchPaths;
 		VuoCompiler compiler;
-		compiler.loadStoredLicense();
+		compiler.loadStoredLicense(true);
 
 		static struct option options[] = {
 			{"help", no_argument, NULL, 0},
@@ -260,6 +260,9 @@ int main (int argc, char * argv[])
 				if (! hasPotentialInputFile)
 					throw std::runtime_error("no input file");
 
+				if (! VuoFileUtilities::fileContainsReadableData(inputPath))
+					throw std::runtime_error("can't read input file");
+
 				if (outputPath.empty())
 					outputPath = inputDir + inputFile + ".app";
 
@@ -269,6 +272,7 @@ int main (int argc, char * argv[])
 				VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(inputPath, &compiler);
 				VuoComposition *baseComposition = new VuoComposition();
 				VuoCompilerComposition *compilerComposition = new VuoCompilerComposition(baseComposition, parser);
+				compilerComposition->getBase()->setDirectory(inputDir);
 				VuoRendererComposition *rendererComposition = new VuoRendererComposition(baseComposition);
 
 				string exportErrString;
@@ -283,6 +287,9 @@ int main (int argc, char * argv[])
 			{
 				if (! hasPotentialInputFile)
 					throw std::runtime_error("no input file");
+
+				if (! VuoFileUtilities::fileContainsReadableData(inputPath))
+					throw std::runtime_error("can't read input file");
 
 				// If the user presses Ctrl-C, try to cleanly finish the movie.
 				signal(SIGINT, sigintHandler);

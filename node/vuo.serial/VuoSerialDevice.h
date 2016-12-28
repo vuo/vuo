@@ -42,6 +42,8 @@ typedef struct
 VuoSerialDevice VuoSerialDevice_makeFromJson(struct json_object *js);
 struct json_object *VuoSerialDevice_getJson(const VuoSerialDevice value);
 char *VuoSerialDevice_getSummary(const VuoSerialDevice value);
+
+#define VuoSerialDevice_SUPPORTS_COMPARISON
 bool VuoSerialDevice_areEqual(const VuoSerialDevice valueA, const VuoSerialDevice valueB);
 bool VuoSerialDevice_isLessThan(const VuoSerialDevice valueA, const VuoSerialDevice valueB);
 

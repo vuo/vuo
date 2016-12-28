@@ -103,7 +103,9 @@ int main (int argc, char * const argv[])
 			TelemetryLogger *logger = new TelemetryLogger();
 			runner->setDelegate(logger);
 
-			runner->start();
+			runner->startPaused();
+			runner->subscribeToAllTelemetry();
+			runner->unpause();
 			runner->waitUntilStopped();
 		}
 

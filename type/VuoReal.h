@@ -182,12 +182,22 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 	return center + nonzeroSnap * (int)round( (a-center) / nonzeroSnap );
 }
 
+#define VuoReal_SUPPORTS_COMPARISON
+
 /**
  * Returns true if the two values are equal (within a small tolerance).
  */
 static inline bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2)
 {
-	return fabs(value1 - value2) < 0.00001;
+	return fabs(value1 - value2) <= 0.00001;
+}
+
+/**
+ * Returns true if a < b.
+ */
+static inline bool VuoReal_isLessThan(const VuoReal a, const VuoReal b)
+{
+	return a < b;
 }
 
 /**

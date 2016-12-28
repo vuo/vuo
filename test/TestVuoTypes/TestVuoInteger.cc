@@ -23,10 +23,6 @@ class TestVuoInteger : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testStringConversion_data()
 	{
@@ -91,6 +87,35 @@ private slots:
 		}
 		QVERIFY(generated.size() >= expectedMinimumUniqueValueCount);
 		QVERIFY(generatedWithState.size() >= expectedMinimumUniqueValueCount);
+	}
+
+	void testWrap_data()
+	{
+		QTest::addColumn<VuoInteger>("value");
+		QTest::addColumn<VuoInteger>("minimum");
+		QTest::addColumn<VuoInteger>("maximum");
+		QTest::addColumn<VuoInteger>("expectedWrappedValue");
+
+		QTest::newRow("0 inside null range")				<< (VuoInteger)0 << (VuoInteger)0 << (VuoInteger)0 << (VuoInteger)0;
+		QTest::newRow("1 inside null range")				<< (VuoInteger)1 << (VuoInteger)1 << (VuoInteger)1 << (VuoInteger)1;
+		QTest::newRow("0 outside null range")				<< (VuoInteger)0 << (VuoInteger)1 << (VuoInteger)1 << (VuoInteger)1;
+		QTest::newRow("1 outside null range")				<< (VuoInteger)1 << (VuoInteger)0 << (VuoInteger)0 << (VuoInteger)0;
+		QTest::newRow("0 inside nonnull range")				<< (VuoInteger)0 << (VuoInteger)0 << (VuoInteger)1 << (VuoInteger)0;
+		QTest::newRow("1 inside nonnull range")				<< (VuoInteger)1 << (VuoInteger)0 << (VuoInteger)1 << (VuoInteger)1;
+		QTest::newRow("0 outside nonnull range")			<< (VuoInteger)0 << (VuoInteger)1 << (VuoInteger)2 << (VuoInteger)2;
+		QTest::newRow("1 outside nonnull range")			<< (VuoInteger)1 << (VuoInteger)2 << (VuoInteger)3 << (VuoInteger)3;
+		QTest::newRow("0 inside reversed nonnull range")	<< (VuoInteger)0 << (VuoInteger)1 << (VuoInteger)0 << (VuoInteger)0;
+		QTest::newRow("1 inside reversed nonnull range")	<< (VuoInteger)1 << (VuoInteger)1 << (VuoInteger)0 << (VuoInteger)1;
+	}
+	void testWrap()
+	{
+		QFETCH(VuoInteger, value);
+		QFETCH(VuoInteger, minimum);
+		QFETCH(VuoInteger, maximum);
+		QFETCH(VuoInteger, expectedWrappedValue);
+
+		VuoInteger actualWrappedValue = VuoInteger_wrap(value, minimum, maximum);
+		QCOMPARE(actualWrappedValue, expectedWrappedValue);
 	}
 };
 

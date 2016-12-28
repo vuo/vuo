@@ -8,7 +8,7 @@
  */
 
 #include "VuoCompilerOutputData.hh"
-
+#include "VuoCompilerOutputDataClass.hh"
 #include "VuoPort.hh"
 
 /**

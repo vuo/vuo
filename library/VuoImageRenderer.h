@@ -26,7 +26,7 @@ typedef void * VuoImageRenderer;
 VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext);
 VuoImage VuoImageRenderer_draw(VuoImageRenderer imageRenderer, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth);
 
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle);
+unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture);
 
 #ifdef __cplusplus
 }

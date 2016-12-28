@@ -35,7 +35,9 @@ static pthread_t VuoSyphonListener_mainThread = NULL;	///< A reference to the ma
 static void __attribute__((constructor)) VuoSyphonListener_init()
 {
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+					   VUOLOG_PROFILE_BEGIN(mainQueue);
 					   dispatch_sync(dispatch_get_main_queue(), ^{
+										 VUOLOG_PROFILE_END(mainQueue);
 										 VuoSyphonListener_mainThread = pthread_self();
 									 });
 				   });
@@ -71,7 +73,10 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 	if (self = [super init])
 	{
 		// Wait for VuoSyphonListener_init() to complete.
-		dispatch_sync(dispatch_get_main_queue(), ^{});
+		VUOLOG_PROFILE_BEGIN(mainQueue);
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			VUOLOG_PROFILE_END(mainQueue);
+		});
 
 		callback = NULL;
 		serverNotifier = NULL;
@@ -125,9 +130,13 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 		if (VuoSyphonListener_isMainThread())
 			currentDict = [[syphonClient serverDescription] retain];
 		else
+		{
+			VUOLOG_PROFILE_BEGIN(mainQueue);
 			dispatch_sync(dispatch_get_main_queue(), ^{
+							  VUOLOG_PROFILE_END(mainQueue);
 							  currentDict = [[syphonClient serverDescription] retain];
 						  });
+		}
 
 		bool isCurrentStillDesired;
 		{
@@ -158,9 +167,13 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 			if (VuoSyphonListener_isMainThread())
 				[syphonClient stop];
 			else
+			{
+				VUOLOG_PROFILE_BEGIN(mainQueue);
 				dispatch_sync(dispatch_get_main_queue(), ^{
+								  VUOLOG_PROFILE_END(mainQueue);
 								  [syphonClient stop];
 							  });
+			}
 			self.syphonClient = nil;
 		}
 	}
@@ -176,9 +189,13 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 		if (VuoSyphonListener_isMainThread())
 			[syphonClient stop];
 		else
+		{
+			VUOLOG_PROFILE_BEGIN(mainQueue);
 			dispatch_sync(dispatch_get_main_queue(), ^{
+							  VUOLOG_PROFILE_END(mainQueue);
 							  [syphonClient stop];
 						  });
+		}
 		self.syphonClient = nil;
 		VuoRelease(matchingServers);
 		return;
@@ -207,7 +224,10 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 									  SyphonImage *frame = [client newFrameImageForContext:cgl_ctx];
 
 									  if (frame.textureSize.width < 1 || frame.textureSize.height < 1)
+									  {
+										  [frame release];
 										  return;
+									  }
 
 									  VuoImage image = VuoImage_makeClientOwnedGlTextureRectangle(frame.textureName, GL_RGBA, frame.textureSize.width, frame.textureSize.height, VuoSyphonListener_freeSyphonImageCallback, frame);
 									  VuoRetain(image);
@@ -222,7 +242,13 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 	if (VuoSyphonListener_isMainThread())
 		connect();
 	else
-		dispatch_sync(dispatch_get_main_queue(), connect);
+	{
+		VUOLOG_PROFILE_BEGIN(mainQueue);
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			VUOLOG_PROFILE_END(mainQueue);
+			connect();
+		});
+	}
 }
 
 /**
@@ -246,7 +272,9 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 					  VuoRelease(serverNotifier);
 					  serverNotifier = NULL;
 
+					  VUOLOG_PROFILE_BEGIN(mainQueue);
 					  dispatch_sync(dispatch_get_main_queue(), ^{
+						  VUOLOG_PROFILE_END(mainQueue);
 						  [syphonClient stop];
 					  });
 					  self.syphonClient = nil;

@@ -12,11 +12,37 @@
 VuoModuleMetadata({
 					  "title" : "Decreased",
 					  "keywords" : [ "pulse", "watcher", "changed" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
-							  "defaultType" : "VuoReal",
-							  "compatibleTypes" : [ "VuoInteger", "VuoReal" ]
+							  "compatibleTypes" : [
+								  /* Sync with other nodes that say "Sync with vuo.event.decreased" */
+								  "VuoInteger", /* VuoInteger first, so this node can be compiled when unspecialized, since it's a core type */
+								  "VuoArtNetInputDevice",
+								  "VuoArtNetOutputDevice",
+								  "VuoBaudRate",
+								  "VuoColor",
+								  "VuoData",
+								  "VuoDistribution3d",
+								  "VuoDragEvent",
+								  "VuoFont",
+								  "VuoHidControl",
+								  "VuoHidDevice",
+								  "VuoMidiPitchBend",
+								  "VuoMultisample",
+								  "VuoNumberFormat",
+								  "VuoOscInputDevice",
+								  "VuoOscOutputDevice",
+								  "VuoParity",
+								  "VuoReal",
+								  "VuoSerialDevice",
+								  "VuoText",
+								  "VuoTimeUnit",
+								  "VuoTime",
+								  "VuoUrl",
+								  "VuoVertexAttribute",
+								  "VuoWeekday",
+							  ]
 						  }
 					  },
 					  "node" : {
@@ -35,12 +61,12 @@ VuoGenericType1 * nodeInstanceInit( VuoInputData(VuoGenericType1) value )
 void nodeInstanceEvent
 (
 		VuoInstanceData(VuoGenericType1 *) lastValue,
-		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.0}}) value,
+		VuoInputData(VuoGenericType1) value,
 		VuoInputEvent({"eventBlocking":"door","data":"value"}) valueEvent,
 		VuoOutputEvent() decreased
 )
 {
-	*decreased = (value < **lastValue);
+	*decreased = VuoGenericType1_isLessThan(value, **lastValue);
 	**lastValue = value;
 }
 

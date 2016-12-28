@@ -11,7 +11,8 @@
 #define VUOCOMPILERDATA_H
 
 #include "VuoCompilerNodeArgument.hh"
-#include "VuoCompilerDataClass.hh"
+
+class VuoCompilerDataClass;
 
 /**
  * The data for a data-and-event port.
@@ -20,7 +21,6 @@ class VuoCompilerData : public VuoCompilerNodeArgument
 {
 protected:
 	VuoCompilerData(VuoCompilerDataClass *dataClass);
-	string getVariableBaseName(void);
 };
 
 #endif

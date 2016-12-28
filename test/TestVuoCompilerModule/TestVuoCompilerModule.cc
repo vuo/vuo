@@ -8,6 +8,7 @@
  */
 
 #include "TestVuoCompiler.hh"
+#include "VuoCompilerComposition.hh"
 #include "VuoCompilerModule.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
 #include "VuoStringUtilities.hh"

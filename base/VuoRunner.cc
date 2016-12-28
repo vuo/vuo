@@ -10,6 +10,8 @@
 #include "VuoNodeClass.hh"
 #include "VuoRunner.hh"
 #include "VuoFileUtilities.hh"
+#include "VuoEventLoop.h"
+#include "VuoRuntime.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
@@ -20,6 +22,7 @@
 #include <objc/message.h>
 
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
+static int compositionReadRunnerWritePipe[2];  ///< A pipe used by the runtime to check if the runner process has ended.
 
 /**
  * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
@@ -27,13 +30,7 @@ void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 static void __attribute__((constructor)) VuoRunner_init()
 {
 	VuoApp_mainThread = (void *)pthread_self();
-
-	// Processes using VuoRunner are also likely to use Vuo Types, which need reference counting support.
-	// If the code using VuoRunner links to libVuoHeap.dylib, initialize the reference counting system.
-	typedef void (*initType)(void);
-	initType VuoHeap_init = (initType) dlsym(RTLD_SELF, "VuoHeap_init");
-	if (VuoHeap_init)
-		VuoHeap_init();
+	pipe(compositionReadRunnerWritePipe);
 }
 
 /**
@@ -47,11 +44,14 @@ static bool isMainThread(void)
 /**
  * Applies standard settings to the specified ZMQ socket.
  */
-static void VuoRunner_configureSocket(void *zmqSocket)
+static void VuoRunner_configureSocket(void *zmqSocket, int timeoutInSeconds)
 {
-	int timeout = 5 * 1000; // 5 seconds
-	zmq_setsockopt(zmqSocket, ZMQ_RCVTIMEO, &timeout, sizeof timeout);
-	zmq_setsockopt(zmqSocket, ZMQ_SNDTIMEO, &timeout, sizeof timeout);
+	if (timeoutInSeconds >= 0)
+	{
+		int timeoutInMilliseconds = timeoutInSeconds * 1000;
+		zmq_setsockopt(zmqSocket, ZMQ_RCVTIMEO, &timeoutInMilliseconds, sizeof timeoutInMilliseconds);
+		zmq_setsockopt(zmqSocket, ZMQ_SNDTIMEO, &timeoutInMilliseconds, sizeof timeoutInMilliseconds);
+	}
 
 	int linger = 0;  // avoid having zmq_term block if the runner has tried to send a message on a broken connection
 	zmq_setsockopt(zmqSocket, ZMQ_LINGER, &linger, sizeof linger);
@@ -59,8 +59,12 @@ static void VuoRunner_configureSocket(void *zmqSocket)
 
 /**
  * Creates a runner object that can run the composition in file @a compositionPath in a new process.
+ *
+ * @param compositionPath A composition (.vuo) file.
+ * @param continueIfRunnerDies If true, the composition keeps running if the runner process exits without stopping the composition.
+ * @param useExistingCache If true, the build is sped up by skipping the step of ensuring that the compiler's cache exists.
  */
-VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compositionPath, bool useExistingCache)
+VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compositionPath, bool continueIfRunnerDies, bool useExistingCache)
 {
 	string compositionDir, compositionFile, compositionExt;
 	VuoFileUtilities::splitPath(compositionPath, compositionDir, compositionFile, compositionExt);
@@ -80,9 +84,9 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compos
 	{
 		string optimization = (useExistingCache ? "on" : "off");
 		execl(vuoCompilePath.c_str(), "vuo-compile", "--output", compiledCompositionPath.c_str(), compositionPath.c_str(),
-			  "--optimization", optimization.c_str(), NULL);
-		VLog("Error: Couldn't run '%s'.", vuoCompilePath.c_str());
-		return NULL;
+			  "--optimization", optimization.c_str(), "--omit-license-warning", NULL);
+		VUserLog("Error: Couldn't run '%s'.", vuoCompilePath.c_str());
+		_exit(-1);
 	}
 	else if (compilePid > 0)
 	{
@@ -93,13 +97,13 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compos
 		} while (ret == -1 && errno == EINTR);
 		if (WIFEXITED(status) && WEXITSTATUS(status))
 		{
-			VLog("Error: Couldn't compile '%s'.", compositionPath.c_str());
+			VUserLog("Error: Couldn't compile '%s'.", compositionPath.c_str());
 			return NULL;
 		}
 	}
 	else
 	{
-		VLog("Error: Couldn't fork '%s'.", vuoCompilePath.c_str());
+		VUserLog("Error: Couldn't fork '%s'.", vuoCompilePath.c_str());
 		return NULL;
 	}
 
@@ -109,9 +113,9 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compos
 	{
 		string optimization = (useExistingCache ? "fast-build-existing-cache" : "fast-build");
 		execl(vuoLinkPath.c_str(), "vuo-link", "--output", linkedCompositionPath.c_str(), compiledCompositionPath.c_str(),
-			  "--optimization", optimization.c_str(), NULL);
-		VLog("Error: Couldn't run '%s'.", vuoLinkPath.c_str());
-		return NULL;
+			  "--optimization", optimization.c_str(), "--omit-license-warning", NULL);
+		VUserLog("Error: Couldn't run '%s'.", vuoLinkPath.c_str());
+		_exit(-1);
 	}
 	else if (linkPid > 0)
 	{
@@ -122,19 +126,19 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compos
 		} while (ret == -1 && errno == EINTR);
 		if (WIFEXITED(status) && WEXITSTATUS(status))
 		{
-			VLog("Error: Couldn't link '%s'.", compositionPath.c_str());
+			VUserLog("Error: Couldn't link '%s'.", compositionPath.c_str());
 			return NULL;
 		}
 	}
 	else
 	{
-		VLog("Error: Couldn't fork '%s'.", vuoLinkPath.c_str());
+		VUserLog("Error: Couldn't fork '%s'.", vuoLinkPath.c_str());
 		return NULL;
 	}
 
 	remove(compiledCompositionPath.c_str());
 
-	return newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
+	return newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, continueIfRunnerDies, true);
 }
 
 /**
@@ -143,10 +147,11 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionFile(string compos
  * @param compositionString A string containing the composition source code.
  * @param name The executable filename that the running composition should use.
  * @param sourceDir The directory nodes should use to resolve relative paths in the composition.
+ * @param continueIfRunnerDies If true, the composition keeps running if the runner process exits without stopping the composition.
  * @param useExistingCache If true, the build is sped up by skipping the step of ensuring that the compiler's cache exists.
  */
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string compositionString, string name, string sourceDir,
-																	 bool useExistingCache)
+																	 bool continueIfRunnerDies, bool useExistingCache)
 {
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile(name, "bc");
 
@@ -162,7 +167,7 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string comp
 	int ret = pipe(fd);
 	if (ret != 0)
 	{
-		VLog("Error: Couldn't open pipe to compiler.");
+		VUserLog("Error: Couldn't open pipe to compiler.");
 		return NULL;
 	}
 
@@ -177,9 +182,9 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string comp
 
 		string optimization = (useExistingCache ? "on" : "off");
 		execl(vuoCompilePath.c_str(), "vuo-compile", "--output", compiledCompositionPath.c_str(),
-			  "--optimization", optimization.c_str(), "-", NULL);
-		VLog("Error: Couldn't run '%s'.", vuoCompilePath.c_str());
-		return NULL;
+			  "--optimization", optimization.c_str(), "--omit-license-warning", "-", NULL);
+		VUserLog("Error: Couldn't run '%s'.", vuoCompilePath.c_str());
+		_exit(-1);
 	}
 	else if (compilePid > 0)
 	{
@@ -196,13 +201,13 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string comp
 		} while (ret == -1 && errno == EINTR);
 		if (WIFEXITED(status) && WEXITSTATUS(status))
 		{
-			VLog("Error: Couldn't compile '%s'.", name.c_str());
+			VUserLog("Error: Couldn't compile '%s'.", name.c_str());
 			return NULL;
 		}
 	}
 	else
 	{
-		VLog("Error: Couldn't fork '%s'.", vuoCompilePath.c_str());
+		VUserLog("Error: Couldn't fork '%s'.", vuoCompilePath.c_str());
 		return NULL;
 	}
 
@@ -212,9 +217,9 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string comp
 	{
 		string optimization = (useExistingCache ? "fast-build-existing-cache" : "fast-build");
 		execl(vuoLinkPath.c_str(), "vuo-link", "--output", linkedCompositionPath.c_str(), compiledCompositionPath.c_str(),
-			  "--optimization", optimization.c_str(), NULL);
-		VLog("Error: Couldn't run '%s'.", vuoLinkPath.c_str());
-		return NULL;
+			  "--optimization", optimization.c_str(), "--omit-license-warning", NULL);
+		VUserLog("Error: Couldn't run '%s'.", vuoLinkPath.c_str());
+		_exit(-1);
 	}
 	else if (linkPid > 0)
 	{
@@ -225,19 +230,19 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string comp
 		} while (ret == -1 && errno == EINTR);
 		if (WIFEXITED(status) && WEXITSTATUS(status))
 		{
-			VLog("Error: Couldn't link '%s'.", name.c_str());
+			VUserLog("Error: Couldn't link '%s'.", name.c_str());
 			return NULL;
 		}
 	}
 	else
 	{
-		VLog("Error: Couldn't fork '%s'.", vuoLinkPath.c_str());
+		VUserLog("Error: Couldn't fork '%s'.", vuoLinkPath.c_str());
 		return NULL;
 	}
 
 	remove(compiledCompositionPath.c_str());
 
-	return newSeparateProcessRunnerFromExecutable(linkedCompositionPath, sourceDir, true);
+	return newSeparateProcessRunnerFromExecutable(linkedCompositionPath, sourceDir, continueIfRunnerDies, true);
 }
 
 /**
@@ -254,7 +259,7 @@ void VuoRunner::initializeCompilerCache()
 	string composition = "digraph G {}";
 	string name = "InitializeCompilerCache";
 	string sourceDir = VuoFileUtilities::getTmpDir();
-	VuoRunner *r = newSeparateProcessRunnerFromCompositionString(composition, name, sourceDir, false);
+	VuoRunner *r = newSeparateProcessRunnerFromCompositionString(composition, name, sourceDir, false, false);
 	delete r;
 }
 
@@ -263,15 +268,17 @@ void VuoRunner::initializeCompilerCache()
  *
  * @param executablePath A linked composition executable, produced by VuoCompiler::linkCompositionToCreateExecutable().
  * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
+ * @param continueIfRunnerDies If true, the composition keeps running if the runner process exits without stopping the composition.
  * @param deleteExecutableWhenFinished True if the runner should delete @c executablePath when it's finished using the file.
  *
  * @see CompileAndRunInNewProcess.cc
  */
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir,
-															  bool deleteExecutableWhenFinished)
+															  bool continueIfRunnerDies, bool deleteExecutableWhenFinished)
 {
 	VuoRunner * vr = new VuoRunner();
 	vr->executablePath = executablePath;
+	vr->shouldContinueIfRunnerDies = continueIfRunnerDies;
 	vr->shouldDeleteBinariesWhenFinished = deleteExecutableWhenFinished;
 	vr->sourceDir = sourceDir;
 	return vr;
@@ -285,16 +292,18 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executableP
  * @param compositionDylibPath A linked composition dynamic library, produced by VuoCompiler::linkCompositionToCreateDynamicLibraries().
  * @param resourceDylibPath A linked resource dynamic library, produced by the first call to VuoCompiler::linkCompositionToCreateDynamicLibraries() for this runner.
  * @param sourceDir The directory containing the composition (.vuo) source file, used by nodes in the composition to resolve relative paths.
+ * @param continueIfRunnerDies If true, the composition keeps running if the runner process exits without stopping the composition.
  * @param deleteDylibsWhenFinished True if the runner should delete @c compositionDylibPath and @c resourceDylibPath when it's finished using the files.
  */
 VuoRunner * VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath,
 																  string resourceDylibPath, string sourceDir,
-																  bool deleteDylibsWhenFinished)
+																  bool continueIfRunnerDies, bool deleteDylibsWhenFinished)
 {
 	VuoRunner * vr = new VuoRunner();
 	vr->executablePath = compositionLoaderPath;
 	vr->dylibPath = compositionDylibPath;
 	vr->resourceDylibPaths.push_back(resourceDylibPath);
+	vr->shouldContinueIfRunnerDies = continueIfRunnerDies;
 	vr->shouldDeleteBinariesWhenFinished = deleteDylibsWhenFinished;
 	vr->sourceDir = sourceDir;
 	return vr;
@@ -329,6 +338,7 @@ VuoRunner * VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(string dylibPat
 VuoRunner::~VuoRunner(void)
 {
 	dispatch_release(stoppedSemaphore);
+	dispatch_release(terminatedZMQContextSemaphore);
 	dispatch_release(beganListeningSemaphore);
 	dispatch_release(endedListeningSemaphore);
 	dispatch_release(delegateQueue);
@@ -341,16 +351,20 @@ VuoRunner::~VuoRunner(void)
 VuoRunner::VuoRunner(void)
 {
 	dylibHandle = NULL;
+	shouldContinueIfRunnerDies = false;
 	shouldDeleteBinariesWhenFinished = false;
 	paused = true;
 	stopped = true;
 	lostContact = false;
 	listenCanceled = false;
 	stoppedSemaphore = dispatch_semaphore_create(1);
+	terminatedZMQContextSemaphore = dispatch_semaphore_create(0);
 	beganListeningSemaphore = dispatch_semaphore_create(0);
 	endedListeningSemaphore = dispatch_semaphore_create(1);
 	controlQueue = dispatch_queue_create("org.vuo.runner.control", NULL);
 	ZMQContext = NULL;
+	ZMQSelfSend = NULL;
+	ZMQSelfReceive = NULL;
 	ZMQControl = NULL;
 	ZMQTelemetry = NULL;
 	ZMQLoaderControl = NULL;
@@ -442,6 +456,8 @@ void VuoRunner::startPaused(void)
  * Assumes the composition is not already running.
  *
  * Upon return, the composition has been started in a paused state.
+ *
+ * @throw std::runtime_error The composition couldn't start or the connection between the runner and the composition couldn't be established.
  */
 void VuoRunner::startInternal(void)
 {
@@ -458,9 +474,7 @@ void VuoRunner::startInternal(void)
 		if (!dylibHandle)
 			throw std::runtime_error("The composition couldn't start because the library '" + dylibPath + "' couldn't be loaded : " + dlerror());
 
-		typedef void(* initInProcessType)(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid, bool trialRestrictionsEnabled);
-
-		initInProcessType vuoInitInProcess = (initInProcessType)dlsym(dylibHandle, "vuoInitInProcess");
+		VuoInitInProcessType *vuoInitInProcess = (VuoInitInProcessType *)dlsym(dylibHandle, "vuoInitInProcess");
 		if (! vuoInitInProcess)
 			throw std::runtime_error("The composition couldn't start because vuoInitInProcess() couldn't be found in '" + dylibPath + "' : " + dlerror());
 
@@ -481,7 +495,7 @@ void VuoRunner::startInternal(void)
 				throw std::runtime_error("The composition couldn't start because the working directory couldn't be changed to '" + sourceDir + "' : " + strerror(errno));
 		}
 
-		vuoInitInProcess(ZMQContext, ZMQControlURL.c_str(), ZMQTelemetryURL.c_str(), true, getpid(), trialRestrictionsEnabled);
+		vuoInitInProcess(ZMQContext, ZMQControlURL.c_str(), ZMQTelemetryURL.c_str(), true, getpid(), -1, false, trialRestrictionsEnabled, NULL);
 	}
 	else
 	{
@@ -513,10 +527,11 @@ void VuoRunner::startInternal(void)
 		args.push_back("--vuo-control=" + ZMQControlURL);
 		args.push_back("--vuo-telemetry=" + ZMQTelemetryURL);
 
-		pid_t pid = getpid();
 		ostringstream oss;
-		oss << pid;
-		args.push_back("--vuo-runner=" + oss.str());
+		oss << compositionReadRunnerWritePipe[0];
+		args.push_back("--vuo-runner-pipe=" + oss.str());
+		if (shouldContinueIfRunnerDies)
+			args.push_back("--vuo-continue-if-runner-dies");
 
 		if (isUsingCompositionLoader())
 		{
@@ -554,12 +569,23 @@ void VuoRunner::startInternal(void)
 		const size_t ERROR_BUFFER_LEN = 256;
 		char errorBuffer[ERROR_BUFFER_LEN];
 
+		pipe(runnerReadCompositionWritePipe);
+		allCompositionWritePipes.push_back(runnerReadCompositionWritePipe[1]);
+
 		pid_t childPid = fork();
 		if (childPid == 0)
 		{
 			// There are only a limited set of functions you're allowed to call in the child process
-			// after fork() and before exec(). Functions such as VLog() and exit() aren't allowed,
+			// after fork() and before exec(). Functions such as VUserLog() and exit() aren't allowed,
 			// so instead we're calling alternatives such as write() and _exit().
+
+			close(compositionReadRunnerWritePipe[1]);
+			close(runnerReadCompositionWritePipe[0]);
+
+			// Close the write pipes for this process's other running compositions, so we don't block their shutdown.
+			for (vector<int>::iterator i = allCompositionWritePipes.begin(); i != allCompositionWritePipes.end(); ++i)
+				if (*i != runnerReadCompositionWritePipe[1])
+					close(*i);
 
 			pid_t grandchildPid = fork();
 			if (grandchildPid == 0)
@@ -653,7 +679,7 @@ void VuoRunner::startInternal(void)
 	if (isUsingCompositionLoader())
 	{
 		ZMQLoaderControl = zmq_socket(ZMQContext,ZMQ_REQ);
-		VuoRunner_configureSocket(ZMQLoaderControl);
+		VuoRunner_configureSocket(ZMQLoaderControl, 5);
 
 		// Try to connect to the composition loader. If at first we don't succeed, give the composition loader a little more time to set up the socket.
 		int numTries = 0;
@@ -668,17 +694,28 @@ void VuoRunner::startInternal(void)
 	}
 	else
 	{
-		setUpConnections();
+		__block string errorMessage;
+		dispatch_sync(controlQueue, ^{
+						  try {
+							  setUpConnections();
+						  } catch (exception &e) {
+							  errorMessage = e.what();
+						  }
+					  });
+		if (! errorMessage.empty())
+			throw std::runtime_error(errorMessage);
 	}
 }
 
 /**
  * Establishes ZMQ connections with the running composition.
+ *
+ * @throw std::runtime_error The connection between the runner and the composition failed.
  */
 void VuoRunner::setUpConnections(void)
 {
 	ZMQControl = zmq_socket(ZMQContext,ZMQ_REQ);
-	VuoRunner_configureSocket(ZMQControl);
+	VuoRunner_configureSocket(ZMQControl, -1);
 
 	// Try to connect to the composition. If at first we don't succeed, give the composition a little more time to set up the socket.
 	int numTries = 0;
@@ -726,6 +763,8 @@ void VuoRunner::setUpConnections(void)
 	__block string listenError;
 	dispatch_async(queue, ^{
 					   listenOk = listen(listenError);
+					   if (!listenOk)
+						   dispatch_semaphore_signal(beganListeningSemaphore);
 				   });
 	dispatch_semaphore_wait(beganListeningSemaphore, DISPATCH_TIME_FOREVER);
 	if (! listenOk)
@@ -760,11 +799,7 @@ void VuoRunner::runOnMainThread(void)
 		throw std::logic_error("This is not the main thread. Only call this function from the main thread.");
 
 	while (! stopped)
-	{
-		id pool = objc_msgSend((id)objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
-		CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
-		objc_msgSend(pool, sel_getUid("drain"));
-	}
+		VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
 }
 
 /**
@@ -801,9 +836,7 @@ void VuoRunner::drainMainDispatchQueue(void)
 	if (! isMainThread())
 		throw std::logic_error("This is not the main thread. Only call this function from the main thread.");
 
-	id pool = objc_msgSend((id)objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
-	CFRunLoopRunInMode(kCFRunLoopDefaultMode,0,false);
-	objc_msgSend(pool, sel_getUid("drain"));
+	VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
 }
 
 /**
@@ -965,7 +998,32 @@ void VuoRunner::stop(void)
 							  vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
 							  vuoInitMessageWithBool(&messages[1], false);
 							  vuoControlRequestSend(VuoControlRequestCompositionStop,messages,2);
-							  vuoControlReplyReceive(VuoControlReplyCompositionStopping);
+
+							  if (isInCurrentProcess() && isMainThread())
+							  {
+								  // If VuoRunner::stop() is blocking the main thread, wait for the composition's reply on another thread, and drain the main queue, in case the composition needs to shut down stuff that requires the main queue.
+								  __block bool replyReceived = false;
+								  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+									  vuoMemoryBarrier();
+									  try
+									  {
+										  vuoControlReplyReceive(VuoControlReplyCompositionStopping);
+									  }
+									  catch (exception &e)
+									  {
+										  // do nothing; doesn't matter if connection timed out
+									  }
+									  replyReceived = true;
+								  });
+								  while (!replyReceived)
+								  {
+									  drainMainDispatchQueue();
+									  usleep(USEC_PER_SEC / 1000);
+								  }
+								  vuoMemoryBarrier();
+							  }
+							  else
+								  vuoControlReplyReceive(VuoControlReplyCompositionStopping);
 						  }
 						  catch (exception &e)
 						  {
@@ -983,16 +1041,13 @@ void VuoRunner::stop(void)
 
 					  if (isInCurrentProcess() && dylibHandle)
 					  {
-						  typedef void(* initInProcessType)(void *_ZMQContext, const char *controlURL, const char *telemetryURL, bool _isPaused, pid_t _runnerPid, bool trialRestrictionsEnabled);
-						  typedef void(* finiType)(void);
-
-						  initInProcessType vuoInitInProcess = (initInProcessType)dlsym(dylibHandle, "vuoInitInProcess");
+						  VuoInitInProcessType *vuoInitInProcess = (VuoInitInProcessType *)dlsym(dylibHandle, "vuoInitInProcess");
 						  if (vuoInitInProcess)  // Avoid double jeopardy if startInternal() already failed for missing vuoInitInProcess.
 						  {
-							  finiType vuoFini = (finiType)dlsym(dylibHandle, "vuoFini");
+							  VuoFiniType *vuoFini = (VuoFiniType *)dlsym(dylibHandle, "vuoFini");
 							  if (! vuoFini)
 							  {
-								  VLog("The composition couldn't stop because vuoFini() couldn't be found in '%s' : %s", dylibPath.c_str(), dlerror());
+								  VUserLog("The composition couldn't stop because vuoFini() couldn't be found in '%s' : %s", dylibPath.c_str(), dlerror());
 								  return;
 							  }
 							  vuoFini();
@@ -1004,16 +1059,39 @@ void VuoRunner::stop(void)
 						  int ret = chdir(originalWorkingDir.c_str());
 						  if (ret)
 						  {
-							  VLog("The working directory couldn't be restored after the composition was stopped : %s", strerror(errno));
+							  VUserLog("The working directory couldn't be restored after the composition was stopped : %s", strerror(errno));
 						  }
+					  }
+					  else if (isInCurrentProcess() && !dylibHandle)
+					  {
+						  // If the dylib isn't open, the composition isn't running, so there's nothing to clean up.
 					  }
 					  else
 					  {
-						  // Wait for child process to end.
-						  int status;
-						  waitpid(compositionPid, &status, 0);
+						  char buf[1];
+						  close(runnerReadCompositionWritePipe[1]);
 
-						  zmq_term(ZMQContext);
+						  // Remove compositionPipe[1] from the process-wide pipe list.
+						  vector<int>::iterator it = find(allCompositionWritePipes.begin(), allCompositionWritePipes.end(), runnerReadCompositionWritePipe[1]);
+						  if (it != allCompositionWritePipes.end())
+							  allCompositionWritePipes.erase(it);
+
+						  // Wait for child process to end.
+						  // Can't use waitpid() since it only waits on child processes, yet compositionPid is a grandchild.
+						  // Instead, do a blocking read() — the grandchild never writes anything to the pipe, and when the grandchild exits,
+						  // read() will return EOF (since it was the last process that had it open for writing).
+						  read(runnerReadCompositionWritePipe[0], &buf, 1);
+						  close(runnerReadCompositionWritePipe[0]);
+
+						  if (! lostContact)
+						  {
+							  zmq_term(ZMQContext);
+							  ZMQContext = NULL;
+						  }
+						  else
+						  {
+							  dispatch_semaphore_wait(terminatedZMQContextSemaphore, DISPATCH_TIME_FOREVER);
+						  }
 					  }
 
 					  if (shouldDeleteBinariesWhenFinished)
@@ -1036,6 +1114,7 @@ void VuoRunner::stop(void)
 
 					  stopped = true;
 					  dispatch_semaphore_signal(stoppedSemaphore);
+					  VuoEventLoop_break();
 				  });
 }
 
@@ -1051,6 +1130,15 @@ void VuoRunner::cleanUpConnections(void)
 	ZMQControl = NULL;
 
 	listenCanceled = true;
+
+	// Break out of zmq_poll().
+	char z = 0;
+	zmq_msg_t message;
+	zmq_msg_init_size(&message, sizeof z);
+	memcpy(zmq_msg_data(&message), &z, sizeof z);
+	zmq_send(ZMQSelfSend, &message, 0);
+	zmq_msg_close(&message);
+
 	dispatch_semaphore_wait(endedListeningSemaphore, DISPATCH_TIME_FOREVER);
 	dispatch_semaphore_signal(endedListeningSemaphore);
 }
@@ -1286,6 +1374,246 @@ string VuoRunner::getOutputPortSummary(string portIdentifier)
 }
 
 /**
+ * Sends a control request to the composition telling it to start sending telemetry for each event through an input port.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ *
+ * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
+ * @return A brief description of the port's value.
+ *
+ * @see VuoTypes for information about types and their summaries.
+ */
+string VuoRunner::subscribeToInputPortTelemetry(string portIdentifier)
+{
+	__block string summary;
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  zmq_msg_t messages[1];
+						  vuoInitMessageWithString(&messages[0], portIdentifier.c_str());
+						  vuoControlRequestSend(VuoControlRequestInputPortTelemetrySubscribe, messages, 1);
+						  vuoControlReplyReceive(VuoControlReplyInputPortTelemetrySubscribed);
+						  summary = receiveString("");
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+	return summary;
+}
+
+/**
+ * Sends a control request to the composition telling it to start sending telemetry for each event through an output port.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ *
+ * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
+ * @return A brief description of the port's value.
+ *
+ * @see VuoTypes for information about types and their summaries.
+ */
+string VuoRunner::subscribeToOutputPortTelemetry(string portIdentifier)
+{
+	__block string summary;
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  zmq_msg_t messages[1];
+						  vuoInitMessageWithString(&messages[0], portIdentifier.c_str());
+						  vuoControlRequestSend(VuoControlRequestOutputPortTelemetrySubscribe, messages, 1);
+						  vuoControlReplyReceive(VuoControlReplyOutputPortTelemetrySubscribed);
+						  summary = receiveString("");
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+	return summary;
+}
+
+/**
+ * Sends a control request to the composition telling it to stop sending telemetry for each event through an input port.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ *
+ * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
+ */
+void VuoRunner::unsubscribeFromInputPortTelemetry(string portIdentifier)
+{
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  zmq_msg_t messages[1];
+						  vuoInitMessageWithString(&messages[0], portIdentifier.c_str());
+						  vuoControlRequestSend(VuoControlRequestInputPortTelemetryUnsubscribe, messages, 1);
+						  vuoControlReplyReceive(VuoControlReplyInputPortTelemetryUnsubscribed);
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+}
+
+/**
+ * Sends a control request to the composition telling it to stop sending telemetry for each event through an output port.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ *
+ * @param portIdentifier The compile-time identifier for the port (see VuoCompilerEventPort::getIdentifier()).
+ */
+void VuoRunner::unsubscribeFromOutputPortTelemetry(string portIdentifier)
+{
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  zmq_msg_t messages[1];
+						  vuoInitMessageWithString(&messages[0], portIdentifier.c_str());
+						  vuoControlRequestSend(VuoControlRequestOutputPortTelemetryUnsubscribe, messages, 1);
+						  vuoControlReplyReceive(VuoControlReplyOutputPortTelemetryUnsubscribed);
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+}
+
+/**
+ * Sends a control request to the composition telling it to start sending telemetry for all events.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ */
+void VuoRunner::subscribeToEventTelemetry(void)
+{
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  vuoControlRequestSend(VuoControlRequestEventTelemetrySubscribe, NULL, 0);
+						  vuoControlReplyReceive(VuoControlReplyEventTelemetrySubscribed);
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+}
+
+/**
+ * Sends a control request to the composition telling it to stop sending telemetry for all events.
+ * The composition will continue sending any telemetry subscribed by subscribeToInputPortTelemetry(),
+ * subscribeToOutputPortTelemetry() or subscribeToAllTelemetry().
+ *
+ * Assumes the composition has been started and has not been stopped.
+ */
+void VuoRunner::unsubscribeFromEventTelemetry(void)
+{
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  vuoControlRequestSend(VuoControlRequestEventTelemetryUnsubscribe, NULL, 0);
+						  vuoControlReplyReceive(VuoControlReplyEventTelemetryUnsubscribed);
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+}
+
+/**
+ * Sends a control request to the composition telling it to start sending all telemetry.
+ *
+ * Assumes the composition has been started and has not been stopped.
+ */
+void VuoRunner::subscribeToAllTelemetry(void)
+{
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  vuoControlRequestSend(VuoControlRequestAllTelemetrySubscribe, NULL, 0);
+						  vuoControlReplyReceive(VuoControlReplyAllTelemetrySubscribed);
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+}
+
+/**
+ * Sends a control request to the composition telling it to stop sending all telemetry
+ * The composition will continue sending any telemetry subscribed by subscribeToInputPortTelemetry(),
+ * subscribeToOutputPortTelemetry(), or subscribeToEventTelemetry().
+ *
+ * Assumes the composition has been started and has not been stopped.
+ */
+void VuoRunner::unsubscribeFromAllTelemetry(void)
+{
+	dispatch_sync(controlQueue, ^{
+					  if (stopped || lostContact) {
+						  return;
+					  }
+
+					  vuoMemoryBarrier();
+
+					  try
+					  {
+						  vuoControlRequestSend(VuoControlRequestAllTelemetryUnsubscribe, NULL, 0);
+						  vuoControlReplyReceive(VuoControlReplyAllTelemetryUnsubscribed);
+					  }
+					  catch (exception &e)
+					  {
+						  stopBecauseLostContact(e.what());
+					  }
+				  });
+}
+
+/**
  * Sends a control request to the composition telling it to modify a published input port's value.
  *
  * Upon return, the published input port value will have been modified.
@@ -1365,8 +1693,8 @@ void VuoRunner::firePublishedInputPortEvent(VuoRunner::Port *port)
  */
 void VuoRunner::firePublishedInputPortEvent(void)
 {
-	Port port(VuoNodeClass::publishedInputNodeSimultaneousTriggerName, "", NULL);
-	firePublishedInputPortEvent(&port);
+	Port *port = getPublishedInputPorts().at(0);
+	firePublishedInputPortEvent(port);
 }
 
 /**
@@ -1478,6 +1806,8 @@ json_object * VuoRunner::getPublishedOutputPortValue(VuoRunner::Port *port)
  *
  * If a control request is sent, this function must be synchronized with other control requests
  * (i.e. called from @ref start(bool) or @ref controlQueue).
+ *
+ * @throw std::runtime_error The connection between the runner and the composition failed.
  */
 vector<VuoRunner::Port *> VuoRunner::getCachedPublishedPorts(bool input)
 {
@@ -1512,67 +1842,80 @@ vector<VuoRunner::Port *> VuoRunner::getCachedPublishedPorts(bool input)
  *
  * This function must be synchronized with other control requests
  * (i.e. called from @ref start(bool) or @ref controlQueue).
+ *
+ * @throw std::runtime_error The connection between the runner and the composition failed.
+ *		This function imposes a 5-second timeout.
  */
 vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
 {
-	vuoMemoryBarrier();
-
-	enum VuoControlRequest requests[4];
-	enum VuoControlReply replies[4];
-	if (input)
-	{
-		requests[0] = VuoControlRequestPublishedInputPortNamesRetrieve;
-		requests[1] = VuoControlRequestPublishedInputPortTypesRetrieve;
-		requests[2] = VuoControlRequestPublishedInputPortDetailsRetrieve;
-		requests[3] = VuoControlRequestPublishedInputPortConnectedIdentifiersRetrieve;
-		replies[0] = VuoControlReplyPublishedInputPortNamesRetrieved;
-		replies[1] = VuoControlReplyPublishedInputPortTypesRetrieved;
-		replies[2] = VuoControlReplyPublishedInputPortDetailsRetrieved;
-		replies[3] = VuoControlReplyPublishedInputPortConnectedIdentifiersRetrieved;
-	}
-	else
-	{
-		requests[0] = VuoControlRequestPublishedOutputPortNamesRetrieve;
-		requests[1] = VuoControlRequestPublishedOutputPortTypesRetrieve;
-		requests[2] = VuoControlRequestPublishedOutputPortDetailsRetrieve;
-		requests[3] = VuoControlRequestPublishedOutputPortConnectedIdentifiersRetrieve;
-		replies[0] = VuoControlReplyPublishedOutputPortNamesRetrieved;
-		replies[1] = VuoControlReplyPublishedOutputPortTypesRetrieved;
-		replies[2] = VuoControlReplyPublishedOutputPortDetailsRetrieved;
-		replies[3] = VuoControlReplyPublishedOutputPortConnectedIdentifiersRetrieved;
-	}
-
-	vector<string> names;
-	vector<string> types;
-	vector<string> details;
-
-	for (int i = 0; i < 3; ++i)
-	{
-		vuoControlRequestSend(requests[i], NULL, 0);
-		vuoControlReplyReceive(replies[i]);
-		vector<string> messageStrings = receiveListOfStrings();
-		if (i == 0)
-			names = messageStrings;
-		else if (i == 1)
-			types = messageStrings;
-		else
-			details = messageStrings;
-	}
+	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_source_t timeout = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+	dispatch_source_set_timer(timeout, dispatch_time(DISPATCH_TIME_NOW, 5*NSEC_PER_SEC), NSEC_PER_SEC, NSEC_PER_SEC/10);
+	dispatch_source_set_event_handler(timeout, ^{
+										  stopBecauseLostContact("The connection between the composition and runner timed out when trying to receive the list of published ports");
+										  dispatch_source_cancel(timeout);
+	});
+	dispatch_resume(timeout);
 
 	vector<VuoRunner::Port *> ports;
-	for (size_t i = 0; i < names.size() && i < types.size(); ++i)
-	{
-		zmq_msg_t messages[1];
-		vuoInitMessageWithString(&messages[0], names[i].c_str());
-		vuoControlRequestSend(requests[3], messages, 1);
-		vuoControlReplyReceive(replies[3]);
-		vector<string> messageStrings = receiveListOfStrings();
-		set<string> identifiers( messageStrings.begin(), messageStrings.end() );
 
-		VuoRunner::Port *port = new Port(names[i], types[i], json_tokener_parse(details[i].c_str()));
-		port->setConnectedPortIdentifiers(identifiers);
-		ports.push_back(port);
+	try
+	{
+		vuoMemoryBarrier();
+
+		enum VuoControlRequest requests[4];
+		enum VuoControlReply replies[4];
+		if (input)
+		{
+			requests[0] = VuoControlRequestPublishedInputPortNamesRetrieve;
+			requests[1] = VuoControlRequestPublishedInputPortTypesRetrieve;
+			requests[2] = VuoControlRequestPublishedInputPortDetailsRetrieve;
+			replies[0] = VuoControlReplyPublishedInputPortNamesRetrieved;
+			replies[1] = VuoControlReplyPublishedInputPortTypesRetrieved;
+			replies[2] = VuoControlReplyPublishedInputPortDetailsRetrieved;
+		}
+		else
+		{
+			requests[0] = VuoControlRequestPublishedOutputPortNamesRetrieve;
+			requests[1] = VuoControlRequestPublishedOutputPortTypesRetrieve;
+			requests[2] = VuoControlRequestPublishedOutputPortDetailsRetrieve;
+			replies[0] = VuoControlReplyPublishedOutputPortNamesRetrieved;
+			replies[1] = VuoControlReplyPublishedOutputPortTypesRetrieved;
+			replies[2] = VuoControlReplyPublishedOutputPortDetailsRetrieved;
+		}
+
+		vector<string> names;
+		vector<string> types;
+		vector<string> details;
+
+		for (int i = 0; i < 3; ++i)
+		{
+			vuoControlRequestSend(requests[i], NULL, 0);
+			vuoControlReplyReceive(replies[i]);
+			vector<string> messageStrings = receiveListOfStrings();
+			if (i == 0)
+				names = messageStrings;
+			else if (i == 1)
+				types = messageStrings;
+			else
+				details = messageStrings;
+		}
+
+		for (size_t i = 0; i < names.size() && i < types.size() && i < details.size(); ++i)
+		{
+			VuoRunner::Port *port = new Port(names[i], types[i], json_tokener_parse(details[i].c_str()));
+			ports.push_back(port);
+		}
 	}
+	catch (exception &e)
+	{
+		dispatch_source_cancel(timeout);
+		dispatch_release(timeout);
+		throw;
+	}
+
+	dispatch_source_cancel(timeout);
+	dispatch_release(timeout);
 
 	return ports;
 }
@@ -1648,9 +1991,25 @@ VuoRunner::Port * VuoRunner::getPublishedOutputPortWithName(string name)
  */
 bool VuoRunner::listen(string &error)
 {
+	ZMQSelfReceive = zmq_socket(ZMQContext, ZMQ_PAIR);
+	VuoRunner_configureSocket(ZMQSelfReceive, -1);
+	if (zmq_bind(ZMQSelfReceive, "inproc://vuo-runner-self") != 0)
+	{
+		error = strerror(errno);
+		return false;
+	}
+
+	ZMQSelfSend = zmq_socket(ZMQContext, ZMQ_PAIR);
+	VuoRunner_configureSocket(ZMQSelfSend, -1);
+	if (zmq_connect(ZMQSelfSend, "inproc://vuo-runner-self") != 0)
+	{
+		error = strerror(errno);
+		return false;
+	}
+
 	{
 		ZMQTelemetry = zmq_socket(ZMQContext,ZMQ_SUB);
-		VuoRunner_configureSocket(ZMQTelemetry);
+		VuoRunner_configureSocket(ZMQTelemetry, -1);
 		if(zmq_connect(ZMQTelemetry,ZMQTelemetryURL.c_str()))
 		{
 			error = strerror(errno);
@@ -1669,6 +2028,8 @@ bool VuoRunner::listen(string &error)
 		type = VuoTelemetryInputPortsUpdated;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryOutputPortsUpdated;
+		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
+		type = VuoTelemetryPublishedOutputPortsUpdated;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
 		type = VuoTelemetryEventDropped;
 		zmq_setsockopt(ZMQTelemetry, ZMQ_SUBSCRIBE, &type, sizeof type);
@@ -1704,9 +2065,10 @@ bool VuoRunner::listen(string &error)
 		zmq_pollitem_t items[]=
 		{
 			{ZMQTelemetry,0,ZMQ_POLLIN,0},
+			{ZMQSelfReceive,0,ZMQ_POLLIN,0},
 		};
-		int itemCount = 1;
-		long timeout = USEC_PER_SEC;  // wait up to 1 second (can't wait forever, since we need to check listenCanceled)
+		int itemCount = 2;
+		long timeout = USEC_PER_SEC;  // Wait 1 second.  If no telemetry was received in that second, we probably lost contact with the composition.
 		zmq_poll(items,itemCount,timeout);
 		if(items[0].revents & ZMQ_POLLIN)
 		{
@@ -1804,27 +2166,42 @@ bool VuoRunner::listen(string &error)
 												  if (delegate)
 													  delegate->receivedTelemetryOutputPortUpdated(portIdentifier, sentData, portDataSummary);
 											  });
-
-								if (sentData)
-								{
-									for (vector<VuoRunner::Port *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
-									{
-										VuoRunner::Port *port = *i;
-										set<string> connectedIdentifiers = port->getConnectedPortIdentifiers();
-										if (connectedIdentifiers.find(portIdentifier) != connectedIdentifiers.end())
-										{
-											dispatch_sync(delegateQueue, ^{
-															  if (delegate)
-															  delegate->receivedTelemetryPublishedOutputPortUpdated(port, sentData, portDataSummary);
-														  });
-
-											saturating_semaphore_signal(anyPublishedPortEventSemaphore, &anyPublishedPortEventSignaled);
-										}
-									}
-								}
 							}
 						}
 						free(portIdentifier);
+					}
+					break;
+				}
+				case VuoTelemetryPublishedOutputPortsUpdated:
+				{
+					while (hasMoreToReceive(ZMQTelemetry))
+					{
+						char *portIdentifier = vuoReceiveAndCopyString(ZMQTelemetry, NULL);
+						if (hasMoreToReceive(ZMQTelemetry))
+						{
+							bool sentData = vuoReceiveBool(ZMQTelemetry, NULL);
+							if (hasMoreToReceive(ZMQTelemetry))
+							{
+								string portDataSummary;
+								char *s = vuoReceiveAndCopyString(ZMQTelemetry, NULL);
+								if (s)
+								{
+									portDataSummary = s;
+									free(s);
+								}
+								else
+									portDataSummary = "";
+
+								Port *port = getPublishedOutputPortWithName(portIdentifier);
+
+								dispatch_sync(delegateQueue, ^{
+												  if (delegate)
+													  delegate->receivedTelemetryPublishedOutputPortUpdated(port, sentData, portDataSummary);
+											  });
+
+								saturating_semaphore_signal(anyPublishedPortEventSemaphore, &anyPublishedPortEventSignaled);
+							}
+						}
 					}
 					break;
 				}
@@ -1864,12 +2241,19 @@ bool VuoRunner::listen(string &error)
 		else if (! listenCanceled)
 		{
 			listenCanceled = true;
-			stopBecauseLostContact("");
+			string dir, file, ext;
+			VuoFileUtilities::splitPath(executablePath, dir, file, ext);
+			stopBecauseLostContact("The connection between the composition ('" + file + "') and runner timed out while listening for telemetry.");
 		}
 	}
 
 	zmq_close(ZMQTelemetry);
 	ZMQTelemetry = NULL;
+
+	zmq_close(ZMQSelfSend);
+	ZMQSelfSend = NULL;
+	zmq_close(ZMQSelfReceive);
+	ZMQSelfReceive = NULL;
 
 	dispatch_semaphore_signal(endedListeningSemaphore);
 	return true;
@@ -1936,7 +2320,9 @@ void VuoRunner::vuoControlReplyReceive(enum VuoControlReply expectedReply)
 	{
 		string e(error);
 		free(error);
-		throw std::runtime_error(e);
+		ostringstream oss;
+		oss << e << " (expected " << expectedReply << ")";
+		throw std::runtime_error(oss.str());
 	}
 	else if (reply != expectedReply)
 	{
@@ -1963,7 +2349,9 @@ void VuoRunner::vuoLoaderControlReplyReceive(enum VuoLoaderControlReply expected
 	{
 		string e(error);
 		free(error);
-		throw std::runtime_error(e);
+		ostringstream oss;
+		oss << e << " (expected " << expectedReply << ")";
+		throw std::runtime_error(oss.str());
 	}
 	else if (reply != expectedReply)
 	{
@@ -2090,21 +2478,40 @@ void VuoRunner::setDelegate(VuoRunnerDelegate *delegate)
  */
 void VuoRunner::stopBecauseLostContact(string errorMessage)
 {
+	__block bool alreadyLostContact;
 	dispatch_sync(delegateQueue, ^{
-					  if (! lostContact)
-					  {
-						  lostContact = true;
+					  alreadyLostContact = lostContact;
+					  lostContact = true;
+				  });
 
-						  if (delegate)
-							  delegate->lostContactWithComposition();
-					  }
+	if (alreadyLostContact)
+		return;
+
+	dispatch_sync(delegateQueue, ^{
+					  if (delegate)
+						  delegate->lostContactWithComposition();
 				  });
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 					   stop();
 				   });
 
-	VLog("%s", errorMessage.c_str());
+	if (! isInCurrentProcess())
+	{
+		// Normally, stop() is responsible for terminating the ZMQ context.
+		// But, if stopBecauseLostContact() is called, it takes the responsibility away from stop().
+		// If there's an in-progress zmq_recv() call, stop() will get stuck waiting on controlQueue, so
+		// the below call to terminate the ZMQ context interrupts zmq_recv() and allows stop() to proceed.
+		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+						   vuoMemoryBarrier();
+
+						   zmq_term(ZMQContext);
+						   ZMQContext = NULL;
+						   dispatch_semaphore_signal(terminatedZMQContextSemaphore);
+					   });
+	}
+
+	VUserLog("%s", errorMessage.c_str());
 }
 
 /**
@@ -2139,26 +2546,31 @@ string VuoRunner::Port::getType(void)
 
 /**
  * Returns the published port's details.
+ *
+ * Keys include:
+ *
+ *    - `default` — the port's default value
+ *    - `menuItems` — an array where each element is an object with 2 keys: `value` (string: identifier) and `name` (string: display name)
+ *    - `suggestedMin` — the port's suggested minimum value (for use on UI sliders and spinboxes)
+ *    - `suggestedMax` — the port's suggested maximum value (for use on UI sliders and spinboxes)
+ *    - `suggestedStep` — the port's suggested step (the amount the value changes with each click of a spinbox)
+ *
+ * If `menuItems` contains any values, the host application should display a select widget.
+ * Otherwise, the host application should use `type` to determine the kind of widget to display.
+ * Host applications are encouraged to provide widgets for the following specific `type`s:
+ *
+ *    - @ref VuoText
+ *    - @ref VuoReal
+ *    - @ref VuoInteger
+ *    - @ref VuoBoolean
+ *    - @ref VuoPoint2d
+ *    - @ref VuoPoint3d
+ *    - @ref VuoImage
+ *    - @ref VuoColor
  */
 json_object *VuoRunner::Port::getDetails(void)
 {
 	return details;
-}
-
-/**
- * Makes this published port an alias for the ports with the given identifiers.
- */
-void VuoRunner::Port::setConnectedPortIdentifiers(set<string> connectedPortIdentifiers)
-{
-	this->connectedPortIdentifiers = connectedPortIdentifiers;
-}
-
-/**
- * Returns the identifiers of the ports for which this published port is an alias.
- */
-set<string> VuoRunner::Port::getConnectedPortIdentifiers(void)
-{
-	return connectedPortIdentifiers;
 }
 
 VuoRunnerDelegate::~VuoRunnerDelegate() { }  // Fixes "undefined symbols" error
@@ -2172,3 +2584,5 @@ void VuoRunner::setTrialRestrictions(bool isTrial)
 {
 	trialRestrictionsEnabled = isTrial;
 }
+
+vector<int> VuoRunner::allCompositionWritePipes;

@@ -81,7 +81,7 @@ json_object * VuoAudioOutputDevice_getJson(const VuoAudioOutputDevice value)
  */
 char * VuoAudioOutputDevice_getSummary(const VuoAudioOutputDevice value)
 {
-	if (value.id == -1 && strlen(value.name) == 0)
+	if (value.id == -1 && (!value.name || value.name[0] == 0))
 		return strdup("The default audio output device");
 	else if (value.id == -1)
 		return VuoText_format("The first audio output device whose name contains \"%s\"", value.name);

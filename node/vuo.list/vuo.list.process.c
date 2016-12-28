@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Process List",
 					 "keywords" : [ "iterate", "repeat", "multiple", "many", "foreach", "each", "loop", "while", "cycle" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ "DisplayGridOfImages.vuo", "WobbleEggs.vuo", "AddEffectToInstantReplay.vuo" ],
 					 }
@@ -20,6 +20,8 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
+	VuoInteger count;
+	VuoInteger total;
 	VuoList_VuoGenericType1 inputList;
 	VuoList_VuoGenericType2 processedList;
 };
@@ -42,46 +44,46 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	bool finishedProcessingList = false;
-
 	// Only allow starting a new list if we've received back _all_ the fired events,
 	// to prevent outputting partially-complete lists
 	// when `fire` receives frequent events but the feedback loop is slow.
 	if (fireEvent && !(*context)->processedList)
 	{
+		(*context)->total = VuoListGetCount_VuoGenericType1(fire);
+		if ((*context)->total < 1)
+		{
+			processedList(VuoListCreate_VuoGenericType2());
+			return;
+		}
+
 		(*context)->inputList = fire;
 		VuoRetain((*context)->inputList);
 
 		(*context)->processedList = VuoListCreate_VuoGenericType2();
 		VuoRetain((*context)->processedList);
 
-		VuoInteger count = VuoListGetCount_VuoGenericType1(fire);
-		if (count == 0)
-			finishedProcessingList = true;
-		else
-			for (VuoInteger i = 1; i <= count; ++i)
-				processItem(VuoListGetValue_VuoGenericType1(fire, i));
+		(*context)->count = 1;
+		processItem(VuoListGetValue_VuoGenericType1(fire, (*context)->count));
 	}
 
-	if (processedItemEvent && (*context)->processedList)
+	if (processedItemEvent && (*context)->processedList && (*context)->count <= (*context)->total)
 	{
 		VuoListAppendValue_VuoGenericType2((*context)->processedList, processedItem);
 
-		VuoInteger items = VuoListGetCount_VuoGenericType1((*context)->inputList);
-		if (items == VuoListGetCount_VuoGenericType2((*context)->processedList))
-			finishedProcessingList = true;
-	}
+		++(*context)->count;
+		if ((*context)->count <=  (*context)->total)
+			processItem(VuoListGetValue_VuoGenericType1((*context)->inputList, (*context)->count));
+		else
+		{
+			processedList((*context)->processedList);
+			VuoRelease((*context)->processedList);
+			(*context)->processedList = NULL;
 
-	if (finishedProcessingList)
-	{
-		processedList((*context)->processedList);
+			VuoRelease((*context)->inputList);
+			(*context)->inputList = NULL;
 
-		// Stop collecting items.
-		VuoRelease((*context)->processedList);
-		(*context)->processedList = NULL;
-
-		VuoRelease((*context)->inputList);
-		(*context)->inputList = NULL;
+			(*context)->count = 0;
+		}
 	}
 }
 

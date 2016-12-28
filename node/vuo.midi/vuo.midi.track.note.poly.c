@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Track Notes",
 					 "keywords" : [ "pitches", "tones", "synthesizer", "music", "instrument",
-						 "multiple", "polyphonic", "chord", "range", "octave", "filter" ],
+						 "multiple", "polyphonic", "chord", "range", "octave", "filter", "follower" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "ShowPianoRoll.vuo" ],

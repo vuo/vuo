@@ -11,7 +11,7 @@ extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoText.h"
 #include "VuoData.h"
-#include <json/json.h>
+#include <json-c/json.h>
 }
 
 // Be able to use this type in QTest::addColumn()
@@ -26,10 +26,6 @@ class TestVuoText : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testNull()
 	{
@@ -37,9 +33,9 @@ private slots:
 
 		QCOMPARE(QString::fromUtf8(VuoText_make(NULL)), QString(""));
 
-		QCOMPARE(QString::fromUtf8(VuoText_getString(NULL)), QString("\"\""));
+		QCOMPARE(QString::fromUtf8(VuoText_getString(NULL)), QString("null"));
 
-		QCOMPARE(QString::fromUtf8(VuoText_getSummary(NULL)), QString(""));
+		QCOMPARE(QString::fromUtf8(VuoText_getSummary(NULL)), QString("<code></code>"));
 
 		QCOMPARE(VuoText_length(NULL), (size_t)0);
 
@@ -68,13 +64,13 @@ private slots:
 		QTest::addColumn<QString>("value");
 		QTest::addColumn<QString>("summary");
 
-		QTest::newRow("empty string")		<< ""									<< "";
-		QTest::newRow("short")				<< "a"									<< "a";
-		QTest::newRow("borderline")			<< "01234567890123456789012345678901234567890123456789"	<< "01234567890123456789012345678901234567890123456789";
-		QTest::newRow("long")				<< "012345678901234567890123456789012345678901234567890"	<< "01234567890123456789012345678901234567890123456789…";
-		QTest::newRow("UTF8 short")			<< QString::fromUtf8("流")				<< QString::fromUtf8("流");
-		QTest::newRow("UTF8 borderline")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾");
-		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾…");
+		QTest::newRow("empty string")		<< ""									<< "<code></code>";
+		QTest::newRow("short")				<< "a"									<< "<code>a</code>";
+		QTest::newRow("borderline")			<< "01234567890123456789012345678901234567890123456789"	<< "<code>01234567890123456789012345678901234567890123456789</code>";
+		QTest::newRow("long")				<< "012345678901234567890123456789012345678901234567890"	<< "<code>01234567890123456789012345678901234567890123456789…</code>";
+		QTest::newRow("UTF8 short")			<< QString::fromUtf8("流")				<< QString::fromUtf8("<code>流</code>");
+		QTest::newRow("UTF8 borderline")	<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾")	<< QString::fromUtf8("<code>⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾</code>");
+		QTest::newRow("UTF8 long")		<< QString::fromUtf8("⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿")	<< QString::fromUtf8("<code>⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾…</code>");
 	}
 	void testSummary()
 	{
@@ -235,31 +231,32 @@ private slots:
 	{
 		QTest::addColumn<QString>("string");
 		QTest::addColumn<QString>("substring");
-		QTest::addColumn<size_t>("expectedIndex");
+		QTest::addColumn<size_t>("expectedFirstIndex");
+		QTest::addColumn<size_t>("expectedLastIndex");
 
-		{
-			QTest::newRow("Not found") << "⓪①②③④" << "⑤" << (size_t)0;
-		}
-		{
-			QTest::newRow("Found at beginning") << "⓪①②③④" << "⓪" << (size_t)1;
-		}
-		{
-			QTest::newRow("Found at end") << "⓪①②③④" << "④" << (size_t)5;
-		}
-		{
-			QTest::newRow("Multiple occurrences") << "⓪①①①④" << "①" << (size_t)4;
-		}
-		{
-			QTest::newRow("Multiple characters") << "⓪①②③④" << "①②③④" << (size_t)2;
-		}
+		QTest::newRow("Not found")				<< "⓪①②③④" << "⑤"		<< (size_t)0 << (size_t)0;
+		QTest::newRow("Found at beginning")		<< "⓪①②③④" << "⓪"		<< (size_t)1 << (size_t)1;
+		QTest::newRow("Found emptystring")		<< "⓪①②③④" << ""		<< (size_t)1 << (size_t)6;
+		QTest::newRow("Found empty-empty")		<< ""			<< ""		<< (size_t)1 << (size_t)1;
+		QTest::newRow("Found empty-NULL")		<< ""			<< "NULL"	<< (size_t)1 << (size_t)1;
+		QTest::newRow("Found NULL-empty")		<< "NULL"		<< ""		<< (size_t)1 << (size_t)1;
+		QTest::newRow("Found NULL-NULL")		<< "NULL"		<< "NULL"	<< (size_t)1 << (size_t)1;
+		QTest::newRow("Found at end")			<< "⓪①②③④" << "④"		<< (size_t)5 << (size_t)5;
+		QTest::newRow("Multiple occurrences")	<< "⓪①①①④" << "①"		<< (size_t)2 << (size_t)4;
+		QTest::newRow("Multiple characters")	<< "⓪①②③④" << "①②③④"	<< (size_t)2 << (size_t)2;
 	}
 	void testFind()
 	{
 		QFETCH(QString, string);
 		QFETCH(QString, substring);
-		QFETCH(size_t, expectedIndex);
+		QFETCH(size_t, expectedFirstIndex);
+		QFETCH(size_t, expectedLastIndex);
 
-		QCOMPARE(VuoText_findLastOccurrence(string.toUtf8().data(), substring.toUtf8().data()), expectedIndex);
+		VuoText    stringT =    string == "NULL" ? NULL : VuoText_make(   string.toUtf8().data());
+		VuoText substringT = substring == "NULL" ? NULL : VuoText_make(substring.toUtf8().data());
+
+		QCOMPARE(VuoText_findFirstOccurrence(stringT, substringT, 1), expectedFirstIndex);
+		QCOMPARE(VuoText_findLastOccurrence(stringT, substringT), expectedLastIndex);
 	}
 
 	void testReplace_data()

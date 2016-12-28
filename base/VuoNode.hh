@@ -11,10 +11,10 @@
 #define VUONODE_HH
 
 #include "VuoBase.hh"
-#include "VuoNodeClass.hh"
 
 class VuoCompilerNode;
 class VuoRendererNode;
+class VuoNodeClass;
 class VuoPort;
 
 /**

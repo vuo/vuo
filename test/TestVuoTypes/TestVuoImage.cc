@@ -12,7 +12,10 @@ extern "C" {
 #include "VuoImage.h"
 #include "VuoGlContext.h"
 #include "VuoShader.h"
+#include "VuoImageGet.h"
 #include "VuoImageRenderer.h"
+#include "VuoImageBlur.h"
+#include "VuoSceneRenderer.h"
 }
 
 #include <OpenGL/CGLMacro.h>
@@ -69,10 +72,6 @@ class TestVuoImage : public QObject
 	);
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testNull()
 	{
@@ -119,10 +118,10 @@ private slots:
 		QVERIFY(image);
 
 		VuoRetain(image);
-		unsigned char *imageBuffer = VuoImage_copyBuffer(image, GL_RGBA);
-		QVERIFY(abs(imageBuffer[0] - 127) < 2);
+		const unsigned char *imageBuffer = VuoImage_getBuffer(image, GL_BGRA);
+		QVERIFY(abs(imageBuffer[2] - 127) < 2);
 		QVERIFY(abs(imageBuffer[1] - 255) < 2);
-		QVERIFY(abs(imageBuffer[2] -   0) < 2);
+		QVERIFY(abs(imageBuffer[0] -   0) < 2);
 		QVERIFY(abs(imageBuffer[3] - 255) < 2);
 		VuoRelease(image);
 	}
@@ -132,25 +131,43 @@ private slots:
 		QTest::addColumn<VuoImage>("a");
 		QTest::addColumn<VuoImage>("b");
 		QTest::addColumn<bool>("expectedEquality");
+		QTest::addColumn<bool>("expectedAEmpty");
+		QTest::addColumn<bool>("expectedBEmpty");
 
 		QTest::newRow("null null")			<< (VuoImage)NULL
 											<< (VuoImage)NULL
+											<< true
+											<< true
 											<< true;
 
 		QTest::newRow("null nonnull")		<< (VuoImage)NULL
 											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< false
+											<< true
 											<< false;
 
 		QTest::newRow("nonnull null")		<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
 											<< (VuoImage)NULL
-											<< false;
+											<< false
+											<< false
+											<< true;
 
 		QTest::newRow("same color")			<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
 											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< true
+											<< false
+											<< false;
+
+		QTest::newRow("different alpha")	<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
+											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,0),1,1)
+											<< false
+											<< false
 											<< true;
 
 		QTest::newRow("different color")	<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1),1,1)
 											<< VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,.1),1,1)
+											<< false
+											<< false
 											<< false;
 	}
 	void testImageEquality()
@@ -158,9 +175,17 @@ private slots:
 		QFETCH(VuoImage, a);
 		QFETCH(VuoImage, b);
 		QFETCH(bool, expectedEquality);
+		QFETCH(bool, expectedAEmpty);
+		QFETCH(bool, expectedBEmpty);
 
 		bool actualEquality = VuoImage_areEqual(a,b);
 		QCOMPARE(actualEquality, expectedEquality);
+
+		bool actualAEmpty = VuoImage_isEmpty(a);
+		QCOMPARE(actualAEmpty, expectedAEmpty);
+
+		bool actualBEmpty = VuoImage_isEmpty(b);
+		QCOMPARE(actualBEmpty, expectedBEmpty);
 	}
 
 	void testFreeingClientOwned()
@@ -194,6 +219,18 @@ private slots:
 		QVERIFY(TestVuoImage_freed);
 	}
 
+	void testFetchImagePerformance()
+	{
+		QBENCHMARK {
+			VuoImage i = VuoImage_get("/Library/Desktop Pictures/Zebras.jpg");
+			QVERIFY(i);
+			VuoRetain(i);
+			QCOMPARE(i->pixelsWide, 5120UL);
+			QCOMPARE(i->pixelsHigh, 2880UL);
+			VuoRelease(i);
+		}
+	}
+
 	void testMakeFromBufferPerformance()
 	{
 		unsigned int width = 1920;
@@ -201,7 +238,7 @@ private slots:
 		unsigned char *buffer = (unsigned char *)malloc(width*height*4);
 
 		QBENCHMARK {
-			VuoImage i = VuoImage_makeFromBuffer(buffer, GL_RGBA, width, height, VuoImageColorDepth_8);
+			VuoImage i = VuoImage_makeFromBuffer(buffer, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void*){ /* Wait to free until after the benchmark. */ });
 			VuoRetain(i);
 			VuoRelease(i);
 		}
@@ -215,7 +252,7 @@ private slots:
 		unsigned int width = 1920;
 		unsigned int height = 1080;
 		unsigned char *buffer = (unsigned char *)malloc(width*height*4);
-		VuoImage localImage = VuoImage_makeFromBuffer(buffer, GL_RGBA, width, height);
+		VuoImage localImage = VuoImage_makeFromBuffer(buffer, GL_BGRA, width, height);
 		free(buffer);
 		VuoRetain(localImage);
 
@@ -245,7 +282,7 @@ private slots:
 
 		VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_8);
 		VuoRetain(i);
-		unsigned char *imageBuffer = VuoImage_copyBuffer(i, GL_RGBA);
+		const unsigned char *imageBuffer = VuoImage_getBuffer(i, GL_BGRA);
 		QCOMPARE(imageBuffer[0], (unsigned char)255);
 		QCOMPARE(imageBuffer[1], (unsigned char)255);
 		QCOMPARE(imageBuffer[2], (unsigned char)255);
@@ -277,7 +314,7 @@ private slots:
 
 		VuoImage i = VuoImageRenderer_draw(ir, s, width, height, VuoImageColorDepth_16);
 		VuoRetain(i);
-		unsigned char *imageBuffer = VuoImage_copyBuffer(i, GL_RGBA);
+		const unsigned char *imageBuffer = VuoImage_getBuffer(i, GL_BGRA);
 		QCOMPARE(imageBuffer[0], (unsigned char)255);
 		QCOMPARE(imageBuffer[1], (unsigned char)255);
 		QCOMPARE(imageBuffer[2], (unsigned char)255);
@@ -299,8 +336,7 @@ private slots:
 		unsigned int width = 1920;
 		unsigned int height = 1080;
 		unsigned char *buffer = (unsigned char *)malloc(width*height*4);
-		VuoImage sourceImage = VuoImage_makeFromBuffer(buffer, GL_RGBA, width, height, VuoImageColorDepth_8);
-		free(buffer);
+		VuoImage sourceImage = VuoImage_makeFromBuffer(buffer, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 		VuoRetain(sourceImage);
 
 		VuoGlContext glContext = VuoGlContext_use();
@@ -336,16 +372,19 @@ private slots:
 		unsigned int width = 640;
 		unsigned int height = 480;
 		unsigned char *buffer = (unsigned char *)malloc(width*height*4);
-		VuoImage sourceImage = VuoImage_makeFromBuffer(buffer, GL_RGBA, width, height, VuoImageColorDepth_8);
-		free(buffer);
+		VuoImage sourceImage = VuoImage_makeFromBuffer(buffer, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 		VuoRetain(sourceImage);
 
+		VuoImageBlur ib = VuoImageBlur_make();
+		VuoRetain(ib);
+
 		QBENCHMARK {
-			VuoImage i = VuoImage_blur(sourceImage, 1, FALSE);
+			VuoImage i = VuoImageBlur_blur(ib, sourceImage, 1, FALSE);
 			VuoRetain(i);
 			VuoRelease(i);
 		}
 		VuoRelease(sourceImage);
+		VuoRelease(ib);
 	}
 
 	void testImageCopyPerformance()
@@ -365,13 +404,12 @@ private slots:
 			QCOMPARE(copiedImage->pixelsWide, width);
 			QCOMPARE(copiedImage->pixelsHigh, height);
 
-			unsigned char *imageBuffer = VuoImage_copyBuffer(copiedImage, GL_RGBA);
+			const unsigned char *imageBuffer = VuoImage_getBuffer(copiedImage, GL_BGRA);
 			// For unknown reasons the green/blue values fluctuate between 127 and 128, so use a tolerance of 2.
-			QVERIFY(abs(imageBuffer[0] - 255) < 2);
+			QVERIFY(abs(imageBuffer[2] - 255) < 2);
 			QVERIFY(abs(imageBuffer[1] - 127) < 2);
-			QVERIFY(abs(imageBuffer[2] - 127) < 2);
+			QVERIFY(abs(imageBuffer[0] - 127) < 2);
 			QVERIFY(abs(imageBuffer[3] - 255) < 2);
-			free(imageBuffer);
 
 			VuoRelease(copiedImage);
 		}
@@ -403,13 +441,12 @@ private slots:
 			QCOMPARE(copiedImage->pixelsWide, width);
 			QCOMPARE(copiedImage->pixelsHigh, height);
 
-			unsigned char *imageBuffer = VuoImage_copyBuffer(copiedImage, GL_RGBA);
+			const unsigned char *imageBuffer = VuoImage_getBuffer(copiedImage, GL_BGRA);
 			// For unknown reasons the green/blue values fluctuate between 127 and 128, so use a tolerance of 2.
-			QVERIFY(abs(imageBuffer[0] - 255) < 2);
+			QVERIFY(abs(imageBuffer[2] - 255) < 2);
 			QVERIFY(abs(imageBuffer[1] - 127) < 2);
-			QVERIFY(abs(imageBuffer[2] - 127) < 2);
+			QVERIFY(abs(imageBuffer[0] - 127) < 2);
 			QVERIFY(abs(imageBuffer[3] - 255) < 2);
-			free(imageBuffer);
 
 			VuoRelease(copiedImage);
 		}
@@ -422,6 +459,55 @@ private slots:
 		}
 
 		VuoRelease(sourceImage);
+	}
+
+	void testGetBuffer_data()
+	{
+		QTest::addColumn<int>("requestedFormat");
+
+		// All the formats listed in VuoImage_getBuffer()'s Doxygen.
+		QTest::newRow("GL_RGBA")              << GL_RGBA;
+		QTest::newRow("GL_BGRA")              << GL_BGRA;
+		QTest::newRow("GL_RGBA16I_EXT")       << GL_RGBA16I_EXT;
+		QTest::newRow("GL_RGBA16F_ARB")       << GL_RGBA16F_ARB;
+		QTest::newRow("GL_RGBA32F_ARB")       << GL_RGBA32F_ARB;
+		QTest::newRow("GL_LUMINANCE")         << GL_LUMINANCE;
+		QTest::newRow("GL_LUMINANCE_ALPHA")   << GL_LUMINANCE_ALPHA;
+		QTest::newRow("GL_DEPTH_COMPONENT16") << GL_DEPTH_COMPONENT16;
+	}
+	void testGetBuffer()
+	{
+		QFETCH(int, requestedFormat);
+
+
+		// Create a color image and a depth image.
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoRetain(sr);
+
+		VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), VuoListCreate_VuoSceneObject());
+		VuoSceneObject_retain(rootSceneObject);
+
+		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+		VuoSceneRenderer_setCameraName(sr, NULL, true);
+		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
+		VuoImage colorImage, depthImage;
+		VuoSceneRenderer_renderToImage(sr, &colorImage, VuoImageColorDepth_16, VuoMultisample_Off, &depthImage);
+		VuoRetain(colorImage);
+		VuoRetain(depthImage);
+
+
+		const unsigned char *pixels = VuoImage_getBuffer(
+			requestedFormat == GL_DEPTH_COMPONENT16 ? depthImage : colorImage,
+			requestedFormat);
+		QVERIFY(pixels);
+
+
+		VuoRelease(depthImage);
+		VuoRelease(colorImage);
+		VuoSceneObject_release(rootSceneObject);
+		VuoRelease(sr);
+		VuoGlContext_disuse(glContext);
 	}
 };
 

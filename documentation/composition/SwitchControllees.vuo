@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-30,555"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="394,461" fillcolor="green"];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="364,446" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="180,435" _color="{\"r\":0.16426336765289307,\"g\":0.14882123470306396,\"b\":0.9982757568359375,\"a\":0.50000762939453125}" _rotation="0.0" _width="0.29999999999999999" _height="0.29999999999999999" _sharpness="1.0"];
+MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="180,585" _color="{\"r\":0.97569239139556885,\"g\":0.19632257521152496,\"b\":0.26157015562057495,\"a\":0.50000762939453125}" _rotation="0.0" _width="0.29999999999999999" _height="0.29999999999999999" _sharpness="1.0"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-285,270" fillcolor="yellow" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-255,390" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="435,435" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectOutput2 [type="vuo.select.out.boolean.VuoPoint2d" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-30,375" fillcolor="violet"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="-45,270" fillcolor="violet"];
+
+AllowFirstEvent:firstEvent -> MakeOvalLayer2:refresh;
+AllowFirstEvent:firstEvent -> MakeOvalLayer:refresh;
+MakeList5:list -> RenderLayersToWindow:setWindowProperties;
+MakeList6:list -> RenderLayersToWindow:layers;
+MakeOvalLayer2:layer -> MakeList6:2;
+MakeOvalLayer:layer -> MakeList6:1;
+ReceiveKeyboardButtons:pressed -> Toggle:toggle;
+ReceiveMouseMoves:movedTo -> SelectOutput2:in;
+RenderLayersToWindow:requestedFrame -> AllowFirstEvent:event;
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+SelectOutput2:falseOption -> MakeOvalLayer:center;
+SelectOutput2:trueOption -> MakeOvalLayer2:center;
+Toggle:value -> SelectOutput2:which;
+}

@@ -22,5 +22,8 @@ void nodeEvent
 		VuoOutputData(VuoInteger) integer
 )
 {
+	if (!text)
+		return;
+
 	*integer = VuoInteger_makeFromString(text);
 }

@@ -2,6 +2,7 @@
 
 set -e
 
+VUO_RUN_DIR=$(dirname $0)
 if [ -x 'framework/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='framework'
 elif [ -x '../framework/vuo-compile' ]; then
@@ -10,8 +11,8 @@ elif [ -x '../../framework/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='../../framework'
 elif [ -x '../../../framework/vuo-compile' ]; then
 	VUO_FRAMEWORK_PATH='../../../framework'
-elif [ -x "$HOME/prj/vuo/trunk/framework" ]; then
-	VUO_FRAMEWORK_PATH="$HOME/prj/vuo/trunk/framework"
+elif [ -x "$VUO_RUN_DIR/vuo-compile" ]; then
+	VUO_FRAMEWORK_PATH="$VUO_RUN_DIR"
 else
 	echo "Error: Couldn't find vuo-compile."
 	exit

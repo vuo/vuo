@@ -9,37 +9,31 @@
 
 digraph G
 {
-Convert2DPointTo3DPoint [type="vuo.type.point2d.point3d.xy" version="1.0.0" label="Convert 2D Point to 3D Point|<refresh>refresh\l|<xy>xy\l|<xyz>xyz\r" pos="357,815"];
-ConvertRealTo3DPoint3 [type="vuo.type.real.point3d.y" version="1.0.0" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="153,348"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-232,67" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="648,635" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DSquare2 [type="vuo.scene.make.square.VuoShader" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="226,169" _rows="2" _columns="2"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="43,88" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":-1.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":10.000000,\"y\":10.000000,\"z\":1.000000}"];
-Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="35,530" _translation="{\"x\":-0.500000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
-Make3DTransform3 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="31,307" _translation="{\"x\":0.500000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
-MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="227,530"];
-MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-226,556" _2="20.000000"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="595,380" fillcolor="green"];
-MakeList7 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="565,350" fillcolor="green"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="230,354" _rows="32" _columns="32"];
-MakeTargetedSpotlight [type="vuo.scene.make.light.spot.target" version="1.0.0" label="Make Targeted Spotlight|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<target>target\l|<cone>cone\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="817,665" fillcolor="violet" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="1.000000" _position="{\"x\":0.400000,\"y\":-0.400000,\"z\":1.000000}" _cone="30.000000" _range="10.000000" _sharpness="0.900000"];
-Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-180,545"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="554,710" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="636,339" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="39,419" _color="{\"r\":1.000000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
-ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="51,184" _color="{\"r\":0.498436,\"g\":0.398611,\"b\":0.600000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.340002}" _shininess="0.900000"];
+Convert2DPointTo3DPoint [type="vuo.type.point2d.point3d.xy" version="1.0.1" label="Convert 2D Point to 3D Point|<refresh>refresh\l|<xy>xy\l|<xyz>xyz\r" pos="360,810"];
+ConvertRealTo3DPoint3 [type="vuo.type.real.point3d.y" version="1.0.1" label="Convert Real to 3D Point|<refresh>refresh\l|<y>y\l|<point3d>point3d\r" pos="150,345"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-150,195" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="645,630" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DSquare2 [type="vuo.scene.make.square.VuoShader" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="225,165" _transform="{\"translation\":[0,0,-1],\"eulerRotation\":[0,0,0],\"scale\":[10,10,1]}" _rows="2" _columns="2"];
+Make3DTransform2 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="30,525" _translation="{\"x\":-0.500000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.400000,\"y\":0.400000,\"z\":0.400000}"];
+MakeCube3 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="225,525"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-226,551" _2="20.000000"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="589,386" fillcolor="green"];
+MakeList7 [type="vuo.list.make.4.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="559,356" fillcolor="green"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="225,360" _transform="{\"translation\":[0.5,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.40000000596046448,0.40000000596046448,0.40000000596046448]}" _rows="32" _columns="32"];
+MakeTargetedSpotlight [type="vuo.scene.make.light.spot.target" version="1.0.0" label="Make Targeted Spotlight|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<target>target\l|<cone>cone\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="810,660" fillcolor="violet" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="1.000000" _position="{\"x\":0.400000,\"y\":-0.400000,\"z\":1.000000}" _cone="30.000000" _range="10.000000" _sharpness="0.900000"];
+Multiply [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="-180,540"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="555,705" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="630,345" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="45,420" _color="{\"r\":1.000000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+ShadeWithColor3 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="45,225" _color="{\"r\":0.498436,\"g\":0.398611,\"b\":0.600000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":0.340002}" _shininess="0.900000"];
 
 Convert2DPointTo3DPoint:xyz -> MakeTargetedSpotlight:target;
 ConvertRealTo3DPoint3:point3d -> Make3DTransform2:rotation;
 FireOnStart2:started -> MakeTargetedSpotlight:refresh;
-FireOnStart:started -> Make3DTransform3:refresh;
-FireOnStart:started -> Make3DTransform:refresh;
 FireOnStart:started -> ShadeWithColor3:refresh;
 FireOnStart:started -> ShadeWithColor:refresh;
 Make3DSquare2:object -> MakeList7:1;
 Make3DTransform2:transform -> MakeCube3:transform;
-Make3DTransform3:transform -> MakeSphere2:transform;
-Make3DTransform:transform -> Make3DSquare2:transform;
 MakeCube3:cube -> MakeList7:3;
 MakeList0:list -> RenderSceneToWindow:setWindowProperties;
 MakeList7:list -> RenderSceneToWindow:objects;

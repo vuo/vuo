@@ -24,7 +24,7 @@ VuoInputEditorWithEnumMenu::VuoInputEditorWithEnumMenu(QString type)
 /**
  * Creates the tree that models the menu.
  */
-VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree()
+VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree(json_object *details)
 {
 	VuoInputEditorMenuItem *rootMenuItem = new VuoInputEditorMenuItem("root");
 
@@ -50,13 +50,37 @@ VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree()
 
 	if (allowedValuesFunction && summaryFunction && jsonFunction && listCountFunction && listValueFunction)
 	{
+		json_object *includeValues = NULL;
+		json_object_object_get_ex(details, "includeValues", &includeValues);
+		int includeValuesCount = includeValues ? json_object_array_length(includeValues) : 0;
+
 		void *allowedValues = allowedValuesFunction();
 		unsigned long count = listCountFunction(allowedValues);
 		for (unsigned long i=1; i<=count; ++i)
 		{
 			int value = listValueFunction(allowedValues, i);
+			json_object *valueJson = jsonFunction(value);
 			char *summary = summaryFunction(value);
-			rootMenuItem->addItem(new VuoInputEditorMenuItem(summary, jsonFunction(value)));
+
+			bool includeThisValue = true;
+			if (includeValuesCount)
+			{
+				includeThisValue = false;
+				const char *valueString = json_object_to_json_string(valueJson);
+				for (int j = 0; j < includeValuesCount; ++j)
+				{
+					const char *includeValueString = json_object_to_json_string(json_object_array_get_idx(includeValues, j));
+					if (strcmp(valueString, includeValueString) == 0)
+					{
+						includeThisValue = true;
+						break;
+					}
+				}
+			}
+
+			if (includeThisValue)
+				rootMenuItem->addItem(new VuoInputEditorMenuItem(summary, valueJson));
+
 			free(summary);
 		}
 	}

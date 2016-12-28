@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Delay [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="214,-6" _seconds="0.000300"];
+Delay2 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="383,-5" _seconds="0.000300"];
+Delay3 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="562,-2" _seconds="0.000300"];
+Delay4 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="219,157" _seconds="0.000300"];
+Delay5 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="393,159" _seconds="0.000300"];
+Delay6 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="569,160" _seconds="0.000300"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically 1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-44,-5" _seconds="0.100000" _fired_eventThrottling="drop"];
+FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically 2|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-48,164" _seconds="0.001000" _fired_eventThrottling="enqueue"];
+
+Delay2:event -> Delay3:seconds;
+Delay4:event -> Delay5:seconds;
+Delay5:event -> Delay6:seconds;
+Delay:event -> Delay2:seconds;
+FirePeriodically1:fired -> Delay:seconds;
+FirePeriodically2:fired -> Delay4:seconds;
+}

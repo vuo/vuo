@@ -7,6 +7,7 @@ NODE_SOURCES += \
 	vuo.test.triggerCarryingFloat.c \
 	vuo.test.triggerCarryingInteger.c \
 	vuo.test.triggerCarryingPoint3d.c \
+	vuo.test.triggerCarryingPoint4d.c \
 	vuo.test.triggerCarryingReal.c
 
 HEADERS += \

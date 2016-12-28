@@ -9,12 +9,12 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
 #include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputData.hh"
-
+#include "VuoType.hh"
 
 /**
  * Creates a data type for a data-and-event input port.

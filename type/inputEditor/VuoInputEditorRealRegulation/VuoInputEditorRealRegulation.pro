@@ -20,6 +20,7 @@ INCLUDEPATH += \
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
 	$$ROOT/node/vuo.bcf2000/VuoRealRegulation.o \
+	$$ROOT/node/vuo.noise/VuoGradientNoiseCommon.bc \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \

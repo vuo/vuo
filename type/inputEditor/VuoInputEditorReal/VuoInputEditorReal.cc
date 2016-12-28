@@ -29,8 +29,7 @@ VuoInputEditor * VuoInputEditorRealFactory::newInputEditor()
  */
 void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
-	// See https://b33p.net/kosada/node/5724
-	const int decimalPrecision = 6;
+	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 
 	suggestedMin = -std::numeric_limits<double>::max();
 	suggestedMax = std::numeric_limits<double>::max();

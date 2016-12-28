@@ -9,6 +9,7 @@ TYPE_SOURCES += \
 	VuoBoolean.c \
 	VuoBlendMode.c \
 	VuoColor.c \
+	VuoCoordinateUnit.c \
 	VuoCursor.c \
 	VuoCurve.c \
 	VuoCurveEasing.c \
@@ -29,7 +30,7 @@ TYPE_SOURCES += \
 	VuoReal.c \
 	VuoSceneObject.c \
 	VuoScreen.c \
-	VuoShader.c \
+	VuoShader.cc \
 	VuoText.c \
 	VuoTransform.c \
 	VuoTransform2d.c \
@@ -45,6 +46,7 @@ TYPE_HEADERS = \
 	VuoBoolean.h \
 	VuoBlendMode.h \
 	VuoColor.h \
+	VuoCoordinateUnit.h \
 	VuoCursor.h \
 	VuoCurve.h \
 	VuoCurveEasing.h \

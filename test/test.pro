@@ -27,6 +27,10 @@ SUBDIRS += \
 	test_TestCompilingAndLinking_node \
 	test_TestControlAndTelemetry \
 	test_TestControlAndTelemetry_node \
+	test_TestSubcompositions \
+	test_TestEventDropping \
+	test_TestEventDropping_node \
+	test_TestHeap \
 	test_TestNodes \
 	test_TestNodeExecutionOrder \
 	test_TestNodeExecutionOrder_node \
@@ -40,13 +44,13 @@ test_TestBuiltProducts.subdir = TestBuiltProducts
 test_TestBuiltProducts.depends = test_TestCompositionExecution
 
 test_TestCompilingAndLinking.subdir = TestCompilingAndLinking
-test_TestCompilingAndLinking.depends = test_TestCompositionExecution
+test_TestCompilingAndLinking.depends = test_TestCompositionExecution test_TestCompilingAndLinking_node
 
 test_TestCompilingAndLinking_node.subdir = TestCompilingAndLinking/node-TestCompilingAndLinking
 test_TestCompilingAndLinking_node.depends =
 
 test_TestControlAndTelemetry.subdir = TestControlAndTelemetry
-test_TestControlAndTelemetry.depends = test_TestCompositionExecution
+test_TestControlAndTelemetry.depends = test_TestCompositionExecution test_TestControlAndTelemetry_node
 
 test_TestControlAndTelemetry_node.subdir = TestControlAndTelemetry/node-TestControlAndTelemetry
 test_TestControlAndTelemetry_node.depends =
@@ -55,10 +59,16 @@ test_TestCompositionExecution.subdir = TestCompositionExecution
 test_TestCompositionExecution.depends = test_TestVuoCompiler_node
 
 test_TestCompositions.subdir = TestCompositions
-test_TestCompositions.depends = test_TestCompositionExecution
+test_TestCompositions.depends = test_TestCompositionExecution test_TestCompositions_node
 
 test_TestCompositions_node.subdir = TestCompositions/node-TestCompositions
 test_TestCompositions_node.depends =
+
+test_TestEventDropping.subdir = TestEventDropping
+test_TestEventDropping.depends = test_TestCompositionExecution test_TestEventDropping_node
+
+test_TestEventDropping_node.subdir = TestEventDropping/node-TestEventDropping
+test_TestEventDropping_node.depends =
 
 test_TestNodes.subdir = TestNodes
 test_TestNodes.depends = test_TestCompositionExecution
@@ -74,6 +84,9 @@ test_TestReferenceCounting.depends = test_TestCompositionExecution
 
 test_TestReferenceCounting_node.subdir = TestReferenceCounting/node-TestReferenceCounting
 test_TestReferenceCounting_node.depends =
+
+test_TestSubcompositions.subdir = TestSubcompositions
+test_TestSubcompositions.depends = test_TestCompositionExecution
 
 test_TestVuoCompiler_node.subdir = TestVuoCompiler/node-TestVuoCompiler
 test_TestVuoCompiler_node.depends =
@@ -101,6 +114,9 @@ test_TestVuoCompilerNodeClass.depends = test_TestVuoCompiler
 
 test_TestVuoCompilerType.subdir = TestVuoCompilerType
 test_TestVuoCompilerType.depends = test_TestVuoCompiler
+
+test_TestHeap.subdir = TestHeap
+test_TestHeap.depends =
 
 test_TestVuoVideo.subdir = TestVuoVideo
 test_TestVuoVideo.depends =

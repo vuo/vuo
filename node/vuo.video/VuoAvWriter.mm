@@ -50,7 +50,7 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 
 		NSString* apple_string = [[NSString stringWithUTF8String:url] stringByExpandingTildeInPath];
 		NSString* extension = [apple_string pathExtension];
-		
+
 		if( [extension caseInsensitiveCompare:@"mov"] != NSOrderedSame )
 			apple_string = [apple_string stringByAppendingPathExtension:@"mov"];
 
@@ -63,7 +63,7 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 			{
 				if (![[NSFileManager defaultManager] removeItemAtURL:file_url error:&error])
 				{
-					VLog("Failed deleting old video file at path: %s", [apple_string UTF8String]);
+					VUserLog("Failed deleting old video file at path: %s", [apple_string UTF8String]);
 					return NO;
 				}
 			}

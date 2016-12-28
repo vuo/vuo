@@ -113,12 +113,12 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
 
-		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":2}) saturation,
-		VuoInputData(VuoReal, {"default":0, "suggestedMin":-180, "suggestedMax":180}) hueShift,
-		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1}) contrast,
-		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1}) brightness,
-		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1}) exposure,
-		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":3}) gamma,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":2, "suggestedStep":0.1}) saturation,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":-180, "suggestedMax":180, "suggestedStep":1}) hueShift,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1, "suggestedStep":0.1}) contrast,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1, "suggestedStep":0.1}) brightness,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":-1, "suggestedMax":1, "suggestedStep":0.1}) exposure,
+		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":3, "suggestedStep":0.1}) gamma,
 		VuoOutputData(VuoImage) adjustedImage
 )
 {
@@ -128,7 +128,7 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoImage((*instance)->shader, "image", image);
 
 	// *scaledValue = (value - start) * scaledRange / range + scaledStart;
-	VuoShader_setUniform_VuoReal((*instance)->shader, "saturation", saturation+1); 	// 0 - 3 values
+	VuoShader_setUniform_VuoReal((*instance)->shader, "saturation", MAX(0,saturation+1)); 	// 0 - 3 values
 	VuoShader_setUniform_VuoReal((*instance)->shader, "hueShift", hueShift/360.);
 	VuoShader_setUniform_VuoReal((*instance)->shader, "brightness", brightness);	// -1, 1 values
 	VuoShader_setUniform_VuoReal((*instance)->shader, "contrast", contrast+1);		// 0, 2 values

@@ -50,10 +50,11 @@ public:
 		compiler->compileComposition(compositionPath, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
-		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
+		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
 
 		runner->setDelegate(this);
 		runner->start();
+		runner->subscribeToAllTelemetry();
 
 		VuoRunner::Port *startPort = runner->getPublishedInputPortWithName("start");
 		runner->firePublishedInputPortEvent(startPort);
@@ -63,7 +64,7 @@ public:
 		const size_t NUM_EVENTS = 100;
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, compiler);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, false, file, compiler);
 		size_t maxNumNodeExecutions = generator->composition->getBase()->getNodes().size() * 2 * NUM_EVENTS;  // For each event, each node can be executed at most twice (feedback).
 		QVERIFY2(NUM_EVENTS <= nodeExecutions.size() && nodeExecutions.size() <= maxNumNodeExecutions,
 				 QString("%1 <= %2 <= %3").arg(NUM_EVENTS).arg(nodeExecutions.size()).arg(maxNumNodeExecutions).toUtf8().constData());
@@ -73,15 +74,18 @@ public:
 
 	void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
 	{
-		if (! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_conductor") &&
-				! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_semiconductor") &&
-				! VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_firePeriodically"))
+		if (! VuoStringUtilities::beginsWith(portIdentifier, "Conductor") &&
+				! VuoStringUtilities::beginsWith(portIdentifier, "Semiconductor") &&
+				! VuoStringUtilities::beginsWith(portIdentifier, "TestFirePeriodically"))
 			return;
 
 		if (portIdentifier.find("nodeInfo") == string::npos)
 			return;
 
 		QVERIFY(dataSummary.find("...") == string::npos);
+
+		dataSummary = VuoStringUtilities::substrAfter(dataSummary, "<code>");
+		dataSummary = VuoStringUtilities::substrBefore(dataSummary, "</code>");
 
 		const char *SENTINEL = "*";
 		if (VuoStringUtilities::beginsWith(dataSummary, SENTINEL))
@@ -97,7 +101,7 @@ public:
 			return;
 		}
 
-		if (VuoStringUtilities::beginsWith(portIdentifier, "vuo_test_firePeriodically") &&
+		if (VuoStringUtilities::beginsWith(portIdentifier, "TestFirePeriodically") &&
 				! isAfterStartEventForTrigger[portIdentifier])
 		{
 			isAfterStartEventForTrigger[portIdentifier] = true;
@@ -677,7 +681,7 @@ private slots:
 		{
 			sequencesForTriggerMapping_t sequencesForTrigger;
 			sequence_t s;
-			s.push_back("SemiConductor1");
+			s.push_back("Semiconductor1");
 			s.push_back("Conductor1");
 			s.push_back("Conductor2");
 			sequencesForTrigger["FirePer1"].insert(s);
@@ -748,7 +752,7 @@ private slots:
 			}
 			{
 				sequence_t s;
-				s.push_back("SemiConductor1");
+				s.push_back("Semiconductor1");
 				s.push_back("Conductor2");
 				sequencesForTrigger["FirePer2"].insert(s);
 			}

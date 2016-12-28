@@ -50,7 +50,7 @@ void VuoVideoFrame_release(VuoVideoFrame value);
 ///@}
 
 /**
- * Returns an audio input device with the specified values.
+ * Returns a VuoVideoFrame with image and timestamp.
  */
 static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp) __attribute__((const));
 static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp)

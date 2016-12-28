@@ -41,11 +41,23 @@ class TestVuoSceneObject : public QObject
 		return rootSceneObject;
 	}
 
-private slots:
-	void initTestCase()
+	VuoSceneObject makeSphere(void)
 	{
-		VuoHeap_init();
+		// Copied from vuo.mesh.make.sphere
+		const char *xExp = "sin((u-.5)*360) * cos((v-.5)*180) / 2.";
+		const char *yExp = "sin((v-.5)*180) / 2.";
+		const char *zExp = "cos((u-.5)*360) * cos((v-.5)*180) / 2.";
+		VuoMesh m = VuoMeshParametric_generate(0,
+											   xExp, yExp, zExp,
+											   16, 16,
+											   false,		// close u
+											   0, 1,
+											   false,		// close v
+											   0, 1);
+		return VuoSceneObject_make(m, VuoShader_makeDefaultShader(), VuoTransform_makeIdentity(), NULL);
 	}
+
+private slots:
 
 	void testMakeAndSummaryAndSerialization_data()
 	{
@@ -148,7 +160,7 @@ private slots:
 		{
 			VuoTransform transform = VuoTransform_makeEuler(
 						VuoPoint3d_make(42,43,44),
-						VuoPoint3d_multiply(VuoPoint3d_make(1,2,3), -M_PI/180.f),
+						VuoPoint3d_make(0,-.5,-1),
 						VuoPoint3d_make(1,1,1)
 					);
 			VuoSceneObject o = VuoSceneObject_makePerspectiveCamera(
@@ -159,8 +171,8 @@ private slots:
 						20.0
 					);
 			QTest::newRow("perspective camera")		<< o
-													<< "camera-perspective<br>at (42, 43, 44)<br>rotated (1, 2, 3)<br>42° field of view<br>shows objects between depth 1 and 20"
-													<< "{\"type\":\"camera-perspective\",\"cameraDistanceMin\":1.000000,\"cameraDistanceMax\":20.000000,\"cameraFieldOfView\":42.000000,\"name\":\"vuocam\",\"transform\":{\"translation\":[42.000000,43.000000,44.000000],\"eulerRotation\":[-0.017453,-0.034907,-0.052360],\"scale\":[1.000000,1.000000,1.000000]}}";
+													<< "camera-perspective<br>at (42, 43, 44)<br>rotated (-0, 28.6479, 57.2958)<br>42° field of view<br>shows objects between depth 1 and 20"
+													<< "{\"type\":\"camera-perspective\",\"cameraDistanceMin\":1,\"cameraDistanceMax\":20,\"cameraFieldOfView\":42,\"name\":\"vuocam\",\"transform\":{\"translation\":[42,43,44],\"eulerRotation\":[0,-0.5,-1],\"scale\":[1,1,1]}}";
 		}
 
 		{
@@ -178,7 +190,7 @@ private slots:
 					);
 			QTest::newRow("targeted perspective camera")	<< o
 															<< "camera-perspective<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
-															<< QUOTE({"type":"camera-perspective","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+															<< QUOTE({"type":"camera-perspective","cameraDistanceMin":1,"cameraDistanceMax":20,"cameraFieldOfView":42,"name":"vuocam","transform":{"translation":[42,43,44],"target":[45,46,47],"upDirection":[0,1,0]}});
 		}
 
 		{
@@ -194,17 +206,17 @@ private slots:
 						1.0,
 						20.0,
 						1.0,
-						0.1
+						0.5
 					);
 			QTest::newRow("targeted stereo camera")	<< o
 													<< "camera-stereo<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view (stereoscopic)<br>shows objects between depth 1 and 20"
-													<< QUOTE({"type":"camera-stereo","cameraDistanceMin":1.000000,"cameraDistanceMax":20.000000,"cameraFieldOfView":42.000000,"cameraConfocalDistance":1.000000,"cameraIntraocularDistance":0.100000,"name":"vuocam","transform":{"translation":[42.000000,43.000000,44.000000],"target":[45.000000,46.000000,47.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+													<< QUOTE({"type":"camera-stereo","cameraDistanceMin":1,"cameraDistanceMax":20,"cameraFieldOfView":42,"cameraConfocalDistance":1,"cameraIntraocularDistance":0.5,"name":"vuocam","transform":{"translation":[42,43,44],"target":[45,46,47],"upDirection":[0,1,0]}});
 		}
 
 		{
 			VuoTransform transform = VuoTransform_makeEuler(
 						VuoPoint3d_make(52,53,54),
-						VuoPoint3d_multiply(VuoPoint3d_make(4,5,6), -M_PI/180.f),
+						VuoPoint3d_make(0,-.5,-1),
 						VuoPoint3d_make(1,1,1)
 					);
 			VuoSceneObject o = VuoSceneObject_makeOrthographicCamera(
@@ -215,36 +227,36 @@ private slots:
 						22.0
 					);
 			QTest::newRow("orthographic camera")	<< o
-													<< "camera-orthographic<br>at (52, 53, 54)<br>rotated (4, 5, 6)<br>2 unit width<br>shows objects between depth 3 and 22"
-													<< "{\"type\":\"camera-orthographic\",\"cameraDistanceMin\":3.000000,\"cameraDistanceMax\":22.000000,\"cameraWidth\":2.000000,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52.000000,53.000000,54.000000],\"eulerRotation\":[-0.069813,-0.087266,-0.104720],\"scale\":[1.000000,1.000000,1.000000]}}";
+													<< "camera-orthographic<br>at (52, 53, 54)<br>rotated (-0, 28.6479, 57.2958)<br>2 unit width<br>shows objects between depth 3 and 22"
+													<< "{\"type\":\"camera-orthographic\",\"cameraDistanceMin\":3,\"cameraDistanceMax\":22,\"cameraWidth\":2,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52,53,54],\"eulerRotation\":[0,-0.5,-1],\"scale\":[1,1,1]}}";
 		}
 
 		{
 			VuoSceneObject o = VuoSceneObject_makeAmbientLight(
-						VuoColor_makeWithRGBA(0.1,0.2,0.3,0.4),
+						VuoColor_makeWithRGBA(0,0.5,1,1),
 						0.5
 					);
 			QTest::newRow("ambient light")	<< o
-											<< "light-ambient<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5"
-											<< QUOTE({"type":"light-ambient","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000});
+											<< "light-ambient<br>color (0, 0.5, 1, 1)<br>brightness 0.5"
+											<< QUOTE({"type":"light-ambient","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5});
 		}
 
 		{
 			VuoSceneObject o = VuoSceneObject_makePointLight(
-						VuoColor_makeWithRGBA(0.1,0.2,0.3,0.4),
+						VuoColor_makeWithRGBA(0,0.5,1,1),
 						0.5,
 						VuoPoint3d_make(1,2,3),
 						2.5,
 						0.5
 					);
 			QTest::newRow("point light")	<< o
-											<< "light-point<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
-											<< QUOTE({"type":"light-point","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
+											<< "light-point<br>color (0, 0.5, 1, 1)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
+											<< QUOTE({"type":"light-point","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
 		{
 			VuoSceneObject o = VuoSceneObject_makeSpotlight(
-						VuoColor_makeWithRGBA(0.1,0.2,0.3,0.4),
+						VuoColor_makeWithRGBA(0,0.5,1,1),
 						0.5,
 						VuoTransform_makeEuler(VuoPoint3d_make(1,2,3), VuoPoint3d_make(0, 0, 0), VuoPoint3d_make(1,1,1)),
 						45 * M_PI/180.,
@@ -252,8 +264,8 @@ private slots:
 						0.5
 					);
 			QTest::newRow("spotlight")	<< o
-											<< "light-spot<br>color (0.1, 0.2, 0.3, 0.4)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
-											<< QUOTE({"type":"light-spot","lightColor":{"r":0.100000,"g":0.200000,"b":0.300000,"a":0.400000},"lightBrightness":0.500000,"lightRange":2.500000,"lightSharpness":0.500000,"lightCone":0.785398,"transform":{"translation":[1.000000,2.000000,3.000000],"eulerRotation":[0.000000,0.000000,0.000000],"scale":[1.000000,1.000000,1.000000]}});
+											<< "light-spot<br>color (0, 0.5, 1, 1)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
+											<< QUOTE({"type":"light-spot","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"lightCone":0.78539818525314331,"transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
 		{
@@ -271,7 +283,7 @@ private slots:
 					);
 			QTest::newRow("targeted orthographic camera")	<< o
 															<< "camera-orthographic<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
-															<< QUOTE({"type":"camera-orthographic","cameraDistanceMin":3.000000,"cameraDistanceMax":22.000000,"cameraWidth":2.000000,"name":"vuocam ortho","transform":{"translation":[52.000000,53.000000,54.000000],"target":[55.000000,56.000000,57.000000],"upDirection":[0.000000,1.000000,0.000000]}});
+															<< QUOTE({"type":"camera-orthographic","cameraDistanceMin":3,"cameraDistanceMax":22,"cameraWidth":2,"name":"vuocam ortho","transform":{"translation":[52,53,54],"target":[55,56,57],"upDirection":[0,1,0]}});
 		}
 	}
 	void testMakeAndSummaryAndSerialization()
@@ -508,7 +520,7 @@ private slots:
 			VuoSceneRenderer_setCameraName(sr, "", true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -527,22 +539,7 @@ private slots:
 		VuoRetain(sr);
 
 		QBENCHMARK {
-			VuoList_VuoSceneObject childObjects = VuoListCreate_VuoSceneObject();
-
-			// Copied from vuo.mesh.make.sphere
-			const char *xExp = "sin((u-.5)*360) * cos((v-.5)*180) / 2.";
-			const char *yExp = "sin((v-.5)*180) / 2.";
-			const char *zExp = "cos((u-.5)*360) * cos((v-.5)*180) / 2.";
-			VuoMesh m = VuoMeshParametric_generate(0,
-												   xExp, yExp, zExp,
-												   16, 16,
-												   false,		// close u
-												   0, 1,
-												   false,		// close v
-												   0, 1);
-			VuoListAppendValue_VuoSceneObject(childObjects, VuoSceneObject_make(m, VuoShader_makeDefaultShader(), VuoTransform_makeIdentity(), NULL));
-
-			VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), childObjects);
+			VuoSceneObject rootSceneObject = makeSphere();
 			VuoSceneObject_retain(rootSceneObject);
 
 			// Copied from vuo.scene.render.image.
@@ -550,7 +547,7 @@ private slots:
 			VuoSceneRenderer_setCameraName(sr, "", true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -580,7 +577,7 @@ private slots:
 			VuoSceneRenderer_setCameraName(sr, "", true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -611,7 +608,7 @@ private slots:
 
 		QBENCHMARK {
 			VuoImage i;
-			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, NULL);
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
 
 			VuoRetain(i);
 			VuoRelease(i);
@@ -620,6 +617,118 @@ private slots:
 		VuoGlContext_disuse(glContext);
 		VuoSceneObject_release(rootSceneObject);
 		VuoRelease(sr);
+	}
+
+	/**
+	 * Makes a bunch of instances of a sphere.
+	 *
+	 * The returned sceneobject needs to be released by the caller.
+	 */
+	VuoSceneObject makeSphereInstances(int count)
+	{
+		VuoSceneObject cube = makeSphere();
+		VuoSceneObject_retain(cube);
+		VuoList_VuoSceneObject cubes = VuoListCreate_VuoSceneObject();
+		VuoRetain(cubes);
+
+		for (int i = 0; i < count; ++i)
+		{
+			// Give each cube a random position.
+			cube.transform.translation = VuoPoint3d_random(VuoPoint3d_make(-1,-1,-1), VuoPoint3d_make(1,1,1));
+
+			VuoListAppendValue_VuoSceneObject(cubes, cube);
+		}
+
+		VuoSceneObject so = VuoSceneObject_makeGroup(cubes, VuoTransform_makeIdentity());
+		VuoSceneObject_retain(so);
+
+		VuoRelease(cubes);
+		VuoSceneObject_release(cube);
+
+		return so;
+	}
+
+	/**
+	 * Tests performance of rendering a bunch of instances of a sphere with the same shader.
+	 */
+	void testRenderSameShaderPerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoRetain(sr);
+
+		VuoSceneObject rootSceneObject = makeSphereInstances(2000);
+
+		// Copied from vuo.scene.render.image.
+		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+		VuoSceneRenderer_setCameraName(sr, "", true);
+		VuoSceneRenderer_regenerateProjectionMatrix(sr, 640, 480);
+
+		// Render one to prime the caches.
+		VuoImage i;
+		VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+		VuoRetain(i);
+		VuoRelease(i);
+
+		QBENCHMARK {
+			VuoImage i;
+			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
+			VuoRetain(i);
+			VuoRelease(i);
+		}
+
+		VuoGlContext_disuse(glContext);
+		VuoSceneObject_release(rootSceneObject);
+		VuoRelease(sr);
+	}
+
+	/**
+	 * Tests performance of regenerating the projection matrix in a scene with a bunch of objects.
+	 */
+	void testRegenerateProjectionMatrixPerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+		VuoSceneRenderer sr = VuoSceneRenderer_make(glContext, 1);
+		VuoRetain(sr);
+
+		VuoSceneObject rootSceneObject = makeSphereInstances(20000);
+
+		// Copied from vuo.scene.render.image.
+		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
+		VuoSceneRenderer_setCameraName(sr, "", true);
+
+		// Regenerate once to prime the caches.
+		VuoSceneRenderer_regenerateProjectionMatrix(sr, 640, 480);
+
+		QBENCHMARK {
+			VuoSceneRenderer_regenerateProjectionMatrix(sr, 640, 480);
+		}
+
+		VuoGlContext_disuse(glContext);
+		VuoSceneObject_release(rootSceneObject);
+		VuoRelease(sr);
+	}
+
+	/**
+	 * Tests performance of normalizing a scene with a bunch of objects (including instances).
+	 */
+	void testNormalizePerformance()
+	{
+		VuoList_VuoSceneObject objects = VuoListCreate_VuoSceneObject();
+		VuoRetain(objects);
+
+		for (int i = 0; i < 20; ++i)
+			VuoListAppendValue_VuoSceneObject(objects, makeSphereInstances(200));
+
+		VuoSceneObject so = VuoSceneObject_makeGroup(objects, VuoTransform_makeIdentity());
+		VuoSceneObject_retain(so);
+		VuoRelease(objects);
+
+		QBENCHMARK {
+			VuoSceneObject_normalize(&so);
+		}
+
+		VuoSceneObject_release(so);
 	}
 };
 

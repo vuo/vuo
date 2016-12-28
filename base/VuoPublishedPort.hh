@@ -12,45 +12,22 @@
 
 #include <set>
 #include "VuoBase.hh"
-#include "VuoType.hh"
-
-class VuoCompilerPublishedPort;
-class VuoRendererPublishedPort;
-class VuoPort;
+#include "VuoPort.hh"
 
 /**
  * This class represents a published port in a composition. Published ports are visible to clients
  * of the composition, for example to a @c VuoRunner running the composition or to another composition in which
  * this composition is a subcomposition.
- *
- * @see VuoCompilerPublishedPort
- * @see VuoRendererPublishedPort
  */
-class VuoPublishedPort : public VuoBase<VuoCompilerPublishedPort,VuoRendererPublishedPort>
+class VuoPublishedPort : public VuoPort
 {
 public:
-	VuoPublishedPort(string name, VuoType *type, bool isOutput, set<VuoPort *> connectedPorts=set<VuoPort *>());
-	string getName(void);
-	VuoType * getType(void);
-	bool getInput(void) const;
-	bool getOutput(void) const;
-	set<VuoPort *> getConnectedPorts(void);
-	bool hasConnectedPort(VuoPort *port);
-	void addConnectedPort(VuoPort *port);
-	void removeConnectedPort(VuoPort *port);
-	void setName(string name);
-	void setType(VuoType *type);
-
-	void setProtocolPort(bool isProtocolPort);
+	VuoPublishedPort(VuoPortClass *portClass);
+	void setProtocolPort(bool protocolPort);
 	bool isProtocolPort(void);
 
 private:
-	string name;
-	VuoType *type;
-	bool isOutput;
-	bool _isProtocolPort;
-	set<VuoPort *> connectedPorts;
-	string initialValueAsString;
+	bool protocolPort;
 };
 
 #endif // VUOPUBLISHEDPORT_HH
