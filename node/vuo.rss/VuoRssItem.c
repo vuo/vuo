@@ -13,6 +13,7 @@
 #include "type.h"
 #include "VuoRssItem.h"
 #include "VuoText.h"
+#include "VuoTime.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -23,7 +24,9 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						  "VuoImage",
-						  "VuoText"
+						  "VuoText",
+						  "VuoTime",
+						  "VuoUrl"
 					  ]
 				  });
 #endif
@@ -45,7 +48,7 @@ VuoModuleMetadata({
  */
 VuoRssItem VuoRssItem_makeFromJson(json_object * js)
 {
-	VuoRssItem value = {NULL, NULL, NULL, NULL, NULL};
+	VuoRssItem value = {NULL, NULL, NULL, NULL, NAN, NULL};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "title", &o))
@@ -58,7 +61,13 @@ VuoRssItem VuoRssItem_makeFromJson(json_object * js)
 		value.description = VuoText_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "url", &o))
-		value.url = VuoText_makeFromJson(o);
+		value.url = VuoUrl_makeFromJson(o);
+
+	if (json_object_object_get_ex(js, "dateTime", &o))
+		value.dateTime = VuoTime_makeFromJson(o);
+
+	if (json_object_object_get_ex(js, "imageUrl", &o))
+		value.imageUrl = VuoUrl_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "image", &o))
 		value.image = VuoImage_makeFromJson(o);
@@ -82,8 +91,14 @@ json_object * VuoRssItem_getJson(const VuoRssItem value)
 	json_object *descriptionObject = VuoText_getJson(value.description);
 	json_object_object_add(js, "description", descriptionObject);
 
-	json_object *urlObject = VuoText_getJson(value.url);
+	json_object *urlObject = VuoUrl_getJson(value.url);
 	json_object_object_add(js, "url", urlObject);
+
+	json_object *dateTimeObject = VuoTime_getJson(value.dateTime);
+	json_object_object_add(js, "dateTime", dateTimeObject);
+
+	json_object *imageUrlObject = VuoUrl_getJson(value.imageUrl);
+	json_object_object_add(js, "imageUrl", imageUrlObject);
 
 	json_object *imageObject = VuoImage_getJson(value.image);
 	json_object_object_add(js, "image", imageObject);

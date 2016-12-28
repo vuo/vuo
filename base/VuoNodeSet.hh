@@ -11,7 +11,8 @@
 #define VUONODESET_HH
 
 #include "VuoFileUtilities.hh"
-#include "VuoModule.hh"
+
+class VuoModule;
 
 /**
  * This class represents a node set, which is a set of node classes and supporting files

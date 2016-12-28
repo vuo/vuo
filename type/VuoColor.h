@@ -40,7 +40,10 @@ typedef struct
 VuoColor VuoColor_makeFromJson(struct json_object * js);
 struct json_object * VuoColor_getJson(const VuoColor value);
 char * VuoColor_getSummary(const VuoColor value);
-bool VuoColor_areEqual(const VuoColor value1, const VuoColor value2);
+
+#define VuoColor_SUPPORTS_COMPARISON
+bool VuoColor_areEqual(const VuoColor a, const VuoColor b);
+bool VuoColor_isLessThan(const VuoColor a, const VuoColor b);
 
 /**
  * Returns a @c VuoColor with the given red, green, blue, alpha.

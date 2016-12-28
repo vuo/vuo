@@ -61,7 +61,18 @@ string TestCompositionExecution::wrapNodeInComposition(VuoCompilerNodeClass *nod
 		string portName = port->getClass()->getName();
 		oss << "|<" << portName << ">" << portName << "\\r";
 	}
-	oss << "\"];" << endl;
+	oss << "\"";
+	foreach (VuoPort *port, node->getInputPorts())
+	{
+		VuoCompilerInputData *data = dynamic_cast<VuoCompilerInputEventPort *>( port->getCompiler() )->getData();
+		if (data)
+		{
+			string initialValue = VuoStringUtilities::transcodeToGraphvizIdentifier( data->getInitialValue() );
+			string portName = port->getClass()->getName();
+			oss << " _" << portName << "=\"" << initialValue << "\"";
+		}
+	}
+	oss << "];" << endl;
 
 	oss << "PublishedOutputs [type=\"vuo.out\" label=\"PublishedOutputs";
 	foreach (VuoPort *port, node->getOutputPorts())

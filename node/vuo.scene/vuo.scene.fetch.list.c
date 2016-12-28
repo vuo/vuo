@@ -16,6 +16,8 @@ VuoModuleMetadata({
 						 "download", "open", "load", "import", "http", "url", "file", "get",
 						 "mesh", "model", "object", "3D", "opengl", "scenegraph", "graphics",
 						 "3ds", "Studio",
+						 "Autodesk FBX",
+						 "STL",
 						 "Wavefront",
 						 "Collada", "dae",
 						 "Blender",

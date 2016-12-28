@@ -9,6 +9,8 @@
 
 #include "VuoRendererColors.hh"
 
+#include "VuoReal.h"
+
 const qreal VuoRendererColors::minNodeFrameAndFillAlpha = 0.35;
 const qreal VuoRendererColors::maxNodeFrameAndFillAlpha = 1.00;
 const qreal VuoRendererColors::defaultNodeFrameAndFillAlpha = .85;
@@ -83,7 +85,7 @@ bool VuoRendererColors::isDark(void)
  */
 QColor VuoRendererColors::canvasFill(void)
 {
-	return _isDark ? QColor("#1a1a1a") : QColor::fromHslF(0, 0, 1, 1);
+	return _isDark ? QColor("#303030") : QColor::fromHslF(0, 0, 1, 1);
 }
 
 /**

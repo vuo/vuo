@@ -90,18 +90,21 @@ static bool VuoSmoothInertia_step(VuoSmoothInertia s, VuoReal time, type *calcul
 	{
 		movedDuringThisStep = true;
 		VuoReal timeSinceLastFrame = time - s->timeLastFrame;
-		double timeSinceTargetChanged = MIN(time - s->timeWhenTargetChanged, s->duration);
-		double curviness = s->duration/(3.*timeSinceLastFrame);
-		type p1 = add(s->positionWhenTargetChanged, multiply(s->velocityWhenTargetChanged, timeSinceLastFrame*curviness));
-		*calculatedPosition = bezier3(s->positionWhenTargetChanged, p1, s->target, s->target, timeSinceTargetChanged/s->duration);
-
-		s->velocity = multiply(subtract(*calculatedPosition, s->positionLastFrame), 1./timeSinceLastFrame);
-		s->positionLastFrame = *calculatedPosition;
-
-		if (time - s->timeWhenTargetChanged > s->duration)
+		if (timeSinceLastFrame != 0)
 		{
-			s->moving = false;
-			s->velocity = zeroValue;
+			double timeSinceTargetChanged = MIN(time - s->timeWhenTargetChanged, s->duration);
+			double curviness = s->duration/(3.*timeSinceLastFrame);
+			type p1 = add(s->positionWhenTargetChanged, multiply(s->velocityWhenTargetChanged, timeSinceLastFrame*curviness));
+			*calculatedPosition = bezier3(s->positionWhenTargetChanged, p1, s->target, s->target, timeSinceTargetChanged/s->duration);
+
+			s->velocity = multiply(subtract(*calculatedPosition, s->positionLastFrame), 1./timeSinceLastFrame);
+			s->positionLastFrame = *calculatedPosition;
+
+			if (time - s->timeWhenTargetChanged > s->duration)
+			{
+				s->moving = false;
+				s->velocity = zeroValue;
+			}
 		}
 	}
 

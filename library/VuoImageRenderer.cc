@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include <IOSurface/IOSurface.h>
+#include <CoreServices/CoreServices.h>
 
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
@@ -133,7 +134,7 @@ VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned i
 	if (pixelsWide < 1 || pixelsHigh < 1)
 		return NULL;
 
-	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,imageColorDepth,false,false), VuoImageColorDepth_getGlInternalFormat(GL_RGBA, imageColorDepth), pixelsWide, pixelsHigh);
+	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,imageColorDepth,false,false,0), VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth), pixelsWide, pixelsHigh);
 }
 
 /**
@@ -141,7 +142,7 @@ VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned i
  *
  * If @c outputToGlTextureRectangle is true, the caller is responsible for deleting the texture (it should not be thrown into the GL texture pool).
  */
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle)
+unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture)
 {
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
 
@@ -154,21 +155,23 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 
 		// Create a new GL Texture Object.
 		GLuint textureTarget = (outputToIOSurface || outputToGlTextureRectangle) ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
-		GLuint textureTargetInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_RGBA, imageColorDepth);
+		GLuint textureTargetInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
 
 		VuoIoSurface ioSurface = NULL;
 		if (outputToIOSurface)
 			ioSurface = VuoIoSurfacePool_use(cgl_ctx, pixelsWide, pixelsHigh, &outputTexture);
+		else if (outputToSpecificTexture)
+			outputTexture = outputToSpecificTexture;
 		else
 		{
 			if (outputToGlTextureRectangle)
 			{
 				glGenTextures(1, &outputTexture);
 				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, outputTexture);
-				glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, textureTargetInternalFormat, pixelsWide, pixelsHigh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+				glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, textureTargetInternalFormat, pixelsWide, pixelsHigh, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
 
-				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -176,10 +179,11 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 			}
 			else
-				outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_RGBA);
+				outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_BGRA);
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, imageRenderer->outputFramebuffer);
+//		VLog("glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, %s, %d, 0);", VuoGl_stringForConstant(textureTarget), outputTexture);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureTarget, outputTexture, 0);
 
 		glClearColor(0,0,0,0);
@@ -192,10 +196,12 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 			bool ret = VuoShader_getAttributeLocations(shader, VuoMesh_IndividualTriangles, cgl_ctx, &positionAttribute, NULL, NULL, NULL, &textureCoordinateAttribute);
 			if (!ret)
 			{
-				VLog("Error: Failed to get attribute locations.");
+				VUserLog("Error: Failed to get attribute locations.");
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				if (outputToIOSurface)
 					VuoIoSurfacePool_disuse(cgl_ctx, pixelsWide, pixelsHigh, ioSurface, outputTexture);
+				else if (outputToSpecificTexture)
+				{}
 				else
 				{
 					if (outputToGlTextureRectangle)
@@ -209,19 +215,35 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				return 0;
 			}
 
-			unsigned int programName = VuoShader_activate(shader, VuoMesh_IndividualTriangles, cgl_ctx);
+			VuoGlProgram program;
+			if (!VuoShader_activate(shader, VuoMesh_IndividualTriangles, cgl_ctx, &program))
+			{
+				VUserLog("Shader activation failed.");
+				return 0;
+			}
+
 			{
 				glBindVertexArray(imageRenderer->vertexArray);
 
-				GLint projectionMatrixUniform = glGetUniformLocation(programName, "projectionMatrix");
+				GLint projectionMatrixUniform = VuoGlProgram_getUniformLocation(program, "projectionMatrix");
 				glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, unityMatrix);
 
-				GLint modelviewMatrixUniform = glGetUniformLocation(programName, "modelviewMatrix");
+				GLint cameraMatrixInverseUniform = VuoGlProgram_getUniformLocation(program, "cameraMatrixInverse");
+				glUniformMatrix4fv(cameraMatrixInverseUniform, 1, GL_FALSE, unityMatrix);
+
+				GLint useFisheyeProjectionUniform = VuoGlProgram_getUniformLocation(program, "useFisheyeProjection");
+				glUniform1i(useFisheyeProjectionUniform, false);
+
+				GLint modelviewMatrixUniform = VuoGlProgram_getUniformLocation(program, "modelviewMatrix");
 				glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, unityMatrix);
 
-				GLint aspectRatioUniform = glGetUniformLocation(programName, "aspectRatio");
+				GLint aspectRatioUniform = VuoGlProgram_getUniformLocation(program, "aspectRatio");
 				if (aspectRatioUniform != -1)
 					glUniform1f(aspectRatioUniform, (float)pixelsWide/(float)pixelsHigh);
+
+				GLint viewportSizeUniform = VuoGlProgram_getUniformLocation(program, "viewportSize");
+				if (viewportSizeUniform != -1)
+					glUniform2f(viewportSizeUniform, (float)pixelsWide, (float)pixelsHigh);
 
 				glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
 
@@ -234,7 +256,48 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 					glVertexAttribPointer(textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)(sizeof(GLfloat)*16));
 				}
 
+#ifdef PROFILE
+	GLuint timeElapsedQuery;
+	double timeStart = 0;
+	SInt32 macMinorVersion;
+	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+	if (macMinorVersion < 9)
+	{
+		// Prior to OS X v10.9, glGetQueryObjectuiv() isn't likely to work.
+		// (On NVIDIA GeForce 9400M on OS X v10.8, it hangs for 6 seconds then returns bogus data.)
+		// https://www.mail-archive.com/mac-opengl@lists.apple.com/msg00003.html
+		// https://b33p.net/kosada/node/10677
+		glFinish();
+		timeStart = VuoLogGetTime();
+	}
+	else
+	{
+		glGenQueries(1, &timeElapsedQuery);
+		glBeginQuery(GL_TIME_ELAPSED_EXT, timeElapsedQuery);
+	}
+#endif
+
 				glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
+
+#ifdef PROFILE
+	double seconds;
+	if (macMinorVersion < 9)
+	{
+		glFinish();
+		seconds = VuoLogGetTime() - timeStart;
+	}
+	else
+	{
+		glEndQuery(GL_TIME_ELAPSED_EXT);
+		GLuint nanoseconds;
+		glGetQueryObjectuiv(timeElapsedQuery, GL_QUERY_RESULT, &nanoseconds);
+		seconds = ((double)nanoseconds) / NSEC_PER_SEC;
+		glDeleteQueries(1, &timeElapsedQuery);
+	}
+
+	double objectPercent = seconds / (1./60.) * 100.;
+	VLog("%6.2f %% of 60 Hz frame	%s", objectPercent, shader->name);
+#endif
 
 				if (textureCoordinateAttribute != -1)
 				glDisableVertexAttribArray(textureCoordinateAttribute);
@@ -272,6 +335,9 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 void VuoImageRenderer_destroy(VuoImageRenderer ir)
 {
 	struct VuoImageRendererInternal *imageRenderer = (struct VuoImageRendererInternal *)ir;
+
+	VuoShader_cleanupContext(imageRenderer->glContext);
+
 	CGLContextObj cgl_ctx = (CGLContextObj)imageRenderer->glContext;
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

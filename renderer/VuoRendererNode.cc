@@ -19,6 +19,7 @@
 #include "VuoPort.hh"
 #include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerTriggerPort.hh"
+#include "VuoFileUtilities.hh"
 #include "VuoGenericType.hh"
 #include "VuoRendererTypecastPort.hh"
 #include "VuoRendererColors.hh"
@@ -32,7 +33,9 @@ const qreal VuoRendererNode::cornerRadius = VuoRendererFonts::thickPenWidth/8.0;
 const qreal VuoRendererNode::outerBorderWidth = 1.;
 const qreal VuoRendererNode::nodeTitleHeight = round(VuoRendererFonts::nodeTitleFontSize + VuoRendererFonts::thickPenWidth*1./8.);	///< The height of the node's title.
 const qreal VuoRendererNode::nodeClassHeight = round(VuoRendererFonts::thickPenWidth*3./5.);
-const qreal VuoRendererNode::antennaIconWidth = 18.;
+const qreal VuoRendererNode::antennaIconWidth = 3*VuoRendererFonts::midPenWidth;
+const qreal VuoRendererNode::iconRightOffset = 12.;
+const qreal VuoRendererNode::intraIconMargin = 6.;
 
 /**
  * Creates a renderer detail for the specified base node.
@@ -54,8 +57,8 @@ VuoRendererNode::VuoRendererNode(VuoNode * baseNode, VuoRendererSignaler *signal
 	else
 		this->nodeClass = QString::fromUtf8(nodeClass->getClassName().c_str());
 
-	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->getInstanceDataClass();
-	this->nodeIsSubcomposition = false;  /// @todo support subcompositions - https://b33p.net/kosada/node/2639
+	this->nodeIsStateful = nodeClass->hasCompiler() && nodeClass->getCompiler()->isStateful();
+	this->nodeIsSubcomposition = nodeClass->hasCompiler() && nodeClass->getCompiler()->isSubcomposition();
 	this->nodeIsMissing = !nodeClass->hasCompiler();
 	this->alwaysDisplayPortNames = false;
 
@@ -157,7 +160,7 @@ void VuoRendererNode::layoutPorts(void)
 		p->setPos(getPortPoint(p, i++));
 
 	this->portPaths = getPortPaths(this->inputPorts, this->outputPorts);
-	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutline, this->nodeIsSubcomposition);
+	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutline);
 }
 
 /**
@@ -266,6 +269,10 @@ void VuoRendererNode::drawNodeFrame(QPainter *painter, QRectF nodeInnerFrameRect
 	// Paint the "Antenna" icon.
 	if (getBase()->getNodeClass()->isInterface())
 		painter->strokePath(this->antennaPath, QPen(QColor::fromRgb(255,255,255,128), VuoRendererFonts::midPenWidth*5/6, Qt::SolidLine, Qt::FlatCap));
+
+	// Paint the subcomposition icon.
+	if (nodeIsSubcomposition)
+		painter->fillPath(this->subcompositionIndicatorPath, QBrush(QColor::fromRgb(255,255,255,128)));
 }
 
 /**
@@ -275,8 +282,7 @@ void VuoRendererNode::drawNodeFrame(QPainter *painter, QRectF nodeInnerFrameRect
 QPair<QPainterPath, QPainterPath> VuoRendererNode::getNodeFrames(QRectF nodeInnerFrameRect,
 																 QPainterPath portsPath,
 																 QPainterPath portsInsetPath,
-																 QPainterPath statefulIndicatorOutline,
-																 bool isSubcomposition)
+																 QPainterPath statefulIndicatorOutline)
 {
 	// Calculate the bounds of the outer frame (header background, edges around the inner frame, optional footer).
 	QRectF nodeOuterFrameRect;
@@ -293,28 +299,10 @@ QPair<QPainterPath, QPainterPath> VuoRendererNode::getNodeFrames(QRectF nodeInne
 
 	// Calculate the outer and inner frames.
 	QPainterPath nodeOuterFrame;
-	if (isSubcomposition)
 	{
-		// If it's a subcomposition, the outer frame is a rounded rectangle with top and bottom bulges.
-		addRoundedCorner(nodeOuterFrame, false, nodeOuterFrameRect.topLeft(), VuoRendererNode::cornerRadius, true,  true);
-		nodeOuterFrame.cubicTo(
-					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.top() - VuoRendererNode::subcompositionBulge,
-					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.top() - VuoRendererNode::subcompositionBulge,
-					nodeOuterFrameRect.right() - VuoRendererNode::cornerRadius, nodeOuterFrameRect.top()
-					);
-		addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.topRight(), VuoRendererNode::cornerRadius, true,  false);
-		addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.bottomRight(), VuoRendererNode::cornerRadius, false, false);
-		nodeOuterFrame.cubicTo(
-					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.bottom() + VuoRendererNode::subcompositionBulge,
-					nodeOuterFrameRect.center().x(), nodeOuterFrameRect.bottom() + VuoRendererNode::subcompositionBulge,
-					nodeOuterFrameRect.left() + VuoRendererNode::cornerRadius, nodeOuterFrameRect.bottom()
-					);
-		addRoundedCorner(nodeOuterFrame, true,  nodeOuterFrameRect.bottomLeft(),  VuoRendererNode::cornerRadius, false, true);
-		nodeOuterFrame.closeSubpath();
-	}
-	else
-		// If it's not a subcomposition, the outer frame is just a rounded rectangle.
+		// The outer frame is just a rounded rectangle.
 		nodeOuterFrame.addRoundedRect(nodeOuterFrameRect, VuoRendererNode::cornerRadius, VuoRendererNode::cornerRadius);
+	}
 
 	QPainterPath nodeInnerFrame;
 	{
@@ -410,7 +398,7 @@ QPainterPath VuoRendererNode::getStatefulIndicatorOutline(QRectF nodeInnerFrameR
  * Returns the path of the "Antenna" icon for a node with the provided @c nodeInnerFrameRect,
  * or an empty path if @c isInterface is false.
  */
-QPainterPath VuoRendererNode::getAntennaPath(QRectF nodeInnerFrameRect, bool isInterface)
+QPainterPath VuoRendererNode::getAntennaPath(QRectF nodeInnerFrameRect, bool isInterface, bool isSubcomposition)
 {
 	if (!isInterface)
 		return QPainterPath();
@@ -418,8 +406,11 @@ QPainterPath VuoRendererNode::getAntennaPath(QRectF nodeInnerFrameRect, bool isI
 	// "Antenna" icon.
 	// The icon should start at the node class label's baseline, and extend to match its ascender height.
 	QPainterPath antenna;
-	QPointF center = QPointF(nodeInnerFrameRect.right()-VuoRendererNode::antennaIconWidth, -2.);
-	const double arcSize = VuoRendererFonts::midPenWidth*1.5;
+	const double arcSize = 0.5*VuoRendererNode::antennaIconWidth;
+	double offsetFromRight = VuoRendererNode::iconRightOffset + (isSubcomposition?
+																	  intraIconMargin + VuoRendererNode::antennaIconWidth :
+																	  0);
+	QPointF center = QPointF(nodeInnerFrameRect.right()-offsetFromRight, -2.);
 	for (int i=1; i<4; ++i)
 	{
 		QRectF arcBounds = QRectF(center.x()-i*arcSize, center.y()-i*arcSize, i*arcSize*2., i*arcSize*2.);
@@ -428,6 +419,37 @@ QPainterPath VuoRendererNode::getAntennaPath(QRectF nodeInnerFrameRect, bool isI
 	}
 
 	return antenna;
+}
+
+/**
+ * Returns the path of the subcomposition icon for a node with the provided @c nodeInnerFrameRect,
+ * or an empty path if @c isSubcomposition is false.
+ */
+QPainterPath VuoRendererNode::getSubcompositionIndicatorPath(QRectF nodeInnerFrameRect, bool isSubcomposition)
+{
+	if (!isSubcomposition)
+		return QPainterPath();
+
+	const double rectSideLength = VuoRendererFonts::midPenWidth*2.5;
+
+	// The icon should start at the node class label's baseline, and extend to match its ascender height.
+	QPainterPath rectPath;
+	rectPath.addRect(QRectF(-0.5 /* pixel-align */ + nodeInnerFrameRect.right() - iconRightOffset,
+							-4. - 1.5*rectSideLength,
+							rectSideLength,
+							rectSideLength));
+
+	// Stroke the top-left rectangle.
+	QPainterPathStroker rectStroker;
+	QPainterPath topLeftStroke = rectStroker.createStroke(rectPath);
+
+	// Stroke the bottom-right rectangle.
+	rectPath.translate(-0.5 /* pixel-align */ + rectSideLength/2,
+					   -0.5 /* pixel-align */ + rectSideLength/2);
+	QPainterPath bottomRightStroke = rectStroker.createStroke(rectPath);
+
+	// Unite the two rectangles (rather than overdrawing semitransparent strokes), so the icon is a uniform color.
+	return topLeftStroke.united(bottomRightStroke);
 }
 
 /**
@@ -528,11 +550,23 @@ void VuoRendererNode::updateNodeFrameRect(void)
 
 		qreal thisRowWidth = 0;
 		if (adjustedInputPortRow < inputPorts->childItems().size())
-			thisRowWidth += inputPorts->childItems()[adjustedInputPortRow]->getNameRect().width() +
-							inputPorts->childItems()[adjustedInputPortRow]->getActionIndicatorRect().width();
+		{
+			VuoRendererPort *port = inputPorts->childItems()[adjustedInputPortRow];
+			thisRowWidth += port->getNameRect().x() + port->getNameRect().width();
+
+			if (port->hasPortAction())
+				thisRowWidth += port->getActionIndicatorRect().width();
+		}
 
 		if (adjustedOutputPortRow < outputPorts->childItems().size())
+		{
 			thisRowWidth += outputPorts->childItems()[adjustedOutputPortRow]->getNameRect().width();
+			thisRowWidth +=
+					// The half of the port circle inside the node
+					VuoRendererPort::portRadius
+					// Margin between label and port circle
+					+ 7;
+		}
 
 		if(thisRowWidth > maxPortRowWidth)
 			maxPortRowWidth = thisRowWidth;
@@ -540,25 +574,49 @@ void VuoRendererNode::updateNodeFrameRect(void)
 
 	qreal nodeTitleWidth = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodeTitleFont()).boundingRect(nodeTitle).width();
 	qreal nodeClassWidth = QFontMetricsF(VuoRendererFonts::getSharedFonts()->nodeClassFont()).boundingRect(nodeClass).width();
-	// "Antenna" icon
-	if (getBase()->getNodeClass()->isInterface())
-		nodeClassWidth +=
-				4.	// margin between node class label and antenna icon
-				+ VuoRendererNode::antennaIconWidth;
+
+	if (getBase()->getNodeClass()->isInterface() || this->nodeIsSubcomposition)
+	{
+		nodeClassWidth += 4.; // margin between node class label and leftmost icon
+		nodeClassWidth += VuoRendererNode::iconRightOffset; // margin between left edge of rightmost icon and right edge of node
+
+		if (getBase()->getNodeClass()->isInterface() && this->nodeIsSubcomposition)
+			nodeClassWidth += antennaIconWidth + intraIconMargin; // leftmost icon width and intra-icon margin
+		else if (this->nodeIsSubcomposition)
+			// The subcomposition icon is a little narrower than the antenna icon
+			nodeClassWidth -= 5;
+	}
 
 	bool hasInputPorts = inputPorts->childItems().size() > VuoNodeClass::unreservedInputPortStartIndex;
 	bool hasOutputPorts = outputPorts->childItems().size() > VuoNodeClass::unreservedOutputPortStartIndex;
 	int unalignedFrameWidth =
 		floor(max(
 			max(
-				nodeTitleWidth + VuoRendererFonts::thickPenWidth + 4.,
-				nodeClassWidth + VuoRendererFonts::thickPenWidth + 4.
+				nodeTitleWidth
+					  // Padding between left edge of node frame and left edge of text
+					  + VuoRendererFonts::thickPenWidth/2.
+					  // Padding between right edge of text and right edge of node frame
+					  + VuoRendererFonts::thickPenWidth/2.
+					  // Line up right edge of text with right edge of antenna icon
+					  - 3,
+
+				nodeClassWidth
+					  // Padding between left edge of node frame and left edge of text
+					  + VuoRendererFonts::thickPenWidth/2.
+					  // Padding between right edge of text and right edge of node frame
+					  + VuoRendererFonts::thickPenWidth/2.
+					  // Line up right edge of text with where the right edge of the antenna icon would be if it were present
+					  - 3
 			),
 			maxPortRowWidth
+
+				  // Leave some space between the right edge of the input port name and the left edge of the output port name.
 				  + ((hasInputPorts && hasOutputPorts) ? (nameDisplayEnabledForInputPorts() && nameDisplayEnabledForOutputPorts()?
-															  VuoRendererFonts::thickPenWidth*2.0 :
-															  VuoRendererFonts::thickPenWidth/2.0  + 3. + VuoRendererPort::portRadius) :
+															  VuoRendererFonts::thickPenWidth/2.0 :
+															  VuoRendererFonts::thickPenWidth/4.0) :
 														 0.)
+
+
 				  + 1.
 		));
 
@@ -584,8 +642,9 @@ void VuoRendererNode::updateNodeFrameRect(void)
 
 	this->frameRect = updatedFrameRect;
 	this->statefulIndicatorOutline = getStatefulIndicatorOutline(this->frameRect, this->nodeIsStateful);
-	this->antennaPath = getAntennaPath(this->frameRect, this->getBase()->getNodeClass()->isInterface());
-	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutline, this->nodeIsSubcomposition);
+	this->antennaPath = getAntennaPath(this->frameRect, this->getBase()->getNodeClass()->isInterface(), this->nodeIsSubcomposition);
+	this->subcompositionIndicatorPath = getSubcompositionIndicatorPath(this->frameRect, this->nodeIsSubcomposition);
+	this->nodeFrames = getNodeFrames(this->frameRect, this->portPaths.first, this->portPaths.second, this->statefulIndicatorOutline);
 }
 
 /**
@@ -604,9 +663,6 @@ QRectF VuoRendererNode::boundingRect(void) const
 	if (nodeIsStateful)
 		// If there's no footer, and the node is stateful, leave room for the stateful indicator's thick line width.
 		r.adjust(0, 0, 0, VuoRendererCable::cableWidth/2.);
-
-	if (nodeIsSubcomposition)
-		r.adjust(0, -subcompositionBulge*3./4., 0, subcompositionBulge*3./4.);
 
 	// Antialiasing bleed
 	r.adjust(-1,-1,1,1);
@@ -692,7 +748,7 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 					+ 2.
 					- VuoRendererFonts::getHorizontalOffset(font, nodeTitle),
 			-nodeTitleHeight - nodeClassHeight,
-			frameRect.width() + 2. - 2. * VuoRendererFonts::thickPenWidth/2.,	// Leave room for in-event and out-event ports.
+			frameRect.width() + 4. - 2. * VuoRendererFonts::thickPenWidth/2.,	// Leave room for in-event and out-event ports.
 			nodeTitleHeight + 2.
 		);
 		painter->setPen(colors->nodeTitle());
@@ -710,7 +766,7 @@ void VuoRendererNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 					+ 2.
 					- VuoRendererFonts::getHorizontalOffset(font, nodeClass),
 			-nodeClassHeight - 2.,
-			frameRect.width() + 2. - 2. * VuoRendererFonts::thickPenWidth/2.,	// Leave room for in-event and out-event ports.
+			frameRect.width() + 4. - 2. * VuoRendererFonts::thickPenWidth/2.,	// Leave room for in-event and out-event ports.
 			nodeClassHeight + 2.
 		);
 		painter->setPen(colors->nodeClass());
@@ -915,6 +971,10 @@ void VuoRendererNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	// open up a text editor to modify the title.
 	if (nodeTitleBoundingRect.contains(event->pos()))
 		signaler->signalNodeTitleEditorRequested(this);
+
+	// Otherwise, if the node is an installed subcomposition, open the source composition for editing.
+	else if (nodeIsSubcomposition)
+		signaler->signalSubcompositionEditRequested(this);
 }
 
 /**
@@ -1149,9 +1209,9 @@ QString VuoRendererNode::generateNodeClassToolTipTitle(VuoNodeClass *nodeClass, 
  */
 QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClass, string smallTextColor)
 {
-	string className;
-	string description;
-	string version;
+	string className = "";
+	string description = "";
+	string version = "";
 
 	if (nodeClass->hasCompiler())
 	{
@@ -1180,20 +1240,51 @@ QString VuoRendererNode::generateNodeClassToolTipTextBody(VuoNodeClass *nodeClas
 						  "You can either remove it from the composition or install it on your computer.";
 	}
 
-	description = VuoStringUtilities::generateHtmlFromMarkdown(description);
+	QString subcompositionLink = "";
+	if (nodeClass->hasCompiler() && nodeClass->getCompiler()->isSubcomposition())
+	{
+		QString expectedSubcompositionPath = QString(VuoFileUtilities::getUserModulesPath().c_str())
+				.append("/")
+				.append(className.c_str())
+				.append(".vuo");
+
+		if (VuoFileUtilities::fileExists(expectedSubcompositionPath.toUtf8().constData()))
+			subcompositionLink = QString("<a href=\"")
+								 .append("file://")
+								 .append(expectedSubcompositionPath)
+								 .append("\">")
+								 .append("Edit Composition…")
+								 .append("</a>");
+	}
+
+	QString formattedDescription = (description == VuoRendererComposition::getDefaultCompositionDescription()?
+										"" : VuoStringUtilities::generateHtmlFromMarkdown(description).c_str());
+
+	QString formattedVersion = (version.empty()?
+									"" : QString("Version %1").arg(version.c_str()));
 
 	QString tooltipBody;
-	tooltipBody.append(QString("<font size=+1 color=\"%2\">%1</font>")
-					   .arg(description.c_str())
+	tooltipBody.append(QString("<font color=\"%2\">%1</font>")
+					   .arg(formattedDescription)
 					   .arg(smallTextColor.c_str()));
-	tooltipBody.append(QString("<p><font color=\"%2\">%1</font><br>")
+
+	tooltipBody.append("<p>");
+
+	tooltipBody.append(QString("<font color=\"%2\">%1</font>")
 					   .arg(className.c_str())
 					   .arg(smallTextColor.c_str()));
 
 	if (nodeClass->hasCompiler())
-		tooltipBody.append(QString("<font color=\"%2\">Version %1</font></p>")
-						   .arg(version.c_str())
+		tooltipBody.append(QString("<br><font color=\"%2\">%1</font>")
+						   .arg(formattedVersion)
 						   .arg(smallTextColor.c_str()));
+
+	if (!subcompositionLink.isEmpty())
+		tooltipBody.append(QString("<br><font color=\"%2\">%1</font>")
+						   .arg(subcompositionLink)
+						   .arg(smallTextColor.c_str()));
+
+	tooltipBody.append("</p>");
 
 	return tooltipBody;
 }

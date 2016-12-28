@@ -24,6 +24,7 @@
 #include "VuoReal.h"
 #include "VuoScreen.h"
 #include "VuoText.h"
+#include "VuoCoordinateUnit.h"
 
 /**
  * The type of window property.
@@ -52,6 +53,7 @@ typedef struct
 	VuoBoolean fullScreen;
 	VuoScreen screen;
 
+	VuoCoordinateUnit unit;
 	VuoInteger left;
 	VuoInteger top;
 

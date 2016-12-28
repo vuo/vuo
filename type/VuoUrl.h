@@ -23,6 +23,7 @@ extern "C"
 {
 #endif
 
+#include "VuoInteger.h"
 #include "VuoText.h"
 
 struct json_object;
@@ -35,10 +36,18 @@ typedef VuoText VuoUrl;
 VuoUrl VuoUrl_makeFromJson(struct json_object *js);
 struct json_object *VuoUrl_getJson(const VuoUrl value);
 char * VuoUrl_getSummary(const VuoUrl value);
+bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *host, VuoInteger *port, VuoText *path, VuoText *query, VuoText *fragment);
+bool VuoUrl_getFileParts(const VuoUrl url, VuoText *path, VuoText *folder, VuoText *filename, VuoText *extension);
+
+#define VuoUrl_SUPPORTS_COMPARISON
+bool VuoUrl_areEqual(const VuoText a, const VuoText b);
+bool VuoUrl_isLessThan(const VuoText a, const VuoText b);
 
 bool VuoUrl_isRelativePath(const VuoUrl url);
 VuoUrl VuoUrl_normalize(const VuoText url, bool isSave);
 VuoText VuoUrl_getPosixPath(const VuoUrl url);
+VuoText VuoUrl_escapePosixPath(const VuoText posixPath);
+bool VuoUrl_isBundle(const VuoUrl url);
 
 /// @{
 /**

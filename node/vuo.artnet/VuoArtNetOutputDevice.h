@@ -37,6 +37,8 @@ char *VuoArtNetOutputDevice_getSummary(const VuoArtNetOutputDevice value);
 
 VuoArtNetOutputDevice VuoArtNetOutputDevice_makeBroadcast(const VuoInteger net, const VuoInteger subNet, const VuoInteger universe);
 VuoArtNetOutputDevice VuoArtNetOutputDevice_makeUnicast(const VuoText ipAddress, const VuoInteger net, const VuoInteger subNet, const VuoInteger universe);
+
+#define VuoArtNetOutputDevice_SUPPORTS_COMPARISON
 bool VuoArtNetOutputDevice_areEqual(const VuoArtNetOutputDevice value1, const VuoArtNetOutputDevice value2);
 bool VuoArtNetOutputDevice_isLessThan(const VuoArtNetOutputDevice value1, const VuoArtNetOutputDevice value2);
 

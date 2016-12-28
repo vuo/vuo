@@ -20,8 +20,9 @@ VuoModuleMetadata({
 				  });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslProjection)
+
 	// Inputs provided by VuoSceneRenderer
-	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
 	attribute vec4 normal;
@@ -39,14 +40,16 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		gl_Position = projectionMatrix * modelviewMatrix * position;
+		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
+
 		projectedNormal = mat4to3(modelviewMatrix) * normal.xyz;
 	}
 );
 
 static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslProjection)
+
 	// Inputs provided by VuoSceneRenderer
-	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
 	attribute vec4 normal;
@@ -60,7 +63,7 @@ static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	{
 		positionForGeometry = modelviewMatrix * position;
 		textureCoordinateForGeometry = textureCoordinate;
-		gl_Position = projectionMatrix * modelviewMatrix * position;
+		gl_Position = VuoGlsl_projectPosition(positionForGeometry);
 	}
 );
 
@@ -106,6 +109,11 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
+		// Work around ATI Radeon HD 5770 bug.
+		// It seems that the rest of the shader isn't executed unless we initialize the output with a uniform.
+		// https://b33p.net/kosada/node/11256
+		gl_FragColor = color;
+
 		vertexPosition;
 		vertexPlaneToWorld;
 

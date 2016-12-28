@@ -105,10 +105,44 @@ void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoIntege
  */
 bool VuoWindowReference_isFocused(const VuoWindowReference value)
 {
-	__block bool focused;
 	NSWindow *window = (NSWindow *)value;
-	dispatch_sync(dispatch_get_main_queue(), ^{
-					  focused = [window isMainWindow];
-				  });
-	return focused;
+	return [NSApp mainWindow] == window;
+}
+
+/**
+ * Adds callbacks to be invoked when files are dragged from Finder.
+ */
+void VuoWindowReference_addDragCallbacks(const VuoWindowReference wr,
+										 void (*dragEnteredCallback)(VuoDragEvent e),
+										 void (*dragMovedToCallback)(VuoDragEvent e),
+										 void (*dragCompletedCallback)(VuoDragEvent e),
+										 void (*dragExitedCallback)(VuoDragEvent e))
+{
+	if (!wr)
+		return;
+
+	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)wr;
+	[window addDragEnteredCallback:dragEnteredCallback
+			   dragMovedToCallback:dragMovedToCallback
+			 dragCompletedCallback:dragCompletedCallback
+				dragExitedCallback:dragExitedCallback];
+}
+
+/**
+ * Removes callbacks that would have been invoked when files were dragged from Finder.
+ */
+void VuoWindowReference_removeDragCallbacks(const VuoWindowReference wr,
+											void (*dragEnteredCallback)(VuoDragEvent e),
+											void (*dragMovedToCallback)(VuoDragEvent e),
+											void (*dragCompletedCallback)(VuoDragEvent e),
+											void (*dragExitedCallback)(VuoDragEvent e))
+{
+	if (!wr)
+		return;
+
+	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)wr;
+	[window removeDragEnteredCallback:dragEnteredCallback
+				  dragMovedToCallback:dragMovedToCallback
+				dragCompletedCallback:dragCompletedCallback
+				   dragExitedCallback:dragExitedCallback];
 }

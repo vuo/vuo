@@ -8,8 +8,11 @@
  */
 
 #include "VuoCable.hh"
+#include "VuoNode.hh"
+#include "VuoNodeClass.hh"
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
+#include "VuoPublishedPort.hh"
 
 /**
  * Creates a cable from @c fromNode's @c fromPort to @c toNode's @c toPort.
@@ -72,7 +75,6 @@ VuoPort * VuoCable::getToPort(void)
  */
 void VuoCable::setFrom(VuoNode *fromNode, VuoPort *fromPort)
 {
-
 	if (this->fromPort)
 	{
 		this->fromPort->removeConnectedCable(this);
@@ -108,30 +110,26 @@ void VuoCable::setTo(VuoNode *toNode, VuoPort *toPort)
 	this->toNode = toNode;
 }
 
-
 /**
- * Returns a boolean indicating whether this cable has an externally
- * visible published port as one of its endpoints.
+ * Returns true if either of the cable's endpoints is an externally visible published port.
  */
-bool VuoCable::isPublishedCable(void)
+bool VuoCable::isPublished(void)
 {
 	return (isPublishedInputCable() || isPublishedOutputCable());
 }
 
 /**
- * Returns a boolean indicating whether this cable has an externally
- * visible published input port as one of its endpoints.
+ * Returns true if this cable has an externally visible published input port as one of its endpoints.
  */
 bool VuoCable::isPublishedInputCable(void)
 {
-	return (fromNode && (fromNode->getNodeClass()->getClassName() == VuoNodeClass::publishedInputNodeClassName));
+	return dynamic_cast<VuoPublishedPort *>(fromPort);
 }
 
 /**
- * Returns a boolean indicating whether this cable has an externally
- * visible published output port as one of its endpoints.
+ * Returns true if this cable has an externally visible published output port as one of its endpoints.
  */
 bool VuoCable::isPublishedOutputCable(void)
 {
-	return (toNode && (toNode->getNodeClass()->getClassName() == VuoNodeClass::publishedOutputNodeClassName));
+	return dynamic_cast<VuoPublishedPort *>(toPort);
 }

@@ -26,6 +26,9 @@ base_stub.commands = \
 		$$QMAKE_LFLAGS \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}
+coverage {
+	base_stub.commands += && install_name_tool -change @executable_path/../lib/libprofile_rt.dylib $$LLVM_ROOT/lib/libprofile_rt.dylib ${QMAKE_FILE_OUT}
+}
 QMAKE_EXTRA_COMPILERS += base_stub
 
 createMasterHeader.commands += (cd ../framework ; ./generateFrameworkHeader.pl $${FRAMEWORK_VUO_STUB_HEADER} $${MASTER_VUO_HEADER_LIST} > Vuo.h)

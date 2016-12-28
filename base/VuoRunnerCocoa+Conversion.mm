@@ -15,7 +15,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
 #include <vector>
@@ -222,7 +222,7 @@ extern "C" {
 		if (json_object_is_type(vuoValue, json_type_string))
 			return [NSString stringWithUTF8String:json_object_get_string(vuoValue)];
 
-	VLog("Type %s isn't supported yet.  Please https://vuo.org/contact us if you'd like support for this type.", type.c_str());
+	VUserLog("Type %s isn't supported yet.  Please https://vuo.org/contact us if you'd like support for this type.", type.c_str());
 	return nil;
 }
 
@@ -266,25 +266,25 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 
 			if (CGImageGetAlphaInfo(cgimage) != kCGImageAlphaPremultipliedLast)
 			{
-				VLog("Error: Alpha option %d isn't supported yet.  Please use kCGImageAlphaPremultipliedLast, and https://vuo.org/contact us if you'd like support for other alpha options.", CGImageGetAlphaInfo(cgimage));
+				VUserLog("Error: Alpha option %d isn't supported yet.  Please use kCGImageAlphaPremultipliedLast, and https://vuo.org/contact us if you'd like support for other alpha options.", CGImageGetAlphaInfo(cgimage));
 				return NULL;
 			}
 
 			if (CGImageGetBitmapInfo(cgimage) & kCGBitmapFloatComponents)
 			{
-				VLog("Error: Floating-point pixel values aren't supported yet.  Please use integer pixel values, and https://vuo.org/contact us if you'd like support for floating-point pixel values.");
+				VUserLog("Error: Floating-point pixel values aren't supported yet.  Please use integer pixel values, and https://vuo.org/contact us if you'd like support for floating-point pixel values.");
 				return NULL;
 			}
 
 			if (CGImageGetBitsPerComponent(cgimage) != 8)
 			{
-				VLog("Error: BitsPerComponent=%lu isn't supported yet.  Please use 8 bits per component, and https://vuo.org/contact us if you'd like support for other bit depths.", CGImageGetBitsPerComponent(cgimage));
+				VUserLog("Error: BitsPerComponent=%lu isn't supported yet.  Please use 8 bits per component, and https://vuo.org/contact us if you'd like support for other bit depths.", CGImageGetBitsPerComponent(cgimage));
 				return NULL;
 			}
 
 			if (CGImageGetBitsPerPixel(cgimage) != 32)
 			{
-				VLog("Error: BitsPerPixel=%lu isn't supported yet.  Please use 32 bits per pixel, and https://vuo.org/contact us if you'd like support for other bit depths.", CGImageGetBitsPerPixel(cgimage));
+				VUserLog("Error: BitsPerPixel=%lu isn't supported yet.  Please use 32 bits per pixel, and https://vuo.org/contact us if you'd like support for other bit depths.", CGImageGetBitsPerPixel(cgimage));
 				return NULL;
 			}
 
@@ -292,14 +292,14 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			unsigned long height = CGImageGetHeight(cgimage);
 			if (CGImageGetBytesPerRow(cgimage) != width*4)
 			{
-				VLog("Error: BytesPerRow must be width*4.  https://vuo.org/contact us if you'd like support for inexact strides.");
+				VUserLog("Error: BytesPerRow must be width*4.  https://vuo.org/contact us if you'd like support for inexact strides.");
 				return NULL;
 			}
 
 //			NSString *colorSpaceName = (NSString *)CGColorSpaceCopyName(CGImageGetColorSpace(cgimage));
 //			if (![colorSpaceName isEqualToString:(NSString *)kCGColorSpaceSRGB])
 //			{
-//				VLog("Error: Colorspace '%s' isn't supported yet.  Please use kCGColorSpaceSRGB, and https://vuo.org/contact us if you'd like support for other colorspaces.", [colorSpaceName UTF8String]);
+//				VUserLog("Error: Colorspace '%s' isn't supported yet.  Please use kCGColorSpaceSRGB, and https://vuo.org/contact us if you'd like support for other colorspaces.", [colorSpaceName UTF8String]);
 //				[colorSpaceName release];
 //				return NULL;
 //			}
@@ -307,9 +307,17 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 
 			CGDataProviderRef provider = CGImageGetDataProvider(cgimage);
 			CFDataRef data = CGDataProviderCopyData(provider);
-			VuoImage vi = VuoImage_makeFromBuffer(CFDataGetBytePtr(data), GL_RGBA, width, height, VuoImageColorDepth_8);
+
+			char *bitmapData = (char *)CFDataGetBytePtr(data);
+			int bytesPerRow = width*4;
+			char *flippedBitmapData = (char *)malloc(bytesPerRow*height);
+
+			// Flip the image data (CGImage is unflipped, but VuoImage_makeFromBuffer() expects flipped).
+			for (unsigned long y = 0; y < height; ++y)
+				memcpy(flippedBitmapData + bytesPerRow * (height - y - 1), bitmapData + bytesPerRow * y, bytesPerRow);
+
+			VuoImage vi = VuoImage_makeFromBuffer(flippedBitmapData, GL_RGBA, width, height, VuoImageColorDepth_8, ^(void *buffer){ free(flippedBitmapData); });
 			VuoRetain(vi);
-			CFRelease(data);
 
 			json_object *js = VuoImage_getInterprocessJson(vi);
 			VuoRelease(vi);
@@ -322,14 +330,14 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 
 			if (CVPixelBufferIsPlanar(cvpb))
 			{
-				VLog("Error: Planar buffers aren't supported yet.  Please use chunky buffers, and https://vuo.org/contact us if you'd like support for planar buffers.");
+				VUserLog("Error: Planar buffers aren't supported yet.  Please use chunky buffers, and https://vuo.org/contact us if you'd like support for planar buffers.");
 				return NULL;
 			}
 
 			if (CVPixelBufferGetPixelFormatType(cvpb) != kCVPixelFormatType_32BGRA)
 			{
 				unsigned long pf = CVPixelBufferGetPixelFormatType(cvpb);
-				VLog("Error: Pixel format %lu isn't supported yet.  Please use kCVPixelFormatType_32BGRA, and https://vuo.org/contact us if you'd like support for other pixel formats.", pf);
+				VUserLog("Error: Pixel format %lu isn't supported yet.  Please use kCVPixelFormatType_32BGRA, and https://vuo.org/contact us if you'd like support for other pixel formats.", pf);
 				return NULL;
 			}
 
@@ -337,31 +345,32 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			unsigned long height = CVPixelBufferGetHeight(cvpb);
 			if (CVPixelBufferGetBytesPerRow(cvpb) != width*4)
 			{
-				VLog("Error: BytesPerRow must be width*4.  https://vuo.org/contact us if you'd like support for inexact strides.");
+				VUserLog("Error: BytesPerRow must be width*4.  https://vuo.org/contact us if you'd like support for inexact strides.");
 				return NULL;
 			}
 
 			CVReturn ret = CVPixelBufferLockBaseAddress(cvpb, kCVPixelBufferLock_ReadOnly);
 			if (ret != kCVReturnSuccess)
 			{
-				VLog("CVPixelBufferLockBaseAddress() failed: %d", ret);
+				VUserLog("CVPixelBufferLockBaseAddress() failed: %d", ret);
 				return NULL;
 			}
 
 			const unsigned char *pixels = (const unsigned char *)CVPixelBufferGetBaseAddress(cvpb);
 			if (!pixels)
 			{
-				VLog("Error: CVPixelBufferGetBaseAddress() returned NULL.");
+				VUserLog("Error: CVPixelBufferGetBaseAddress() returned NULL.");
 				return NULL;
 			}
 
-			VuoImage vi = VuoImage_makeFromBuffer(pixels, GL_BGRA, width, height, VuoImageColorDepth_8);
+			CVPixelBufferRetain(cvpb);
+			VuoImage vi = VuoImage_makeFromBuffer(pixels, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void *buffer){ CVPixelBufferRelease(cvpb); });
 			VuoRetain(vi);
 
 			ret = CVPixelBufferUnlockBaseAddress(cvpb, kCVPixelBufferLock_ReadOnly);
 			if (ret != kCVReturnSuccess)
 			{
-				VLog("CVPixelBufferUnlockBaseAddress() failed: %d", ret);
+				VUserLog("CVPixelBufferUnlockBaseAddress() failed: %d", ret);
 				return NULL;
 			}
 
@@ -377,7 +386,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 			GLuint name = CVOpenGLTextureGetName(cvgl);
 			if (!name)
 			{
-				VLog("Error: CVOpenGLTextureGetName() returned 0.");
+				VUserLog("Error: CVOpenGLTextureGetName() returned 0.");
 				return NULL;
 			}
 
@@ -399,7 +408,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 				vi = VuoImage_makeClientOwnedGlTextureRectangle(name, GL_RGBA, width, height, VuoRunnerCocoa_doNothingCallback, NULL);
 			else
 			{
-				VLog("Error: GL texture target %d isn't supported yet.  Please use GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE_ARB, and https://vuo.org/contact us if you'd like support for other targets.", target);
+				VUserLog("Error: GL texture target %d isn't supported yet.  Please use GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE_ARB, and https://vuo.org/contact us if you'd like support for other targets.", target);
 				return NULL;
 			}
 
@@ -410,12 +419,12 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 		}
 
 		NSString *typeDescription = (NSString *)CFCopyTypeIDDescription(type);
-		VLog("Error: Unknown CFType '%s'", [typeDescription UTF8String]);
+		VUserLog("Error: Unknown CFType '%s'", [typeDescription UTF8String]);
 		[typeDescription release];
 		return NULL;
 	}
 
-	VLog("Error: Unknown type '%s' for object '%s'", object_getClassName(value), [[value description] UTF8String]);
+	VUserLog("Error: Unknown type '%s' for object '%s'", object_getClassName(value), [[value description] UTF8String]);
 	return NULL;
 }
 
@@ -448,6 +457,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 		glBindTexture(GL_TEXTURE_2D, vi->glTextureName);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmapData);
+		glBindTexture(GL_TEXTURE_2D, 0);
 		VuoGlContext_disuse(cgl_ctx);
 	}
 
@@ -465,55 +475,6 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	[ni addRepresentation:nbi];
 	[nbi release];
 	return [ni autorelease];
-}
-
-/**
- * Returns an @c NSArray where each element is an @c NSDictionary with 2 keys: @c value (NSString) and @c name (NSString).
- */
-+ (NSArray *)menuItemsForType:(string)type
-{
-	string allowedValuesFunctionName = type + "_getAllowedValues";
-	typedef void *(*allowedValuesFunctionType)(void);
-	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.c_str());
-
-	string getJsonFunctionName = type + "_getJson";
-	typedef json_object *(*getJsonFunctionType)(int);
-	getJsonFunctionType getJsonFunction = (getJsonFunctionType)dlsym(RTLD_SELF, getJsonFunctionName.c_str());
-
-	string summaryFunctionName = type + "_getSummary";
-	typedef char *(*summaryFunctionType)(int);
-	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.c_str());
-
-	string listCountFunctionName = "VuoListGetCount_" + type;
-	typedef unsigned long (*listCountFunctionType)(void *);
-	listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_SELF, listCountFunctionName.c_str());
-
-	string listValueFunctionName = "VuoListGetValue_" + type;
-	typedef int (*listValueFunctionType)(void *, unsigned long);
-	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.c_str());
-
-	if (!allowedValuesFunction || !summaryFunction || !listCountFunction || !listValueFunction)
-		return nil;
-
-	void *allowedValues = allowedValuesFunction();
-	unsigned long listCount = listCountFunction(allowedValues);
-	NSMutableArray *menuItems = [NSMutableArray new];
-	for (unsigned long i=1; i<=listCount; ++i)
-	{
-		int value = listValueFunction(allowedValues, i);
-		json_object *js = getJsonFunction(value);
-		if (!json_object_is_type(js, json_type_string))
-			continue;
-		const char *key = json_object_get_string(js);
-		char *summary = summaryFunction(value);
-		NSDictionary *menuItem = [NSDictionary dictionaryWithObjectsAndKeys:
-				[NSString stringWithUTF8String:key], @"value",
-				[NSString stringWithUTF8String:summary], @"name",
-				nil];
-		[menuItems addObject:menuItem];
-		free(summary);
-	}
-	return [menuItems autorelease];
 }
 
 @end
@@ -538,7 +499,7 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	 || type == 'C' || type == 'I' || type == 'S' || type == 'L' || type == 'Q')
 		return VuoInteger_getJson([self longLongValue]);
 
-	VLog("Error: Unknown type '%s'", [self objCType]);
+	VUserLog("Error: Unknown type '%s'", [self objCType]);
 	return NULL;
 }
 @end
@@ -631,13 +592,6 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
  */
 - (json_object *)vuoValue
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-	// Load image into a GL Texture
-	GLuint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
 	// Flip the image data (OpenGL expects flipped data, but NSBitmapImageRep is not flipped).
 	unsigned char *bitmapData = [self bitmapData];
 	unsigned long width = [self size].width;
@@ -645,22 +599,20 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	unsigned long bytesPerRow = width * 4;
 	unsigned char *bitmapDataFlipped = (unsigned char *)malloc(bytesPerRow * height);
 	for (unsigned long y = 0; y < height; ++y)
-		memcpy(bitmapDataFlipped + bytesPerRow * (height - y - 1), bitmapData + bytesPerRow * y, bytesPerRow);
+		for (unsigned long x = 0; x < width; ++x)
+		{
+			// Swizzle RGBA -> BGRA (so the GPU doesn't have to swizzle during each fetch)
+			bitmapDataFlipped[bytesPerRow * (height - y - 1) + x * 4 + 2] = bitmapData[bytesPerRow * y + x * 4 + 0];
+			bitmapDataFlipped[bytesPerRow * (height - y - 1) + x * 4 + 1] = bitmapData[bytesPerRow * y + x * 4 + 1];
+			bitmapDataFlipped[bytesPerRow * (height - y - 1) + x * 4 + 0] = bitmapData[bytesPerRow * y + x * 4 + 2];
+			bitmapDataFlipped[bytesPerRow * (height - y - 1) + x * 4 + 3] = bitmapData[bytesPerRow * y + x * 4 + 3];
+		}
 
-	GLenum internalformat = GL_RGBA;
-	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmapDataFlipped);
-	free(bitmapDataFlipped);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-	VuoGlContext_disuse(cgl_ctx);
-
-	VuoImage vi = VuoImage_make(texture, internalformat, [self size].width, [self size].height);
-	return VuoImage_getInterprocessJson(vi);
+	VuoImage vi = VuoImage_makeFromBuffer(bitmapDataFlipped, GL_BGRA, width, height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
+	VuoRetain(vi);
+	json_object *json = VuoImage_getInterprocessJson(vi);
+	VuoRelease(vi);
+	return json;
 }
 @end
 

@@ -11,14 +11,21 @@
 #include <fcntl.h>
 #include <fstream>
 #include "TestVuoCompiler.hh"
-#include "VuoCompilerGraphvizParser.hh"
-#include "VuoCompilerOutputEventPort.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerInputData.hh"
+#include "VuoCompilerInputDataClass.hh"
+#include "VuoCompilerInputEventPort.hh"
+#include "VuoCompilerOutputDataClass.hh"
+#include "VuoCompilerOutputEventPort.hh"
+#include "VuoCompilerPublishedPort.hh"
 #include "VuoPort.hh"
+#include "VuoPublishedPort.hh"
+#include "VuoType.hh"
 
 
 class TestVuoCompilerGraphvizParser;
-typedef Module * (TestVuoCompilerGraphvizParser::*moduleFunction_t)();  ///< A function that creates a @c Module.
+typedef Module * (TestVuoCompilerGraphvizParser::*moduleFunction_t)(void);  ///< A function that creates a @c Module.
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(vector<string>);
@@ -58,7 +65,7 @@ private slots:
 		QTest::newRow("non-ASCII text") << "LengthOfConstantString.vuo" << "Count Characters" << "text" << "流";
 		QTest::newRow("empty text overriding non-empty default value") << "NonEmptyDefaultString.vuo" << "UnicodeDefaultString1" << "string" << "\"\"";
 		QTest::newRow("published data-and-event cable with published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "a" << "10";
-		QTest::newRow("published data-and-event cable without published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "b" << "0";
+		QTest::newRow("published data-and-event cable without published canstant") << "Recur_Subtract_published.vuo" << "Subtract1" << "b" << "";
 		QTest::newRow("published data-and-event cable") << "Constants.vuo" << "Subtract4" << "a" << "0";
 		QTest::newRow("published event cable from published event port") << "Constants.vuo" << "Subtract3" << "a" << "55";
 		QTest::newRow("published event cable from published data-and-event port") << "Constants.vuo" << "Subtract3" << "b" << "66";
@@ -127,26 +134,24 @@ private slots:
 		QTest::addColumn< QString >("fromPort");
 		QTest::addColumn< QString >("toNodeTitle");
 		QTest::addColumn< QString >("toPort");
-		QTest::addColumn< bool >("isFromPublishedInput");
-		QTest::addColumn< bool >("isToPublishedOutput");
 		QTest::addColumn< bool >("carriesData");
 		QTest::addColumn< bool >("isHidden");
 
-		QTest::newRow("data-and-event cable") << "ShareValue1" << "sameValue" << "ShareValue2" << "value" << false << false << true << false;
-		QTest::newRow("event-only cable between event-only ports") << "BecameTrue1" << "becameTrue" << "ShareValue3" << "refresh" << false << false << false << false;
-		QTest::newRow("event-only cable between data-and-event port and event-only port") << "BecameTrue2" << "becameTrue" << "ShareValue4" << "value" << false << false << false << false;
-		QTest::newRow("event-only cable between data-and-event ports") << "ShareValue5" << "sameValue" << "ShareValue6" << "value" << false << false << false << false;
+		QTest::newRow("data-and-event cable") << "ShareValue1" << "sameValue" << "ShareValue2" << "value" << true << false;
+		QTest::newRow("event-only cable between event-only ports") << "BecameTrue1" << "becameTrue" << "ShareValue3" << "refresh" << false << false;
+		QTest::newRow("event-only cable between data-and-event port and event-only port") << "BecameTrue2" << "becameTrue" << "ShareValue4" << "value" << false << false;
+		QTest::newRow("event-only cable between data-and-event ports") << "ShareValue5" << "sameValue" << "ShareValue6" << "value" << false << false;
 
-		QTest::newRow("data-and-event published input cable") << "PublishedInputs" << "value1" << "ShareValue7" << "value" << true << false << true << false;
-		QTest::newRow("event-only published input cable between event-only ports") << "PublishedInputs" << "refresh1" << "ShareValue8" << "refresh" << true << false << false << false;
-		QTest::newRow("event-only published input cable between data-and-event ports") << "PublishedInputs" << "value2" << "ShareValue9" << "value" << true << false << false << false;
+		QTest::newRow("data-and-event published input cable") << "PublishedInputs" << "value1" << "ShareValue7" << "value" << true << false;
+		QTest::newRow("event-only published input cable between event-only ports") << "PublishedInputs" << "refresh1" << "ShareValue8" << "refresh" << false << false;
+		QTest::newRow("event-only published input cable between data-and-event ports") << "PublishedInputs" << "value2" << "ShareValue9" << "value" << false << false;
 
-		QTest::newRow("data-and-event published output cable") << "ShareValue10" << "sameValue" << "PublishedOutputs" << "sameValue1" << false << true << true << false;
-		QTest::newRow("event-only published output cable between event-only ports") << "BecameTrue3" << "becameTrue" << "PublishedOutputs" << "becameTrue1" << false << true << false << false;
-		QTest::newRow("event-only published output cable between data-and-event ports") << "ShareValue11" << "sameValue" << "PublishedOutputs" << "sameValue2" << false << true << false << false;
+		QTest::newRow("data-and-event published output cable") << "ShareValue10" << "sameValue" << "PublishedOutputs" << "sameValue1" << true << false;
+		QTest::newRow("event-only published output cable between event-only ports") << "BecameTrue3" << "becameTrue" << "PublishedOutputs" << "becameTrue1" << false << false;
+		QTest::newRow("event-only published output cable between data-and-event ports") << "ShareValue11" << "sameValue" << "PublishedOutputs" << "sameValue2" << false << false;
 		
-		QTest::newRow("hidden data-and-event cable") << "ShareValue12" << "sameValue" << "ShareValue13" << "value" << false << false << true << true;
-		QTest::newRow("hidden always-event-only cable") << "ShareValue14" << "sameValue" << "ShareValue15" << "value" << false << false << false << true;
+		QTest::newRow("hidden data-and-event cable") << "ShareValue12" << "sameValue" << "ShareValue13" << "value" << true << true;
+		QTest::newRow("hidden always-event-only cable") << "ShareValue14" << "sameValue" << "ShareValue15" << "value" << false << true;
 	}
 	void testCables()
 	{
@@ -154,8 +159,6 @@ private slots:
 		QFETCH(QString, fromPort);
 		QFETCH(QString, toNodeTitle);
 		QFETCH(QString, toPort);
-		QFETCH(bool, isFromPublishedInput);
-		QFETCH(bool, isToPublishedOutput);
 		QFETCH(bool, carriesData);
 		QFETCH(bool, isHidden);
 
@@ -163,13 +166,7 @@ private slots:
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
 		bool foundCable = false;
-		vector<VuoCable *> cables;
-		if (isFromPublishedInput)
-			cables = parser->getPublishedInputCables();
-		else if (isToPublishedOutput)
-			cables = parser->getPublishedOutputCables();
-		else
-			cables = parser->getCables();
+		vector<VuoCable *> cables = parser->getCables();
 
 		foreach (VuoCable *cable, cables)
 		{
@@ -265,26 +262,26 @@ private slots:
 		string compositionPath = getCompositionPath("Recur_Subtract_published.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
-		vector<VuoCompilerPublishedPort *> publishedInputs = parser->getPublishedInputPorts();
+		vector<VuoPublishedPort *> publishedInputs = parser->getPublishedInputPorts();
 		QCOMPARE(publishedInputs.size(), (size_t)2);
-		foreach (VuoCompilerPublishedPort *input, publishedInputs)
 		{
-			QVERIFY2(input->getBase()->getName() == "publishedA" ||
-					 input->getBase()->getName() == "publishedB",
-					 input->getBase()->getName().c_str());
-			QCOMPARE(QString(input->getBase()->getType()->getModuleKey().c_str()), QString("VuoInteger"));
+			QCOMPARE(QString(publishedInputs[0]->getClass()->getName().c_str()), QString("publishedA"));
+			string typeName = static_cast<VuoCompilerPublishedPort *>(publishedInputs[0]->getCompiler())->getDataVuoType()->getModuleKey();
+			QCOMPARE(QString(typeName.c_str()), QString("VuoInteger"));
+		}
+		{
+			QCOMPARE(QString(publishedInputs[1]->getClass()->getName().c_str()), QString("publishedB"));
+			string typeName = static_cast<VuoCompilerPublishedPort *>(publishedInputs[1]->getCompiler())->getDataVuoType()->getModuleKey();
+			QCOMPARE(QString(typeName.c_str()), QString("VuoInteger"));
 		}
 
-		vector<VuoCompilerPublishedPort *> publishedOutputs = parser->getPublishedOutputPorts();
+		vector<VuoPublishedPort *> publishedOutputs = parser->getPublishedOutputPorts();
 		QCOMPARE(publishedOutputs.size(), (size_t)1);
-		QCOMPARE(QString(publishedOutputs.at(0)->getBase()->getName().c_str()), QString("publishedSum"));
-		QCOMPARE(QString(publishedOutputs.at(0)->getBase()->getType()->getModuleKey().c_str()), QString("VuoInteger"));
-
-		VuoNode *publishedInputNode = parser->getPublishedInputNode();
-		QCOMPARE(publishedInputNode->getOutputPorts().size(), (size_t)(3 + VuoNodeClass::unreservedOutputPortStartIndex));
-		QVERIFY(publishedInputNode->getOutputPortWithName("publishedA") != NULL);
-		QVERIFY(publishedInputNode->getOutputPortWithName("publishedB") != NULL);
-		QVERIFY(publishedInputNode->getOutputPortWithName(VuoNodeClass::publishedInputNodeSimultaneousTriggerName) != NULL);
+		{
+			QCOMPARE(QString(publishedOutputs[0]->getClass()->getName().c_str()), QString("publishedSum"));
+			string typeName = static_cast<VuoCompilerPublishedPort *>(publishedOutputs[0]->getCompiler())->getDataVuoType()->getModuleKey();
+			QCOMPARE(QString(typeName.c_str()), QString("VuoInteger"));
+		}
 
 		delete parser;
 	}
@@ -297,7 +294,7 @@ private slots:
 
 		QTest::newRow("all from published input port") << "hue" << true << "{\"default\":0.3,\"suggestedMin\":0.2,\"suggestedMax\":1.1,\"suggestedStep\":0.1}";
 		QTest::newRow("all from published output port") << "color" << false << "{}";
-		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.5,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":1}";
+		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.500000,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":1}";
 		QTest::newRow("none from published port, no connected ports") << "image" << true << "{}";
 	}
 	void testPublishedPortDetails()
@@ -310,11 +307,11 @@ private slots:
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 
 		bool foundPublishedPort = false;
-		foreach (VuoCompilerPublishedPort *publishedPort, (isInput ? parser->getPublishedInputPorts() : parser->getPublishedOutputPorts()))
+		foreach (VuoPublishedPort *publishedPort, (isInput ? parser->getPublishedInputPorts() : parser->getPublishedOutputPorts()))
 		{
-			if (publishedPort->getBase()->getName() == publishedPortName.toStdString())
+			if (publishedPort->getClass()->getName() == publishedPortName.toStdString())
 			{
-				json_object *detailsObj = publishedPort->getDetails();
+				json_object *detailsObj = static_cast<VuoCompilerPublishedPort *>(publishedPort->getCompiler())->getDetails(isInput);
 				json_object *expectedDetailsObj = json_tokener_parse(expectedDetails.toUtf8().constData());
 
 				{
@@ -323,7 +320,7 @@ private slots:
 						json_object *o;
 						bool foundKey = json_object_object_get_ex(detailsObj, key, &o);
 						QVERIFY2(foundKey, key);
-						QCOMPARE(QString(json_object_to_json_string(val)), QString(json_object_to_json_string(o)));
+						QCOMPARE(QString(json_object_to_json_string(o)), QString(json_object_to_json_string(val)));
 					}
 				}
 				{
@@ -332,7 +329,7 @@ private slots:
 						json_object *o;
 						bool foundKey = json_object_object_get_ex(expectedDetailsObj, key, &o);
 						QVERIFY2(foundKey, key);
-						QCOMPARE(QString(json_object_to_json_string(val)), QString(json_object_to_json_string(o)));
+						QCOMPARE(QString(json_object_to_json_string(o)), QString(json_object_to_json_string(val)));
 					}
 				}
 

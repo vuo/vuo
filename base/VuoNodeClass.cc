@@ -28,8 +28,6 @@ const string VuoNodeClass::publishedOutputNodeClassName = "vuo.out";
 const string VuoNodeClass::publishedInputNodeIdentifier = "PublishedInputs";
 /// The Graphviz identifier of the Vuo published output pseudo-node.
 const string VuoNodeClass::publishedOutputNodeIdentifier = "PublishedOutputs";
-/// The name of the Vuo published input port that can fire an event for all published input ports simultaneously.
-const string VuoNodeClass::publishedInputNodeSimultaneousTriggerName = "vuoSimultaneous";
 
 /**
  * Create a dummy base node class with no implementation.
@@ -156,12 +154,23 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 	/// @todo Temporary workaround. Instead use VuoNode::isCollapsed() elsewhere. (https://b33p.net/kosada/node/5477)
 	string nodeClassName = getClassName();
 	return (VuoStringUtilities::beginsWith(nodeClassName, "vuo.type")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.data.summarize")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.math.round")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.count.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.first.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.last.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.populated.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.random.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get")
-			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get."));
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get.")
+			|| nodeClassName == "vuo.audio.mix"
+			|| nodeClassName == "vuo.audio.populated"
+			|| nodeClassName == "vuo.image.populated"
+			|| nodeClassName == "vuo.layer.populated"
+			|| nodeClassName == "vuo.mesh.populated"
+			|| nodeClassName == "vuo.scene.populated"
+			|| nodeClassName == "vuo.text.populated"
+			|| nodeClassName == "vuo.window.cursor.populated");
 
 #if 0
 	if (inputPortClasses.size() != VuoNodeClass::unreservedInputPortStartIndex+1)

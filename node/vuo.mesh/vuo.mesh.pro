@@ -12,6 +12,7 @@ NODE_SOURCES += \
 	vuo.mesh.make.parametric.c \
 	vuo.mesh.make.sphere.c \
 	vuo.mesh.make.square.c \
-	vuo.mesh.make.triangle.c
+	vuo.mesh.make.triangle.c \
+	vuo.mesh.populated.c
 
 include(../../module.pri)

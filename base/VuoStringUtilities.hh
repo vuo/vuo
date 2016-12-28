@@ -24,14 +24,19 @@ public:
 	static size_t replaceAll(string &wholeString, string originalSubstring, string replacementSubstring);
 	static vector<string> split(const string &wholeString, char delimiter);
 	static string join(vector<string> partialStrings, char delimiter);
+
+	static string prefixSymbolName(string symbolName, string moduleKey);
 	static bool isValidCharInIdentifier(char ch);
 	static string transcodeToIdentifier(string str);
 	static string transcodeToGraphvizIdentifier(const string &originalString);
 	static string transcodeFromGraphvizIdentifier(const string &graphvizIdentifier);
+
 	static string generateHtmlFromMarkdown(const string &markdownString);
 	static string generateHtmlFromMarkdownLine(const string &markdownString);
 
 	static string expandCamelCase(string camelCaseString);
+
+	static string makeRandomHash(int length);
 };
 
 

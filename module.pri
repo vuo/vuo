@@ -3,6 +3,7 @@ MODULE_INCLUDEPATH = \
 	$${ROOT}/library \
 	$${ROOT}/node \
 	$${ROOT}/node/vuo.font \
+	$${ROOT}/node/vuo.ui \
 	$${ROOT}/type \
 	$${ROOT}/type/list \
 	$${ROOT}/runtime
@@ -62,6 +63,8 @@ CLANG_NODE_LIBRARY_FLAGS = \
 	$$join(DEFINES, " -D", "-D") \
 	$$VUO_VERSION_DEFINES \
 	-DVUO_COMPILER=1
+
+CLANG_NODE_LIBRARY_FLAGS += -isysroot $$QMAKE_MAC_SDK.macosx.path
 
 # Skip --coverage on Objective-C(++) files, since clang crashes.
 CLANG_NODE_LIBRARY_FLAGS_NON_OBJC = $$FLAGS
@@ -123,6 +126,7 @@ VuoNodeSet {
 	exists($$NODE_SET_DIR/examples/*.3ds) { NODE_SET_ZIP_CONTENTS += examples/*.3ds }
 	exists($$NODE_SET_DIR/examples/*.dae) { NODE_SET_ZIP_CONTENTS += examples/*.dae }
 	exists($$NODE_SET_DIR/examples/*.data){ NODE_SET_ZIP_CONTENTS += examples/*.data}
+	exists($$NODE_SET_DIR/examples/*.csv) { NODE_SET_ZIP_CONTENTS += examples/*.csv }
 
 	# Check for impending existence of premium nodes.
 	exists($$NODE_SET_DIR/premium) { NODE_SET_ZIP_CONTENTS += *.vuonode+ }
@@ -143,6 +147,7 @@ VuoNodeSet {
 
 # Enable Qt Creator to open and autocomplete 3rd-party headers
 INCLUDEPATH += \
+	$$MODULE_INCLUDEPATH \
 	$$NODE_INCLUDEPATH \
 	$$TYPE_INCLUDEPATH \
 	$$NODE_LIBRARY_INCLUDEPATH

@@ -105,6 +105,10 @@ char *VuoArtNetOutputDevice_getSummary(const VuoArtNetOutputDevice value)
 							  value.name,
 							  value.ipAddress, value.ethernetAddress,
 							  value.address.net, value.address.subNet, value.address.universe);
+	else if (value.ipAddress)
+		return VuoText_format("%s<br>Net %lld, Sub-Net %lld, Universe %lld",
+							  value.ipAddress,
+							  value.address.net, value.address.subNet, value.address.universe);
 	else
 		return VuoText_format("Net %lld, Sub-Net %lld, Universe %lld", value.address.net, value.address.subNet, value.address.universe);
 }
@@ -163,18 +167,16 @@ bool VuoArtNetOutputDevice_areEqual(const VuoArtNetOutputDevice value1, const Vu
 /**
  * Returns true if value1 < value2.
  */
-bool VuoArtNetOutputDevice_isLessThan(const VuoArtNetOutputDevice value1, const VuoArtNetOutputDevice value2)
+bool VuoArtNetOutputDevice_isLessThan(const VuoArtNetOutputDevice a, const VuoArtNetOutputDevice b)
 {
-	// If both are unicast, sort by IP address.
-	if (value1.ipAddress && value2.ipAddress)
-		return (strcmp(value1.ipAddress, value2.ipAddress) < 0);
+	if (VuoText_isLessThan(a.name, b.name)) return true;
+	if (VuoText_isLessThan(b.name, a.name)) return false;
 
-	// Sort unicast on top.
-	if (value1.ipAddress && !value2.ipAddress)
-		return true;
-	if (!value1.ipAddress && value2.ipAddress)
-		return false;
+	if (VuoText_isLessThan(a.ipAddress, b.ipAddress)) return true;
+	if (VuoText_isLessThan(b.ipAddress, a.ipAddress)) return false;
 
-	// Both are broadcast; just compare Art-Net address.
-	return VuoArtNetAddress_isLessThan(value1.address, value2.address);
+	if (VuoText_isLessThan(a.ethernetAddress, b.ethernetAddress)) return true;
+	if (VuoText_isLessThan(b.ethernetAddress, a.ethernetAddress)) return false;
+
+	return VuoArtNetAddress_isLessThan(a.address, b.address);
 }

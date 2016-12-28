@@ -83,6 +83,7 @@ class VuoMovieExporter
 {
 	VuoMovieExporterParameters parameters;
 	unsigned int timebase;
+	unsigned int frameMultiplier;
 	unsigned int frameCount;
 	unsigned int framesExportedSoFar;
 	bool firstFrame;

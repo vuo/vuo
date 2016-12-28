@@ -9,12 +9,22 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-31,79" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeColorImage [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="324,70" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="300"];
-MakeColorImage2 [type="vuo.image.make.color" version="1.0.0" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="324,158" fillcolor="green" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _width="200"];
-ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="141,100" fillcolor="violet" _value="100"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,180" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="360,210" _color="{\"r\":0.998565673828125,\"g\":0.92495614290237427,\"b\":0.56453806161880493,\"a\":1}" _center="{\"x\":-0.20000000298023224,\"y\":0}" _rotation="0.0" _width="0.29999999999999999"];
+MakeList4 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="634,206" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="664,221" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="360,60" _color="{\"r\":0.64954602718353271,\"g\":0.62946516275405884,\"b\":0.9990081787109375,\"a\":1}" _center="{\"x\":-0.60000002384185791,\"y\":0}" _rotation="0.0" _width="0.10000000000000001" _sharpness="1.0"];
+MakeRoundedRectangleLayer [type="vuo.layer.make.roundedRectangle" version="1.0.0" label="Make Rounded Rectangle Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<roundness>roundness\l|<layer>layer\r" pos="360,345" _color="{\"r\":0.99298083782196045,\"g\":0.67241930961608887,\"b\":0.69423973560333252,\"a\":1}" _center="{\"x\":0.40000000596046448,\"y\":0}" _rotation="0.0" _width="0.5" _sharpness="1" _roundness="0.5"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="705,195" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue3 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="165,225" fillcolor="violet" _value="0.80000000000000004"];
 
-FireOnStart:started -> ShareValue2:refresh;
-ShareValue2:sameValue -> MakeColorImage2:height;
-ShareValue2:sameValue -> MakeColorImage:height;
+FireOnStart:started -> ShareValue3:refresh;
+MakeColorLayer:layer -> MakeList4:2;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeOvalLayer:layer -> MakeList4:1;
+MakeRoundedRectangleLayer:layer -> MakeList4:3;
+ShareValue3:sameValue -> MakeColorLayer:height;
+ShareValue3:sameValue -> MakeOvalLayer:height;
+ShareValue3:sameValue -> MakeRoundedRectangleLayer:height;
 }

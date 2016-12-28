@@ -12,7 +12,8 @@
 		"firingPort" : "refresh",
 		"inputPortValues" : {
 			"initialValue" : 1,
-			"newValue" : 2
+			"newValue" : 2,
+			"newValueEvent" : false
 		},
 		"outputPortValues" : {
 			"heldValue" : 1
@@ -21,7 +22,8 @@
 	{
 		"firingPort" : "newValue",
 		"inputPortValues" : {
-			"newValue" : 2
+			"newValue" : 2,
+			"newValueEvent" : true
 		},
 		"outputPortValues" : {
 		}
@@ -30,29 +32,11 @@
 		"firingPort" : "refresh",
 		"inputPortValues" : {
 			"initialValue" : 1,
-			"newValue" : 2
+			"newValue" : 2,
+			"newValueEvent" : false
 		},
 		"outputPortValues" : {
 			"heldValue" : 2
-		}
-	},
-	{
-		"firingPort" : "newValue",
-		"inputPortValues" : {
-			"initialValue" : 3,
-			"newValue" : 4
-		},
-		"outputPortValues" : {
-		}
-	},
-	{
-		"firingPort" : "refresh",
-		"inputPortValues" : {
-			"initialValue" : 5,
-			"newValue" : 6
-		},
-		"outputPortValues" : {
-			"heldValue" : 6
 		}
 	}
 ]}

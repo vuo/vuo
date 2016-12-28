@@ -3,7 +3,7 @@ Creates a 3D object group consisting of transformed copies of an original.
 This node is useful for displaying multiple similar 3D objects within a scene.
 
    - `Object` — The original 3D object.
-   - `Translations` — The copy's position, in Vuo coordinates.
+   - `Translations` — The copy's position, in Vuo Coordinates.
    - `Rotations` —  The copy's rotation, in degrees (Euler angles).
    - `Scales` — The copy's scale.
    - `Copies` — A group of 3D objects, with as many items as the longest list among `Translations`, `Rotations`, and `Scales`.

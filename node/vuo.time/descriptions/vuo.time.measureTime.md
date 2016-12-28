@@ -5,5 +5,5 @@ This node is useful for controlling animations. You can connect the `Requested F
    - `Time` — A time, such as the output from the `Requested Frame` port of a graphics window node. Each time value should be greater than the previous one. 
    - `Start` — When this port receives an event, the node begins (or continues) letting `Time` events through. 
    - `Pause` — When this port receives an event, the node stops letting `Time` events through. 
-   - `Reset` — When this port receives an event, the node resets its start time to 0, and stops letting `Time` events through.
+   - `Reset` — When this port receives an event, the node resets its start time to 0, lets the next `Time` event through, and then stops letting `Time` events through.
    - `Elapsed Time` — The difference between the current value of `Time` and the value of `Time` when `Start` got its first event or `Reset` most recently got an event, not counting any time elapsed while the node was paused. 

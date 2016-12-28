@@ -1,5 +1,5 @@
 TEMPLATE = lib
-CONFIG += staticlib json qtCore qtGui VuoPCH
+CONFIG += staticlib json qtCore qtGui VuoPCH VuoPCH_objcxx
 TARGET = widget
 
 include(../../../vuo.pri)

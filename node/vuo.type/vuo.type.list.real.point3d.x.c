@@ -10,15 +10,15 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title": "Convert Real List to 3D Point List",
+					  "title": "Convert Real List to 3D Point List (X,0,0)",
 					  "description": "Creates a list of 3D points using the input real numbers as the X coordinate, and 0 as the Y and Z coordinates.",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
 (
 	VuoInputData(VuoList_VuoReal) x,
-	VuoOutputData(VuoList_VuoPoint3d) point3d
+	VuoOutputData(VuoList_VuoPoint3d, {"name":"(X,0,0)"}) point3d
 )
 {
 	*point3d = VuoListCreate_VuoPoint3d();

@@ -89,10 +89,13 @@ VuoInteger VuoInteger_max(VuoInteger *terms, unsigned long termsCount)
  */
 VuoInteger VuoInteger_wrap(VuoInteger value, VuoInteger minimum, VuoInteger maximum)
 {
-	if (value > maximum)
-		return minimum + ((value-maximum-1) % (maximum-minimum+1));
-	else if (value < minimum)
-		return maximum + ((value-minimum+1) % (maximum-minimum+1));
+	VuoInteger rectifiedMin = (minimum < maximum) ? minimum : maximum;
+	VuoInteger rectifiedMax = (minimum < maximum) ? maximum : minimum;
+
+	if (value > rectifiedMax)
+		return rectifiedMin + ((value-rectifiedMax-1) % (rectifiedMax-rectifiedMin+1));
+	else if (value < rectifiedMin)
+		return rectifiedMax + ((value-rectifiedMin+1) % (rectifiedMax-rectifiedMin+1));
 	else
 		return value;
 }

@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+KeepMaximum3 [type="vuo.math.keep.max.VuoInteger" version="1.0.0" label="Keep Maximum|<refresh>refresh\l|<value>value\l|<reset>reset\l|<max>max\r" pos="270,150"];
+SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="30,180"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<refresh>refresh\r|<value>value\r|<resetEvent>resetEvent\r|<reset>reset\r" _refresh_type="event" _value_type="VuoInteger" _value="null" _resetEvent_type="VuoBoolean" _resetEvent="false" _reset_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<max>max\l" _max_type="VuoInteger"];
+
+SelectEventOutput:trueOption -> KeepMaximum3:reset;
+PublishedInputs:refresh -> KeepMaximum3:refresh;
+PublishedInputs:value -> KeepMaximum3:value;
+PublishedInputs:resetEvent -> SelectEventOutput:which;
+PublishedInputs:reset -> SelectEventOutput:in;
+KeepMaximum3:max -> PublishedOutputs:max;
+}

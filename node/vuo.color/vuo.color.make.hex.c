@@ -8,7 +8,7 @@
  */
 
 #include "node.h"
-#include "json/json.h"
+#include <json-c/json.h>
 
 VuoModuleMetadata({
 					 "title" : "Make Hex Color",

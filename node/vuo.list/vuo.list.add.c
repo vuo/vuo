@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Add to List",
-					 "keywords" : [ "push", "append", "prepend", "insert" ],
+					 "keywords" : [ "push", "append", "prepend", "insert", "combine" ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ "ShiftSquares.vuo" ]

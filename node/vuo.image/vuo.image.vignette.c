@@ -27,6 +27,7 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec4 edgeColor;
 	uniform float innerRadius;
 	uniform float outerRadius;
+	uniform bool replaceOpacity;
 
 	// http://www.geeks3d.com/20091020/shader-library-lens-circle-post-processing-effect-glsl/
 	void main(void)
@@ -35,7 +36,8 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 		float dist = distance(fragmentTextureCoordinate.xy, vec2(0.5,0.5));
 		vec3 mixed = mix(edgeColor.rgb * edgeColor.a, col.rgb * col.a, smoothstep(outerRadius, innerRadius, dist) );
 		float a = mix(edgeColor.a, col.a, smoothstep(outerRadius, innerRadius, dist));
-		gl_FragColor = vec4(mixed, a);
+
+		gl_FragColor = replaceOpacity ? vec4(mixed, a) : mix(col, vec4(mixed, a), edgeColor.a);
 	}
 );
 
@@ -68,8 +70,9 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoColor, {"default":{"r":0,"g":0,"b":0,"a":1}}) color,
-		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0, "suggestedMax":2}) width,
+		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0, "suggestedMax":4}) width,
 		VuoInputData(VuoReal, {"default":0.33, "suggestedMin":0, "suggestedMax":1}) sharpness,
+		VuoInputData(VuoBoolean, {"default":true}) replaceOpacity,
 		VuoOutputData(VuoImage) vignettedImage
 )
 {
@@ -80,7 +83,7 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
 	// VuoShader_setUniform_VuoPoint2d((*instance)->shader, "scale", w < h ? VuoPoint2d_make(1., h/(float)w) : VuoPoint2d_make(w/(float)h, 1.));
 
-	float radius = width/2.;
+	float radius = width/4.;
 	if(radius < 0.) radius = 0.;
 	if(radius > 2.) radius = 2.;
 
@@ -96,6 +99,7 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "innerRadius", innerRadius);
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "outerRadius", outerRadius);
 	VuoShader_setUniform_VuoColor((*instance)->shader, "edgeColor", color);
+	VuoShader_setUniform_VuoBoolean ((*instance)->shader, "replaceOpacity", replaceOpacity);
 
 	*vignettedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }

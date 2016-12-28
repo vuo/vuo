@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-38,25" _seconds="1.0" _fired_eventThrottling="drop"];
+HoldValue2 [type="vuo.data.hold.VuoRenderedLayers" version="2.0.0" label="HoldValue|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="343,80"];
+MakeButton [type="vuo.ui.button.action" version="1.0.0" label="MakeButton|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="721,226" _label="\"Start\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.4,\"g\":0.5,\"b\":0.6,\"a\":1.0}" _iconPosition="\"left\"" _width="0.4" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList15 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="MakeList|<refresh>refresh\l|<1>1\l|<list>list\r" pos="961,183"];
+MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="991,198"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="RenderLayersToWindow|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1032,172" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue1|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="172,57"];
+ShareValue4 [type="vuo.data.share.VuoRenderedLayers" version="1.0.0" label="ShareValue2|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="514,77"];
+
+FirePeriodically:fired -> ShareValue3:refresh;
+HoldValue2:heldValue -> ShareValue4:value;
+MakeButton:updatedLayer -> MakeList15:1;
+MakeList15:list -> RenderLayersToWindow:layers;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+RenderLayersToWindow:renderedLayers -> HoldValue2:newValue;
+RenderLayersToWindow:requestedFrame -> ShareValue4:refresh;
+ShareValue3:sameValue -> HoldValue2:refresh;
+ShareValue4:sameValue -> MakeButton:renderedLayers;
+}

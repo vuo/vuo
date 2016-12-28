@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+HoldValue2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="315,60"];
+SelectOutput3 [type="vuo.select.out.boolean.VuoInteger" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="105,135"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<refresh>refresh\r|<initialValue>initialValue\r|<newValueEvent>newValueEvent\r|<newValue>newValue\r" _refresh_type="event" _initialValue_type="VuoInteger" _initialValue="null" _newValueEvent_type="VuoBoolean" _newValueEvent="false" _newValue_type="VuoInteger" _newValue="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<heldValue>heldValue\l" _heldValue_type="VuoInteger"];
+
+SelectOutput3:trueOption -> HoldValue2:newValue;
+PublishedInputs:refresh -> HoldValue2:refresh;
+PublishedInputs:initialValue -> HoldValue2:initialValue;
+PublishedInputs:newValueEvent -> SelectOutput3:which;
+PublishedInputs:newValue -> SelectOutput3:in;
+HoldValue2:heldValue -> PublishedOutputs:heldValue;
+}

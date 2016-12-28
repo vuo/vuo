@@ -22,6 +22,9 @@ void nodeEvent
 		VuoOutputData(VuoData) data
 )
 {
+	if (!text)
+		return;
+
 	*data = VuoData_makeFromText(text);
 }
 

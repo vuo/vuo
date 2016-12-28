@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CutList2 [type="vuo.list.cut.VuoInteger" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="255,120" _startPosition="1" _itemCount="2"];
+MakeList4 [type="vuo.list.make.3.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="201,131" _1="11" _2="22" _3="33"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Refresh>Refresh\r" _Refresh_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<PartialList>PartialList\l" _PartialList_type="VuoList_VuoInteger"];
+
+MakeList4:list -> CutList2:list;
+PublishedInputs:Refresh -> CutList2:refresh;
+CutList2:partialList -> PublishedOutputs:PartialList;
+}

@@ -10,8 +10,8 @@
 #ifndef VUOCOMPILEREXCEPTION_HH
 #define VUOCOMPILEREXCEPTION_HH
 
-#include "VuoCable.hh"
-
+class VuoCable;
+class VuoNode;
 
 /**
  * A description of an error that occurred while compiling a composition.
@@ -41,6 +41,7 @@ class VuoCompilerException : public exception
 {
 public:
 	VuoCompilerException(const vector<VuoCompilerError> &errors);
+	VuoCompilerException(void) throw() { }  ///< Needed for this class to be the value type in an STL map.
 	~VuoCompilerException(void) throw() { }  ///< Needed to prevent a build error.
 	vector<VuoCompilerError> getErrors(void) const;
 	const char * what() const throw();

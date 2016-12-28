@@ -30,8 +30,7 @@ extern "C" {
  */
 typedef void (*DeallocateFunctionType)(void *);
 
-void VuoHeap_init(void);
-void VuoHeap_fini(void);
+void VuoHeap_report(void);
 
 /**
  * @ingroup ReferenceCountingFunctions
@@ -60,28 +59,12 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 #define VuoRegisterSingleton(heapPointer) VuoRegisterSingletonF(heapPointer, __FILE__, __LINE__, __func__, #heapPointer)
 int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned int line, const char *func, const char *pointerName);
 
-/**
- * @ingroup ReferenceCountingFunctions
- * Increments the reference count for @a heapPointer (unless @a heapPointer is not being reference-counted).
- *
- * @param heapPointer A pointer to allocated memory on the heap.
- * @return The updated reference count of @a heapPointer, or -1 if @a heapPointer is not being reference-counted or is null.
- */
-#define VuoRetain(heapPointer) VuoRetainF(heapPointer, __FILE__, __LINE__, __func__)
-int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, const char *func);
+int VuoRetain(const void *heapPointer);
 
-/**
- * @ingroup ReferenceCountingFunctions
- * Decrements the reference count for @a heapPointer (unless @a heapPointer is not being reference-counted).
- * If the reference count becomes 0, @a heapPointer is deallocated and is no longer reference-counted.
- *
- * @param heapPointer A pointer to allocated memory on the heap.
- * @return The updated reference count of @a heapPointer, or -1 if @a heapPointer is not being reference-counted, has never been retained, or is null.
- */
-#define VuoRelease(heapPointer) VuoReleaseF(heapPointer, __FILE__, __LINE__, __func__)
-int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, const char *func);
+int VuoRelease(const void *heapPointer);
 
 const char * VuoHeap_getDescription(const void *heapPointer);
+void VuoHeap_addTrace(const void *heapPointer);
 
 #ifdef __cplusplus
 }

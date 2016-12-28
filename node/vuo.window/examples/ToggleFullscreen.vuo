@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Switches between windowed and fullscreen using a keypress.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeFullscreenStatus [type="vuo.window.fullscreen" version="1.0.0" label="Change Fullscreen Status|<refresh>refresh\l|<fullscreen>fullscreen\l|<screen>screen\l|<property>property\r" pos="255,330" fillcolor="violet" _screen="{\"type\":\"active\"}"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="180,195" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList12 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="472,251" fillcolor="green"];
+MakeList9 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="509,266" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="315,240" _text="\"Press the 'i' key to toggle fullscreen mode.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0.0,\"y\":0.0}"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-90,300" _key="\"I\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="555,240" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="135,315"];
+
+ChangeFullscreenStatus:property -> MakeList9:1;
+FireOnStart:started -> MakeTextLayer:refresh;
+MakeList12:list -> RenderLayersToWindow:layers;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+MakeTextLayer:layer -> MakeList12:1;
+ReceiveKeyboardButtons:pressed -> Toggle:toggle;
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
+Toggle:value -> ChangeFullscreenStatus:fullscreen;
+}

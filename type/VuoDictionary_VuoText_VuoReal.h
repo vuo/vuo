@@ -40,7 +40,7 @@ struct json_object * VuoDictionary_VuoText_VuoReal_getJson(const VuoDictionary_V
 char * VuoDictionary_VuoText_VuoReal_getSummary(const VuoDictionary_VuoText_VuoReal value);
 
 VuoDictionary_VuoText_VuoReal VuoDictionaryCreate_VuoText_VuoReal(void);
-VuoList_VuoText VuoDictionaryGetKeys_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d);
+VuoDictionary_VuoText_VuoReal VuoDictionaryCreateWithLists_VuoText_VuoReal(const VuoList_VuoText keys, const VuoList_VuoReal values);
 VuoReal VuoDictionaryGetValueForKey_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d, VuoText key);
 void VuoDictionarySetKeyValue_VuoText_VuoReal(VuoDictionary_VuoText_VuoReal d, VuoText key, VuoReal value);
 

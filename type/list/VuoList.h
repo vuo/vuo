@@ -35,6 +35,13 @@ typedef const struct LIST_TYPE_struct { void *l; } * LIST_TYPE;
 LIST_TYPE VuoListCreate_ELEMENT_TYPE(void);
 
 /**
+ * Creates a new list of `count` instances of `value`.
+ *
+ * Use this in conjunction with @ref VuoListGetData_ELEMENT_TYPE to quickly initialize a large list.
+ */
+LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const ELEMENT_TYPE value);
+
+/**
  * Makes a shallow copy of `list` — its items are retained (not copied) by the new list.
  */
 LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list);
@@ -46,6 +53,24 @@ LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list);
  * Attempting to access an out-of-bounds index returns the first item in the list (if the index is 0), or last item in the list (if the index is greater than the list size).
  */
 ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned long index);
+
+/**
+ * Returns a pointer to a C array containing the list items.
+ *
+ * Use this if you need a fast way to get or change multiple list items.
+ *
+ * You can modify values in the list by changing them in this array.
+ * Just don't attempt to access beyond the list size.
+ *
+ * The pointer becomes invalid if you modify the list size using other functions
+ * (e.g., Insert, Prepend, Append, Cut, Remove);
+ * if you use those functions, just get a new pointer by calling this function again.
+ *
+ * If the list has no items, returns NULL.
+ *
+ * The pointer remains owned by the list; don't free it.
+ */
+ELEMENT_TYPE *VuoListGetData_ELEMENT_TYPE(const LIST_TYPE list);
 
 /**
  * Changes the @ref ELEMENT_TYPE at @c index.
@@ -77,6 +102,25 @@ void VuoListAppendValue_ELEMENT_TYPE(LIST_TYPE list, const ELEMENT_TYPE value);
  * Swaps the value at `indexA` with the value at `indexB`.
  */
 void VuoListExchangeValues_ELEMENT_TYPE(LIST_TYPE list, const unsigned long indexA, const unsigned long indexB);
+
+#ifdef ELEMENT_TYPE_SUPPORTS_COMPARISON
+/**
+ * Sorts `list`.
+ */
+void VuoListSort_ELEMENT_TYPE(LIST_TYPE list);
+
+/**
+ * Returns true if the two lists are equivalent.
+ *
+ * NULL lists are never equal to non-NULL lists (even empty lists).
+ */
+bool LIST_TYPE_areEqual(const LIST_TYPE a, const LIST_TYPE b);
+
+/**
+ * Returns true if `a` < `b`.
+ */
+bool LIST_TYPE_isLessThan(const LIST_TYPE a, const LIST_TYPE b);
+#endif
 
 /**
  * Generates a random permutation of `list`.

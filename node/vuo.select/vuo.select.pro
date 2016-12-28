@@ -19,6 +19,14 @@ GENERIC_NODE_SOURCES += \
 	vuo.select.latest.8.c \
 	vuo.select.out.2.c \
 	vuo.select.out.8.c \
-	vuo.select.out.boolean.c
+	vuo.select.out.boolean.c \
+	vuo.select.in.list.2.c \
+	vuo.select.in.list.8.c \
+	vuo.select.in.list.boolean.c \
+	vuo.select.latest.list.2.c \
+	vuo.select.latest.list.8.c \
+	vuo.select.out.list.2.c \
+	vuo.select.out.list.8.c \
+	vuo.select.out.list.boolean.c
 
 include(../../module.pri)

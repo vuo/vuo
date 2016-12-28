@@ -10,6 +10,7 @@
 #include "VuoCompilerGenericType.hh"
 #include "VuoCompiler.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoGenericType.hh"
 #include "VuoStringUtilities.hh"
 
 

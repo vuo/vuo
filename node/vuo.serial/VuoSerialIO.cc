@@ -12,8 +12,10 @@
 #include "VuoTriggerSet.hh"
 
 #include <sys/ioctl.h>
+#include <sys/fcntl.h>
 #include <termios.h>
 #include <IOKit/serial/ioss.h>
+#include <errno.h>
 
 #include <map>
 #include <string>
@@ -97,7 +99,7 @@ void VuoSerial_processPacket(VuoSerial_internal si)
 		sprintf(hex + data.size + 1 + i*3, "%02x ", (unsigned char)data.data[i]);
 	}
 	hex[data.size] = '\t';
-	VLog("%4lld:\t%s", data.size, hex);
+	VUserLog("%4lld:\t%s", data.size, hex);
 	free(hex);
 }
 #endif
@@ -197,7 +199,7 @@ VuoSerial_internal VuoSerial_make(std::string devicePath)
 		VuoSerial_initSource(si);
 	else
 	{
-		VLog("Warning: Serial device '%s' isn't currently available (%s).  I'll keep trying.", si->devicePath, strerror(errno));
+		VUserLog("Warning: Serial device '%s' isn't currently available (%s).  I'll keep trying.", si->devicePath, strerror(errno));
 		dispatch_async(VuoSerial_pendingDevicesQueue, ^{
 			VuoSerial_pendingDevices.insert(si);
 		});
@@ -303,14 +305,14 @@ void VuoSerial_configureDevice(VuoSerial device, VuoInteger baudRate, VuoInteger
 
 	// Configure baud rate.
 	if (ioctl(si->fileHandle, IOSSIOSPEED, &baudRate) == -1)
-		VLog("Couldn't set %s to baud rate %lld: %s", si->devicePath, baudRate, strerror(errno));
+		VUserLog("Couldn't set %s to baud rate %lld: %s", si->devicePath, baudRate, strerror(errno));
 
 
 	// Get the current options.
 	struct termios options;
 	if (tcgetattr(si->fileHandle, &options) == -1)
 	{
-		VLog("Couldn't get TTY attributes for %s: %s", si->devicePath, strerror(errno));
+		VUserLog("Couldn't get TTY attributes for %s: %s", si->devicePath, strerror(errno));
 		return;
 	}
 
@@ -326,7 +328,7 @@ void VuoSerial_configureDevice(VuoSerial device, VuoInteger baudRate, VuoInteger
 	else if (dataBits == 8)
 		options.c_cflag |= CS8;
 	else
-		VLog("Couldn't set %s dataBits to %lld.", si->devicePath, dataBits);
+		VUserLog("Couldn't set %s dataBits to %lld.", si->devicePath, dataBits);
 
 
 	// Configure parity.
@@ -340,7 +342,7 @@ void VuoSerial_configureDevice(VuoSerial device, VuoInteger baudRate, VuoInteger
 	else if (parity == VuoParity_Odd)
 		options.c_cflag |= PARENB | PARODD;	// Set the Parity Enable and Parity Odd bits.
 	else
-		VLog("Couldn't set %s parity to %d.", si->devicePath, parity);
+		VUserLog("Couldn't set %s parity to %d.", si->devicePath, parity);
 
 
 	// Configure stop bits.
@@ -349,10 +351,10 @@ void VuoSerial_configureDevice(VuoSerial device, VuoInteger baudRate, VuoInteger
 	else if (stopBits == 2)
 		options.c_cflag |= CSTOPB;
 	else
-		VLog("Couldn't set %s stopBits to %lld.", si->devicePath, stopBits);
+		VUserLog("Couldn't set %s stopBits to %lld.", si->devicePath, stopBits);
 
 
 	// Apply configuration immediately.
 	if (tcsetattr(si->fileHandle, TCSANOW, &options) == -1)
-		VLog("Couldn't configure %s: %s", si->devicePath, strerror(errno));
+		VUserLog("Couldn't configure %s: %s", si->devicePath, strerror(errno));
 }

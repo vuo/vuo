@@ -23,6 +23,7 @@ NODE_SOURCES += \
 	vuo.layer.combine.c \
 	vuo.layer.combine.center.c \
 	vuo.layer.drag.c \
+	vuo.layer.populated.c \
 	vuo.layer.render.window.c \
 	vuo.layer.render.image.c \
 	vuo.layer.within.c
@@ -36,6 +37,7 @@ HEADERS += \
 	VuoRenderedLayers.h
 
 NODE_INCLUDEPATH += \
-	../vuo.mouse
+	../vuo.mouse \
+	../vuo.scene
 
 include(../../module.pri)

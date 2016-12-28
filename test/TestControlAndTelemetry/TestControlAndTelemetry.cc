@@ -53,7 +53,7 @@ private:
 		compiler->linkCompositionToCreateExecutable(bcPath, exePath, VuoCompiler::Optimization_FastBuild);
 		remove(bcPath.c_str());
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, "", true);
+		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, "", false, true);
 		runner->setDelegate(new TestRunnerDelegate());
 		return runner;
 	}
@@ -82,7 +82,7 @@ private:
 		string compositionLoaderPath = compiler->getCompositionLoaderPath();
 		remove(bcPath.c_str());
 
-		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir, true);
+		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compositionLoaderPath, dylibPath, resourceDylibPath, compositionDir, false, true);
 		// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 		return runner;
 	}
@@ -318,7 +318,7 @@ private slots:
 		}
 		else if (testNum == 6)  // Error handling: New process, non-existent executable
 		{
-			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(nonExistentFile, "", false);
+			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(nonExistentFile, "", false, false);
 			runner->start();
 			runner->waitUntilStopped();
 			delete runner;
@@ -327,7 +327,7 @@ private slots:
 		{
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(),
 																					  nonExistentFile, nonExistentFile,
-																					  "", false);
+																					  "", false, false);
 			runner->start();
 			runner->waitUntilStopped();
 			delete runner;
@@ -587,13 +587,13 @@ private:
 			runner->startPaused();
 
 			{
-				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( firedPortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->getInputPortSummary( incrementPortIdentifier )), QString("1"));
-				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( countPortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->getInputPortSummary( item1PortIdentifier )), QString("0"));
-				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( listPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
-				QCOMPARE(QString::fromStdString(runner->getInputPortSummary( valuesPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
-				QCOMPARE(QString::fromStdString(runner->getOutputPortSummary( sumPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( firedPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( incrementPortIdentifier )), QString("1"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( countPortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( item1PortIdentifier )), QString("0"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( listPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToInputPortTelemetry( valuesPortIdentifier )), QString("List containing 2 items: <ul><li>0</li><li>10</li></ul>"));
+				QCOMPARE(QString::fromStdString(runner->subscribeToOutputPortTelemetry( sumPortIdentifier )), QString("0"));
 			}
 
 			runner->unpause();
@@ -741,7 +741,11 @@ private:
 
 			runner->setDelegate(this);
 
-			runner->start();
+			runner->startPaused();
+			runner->subscribeToInputPortTelemetry(incrementPortIdentifier);
+			runner->subscribeToOutputPortTelemetry(countPortIdentifier);
+
+			runner->unpause();
 			runner->waitUntilStopped();
 
 			QCOMPARE(timesIncrementReceivedEvent, 4);
@@ -750,9 +754,6 @@ private:
 
 		void receivedTelemetryInputPortUpdated(string portIdentifier, bool receivedEvent, bool receivedData, string dataSummary)
 		{
-			if (portIdentifier != incrementPortIdentifier)
-				return;
-
 			if (receivedEvent)
 				++timesIncrementReceivedEvent;
 
@@ -765,9 +766,6 @@ private:
 		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
 		{
 			if (isStopping)
-				return;
-
-			if (portIdentifier != countPortIdentifier)
 				return;
 
 			runner->pause();
@@ -881,7 +879,9 @@ private:
 
 			runner->setDelegate(this);
 
-			runner->start();
+			runner->startPaused();
+			runner->subscribeToAllTelemetry();
+			runner->unpause();
 			runner->waitUntilStopped();
 		}
 
@@ -984,15 +984,14 @@ private:
 
 			runner->setDelegate(this);
 
-			runner->start();
+			runner->startPaused();
+			runner->subscribeToOutputPortTelemetry(sumPortIdentifier);
+			runner->unpause();
 			runner->waitUntilStopped();
 		}
 
 		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
 		{
-			if (portIdentifier != sumPortIdentifier)
-				return;
-
 			if (timesSumChanged == 0)
 			{
 				QCOMPARE(QString(dataSummary.c_str()), QString("1"));
@@ -1064,7 +1063,7 @@ private slots:
 			vector<VuoRunner::Port *> inputs;
 			inputs.push_back( new VuoRunner::Port("publishedIn0", "VuoInteger", json_tokener_parse("{}")) );
 			inputs.push_back( new VuoRunner::Port("publishedIn1", "VuoInteger", json_tokener_parse("{}")) );
-			inputs.push_back( new VuoRunner::Port("publishedIn2", "VuoReal", json_tokener_parse("{\"default\":0.050000,\"suggestedMin\":0.000001,\"suggestedMax\":0.050000}")) );
+			inputs.push_back( new VuoRunner::Port("publishedIn2", "VuoReal", json_tokener_parse("{\"default\":0.050000,\"suggestedMin\":0.000001,\"suggestedMax\":0.05}")) );
 			vector<VuoRunner::Port *> outputs;
 			outputs.push_back( new VuoRunner::Port("publishedSum", "VuoInteger", json_tokener_parse("{}")) );
 			QTest::newRow("some published input and output ports") << "Recur_Add_published.vuo" << inputs << outputs;
@@ -1171,7 +1170,6 @@ private slots:
 
 		TestPublishedPortCachingRunnerDelegate delegate(runner);
 		runner->setDelegate(&delegate);
-
 		runner->start();
 
 		if (shouldRunInSeparateProcess)
@@ -1352,7 +1350,7 @@ private:
 			}
 			else if (timesSumChanged == 2)
 			{
-				QCOMPARE(QString(dataSummary.c_str()), QString("36"));
+				QCOMPARE(QString(dataSummary.c_str()), QString("78"));
 
 				runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1));
 				runner->setPublishedInputPortValue(publishedDecrementBoth, VuoInteger_getJson(5));
@@ -1360,7 +1358,7 @@ private:
 			}
 			else if (timesSumChanged == 3)
 			{
-				QCOMPARE(QString(dataSummary.c_str()), QString("27"));
+				QCOMPARE(QString(dataSummary.c_str()), QString("69"));
 
 				dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 				dispatch_async(queue, ^{
@@ -1388,19 +1386,24 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
+			runner->subscribeToEventTelemetry();
 
-			VuoRunner::Port *publishedIncrement1 = runner->getPublishedInputPortWithName("publishedIncrement1");
+			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 			VuoRunner::Port *publishedCount1 = runner->getPublishedOutputPortWithName("publishedCount1");
+			VuoRunner::Port *publishedCount2 = runner->getPublishedOutputPortWithName("publishedCount2");
+			VuoRunner::Port *publishedCount3 = runner->getPublishedOutputPortWithName("publishedCount3");
 
 			vector<VuoInteger> expectedCounts;
 			expectedCounts.push_back(10);
 			expectedCounts.push_back(20);
 			for (vector<VuoInteger>::iterator i = expectedCounts.begin(); i != expectedCounts.end(); ++i)
 			{
-				runner->firePublishedInputPortEvent(publishedIncrement1);
+				runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(true));
+				runner->firePublishedInputPortEvent(shouldDelay);
 				runner->waitForAnyPublishedOutputPortEvent();
-				VuoInteger publishedCount1Value = VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) );
-				QCOMPARE(publishedCount1Value, *i);
+				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), *i);
+				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)0);
+				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)0);
 			}
 
 			runner->stop();
@@ -1413,8 +1416,10 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
+			runner->subscribeToEventTelemetry();
 
-			VuoRunner::Port *publishedIncrement2 = runner->getPublishedInputPortWithName("publishedIncrement2");
+			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
+			VuoRunner::Port *publishedCount1 = runner->getPublishedOutputPortWithName("publishedCount1");
 			VuoRunner::Port *publishedCount2 = runner->getPublishedOutputPortWithName("publishedCount2");
 			VuoRunner::Port *publishedCount3 = runner->getPublishedOutputPortWithName("publishedCount3");
 
@@ -1423,9 +1428,11 @@ private slots:
 			expectedCounts.push_back(200);
 			for (vector<VuoInteger>::iterator i = expectedCounts.begin(); i != expectedCounts.end(); ++i)
 			{
-				runner->firePublishedInputPortEvent(publishedIncrement2);
+				runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(false));
+				runner->firePublishedInputPortEvent(shouldDelay);
 				sleep(1);
 				runner->waitForAnyPublishedOutputPortEvent();
+				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)0);
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), *i);
 				QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), *i);
 			}
@@ -1440,20 +1447,25 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
+			runner->subscribeToEventTelemetry();
 
-			VuoRunner::Port *publishedIncrement1 = runner->getPublishedInputPortWithName("publishedIncrement1");
-			VuoRunner::Port *publishedIncrement2 = runner->getPublishedInputPortWithName("publishedIncrement2");
+			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 			VuoRunner::Port *publishedCount1 = runner->getPublishedOutputPortWithName("publishedCount1");
 			VuoRunner::Port *publishedCount2 = runner->getPublishedOutputPortWithName("publishedCount2");
 			VuoRunner::Port *publishedCount3 = runner->getPublishedOutputPortWithName("publishedCount3");
 
-			runner->firePublishedInputPortEvent(publishedIncrement1);
+			runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(true));
+			runner->firePublishedInputPortEvent(shouldDelay);
 			runner->waitForAnyPublishedOutputPortEvent();
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)10);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)0);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)0);
 
-			runner->firePublishedInputPortEvent(publishedIncrement2);
+			runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(false));
+			runner->firePublishedInputPortEvent(shouldDelay);
 			sleep(1);
 			runner->waitForAnyPublishedOutputPortEvent();
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount1) ), (VuoInteger)10);
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount2) ), (VuoInteger)100);
 			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedCount3) ), (VuoInteger)100);
 
@@ -1467,11 +1479,13 @@ private slots:
 
 			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
 			runner->start();
+			runner->subscribeToEventTelemetry();
 
-			VuoRunner::Port *publishedIncrement2 = runner->getPublishedInputPortWithName("publishedIncrement2");
+			VuoRunner::Port *shouldDelay = runner->getPublishedInputPortWithName("shouldDelay");
 
-			runner->firePublishedInputPortEvent(publishedIncrement2);
-			runner->firePublishedInputPortEvent(publishedIncrement2);
+			runner->setPublishedInputPortValue(shouldDelay, VuoBoolean_getJson(false));
+			runner->firePublishedInputPortEvent(shouldDelay);
+			runner->firePublishedInputPortEvent(shouldDelay);
 			runner->waitForAnyPublishedOutputPortEvent();
 
 			runner->stop();
@@ -1498,6 +1512,32 @@ private slots:
 
 		json_object *outPortValue = runner->getPublishedOutputPortValue(outPort);
 		QCOMPARE(VuoInteger_makeFromJson(outPortValue), (VuoInteger)0);
+
+		runner->stop();
+		delete runner;
+	}
+
+	void testEventOnlyPublishedInputCables()
+	{
+		string compositionPath = getCompositionPath("EventOnlyPublishedInputCable.vuo");
+		VuoRunner *runner = createRunnerInNewProcess(compositionPath);
+		runner->start();
+
+		vector<VuoRunner::Port *> inPorts = runner->getPublishedInputPorts();
+		QCOMPARE(inPorts.size(), (size_t)1);
+
+		vector<VuoRunner::Port *> outPorts = runner->getPublishedOutputPorts();
+		QCOMPARE(outPorts.size(), (size_t)2);
+
+		runner->setPublishedInputPortValue(inPorts[0], VuoInteger_getJson(9));
+		runner->firePublishedInputPortEvent();
+		runner->waitForAnyPublishedOutputPortEvent();
+
+		json_object *outPort1Value = runner->getPublishedOutputPortValue(outPorts[0]);
+		QCOMPARE(VuoInteger_makeFromJson(outPort1Value), (VuoInteger)9);
+
+		json_object *outPort2Value = runner->getPublishedOutputPortValue(outPorts[1]);
+		QCOMPARE(VuoInteger_makeFromJson(outPort2Value), (VuoInteger)1);
 
 		runner->stop();
 		delete runner;
@@ -1561,6 +1601,90 @@ private slots:
 	{
 		TestMultiplyConnectedPublishedOutputPortsRunnerDelegate delegate;
 		delegate.runComposition(compiler);
+	}
+
+	void testEventlessTransmission()
+	{
+		string compositionPath = TestCompositionExecution::getCompositionPath("CutList.vuo");
+		VuoCompilerComposition *composition = NULL;
+		VuoRunner *runner = createRunnerInNewProcess(compiler, compositionPath, &composition);
+
+		string item1PortIdentifier;
+		string listPortIdentifier;
+		string partialListPortIdentifier;
+
+		foreach (VuoNode *node, composition->getBase()->getNodes())
+		{
+			if (node->getNodeClass()->getClassName() == "vuo.list.make.3.VuoInteger")
+			{
+				VuoPort *basePort = node->getInputPortWithName("1");
+				item1PortIdentifier = static_cast<VuoCompilerPort *>( basePort->getCompiler() )->getIdentifier();
+			}
+			else if (node->getNodeClass()->getClassName() == "vuo.list.cut.VuoInteger")
+			{
+				{
+					VuoPort *basePort = node->getInputPortWithName("list");
+					listPortIdentifier = static_cast<VuoCompilerPort *>( basePort->getCompiler() )->getIdentifier();
+				}
+				{
+					VuoPort *basePort = node->getOutputPortWithName("partialList");
+					partialListPortIdentifier = static_cast<VuoCompilerPort *>( basePort->getCompiler() )->getIdentifier();
+				}
+			}
+		}
+
+		QVERIFY(! item1PortIdentifier.empty());
+		QVERIFY(! listPortIdentifier.empty());
+		QVERIFY(! partialListPortIdentifier.empty());
+
+		runner->start();
+		runner->firePublishedInputPortEvent();
+		runner->waitForAnyPublishedOutputPortEvent();
+
+		{
+			json_object *item1Value = runner->getInputPortValue(item1PortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(item1Value, JSON_C_TO_STRING_PLAIN)), QString("11"));
+
+			json_object *listValue = runner->getInputPortValue(listPortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(listValue, JSON_C_TO_STRING_PLAIN)), QString("[11,22,33]"));
+
+			json_object *partialListValue = runner->getInputPortValue(partialListPortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(partialListValue, JSON_C_TO_STRING_PLAIN)), QString("[11,22]"));
+		}
+
+		json_object *newValue = VuoInteger_getJson(44);
+		runner->setInputPortValue(item1PortIdentifier, newValue);
+		json_object_put(newValue);
+
+		{
+			json_object *item1Value = runner->getInputPortValue(item1PortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(item1Value, JSON_C_TO_STRING_PLAIN)), QString("44"));
+
+			json_object *listValue = runner->getInputPortValue(listPortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(listValue, JSON_C_TO_STRING_PLAIN)), QString("[44,22,33]"));
+
+			json_object *partialListValue = runner->getInputPortValue(partialListPortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(partialListValue, JSON_C_TO_STRING_PLAIN)), QString("[11,22]"));
+		}
+
+		runner->firePublishedInputPortEvent();
+		runner->waitForAnyPublishedOutputPortEvent();
+
+		{
+			json_object *item1Value = runner->getInputPortValue(item1PortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(item1Value, JSON_C_TO_STRING_PLAIN)), QString("44"));
+
+			json_object *listValue = runner->getInputPortValue(listPortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(listValue, JSON_C_TO_STRING_PLAIN)), QString("[44,22,33]"));
+
+			json_object *partialListValue = runner->getInputPortValue(partialListPortIdentifier);
+			QCOMPARE(QString(json_object_to_json_string_ext(partialListValue, JSON_C_TO_STRING_PLAIN)), QString("[44,22]"));
+		}
+
+		runner->stop();
+
+		delete composition;
+		delete runner;
 	}
 
 	void testReplacingCompositionWithoutCrashing_data()
@@ -1649,7 +1773,7 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, true);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, false, true);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
@@ -1735,9 +1859,10 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, true);
+			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir, false, true);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
+			runner->subscribeToEventTelemetry();
 
 			publishedIncrementOne = runner->getPublishedInputPortWithName("publishedIncrementOne");
 			QVERIFY(publishedIncrementOne != NULL);
@@ -1887,11 +2012,11 @@ private slots:
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 			delete originalComposition;
 
-			// "Count1:increment" becomes 1000000, "Count1:count" becomes 1111110, "Add1:sum" becomes 1111110 + 122220 = 1233330.
+			// "Count1:increment" becomes 1000000, "Count1:count" becomes 1111110, "Add1:sum" becomes 1111110 + 0 = 1111110.
 			runner->setPublishedInputPortValue(publishedIncrementOne, VuoInteger_getJson(1000000));
 			runner->firePublishedInputPortEvent(publishedIncrementOne);
 			runner->waitForAnyPublishedOutputPortEvent();
-			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)1233330);
+			QCOMPARE(VuoInteger_makeFromJson( runner->getPublishedOutputPortValue(publishedSum) ), (VuoInteger)1111110);
 		}
 
 		runner->stop();

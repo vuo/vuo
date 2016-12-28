@@ -13,6 +13,7 @@
 #include "VuoText.h"
 #include "VuoList_VuoReal.h"
 #include <float.h>
+#include <limits.h>
 
 /// @{
 #ifdef VUO_COMPILER

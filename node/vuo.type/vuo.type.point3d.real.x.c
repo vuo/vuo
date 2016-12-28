@@ -10,14 +10,14 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert 3D Point to Real",
+					 "title" : "Convert 3D Point to Real (X)",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoPoint3d, {"default":{"x":0, "y":0, "z":0}}) xyz,
+		VuoInputData(VuoPoint3d, {"default":{"x":0, "y":0, "z":0}, "name":"(X,Y,Z)"}}) xyz,
 		VuoOutputData(VuoReal) x
 )
 {

@@ -20,6 +20,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoAudioBins:0 \
 		VuoAudioBinAverageType:0 \
 		VuoAudioEncoding:0 \
+		VuoAudioFrame:2 \
 		VuoAudioInputDevice:2 \
 		VuoAudioOutputDevice:2 \
 		VuoAudioSamples:2 \
@@ -27,17 +28,23 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoBlendMode:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
+		VuoCoordinateUnit:0 \
 		VuoCursor:2 \
 		VuoCurve:0 \
 		VuoCurveEasing:0 \
 		VuoData:2 \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
+		VuoDistribution3d:0 \
+		VuoDragEvent:2 \
 		VuoDmxColorMap:2 \
+		VuoDurationType:0 \
 		VuoFileType:0 \
 		VuoFont:2 \
 		VuoGradientNoise:0 \
 		VuoGridType:0 \
+		VuoHidControl:2 \
+		VuoHidDevice:2 \
 		VuoHorizontalAlignment:0 \
 		VuoHorizontalReflection:0 \
 		VuoHorizontalSide:0 \
@@ -66,9 +73,14 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoMouseButton:0 \
 		VuoMovieFormat:0 \
 		VuoMovieImageEncoding:0 \
+		VuoVideoOptimization:0 \
+		VuoMultisample:2 \
 		VuoNoise:0 \
 		VuoNotePriority:2 \
 		VuoNumberFormat:2 \
+		VuoNumberComparison:2 \
+		VuoOscInputDevice:2 \
+		VuoOscOutputDevice:2 \
 		VuoOscMessage:2 \
 		VuoParity:2 \
 		VuoPoint2d:0 \
@@ -76,7 +88,9 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoPoint4d:0 \
 		VuoReal:0 \
 		VuoRealRegulation:2 \
+		VuoRelativeTime:0 \
 		VuoRenderedLayers:2 \
+		VuoRoundingMethod:0 \
 		VuoRssItem:2 \
 		VuoSceneObject:2 \
 		VuoScreen:2 \
@@ -85,8 +99,12 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoSerialDevice:2 \
 		VuoSizingMode:0 \
 		VuoSyphonServerDescription:0 \
+		VuoTempoRange:0 \
 		VuoText:1 \
 		VuoThresholdType:0 \
+		VuoTime:0 \
+		VuoTimeFormat:0 \
+		VuoTimeUnit:0 \
 		VuoTransform2d:0 \
 		VuoTransform:0 \
 		VuoUrl:2 \
@@ -96,6 +114,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoVideoFrame:2 \
 		VuoVideoInputDevice:2 \
 		VuoWave:0 \
+		VuoWeekday:0 \
 		VuoWindowProperty:2 \
 		VuoWindowReference:0 \
 		VuoWrapMode:0 \
@@ -109,11 +128,13 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.data \
 	$$ROOT/node/vuo.file \
 	$$ROOT/node/vuo.font \
+	$$ROOT/node/vuo.hid \
 	$$ROOT/node/vuo.image \
 	$$ROOT/node/vuo.keyboard \
 	$$ROOT/node/vuo.layer \
 	$$ROOT/node/vuo.leap \
 	$$ROOT/node/vuo.list \
+	$$ROOT/node/vuo.math \
 	$$ROOT/node/vuo.midi \
 	$$ROOT/node/vuo.mouse \
 	$$ROOT/node/vuo.motion \
@@ -126,7 +147,7 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.shader \
 	$$ROOT/node/vuo.syphon \
 	$$ROOT/node/vuo.text \
-	$$ROOT/node/vuo.ui
+	$$ROOT/node/vuo.time
 
 include(../../module.pri)
 

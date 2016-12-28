@@ -23,11 +23,11 @@
 
 	/* Reset */
 	{	"firingPort" : "reset",
-		"inputPortValues": {"value": 2},
+		"inputPortValues": {"value": 2, "resetEvent": true},
 		"outputPortValues": {"average": 2}
 	},
 	{	"firingPort": "refresh",
-		"inputPortValues": {"value": 3},
+		"inputPortValues": {"value": 3, "resetEvent": false},
 		"outputPortValues": {"average": 2.5}
 	},
 ]}

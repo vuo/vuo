@@ -70,9 +70,9 @@ VuoList_VuoSyphonServerDescription VuoSyphon_filterServerDescriptions(VuoList_Vu
 		VuoSyphonServerDescription description = VuoListGetValue_VuoSyphonServerDescription(allDescriptions, i);
 
 		/// @todo Handle UTF8 names (add VuoText function).
-		if (strstr(description.serverUUID, partialDescription.serverUUID) != NULL &&
-				strstr(description.serverName, partialDescription.serverName) != NULL &&
-				strstr(description.applicationName, partialDescription.applicationName) != NULL)
+		if ((!partialDescription.serverUUID      || strstr(description.serverUUID,      partialDescription.serverUUID     ) != NULL) &&
+			(!partialDescription.serverName      || strstr(description.serverName,      partialDescription.serverName     ) != NULL) &&
+			(!partialDescription.applicationName || strstr(description.applicationName, partialDescription.applicationName) != NULL))
 		{
 			VuoListAppendValue_VuoSyphonServerDescription(filteredDescriptions, description);
 		}
@@ -141,9 +141,12 @@ void VuoSyphonServer_free(void *server);
  */
 VuoSyphonServer VuoSyphonServer_make(const char *serverName, VuoGlContext *glContext)
 {
+	if (!serverName)
+		return NULL;
+
 	VuoApp_init();
 	VuoSyphonSender *server = [[VuoSyphonSender alloc] init];
-	[server initServerWithName:[[NSString alloc] initWithUTF8String:serverName] context:glContext];
+	[server initServerWithName:[NSString stringWithUTF8String:serverName] context:glContext];
 	VuoRegister(server, VuoSyphonServer_free);
 	return (VuoSyphonServer)server;
 }
@@ -161,7 +164,10 @@ void VuoSyphonServer_publishFrame(VuoSyphonServer server, VuoImage frame)
  */
 void VuoSyphonServer_setName(VuoSyphonServer server, const char *serverName)
 {
-	[(VuoSyphonSender*)server setName:[[NSString alloc] initWithUTF8String:serverName]];
+	if (!serverName)
+		return;
+
+	[(VuoSyphonSender*)server setName:[NSString stringWithUTF8String:serverName]];
 }
 
 /**

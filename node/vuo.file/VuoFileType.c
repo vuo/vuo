@@ -49,6 +49,8 @@ VuoFileType VuoFileType_makeFromJson(json_object * js)
 		return VuoFileType_Movie;
 	else if (strcmp(valueAsString, "scene") == 0)
 		return VuoFileType_Scene;
+	else if (strcmp(valueAsString, "feed") == 0)
+		return VuoFileType_Feed;
 	else if (strcmp(valueAsString, "folder") == 0)
 		return VuoFileType_Folder;
 
@@ -73,6 +75,8 @@ json_object * VuoFileType_getJson(const VuoFileType value)
 		valueAsString = "movie";
 	else if (value == VuoFileType_Scene)
 		valueAsString = "scene";
+	else if (value == VuoFileType_Feed)
+		valueAsString = "feed";
 	else if (value == VuoFileType_Folder)
 		valueAsString = "folder";
 
@@ -91,6 +95,7 @@ VuoList_VuoFileType VuoFileType_getAllowedValues(void)
 	VuoListAppendValue_VuoFileType(l, VuoFileType_Mesh);
 	VuoListAppendValue_VuoFileType(l, VuoFileType_Movie);
 	VuoListAppendValue_VuoFileType(l, VuoFileType_Scene);
+	VuoListAppendValue_VuoFileType(l, VuoFileType_Feed);
 	VuoListAppendValue_VuoFileType(l, VuoFileType_Folder);
 	return l;
 }
@@ -113,6 +118,8 @@ char * VuoFileType_getSummary(const VuoFileType value)
 		valueAsString = "Movie";
 	else if (value == VuoFileType_Scene)
 		valueAsString = "Scene";
+	else if (value == VuoFileType_Feed)
+		valueAsString = "Feed";
 	else if (value == VuoFileType_Folder)
 		valueAsString = "Folder";
 
@@ -137,6 +144,8 @@ bool VuoFileType_isFileOfType(const VuoText path, VuoFileType fileType)
 		return VuoFileFormat_isSupportedMovieFile(path);
 	else if (fileType == VuoFileType_Scene)
 		return VuoFileFormat_isSupportedSceneFile(path);
+	else if (fileType == VuoFileType_Feed)
+		return VuoFileFormat_isSupportedFeedFile(path);
 
 	return false;
 }

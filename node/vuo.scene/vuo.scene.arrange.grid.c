@@ -37,6 +37,10 @@ void nodeEvent
 	unsigned long objectCount = VuoListGetCount_VuoSceneObject(objects);
 	unsigned long currentObject = 1;
 
+	VuoReal gridCellWidth = width / columns;
+	VuoReal gridCellHeight = height / rows;
+	VuoReal gridCellDepth = depth / slices;
+
 	for (unsigned int z = 0; z < slices; ++z)
 	{
 		VuoReal zPosition = center.z - depth/2 + (depth / slices) * (z + .5);
@@ -55,8 +59,15 @@ void nodeEvent
 
 				if (scaleToFit)
 				{
-					VuoSceneObject_normalize(&object);
-					object.transform.scale = VuoPoint3d_multiply(object.transform.scale, fmin(fmin(width/columns, height/rows), depth/slices));
+					VuoBox bounds = VuoSceneObject_bounds(object);
+					VuoReal scaleFactor = 1;
+					if (bounds.size.x * scaleFactor > gridCellWidth)
+						scaleFactor *= gridCellWidth / (bounds.size.x * scaleFactor);
+					if (bounds.size.y * scaleFactor > gridCellHeight)
+						scaleFactor *= gridCellHeight / (bounds.size.y * scaleFactor);
+					if (bounds.size.z * scaleFactor > gridCellDepth)
+						scaleFactor *= gridCellDepth / (bounds.size.z * scaleFactor);
+					object.transform.scale = VuoPoint3d_multiply(object.transform.scale, scaleFactor);
 				}
 
 				VuoListAppendValue_VuoSceneObject((*griddedObject).childObjects, object);

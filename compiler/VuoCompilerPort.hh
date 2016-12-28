@@ -11,7 +11,11 @@
 #define VUOCOMPILERPORT_H
 
 #include "VuoCompilerNodeArgument.hh"
-#include "VuoCompilerPortClass.hh"
+
+class VuoCompilerConstantStringCache;
+class VuoCompilerPort;
+class VuoPort;
+class VuoType;
 
 /**
  * A port.
@@ -19,26 +23,32 @@
 class VuoCompilerPort : public VuoCompilerNodeArgument
 {
 public:
-	bool hasConnectedCable(bool includePublishedCables) const;
-	bool hasConnectedDataCable(bool includePublishedCables) const;
+	bool hasConnectedCable(void) const;
+	bool hasConnectedDataCable(void) const;
 	VuoType * getDataVuoType(void);
 	void setDataVuoType(VuoType *dataType);
+	void setNodeIdentifier(string nodeIdentifier);
+	virtual string getIdentifier(void);
+	void setIndexInPortContexts(int indexInPortContexts);
+	int getIndexInPortContexts(void);
+	void setConstantStringCache(VuoCompilerConstantStringCache *constantStrings);
+	Value * getDataVariable(Module *module, BasicBlock *block, Value *nodeContextValue);
+	Value * generateGetPortContext(Module *module, BasicBlock *block, Value *nodeContextValue);
 
 	/**
-	 * Returns the variable that stores this port's data, or NULL if this port is event-only.
+	 * Generates code that creates a `PortContext *` and initializes it for this port.
 	 */
-	virtual GlobalVariable * getDataVariable(void) = 0;
-
-	/**
-	 * Returns a unique, consistent identifier for this port.
-	 */
-	virtual string getIdentifier(void) = 0;
+	virtual Value * generateCreatePortContext(Module *module, BasicBlock *block) = 0;
 
 protected:
 	VuoCompilerPort(VuoPort * basePort);
 
+	VuoCompilerConstantStringCache *constantStrings;  ///< Cache used to generate constant string values.
+
 private:
 	VuoType *dataType;
+	string nodeIdentifier;
+	int indexInPortContexts;
 };
 
 #endif

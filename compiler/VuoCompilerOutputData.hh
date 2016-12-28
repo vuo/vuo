@@ -11,8 +11,8 @@
 #define VUOCOMPILEROUTPUTDATA_H
 
 #include "VuoCompilerData.hh"
-#include "VuoCompilerOutputDataClass.hh"
 
+class VuoCompilerOutputDataClass;
 
 /**
  * The data for a data-and-event output port.

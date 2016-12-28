@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					"title" : "Make Cube",
-					"keywords" : [ "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
+					"keywords" : [ "3D", "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
 					"version" : "1.0.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {

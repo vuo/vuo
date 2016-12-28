@@ -11,9 +11,9 @@
 #define VUOCOMPILERINPUTEVENTPORT_H
 
 #include "VuoCompilerEventPort.hh"
-#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerInputData.hh"
 
+class VuoPort;
 
 /**
  * An input port, optionally with data.

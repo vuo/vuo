@@ -46,7 +46,5 @@ void nodeEvent
 			pixels[row*columns + column] = .5 + rowSamples.samples[column]*.5;
 	}
 
-	*image = VuoImage_makeFromBuffer(pixels, GL_LUMINANCE, columns, rows, VuoImageColorDepth_16);
-
-	free(pixels);
+	*image = VuoImage_makeFromBuffer(pixels, GL_LUMINANCE, columns, rows, VuoImageColorDepth_16, ^(void *buffer){ free(buffer); });
 }

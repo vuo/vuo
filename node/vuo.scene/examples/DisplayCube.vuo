@@ -9,19 +9,16 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-185,129" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="19,150" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":0.750000,\"y\":0.750000,\"z\":0.750000}"];
-MakeCube2 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="202,187" fillcolor="violet"];
-MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.0" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="663,381" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000" _updatedCamera_eventThrottling="enqueue"];
-MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="594,198" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="624,228" fillcolor="green"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="665,187" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.0.0" label="Shade with Wireframe|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<shader>shader\r" pos="0,253" _frontColor="{\"r\":0.600000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _backColor="{\"r\":0.400000,\"g\":0.530000,\"b\":0.400000,\"a\":1}" _width="0.100000" _standoffWidth="0.010000" _showThirdEdge="false"];
-ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="384,187" _keepFront="true"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,195" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeCube2 [type="vuo.scene.make.cube.1.VuoShader" version="1.0.0" label="Make Cube|<refresh>refresh\l|<transform>transform\l|<material>material\l|<cube>cube\r" pos="210,180" fillcolor="violet" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.75,0.75,0.75]}"];
+MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.1" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="660,375" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.000000" _distanceMin="0.100000" _distanceMax="10.000000" _updatedCamera_eventThrottling="enqueue"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="589,191" fillcolor="green"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,221" fillcolor="green"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="660,180" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.0.0" label="Shade with Wireframe|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<shader>shader\r" pos="15,240" _frontColor="{\"r\":0.600000,\"g\":0.800000,\"b\":0.600000,\"a\":1}" _backColor="{\"r\":0.400000,\"g\":0.530000,\"b\":0.400000,\"a\":1}" _width="0.100000" _standoffWidth="0.010000" _showThirdEdge="false"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="390,180" _keepFront="true"];
 
-FireOnStart:started -> Make3DTransform:refresh;
 FireOnStart:started -> ShadeWithWireframe:refresh;
-Make3DTransform:transform -> MakeCube2:transform;
 MakeCube2:cube -> ShowBackOf3DObject:object;
 MakeDraggableCamera:updatedCamera -> MakeList:2;
 MakeList4:list -> RenderSceneToWindow:setWindowProperties;

@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find Serial Devices by Name",
-					  "keywords" : [ ],
+					  "keywords" : [ "filter" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]
@@ -33,7 +33,7 @@ void nodeEvent
 	for (unsigned long i = 1; i <= deviceCount; ++i)
 	{
 		VuoSerialDevice d = VuoListGetValue_VuoSerialDevice(serialDevices, i);
-		if (d.name && strstr(d.name, name))
+		if (!name || (d.name && strstr(d.name, name)))
 			VuoListAppendValue_VuoSerialDevice(*foundSerialDevices, d);
 	}
 }

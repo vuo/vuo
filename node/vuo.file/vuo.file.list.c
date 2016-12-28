@@ -12,7 +12,6 @@
 #include <sys/stat.h>
 #include "node.h"
 #include "VuoFileType.h"
-#include "VuoFileListSort.h"
 #include "VuoUrlFetch.h"
 
 VuoModuleMetadata({
@@ -20,10 +19,9 @@ VuoModuleMetadata({
 					  "keywords" : [ "folder", "directory", "path", "url",
 						  "search", "scanner", "find"
 					  ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "dependencies" : [
-						  "VuoUrlFetch",
-						  "VuoFileListSort"
+						  "VuoUrlFetch"
 					  ],
 					  "node": {
 						  "exampleCompositions" : [ ],
@@ -39,7 +37,7 @@ static VuoList_VuoText listFiles(VuoText folderPath, VuoBoolean includeSubfolder
 	if (! d)
 	{
 		if (access(folderPath, F_OK) != -1)
-			VLog("Error: Couldn't open folder '%s'.", folderPath);
+			VUserLog("Error: Couldn't open folder '%s'.", folderPath);
 		return files;
 	}
 
@@ -60,19 +58,29 @@ static VuoList_VuoText listFiles(VuoText folderPath, VuoBoolean includeSubfolder
 	unsigned long count = VuoListGetCount_VuoText(topLevelFileNames);
 	for (int i = 1; i <= count; ++i)
 	{
-		VuoText parts[3] = { folderPath, "/", VuoListGetValue_VuoText(topLevelFileNames, i) };
-		VuoText filePath = VuoText_append(parts, 3);
+		const char *fileUrlPrefix = "file://";
+		size_t fileUrlPrefixLength = 7;
+		VuoText parts[] = { fileUrlPrefix, VuoUrl_escapePosixPath(folderPath), "/", VuoUrl_escapePosixPath(VuoListGetValue_VuoText(topLevelFileNames, i)) };
+		VuoText fileUrl = VuoText_append(parts, sizeof(parts)/sizeof(VuoText));
+		VuoRetain(parts[1]);
+		VuoRelease(parts[1]);
+		VuoRetain(parts[3]);
+		VuoRelease(parts[3]);
 
 		bool isDir = false;
+		VuoText filePath = VuoUrl_getPosixPath(fileUrl);
+		if (!filePath)
+			goto fail;
+
 		struct stat st_buf;
 		int status = lstat(filePath, &st_buf);  // Unlike stat, lstat doesn't follow symlinks.
 		if (! status && S_ISDIR(st_buf.st_mode))
 			isDir = true;
 
-		if (isDir)
+		if (isDir && !VuoUrl_isBundle(fileUrl))
 		{
 			if (fileType == VuoFileType_Folder)
-				VuoListAppendValue_VuoText(files, filePath);
+				VuoListAppendValue_VuoText(files, fileUrl);
 
 			if (includeSubfolders)
 			{
@@ -86,12 +94,16 @@ static VuoList_VuoText listFiles(VuoText folderPath, VuoBoolean includeSubfolder
 		}
 		else
 		{
-			if (VuoFileType_isFileOfType(filePath, fileType))
-				VuoListAppendValue_VuoText(files, filePath);
+			if (VuoFileType_isFileOfType(fileUrl, fileType))
+				VuoListAppendValue_VuoText(files, fileUrl);
 		}
 
 		VuoRetain(filePath);
 		VuoRelease(filePath);
+
+fail:
+		VuoRetain(fileUrl);
+		VuoRelease(fileUrl);
 	}
 
 	VuoRetain(topLevelFileNames);
@@ -108,11 +120,14 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoText) files
 )
 {
+	if (!folder)
+		return;
+
 	VuoUrl folderUrl = VuoUrl_normalize(folder, false);
 	VuoText folderPath = VuoUrl_getPosixPath(folderUrl);
 	if (!folderPath)
 	{
-		VLog("Error: Couldn't list files in '%s' because remote URLs are not supported.", folderUrl);
+		VUserLog("Error: Couldn't list files in '%s' because remote URLs are not supported.", folderUrl);
 		*files = VuoListCreate_VuoText();
 		goto cleanup;
 	}

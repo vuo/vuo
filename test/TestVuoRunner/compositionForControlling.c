@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "composition.h"
+#include "VuoEventLoop.h"
 
 
 FILE *file;
@@ -26,11 +27,11 @@ int main(int argc, char **argv)
 	fprintf(file, "started\n");
 
 	while (! isStopped)
-		CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.01,false);
+		VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
 	return 0;
 }
 
-void nodeInstanceFini(void)
+void vuoInstanceFini(void)
 {
 	fprintf(file, "stopped\n");
 	fclose(file);

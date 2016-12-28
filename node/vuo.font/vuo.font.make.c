@@ -25,11 +25,11 @@ void nodeEvent
 		VuoInputData(VuoReal, {"default":28.,"suggestedMin":0.0001,"suggestedMax":512.}) pointSize,
 		VuoInputData(VuoBoolean, {"default":false}) underlined,
 		VuoInputData(VuoColor,{"default":{"r":1,"g":1,"b":1,"a":1}}) color,
-		/// @todo add alignment port + input editor
+		VuoInputData(VuoHorizontalAlignment,{"default":"left"}) horizontalAlignment,
 		VuoInputData(VuoReal, {"default":1.,"suggestedMin":0.,"suggestedMax":2.}) characterSpacing,
 		VuoInputData(VuoReal, {"default":1.,"suggestedMin":0.,"suggestedMax":2.}) lineSpacing,
 		VuoOutputData(VuoFont) font
 )
 {
-	*font = VuoFont_make(fontName, pointSize, underlined, color, VuoHorizontalAlignment_Left, characterSpacing, lineSpacing);
+	*font = VuoFont_make(fontName, pointSize, underlined, color, horizontalAlignment, characterSpacing, lineSpacing);
 }

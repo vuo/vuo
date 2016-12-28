@@ -26,10 +26,6 @@ class TestVuoTransform : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testQuaternionVuoPoint4d_data()
 	{
@@ -231,6 +227,12 @@ private slots:
 		}
 
 		{
+			VuoPoint4d quaternion = VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), 91. * M_PI/180.);
+			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(0,0,0), quaternion, VuoPoint3d_make(1,1,1));
+			QTest::newRow("rotate 91° around y axis (quaternion)") << t << VuoPoint3d_make(-.01745, 0, -.99985) << VuoPoint3d_make(3.1416, 1.5533, 3.1416) << quaternion;
+		}
+
+		{
 			VuoPoint4d quaternion = VuoTransform_quaternionFromAxisAngle(VuoPoint3d_make(0,1,0), M_PI/2.);
 			VuoTransform t = VuoTransform_makeQuaternion(VuoPoint3d_make(1,2,3), quaternion, VuoPoint3d_make(4,5,6));
 			QTest::newRow("rotate 90° around y axis (quaternion), scale, transform") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
@@ -241,7 +243,7 @@ private slots:
 			VuoPoint3d lightTarget = VuoPoint3d_make(0,0,0);
 			VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_subtract(lightTarget, lightPosition));
 			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
-			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
+			QTest::newRow("targeted spotlight direction vector: forward") << t << VuoPoint3d_make(0,0,-1) << VuoPoint3d_make(0, M_PI/2., 0) << quaternion;
 		}
 
 		{
@@ -249,7 +251,7 @@ private slots:
 			VuoPoint3d lightTarget = VuoPoint3d_make(0,0,0);
 			VuoPoint4d quaternion = VuoTransform_quaternionFromVectors(VuoPoint3d_make(1,0,0), VuoPoint3d_subtract(lightTarget, lightPosition));
 			VuoTransform t = VuoTransform_makeQuaternion(lightPosition, quaternion, VuoPoint3d_make(1,1,1));
-			QTest::newRow("targeted spotlight direction vector") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4)) << VuoPoint3d_make(0, M_PI/4., 0) << quaternion;
+			QTest::newRow("targeted spotlight direction vector: forward/right") << t << VuoPoint3d_make(sin(M_PI/4),0,-sin(M_PI/4)) << VuoPoint3d_make(0, M_PI/4., 0) << quaternion;
 		}
 	}
 	void testDirection()
@@ -276,6 +278,14 @@ private slots:
 		QCOMPARE(actualQuaternion.x+10.f, expectedQuaternion.x+10.f);
 		QCOMPARE(actualQuaternion.y+10.f, expectedQuaternion.y+10.f);
 		QCOMPARE(actualQuaternion.z+10.f, expectedQuaternion.z+10.f);
+
+		{
+			VuoPoint3d initialDirection = (VuoPoint3d){1,0,0};
+			VuoPoint3d actualDirection = VuoTransform_rotateVectorWithQuaternion(initialDirection, expectedQuaternion);
+			QCOMPARE(actualDirection.x+10.f, expectedDirection.x+10.f);
+			QCOMPARE(actualDirection.y+10.f, expectedDirection.y+10.f);
+			QCOMPARE(actualDirection.z+10.f, expectedDirection.z+10.f);
+		}
 	}
 
 	void testMatrixRoundtrip_data()
@@ -333,6 +343,7 @@ private slots:
 			QCOMPARE(actualMatrix[i] + 10.f, expectedMatrix[i] + 10.f);
 
 		VuoTransform actualTransform = VuoTransform_makeFromMatrix4x4(expectedMatrix);
+		QEXPECT_FAIL("rotate, scale, translate (quaternion)", "json-c now encodes double-precision, but quaternion is only accurate to float-precision", Continue);
 		QCOMPARE(VuoTransform_getString(actualTransform), VuoTransform_getString(expectedTransform));
 	}
 

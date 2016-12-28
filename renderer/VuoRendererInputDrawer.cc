@@ -11,6 +11,7 @@
 #include "VuoRendererPort.hh"
 #include "VuoRendererFonts.hh"
 #include "VuoRendererTypecastPort.hh"
+#include "VuoNodeClass.hh"
 
 const qreal VuoRendererInputDrawer::drawerInteriorHorizontalPadding = VuoRendererFonts::thickPenWidth*3./4.+5;
 const qreal VuoRendererInputDrawer::drawerHorizontalSpacing = VuoRendererFonts::thickPenWidth*1./4.;

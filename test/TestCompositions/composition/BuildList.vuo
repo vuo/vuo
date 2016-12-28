@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+BuildList2 [type="vuo.list.build.VuoInteger" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="150,90" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+CountItemsInList2 [type="vuo.list.count.VuoInteger" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="330,90"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Fire>Fire\r" _Fire_type="VuoInteger" _Fire="10"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ItemCount>ItemCount\l" _ItemCount_type="VuoInteger"];
+
+BuildList2:buildItem -> BuildList2:builtItem;
+BuildList2:builtList -> CountItemsInList2:list;
+PublishedInputs:Fire -> BuildList2:fire;
+CountItemsInList2:itemCount -> PublishedOutputs:ItemCount;
+}

@@ -9,11 +9,12 @@
 
 #include "node.h"
 #include "VuoRssItem.h"
+#include "VuoTime.h"
 
 VuoModuleMetadata({
 					  "title" : "Get RSS Item Values",
 					  "keywords" : [ ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ "DisplayRssItems.vuo" ]
 					  }
@@ -26,6 +27,8 @@ void nodeEvent
 		VuoOutputData(VuoText) author,
 		VuoOutputData(VuoText) description,
 		VuoOutputData(VuoText, {"name":"URL"}) url,
+		VuoOutputData(VuoTime) time,
+		VuoOutputData(VuoText, {"name":"Image URL"}) imageUrl,
 		VuoOutputData(VuoImage) image
 )
 {
@@ -33,5 +36,7 @@ void nodeEvent
 	*author = item.author;
 	*description = item.description;
 	*url = item.url;
+	*time = item.dateTime;
+	*imageUrl = item.imageUrl;
 	*image = item.image;
 }

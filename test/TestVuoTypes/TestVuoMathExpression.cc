@@ -20,10 +20,6 @@ class TestVuoMathExpression : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testParsingSingleExpression_data()
 	{

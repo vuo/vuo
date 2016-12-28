@@ -44,7 +44,7 @@ struct nodeInstanceData* nodeInstanceInit(
 
 	instance->curFreqBins = frequencyBins;
 
-	instance->vdsp = VuoDsp_make(binSize, 3); /// 3 is Blackman window
+	instance->vdsp = VuoDsp_make(binSize, VuoWindowing_Blackman);
 	VuoRetain(instance->vdsp);
 
 	return instance;
@@ -70,7 +70,7 @@ void nodeInstanceEvent
 		(*instance)->sampleQueue = (VuoReal*)calloc(binSize, sizeof(VuoReal));
 
 		VuoRelease((*instance)->vdsp);
-		(*instance)->vdsp = VuoDsp_make(binSize, 3);	/// 3 is Blackman window
+		(*instance)->vdsp = VuoDsp_make(binSize, VuoWindowing_Blackman);
 		VuoRetain((*instance)->vdsp);
 	}
 
@@ -100,6 +100,7 @@ void nodeInstanceEvent
 			VuoListAppendValue_VuoReal(frequencies, avg[i] / (float)(samples.sampleCount/binSize));
 
 		*amplitudes = frequencies;
+		free(avg);
 	}
 	else
 	{

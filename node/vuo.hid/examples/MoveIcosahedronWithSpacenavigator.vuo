@@ -1,0 +1,70 @@
+/**
+ * @file
+ * Shows how to control an object using the [SpaceNavigator](http://www.3dconnexion.com/products/spacemouse/spacenavigator.html) 3D mouse.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Combine3DObjects [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="1110,480"];
+FilterAndScaleControl [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="465,390" fillcolor="violet" _name="\"X\"" _minimum="-1" _maximum="1.0"];
+FilterAndScaleControl2 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="465,495" fillcolor="violet" _name="\"Y\"" _minimum="1" _maximum="-1"];
+FilterAndScaleControl3 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="465,600" fillcolor="violet" _name="\"Z\"" _minimum="0.5" _maximum="-1"];
+FilterAndScaleControl4 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="465,705" fillcolor="violet" _name="\"Rx\"" _minimum="-90" _maximum="90"];
+FilterAndScaleControl5 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="465,810" fillcolor="violet" _name="\"Ry\"" _minimum="90" _maximum="-90"];
+FilterAndScaleControl6 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="465,915" fillcolor="violet" _name="\"Rz\"" _minimum="90" _maximum="-90"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-75,240" fillcolor="yellow" _started_eventThrottling="enqueue"];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="675,480"];
+Make3DPoint2 [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="675,795"];
+Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="885,480" _scale="{\"x\":1,\"y\":1,\"z\":1}"];
+MakeHIDFromName2 [type="vuo.hid.make.name" version="1.0.0" label="Make HID from Name|<refresh>refresh\l|<name>name\l|<device>device\r" pos="60,645" fillcolor="violet" _name="\"SpaceNavigator\""];
+MakeIcosphere4 [type="vuo.scene.make.icosphere.VuoShader" version="1.0.0" label="Make Icosphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<subdivisions>subdivisions\l|<object>object\r" pos="675,255" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.89999997615814209,0.89999997615814209,0.89999997615814209]}" _subdivisions="0"];
+MakeList10 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="455,11" _1="{\"r\":0.50000762939453125,\"g\":0.50000762939453125,\"b\":0.50000762939453125,\"a\":1}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1324,491" fillcolor="green"];
+MakeList6 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1064,506"];
+MakeList9 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1294,461" fillcolor="green"];
+MakeRadialGradientImage2 [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="525,0" _center="{\"x\":0,\"y\":0}" _radius="1.5" _noiseAmount="0.20000000000000001" _width="1024" _height="1024"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="600,135" _text="\"Connect a SpaceNavigator to move and rotate the icosahedron.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":72,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}"];
+MakeUnlit3DObjectFromImage [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="810,135" _center="{\"x\":0,\"y\":-0.55000001192092896,\"z\":0}" _rotation="{\"x\":0.0,\"y\":0.0,\"z\":0.0}" _width="1.3" _opacity="1.0"];
+MakeUnlit3DObjectFromImage2 [type="vuo.scene.make.image.unlit" version="2.0.0" label="Make Unlit 3D Object from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<object>object\r" pos="810,0" _center="{\"x\":0,\"y\":0,\"z\":-2}" _rotation="{\"x\":0.0,\"y\":0.0,\"z\":0.0}" _width="6" _opacity="1.0"];
+ReceiveHIDControls2 [type="vuo.hid.receive" version="1.0.0" label="Receive HID Controls|<refresh>refresh\l|<device>device\l|<exclusive>exclusive\l|<receivedControl>receivedControl\r" pos="240,660" fillcolor="violet" _exclusive="true" _receivedControl_eventThrottling="enqueue"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1365,450" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithWireframe [type="vuo.shader.make.wireframe" version="1.0.0" label="Shade with Wireframe|<refresh>refresh\l|<frontColor>frontColor\l|<backColor>backColor\l|<width>width\l|<standoffWidth>standoffWidth\l|<showThirdEdge>showThirdEdge\l|<shader>shader\r" pos="345,270" _frontColor="{\"r\":0.71238267421722412,\"g\":0.51621270179748535,\"b\":0.75521475076675415,\"a\":1}" _backColor="{\"r\":0.30812543630599976,\"g\":0.22865644097328186,\"b\":0.32568857073783875,\"a\":1}" _width="0.10000000000000001" _standoffWidth="0" _showThirdEdge="true"];
+ShowBackOf3DObject [type="vuo.scene.back" version="1.0.0" label="Show Back of 3D Object|<refresh>refresh\l|<object>object\l|<keepFront>keepFront\l|<backObject>backObject\r" pos="870,255" _keepFront="true"];
+
+Combine3DObjects:object -> MakeList9:3;
+FilterAndScaleControl2:value -> Make3DPoint:y;
+FilterAndScaleControl3:value -> Make3DPoint:z;
+FilterAndScaleControl4:value -> Make3DPoint2:x;
+FilterAndScaleControl5:value -> Make3DPoint2:y;
+FilterAndScaleControl6:value -> Make3DPoint2:z;
+FilterAndScaleControl:value -> Make3DPoint:x;
+FireOnStart:started -> MakeHIDFromName2:refresh;
+FireOnStart:started -> MakeRadialGradientImage2:refresh;
+FireOnStart:started -> MakeTextImage:refresh;
+FireOnStart:started -> ShadeWithWireframe:refresh;
+Make3DPoint2:point -> Make3DTransform:rotation;
+Make3DPoint:point -> Make3DTransform:translation;
+Make3DTransform:transform -> Combine3DObjects:transform;
+MakeHIDFromName2:device -> ReceiveHIDControls2:device;
+MakeIcosphere4:object -> ShowBackOf3DObject:object;
+MakeList10:list -> MakeRadialGradientImage2:colors;
+MakeList4:list -> RenderSceneToWindow:setWindowProperties;
+MakeList6:list -> Combine3DObjects:childObjects;
+MakeList9:list -> RenderSceneToWindow:objects;
+MakeRadialGradientImage2:image -> MakeUnlit3DObjectFromImage2:image;
+MakeTextImage:image -> MakeUnlit3DObjectFromImage:image;
+MakeUnlit3DObjectFromImage2:object -> MakeList9:1;
+MakeUnlit3DObjectFromImage:object -> MakeList9:2;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl2:control;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl3:control;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl4:control;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl5:control;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl6:control;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl:control;
+ShadeWithWireframe:shader -> MakeIcosphere4:material;
+ShowBackOf3DObject:backObject -> MakeList6:1;
+}

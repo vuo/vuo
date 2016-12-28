@@ -111,18 +111,9 @@ using namespace llvm;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "coreTypes.h"
-
-#ifdef __cplusplus
-}
-#endif
+#include <dispatch/dispatch.h>
 
 #include "VuoLog.h"

@@ -8,7 +8,7 @@
  */
 
 #include "VuoCompilerData.hh"
-
+#include "VuoCompilerDataClass.hh"
 #include "VuoPort.hh"
 
 /**
@@ -17,12 +17,4 @@
 VuoCompilerData::VuoCompilerData(VuoCompilerDataClass *dataClass)
 	: VuoCompilerNodeArgument(new VuoPort(dataClass->getBase()))
 {
-}
-
-/**
- * Distinguishes the variable for the data from the variable for the event in data-and-event ports.
- */
-string VuoCompilerData::getVariableBaseName(void)
-{
-	return VuoCompilerNodeArgument::getVariableBaseName() + "_data";
 }

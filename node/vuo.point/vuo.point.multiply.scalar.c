@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Scale Point",
-					  "keywords" : [ "multiply", "product", "*", "vector" ],
+					  "keywords" : [ "multiply", "divide", "product", "*", "/", "vector" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

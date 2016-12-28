@@ -50,6 +50,8 @@ VuoBaudRate VuoBaudRate_makeFromJson(struct json_object *js);
 struct json_object *VuoBaudRate_getJson(const VuoBaudRate value);
 VuoList_VuoBaudRate VuoBaudRate_getAllowedValues(void);
 char *VuoBaudRate_getSummary(const VuoBaudRate value);
+
+#define VuoBaudRate_SUPPORTS_COMPARISON
 bool VuoBaudRate_areEqual(const VuoBaudRate valueA, const VuoBaudRate valueB);
 bool VuoBaudRate_isLessThan(const VuoBaudRate valueA, const VuoBaudRate valueB);
 

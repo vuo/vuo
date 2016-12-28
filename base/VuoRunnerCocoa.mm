@@ -210,18 +210,22 @@ bool VuoRunnerCocoa_hasInitializedCompilerCache = false;  ///< Tracks whether th
 		if (self.compositionURL)
 		{
 			string compositionFilePath = [[self.compositionURL path] UTF8String];
-			self.runner = VuoRunner::newSeparateProcessRunnerFromCompositionFile(compositionFilePath, true);
+			self.runner = VuoRunner::newSeparateProcessRunnerFromCompositionFile(compositionFilePath, false, true);
 		}
 		else
 			self.runner = VuoRunner::newSeparateProcessRunnerFromCompositionString(
 				[self.compositionString UTF8String],
 				[self.compositionProcessName UTF8String],
 				[self.compositionSourcePath UTF8String],
+				false,
 				true
 			);
 
 		if (self.runner)
+		{
 			self.runner->start();
+			self.runner->subscribeToEventTelemetry();
+		}
 	});
 }
 
@@ -323,10 +327,6 @@ bool VuoRunnerCocoa_hasInitializedCompilerCache = false;  ///< Tracks whether th
 
 	[details setObject:[NSString stringWithUTF8String:port->getType().c_str()] forKey:@"type"];
 
-	NSArray *menuItems = [VuoRunnerCocoa menuItemsForType:port->getType()];
-	if (menuItems)
-		[details setObject:menuItems forKey:@"menuItems"];
-
 	json_object *js = port->getDetails();
 	if (js)
 	{
@@ -358,6 +358,33 @@ bool VuoRunnerCocoa_hasInitializedCompilerCache = false;  ///< Tracks whether th
 			id cocoaObject = [VuoRunnerCocoa cocoaObjectWithVuoValue:o ofType:port->getType()];
 			if (cocoaObject)
 				[details setObject:cocoaObject forKey:@"suggestedStep"];
+		}
+
+		if (json_object_object_get_ex(js, "menuItems", &o))
+		{
+			NSMutableArray *menuItems = [NSMutableArray new];
+
+			int itemCount = json_object_array_length(o);
+			for (int i = 0; i < itemCount; ++i)
+			{
+				json_object *item = json_object_array_get_idx(o, i);
+
+				json_object *value;
+				json_object_object_get_ex(item, "value", &value);
+				json_object *name;
+				json_object_object_get_ex(item, "name", &name);
+
+				const char *key = json_object_get_string(value);
+				const char *summary = json_object_get_string(name);
+				NSDictionary *menuItem = [NSDictionary dictionaryWithObjectsAndKeys:
+						[NSString stringWithUTF8String:key], @"value",
+						[NSString stringWithUTF8String:summary], @"name",
+						nil];
+				[menuItems addObject:menuItem];
+			}
+
+			[details setObject:menuItems forKey:@"menuItems"];
+			[menuItems release];
 		}
 	}
 
@@ -568,6 +595,46 @@ bool VuoRunnerCocoa_hasInitializedCompilerCache = false;  ///< Tracks whether th
 	return vuoImage->glTextureName;
 }
 
+/**
+ * Retrieves the image in the specified published output port, keeping it in GPU VRAM as an OpenGL texture.
+ *
+ * Returns `0` if the composition is stopped, if no port with that name exists, if the port does not have type `VuoImage`,
+ * or if the image could not be converted.
+ * Otherwise, returns the host-owned OpenGL texture name whose `GL_TEXTURE_RECTANGLE_ARB` target has been populated.
+ *
+ * @param provider A block that returns an OpenGL texture name with the requested width and height.
+ *                 The host app must not call `glTexImage2D()` on the texture,
+ *                 since this makes the texture incompatible with the IOSurface backing.
+ * @param portName The name of an output port.
+ * @param[out] outputPixelsWide Upon return, this contains the width of the output texture.
+ * @param[out] outputPixelsHigh Upon return, this contains the height of the output texture.
+ * @param[out] outputIOSurface Upon return, this contains the IOSurface backing the output texture.
+ *                 When the host app is finished with the output texture, it must signal and release the IOSurface:
+ *
+ *                     VuoIoSurfacePool_signal(outputIOSurface);
+ *                     CFRelease(outputIOSurface);
+ */
+- (GLuint)glTextureFromProvider:(GLuint (^)(NSUInteger pixelsWide, NSUInteger pixelsHigh))provider forOutputPort:(NSString *)portName outputPixelsWide:(NSUInteger *)outputPixelsWide pixelsHigh:(NSUInteger *)outputPixelsHigh ioSurface:(IOSurfaceRef *)outputIOSurface
+{
+	if ([self isStopped])
+		return 0;
+
+	VuoRunner::Port *port = self.runner->getPublishedOutputPortWithName([portName UTF8String]);
+	if (!port)
+		return 0;
+
+	json_object *valueJson = self.runner->getPublishedOutputPortValue(port);
+
+	GLuint (^provider2)(unsigned int, unsigned int) = ^GLuint(unsigned int pixelsWide, unsigned int pixelsHigh){
+		return provider(pixelsWide, pixelsHigh);
+	};
+	unsigned int outputPixelsWide2, outputPixelsHigh2;
+	GLuint outputTexture = VuoImage_resolveInterprocessJsonUsingTextureProvider(valueJson, provider2, &outputPixelsWide2, &outputPixelsHigh2, outputIOSurface);
+	*outputPixelsWide = outputPixelsWide2;
+	*outputPixelsHigh = outputPixelsHigh2;
+	return outputTexture;
+}
+
 @end
 
 
@@ -718,6 +785,43 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	return [self glTextureWithTarget:target forOutputPort:@"outputImage" outputPixelsWide:outputPixelsWide pixelsHigh:outputPixelsHigh];
 }
 
+/**
+ * Sends @c textureName to the Vuo composition,
+ * instructs the Vuo composition to filter it
+ * at the specified logical @c time (number of seconds since rendering started),
+ * requests that the host provide a texture of the appropriate size,
+ * and returns that texture with image data attached to its `GL_TEXTURE_RECTANGLE_ARB` target.
+ *
+ * @param textureName The OpenGL texture name to filter.  Remains owned by the caller.
+ *                    The host app may delete or recycle it after this method returns.
+ * @param target      The target to which the input image is bound.
+ *                    Must be either `GL_TEXTURE_2D` or `GL_TEXTURE_RECTANGLE_ARB`.
+ * @param pixelsWide  The input image's width.
+ * @param pixelsHigh  The input image's height.
+ * @param time        The logical time at which to filter the image.
+ * @param provider A block that returns an OpenGL texture name with the requested width and height.
+ *                 The host app must not call `glTexImage2D()` on the texture,
+ *                 since this makes the texture incompatible with the IOSurface backing.
+ * @param[out] outputPixelsWide Upon return, this contains the width of the output texture.
+ * @param[out] outputPixelsHigh Upon return, this contains the height of the output texture.
+ * @param[out] outputIOSurface Upon return, this contains the IOSurface backing the output texture.
+ *                 When the host app is finished with the output texture, it must signal and release the IOSurface:
+ *
+ *                     VuoIoSurfacePool_signal(outputIOSurface);
+ *                     CFRelease(outputIOSurface);
+ *
+ * @note The Vuo composition is not required to produce an image
+ * with the same dimensions as the input image
+ * (it is a hint, not a guarantee).
+ */
+- (GLuint)filterGLTexture:(GLuint)textureName target:(GLuint)target pixelsWide:(NSUInteger)pixelsWide pixelsHigh:(NSUInteger)pixelsHigh atTime:(NSTimeInterval)time withTextureProvider:(GLuint (^)(NSUInteger pixelsWide, NSUInteger pixelsHigh))provider outputPixelsWide:(NSUInteger *)outputPixelsWide pixelsHigh:(NSUInteger *)outputPixelsHigh ioSurface:(IOSurfaceRef *)outputIOSurface
+{
+	if (![self executeWithGLTexture:textureName target:target pixelsWide:pixelsWide pixelsHigh:pixelsHigh atTime:time])
+		return 0;
+
+	return [self glTextureFromProvider:provider forOutputPort:@"outputImage" outputPixelsWide:outputPixelsWide pixelsHigh:outputPixelsHigh ioSurface:outputIOSurface];
+}
+
 @end
 
 
@@ -842,6 +946,36 @@ static void VuoRunnerCocoa_doNothingCallback(VuoImage imageToFree)
 	if (![self executeWithSuggestedPixelsWide:suggestedPixelsWide pixelsHigh:suggestedPixelsHigh atTime:time])
 		return 0;
 	return [self glTextureWithTarget:target forOutputPort:@"outputImage" outputPixelsWide:outputPixelsWide pixelsHigh:outputPixelsHigh];
+}
+
+/**
+ * Instructs the Vuo composition to generate an image with the specified dimensions
+ * at the specified logical @c time (number of seconds since rendering started),
+ * requests that the host provide a texture of the appropriate size,
+ * and returns that texture with image data attached to its `GL_TEXTURE_RECTANGLE_ARB` target.
+ *
+ * @param suggestedPixelsWide  The suggested width of the output image.
+ * @param suggestedPixelsHigh  The suggested height of the output image.
+ * @param time        The logical time at which to filter the image.
+ * @param provider A block that returns an OpenGL texture name with the requested width and height.
+ *                 The host app must not call `glTexImage2D()` on the texture,
+ *                 since this makes the texture incompatible with the IOSurface backing.
+ * @param[out] outputPixelsWide Upon return, this contains the width of the output texture.
+ * @param[out] outputPixelsHigh Upon return, this contains the height of the output texture.
+ * @param[out] outputIOSurface Upon return, this contains the IOSurface backing the output texture.
+ *                 When the host app is finished with the output texture, it must signal and release the IOSurface:
+ *
+ *                     VuoIoSurfacePool_signal(outputIOSurface);
+ *                     CFRelease(outputIOSurface);
+ *
+ * @note The Vuo composition is not required to use the specified dimensions
+ * (it is a hint, not a guarantee).
+ */
+- (GLuint)generateGLTextureWithProvider:(GLuint (^)(NSUInteger pixelsWide, NSUInteger pixelsHigh))provider suggestedPixelsWide:(NSUInteger)suggestedPixelsWide pixelsHigh:(NSUInteger)suggestedPixelsHigh atTime:(NSTimeInterval)time outputPixelsWide:(NSUInteger *)outputPixelsWide pixelsHigh:(NSUInteger *)outputPixelsHigh ioSurface:(IOSurfaceRef *)outputIOSurface
+{
+	if (![self executeWithSuggestedPixelsWide:suggestedPixelsWide pixelsHigh:suggestedPixelsHigh atTime:time])
+		return 0;
+	return [self glTextureFromProvider:provider forOutputPort:@"outputImage" outputPixelsWide:outputPixelsWide pixelsHigh:outputPixelsHigh ioSurface:outputIOSurface];
 }
 
 /**

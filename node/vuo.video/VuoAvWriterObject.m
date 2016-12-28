@@ -83,7 +83,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	{
 		if (!VuoAvWriterObject_isProResAvailable())
 		{
-			VLog("Error: The ProRes codec is only available on systems with Final Cut Pro installed.");
+			VUserLog("Error: The ProRes codec is only available on systems with Final Cut Pro installed.");
 			return NO;
 		}
 		videoEncoding = AVVideoCodecAppleProRes4444;
@@ -92,7 +92,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	{
 		if (!VuoAvWriterObject_isProResAvailable())
 		{
-			VLog("Error: The ProRes codec is only available on systems with Final Cut Pro installed.");
+			VUserLog("Error: The ProRes codec is only available on systems with Final Cut Pro installed.");
 			return NO;
 		}
 		videoEncoding = AVVideoCodecAppleProRes422;
@@ -102,7 +102,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	self.assetWriter = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:AVFileTypeQuickTimeMovie error:&error];
 
 	if (error) {
-		VLog("AVAssetWriter initWithURL failed with error %s", [[error localizedDescription] UTF8String]);
+		VUserLog("AVAssetWriter initWithURL failed with error %s", [[error localizedDescription] UTF8String]);
 		return NO;
 	}
 
@@ -139,7 +139,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	}
 	else
 	{
-		VLog("Failed adding a video input to the AVWriter.");
+		VUserLog("Failed adding a video input to the AVWriter.");
 		[self.assetWriter release];
 		[self.videoInput release];
 		[self.avAdaptor release];
@@ -226,7 +226,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		}
 		else
 		{
-			VLog("Could not add audio input.");
+			VUserLog("Could not add audio input.");
 			[self.audioInput release];
 			self.audioInput = nil;
 		}
@@ -245,13 +245,13 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 {
 	if(image->pixelsWide != self.originalWidth || image->pixelsHigh != self.originalHeight)
 	{
-		VLog("Error: Can't append image because it is not the same dimensions as the the current movie.");
+		VUserLog("Error: Can't append image because it is not the same dimensions as the the current movie.");
 		return;
 	}
 
 	if(!self.videoInput.readyForMoreMediaData)
 	{
-		VLog("Error: AVFoundation asset writer is still catching up, dropping this frame.");
+		VUserLog("Error: AVFoundation asset writer is still catching up, dropping this frame.");
 		return;
 	}
 
@@ -266,17 +266,13 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	CVPixelBufferRef pb = nil;
 
-	unsigned char* buf = VuoImage_copyBuffer(image, GL_BGRA);
-
-	if (VuoIsTrial())
-		VuoRelease(image);
+	const unsigned char *buf = VuoImage_getBuffer(image, GL_BGRA);
 
 	CVReturn ret = CVPixelBufferPoolCreatePixelBuffer(nil, [self.avAdaptor pixelBufferPool], &pb);
 
 	if(ret != kCVReturnSuccess)
 	{
-		VLog("Error: Couldn't get PixelBuffer from pool. %d", ret);
-		free(buf);
+		VUserLog("Error: Couldn't get PixelBuffer from pool. %d", ret);
 		return;
 	}
 
@@ -284,8 +280,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	if(ret != kCVReturnSuccess)
 	{
-		VLog("Error: Couldn't lock PixelBuffer base address");
-		free(buf);
+		VUserLog("Error: Couldn't lock PixelBuffer base address");
 		return;
 	}
 
@@ -293,8 +288,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	if(!bytes)
 	{
-		VLog("Error: Couldn't get the pixel buffer base address");
-		free(buf);
+		VUserLog("Error: Couldn't get the pixel buffer base address");
 		return;
 	}
 
@@ -303,13 +297,14 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	for(unsigned long y = 0; y < self.originalHeight; y++)
 		memcpy(bytes + bytesPerRow * (self.originalHeight - y - 1), buf + self.originalWidth * y * 4, self.originalWidth * 4);
 
-	free(buf);
+	if (VuoIsTrial())
+		VuoRelease(image);
 
 	ret = CVPixelBufferUnlockBaseAddress(pb, 0);
 
 	if(ret != kCVReturnSuccess)
 	{
-		VLog("Error: Couldn't unlock pixelbuffer base address. %d", ret);
+		VUserLog("Error: Couldn't unlock pixelbuffer base address. %d", ret);
 		return;
 	}
 
@@ -333,11 +328,11 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	self.lastTimestamp = presentationTime;
 
-	// VLog("time: %f  interval: %f", [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime));
+	// VUserLog("time: %f  interval: %f", [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime));
 
 	if (![self.avAdaptor appendPixelBuffer:pb withPresentationTime:presentationTime])
 	{
-		VLog("Problem at time: %lld (%f)", presentationTime.value, CMTimeGetSeconds(presentationTime));
+		VUserLog("Problem at time: %lld (%f)", presentationTime.value, CMTimeGetSeconds(presentationTime));
 	}
 
 	if(pb)
@@ -351,12 +346,12 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	if(channelCount != self.originalChannelCount)
 	{
-		VLog("Error: Attempting to write %lu channels to a video file with %u channels!", channelCount, self.originalChannelCount);
+		VUserLog("Error: Attempting to write %lu channels to a video file with %u channels!", channelCount, self.originalChannelCount);
 		return;
 	}
 
 	if ( !self.audioInput.readyForMoreMediaData) {
-		VLog("Error: Dropped audio frame because AVFoundation is too slow.");
+		VUserLog("Error: Dropped audio frame because AVFoundation is too slow.");
 		return;
 	}
 
@@ -396,7 +391,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	CFRelease(tmp);
 
 	if (status != noErr) {
-		VLog("CMBlockBufferCreateWithMemoryBlock error");
+		VUserLog("CMBlockBufferCreateWithMemoryBlock error");
 		return;
 	}
 
@@ -425,13 +420,13 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 																NULL, &sbuf);
 
 	if (status != noErr) {
-		VLog("CMSampleBufferCreate error");
+		VUserLog("CMSampleBufferCreate error");
 		return;
 	}
 
 	if ( ![self.audioInput appendSampleBuffer:sbuf] )
 	{
-		VLog("AppendSampleBuffer error");
+		VUserLog("AppendSampleBuffer error");
 	}
 
 	free(interleaved);

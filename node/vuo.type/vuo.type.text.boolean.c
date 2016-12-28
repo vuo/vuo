@@ -22,5 +22,8 @@ void nodeEvent
 		VuoOutputData(VuoBoolean) boolean
 )
 {
+	if (!text)
+		return;
+
 	*boolean = VuoBoolean_makeFromString(text);
 }

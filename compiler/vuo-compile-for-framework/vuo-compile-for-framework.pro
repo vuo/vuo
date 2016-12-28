@@ -15,4 +15,8 @@ SOURCES += \
 
 LIBS += -rpath @loader_path/.
 
-QMAKE_POST_LINK += cp vuo-compile ../../framework
+QMAKE_POST_LINK = true
+coverage {
+	QMAKE_POST_LINK += && install_name_tool -change @executable_path/../lib/libprofile_rt.dylib $$LLVM_ROOT/lib/libprofile_rt.dylib vuo-compile
+}
+QMAKE_POST_LINK += && cp vuo-compile ../../framework

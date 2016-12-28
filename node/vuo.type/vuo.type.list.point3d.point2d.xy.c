@@ -10,15 +10,15 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title": "Convert 3D Point List to 2D Point List",
+					  "title": "Convert 3D Point List to 2D Point List (X,Y)",
 					  "description": "Outputs a list of just the (X,Y) part of a list of 3D points (X,Y,Z).",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
 (
-	VuoInputData(VuoList_VuoPoint3d) xyz,
-	VuoOutputData(VuoList_VuoPoint2d) xy
+	VuoInputData(VuoList_VuoPoint3d, {"name":"(X,Y,Z)"}) xyz,
+	VuoOutputData(VuoList_VuoPoint2d, {"name":"(X,Y)"}) xy
 )
 {
 	*xy = VuoListCreate_VuoPoint2d();

@@ -21,8 +21,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
- VuoOutputData(VuoInteger) output,
- VuoOutputTrigger(trigger,void)
+	VuoOutputData(VuoInteger) output,
+	VuoOutputTrigger(trigger,void)
 )
 {
 }

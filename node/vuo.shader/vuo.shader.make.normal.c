@@ -27,8 +27,9 @@ VuoModuleMetadata({
 
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslProjection)
+
 	// Inputs
-	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	uniform int attr;
 	attribute vec4 position;
@@ -62,13 +63,14 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		else
 			vertexColor = abs(modelviewMatrix * position).xyz;
 
-		gl_Position = projectionMatrix * modelviewMatrix * position;
+		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
 	}
 );
 
 static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslProjection)
+
 	// Inputs provided by VuoSceneRenderer
-	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
 	attribute vec4 textureCoordinate;
@@ -81,7 +83,7 @@ static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 	{
 		positionForGeometry = modelviewMatrix * position;
 		textureCoordinateForGeometry = textureCoordinate;
-		gl_Position = projectionMatrix * positionForGeometry;
+		gl_Position = VuoGlsl_projectPosition(positionForGeometry);
 	}
 );
 
@@ -119,6 +121,11 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
+		// Work around ATI Radeon HD 5770 bug.
+		// It seems that the rest of the shader isn't executed unless we initialize the output with a uniform.
+		// https://b33p.net/kosada/node/11256
+		gl_FragColor = xColor;
+
 		fragmentTextureCoordinate;
 
 		vec3 vertexColor;
@@ -181,8 +188,10 @@ static const char *checkerboardFragmentShaderSourceForGeometry = VUOSHADER_GLSL_
 		vec2 filterWidth = fwidth(fragmentTextureCoordinate.xy) * frequency;
 
 		vec2 checkPos = fract(fragmentTextureCoordinate.xy * frequency);
+		// Add 0.00001 so that smoothstep() doesn't return NaN on ATI Radeon HD 5770.
+		// https://b33p.net/kosada/node/10467
 		vec2 p = smoothstep(vec2(0.5), filterWidth + vec2(0.5), checkPos) +
-				(1 - smoothstep(vec2(0),   filterWidth,             checkPos));
+			(1 - smoothstep(vec2(0),   filterWidth,             checkPos+0.00001));
 
 		gl_FragColor = vec4(mix(color0, color1, p.x*p.y + (1-p.x)*(1-p.y)), 1);
 	}

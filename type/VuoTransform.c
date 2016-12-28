@@ -126,26 +126,23 @@ VuoPoint3d VuoTransform_getEuler(const VuoTransform transform)
 	if (transform.type == VuoTransformTypeEuler)
 		return transform.rotationSource.euler;
 
-	// Convert the quaternion to euler angles.
-	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
-	VuoPoint4d q = transform.rotationSource.quaternion;
-	double sqw = q.w * q.w;
-	double sqx = q.x * q.x;
-	double sqy = q.y * q.y;
-	double sqz = q.z * q.z;
-	double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
-	double test = q.x * q.y + q.z * q.w;
-	if (test > 0.499 * unit)
-		// singularity at north pole
-		return VuoPoint3d_make(M_PI/2, 2 * atan2(q.x,q.w), 0);
-	if (test < -0.499*unit)
-		// singularity at south pole
-		return VuoPoint3d_make(-M_PI/2, -2 * atan2(q.x,q.w), 0);
+	// "Euler Angle Conversion" by Ken Shoemake.  Graphics Gems IV, pp. 222–229.
+	VuoPoint3d ea;
+	double cy = sqrt(transform.rotation[0]*transform.rotation[0] + transform.rotation[1]*transform.rotation[1]);
+	if (cy > 16*FLT_EPSILON)
+	{
+		ea.z = atan2(transform.rotation[5], transform.rotation[8]);
+		ea.y = atan2(-transform.rotation[2], cy);
+		ea.x = atan2(transform.rotation[1], transform.rotation[0]);
+	}
+	else
+	{
+		ea.z = atan2(-transform.rotation[7], transform.rotation[4]);
+		ea.y = atan2(-transform.rotation[2], cy);
+		ea.x = 0;
+	}
 
-	return VuoPoint3d_make(
-				asin(2*test/unit),
-				atan2(2*q.y*q.w - 2*q.x*q.z, sqx - sqy - sqz + sqw),
-				atan2(2*q.x*q.w - 2*q.y*q.z, -sqx + sqy - sqz + sqw));
+	return ea;
 }
 
 /**
@@ -200,7 +197,26 @@ VuoPoint3d VuoTransform_getDirection(const VuoTransform transform)
  */
 VuoTransform VuoTransform_makeIdentity(void)
 {
-	return VuoTransform_makeEuler(VuoPoint3d_make(0,0,0), VuoPoint3d_make(0,0,0), VuoPoint3d_make(1,1,1));
+	VuoTransform t;
+
+	t.type = VuoTransformTypeEuler;
+
+	t.translation = (VuoPoint3d){0,0,0};
+
+	t.rotationSource.euler = (VuoPoint3d){0,0,0};
+	t.rotation[0] = 1;
+	t.rotation[1] = 0;
+	t.rotation[2] = 0;
+	t.rotation[3] = 0;
+	t.rotation[4] = 1;
+	t.rotation[5] = 0;
+	t.rotation[6] = 0;
+	t.rotation[7] = 0;
+	t.rotation[8] = 1;
+
+	t.scale = (VuoPoint3d){1,1,1};
+
+	return t;
 }
 
 /**
@@ -345,22 +361,6 @@ VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix)
 	t.translation = VuoPoint3d_make(matrix[12], matrix[13], matrix[14]);
 
 	return t;
-}
-
-/**
- * @ingroup VuoTransform
- * Transforms @c point using @c matrix (a column-major matrix of 16 values), and returns the new point.
- *
- * @see VuoTransform_getMatrix
- */
-VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoint3d point)
-{
-	VuoPoint3d transformedPoint = {
-		point.x * matrix[0] + point.y * matrix[4] + point.z * matrix[ 8] + matrix[12],
-		point.x * matrix[1] + point.y * matrix[5] + point.z * matrix[ 9] + matrix[13],
-		point.x * matrix[2] + point.y * matrix[6] + point.z * matrix[10] + matrix[14]
-	};
-	return transformedPoint;
 }
 
 /**

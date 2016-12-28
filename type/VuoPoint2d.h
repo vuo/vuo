@@ -78,6 +78,14 @@ static inline VuoRectangle VuoRectangle_make(float centerX, float centerY, float
 }
 
 /**
+ * Returns true if the rectangles have the same position and size.
+ */
+static inline bool VuoRectangle_areEqual(const VuoRectangle a, const VuoRectangle b)
+{
+	return VuoPoint2d_areEqual(a.center, b.center) && VuoPoint2d_areEqual(a.size, b.size);
+}
+
+/**
  * Returns a rectangle with the specified coordinates.
  */
 static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height) __attribute__((const));

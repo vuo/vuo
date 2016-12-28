@@ -27,6 +27,9 @@ void nodeEvent
 	VuoOutputData(VuoSceneObject) shadedObject
 )
 {
+	if (!material)
+		return;
+
 	VuoSceneObject copy = VuoSceneObject_copy(object);
 
 	bool applyToAll = (strlen(material) == 0);

@@ -11,5 +11,5 @@ This node lets you easily, interactively navigate through a 3D scene.
    - `Modifier Key` — If set, only accept mouse input when this modifier key is pressed.
    - `Window` — Which window is this scene object rendering to?  Used to calculate how much of an effect mouse drags should have.
    - `Field of View` — The camera's [angle of view](http://en.wikipedia.org/wiki/Angle_of_view), in degrees. 
-   - `Distance Min`, `Distance Max` — The minimum and maximum distance in front of the camera at which an object is visible (clipping planes), in Vuo coordinates. These should be greater than 0. 
+   - `Distance Min`, `Distance Max` — The minimum and maximum distance in front of the camera at which an object is visible (clipping planes), in Vuo Coordinates. These should be greater than 0. 
    - `Reset` — Set the camera's transform back to its default position.

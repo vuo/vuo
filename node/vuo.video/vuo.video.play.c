@@ -8,428 +8,281 @@
  */
 
 #include "node.h"
-#include "VuoLoopType.h"
-#include "VuoMovie.h"
-#include <dispatch/dispatch.h>
+#include "VuoVideo.h"
 #include "VuoVideoFrame.h"
-
-// #define PROFILE_TIMES 1
+#include "VuoAudioFrame.h"
+#include "VuoLoopType.h"
 
 VuoModuleMetadata({
-					  "title" : "Play Movie",
-					  "keywords" : [
-						  "animation",
+					"title" : "Play Movie",
+					"keywords" : [
+						"record", "cinema", "animation",
 						  "avi",
 						  "dv", "dvc",
 						  "h264", "h.264",
 						  "mjpeg",
 						  "mpeg", "m4v", "mp4",
 						  "quicktime", "qt", "aic", "prores",
-						  "video",
-					  ],
-					  "version" : "2.0.1",
-					  "node": {
-						  "isInterface" : true,
-						  "exampleCompositions" : [ "PlayMovie.vuo", "PlayMoviesAndCameraOnCube.vuo", "PlayMovieWithSound.vuo" ]
-					  },
-					  "dependencies" : [
-						"VuoMovie",
-						"VuoUrl"
-					  ]
-				  });
-
-#define AUDIO_ADVANCE_GET 100000
-#define AUDIO_SYNC_THRESHOLD .01	// maximum diff in a/v timestamp to allow
-#define AUDIO_SEC_PER_SAMPLE ((float)VuoAudioSamples_bufferSize/VuoAudioSamples_sampleRate)
-#define VuoAudio_queueSize 8	// todo - get this value from VuoAudio
+						  "video", "gif"
+					],
+					"version" : "2.0.2",
+					"dependencies" : [
+						"VuoVideo",
+						"VuoFfmpegDecoder",
+						"VuoVideoPlayer"
+					],
+					"node": {
+					"isInterface" : true,
+					"exampleCompositions" : [
+						"PlayMovie.vuo",
+						"PlayMoviesAndCameraOnCube.vuo",
+						"PlayMovieWithSound.vuo"
+						]
+					}
+				 });
 
 struct nodeInstanceData
 {
-	VuoMovie movie;
-	bool isPlaying;
-
-	dispatch_time_t movieStartTime;
-	VuoImage lastImage;
-	VuoList_VuoAudioSamples lastAudioSamples;
-
+	VuoVideo player;
 	VuoLoopType loop;
+	VuoUrl url;
 
+	bool isPlaying;
+	VuoReal lastSoughtTime;
 	VuoReal playbackRate;
-	VuoReal moviePtsStart;
-
-	double lastVideoTimestamp;
-	double lastAudioTimestamp;
-
-	dispatch_source_t movie_timer;
-	dispatch_semaphore_t movie_timerCanceled;
-
-	dispatch_source_t audio_timer;
-	dispatch_semaphore_t audio_timerCanceled;
-
-	double duration;
+	VuoVideoOptimization optimizeFor;
 };
 
-static void pauseAudio(struct nodeInstanceData *context)
+bool setVideoPath(struct nodeInstanceData* instance, VuoUrl url)
 {
-	if( VuoMovie_containsAudio(context->movie) )
-	{
-		if(context->audio_timer)
-		{
-			dispatch_source_cancel(context->audio_timer);
-			dispatch_semaphore_wait(context->audio_timerCanceled, DISPATCH_TIME_FOREVER);
-			dispatch_release(context->audio_timer);
-		}
+	if(VuoText_length(url) < 1)
+		return false;
 
-		context->audio_timer = NULL;
-		if(context->lastAudioSamples)
-		{
-			VuoRelease(context->lastAudioSamples);
-			context->lastAudioSamples = NULL;
-		}
+	if(instance->url != NULL)
+		VuoRelease(instance->url);
+
+	instance->url = url;
+	VuoRetain(instance->url);
+
+	if(instance->player != NULL)
+	{
+		VuoRelease(instance->player);
+		instance->player = NULL;
+	}
+
+	VuoVideoOptimization opt = instance->optimizeFor;
+
+	if(opt == VuoVideoOptimization_Auto)
+		opt = instance->playbackRate < 0 || instance->loop == VuoLoopType_Mirror ? VuoVideoOptimization_Random : VuoVideoOptimization_Forward;
+
+	instance->player = VuoVideo_make(url, opt);
+
+	if(instance->player != NULL)
+	{
+		VuoRetain(instance->player);
+		VuoVideo_setPlaybackLooping(instance->player, instance->loop);
+		VuoVideo_setPlaybackRate(instance->player, instance->playbackRate);
+
+		return true;
+	}
+
+	return false;
+}
+
+struct nodeInstanceData* nodeInstanceInit(
+	VuoInputData(VuoText) url,
+	VuoInputData(VuoReal) playbackRate,
+	VuoInputData(VuoReal) setTime,
+	VuoInputData(VuoVideoOptimization) optimization
+	)
+{
+	struct nodeInstanceData* instance = (struct nodeInstanceData*) calloc(1, sizeof(struct nodeInstanceData));
+	VuoRegister(instance, free);
+
+	instance->isPlaying = false;
+	instance->playbackRate = playbackRate;
+	instance->optimizeFor = optimization;
+	instance->lastSoughtTime = setTime;
+
+	setVideoPath(instance, url);
+	VuoVideo_seekToSecond(instance->player, setTime);
+
+	return instance;
+}
+
+void nodeInstanceTriggerStart(
+	VuoInstanceData(struct nodeInstanceData*) instance,
+	VuoOutputTrigger(decodedVideo, VuoVideoFrame),
+	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
+	)
+{
+	// Can't pass output triggers on nodeInstanceInit()
+	VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
+	VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+
+	if((*instance)->isPlaying)
+	{
+		VuoVideo_play((*instance)->player);
 	}
 }
 
-static void pauseMovie(struct nodeInstanceData *context)
+void nodeInstanceTriggerStop(
+	VuoInstanceData(struct nodeInstanceData*) instance
+	)
 {
-	if (! context->movie)
-		return;
-
-	if(context->movie_timer)
+	if((*instance)->isPlaying)
 	{
-		dispatch_source_cancel(context->movie_timer);
-		dispatch_semaphore_wait(context->movie_timerCanceled, DISPATCH_TIME_FOREVER);
-		dispatch_release(context->movie_timer);
+		VuoVideo_pause((*instance)->player);
+
+		VuoVideo_setVideoDelegate((*instance)->player, NULL);
+		VuoVideo_setAudioDelegate((*instance)->player, NULL);
 	}
-
-	context->movie_timer = NULL;
-
-	if(context->lastImage)
-	{
-		VuoRelease(context->lastImage);
-		context->lastImage = NULL;
-	}
-
-	pauseAudio(context);
 }
 
-
-static void playNextAudioFrame(struct nodeInstanceData *context, VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples))
+void nodeInstanceEvent(
+	VuoInstanceData(struct nodeInstanceData*) instance,
+	VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
+	VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
+	VuoInputEvent({"eventBlocking":"none"}) play,
+	VuoInputEvent({"eventBlocking":"none"}) pause,
+	VuoInputData(VuoLoopType, {"default":"loop"}) loop,
+	VuoInputData(VuoReal, {"default":1}) playbackRate,
+	VuoInputData(VuoReal, {"default":""}) setTime,
+	VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
+	VuoInputData(VuoVideoOptimization, {"default":"auto"}) optimization,
+	VuoInputEvent({"eventBlocking":"none", "data":"optimization"}) optimizationChanged,
+	VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
+	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
+	)
 {
-	if(context->lastAudioSamples)
+	if( setTimeEvent )
 	{
-		// Send Audio
-		if(VuoListGetCount_VuoAudioSamples(context->lastAudioSamples) > 0)
+		(*instance)->lastSoughtTime = setTime;
+		VuoVideo_seekToSecond((*instance)->player, setTime);
+	}
+
+	if(optimizationChanged)
+	{
+		// get current time, then reload the video and sync back up
+		VuoReal timestamp = VuoVideo_getLastDecodedVideoTimestamp((*instance)->player);
+
+		(*instance)->optimizeFor = optimization;
+
+		setVideoPath(*instance, url);
+
+		VuoVideo_seekToSecond((*instance)->player, timestamp);
+
+		if((*instance)->isPlaying)
 		{
-			VuoAudioSamples as = VuoListGetValue_VuoAudioSamples(context->lastAudioSamples, 1);
-			decodedAudio(context->lastAudioSamples);
-		}
+			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
+			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
 
-		VuoRelease(context->lastAudioSamples);
-		context->lastAudioSamples = NULL;
-	}
-
-	uint64_t cur_time = dispatch_time(DISPATCH_TIME_NOW, 0);
-
-	if(!context->movie) return;
-
-	context->lastAudioSamples = VuoListCreate_VuoAudioSamples();
-
-	double frameTimestampInSecs = 0;
-
-	bool gotFrame = VuoMovie_getNextAudioSample(context->movie, context->lastAudioSamples, &frameTimestampInSecs);
-	if(gotFrame)
-	{
-		VuoRetain(context->lastAudioSamples);
-		context->lastAudioTimestamp = frameTimestampInSecs;
-	}
-	else
-	{
-		VLog("bad");
-
-		if(context->lastAudioSamples)
-			VuoRelease(context->lastAudioSamples);
-
-		context->lastAudioSamples = NULL;
-	}
-
-	uint64_t presentationTime = (cur_time + NSEC_PER_SEC * AUDIO_SEC_PER_SAMPLE - 100000);
-	dispatch_source_set_timer(context->audio_timer, presentationTime, DISPATCH_TIME_FOREVER, NSEC_PER_SEC / 100000 );
-}
-
-static void resumeAudio(struct nodeInstanceData *context, VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples))
-{
-	/* audio queue */
-	if( VuoMovie_containsAudio(context->movie) && context->playbackRate == 1.)
-	{
-		dispatch_queue_t a_queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-		context->audio_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, a_queue);
-
-		// audio (plays at a steady rate)
-		dispatch_source_set_timer(context->audio_timer, DISPATCH_TIME_NOW, DISPATCH_TIME_FOREVER, 0);
-		dispatch_source_set_event_handler(context->audio_timer, ^{
-											  playNextAudioFrame(context, decodedAudio);
-										  });
-		dispatch_source_set_cancel_handler(context->audio_timer, ^{
-											   dispatch_semaphore_signal(context->audio_timerCanceled);
-										   });
-		dispatch_resume(context->audio_timer);
-	}
-}
-
-static void playNextFrame(struct nodeInstanceData *context, VuoOutputTrigger(decodedVideo, VuoVideoFrame), VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples))
-{
-	// Display last decoded frame (if any)
-	if (context->lastImage)
-	{
-		// VLog("Video PTS: %f", context->lastVideoTimestamp);
-
-		decodedVideo( (VuoVideoFrame){ context->lastImage, context->lastVideoTimestamp } );
-		VuoRelease(context->lastImage);
-		context->lastImage = NULL;
-	}
-
-	// Decode next frame
-	double presentationRelativeSeconds = 0;
-
-	bool gotFrame = (context->playbackRate) > 0 ?
-			VuoMovie_getNextVideoFrame(context->movie, &context->lastImage, &presentationRelativeSeconds) :
-			VuoMovie_getPreviousVideoFrame(context->movie, &context->lastImage, &presentationRelativeSeconds);
-
-	context->lastVideoTimestamp = presentationRelativeSeconds;	// todo - this is debug stuff
-
-	if(gotFrame)
-		VuoRetain(context->lastImage);
-
-	bool shouldContinue = true;
-
-	if (! gotFrame)
-	{
-		switch(context->loop)
-		{
-			case VuoLoopType_None:
-				shouldContinue = false;
-				break;
-
-			case VuoLoopType_Loop:
-
-				presentationRelativeSeconds = context->playbackRate > 0 ? 0 : context->duration;
-				VuoMovie_seekToSecond(context->movie, presentationRelativeSeconds);
-				context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);
-				context->moviePtsStart = VuoMovie_getCurrentSecond(context->movie);
-
-				break;
-
-			case VuoLoopType_Mirror:
-
-				context->playbackRate = -context->playbackRate;
-				context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);
-				context->moviePtsStart = VuoMovie_getCurrentSecond(context->movie);
-
-				presentationRelativeSeconds = context->playbackRate > 0 ? 0 : context->duration;
-
-				if(context->playbackRate == 1.)
-					resumeAudio(context, decodedAudio);
-				else
-					pauseAudio(context);
-
-				/// @todo (https://b33p.net/kosada/node/6601)
-				break;
+			VuoVideo_play((*instance)->player);
 		}
 	}
 
-	presentationRelativeSeconds = ( (presentationRelativeSeconds-context->moviePtsStart) / context->playbackRate );
-
-	// Schedule next frame
-	uint64_t presentationTime = (shouldContinue ?
-									 dispatch_time(context->movieStartTime, presentationRelativeSeconds * NSEC_PER_SEC) :
-									 DISPATCH_TIME_FOREVER);
-
-	dispatch_source_set_timer(context->movie_timer, presentationTime, DISPATCH_TIME_FOREVER, NSEC_PER_SEC / 1000);
-}
-
-static void playMovie(struct nodeInstanceData *context, VuoOutputTrigger(decodedVideo, VuoVideoFrame), VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples))
-{
-	if (! context->movie)
-		return;
-
-	// video queue
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	context->movie_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-
-	// set start PTS
-	context->movieStartTime = dispatch_time(DISPATCH_TIME_NOW, 0);
-	context->moviePtsStart = VuoMovie_getCurrentSecond(context->movie);
-
-	// video queue
-	dispatch_source_set_timer(context->movie_timer, DISPATCH_TIME_NOW, DISPATCH_TIME_FOREVER, 0);
-	dispatch_source_set_event_handler(context->movie_timer, ^{
-										  playNextFrame(context, decodedVideo, decodedAudio);
-									  });
-	dispatch_source_set_cancel_handler(context->movie_timer, ^{
-										   dispatch_semaphore_signal(context->movie_timerCanceled);
-									   });
-	dispatch_resume(context->movie_timer);
-
-	resumeAudio(context, decodedAudio);
-}
-
-static void setMovie(struct nodeInstanceData *context, const char *movieURL)
-{
-	VuoUrl normalizedUrl = VuoUrl_normalize(movieURL, false);
-	VuoRetain(normalizedUrl);
-
-	VuoText path = VuoUrl_getPosixPath(normalizedUrl);
-	VuoRetain(path);
-	VuoRelease(normalizedUrl);
-
-	VuoMovie newMovie = VuoMovie_make(path);
-	VuoRelease(path);
-
-	// If VuoMovie_make fails to initialize properly, it cleans up after itself.
-	// No need to call VuoMovie_free()
-	if(newMovie == NULL)
-		return;
-
-	VuoRetain(newMovie);
-	VuoRelease(context->movie);
-	context->movie = newMovie;
-	context->duration = VuoMovie_getDuration(context->movie);
-}
-
-struct nodeInstanceData * nodeInstanceInit
-(
-		VuoInputData(VuoText) url,
-		VuoInputData(VuoReal) playbackRate,
-		VuoInputData(VuoLoopType) loop,
-		VuoInputData(VuoReal) setTime
-)
-{
-	struct nodeInstanceData *context = (struct nodeInstanceData *) calloc(1, sizeof(struct nodeInstanceData));
-	VuoRegister(context, free);
-
-	context->movie_timerCanceled = dispatch_semaphore_create(0);
-	context->audio_timerCanceled = dispatch_semaphore_create(0);
-
-	context->loop = loop;
-	context->playbackRate = playbackRate;
-
-	setMovie(context, url);
-
-	if(context->movie != NULL)
+	if(urlEvent)
 	{
-		VuoMovie_seekToSecond(context->movie, setTime);
-	}
-
-	return context;
-}
-
-void nodeInstanceTriggerStart
-(
-		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
-		VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"})
-)
-{
-	if ((*context)->isPlaying)
-		playMovie(*context, decodedVideo, decodedAudio);
-}
-
-void nodeInstanceEvent
-(
-		VuoInstanceData(struct nodeInstanceData *) context,
-		VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
-		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
-		VuoInputEvent({"eventBlocking":"none"}) play,
-		VuoInputEvent({"eventBlocking":"none"}) pause,
-		VuoInputData(VuoLoopType, {"default":"loop"}) loop,
-		VuoInputData(VuoReal, {"default":1., "suggestedMin":-2., "suggestedMax":2.}) playbackRate,
-		VuoInputData(VuoReal, {"default":""}) setTime,
-		VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
-
-		VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
-		VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"})
-)
-{
-	if (urlEvent)
-	{
-		if ((*context)->isPlaying)
-			pauseMovie(*context);
-
-		setMovie(*context, url);
-
-		if ((*context)->isPlaying)
-			playMovie(*context, decodedVideo, decodedAudio);
-	}
-
-	if((*context)->playbackRate != playbackRate)
-	{
-		if((*context)->isPlaying && (*context)->playbackRate != 0)
-			pauseMovie(*context);
-
-		(*context)->playbackRate = playbackRate;
-
-		if( (*context)->isPlaying && playbackRate != 0)
-			playMovie(*context, decodedVideo, decodedAudio);
-	}
-
-	if(setTimeEvent && (*context)->movie != NULL)
-	{
-		if ((*context)->isPlaying)
-			pauseMovie((*context));
-
-		VuoMovie_seekToSecond( (*context)->movie, setTime );
-
-		if ((*context)->isPlaying)
+		if(setVideoPath(*instance, url))
 		{
-			playMovie((*context), decodedVideo, decodedAudio);
-		}
-		else
-		{
-			// step the frame so that the image is set to match the current time
-			if( VuoMovie_getNextVideoFrame((*context)->movie, &(*context)->lastImage, &(*context)->lastVideoTimestamp) )
-			{
-				VuoRetain((*context)->lastImage);
-				decodedVideo( (VuoVideoFrame){ (*context)->lastImage, (*context)->lastVideoTimestamp } );
-				VuoRelease((*context)->lastImage);
-				(*context)->lastImage = NULL;
-			}
+			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
+			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+
+			if((*instance)->isPlaying)
+				VuoVideo_play((*instance)->player);
 		}
 	}
 
-	(*context)->loop = loop;
-
-	if (play && ! (*context)->isPlaying)
+	if(play && !(*instance)->isPlaying)
 	{
-		(*context)->isPlaying = true;
-		playMovie(*context, decodedVideo, decodedAudio);
+		(*instance)->isPlaying = true;
+		VuoVideo_play((*instance)->player);
 	}
 
-	if( pause && (*context)->isPlaying)
+	if(pause && (*instance)->isPlaying)
 	{
-		(*context)->isPlaying = false;
-		pauseMovie(*context);
+		(*instance)->isPlaying = false;
+		VuoVideo_pause((*instance)->player);
+	}
+
+	VuoVideo_setPlaybackLooping((*instance)->player, loop);
+
+	if( !VuoReal_areEqual((*instance)->playbackRate, playbackRate) )
+	{
+		(*instance)->playbackRate = playbackRate;
+		VuoVideo_setPlaybackRate((*instance)->player, playbackRate);
 	}
 }
 
-void nodeInstanceTriggerStop
-(
-		VuoInstanceData(struct nodeInstanceData *) context
-)
+void nodeInstanceTriggerUpdate(
+	VuoInstanceData(struct nodeInstanceData*) instance,
+	VuoInputData(VuoText, {"default":"", "name":"URL"}) url,
+	VuoInputData(VuoLoopType, {"default":"loop"}) loop,
+	VuoInputData(VuoReal, {"default":1}) playbackRate,
+	VuoInputData(VuoReal) setTime,
+	VuoInputData(VuoVideoOptimization, {"default":"auto"}) optimization,
+	VuoOutputTrigger(decodedVideo, VuoVideoFrame, {"eventThrottling":"drop"}),
+	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
+	)
 {
-	if ((*context)->isPlaying)
-		pauseMovie(*context);
+	if(optimization != (*instance)->optimizeFor)
+	{
+		// get current time, then reload the video and sync back up
+		VuoReal timestamp = VuoVideo_getLastDecodedVideoTimestamp((*instance)->player);
+
+		(*instance)->optimizeFor = optimization;
+
+		setVideoPath(*instance, url);
+
+		VuoVideo_seekToSecond((*instance)->player, timestamp);
+
+		if((*instance)->isPlaying)
+		{
+			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
+			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+
+			VuoVideo_play((*instance)->player);
+		}
+	}
+
+	if(VuoText_length(url) > 2 && !VuoText_areEqual(url, (*instance)->url))
+	{
+		if( setVideoPath(*instance, url) )
+		{
+			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
+			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+
+			if((*instance)->isPlaying)
+				VuoVideo_play((*instance)->player);
+		}
+	}
+
+	VuoVideo_setPlaybackLooping((*instance)->player, loop);
+
+	if( !VuoReal_areEqual((*instance)->playbackRate, playbackRate) )
+	{
+		(*instance)->playbackRate = playbackRate;
+		VuoVideo_setPlaybackRate((*instance)->player, playbackRate);
+	}
+
+	if( !VuoReal_areEqual((*instance)->lastSoughtTime, setTime) )
+	{
+		(*instance)->lastSoughtTime = setTime;
+		VuoVideo_seekToSecond((*instance)->player, setTime);
+	}
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(struct nodeInstanceData *) context
+	VuoInstanceData(struct nodeInstanceData*) instance
 )
 {
-	if ((*context)->isPlaying)
-		pauseMovie(*context);
+	if((*instance)->player != NULL)
+	{
+		VuoRelease( (*instance)->player );
+		(*instance)->player = NULL;
+	}
 
-	VuoRelease((*context)->movie);
-
-	dispatch_release((*context)->movie_timerCanceled);
-	dispatch_release((*context)->audio_timerCanceled);
+	if((*instance)->url != NULL)
+		VuoRelease((*instance)->url);
 }

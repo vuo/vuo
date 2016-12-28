@@ -10,15 +10,15 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert Real to 4D Point",
+					 "title" : "Convert Real to 4D Point (X,0,0,0)",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoReal, {"default":0.0}) x,
-		VuoOutputData(VuoPoint4d) point4d
+		VuoOutputData(VuoPoint4d, {"name":"(X,0,0,0)"}) point4d
 )
 {
 	*point4d = VuoPoint4d_make(x, 0, 0, 0);

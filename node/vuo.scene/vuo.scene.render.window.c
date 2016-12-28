@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoDisplayRefresh.h"
 #include "VuoSceneRenderer.h"
 #include "VuoWindow.h"
 
@@ -23,7 +22,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "draw", "graphics", "display", "view", "object", "screen", "full screen", "fullscreen" ],
 					 "version" : "2.2.0",
 					 "dependencies" : [
-						 "VuoDisplayRefresh",
 						 "VuoSceneRenderer",
 						 "VuoWindow"
 					 ],
@@ -36,9 +34,9 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	VuoDisplayRefresh *displayRefresh;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer *sceneRenderer;
+	dispatch_queue_t sceneRendererQueue;
 };
 
 void vuo_scene_render_window_init(VuoGlContext glContext, float backingScaleFactor, void *ctx)
@@ -47,6 +45,28 @@ void vuo_scene_render_window_init(VuoGlContext glContext, float backingScaleFact
 
 	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
+}
+
+void vuo_scene_render_window_updateBacking(VuoGlContext glContext, void *ctx, float backingScaleFactor)
+{
+	struct nodeInstanceData *context = ctx;
+
+	bool valid = false;
+	VuoSceneObject so = VuoSceneRenderer_getRootSceneObject(context->sceneRenderer, &valid);
+	if (valid)
+		VuoSceneObject_retain(so);
+
+	dispatch_sync(context->sceneRendererQueue, ^{
+	VuoRelease(context->sceneRenderer);
+
+	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
+	VuoRetain(context->sceneRenderer);
+	if (valid)
+	{
+		VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, so);
+		VuoSceneObject_release(so);
+	}
+				  });
 }
 
 void vuo_scene_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
@@ -74,13 +94,12 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	VuoRegister(context, free);
 
 	context->sceneRenderer = NULL;
-
-	context->displayRefresh = VuoDisplayRefresh_make(context);
-	VuoRetain(context->displayRefresh);
+	context->sceneRendererQueue = dispatch_queue_create("org.vuo.scene.render.window.sceneRenderer", NULL);
 
 	context->window = VuoWindowOpenGl_make(
 				true,
 				vuo_scene_render_window_init,
+				vuo_scene_render_window_updateBacking,
 				vuo_scene_render_window_resize,
 				vuo_scene_render_window_draw,
 				(void *)context
@@ -97,8 +116,7 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(requestedFrame, VuoReal, {"eventThrottling":"drop"})
 )
 {
-	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow);
-	VuoDisplayRefresh_enableTriggers((*context)->displayRefresh, requestedFrame, NULL);
+	VuoWindowOpenGl_enableTriggers((*context)->window, showedWindow, requestedFrame);
 }
 
 void nodeInstanceEvent
@@ -115,11 +133,11 @@ void nodeInstanceEvent
 
 	VuoSceneObject rootSceneObject = VuoSceneObject_make(NULL, NULL, VuoTransform_makeIdentity(), objects);
 
-	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
-												 VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
-											 });
+	dispatch_sync((*context)->sceneRendererQueue, ^{
+	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 
 	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName, true);
+				  });
 
 	// Schedule a redraw.
 	VuoWindowOpenGl_redraw((*context)->window);
@@ -130,7 +148,6 @@ void nodeInstanceTriggerStop
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	VuoDisplayRefresh_disableTriggers((*context)->displayRefresh);
 	VuoWindowOpenGl_disableTriggers((*context)->window);
 }
 
@@ -139,9 +156,10 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	VuoWindowOpenGl_close((*context)->window);
 	VuoWindowOpenGl_executeWithWindowContext((*context)->window, ^(VuoGlContext glContext){
 												 VuoRelease((*context)->sceneRenderer);
 											 });
 	VuoRelease((*context)->window);
-	VuoRelease((*context)->displayRefresh);
+	dispatch_release((*context)->sceneRendererQueue);
 }

@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="315,255"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,135" _seconds="0.100000" _fired_eventThrottling="drop"];
+MakeList3 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="266,266" _2="\"!\""];
+ProcessList3 [type="vuo.list.process.VuoText.VuoText" version="1.0.0" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="255,90" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Texts>Texts\r" _Texts_type="VuoList_VuoText" _Texts="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ExclamationTexts>ExclamationTexts\l" _ExclamationTexts_type="VuoList_VuoText"];
+
+AppendTexts2:compositeText -> ProcessList3:processedItem;
+FirePeriodically:fired -> ProcessList3:fire;
+MakeList3:list -> AppendTexts2:texts;
+ProcessList3:processItem -> MakeList3:1;
+PublishedInputs:Texts -> ProcessList3:fire;
+ProcessList3:processedList -> PublishedOutputs:ExclamationTexts;
+}

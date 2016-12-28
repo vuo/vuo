@@ -10,30 +10,26 @@
 #ifndef VUOCOMPILERPUBLISHEDPORT_HH
 #define VUOCOMPILERPUBLISHEDPORT_HH
 
-#include "VuoCompilerData.hh"
 #include "VuoCompilerPort.hh"
-#include "VuoPublishedPort.hh"
+
+class VuoCompilerPublishedPortClass;
+class VuoPort;
+class VuoPublishedPort;
+class VuoType;
 
 /**
  * The compiler detail class for @c VuoPublishedPort.
  */
-class VuoCompilerPublishedPort : public VuoBaseDetail<VuoPublishedPort>
+class VuoCompilerPublishedPort : public VuoCompilerPort
 {
 public:
-	~VuoCompilerPublishedPort(void);
-	set<string> getConnectedPortIdentifiers(void);
-	virtual VuoPort * getVuoPseudoPort(void) = 0;  ///< Returns the associated port belonging to the composition's published ("vuo.in" or "vuo.out") pseudo-node.
-	json_object * getDetails(void);
-	void setDetail(string key, string value);
-	void unsetDetail(string key);
+	VuoCompilerPublishedPort(VuoPort *basePort);
+	string getIdentifier(void);
+	void setInitialValue(string initialValueAsString);
+	string getInitialValue(void);
+	json_object * getDetails(bool isInput);
 	string getGraphvizAttributes(void);
-
-protected:
-	VuoCompilerPublishedPort(string name, VuoType *type, bool isOutput, const set<VuoCompilerPort *> &connectedPorts=set<VuoCompilerPort *>());
-	struct json_object *details;  ///< Metadata specified in the serialized composition, such as the default value.
-
-private:
-	static set<VuoPort *> getBasePorts(set<VuoCompilerPort *>list);
+	Value * generateCreatePortContext(Module *module, BasicBlock *block);
 };
 
 #endif // VUOCOMPILERPUBLISHEDPORT_HH

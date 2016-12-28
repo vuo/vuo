@@ -88,7 +88,8 @@ VuoModuleMetadata({
 			NSError *error;
 			if (![[NSFileManager defaultManager] removeItemAtURL:url error:&error])
 			{
-				VLV(error);
+				char *errorString = VuoLog_copyCFDescription(error);
+				VUserLog("Couldn't replace movie file: %s", errorString);
 				return nil;
 			}
 		}
@@ -148,14 +149,14 @@ VuoModuleMetadata({
 
 		if (![self.assetWriter canAddInput:self.assetWriterInput])
 		{
-			VLog("Error adding AVAssetWriterInput: %s", [[self.assetWriter.error description] UTF8String]);
+			VUserLog("Error adding AVAssetWriterInput: %s", [[self.assetWriter.error description] UTF8String]);
 			return nil;
 		}
 		[self.assetWriter addInput:self.assetWriterInput];
 
 		if (![self.assetWriter startWriting])
 		{
-			VLog("Error starting writing: %s", [[self.assetWriter.error description] UTF8String]);
+			VUserLog("Error starting writing: %s", [[self.assetWriter.error description] UTF8String]);
 			return nil;
 		}
 		[self.assetWriter startSessionAtSourceTime:CMTimeMake(0, TIMEBASE)];
@@ -177,7 +178,7 @@ VuoModuleMetadata({
 /**
  * Appends sourceBytes to the movie.
  */
-- (void)appendBuffer:(unsigned char *)sourceBytes width:(unsigned long)width height:(unsigned long)height
+- (void)appendBuffer:(const unsigned char *)sourceBytes width:(unsigned long)width height:(unsigned long)height
 {
 	if (self.framesToSkip > 0)
 	{
@@ -207,31 +208,31 @@ VuoModuleMetadata({
 
 	if (!self.assetWriterInput.readyForMoreMediaData)
 	{
-		VLog("Warning: AVFoundation video encoder isn't keeping up. Dropping this frame.");
+		VUserLog("Warning: AVFoundation video encoder isn't keeping up. Dropping this frame.");
 		goto done;
 	}
 
 	CVReturn ret = CVPixelBufferPoolCreatePixelBuffer(NULL, [self.assetWriterInputPixelBufferAdaptor pixelBufferPool], &pb);
 	if (ret != kCVReturnSuccess)
 	{
-		VLog("Error: Couldn't get buffer from pool: %d", ret);
+		VUserLog("Error: Couldn't get buffer from pool: %d", ret);
 		goto done;
 	}
 
 	ret = CVPixelBufferLockBaseAddress(pb, 0);
 	if (ret != kCVReturnSuccess)
 	{
-		VLog("Error locking buffer: %d", ret);
+		VUserLog("Error locking buffer: %d", ret);
 		goto done;
 	}
 
 	unsigned char *bytes = (unsigned char *)CVPixelBufferGetBaseAddress(pb);
 	if (!bytes)
 	{
-		VLog("Error getting buffer base address.");
+		VUserLog("Error getting buffer base address.");
 		ret = CVPixelBufferUnlockBaseAddress(pb, 0);
 		if (ret != kCVReturnSuccess)
-			VLog("Error unlocking buffer: %d", ret);
+			VUserLog("Error unlocking buffer: %d", ret);
 		goto done;
 	}
 
@@ -244,7 +245,7 @@ VuoModuleMetadata({
 
 	ret = CVPixelBufferUnlockBaseAddress(pb, 0);
 	if (ret != kCVReturnSuccess)
-		VLog("Error unlocking buffer: %d", ret);
+		VUserLog("Error unlocking buffer: %d", ret);
 
 
 	if (CMTimeCompare(time, self.priorFrameTime) <= 0)
@@ -256,7 +257,7 @@ VuoModuleMetadata({
 
 
 	if (![self.assetWriterInputPixelBufferAdaptor appendPixelBuffer:pb withPresentationTime:time])
-		VLog("Error appending buffer: %s", [[self.assetWriter.error description] UTF8String]);
+		VUserLog("Error appending buffer: %s", [[self.assetWriter.error description] UTF8String]);
 
 	self.priorFrameTime = time;
 
@@ -288,6 +289,7 @@ done:
 	glReadBuffer(GL_FRONT);
 	glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 	GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+	glReadBuffer(GL_BACK);
 	glFlush();
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
@@ -313,7 +315,7 @@ done:
 		if (syncResult != GL_CONDITION_SATISFIED && syncResult != GL_ALREADY_SIGNALED)
 		{
 			char *s = VuoGl_stringForConstant(syncResult);
-			VLog("%s",s);
+			VUserLog("%s",s);
 			free(s);
 			VGL();
 			goto done;
@@ -372,7 +374,7 @@ done:
 		VuoImage resizedImage = VuoImageResize_resize(image, self.resizeShader, self.resizeImageRenderer, VuoSizingMode_Fit, outputWidth, outputHeight);
 		if (!resizedImage)
 		{
-			VLog("Error: Failed to resize image.");
+			VUserLog("Error: Failed to resize image.");
 			VuoRelease(image);
 			return;
 		}
@@ -395,12 +397,9 @@ done:
 
 	// Download from GPU to CPU, and append to movie.
 	{
-		unsigned char *sourceBytes = VuoImage_copyBuffer(image, GL_BGRA);
-		VuoRelease(image);
-
+		const unsigned char *sourceBytes = VuoImage_getBuffer(image, GL_BGRA);
 		[self appendBuffer:sourceBytes width:outputWidth height:outputHeight];
-
-		free(sourceBytes);
+		VuoRelease(image);
 	}
 
 
@@ -432,7 +431,7 @@ done:
 
 				if (width == 0 || height == 0)
 				{
-					VLog("Error: Invalid viewport size %dx%d. Skipping frame.", width, height);
+					VUserLog("Error: Invalid viewport size %dx%d. Skipping frame.", width, height);
 					return;
 				}
 
@@ -473,7 +472,7 @@ done:
 					  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 						  /// @todo Replace with -finishWritingWithCompletionHandler: when we drop Mac OS 10.8 support.
 						  if (![self.assetWriter finishWriting])
-							  VLog("Error: %s", [[self.assetWriter.error localizedDescription] UTF8String]);
+							  VUserLog("Error: %s", [[self.assetWriter.error localizedDescription] UTF8String]);
 						  dispatch_semaphore_signal(finishedWriting);
 					  });
 					  dispatch_semaphore_wait(finishedWriting, DISPATCH_TIME_FOREVER);
@@ -487,8 +486,8 @@ done:
 
 	if (VuoIsDebugEnabled())
 	{
-		VLog("Average render-blocking record time per frame: %g", self.totalSyncTime  / self.frameCount);
-		VLog("Average background      record time per frame: %g", self.totalAsyncTime / self.frameCount);
+		VUserLog("Average render-blocking record time per frame: %g", self.totalSyncTime  / self.frameCount);
+		VUserLog("Average background      record time per frame: %g", self.totalAsyncTime / self.frameCount);
 	}
 }
 

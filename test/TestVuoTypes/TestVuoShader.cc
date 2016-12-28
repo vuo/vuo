@@ -20,10 +20,6 @@ class TestVuoShader : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testNull()
 	{
@@ -83,6 +79,41 @@ private slots:
 			VuoRelease(s);
 		}
 
+		VuoGlContext_disuse(glContext);
+	}
+
+	void testGetUniformLocationPerformance()
+	{
+		VuoGlContext glContext = VuoGlContext_use();
+
+		VuoShader s = VuoShader_makeLitColorShader(VuoColor_makeWithRGBA(1,1,1,1), VuoColor_makeWithRGBA(1,1,1,1), 1);
+		VuoRetain(s);
+
+		VuoGlProgram program;
+		QVERIFY(VuoShader_activate(s, VuoMesh_IndividualTriangles, glContext, &program));
+
+		// A random selection of uniforms
+		vector<string> uniformNames;
+		uniformNames.push_back("specularPower");
+		uniformNames.push_back("diffuseColor");
+		uniformNames.push_back("specularColor");
+		uniformNames.push_back("cameraPosition");
+		uniformNames.push_back("useFisheyeProjection");
+		uniformNames.push_back("ambientBrightness");
+		uniformNames.push_back("pointLights[15].sharpness");
+		uniformNames.push_back("spotLightCount");
+		uniformNames.push_back("projectionMatrix");
+		uniformNames.push_back("spotLights[1].color");
+		int uniformNameCount = uniformNames.size();
+		int i = 0;
+
+		QBENCHMARK {
+			QVERIFY(VuoGlProgram_getUniformLocation(program, uniformNames[i++ % uniformNameCount].c_str()) != -1);
+		}
+
+		VuoShader_deactivate(s, VuoMesh_IndividualTriangles, glContext);
+		VuoShader_cleanupContext(glContext);
+		VuoRelease(s);
 		VuoGlContext_disuse(glContext);
 	}
 };

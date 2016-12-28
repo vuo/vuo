@@ -117,9 +117,14 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoRegister(instance, free);
 
 	instance->shader = VuoShader_make("Trim Object");
+
 	VuoShader_addSource(instance->shader, VuoMesh_Points,              vertexShaderSource, geometryShaderSource, NULL);
+
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualLines,     vertexShaderSource, geometryShaderSource, NULL);
+
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, vertexShaderSource, geometryShaderSource, NULL);
+	VuoShader_setMayChangeOutputPrimitiveCount(instance->shader, VuoMesh_IndividualTriangles, true);
+
 	VuoRetain(instance->shader);
 
 	instance->glContext = VuoGlContext_use();

@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Animates 3 soft ovals.  The `Wave` node's Phase port is used to place the blue oval slightly ahead of the white oval, and to place the blue slightly behind the white oval.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+*/
+
+digraph G
+{
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="345,90"];
+ConvertRealTo2DPoint2 [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="450,390"];
+ConvertRealTo2DPoint3 [type="vuo.type.real.point2d.x" version="1.0.0" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="450,540"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="394,26" fillcolor="green"];
+MakeList7 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="364,11" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="195,-135" _color="{\"r\":1.000000,\"g\":0.500008,\"b\":0.500008,\"a\":1.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000" _sharpness="0.000000"];
+MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="195,165" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000" _sharpness="0.000000"];
+MakeOvalLayer3 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="195,15" _color="{\"r\":0.501961,\"g\":0.501961,\"b\":1.000000,\"a\":1.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000" _sharpness="0.000000"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="435,0" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-180,45" fillcolor="green"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="-15,-105" fillcolor="violet" _wave="\"sine\"" _period="4.000000" _center="0.000000" _amplitude="0.600000" _phase="0.000000"];
+Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="-15,195" fillcolor="violet" _wave="\"sine\"" _period="4.000000" _center="0.000000" _amplitude="0.600000" _phase="0.050000"];
+Wave3 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="-15,45" fillcolor="violet" _wave="\"sine\"" _period="4.000000" _center="0.000000" _amplitude="0.600000" _phase="0.100000"];
+
+ConvertRealTo2DPoint2:point2d -> MakeOvalLayer2:center;
+ConvertRealTo2DPoint3:point2d -> MakeOvalLayer3:center;
+ConvertRealTo2DPoint:point2d -> MakeOvalLayer:center;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeList7:list -> RenderLayersToWindow:layers;
+MakeOvalLayer2:layer -> MakeList7:3;
+MakeOvalLayer3:layer -> MakeList7:2;
+MakeOvalLayer:layer -> MakeList7:1;
+RenderLayersToWindow:requestedFrame -> ShareValue2:value [style=invis];
+ShareValue2:sameValue -> Wave2:time;
+ShareValue2:sameValue -> Wave3:time;
+ShareValue2:sameValue -> Wave:time;
+Wave2:value -> ConvertRealTo2DPoint2:x;
+Wave3:value -> ConvertRealTo2DPoint3:x;
+Wave:value -> ConvertRealTo2DPoint:x;
+}

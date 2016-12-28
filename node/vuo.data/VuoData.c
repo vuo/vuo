@@ -49,6 +49,9 @@ VuoData VuoData_makeFromJson(json_object *js)
  */
 json_object *VuoData_getJson(const VuoData value)
 {
+	if (!value.data)
+		return NULL;
+
 	char *encoded = VuoBase64_encode(value.size, value.data);
 	json_object *js = json_object_new_string(encoded);
 	free(encoded);
@@ -63,6 +66,9 @@ bool VuoData_areEqual(const VuoData valueA, const VuoData valueB)
 	if (valueA.size != valueB.size)
 		return false;
 
+	if (!valueA.data || !valueB.data)
+		return (!valueA.data && !valueB.data);
+
 	return memcmp(valueA.data, valueB.data, valueA.size) == 0;
 }
 
@@ -71,6 +77,9 @@ bool VuoData_areEqual(const VuoData valueA, const VuoData valueB)
  */
 bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB)
 {
+	if (!valueA.data || !valueB.data)
+		return valueA.data && !valueB.data;
+
 	return memcmp(valueA.data, valueB.data, MIN(valueA.size, valueB.size)) < 0;
 }
 
@@ -79,7 +88,10 @@ bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB)
  */
 char *VuoData_getSummary(const VuoData value)
 {
-	return VuoText_format("%lld bytes of data", value.size);
+	if (value.data)
+		return VuoText_format("%lld bytes of data", value.size);
+	else
+		return strdup("no data");
 }
 
 /**
@@ -91,9 +103,16 @@ VuoData VuoData_make(VuoInteger size, unsigned char *data)
 {
 	VuoData value;
 	value.size = size;
-	value.data = (char *)malloc(size);
-	memcpy(value.data, data, size);
-	VuoRegister(value.data, free);
+
+	if (data)
+	{
+		value.data = (char *)malloc(size);
+		memcpy(value.data, data, size);
+		VuoRegister(value.data, free);
+	}
+	else
+		value.data = NULL;
+
 	return value;
 }
 

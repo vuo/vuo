@@ -23,10 +23,6 @@ class TestVuoPoint4d : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testStringConversion_data()
 	{
@@ -36,12 +32,12 @@ private slots:
 
 		{
 			VuoPoint4d p;
-			p.x = -0.999;
-			p.y = 0.42;
-			p.z = 0.22;
+			p.x = -0.5;
+			p.y = 0.5;
+			p.z = 1;
 			p.w = 127;
-			QTest::newRow("different values") << "{\"x\":-0.999000,\"y\":0.420000,\"z\":0.220000,\"w\":127.000000}" << p << true;
-			QTest::newRow("different values text") << QUOTE("-.999,.42, .22,127") << p << false;
+			QTest::newRow("different values") << "{\"x\":-0.5,\"y\":0.5,\"z\":1,\"w\":127}" << p << true;
+			QTest::newRow("different values text") << QUOTE("-.5,.5, 1,127") << p << false;
 		}
 	}
 	void testStringConversion()

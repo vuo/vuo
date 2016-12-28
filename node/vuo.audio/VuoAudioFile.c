@@ -9,6 +9,7 @@
 
 #include "VuoAudioFile.h"
 #include "VuoUrlFetch.h"
+#include "VuoOsStatus.h"
 
 #include <dispatch/dispatch.h>
 
@@ -29,6 +30,7 @@ VuoModuleMetadata({
 						 "VuoAudioSamples",
 						 "VuoInteger",
 						 "VuoLoopType",
+						 "VuoOsStatus",
 						 "VuoReal",
 						 "VuoText",
 						 "VuoUrlFetch",
@@ -39,25 +41,6 @@ VuoModuleMetadata({
 					 ]
 				 });
 #endif
-
-/**
- * Returns a string providing a (slightly) better explanation of @c error.
- */
-static char *stringWithOSStatus(OSStatus error)
-{
-	char *errorString = (char *)calloc(1, 7);
-
-	*(UInt32 *)(errorString + 1) = CFSwapInt32HostToBig(error);
-	if (isprint(errorString[1]) && isprint(errorString[2]) && isprint(errorString[3]) && isprint(errorString[4]))
-	{
-		errorString[0] = errorString[5] = '\'';
-		errorString[6] = '\0';
-	}
-	else
-		sprintf(errorString, "%d", (int)error);
-
-	return errorString;
-}
 
 /**
  * Context data for decoding an audio file.
@@ -109,8 +92,8 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 			if (err != noErr)
 			{
 				free(buffer);
-				char *errStr = stringWithOSStatus(err);
-				VLog("Error reading samples: %s", errStr);
+				char *errStr = VuoOsStatus_getText(err);
+				VUserLog("Error reading samples: %s", errStr);
 				free(errStr);
 				afi->playing = false;
 				if (afi->finishedPlayback)
@@ -154,6 +137,11 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 	dispatch_sync(afi->audioFileQueue, ^{
 					  if (afi->decodedChannels)
 						  afi->decodedChannels(channels);
+					  else
+					  {
+						  VuoRetain(channels);
+						  VuoRelease(channels);
+					  }
 				  });
 }
 
@@ -190,6 +178,9 @@ void VuoAudioFile_free(void *af)
  */
 VuoAudioFile VuoAudioFile_make(VuoText url)
 {
+	if (!url || url[0] == 0)
+		return NULL;
+
 	VuoAudioFileInternal afi = calloc(1, sizeof(struct VuoAudioFileInternal));
 	VuoRegister(afi, VuoAudioFile_free);
 
@@ -205,7 +196,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		CFURLRef url = CFURLCreateWithString(NULL, urlCFS, NULL);
 		if (!url)
 		{
-			VLog("Couldn't open '%s': Invalid URL.", normalizedURL);
+			VUserLog("Couldn't open '%s': Invalid URL.", normalizedURL);
 			VuoRelease(normalizedURL);
 			CFRelease(urlCFS);
 			goto fail;
@@ -219,8 +210,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		CFRelease(url);
 		if (err != noErr)
 		{
-			char *errStr = stringWithOSStatus(err);
-			VLog("Couldn't open '%s': %s", normalizedURL, errStr);
+			char *errStr = VuoOsStatus_getText(err);
+			VUserLog("Couldn't open '%s': %s", normalizedURL, errStr);
 			free(errStr);
 			VuoRelease(normalizedURL);
 			goto fail;
@@ -233,8 +224,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		OSStatus err = ExtAudioFileGetProperty(afi->audioFile, kExtAudioFileProperty_FileDataFormat, &size, &afi->inputFormat);
 		if (err != noErr)
 		{
-			char *errStr = stringWithOSStatus(err);
-			VLog("Error getting file format for '%s': %s", url, errStr);
+			char *errStr = VuoOsStatus_getText(err);
+			VUserLog("Error getting file format for '%s': %s", url, errStr);
 			free(errStr);
 			goto fail;
 		}
@@ -245,8 +236,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		OSStatus err = ExtAudioFileGetProperty(afi->audioFile, kExtAudioFileProperty_FileLengthFrames, &size, &afi->totalFrameCount);
 		if (err != noErr)
 		{
-			char *errStr = stringWithOSStatus(err);
-			VLog("Error getting frame count for '%s': %s", url, errStr);
+			char *errStr = VuoOsStatus_getText(err);
+			VUserLog("Error getting frame count for '%s': %s", url, errStr);
 			free(errStr);
 			goto fail;
 		}
@@ -265,8 +256,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		OSStatus err = ExtAudioFileSetProperty(afi->audioFile, kExtAudioFileProperty_ClientDataFormat, size, &afi->outputFormat);
 		if (err != noErr)
 		{
-			char *errStr = stringWithOSStatus(err);
-			VLog("Error setting output format for '%s': %s", url, errStr);
+			char *errStr = VuoOsStatus_getText(err);
+			VUserLog("Error setting output format for '%s': %s", url, errStr);
 			free(errStr);
 			goto fail;
 		}
@@ -279,8 +270,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 		OSStatus err = ExtAudioFileGetProperty(afi->audioFile, kExtAudioFileProperty_AudioConverter, &size, &ac);
 		if (err != noErr)
 		{
-			char *errStr = stringWithOSStatus(err);
-			VLog("Error getting audio converter info for '%s': %s", url, errStr);
+			char *errStr = VuoOsStatus_getText(err);
+			VUserLog("Error getting audio converter info for '%s': %s", url, errStr);
 			free(errStr);
 		}
 		else
@@ -293,8 +284,8 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 			{
 				if (err != kAudioFormatUnsupportedPropertyError)
 				{
-					char *errStr = stringWithOSStatus(err);
-					VLog("Error getting header info for '%s': %s", url, errStr);
+					char *errStr = VuoOsStatus_getText(err);
+					VUserLog("Error getting header info for '%s': %s", url, errStr);
 					free(errStr);
 				}
 			}
@@ -408,8 +399,8 @@ void VuoAudioFile_setTime(VuoAudioFile af, VuoReal time)
 					  OSStatus err = ExtAudioFileSeek(afi->audioFile, targetFrame + afi->headerFrames);
 					  if (err != noErr)
 					  {
-						  char *errStr = stringWithOSStatus(err);
-						  VLog("Error seeking to sample: %s", errStr);
+						  char *errStr = VuoOsStatus_getText(err);
+						  VUserLog("Error seeking to sample: %s", errStr);
 						  free(errStr);
 						  return;
 					  }

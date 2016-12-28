@@ -79,6 +79,8 @@ VuoImageBlend VuoImageBlend_make(void)
  * Averages multiple images together into a single image.
  *
  * The output image is the same size as the first image (later images are stretched if needed).
+ *
+ * The returned image has retain count +1.
  */
 VuoImage VuoImageBlend_blend(VuoImageBlend blend, VuoList_VuoImage images)
 {
@@ -88,7 +90,10 @@ VuoImage VuoImageBlend_blend(VuoImageBlend blend, VuoList_VuoImage images)
 
 	VuoImage blendedImage = VuoListGetValue_VuoImage(images, 1);
 	if (imageCount == 1)
-		return VuoImage_makeShallowCopy(blendedImage);
+	{
+		VuoRetain(blendedImage);
+		return blendedImage;
+	}
 
 	VuoImageColorDepth cd = VuoImage_getColorDepth(blendedImage);
 
@@ -113,7 +118,5 @@ VuoImage VuoImageBlend_blend(VuoImageBlend blend, VuoList_VuoImage images)
 		blendedImage = b;
 	}
 
-	VuoImage b = VuoImage_makeShallowCopy(blendedImage);
-	VuoRelease(blendedImage);
-	return b;
+	return blendedImage;
 }

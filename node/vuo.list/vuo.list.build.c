@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Build List",
 					 "keywords" : [ "iterate", "repeat", "multiple", "many", "foreach", "each", "loop", "while", "cycle" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ "DisplayRainbowOvals.vuo", "DisplayMovieFrames.vuo" ],
 					 }
@@ -33,7 +33,7 @@ struct nodeInstanceData *nodeInstanceInit(void)
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoInteger, {"default":10}) fire,
+		VuoInputData(VuoInteger, {"default":10, "suggestedMin":1}) fire,
 		VuoInputEvent({"data":"fire", "eventBlocking":"none"}) fireEvent,
 		VuoInputData(VuoGenericType1) builtItem,
 		VuoInputEvent({"data":"builtItem", "eventBlocking":"none"}) builtItemEvent,
@@ -42,41 +42,38 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	bool finishedBuildingList = false;
-
 	// Only allow creating a new list if we've received back _all_ the fired events,
 	// to prevent outputting partially-complete lists
 	// when `fire` receives frequent events but the feedback loop is slow.
 	if (fireEvent && !(*context)->list)
 	{
+		if (fire < 1)
+		{
+			builtList(VuoListCreate_VuoGenericType1());
+			return;
+		}
+
 		(*context)->list = VuoListCreate_VuoGenericType1();
 		VuoRetain((*context)->list);
 
-		(*context)->count = fire;
-
-		if (fire <= 0)
-			finishedBuildingList = true;
-		else
-			for (VuoInteger i = 1; i <= fire; ++i)
-				buildItem(i);
+		(*context)->count = 1;
+		buildItem((*context)->count);
 	}
 
-	if (builtItemEvent && (*context)->list)
+	if (builtItemEvent && (*context)->list && (*context)->count <= fire)
 	{
 		VuoListAppendValue_VuoGenericType1((*context)->list, builtItem);
 
-		VuoInteger items = VuoListGetCount_VuoGenericType1((*context)->list);
-		if (items == (*context)->count)
-			finishedBuildingList = true;
-	}
-
-	if (finishedBuildingList)
-	{
-		builtList((*context)->list);
-
-		// Stop collecting items.
-		VuoRelease((*context)->list);
-		(*context)->list = NULL;
+		++(*context)->count;
+		if ((*context)->count <= fire)
+			buildItem((*context)->count);
+		else
+		{
+			builtList((*context)->list);
+			VuoRelease((*context)->list);
+			(*context)->count = 0;
+			(*context)->list = NULL;
+		}
 	}
 }
 

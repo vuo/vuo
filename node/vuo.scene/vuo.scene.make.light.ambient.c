@@ -21,7 +21,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoColor,{"default":{"r":1.,"g":1.,"b":1.,"a":1.}}) color,
-		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) brightness,
+		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0., "suggestedMax":2., "suggestedStep":0.1}) brightness,
 		VuoOutputData(VuoSceneObject) object
 )
 {

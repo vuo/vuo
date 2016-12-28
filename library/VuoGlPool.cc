@@ -18,6 +18,7 @@
 #include <deque>
 #include <map>
 #include <locale>
+#include <sstream>
 using namespace std;
 
 #include <dispatch/dispatch.h>
@@ -27,6 +28,7 @@ using namespace std;
 
 #include <OpenGL/CGLIOSurface.h>
 #include <OpenGL/CGLMacro.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 
 static map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > VuoGlPool __attribute__((init_priority(101)));
@@ -72,7 +74,7 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
 //				glBindBuffer(bufferType, 0);
 			}
 			else
-				VLog("Unknown pool type %d.", type);
+				VUserLog("Unknown pool type %d.", type);
 
 			VuoGlContext_disuse(cgl_ctx);
 		}
@@ -102,7 +104,7 @@ void VuoGlPool_disuse(VuoGlPoolType type, unsigned long size, GLuint name)
 //			VuoGlPool[type][size].push_back(name);
 		}
 		else
-			VLog("Unknown pool type %d.", type);
+			VUserLog("Unknown pool type %d.", type);
 	}
 //	dispatch_semaphore_signal(VuoGlPool_semaphore);
 }
@@ -173,23 +175,13 @@ static dispatch_source_t VuoGlTexturePool_timer;	///< Periodically cleans up Vuo
 static double textureTimeout = 0.1;	///< Seconds a texture can remain in the pool unused, before it gets purged.
 
 /**
- * Returns the number of seconds (including fractional seconds) since midnight 1970.01.01 GMT.
- */
-static double VuoGlTexturePool_getTime(void)
-{
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	return t.tv_sec + t.tv_usec / 1000000.;
-}
-
-/**
  * Purges expired textures from the GL Texture Pool.
  */
 static void VuoGlTexturePool_cleanup(void *blah)
 {
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		double now = VuoGlTexturePool_getTime();
+		double now = VuoLogGetTime();
 //		VLog("pool:");
 		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool->begin(); internalformat != VuoGlTexturePool->end(); ++internalformat)
 		{
@@ -255,14 +247,108 @@ static void __attribute__((destructor)) VuoGlTexturePool_fini(void)
 
 /**
  * Returns the OpenGL texture data type corresponding with OpenGL texture `format`.
- * Assumes `format` refers to an 8-bits-per-channel texture.
  */
 GLuint VuoGlTexture_getType(GLuint format)
 {
 	if (format == GL_YCBCR_422_APPLE)
 		return GL_UNSIGNED_SHORT_8_8_APPLE;
+	else if (format == GL_RGB
+		|| format == GL_LUMINANCE
+		|| format == GL_LUMINANCE_ALPHA
+		|| format == GL_BGR_EXT)
+		return GL_UNSIGNED_BYTE;
+	else if (format == GL_RGBA
+		  || format == GL_RGBA8
+		  || format == GL_BGRA)
+		return GL_UNSIGNED_INT_8_8_8_8_REV;
+	else if (format == GL_DEPTH_COMPONENT)
+		// Don't use GL_UNSIGNED_SHORT or GL_UNSIGNED_INT; they cause glBlitFramebufferEXT to output garbage on some GPUs.
+		// https://b33p.net/kosada/node/11305
+		return GL_UNSIGNED_BYTE;
 
-	return GL_UNSIGNED_BYTE;
+	VUserLog("Unknown format %s", VuoGl_stringForConstant(format));
+	return 0;
+}
+
+/**
+ * Returns the number of color channels in the specified OpenGL texture format.
+ */
+unsigned char VuoGlTexture_getChannelCount(GLuint format)
+{
+	if (format == GL_LUMINANCE
+	 || format == GL_DEPTH_COMPONENT)
+		return 1;
+	else if (format == GL_YCBCR_422_APPLE
+		  || format == GL_LUMINANCE_ALPHA)
+		return 2;
+	else if (format == GL_RGB
+		  || format == GL_BGR_EXT)
+		return 3;
+	else if (format == GL_RGBA
+		  || format == GL_RGBA8
+		  || format == GL_BGRA)
+		return 4;
+
+	VUserLog("Unknown format %s", VuoGl_stringForConstant(format));
+	return 1;
+}
+
+/**
+ * Returns the number of bytes required to store each pixel of the specified OpenGL texture format.
+ */
+unsigned char VuoGlTexture_getBytesPerPixel(GLuint internalformat, GLuint format)
+{
+	unsigned char bytes = VuoGlTexture_getChannelCount(format);
+	if (internalformat == GL_RGB
+	 || internalformat == GL_RGBA
+	 || internalformat == GL_RGBA8
+	 || internalformat == GL_LUMINANCE8
+	 || internalformat == GL_LUMINANCE8_ALPHA8)
+		return bytes;
+	else if (internalformat == GL_RGB16F_ARB
+		  || internalformat == GL_RGBA16F_ARB
+		  || internalformat == GL_DEPTH_COMPONENT
+		  || internalformat == GL_LUMINANCE16F_ARB
+		  || internalformat == GL_LUMINANCE_ALPHA16F_ARB)
+		return bytes * 2;
+
+	VUserLog("Unknown internalformat %s", VuoGl_stringForConstant(internalformat));
+	return 0;
+}
+
+/**
+ * Returns the maximum number of bytes in Video RAM that a texture can occupy.
+ */
+unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+	static unsigned long maximumTextureBytes = 0;
+	static dispatch_once_t maximumTextureBytesQuery = 0;
+	dispatch_once(&maximumTextureBytesQuery, ^{
+					  GLint contextRendererID;
+					  CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &contextRendererID);
+
+					  CGLRendererInfoObj ri;
+					  GLint rendererCount = 0;
+					  CGLQueryRendererInfo(CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()), &ri, &rendererCount);
+					  for (int i = 0; i < rendererCount; ++i)
+					  {
+						  GLint rendererID;
+						  CGLDescribeRenderer(ri, i, kCGLRPRendererID, &rendererID);
+						  if (rendererID == contextRendererID)
+						  {
+							  GLint textureMegabytes = 0;
+							  if (CGLDescribeRenderer(ri, i, kCGLRPTextureMemoryMegabytes, &textureMegabytes) == kCGLNoError)
+							  {
+								  // In OS X, the GPU seems to often crash with individual textures that occupy more than about 85% of texture memory.
+								  maximumTextureBytes = textureMegabytes * 1024 * 1024 * .85;
+								  break;
+							  }
+						  }
+					  }
+					  CGLDestroyRendererInfo(ri);
+				  });
+	return maximumTextureBytes;
 }
 
 /**
@@ -279,11 +365,13 @@ GLuint VuoGlTexture_getType(GLuint format)
  *
  * See [glTexImage2D](http://www.opengl.org/sdk/docs/man/xhtml/glTexImage2D.xml) for information about @c internalformat and @c format.
  *
+ * Returns 0 if the texture would be too large to fit in Video RAM.
+ *
  * @threadAnyGL
  */
 GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format)
 {
-//	VLog("want (%s %dx%d)", VuoGl_stringForConstant(internalformat), width, height);
+//	VLog("want (%s %dx%d %s)", VuoGl_stringForConstant(internalformat), width, height, VuoGl_stringForConstant(format));
 
 	GLuint name = 0;
 	VuoGlTextureDimensionsType dimensions(width,height);
@@ -294,7 +382,7 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 		(*VuoGlTexturePool)[internalformat][dimensions].first.pop();
 //		if (name) VLog("using recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
 	}
-	(*VuoGlTexturePool)[internalformat][dimensions].second = VuoGlTexturePool_getTime();
+	(*VuoGlTexturePool)[internalformat][dimensions].second = VuoLogGetTime();
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
 
@@ -302,17 +390,31 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 
 	if (name == 0)
 	{
+		// Check texture size against available Texture Video RAM (to avoid GPU crashes / kernel panics).
+		unsigned long maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(glContext);
+		if (maximumTextureBytes > 0)
+		{
+			unsigned char bytesPerPixel = VuoGlTexture_getBytesPerPixel(internalformat, format);
+			unsigned long requiredBytes = width * height * bytesPerPixel;
+			if (requiredBytes > maximumTextureBytes)
+			{
+				/// @todo Better error handling per https://b33p.net/kosada/node/4724
+				VUserLog("Not enough graphics memory for %dx%d (%d bytes/pixel) texture.  Requires %lu bytes, have %lu bytes.", width, height, bytesPerPixel, requiredBytes, maximumTextureBytes);
+				return 0;
+			}
+		}
+
 		glGenTextures(1, &name);
 		glBindTexture(GL_TEXTURE_2D, name);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, VuoGlTexture_getType(format), NULL);
-//		VLog("allocated %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
+//		VLog("glTexImage2D(GL_TEXTURE_2D, 0, %s, %d, %d, 0, %s, %s, NULL); -> %d", VuoGl_stringForConstant(internalformat), width, height, VuoGl_stringForConstant(format), VuoGl_stringForConstant(VuoGlTexture_getType(format)), name);
 	}
 	else
 		glBindTexture(GL_TEXTURE_2D, name);
 
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -328,16 +430,16 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
  * The texture is returned to the pool, so other callers can use it
  * (which is more efficient than deleting and re-generating textures).
  *
- * @threadAnyGL
+ * @threadAny
  */
-static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLuint name)
+static void VuoGlTexurePool_disuse(GLenum internalformat, unsigned short width, unsigned short height, GLuint name)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-
 	if (internalformat == 0)
 	{
-		VLog("Error:  Can't recycle texture %d since we don't know its internalformat.  Deleting.", name);
+		VUserLog("Error:  Can't recycle texture %d since we don't know its internalformat.  Deleting.", name);
+		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 		glDeleteTextures(1, &name);
+		VuoGlContext_disuse(cgl_ctx);
 		return;
 	}
 
@@ -345,7 +447,7 @@ static void VuoGlTexurePool_disuse(VuoGlContext glContext, GLenum internalformat
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		(*VuoGlTexturePool)[internalformat][dimensions].first.push(name);
-		(*VuoGlTexturePool)[internalformat][dimensions].second = VuoGlTexturePool_getTime();
+		(*VuoGlTexturePool)[internalformat][dimensions].second = VuoLogGetTime();
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
@@ -366,10 +468,14 @@ typedef struct
 	void *freeCallbackContext;
 } VuoGlTexture;
 typedef map<GLuint, VuoGlTexture> VuoGlTextureReferenceCounts;	///< The number of times each glTextureName is retained..
-static VuoGlTextureReferenceCounts VuoGlTexture_referenceCounts __attribute__((init_priority(101)));  ///< The reference count for each OpenGL Texture Object.
+static VuoGlTextureReferenceCounts *VuoGlTexture_referenceCounts;  ///< The reference count for each OpenGL Texture Object.
 static dispatch_semaphore_t VuoGlTexture_referenceCountsSemaphore = NULL;  ///< Synchronizes access to @c VuoGlTexture_referenceCounts.
-static void __attribute__((constructor)) VuoGlTexture_init(void)
+/**
+ * Initializes the texture reference counting system.
+ */
+static void __attribute__((constructor(101))) VuoGlTexture_init(void)
 {
+	VuoGlTexture_referenceCounts = new VuoGlTextureReferenceCounts;
 	VuoGlTexture_referenceCountsSemaphore = dispatch_semaphore_create(1);
 }
 
@@ -386,9 +492,9 @@ void VuoGlTexture_retain(GLuint glTextureName, VuoImage_freeCallback freeCallbac
 
 	dispatch_semaphore_wait(VuoGlTexture_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
 
-	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
-	if (it == VuoGlTexture_referenceCounts.end())
-		VuoGlTexture_referenceCounts[glTextureName] = (VuoGlTexture){1, freeCallback, freeCallbackContext};
+	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts->find(glTextureName);
+	if (it == VuoGlTexture_referenceCounts->end())
+		(*VuoGlTexture_referenceCounts)[glTextureName] = (VuoGlTexture){1, freeCallback, freeCallbackContext};
 	else
 		++(*it).second.referenceCount;
 
@@ -408,12 +514,12 @@ void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned 
 
 	dispatch_semaphore_wait(VuoGlTexture_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
 
-	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
-	if (it == VuoGlTexture_referenceCounts.end())
-		VLog("Error: VuoGlTexture_release() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
+	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts->find(glTextureName);
+	if (it == VuoGlTexture_referenceCounts->end())
+		VUserLog("Error: VuoGlTexture_release() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
 	else
 	{
-		VuoGlTexture t = VuoGlTexture_referenceCounts[glTextureName];
+		VuoGlTexture t = (*VuoGlTexture_referenceCounts)[glTextureName];
 		if (--t.referenceCount == 0)
 		{
 			if (t.freeCallback)
@@ -425,14 +531,12 @@ void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned 
 			else
 			{
 				// Vuo-owned texture
-				VuoGlContext glContext = VuoGlContext_use();
-				VuoGlTexurePool_disuse(glContext, internalformat, width, height, glTextureName);
-				VuoGlContext_disuse(glContext);
+				VuoGlTexurePool_disuse(internalformat, width, height, glTextureName);
 			}
-			VuoGlTexture_referenceCounts.erase(it);
+			VuoGlTexture_referenceCounts->erase(it);
 		}
 		else
-			VuoGlTexture_referenceCounts[glTextureName] = t;
+			(*VuoGlTexture_referenceCounts)[glTextureName] = t;
 	}
 
 	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
@@ -455,16 +559,16 @@ void VuoGlTexture_disown(GLuint glTextureName)
 
 	dispatch_semaphore_wait(VuoGlTexture_referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
 
-	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts.find(glTextureName);
-	if (it == VuoGlTexture_referenceCounts.end())
-		VLog("Error: VuoGlTexture_disown() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
+	VuoGlTextureReferenceCounts::iterator it = VuoGlTexture_referenceCounts->find(glTextureName);
+	if (it == VuoGlTexture_referenceCounts->end())
+		VUserLog("Error: VuoGlTexture_disown() was called with OpenGL Texture Object %d, which was never retained.", glTextureName);
 	else
 	{
-		VuoGlTexture t = VuoGlTexture_referenceCounts[glTextureName];
+		VuoGlTexture t = (*VuoGlTexture_referenceCounts)[glTextureName];
 		if (t.referenceCount != 1)
-			VLog("Error: VuoGlTexture_disown() was called with OpenGL Texture Object %d, which has a reference count of %d (but it should be 1).", glTextureName, t.referenceCount);
+			VUserLog("Error: VuoGlTexture_disown() was called with OpenGL Texture Object %d, which has a reference count of %d (but it should be 1).", glTextureName, t.referenceCount);
 		else
-			VuoGlTexture_referenceCounts.erase(it);
+			VuoGlTexture_referenceCounts->erase(it);
 	}
 
 	dispatch_semaphore_signal(VuoGlTexture_referenceCountsSemaphore);
@@ -521,7 +625,7 @@ static void VuoIoSurfacePool_cleanup(void *blah)
 		}
 
 
-		double now = VuoGlTexturePool_getTime();
+		double now = VuoLogGetTime();
 		for (VuoIoSurfacePoolType::iterator poolQueue = VuoIoSurfacePool->begin(); poolQueue != VuoIoSurfacePool->end(); ++poolQueue)
 		{
 			for (deque<VuoIoSurfacePoolEntryType>::iterator poolIoSurfaceEntry = poolQueue->second.begin(); poolIoSurfaceEntry != poolQueue->second.end();)
@@ -599,6 +703,9 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 	if (!ioSurface)
 	{
 		CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+
+		/// @todo kIOSurfaceIsGlobal is deprecated on 10.11; replace int32 lookup with IOSurfaceCreateXPCObject or something.
+		/// http://lists.apple.com/archives/mac-opengl/2009/Sep/msg00110.html
 		CFDictionaryAddValue(properties, kIOSurfaceIsGlobal, kCFBooleanTrue);
 
 		long long pixelsWideLL = pixelsWide;
@@ -616,11 +723,10 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 		glGenTextures(1, outputTexture);
-		glEnable(GL_TEXTURE_RECTANGLE_ARB);
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, *outputTexture);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 //		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -633,7 +739,7 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)ioSurface, 0);
 		if (err != kCGLNoError)
 		{
-			VLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
+			VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
 			return NULL;
 		}
 
@@ -665,7 +771,7 @@ void VuoIoSurfacePool_disuse(VuoGlContext glContext, unsigned short pixelsWide, 
 	VuoIoSurfacePoolEntryType e;
 	e.ioSurface = ioSurface;
 	e.texture = texture;
-	e.lastUsedTime = VuoGlTexturePool_getTime();
+	e.lastUsedTime = VuoLogGetTime();
 
 	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
@@ -703,7 +809,7 @@ void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 	{
 		infoLog = (char *)malloc(infologLength);
 		glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
-		VLog("%s",infoLog);
+		VUserLog("%s",infoLog);
 		free(infoLog);
 	}
 }
@@ -719,6 +825,8 @@ __attribute__((constructor)) static void VuoGlShaderPool_init(void)
 	VuoGlShaderPool_semaphore = dispatch_semaphore_create(1);
 }
 
+#include "VuoGlslProjection.h"
+#include "VuoGlslRandom.h"
 #include "deform.h"
 #include "hsl.h"
 #include "lighting.h"
@@ -744,6 +852,9 @@ string VuoGlShader_replaceInclude(string source, string includeFileName, const u
 			+ source.substr(includeTokenLocation + includeToken.length());
 }
 
+static const std::locale VuoGlPool_locale;	///< For hashing strings.
+static const std::collate<char> &VuoGlPool_collate = std::use_facet<std::collate<char> >(VuoGlPool_locale);	///< For hashing strings.
+
 /**
  * Returns an OpenGL Shader Object representing the specified @c source.
  *
@@ -756,9 +867,7 @@ string VuoGlShader_replaceInclude(string source, string includeFileName, const u
  */
 GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 {
-	std::locale loc;
-	const std::collate<char> &coll = std::use_facet<std::collate<char> >(loc);
-	long hash = coll.hash(source, source+strlen(source));
+	long hash = VuoGlPool_collate.hash(source, source+strlen(source));
 
 	dispatch_semaphore_wait(VuoGlShaderPool_semaphore, DISPATCH_TIME_FOREVER);
 
@@ -771,32 +880,10 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 
 		string combinedSource = source;
 
-		if (strcmp((const char *)glGetString(GL_VENDOR), "ATI Technologies Inc.") == 0)
-		{
-			// On ATI Radeon HD 5770 (and possibly others), using snoise4D3D() causes
-			// GLSL compliation to crash inside ATIRadeonX3000GLDriver,
-			// so use the built-in noise function.
-			// Continue using snoise4D3D() on other systems since it (at least on some configurations)
-			// prevents falling back to the software renderer.
-			// https://b33p.net/kosada/node/8285
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslProjection", VuoGlslProjection_glsl, VuoGlslProjection_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslRandom",     VuoGlslRandom_glsl,     VuoGlslRandom_glsl_len);
 
-			// Ignore "include(noise4D)".
-			string includeToken = string("include(noise4D)");
-			string::size_type includeTokenLocation;
-			if ((includeTokenLocation = combinedSource.find(includeToken)) != std::string::npos)
-				combinedSource.replace(includeTokenLocation, includeToken.length(), "");
-
-			// Replace snoise4D3D() calls with noise3().
-			string::size_type snoise4D3DLocation = 0;
-			string snoise4D3DToken = string("snoise4D3D");
-			string noise3Token = string("noise3");
-			while ((snoise4D3DLocation = combinedSource.find(snoise4D3DToken, snoise4D3DLocation)) != std::string::npos)
-			{
-				 combinedSource.replace(snoise4D3DLocation, snoise4D3DToken.length(), noise3Token);
-				 snoise4D3DLocation += noise3Token.length();
-			}
-		}
-
+		/// @todo prefix the following with VuoGlsl_
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "deform",        deform_glsl,        deform_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "hsl",           hsl_glsl,           hsl_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "lighting",      lighting_glsl,      lighting_glsl_len);
@@ -820,6 +907,221 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 	dispatch_semaphore_signal(VuoGlShaderPool_semaphore);
 
 	return shader;
+}
+
+// Too bad we can't use std::tuple yet…
+typedef pair<GLuint, pair<GLuint, pair<GLuint, pair<VuoMesh_ElementAssemblyMethod, unsigned int> > > > VuoGlProgramDescriptorType;	///< An entry in the GL Program pool: vertexShaderName, geometryShaderName, fragmentShaderName, assemblyMethod, expectedOutputPrimitiveCount.
+typedef map<VuoGlProgramDescriptorType, VuoGlProgram> VuoGlProgramPoolType;	///< Type for VuoGlProgramPool.
+static VuoGlProgramPoolType VuoGlProgramPool;	///< All the GL Programs.
+static dispatch_semaphore_t VuoGlProgramPool_semaphore;	///< Serializes access to VuoGlProgramPool.
+static void __attribute__((constructor)) VuoGlProgramPool_init(void)
+{
+	VuoGlProgramPool_semaphore = dispatch_semaphore_create(1);
+}
+
+typedef std::map<long, GLuint> VuoGlUniformMap;	///< A quick way to look up a uniform location given a hash of its name.
+
+/**
+ * Links shaders together into a program (or finds an existing program if one already exists for the given shaders, element assembly method, and output primitive count),
+ * and returns the GL Program Object.
+ *
+ * `vertexShaderName` must be nonzero, but it's OK for `geometryShaderName` and/or `fragmentShaderName` to be 0 (same rules as @ref VuoShader_addSource).
+ *
+ * `description` is used just to print errors/warnings; it is not used for cache matching.
+ *
+ * Do not call `glDeleteShaders()` on the returned program;
+ * it's expected to persist throughout the lifetime of the process.
+ *
+ * Be sure to call @ref VuoGlProgram_lock() before you call `glUseProgram()`.
+ */
+VuoGlProgram VuoGlProgram_use(VuoGlContext glContext, const char *description, GLuint vertexShaderName, GLuint geometryShaderName, GLuint fragmentShaderName, VuoMesh_ElementAssemblyMethod assemblyMethod, unsigned int expectedOutputPrimitiveCount)
+{
+//	VLog("looking for %d %d %d %d %d", vertexShaderName, geometryShaderName, fragmentShaderName, assemblyMethod, expectedOutputPrimitiveCount);
+	VuoGlProgram program;
+	VuoGlProgramDescriptorType e(vertexShaderName, std::make_pair(geometryShaderName, std::make_pair(fragmentShaderName, std::make_pair(assemblyMethod, expectedOutputPrimitiveCount))));
+	dispatch_semaphore_wait(VuoGlProgramPool_semaphore, DISPATCH_TIME_FOREVER);
+	VuoGlProgramPoolType::iterator it = VuoGlProgramPool.find(e);
+	if (it != VuoGlProgramPool.end())
+		program = it->second;
+	else
+	{
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+
+		GLuint programName = glCreateProgram();
+		glAttachShader(programName, vertexShaderName);
+		if (geometryShaderName)
+			glAttachShader(programName, geometryShaderName);
+		if (fragmentShaderName)
+			glAttachShader(programName, fragmentShaderName);
+
+		// Make sure `position` is at location 0, since location 0 is required in order for glDraw*() to work.
+		glBindAttribLocation(programName, 0, "position");
+
+		if (geometryShaderName)
+		{
+			GLuint inputPrimitiveGlMode = GL_TRIANGLES;
+			if (assemblyMethod == VuoMesh_IndividualLines
+			 || assemblyMethod == VuoMesh_LineStrip)
+				inputPrimitiveGlMode = GL_LINES;
+			else if (assemblyMethod == VuoMesh_Points)
+				inputPrimitiveGlMode = GL_POINTS;
+			glProgramParameteriEXT(programName, GL_GEOMETRY_INPUT_TYPE_EXT, inputPrimitiveGlMode);
+
+			GLuint outputPrimitiveGlMode = GL_TRIANGLE_STRIP;
+			if (!fragmentShaderName)
+			{
+				// If there's no fragment shader, this shader is being used for transform feedback,
+				// so the output primitive mode needs to match the input primitive mode.
+				if (assemblyMethod == VuoMesh_IndividualLines
+				 || assemblyMethod == VuoMesh_LineStrip)
+					outputPrimitiveGlMode = GL_LINE_STRIP;
+				else if (assemblyMethod == VuoMesh_Points)
+					outputPrimitiveGlMode = GL_POINTS;
+			}
+			glProgramParameteriEXT(programName, GL_GEOMETRY_OUTPUT_TYPE_EXT, outputPrimitiveGlMode);
+
+			unsigned int expectedVertexCount = expectedOutputPrimitiveCount;
+			if (outputPrimitiveGlMode == GL_TRIANGLE_STRIP)
+				expectedVertexCount *= 3;
+			else if (outputPrimitiveGlMode == GL_LINE_STRIP)
+				expectedVertexCount *= 2;
+			glProgramParameteriEXT(programName, GL_GEOMETRY_VERTICES_OUT_EXT, expectedVertexCount);
+		}
+
+		// If there's no fragment shader, this shader is being used for transform feedback.
+		if (!fragmentShaderName)
+		{
+			// We need to use GL_INTERLEAVED_ATTRIBS, since GL_SEPARATE_ATTRIBS is limited to writing to 4 buffers.
+			const GLchar *varyings[] = { "outPosition", "outNormal", "outTangent", "outBitangent", "outTextureCoordinate" };
+			glTransformFeedbackVaryingsEXT(programName, 5, varyings, GL_INTERLEAVED_ATTRIBS_EXT);
+		}
+
+		glLinkProgram(programName);
+
+		{
+			int infologLength = 0;
+			int charsWritten  = 0;
+			char *infoLog;
+
+			glGetProgramiv(programName, GL_INFO_LOG_LENGTH, &infologLength);
+
+			if (infologLength > 0)
+			{
+				infoLog = (char *)malloc(infologLength);
+				glGetProgramInfoLog(programName, infologLength, &charsWritten, infoLog);
+				VUserLog("%s: %s", description, infoLog);
+				free(infoLog);
+			}
+		}
+
+		program.programName = programName;
+
+		GLint uniformCount;
+		glGetProgramiv(programName, GL_ACTIVE_UNIFORMS, &uniformCount);
+
+		GLint maxNameLength;
+		glGetProgramiv(programName, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
+		char *name = (char *)malloc(maxNameLength + 1);
+
+		VuoGlUniformMap *uniforms = new VuoGlUniformMap;
+		program.uniforms = (void *)uniforms;
+
+		for (GLuint i = 0; i < uniformCount; ++i)
+		{
+			GLint size;
+			glGetActiveUniform(programName, i, maxNameLength+1, NULL, &size, NULL, name);
+
+			// The uniform location is _not_ the same as the active uniform index!
+			size_t nameLen = strlen(name);
+			long hash = VuoGlPool_collate.hash(name, name+nameLen);
+			(*uniforms)[hash] = glGetUniformLocation(programName, name);
+
+			if (size > 1)
+			{
+				// For arrays, glGetActiveUniform() returns only the first array index.  Take care of the rest of the indices.
+				// E.g., `uniform float offset[3];` would return `offset[0]` with size 3, so we need to synthesize `offset[1]` and `offset[2]`.
+				if (name[nameLen-2] == '0' && name[nameLen-1] == ']')
+				{
+					name[nameLen-2] = 0;
+					for (int i = 1; i < size; ++i)
+					{
+						std::stringstream ss;
+						ss << name << i << "]";
+						string sss = ss.str();
+						long sHash = VuoGlPool_collate.hash(sss.data(), sss.data()+sss.length());
+						(*uniforms)[sHash] = glGetUniformLocation(programName, sss.c_str());
+					}
+				}
+			}
+		}
+
+		VuoGlProgramPool[e] = program;
+	}
+
+	dispatch_semaphore_signal(VuoGlProgramPool_semaphore);
+	return program;
+}
+
+/**
+ * Returns the location (suitable for use with `glUniform*()`) for a given uniform identifier, or -1 if the uniform isn't found.
+ */
+int VuoGlProgram_getUniformLocation(VuoGlProgram program, const char *uniformIdentifier)
+{
+	VuoGlUniformMap *uniforms = (VuoGlUniformMap *)program.uniforms;
+
+	long hash = VuoGlPool_collate.hash(uniformIdentifier, uniformIdentifier+strlen(uniformIdentifier));
+
+	VuoGlUniformMap::iterator i = uniforms->find(hash);
+	if (i != uniforms->end())
+		return i->second;
+
+	return -1;
+}
+
+typedef map<GLuint, dispatch_semaphore_t> VuoGlProgramLocksType;	///< Type for VuoGlProgramLocks.
+static VuoGlProgramLocksType VuoGlProgramLocks;	///< A semaphore for each GL program.
+static dispatch_semaphore_t VuoGlProgramLocks_semaphore;	///< Serializes access to VuoGlProgramLocks.
+static void __attribute__((constructor)) VuoGlProgramLocks_init(void)
+{
+	VuoGlProgramLocks_semaphore = dispatch_semaphore_create(1);
+}
+
+/**
+ * Waits for the process-wide lock for this GL program to become available, and claims it.
+ */
+void VuoGlProgram_lock(GLuint programName)
+{
+	// Fetch (or create) the semaphore (but don't wait yet).
+	dispatch_semaphore_t programSemaphore;
+	{
+		dispatch_semaphore_wait(VuoGlProgramLocks_semaphore, DISPATCH_TIME_FOREVER);
+		VuoGlProgramLocksType::iterator it = VuoGlProgramLocks.find(programName);
+		if (it != VuoGlProgramLocks.end())
+			programSemaphore = it->second;
+		else
+		{
+			programSemaphore = dispatch_semaphore_create(1);
+			VuoGlProgramLocks[programName] = programSemaphore;
+		}
+		dispatch_semaphore_signal(VuoGlProgramLocks_semaphore);
+	}
+
+	// Now that we've released VuoGlProgramLocks_semaphore, we can wait.
+	dispatch_semaphore_wait(programSemaphore, DISPATCH_TIME_FOREVER);
+}
+
+/**
+ * Releases the process-wide lock for this GL program.
+ */
+void VuoGlProgram_unlock(GLuint programName)
+{
+	dispatch_semaphore_wait(VuoGlProgramLocks_semaphore, DISPATCH_TIME_FOREVER);
+	VuoGlProgramLocksType::iterator it = VuoGlProgramLocks.find(programName);
+	if (it != VuoGlProgramLocks.end())
+		dispatch_semaphore_signal(it->second);
+	else
+		VUserLog("Error: I don't know about GL Program %d.", programName);
+	dispatch_semaphore_signal(VuoGlProgramLocks_semaphore);
 }
 
 /// Helper for @ref VuoGl_stringForConstant.
@@ -854,19 +1156,26 @@ char *VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_RGBA16F_ARB);
 	RETURN_STRING_IF_EQUAL(GL_RGBA32F_ARB);
 	RETURN_STRING_IF_EQUAL(GL_BGRA);
+	RETURN_STRING_IF_EQUAL(GL_BGR_EXT);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE8);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16I_EXT);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE8_ALPHA8);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE16_ALPHA16);
 	RETURN_STRING_IF_EQUAL(GL_LUMINANCE_ALPHA16F_ARB);
+	RETURN_STRING_IF_EQUAL(GL_LUMINANCE_ALPHA);
 	RETURN_STRING_IF_EQUAL(GL_DEPTH_COMPONENT);
+	RETURN_STRING_IF_EQUAL(GL_DEPTH_COMPONENT16);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_2D);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_RECTANGLE_ARB);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE_3_3_2);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_4_4_4_4);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_5_5_5_1);
+	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT_8_8_APPLE);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_8_8_8_8);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_INT_10_10_10_2);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE_2_3_3_REV);

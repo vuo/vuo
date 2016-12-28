@@ -11,7 +11,6 @@
 #define VUOCOMPILERNODEARGUMENTCLASS_H
 
 #include "VuoBaseDetail.hh"
-
 #include "VuoPortClass.hh"
 
 /**

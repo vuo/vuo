@@ -57,7 +57,7 @@ static size_t VuoUrl_curlCallback(void *contents, size_t size, size_t nmemb, voi
 	mem->memory = (char *)realloc(mem->memory, mem->size + realsize + 1);
 	if(mem->memory == NULL)
 	{
-		VLog("Error: realloc() returned NULL (out of memory?).");
+		VUserLog("Error: realloc() returned NULL (out of memory?).");
 		return 0;
 	}
 
@@ -71,11 +71,16 @@ static size_t VuoUrl_curlCallback(void *contents, size_t size, size_t nmemb, voi
 /**
  * Receives the data at the specified @c url.
  *
+ * The caller is responsible for `free()`ing the data.
+ *
  * @return true upon success, false upon failure.
  * @todo Better error handling per https://b33p.net/kosada/node/4724
  */
 bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 {
+	if (!url || url[0] == 0)
+		return false;
+
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};
 	CURL *curl;
 	CURLcode res;
@@ -83,7 +88,7 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 	curl = curl_easy_init();
 	if (!curl)
 	{
-		VLog("Error: cURL initialization failed.");
+		VUserLog("Error: cURL initialization failed.");
 		return false;
 	}
 
@@ -103,10 +108,11 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 	if(res != CURLE_OK)
 	{
 		if (res == CURLE_FILE_COULDNT_READ_FILE)
-			VLog("Error: Could not read path: \"%s\"", resolvedUrl);
+			VUserLog("Error: Could not read path: \"%s\"", resolvedUrl);
 		else
-			VLog("Error: cURL request failed: %s (%d)\n", curl_easy_strerror(res), res);
+			VUserLog("Error: cURL request failed: %s (%d)\n", curl_easy_strerror(res), res);
 		VuoRelease(resolvedUrl);
+		curl_easy_cleanup(curl);
 		return false;
 	}
 	VuoRelease(resolvedUrl);

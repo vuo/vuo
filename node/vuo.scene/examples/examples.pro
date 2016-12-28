@@ -21,6 +21,7 @@ EXAMPLE_SOURCES += \
 	MakeRuggedTerrain.vuo \
 	MoveBeadsOnString.vuo \
 	MoveSpinningSphere.vuo \
+#	MoveThroughTubeWithFisheye.vuo \
 	PaintSceneWithCheckerboard.vuo \
 	PinchRectangles.vuo \
 	PinchSphere.vuo \
@@ -28,7 +29,9 @@ EXAMPLE_SOURCES += \
 	RippleGrid.vuo \
 	RippleImageOfSphere.vuo \
 	SkewSphere.vuo \
+	ShowRandomPoints.vuo \
 	ShowSpheresWithLights.vuo \
+#	ShowTreesWithFisheye.vuo \
 	SpikeSphere.vuo \
 	SwitchCameras.vuo \
 	TrimSphere.vuo \

@@ -43,7 +43,14 @@ The math expressions may contain:
       - `min` — minimum of a list of numbers
       - `max` — maximum of a list of numbers
       - `abs` — absolute value
-      - `rint` — round to the nearest integer
+      - `round` or `rint` — round to the nearest integer
+      - `floor` / `ceil` — round to the nearest smaller/larger integer
+      - `trunc` — round to the nearest integer with a smaller magnitude
+      - `fract` — returns the fractional part
+      - `clamp(x,min,max)` — constrains x to be &gt;= min and &lt;= max
+      - `step(edge,x)` — returns 0 if x &lt; edge, or 1 if x &gt; edge
+      - `smoothstep(edge0,edge1,x)` — returns a smooth 0 to 1 value as x changes from edge0 to edge1
+      - `mix(x,y,t)` — linearly interpolate between x and y, at position t (0 to 1)
       - `sign` — -1 if negative, 1 if positive
       - `sqrt` — square root
       - `exp` — the mathematical constant *e* raised to a power
@@ -52,8 +59,18 @@ The math expressions may contain:
       - `log2` — logarithm to base 2
       - `deg2rad` — convert degrees to radians
       - `rad2deg` — convert radians to degrees
+      - `random(min,max)` — random number
+      - Gradient noise
+         - `perlin1d(x)`
+         - `perlin2d(x,y)`
+         - `perlin3d(x,y,z)`
+         - `perlin4d(x,y,z,w)`
+         - `simplex1d(x)`
+         - `simplex2d(x,y)`
+         - `simplex3d(x,y,z)`
+         - `simplex4d(x,y,z,w)`
       - Trigonometry — for numbers in degrees
          - `sin`, `cos`, `tan`
-         - `asin`, `acos`, `atan`
+         - `asin`, `acos`, `atan`, `atan2`
          - `sinh`, `cosh`, `tanh`
          - `asinh`, `acosh`, `atanh`

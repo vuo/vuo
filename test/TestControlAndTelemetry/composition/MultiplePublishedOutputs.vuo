@@ -9,18 +9,20 @@
 
 digraph G 
 {
-PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedIncrement1>publishedIncrement1\r|<publishedIncrement2>publishedIncrement2\r" _publishedIncrement1="10" _publishedIncrement2="100"];
-Count1 [type="vuo.math.count.VuoInteger" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _decrement="1"];
-Count2 [type="vuo.math.count.VuoInteger" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _decrement="1"];
-Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" _initialValue="0"];
-Delay1 [type="vuo.test.delay" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" _seconds="1"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedCount1>publishedCount1\l|<publishedCount2>publishedCount2\l|<publishedCount3>publishedCount3\l"];
+Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="268,96" _increment="10" _decrement="1" _setCount="0"];
+Count2 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="547,292" _increment="100" _decrement="1" _setCount="0"];
+Delay1 [type="vuo.test.delay" version="1.0.0" label="Delay|<refresh>refresh\l|<seconds>seconds\l|<event>event\r" pos="405,59" _seconds="1"];
+Hold1 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold1|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="547,125" _initialValue="0"];
+SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="-34,163"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<shouldDelay>shouldDelay\r" _shouldDelay_type="VuoBoolean" _shouldDelay="false"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedCount1>publishedCount1\l|<publishedCount2>publishedCount2\l|<publishedCount3>publishedCount3\l" _publishedCount1_type="VuoInteger" _publishedCount2_type="VuoInteger" _publishedCount3_type="VuoInteger"];
 
-PublishedInputs:publishedIncrement1 -> Count1:increment;
-PublishedInputs:publishedIncrement2 -> Count2:increment;
-Count1:count -> Hold1:newValue;
 Count1:count -> Delay1:refresh;
+Count1:count -> Hold1:newValue;
 Delay1:event -> Hold1:refresh;
+SelectEventOutput:falseOption -> Count2:increment;
+SelectEventOutput:trueOption -> Count1:increment;
+PublishedInputs:shouldDelay -> SelectEventOutput:which;
 Hold1:heldValue -> PublishedOutputs:publishedCount1;
 Count2:count -> PublishedOutputs:publishedCount2;
 Count2:count -> PublishedOutputs:publishedCount3;

@@ -9,13 +9,17 @@
 
 #include "node.h"
 
+#include <CoreFoundation/CoreFoundation.h>
+
 #include "VuoNumberFormat.h"
 
 VuoModuleMetadata({
 					  "title" : "Format Number",
 					  "keywords" : [ "currency", "dollar", "euro", "percentage", "round" ],
-					  "version" : "1.0.0",
-					  "dependencies" : [ ],
+					  "version" : "1.1.0",
+					  "dependencies" : [
+						  "CoreFoundation.framework"
+					  ],
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -25,7 +29,9 @@ void nodeEvent
 (
 	VuoInputData(VuoReal, {"default":"1.0"}) value,
 	VuoInputData(VuoNumberFormat, {"default":"decimal"}) format,
-	VuoInputData(VuoInteger, {"default":2, "suggestedMin": 0}) decimalPlaces,
+	VuoInputData(VuoInteger, {"default":0, "suggestedMin":0}) minimumIntegerDigits,
+	VuoInputData(VuoInteger, {"default":0, "suggestedMin":0}) minimumDecimalPlaces,
+	VuoInputData(VuoInteger, {"default":2, "suggestedMin":0, "name":"Maximum Decimal Places"}) decimalPlaces,
 	VuoInputData(VuoBoolean, {"default":true}) showThousandSeparator,
 	VuoOutputData(VuoText) text
 )
@@ -38,6 +44,18 @@ void nodeEvent
 
 	CFLocaleRef currentLocale = CFLocaleCopyCurrent();
 	CFNumberFormatterRef numberFormatter = CFNumberFormatterCreate(NULL, currentLocale, style);
+
+	{
+		CFNumberRef cfn = CFNumberCreate(NULL, kCFNumberIntType, &minimumIntegerDigits);
+		CFNumberFormatterSetProperty(numberFormatter, kCFNumberFormatterMinIntegerDigits, cfn);
+		CFRelease(cfn);
+	}
+
+	{
+		CFNumberRef cfn = CFNumberCreate(NULL, kCFNumberIntType, &minimumDecimalPlaces);
+		CFNumberFormatterSetProperty(numberFormatter, kCFNumberFormatterMinFractionDigits, cfn);
+		CFRelease(cfn);
+	}
 
 	{
 		CFNumberRef maxFractionDigits = CFNumberCreate(NULL, kCFNumberIntType, &decimalPlaces);

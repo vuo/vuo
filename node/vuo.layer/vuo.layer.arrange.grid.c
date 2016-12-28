@@ -49,8 +49,17 @@ void nodeEvent
 
 			if (scaleToFit)
 			{
-				VuoSceneObject_normalize(&layer.sceneObject);
-				layer.sceneObject.transform.scale = VuoPoint3d_multiply(layer.sceneObject.transform.scale, fmin(width/columns, height/rows));
+				VuoBox bounds = VuoSceneObject_bounds(layer.sceneObject);
+
+				VuoReal gridCellWidth = width / columns;
+				VuoReal gridCellHeight = height / rows;
+				VuoReal gridCellAspect = gridCellWidth / gridCellHeight;
+				VuoReal layerWidth = bounds.size.x;
+				VuoReal layerHeight = bounds.size.y;
+				VuoReal layerAspect = layerWidth / layerHeight;
+				VuoReal scaleFactor = (layerAspect > gridCellAspect ? gridCellWidth / layerWidth : gridCellHeight / layerHeight);
+
+				layer.sceneObject.transform.scale = VuoPoint3d_multiply(layer.sceneObject.transform.scale, scaleFactor);
 			}
 
 			layer.sceneObject.transform.translation = VuoPoint3d_add(layer.sceneObject.transform.translation, VuoPoint3d_make(xPosition,yPosition,0));

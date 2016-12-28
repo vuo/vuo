@@ -49,15 +49,14 @@ VuoText VuoBarcode_read(VuoImage image, VuoRectangle *outputPosition)
 
 	// Download the full-color image from the GPU, and mix it down (CCIR601) to a single luminance byte
 	// (can't use GL_LUMINANCE since it ignores the green and blue channels).
-	unsigned char *rgba = VuoImage_copyBuffer(image, GL_RGBA);
+	const unsigned char *bgra = VuoImage_getBuffer(image, GL_BGRA);
 	unsigned char *luma = (unsigned char *)malloc(image->pixelsWide*image->pixelsHigh);
 	for (int y = 0; y < image->pixelsHigh; ++y)
 		for (int x = 0; x < image->pixelsWide; ++x)
 			luma[(image->pixelsHigh-y-1)*image->pixelsWide + x] =
-					  0.299 * rgba[(y*image->pixelsWide + x)*4 + 0]
-					+ 0.587 * rgba[(y*image->pixelsWide + x)*4 + 1]
-					+ 0.114 * rgba[(y*image->pixelsWide + x)*4 + 2];
-	free(rgba);
+					  0.299 * bgra[(y*image->pixelsWide + x)*4 + 2]
+					+ 0.587 * bgra[(y*image->pixelsWide + x)*4 + 1]
+					+ 0.114 * bgra[(y*image->pixelsWide + x)*4 + 0];
 
 	try
 	{
@@ -98,13 +97,11 @@ VuoText VuoBarcode_read(VuoImage image, VuoRectangle *outputPosition)
 		VuoRegister(outputText, free);
 		return outputText;
 	}
-	catch (ReaderException e)
+	catch (Exception e)
 	{
-//		VLog("ReaderException: %s",e.what());
-	}
-	catch (IllegalArgumentException e)
-	{
-//		VLog("IllegalArgumentException: %s",e.what());
+		// Why does zxing throw an exception for the perfectly normal no-code-detected situation.
+		if (strcmp(e.what(), "No code detected"))
+			VDebugLog("Exception: %s", e.what());
 	}
 
 	free(luma);

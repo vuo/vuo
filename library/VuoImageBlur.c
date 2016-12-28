@@ -9,6 +9,7 @@
 
 #include "node.h"
 #include "VuoImageRenderer.h"
+#include "VuoImageBlur.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -22,32 +23,36 @@ VuoModuleMetadata({
 /// @}
 
 /**
- * Returns a blurred copy of @a image.  (Or, if radius is zero, returns @a image.)
- *
- * If @a expandBounds is true, the output image will be expanded to encompass the full bleed of the blur.
- * Otherwise, the output image will have the same dimensions as the soure image.
+ * State data for the image blurrer.
  */
-VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds)
+typedef struct
 {
-	if (!image)
-		return NULL;
+	VuoShader verticalPassShader;
+	VuoShader horizontalPassShader;
+	VuoGlContext context;
+	VuoImageRenderer imageRenderer;
+} VuoImageBlur_internal;
 
-	if (radius < 0.0001)
-		return image;
+/**
+ * Frees image blender state data.
+ */
+void VuoImageBlur_free(void *blur)
+{
+	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)blur;
+	VuoRelease(bi->verticalPassShader);
+	VuoRelease(bi->horizontalPassShader);
+	VuoRelease(bi->imageRenderer);
+	VuoGlContext_disuse(bi->context);
+}
 
-	VuoGlContext glContext = VuoGlContext_use();
-	VuoImageRenderer imageRenderer = VuoImageRenderer_make(glContext);
-	VuoRetain(imageRenderer);
+/**
+ * Creates state data for the image blurrer.
+ */
+VuoImageBlur VuoImageBlur_make(void)
+{
+	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)malloc(sizeof(VuoImageBlur_internal));
+	VuoRegister(bi, VuoImageBlur_free);
 
-	int inset = expandBounds ? ceil(radius) : 0;
-
-	// @@@ Currently it looks like the blur actually blurs more than the specified radius..?
-	// inset += 2;
-
-	int w = image->pixelsWide + inset*2;
-	int h = image->pixelsHigh + inset*2;
-
-	VuoImage img = image;
 
 	// Multiple pass Gaussian blur implementation adapted from:
 	// http://www.geeks3d.com/20100909/shader-library-gaussian-blur-post-processing-filter-in-glsl/
@@ -111,59 +116,89 @@ VuoImage VuoImage_blur(VuoImage image, VuoReal radius, VuoBoolean expandBounds)
 		}
 	);
 
-	VuoShader verticalPassShader = VuoShader_make("Gaussian Blur Shader (Vertical)");
-	VuoShader_addSource(verticalPassShader, VuoMesh_IndividualTriangles, NULL, NULL, verticalPassFragmentShader);
-	VuoRetain(verticalPassShader);
+	bi->verticalPassShader = VuoShader_make("Gaussian Blur Shader (Vertical)");
+	VuoShader_addSource(bi->verticalPassShader, VuoMesh_IndividualTriangles, NULL, NULL, verticalPassFragmentShader);
+	VuoRetain(bi->verticalPassShader);
 
-	VuoShader horizontalPassShader = VuoShader_make("Gaussian Blur Shader (Horizontal)");
-	VuoShader_addSource(horizontalPassShader, VuoMesh_IndividualTriangles, NULL, NULL, horizontalPassFragmentShader);
-	VuoRetain(horizontalPassShader);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader, "offset[0]", 0);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader, "offset[1]", 1.3846153846);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader, "offset[2]", 3.2307692308);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader, "weight[0]", 0.2270270270);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader, "weight[1]", 0.3162162162);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader, "weight[2]", 0.0702702703);
 
-	VuoShader_setUniform_VuoReal(verticalPassShader,   "inset",  inset);
-	VuoShader_setUniform_VuoReal(verticalPassShader,   "width",  w);
-	VuoShader_setUniform_VuoReal(verticalPassShader,   "height", h);
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "width",  w);
+	bi->horizontalPassShader = VuoShader_make("Gaussian Blur Shader (Horizontal)");
+	VuoShader_addSource(bi->horizontalPassShader, VuoMesh_IndividualTriangles, NULL, NULL, horizontalPassFragmentShader);
+	VuoRetain(bi->horizontalPassShader);
 
-	VuoShader_setUniform_VuoReal(verticalPassShader, "offset[0]", 0);
-	VuoShader_setUniform_VuoReal(verticalPassShader, "offset[1]", 1.3846153846);
-	VuoShader_setUniform_VuoReal(verticalPassShader, "offset[2]", 3.2307692308);
-	VuoShader_setUniform_VuoReal(verticalPassShader, "weight[0]", 0.2270270270);
-	VuoShader_setUniform_VuoReal(verticalPassShader, "weight[1]", 0.3162162162);
-	VuoShader_setUniform_VuoReal(verticalPassShader, "weight[2]", 0.0702702703);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "offset[0]", 0);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "offset[1]", 1.3846153846);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "offset[2]", 3.2307692308);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "weight[0]", 0.2270270270);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "weight[1]", 0.3162162162);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "weight[2]", 0.0702702703);
 
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "offset[0]", 0);
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "offset[1]", 1.3846153846);
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "offset[2]", 3.2307692308);
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "weight[0]", 0.2270270270);
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "weight[1]", 0.3162162162);
-	VuoShader_setUniform_VuoReal(horizontalPassShader, "weight[2]", 0.0702702703);
+	bi->context = VuoGlContext_use();
+
+	bi->imageRenderer = VuoImageRenderer_make(bi->context);
+	VuoRetain(bi->imageRenderer);
+
+	return (VuoImageBlur)bi;
+}
+
+/**
+ * Returns a blurred copy of @a image.  (Or, if radius is zero, returns @a image.)
+ *
+ * If @a expandBounds is true, the output image will be expanded to encompass the full bleed of the blur.
+ * Otherwise, the output image will have the same dimensions as the soure image.
+ */
+VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoReal radius, VuoBoolean expandBounds)
+{
+	if (!image)
+		return NULL;
+
+	if (radius < 0.0001)
+		return image;
+
+	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)blur;
+
+	int inset = expandBounds ? ceil(radius) : 0;
+
+	// @@@ Currently it looks like the blur actually blurs more than the specified radius..?
+	// inset += 2;
+
+	int w = image->pixelsWide + inset*2;
+	int h = image->pixelsHigh + inset*2;
+
+	VuoImage img = image;
+
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader,   "inset",  inset);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader,   "width",  w);
+	VuoShader_setUniform_VuoReal(bi->verticalPassShader,   "height", h);
+	VuoShader_setUniform_VuoReal(bi->horizontalPassShader, "width",  w);
 
 	for(int i = 0; i < radius; i++)
 	{
 		// apply vertical pass
-		VuoShader_setUniform_VuoImage(verticalPassShader, "texture", img);
+		VuoShader_setUniform_VuoImage(bi->verticalPassShader, "texture", img);
 
-		VuoImage verticalPassImage = VuoImageRenderer_draw(imageRenderer, verticalPassShader, w, h, VuoImage_getColorDepth(img));
+		VuoImage verticalPassImage = VuoImageRenderer_draw(bi->imageRenderer, bi->verticalPassShader, w, h, VuoImage_getColorDepth(img));
+		VuoImage_setWrapMode(verticalPassImage, VuoImageWrapMode_None);
 
 		// Only inset the first pass
 		if (inset)
 		{
 			inset=0;
-			VuoShader_setUniform_VuoReal(verticalPassShader, "inset", inset);
+			VuoShader_setUniform_VuoReal(bi->verticalPassShader, "inset", inset);
 		}
 
 		// apply horizontal pass
-		VuoShader_setUniform_VuoImage(horizontalPassShader, "texture", verticalPassImage);
+		VuoShader_setUniform_VuoImage(bi->horizontalPassShader, "texture", verticalPassImage);
 
 		// one pass complete, ready for another (or not)
-		img = VuoImageRenderer_draw(imageRenderer, horizontalPassShader, w, h, VuoImage_getColorDepth(img));
+		img = VuoImageRenderer_draw(bi->imageRenderer, bi->horizontalPassShader, w, h, VuoImage_getColorDepth(img));
+		VuoImage_setWrapMode(img, VuoImageWrapMode_None);
 	}
-
-	VuoRelease(verticalPassShader);
-	VuoRelease(horizontalPassShader);
-
-	VuoRelease(imageRenderer);
-	VuoGlContext_disuse(glContext);
 
 	return img;
 }

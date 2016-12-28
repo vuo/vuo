@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <mach-o/dyld.h>
 #include "VuoFileUtilities.hh"
+#include "VuoFileUtilitiesCocoa.hh"
 #include "VuoStringUtilities.hh"
 
 
@@ -26,6 +27,8 @@
  * @param[out] dir The directory in @c path, if any. Ends with a file separator (e.g. '/') if there was one in @c path.
  * @param[out] file The file name in @c path, if any.
  * @param[out] extension The file extension in @c path, if any. Does not include the '.' character.
+ *
+ * @see VuoUrl_getFileParts
  */
 void VuoFileUtilities::splitPath(string path, string &dir, string &file, string &extension)
 {
@@ -127,7 +130,7 @@ void VuoFileUtilities::makeDir(string path)
 }
 
 /**
- * Returns the path of Vuo.framework (without a trailing slash),
+ * Returns the absolute path of Vuo.framework (without a trailing slash),
  * or an empty string if Vuo.framework cannot be located.
  */
 string VuoFileUtilities::getVuoFrameworkPath(void)
@@ -208,7 +211,7 @@ string VuoFileUtilities::getSystemModulesPath()
  */
 string VuoFileUtilities::getCachePath(void)
 {
-	return string(getenv("HOME")) + "/Library/Caches/org.vuo/" + VUO_VERSION_STRING;
+	return string(getenv("HOME")) + "/Library/Caches/org.vuo/" + VUO_VERSION_AND_BUILD_STRING;
 }
 
 /**
@@ -272,7 +275,7 @@ string VuoFileUtilities::readFileToString(string path)
 	ifstream in(path.c_str(), ios::in | ios::binary);
 	if (! in)
 	{
-		VLog("Error: Couldn't read file at path '%s'.", path.c_str());
+		VUserLog("Error: Couldn't read file at path '%s'.", path.c_str());
 		return "";
 	}
 
@@ -289,11 +292,19 @@ string VuoFileUtilities::readFileToString(string path)
  * Writes the array of bytes to the file.
  *
  * If the file already exists, it gets overwritten.
+ *
+ * @throw std::runtime_error The file couldn't be written.
  */
 void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, string file)
 {
 	FILE *f = fopen(file.c_str(), "wb");
-	fwrite(data, sizeof(char), numBytes, f);
+	if (! f)
+		throw std::runtime_error("Couldn't open for writing file '" + file + "' : " + strerror(errno));
+
+	size_t numBytesWritten = fwrite(data, sizeof(char), numBytes, f);
+	if (numBytesWritten != numBytes)
+		throw std::runtime_error("Couldn't write all data to file '" + file + "'");
+
 	fclose(f);
 }
 
@@ -301,6 +312,8 @@ void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, str
  * Writes the string to the file.
  *
  * If the file already exists, it gets overwritten.
+ *
+ * @throw std::runtime_error The file couldn't be written.
  */
 void VuoFileUtilities::writeStringToFile(string s, string file)
 {
@@ -326,12 +339,76 @@ bool VuoFileUtilities::dirExists(string path)
 }
 
 /**
+ * Returns true if the file is readable.
+ */
+bool VuoFileUtilities::fileIsReadable(string path)
+{
+	return access(path.c_str(), R_OK) == 0;
+}
+
+/**
+ * Returns true if the file exists, can be opened, and has a size of more than 0 bytes.
+ */
+bool VuoFileUtilities::fileContainsReadableData(string path)
+{
+	FILE *f = fopen(path.c_str(), "rb");
+	if (!f)
+		return false;
+
+	fseek(f, 0, SEEK_END);
+	long pos = ftell(f);
+	fclose(f);
+	return pos > 0;
+}
+
+/**
  * Creates the file if it does not exist already; otherwise, has no effect on the file.
  */
 void VuoFileUtilities::createFile(string path)
 {
 	FILE *f = fopen(path.c_str(), "a");
 	fclose(f);
+}
+
+/**
+ * Deletes the file if it exists; otherwise, has no effect.
+ */
+void VuoFileUtilities::deleteFile(string path)
+{
+	remove(path.c_str());
+}
+
+/**
+ * Moves the file from @a fromPath to @a toPath.
+ *
+ * @throw std::runtime_error The file couldn't be moved.
+ */
+void VuoFileUtilities::moveFile(string fromPath, string toPath)
+{
+	int ret = rename(fromPath.c_str(), toPath.c_str());
+	if (ret != 0)
+		throw std::runtime_error("Couldn't move file '" + fromPath + "' to '" + toPath + "'");
+}
+
+/**
+ * Moves the specified file to the user's trash folder.
+ *
+ * @throw std::runtime_error The file couldn't be moved.
+ */
+void VuoFileUtilities::moveFileToTrash(string filePath)
+{
+	VuoFileUtilitiesCocoa_moveFileToTrash(filePath);
+}
+
+/**
+ * Copies the file from @a fromPath to @a toPath.
+ *
+ * @throw std::runtime_error The file couldn't be copied.
+ */
+void VuoFileUtilities::copyFile(string fromPath, string toPath)
+{
+	string contents = readFileToString(fromPath);
+	writeStringToFile(contents, toPath);
 }
 
 /**
@@ -363,7 +440,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 	if (! d)
 	{
 		if (access(dirPath.c_str(), F_OK) != -1)
-			VLog("Error: Couldn't open directory '%s' to find files in it.", dirPath.c_str());
+			VUserLog("Error: Couldn't open directory '%s' to find files in it.", dirPath.c_str());
 		return files;
 	}
 
@@ -471,7 +548,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInArchive(string arc
 		bool success = mz_zip_reader_file_stat(archive->zipArchive, i, &file_stat);
 		if (! success)
 		{
-			VLog("Error: Couldn't read file '%u' in zip archive '%s'.", i, archive->path.c_str());
+			VUserLog("Error: Couldn't read file '%u' in zip archive '%s'.", i, archive->path.c_str());
 			break;
 		}
 
@@ -641,6 +718,8 @@ string VuoFileUtilities::File::getRelativePath(void)
  *
  * @param[out] numBytes The size of the returned array.
  * @return The array of bytes. The caller is responsible for freeing it.
+ *
+ * @throw std::runtime_error The file couldn't be read.
  */
 char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 {
@@ -655,10 +734,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 
 		FILE *pFile = fopen ( fullPath.c_str() , "rb" );
 		if (pFile==NULL)
-		{
-			VLog("Error: Couldn't open file '%s' for reading.", fullPath.c_str());
-			return NULL;
-		}
+			throw std::runtime_error("Couldn't open file '" + fullPath + "' for reading");
 
 		// obtain file size:
 		fseek (pFile , 0 , SEEK_END);
@@ -673,9 +749,8 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 		fclose(pFile);
 		if (numBytes != lSize)
 		{
-			VLog("Error: Couldn't read file '%s'.", fullPath.c_str());
 			free(buffer);
-			return NULL;
+			throw std::runtime_error("Couldn't read file '" + fullPath + "'");
 		}
 	}
 	else
@@ -688,6 +763,8 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 
 /**
  * Returns the contents of the file as a string.
+ *
+ * @throw std::runtime_error The file couldn't be read.
  */
 string VuoFileUtilities::File::getContentsAsString(void)
 {

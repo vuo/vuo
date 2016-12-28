@@ -17,12 +17,14 @@
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerDriver.hh"
 #include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerInputDataClass.hh"
+#include "VuoCompilerInputEventPort.hh"
+#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
-#include "VuoCompilerPublishedInputNodeClass.hh"
-#include "VuoCompilerPublishedInputPort.hh"
-#include "VuoCompilerPublishedOutputPort.hh"
+#include "VuoCompilerTriggerPort.hh"
+#include "VuoCompilerType.hh"
 
 #include "VuoRendererNode.hh"
 #include "VuoRendererInputListDrawer.hh"
@@ -39,6 +41,8 @@
 #include "VuoPort.hh"
 
 #include "VuoHeap.h"
+
+#include "VuoUrl.h"
 
 #include <sys/stat.h>
 #include <regex.h>
@@ -71,11 +75,12 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 	this->renderActivity = false;
 	this->renderHiddenCables = false;
 	this->cachingEnabled = enableCaching;
+	this->publishedInputNode = createPublishedInputNode();
+	this->publishedOutputNode = createPublishedOutputNode();
 
 	parser = NULL;
 
 	signaler = new VuoRendererSignaler();
-
 
 	// Add any nodes, cables, published ports, and published cables that are already in the base composition.
 
@@ -83,25 +88,24 @@ VuoRendererComposition::VuoRendererComposition(VuoComposition *baseComposition, 
 	foreach (VuoNode *node, nodes)
 		addNodeInCompositionToCanvas(node);
 
-	set<VuoCable *> cables = getBase()->getCables();
-	foreach (VuoCable *cable, cables)
-		addCableInCompositionToCanvas(cable);
-
 	vector<VuoPublishedPort *> publishedInputPorts = getBase()->getPublishedInputPorts();
 	foreach (VuoPublishedPort *publishedPort, publishedInputPorts)
-		createRendererForPublishedPortInComposition(publishedPort);
+		createRendererForPublishedPortInComposition(publishedPort, true);
 
 	vector<VuoPublishedPort *> publishedOutputPorts = getBase()->getPublishedOutputPorts();
 	foreach (VuoPublishedPort *publishedPort, publishedOutputPorts)
-		createRendererForPublishedPortInComposition(publishedPort);
+		createRendererForPublishedPortInComposition(publishedPort, false);
 
-	set<VuoCable *> publishedInputCables = getBase()->getPublishedInputCables();
-	foreach (VuoCable *cable, publishedInputCables)
+	set<VuoCable *> cables = getBase()->getCables();
+	foreach (VuoCable *cable, cables)
+	{
 		addCableInCompositionToCanvas(cable);
 
-	set<VuoCable *> publishedOutputCables = getBase()->getPublishedOutputCables();
-	foreach (VuoCable *cable, publishedOutputCables)
-		addCableInCompositionToCanvas(cable);
+		if (cable->isPublishedInputCable())
+			cable->setFrom(publishedInputNode, cable->getFromPort());
+		if (cable->isPublishedOutputCable())
+			cable->setTo(publishedOutputNode, cable->getToPort());
+	}
 
 	collapseTypecastNodes();
 
@@ -223,28 +227,6 @@ void VuoRendererComposition::addCableInCompositionToCanvas(VuoCable *c)
 }
 
 /**
- * Adds a published input cable to the canvas and the underlying composition.
- *
- * If the cable doesn't have a renderer detail, one is created for it.
- */
-void VuoRendererComposition::addPublishedInputCable(VuoCable *c)
-{
-	getBase()->addPublishedInputCable(c);
-	addCableInCompositionToCanvas(c);
-}
-
-/**
- * Adds a published output cable to the canvas and the underlying composition.
- *
- * If the cable doesn't have a renderer detail, one is created for it.
- */
-void VuoRendererComposition::addPublishedOutputCable(VuoCable *c)
-{
-	getBase()->addPublishedOutputCable(c);
-	addCableInCompositionToCanvas(c);
-}
-
-/**
  * Removes a node from the canvas and the underlying composition.
  */
 void VuoRendererComposition::removeNode(VuoRendererNode *rn)
@@ -270,34 +252,6 @@ void VuoRendererComposition::removeCable(VuoRendererCable *rc)
 }
 
 /**
- * Removes a published input cable from the canvas and underlying composition.
- */
-void VuoRendererComposition::removePublishedInputCable(VuoRendererCable *rc)
-{
-	rc->setFrom(NULL, NULL);
-	rc->setTo(NULL, NULL);
-
-	rc->updateGeometry();
-	rc->removeFromScene();
-
-	getBase()->removePublishedInputCable(rc->getBase());
-}
-
-/**
- * Removes a published output cable from the canvas and underlying composition.
- */
-void VuoRendererComposition::removePublishedOutputCable(VuoRendererCable *rc)
-{
-	rc->setFrom(NULL, NULL);
-	rc->setTo(NULL, NULL);
-
-	rc->updateGeometry();
-	rc->removeFromScene();
-
-	getBase()->removePublishedOutputCable(rc->getBase());
-}
-
-/**
  * Creates and connects the appropriate input attachments to the provided @c node.
  */
 void VuoRendererComposition::createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler)
@@ -316,7 +270,7 @@ void VuoRendererComposition::createAndConnectDrawersToListInputPorts(VuoRenderer
 {
 	foreach (VuoPort *port, node->getBase()->getInputPorts())
 	{
-		VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>(port->getCompiler());
+		VuoCompilerInputEventPort *inputEventPort = (port->hasCompiler()? dynamic_cast<VuoCompilerInputEventPort *>(port->getCompiler()) : NULL);
 		if (inputEventPort && VuoCompilerType::isListType(inputEventPort->getDataType()))
 		{
 			VuoRendererCable *cable = NULL;
@@ -424,7 +378,7 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
 	VuoPort *valuesInputPort = node->getInputPortWithName("values");
 	if (!(expressionInputPort && valuesInputPort))
 	{
-		VLog("Error: Cannot create dictionary attachments for a node without 'expression' and 'values' input ports.");
+		VUserLog("Error: Cannot create dictionary attachments for a node without 'expression' and 'values' input ports.");
 		return;
 	}
 
@@ -436,14 +390,14 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
 	VuoCompilerPort *valuesInputPortCompiler = static_cast<VuoCompilerPort *>(valuesInputPort->getCompiler());
 	if (valuesInputPortCompiler->getDataVuoType()->getModuleKey() != dictionaryTypeName)
 	{
-		VLog("Error: Unexpected dictionary type required: %s", valuesInputPortCompiler->getDataVuoType()->getModuleKey().c_str());
+		VUserLog("Error: Unexpected dictionary type required: %s", valuesInputPortCompiler->getDataVuoType()->getModuleKey().c_str());
 		return;
 	}
 
 	VuoCompilerPort *expressionInputPortCompiler = static_cast<VuoCompilerPort *>(expressionInputPort->getCompiler());
 	if (expressionInputPortCompiler->getDataVuoType()->getModuleKey() != dictionaryKeySourceTypeName)
 	{
-		VLog("Error: Unexpected key source type encountered: %s", expressionInputPortCompiler->getDataVuoType()->getModuleKey().c_str());
+		VUserLog("Error: Unexpected key source type encountered: %s", expressionInputPortCompiler->getDataVuoType()->getModuleKey().c_str());
 		return;
 	}
 
@@ -538,45 +492,41 @@ vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsCo
  * Creates a renderer detail for the pre-existing @c publishedPort, on the assumption that
  * the published port provided already exists in the base composition and has an associated compiler detail.
  */
-VuoRendererPublishedPort * VuoRendererComposition::createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort)
+VuoRendererPublishedPort * VuoRendererComposition::createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort, bool isPublishedInput)
 {
 	if (! publishedPort->hasCompiler())
 		return NULL;
 
-	VuoRendererPublishedPort *rpp = new VuoRendererPublishedPort(publishedPort);
-	rpp->setVisible(false);
-	return rpp;
+	return new VuoRendererPublishedPort(publishedPort, !isPublishedInput);
 }
 
 /**
  * Adds an existing VuoPublishedPort as one of this composition's published ports.
  */
-void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler)
+void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, bool isPublishedInput, VuoCompiler *compiler)
 {
-	string name = publishedPort->getName();
-	if (isInput)
+	string name = publishedPort->getClass()->getName();
+	if (isPublishedInput)
 	{
 		VuoPublishedPort *existingPort = getBase()->getPublishedInputPortWithName(name);
 		if (! existingPort)
 		{
 			int index = getBase()->getPublishedInputPorts().size();
 			getBase()->addPublishedInputPort(publishedPort, index);
-			updatePublishedInputNode(compiler);
 		}
 		else if (publishedPort != existingPort)
-			VLog("Error: Unhandled published port name conflict.");
+			VUserLog("Error: Unhandled published port name conflict.");
 	}
-	else // if (! isInput)
+	else // if (! isPublishedInput)
 	{
 		VuoPublishedPort *existingPort = getBase()->getPublishedOutputPortWithName(name);
 		if (! existingPort)
 		{
 			int index = getBase()->getPublishedOutputPorts().size();
 			getBase()->addPublishedOutputPort(publishedPort, index);
-			updatePublishedOutputNode();
 		}
 		else if (publishedPort != existingPort)
-			VLog("Error: Unhandled published port name conflict.");
+			VUserLog("Error: Unhandled published port name conflict.");
 	}
 }
 
@@ -586,26 +536,22 @@ void VuoRendererComposition::addPublishedPort(VuoPublishedPort *publishedPort, b
  *
  * @return The index within the list of published input port output ports at which the port was located, or -1 if not located.
  */
-int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler)
+int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort, bool isPublishedInput, VuoCompiler *compiler)
 {
-	if (isInput)
+	if (isPublishedInput)
 	{
-		int index = getBase()->getIndexOfPublishedPort(publishedPort, isInput);
+		int index = getBase()->getIndexOfPublishedPort(publishedPort, isPublishedInput);
 		if (index != -1)
-		{
 			getBase()->removePublishedInputPort(index);
-			updatePublishedInputNode(compiler);
-		}
+
 		return index;
 	}
 	else
 	{
-		int index = getBase()->getIndexOfPublishedPort(publishedPort, isInput);
+		int index = getBase()->getIndexOfPublishedPort(publishedPort, isPublishedInput);
 		if (index != -1)
-		{
 			getBase()->removePublishedOutputPort(index);
-			updatePublishedOutputNode();
-		}
+
 		return index;
 	}
 }
@@ -616,94 +562,30 @@ int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort,
  */
 void VuoRendererComposition::setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name, VuoCompiler *compiler)
 {
-	bool isInput = publishedPort->getBase()->getInput();
-	publishedPort->setName(getUniquePublishedPortName(name, isInput));
-	isInput? updatePublishedInputNode(compiler) : updatePublishedOutputNode();
+	bool isPublishedInput = !publishedPort->getInput();
+	publishedPort->setName(getUniquePublishedPortName(name, isPublishedInput));
 }
 
 /**
- * Updates the composition's published input node so that it remains consistent with the composition's
- * list of published input ports.
- * @todo: Incorporate type, not just name.
+ * Creates and returns a dummy published input node for this composition.
+ * Its port classes are unpopulated not expected to be maintained
+ * as the composition's set of published ports changes.
  */
-void VuoRendererComposition::updatePublishedInputNode(VuoCompiler *compiler)
+VuoNode * VuoRendererComposition::createPublishedInputNode()
 {
-	// Derive the new published input node class from the composition's list of published input ports.
-	vector<VuoPublishedPort *> publishedInputPorts = getBase()->getPublishedInputPorts();
-	vector<string> publishedInputNodeOutputPortNames;
-	foreach (VuoPublishedPort * publishedPort, publishedInputPorts)
-		publishedInputNodeOutputPortNames.push_back(publishedPort->getName());
-
-	VuoNodeClass *dummyVuoInNodeClass = new VuoNodeClass(VuoNodeClass::publishedInputNodeClassName, vector<string>(), publishedInputNodeOutputPortNames);
-	VuoNodeClass *newVuoInNodeClass = compiler->createPublishedInputNodeClass(dummyVuoInNodeClass)->getBase();
-
-	// Create the new published input node.
-	VuoNode *newVuoInNode = newVuoInNodeClass->getCompiler()->newNode(VuoNodeClass::publishedInputNodeIdentifier, 0, 0);
-
-	// Update the composition to reflect the newly created published input node.
-	getBase()->getCompiler()->setPublishedInputNode(newVuoInNode);
-
-	// Update the composition's published ports to reflect the relevant pseudo-ports of the newly created published input node
-	// as their associated pseudo-ports.
-	foreach (VuoPublishedPort *publishedPort, publishedInputPorts)
-	{
-		VuoCompilerPublishedInputPort *compilerPublishedInputPort = ((VuoCompilerPublishedInputPort *)(publishedPort->getCompiler()));
-
-		vector<VuoCable *> publishedInputCables = compilerPublishedInputPort->getVuoPseudoPort()?
-					compilerPublishedInputPort->getVuoPseudoPort()->getConnectedCables(true) :
-					vector<VuoCable *>();
-
-		VuoPort *newFromPort = newVuoInNode->getOutputPortWithName(publishedPort->getName());
-		VuoCompilerTriggerPort *newFromTrigger = static_cast<VuoCompilerTriggerPort *>(newFromPort->getCompiler());
-		compilerPublishedInputPort->setTriggerPort(newFromTrigger);
-
-		// Update the port's connected published cables to reflect the newly created published input node as their 'From' node.
-		foreach (VuoCable *cable, publishedInputCables)
-			cable->setFrom(newVuoInNode, newFromPort);
-
-		createRendererForPublishedPortInComposition(publishedPort);
-	}
+	VuoNodeClass *dummyPublishedInputNodeClass = new VuoNodeClass(VuoNodeClass::publishedInputNodeClassName, vector<string>(), vector<string>());
+	return dummyPublishedInputNodeClass->newNode(VuoNodeClass::publishedInputNodeIdentifier);
 }
 
 /**
- * Updates the composition's published output node so that it remains consistent with the composition's
- * list of published output ports.
+ * Creates and returns a dummy published output node for this composition.
+ * Its port classes are unpopulated not expected to be maintained
+ * as the composition's set of published ports changes.
  */
-void VuoRendererComposition::updatePublishedOutputNode()
+VuoNode * VuoRendererComposition::createPublishedOutputNode()
 {
-	// Derive the new published output node class from the composition's list of published output ports.
-	vector<VuoPublishedPort *> publishedOutputPorts = getBase()->getPublishedOutputPorts();
-	vector<string> publishedOutputNodeInputPortNames;
-	foreach (VuoPublishedPort * publishedPort, publishedOutputPorts)
-		publishedOutputNodeInputPortNames.push_back(publishedPort->getName());
-
-	VuoNodeClass *newVuoOutNodeClass = new VuoNodeClass(VuoNodeClass::publishedOutputNodeClassName, publishedOutputNodeInputPortNames, vector<string>());
-
-	// Create the new published output node.
-	VuoNode *newVuoOutNode = newVuoOutNodeClass->newNode(VuoNodeClass::publishedOutputNodeIdentifier, 0, 0);
-
-	// Update the composition to reflect the newly created published output node.
-	getBase()->getCompiler()->setPublishedOutputNode(newVuoOutNode);
-
-	// Update the composition's published ports to reflect the relevant pseudo-ports of the newly created published output node
-	// as their associated pseudo-ports.
-	foreach (VuoPublishedPort *publishedPort, publishedOutputPorts)
-	{
-		VuoCompilerPublishedOutputPort *compilerPublishedOutputPort = ((VuoCompilerPublishedOutputPort *)(publishedPort->getCompiler()));
-
-		vector<VuoCable *> publishedOutputCables = compilerPublishedOutputPort->getVuoPseudoPort()?
-					compilerPublishedOutputPort->getVuoPseudoPort()->getConnectedCables(true) :
-					vector<VuoCable *>();
-
-		VuoPort *newToPort = newVuoOutNode->getInputPortWithName(publishedPort->getName());
-		compilerPublishedOutputPort->setVuoPseudoPort(newToPort);
-
-		// Update the port's connected published cables to reflect the newly created published output node as their 'To' node.
-		foreach (VuoCable *cable, publishedOutputCables)
-			cable->setTo(newVuoOutNode, newToPort);
-
-		createRendererForPublishedPortInComposition(publishedPort);
-	}
+	VuoNodeClass *dummyPublishedOutputNodeClass = new VuoNodeClass(VuoNodeClass::publishedOutputNodeClassName, vector<string>(), vector<string>());
+	return dummyPublishedOutputNodeClass->newNode(VuoNodeClass::publishedOutputNodeIdentifier);
 }
 
 /**
@@ -711,12 +593,12 @@ void VuoRendererComposition::updatePublishedOutputNode()
  * to be unique either among the published input port names or among the published
  * output port names for this composition, as specified by @c isInput.
  */
-string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool isInput)
+string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool isPublishedInput)
 {
 	string uniquePortName = baseName;
 	string uniquePortNamePrefix = uniquePortName;
 	int portNameInstanceNum = 1;
-	while (isPublishedPortNameTaken(uniquePortName, isInput) || uniquePortName.empty())
+	while (isPublishedPortNameTaken(uniquePortName, isPublishedInput) || uniquePortName.empty())
 	{
 		ostringstream oss;
 		oss << ++portNameInstanceNum;
@@ -731,15 +613,23 @@ string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool 
  * either by a published input port or by a published output port associated with this
  * composition, as specified by @c isInput.
  */
-bool VuoRendererComposition::isPublishedPortNameTaken(string name, bool isInput)
+bool VuoRendererComposition::isPublishedPortNameTaken(string name, bool isPublishedInput)
 {
 	if (name == "refresh")
 		return true;
 
-	VuoPublishedPort *publishedPort = (isInput ?
+	VuoPublishedPort *publishedPort = (isPublishedInput ?
 										   getBase()->getPublishedInputPortWithName(name) :
 										   getBase()->getPublishedOutputPortWithName(name));
 	return (publishedPort != NULL);
+}
+
+/**
+ * Returns true if the internal @c port is connected to a published port.
+ */
+bool VuoRendererComposition::isPortPublished(VuoRendererPort *port)
+{
+	return (!port->getPublishedPorts().empty());
 }
 
 /**
@@ -792,6 +682,12 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 	if (outCables.size() != 1)
 		return NULL;
 
+	VuoCable *outCable = *(outCables.begin());
+
+	// Don't try to collapse typecast nodes whose outgoing cable is event-only.
+	if (!(outCable->hasRenderer() && outCable->getRenderer()->effectivelyCarriesData()))
+		return NULL;
+
 	// Don't try to collapse typecast nodes without any incoming data+event cables (including published ones).
 	VuoCable *incomingDataCable = NULL;
 	for (vector<VuoCable *>::iterator i = inCables.begin(); !incomingDataCable && (i != inCables.end()); ++i)
@@ -803,14 +699,12 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 		return NULL;
 
 	// Don't try to collapse typecast nodes that have published output ports.
-	bool hasPublishedOutputPort = (! getBase()->getPublishedOutputPortsConnectedToNode(rn->getBase()).empty());
-	if (hasPublishedOutputPort)
+	if (outCable->isPublished())
 		return NULL;
 
 	VuoNode *fromNode = incomingDataCable->getFromNode();
 	VuoPort *fromPort = incomingDataCable->getFromPort();
 
-	VuoCable * outCable = *(outCables.begin());
 	VuoNode * toNode = outCable->getToNode();
 	VuoPort * toPort = outCable->getToPort();
 
@@ -830,8 +724,8 @@ VuoRendererTypecastPort * VuoRendererComposition::collapseTypecastNode(VuoRender
 	if (toPort->getConnectedCables(false).size() > 1)
 		return NULL;
 
-	// Don't try to collapse typecast nodes outputting to published ports.
-	if (!getBase()->getPublishedInputPortsConnectedToPort(toPort).empty())
+	// Don't try to collapse typecast nodes outputting to internal ports that have been published.
+	if (isPortPublished(toPort->getRenderer()))
 		return NULL;
 
 	// Hide the typecast node.
@@ -953,6 +847,22 @@ VuoRendererNode * VuoRendererComposition::uncollapseTypecastNode(VuoRendererType
 }
 
 /**
+ * Returns the published input node associated with this composition.
+ */
+VuoNode * VuoRendererComposition::getPublishedInputNode()
+{
+	return this->publishedInputNode;
+}
+
+/**
+ * Returns the published output node associated with this composition.
+ */
+VuoNode * VuoRendererComposition::getPublishedOutputNode()
+{
+	return this->publishedOutputNode;
+}
+
+/**
  * Removes connection eligibility highlighting from all ports in the scene.
  */
 void VuoRendererComposition::clearInternalPortEligibilityHighlighting()
@@ -1017,12 +927,6 @@ void VuoRendererComposition::updateGeometryForAllComponents()
 	}
 
 	foreach (VuoCable *cable, getBase()->getCables())
-		cable->getRenderer()->updateGeometry();
-
-	foreach (VuoCable *cable, getBase()->getPublishedInputCables())
-		cable->getRenderer()->updateGeometry();
-
-	foreach (VuoCable *cable, getBase()->getPublishedOutputCables())
 		cable->getRenderer()->updateGeometry();
 }
 
@@ -1102,12 +1006,6 @@ void VuoRendererComposition::setRenderActivity(bool render)
 
 		foreach (VuoCable *cable, getBase()->getCables())
 			cable->getRenderer()->resetTimeLastEventPropagated();
-
-		foreach (VuoCable *cable, getBase()->getPublishedInputCables())
-			cable->getRenderer()->resetTimeLastEventPropagated();
-
-		foreach (VuoCable *cable, getBase()->getPublishedOutputCables())
-			cable->getRenderer()->resetTimeLastEventPropagated();
 	}
 
 	updateGeometryForAllComponents();
@@ -1148,15 +1046,7 @@ void VuoRendererComposition::setComponentCaching(QGraphicsItem::CacheMode cacheM
 	}
 
 	// Cables
-	set<VuoCable *> internalCables = getBase()->getCables();
-	set<VuoCable *> publishedInputCables = getBase()->getPublishedInputCables();
-	set<VuoCable *> publishedOutputCables = getBase()->getPublishedOutputCables();
-
-	set<VuoCable *> allCables;
-	allCables.insert(internalCables.begin(), internalCables.end());
-	allCables.insert(publishedInputCables.begin(), publishedInputCables.end());
-	allCables.insert(publishedOutputCables.begin(), publishedOutputCables.end());
-
+	set<VuoCable *> allCables = getBase()->getCables();
 	foreach (VuoCable *cable, allCables)
 	{
 		VuoRendererCable *rc = cable->getRenderer();
@@ -1351,19 +1241,7 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 		// Modify port constants that contain relative paths so that the paths will be
 		// resolved correctly relative to the "Resources" directory within the app bundle.
 		VuoRendererComposition *rendererCompositionToExport = new VuoRendererComposition(VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compiledCompositionToExport->getGraphvizDeclaration(), compiler)->getBase());
-		foreach (VuoNode *node, rendererCompositionToExport->getBase()->getNodes())
-		{
-			foreach (VuoPort *port, node->getInputPorts())
-			{
-				if (hasRelativeReadURLConstantValue(port))
-				{
-					QString origRelativeResourcePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
-					string modifiedRelativeResourcePath = modifyResourcePathForAppBundle(origRelativeResourcePath.toUtf8().constData());
-					port->getRenderer()->setConstant("\"" + modifiedRelativeResourcePath + "\"");
-				}
-			}
-		}
-
+		rendererCompositionToExport->modifyAllRelativeResourcePathsForAppBundle();
 		delete rendererCompositionToExport;
 
 		string pathOfCompiledCompositionToExport = VuoFileUtilities::makeTmpFile(compiledCompositionToExport->getBase()->getName(), "bc");
@@ -1385,12 +1263,11 @@ bool VuoRendererComposition::bundleExecutable(VuoCompiler *compiler, string targ
 }
 
 /**
- * Copies resources referenced within the composition by relative URL into the
- * provided @c targetResourceDir.
- *
- * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ * Maps all relative resource paths referenced within this composition's port constants
+ * to the corresponding paths appropriate for use within the "Resources" directory of an
+ * exported app bundle.
  */
-void VuoRendererComposition::bundleResourceFiles(string targetResourceDir)
+void VuoRendererComposition::modifyAllRelativeResourcePathsForAppBundle()
 {
 	foreach (VuoNode *node, getBase()->getNodes())
 	{
@@ -1398,7 +1275,66 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir)
 		{
 			if (hasRelativeReadURLConstantValue(port))
 			{
-				QString origRelativeResourcePath = VuoText_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+				VuoUrl url = VuoUrl_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+				VuoRetain(url);
+				string modifiedRelativeResourcePath = modifyResourcePathForAppBundle(url);
+				port->getRenderer()->setConstant("\"" + modifiedRelativeResourcePath + "\"");
+				VuoRelease(url);
+			}
+		}
+	}
+}
+
+/**
+ * Maps all relative resource paths referenced within this composition's port constants
+ * to the corresponding paths appropriate for use after the composition has been
+ * relocated to `newDir`.
+ */
+map<VuoPort *, string> VuoRendererComposition::getResourcePathsRelativeToDir(QDir newDir)
+{
+	map<VuoPort *, string> modifiedPathForPort;
+	foreach (VuoNode *node, getBase()->getNodes())
+	{
+		foreach (VuoPort *port, node->getInputPorts())
+		{
+			if (hasRelativeReadURLConstantValue(port))
+			{
+				VuoUrl url = VuoUrl_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+				VuoRetain(url);
+				QString origRelativeResourcePath = url;
+				string modifiedRelativeResourcePath = modifyResourcePathForNewDir(origRelativeResourcePath.toUtf8().constData(), newDir);
+
+				if (modifiedRelativeResourcePath != origRelativeResourcePath.toUtf8().constData())
+					modifiedPathForPort[port] = "\"" + modifiedRelativeResourcePath + "\"";
+				VuoRelease(url);
+			}
+		}
+	}
+
+	return modifiedPathForPort;
+}
+
+/**
+ * Copies resources referenced within the composition by relative URL into the
+ * provided @c targetResourceDir.
+ *
+ * If `tmpFilesOnly` is `true`, bundles only files that are originally located
+ * within the `/tmp` directory or one of its subdirectories and ignores all others.
+ *
+ * Helper function for VuoRendererComposition::exportApp(const QString &savePath) and
+ * VuoEditorWindow::on_saveCompositionAs_triggered().
+ */
+void VuoRendererComposition::bundleResourceFiles(string targetResourceDir, bool tmpFilesOnly)
+{
+	foreach (VuoNode *node, getBase()->getNodes())
+	{
+		foreach (VuoPort *port, node->getInputPorts())
+		{
+			if (hasRelativeReadURLConstantValue(port))
+			{
+				VuoUrl url = VuoUrl_makeFromString(port->getRenderer()->getConstantAsString().c_str());
+				VuoRetain(url);
+				QString origRelativeResourcePath = url;
 				QString modifiedRelativeResourcePath = modifyResourcePathForAppBundle(origRelativeResourcePath.toUtf8().constData()).c_str();
 
 				string origRelativeDir, modifiedRelativeDir, file, ext;
@@ -1414,21 +1350,43 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir)
 				QDir compositionDir(QDir(getBase()->getDirectory().c_str()).canonicalPath());
 				QDir appDir(QDir(targetResourceDir.c_str()).canonicalPath());
 
-				if (!modifiedRelativeDir.empty())
-					appDir.mkpath(modifiedRelativeDir.c_str());
-
 				QString sourceFilePath = compositionDir.filePath(QDir(origRelativeDir.c_str()).filePath(resourceFileName.c_str()));
-				QString targetFilePath = appDir.filePath(QDir(modifiedRelativeDir.c_str()).filePath(resourceFileName.c_str()));
-				copyFileOrDirectory(sourceFilePath.toUtf8().constData(), targetFilePath.toUtf8().constData());
+				if (!tmpFilesOnly || isTmpFile(sourceFilePath.toUtf8().constData()))
+				{
+					if (!modifiedRelativeDir.empty())
+						appDir.mkpath(modifiedRelativeDir.c_str());
 
-				if (isSupportedSceneFile(sourceFilePath.toUtf8().constData()))
-					bundleAuxiliaryFilesForSceneFile(sourceFilePath, targetFilePath);
+					QString targetFilePath = appDir.filePath(QDir(modifiedRelativeDir.c_str()).filePath(resourceFileName.c_str()));
+					copyFileOrDirectory(sourceFilePath.toUtf8().constData(), targetFilePath.toUtf8().constData());
+
+					if (isSupportedSceneFile(sourceFilePath.toUtf8().constData()))
+						bundleAuxiliaryFilesForSceneFile(sourceFilePath, targetFilePath);
+				}
+				VuoRelease(url);
 			}
 
 		}
 	}
 
 	// @todo https://b33p.net/kosada/node/9205 : Published input port constants?
+}
+
+/**
+ * Returns a boolean indicating whether the provided `filePath` is within the
+ * `/tmp` directory (or a subdirectory thereof).
+ */
+bool VuoRendererComposition::isTmpFile(string filePath)
+{
+	const QString tmpDirPath = QDir(VuoFileUtilities::getTmpDir().c_str()).canonicalPath();
+	QDir parentDir(QDir(QFileInfo(filePath.c_str()).dir()).canonicalPath());
+
+	do
+	{
+		if (parentDir.canonicalPath() == tmpDirPath)
+			return true;
+	} while (parentDir.cdUp());
+
+	return false;
 }
 
 /**
@@ -1459,6 +1417,36 @@ string VuoRendererComposition::modifyResourcePathForAppBundle(string path)
 		return path;
 }
 
+/**
+ * Given a resource @c path, returns the corresponding mapped path
+ * to be used after the composition has been relocated to `newDir`.
+ */
+string VuoRendererComposition::modifyResourcePathForNewDir(string path, QDir newDir)
+{
+	if (VuoUrl_isRelativePath(path.c_str()))
+	{
+		QDir compositionDir(QDir(getBase()->getDirectory().c_str()).canonicalPath());
+		if (compositionDir.canonicalPath() == newDir.canonicalPath())
+			return path;
+
+		string origRelativeDir, file, ext;
+		VuoFileUtilities::splitPath(path, origRelativeDir, file, ext);
+		string resourceFileName = file;
+		if (!ext.empty())
+		{
+			resourceFileName += ".";
+			resourceFileName += ext;
+		}
+
+		QString sourceFilePath = compositionDir.filePath(QDir(origRelativeDir.c_str()).filePath(resourceFileName.c_str()));
+		string modifiedPath = newDir.relativeFilePath(sourceFilePath).toUtf8().constData();
+
+		return modifiedPath;
+	}
+
+	else
+		return path;
+}
 
 /**
  * Recursively copies the provided file or directory from @c sourcePath to @c targetPath.
@@ -1544,8 +1532,7 @@ bool VuoRendererComposition::hasRelativeReadURLConstantValue(VuoPort *port)
 	if (details && json_object_object_get_ex(details, "isSave", &isSaveValue) && json_object_get_boolean(isSaveValue))
 		return false;
 
-	string constant = port->getRenderer()->getConstantAsString();
-	VuoText url = VuoText_makeFromString(constant.c_str());
+	VuoUrl url = VuoUrl_makeFromString(port->getRenderer()->getConstantAsString().c_str());
 	VuoRetain(url);
 	bool isRelativePath = VuoUrl_isRelativePath(url);
 	VuoRelease(url);
@@ -1711,6 +1698,24 @@ bool VuoRendererComposition::isSupportedSceneFile(string path)
 }
 
 /**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported feed file.
+ */
+bool VuoRendererComposition::isSupportedFeedFile(string path)
+{
+	return VuoFileFormat_isSupportedFeedFile(path.c_str());
+}
+
+/**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported data file.
+ */
+bool VuoRendererComposition::isSupportedDataFile(string path)
+{
+	return VuoFileFormat_isSupportedDataFile(path.c_str());
+}
+
+/**
  * Specifies the opacity at which grid lines should be rendered on the canvas.
  */
 void VuoRendererComposition::setGridLineOpacity(int opacity)
@@ -1735,4 +1740,12 @@ QPoint VuoRendererComposition::quantizeToNearestGridLine(QPointF point, int grid
 {
 	return QPoint(floor((point.x()/(1.0*gridSpacing))+0.5)*gridSpacing,
 				  floor((point.y()/(1.0*gridSpacing))+0.5)*gridSpacing);
+}
+
+/**
+ * Returns the default composition description.
+ */
+string VuoRendererComposition::getDefaultCompositionDescription()
+{
+	return "This composition does...";
 }

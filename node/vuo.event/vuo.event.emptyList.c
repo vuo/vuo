@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Block Empty List",
-					 "keywords" : [ "keep", "filter", "filled", "items", "count" ],
+					 "keywords" : [ "keep", "filter", "pass", "filled", "items", "count", "non-empty", "nonempty" ],
 					 "version" : "1.0.0",
 					 "node": {
 						  "exampleCompositions" : [ ]

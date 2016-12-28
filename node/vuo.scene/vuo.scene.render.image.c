@@ -10,6 +10,7 @@
 #include "node.h"
 #include "VuoGlContext.h"
 #include "VuoSceneRenderer.h"
+#include "VuoMultisample.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -56,6 +57,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoInteger, {"default":1024, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) width,
 		VuoInputData(VuoInteger, {"default":768, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) height,
 		VuoInputData(VuoImageColorDepth, {"default":"8bpc"}) colorDepth,
+		VuoInputData(VuoMultisample, {"default":"off"}) multisampling,
 		VuoInputData(VuoText) cameraName,
 		VuoOutputData(VuoImage) image,
 		VuoOutputData(VuoImage) depthImage
@@ -66,7 +68,7 @@ void nodeInstanceEvent
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_setCameraName((*context)->sceneRenderer, cameraName, true);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
-	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, colorDepth, depthImage);
+	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, image, colorDepth, multisampling, depthImage);
 }
 
 void nodeInstanceFini

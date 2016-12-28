@@ -14,12 +14,12 @@ TestFirePeriodically1 [type="vuo.test.firePeriodically" label="FirePer1|<refresh
 TestFirePeriodically2 [type="vuo.test.firePeriodically" label="FirePer2|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<fired>fired\r" _nodeTitle="\"FirePer2\""];
 Conductor1 [type="vuo.test.conductor" label="Conductor1|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor1\""];
 Conductor2 [type="vuo.test.conductor" label="Conductor2|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor2\""];
-SemiConductor1 [type="vuo.test.semiconductor" label="SemiConductor1|<refresh>refresh\l|<triggerInfoConductive>triggerInfoConductive\l|<triggerInfoNonConductive>triggerInfoConductive\l|<nodeTitle>nodeTitle\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"SemiConductor1\""];
+Semiconductor1 [type="vuo.test.semiconductor" label="Semiconductor1|<refresh>refresh\l|<triggerInfoConductive>triggerInfoConductive\l|<triggerInfoNonConductive>triggerInfoConductive\l|<nodeTitle>nodeTitle\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Semiconductor1\""];
 
 PublishedInputs:start -> TestFirePeriodically1:refresh;
 PublishedInputs:start -> TestFirePeriodically2:refresh;
 TestFirePeriodically1:fired -> Conductor1:triggerInfoIn0;
-Conductor1:triggerInfoOut -> SemiConductor1:triggerInfoNonConductive;
-SemiConductor1:triggerInfoOut -> Conductor2:triggerInfoIn0;
-TestFirePeriodically2:fired -> SemiConductor1:triggerInfoConductive;
+Conductor1:triggerInfoOut -> Semiconductor1:triggerInfoNonConductive;
+Semiconductor1:triggerInfoOut -> Conductor2:triggerInfoIn0;
+TestFirePeriodically2:fired -> Semiconductor1:triggerInfoConductive;
 }

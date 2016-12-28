@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Composition used in Vuo Manual illustrations.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="480,225"];
+CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="150,90" fillcolor="violet" _increment="1" _decrement="1" _setCount="1" _minimum="-2" _maximum="1" _wrapMode="\"wrap\""];
+Exponentiate [type="vuo.math.exponentiate.VuoReal" version="1.0.0" label="Exponentiate|<refresh>refresh\l|<base>base\l|<exponent>exponent\l|<power>power\r" pos="420,90" _base="2"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-60,45" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-75,105" fillcolor="violet" _seconds="3" _fired_eventThrottling="drop"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="514,236" fillcolor="green"];
+MakeList6 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="275,-49" _1="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _2="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}"];
+MakeRadialGradientImage [type="vuo.image.make.gradient.radial" version="1.0.1" label="Make Radial Gradient Image|<refresh>refresh\l|<colors>colors\l|<center>center\l|<radius>radius\l|<noiseAmount>noiseAmount\l|<width>width\l|<height>height\l|<image>image\r" pos="345,-60" _center="{\"x\":0,\"y\":0}" _radius="1" _noiseAmount="0.2" _width="640" _height="640"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="555,210" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+TileImage [type="vuo.image.tile" version="1.0.0" label="Tile Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<reflectOddRows>reflectOddRows\l|<reflectOddColumns>reflectOddColumns\l|<tiledImage>tiledImage\r" pos="630,45" _center="{\"x\":1,\"y\":1}" _reflectOddRows="false" _reflectOddColumns="false"];
+
+ConvertIntegerToRealNumber:real -> Exponentiate:exponent;
+CountWithinRange:count -> ConvertIntegerToRealNumber:integer;
+Exponentiate:power -> TileImage:width;
+FireOnStart:started -> CountWithinRange:refresh;
+FireOnStart:started -> MakeRadialGradientImage:refresh;
+FirePeriodically:fired -> CountWithinRange:decrement;
+MakeList5:list -> RenderImageToWindow:setWindowProperties;
+MakeList6:list -> MakeRadialGradientImage:colors;
+MakeRadialGradientImage:image -> TileImage:image;
+TileImage:tiledImage -> RenderImageToWindow:image;
+}

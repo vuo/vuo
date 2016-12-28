@@ -23,6 +23,7 @@ NODE_SOURCES += \
 	vuo.midi.note.frequency.c \
 	vuo.midi.receive.c \
 	vuo.midi.send.c \
+	vuo.midi.smooth.controller.c \
 	vuo.midi.track.note.mono.c \
 	vuo.midi.track.note.poly.c
 
@@ -37,6 +38,9 @@ HEADERS += \
 	VuoMidiOutputDevice.h \
 	VuoMidiPitchBend.h \
 	VuoNotePriority.h
+
+NODE_INCLUDEPATH = \
+	../vuo.bcf2000 \
 
 NODE_LIBRARY_INCLUDEPATH = \
 	$${RTMIDI_ROOT}/include

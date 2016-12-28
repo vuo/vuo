@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Append Lists",
-					 "keywords" : [ "concatenate", "combine", "join", "together", "merge" ],
+					 "keywords" : [ "push", "append", "prepend", "insert", "combine", "concatenate", "join", "together", "merge" ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ "SpliceSquares.vuo" ]

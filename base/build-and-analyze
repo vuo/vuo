@@ -10,6 +10,7 @@ shift 2
 	--analyze \
 	-Xanalyzer -analyzer-eagerly-assume \
 	-Xanalyzer -analyzer-opt-analyze-nested-blocks \
+	-Xanalyzer -analyzer-checker=alpha,core,deadcode,llvm,osx,security,unix \
 	-Xanalyzer -analyzer-output=html \
 	"$@" \
 	-o $ROOT/analysis \

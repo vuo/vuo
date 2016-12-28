@@ -39,7 +39,7 @@ void nodeEvent
 	VuoSerialDevice realizedDevice;
 	if (!VuoSerialDevice_realize(device, &realizedDevice))
 	{
-		VLog("Couldn't realize device %s.", VuoSerialDevice_getSummary(device));
+		VUserLog("Couldn't realize device %s.", VuoSerialDevice_getSummary(device));
 		return;
 	}
 

@@ -34,6 +34,7 @@ NODE_SOURCES += \
 	vuo.scene.normalize.c \
 	vuo.scene.noise.c \
 	vuo.scene.pinch.c \
+	vuo.scene.populated.c \
 	vuo.scene.render.image.c \
 	vuo.scene.render.window.c \
 	vuo.scene.ripple.c \
@@ -47,23 +48,33 @@ NODE_SOURCES += \
 GENERIC_NODE_SOURCES += \
 	vuo.scene.make.grid.lines.c \
 	vuo.scene.make.grid.points.c \
+	vuo.scene.make.random.points.c \
 	vuo.scene.make.sphere.c \
+	vuo.scene.make.cone.c \
 	vuo.scene.make.square.c \
 	vuo.scene.make.cube.1.c \
 	vuo.scene.make.triangle.c \
+	vuo.scene.make.icosphere.c \
+	vuo.scene.make.torus.c \
 	vuo.scene.make.tube.c
 
 NODE_INCLUDEPATH += \
+	. \
+	../vuo.noise \
 	$${ASSIMP_ROOT}/include
 
 HEADERS += \
 	VuoDispersion.h \
+	VuoDisplacement.h \
+	VuoDistribution3d.h \
 	VuoGridType.h \
-	VuoDisplacement.h
+	VuoMultisample.h
 
 TYPE_SOURCES += \
 	VuoDispersion.c \
+	VuoDisplacement.c \
+	VuoDistribution3d.c \
 	VuoGridType.c \
-	VuoDisplacement.c
+	VuoMultisample.c
 
 include(../../module.pri)

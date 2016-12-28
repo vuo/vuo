@@ -135,6 +135,13 @@ LIST_TYPE VuoListCreate_ELEMENT_TYPE(void)
 	return reinterpret_cast<LIST_TYPE>(l);
 }
 
+LIST_TYPE VuoListCreateWithCount_ELEMENT_TYPE(const unsigned long count, const ELEMENT_TYPE value)
+{
+	std::vector<ELEMENT_TYPE> * l = new std::vector<ELEMENT_TYPE>(count);
+	VuoRegister(l, VuoListDestroy_ELEMENT_TYPE);
+	return reinterpret_cast<LIST_TYPE>(l);
+}
+
 LIST_TYPE VuoListCopy_ELEMENT_TYPE(const LIST_TYPE list)
 {
 	if (!list)
@@ -156,7 +163,9 @@ void VuoListDestroy_ELEMENT_TYPE(void *list)
 	if (!list)
 		return;
 
+#if IS_ELEMENT_REFERENCE_COUNTED != 0
 	VuoListRemoveAll_ELEMENT_TYPE(reinterpret_cast<LIST_TYPE>(list));
+#endif
 
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 	delete l;
@@ -176,6 +185,16 @@ ELEMENT_TYPE VuoListGetValue_ELEMENT_TYPE(const LIST_TYPE list, const unsigned l
 		return (*l)[l->size()-1];
 
 	return (*l)[index-1];
+}
+
+ELEMENT_TYPE *VuoListGetData_ELEMENT_TYPE(const LIST_TYPE list)
+{
+	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
+
+	if (!l || l->size() == 0)
+		return NULL;
+
+	return &((*l)[0]);
 }
 
 void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index)
@@ -271,6 +290,58 @@ void VuoListExchangeValues_ELEMENT_TYPE(LIST_TYPE list, const unsigned long inde
 	(*l)[clampedIndexA] = (*l)[clampedIndexB];
 	(*l)[clampedIndexB] = value;
 }
+
+#ifdef ELEMENT_TYPE_SUPPORTS_COMPARISON
+void VuoListSort_ELEMENT_TYPE(LIST_TYPE list)
+{
+	if (!list)
+		return;
+
+	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
+
+	size_t size = l->size();
+	if (size < 2)
+		return;
+
+	std::sort(l->begin(), l->end(), ELEMENT_TYPE_isLessThan);
+}
+
+bool LIST_TYPE_areEqual(const LIST_TYPE _a, const LIST_TYPE _b)
+{
+	if (!_a || !_b)
+		return _a == _b;
+
+	std::vector<ELEMENT_TYPE> *a = (std::vector<ELEMENT_TYPE> *)_a;
+	std::vector<ELEMENT_TYPE> *b = (std::vector<ELEMENT_TYPE> *)_b;
+	if (a->size() != b->size())
+		return false;
+
+	for (std::vector<ELEMENT_TYPE>::iterator ia = a->begin(), ib = b->begin(); ia != a->end(); ++ia, ++ib)
+		if (!ELEMENT_TYPE_areEqual(*ia, *ib))
+			return false;
+
+	return true;
+}
+
+bool LIST_TYPE_isLessThan(const LIST_TYPE _a, const LIST_TYPE _b)
+{
+	if (!_a || !_b)
+		return _a < _b;
+
+	std::vector<ELEMENT_TYPE> *a = (std::vector<ELEMENT_TYPE> *)_a;
+	std::vector<ELEMENT_TYPE> *b = (std::vector<ELEMENT_TYPE> *)_b;
+	if (a->size() < b->size()) return true;
+	if (a->size() > b->size()) return false;
+
+	for (std::vector<ELEMENT_TYPE>::iterator ia = a->begin(), ib = b->begin(); ia != a->end(); ++ia, ++ib)
+	{
+		if (ELEMENT_TYPE_isLessThan(*ia, *ib)) return true;
+		if (ELEMENT_TYPE_isLessThan(*ib, *ia)) return false;
+	}
+
+	return false;
+}
+#endif
 
 void VuoListShuffle_ELEMENT_TYPE(LIST_TYPE list, const double chaos)
 {

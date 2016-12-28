@@ -9,6 +9,7 @@
 
 #include "VuoRendererTypecastPort.hh"
 
+#include "VuoNodeClass.hh"
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
 #include "VuoRendererNode.hh"

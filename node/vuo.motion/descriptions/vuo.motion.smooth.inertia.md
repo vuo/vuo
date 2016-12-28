@@ -10,3 +10,4 @@ Starting when an event hits this node's `Set Target` input port, each time the `
    - `Set Position` — Sets the initial position, or, when it receives an event, immediately moves to a new position (without any smoothing).
    - `Set Target` — Starts smoothly moving toward a new position.
    - `Duration` — How long the smooth movement should take, based on the values coming into the `Time` port.
+   - `Reached Target` — Outputs an event when the transition has reached the target and stopped moving.

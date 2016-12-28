@@ -28,6 +28,8 @@ void nodeEvent
 
 	*mixedSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
 
+	(*mixedSamples).samplesPerSecond = VuoAudioSamples_sampleRate;
+
 	for(unsigned int n = 0; n < (*mixedSamples).sampleCount; n++)
 		(*mixedSamples).samples[n] = 0.;
 

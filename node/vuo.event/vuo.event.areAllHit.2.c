@@ -14,14 +14,14 @@ VuoModuleMetadata({
 					 "keywords" : [ "boolean" ],
 					 "version" : "1.0.0",
 					 "node": {
-						  "exampleCompositions" : [ "RotateInSequence.vuo" ]
+						  "exampleCompositions" : [ ]
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) input1,
-		VuoInputEvent({"eventBlocking":"door","hasPortAction":false}) input2,
+		VuoInputEvent({"eventBlocking":"none","hasPortAction":false}) input1,
+		VuoInputEvent({"eventBlocking":"none","hasPortAction":false}) input2,
 		VuoOutputData(VuoBoolean) allHit,
 		VuoOutputEvent({"data":"allHit"}) allHitEvent
 )

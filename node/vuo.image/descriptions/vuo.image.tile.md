@@ -8,7 +8,7 @@ This node can be used to:
 
 The output image has the same width and height in pixels as the input image. Each tile has the same aspect ratio as the input image.
 
-The number of rows and columns of tiles in the output image is 2 divided by `Width` (in other words, the image width divided by the tile width in Vuo coordinates). If the number of rows and columns is not an integer, then some tiles along the edges are only partially displayed.
+The number of rows and columns of tiles in the output image is 2 divided by `Width` (in other words, the image width divided by the tile width in Vuo Coordinates). If the number of rows and columns is not an integer, then some tiles along the edges are only partially displayed.
 
    - `Center` — The position in the output image at which the center 4 images' corners touch, in Vuo Coordinates.
    - `Width` — The size of each tiled image, in Vuo Coordinates.

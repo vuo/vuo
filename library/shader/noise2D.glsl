@@ -1,72 +1,66 @@
-//
-// Description : Array and textureless GLSL 2D simplex noise function.
-//      Author : Ian McEwan, Ashima Arts.
-//  Maintainer : ijm
-//     Lastmod : 20110822 (ijm)
-//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
-//               Distributed under the MIT License. See LICENSE file.
-//               https://github.com/ashima/webgl-noise
-//
+/**
+ * Classic Perlin noise.
+ * This version makes heavy use of a texture for table lookups.
+ *
+ * Author: Stefan Gustavson ITN-LiTH (stegu@itn.liu.se) 2004-12-05
+ *
+ * You may use, modify and redistribute this code free of charge,
+ * provided that the author's names and this notice appear intact.
+ */
 
-vec3 mod289(vec3 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
+uniform sampler2D perlinTexture;
+
+/**
+ * To create offsets of one texel and one half texel in the
+ * texture lookup, we need to know the texture image size.
+ */
+#define ONE 0.00390625
+#define ONEHALF 0.001953125
+// The numbers above are 1/256 and 0.5/256, change accordingly
+// if you change the code to use another texture size.
+
+/**
+ * The interpolation function. This could be a 1D texture lookup
+ * to get some more speed, but it's not the main part of the algorithm.
+ */
+vec2 fade(vec2 t) {
+	// return t*t*(3.0-2.0*t); // Old fade, yields discontinuous second derivative
+	return t*t*t*(t*(t*6.0-15.0)+10.0); // Improved fade, yields C2-continuous noise
 }
 
-vec2 mod289(vec2 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
+/**
+ * 2D classic Perlin noise. Fast, but less useful than 3D noise.
+ */
+float snoise2D1D(vec2 P)
+{
+	vec2 Pi = ONE*floor(P)+ONEHALF; // Integer part, scaled and offset for texture lookup
+	vec2 Pf = fract(P);             // Fractional part for interpolation
 
-vec3 permute(vec3 x) {
-  return mod289(((x*34.0)+1.0)*x);
-}
+	// Noise contribution from lower left corner
+	vec2 grad00 = texture2D(perlinTexture, Pi).rg * 4.0 - 1.0;
+	float n00 = dot(grad00, Pf);
 
-float snoise2D1D(vec2 v)
-  {
-  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-					  0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-					 -0.577350269189626,  // -1.0 + 2.0 * C.x
-					  0.024390243902439); // 1.0 / 41.0
-// First corner
-  vec2 i  = floor(v + dot(v, C.yy) );
-  vec2 x0 = v -   i + dot(i, C.xx);
+	// Noise contribution from lower right corner
+	vec2 grad10 = texture2D(perlinTexture, Pi + vec2(ONE, 0.0)).rg * 4.0 - 1.0;
+	float n10 = dot(grad10, Pf - vec2(1.0, 0.0));
 
-// Other corners
-  vec2 i1;
-  //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
-  //i1.y = 1.0 - i1.x;
-  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  // x0 = x0 - 0.0 + 0.0 * C.xx ;
-  // x1 = x0 - i1 + 1.0 * C.xx ;
-  // x2 = x0 - 1.0 + 2.0 * C.xx ;
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
+	// Noise contribution from upper left corner
+	vec2 grad01 = texture2D(perlinTexture, Pi + vec2(0.0, ONE)).rg * 4.0 - 1.0;
+	float n01 = dot(grad01, Pf - vec2(0.0, 1.0));
 
-// Permutations
-  i = mod289(i); // Avoid truncation effects in permutation
-  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-		+ i.x + vec3(0.0, i1.x, 1.0 ));
+	// Noise contribution from upper right corner
+	vec2 grad11 = texture2D(perlinTexture, Pi + vec2(ONE, ONE)).rg * 4.0 - 1.0;
+	float n11 = dot(grad11, Pf - vec2(1.0, 1.0));
 
-  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-  m = m*m ;
-  m = m*m ;
+	vec2 fade_xy = fade(Pf);
+	// Blend contributions along x
+	vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
 
-// Gradients: 41 points uniformly over a line, mapped onto a diamond.
-// The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+	// Blend contributions along y
+	float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
 
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-
-// Normalise gradients implicitly by scaling m
-// Approximation of: m *= inversesqrt( a0*a0 + h*h );
-  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-
-// Compute final noise value at P
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
+	// We're done, return the final noise value.
+	return n_xy;
 }
 
 vec2 snoise2D2D(vec2 v)

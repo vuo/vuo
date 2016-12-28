@@ -8,24 +8,37 @@
  */
 
 #include "node.h"
-#include "VuoImageRenderer.h"
+#include "VuoImageBlur.h"
 
 VuoModuleMetadata({
 					  "title" : "Blur Image",
 					  "keywords" : [ "gaussian", "distort", "obscure", "smudge", "filter", "censor", "smooth", "soften", "unfocus", "defocus", "detail" ],
 					  "version" : "1.2.1",
+					  "dependencies" : [
+						  "VuoImageBlur"
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ "BlurMovie.vuo" ]
 					  }
 				 });
 
-void nodeEvent
+VuoImageBlur *nodeInstanceInit(void)
+{
+	return VuoImageBlur_make();
+}
+
+void nodeInstanceEvent
 (
+		VuoInstanceData(VuoImageBlur *) blur,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":4, "suggestedMin":0, "suggestedMax":20}) radius,
 		VuoInputData(VuoBoolean, {"default":false}) expandBounds,
 		VuoOutputData(VuoImage) blurredImage
 )
 {
-	*blurredImage = VuoImage_blur(image, radius, expandBounds);
+	*blurredImage = VuoImageBlur_blur(*blur, image, radius, expandBounds);
+}
+
+void nodeInstanceFini(VuoInstanceData(VuoImageBlur *) blur)
+{
 }

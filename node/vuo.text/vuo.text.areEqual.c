@@ -15,6 +15,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "strcmp", "string" ],
 					 "version" : "1.0.1",
 					 "node": {
+						 "isDeprecated": true
 					 }
 				 });
 

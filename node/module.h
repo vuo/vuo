@@ -98,7 +98,7 @@
  * @see DevelopingTypes
  * @see DevelopingLibraryModules
  */
-#define VuoModuleMetadata(...) const char *moduleDetails = #__VA_ARGS__
+#define VuoModuleMetadata(...) extern const char *moduleDetails; const char *moduleDetails = #__VA_ARGS__
 
 /**
  * @}
@@ -148,23 +148,38 @@ static inline bool VuoIsTrial(void)
 	return **trialRestrictionsEnabled;
 }
 
+/**
+ * Returns true if nodes/libraries should enable Pro features.
+ */
+static inline bool VuoIsPro(void)
+{
+	bool *proEnabled = (bool *) dlsym(RTLD_SELF, "VuoProEnabled");
+	if (!proEnabled)
+		proEnabled = (bool *) dlsym(RTLD_DEFAULT, "VuoProEnabled");
+	if (!proEnabled)
+	{
+//		VLog("Warning: Couldn't find symbol VuoProEnabled.");
+		return true;
+	}
+	return *proEnabled;
+}
 
-
-
-#ifndef __OBJC__
+typedef void (*VuoCompositionFiniCallback)(void);	///< Callback prototype.
 
 /**
- * Returns the smaller of @c a and @c b.
+ * Registers a callback to be invoked when the composition is shutting down,
+ * after all nodes have been fini'd.
+ *
+ * `VuoCompositionFiniCallback`s are not called during livecoding reloads.
  */
-#define	MIN(a,b) (((a)<(b))?(a):(b))
-
-/**
- * Returns the larger of @c a and @c b.
- */
-#define	MAX(a,b) (((a)>(b))?(a):(b))
-
-#endif
-
-
+static inline void VuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini)
+{
+	typedef void (*vuoAddCompositionFiniCallbackType)(VuoCompositionFiniCallback);
+	vuoAddCompositionFiniCallbackType vuoAddCompositionFiniCallback = (vuoAddCompositionFiniCallbackType) dlsym(RTLD_SELF, "vuoAddCompositionFiniCallback");
+	if (!vuoAddCompositionFiniCallback)
+		vuoAddCompositionFiniCallback = (vuoAddCompositionFiniCallbackType) dlsym(RTLD_DEFAULT, "vuoAddCompositionFiniCallback");
+	if (vuoAddCompositionFiniCallback)
+		vuoAddCompositionFiniCallback(fini);
+}
 
 #endif

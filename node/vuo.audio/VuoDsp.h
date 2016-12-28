@@ -15,16 +15,26 @@ extern "C"
 #include "VuoAudioSamples.h"
 #include "VuoAudioBinAverageType.h"
 #include "VuoList_VuoReal.h"
-	
+
 /**
  * An object for writing audio and images to a video file.
  */
 typedef void * VuoDsp;
 
 /**
+ * An enum defining different windowing modes.
+ */
+typedef enum {					// actual samples per-bin
+	VuoWindowing_None,
+	VuoWindowing_Hamming,
+	VuoWindowing_Hann,
+	VuoWindowing_Blackman,
+} VuoWindowing;
+
+/**
  *	Create a new VuoDsp object with frame size (the max number of audio samples to process per-bin).
  */
-VuoDsp VuoDsp_make(unsigned int frameSize, unsigned int windowing);
+VuoDsp VuoDsp_make(unsigned int frameSize, VuoWindowing windowing);
 
 /**
  * Return a VuoReal* array with size of spectrumSize of the analyzed audio samples.
