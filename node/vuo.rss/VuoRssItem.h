@@ -20,6 +20,7 @@
 
 #include "VuoText.h"
 #include "VuoImage.h"
+#include "VuoUrl.h"
 
 /**
  * An item from an RSS feed.
@@ -29,8 +30,9 @@ typedef struct
 	VuoText title;
 	VuoText author;
 	VuoText description;
-	VuoText url;
-//	VuoText date;
+	VuoUrl url;
+	double /*VuoTime*/ dateTime;
+	VuoUrl imageUrl;
 	VuoImage image;
 } VuoRssItem;
 

@@ -11,12 +11,13 @@
 #define VUOCOMPOSITION_HH
 
 #include "VuoBase.hh"
-#include "VuoCable.hh"
-#include "VuoNode.hh"
-#include "VuoPublishedPort.hh"
 
 class VuoCompilerComposition;
 class VuoRendererComposition;
+class VuoCable;
+class VuoNode;
+class VuoPort;
+class VuoPublishedPort;
 
 /**
  * A collection of nodes and the cables connecting them.
@@ -47,14 +48,6 @@ public:
 	void removeCable(VuoCable *cable);
 	set<VuoCable *> getCables(void);
 
-	void addPublishedInputCable(VuoCable *cable);
-	void removePublishedInputCable(VuoCable *cable);
-	set<VuoCable *> getPublishedInputCables(void);
-
-	void addPublishedOutputCable(VuoCable *cable);
-	void removePublishedOutputCable(VuoCable *cable);
-	set<VuoCable *> getPublishedOutputCables(void);
-
 	void addPublishedInputPort(VuoPublishedPort *port, int index);
 	void addPublishedOutputPort(VuoPublishedPort *port, int index);
 	void removePublishedInputPort(int index);
@@ -63,10 +56,6 @@ public:
 	vector<VuoPublishedPort *> getPublishedOutputPorts(void);
 	VuoPublishedPort * getPublishedInputPortWithName(string name);
 	VuoPublishedPort * getPublishedOutputPortWithName(string name);
-	set<VuoPublishedPort *> getPublishedInputPortsConnectedToPort(VuoPort *port);
-	set<VuoPublishedPort *> getPublishedOutputPortsConnectedToPort(VuoPort *port);
-	set<pair<VuoPublishedPort *, VuoPort *> > getPublishedInputPortsConnectedToNode(VuoNode *node);
-	set<pair<VuoPublishedPort *, VuoPort *> > getPublishedOutputPortsConnectedToNode(VuoNode *node);
 	int getIndexOfPublishedPort(VuoPublishedPort *port, bool isInput);
 
 	static void parseHeader(const string &compositionAsString, string &name, string &description, string &copyright);
@@ -79,8 +68,6 @@ private:
 
 	set<VuoNode *> nodes;
 	set<VuoCable *> cables;
-	set<VuoCable *> publishedInputCables;
-	set<VuoCable *> publishedOutputCables;
 	vector<VuoPublishedPort *> publishedInputPorts;
 	vector<VuoPublishedPort *> publishedOutputPorts;
 

@@ -35,7 +35,7 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 	QString styleSheet = "* { " + VuoInputEditor::getDefaultFontCss() + " } ";
 	if (isDark)
 		styleSheet += STRINGIFY(
-						  * {
+						  QLabel {
 							  color: #cfcfcf;
 						  }
 
@@ -44,6 +44,7 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 						  QPlainTextEdit,
 						  QDoubleSpinBox,
 						  QSpinBox {
+							  color: #cfcfcf;
 							  border: 2px solid #707070;
 							  border-radius: 4px;
 							  background: #1a1a1a;

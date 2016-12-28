@@ -39,7 +39,7 @@ public:
 		compiler->compileComposition(compositionPath, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
 		remove(compiledCompositionPath.c_str());
-		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, true);
+		runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, compositionDir, false, true);
 
 		runner->setDelegate(this);
 		runner->start();

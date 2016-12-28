@@ -37,12 +37,19 @@ struct nodeInstanceData
 
 static void initialize(struct nodeInstanceData *context, VuoScreen screen, VuoRectangle rectangle, VuoOutputTrigger(capturedImage, VuoImage))
 {
+	VuoScreen realizedScreen;
+	if (!VuoScreen_realize(screen, &realizedScreen))
+		realizedScreen = VuoScreen_getSecondary();
+	VuoScreen_retain(realizedScreen);
+
+	if (VuoScreen_areEqual(realizedScreen, context->screen) && VuoRectangle_areEqual(rectangle, context->rectangle))
+	{
+		VuoScreen_release(realizedScreen);
+		return;
+	}
+
 	VuoScreen_release(context->screen);
-
-	if (!VuoScreen_realize(screen, &context->screen))
-		context->screen = VuoScreen_getSecondary();
-
-	VuoScreen_retain(context->screen);
+	context->screen = realizedScreen;
 
 	context->rectangle = rectangle;
 

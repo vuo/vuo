@@ -64,8 +64,11 @@ NODE_CLASS_IMAGES += \
 COMPOSITION_IMAGES += \
 	composition/2Recur.vuo \
 	composition/AreAllValuesTrue.vuo \
+   composition/BeepWhenMouseEntersSquare.vuo \
 	composition/BuildColoredGrid.vuo \
 	composition/CalculateBoxVolume.vuo \
+   composition/ChangeBackgroundColor.vuo \
+   composition/ChangeTilingPeriodically.vuo \
 	composition/Count.vuo \
 	composition/CountAndHold.vuo \
 	composition/CountCharactersToConsole.vuo \
@@ -76,13 +79,20 @@ COMPOSITION_IMAGES += \
 	composition/CountWithFeedback.vuo \
 	composition/CountWithInfiniteFeedback.vuo \
 	composition/DeadlockedFeedbackLoop.vuo \
+   composition/DetectBarcode.vuo \
+   composition/DetectCamera.vuo \
 	composition/DisplayHelloWorldImage.vuo \
 	composition/DisplayAndTwirlHelloWorldImage.vuo \
 	composition/DisplayAndTwirlHelloWorldContinuously.vuo \
 	composition/DisplayHelloWorldNoEvent.vuo \
 	composition/DisplayMultipleWindows.vuo \
+   composition/FetchOnlyWhenURLChanges.vuo \
+   composition/GraduallyMoveCircle.vuo \
 	composition/InvertMovieColors.vuo \
+   composition/MoveCircleWithMouse.vuo \
 	composition/MultipleEventOnlyCables.vuo \
+   composition/RememberMousePresses.vuo \
+   composition/RespondToMagicWord.vuo \
 	composition/SelectColor.vuo \
 	composition/SelectLatestInput.vuo \
 	composition/ShareHeight.vuo \
@@ -91,10 +101,24 @@ COMPOSITION_IMAGES += \
 	composition/SlideAndBlendCheckerboardsWithPeriodicEvents.vuo \
 	composition/SlideAndBlendCheckerboardsWithFrameEvents.vuo \
 	composition/SumAddOne.vuo \
+   composition/SwitchControllees.vuo \
+   composition/SwitchControllers.vuo \
+   ../node/vuo.data/examples/StoreMousePosition.vuo \
 	../node/vuo.event/examples/LoadImageAsynchronously.vuo \
 	../node/vuo.image/examples/BlendImages.vuo \
 	../node/vuo.image/examples/DisplayImage.vuo \
+   ../node/vuo.list/examples/CycleSeasons.vuo \
+   ../node/vuo.list/examples/DisplayGridOfImages.vuo \
+   ../node/vuo.list/examples/DisplayRainbowOvals.vuo \
+   ../node/vuo.list/examples/ReplaceColorsInGradient.vuo \
+   ../node/vuo.logic/examples/IsMouseWithinIntersectingRectangles.vuo \
+   ../node/vuo.motion/examples/SpringBack.vuo \
+   ../node/vuo.motion/examples/WaveCircle.vuo \
+   ../node/vuo.scene/examples/MoveSpinningSphere.vuo \
 	../node/vuo.select/examples/SelectMovie.vuo \
+   ../node/vuo.select/examples/ShowArrowPresses.vuo \
+   ../node/vuo.time/examples/AnimateOnSchedule.vuo \
+   ../node/vuo.time/examples/FlashOnMousePress.vuo \
 	../node/vuo.video/examples/PlayMovie.vuo
 
 pandoc.commands = cat VuoManual.txt \

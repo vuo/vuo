@@ -11,9 +11,9 @@
 #define VUOCOMPILERDATACLASS_H
 
 #include "VuoCompilerNodeArgumentClass.hh"
-#include "VuoType.hh"
-class VuoCompilerData;
 
+class VuoCompilerData;
+class VuoType;
 
 /**
  * The data type for a data-and-event port.

@@ -66,7 +66,7 @@ VuoPort * VuoRendererInputAttachment::getUnderlyingHostPortForNode(VuoNode *node
 	if (outCables.size() < 1)
 		return NULL;
 
-	VuoCable *outCable = outCables[0];
+	VuoCable *outCable = *outCables.begin();
 	return outCable->getToPort();
 }
 
@@ -83,7 +83,7 @@ VuoNode * VuoRendererInputAttachment::getUnderlyingHostNodeForNode(VuoNode *node
 	if (outCables.size() < 1)
 		return NULL;
 
-	VuoCable *outCable = outCables[0];
+	VuoCable *outCable = *outCables.begin();
 	return outCable->getToNode();
 }
 

@@ -34,10 +34,10 @@ VuoModuleMetadata({
  */
 VuoText VuoText_makeFromJson(json_object * js)
 {
-	const char *textString = "";
+	const char *textString = NULL;
 	if (json_object_get_type(js) == json_type_string)
-		textString = json_object_get_string(js);
-	return VuoText_make(textString);
+		textString = VuoText_make(json_object_get_string(js));
+	return textString;
 }
 
 /**
@@ -47,7 +47,7 @@ VuoText VuoText_makeFromJson(json_object * js)
 json_object * VuoText_getJson(const VuoText value)
 {
 	if (!value)
-		return json_object_new_string("");
+		return NULL;
 
 	return json_object_new_string(value);
 }
@@ -92,10 +92,13 @@ VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength)
  */
 char * VuoText_getSummary(const VuoText value)
 {
-	VuoText t = VuoText_truncateWithEllipsis(value, 50);
-	VuoRetain(t);
-	char *summary = strdup(t);
-	VuoRelease(t);
+	VuoText truncatedText = VuoText_truncateWithEllipsis(value, 50);
+	VuoRetain(truncatedText);
+	VuoText escapedText = VuoText_replace(truncatedText, "<", "&lt;");
+	VuoRetain(escapedText);
+	VuoRelease(truncatedText);
+	char *summary = VuoText_format("<code>%s</code>", escapedText);
+	VuoRelease(escapedText);
 	return summary;
 }
 
@@ -181,7 +184,7 @@ VuoText VuoText_makeFromCFString(const void *cfs)
  *
  * `data` is copied.
  */
-VuoText VuoText_makeFromData(unsigned char *data, unsigned long size)
+VuoText VuoText_makeFromData(const unsigned char *data, const unsigned long size)
 {
 	if (!size || !data)
 		return NULL;
@@ -214,6 +217,9 @@ size_t VuoText_length(const VuoText text)
 		return 0;
 
 	CFStringRef s = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
+	if (!s)
+		return 0;
+
 	size_t length = CFStringGetLength(s);
 	CFRelease(s);
 	return length;
@@ -231,7 +237,16 @@ bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 		return (! text1 && ! text2);
 
 	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
+	if (!s1)
+		return false;
+
 	CFStringRef s2 = CFStringCreateWithCString(kCFAllocatorDefault, text2, kCFStringEncodingUTF8);
+	if (!s2)
+	{
+		CFRelease(s1);
+		return false;
+	}
+
 	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral | kCFCompareWidthInsensitive);
 
 	CFRelease(s1);
@@ -250,7 +265,16 @@ bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
 		return text1 && ! text2;
 
 	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
+	if (!s1)
+		return false;
+
 	CFStringRef s2 = CFStringCreateWithCString(kCFAllocatorDefault, text2, kCFStringEncodingUTF8);
+	if (!s2)
+	{
+		CFRelease(s1);
+		return false;
+	}
+
 	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral | kCFCompareWidthInsensitive);
 
 	CFRelease(s1);
@@ -268,6 +292,9 @@ bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
  */
 size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring, const size_t startIndex)
 {
+	if (!substring || (substring && substring[0] == 0))
+		return 1;
+
 	if (! string)
 		return 0;
 
@@ -299,6 +326,14 @@ size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring
  */
 size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring)
 {
+	if (!substring || (substring && substring[0] == 0))
+	{
+		if (string)
+			return VuoText_length(string) + 1;
+		else
+			return 1;
+	}
+
 	if (! string)
 		return 0;
 
@@ -359,7 +394,13 @@ VuoText VuoText_substring(const VuoText string, int startIndex, int length)
 	size_t startIndexFromZero = startIndex - 1;
 
 	CFStringRef s = CFStringCreateWithCString(kCFAllocatorDefault, string, kCFStringEncodingUTF8);
+	if (!s)
+		return VuoText_make("");
+
 	CFStringRef ss = CFStringCreateWithSubstring(kCFAllocatorDefault, s, CFRangeMake(startIndexFromZero, length));
+	if (!ss)
+		return VuoText_make("");
+
 	VuoText substring = VuoText_makeFromCFString(ss);
 
 	CFRelease(s);
@@ -419,8 +460,11 @@ VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts,
 			{
 				VuoText part = VuoText_substring(text, startIndex, separatorIndex - startIndex);
 				CFStringRef partStr = CFStringCreateWithCString(kCFAllocatorDefault, part, kCFStringEncodingUTF8);
-				CFArrayAppendValue(splitTexts, partStr);
-				CFRelease(partStr);
+				if (partStr)
+				{
+					CFArrayAppendValue(splitTexts, partStr);
+					CFRelease(partStr);
+				}
 				VuoRetain(part);
 				VuoRelease(part);
 			}
@@ -431,8 +475,11 @@ VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts,
 		if (includeEmptyParts && textLength > 0 && separatorIndex + separatorLength - 1 == textLength)
 		{
 			CFStringRef emptyPartStr = CFStringCreateWithCString(kCFAllocatorDefault, "", kCFStringEncodingUTF8);
-			CFArrayAppendValue(splitTexts, emptyPartStr);
-			CFRelease(emptyPartStr);
+			if (emptyPartStr)
+			{
+				CFArrayAppendValue(splitTexts, emptyPartStr);
+				CFRelease(emptyPartStr);
+			}
 		}
 	}
 	else
@@ -441,8 +488,11 @@ VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts,
 		{
 			VuoText part = VuoText_substring(text, i, 1);
 			CFStringRef partStr = CFStringCreateWithCString(kCFAllocatorDefault, part, kCFStringEncodingUTF8);
-			CFArrayAppendValue(splitTexts, partStr);
-			CFRelease(partStr);
+			if (partStr)
+			{
+				CFArrayAppendValue(splitTexts, partStr);
+				CFRelease(partStr);
+			}
 			VuoRetain(part);
 			VuoRelease(part);
 		}
@@ -469,8 +519,21 @@ VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replaceme
 {
 	CFMutableStringRef subjectCF = CFStringCreateMutable(NULL, 0);
 	CFStringAppendCString(subjectCF, subject, kCFStringEncodingUTF8);
+
 	CFStringRef stringToFindCF = CFStringCreateWithCString(NULL, stringToFind, kCFStringEncodingUTF8);
+	if (!stringToFindCF)
+	{
+		CFRelease(subjectCF);
+		return subject;
+	}
+
 	CFStringRef replacementCF = CFStringCreateWithCString(NULL, replacement, kCFStringEncodingUTF8);
+	if (!replacementCF)
+	{
+		CFRelease(stringToFindCF);
+		CFRelease(subjectCF);
+		return subject;
+	}
 
 	CFStringFindAndReplace(subjectCF, stringToFindCF, replacementCF, CFRangeMake(0,CFStringGetLength(subjectCF)), kCFCompareNonliteral);
 

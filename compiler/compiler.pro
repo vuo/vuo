@@ -54,22 +54,24 @@ SOURCES += \
 	VuoCompilerGraphvizParser.cc \
 	VuoCompilerBitcodeGenerator.cc \
 	VuoCompilerGraph.cc \
+	VuoCompilerTriggerDescription.cc \
 	VuoCompilerTriggerPortClass.cc \
 	VuoCompilerTriggerPort.cc \
 	VuoCompilerChain.cc \
 	VuoCompilerBitcodeParser.cc \
 	VuoCompiler.cc \
 	VuoCompilerCable.cc \
+	VuoCompilerPublishedPortClass.cc \
 	VuoCompilerPublishedPort.cc \
-	VuoCompilerPublishedInputPort.cc \
-	VuoCompilerPublishedOutputPort.cc \
 	VuoCompilerCodeGenUtilities.cc \
+	VuoCompilerConstantStringCache.cc \
 	VuoCompilerModule.cc \
 	VuoCompilerType.cc \
 	VuoCompilerGenericType.cc \
 	VuoCompilerComposition.cc \
 	VuoCompilerMakeListNodeClass.cc \
 	VuoCompilerPublishedInputNodeClass.cc \
+	VuoCompilerPublishedOutputNodeClass.cc \
 	VuoCompilerSpecializedNodeClass.cc \
 	VuoCompilerTargetSet.cc \
 	VuoCompilerDriver.cc \
@@ -106,22 +108,24 @@ HEADERS += \
 	VuoCompilerGraphvizParser.hh \
 	VuoCompilerBitcodeGenerator.hh \
 	VuoCompilerGraph.hh \
+	VuoCompilerTriggerDescription.hh \
 	VuoCompilerTriggerPortClass.hh \
 	VuoCompilerTriggerPort.hh \
 	VuoCompilerChain.hh \
 	VuoCompilerBitcodeParser.hh \
 	VuoCompiler.hh \
 	VuoCompilerCable.hh \
+	VuoCompilerPublishedPortClass.hh \
 	VuoCompilerPublishedPort.hh \
-	VuoCompilerPublishedInputPort.hh \
-	VuoCompilerPublishedOutputPort.hh \
 	VuoCompilerCodeGenUtilities.hh \
+	VuoCompilerConstantStringCache.hh \
 	VuoCompilerModule.hh \
 	VuoCompilerType.hh \
 	VuoCompilerGenericType.hh \
 	VuoCompilerComposition.hh \
 	VuoCompilerMakeListNodeClass.hh \
 	VuoCompilerPublishedInputNodeClass.hh \
+	VuoCompilerPublishedOutputNodeClass.hh \
 	VuoCompilerSpecializedNodeClass.hh \
 	VuoCompilerTargetSet.hh \
 	VuoCompilerDriver.hh \

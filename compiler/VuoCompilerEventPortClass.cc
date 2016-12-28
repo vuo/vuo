@@ -8,7 +8,7 @@
  */
 
 #include "VuoCompilerEventPortClass.hh"
-
+#include "VuoCompilerDataClass.hh"
 #include "VuoPortClass.hh"
 
 /**
@@ -75,4 +75,23 @@ VuoType * VuoCompilerEventPortClass::getDataVuoType(void)
 void VuoCompilerEventPortClass::setDataVuoType(VuoType *type)
 {
 	dataClass->setVuoType(type);
+}
+
+/**
+ * Returns the port class's display name, camel-case expanded, and optionally overridden by the port class `details`.
+ */
+string VuoCompilerEventPortClass::getDisplayName(void)
+{
+	// First, look for a name stored within the details of the port's data class, if applicable.
+	if (getDataVuoType())
+	{
+		json_object *details = getDataClass()->getDetails();
+		json_object *nameValue = NULL;
+
+		if (details && json_object_object_get_ex(details, "name", &nameValue))
+			return json_object_get_string(nameValue);
+	}
+
+	// Failing that, look for a name associated with the port class rather than the data class.
+	return VuoCompilerPortClass::getDisplayName();
 }

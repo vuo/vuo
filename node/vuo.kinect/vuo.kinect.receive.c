@@ -68,8 +68,7 @@ void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint
 		}
 	}
 
-	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_16);
-	free(depthOutput);
+	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_16, ^(void *buffer){ free(buffer); });
 	context->receivedDepthImage(image);
 }
 
@@ -82,16 +81,11 @@ void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t t
 	int lines = mode.height;
 	unsigned int stride = mode.width*3;
 	unsigned int size = stride * sizeof(uint8_t);
-	uint8_t *tmp = (uint8_t*)malloc(size);
-	for(int i = 0; i < lines/2; i++)
-	{
-		memcpy(tmp, rgb + stride*i, size);
-		memcpy(rgb+stride*i, rgb+stride*(lines-i-1), size);
-		memcpy(rgb+stride*(lines-i-1), tmp, size);
-	}
-	free(tmp);
+	void *rgbOut = malloc(size*lines);
+	for(int i = 0; i < lines; i++)
+		memcpy(rgbOut+stride*(lines-i-1), rgb + stride*i, size);
 
-	VuoImage image = VuoImage_makeFromBuffer(rgb, GL_RGB, mode.width, mode.height, VuoImageColorDepth_8);
+	VuoImage image = VuoImage_makeFromBuffer(rgbOut, GL_RGB, mode.width, mode.height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 	context->receivedImage(image);
 }
 
@@ -120,12 +114,12 @@ void vuo_kinect_receive_worker(void *ctx)
 					haveKinect = true;
 				else
 				{
-					VLog("freenect_open_device(%d) failed, returned %d", deviceNumber, ret);
+					VUserLog("freenect_open_device(%d) failed, returned %d", deviceNumber, ret);
 				}
 			}
 		}
 		else
-			VLog("freenect_init() failed, returned %d", ret);
+			VUserLog("freenect_init() failed, returned %d", ret);
 
 		if (haveKinect)
 		{
@@ -148,7 +142,7 @@ void vuo_kinect_receive_worker(void *ctx)
 				int ret = freenect_process_events_timeout(context->freenectContext, &timeout);
 				if (ret < 0 && ret != -10)
 				{
-					VLog("freenect_process_events_timeout() failed, returned %d", ret);
+					VUserLog("freenect_process_events_timeout() failed, returned %d", ret);
 							haveKinect = false;
 					break;
 				}

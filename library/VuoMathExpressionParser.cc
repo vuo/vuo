@@ -16,6 +16,7 @@ extern "C"
 {
 #include "module.h"
 #include "VuoMathExpressionParser.h"
+#include "VuoGradientNoiseCommon.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -28,6 +29,7 @@ VuoModuleMetadata({
 						"VuoList_VuoReal",
 						"VuoList_VuoText",
 						"VuoDictionary_VuoText_VuoReal",
+						"VuoGradientNoiseCommon",
 						"muParser"
 					  ]
 				  });
@@ -128,6 +130,55 @@ static double rad2deg(double radians)
 	return radians * 57.2957795;
 }
 
+/**
+ * As defined by muParserTemplateMagic.h
+ */
+static double muparser_rint(double x)
+{
+	return floor(x + .5);
+}
+
+/**
+ * As defined by https://www.opengl.org/sdk/docs/man/html/fract.xhtml
+ */
+static double fract(double x)
+{
+	return x - floor(x);
+}
+
+/**
+ * As defined by https://www.opengl.org/sdk/docs/man/html/clamp.xhtml
+ */
+static double clamp(double x, double minVal, double maxVal)
+{
+	return MIN(MAX(x, minVal), maxVal);
+}
+
+/**
+ * As defined by https://www.opengl.org/sdk/docs/man/html/step.xhtml
+ */
+static double step(double edge, double x)
+{
+	return x < edge ? 0 : 1;
+}
+
+/**
+ * As defined by https://www.opengl.org/sdk/docs/man/html/smoothstep.xhtml
+ */
+static double smoothstep(double edge0, double edge1, double x)
+{
+	double t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+	return t * t * (3.0 - 2.0 * t);
+}
+
+/**
+ * As defined by https://www.opengl.org/sdk/docs/man/html/mix.xhtml
+ */
+static double mix(double x, double y, double a)
+{
+	return x * (1. - a) + y * a;
+}
+
 /// @{
 /**
  * Trigonometric functions that take degrees instead of radians.
@@ -138,6 +189,7 @@ static double tanInDegrees(double degrees) { return tan(deg2rad(degrees)); }
 static double asinInDegrees(double x) { return rad2deg(asin(x)); }
 static double acosInDegrees(double x) { return rad2deg(acos(x)); }
 static double atanInDegrees(double x) { return rad2deg(atan(x)); }
+static double atan2InDegrees(double y, double x) { return rad2deg(atan2(y,x)); }
 static double sinhInDegrees(double degrees) { return sinh(deg2rad(degrees)); }
 static double coshInDegrees(double degrees) { return cosh(deg2rad(degrees)); }
 static double tanhInDegrees(double degrees) { return tanh(deg2rad(degrees)); }
@@ -145,6 +197,74 @@ static double asinhInDegrees(double x) { return rad2deg(asinh(x)); }
 static double acoshInDegrees(double x) { return rad2deg(acosh(x)); }
 static double atanhInDegrees(double x) { return rad2deg(atanh(x)); }
 /// @}
+
+/// @{
+/**
+ * Gradient noise wrappers.
+ */
+static double perlin2d (double x, double y                    ) { return VuoGradientNoise_perlin_VuoPoint2d_VuoReal (VuoPoint2d_make(x,y    )); }
+static double perlin3d (double x, double y, double z          ) { return VuoGradientNoise_perlin_VuoPoint3d_VuoReal (VuoPoint3d_make(x,y,z  )); }
+static double perlin4d (double x, double y, double z, double w) { return VuoGradientNoise_perlin_VuoPoint4d_VuoReal (VuoPoint4d_make(x,y,z,w)); }
+static double simplex2d(double x, double y                    ) { return VuoGradientNoise_simplex_VuoPoint2d_VuoReal(VuoPoint2d_make(x,y    )); }
+static double simplex3d(double x, double y, double z          ) { return VuoGradientNoise_simplex_VuoPoint3d_VuoReal(VuoPoint3d_make(x,y,z  )); }
+static double simplex4d(double x, double y, double z, double w) { return VuoGradientNoise_simplex_VuoPoint4d_VuoReal(VuoPoint4d_make(x,y,z,w)); }
+/// @}
+
+/**
+ * Given a pointer to a `mu::Parser` instance, adds Vuo's standard operators, constants, and functions.
+ */
+void VuoMathExpressionParser_defineStandardLibrary(void *p)
+{
+	mu::Parser *muParser = (mu::Parser *)p;
+
+	muParser->DefineConst("PI", (double)3.14159265359);
+
+	muParser->DefineOprt("%", fmod, mu::prMUL_DIV, mu::oaLEFT, true);
+
+	// Trigonometry
+	muParser->DefineFun("deg2rad", deg2rad, true);
+	muParser->DefineFun("rad2deg", rad2deg, true);
+	muParser->DefineFun("sin", sinInDegrees, true);
+	muParser->DefineFun("cos", cosInDegrees, true);
+	muParser->DefineFun("tan", tanInDegrees, true);
+	muParser->DefineFun("asin", asinInDegrees, true);
+	muParser->DefineFun("acos", acosInDegrees, true);
+	muParser->DefineFun("atan", atanInDegrees, true);
+	muParser->DefineFun("atan2", atan2InDegrees, true);
+	muParser->DefineFun("sinh", sinhInDegrees, true);
+	muParser->DefineFun("cosh", coshInDegrees, true);
+	muParser->DefineFun("tanh", tanhInDegrees, true);
+	muParser->DefineFun("asinh", asinhInDegrees, true);
+	muParser->DefineFun("acosh", acoshInDegrees, true);
+	muParser->DefineFun("atanh", atanhInDegrees, true);
+
+	// Real -> Integer
+	muParser->DefineFun("round", muparser_rint, true);
+	muParser->DefineFun("floor", ::floor, true);
+	muParser->DefineFun("ceil", ::ceil, true);
+	muParser->DefineFun("trunc", trunc, true);
+
+	// GLSL
+	muParser->DefineFun("fract", fract, true);
+	muParser->DefineFun("clamp", clamp);
+	muParser->DefineFun("step", step);
+	muParser->DefineFun("smoothstep", smoothstep);
+	muParser->DefineFun("mix", mix);
+
+	// Random / noise
+	muParser->DefineFun("random", VuoReal_random, false /* since it generates a new value each call */);
+
+	muParser->DefineFun("perlin1d", VuoGradientNoise_perlin_VuoReal_VuoReal, true);
+	muParser->DefineFun("perlin2d", perlin2d, true);
+	muParser->DefineFun("perlin3d", perlin3d, true);
+	muParser->DefineFun("perlin4d", perlin4d, true);
+
+	muParser->DefineFun("simplex1d", VuoGradientNoise_simplex_VuoReal_VuoReal, true);
+	muParser->DefineFun("simplex2d", simplex2d, true);
+	muParser->DefineFun("simplex3d", simplex3d, true);
+	muParser->DefineFun("simplex4d", simplex4d, true);
+}
+
 
 /**
  * C++ implementation of opaque C type VuoMathExpressionParser.
@@ -188,23 +308,7 @@ public:
 		this->variableCount = 0;
 		this->outputVariableNames = outputVariableNames_;
 
-		muParser.DefineOprt("%", fmod, mu::prMUL_DIV, mu::oaLEFT, true);
-		muParser.DefineFun("deg2rad", deg2rad, false);
-		muParser.DefineFun("rad2deg", rad2deg, false);
-		muParser.DefineConst("PI", (double)3.14159265359);
-
-		muParser.DefineFun("sin", sinInDegrees, false);
-		muParser.DefineFun("cos", cosInDegrees, false);
-		muParser.DefineFun("tan", tanInDegrees, false);
-		muParser.DefineFun("asin", asinInDegrees, false);
-		muParser.DefineFun("acos", acosInDegrees, false);
-		muParser.DefineFun("atan", atanInDegrees, false);
-		muParser.DefineFun("sinh", sinhInDegrees, false);
-		muParser.DefineFun("cosh", coshInDegrees, false);
-		muParser.DefineFun("tanh", tanhInDegrees, false);
-		muParser.DefineFun("asinh", asinhInDegrees, false);
-		muParser.DefineFun("acosh", acoshInDegrees, false);
-		muParser.DefineFun("atanh", atanhInDegrees, false);
+		VuoMathExpressionParser_defineStandardLibrary(&muParser);
 
 		muParser.SetVarFactory(addVariable, this);
 		muParser.SetExpr(expression);  // checks for some errors
@@ -544,32 +648,34 @@ VuoDictionary_VuoText_VuoReal VuoMathExpressionParser_calculate(VuoMathExpressio
 	for (size_t i = 0; i < MAX_VARIABLE_COUNT; ++i)
 		mi->variableValues[i] = 0;
 
-	VuoList_VuoText inputVariables = VuoDictionaryGetKeys_VuoText_VuoReal(inputValues);
-	unsigned long inputCount = VuoListGetCount_VuoText(inputVariables);
+	VuoText *inputVariablesArray = VuoListGetData_VuoText(inputValues.keys);
+	VuoReal *inputValuesArray = VuoListGetData_VuoReal(inputValues.values);
+	unsigned long inputCount = VuoListGetCount_VuoText(inputValues.keys);
 	for (int i = 0; i < inputCount; ++i)
 	{
-		VuoText variable = VuoListGetValue_VuoText(inputVariables, i+1);
-		map<string, size_t>::iterator variableIter = mi->variableNamesAndIndices.find(variable);
+		map<string, size_t>::iterator variableIter = mi->variableNamesAndIndices.find(inputVariablesArray[i]);
 		if (variableIter != mi->variableNamesAndIndices.end())
 		{
 			size_t index = variableIter->second;
-			VuoReal value = VuoDictionaryGetValueForKey_VuoText_VuoReal(inputValues, variable);
-			mi->variableValues[index] = value;
+			mi->variableValues[index] = inputValuesArray[i];
 		}
 	}
-	VuoRetain(inputVariables);
-	VuoRelease(inputVariables);
 
 	int outputCount;
 	double *results = mi->muParser.Eval(outputCount);
 
-	VuoDictionary_VuoText_VuoReal outputValues = VuoDictionaryCreate_VuoText_VuoReal();
+	VuoList_VuoText keys = VuoListCreateWithCount_VuoText(outputCount, NULL);
+	VuoText *keysArray = VuoListGetData_VuoText(keys);
+
+	VuoList_VuoReal values = VuoListCreateWithCount_VuoReal(outputCount, 0);
+	VuoReal *valuesArray = VuoListGetData_VuoReal(values);
+
 	for (int i = 0; i < outputCount; ++i)
 	{
-		VuoText key = VuoText_make( mi->outputVariableNames[i].c_str() );
-		VuoReal value = results[i];
-		VuoDictionarySetKeyValue_VuoText_VuoReal(outputValues, key, value);
+		keysArray[i] = VuoText_make( mi->outputVariableNames[i].c_str() );
+		VuoRetain(keysArray[i]);
+		valuesArray[i] = results[i];
 	}
 
-	return outputValues;
+	return VuoDictionaryCreateWithLists_VuoText_VuoReal(keys, values);
 }

@@ -70,7 +70,7 @@ void VuoRendererFonts::addFont(QString font)
 			return;
 	}
 
-	VLog("Error: Failed to open '%s'.", font.toUtf8().data());
+	VUserLog("Error: Failed to open '%s'.", font.toUtf8().data());
 }
 
 /**

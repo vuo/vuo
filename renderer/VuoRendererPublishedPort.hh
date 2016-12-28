@@ -10,43 +10,36 @@
 #ifndef VUORENDERERPUBLISHEDPORT_HH
 #define VUORENDERERPUBLISHEDPORT_HH
 
-#include "VuoBaseDetail.hh"
-#include "VuoNode.hh"
-#include "VuoPort.hh"
+#include "VuoRendererPort.hh"
 #include "VuoPublishedPort.hh"
-#include "VuoRendererItem.hh"
 #include "VuoRendererCable.hh"
+
+class VuoType;
 
 /**
  * A published input or output port.
  */
-class VuoRendererPublishedPort : public VuoRendererItem, public VuoBaseDetail<VuoPublishedPort>
+class VuoRendererPublishedPort : public VuoRendererPort
 {
 public:
-	VuoRendererPublishedPort(VuoPublishedPort *basePublishedPort);
+	VuoRendererPublishedPort(VuoPublishedPort *basePublishedPort, bool isPublishedOutput);
 
-	QRectF boundingRect(void) const;
-	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	void setName(string name);
 	bool canAccommodateInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection);
 	bool isCompatibleAliasWithoutSpecializationForInternalPort(VuoRendererPort *port, bool eventOnlyConnection);
 	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *port, bool eventOnlyConnection);
 	bool isCompatibleAliasWithSpecializationForInternalPort(VuoRendererPort *internalPort, bool eventOnlyConnection, VuoRendererPort **portToSpecialize, string &specializedTypeName);
 	bool canBeMergedWith(VuoPublishedPort *otherExternalPort, bool mergeWillAddData);
-	void addConnectedPort(VuoPort *port);
-	void removeConnectedPort(VuoPort *port);
 	QPoint getCompositionViewportPos(void) const;
 	void setCompositionViewportPos(QPoint pos);
-	VuoRendererPort * getPortRepresentation();
 	void setCurrentlyActive(bool active);
 	bool getCurrentlyActive();
 
-private:
-	static VuoRendererPort * createPortRepresentation(string name, VuoType *type, bool isPublishedInput);
-	void updateNameRect();
+protected:
+	QPainterPath getWirelessAntennaPath() const;
 
+private:
 	QPoint compositionViewportPos;
-	VuoRendererPort *portRepresentation;
 	bool isActive;
 
 };

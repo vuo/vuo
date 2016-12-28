@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
-					 "version" : "2.0.1",
+					 "version" : "2.0.2",
 					 "node": {
 						 "exampleCompositions" : [ "DisplayRowOfSpheres.vuo" ]
 					 }
@@ -73,7 +73,8 @@ void nodeEvent
 		VuoListAppendValue_VuoSceneObject(copies->childObjects, VuoSceneObject_make(
 			object.mesh,
 			object.shader,
-			VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale),
+			VuoTransform_composite(object.transform,
+								   VuoTransform_makeEuler(translation, VuoPoint3d_multiply(rotation, M_PI/180.), scale)),
 			object.childObjects
 			));
 	}

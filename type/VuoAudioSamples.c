@@ -128,3 +128,12 @@ bool VuoAudioSamples_isEmpty(const VuoAudioSamples samples)
 
 	return true;
 }
+
+/**
+ * - If there are no audio samples, returns false.
+ * - Otherwise returns true.
+ */
+bool VuoAudioSamples_isPopulated(const VuoAudioSamples samples)
+{
+	return (samples.sampleCount > 0);
+}

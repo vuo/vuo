@@ -1,6 +1,6 @@
 Fires an event when a mouse button is clicked. 
 
-   - `Window` — If a window is provided, then mouse clicks are only tracked when the mouse was pressed on that window, and mouse positions are in Vuo coordinates relative to the window. Otherwise, mouse clicks are tracked when the mouse was pressed on any window of the composition, and mouse positions are in screen coordinates.
+   - `Window` — If a window is provided, then mouse clicks are only tracked when the mouse was pressed on that window, and mouse positions are in Vuo Coordinates relative to the window. Otherwise, mouse clicks are tracked when the mouse was pressed on any window of the composition, and mouse positions are in screen coordinates.
    - `Button` — The mouse button(s) to track. 
    - `Modifier Key` — The keyboard button (if any) that must be held for mouse clicks to be tracked. 
    - `Singled Clicked` — When the mouse button is single-clicked, fires an event with the position where it was clicked. 

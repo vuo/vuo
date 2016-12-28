@@ -1,0 +1,45 @@
+/**
+ * @file
+ * Displays the filename and image for each of the first 12 image files in a folder.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="915,-60" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="2.000000" _columns="4" _height="1.5" _rows="3"];
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="1140,0" _width="4." _height="3."];
+CombineLayersWithTransform [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="885,195"];
+CutList2 [type="vuo.list.cut.VuoText" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="435,-60" _startPosition="1" _itemCount="12"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="480,225"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="120,-105" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetFileURLValues [type="vuo.url.get.file" version="1.0.0" label="Get File URL Values|<refresh>refresh\l|<url>url\l|<path>path\r|<folder>folder\r|<fileName>fileName\r|<extension>extension\r" pos="390,315" fillcolor="violet"];
+ListFiles [type="vuo.file.list" version="1.0.2" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="270,-60" _folder="\"\\/Library\\/User Pictures\"" _includeSubfolders="true" _fileType="\"image\""];
+MakeList2 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1379,-34" fillcolor="green"];
+MakeList6 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="839,221"];
+MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1342,-49" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="660,210" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.29999999999999999" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="675,345" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0,\"y\":-0.20000000298023224}"];
+ProcessList3 [type="vuo.list.process.VuoText.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="600,-60" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1425,-60" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+ArrangeLayersInGrid:griddedLayer -> ChangeWindowAspectRatio:refresh;
+ArrangeLayersInGrid:griddedLayer -> MakeList9:1;
+ChangeWindowAspectRatio:property -> MakeList2:1;
+CombineLayersWithTransform:layer -> ProcessList3:processedItem;
+CutList2:partialList -> ProcessList3:fire;
+FetchImage:image -> MakeScaledLayer:image;
+FireOnStart:started -> ListFiles:refresh;
+GetFileURLValues:fileName -> MakeTextLayer:text;
+ListFiles:files -> CutList2:list;
+MakeList2:list -> RenderLayersToWindow:setWindowProperties;
+MakeList6:list -> CombineLayersWithTransform:layers;
+MakeList9:list -> RenderLayersToWindow:layers;
+MakeScaledLayer:layer -> MakeList6:1;
+MakeTextLayer:layer -> MakeList6:2;
+ProcessList3:processItem -> FetchImage:url;
+ProcessList3:processItem -> GetFileURLValues:url;
+ProcessList3:processedList -> ArrangeLayersInGrid:layers;
+}

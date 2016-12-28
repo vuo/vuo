@@ -93,25 +93,30 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 	enum json_type actualType = json_object_get_type(actualValue);
 	enum json_type expectedType = json_object_get_type(expectedValue);
 
+	string actualString = json_object_to_json_string_ext(actualValue, JSON_C_TO_STRING_PLAIN);
+	string expectedString = json_object_to_json_string_ext(expectedValue, JSON_C_TO_STRING_PLAIN);
+
+	string failMessage = toString() + " --- " + expectedString + " != " + actualString;
+
 	if (expectedType == json_type_object && actualType == json_type_object)
 	{
 		if (type == "VuoImage")
 		{
 			VuoImage expectedImage = VuoImage_makeFromJson(expectedValue);
 			VuoImage   actualImage = VuoImage_makeFromJson(actualValue);
-			QVERIFY(VuoImage_areEqual(actualImage, expectedImage));
+			QVERIFY2(VuoImage_areEqualWithinTolerance(actualImage, expectedImage, 1), failMessage.c_str());
 			return;
 		}
 
 		json_object_object_foreach(expectedValue, expectedPort, expectedElement)
 		{
 			json_object *actualElement;
-			QVERIFY( json_object_object_get_ex(actualValue, expectedPort, &actualElement) );
+			QVERIFY2(json_object_object_get_ex(actualValue, expectedPort, &actualElement), failMessage.c_str());
 		}
 		json_object_object_foreach(actualValue, actualPort, actualElement)
 		{
 			json_object *expectedElement;
-			QVERIFY( json_object_object_get_ex(expectedValue, actualPort, &expectedElement) );
+			QVERIFY2(json_object_object_get_ex(expectedValue, actualPort, &expectedElement), failMessage.c_str());
 
 			checkEqual("", actualElement, expectedElement);
 		}
@@ -120,7 +125,7 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 	{
 		int actualElementCount = json_object_array_length(actualValue);
 		int expectedElementCount = json_object_array_length(expectedValue);
-		QCOMPARE(actualElementCount, expectedElementCount);
+		QVERIFY2(actualElementCount == expectedElementCount, failMessage.c_str());
 
 		for (int i = 0; i < expectedElementCount; ++i)
 		{
@@ -135,13 +140,11 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 		double actualDouble = json_object_get_double(actualValue);
 		double expectedDouble = json_object_get_double(expectedValue);
 		const double DELTA = 0.000001;
-		QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, QString("actual %1, expected %2").arg(actualDouble).arg(expectedDouble).toUtf8().data());
+		QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, failMessage.c_str());
 	}
 	else
 	{
-		string actualString = json_object_to_json_string_ext(actualValue, JSON_C_TO_STRING_PLAIN);
-		string expectedString = json_object_to_json_string_ext(expectedValue, JSON_C_TO_STRING_PLAIN);
-		QCOMPARE(QString::fromStdString(actualString), QString::fromStdString(expectedString));
+		QVERIFY2(actualString == expectedString, failMessage.c_str());
 	}
 }
 

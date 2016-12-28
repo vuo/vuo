@@ -76,7 +76,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoSceneObject) object,
-		VuoInputData(VuoReal) time,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedStep":0.1}) time,
 		VuoInputData(VuoPoint3d, {"default":{"x":0.2,"y":0.2,"z":0.2},"suggestedMin":{"x":0.0,"y":0.0,"z":0.0},"suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) amount,
 		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0.0,"suggestedMax":2.0}) scale,
 		VuoOutputData(VuoSceneObject) noisedObject

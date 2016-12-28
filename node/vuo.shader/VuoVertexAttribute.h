@@ -39,6 +39,8 @@ VuoVertexAttribute VuoVertexAttribute_makeFromJson(struct json_object *js);
 struct json_object *VuoVertexAttribute_getJson(const VuoVertexAttribute value);
 VuoList_VuoVertexAttribute VuoVertexAttribute_getAllowedValues(void);
 char *VuoVertexAttribute_getSummary(const VuoVertexAttribute value);
+
+#define VuoVertexAttribute_SUPPORTS_COMPARISON
 bool VuoVertexAttribute_areEqual(const VuoVertexAttribute valueA, const VuoVertexAttribute valueB);
 bool VuoVertexAttribute_isLessThan(const VuoVertexAttribute valueA, const VuoVertexAttribute valueB);
 

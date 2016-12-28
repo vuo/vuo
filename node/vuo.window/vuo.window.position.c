@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Window Position",
-					 "keywords" : [ "top", "right", "bottom", "left", "arrange", "properties" ],
+					 "keywords" : [ "top", "right", "bottom", "left", "arrange", "properties", "set" ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ ]
@@ -22,10 +22,12 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}}) topLeft,
+		VuoInputData(VuoCoordinateUnit, {"default":"points"}) unit,
 		VuoOutputData(VuoWindowProperty) property
 )
 {
 	(*property).type = VuoWindowProperty_Position;
 	(*property).left = topLeft.x;
 	(*property).top = topLeft.y;
+	(*property).unit = unit;
 }

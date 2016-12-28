@@ -29,7 +29,7 @@ extern "C" {
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include "json/json.h"
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 }
 
@@ -157,16 +157,49 @@ VuoMovieExporter::VuoMovieExporter(std::string compositionString, std::string na
 }
 
 /**
+ * Returns the greatest common divisor of a and b.
+ */
+static int gcd(int a, int b)
+{
+	while (b > 0)
+	{
+		int rem = a % b;
+		a = b;
+		b = rem;
+	}
+	return a;
+}
+
+/**
  * Helper for the constructors.
  *
  * @throw std::runtime_error Couldn't build the composition or create the movie file.
  */
 void VuoMovieExporter::init(NSString *compositionString, std::string name, std::string sourcePath, std::string outputMovieFile, VuoMovieExporterParameters parameters)
 {
+	if (parameters.imageFormat == VuoMovieExporterParameters::H264)
+	{
+		// H.264 Level 5.1 (highest available as of 2015.07.15) only supports up to 36,864 macroblocks.
+		// Instead of letting AVFoundation throw a nondescript "-6661 invalid argument" error,
+		// try to catch it ourselves and provide a more helpful message.
+		// https://en.wikipedia.org/wiki/H.264/MPEG-4_AVC#Levels
+		int widthRoundedToMacroblock  = ceil((double)parameters.width /16.)*16.;
+		int heightRoundedToMacroblock = ceil((double)parameters.height/16.)*16.;
+		if (widthRoundedToMacroblock * heightRoundedToMacroblock > 36864*(16*16))
+			throw std::runtime_error("The H.264 codec only allows up to 9,437,184 pixels per frame. Try another image format, or a lower resolution.");
+	}
+
 	this->parameters = parameters;
 
-	/// @todo support noninteger framerates.
-	timebase = parameters.framerate;
+	// Given the framerate, find an appropriate timebase and frame multiplier.
+	{
+		int maxTimeResolution = 1000;
+		int numerator   = maxTimeResolution * 1;
+		int denominator = maxTimeResolution * parameters.framerate;
+		int divisor = gcd(numerator, denominator);
+		frameMultiplier = numerator   / divisor;
+		timebase        = denominator / divisor;
+	}
 
 	frameCount = parameters.duration * parameters.framerate;
 	framesExportedSoFar = 0;
@@ -293,23 +326,21 @@ bool VuoMovieExporter::exportNextFrame(void)
 		return false;
 
 
-	[generator setValue:(id)kCFBooleanTrue forInputPort:@"offlineRender"];
+	[generator setValue:(id)kCFBooleanTrue      forInputPort:@"offlineRender"];
+	[generator setValue:@(parameters.framerate) forInputPort:@"offlineFramerate"];
 
 
 	// Render the image.
-	unsigned char *pixels;
+	VuoImage image;
+	const unsigned char *pixels;
 	unsigned int pixelsWide;
 	unsigned int pixelsHigh;
 	{
-		VuoImage image;
-
 		if (parameters.spatialSupersample > 1 || parameters.temporalSupersample > 1)
 		{
 			image = exportNextFramePremium();
 			if (!image)
 				goto done;
-
-			VuoRetain(image);
 		}
 		else
 		{
@@ -344,10 +375,9 @@ bool VuoMovieExporter::exportNextFrame(void)
 			image = watermarkedImage;
 		}
 
-		pixels = VuoImage_copyBuffer(image, GL_BGRA);
+		pixels = VuoImage_getBuffer(image, GL_BGRA);
 		pixelsWide = image->pixelsWide;
 		pixelsHigh = image->pixelsHigh;
-		VuoRelease(image);
 	}
 
 
@@ -439,7 +469,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 		unsigned int bytesPerRow = CVPixelBufferGetBytesPerRow(pb);
 		for (unsigned long y = 0; y < pixelsHigh; ++y)
 			memcpy(bytes + bytesPerRow * (pixelsHigh - y - 1), pixels + pixelsWide * y * 4, pixelsWide * 4);
-		free(pixels);
+		VuoRelease(image);
 
 		ret = CVPixelBufferUnlockBaseAddress(pb, 0);
 		if (ret != kCVReturnSuccess)
@@ -448,7 +478,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 		while (!assetWriterInput.readyForMoreMediaData)
 			usleep(USEC_PER_SEC / 10);
 
-		CMTime time = CMTimeMake(framesExportedSoFar, timebase);
+		CMTime time = CMTimeMake(framesExportedSoFar * frameMultiplier, timebase);
 		if (![assetWriterInputPixelBufferAdaptor appendPixelBuffer:pb withPresentationTime:time])
 			throw std::runtime_error("error appending buffer");
 

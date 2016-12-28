@@ -11,9 +11,10 @@
 #define VUOCOMPILERGENERICTYPE_HH
 
 #include "VuoCompilerType.hh"
-#include "VuoGenericType.hh"
+
 class VuoCompiler;
 class VuoCompilerNodeClass;
+class VuoGenericType;
 
 /**
  * The compiler detail class for VuoGenericType.

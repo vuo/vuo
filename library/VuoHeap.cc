@@ -15,24 +15,49 @@
 #include <sstream>
 #include <iomanip>
 using namespace std;
+#include "VuoLog.h"
+
+//#define VUOHEAP_TRACE		// NOCOMMIT
+//#define VUOHEAP_TRACEALL	// NOCOMMIT
+static set<const void *> *VuoHeap_trace;	///< Heap pointers to trace.
 
 /**
  * Calls the sendError() function defined in VuoRuntime (without introducing a direct dependency on VuoRuntime).
  */
 void sendErrorWrapper(const char *message)
 {
+#ifdef VUOHEAP_TRACE
+	fprintf(stderr, "%s\n", message);
+	VuoLog_backtrace();
+#endif
+
 	typedef void (*sendErrorType)(const char *message);
 	sendErrorType sendError = (sendErrorType) dlsym(RTLD_SELF, "sendError");  // for running composition in separate process as executable or in current process
 	if (! sendError)
 		sendError = (sendErrorType) dlsym(RTLD_DEFAULT, "sendError");  // for running composition in separate process as dynamic libraries
-	sendError(message);
+	if (sendError)
+		sendError(message);
+	else
+		VUserLog("%s", message);
 }
 
-map<const void *, int> referenceCounts;  ///< The reference count for each pointer.
-static set<const void *> singletons;  ///< Known singleton pointers.
-map<const void *, DeallocateFunctionType> deallocateFunctions;  ///< The function to be used for deallocating each pointer.
-map<const void *, string> descriptions;  ///< A human-readable description for each pointer.
-dispatch_semaphore_t referenceCountsSemaphore = NULL;  ///< Synchronizes access to @ref referenceCounts.
+/**
+ * An entry in the reference-counting table.
+ */
+typedef struct
+{
+	int referenceCount;
+	DeallocateFunctionType deallocateFunction;
+
+	const char *file;
+	unsigned int line;
+	const char *function;
+	const char *variable;
+} VuoHeapEntry;
+
+static map<const void *, VuoHeapEntry> *referenceCounts;  ///< The reference count for each pointer.
+static set<const void *> *singletons;  ///< Known singleton pointers.
+static dispatch_semaphore_t referenceCountsSemaphore = NULL;  ///< Synchronizes access to referenceCounts.
 
 /**
  * Copies the first 16 printable characters of `pointer` into `summary`, followed by char 0.
@@ -49,12 +74,28 @@ static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
 }
 
 /**
- * Initializes the reference-counting system. To be called once, before any other reference-counting function calls.
+ * Copies the first 16 printable characters of `pointer` into `summary`, followed by char 0.
  */
-void VuoHeap_init(void)
+static char *VuoHeap_makeDescription(VuoHeapEntry e)
 {
-	if (! referenceCountsSemaphore)
-		referenceCountsSemaphore = dispatch_semaphore_create(1);
+	const char *format = "%s:%d :: %s() :: %s";
+	int size = snprintf(NULL, 0, format,  e.file, e.line, e.function, e.variable);
+	char *description = (char *)malloc(size+1);
+	snprintf(description, size+1, format, e.file, e.line, e.function, e.variable);
+	return description;
+}
+
+/**
+ * Initializes the reference-counting system.
+ *
+ * This function is automatically added near the beginning of the linker module's call graph.
+ */
+static void __attribute__((constructor(101))) VuoHeap_init()
+{
+	referenceCounts = new map<const void *, VuoHeapEntry>;
+	singletons = new set<const void *>;
+	VuoHeap_trace = new set<const void *>;
+	referenceCountsSemaphore = dispatch_semaphore_create(1);
 
 #if 0
 	// Periodically dump the referenceCounts table, to help find leaks.
@@ -64,14 +105,14 @@ void VuoHeap_init(void)
 	dispatch_source_set_event_handler(timer, ^{
 										  fprintf(stderr, "\n\n\n\n\nreferenceCounts:\n");
 										  dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
-										  for (map<const void *, int>::iterator i = referenceCounts.begin(); i != referenceCounts.end(); ++i)
+										  for (map<const void *, VuoHeapEntry>::iterator i = referenceCounts->begin(); i != referenceCounts->end(); ++i)
 										  {
 											  const void *heapPointer = i->first;
-											  int referenceCount = i->second;
-											  string description = descriptions[heapPointer];
 											  char pointerSummary[17];
 											  VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
-											  fprintf(stderr, "\t% 3d refs to %p \"%s\", registered at %s\n", referenceCount, heapPointer, pointerSummary, description.c_str());
+											  char *description = VuoHeap_makeDescription(i->second);
+											  fprintf(stderr, "\t% 3d refs to %p \"%s\", registered at %s\n", i->second.referenceCount, heapPointer, pointerSummary, description);
+											  free(description);
 										  }
 										  dispatch_semaphore_signal(referenceCountsSemaphore);
 									  });
@@ -80,28 +121,33 @@ void VuoHeap_init(void)
 }
 
 /**
- * Cleans up the reference-counting system. To be called once, after all other reference-counting function calls.
+ * Sends a telemetry error with information about any objects remaining in the reference counting table.
  */
-void VuoHeap_fini(void)
+void VuoHeap_report(void)
 {
-	if (! referenceCounts.empty())
+	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
+	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VUOLOG_PROFILE_END(referenceCountsSemaphore);
+	{
+
+	if (! referenceCounts->empty())
 	{
 		ostringstream errorMessage;
 		errorMessage << "VuoRelease was not called enough times for:" << endl;
-		for (map<const void *, int>::iterator i = referenceCounts.begin(); i != referenceCounts.end(); ++i)
+		for (map<const void *, VuoHeapEntry>::iterator i = referenceCounts->begin(); i != referenceCounts->end(); ++i)
 		{
 			const void *heapPointer = i->first;
-			int referenceCount = i->second;
-			string description = descriptions[heapPointer];
 			char pointerSummary[17];
 			VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
-			errorMessage << "\t" << setw(3) << referenceCount << " refs to " << heapPointer << " \"" << pointerSummary << "\", registered at " << description << endl;
+			char *description = VuoHeap_makeDescription(i->second);
+			errorMessage << "\t" << setw(3) << i->second.referenceCount << " refs to " << heapPointer << " \"" << pointerSummary << "\", registered at " << description << endl;
+			free(description);
 		}
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
-	dispatch_release(referenceCountsSemaphore);
-	referenceCountsSemaphore = NULL;
+	}
+	dispatch_semaphore_signal(referenceCountsSemaphore);
 }
 
 /**
@@ -127,25 +173,30 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	bool isAlreadyReferenceCounted;
 	int updatedCount;
 
-	ostringstream sout;
-	sout << file << ":" << line << " :: " << func << "() :: " << pointerName;
-	string description = sout.str();
-	string previousDescription;
-
+	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
 	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 
-		isAlreadyReferenceCounted = (referenceCounts.find(heapPointer) != referenceCounts.end());
+#ifdef VUOHEAP_TRACE
+#ifndef VUOHEAP_TRACEALL
+		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
+#endif
+		{
+			fprintf(stderr, "VuoRegister(%p)  %s\n", heapPointer, pointerName);
+			VuoLog_backtrace();
+		}
+#endif
+
+		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
+		isAlreadyReferenceCounted = (i != referenceCounts->end());
 		if (! isAlreadyReferenceCounted)
 		{
-			deallocateFunctions[heapPointer] = deallocate;
-			descriptions[heapPointer] = description;
+			updatedCount = 0;
+			(*referenceCounts)[heapPointer] = (VuoHeapEntry){updatedCount, deallocate, file, line, func, pointerName};
 		}
 		else
-		{
-			previousDescription = descriptions[heapPointer];
-		}
-		updatedCount = referenceCounts[heapPointer];
+			updatedCount = i->second.referenceCount;
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
@@ -153,8 +204,9 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRegister was called more than once for " << heapPointer << " " <<
-						previousDescription << " (previous call), " << description << " (current call)";
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, line, func, pointerName});
+		errorMessage << "VuoRegister was called more than once for " << heapPointer << " " << description;
+		free(description);
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -172,35 +224,38 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 
 	bool isAlreadyReferenceCounted;
 
-	ostringstream sout;
-	sout << file << ":" << line << " :: " << func << "() :: " << pointerName;
-	string description = sout.str();
-	string previousDescription;
-
+	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
 	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
+
+#ifdef VUOHEAP_TRACE
+#ifndef VUOHEAP_TRACEALL
+		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
+#endif
+		{
+			fprintf(stderr, "VuoRegisterSingleton(%p)  %s\n", heapPointer, pointerName);
+			VuoLog_backtrace();
+		}
+#endif
+
 		// Remove the singleton from the main reference-counting table, if it exists there.
 		// Enables reclassifying a pointer that was already VuoRegister()ed.
-		referenceCounts.erase(heapPointer);
-		deallocateFunctions.erase(heapPointer);
+		referenceCounts->erase(heapPointer);
 
 		// Add the singleton to the singleton table.
-		isAlreadyReferenceCounted = (singletons.find(heapPointer) != singletons.end());
+		isAlreadyReferenceCounted = (singletons->find(heapPointer) != singletons->end());
 		if (! isAlreadyReferenceCounted)
-		{
-			singletons.insert(heapPointer);
-			descriptions[heapPointer] = description;
-		}
-		else
-			previousDescription = descriptions[heapPointer];
+			singletons->insert(heapPointer);
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
 
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRegisterSingleton was called more than once for " << heapPointer << " " <<
-						previousDescription << " (previous call), " << description << " (current call)";
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, line, func, pointerName});
+		errorMessage << "VuoRegisterSingleton was called more than once for " << heapPointer << " " << description;
+		free(description);
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -208,27 +263,55 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 }
 
 /**
- * Instead of this function, you probably want to use VuoRetain(). This function is used to implement
- * the VuoRetain() macro.
+ * Wrapper for @ref VuoRetain.
+ *
+ * This used to be an instrumented function, but the instrumentation was removed in Vuo 1.2 to improve performance.
+ * It's still here so that plugins compiled with Vuo 0.9 through 1.1 have a better chance of linking successfully.
+ *
+ * @deprecated Use @ref VuoRetain instead.
  */
-int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, const char *func)
+extern "C" int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, const char *func)
+{
+	return VuoRetain(heapPointer);
+}
+
+/**
+ * @ingroup ReferenceCountingFunctions
+ * Increments the reference count for @a heapPointer (unless @a heapPointer is not being reference-counted).
+ *
+ * @param heapPointer A pointer to allocated memory on the heap.
+ * @return The updated reference count of @a heapPointer, or -1 if @a heapPointer is not being reference-counted or is null.
+ */
+int VuoRetain(const void *heapPointer)
 {
 	if (! heapPointer)
 		return -1;
 
 	int updatedCount = -1;
 	bool foundSingleton = false;
-	string description;
+	VuoHeapEntry entry;
 
+	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
 	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
+		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 
-		map<const void *, int>::iterator i = referenceCounts.find(heapPointer);
-		if (i != referenceCounts.end())
-			updatedCount = ++referenceCounts[heapPointer];
+#ifdef VUOHEAP_TRACE
+#ifndef VUOHEAP_TRACEALL
+		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
+#endif
+		{
+			fprintf(stderr, "VuoRetain(%p)  %s\n", heapPointer, (i != referenceCounts->end()) ? i->second.variable : "");
+			VuoLog_backtrace();
+		}
+#endif
+
+		if (i != referenceCounts->end())
+			updatedCount = ++(i->second.referenceCount);
 		else
-			foundSingleton = singletons.find(heapPointer) != singletons.end();
-		description = descriptions[heapPointer];
+			foundSingleton = singletons->find(heapPointer) != singletons->end();
+		entry = i->second;
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
@@ -236,7 +319,7 @@ int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, con
 	if (updatedCount == -1 && !foundSingleton)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRetain was called by " << file << ":" << line << " :: " << func << "() for unregistered pointer " << heapPointer << " " << description;
+		errorMessage << "VuoRetain was called for unregistered pointer " << heapPointer;
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -244,10 +327,27 @@ int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, con
 }
 
 /**
- * Instead of this function, you probably want to use VuoRelease(). This function is used to implement
- * the VuoRelease() macro.
+ * Wrapper for @ref VuoRelease.
+ *
+ * This used to be an instrumented function, but the instrumentation was removed in Vuo 1.2 to improve performance.
+ * It's still here so that plugins compiled with Vuo 0.9 through 1.1 have a better chance of linking successfully.
+ *
+ * @deprecated Use @ref VuoRelease instead.
  */
-int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, const char *func)
+extern "C" int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, const char *func)
+{
+	return VuoRelease(heapPointer);
+}
+
+/**
+ * @ingroup ReferenceCountingFunctions
+ * Decrements the reference count for @a heapPointer (unless @a heapPointer is not being reference-counted).
+ * If the reference count becomes 0, @a heapPointer is deallocated and is no longer reference-counted.
+ *
+ * @param heapPointer A pointer to allocated memory on the heap.
+ * @return The updated reference count of @a heapPointer, or -1 if @a heapPointer is not being reference-counted, has never been retained, or is null.
+ */
+int VuoRelease(const void *heapPointer)
 {
 	if (! heapPointer)
 		return -1;
@@ -256,34 +356,42 @@ int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, co
 	bool foundSingleton = false;
 	bool isRegisteredWithoutRetain = false;
 	DeallocateFunctionType deallocate = NULL;
-	string description;
 
+	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
 	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
+		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 
-		map<const void *, int>::iterator i = referenceCounts.find(heapPointer);
-		if (i != referenceCounts.end())
+#ifdef VUOHEAP_TRACE
+#ifndef VUOHEAP_TRACEALL
+		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
+#endif
 		{
-			description = descriptions[heapPointer];
-			if (referenceCounts[heapPointer] == 0)
+			fprintf(stderr, "VuoRelease(%p)  %s\n", heapPointer, (i != referenceCounts->end()) ? i->second.variable : "");
+			VuoLog_backtrace();
+		}
+#endif
+
+		if (i != referenceCounts->end())
+		{
+			if (i->second.referenceCount == 0)
 			{
 				isRegisteredWithoutRetain = true;
 			}
 			else
 			{
-				updatedCount = --referenceCounts[heapPointer];
+				updatedCount = --(i->second.referenceCount);
 
 				if (updatedCount == 0)
 				{
-					referenceCounts.erase(heapPointer);
-					deallocate = deallocateFunctions[heapPointer];
-					deallocateFunctions.erase(heapPointer);
-					descriptions.erase(heapPointer);
+					deallocate = i->second.deallocateFunction;
+					referenceCounts->erase(heapPointer);
 				}
 			}
 		}
 		else
-			foundSingleton = singletons.find(heapPointer) != singletons.end();
+			foundSingleton = singletons->find(heapPointer) != singletons->end();
 
 	}
 	dispatch_semaphore_signal(referenceCountsSemaphore);
@@ -295,9 +403,9 @@ int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, co
 	else if (updatedCount == -1 && !foundSingleton)
 	{
 		ostringstream errorMessage;
-		errorMessage << "VuoRelease was called by " << file << ":" << line << " :: " << func << "() for "
+		errorMessage << "VuoRelease was called for "
 					 << (isRegisteredWithoutRetain ? "unretained" : "unregistered")
-					 << " pointer " << heapPointer << " " << description;
+					 << " pointer " << heapPointer;
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -309,13 +417,29 @@ int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, co
  * the file, line, and function where VuoRegister() was called,
  * and the variable name.
  *
- * The returned string is still owned by VuoHeap; you should not free it.
+ * The caller is responsible for freeing the returned string.
  */
 const char * VuoHeap_getDescription(const void *heapPointer)
 {
-	map<const void *, string>::iterator i = descriptions.find(heapPointer);
-	if (i != descriptions.end())
-		return descriptions[heapPointer].c_str();
-	else
-		return "(pointer was not VuoRegister()ed)";
+	map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
+	if (i != referenceCounts->end())
+		return VuoHeap_makeDescription(i->second);
+
+	return strdup("(pointer was not VuoRegister()ed)");
+}
+
+/**
+ * Pass a pointer to this function to log all its subsequent retains and releases.
+ *
+ * This only has any effect when preprocessor macro `VUOHEAP_TRACE` is defined in `VuoHeap.cc`.
+ */
+void VuoHeap_addTrace(const void *heapPointer)
+{
+	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
+	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VUOLOG_PROFILE_END(referenceCountsSemaphore);
+	{
+		VuoHeap_trace->insert(heapPointer);
+	}
+	dispatch_semaphore_signal(referenceCountsSemaphore);
 }

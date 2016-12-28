@@ -34,6 +34,8 @@ typedef struct
 VuoMidiPitchBend VuoMidiPitchBend_makeFromJson(struct json_object *js);
 struct json_object *VuoMidiPitchBend_getJson(const VuoMidiPitchBend value);
 char *VuoMidiPitchBend_getSummary(const VuoMidiPitchBend value);
+
+#define VuoMidiPitchBend_SUPPORTS_COMPARISON
 bool VuoMidiPitchBend_areEqual(const VuoMidiPitchBend valueA, const VuoMidiPitchBend valueB);
 bool VuoMidiPitchBend_isLessThan(const VuoMidiPitchBend valueA, const VuoMidiPitchBend valueB);
 

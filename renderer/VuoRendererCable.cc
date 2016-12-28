@@ -110,7 +110,7 @@ QPointF VuoRendererCable::getStartPoint(void) const
 
 	if (fromPort && fromPort->hasRenderer())
 	{
-		VuoRendererPublishedPort *sidebarPort = fromPort->getRenderer()->getProxyPublishedSidebarPort();
+		VuoRendererPublishedPort *sidebarPort = dynamic_cast<VuoRendererPublishedPort *>(fromPort->getRenderer());
 		if (sidebarPort)
 		{
 			QList<QGraphicsView *> views = scene()->views();
@@ -134,7 +134,7 @@ QPointF VuoRendererCable::getEndPoint(void) const
 
 	if (toNode && toPort && toPort->hasRenderer())
 	{
-		VuoRendererPublishedPort *sidebarPort = toPort->getRenderer()->getProxyPublishedSidebarPort();
+		VuoRendererPublishedPort *sidebarPort = dynamic_cast<VuoRendererPublishedPort *>(toPort->getRenderer());
 		if (sidebarPort)
 		{
 			QList<QGraphicsView *> views = scene()->views();
@@ -416,11 +416,11 @@ bool VuoRendererCable::isPublishedInputCableWithoutVisiblePublishedPort() const
 	// but the sidebar is not currently displayed, disable painting.
 	if (getBase()->getFromPort())
 	{
-		VuoRendererPublishedPort *proxyPublishedInputSidebarPort = getBase()->getFromPort()->getRenderer()->getProxyPublishedSidebarPort();
+		VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(getBase()->getFromPort()->getRenderer());
 
-		if (proxyPublishedInputSidebarPort)
+		if (publishedPort)
 		{
-			bool proxyPublishedInputSidebarPortHidden = (! proxyPublishedInputSidebarPort->isVisible());
+			bool proxyPublishedInputSidebarPortHidden = (! publishedPort->isVisible());
 			if (proxyPublishedInputSidebarPortHidden)
 				return true;
 		}
@@ -439,11 +439,11 @@ bool VuoRendererCable::isPublishedOutputCableWithoutVisiblePublishedPort() const
 	// but the sidebar is not currently displayed, disable painting.
 	if (getBase()->getToPort())
 	{
-		VuoRendererPublishedPort *proxyPublishedOutputSidebarPort = getBase()->getToPort()->getRenderer()->getProxyPublishedSidebarPort();
+		VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(getBase()->getToPort()->getRenderer());
 
-		if (proxyPublishedOutputSidebarPort)
+		if (publishedPort)
 		{
-			bool proxyPublishedOutputSidebarPortHidden = (! proxyPublishedOutputSidebarPort->isVisible());
+			bool proxyPublishedOutputSidebarPortHidden = (! publishedPort->isVisible());
 			if (proxyPublishedOutputSidebarPortHidden)
 				return true;
 		}
@@ -746,17 +746,8 @@ bool VuoRendererCable::effectivelyCarriesData(void) const
 	VuoRendererPort *fromPort = (getBase()->getFromPort()? getBase()->getFromPort()->getRenderer() : NULL);
 	VuoRendererPort *toPort = (getBase()->getToPort()? getBase()->getToPort()->getRenderer() : NULL);
 
-	VuoType *fromPortDataType = (fromPort?
-									 (fromPort->getProxyPublishedSidebarPort()?
-										  fromPort->getProxyPublishedSidebarPort()->getBase()->getType() :
-										  fromPort->getDataType()) :
-									 NULL);
-
-	VuoType *toPortDataType = (toPort?
-								   (toPort->getProxyPublishedSidebarPort()?
-										toPort->getProxyPublishedSidebarPort()->getBase()->getType() :
-										toPort->getDataType()) :
-								   NULL);
+	VuoType *fromPortDataType = (fromPort? fromPort->getDataType() : NULL);
+	VuoType *toPortDataType  = (toPort? toPort->getDataType() : NULL);
 
 	bool cableCarriesData = false;
 	if (fromPort && !toPort)

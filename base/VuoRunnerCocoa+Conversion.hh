@@ -28,7 +28,6 @@ extern "C" {
 + (id)cocoaObjectWithVuoValue:(json_object *)vuoValue ofType:(string)type;
 + (json_object *)vuoValueWithCocoaObject:(id)value;
 + (NSImage *)nsImageWithVuoImage:(VuoImage)vi;
-+ (NSArray *)menuItemsForType:(string)type;
 @end
 
 /**

@@ -11,7 +11,9 @@
 #define VUOCOMPILERTRIGGERPORT_H
 
 #include "VuoCompilerPort.hh"
-#include "VuoCompilerTriggerPortClass.hh"
+
+class VuoCompilerTriggerPortClass;
+class VuoCompilerType;
 
 /**
  * A trigger output port.
@@ -20,30 +22,25 @@
  */
 class VuoCompilerTriggerPort : public VuoCompilerPort
 {
-private:
-	Function *function;
-	GlobalVariable *dispatchQueueVariable;
-	GlobalVariable *previousDataVariable;
-	string nodeInstanceIdentifier;
-	Function * getWorkerFunction(Module *module, string identifier);
-
 public:
 	VuoCompilerTriggerPort(VuoPort * basePort);
-	void generateAllocation(Module *module, string nodeInstanceIdentifier);
-	void generateInitialization(Module *module, BasicBlock *block);
-	void generateFinalization(Module *module, BasicBlock *block);
-	Function * generateAsynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, string identifier);
-	Function * generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, string identifier, Value *workerFunctionArg=NULL);
-	Value * generateDataValueUpdate(Module *module, BasicBlock *block, Function *triggerWorker);
-	void generateDataValueDiscard(Module *module, BasicBlock *block, Function *triggerWorker);
-	LoadInst * generateLoad(BasicBlock *block);
-	StoreInst * generateStore(Value *value, BasicBlock *block);
-	void setFunction(Function *function);
-	Function * getFunction(void);
-	GlobalVariable * getDataVariable(void);
+	Value * generateCreatePortContext(Module *module, BasicBlock *block);
+	static void generateAsynchronousSubmissionToDispatchQueue(Module *module, Function *function, BasicBlock *block, Value *compositionIdentifierValue, Value *portContextValue, VuoType *dataType, Function *workerFunction);
+	Function * generateSynchronousSubmissionToDispatchQueue(Module *module, BasicBlock *block, Value *nodeContextValue, string workerFunctionName, Value *workerFunctionArg=NULL);
+	Function * getWorkerFunction(Module *module, string functionName, bool isExternal=false);
+	static Value * generateNonBlockingWaitForSemaphore(Module *module, BasicBlock *block, Value *portContextValue);
+	void generateSignalForSemaphore(Module *module, BasicBlock *block, Value *nodeContextValue);
+	Value * generateLoadFunction(Module *module, BasicBlock *block, Value *nodeContextValue);
+	void generateStoreFunction(Module *module, BasicBlock *block, Value *nodeContextValue, Value *functionValue);
+	Value * generateLoadPreviousData(Module *module, BasicBlock *block, Value *nodeContextValue);
+	void generateFreeContext(Module *module, BasicBlock *block, Function *workerFunction);
+	Value * generateCompositionIdentifierValue(Module *module, BasicBlock *block, Function *workerFunction);
+	Value * generateDataValue(Module *module, BasicBlock *block, Function *workerFunction);
+	Value * generateDataValueUpdate(Module *module, BasicBlock *block, Function *workerFunction, Value *nodeContextValue);
+	static void generateDataValueDiscardFromScheduler(Module *module, Function *function, BasicBlock *block, VuoType *dataType);
+	void generateDataValueDiscardFromWorker(Module *module, BasicBlock *block, Function *workerFunction);
 	Type * getDataType(void);
 	VuoCompilerTriggerPortClass * getClass(void);
-	string getIdentifier(void);
 };
 
 #endif

@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
 						}
-					},					
+					},
 					"dependencies": [
 						"VuoMeshUtility"
 					],
@@ -50,11 +50,11 @@ void nodeEvent
 	VuoPoint4d* textures = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
 
 	unsigned int i = 0;
-	for(int y = 0; y < rows; y++)
+	for(int y = 0; y < rows2; y++)
 	{
 		float yp = ((y/(float)(rows2-1)) * h) - half_h;
 
-		for(int x = 0; x < columns; x++)
+		for(int x = 0; x < columns2; x++)
 		{
 			vertices[i] = VuoPoint4d_make( ((x/(float)(columns2-1)) * w) -  half_w, yp, 0, 1);
 			normals[i] = VuoPoint4d_make( 0, 0, 1, 1);
@@ -66,9 +66,9 @@ void nodeEvent
 	unsigned int* elements = (unsigned int*)malloc(sizeof(unsigned int) * elementCount);
 	unsigned int n = 0;
 
-	for(int y = 0; y < (rows-1); y++)
+	for(int y = 0; y < (rows2-1); y++)
 	{
-		for(int x = 0; x < (columns-1); x++)
+		for(int x = 0; x < (columns2-1); x++)
 		{
 			unsigned int a = (y*columns2) + x+0;
 			unsigned int b = (y*columns2) + x+1;
@@ -94,7 +94,7 @@ void nodeEvent
 	submesh.tangents = NULL;
 	submesh.bitangents = NULL;
 	submesh.textureCoordinates = textures;
-	submesh.faceCullingMode = GL_NONE;
+	submesh.faceCullingMode = GL_BACK;
 	submesh.elementCount = elementCount;
 	submesh.elements = elements;
 	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;

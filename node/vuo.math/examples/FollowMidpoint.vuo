@@ -1,6 +1,6 @@
 /**
  * @file
- * Draws two points that randomly move around (blue) and the midpoint between them (white).
+ * Draws two points that randomly move around (blue) and the midpoint between them (orange).
  *
  * @copyright Copyright © 2012–2015 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -26,7 +26,7 @@ MakeList4 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<ref
 MakeList5 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1025,74" fillcolor="green"];
 MakeList6 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="628,246" _1="{\"r\":0.015808,\"g\":0.115480,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
 MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="49,296" _2="10.000000"];
-MakeList8 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="627,475" _1="{\"r\":0.993072,\"g\":1.000000,\"b\":0.964065,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
+MakeList8 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="627,475" _1="{\"r\":1,\"g\":0.63871216773986816,\"b\":0.094850078225135803,\"a\":1}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
 MakeRadialGradientLayer [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="697,57" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000"];
 MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="698,220" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000"];
 MakeRadialGradientLayer3 [type="vuo.layer.make.gradient.radial" version="1.1.0" label="Make Radial Gradient Layer|<refresh>refresh\l|<name>name\l|<colors>colors\l|<gradientCenter>gradientCenter\l|<gradientRadius>gradientRadius\l|<layerCenter>layerCenter\l|<layerRotation>layerRotation\l|<layerWidth>layerWidth\l|<layerHeight>layerHeight\l|<layer>layer\r" pos="697,449" _gradientCenter="{\"x\":0,\"y\":0}" _gradientRadius="1" _layerRotation="0.000000" _layerWidth="0.050000" _layerHeight="0.050000"];

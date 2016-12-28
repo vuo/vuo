@@ -22,6 +22,8 @@ extern "C"
  */
 typedef void * VuoGlContext;
 
+bool VuoGlContext_isMultisamplingFunctional(VuoGlContext context);
+
 void VuoGlContext_setGlobalRootContext(void *rootContext);
 
 VuoGlContext VuoGlContext_use(void);

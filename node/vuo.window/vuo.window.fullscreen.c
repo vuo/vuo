@@ -12,10 +12,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Fullscreen Status",
-					 "keywords" : [ "windowed", "screen", "display", "properties" ],
+					 "keywords" : [ "windowed", "screen", "display", "properties", "set" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "ShowWindowsOn2Screens.vuo" ]
+						 "exampleCompositions" : [ "ToggleFullscreen.vuo", "ShowWindowsOn2Screens.vuo" ]
 					 }
 				 });
 

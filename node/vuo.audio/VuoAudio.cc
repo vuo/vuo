@@ -121,7 +121,7 @@ int VuoAudio_receivedEvent(void *outputBuffer, void *inputBuffer, unsigned int n
 //	ai->priorStreamTime=streamTime;
 
 	if (status)
-		VLog("Stream overflow on %s.", ai->inputDevice.name);
+		VUserLog("Stream overflow on %s.", ai->inputDevice.name);
 
 	// Fire triggers requesting audio output buffers.
 	ai->outputTriggers.fire(streamTime);
@@ -168,7 +168,7 @@ int VuoAudio_receivedEvent(void *outputBuffer, void *inputBuffer, unsigned int n
 							  }
 
 						  if (pendingOutput)
-							  VLog("This audio device (%s) doesn't support output.", ai->outputDevice.name);
+							  VUserLog("This audio device (%s) doesn't support output.", ai->outputDevice.name);
 						  return;
 					  }
 
@@ -221,6 +221,7 @@ int VuoAudio_receivedEvent(void *outputBuffer, void *inputBuffer, unsigned int n
 								  {
 									  // We were previously playing audio, so just copy the samples intact.
 									  for (VuoInteger i=0; i<nBufferFrames; ++i)
+										  /// @todo Should we clamp here (or after all buffers for this channel have been summed), or does CoreAudio handle that for us?
 										  outputBufferDouble[nBufferFrames*(channel) + i] += as.samples[i];
 								  }
 
@@ -287,7 +288,7 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Failed to open the audio device (%d) :: %s.\n", deviceId, error.what());
+		VUserLog("Failed to open the audio device (%d) :: %s.\n", deviceId, error.what());
 
 		if (ai)
 		{
@@ -307,8 +308,6 @@ static void VuoAudio_destroy(VuoAudio_internal ai)
 {
 	VuoAudio_internalPool->removeSharedInstance(ai->inputDevice.id);
 
-	dispatch_release(ai->pendingOutputQueue);
-
 	try
 	{
 		if (ai->rta->isStreamOpen())
@@ -319,8 +318,11 @@ static void VuoAudio_destroy(VuoAudio_internal ai)
 	}
 	catch (RtError &error)
 	{
-		VLog("Failed to close the audio device (%s) :: %s.\n", ai->inputDevice.name, error.what());
+		VUserLog("Failed to close the audio device (%s) :: %s.\n", ai->inputDevice.name, error.what());
 	}
+
+	// Now that the audio stream is stopped (and the last callback has returned), it's safe to delete the queue.
+	dispatch_release(ai->pendingOutputQueue);
 
 	// Release any leftover buffers.
 	for (pendingOutputType::iterator it = ai->pendingOutput.begin(); it != ai->pendingOutput.end(); ++it)
@@ -373,7 +375,7 @@ VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Failed to enumerate audio devices :: %s.\n", error.what());
+		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
 		return NULL;
 	}
 
@@ -415,7 +417,7 @@ VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Failed to enumerate audio devices :: %s.\n", error.what());
+		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
 		return NULL;
 	}
 

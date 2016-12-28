@@ -22,7 +22,7 @@ void nodeEvent
 (
 		VuoInputData(VuoBoolean, {"default":false}) value,
 		VuoOutputData(VuoBoolean) notValue
- )
+)
 {
 	*notValue = !value;
 }

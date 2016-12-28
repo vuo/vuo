@@ -21,7 +21,7 @@ static inline VuoImage VuoImage_watermark(VuoImage image)
 	// Render the watermark text.
 	VuoImage textImage;
 	{
-		VuoFont font = VuoFont_make("HelveticaNeue-Bold", 72, false, VuoColor_makeWithRGBA(.1,.1,.1,1), VuoHorizontalAlignment_Left, 1, 1);
+		VuoFont font = VuoFont_make(VuoText_make("HelveticaNeue-Bold"), 72, false, VuoColor_makeWithRGBA(.1,.1,.1,1), VuoHorizontalAlignment_Left, 1, 1);
 		textImage = VuoImage_makeText(" Vuo Free Trial  \n", font, 1);
 		VuoRetain(textImage);
 	}

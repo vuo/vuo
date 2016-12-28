@@ -7,6 +7,7 @@ HEADERS += \
 	node.h
 
 SUBDIRS += \
+	vuo.app \
 	vuo_artnet \
 	vuo.audio \
 	vuo.bcf2000 \
@@ -17,6 +18,7 @@ SUBDIRS += \
 	vuo.event \
 	vuo.file \
 	vuo.font \
+	vuo.hid \
 	vuo_image \
 	vuo.keyboard \
 	vuo.kinect \
@@ -45,6 +47,7 @@ SUBDIRS += \
 	vuo.transform \
 	vuo.type \
 	vuo.ui \
+	vuo.url \
 	vuo.video \
 	vuo.window
 

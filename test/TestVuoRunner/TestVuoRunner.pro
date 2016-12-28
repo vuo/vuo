@@ -18,6 +18,7 @@ OTHER_FILES += composition.h \
 
 QMAKE_LFLAGS += \
 	-rpath ../../framework \
+	-framework AppKit \
 	-framework OpenGL \
 	$$ROOT/library/libVuoGlContext.dylib
 
@@ -47,17 +48,28 @@ test_runner.commands = \
 		-c ${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_IN_BASE}.bc && \
 	$$LLVM_LINK \
+		$$ROOT/runtime/libVuoEventLoop.bc \
 		$$ROOT/runtime/libVuoRuntime.bc \
 		$$ROOT/runtime/libVuoTelemetry.bc \
 		${QMAKE_FILE_IN_BASE}.bc \
 		-o ${QMAKE_FILE_IN_BASE}-linked.bc && \
 	$$QMAKE_CC \
+		$$QMAKE_LFLAGS \
 		$${TEST_RUNNER_NATIVE_LIBS} \
 		${QMAKE_FILE_IN_BASE}-linked.bc \
 		libVuoHeap.dylib \
-		$${JSONC_ROOT}/lib/libjson.a \
+		$${JSONC_ROOT}/lib/libjson-c.a \
 		-lobjc \
-		-framework Foundation \
+		-framework AppKit \
 		-o ${QMAKE_FILE_OUT}
 test_runner.CONFIG += no_link target_predeps
 QMAKE_EXTRA_COMPILERS += test_runner
+
+buildComposition.commands = \
+	   ../../framework/vuo-compile PublishedPorts.vuo \
+	&& ../../framework/vuo-link PublishedPorts.bc
+buildComposition.depends += PublishedPorts.vuo
+buildComposition.target = PublishedPorts
+POST_TARGETDEPS += PublishedPorts
+QMAKE_EXTRA_TARGETS += buildComposition
+QMAKE_CLEAN += PublishedPorts PublishedPorts.bc

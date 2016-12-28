@@ -4,6 +4,7 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 NODE_SOURCES += \
+	vuo.file.create.folder.c \
 	vuo.file.list.c
 
 HEADERS += \
@@ -14,11 +15,5 @@ TYPE_SOURCES += \
 
 HEADERS += \
 	VuoFileType.h
-
-NODE_LIBRARY_SOURCES += \
-	VuoFileListSort.cc
-
-HEADERS += \
-	VuoFileListSort.h
 
 include(../../module.pri)

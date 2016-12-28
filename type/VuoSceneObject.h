@@ -42,6 +42,7 @@ typedef enum
 	VuoSceneObjectType_PerspectiveCamera,
 	VuoSceneObjectType_StereoCamera,
 	VuoSceneObjectType_OrthographicCamera,
+	VuoSceneObjectType_FisheyeCamera,
 	VuoSceneObjectType_AmbientLight,
 	VuoSceneObjectType_PointLight,
 	VuoSceneObjectType_Spotlight,
@@ -69,12 +70,14 @@ typedef struct VuoSceneObject
 	VuoList_VuoSceneObject childObjects;
 
 	// Camera
-	float cameraFieldOfView;	///< Perspective FOV, in degrees.
+	float cameraFieldOfView;	///< Perspective and fisheye FOV, in degrees.
 	float cameraWidth;	///< Orthographic width, in scene coordinates.
 	float cameraDistanceMin;	///< Distance from camera to near clip plane.
 	float cameraDistanceMax;	///< Distance from camera to far clip plane.
 	float cameraConfocalDistance;	///< Distance from camera to stereoscopic confocal plane.
 	float cameraIntraocularDistance;	///< Distance between the stereoscopic camera pair.
+	float cameraVignetteWidth;			///< Fisheye only.  Distance from the center of the viewport to the center of the vignette.
+	float cameraVignetteSharpness;		///< Fisheye only.  Distance that the vignette gradient covers.
 
 	// Light
 	VuoColor lightColor;
@@ -101,10 +104,12 @@ VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font);
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax);
 VuoSceneObject VuoSceneObject_makeStereoCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal distanceMin, VuoReal distanceMax, VuoReal confocalDistance, VuoReal intraocularDistance);
 VuoSceneObject VuoSceneObject_makeOrthographicCamera(VuoText name, VuoTransform transform, float width, float distanceMin, float distanceMax);
+VuoSceneObject VuoSceneObject_makeFisheyeCamera(VuoText name, VuoTransform transform, VuoReal fieldOfView, VuoReal vignetteWidth, VuoReal vignetteSharpness);
 VuoSceneObject VuoSceneObject_makeDefaultCamera(void);
 
 bool VuoSceneObject_find(VuoSceneObject so, VuoText nameToMatch, VuoList_VuoSceneObject parentObjects, VuoSceneObject *foundObject);
-VuoSceneObject VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, bool *foundCamera);
+bool VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, VuoSceneObject *foundCamera);
+bool VuoSceneObject_isPopulated(VuoSceneObject so);
 
 VuoSceneObject VuoSceneObject_makeAmbientLight(VuoColor color, float brightness);
 VuoSceneObject VuoSceneObject_makePointLight(VuoColor color, float brightness, VuoPoint3d position, float range, float sharpness);

@@ -27,13 +27,5 @@ void nodeEvent
 		VuoOutputData(VuoDictionary_VuoText_VuoReal) dictionary
 )
 {
-	*dictionary = VuoDictionaryCreate_VuoText_VuoReal();
-
-	unsigned long count = MIN( VuoListGetCount_VuoText(keys), VuoListGetCount_VuoReal(values) );
-	for (unsigned long i = 1; i <= count; ++i)
-	{
-		VuoText key = VuoListGetValue_VuoText(keys, i);
-		VuoReal value = VuoListGetValue_VuoReal(values, i);
-		VuoDictionarySetKeyValue_VuoText_VuoReal(*dictionary, key, value);
-	}
+	*dictionary = VuoDictionaryCreateWithLists_VuoText_VuoReal(keys, values);
 }

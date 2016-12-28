@@ -12,16 +12,20 @@
 #include "VuoQTCapture.h"
 #include "VuoQtListener.h"
 #include "VuoTriggerSet.hh"
+#include "VuoOsStatus.h"
 #include <QTKit/QTkit.h>
 #include <IOKit/IOKitLib.h>
+#include <CoreMediaIO/CMIOHardware.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					  "title" : "VuoQtCapture",
 					  "dependencies" : [
 						"VuoImage",
+						"VuoOsStatus",
 						"VuoVideoInputDevice",
 						"VuoList_VuoVideoInputDevice",
+						"CoreMediaIO.framework",
 						"QTKit.framework",
 						"IOKit.framework",
 						"AppKit.framework",
@@ -29,6 +33,28 @@ VuoModuleMetadata({
 					  ]
 				 });
 #endif
+
+/**
+ * Enable support for video capture from tethered iOS devices.
+ */
+static void __attribute__((constructor)) VuoQTCapture_init()
+{
+	// kCMIOHardwarePropertyAllowScreenCaptureDevices (which doesn't exist until OS X v10.10)
+	int allowScreenCaptureDevices = 'yes ';
+
+	CMIOObjectPropertyAddress property = { allowScreenCaptureDevices, kCMIOObjectPropertyScopeGlobal, kCMIOObjectPropertyElementMaster };
+	if (CMIOObjectHasProperty(kCMIOObjectSystemObject, &property))
+	{
+		UInt32 yes = 1;
+		OSStatus ret = CMIOObjectSetPropertyData(kCMIOObjectSystemObject, &property, 0, NULL, sizeof(yes), &yes);
+		if (ret != kCMIOHardwareNoError)
+		{
+			char *errorText = VuoOsStatus_getText(ret);
+			VUserLog("Warning: Couldn't enable tethered iOS device support: %s", errorText);
+			free(errorText);
+		}
+	}
+}
 
 /**
  *	A singleton class that listens for changes in available video input devices.
@@ -103,6 +129,8 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
  * Given a `uniqueID` string (e.g., `0x1a11000005ac8510`, from `-[QTCaptureDevice uniqueID]`),
  * searches the IORegistry to find a matching FireWire or USB device,
  * and returns the Vendor Name string.
+ *
+ * The returned string has a retain count +1, so the caller should release it.
  */
 NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID)
 {
@@ -123,7 +151,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID)
 			NSString *guidAsHexString = [NSString stringWithFormat:@"%llx",[(NSNumber *)CFDictionaryGetValue(serviceDictionary, @"GUID") longLongValue]];
 			if ([uniqueID rangeOfString:guidAsHexString].location != NSNotFound)
 			{
-				NSString *vendorName = [(NSString *)CFDictionaryGetValue(serviceDictionary, @"FireWire Vendor Name") autorelease];
+				NSString *vendorName = [(NSString *)CFDictionaryGetValue(serviceDictionary, @"FireWire Vendor Name") retain];
 				CFRelease(serviceDictionary);
 				IOObjectRelease(serviceObject);
 				IOObjectRelease(entry_iterator);
@@ -152,7 +180,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID)
 			NSString *guidAsHexString = [NSString stringWithFormat:@"%llx",[(NSNumber *)CFDictionaryGetValue(serviceDictionary, @"locationID") longLongValue]];
 			if ([uniqueID rangeOfString:guidAsHexString].location != NSNotFound)
 			{
-				NSString *vendorName = [(NSString *)CFDictionaryGetValue(serviceDictionary, @"USB Vendor Name") autorelease];
+				NSString *vendorName = [(NSString *)CFDictionaryGetValue(serviceDictionary, @"USB Vendor Name") retain];
 				CFRelease(serviceDictionary);
 				IOObjectRelease(serviceObject);
 				IOObjectRelease(entry_iterator);
@@ -184,6 +212,7 @@ VuoList_VuoVideoInputDevice VuoQTCapture_getInputDevices(void)
 		NSString *vendorName = VuoQTCapture_getVendorNameForUniqueID([dev uniqueID]);
 		if ([vendorName length])
 			deviceName = [NSString stringWithFormat:@"%@ %@", vendorName, deviceName];
+		[vendorName release];
 		VuoText displayName = VuoText_make([deviceName UTF8String]);
 
 		VuoListAppendValue_VuoVideoInputDevice(devices, VuoVideoInputDevice_make(uniqueID, displayName));

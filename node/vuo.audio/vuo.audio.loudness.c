@@ -23,15 +23,13 @@ struct nodeInstanceData
 	VuoReal loudness;
 };
 
-struct nodeInstanceData *nodeInstanceInit
-(
-		VuoInputData(VuoReal) loudness
-)
+struct nodeInstanceData *nodeInstanceInit()
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 
-	context->loudness = loudness;
+	// Always start out at 0, then lerp to the desired loudless, to avoid clicks/blips upon launch.
+	context->loudness = 0;
 
 	return context;
 }
@@ -39,12 +37,16 @@ struct nodeInstanceData *nodeInstanceInit
 void nodeInstanceEvent
 (
 		VuoInputData(VuoList_VuoAudioSamples) samples,
+		VuoInputEvent({"data":"samples"}) samplesEvent,
 		VuoInputData(VuoReal, {"suggestedMin":0, "suggestedMax":2, "default":1}) loudness,
 		VuoInputEvent({"data":"loudness", "eventBlocking":"wall"}) loudnessEvent,
 		VuoOutputData(VuoList_VuoAudioSamples) adjustedSamples,
 		VuoInstanceData(struct nodeInstanceData *)context
 )
 {
+	if (!samplesEvent)
+		return;
+
 	unsigned int len = VuoListGetCount_VuoAudioSamples(samples);
 	*adjustedSamples = VuoListCreate_VuoAudioSamples();
 

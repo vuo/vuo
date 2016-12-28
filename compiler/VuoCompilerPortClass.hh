@@ -11,21 +11,20 @@
 #define VUOCOMPILERPORTCLASS_H
 
 #include "VuoCompilerNodeArgumentClass.hh"
-#include "VuoType.hh"
+#include "VuoPortClass.hh"
 
-class VuoPort;
 class VuoCompilerPort;
-
+class VuoPort;
+class VuoType;
 
 /**
  * A port type.
  */
 class VuoCompilerPortClass : public VuoCompilerNodeArgumentClass
 {
-private:
+protected:
 	struct json_object *details;  ///< Metadata specified in the node class implementation, such as the port's display name.
 
-protected:
 	VuoCompilerPortClass(string name, VuoPortClass::PortType portType, Type *type);
 
 public:
@@ -51,10 +50,13 @@ public:
 	 */
 	virtual void setDataVuoType(VuoType *type) = 0;
 
+	/**
+	 * Returns the port class's display name, camel-case expanded, and optionally overridden by the port class `details`.
+	 */
+	virtual string getDisplayName(void);
+
 	void setDetails(struct json_object *details);
 	json_object * getDetails(void);
-
-	string getDisplayName(void);
 };
 
 #endif

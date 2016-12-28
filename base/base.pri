@@ -1,4 +1,5 @@
 SOURCES += \
+	../runtime/VuoLog.cc \
 	VuoBase.cc \
 	VuoBaseDetail.cc \
 	VuoNodeClass.cc \
@@ -22,6 +23,8 @@ SOURCES += \
 	miniz.c
 
 OBJECTIVE_SOURCES += \
+	../runtime/VuoEventLoop.m \
+	VuoFileUtilitiesCocoa.mm \
 	VuoMovieExporter.mm \
 	VuoRunnerCocoa.mm \
 	VuoRunnerCocoa+Conversion.mm
@@ -40,6 +43,7 @@ HEADERS += \
 	VuoRunnerCocoa.h \
 	VuoRunnerCocoa+Conversion.hh \
 	VuoFileUtilities.hh \
+	VuoFileUtilitiesCocoa.hh \
 	VuoTelemetry.h \
 	VuoStringUtilities.hh \
 	VuoPublishedPort.hh \

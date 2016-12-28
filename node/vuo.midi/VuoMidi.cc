@@ -110,7 +110,7 @@ VuoMidiOut VuoMidiOut_make(VuoMidiOutputDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_getSummary(md), error.what());
+		VUserLog("Failed to open the specified MIDI device (%s) :: %s.", VuoMidiOutputDevice_getSummary(md), error.what());
 		if (midiout)
 			delete midiout;
 		return NULL;
@@ -247,7 +247,7 @@ void VuoMidiIn_receivedEvent(double timeStamp, std::vector< unsigned char > *mes
 			messageHex.push_back(hex[(*message)[i] >> 4]);
 			messageHex.push_back(hex[(*message)[i] & 0x0f]);
 		}
-		VLog("Warning: Received unknown message: 0x%s", messageHex.c_str());
+		VUserLog("Warning: Received unknown message: 0x%s", messageHex.c_str());
 	}
 }
 
@@ -300,7 +300,7 @@ VuoMidiIn VuoMidiIn_make(VuoMidiInputDevice md)
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
-		VLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_getSummary(md), error.what());
+		VUserLog("Error: Failed to open the specified MIDI device (%s) :: %s.", VuoMidiInputDevice_getSummary(md), error.what());
 		if (midiin)
 			delete midiin;
 		return NULL;

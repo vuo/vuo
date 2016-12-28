@@ -8,6 +8,7 @@
  */
 
 #include <string.h>
+#include <ctype.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -78,7 +79,7 @@ bool VuoFileFormat_isSupportedMeshFile(const char *path)
  */
 bool VuoFileFormat_isSupportedMovieFile(const char *path)
 {
-	const char *formats[] = {"mov", "avi", "dv", "mpeg", "mpg", "mp2", "m4v", "mp4", "ogv"};
+	const char *formats[] = {"mov", "avi", "dv", "mpeg", "mpg", "mp2", "m4v", "mp4", "ogv", "gif"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }
@@ -90,7 +91,27 @@ bool VuoFileFormat_isSupportedSceneFile(const char *path)
 {
 	const char *formats[] = {"3ds", "dae", "obj", "dxf", "ply", "lwo", "lxo", "ac3d", "ms3d", "cob", "scn", "xml",
 							 "irr", "irrmesh", "mdl", "md2", "md3", "pk3", "mdc", "md5", "m3", "smd", "ter",
-							 "raw", "b3d", "q3d", "q3s", "nff", "off", "3dgs", "hmp", "ndo"};
+							 "raw", "b3d", "q3d", "q3s", "nff", "off", "3dgs", "hmp", "ndo", "fbx", "blend", "stl"};
+	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
+	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
+}
+
+/**
+ * Returns true if the file is of one of the supported RSS file formats.
+ */
+bool VuoFileFormat_isSupportedFeedFile(const char *path)
+{
+	const char *formats[] = {"rss", "rdf"};
+	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
+	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
+}
+
+/**
+ * Returns true if the file is of one of the supported data file formats.
+ */
+bool VuoFileFormat_isSupportedDataFile(const char *path)
+{
+	const char *formats[] = {"txt", "csv"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }

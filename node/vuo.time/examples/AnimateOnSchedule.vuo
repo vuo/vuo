@@ -1,0 +1,47 @@
+/**
+ * @file
+ * Triggers successive animations on a schedule.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Curve2 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="525,615" _startPosition="{\"x\":-0.33000001311302185,\"y\":-0.25}" _endPosition="{\"x\":-0.33000001311302185,\"y\":0.25}" _duration="1" _curve="\"circular\"" _easing="\"out\"" _loop="\"mirror\""];
+Curve3 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="525,780" _startPosition="{\"x\":0,\"y\":-0.25}" _endPosition="{\"x\":0,\"y\":0.25}" _duration="1" _curve="\"circular\"" _easing="\"out\"" _loop="\"mirror\""];
+Curve4 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="525,945" _startPosition="{\"x\":0.33000001311302185,\"y\":-0.25}" _endPosition="{\"x\":0.33000001311302185,\"y\":0.25}" _duration="1" _curve="\"circular\"" _easing="\"out\"" _loop="\"mirror\""];
+Curve6 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="525,1110" _startPosition="{\"x\":0.67000001668930054,\"y\":-0.25}" _endPosition="{\"x\":0.67000001668930054,\"y\":0.25}" _duration="1" _curve="\"circular\"" _easing="\"out\"" _loop="\"mirror\""];
+Curve7 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="525,450" _startPosition="{\"x\":-0.67000001668930054,\"y\":-0.25}" _endPosition="{\"x\":-0.67000001668930054,\"y\":0.25}" _duration="1" _curve="\"circular\"" _easing="\"out\"" _loop="\"mirror\""];
+MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1009,746" fillcolor="green"];
+MakeList20 [type="vuo.list.make.5.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="979,731" fillcolor="green"];
+MakeList7 [type="vuo.list.make.5.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="28,776" fillcolor="violet" _1="0.20000000000000001" _2="0.40000000000000002" _3="0.59999999999999998" _4="0.80000000000000004" _5="1"];
+MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="675,420" _color="{\"r\":0.13900968432426453,\"g\":0.7779201865196228,\"b\":1,\"a\":1}" _rotation="0.0" _width="0.14999999999999999" _height="0.14999999999999999" _sharpness="1"];
+MakeOvalLayer3 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="675,585" _color="{\"r\":0.12117189168930054,\"g\":1,\"b\":0.78300142288208008,\"a\":1}" _rotation="0.0" _width="0.14999999999999999" _height="0.14999999999999999" _sharpness="1"];
+MakeOvalLayer4 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="675,750" _color="{\"r\":0.11798276007175446,\"g\":1,\"b\":0.48079651594161987,\"a\":1}" _rotation="0.0" _width="0.14999999999999999" _height="0.14999999999999999" _sharpness="1"];
+MakeOvalLayer5 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="675,915" _color="{\"r\":0.7598230242729187,\"g\":1,\"b\":0.12872511148452759,\"a\":1}" _rotation="0.0" _width="0.14999999999999999" _height="0.14999999999999999" _sharpness="1"];
+MakeOvalLayer6 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="675,1080" _color="{\"r\":0.95970094203948975,\"g\":1,\"b\":0.11578545719385147,\"a\":1}" _rotation="0.0" _width="0.14999999999999999" _height="0.14999999999999999" _sharpness="1"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1050,720" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Schedule [type="vuo.time.schedule" version="1.0.0" label="Schedule|<refresh>refresh\l|<time>time\l|<schedule>schedule\l|<durationType>durationType\l|<loop>loop\l|<elapsedTime1>elapsedTime1\r|<elapsedTime2>elapsedTime2\r|<elapsedTime3>elapsedTime3\r|<elapsedTime4>elapsedTime4\r|<elapsedTime5>elapsedTime5\r|<elapsedTime6>elapsedTime6\r|<elapsedTime7>elapsedTime7\r|<elapsedTime8>elapsedTime8\r" pos="120,750" fillcolor="violet" _durationType="\"until reset\"" _loop="\"none\""];
+
+Curve2:value -> MakeOvalLayer3:center;
+Curve3:value -> MakeOvalLayer4:center;
+Curve4:value -> MakeOvalLayer5:center;
+Curve6:value -> MakeOvalLayer6:center;
+Curve7:value -> MakeOvalLayer2:center;
+MakeList20:list -> RenderLayersToWindow:layers;
+MakeList2:list -> RenderLayersToWindow:setWindowProperties;
+MakeList7:list -> Schedule:schedule;
+MakeOvalLayer2:layer -> MakeList20:1;
+MakeOvalLayer3:layer -> MakeList20:2;
+MakeOvalLayer4:layer -> MakeList20:3;
+MakeOvalLayer5:layer -> MakeList20:4;
+MakeOvalLayer6:layer -> MakeList20:5;
+RenderLayersToWindow:requestedFrame -> Schedule:time;
+Schedule:elapsedTime1 -> Curve7:time;
+Schedule:elapsedTime2 -> Curve2:time;
+Schedule:elapsedTime3 -> Curve3:time;
+Schedule:elapsedTime4 -> Curve4:time;
+Schedule:elapsedTime5 -> Curve6:time;
+}

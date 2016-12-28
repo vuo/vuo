@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CycleThroughList2 [type="vuo.list.cycle.VuoText" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="255,75" _wrapMode="\"wrap\""];
+MakeList4 [type="vuo.list.make.4.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="185,86" _1="\"Spring\"" _2="\"Summer\"" _3="\"Fall\"" _4="\"Winter\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<GoForward>GoForward\r|<GoToFirst>GoToFirst\r" _GoToFirst_type="event" _GoForward_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Season>Season\l" _Season_type="VuoText"];
+
+MakeList4:list -> CycleThroughList2:list;
+PublishedInputs:GoToFirst -> CycleThroughList2:goToFirst;
+PublishedInputs:GoForward -> CycleThroughList2:goForward;
+CycleThroughList2:item -> PublishedOutputs:Season;
+}

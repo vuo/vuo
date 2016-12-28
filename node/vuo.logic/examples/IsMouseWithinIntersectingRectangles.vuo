@@ -1,0 +1,83 @@
+/**
+ * @file
+ * Checks if the mouse cursor is within each of two rectangles, and uses logic operations to determine if it's in neither, both, at least one, and/or exactly one.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1095,195" _separator="\"\""];
+AreAllTrue [type="vuo.logic.areAllTrue" version="2.0.0" label="Are All True|<refresh>refresh\l|<values>values\l|<allTrue>allTrue\r" pos="600,270" fillcolor="violet"];
+AreAnyTrue [type="vuo.logic.areAnyTrue" version="2.0.0" label="Are Any True|<refresh>refresh\l|<values>values\l|<anyTrue>anyTrue\r" pos="600,210" fillcolor="violet"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,345" fillcolor="yellow" _started_eventThrottling="enqueue"];
+IsOneTrue [type="vuo.logic.isOneTrue" version="2.0.0" label="Is One True|<refresh>refresh\l|<values>values\l|<oneTrue>oneTrue\r" pos="600,330" fillcolor="violet"];
+IsWithinRectangle [type="vuo.point.within.rectangle" version="1.0.0" label="Is within Rectangle|<refresh>refresh\l|<point>point\l|<center>center\l|<width>width\l|<height>height\l|<withinRectangle>withinRectangle\r" pos="345,150"];
+IsWithinRectangle2 [type="vuo.point.within.rectangle" version="1.0.0" label="Is within Rectangle|<refresh>refresh\l|<point>point\l|<center>center\l|<width>width\l|<height>height\l|<withinRectangle>withinRectangle\r" pos="345,390"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="345,255" _color="{\"r\":0.49777981638908386,\"g\":0.48848706483840942,\"b\":0.99871826171875,\"a\":0.50000762939453125}" _rotation="0.0"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="345,495" _color="{\"r\":0.99127185344696045,\"g\":0.56766611337661743,\"b\":0.51363390684127808,\"a\":0.50000762939453125}" _rotation="0.0"];
+MakeList [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="554,221" fillcolor="violet"];
+MakeList14 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="904,566" fillcolor="green"];
+MakeList2 [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="554,341" fillcolor="violet"];
+MakeList3 [type="vuo.list.make.2.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="554,281" fillcolor="violet"];
+MakeList6 [type="vuo.list.make.6.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="1046,206" _1="\"In at least one rectangle? \"" _3="\"\\nIn both rectangles? \"" _5="\"\\nIn exactly one rectangle? \""];
+MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="934,581" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="735,615" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0,\"y\":0.5}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="15,645" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="975,555" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="780,180" _falseOption="\"no\"" _trueOption="\"yes\""];
+SelectInput3 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="780,270" _falseOption="\"no\"" _trueOption="\"yes\""];
+SelectInput4 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="780,360" _falseOption="\"no\"" _trueOption="\"yes\""];
+ShareValue2 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,180" _value="{\"x\":-0.30000001192092896,\"y\":0}"];
+ShareValue4 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,240" _value="1"];
+ShareValue6 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,300" _value="0.5"];
+ShareValue7 [type="vuo.data.share.VuoPoint2d" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,420" _value="{\"x\":0.30000001192092896,\"y\":-0.10000000149011612}"];
+ShareValue8 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,480" _value="1"];
+ShareValue9 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,540" _value="0.5"];
+
+AppendTexts:compositeText -> MakeTextLayer:text;
+AreAllTrue:allTrue -> SelectInput3:which;
+AreAnyTrue:anyTrue -> SelectInput2:which;
+FireOnStart:started -> ShareValue2:refresh;
+FireOnStart:started -> ShareValue4:refresh;
+FireOnStart:started -> ShareValue6:refresh;
+FireOnStart:started -> ShareValue7:refresh;
+FireOnStart:started -> ShareValue8:refresh;
+FireOnStart:started -> ShareValue9:refresh;
+IsOneTrue:oneTrue -> SelectInput4:which;
+IsWithinRectangle2:withinRectangle -> MakeList2:2;
+IsWithinRectangle2:withinRectangle -> MakeList3:2;
+IsWithinRectangle2:withinRectangle -> MakeList:2;
+IsWithinRectangle:withinRectangle -> MakeList2:1;
+IsWithinRectangle:withinRectangle -> MakeList3:1;
+IsWithinRectangle:withinRectangle -> MakeList:1;
+MakeColorLayer2:layer -> MakeList14:2;
+MakeColorLayer:layer -> MakeList14:1;
+MakeList14:list -> RenderLayersToWindow:layers;
+MakeList2:list -> IsOneTrue:values;
+MakeList3:list -> AreAllTrue:values;
+MakeList6:list -> AppendTexts:texts;
+MakeList8:list -> RenderLayersToWindow:setWindowProperties;
+MakeList:list -> AreAnyTrue:values;
+MakeTextLayer:layer -> MakeList14:3;
+ReceiveMouseMoves:movedTo -> IsWithinRectangle2:point;
+ReceiveMouseMoves:movedTo -> IsWithinRectangle:point;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+SelectInput2:out -> MakeList6:2;
+SelectInput3:out -> MakeList6:4;
+SelectInput4:out -> MakeList6:6;
+ShareValue2:sameValue -> IsWithinRectangle:center;
+ShareValue2:sameValue -> MakeColorLayer:center;
+ShareValue4:sameValue -> IsWithinRectangle:width;
+ShareValue4:sameValue -> MakeColorLayer:width;
+ShareValue6:sameValue -> IsWithinRectangle:height;
+ShareValue6:sameValue -> MakeColorLayer:height;
+ShareValue7:sameValue -> IsWithinRectangle2:center;
+ShareValue7:sameValue -> MakeColorLayer2:center;
+ShareValue8:sameValue -> IsWithinRectangle2:width;
+ShareValue8:sameValue -> MakeColorLayer2:width;
+ShareValue9:sameValue -> IsWithinRectangle2:height;
+ShareValue9:sameValue -> MakeColorLayer2:height;
+}

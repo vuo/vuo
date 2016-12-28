@@ -117,22 +117,6 @@ enum VuoControlRequest
 	VuoControlRequestPublishedOutputPortDetailsRetrieve,
 
 	/**
-	 * Request that the published input port's connected unpublished ports be looked up and returned.
-	 *
-	 * Includes data message-parts:
-	 *		@arg @c char *name
-	 */
-	VuoControlRequestPublishedInputPortConnectedIdentifiersRetrieve,
-
-	/**
-	 * Request that the published output port's connected unpublished ports be looked up and returned.
-	 *
-	 * Includes data message-parts:
-	 *		@arg @c char *name
-	 */
-	VuoControlRequestPublishedOutputPortConnectedIdentifiersRetrieve,
-
-	/**
 	 * Request that an event be fired through the published input port.
 	 *
 	 * Includes data message-parts:
@@ -171,7 +155,63 @@ enum VuoControlRequest
 	 * Request that the composition slow its heartbeat telemetry (since the sender has established its
 	 * telemetry connection and no longer wants the rapid stream of messages).
 	 */
-	VuoControlRequestSlowHeartbeat
+	VuoControlRequestSlowHeartbeat,
+
+	/**
+	 * Request that the composition start sending telemetry for each event through this input port.
+	 * The telemetry includes a summary of the port's data.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier;
+	 */
+	VuoControlRequestInputPortTelemetrySubscribe,
+
+	/**
+	 * Request that the composition start sending telemetry for each event through this output port.
+	 * The telemetry includes a summary of the port's data.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier;
+	 */
+	VuoControlRequestOutputPortTelemetrySubscribe,
+
+	/**
+	 * Request that the composition stop sending telemetry for each event through this input port.
+	 * The telemetry includes a summary of the port's data.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier;
+	 */
+	VuoControlRequestInputPortTelemetryUnsubscribe,
+
+	/**
+	 * Request that the composition stop sending telemetry for each event through this output port.
+	 * The telemetry includes a summary of the port's data.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier;
+	 */
+	VuoControlRequestOutputPortTelemetryUnsubscribe,
+
+	/**
+	 * Request that the composition start sending telemetry for all events.
+	 */
+	VuoControlRequestEventTelemetrySubscribe,
+
+	/**
+	 * Request that the composition stop sending telemetry for all events.
+	 */
+	VuoControlRequestEventTelemetryUnsubscribe,
+
+	/**
+	 * Request that the composition start sending all telemetry.
+	 */
+	VuoControlRequestAllTelemetrySubscribe,
+
+	/**
+	 * Request that the composition stop sending all telemetry.
+	 */
+	VuoControlRequestAllTelemetryUnsubscribe
 };
 
 /**
@@ -297,26 +337,6 @@ enum VuoControlReply
 	VuoControlReplyPublishedOutputPortDetailsRetrieved,
 
 	/**
-	 * The list of published input ports' connected unpublished ports has been retrieved.
-	 *
-	 * Includes data message-parts:
-	 *		@arg char *identifier0
-	 *		@arg char *identifier1
-	 *		@arg ...
-	 */
-	VuoControlReplyPublishedInputPortConnectedIdentifiersRetrieved,
-
-	/**
-	 * The list of published output ports' connected unpublished ports has been retrieved.
-	 *
-	 * Includes data message-parts:
-	 *		@arg char *identifier0
-	 *		@arg char *identifier1
-	 *		@arg ...
-	 */
-	VuoControlReplyPublishedOutputPortConnectedIdentifiersRetrieved,
-
-	/**
 	 * An event has been fired through the published input port.
 	 */
 	VuoControlReplyPublishedInputPortFiredEvent,
@@ -345,7 +365,55 @@ enum VuoControlReply
 	/**
 	 * The composition's heartbeat telemetry has been slowed.
 	 */
-	VuoControlReplyHeartbeatSlowed
+	VuoControlReplyHeartbeatSlowed,
+
+	/**
+	 * The composition has started sending telemetry for each event through the input port.
+	 * A summary of the port's current value is included in the message.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *valueAsString;
+	 */
+	VuoControlReplyInputPortTelemetrySubscribed,
+
+	/**
+	 * The composition has started sending telemetry for each event through the output port.
+	 * A summary of the port's current value is included in the message.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *valueAsString;
+	 */
+	VuoControlReplyOutputPortTelemetrySubscribed,
+
+	/**
+	 * The composition has stopped sending telemetry for each event through the input port.
+	 */
+	VuoControlReplyInputPortTelemetryUnsubscribed,
+
+	/**
+	 * The composition has stopped sending telemetry for each event through the output port.
+	 */
+	VuoControlReplyOutputPortTelemetryUnsubscribed,
+
+	/**
+	 * The composition has started sending telemetry for all events.
+	 */
+	VuoControlReplyEventTelemetrySubscribed,
+
+	/**
+	 * The composition has stopped sending telemetry for all events.
+	 */
+	VuoControlReplyEventTelemetryUnsubscribed,
+
+	/**
+	 * The composition has started sending all telemetry.
+	 */
+	VuoControlReplyAllTelemetrySubscribed,
+
+	/**
+	 * The composition has stopped sending all telemetry.
+	 */
+	VuoControlReplyAllTelemetryUnsubscribed
 };
 
 /**
@@ -440,6 +508,21 @@ enum VuoTelemetry
 	 *		@arg @c ...
 	 */
 	VuoTelemetryOutputPortsUpdated,
+
+	/**
+	 * Published just after an event travels through a published output port.
+	 *
+	 * Includes data message-parts:
+	 *		@arg @c char *portIdentifier0;
+	 *		@arg @c bool sentData0;
+	 *		@arg @c char *portDataSummary0;
+	 *		@arg @c char *portIdentifier1;
+	 *		@arg @c bool sentData1;
+	 *		@arg @c char *portData1;
+	 *		@arg @c char *portDataSummary1;
+	 *		@arg @c ...
+	 */
+	VuoTelemetryPublishedOutputPortsUpdated,
 
 	/**
 	 * Published just after a trigger port drops an event.

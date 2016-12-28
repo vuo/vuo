@@ -36,19 +36,15 @@ public:
 	VuoRendererNode * createRendererNode(VuoNode *baseNode);
 	void addNode(VuoNode *node, bool nodeShouldBeRendered=true);
 	void addCable(VuoCable *cable);
-	void addPublishedInputCable(VuoCable *c);
-	void addPublishedOutputCable(VuoCable *c);
 	void removeNode(VuoRendererNode *rn);
 	void removeCable(VuoRendererCable *rc);
-	void removePublishedInputCable(VuoRendererCable *rc);
-	void removePublishedOutputCable(VuoRendererCable *rc);
 	void createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler);
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
 	void createAndConnectDictionaryAttachmentsForNode(VuoNode *node, VuoCompiler *compiler, set<VuoRendererNode *> &createdNodes, set<VuoRendererCable *> &createdCables);
 	vector<string> extractInputVariableListFromExpressionsConstant(string constant);
-	void addPublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler);
-	int removePublishedPort(VuoPublishedPort *publishedPort, bool isInput, VuoCompiler *compiler);
-	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort);
+	void addPublishedPort(VuoPublishedPort *publishedPort, bool isPublishedInput, VuoCompiler *compiler);
+	int removePublishedPort(VuoPublishedPort *publishedPort, bool isPublishedInput, VuoCompiler *compiler);
+	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort, bool isPublishedInput);
 	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name, VuoCompiler *compiler);
 	string getUniquePublishedPortName(string baseName, bool isInput);
 	vector<VuoRendererNode *> collapseTypecastNodes(void);
@@ -56,15 +52,21 @@ public:
 	void uncollapseTypecastNode(VuoRendererNode *typecastNode);
 	VuoRendererNode * uncollapseTypecastNode(VuoRendererTypecastPort *typecast);
 	void clearInternalPortEligibilityHighlighting(void);
+	VuoNode * getPublishedInputNode(void);
+	VuoNode * getPublishedOutputNode(void);
 	bool getRenderActivity(void);
 	bool getRenderHiddenCables(void);
 	void setRenderHiddenCables(bool render);
 	QGraphicsItem::CacheMode getCurrentDefaultCacheMode();
+	map<VuoPort *, string> getResourcePathsRelativeToDir(QDir newDir);
+	void bundleResourceFiles(string targetResourceDir, bool tmpFilesOnly=false);
+	static bool isTmpFile(string filePath);
 
 	static void setGridLineOpacity(int opacity);
 	static int getGridLineOpacity();
 	static QPoint quantizeToNearestGridLine(QPointF point, int gridSpacing);
 
+	static string getDefaultCompositionDescription();
 	static void createAutoreleasePool(void);
 
 	/// Potential outcomes of an app export attempt:
@@ -87,6 +89,7 @@ protected:
 	void setRenderActivity(bool render);
 	void setComponentCaching(QGraphicsItem::CacheMode);
 	void updateGeometryForAllComponents();
+	bool isPortPublished(VuoRendererPort *port);
 
 	// VuoFileFormat wrapper functions
 	static bool isSupportedAudioFile(string path);
@@ -94,9 +97,13 @@ protected:
 	static bool isSupportedMeshFile(string path);
 	static bool isSupportedMovieFile(string path);
 	static bool isSupportedSceneFile(string path);
+	static bool isSupportedFeedFile(string path);
+	static bool isSupportedDataFile(string path);
 
 	VuoCompilerGraphvizParser *parser; ///< The Graphviz parser instance used by this composition.
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this composition.
+	VuoNode *publishedInputNode; ///< The published input node associated with this composition.
+	VuoNode *publishedOutputNode; ///< The published output node associated with this composition.
 	bool cachingEnabled; ///< Should item renderings be cached?
 	bool renderHiddenCables; ///< Should cables be rendered even if they have been hidden (made "wireless")?
 
@@ -105,17 +112,18 @@ private:
 	void addCableInCompositionToCanvas(VuoCable *c);
 	void createAndConnectDrawersToListInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
 	void createAndConnectDrawersToReadOnlyDictionaryInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
-	void updatePublishedInputNode(VuoCompiler *compiler);
-	void updatePublishedOutputNode();
-	bool isPublishedPortNameTaken(string name, bool isInput);
+	VuoNode * createPublishedInputNode();
+	VuoNode * createPublishedOutputNode();
+	bool isPublishedPortNameTaken(string name, bool isPublishedInput);
 
 	string createAppBundleDirectoryStructure();
 	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString, VuoCompilerDriver *driver=NULL);
 	void bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension="");
 	void bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath);
-	void bundleResourceFiles(string targetResourceDir);
 	void bundleAuxiliaryFilesForSceneFile(QString sourceFilePath, QString targetFilePath);
+	void modifyAllRelativeResourcePathsForAppBundle();
 	string modifyResourcePathForAppBundle(string path);
+	string modifyResourcePathForNewDir(string path, QDir newDir);
 	void copyFileOrDirectory(string sourcePath, string targetPath);
 	bool hasURLType(VuoPort *port);
 	bool hasRelativeReadURLConstantValue(VuoPort *port);

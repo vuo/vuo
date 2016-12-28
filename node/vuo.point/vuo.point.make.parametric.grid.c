@@ -13,7 +13,7 @@
 #include "VuoPointsParametric.h"
 
 VuoModuleMetadata({
-					 "title" : "Make Parametric Grid",
+					 "title" : "Make Parametric Grid Points",
 					 "keywords" : [ "math", "expression", "shape" ],
 					 "version" : "1.0.1",
 					 "dependencies" : [

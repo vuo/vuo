@@ -22,17 +22,26 @@
 #include "VuoRendererSignaler.hh"
 
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerOutputEventPort.hh"
+#include "VuoCompilerPortClass.hh"
 #include "VuoCompilerTriggerPort.hh"
 
 #include "VuoGenericType.hh"
 
+extern "C" {
+#include "VuoColor.h"
+#include "VuoImage.h"
+#include "VuoScreen.h"
+#include "VuoTransform.h"
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-	#include "json/json.h"
+	#include <json-c/json.h>
 #pragma clang diagnostic pop
 #include <sstream>
 
@@ -66,7 +75,6 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 	this->isEligibleForSelection = false;
 	setAnimated(false);
 	this->typecastParentPort = NULL;
-	this->proxyPublishedSidebarPort = NULL;
 	this->customizedPortName = getDefaultPortNameToRender();
 
 	resetTimeLastEventFired();
@@ -290,7 +298,7 @@ QRectF VuoRendererPort::getEventBarrierRect(void) const
 {
 	QRectF barrierRect = QRectF();
 
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
+	bool sidebarPaintMode = dynamic_cast<const VuoRendererPublishedPort *>(this);
 	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
 	VuoPortClass::EventBlocking eventBlocking = getBase()->getClass()->getEventBlocking();
 
@@ -424,8 +432,8 @@ VuoNode::TintColor VuoRendererPort::getPortTint() const
 	else
 	{
 		// Tint protocol ports the same color as the protocol.
-		VuoRendererPublishedPort *publishedPort = getProxyPublishedSidebarPort();
-		if (publishedPort && publishedPort->getBase()->isProtocolPort())
+		if (dynamic_cast<const VuoRendererPublishedPort *>(this) &&
+				(dynamic_cast<VuoPublishedPort *>(this->getBase()))->isProtocolPort())
 		{
 			// @todo: Account for multiple simultaneous active protocols. https://b33p.net/kosada/node/9585
 			return VuoRendererColors::getActiveProtocolTint(0);
@@ -723,7 +731,7 @@ QPainterPath VuoRendererPort::shape() const
  */
 void VuoRendererPort::paintEventBarrier(QPainter *painter, VuoRendererColors *colors)
 {
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
+	bool sidebarPaintMode = dynamic_cast<VuoRendererPublishedPort *>(this);
 
 	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
 	VuoPortClass::EventBlocking eventBlocking = getBase()->getClass()->getEventBlocking();
@@ -827,14 +835,14 @@ void VuoRendererPort::paintPortName(QPainter *painter, VuoRendererColors *colors
 	if (!portNameRenderingEnabled())
 		return;
 
-	VuoRendererPublishedPort *rpp = getProxyPublishedSidebarPort();
+	VuoRendererPublishedPort *rpp = dynamic_cast<VuoRendererPublishedPort *>(this);
 
 	string name = getPortNameToRender();
 
 	if (rpp)
-		painter->setPen((getProxyPublishedSidebarPort()->isSelected() && getProxyPublishedSidebarPort()->getCurrentlyActive())
+		painter->setPen((rpp->isSelected() && rpp->getCurrentlyActive())
 						? Qt::white
-						: (rpp->getBase()->isProtocolPort() ? colors->publishedProtocolPortTitle() : colors->publishedPortTitle()));
+						: (dynamic_cast<VuoPublishedPort *>(rpp->getBase())->isProtocolPort() ? colors->publishedProtocolPortTitle() : colors->publishedPortTitle()));
 	else
 		painter->setPen(colors->portTitle());
 
@@ -858,9 +866,8 @@ string VuoRendererPort::getPortNameToRender() const
  */
 string VuoRendererPort::getPortNameToRenderWhenDisplayed() const
 {
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
-
-	return (sidebarPaintMode? getProxyPublishedSidebarPort()->getBase()->getName() :
+	const VuoRendererPublishedPort *publishedPort = dynamic_cast<const VuoRendererPublishedPort *>(this);
+	return (publishedPort? getBase()->getClass()->getName() :
 							  (!customizedPortName.empty()? customizedPortName :
 															getBase()->getClass()->getName()));
 }
@@ -948,11 +955,11 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	if (renderedParentNode && renderedParentNode->paintingDisabled())
 		return;
 
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
+	VuoRendererPublishedPort *publishedPort = dynamic_cast<VuoRendererPublishedPort *>(this);
 
 	// Workaround to prevent items that have been removed from the scene from being painted on the scene anyway.
 	// https://b33p.net/kosada/node/7938
-	if (!(scene() || sidebarPaintMode))
+	if (!(scene() || publishedPort))
 		return;
 
 	painter->setRenderHint(QPainter::Antialiasing, true);
@@ -961,7 +968,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	bool isColorInverted = isRefreshPort || isFunctionPort;
 
 	VuoRendererColors::SelectionType selectionType = ((renderedParentNode && renderedParentNode->isSelected())? VuoRendererColors::directSelection :
-													   ((sidebarPaintMode && getProxyPublishedSidebarPort()->isSelected() && !getProxyPublishedSidebarPort()->getCurrentlyActive())?
+													   ((publishedPort && publishedPort->isSelected() && !publishedPort->getCurrentlyActive())?
 														  VuoRendererColors::sidebarSelection :
 														  VuoRendererColors::noSelection));
 
@@ -999,9 +1006,9 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		portBrush = colors->portTitlebarFill();
 	else if (isAnimated)
 		portBrush = colors->animatedPortFill();
-	else if (getProxyPublishedSidebarPort() && getProxyPublishedSidebarPort()->getBase()->isProtocolPort())
+	else if (publishedPort && dynamic_cast<VuoPublishedPort *>(publishedPort->getBase())->isProtocolPort())
 		portBrush = colors->portTitlebarFill();
-	else if (sidebarPaintMode)
+	else if (publishedPort)
 		portBrush = colors->publishedPortFill();
 	else
 		portBrush = colors->portFill();
@@ -1463,8 +1470,11 @@ string VuoRendererPort::getConstantAsString(void) const
 	if (!(getInput() && getDataType()))
 		return "";
 
-	VuoCompilerInputEventPort *compilerPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getCompiler());
-	return compilerPort->getData()->getInitialValue();
+	VuoCompilerInputEventPort *compilerEventPort = dynamic_cast<VuoCompilerInputEventPort *>(getBase()->getCompiler());
+	if (! compilerEventPort)
+		return "";
+
+	return compilerEventPort->getData()->getInitialValue();
 }
 
 /**
@@ -1481,6 +1491,10 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 	{
 		// Don't display constant input values for generic ports.
 		if (dynamic_cast<VuoGenericType *>(getDataType()))
+			return "";
+
+		// Don't display constant input values for list ports.
+		if (VuoType::isListTypeName(getDataType()->getModuleKey()))
 			return "";
 
 		if (getDataType()->getModuleKey()=="VuoColor")
@@ -1585,7 +1599,12 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 					{
 						json_object *itemObject = json_object_array_get_idx(expressionsObject, 0);
 						if (json_object_get_type(itemObject) == json_type_string)
-							expression = json_object_get_string(itemObject);
+						{
+							VuoText t = VuoText_truncateWithEllipsis(json_object_get_string(itemObject), 30);
+							VuoRetain(t);
+							expression = strdup(t);
+							VuoRelease(t);
+						}
 					}
 				}
 			}
@@ -1744,6 +1763,52 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return outputString;
 		}
+		if (getDataType()->getModuleKey()=="VuoHidDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			QString outputString;
+			if (json_object_object_get_ex(js, "name", &o))
+			{
+				outputString = json_object_get_string(o);
+
+				// Trim off the parenthetical vendor/class.
+				outputString = outputString.section(" (", 0, 0);
+			}
+			json_object_put(js);
+
+			return strdup(outputString.toUtf8().data());
+		}
+		if (getDataType()->getModuleKey()=="VuoOscInputDevice"
+		 || getDataType()->getModuleKey()=="VuoOscOutputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(auto)";
+			if (name && strlen(name))
+				outputString = strdup(name);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoTempoRange")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			const char *tempoRange = json_object_get_string(js);
+			if (strcmp(tempoRange, "andante") == 0)
+				return strdup("70–110 BPM");
+			else if (strcmp(tempoRange, "moderato") == 0)
+				return strdup("100–140 BPM");
+			else if (strcmp(tempoRange, "allegro") == 0)
+				return strdup("120–180 BPM");
+		}
 	}
 
 	// If it's a JSON string (e.g., VuoText or an enum identifier), unescape and truncate it.
@@ -1768,18 +1833,19 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
  */
 void VuoRendererPort::setConstant(string constantValue)
 {
-	QGraphicsItem::CacheMode normalCacheMode = cacheMode();
-	setCacheMode(QGraphicsItem::NoCache);
+	VuoCompilerInputEventPort *eventPort = dynamic_cast<VuoCompilerInputEventPort *>(getBase()->getCompiler());
+	if (eventPort)
+	{
+		QGraphicsItem::CacheMode normalCacheMode = cacheMode();
+		setCacheMode(QGraphicsItem::NoCache);
+		updateGeometry();
 
-	updateGeometry();
-	VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(getBase()->getCompiler());
-	eventPort->getData()->setInitialValue(constantValue);
+		eventPort->getData()->setInitialValue(constantValue);
 
-	updatePortConstantPath();
-
-	setCacheMode(normalCacheMode);
-
-	getRenderedParentNode()->layoutConnectedInputDrawersAtAndAbovePort(eventPort->getBase()->getRenderer());
+		updatePortConstantPath();
+		setCacheMode(normalCacheMode);
+		getRenderedParentNode()->layoutConnectedInputDrawersAtAndAbovePort(eventPort->getBase()->getRenderer());
+	}
 }
 
 /**
@@ -1789,7 +1855,7 @@ void VuoRendererPort::setConstant(string constantValue)
   */
 bool VuoRendererPort::portNameRenderingEnabled() const
 {
-	bool sidebarPaintMode = getProxyPublishedSidebarPort();
+	bool sidebarPaintMode = dynamic_cast<const VuoRendererPublishedPort *>(this);
 	string name = getPortNameToRender();
 
 	if (name.empty() || isAnimated)
@@ -1854,9 +1920,7 @@ bool VuoRendererPort::getPublishable() const
 
 	// @todo: Allow direct connections between external published inputs and external published outputs
 	// (https://b33p.net/kosada/node/7756).
-	bool isExternalPublishedPort = getProxyPublishedSidebarPort();
-
-	return (!isGeneric && !hasDictionaryType && !isMathExpressionInputToCalculateNode && !isExternalPublishedPort);
+	return (!isGeneric && !hasDictionaryType && !isMathExpressionInputToCalculateNode && !dynamic_cast<const VuoRendererPublishedPort *>(this));
 }
 
 /**
@@ -1869,9 +1933,9 @@ vector<VuoRendererPublishedPort *> VuoRendererPort::getPublishedPorts(void) cons
 	foreach (VuoCable *cable, getBase()->getConnectedCables(true))
 	{
 		if (getInput() && cable->isPublishedInputCable())
-			publishedPorts.push_back(cable->getFromPort()->getRenderer()->getProxyPublishedSidebarPort());
+			publishedPorts.push_back(dynamic_cast<VuoRendererPublishedPort *>(cable->getFromPort()->getRenderer()));
 		else if (getOutput() && cable->isPublishedOutputCable())
-			publishedPorts.push_back(cable->getToPort()->getRenderer()->getProxyPublishedSidebarPort());
+			publishedPorts.push_back(dynamic_cast<VuoRendererPublishedPort *>(cable->getToPort()->getRenderer()));
 	}
 
 	return publishedPorts;
@@ -1887,32 +1951,12 @@ vector<VuoRendererPublishedPort *> VuoRendererPort::getPublishedPortsConnectedBy
 	foreach (VuoCable *cable, getBase()->getConnectedCables(true))
 	{
 		if (getInput() && cable->isPublishedInputCable() && cable->getRenderer()->effectivelyCarriesData())
-			publishedPorts.push_back(cable->getFromPort()->getRenderer()->getProxyPublishedSidebarPort());
+			publishedPorts.push_back(dynamic_cast<VuoRendererPublishedPort *>(cable->getFromPort()->getRenderer()));
 		else if (getOutput() && cable->isPublishedOutputCable() && cable->getRenderer()->effectivelyCarriesData())
-			publishedPorts.push_back(cable->getToPort()->getRenderer()->getProxyPublishedSidebarPort());
+			publishedPorts.push_back(dynamic_cast<VuoRendererPublishedPort *>(cable->getToPort()->getRenderer()));
 	}
 
 	return publishedPorts;
-}
-
-
-/**
- * If set, this port will not be drawn; its drawing will be handled by @c proxySidebarPort.  Used for ports
- * belonging to "vuo.in" or "vuo.out" nodes, to be rendered within the published port sidebars
- * rather than on the canvas.
- */
-void VuoRendererPort::setProxyPublishedSidebarPort(VuoRendererPublishedPort *proxySidebarPort)
-{
-	this->proxyPublishedSidebarPort = proxySidebarPort;
-	updateEnabledStatus();
-}
-
-/**
- * Returns this port's published port sidebar renderering proxy, or NULL if it has none.
- */
-VuoRendererPublishedPort * VuoRendererPort::getProxyPublishedSidebarPort(void) const
-{
-	return proxyPublishedSidebarPort;
 }
 
 /**
@@ -1980,7 +2024,7 @@ void VuoRendererPort::updateEnabledStatus()
 	// Port animations, and ports without compilers, shouldn't accept mouse events.
 	setEnabled(!isAnimated &&
 			   ((getBase()->hasCompiler() && getBase()->getClass()->hasCompiler()) ||
-				getProxyPublishedSidebarPort()));
+				dynamic_cast<VuoRendererPublishedPort *>(this)));
 }
 
 /**

@@ -12,6 +12,7 @@
 
 #include "VuoBaseDetail.hh"
 #include "VuoCable.hh"
+#include "VuoNode.hh"
 #include "VuoRendererItem.hh"
 
 /**

@@ -40,7 +40,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoList_VuoColor colors = VuoListCreate_VuoColor();
 	VuoRetain(colors);
 
-	instance->shader = VuoShader_makeLinearGradientShader(colors, (VuoPoint2d){0,0}, (VuoPoint2d){0,0});
+	instance->shader = VuoShader_makeLinearGradientShader(colors, (VuoPoint2d){0,0}, (VuoPoint2d){0,0}, 0);
 	VuoRetain(instance->shader);
 
 	VuoRelease(colors);
@@ -57,13 +57,13 @@ VuoImage makeGradientStrip(VuoList_VuoColor colors)
 	for(int i = 1; i <= len; i++)
 	{
 		VuoColor col = VuoListGetValue_VuoColor(colors, i);
-		pixels[n++] = (unsigned int)(col.a*col.r*255);
-		pixels[n++] = (unsigned int)(col.a*col.g*255);
 		pixels[n++] = (unsigned int)(col.a*col.b*255);
+		pixels[n++] = (unsigned int)(col.a*col.g*255);
+		pixels[n++] = (unsigned int)(col.a*col.r*255);
 		pixels[n++] = (unsigned int)(col.a*255);
 	}
 
-	return VuoImage_makeFromBuffer(pixels, GL_RGBA, len, 1, VuoImageColorDepth_8);
+	return VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 }
 
 void nodeInstanceEvent
@@ -72,6 +72,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoList_VuoColor, {"default":[{"r":1,"g":1,"b":1,"a":1}, {"r":0,"g":0,"b":0,"a":1}]}) colors,
 		VuoInputData(VuoPoint2d, {"default":{"x":-1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) start,
 		VuoInputData(VuoPoint2d,  {"default":{"x":1,"y":-1}, "suggestedStep":{"x":0.1,"y":0.1}}) end,
+		VuoInputData(VuoReal, {"default":0.2, "suggestedMin":0, "suggestedMax":1, "suggestedStep":0.1}) noiseAmount,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,
 		VuoInputData(VuoInteger, {"default":480, "suggestedMin":1, "suggestedStep":32}) height,
 		VuoOutputData(VuoImage) image
@@ -84,6 +85,7 @@ void nodeInstanceEvent
 
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "gradientStrip", gradientStrip);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "gradientCount", VuoListGetCount_VuoColor(colors));
+	VuoShader_setUniform_VuoReal   ((*instance)->shader, "noiseAmount",   MAX(0.,noiseAmount/10.));
 
 	// Render.
 	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);

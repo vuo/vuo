@@ -4,7 +4,7 @@ The image used to create this layer may be resized in the composite image. If re
 
    - `Name` — A name to identify the layer, allowing other nodes to select it from a group of layers. 
    - `Image` — The image displayed in the layer. For the layer to be visible, you have to provide an image. 
-   - `Center` — The center point of the image, in Vuo coordinates. 
+   - `Center` — The center point of the image, in Vuo Coordinates. 
    - `Rotation` — The image's rotation counterclockwise, in degrees. 
-   - `Width` — The image's width, in Vuo coordinates. Its height is determined by the image's aspect ratio. 
+   - `Width` — The image's width, in Vuo Coordinates. Its height is determined by the image's aspect ratio. 
    - `Opacity` — The image's opacity, from 0 (fully transparent) to 1 (fully opaque). 

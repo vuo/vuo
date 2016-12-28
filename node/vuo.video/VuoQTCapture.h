@@ -53,9 +53,6 @@ void VuoQTCapture_stopListening(VuoQTCapture movie);
 void VuoQtCapture_setInputDevice(VuoQTCapture movie, VuoVideoInputDevice inputDevice);
 void VuoQTCapture_setCallback(VuoQTCapture movie, VuoOutputTrigger(receivedFrame, VuoVideoFrame));
 
-void VuoQTCapture_free(VuoQTCapture movie);
-
 #ifdef __cplusplus
-
 }
 #endif

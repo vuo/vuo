@@ -10,15 +10,15 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert Integer to 2D Point",
+					 "title" : "Convert Integer to 2D Point (X,0)",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":0}) x,
-		VuoOutputData(VuoPoint2d) point2d
+		VuoOutputData(VuoPoint2d, {"name":"(X,0)"}) point2d
 )
 {
 	*point2d = VuoPoint2d_make(x, 0);

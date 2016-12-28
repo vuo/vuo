@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Change Mouse Cursor",
-					 "keywords" : [ "pointer", "hand", "arrow", "hide", "touch", "properties" ],
+					 "keywords" : [ "pointer", "hand", "arrow", "hide", "touch", "properties", "set" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "DragWithHandCursor.vuo" ]

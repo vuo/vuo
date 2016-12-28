@@ -1,6 +1,8 @@
 TEMPLATE = aux
 
 SHADERS += \
+	VuoGlslProjection.glsl \
+	VuoGlslRandom.glsl \
 	deform.glsl \
 	hsl.glsl \
 	lighting.glsl \

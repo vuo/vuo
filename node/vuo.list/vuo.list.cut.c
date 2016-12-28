@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Cut List",
-					 "keywords" : [ "part", "piece", "extract", "truncate", "trim" ],
+					 "keywords" : [ "part", "piece", "extract", "truncate", "trim", "sublist" ],
 					 "version" : "1.0.0",
 					 "node" : {
 						  "exampleCompositions" : [ "SpliceSquares.vuo" ]

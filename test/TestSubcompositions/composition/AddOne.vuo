@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="330,105"];
+MakeList [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="284,116" _2="1.000000"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Value>Value\r" _Value_type="VuoReal" _Value="0.000000"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Sum>Sum\l" _Sum_type="VuoReal"];
+
+MakeList:list -> Add:values;
+PublishedInputs:Value -> MakeList:1;
+Add:sum -> PublishedOutputs:Sum;
+}

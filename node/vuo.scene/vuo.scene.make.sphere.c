@@ -32,8 +32,8 @@ void nodeEvent
 (
 	VuoInputData(VuoTransform) transform,
 	VuoInputData(VuoGenericType1, {"defaults":{"VuoColor":{"r":1,"g":1,"b":1,"a":1}}}) material,
-	VuoInputData(VuoInteger, {"default":16,"suggestedMin":3, "suggestedMax":256}) rows,
-	VuoInputData(VuoInteger, {"default":16,"suggestedMin":3, "suggestedMax":256}) columns,
+	VuoInputData(VuoInteger, {"default":32,"suggestedMin":4, "suggestedMax":256}) rows,
+	VuoInputData(VuoInteger, {"default":32,"suggestedMin":4, "suggestedMax":256}) columns,
 	VuoOutputData(VuoSceneObject) object
 )
 {
@@ -41,8 +41,8 @@ void nodeEvent
 	char *yExp = "sin((v-.5)*180) / 2.";
 	char *zExp = "cos((u-.5)*360) * cos((v-.5)*180) / 2.";
 
-	unsigned int r = MAX(3, MIN(512, rows));
-	unsigned int c = MAX(3, MIN(512, columns));
+	unsigned int r = MAX(4, MIN(512, rows));
+	unsigned int c = MAX(4, MIN(512, columns));
 
 	VuoMesh mesh = VuoMeshParametric_generate(	0,
 												xExp, yExp, zExp,

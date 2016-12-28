@@ -36,6 +36,8 @@ typedef enum
 struct json_object *%TypeName%_getJson(const %TypeName% value);
 VuoList_%TypeName% %TypeName%_getAllowedValues(void);
 char *%TypeName%_getSummary(const %TypeName% value);
+
+#define %TypeName%_SUPPORTS_COMPARISON
 bool %TypeName%_areEqual(const %TypeName% valueA, const %TypeName% valueB);
 bool %TypeName%_isLessThan(const %TypeName% valueA, const %TypeName% valueB); 
 

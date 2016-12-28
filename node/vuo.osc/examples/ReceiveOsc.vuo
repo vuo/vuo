@@ -9,17 +9,17 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="242,449" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetMessageValues3 [type="vuo.osc.message.get.2.VuoReal.VuoReal" version="1.0.1" label="Get Message Values|<refresh>refresh\l|<message>message\l|<address>address\r|<data1>data1\r|<data2>data2\r" pos="-216,398" fillcolor="violet"];
-Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="216,520"];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="404,505" _color="{\"r\":0.477180,\"g\":0.539696,\"b\":0.691524,\"a\":1.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
-MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="569,516" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="599,531" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="410,665" _text="\"Connect TouchOSC to \\\"Vuo OSC Server\\\" and select \\\"Simple\\\" layout, page 3.\\nMove the XY position.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.450000}"];
-ReceiveOSCMessages [type="vuo.osc.receive" version="1.0.0" label="Receive OSC Messages|<refresh>refresh\l|<udpPort>udpPort\l|<receivedMessage>receivedMessage\r" pos="-419,398" fillcolor="violet" _udpPort="0" _receivedMessage_eventThrottling="enqueue"];
-RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="640,505" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="54,535" _start="0.000000" _end="1.000000" _scaledStart="1.000000" _scaledEnd="-1.000000"];
-Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="54,413" _start="0.000000" _end="1.000000" _scaledStart="-1.000000" _scaledEnd="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="240,450" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetMessageValues3 [type="vuo.osc.message.get.2.VuoReal.VuoReal" version="1.0.1" label="Get Message Values|<refresh>refresh\l|<message>message\l|<address>address\r|<data1>data1\r|<data2>data2\r" pos="-150,405" fillcolor="violet"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="210,525"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="420,495" _color="{\"r\":0.477180,\"g\":0.539696,\"b\":0.691524,\"a\":1.000000}" _rotation="0.000000" _width="0.500000" _height="0.500000"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="589,506" fillcolor="green"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,521" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="420,645" _text="\"Connect TouchOSC to \\\"Vuo OSC Server\\\" and select \\\"Simple\\\" layout, page 3.\\nMove the XY position.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":-0.450000}"];
+ReceiveOSCMessages2 [type="vuo.osc.receive2" version="2.0.0" label="Receive OSC Messages|<refresh>refresh\l|<device>device\l|<receivedMessage>receivedMessage\r" pos="-360,405" fillcolor="violet" _receivedMessage_eventThrottling="enqueue"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="660,495" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="75,540" _start="0.000000" _end="1.000000" _scaledStart="1.000000" _scaledEnd="-1.000000"];
+Scale2 [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="75,420" _start="0.000000" _end="1.000000" _scaledStart="-1.000000" _scaledEnd="1.000000"];
 
 FireOnStart:started -> MakeColorLayer:refresh;
 FireOnStart:started -> MakeTextLayer:refresh;
@@ -30,7 +30,7 @@ MakeColorLayer:layer -> MakeList:1;
 MakeList0:list -> RenderLayersToWindow2:setWindowProperties;
 MakeList:list -> RenderLayersToWindow2:layers;
 MakeTextLayer:layer -> MakeList:2;
-ReceiveOSCMessages:receivedMessage -> GetMessageValues3:message;
+ReceiveOSCMessages2:receivedMessage -> GetMessageValues3:message;
 Scale2:scaledValue -> Make2DPoint:x;
 Scale:scaledValue -> Make2DPoint:y;
 }

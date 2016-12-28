@@ -32,8 +32,7 @@ VuoInputEditor * VuoInputEditorMovieFormatFactory::newInputEditor()
  */
 void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
-	// See https://b33p.net/kosada/node/5724
-	const int decimalPrecision = 6;
+	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
 
 	suggestedMinImageQuality = 0;
 	suggestedMaxImageQuality = 1;

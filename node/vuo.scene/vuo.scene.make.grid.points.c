@@ -11,7 +11,7 @@
 #include <OpenGL/CGLMacro.h>	// GL_NONE
 
 VuoModuleMetadata({
-					"title" : "Make 3D Grid Points",
+					"title" : "Make Grid Points Object",
 					"keywords" : [ "heightmap", "plane", "subdivision", "square", "rectangle" ],
 					"version" : "1.0.0",
 					"genericTypes" : {
@@ -49,11 +49,11 @@ void nodeEvent
 	VuoPoint4d* textures = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
 
 	unsigned int i = 0;
-	for(int y = 0; y < rows; y++)
+	for(int y = 0; y < rows2; y++)
 	{
 		float yp = ((y/(float)(rows2-1)) * h) - half_h;
 
-		for(int x = 0; x < columns; x++)
+		for(int x = 0; x < columns2; x++)
 		{
 			vertices[i] = VuoPoint4d_make( ((x/(float)(columns2-1)) * w) -  half_w, yp, 0, 1);
 			normals[i] = VuoPoint4d_make( 0, 0, 1, 1);

@@ -20,6 +20,7 @@ VuoModuleMetadata({
 						  }
 					  },
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ ]
 					  }
 				  });

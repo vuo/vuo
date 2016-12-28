@@ -12,17 +12,21 @@
 
 #include "VuoBaseDetail.hh"
 #include "VuoCompilerModule.hh"
-
-#include "VuoNode.hh"
 #include "VuoNodeClass.hh"
 
-#include "VuoCompilerTriggerPortClass.hh"
-#include "VuoCompilerInputEventPortClass.hh"
-#include "VuoCompilerInstanceDataClass.hh"
-#include "VuoCompilerOutputEventPortClass.hh"
-#include "VuoCompilerPortClass.hh"
-
 class VuoCompiler;
+class VuoCompilerInputEventPortClass;
+class VuoCompilerInputDataClass;
+class VuoCompilerInstanceDataClass;
+class VuoCompilerNodeArgumentClass;
+class VuoCompilerOutputDataClass;
+class VuoCompilerOutputEventPortClass;
+class VuoCompilerTriggerDescription;
+class VuoCompilerTriggerPortClass;
+class VuoNode;
+class VuoNodeClass;
+class VuoPortClass;
+class VuoType;
 
 /**
  * The compiler detail class for @c VuoNodeClass.
@@ -37,6 +41,7 @@ private:
 	Function *callbackUpdateFunction;
 	Function *callbackStopFunction;
 	VuoCompilerInstanceDataClass *instanceDataClass;
+	vector<VuoCompilerTriggerDescription *> triggerDescriptions;
 	map<string, vector<string> > compatibleSpecializedForGenericTypeName;
 	set<VuoCompilerInputEventPortClass *> portsWithExplicitEventBlockingNone;
 
@@ -91,10 +96,18 @@ public:
 	virtual Function * getCallbackStartFunction(void);
 	virtual Function * getCallbackUpdateFunction(void);
 	virtual Function * getCallbackStopFunction(void);
+	virtual Function * getCompositionContextInitFunction(void);
+	virtual Function * getCompositionContextFiniFunction(void);
+	virtual Function * getCompositionSerializeFunction(void);
+	virtual Function * getCompositionUnserializeFunction(void);
+	virtual Function * getTriggerWorkerFunction(string portIdentifier);
+	virtual vector<VuoCompilerTriggerDescription *> getTriggerDescriptions(void);
 	virtual VuoCompilerInstanceDataClass * getInstanceDataClass(void);
 	virtual string getDoxygenDocumentation(void);
 	virtual string getDefaultSpecializedTypeName(string genericTypeName);
 	virtual vector<string> getAutomaticKeywords(void);
+	virtual bool isStateful(void);
+	bool isSubcomposition(void);
 };
 
 #endif

@@ -10,15 +10,15 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert Integer to 4D Point",
+					 "title" : "Convert Integer to 4D Point (0,0,Z,0)",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent
 (
 		VuoInputData(VuoInteger, {"default":0}) z,
-		VuoOutputData(VuoPoint4d) point4d
+		VuoOutputData(VuoPoint4d, {"name":"(0,0,Z,0)"}) point4d
 )
 {
 	*point4d = VuoPoint4d_make(0, 0, z, 0);

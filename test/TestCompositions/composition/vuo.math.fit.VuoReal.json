@@ -27,7 +27,7 @@
 
 	/* Reset */
 	{	"firingPort" : "reset",
-		"inputPortValues": {"value": 2},
+		"inputPortValues": {"value": 2, "resetEvent": true},
 		"outputPortValues": {"fittedValue": 0.5, "min": 2, "max": 2}
 	},
 ]}

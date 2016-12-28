@@ -36,6 +36,8 @@ VuoParity VuoParity_makeFromJson(struct json_object *js);
 struct json_object *VuoParity_getJson(const VuoParity value);
 VuoList_VuoParity VuoParity_getAllowedValues(void);
 char *VuoParity_getSummary(const VuoParity value);
+
+#define VuoParity_SUPPORTS_COMPARISON
 bool VuoParity_areEqual(const VuoParity valueA, const VuoParity valueB);
 bool VuoParity_isLessThan(const VuoParity valueA, const VuoParity valueB);
 

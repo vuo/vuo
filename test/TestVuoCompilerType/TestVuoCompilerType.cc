@@ -8,6 +8,8 @@
  */
 
 #include "TestVuoCompiler.hh"
+#include "VuoCompilerDataClass.hh"
+#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerType.hh"
 
 // Be able to use these types in QTest::addColumn()

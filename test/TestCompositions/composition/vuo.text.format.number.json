@@ -28,8 +28,11 @@
 	{ "firingPort": "refresh", "inputPortValues": { "value":     0.5       , "format": "percentage", "decimalPlaces": 0, "showThousandSeparator": false }, "outputPortValues": { "text":     "50%"       } },
 	{ "firingPort": "refresh", "inputPortValues": { "value":     0.567     , "format": "percentage", "decimalPlaces": 1, "showThousandSeparator": false }, "outputPortValues": { "text":     "56.7%"     } },
 
-	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.5       , "format": "currency"  , "decimalPlaces": 2, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.50"     } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.5       , "format": "currency"  , "decimalPlaces": 2, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.5"      } },
 	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.567     , "format": "currency"  , "decimalPlaces": 0, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,001"        } },
 	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.567     , "format": "currency"  , "decimalPlaces": 1, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.6"      } },
 	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.567     , "format": "currency"  , "decimalPlaces": 2, "showThousandSeparator": true  }, "outputPortValues": { "text": "$1,000.57"     } },
+
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.1       , "format": "decimal"   , "minimumIntegerDigits": 5, "minimumDecimalPlaces": 0, "decimalPlaces": 1, "showThousandSeparator": false }, "outputPortValues": { "text": "01000.1"      } },
+	{ "firingPort": "refresh", "inputPortValues": { "value":  1000.1       , "format": "decimal"   , "minimumIntegerDigits": 5, "minimumDecimalPlaces": 4, "decimalPlaces": 4, "showThousandSeparator": false }, "outputPortValues": { "text": "01000.1000"   } },
 ]}

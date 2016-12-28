@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AddOne1 [type="vuo.test.addOne" version="" label="AddOne1|<refresh>refresh\l|<Value>Value\l|<Sum>Sum\r" pos="495,45"];
+AddOne2 [type="vuo.test.addOne" version="" label="AddOne2|<refresh>refresh\l|<Value>Value\l|<Sum>Sum\r" pos="495,120"];
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="120,120"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-60,45" _started_eventThrottling="enqueue"];
+SpinOffCount1 [type="vuo.test.spinOffCount" version="" label="SpinOffCount1|<refresh>refresh\l|<Increment>Increment\l|<Count>Count\r" pos="315,45" _Count_eventThrottling="enqueue"];
+SpinOffCount2 [type="vuo.test.spinOffCount" version="" label="SpinOffCount2|<refresh>refresh\l|<Increment>Increment\l|<Count>Count\r" pos="315,120" _Count_eventThrottling="enqueue"];
+
+AllowFirstEvent:firstEvent -> SpinOffCount2:Increment;
+FireOnStart:started -> AllowFirstEvent:event;
+FireOnStart:started -> SpinOffCount1:Increment;
+SpinOffCount1:Count -> AddOne1:Value;
+SpinOffCount2:Count -> AddOne2:Value;
+}

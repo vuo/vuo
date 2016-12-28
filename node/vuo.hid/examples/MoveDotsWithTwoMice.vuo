@@ -1,0 +1,67 @@
+/**
+ * @file
+ * Shows how to independently receive control data from 2 mice.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="975,15" _width="4" _height="3"];
+CombineLayersWithTransform [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="915,-75"];
+CountItemsInList2 [type="vuo.list.count.VuoHidDevice" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="-210,315"];
+CountWithinRange3 [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="330,60" _decrement="1" _setCount="-0.5" _minimum="-1" _maximum="1" _wrapMode="\"saturate\""];
+CountWithinRange4 [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="330,195" _decrement="1" _setCount="0" _minimum="-0.75" _maximum="0.75" _wrapMode="\"saturate\""];
+FilterAndScaleControl2 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="105,195" fillcolor="violet" _name="\"Y\"" _minimum="1" _maximum="-1"];
+FilterAndScaleControl4 [type="vuo.hid.scale.control" version="1.0.0" label="Filter and Scale Control|<refresh>refresh\l|<control>control\l|<name>name\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="105,60" fillcolor="violet" _name="\"X\"" _minimum="-1" _maximum="1"];
+FindHIDsByName2 [type="vuo.hid.find.name" version="1.0.0" label="Find HIDs by Name|<refresh>refresh\l|<hids>hids\l|<name>name\l|<foundHids>foundHids\r" pos="-90,-240" fillcolor="violet" _name="\"Mouse\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="120,-90" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetLastItemInList [type="vuo.list.get.last.VuoHidDevice" version="1.0.0" label="Get Last Item in List|<refresh>refresh\l|<list>list\l|<lastItem>lastItem\r" pos="0,225"];
+IsGreaterThan2 [type="vuo.data.isGreaterThan.VuoInteger" version="1.0.0" label="Is Greater Than|<refresh>refresh\l|<a>a\l|<b>b\l|<greaterThan>greaterThan\r" pos="195,-240" _b="1"];
+ListHIDs2 [type="vuo.hid.listDevices" version="1.0.0" label="List HIDs|<refresh>refresh\l|<devices>devices\r" pos="-240,-255" fillcolor="violet" _devices_eventThrottling="enqueue"];
+Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="510,120"];
+MakeList6 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1259,-94" fillcolor="green"];
+MakeList8 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="869,-49"];
+MakeList9 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1222,-109" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="705,-60" _color="{\"r\":1,\"g\":0.43529412150382996,\"b\":0.81176471710205078,\"a\":1}" _rotation="0.0" _width="0.20000000000000001" _height="0.20000000000000001" _sharpness="1"];
+MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="705,90" _color="{\"r\":0.40000000596046448,\"g\":0.80000001192092896,\"b\":1,\"a\":1}" _rotation="0.0" _width="0.20000000000000001" _height="0.20000000000000001" _sharpness="1"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1050,-195" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0,\"y\":-0.5}"];
+ReceiveHIDControls2 [type="vuo.hid.receive" version="1.0.0" label="Receive HID Controls|<refresh>refresh\l|<device>device\l|<exclusive>exclusive\l|<receivedControl>receivedControl\r" pos="-105,60" fillcolor="violet" _receivedControl_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="495,-30" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1305,-120" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput2 [type="vuo.select.in.boolean.VuoText" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="900,-240" _falseOption="\"Please connect 2 USB mice to this computer.\"" _trueOption="\"Move each mouse to control a dot.\\n\\nThis composition has taken exclusive control of one of the mice.\\nTo quit, press ⌘Q.\""];
+SelectInput4 [type="vuo.select.in.boolean.VuoLayer" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="1065,-105"];
+
+ChangeWindowAspectRatio:property -> MakeList6:1;
+CombineLayersWithTransform:layer -> SelectInput4:trueOption;
+CountItemsInList2:itemCount -> IsGreaterThan2:a;
+CountWithinRange3:count -> Make2DPoint:x;
+CountWithinRange4:count -> Make2DPoint:y;
+FilterAndScaleControl2:value -> CountWithinRange4:increment;
+FilterAndScaleControl4:value -> CountWithinRange3:increment;
+FindHIDsByName2:foundHids -> CountItemsInList2:list;
+FindHIDsByName2:foundHids -> GetLastItemInList:list;
+FireOnStart:started -> CountWithinRange3:setCount;
+FireOnStart:started -> MakeOvalLayer:refresh;
+GetLastItemInList:lastItem -> ReceiveHIDControls2:device;
+IsGreaterThan2:greaterThan -> ReceiveHIDControls2:exclusive;
+IsGreaterThan2:greaterThan -> SelectInput2:which;
+IsGreaterThan2:greaterThan -> SelectInput4:which;
+ListHIDs2:devices -> FindHIDsByName2:hids;
+Make2DPoint:point -> MakeOvalLayer2:center;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeList8:list -> CombineLayersWithTransform:layers;
+MakeList9:list -> RenderLayersToWindow:layers;
+MakeOvalLayer2:layer -> MakeList8:2;
+MakeOvalLayer:layer -> ChangeWindowAspectRatio:refresh;
+MakeOvalLayer:layer -> MakeList8:1;
+MakeTextLayer:layer -> MakeList9:1;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl2:control;
+ReceiveHIDControls2:receivedControl -> FilterAndScaleControl4:control;
+ReceiveMouseMoves:movedTo -> MakeOvalLayer:center;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+SelectInput2:out -> MakeTextLayer:text;
+SelectInput4:out -> MakeList9:2;
+}

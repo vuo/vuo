@@ -12,10 +12,28 @@
 VuoModuleMetadata({
 					  "title" : "Changed",
 					  "keywords" : [ "pulse", "watcher" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
-							  "compatibleTypes" : [ "VuoBoolean", "VuoInteger", "VuoReal" ]
+							  "compatibleTypes" : [
+								  /* Sync with other nodes that say "Sync with vuo.event.changed" */
+								  "VuoBoolean", "VuoColor", "VuoImage", "VuoInteger",
+								  "VuoPoint2d", "VuoPoint3d", "VuoPoint4d",
+								  "VuoReal", "VuoScreen", "VuoText",
+								  "VuoArtNetInputDevice", "VuoArtNetOutputDevice",
+								  "VuoAudioInputDevice", "VuoAudioOutputDevice", "VuoAudioFrame", "VuoData",
+								  "VuoCoordinateUnit", "VuoDistribution3d", "VuoDragEvent",
+								  "VuoHidControl", "VuoHidDevice",
+								  "VuoFont", "VuoMidiController", "VuoMidiInputDevice",
+								  "VuoMidiNote", "VuoMidiOutputDevice", "VuoMidiPitchBend",
+								  "VuoMultisample", "VuoBaudRate", "VuoParity",
+								  "VuoOscInputDevice", "VuoOscOutputDevice",
+								  "VuoRelativeTime", "VuoRoundingMethod",
+								  "VuoSerialDevice", "VuoVertexAttribute", "VuoSyphonServerDescription",
+								  "VuoTempoRange", "VuoNumberFormat", "VuoIconPosition", "VuoMovieFormat",
+								  "VuoVideoFrame", "VuoVideoInputDevice",
+								  "VuoTime", "VuoTimeUnit", "VuoTimeFormat", "VuoWeekday",
+							  ]
 						  }
 					  },
 					  "node": {
@@ -37,12 +55,12 @@ VuoGenericType1 * nodeInstanceInit
 void nodeInstanceEvent
 (
 		VuoInstanceData(VuoGenericType1 *) lastValue,
-		VuoInputData(VuoGenericType1, {"defaults":{"VuoBoolean":false, "VuoInteger":0, "VuoReal":0.0}}) value,
+		VuoInputData(VuoGenericType1) value,
 		VuoInputEvent({"eventBlocking":"door","data":"value"}) valueEvent,
 		VuoOutputEvent() changed
 )
 {
-	*changed = (**lastValue != value);
+	*changed = (! VuoGenericType1_areEqual(**lastValue, value));
 	**lastValue = value;
 }
 

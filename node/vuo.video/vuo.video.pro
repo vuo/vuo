@@ -14,32 +14,57 @@ NODE_SOURCES += \
 	vuo.video.save.c
 
 NODE_LIBRARY_SOURCES += \
-	VuoMovie.cc \
+	VuoVideo.cc \
+	VuoFfmpegDecoder.cc \
+	VuoAvDecoder.cc \
+	VuoVideoPlayer.cc \
+	VuoVideoDecoder.cc \
+	VuoAvPlayerObject.m \
+	VuoAvPlayerInterface.m \
 	VuoAvWriter.mm \
 	VuoQTCapture.mm \
 	VuoAvWriterObject.m \
 	VuoQtListener.m
 
 SOURCES += \
-	VuoMovie.cc
+	VuoVideo.cc \
+	VuoFfmpegDecoder.cc \
+	VuoAvDecoder.cc \
+	VuoVideoPlayer.cc \
+	VuoVideoDecoder.cc
+
+OBJECTIVE_SOURCES += \
+	VuoAvPlayerObject.m \
+	VuoAvPlayerInterface.m
 
 HEADERS += \
 	VuoAvWriter.h \
 	VuoAvWriterObject.h \
-	VuoMovie.h \
+	VuoAvPlayerInterface.h \
+	VuoVideo.h \
+	VuoFfmpegDecoder.h \
+	VuoFfmpegUtility.h \
+	VuoAvDecoder.h \
+	VuoAvPlayerObject.h \
+	VuoVideoPlayer.h \
+	VuoVideoDecoder.h \
 	VuoQTCapture.h \
 	VuoQtListener.h
 
 HEADERS += \
+	VuoAudioFrame.h \
 	VuoVideoFrame.h \
 	VuoMovieImageEncoding.h \
+	VuoVideoOptimization.h \
 	VuoAudioEncoding.h \
 	VuoMovieFormat.h \
 	VuoVideoInputDevice.h
 
 TYPE_SOURCES += \
+	VuoAudioFrame.c \
 	VuoVideoFrame.c \
 	VuoMovieImageEncoding.c \
+	VuoVideoOptimization.c \
 	VuoAudioEncoding.c \
 	VuoMovieFormat.c \
 	VuoVideoInputDevice.c

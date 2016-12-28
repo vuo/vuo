@@ -10,7 +10,10 @@
 #ifndef VUOCOMPILERDRIVER_HH
 #define VUOCOMPILERDRIVER_HH
 
-#include "VuoCompiler.hh"
+class VuoCompiler;
+class VuoCompilerComposition;
+class VuoCompilerGraphvizParser;
+class VuoProtocol;
 
 /**
  * This class represents a driver for a protocol.

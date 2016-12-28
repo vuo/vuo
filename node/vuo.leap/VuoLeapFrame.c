@@ -16,7 +16,7 @@
 
 /// @{
 #ifdef VUO_COMPILER
- VuoModuleMetadata({
+VuoModuleMetadata({
 					"title" : "Leap Frame",
 					"description" : "Frame of Leap Motion data.",
 					"keywords" : ["gesture", "controller", "motion", "hand", "finger"],

@@ -10,14 +10,14 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert 2D Point to Real",
+					 "title" : "Convert 2D Point to Real (X)",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoPoint2d, {"default":{"x":0, "y":0}}) xy,
+		VuoInputData(VuoPoint2d, {"default":{"x":0, "y":0}, "name":"(X,Y)"}) xy,
 		VuoOutputData(VuoReal) x
 )
 {

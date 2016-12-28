@@ -8,7 +8,8 @@
  */
 
 #include "node.h"
-#include "VuoMovie.h"
+#include "VuoVideo.h"
+#include "VuoVideoOptimization.h"
 
 VuoModuleMetadata({
 					 "title" : "Get Movie Info",
@@ -22,9 +23,9 @@ VuoModuleMetadata({
 						  "quicktime", "qt", "aic", "prores",
 						  "video",
 					  ],
-					 "version" : "2.0.1",
+					 "version" : "2.0.2",
 					 "dependencies" : [
-						 "VuoMovie",
+						 "VuoVideo",
 						 "VuoUrl"
 					 ],
 					 "node": {
@@ -40,16 +41,12 @@ void nodeEvent
 //		VuoOutputData(VuoDictionary_VuoText) metadata
 )
 {
-	VuoUrl normalizedUrl = VuoUrl_normalize(url, false);
-	VuoRetain(normalizedUrl);
+	VuoVideo decoder = VuoVideo_make(url, VuoVideoOptimization_Auto);
 
-	VuoText path = VuoUrl_getPosixPath(normalizedUrl);
-	VuoRetain(path);
-	VuoRelease(normalizedUrl);
-
-	double dur;
-	if( VuoMovie_getInfo(path, &dur) )
-		*duration = (VuoReal)dur;
-
-	VuoRelease(path);
+	if(decoder != NULL)
+	{
+		VuoRetain(decoder);
+		*duration = VuoVideo_getDuration(decoder);
+		VuoRelease(decoder);
+	}
 }

@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Convert Beats Per Minute to Seconds",
-					  "keywords" : [ "tempo" ],
+					  "keywords" : [ "tempo", "music" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]

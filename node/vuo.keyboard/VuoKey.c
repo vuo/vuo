@@ -18,6 +18,7 @@
 VuoModuleMetadata({
 					  "title" : "Key",
 					  "dependencies" : [
+						"VuoText",
 						"VuoList_VuoKey",
 						"Carbon.framework"
 					  ],
@@ -889,7 +890,9 @@ char * VuoKey_getSummary(const VuoKey value)
 		UInt32 deadKeyState = 0;
 		summary = VuoKey_getCharactersForMacVirtualKeyCode(keyCode, 0, &deadKeyState);
 
-		if (strlen(summary) == 0 || (strlen(summary) == 1 && summary[0] <= ' '))
+		if (!summary)
+			isVisibleChar = false;
+		else if (strlen(summary) == 0 || (strlen(summary) == 1 && summary[0] <= ' '))
 		{
 			// corresponds to a virtual key code that doesn't type a visible character on the user's keyboard
 			isVisibleChar = false;
@@ -944,6 +947,8 @@ char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned
 
 	TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
 	CFDataRef layoutData = TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
+	if (!layoutData)
+		return NULL;
 	const UCKeyboardLayout *keyboardLayout = (const UCKeyboardLayout *)CFDataGetBytePtr(layoutData);
 
 	UInt32 modifierKeyState = (flags >> 16) & 0xFF;
@@ -965,25 +970,11 @@ char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned
 	CFRelease(currentKeyboard);
 	CFStringRef cfString = CFStringCreateWithCharacters(kCFAllocatorDefault, unicodeString, realLength);
 
-	// http://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
-
-	const char *useUTF8StringPtr = "";
-	char *freeUTF8StringPtr = NULL;
-
-	if ((useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8)) == NULL)
-	{
-		CFIndex stringLength = CFStringGetLength(cfString);
-		CFIndex maxBytes = 4 * stringLength + 1;
-		freeUTF8StringPtr = malloc(maxBytes);
-		CFStringGetCString(cfString, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
-		useUTF8StringPtr = freeUTF8StringPtr;
-	}
-
-	char *characters = strdup(useUTF8StringPtr);
-
-	if (freeUTF8StringPtr != NULL)
-		free(freeUTF8StringPtr);
-
+	VuoText t = VuoText_makeFromCFString(cfString);
+	VuoRetain(t);
+	char *characters = strdup(t);
+	VuoRelease(t);
+	CFRelease(cfString);
 	return characters;
 }
 

@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AreEqual2 [type="vuo.data.areEqual.VuoText" version="1.0.0" label="Are Equal|<refresh>refresh\l|<values>values\l|<equal>equal\r" pos="405,60"];
+GetURLValues [type="vuo.url.get" version="1.0.0" label="Get URL Values|<refresh>refresh\l|<url>url\l|<scheme>scheme\r|<user>user\r|<host>host\r|<port>port\r|<path>path\r|<query>query\r|<fragment>fragment\r" pos="120,60"];
+MakeList2 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="359,71" _2="\"https\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<URL>URL\r" _URL_type="VuoText" _URL="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<IsHTTPS>IsHTTPS\l" _IsHTTPS_type="VuoBoolean"];
+
+AreEqual2:equal -> PublishedOutputs:IsHTTPS;
+GetURLValues:scheme -> MakeList2:1;
+MakeList2:list -> AreEqual2:values;
+PublishedInputs:URL -> GetURLValues:url;
+}

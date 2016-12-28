@@ -9,10 +9,11 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 #include <sstream>
 
+#include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerCodeGenUtilities.hh"
 #include "VuoCompilerType.hh"
 
@@ -75,13 +76,13 @@ void VuoCompilerType::parse(void)
 	getSummaryFunction = parser->getFunction(typeName + "_getSummary");
 
 	if (! makeFromJsonFunction)
-		VLog("Error: Couldn't find %s_makeFromJson() function.", typeName.c_str());
+		VUserLog("Error: Couldn't find %s_makeFromJson() function.", typeName.c_str());
 	if (! getJsonFunction)
-		VLog("Error: Couldn't find %s_getJson() function.", typeName.c_str());
+		VUserLog("Error: Couldn't find %s_getJson() function.", typeName.c_str());
 	if (! getSummaryFunction)
-		VLog("Error: Couldn't find %s_getSummaryFunction() function.", typeName.c_str());
+		VUserLog("Error: Couldn't find %s_getSummaryFunction() function.", typeName.c_str());
 
-	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(getJsonFunction, 0, module, typeName);
+	llvmType = VuoCompilerCodeGenUtilities::getParameterTypeBeforeLowering(getJsonFunction, module, typeName);
 
 	parseOrGenerateValueFromStringFunction();
 	parseOrGenerateStringFromValueFunction(false);
@@ -395,19 +396,21 @@ Value * VuoCompilerType::generateSummaryFromValueFunctionCall(Module *module, Ba
 }
 
 /**
- * Generates a call to @c [Type]_retain().
+ * Generates a call to @c [Type]_retain(), if needed.
  */
 void VuoCompilerType::generateRetainCall(Module *module, BasicBlock *block, Value *arg)
 {
-	generateFunctionCallWithTypeParameter(module, block, arg, retainFunction);
+	if (VuoCompilerCodeGenUtilities::isRetainOrReleaseNeeded(getType()))
+		generateFunctionCallWithTypeParameter(module, block, arg, retainFunction);
 }
 
 /**
- * Generates a call to @c [Type]_release().
+ * Generates a call to @c [Type]_release(), if needed.
  */
 void VuoCompilerType::generateReleaseCall(Module *module, BasicBlock *block, Value *arg)
 {
-	generateFunctionCallWithTypeParameter(module, block, arg, releaseFunction);
+	if (VuoCompilerCodeGenUtilities::isRetainOrReleaseNeeded(getType()))
+		generateFunctionCallWithTypeParameter(module, block, arg, releaseFunction);
 }
 
 /**

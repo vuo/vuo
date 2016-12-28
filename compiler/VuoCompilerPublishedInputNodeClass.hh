@@ -10,19 +10,31 @@
 #ifndef VUOCOMPILERPUBLISHEDINPUTNODECLASS_H
 #define VUOCOMPILERPUBLISHEDINPUTNODECLASS_H
 
-#include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerSpecializedNodeClass.hh"
+
+class VuoPublishedPort;
 
 /**
- * A node class used by the compiler to provide trigger ports corresponding to published input ports.
+ * A node class used when generating code for a composition to represent published input ports.
+ * For each published input port, this node class has an input port with the same name and data type.
+ * In addition, this node class has an event-only trigger output port.
  */
-class VuoCompilerPublishedInputNodeClass : public VuoCompilerNodeClass
+class VuoCompilerPublishedInputNodeClass : public VuoCompilerSpecializedNodeClass
 {
-private:
-	VuoCompilerPublishedInputNodeClass(Module *module);
-	VuoCompilerPublishedInputNodeClass(VuoCompilerPublishedInputNodeClass *nodeClass);
-
 public:
-	static VuoNodeClass * newNodeClass(VuoNodeClass *dummyNodeClass);
+	static VuoNodeClass * newNodeClass(vector<VuoPublishedPort *> publishedInputPorts);
+	VuoCompilerNode * createReplacementBackingNode(VuoNode *nodeToBack, string backingNodeClassName, VuoCompiler *compiler);
+	VuoType * getOriginalPortType(VuoPortClass *portClass);
+	string getOriginalGenericNodeClassName(void);
+	string getOriginalGenericNodeClassDescription(void);
+	VuoNodeSet * getOriginalGenericNodeSet(void);
+	string createUnspecializedNodeClassName(set<VuoPortClass *> portClassesToUnspecialize);
+	string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
+
+private:
+	VuoCompilerPublishedInputNodeClass(string nodeClassName, Module *module);
+	VuoCompilerPublishedInputNodeClass(VuoCompilerPublishedInputNodeClass *compilerNodeClass);
+	VuoCompilerPublishedInputNodeClass(VuoNodeClass *baseNodeClass);
 };
 
 #endif

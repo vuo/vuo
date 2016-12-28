@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+CountWithinRange [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="270,330"];
+SelectOutput2 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="75,90"];
+SelectOutput3 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="75,165"];
+SelectOutput4 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="75,240"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<refresh>refresh\r|<incrementEvent>incrementEvent\r|<increment>increment\r|<decrementEvent>decrementEvent\r|<decrement>decrement\r|<setCountEvent>setCountEvent\r|<setCount>setCount\r|<minimum>minimum\r|<maximum>maximum\r|<wrapMode>wrapMode\r" _refresh_type="event" _incrementEvent_type="VuoBoolean" _incrementEvent="false" _increment_type="VuoReal" _increment="null" _decrementEvent_type="VuoBoolean" _decrementEvent="false" _decrement_type="VuoReal" _decrement="null" _setCountEvent_type="VuoBoolean" _setCountEvent="false" _setCount_type="VuoReal" _setCount="null" _minimum_type="VuoReal" _minimum="0" _maximum_type="VuoReal" _maximum="10" _wrapMode_type="VuoWrapMode" _wrapMode="\"wrap\""];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<count>count\l" _count_type="VuoReal"];
+
+SelectOutput2:trueOption -> CountWithinRange:increment;
+SelectOutput3:trueOption -> CountWithinRange:decrement;
+SelectOutput4:trueOption -> CountWithinRange:setCount;
+PublishedInputs:refresh -> CountWithinRange:refresh;
+PublishedInputs:incrementEvent -> SelectOutput2:which;
+PublishedInputs:increment -> SelectOutput2:in;
+PublishedInputs:decrementEvent -> SelectOutput3:which;
+PublishedInputs:decrement -> SelectOutput3:in;
+PublishedInputs:setCountEvent -> SelectOutput4:which;
+PublishedInputs:setCount -> SelectOutput4:in;
+PublishedInputs:minimum -> CountWithinRange:minimum;
+PublishedInputs:maximum -> CountWithinRange:maximum;
+PublishedInputs:wrapMode -> CountWithinRange:wrapMode;
+CountWithinRange:count -> PublishedOutputs:count;
+}

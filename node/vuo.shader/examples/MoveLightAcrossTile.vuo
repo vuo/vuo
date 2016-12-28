@@ -9,30 +9,27 @@
 
 digraph G
 {
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-132,389" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="100,430" _url="\"WinchesterTile.jpg\""];
-GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="106,577" _url="\"WinchesterTileNormal.png\""];
-Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="147,106" _z="0.400000"];
-Make3DSquare2 [type="vuo.scene.make.square.VuoShader" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="485,453" _rows="2" _columns="2"];
-Make3DTransform [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="285,363" _translation="{\"x\":0,\"y\":0,\"z\":0}" _rotation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _scale="{\"x\":2.000000,\"y\":2.000000,\"z\":1.000000}"];
-MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="86,488" _color="{\"r\":0.501961,\"g\":0.501961,\"b\":0.501961,\"a\":0.200000}" _width="1" _height="1"];
-MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="526,249" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="556,279" fillcolor="green"];
-MakePointLight [type="vuo.scene.make.light.point" version="1.0.0" label="Make Point Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="341,76" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="2.000000" _range="1.000000" _sharpness="0.000000"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="597,238" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithDetails [type="vuo.shader.make.image.details" version="2.0.0" label="Shade with Details|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<specularImage>specularImage\l|<normalImage>normalImage\l|<shader>shader\r" pos="279,468" fillcolor="violet" _opacity="1.000000"];
-Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="-3,83" _wave="\"sine\"" _period="7.000000" _center="0.000000" _amplitude="1.000000"];
-Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<value>value\r" pos="-8,206" _wave="\"sine\"" _period="11.000000" _center="0.000000" _amplitude="1.000000"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,390" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="105,435" _url="\"WinchesterTile.jpg\""];
+GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="105,585" _url="\"WinchesterTileNormal.png\""];
+Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="150,105" _z="0.400000"];
+Make3DSquare2 [type="vuo.scene.make.square.VuoShader" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="510,405" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[2,2,1]}" _rows="2" _columns="2"];
+MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="90,495" _color="{\"r\":0.501961,\"g\":0.501961,\"b\":0.501961,\"a\":0.200000}" _width="1" _height="1"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="529,251" fillcolor="green"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="559,281" fillcolor="green"];
+MakePointLight [type="vuo.scene.make.light.point" version="1.0.0" label="Make Point Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<position>position\l|<range>range\l|<sharpness>sharpness\l|<object>object\r" pos="345,75" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="2.000000" _range="1.000000" _sharpness="0.000000"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="600,240" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithDetails [type="vuo.shader.make.image.details" version="2.0.0" label="Shade with Details|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<specularImage>specularImage\l|<normalImage>normalImage\l|<shader>shader\r" pos="285,465" fillcolor="violet" _opacity="1.000000"];
+Wave [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="0,90" _wave="\"sine\"" _period="7.000000" _center="0.000000" _amplitude="1.000000" _phase="0.000000"];
+Wave2 [type="vuo.motion.wave" version="2.0.0" label="Wave|<refresh>refresh\l|<time>time\l|<wave>wave\l|<period>period\l|<center>center\l|<amplitude>amplitude\l|<phase>phase\l|<value>value\r" pos="0,225" _wave="\"sine\"" _period="11.000000" _center="0.000000" _amplitude="1.000000" _phase="0.000000"];
 
 FireOnStart:started -> GetImage3:refresh;
 FireOnStart:started -> GetImage:refresh;
-FireOnStart:started -> Make3DTransform:refresh;
 FireOnStart:started -> MakeColorImage:refresh;
 GetImage3:image -> ShadeWithDetails:normalImage;
 GetImage:image -> ShadeWithDetails:image;
 Make3DPoint:point -> MakePointLight:position;
 Make3DSquare2:object -> MakeList:2;
-Make3DTransform:transform -> Make3DSquare2:transform;
 MakeColorImage:image -> ShadeWithDetails:specularImage;
 MakeList0:list -> RenderSceneToWindow2:setWindowProperties;
 MakeList:list -> RenderSceneToWindow2:objects;

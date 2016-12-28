@@ -5,8 +5,8 @@ Vuo's source code is available so you can learn about how Vuo works, tinker with
 You ***do not*** need to build Vuo from source if you want to:
 
    - **run the Vuo Editor application**.  The Vuo Editor application is not included in this source code archive — it is available as a [separate download](https://vuo.org/download).
-   - **develop an application that uses Vuo**.  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Applications that use Vuo".
-   - **develop nodes and types for Vuo**.  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Node Classes and Port Types".
+   - **develop an application that uses Vuo**, and you've [bought Vuo](vuo.org/buy).  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Applications that use Vuo".
+   - **develop nodes and types for Vuo**, and you've [bought Vuo](vuo.org/buy).  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Node Classes and Port Types".
 
 
 
@@ -68,8 +68,6 @@ If you're running any version of Mac OS X:
     cd tools/clang
     make install -j9
 
-If building LLVM and Clang for redistribution, also build and execute UPX (see the UPX section below).
-
 ### Graphviz
 
 Install Graphviz 2.28.0:
@@ -100,13 +98,13 @@ Install Qt 5.3.1:
 
     unset CC CXX
     cd /tmp
-    curl -OL http://download.qt-project.org/official_releases/qt/5.3/5.3.1/single/qt-everywhere-opensource-src-5.3.1.tar.gz
+    curl -OL http://download.qt.io/official_releases/qt/5.3/5.3.1/single/qt-everywhere-opensource-src-5.3.1.tar.gz
     tar xzf qt-everywhere-opensource-src-5.3.1.tar.gz
     cd qt-everywhere-opensource-src-5.3.1
     cd qtbase
 
     # https://bugreports.qt-project.org/browse/QTBUG-36575
-    curl -OL https://bugreports.qt-project.org/secure/attachment/37834/qmake-objcxx-cxxflags.patch
+    curl -OL https://bugreports.qt.io/secure/attachment/37834/qmake-objcxx-cxxflags.patch
     patch -p1 < qmake-objcxx-cxxflags.patch
 
     # https://bugreports.qt-project.org/browse/QTBUG-37926
@@ -114,7 +112,7 @@ Install Qt 5.3.1:
     patch -p1 < mousebuttonstate.patch
 
     # https://bugreports.qt-project.org/browse/QTBUG-26795
-    curl -OL https://bugreports.qt-project.org/secure/attachment/42769/DevicePixelsRatioImageItemCache.diff
+    curl -OL https://bugreports.qt.io/secure/attachment/42769/DevicePixelsRatioImageItemCache.diff
     patch -p1 < DevicePixelsRatioImageItemCache.diff
 
     # https://bugreports.qt-project.org/browse/QTBUG-36383
@@ -125,6 +123,27 @@ Install Qt 5.3.1:
     curl -OL https://b33p.net/sites/default/files/yosemite-dragdrop.patch
     patch -p1 < yosemite-dragdrop.patch
 
+    # https://bugreports.qt.io/browse/QTBUG-6523
+    # https://b33p.net/kosada/node/11094
+    curl -OL https://b33p.net/sites/default/files/qgraphicsview_rubberband_select_qt5_patch.diff
+    patch -p1 < qgraphicsview_rubberband_select_qt5_patch.diff
+
+    # https://bugreports.qt.io/browse/QTBUG-47383
+    # https://b33p.net/kosada/node/11098
+    curl -OL https://b33p.net/sites/default/files/qt-clang-37.patch
+    patch -p1 < qt-clang-37.patch
+
+    # https://bugreports.qt.io/browse/QTBUG-44620
+    # https://b33p.net/kosada/node/11273
+    curl -OL https://b33p.net/sites/default/files/qt-colorpanel-size.patch
+    patch -p1 < qt-colorpanel-size.patch
+
+    # https://bugreports.qt.io/browse/QTBUG-31406
+    # https://b33p.net/kosada/node/6228
+    # https://vuo.org/node/111
+    curl -OL https://b33p.net/sites/default/files/qt-colorpanel-position.patch
+    patch -p1 < qt-colorpanel-position.patch
+
     cd ..
     ./configure -prefix /usr/local/Cellar/qt/5.3.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit -skip qtmultimedia
     make -j9
@@ -133,19 +152,23 @@ Install Qt 5.3.1:
 
 ### JSON-C
 
-Install JSON-C 0.10:
+Install JSON-C:
+
+If you're running Mac OS 10.11:
+
+	CFLAGS="-mmacosx-version-min=10.7"
+
+If you're running any version of Mac OS X:
 
     cd /tmp
-    curl -OL https://github.com/downloads/json-c/json-c/json-c-0.10.tar.gz
-    tar zxf json-c-0.10.tar.gz
-    cd json-c-0.10
-    CFLAGS="-Wno-error" ./configure --prefix=/usr/local/Cellar/json-c/0.10
+    curl -OL https://github.com/json-c/json-c/archive/json-c-0.12-20140410.tar.gz
+    tar zxf json-c-0.12-20140410.tar.gz
+    cd json-c-json-c-0.12-20140410
+    CFLAGS="$CFLAGS -Wno-error" ./configure --prefix=/usr/local/Cellar/json-c/0.12
     make install -j9
-    cp json_object_iterator.h /usr/local/Cellar/json-c/0.10/include/json/
     make clean
-    CFLAGS="-Wno-error -m32" ./configure --prefix=/usr/local/Cellar/json-c/0.10-32
+    CFLAGS="$CFLAGS -Wno-error -m32" ./configure --prefix=/usr/local/Cellar/json-c/0.12-32
     make install -j9
-    cp json_object_iterator.h /usr/local/Cellar/json-c/0.10-32/include/json/
 
 ### ØMQ
 
@@ -312,33 +335,36 @@ If you're running any version of Mac OS X:
 If you're running any version of Mac OS X:
 
     cd /tmp
-    curl -OL http://downloads.sourceforge.net/project/assimp/assimp-3.0/assimp--3.0.1270-source-only.zip
-    tar zxf assimp--3.0.1270-source-only.zip
-    cd assimp--3.0.1270-source-only
-    curl -OL https://github.com/assimp/assimp/commit/27767031e61629faa0cb9ce4f0d6ded8a5b487f1.patch
-    # The following patches will show warnings about whitespace errors and types differing from expected; these are safe to ignore.
-    git apply 27767031e61629faa0cb9ce4f0d6ded8a5b487f1.patch
-    curl -OL https://github.com/assimp/assimp/commit/8213805dc6556566a9f983e480e44038bdb75674.patch
-    git apply 8213805dc6556566a9f983e480e44038bdb75674.patch
-    curl -OL https://github.com/assimp/assimp/commit/c338b665ed870363d17a52d2e6e6db276934351f.patch
-    git apply c338b665ed870363d17a52d2e6e6db276934351f.patch
-    curl -OL https://github.com/assimp/assimp/commit/6551fd4903628bef69f5d7bbd0f0f5b262f32d2e.patch
-    git apply 6551fd4903628bef69f5d7bbd0f0f5b262f32d2e.patch
+    curl -OL http://downloads.sourceforge.net/project/assimp/assimp-3.1/assimp-3.1.1.zip
+    unzip assimp-3.1.1.zip
+    cd assimp-3.1.1
+    # Disable Blender BMesh triangulation (it's crashy).
+    # https://vuo.org/node/834
+    # https://b33p.net/kosada/node/10594
+    curl -OL https://github.com/assimp/assimp/commit/b483be30691803ce77cdb605f519ddbb4c07a040.patch
+    patch -p1 < b483be30691803ce77cdb605f519ddbb4c07a040.patch
+    # Collapse multiple spaces in OBJ files.
+    # https://vuo.org/node/945
+    # https://b33p.net/kosada/node/11103
+    curl -OL https://github.com/assimp/assimp/commit/36c82fe5b05bfb15bc3b999d521b9ca26367992e.patch
+    patch -p1 < 36c82fe5b05bfb15bc3b999d521b9ca26367992e.patch
+    curl -OL https://github.com/assimp/assimp/commit/0c5605d07df4f3faa0be7b55cc197ff979f35d84.patch
+    patch -p1 < 0c5605d07df4f3faa0be7b55cc197ff979f35d84.patch
 
 If you're running Mac OS 10.9 or 10.10:
 
-    cmake -DCMAKE_C_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang' -DCMAKE_CXX_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang++' -DCMAKE_CXX_FLAGS='-Oz' -DENABLE_BOOST_WORKAROUND=ON -DBUILD_STATIC_LIB=ON -DNO_EXPORT=ON -DASSIMP_BUILD_ARCHITECTURE=x86_64 -DBUILD_ASSIMP_TOOLS=OFF -DBUILD_ASSIMP_SAMPLES=OFF -DBUILD_TESTS=OFF
+    cmake -DCMAKE_C_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang' -DCMAKE_CXX_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang++' -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=ON -DBUILD_SHARED_LIBS=OFF -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF
 
 If you're running Mac OS 10.7 or 10.8:
 
-    cmake -DCMAKE_CXX_FLAGS='-Oz' -DENABLE_BOOST_WORKAROUND=ON -DBUILD_STATIC_LIB=ON -DNO_EXPORT=ON -DASSIMP_BUILD_ARCHITECTURE=x86_64 -DBUILD_ASSIMP_TOOLS=OFF -DBUILD_ASSIMP_SAMPLES=OFF -DBUILD_TESTS=OFF
+    cmake -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=ON -DBUILD_SHARED_LIBS=OFF -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF
 
 If you're running any version of Mac OS X:
 
     make -j9
-    mkdir -p /usr/local/Cellar/assimp/3.0.1270/{lib,include}
-    cp lib/libassimp.a /usr/local/Cellar/assimp/3.0.1270/lib
-    cp -R include/assimp/ /usr/local/Cellar/assimp/3.0.1270/include/
+    mkdir -p /usr/local/Cellar/assimp/3.1.1/{lib,include}
+    cp lib/libassimp.a /usr/local/Cellar/assimp/3.1.1/lib
+    cp -R include/assimp/ /usr/local/Cellar/assimp/3.1.1/include/
 
 ### Discount
 
@@ -467,32 +493,6 @@ Create a symbolic link to ld64 133.3 in the same directory as Clang (to force Cl
     ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1g --openssldir=/usr/local/etc/openssl no-zlib no-shared no-hw no-asm darwin64-x86_64-cc
     make CFLAG="-O0"
     make install
-
-### UPX (only needed if building Vuo or Vuo.framework for distribution)
-
-    cd /tmp
-    curl -OL http://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
-    tar zxf ucl-1.03.tar.gz 
-    cd ucl-1.03
-    export UPX_UCLDIR=`pwd`
-    ./configure
-    make -j9
-    cd ..
-    curl -OL http://downloads.sourceforge.net/project/sevenzip/LZMA%20SDK/4.43/lzma443.tar.bz2
-    mkdir lzma443
-    cd lzma443
-    tar jxf ../lzma443.tar.bz2
-    export UPX_LZMADIR=`pwd`
-    cd ..
-    curl -OL http://upx.sourceforge.net/download/upx-3.91-src.tar.bz2
-    tar jxf upx-3.91-src.tar.bz2
-    cd upx-3.91-src
-    make -j9 all
-    mkdir -p /usr/local/Cellar/upx/3.91/bin
-    cp src/upx.out /usr/local/Cellar/upx/3.91/bin/upx
-    UPX=/usr/local/Cellar/upx/3.91/bin/upx
-    $UPX --backup --ultra-brute /usr/local/Cellar/llvm/3.2/bin/clang
-    $UPX --backup --ultra-brute /usr/local/Cellar/llvm/3.2/bin/llvm-link
 
 
 ## Reinstall dependencies that are provided with the Vuo source code (optional)

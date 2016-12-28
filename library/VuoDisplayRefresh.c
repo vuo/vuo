@@ -120,10 +120,22 @@ void VuoDisplayRefresh_enableTriggers
 		displayRefresh->displayLinkCanceledAndCompleted = dispatch_semaphore_create(0);
 		CVDisplayLinkSetOutputCallback(displayRefresh->displayLink, VuoDisplayRefresh_displayLinkCallback, displayRefresh);
 		CVDisplayLinkStart(displayRefresh->displayLink);
+
+		CVTime nominal = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(displayRefresh->displayLink);
+		VDebugLog("Refresh: %g Hz (%d/%lld)", (double)nominal.timeScale/nominal.timeValue, nominal.timeScale, nominal.timeValue);
+
+		CVTime latency = CVDisplayLinkGetOutputVideoLatency(displayRefresh->displayLink);
+		if (latency.timeScale)
+		{
+			double latencyFrames = ((double)latency.timeValue/latency.timeScale)/((double)nominal.timeValue/nominal.timeScale);
+			VDebugLog("Latency: %g frame%s (%d/%lld)", latencyFrames, fabs(latencyFrames-1)<0.00001 ? "" : "s", latency.timeScale, latency.timeValue);
+		}
+		else
+			VDebugLog("Latency: unknown");
 	}
 	else
 	{
-		VLog("Failed to create CVDisplayLink.");
+		VUserLog("Failed to create CVDisplayLink.");
 		displayRefresh->displayLink = NULL;
 	}
 }

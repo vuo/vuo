@@ -10,9 +10,16 @@
 #include <fcntl.h>
 #include "TestVuoCompiler.hh"
 #include "VuoCompiler.hh"
+#include "VuoCompilerInputDataClass.hh"
+#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerPortClass.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
+#include "VuoCompilerTriggerPortClass.hh"
+#include "VuoCompilerType.hh"
+#include "VuoGenericType.hh"
+#include "VuoPortClass.hh"
 
 
 // Be able to use these types in QTest::addColumn()

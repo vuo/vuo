@@ -15,11 +15,12 @@ using namespace std;
 #include "VuoGlContext.h"
 
 #include <OpenGL/CGLMacro.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 #include <dispatch/dispatch.h>
 
 
-static dispatch_once_t VuoGlContextPoolCreated;	///< Make sure this process only has a single GL Context Pool.
+static dispatch_once_t VuoGlContextPoolCreated = 0;	///< Make sure this process only has a single GL Context Pool.
 
 /**
  * A process-wide set of mutually-shared OpenGL contexts.
@@ -61,7 +62,7 @@ public:
 				context = createContext(rootContext);
 				if (!context)
 				{
-					VLog("Error: Couldn't create a context.");
+					VUserLog("Error: Couldn't create a context.");
 					return NULL;
 				}
 				allSharedContexts.push_back(context);
@@ -87,7 +88,7 @@ public:
 			if (std::find(allSharedContexts.begin(), allSharedContexts.end(), context) != allSharedContexts.end())
 				avaialbleSharedContexts.push_back(context);
 			else
-				VLog("Error: Disued context %p, which isn't in the global share pool.  I'm not going to muddy the waters.", context);
+				VUserLog("Error: Disued context %p, which isn't in the global share pool.  I'm not going to muddy the waters.", context);
 		}
 		dispatch_semaphore_signal(poolSemaphore);
 	}
@@ -127,7 +128,7 @@ private:
 				CGLDestroyPixelFormat(pf);
 			if (error != kCGLNoError)
 			{
-				VLog("Error: %s\n", CGLErrorString(error));
+				VUserLog("Error: %s\n", CGLErrorString(error));
 				return NULL;
 			}
 		}
@@ -157,7 +158,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 {
 	if (VuoGlContextPool::singletonInstance)
 	{
-		VLog("Error: Called after VuoGlContextPool was initialized.  Ignoring the new rootContext.");
+		VUserLog("Error: Called after VuoGlContextPool was initialized.  Ignoring the new rootContext.");
 		return;
 	}
 
@@ -165,7 +166,7 @@ void VuoGlContext_setGlobalRootContext(void *rootContext)
 	CGLError error = CGLCreateContext(pf, (CGLContextObj)rootContext, &VuoGlContextPool::rootContext);
 	if (error != kCGLNoError)
 	{
-		VLog("Error: %s\n", CGLErrorString(error));
+		VUserLog("Error: %s\n", CGLErrorString(error));
 		return;
 	}
 }
@@ -267,6 +268,40 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
 }
 
 /**
+ * Returns a string describing the context's renderer.
+ *
+ * This is a separate function in order to clean up the log message.
+ */
+const char *VuoGlContext_getRenderer(VuoGlContext context)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)context;
+	const char *renderer = (const char *)glGetString(GL_RENDERER);
+	VDebugLog("%s", renderer);
+	return renderer;
+}
+
+/**
+ * Returns true if Vuo should possibly use multisampling for the specified context's GPU.
+ *
+ * Multisampling is known to break point rendering on some GPUs, so we intentionally disable it on those.
+ *
+ * - https://b33p.net/kosada/node/8225#comment-31324
+ * - https://b33p.net/kosada/node/10595
+ */
+bool VuoGlContext_isMultisamplingFunctional(VuoGlContext context)
+{
+	static bool multisamplingFunctional = false;
+	static dispatch_once_t multisamplingCheck = 0;
+	dispatch_once(&multisamplingCheck, ^{
+		const char *renderer = VuoGlContext_getRenderer(context);
+		multisamplingFunctional = !(strcmp(renderer, "Intel HD Graphics 4000 OpenGL Engine") == 0
+								 || strcmp(renderer, "Intel Iris Pro OpenGL Engine"        ) == 0
+								   );
+	});
+	return multisamplingFunctional;
+}
+
+/**
  * Returns a platform-specific OpenGL pixelformat description.
  *
  * On Mac OS X, this is a @c CGLPixelFormatObj.
@@ -274,46 +309,54 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
 void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 {
 	// Check whether it's OK to use multisampling on this GPU.
-	static dispatch_once_t multisamplingCheck;
-	static bool multisampling = false;
+	static dispatch_once_t multisamplingCheck = 0;
+	static int multisample = 0;
 	dispatch_once(&multisamplingCheck, ^{
 					  // Create a temporary context so we can get the GPU renderer string.
-					  CGLPixelFormatObj pf;
-					  {
-						  CGLPixelFormatAttribute pfa[13] = {
-							  kCGLPFAAccelerated,
-							  kCGLPFANoRecovery,
-							  kCGLPFADoubleBuffer,
-							  kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
-							  kCGLPFADepthSize, (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0),
-							  (CGLPixelFormatAttribute) 0
-						  };
-						  GLint npix;
-						  CGLError error = CGLChoosePixelFormat(pfa, &pf, &npix);
-						  if (error != kCGLNoError)
-						  {
-							  VLog("Error: %s", CGLErrorString(error));
-							  return;
-						  }
-					  }
-
 					  CGLContextObj cgl_ctx;
 					  {
+						  CGLPixelFormatObj pf;
+						  {
+							  CGLPixelFormatAttribute pfa[13] = {
+								  kCGLPFAAccelerated,
+//								  kCGLPFANoRecovery,
+								  kCGLPFADoubleBuffer,
+								  kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
+								  kCGLPFADepthSize, (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0),
+								  (CGLPixelFormatAttribute) 0
+							  };
+							  GLint npix;
+							  CGLError error = CGLChoosePixelFormat(pfa, &pf, &npix);
+							  if (error != kCGLNoError)
+							  {
+								  VUserLog("Error: %s", CGLErrorString(error));
+								  return;
+							  }
+						  }
+
 						  CGLError error = CGLCreateContext(pf, NULL, &cgl_ctx);
 						  CGLDestroyPixelFormat(pf);
 						  if (error != kCGLNoError)
 						  {
-							  VLog("Error: %s\n", CGLErrorString(error));
+							  VUserLog("Error: %s\n", CGLErrorString(error));
 							  return;
 						  }
 					  }
 
-					  if (strcmp((const char *)glGetString(GL_RENDERER), "Intel HD Graphics 4000 OpenGL Engine") == 0)
-						  // Multisampling is known to break point rendering on Intel HD Graphics 4000.
-						  // https://b33p.net/kosada/node/8225#comment-31324
-						  multisampling = false;
-					  else
-						  multisampling = true;
+
+					  // If the user set the `multisample` preference, use it.
+					  Boolean overridden = false;
+					  multisample = CFPreferencesGetAppIntegerValue(CFSTR("multisample"), CFSTR("org.vuo.Editor"), &overridden);
+
+					  if (!overridden)
+					  {
+						  // …otherwise enable 4x multisampling (unless there's a known problem with this GPU model).
+
+						  if (VuoGlContext_isMultisamplingFunctional(cgl_ctx))
+							  multisample = 4;
+						  else
+							  multisample = 0;
+					  }
 
 					  CGLDestroyContext(cgl_ctx);
 				  });
@@ -322,16 +365,16 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 	CGLPixelFormatAttribute pfa[13];
 	int pfaIndex = 0;
 	pfa[pfaIndex++] = kCGLPFAAccelerated;
-	pfa[pfaIndex++] = kCGLPFANoRecovery;
+//	pfa[pfaIndex++] = kCGLPFANoRecovery;
 	pfa[pfaIndex++] = kCGLPFADoubleBuffer;
 	pfa[pfaIndex++] = kCGLPFAColorSize; pfa[pfaIndex++] = (CGLPixelFormatAttribute) 24;
 	pfa[pfaIndex++] = kCGLPFADepthSize; pfa[pfaIndex++] = (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0);
 
-	if (multisampling)
+	if (multisample)
 	{
 		pfa[pfaIndex++] = kCGLPFAMultisample;
 		pfa[pfaIndex++] = kCGLPFASampleBuffers; pfa[pfaIndex++] = (CGLPixelFormatAttribute) 1;
-		pfa[pfaIndex++] = kCGLPFASamples;       pfa[pfaIndex++] = (CGLPixelFormatAttribute) 4;
+		pfa[pfaIndex++] = kCGLPFASamples;       pfa[pfaIndex++] = (CGLPixelFormatAttribute) multisample;
 	}
 
 	pfa[pfaIndex++] = (CGLPixelFormatAttribute) 0;
@@ -341,12 +384,14 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 	CGLError error = CGLChoosePixelFormat(pfa, &pf, &npix);
 	if (error != kCGLNoError)
 	{
-		VLog("Error: %s", CGLErrorString(error));
+		VUserLog("Error: %s", CGLErrorString(error));
 		return NULL;
 	}
 
 	return (void *)pf;
 }
+
+void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func);
 
 /**
  * Helper for @c VGL().
@@ -361,10 +406,20 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 	if (!fragmentOnGPU)
 		VuoLog(file, line, func, "OpenGL warning: Falling back to software renderer for fragment shader.  This will slow things down.");
 
-	GLenum error = glGetError();
-	if (error == GL_NO_ERROR)
-		return;
+	do
+	{
+		GLenum error = glGetError();
+		if (error == GL_NO_ERROR)
+			break;
+		_VGL_describe(error, cgl_ctx, file, line, func);
+	} while (true);
+}
 
+/**
+ * Logs text describing the specified OpenGL error.
+ */
+void _VGL_describe(GLenum error, CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func)
+{
 	// Text from http://www.opengl.org/sdk/docs/man/xhtml/glGetError.xml
 	const char *errorString = "(unknown)";
 	if (error == GL_INVALID_ENUM)
@@ -391,6 +446,8 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 			framebufferErrorString = "GL_FRAMEBUFFER_UNSUPPORTED (The combination of internal formats of the attached images violates an implementation-dependent set of restrictions.)";
 		else if (framebufferError == GL_FRAMEBUFFER_COMPLETE)
 			framebufferErrorString = "GL_FRAMEBUFFER_COMPLETE (?)";
+		else if (framebufferError == GL_FRAMEBUFFER_UNDEFINED)
+			framebufferErrorString = "GL_FRAMEBUFFER_UNDEFINED";
 		VuoLog(file, line, func, "OpenGL framebuffer error %d: %s", framebufferError, framebufferErrorString);
 
 		return;
@@ -403,4 +460,5 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 		errorString = "GL_STACK_OVERFLOW (An attempt has been made to perform an operation that would cause an internal stack to overflow.)";
 
 	VuoLog(file, line, func, "OpenGL error %d: %s", error, errorString);
+	VuoLog_backtrace();
 }

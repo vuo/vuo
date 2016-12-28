@@ -23,10 +23,6 @@ class TestVuoReal : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testStringConversion_data()
 	{

@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="300,240"];
+HoldValue2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="270,105"];
+MakeList [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="251,251" _2="\"e\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Lengthen>Lengthen\r" _Lengthen_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Es>Es\l" _Es_type="VuoText"];
+
+AppendTexts:compositeText -> HoldValue2:newValue;
+HoldValue2:heldValue -> MakeList:1;
+MakeList:list -> AppendTexts:texts;
+PublishedInputs:Lengthen -> HoldValue2:refresh;
+AppendTexts:compositeText -> PublishedOutputs:Es;
+}

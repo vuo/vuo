@@ -47,6 +47,8 @@ struct json_object *VuoArtNetInputDevice_getJson(const VuoArtNetInputDevice valu
 char *VuoArtNetInputDevice_getSummary(const VuoArtNetInputDevice value);
 
 VuoArtNetInputDevice VuoArtNetInputDevice_make(const VuoInteger net, const VuoInteger subNet, const VuoInteger universe);
+
+#define VuoArtNetInputDevice_SUPPORTS_COMPARISON
 bool VuoArtNetInputDevice_areEqual(const VuoArtNetInputDevice value1, const VuoArtNetInputDevice value2);
 bool VuoArtNetInputDevice_isLessThan(const VuoArtNetInputDevice value1, const VuoArtNetInputDevice value2);
 

@@ -23,6 +23,10 @@ VuoPort::VuoPort(VuoPortClass *portClass)
 	this->eventThrottling = getClass()->getDefaultEventThrottling();
 }
 
+VuoPort::~VuoPort(void)
+{
+}
+
 /**
  * Returns the argument class of this argument.
  */
@@ -33,6 +37,7 @@ VuoPortClass * VuoPort::getClass(void)
 
 /**
  * Returns the cables connected to this port.
+ * The cables are in the order in which they were added, from least to most recent.
  * The input @c includePublishedCables determines whether cables connected to
  * externally visible published ports are included in the list of returned cables.
  */
@@ -41,7 +46,7 @@ vector<VuoCable *> VuoPort::getConnectedCables(bool includePublishedCables)
 	vector<VuoCable *> targetCables;
 	for (vector<VuoCable *>::iterator cable = connectedCables.begin(); cable != connectedCables.end(); ++cable)
 	{
-		if (includePublishedCables || (! (*cable)->isPublishedCable()))
+		if (includePublishedCables || (! (*cable)->isPublished()))
 			targetCables.push_back(*cable);
 	}
 

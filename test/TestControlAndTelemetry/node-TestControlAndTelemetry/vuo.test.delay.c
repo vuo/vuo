@@ -28,4 +28,5 @@ void nodeEvent
 {
 	dispatch_semaphore_t temporaryDeadlock = dispatch_semaphore_create(0);
 	dispatch_semaphore_wait(temporaryDeadlock, dispatch_time(DISPATCH_TIME_NOW, seconds * NSEC_PER_SEC));
+	dispatch_release(temporaryDeadlock);
 }

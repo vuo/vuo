@@ -4,7 +4,7 @@ Each color in a computer image is represented as a combination of [red, green, a
 
 This node splits the image into its red, green, and blue channels, independently moves the position of each channel, then recombines them into a single image.
 
-   - `Red Offset`, `Green Offset`, `Blue Offset` — The distance to offset each channel, in Vuo coordinates.
+   - `Red Offset`, `Green Offset`, `Blue Offset` — The distance to offset each channel, in Vuo Coordinates.
 
 ![](mountains.png)
 

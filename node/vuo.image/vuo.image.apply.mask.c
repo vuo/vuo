@@ -32,7 +32,7 @@ static const char *maskFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 		vec4 maskColor = texture2D(mask, fragmentTextureCoordinate.xy);
 		float maskAmount = maskColor.a * rgbToHsl(maskColor.rgb).z;
 		color.rgb *= maskAmount;
-		color.a = maskAmount;
+		color.a *= maskAmount;
 		gl_FragColor = color;
 	}
 );

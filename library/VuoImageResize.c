@@ -32,9 +32,15 @@ static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec2 scale;
 	uniform vec2 offset;
 
+	bool outOfBounds(vec2 coord)
+	{
+		return coord.x < 0 || coord.x > 1 || coord.y < 0 || coord.y > 1;
+	}
+
 	void main(void)
 	{
-		gl_FragColor = texture2D(texture, (vec2(fragmentTextureCoordinate.x, fragmentTextureCoordinate.y)-offset) * scale);
+		vec2 uv = (vec2(fragmentTextureCoordinate.x, fragmentTextureCoordinate.y)-offset) * scale;
+		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : texture2D(texture, uv);
 	}
 );
 

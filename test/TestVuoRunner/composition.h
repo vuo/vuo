@@ -13,32 +13,40 @@ extern bool isStopped;
 
 //@{
 /**
+ * Normally defined in VuoRuntimeHelper. Defined here to prevent link errors.
+ */
+bool isPaused = false;
+char *compositionDiff = NULL;
+//@}
+
+//@{
+/**
  * Normally defined in the composition's generated code. Defined here to prevent link errors.
  */
 int VuoRelease(void *heapPointer)
 {
 	return 0;
 }
-void setup(void)
+void vuoSetup(void)
 {
 }
-void cleanup(void)
+void vuoCleanup(void)
 {
 }
-void nodeInstanceInit(void)
+void vuoInstanceInit(void)
 {
 }
-void nodeInstanceTriggerStart(void)
+void vuoInstanceTriggerStart(void)
 {
 }
-void nodeInstanceTriggerStop(void)
+void vuoInstanceTriggerStop(void)
 {
 }
-char * getPortValue(char *portIdentifier, bool isInput, bool isThreadSafe, int serializationType)
+char * vuoGetPortValue(char *portIdentifier, int serializationType)
 {
 	return NULL;
 }
-void setInputPortValue(char *portIdentifier, char *valueAsString, int shouldUpdateCallbacks)
+void vuoSetInputPortValue(char *portIdentifier, char *valueAsString)
 {
 }
 void fireTriggerPortEvent(char *portIdentifier)
@@ -106,5 +114,5 @@ char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterproce
 {
 	return NULL;
 }
-int isPaused = 0;
+
 //@}

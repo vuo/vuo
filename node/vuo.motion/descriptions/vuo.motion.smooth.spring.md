@@ -9,3 +9,4 @@ Starting when an event hits this node's `Set Target` input port, each time the `
    - `Set Target` — Starts smoothly moving toward a new position.
    - `Period` — The duration, in seconds, of the spring's oscillations.
    - `Damping` — How quickly the spring comes to rest.  When `Damping` is 0, the spring oscillates forever.  When `Damping` is 1, the spring comes to rest quickly, without oscillating.  When `Damping` is between 0 and 1, the spring oscillates and then comes to rest.
+   - `Reached Target` — Outputs an event when the transition has reached the target and stopped moving.  (Although a spring in real life continues oscillating imperceptibly for a long time, the spring simulated by this node stops moving when the time reaches 2 * Period / Damping.)

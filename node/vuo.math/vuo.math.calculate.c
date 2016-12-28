@@ -17,7 +17,7 @@ VuoModuleMetadata({
 						"add", "sum", "+", "subtract", "minus", "difference", "-", "multiply", "product", "*",
 						"divide", "quotient", "/", "power", "^", "modulus", "%", "if", "condition",
 						"and", "&&", "or", "==", "less", "<", "<=", "greater", ">", ">=", "equal", "==", "compare",
-						"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+						"sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
 						"log2", "log10", "log", "ln", "exp", "sqrt", "sign", "rint", "abs", "min", "max", "sum", "avg", "pi",
 						"expression", "equation", "formula", "logic", "trigonometry"
 					  ],
@@ -36,13 +36,11 @@ void nodeEvent
 )
 {
 	VuoDictionary_VuoText_VuoReal results = VuoMathExpressionList_calculate(expression, values);
-	VuoList_VuoText outputVariables = VuoDictionaryGetKeys_VuoText_VuoReal(results);
+	VuoList_VuoText outputVariables = results.keys;
 	*result = (VuoListGetCount_VuoText(outputVariables) == 0) ?
 				  0 :
 				  VuoDictionaryGetValueForKey_VuoText_VuoReal(results, VuoListGetValue_VuoText(outputVariables, 1));
 
-	VuoRetain(outputVariables);
-	VuoRelease(outputVariables);
 	VuoDictionary_VuoText_VuoReal_retain(results);
 	VuoDictionary_VuoText_VuoReal_release(results);
 }

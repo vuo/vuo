@@ -9,10 +9,11 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
 #include "VuoCompilerModule.hh"
+#include "VuoCompilerBitcodeParser.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerType.hh"
 #include "VuoStringUtilities.hh"
@@ -28,6 +29,7 @@ VuoCompilerModule::VuoCompilerModule(VuoModule *base, Module *module)
 	this->moduleDetails = NULL;
 	this->parser = NULL;
 	this->isPremium = false;
+	this->builtIn = false;
 
 	if (module)
 	{
@@ -98,7 +100,7 @@ void VuoCompilerModule::parseMetadata(void)
 
 	if (! moduleDetails)
 	{
-		VLog("Error: Couldn't parse VuoModuleMetadata as JSON: %s", moduleDetailsStr.c_str());
+		VUserLog("Error: Couldn't parse VuoModuleMetadata as JSON: %s", moduleDetailsStr.c_str());
 		return;
 	}
 
@@ -276,7 +278,7 @@ string VuoCompilerModule::nameForGlobal(string genericGlobalVarOrFuncName)
  */
 string VuoCompilerModule::nameForGlobal(string nameBeforeCompilation, string moduleKey)
 {
-	return VuoStringUtilities::transcodeToIdentifier(moduleKey) + "__" + nameBeforeCompilation;
+	return VuoStringUtilities::prefixSymbolName(nameBeforeCompilation, moduleKey);
 }
 
 /**
@@ -398,4 +400,20 @@ bool VuoCompilerModule::getPremium(void)
 void VuoCompilerModule::setPremium(bool premium)
 {
 	this->isPremium = premium;
+}
+
+/**
+ * Returns true if this module is one of the built-in modules distributed with Vuo.
+ */
+bool VuoCompilerModule::isBuiltIn(void)
+{
+	return builtIn;
+}
+
+/**
+ * Sets whether this module is one of the built-in modules distributed with Vuo.
+ */
+void VuoCompilerModule::setBuiltIn(bool builtIn)
+{
+	this->builtIn = builtIn;
 }

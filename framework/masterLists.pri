@@ -84,7 +84,7 @@ for(module_list, MODULE_LISTS) {
 	for(sourcefile, module_list_sources) {
 		objectfile = $${dirname(module_list)}/$${basename(sourcefile)}
 		objectfile ~= s/\\.cc?$/.bc
-		objectfile ~= s/\\.m$/.bc
+		objectfile ~= s/\\.mm?$/.bc
 		MODULE_OBJECTS += $$objectfile
 	}
 
@@ -171,6 +171,7 @@ QMAKE_POST_LINK = ""
 QMAKE_PRE_LINK = ""
 RUNTIME_CXX_SOURCES = ""
 RUNTIME_C_SOURCES = ""
+RUNTIME_OBJC_SOURCES = ""
 RUNTIME_LOADER_SOURCES = ""
 SOURCES = ""
 TEMPLATE = ""

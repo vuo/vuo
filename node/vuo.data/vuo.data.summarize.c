@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Summarize Value",
-					  "keywords" : [ "convert", "text", "brief", "shorten" ],
+					  "keywords" : [ "convert", "text", "brief", "shorten", "debug", "troubleshoot" ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ "ShowMousePosition.vuo" ]

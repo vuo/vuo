@@ -10,14 +10,25 @@
 #include <sstream>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
 #include "VuoCompiler.hh"
+#include "VuoCompilerBitcodeParser.hh"
+#include "VuoCompilerDataClass.hh"
+#include "VuoCompilerInputDataClass.hh"
+#include "VuoCompilerInputEventPortClass.hh"
+#include "VuoCompilerInstanceDataClass.hh"
 #include "VuoCompilerNode.hh"
+#include "VuoCompilerNodeArgumentClass.hh"
 #include "VuoCompilerNodeClass.hh"
+#include "VuoCompilerOutputDataClass.hh"
+#include "VuoCompilerOutputEventPortClass.hh"
+#include "VuoCompilerPort.hh"
+#include "VuoCompilerPortClass.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
-
+#include "VuoCompilerTriggerDescription.hh"
+#include "VuoCompilerTriggerPortClass.hh"
 #include "VuoGenericType.hh"
 #include "VuoPort.hh"
 #include "VuoPortClass.hh"
@@ -94,6 +105,7 @@ VuoCompilerNodeClass::VuoCompilerNodeClass(VuoCompilerNodeClass *compilerNodeCla
 	this->callbackUpdateFunction = compilerNodeClass->callbackUpdateFunction;
 	this->callbackStopFunction = compilerNodeClass->callbackStopFunction;
 	this->instanceDataClass = compilerNodeClass->instanceDataClass;
+	this->triggerDescriptions = compilerNodeClass->triggerDescriptions;
 	this->defaultSpecializedForGenericTypeName = compilerNodeClass->defaultSpecializedForGenericTypeName;
 
 	compilerNodeClass->getBase()->setInputPortClasses(vector<VuoPortClass *>());
@@ -283,6 +295,10 @@ void VuoCompilerNodeClass::parseMetadata(void)
 		getBase()->setInterface( parseBool(nodeDetails, "isInterface") );
 		getBase()->setExampleCompositionFileNames( parseArrayOfStrings(nodeDetails, "exampleCompositions") );
 		getBase()->setDeprecated( parseBool(nodeDetails, "isDeprecated") );
+
+		json_object *triggersArray = NULL;
+		if (json_object_object_get_ex(nodeDetails, "triggers", &triggersArray))
+			triggerDescriptions = VuoCompilerTriggerDescription::parseFromJson(triggersArray);
 	}
 
 	parseGenericTypes(moduleDetails, defaultSpecializedForGenericTypeName, compatibleSpecializedForGenericTypeName);
@@ -331,7 +347,7 @@ void VuoCompilerNodeClass::parseEventFunction(void)
 
 		if (! eventFunction)
 		{
-			VLog("Error: Node class '%s' is missing function nodeEvent or nodeInstanceEvent.", getBase()->getClassName().c_str());
+			VUserLog("Error: Node class '%s' is missing function nodeEvent or nodeInstanceEvent.", getBase()->getClassName().c_str());
 			return;
 		}
 	}
@@ -577,30 +593,30 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 		string wronglyPresentMessage = " is not allowed in " + functionName;
 
 		if (sawInputData && ! (acceptanceFlags & INPUT_DATA_PRESENT))
-			VLog("Error: %s", ("VuoInputData" + wronglyPresentMessage).c_str());
+			VUserLog("Error: %s", ("VuoInputData" + wronglyPresentMessage).c_str());
 		if (sawOutputData && ! (acceptanceFlags & OUTPUT_DATA_PRESENT))
-			VLog("Error: %s", ("VuoOutputData" + wronglyPresentMessage).c_str());
+			VUserLog("Error: %s", ("VuoOutputData" + wronglyPresentMessage).c_str());
 		if (sawInputEvent && ! (acceptanceFlags & INPUT_EVENT_PRESENT))
-			VLog("Error: %s", ("VuoInputEvent" + wronglyPresentMessage).c_str());
+			VUserLog("Error: %s", ("VuoInputEvent" + wronglyPresentMessage).c_str());
 		if (sawOutputEvent && ! (acceptanceFlags & OUTPUT_EVENT_PRESENT))
-			VLog("Error: %s", ("VuoOutputEvent" + wronglyPresentMessage).c_str());
+			VUserLog("Error: %s", ("VuoOutputEvent" + wronglyPresentMessage).c_str());
 		if (sawOutputTrigger && ! (acceptanceFlags & OUTPUT_TRIGGER_PRESENT))
-			VLog("Error: %s", ("VuoOutputTrigger" + wronglyPresentMessage).c_str());
+			VUserLog("Error: %s", ("VuoOutputTrigger" + wronglyPresentMessage).c_str());
 		if (sawInstanceData && ! (acceptanceFlags & INSTANCE_DATA_PRESENT))
-			VLog("Error: %s", ("VuoInstanceData" + wronglyPresentMessage).c_str());
+			VUserLog("Error: %s", ("VuoInstanceData" + wronglyPresentMessage).c_str());
 
 		if (! sawInputData && ! (acceptanceFlags & INPUT_DATA_ABSENT))
-			VLog("Error: %s", ("VuoInputData" + wronglyAbsentMessage).c_str());
+			VUserLog("Error: %s", ("VuoInputData" + wronglyAbsentMessage).c_str());
 		if (! sawOutputData && ! (acceptanceFlags & OUTPUT_DATA_ABSENT))
-			VLog("Error: %s", ("VuoOutputData" + wronglyAbsentMessage).c_str());
+			VUserLog("Error: %s", ("VuoOutputData" + wronglyAbsentMessage).c_str());
 		if (! sawInputEvent && ! (acceptanceFlags & INPUT_EVENT_ABSENT))
-			VLog("Error: %s", ("VuoInputEvent" + wronglyAbsentMessage).c_str());
+			VUserLog("Error: %s", ("VuoInputEvent" + wronglyAbsentMessage).c_str());
 		if (! sawOutputEvent && ! (acceptanceFlags & OUTPUT_EVENT_ABSENT))
-			VLog("Error: %s", ("VuoOutputEvent" + wronglyAbsentMessage).c_str());
+			VUserLog("Error: %s", ("VuoOutputEvent" + wronglyAbsentMessage).c_str());
 		if (! sawOutputTrigger && ! (acceptanceFlags & OUTPUT_TRIGGER_ABSENT))
-			VLog("Error: %s", ("VuoOutputTrigger" + wronglyAbsentMessage).c_str());
+			VUserLog("Error: %s", ("VuoOutputTrigger" + wronglyAbsentMessage).c_str());
 		if (! sawInstanceData && ! (acceptanceFlags & INSTANCE_DATA_ABSENT))
-			VLog("Error: %s", ("VuoInstanceData" + wronglyAbsentMessage).c_str());
+			VUserLog("Error: %s", ("VuoInstanceData" + wronglyAbsentMessage).c_str());
 	}
 
 	// For each event portion of a data-and-event port, find the corresponding data portion. Rename the event portion to match.
@@ -792,7 +808,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 				eventBlocking = VuoPortClass::EventBlocking_Wall;
 			else
 			{
-				VLog("Error: Unknown option for \"eventBlocking\": %s\n", eventBlockingStr.c_str());
+				VUserLog("Error: Unknown option for \"eventBlocking\": %s\n", eventBlockingStr.c_str());
 				continue;
 			}
 			eventPortClass->getBase()->setEventBlocking(eventBlocking);
@@ -819,7 +835,7 @@ void VuoCompilerNodeClass::parseParameters(Function *function, unsigned long acc
 					eventThrottling = VuoPortClass::EventThrottling_Drop;
 				else
 				{
-					VLog("Error: Unknown option for \"throttling\": %s\n", eventThrottlingStr.c_str());
+					VUserLog("Error: Unknown option for \"throttling\": %s\n", eventThrottlingStr.c_str());
 					continue;
 				}
 				triggerPortClass->getBase()->setDefaultEventThrottling(eventThrottling);
@@ -873,7 +889,7 @@ VuoCompilerOutputDataClass * VuoCompilerNodeClass::parseOutputDataParameter(stri
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VLog("Error: Output port data %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Output port data %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -908,7 +924,7 @@ VuoCompilerOutputEventPortClass * VuoCompilerNodeClass::parseOutputEventParamete
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VLog("Error: Output port %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Output port %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -928,7 +944,7 @@ VuoCompilerTriggerPortClass * VuoCompilerNodeClass::parseTriggerParameter(string
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VLog("Error: Output trigger %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Output trigger %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -948,7 +964,7 @@ VuoCompilerInstanceDataClass * VuoCompilerNodeClass::parseInstanceDataParameter(
 	string argumentName = parser->getArgumentNameInSourceCode(a->getName());
 	if (! a->getType()->isPointerTy())
 	{
-		VLog("Error: Node instance data %s must be a pointer.\n", argumentName.c_str());
+		VUserLog("Error: Node instance data %s must be a pointer.\n", argumentName.c_str());
 		return NULL;
 	}
 
@@ -1008,7 +1024,7 @@ json_object * VuoCompilerNodeClass::parseDetailsParameter(string annotation)
 	{
 		detailsObj = json_tokener_parse(details.c_str());
 		if (! detailsObj)
-			VLog("Error: Couldn't parse vuoDetails for `%s`: %s\n", getBase()->getClassName().c_str(), details.c_str());
+			VUserLog("Error: Couldn't parse vuoDetails for `%s`: %s\n", getBase()->getClassName().c_str(), details.c_str());
 	}
 	return detailsObj;
 }
@@ -1031,7 +1047,7 @@ VuoPortClass * VuoCompilerNodeClass::getExistingPortClass(VuoCompilerNodeArgumen
 		}
 		else if ((isInput && existingOutputPortClass) || (! isInput && existingInputPortClass))
 		{
-			VLog("Error: Port %s is declared as an input port in one function and an output port in another function.\n", argumentName.c_str());
+			VUserLog("Error: Port %s is declared as an input port in one function and an output port in another function.\n", argumentName.c_str());
 			return NULL;
 		}
 
@@ -1105,6 +1121,54 @@ Function * VuoCompilerNodeClass::getCallbackUpdateFunction(void)
 Function * VuoCompilerNodeClass::getCallbackStopFunction(void)
 {
 	return callbackStopFunction;
+}
+
+/**
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionContextInit function.  Otherwise null.
+ */
+Function * VuoCompilerNodeClass::getCompositionContextInitFunction(void)
+{
+	return parser->getFunction(nameForGlobal("compositionContextInit"));
+}
+
+/**
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionContextFini function.  Otherwise null.
+ */
+Function * VuoCompilerNodeClass::getCompositionContextFiniFunction(void)
+{
+	return parser->getFunction(nameForGlobal("compositionContextFini"));
+}
+
+/**
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionSerialize function.  Otherwise null.
+ */
+Function * VuoCompilerNodeClass::getCompositionSerializeFunction(void)
+{
+	return parser->getFunction(nameForGlobal("compositionSerialize"));
+}
+
+/**
+ * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionUnserialize function.  Otherwise null.
+ */
+Function * VuoCompilerNodeClass::getCompositionUnserializeFunction(void)
+{
+	return parser->getFunction(nameForGlobal("compositionUnserialize"));
+}
+
+/**
+ * If this node class is a subcomposition, returns this subcomposition's implementation of the trigger worker function for the trigger with identifier @a portIdentifier.
+ */
+Function * VuoCompilerNodeClass::getTriggerWorkerFunction(string portIdentifier)
+{
+	return parser->getFunction(nameForGlobal(portIdentifier));
+}
+
+/**
+ * If this node is a subcomposition, returns information about the triggers internal to the subcomposition, parsed from the subcomposition's metadata.
+ */
+vector<VuoCompilerTriggerDescription *> VuoCompilerNodeClass::getTriggerDescriptions(void)
+{
+	return triggerDescriptions;
 }
 
 /**
@@ -1251,4 +1315,20 @@ vector<string> VuoCompilerNodeClass::getAutomaticKeywords(void)
 		keywords.push_back("premium");
 
 	return keywords;
+}
+
+/**
+ * Returns true if this node class is stateful (implements `nodeInstance*` functions instead of `nodeEvent`).
+ */
+bool VuoCompilerNodeClass::isStateful(void)
+{
+	return (instanceDataClass != NULL);
+}
+
+/**
+ * Returns true if this node class is a subcomposition (implemented in Vuo language, as opposed to text code).
+ */
+bool VuoCompilerNodeClass::isSubcomposition(void)
+{
+	return parser && (getCompositionContextInitFunction() != NULL);
 }

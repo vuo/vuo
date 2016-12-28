@@ -94,10 +94,28 @@ char *VuoRealRegulation_getSummary(const VuoRealRegulation value)
 VuoRealRegulation VuoRealRegulation_make(VuoText name, VuoReal minimumValue, VuoReal maximumValue, VuoReal defaultValue, VuoReal smoothDuration)
 {
 	VuoRealRegulation value;
+
 	value.name = name;
+
+	// Allow the max and min to be in any order (so the user can specify an inverted mapping)…
 	value.minimumValue = minimumValue;
 	value.maximumValue = maximumValue;
-	value.defaultValue = defaultValue;
+
+	// …but put them in the right order in order to clamp the default value.
+	VuoReal actualMin, actualMax;
+	if (minimumValue < maximumValue)
+	{
+		actualMin = minimumValue;
+		actualMax = maximumValue;
+	}
+	else
+	{
+		actualMin = maximumValue;
+		actualMax = minimumValue;
+	}
+	value.defaultValue = VuoReal_clamp(defaultValue, actualMin, actualMax);
+
 	value.smoothDuration = smoothDuration;
+
 	return value;
 }

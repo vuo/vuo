@@ -61,7 +61,7 @@ unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, Vuo
 		return (imageColorDepth == VuoImageColorDepth_16) ? GL_LUMINANCE_ALPHA16F_ARB : GL_LUMINANCE8_ALPHA8;
 
 	char *formatString = VuoGl_stringForConstant(baseFormat);
-	VLog("Error: Unknown baseFormat %x (%s)", baseFormat, formatString);
+	VUserLog("Error: Unknown baseFormat %x (%s)", baseFormat, formatString);
 	free(formatString);
 	return GL_RGB;
 }

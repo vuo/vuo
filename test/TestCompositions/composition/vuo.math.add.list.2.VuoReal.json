@@ -1,0 +1,82 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.add.list.2 node.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	/* Empty + Empty */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list1" : [ ],
+			"list2" : [ ]
+		},
+		"outputPortValues" : {
+			"summedList" : [ ]
+		}
+	},
+
+	/* List + Empty */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list1" : [ 1, 2 ],
+			"list2" : [ ]
+		},
+		"outputPortValues" : {
+			"summedList" : [ 1, 2 ]
+		}
+	},
+
+	/* Empty + List */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list1" : [ ],
+			"list2" : [ 1, 2 ]
+		},
+		"outputPortValues" : {
+			"summedList" : [ 1, 2 ]
+		}
+	},
+
+	/* List + List */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list1" : [ 1, 2 ],
+			"list2" : [ 3, 4 ]
+		},
+		"outputPortValues" : {
+			"summedList" : [ 4, 6 ]
+		}
+	},
+
+	/* First longer than second */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list1" : [ 1, 2, 3 ],
+			"list2" : [ 4, 5 ]
+		},
+		"outputPortValues" : {
+			"summedList" : [ 5, 7, 3 ]
+		}
+	},
+
+	/* Second longer than first */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list1" : [ 1, 2 ],
+			"list2" : [ 3, 4, 5, 6 ]
+		},
+		"outputPortValues" : {
+			"summedList" : [ 4, 6, 5, 6 ]
+		}
+	},
+]}

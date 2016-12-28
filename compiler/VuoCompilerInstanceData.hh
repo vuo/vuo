@@ -11,8 +11,8 @@
 #define VUOCOMPILERINSTANCEDATA_H
 
 #include "VuoCompilerNodeArgument.hh"
-#include "VuoCompilerInstanceDataClass.hh"
 
+class VuoCompilerInstanceDataClass;
 
 /**
  * The instance data for a node.
@@ -23,6 +23,9 @@ class VuoCompilerInstanceData : public VuoCompilerNodeArgument
 {
 public:
 	VuoCompilerInstanceData(VuoCompilerInstanceDataClass *instanceDataClass);
+	Value * generateLoad(Module *module, BasicBlock *block, Value *nodeContextValue);
+	void generateStore(Module *module, BasicBlock *block, Value *nodeContextValue, Value *instanceDataValue);
+	Value * getVariable(Module *module, BasicBlock *block, Value *nodeContextValue);
 };
 
 

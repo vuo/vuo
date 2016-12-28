@@ -78,7 +78,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoReal) rotation,
+		VuoInputData(VuoReal, {"suggestedMin":-180.0, "suggestedMax":180.0, "suggestedStep":15.0}) rotation,
 		VuoInputData(VuoBoolean, { "default":false } ) expandBounds,
 		VuoOutputData(VuoImage) rotatedImage
 )
@@ -95,12 +95,12 @@ void nodeInstanceEvent
 		aspect = fmax( (image->pixelsWide/(float)width), (image->pixelsHigh/(float)height) ) * 2;
 	}
 
-	VuoSceneObject rootSceneObject = VuoLayer_make("Rotated Image", image, (VuoPoint2d){0,0}, rotation, aspect, 1.).sceneObject;
+	VuoSceneObject rootSceneObject = VuoLayer_make(VuoText_make("Rotated Image"), image, (VuoPoint2d){0,0}, rotation, aspect, 1.).sceneObject;
 
 	VuoSceneRenderer_setRootSceneObject((*context)->sceneRenderer, rootSceneObject);
 	VuoSceneRenderer_regenerateProjectionMatrix((*context)->sceneRenderer, width, height);
 
-	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, rotatedImage, VuoImage_getColorDepth(image), NULL);
+	VuoSceneRenderer_renderToImage((*context)->sceneRenderer, rotatedImage, VuoImage_getColorDepth(image), VuoMultisample_4, NULL);
 }
 
 void nodeInstanceFini

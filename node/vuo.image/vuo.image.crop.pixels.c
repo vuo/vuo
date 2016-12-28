@@ -81,15 +81,16 @@ void nodeInstanceEvent
 	if(uv_x+uv_w > 1)
 	{
 		uv_w = 1-uv_x;
-		w = uv_w * image->pixelsWide;
+		w = round(uv_w * image->pixelsWide);
 	}
 	else
 		w = width;
 
-	if(uv_y+uv_h > 1)
+	if (uv_y < 0)
 	{
-		uv_h = 1-uv_y;
-		h = uv_h * image->pixelsHigh;
+		uv_h += uv_y;
+		uv_y = 0;
+		h = round(uv_h * image->pixelsHigh);
 	}
 	else
 		h = height;

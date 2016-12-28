@@ -26,6 +26,8 @@ extern "C"
 typedef void * VuoMathExpressionParser;  ///< Parses and performs calculations with mathematical expressions.
 typedef void * VuoMathExpressionError;  ///< Error caused by invalid expression given to VuoMathExpressionParser.
 
+void VuoMathExpressionParser_defineStandardLibrary(void *muparser);
+
 VuoMathExpressionParser VuoMathExpressionParser_makeFromSingleExpression(VuoText expression,
 																		 VuoMathExpressionError *error);
 VuoMathExpressionParser VuoMathExpressionParser_makeFromMultipleExpressions(VuoList_VuoText expressions,

@@ -12,7 +12,6 @@
 #include "VuoPort.hh"
 #include "VuoCompiler.hh"
 #include "VuoCompilerNodeClass.hh"
-#include "VuoCompilerPublishedInputNodeClass.hh"
 #include "VuoRendererComposition.hh"
 #include "VuoRendererNode.hh"
 #include "VuoRendererCable.hh"
@@ -107,6 +106,35 @@ private slots:
 
 		delete rn;
 		delete n;
+	}
+
+
+	void testNodeWideEnoughForPort_data()
+	{
+		QTest::addColumn<QString>("portDisplayName");
+
+		QTest::newRow("time") << "Time";
+		QTest::newRow("long") << "Node Instance Trigger Stop Start 123";
+	}
+	void testNodeWideEnoughForPort()
+	{
+		QFETCH(QString, portDisplayName);
+
+		vector<string> inputs, outputs;
+		inputs.push_back("i");
+		inputs.push_back(portDisplayName.toStdString());
+		VuoNodeClass *nc = new VuoNodeClass("test", inputs, outputs);
+		VuoNode *n = nc->newNode();
+		VuoRendererNode *rn = new VuoRendererNode(n, new VuoRendererSignaler());
+		VuoRendererPortList *rp = rn->getInputPorts();
+
+		float nodeRight = rn->boundingRect().right();
+		float portRight = rp->childItems().at(2)->boundingRect().right();
+		QVERIFY(portRight < nodeRight);
+
+		delete rn;
+		delete n;
+		delete nc;
 	}
 
 

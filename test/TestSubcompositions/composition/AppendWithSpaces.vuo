@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="210,75" _separator="\" \""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Texts>Texts\r" _Texts_type="VuoList_VuoText" _Texts="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<CompositeText>CompositeText\l" _CompositeText_type="VuoText"];
+
+PublishedInputs:Texts -> AppendTexts:texts;
+AppendTexts:compositeText -> PublishedOutputs:CompositeText;
+}

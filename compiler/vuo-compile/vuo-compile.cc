@@ -16,6 +16,7 @@
 #endif
 
 #include <iostream>
+#include <stdexcept>
 
 void printHelp(char *argv0)
 {
@@ -46,6 +47,7 @@ int main (int argc, char * const argv[])
 		bool isVerbose = false;
 		string optimization = "off";
 		VuoCompiler compiler;
+		bool showLicenseWarning = true;
 
 		static struct option options[] = {
 			{"help", no_argument, NULL, 0},
@@ -55,6 +57,7 @@ int main (int argc, char * const argv[])
 			{"header-search-path", required_argument, NULL, 0},
 			{"verbose", no_argument, NULL, 0},
 			{"optimization", required_argument, NULL, 0},
+			{"omit-license-warning", no_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -86,6 +89,9 @@ int main (int argc, char * const argv[])
 				case 6:  // --optimization
 					optimization = optarg;
 					break;
+				case 7:  // --omit-license-warning
+					showLicenseWarning = false;
+					break;
 			}
 		}
 
@@ -98,7 +104,7 @@ int main (int argc, char * const argv[])
 		for (vector<char *>::iterator i = headerSearchPaths.begin(); i != headerSearchPaths.end(); ++i)
 			compiler.addHeaderSearchPath(*i);
 
-		compiler.loadStoredLicense();
+		compiler.loadStoredLicense(showLicenseWarning);
 
 		if (doPrintHelp)
 			printHelp(argv[0]);
@@ -147,7 +153,7 @@ int main (int argc, char * const argv[])
 					compiler.setTarget(target);
 
 				if (inputExtension == "vuo")
-					compiler.compileComposition(inputPath, outputPath);
+					compiler.compileComposition(inputPath, outputPath, true, false);
 				else if (inputExtension == "c" || inputExtension == "cc" || inputExtension == "m" || inputExtension == "mm")
 					compiler.compileModule(inputPath, outputPath);
 				else

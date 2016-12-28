@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Measure Distance between Points",
+					  "title" : "Measure Distance",
 					  "keywords" : [ "farness", "length", "hypotenuse" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {

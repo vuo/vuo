@@ -17,7 +17,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Display Console Window",
-					 "keywords" : [ "text", "string", "print", "log", "write", "read", "input", "output", "type", "line", "word", "character" ],
+					 "keywords" : [ "text", "string", "print", "log", "write", "read", "input", "output", "type", "line", "word", "character", "debug", "troubleshoot" ],
 					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoWindow"
@@ -78,5 +78,6 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	VuoWindowText_close((*context)->window);
 	VuoRelease((*context)->window);
 }

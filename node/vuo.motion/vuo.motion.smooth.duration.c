@@ -12,14 +12,14 @@
 VuoModuleMetadata({
 					  "title" : "Smooth with Duration",
 					  "keywords" : [ "ease", "easing", "even", "calm", "steady", "continuous", "transition", "time", "length" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]
 						  }
 					  },
 					  "node": {
-						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo" ]
+						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo", "RotateInSequence.vuo" ]
 					  }
 				 });
 
@@ -65,8 +65,10 @@ void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"wall","data":"curve"}) curveEvent,
 		VuoInputData(VuoCurveEasing, {"default":"in"}) easing,
 		VuoInputEvent({"eventBlocking":"wall","data":"easing"}) easingEvent,
+
 		VuoOutputData(VuoGenericType1) position,
-		VuoOutputEvent({"data":"position"}) positionEvent
+		VuoOutputEvent({"data":"position"}) positionEvent,
+		VuoOutputEvent() reachedTarget
 )
 {
 	if ((*ctx)->first || setPositionEvent)
@@ -97,7 +99,10 @@ void nodeInstanceEvent
 		(*ctx)->currentPosition = VuoGenericType1_curve(timeSinceStart, (*ctx)->startPosition, setTarget, duration, curve, easing, VuoLoopType_None);
 
 		if (timeSinceStart > duration)
+		{
 			(*ctx)->moving = false;
+			*reachedTarget = true;
+		}
 	}
 
 	*position = (*ctx)->currentPosition;

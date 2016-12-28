@@ -11,7 +11,7 @@
  * Helper for `VuoShader_setUniform_*()`.
  */
 #define SET_UNIFORM(typeName, valueName)																	\
-	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);											\
+	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER);						\
 																											\
 	/* Is there already a uniform with this identifier?  If so, overwrite it. */							\
 	for (int i = 0; i < shader->uniformsCount; ++i)															\
@@ -25,14 +25,14 @@
 			shader->uniforms[i].value.valueName = valueName;												\
 			typeName ## _retain(shader->uniforms[i].value.valueName);										\
 																											\
-			dispatch_semaphore_signal(shader->lock);														\
+			dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);									\
 			return;																							\
 		}																									\
 																											\
 	/* Otherwise, expand and add another uniform. */														\
 	{																										\
 		++shader->uniformsCount;																			\
-		shader->uniforms = realloc(shader->uniforms, sizeof(VuoShaderUniform) * shader->uniformsCount);		\
+		shader->uniforms = (VuoShaderUniform *)realloc(shader->uniforms, sizeof(VuoShaderUniform) * shader->uniformsCount);	\
 																											\
 		VuoShaderUniform u;																					\
 																											\
@@ -48,7 +48,7 @@
 		shader->uniforms[shader->uniformsCount-1] = u;														\
 	}																										\
 																											\
-	dispatch_semaphore_signal(shader->lock);
+	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
 
 /**
  * Sets a `VuoImage` input value on the specified @c shader.
@@ -136,17 +136,17 @@ void VuoShader_setUniform_VuoColor(VuoShader shader, const char *uniformIdentifi
  */
 VuoImage VuoShader_getUniform_VuoImage(VuoShader shader, const char *uniformIdentifier)
 {
-	dispatch_semaphore_wait(shader->lock, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait((dispatch_semaphore_t)shader->lock, DISPATCH_TIME_FOREVER);
 
 	for (int i = 0; i < shader->uniformsCount; ++i)
 		if (strcmp(shader->uniforms[i].type, "VuoImage") == 0
 		 && strcmp(shader->uniforms[i].name, uniformIdentifier) == 0)
 		{
 			VuoImage image = shader->uniforms[i].value.image;
-			dispatch_semaphore_signal(shader->lock);
+			dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
 			return image;
 		}
 
-	dispatch_semaphore_signal(shader->lock);
+	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
 	return NULL;
 }

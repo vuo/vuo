@@ -11,7 +11,9 @@
 #define VUOCOMPILEREVENTPORTCLASS_H
 
 #include "VuoCompilerPortClass.hh"
-#include "VuoCompilerDataClass.hh"
+
+class VuoCompilerDataClass;
+class VuoType;
 
 /**
  * A passive (non-trigger) port type, optionally with data.
@@ -30,6 +32,7 @@ public:
 	void setDataClass(VuoCompilerDataClass *dataClass);
 	VuoType * getDataVuoType(void);
 	void setDataVuoType(VuoType *type);
+	string getDisplayName(void);
 };
 
 #endif

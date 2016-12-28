@@ -12,6 +12,8 @@
 
 #include "VuoCompilerDataClass.hh"
 
+class VuoCompilerData;
+
 /**
  * The data type for a data-and-event input port.
  */

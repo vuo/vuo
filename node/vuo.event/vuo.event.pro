@@ -4,6 +4,7 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 GENERIC_NODE_SOURCES += \
+	vuo.event.allowChanges.c \
 	vuo.event.changed.c \
 	vuo.event.decreased.c \
 	vuo.event.emptyList.c \
@@ -18,5 +19,8 @@ NODE_SOURCES += \
 	vuo.event.fireOnStart.c \
 	vuo.event.spinOffEvent.c \
 	vuo.event.spinOffEvents.c
+
+NODE_INCLUDEPATH += \
+	../vuo.artnet
 
 include(../../module.pri)

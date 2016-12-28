@@ -43,8 +43,6 @@ public:
 	QRectF getActionIndicatorRect(void) const;
 	QPainterPath shape(void) const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-	VuoRendererPublishedPort * getProxyPublishedSidebarPort(void) const;
-	void setProxyPublishedSidebarPort(VuoRendererPublishedPort *proxyPort);
 
 	bool getEligibleForSelection(void);
 	bool isEligibleForConnection(void);
@@ -129,7 +127,6 @@ private:
 	bool isEligibleForSelection;
 	bool isAnimated;
 	VuoRendererPort *typecastParentPort;
-	VuoRendererPublishedPort *proxyPublishedSidebarPort;
 	qint64 timeLastEventFired;
 	vector<QGraphicsItemAnimation *> animations;
 
@@ -155,7 +152,7 @@ protected:
 	static QPainterPath getPortPath(qreal inset, VuoPortClass::PortType portType, bool isInputPort, bool carriesData);
 	QRectF getEventBarrierRect(void) const;
 	QPainterPath getFunctionPortGlyph(void) const;
-	QPainterPath getWirelessAntennaPath() const;
+	virtual QPainterPath getWirelessAntennaPath() const;
 	bool hasConnectedWirelessDataCable(bool includePublishedCables) const;
 	bool hasConnectedWirelessEventCable(bool includePublishedCables) const;
 	VuoNode::TintColor getWirelessAntennaTint() const;

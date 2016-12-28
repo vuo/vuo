@@ -155,7 +155,7 @@ bool VuoSerialDevice_realize(VuoSerialDevice device, VuoSerialDevice *realizedDe
 	unsigned long deviceCount = VuoListGetCount_VuoSerialDevice(devices);
 	if (deviceCount == 0)
 	{
-		VLog("Warning: No serial devices found.");
+		VUserLog("Warning: No serial devices found.");
 		VuoRelease(devices);
 		return false;
 	}
@@ -186,7 +186,7 @@ bool VuoSerialDevice_realize(VuoSerialDevice device, VuoSerialDevice *realizedDe
 		return true;
 	}
 
-	VLog("Warning: Didn't find a serial device matching '%s'.", device.name);
+	VUserLog("Warning: Didn't find a serial device matching '%s'.", device.name);
 	VuoRelease(devices);
 	return false;
 }

@@ -64,18 +64,18 @@ void nodeEvent
 				for (VuoInteger row = startRow; row <= endRowOuter; ++row)
 				{
 					VuoReal intensity = VuoReal_curve(row-endRowCurrent+1, 255.*fillColor.a, 0, endRowOuter-endRowCurrent+1, VuoCurve_Linear, VuoCurveEasing_InOut, VuoLoopType_None);
-					pixels[(row*pixelsWide + column)*4 + 0] = intensity*fillColor.r;
+					pixels[(row*pixelsWide + column)*4 + 2] = intensity*fillColor.r;
 					pixels[(row*pixelsWide + column)*4 + 1] = intensity*fillColor.g;
-					pixels[(row*pixelsWide + column)*4 + 2] = intensity*fillColor.b;
+					pixels[(row*pixelsWide + column)*4 + 0] = intensity*fillColor.b;
 					pixels[(row*pixelsWide + column)*4 + 3] = intensity;
 				}
 			else
 				for (VuoInteger row = startRow; row >= endRowOuter; --row)
 				{
 					VuoReal intensity = VuoReal_curve(row-endRowCurrent-1, 255.*fillColor.a, 0, endRowOuter-endRowCurrent-1, VuoCurve_Linear, VuoCurveEasing_InOut, VuoLoopType_None);
-					pixels[(row*pixelsWide + column)*4 + 0] = intensity*fillColor.r;
+					pixels[(row*pixelsWide + column)*4 + 2] = intensity*fillColor.r;
 					pixels[(row*pixelsWide + column)*4 + 1] = intensity*fillColor.g;
-					pixels[(row*pixelsWide + column)*4 + 2] = intensity*fillColor.b;
+					pixels[(row*pixelsWide + column)*4 + 0] = intensity*fillColor.b;
 					pixels[(row*pixelsWide + column)*4 + 3] = intensity;
 				}
 		}
@@ -88,15 +88,13 @@ void nodeEvent
 			for (VuoInteger row = startRow; row <= endRow; ++row)
 			{
 				VuoReal intensity = VuoReal_curve(row-startRow+1, 0, 255.*lineColor.a, (endRow-startRow)/2. + 1, VuoCurve_Linear, VuoCurveEasing_InOut, VuoLoopType_Mirror);
-				pixels[(row*pixelsWide + column)*4 + 0] = MIN(pixels[(row*pixelsWide + column)*4 + 0] + intensity*lineColor.r, 255);
+				pixels[(row*pixelsWide + column)*4 + 2] = MIN(pixels[(row*pixelsWide + column)*4 + 2] + intensity*lineColor.r, 255);
 				pixels[(row*pixelsWide + column)*4 + 1] = MIN(pixels[(row*pixelsWide + column)*4 + 1] + intensity*lineColor.g, 255);
-				pixels[(row*pixelsWide + column)*4 + 2] = MIN(pixels[(row*pixelsWide + column)*4 + 2] + intensity*lineColor.b, 255);
+				pixels[(row*pixelsWide + column)*4 + 0] = MIN(pixels[(row*pixelsWide + column)*4 + 0] + intensity*lineColor.b, 255);
 				pixels[(row*pixelsWide + column)*4 + 3] = MIN(pixels[(row*pixelsWide + column)*4 + 3] + intensity, 255);
 			}
 		}
 	}
 
-	*image = VuoImage_makeFromBuffer(pixels, GL_RGBA, pixelsWide, pixelsHigh, VuoImageColorDepth_8);
-
-	free(pixels);
+	*image = VuoImage_makeFromBuffer(pixels, GL_BGRA, pixelsWide, pixelsHigh, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 }

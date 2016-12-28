@@ -26,10 +26,6 @@ class TestVuoPoint3d : public QObject
 	Q_OBJECT
 
 private slots:
-	void initTestCase()
-	{
-		VuoHeap_init();
-	}
 
 	void testStringConversion_data()
 	{
@@ -39,11 +35,11 @@ private slots:
 
 		{
 			VuoPoint3d p;
-			p.x = -0.999;
-			p.y = 0.42;
-			p.z = 0.22;
-			QTest::newRow("different values") << "{\"x\":-0.999000,\"y\":0.420000,\"z\":0.220000}" << p << true;
-			QTest::newRow("different values text") << QUOTE("-0.999000, 0.420000,0.220000") << p << false;
+			p.x = -0.5;
+			p.y = 0.5;
+			p.z = 1;
+			QTest::newRow("different values") << "{\"x\":-0.5,\"y\":0.5,\"z\":1}" << p << true;
+			QTest::newRow("different values text") << QUOTE("-0.5, 0.5,1") << p << false;
 		}
 	}
 	void testStringConversion()

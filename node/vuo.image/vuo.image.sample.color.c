@@ -17,39 +17,20 @@
 VuoModuleMetadata({
 					  "title" : "Sample Color from Image",
 					  "keywords" : [ "coordinate", "eyedrop", "sample", "grab" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "ShowColorFromImage.vuo" ]
 					  }
 				 });
-
-struct nodeInstanceData
-
-{
-	unsigned char* pixelData;
-};
-
-struct nodeInstanceData * nodeInstanceInit( VuoInputData(VuoImage) image )
-{
-	struct nodeInstanceData * instance = (struct nodeInstanceData *)calloc(sizeof(struct nodeInstanceData), 1);
-	VuoRegister(instance, free);
-
-	if(image)
-		instance->pixelData = VuoImage_copyBuffer(image, GL_RGBA);
-	else
-		instance->pixelData = NULL;
-
-	return instance;
-}
 
 static inline int clampi(int value, int min, int max)
 {
 	return value < min ? min : (value > max ? max : value);
 }
 
-const float UINT_TO_FLOAT_COLOR = .0039215686;
+static const float UINT_TO_FLOAT_COLOR = .0039215686;
 
-void colorAtCoordinate(const unsigned char* pixels,
+static void colorAtCoordinate(const unsigned char* pixels,
 						const unsigned int width,
 						const unsigned int height,
 						const unsigned int x,
@@ -61,17 +42,15 @@ void colorAtCoordinate(const unsigned char* pixels,
 {
 	const unsigned char* position = &pixels[((4 * width * y)) + (x * 4)];
 
-	*r = ((unsigned int)position[0]) * UINT_TO_FLOAT_COLOR;
+	*r = ((unsigned int)position[2]) * UINT_TO_FLOAT_COLOR;
 	*g = ((unsigned int)position[1]) * UINT_TO_FLOAT_COLOR;
-	*b = ((unsigned int)position[2]) * UINT_TO_FLOAT_COLOR;
+	*b = ((unsigned int)position[0]) * UINT_TO_FLOAT_COLOR;
 	*a = ((unsigned int)position[3]) * UINT_TO_FLOAT_COLOR;
 }
 
-void nodeInstanceEvent
+void nodeEvent
 (
-		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
-		VuoInputEvent({"eventBlocking":"none","data":"image"}) imageEvent,
 		VuoInputData(VuoPoint2d, {	"default":{"x":0, "y":0},
 									"suggestedMin":{"x":-1, "y":-1},
 									"suggestedMax":{"x":1, "y":1}}) center,
@@ -79,19 +58,11 @@ void nodeInstanceEvent
 		VuoOutputData(VuoColor) color
 )
 {
-	if(imageEvent)
-	{
-		if((*instance)->pixelData)
-		{
-			free((*instance)->pixelData);
-			(*instance)->pixelData = NULL;
-		}
+	if (!image)
+		return;
 
-		if(image)
-			(*instance)->pixelData = VuoImage_copyBuffer(image, GL_RGBA);
-	}
-
-	if(!(*instance)->pixelData)
+	const unsigned char *pixelData = VuoImage_getBuffer(image, GL_BGRA);
+	if (!pixelData)
 		return;
 
 	unsigned int w = image->pixelsWide;
@@ -107,13 +78,13 @@ void nodeInstanceEvent
 
 	unsigned int sampleCount = 0;
 
-	for(int y = clampi(pixelCoord.y-pixelRadius, 0, h); y <= clampi(pixelCoord.y+pixelRadius, 0, h); y++)
+	for(int y = clampi(pixelCoord.y-pixelRadius, 0, h-1); y <= clampi(pixelCoord.y+pixelRadius, 0, h-1); y++)
 	{
-		for(int x = clampi(pixelCoord.x-pixelRadius, 0, w); x <= clampi(pixelCoord.x+pixelRadius, 0, w); x++)
+		for(int x = clampi(pixelCoord.x-pixelRadius, 0, w-1); x <= clampi(pixelCoord.x+pixelRadius, 0, w-1); x++)
 		{
 			sampleCount++;
 
-			colorAtCoordinate((*instance)->pixelData, w, h, x, y, &r, &g, &b, &a);
+			colorAtCoordinate(pixelData, w, h, x, y, &r, &g, &b, &a);
 
 			rf += r;
 			gf += g;
@@ -126,12 +97,4 @@ void nodeInstanceEvent
 									gf/(float)sampleCount,
 									bf/(float)sampleCount,
 									af/(float)sampleCount);
-}
-
-void nodeInstanceFini(
-	VuoInstanceData(struct nodeInstanceData *) instance
-	)
-{
-	if( (*instance)->pixelData)
-		free ((unsigned char*)(*instance)->pixelData);
 }

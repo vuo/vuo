@@ -22,7 +22,7 @@
 #ifdef VUO_CLANG_32_OR_LATER
 	#pragma clang diagnostic ignored "-Wdocumentation"
 #endif
-#include "json/json.h"
+#include "json-c/json.h"
 #pragma clang diagnostic pop
 
 #include "zmq/zmq.h"

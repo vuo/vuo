@@ -12,7 +12,7 @@
 #include "VuoGridType.h"
 
 VuoModuleMetadata({
-					"title" : "Make 3D Grid Lines",
+					"title" : "Make Grid Lines Object",
 					"keywords" : [ "heightmap", "plane", "subdivision", "square", "rectangle" ],
 					"version" : "1.0.0",
 					"genericTypes" : {
@@ -51,11 +51,11 @@ void nodeEvent
 	VuoPoint4d* textures = (VuoPoint4d*)malloc(sizeof(VuoPoint4d) * vertexCount);
 
 	unsigned int i = 0;
-	for(int y = 0; y < rows; y++)
+	for(int y = 0; y < rows2; y++)
 	{
 		float yp = ((y/(float)(rows2-1)) * h) - half_h;
 
-		for(int x = 0; x < columns; x++)
+		for(int x = 0; x < columns2; x++)
 		{
 			vertices[i] = VuoPoint4d_make( ((x/(float)(columns2-1)) * w) -  half_w, yp, 0, 1);
 			normals[i] = VuoPoint4d_make( 0, 0, 1, 1);
@@ -76,12 +76,12 @@ void nodeEvent
 
 	if(gridType == VuoGridType_Horizontal || gridType == VuoGridType_HorizontalAndVertical)
 	{
-		for(int y = 0; y < rows; y++)
+		for(int y = 0; y < rows2; y++)
 		{
-			for(int x = 0; x < (columns-1); x++)
+			for(int x = 0; x < (columns2-1); x++)
 			{
-				elements[n++] = (y*columns) + x;
-				elements[n++] = (y*columns) + x+1;
+				elements[n++] = (y*columns2) + x;
+				elements[n++] = (y*columns2) + x+1;
 			}
 		}
 	}
@@ -90,12 +90,12 @@ void nodeEvent
 	{
 		unsigned int step = columns2;
 
-		for(int y = 0; y < (rows-1); y++)
+		for(int y = 0; y < (rows2-1); y++)
 		{
-			for(int x = 0; x < columns; x++)
+			for(int x = 0; x < columns2; x++)
 			{
-				elements[n++] = (y*columns) + x;
-				elements[n++] = (y*columns) + x+step;
+				elements[n++] = (y*columns2) + x;
+				elements[n++] = (y*columns2) + x+step;
 			}
 		}
 	}

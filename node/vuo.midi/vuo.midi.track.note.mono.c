@@ -16,7 +16,7 @@ VuoModuleMetadata({
 					 "title" : "Track Single Note",
 					 "keywords" : [ "pitches", "tones", "synthesizer", "music", "instrument",
 						 "priority", "monophonic", "first", "last", "top", "bottom", "lowest", "highest",
-						 "range", "octave", "filter" ],
+						 "range", "octave", "filter", "follower" ],
 					 "version" : "1.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "ReceiveMidiNotes.vuo" ]

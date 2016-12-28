@@ -10,9 +10,8 @@
 #ifndef VUOCOMPILERNODEARGUMENT_H
 #define VUOCOMPILERNODEARGUMENT_H
 
-#include "VuoCompilerNodeArgumentClass.hh"
-
-class VuoPort;
+#include "VuoBaseDetail.hh"
+#include "VuoPort.hh"
 
 /**
  * An argument to a node's event and/or init function. For each @c VuoCompilerNodeArgumentClass,
@@ -22,21 +21,11 @@ class VuoPort;
  */
 class VuoCompilerNodeArgument : public VuoBaseDetail<VuoPort>
 {
-private:
-	string getVariableName(string nodeInstanceIdentifier);
-
 protected:
-	GlobalVariable *variable; ///< The global variable in the generated code in which this argument is stored.
-
 	VuoCompilerNodeArgument(VuoPort * basePort);
-	virtual string getVariableBaseName(void);
 
 public:
-	virtual void generateAllocation(Module *module, string nodeInstanceIdentifier);
-	virtual LoadInst * generateLoad(BasicBlock *block);
-	virtual StoreInst * generateStore(Value *value, BasicBlock *block);
-	GlobalVariable * getVariable(void);
+	virtual ~VuoCompilerNodeArgument(void);
 };
-
 
 #endif

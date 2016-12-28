@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+SelectOutput2 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="375,105"];
+Toggle [type="vuo.logic.toggle" version="1.0.0" label="Toggle|<refresh>refresh\l|<toggle>toggle\l|<value>value\r" pos="210,60"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Value>Value\r" _Value_type="VuoReal" _Value="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<AllowedValue>AllowedValue\l" _AllowedValue_type="VuoReal"];
+
+Toggle:value -> SelectOutput2:which;
+PublishedInputs:Value -> Toggle:toggle;
+PublishedInputs:Value -> SelectOutput2:in;
+SelectOutput2:trueOption -> PublishedOutputs:AllowedValue;
+}

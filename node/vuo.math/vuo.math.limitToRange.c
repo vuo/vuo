@@ -42,10 +42,7 @@ void nodeEvent
 			break;
 
 		case VuoWrapMode_Saturate:
-			if(*limitedValue > maximum)
-				*limitedValue = maximum;
-			else if(*limitedValue < minimum)
-				*limitedValue = minimum;
+			*limitedValue = VuoGenericType1_clamp(*limitedValue, minimum, maximum);
 			break;
 	}
 }

@@ -26,8 +26,9 @@ VuoModuleMetadata({
 				 });
 
 static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslProjection)
+
 	// Inputs provided by VuoSceneRenderer
-	uniform mat4 projectionMatrix;
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
 //	attribute vec4 textureCoordinate;
@@ -37,7 +38,7 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		gl_Position = projectionMatrix * modelviewMatrix * position;
+		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
 //		textureCoordinateForGeometry = textureCoordinate.xy;
 	}
 );
@@ -123,6 +124,7 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float aspectRatio;
 	uniform float primitiveHalfSize;
 	uniform vec3 cameraPosition;
+	uniform bool useFisheyeProjection;
 
 	// Inputs from vertex shader
 //	varying in vec2 textureCoordinateForGeometry[2];
@@ -134,7 +136,15 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	void main()
 	{
 		vec2 lineSize = vec2(primitiveHalfSize, primitiveHalfSize * aspectRatio);
-		vec3 perpendicular = normalize(cross(gl_PositionIn[1].xyz - gl_PositionIn[0].xyz, gl_PositionIn[0].xyz - (projectionMatrix * vec4(cameraPosition,1)).xyz));
+
+		vec3 cameraPosition = useFisheyeProjection ? vec3(0,0,-1000) : (projectionMatrix * vec4(cameraPosition,1)).xyz;
+
+		// Screen-space direction perpendicular to the line segment.
+		vec3 perpendicular = normalize(
+					cross(gl_PositionIn[1].xyz - gl_PositionIn[0].xyz,
+						  gl_PositionIn[0].xyz - cameraPosition)
+				);
+
 		vec4 perpendicularOffset = vec4(perpendicular.x*lineSize.x, perpendicular.y*lineSize.y, 0, 0);
 
 		gl_Position               = gl_PositionIn[1]       - perpendicularOffset;
@@ -181,6 +191,11 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
+		// Work around ATI Radeon HD 5770 bug.
+		// It seems that the rest of the shader isn't executed unless we initialize the output with a uniform.
+		// https://b33p.net/kosada/node/11256
+		gl_FragColor = frontLineColor;
+
 //		vec2 filterWidth = fwidth(geometryTextureCoordinate);
 //		float maximumFilterWidth = max(filterWidth.x, filterWidth.y) * 8;
 

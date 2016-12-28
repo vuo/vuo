@@ -76,12 +76,10 @@ static const char * fragmentShaderSource_blendNormal = BLEND_FILTERS(
 	{
 		vec4 base = texture2D(background, fragmentTextureCoordinate.xy);
 		vec4 blend = texture2D(foreground, fragmentTextureCoordinate.xy);
-
-		vec3 result = vec3( mix(base.r, blend.r, blend.a),
-							mix(base.g, blend.g, blend.a),
-							mix(base.b, blend.b, blend.a) );
-
-		gl_FragColor = vec4( mix(base.rgb, result, foregroundOpacity), base.a + blend.a * foregroundOpacity);
+		blend.rgb /= (blend.a == 0.) ? 1. : blend.a;	// un-premultiply
+		float foregroundAlpha = blend.a * foregroundOpacity;
+		gl_FragColor = vec4(mix(base.rgb, blend.rgb, foregroundAlpha),
+							mix(base.a,   1.,        foregroundAlpha));
 	}
 
 );
@@ -692,7 +690,10 @@ void nodeInstanceEvent
 
 	VuoInteger         pixelsWide = background ? background->pixelsWide             : foreground->pixelsWide;
 	VuoInteger         pixelsHigh = background ? background->pixelsHigh             : foreground->pixelsHigh;
-	VuoImageColorDepth colorDepth = background ? VuoImage_getColorDepth(background) : VuoImage_getColorDepth(foreground);
+	VuoImageColorDepth colorDepth           = VuoImage_getColorDepth(background);
+	VuoImageColorDepth colorDepthForeground = VuoImage_getColorDepth(foreground);
+	if (colorDepthForeground > colorDepth)
+		colorDepth = colorDepthForeground;
 
 	// Associate the input image with the shader.
 	VuoShader_setUniform_VuoImage((*instance)->shader, "background", background ? background : VuoImage_makeColorImage(VuoColor_makeWithRGBA(0,0,0,0),1,1));

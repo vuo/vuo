@@ -31,6 +31,8 @@
 	NSString 							*mDesiredDeviceName;				///< The desired device name.
 	NSString 							*mDesiredDeviceID;					///< The desired device id.
 	BOOL 								userWantsRunning;					///< Was startRunning called (without calling stopRunning)?
+	CVOpenGLTextureCacheRef 			textureCache;						///< GL_TEXTURE_RECTANGLEs from the video feed
+	VuoGlContext						glContext;							///< The OpenGL context to convert CVImageBufferRef to gl textures with.
 }
 
 /**
@@ -52,5 +54,6 @@
 - (void) setCaptureDevice:(QTCaptureDevice*)device;
 
 - (void) setCallback:(void(*)(VuoVideoFrame))receivedFrame;
++ (char*) formatTypeString:(int)key;
 
 @end

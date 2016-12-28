@@ -238,7 +238,7 @@ private slots:
 		compiler->compileCompositionString(composition, compiledCompositionPath);
 		compiler->linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_SmallBinary);
 		remove(compiledCompositionPath.c_str());
-		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", true);
+		VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, ".", false, true);
 
 		TestRunnerDelegate delegate;
 		runner->setDelegate(&delegate);
@@ -324,6 +324,7 @@ private slots:
 
 			// Add an instance of each node class in its original (possibly generic) form.
 			VuoNode *node = compiler->createNode(nodeClass);
+			composition.setUniqueGraphvizIdentifierForNode(node);
 			baseComposition.addNode(node);
 
 			// If generic, add an instance of the node class specialized with its default backing types.

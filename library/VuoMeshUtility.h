@@ -30,10 +30,19 @@ void VuoMeshUtility_calculateNormals(VuoSubmesh* submesh);
 void VuoMeshUtility_calculateTangents(VuoSubmesh* submesh);
 
 /**
- * Generate spherical UVs for this submesh.  Inserts a seam (will modify your mesh elements).
+ * Generate spherical UVs for this submesh.
  */
 void VuoMeshUtility_calculateSphericalUVs(VuoSubmesh* submesh);
 
+/**
+ * Generate cubic UVs for this submesh.  Works best with IndividualTriangles meshes where no vertex is shared between triangles.
+ */
+void VuoMeshUtility_calculateCubicUVs(VuoSubmesh* submesh);
+
+/**
+ * Generate cubic UVs for this submesh, using the triangle normal to project UV instead of vertex normal.
+ */
+void VuoMeshUtility_calculateCubicUVsPerTriangle(VuoSubmesh* submesh);
 /**
  * Inserts a seam along a vertical line on the left side of a mesh.
  */

@@ -10,9 +10,9 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Convert Integer to Boolean",
+					 "title" : "Is Integer Nonzero",
 					 "keywords" : [ "0", "1", "true", "false" ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent

@@ -8,17 +8,21 @@
  */
 
 #include "VuoOsc.h"
+#include "VuoPool.hh"
 
 #include <map>
 #include <set>
 #include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <oscpack/osc/OscOutboundPacketStream.h>
 #include <oscpack/osc/OscPacketListener.h>
 #include <oscpack/ip/UdpSocket.h>
 #include <CoreServices/CoreServices.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include <json/json.h>
+#include <json-c/json.h>
 #pragma clang diagnostic pop
 
 extern "C"
@@ -30,6 +34,9 @@ VuoModuleMetadata({
 					 "title" : "VuoOsc",
 					 "dependencies" : [
 						 "VuoOscMessage",
+						 "VuoOscInputDevice",
+						 "VuoOscOutputDevice",
+						 "VuoList_VuoOscMessage",
 						 "CoreServices.framework",
 						 "oscpack"
 					 ]
@@ -143,7 +150,7 @@ protected:
 		}
 		catch (osc::Exception &e)
 		{
-			VLog("Error parsing message: %s: %s", m.AddressPattern(), e.what());
+			VUserLog("Error parsing message: %s: %s", m.AddressPattern(), e.what());
 		}
 	}
 };
@@ -154,6 +161,69 @@ protected:
  */
 static void registerCallback(CFNetServiceRef theService, CFStreamError *error, void *info)
 {
+}
+
+/**
+ * Creates a new CFNetService for advertising an OSC server or client.
+ */
+static CFNetServiceRef VuoOsc_createNetService(char *name, int port, bool isServer)
+{
+	bool defaultName = false;
+	if (!name || name[0] == 0)
+	{
+		name = VuoText_format("Vuo OSC %s", isServer ? "Server" : "Client");
+		defaultName = true;
+	}
+
+	CFStringRef nameCF = CFStringCreateWithCString(NULL, name, kCFStringEncodingUTF8);
+	if (defaultName)
+		free(name);
+	if (!nameCF)
+		return NULL;
+
+	CFNetServiceRef netService = CFNetServiceCreate(NULL, CFSTR(""), CFSTR("_osc._udp"), nameCF, port);
+	CFRelease(nameCF);
+
+	// Add a TXT record, type=server, per http://opensoundcontrol.org/topic/110 proposal #2.
+	{
+		CFStringRef keys[] = { CFSTR("type") };
+		CFTypeRef values[] = { isServer ? CFSTR("server") : CFSTR("client") };
+		CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), NULL, NULL);
+		CFDataRef txtRecord = CFNetServiceCreateTXTDataWithDictionary( NULL, attr );
+		CFRelease(attr);
+
+		CFNetServiceSetTXTData(netService, txtRecord);
+
+		CFRelease(txtRecord);
+	}
+
+	// Start advertising the Bonjour service.
+	CFNetServiceClientContext clientContext = { 0, NULL, NULL, NULL, NULL };
+	CFNetServiceSetClient(netService, registerCallback, &clientContext);
+	CFNetServiceScheduleWithRunLoop(netService, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+	CFStreamError error;
+	if (CFNetServiceRegisterWithOptions(netService, kCFNetServiceFlagNoAutoRename, &error) == false)
+	{
+		CFNetServiceUnscheduleFromRunLoop(netService, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+		CFNetServiceSetClient(netService, NULL, NULL);
+		CFNetServiceCancel(netService);
+		CFRelease(netService);
+		VUserLog("Error: Could not advertise OSC %s via Bonjour (domain=%ld, error=%d)", isServer ? "server" : "client", error.domain, error.error);
+		return NULL;
+	}
+
+	return netService;
+}
+
+/**
+ * Stop advertising the Bonjour service.
+ */
+static void VuoOsc_destroyNetService(CFNetServiceRef netService)
+{
+	CFNetServiceUnscheduleFromRunLoop(netService, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+	CFNetServiceSetClient(netService, NULL, NULL);
+	CFNetServiceCancel(netService);
+	CFRelease(netService);
 }
 
 /**
@@ -183,31 +253,31 @@ public:
 			}
 			catch (osc::MalformedPacketException e)
 			{
-				VLog("Malformed OSC packet: %s", e.what());
+				VUserLog("Malformed OSC packet: %s", e.what());
 			}
 			catch (osc::MalformedBundleException e)
 			{
-				VLog("Malformed OSC bundle: %s", e.what());
+				VUserLog("Malformed OSC bundle: %s", e.what());
 			}
 			catch (osc::MalformedMessageException e)
 			{
-				VLog("Malformed OSC message: %s", e.what());
+				VUserLog("Malformed OSC message: %s", e.what());
 			}
 			catch (osc::WrongArgumentTypeException e)
 			{
-				VLog("OSC: Wrong argument type: %s", e.what());
+				VUserLog("OSC: Wrong argument type: %s", e.what());
 			}
 			catch (osc::MissingArgumentException e)
 			{
-				VLog("OSC: Missing argument: %s", e.what());
+				VUserLog("OSC: Missing argument: %s", e.what());
 			}
 			catch (osc::ExcessArgumentException e)
 			{
-				VLog("OSC: Excess argument: %s", e.what());
+				VUserLog("OSC: Excess argument: %s", e.what());
 			}
 			catch (...)
 			{
-				VLog("Unknown OSC exception");
+				VUserLog("Unknown OSC exception");
 			}
 		}
 	}
@@ -215,7 +285,7 @@ public:
 	/**
 	 * Creates a socket on the specified endpoint.  Invokes the specified listener when a message is received.
 	 */
-	VuoOscInSocket(const IpEndpointName &localEndpoint, VuoOscInPacketListener *listener)
+	VuoOscInSocket(const IpEndpointName &localEndpoint, VuoOscInPacketListener *listener, char *name)
 		: UdpSocket(), listener_(listener)
 	{
 		netService = NULL;
@@ -227,7 +297,7 @@ public:
 		}
 		catch(std::exception const &e)
 		{
-			VLog("Error: (port %d) %s", localEndpoint.port, e.what());
+			VUserLog("Error: (port %d) %s", localEndpoint.port, e.what());
 			return;
 		}
 
@@ -237,37 +307,7 @@ public:
 						   listenForMessages();
 					   });
 
-
-		// Create a Bonjour service.
-		netService = CFNetServiceCreate(NULL, CFSTR(""), CFSTR("_osc._udp"), CFSTR("Vuo OSC Server"), Port());
-
-		// Add a TXT record, type=server, per http://opensoundcontrol.org/topic/110 proposal #2.
-		{
-			CFStringRef keys[] = { CFSTR("type") };
-			CFTypeRef values[] = { CFSTR("server") };
-			CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), NULL, NULL);
-			CFDataRef         txtRecord = CFNetServiceCreateTXTDataWithDictionary( NULL, attr );
-			CFRelease(attr);
-
-			CFNetServiceSetTXTData(netService, txtRecord);
-
-			CFRelease(txtRecord);
-		}
-
-		// Start advertising the Bonjour service.
-		CFNetServiceClientContext clientContext = { 0, NULL, NULL, NULL, NULL };
-		CFNetServiceSetClient(netService, registerCallback, &clientContext);
-		CFNetServiceScheduleWithRunLoop(netService, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
-		CFStreamError error;
-		if (CFNetServiceRegisterWithOptions(netService, kCFNetServiceFlagNoAutoRename, &error) == false)
-		{
-			CFNetServiceUnscheduleFromRunLoop(netService, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
-			CFNetServiceSetClient(netService, NULL, NULL);
-			CFNetServiceCancel(netService);
-			CFRelease(netService);
-			netService = NULL;
-			VLog("Error: Could not advertise OSC server via Bonjour (domain=%ld, error=%d)", error.domain, error.error);
-		}
+		netService = VuoOsc_createNetService(name, Port(), true);
 	}
 
 	/**
@@ -305,13 +345,7 @@ public:
 	~VuoOscInSocket()
 	{
 		if (netService)
-		{
-			// Stop advertising the Bonjour service.
-			CFNetServiceUnscheduleFromRunLoop(netService, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
-			CFNetServiceSetClient(netService, NULL, NULL);
-			CFNetServiceCancel(netService);
-			CFRelease(netService);
-		}
+			VuoOsc_destroyNetService(netService);
 
 		if (IsBound())
 		{
@@ -340,7 +374,7 @@ __attribute__((constructor)) static void VuoOscIn_init(void)
  */
 struct VuoOscIn_internal
 {
-	unsigned int port;	///< The port to listen on.
+	VuoOscInputDevice device;	///< The port to listen on, and the name of the Bonjour service.
 	VuoOscReceivedMessageTrigger receivedMessage;	///< The trigger function to call when a newly-arrived OSC message has been parsed.
 };
 
@@ -348,27 +382,29 @@ void VuoOscIn_destroy(VuoOscIn oi);
 
 /**
  * Creates a reference-counted object to manage receiving messages from a OSC device.
- * If @c port is nonzero, attempts to use the specified port.  If zero, automatically chooses an unused port.
+ * If the device's port is nonzero, attempts to use the specified port.  If zero, automatically chooses an unused port.
  * If the port is successfully opened, advertises the server via Bonjour.
  */
-VuoOscIn VuoOscIn_make(VuoInteger port)
+VuoOscIn VuoOscIn_make(const VuoOscInputDevice device)
 {
 	struct VuoOscIn_internal *oii;
 	oii = (struct VuoOscIn_internal *)calloc(1, sizeof(struct VuoOscIn_internal));
 	VuoRegister(oii, VuoOscIn_destroy);
-	oii->port = port;
+
+	oii->device = device;
+	VuoOscInputDevice_retain(oii->device);
 
 	dispatch_semaphore_wait(VuoOscInPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		if (VuoOscInPool.find(oii->port) == VuoOscInPool.end())
+		if (VuoOscInPool.find(oii->device.port) == VuoOscInPool.end())
 		{
-//			VLog("No socket found for port %d; creating one.", oii->port);
+//			VLog("No socket found for port %d; creating one.", oii->device.port);
 			VuoOscInPacketListener *listener = new VuoOscInPacketListener;
-			IpEndpointName endpoint(IpEndpointName::ANY_ADDRESS, oii->port==0 ? IpEndpointName::ANY_PORT : oii->port);
-			VuoOscInSocket *socket = new VuoOscInSocket(endpoint, listener);
-			VuoOscInPool[oii->port] = socket;
+			IpEndpointName endpoint(IpEndpointName::ANY_ADDRESS, oii->device.port==0 ? IpEndpointName::ANY_PORT : oii->device.port);
+			VuoOscInSocket *socket = new VuoOscInSocket(endpoint, listener, (char *)oii->device.name);
+			VuoOscInPool[oii->device.port] = socket;
 		}
-		VuoOscInPool[oii->port]->use();
+		VuoOscInPool[oii->device.port]->use();
 	}
 	dispatch_semaphore_signal(VuoOscInPool_semaphore);
 
@@ -395,7 +431,7 @@ void VuoOscIn_enableTriggers
 	dispatch_semaphore_wait(VuoOscInPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 //		VLog("Enabling trigger %p", receivedMessage);
-		VuoOscInPool[oii->port]->listener()->enableTrigger(receivedMessage);
+		VuoOscInPool[oii->device.port]->listener()->enableTrigger(receivedMessage);
 	}
 	dispatch_semaphore_signal(VuoOscInPool_semaphore);
 }
@@ -414,7 +450,7 @@ void VuoOscIn_disableTriggers(VuoOscIn oi)
 
 	dispatch_semaphore_wait(VuoOscInPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		VuoOscInPool[oii->port]->listener()->disableTrigger(oii->receivedMessage);
+		VuoOscInPool[oii->device.port]->listener()->disableTrigger(oii->receivedMessage);
 //		VLog("Disabled trigger %p", oii->receivedMessage);
 	}
 	dispatch_semaphore_signal(VuoOscInPool_semaphore);
@@ -434,16 +470,246 @@ void VuoOscIn_destroy(VuoOscIn oi)
 
 	dispatch_semaphore_wait(VuoOscInPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		VuoOscInPool[oii->port]->disuse();
-		if (!VuoOscInPool[oii->port]->useCount())
+		VuoOscInPool[oii->device.port]->disuse();
+		if (!VuoOscInPool[oii->device.port]->useCount())
 		{
 //			VLog("Deleting socket for port %d.", oii->port);
-			std::map<unsigned int, VuoOscInSocket *>::iterator it = VuoOscInPool.find(oii->port);
+			std::map<unsigned int, VuoOscInSocket *>::iterator it = VuoOscInPool.find(oii->device.port);
 			delete it->second;
 			VuoOscInPool.erase(it);
 		}
 	}
 	dispatch_semaphore_signal(VuoOscInPool_semaphore);
 
+	VuoOscInputDevice_release(oii->device);
+
 	free(oi);
+}
+
+/**
+ * Enable VuoOscOutputDevice to be used in `std::map`.
+ */
+class VuoOscOutputIdentifier
+{
+public:
+	VuoOscOutputDevice device;	///< The output device.
+
+	/**
+	 * Creates an output device wrapper.
+	 */
+	VuoOscOutputIdentifier(VuoOscOutputDevice _device)
+		: device(_device)
+	{
+	}
+
+	/**
+	 * Returns true if this device should be sorted before the `other` device.
+	 * Enables using this class with `std::map`.
+	 */
+	bool operator < (const VuoOscOutputIdentifier &other) const
+	{
+		return VuoOscOutputDevice_isLessThan(device, other.device);
+	}
+};
+
+/**
+ * Private data for a VuoOscOut instance.
+ */
+typedef struct _VuoOscOut_internal
+{
+	VuoOscOutputDevice device;		///< The target device this instance represents.
+	UdpTransmitSocket *socket;
+	CFNetServiceRef netService;
+	dispatch_queue_t queue;
+} *VuoOscOut_internal;
+
+/**
+ * Returns an available UDP port.
+ */
+static int VuoOsc_findAvailableUdpPort(void)
+{
+	int socketFD = socket(PF_INET, SOCK_DGRAM, 0);
+	if (socketFD == -1)
+	{
+		VUserLog("Couldn't open port: %s", strerror(errno));
+		return 0;
+	}
+
+	struct sockaddr_in addr;
+	memset(&addr, 0, sizeof(addr));
+	addr.sin_family = PF_INET;
+	addr.sin_addr.s_addr = INADDR_ANY;
+
+	if (bind(socketFD, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+	{
+		VUserLog("Couldn't bind: %s", strerror(errno));
+		close(socketFD);
+		return 0;
+	}
+
+	struct sockaddr_in sin;
+	socklen_t len = sizeof(sin);
+	if (getsockname(socketFD, (struct sockaddr *)&sin, &len) == -1)
+	{
+		VUserLog("Couldn't get socket name: %s", strerror(errno));
+		close(socketFD);
+		return 0;
+	}
+
+	close(socketFD);
+
+	return ntohs(sin.sin_port);
+}
+
+/// @{
+VUOKEYEDPOOL(VuoOscOutputIdentifier, VuoOscOut_internal);
+static void VuoOscOut_destroy(VuoOscOut_internal ai);
+VuoOscOut_internal VuoOscOut_make(VuoOscOutputIdentifier device)
+{
+	IpEndpointName *endpoint;
+	VuoInteger actualPort = device.device.port;
+	if (device.device.ipAddress && actualPort)
+		endpoint = new IpEndpointName(device.device.ipAddress, actualPort);
+	else if (actualPort)
+		endpoint = new IpEndpointName(actualPort);
+	else
+		endpoint = new IpEndpointName(VuoOsc_findAvailableUdpPort());
+
+
+	UdpTransmitSocket *socket;
+	try
+	{
+		socket = new UdpTransmitSocket(*endpoint);
+	}
+	catch (std::exception const &e)
+	{
+		char s[IpEndpointName::ADDRESS_AND_PORT_STRING_LENGTH];
+		endpoint->AddressAndPortAsString(s);
+		VUserLog("Error: %s %s", s, e.what());
+		delete endpoint;
+		return NULL;
+	}
+	delete endpoint;
+
+
+	VuoOscOut_internal ai = (VuoOscOut_internal)calloc(1, sizeof(_VuoOscOut_internal));
+	VuoRegister(ai, (DeallocateFunctionType)VuoOscOut_destroy);
+
+	ai->netService = VuoOsc_createNetService((char *)device.device.name, endpoint->port, false);
+
+	ai->device = device.device;
+	VuoOscOutputDevice_retain(ai->device);
+
+	ai->socket = socket;
+
+	ai->queue = dispatch_queue_create("org.vuo.osc.send", NULL);
+
+	return ai;
+}
+static void VuoOscOut_destroy(VuoOscOut_internal ai)
+{
+	if (ai->netService)
+		VuoOsc_destroyNetService(ai->netService);
+
+	if (ai->socket)
+		delete ai->socket;
+
+	VuoOscOut_internalPool->removeSharedInstance(ai->device);
+
+	VuoOscOutputDevice_release(ai->device);
+
+	dispatch_sync(ai->queue, ^{});
+	dispatch_release(ai->queue);
+
+	delete ai;
+}
+VUOKEYEDPOOL_DEFINE(VuoOscOutputIdentifier, VuoOscOut_internal, VuoOscOut_make);
+/// @}
+
+/**
+ * Returns the reference-counted object for the specified OSC output device.
+ */
+VuoOscOut VuoOscOut_getShared(const VuoOscOutputDevice device)
+{
+	return (VuoOscOut)VuoOscOut_internalPool->getSharedInstance(device);
+}
+
+/**
+ * Sends a message to the specified OSC device.
+ */
+void VuoOscOut_sendMessages(VuoOscOut ao, VuoList_VuoOscMessage messages)
+{
+	if (!ao || !messages)
+		return;
+
+	VuoRetain(messages);
+	VuoOscOut_internal aii = (VuoOscOut_internal)ao;
+	dispatch_async(aii->queue, ^{
+					   bool done = false;
+					   int bufferSize = 256;
+					   while (!done)
+					   {
+						   char *buffer = (char *)malloc(bufferSize);
+						   try
+						   {
+							   osc::OutboundPacketStream p(buffer, bufferSize);
+
+							   VuoInteger messageCount = VuoListGetCount_VuoOscMessage(messages);
+
+							   if (messageCount > 1)
+								   p << osc::BeginBundleImmediate;
+
+							   for(VuoInteger i = 1; i <= VuoListGetCount_VuoOscMessage(messages); ++i)
+							   {
+								   VuoOscMessage message = VuoListGetValue_VuoOscMessage(messages, i);
+								   if (!message)
+									   continue;
+
+								   p << osc::BeginMessage(message->address);
+
+								   int dataCount = json_object_array_length(message->data);
+								   for (int i = 0; i < dataCount; ++i)
+								   {
+									   json_object *datum = json_object_array_get_idx(message->data, i);
+									   json_type type = json_object_get_type(datum);
+
+									   if (type == json_type_null)
+										   p << osc::OscNil;
+									   else if (type == json_type_boolean)
+										   p << (bool)json_object_get_boolean(datum);
+									   else if (type == json_type_double)
+										   p << json_object_get_double(datum);
+									   else if (type == json_type_int)
+										   p << (osc::int64)json_object_get_int64(datum);
+									   else if (type == json_type_string)
+										   p << json_object_get_string(datum);
+									   else
+									   {
+										   VUserLog("Error: Unknown type: %s", json_type_to_name(type));
+										   p << osc::OscNil;
+									   }
+								   }
+
+								   p << osc::EndMessage;
+							   }
+
+							   if (messageCount > 1)
+								   p << osc::EndBundle;
+
+							   aii->socket->Send(p.Data(), p.Size());
+							   done = true;
+						   }
+						   catch (osc::OutOfBufferMemoryException const &e)
+						   {
+							   bufferSize *= 2;
+						   }
+						   catch (std::exception const &e)
+						   {
+							   VUserLog("Error: %s", e.what());
+							   done = true;
+						   }
+						   free(buffer);
+					   }
+					   VuoRelease(messages);
+				   });
 }

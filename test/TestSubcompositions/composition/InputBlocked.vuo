@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+HoldValue2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="165,0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<In1>In1\r" _In1_type="VuoInteger" _In1="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Out1>Out1\l" _Out1_type="VuoInteger"];
+
+PublishedInputs:In1 -> HoldValue2:newValue;
+HoldValue2:heldValue -> PublishedOutputs:Out1;
+}

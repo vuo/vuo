@@ -26,5 +26,6 @@ LIBS += \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$ROOT/type/list/VuoList_VuoText.o \
+	$$ROOT/node/vuo.noise/VuoGradientNoiseCommon.bc \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$MUPARSER_ROOT/lib/libmuparser.a

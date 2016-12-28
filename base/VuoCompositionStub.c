@@ -12,29 +12,29 @@
  * Normally defined in a composition's generated code.
  * Defined here to prevent link errors when linking in VuoRuntime without also linking in a composition.
  */
-void setup(void)
+void vuoSetup(void)
 {
 }
-void cleanup(void)
+void vuoCleanup(void)
 {
 }
-void nodeInstanceInit(void)
+void vuoInstanceInit(void)
 {
 }
-void nodeInstanceFini(void)
+void vuoInstanceFini(void)
 {
 }
-void nodeInstanceTriggerStart(void)
+void vuoInstanceTriggerStart(void)
 {
 }
-void nodeInstanceTriggerStop(void)
+void vuoInstanceTriggerStop(void)
 {
 }
-char * getPortValue(char *portIdentifier, bool isInput, bool isThreadSafe, int serializationType)
+char * vuoGetPortValue(char *portIdentifier, int serializationType)
 {
 	return NULL;
 }
-void setInputPortValue(char *portIdentifier, char *valueAsString, int shouldUpdateCallbacks)
+void vuoSetInputPortValue(char *portIdentifier, char *valueAsString)
 {
 }
 void fireTriggerPortEvent(char *portIdentifier)

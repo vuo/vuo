@@ -1,0 +1,78 @@
+/**
+ * @file
+ * Calculates how long ago certain events took place.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="1755,300" _separator="\"\""];
+ArrangeLayersInGrid2 [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="675,-150" _scaleToFit="false" _center="[{\"x\":0,\"y\":0}]" _width="1.7" _columns="2" _height="0.5" _rows="2"];
+CalculateElapsedTime [type="vuo.time.elapsed" version="1.0.0" label="Calculate Elapsed Time|<refresh>refresh\l|<a>a\l|<b>b\l|<elapsedTime>elapsedTime\r" pos="1140,345" fillcolor="violet"];
+FetchDateTime [type="vuo.time.fetch" version="1.0.0" label="Fetch Date-Time|<refresh>refresh\l|<time>time\r" pos="975,360" fillcolor="violet"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1020,15" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FormatDateTime [type="vuo.time.format" version="1.0.0" label="Format Date-Time|<refresh>refresh\l|<time>time\l|<format>format\l|<formattedTime>formattedTime\r" pos="1440,270" fillcolor="violet" _format="\"date-long\""];
+GetRelativeDateTimeValues [type="vuo.time.relative.get" version="1.0.0" label="Get Relative Date-Time Values|<refresh>refresh\l|<relativeTime>relativeTime\l|<years>years\r|<months>months\r|<days>days\r|<hours>hours\r|<minutes>minutes\r|<seconds>seconds\r" pos="1350,345" fillcolor="violet"];
+MakeButton [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="375,-30" fillcolor="yellow" _label="\"First transatlantic\\ntelegraph communication\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.4,\"g\":0.5,\"b\":0.6,\"a\":1.0}" _iconPosition="\"left\"" _width="0.80000000000000004" _height="0.20000000000000001" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeButton2 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="375,150" fillcolor="yellow" _label="\"First telephone call\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.4,\"g\":0.5,\"b\":0.6,\"a\":1.0}" _iconPosition="\"left\"" _width="0.80000000000000004" _height="0.20000000000000001" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeButton3 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="375,330" fillcolor="yellow" _label="\"First iPhone released\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.4,\"g\":0.5,\"b\":0.6,\"a\":1.0}" _iconPosition="\"left\"" _width="0.80000000000000004" _height="0.20000000000000001" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeButton4 [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="375,510" fillcolor="yellow" _label="\"Twitter IPO\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _color="{\"r\":0.4,\"g\":0.5,\"b\":0.6,\"a\":1.0}" _iconPosition="\"left\"" _width="0.80000000000000004" _height="0.20000000000000001" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeDateTime3 [type="vuo.time.make" version="1.0.0" label="Make Date-Time|<refresh>refresh\l|<year>year\l|<month>month\l|<day>day\l|<hour>hour\l|<minute>minute\l|<second>second\l|<time>time\r" pos="645,15" fillcolor="violet" _year="1858" _month="8" _day="16" _hour="0" _minute="0" _second="0"];
+MakeDateTime4 [type="vuo.time.make" version="1.0.0" label="Make Date-Time|<refresh>refresh\l|<year>year\l|<month>month\l|<day>day\l|<hour>hour\l|<minute>minute\l|<second>second\l|<time>time\r" pos="645,195" fillcolor="violet" _year="1876" _month="3" _day="10" _hour="0" _minute="0" _second="0"];
+MakeDateTime5 [type="vuo.time.make" version="1.0.0" label="Make Date-Time|<refresh>refresh\l|<year>year\l|<month>month\l|<day>day\l|<hour>hour\l|<minute>minute\l|<second>second\l|<time>time\r" pos="645,375" fillcolor="violet" _year="2007" _month="6" _day="29" _hour="0" _minute="0" _second="0"];
+MakeDateTime6 [type="vuo.time.make" version="1.0.0" label="Make Date-Time|<refresh>refresh\l|<year>year\l|<month>month\l|<day>day\l|<hour>hour\l|<minute>minute\l|<second>second\l|<time>time\r" pos="645,555" fillcolor="violet" _year="2013" _month="11" _day="7" _hour="0" _minute="0" _second="0"];
+MakeList17 [type="vuo.list.make.8.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="1706,311" _2="\"\\n(\"" _4="\" years, \"" _6="\" months, and \"" _8="\" days ago)\""];
+MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1429,71" fillcolor="green"];
+MakeList21 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="605,-139"];
+MakeList24 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1399,56" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1890,330" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0,\"y\":-0.5}"];
+MakeTextLayer3 [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1155,60" _text="\"Click an event to see when it happened.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0,\"y\":0.5}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1470,45" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectLatest2 [type="vuo.select.latest.8.VuoTime" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="840,270"];
+ShareValue2 [type="vuo.data.share.VuoRenderedLayers" version="1.0.0" label="Rendered Layers|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="60,-30" fillcolor="green"];
+SummarizeValue2 [type="vuo.data.summarize.VuoInteger" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1695,1185"];
+SummarizeValue3 [type="vuo.data.summarize.VuoInteger" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1695,1155"];
+SummarizeValue6 [type="vuo.data.summarize.VuoInteger" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="1695,1125"];
+
+AppendTexts:compositeText -> MakeTextLayer:text;
+ArrangeLayersInGrid2:griddedLayer -> MakeList24:1;
+CalculateElapsedTime:elapsedTime -> GetRelativeDateTimeValues:relativeTime;
+FetchDateTime:time -> CalculateElapsedTime:b;
+FireOnStart2:started -> MakeTextLayer3:refresh;
+FormatDateTime:formattedTime -> MakeList17:1;
+GetRelativeDateTimeValues:days -> SummarizeValue2:value;
+GetRelativeDateTimeValues:months -> SummarizeValue3:value;
+GetRelativeDateTimeValues:years -> SummarizeValue6:value;
+MakeButton2:pressed -> MakeDateTime4:refresh;
+MakeButton2:updatedLayer -> MakeList21:2;
+MakeButton3:pressed -> MakeDateTime5:refresh;
+MakeButton3:updatedLayer -> MakeList21:3;
+MakeButton4:pressed -> MakeDateTime6:refresh;
+MakeButton4:updatedLayer -> MakeList21:4;
+MakeButton:pressed -> MakeDateTime3:refresh;
+MakeButton:updatedLayer -> MakeList21:1;
+MakeDateTime3:time -> SelectLatest2:option1;
+MakeDateTime4:time -> SelectLatest2:option2;
+MakeDateTime5:time -> SelectLatest2:option3;
+MakeDateTime6:time -> SelectLatest2:option4;
+MakeList17:list -> AppendTexts:texts;
+MakeList21:list -> ArrangeLayersInGrid2:layers;
+MakeList24:list -> RenderLayersToWindow:layers;
+MakeList2:list -> RenderLayersToWindow:setWindowProperties;
+MakeTextLayer3:layer -> MakeList24:2;
+MakeTextLayer:layer -> MakeList24:3;
+RenderLayersToWindow:renderedLayers -> ShareValue2:value [style=invis];
+SelectLatest2:latest -> CalculateElapsedTime:a;
+SelectLatest2:latest -> FetchDateTime:refresh;
+SelectLatest2:latest -> FormatDateTime:time;
+ShareValue2:sameValue -> MakeButton2:renderedLayers;
+ShareValue2:sameValue -> MakeButton3:renderedLayers;
+ShareValue2:sameValue -> MakeButton4:renderedLayers;
+ShareValue2:sameValue -> MakeButton:renderedLayers;
+SummarizeValue2:summary -> MakeList17:7;
+SummarizeValue3:summary -> MakeList17:5;
+SummarizeValue6:summary -> MakeList17:3;
+}

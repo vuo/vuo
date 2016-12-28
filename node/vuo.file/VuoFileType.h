@@ -34,7 +34,8 @@ typedef enum
 	VuoFileType_Mesh,
 	VuoFileType_Movie,
 	VuoFileType_Scene,
-	VuoFileType_Folder
+	VuoFileType_Folder,
+	VuoFileType_Feed,
 } VuoFileType;
 
 VuoFileType VuoFileType_makeFromJson(struct json_object * js);

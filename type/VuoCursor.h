@@ -42,6 +42,8 @@ struct json_object * VuoCursor_getJson(const VuoCursor value);
 VuoList_VuoCursor VuoCursor_getAllowedValues(void);
 char * VuoCursor_getSummary(const VuoCursor value);
 
+bool VuoCursor_isPopulated(const VuoCursor value);
+
 /**
  * Automatically generated function.
  */

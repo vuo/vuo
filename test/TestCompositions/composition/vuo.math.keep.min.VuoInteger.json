@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Expected outputs for the vuo.math.keep.min node.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	{	"firingPort" : "refresh",
+		"inputPortValues" : {"value": 2},
+		"outputPortValues" : {"min" : 2}
+	},
+	{	"firingPort" : "refresh",
+		"inputPortValues" : {"value":42},
+		"outputPortValues" : {"min" : 2}
+	},
+	{	"firingPort" : "refresh",
+		"inputPortValues" : {"value": 1},
+		"outputPortValues" : {"min" : 1}
+	},
+
+	/* Reset */
+	{	"firingPort" : "reset",
+		"inputPortValues" : {"value": 2, "resetEvent": true},
+		"outputPortValues" : {"min" : 2}
+	},
+	{	"firingPort" : "refresh",
+		"inputPortValues" : {"value":42, "resetEvent": false},
+		"outputPortValues" : {"min" : 2}
+	},
+	{	"firingPort" : "refresh",
+		"inputPortValues" : {"value": 1},
+		"outputPortValues" : {"min" : 1}
+	},
+]}

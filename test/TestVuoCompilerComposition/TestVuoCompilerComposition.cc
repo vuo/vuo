@@ -10,6 +10,8 @@
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerGraphvizParser.hh"
+#include "VuoCompilerPort.hh"
 #include "VuoGenericType.hh"
 #include "VuoPort.hh"
 #include <sstream>

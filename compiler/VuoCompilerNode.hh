@@ -11,13 +11,15 @@
 #define VUOCOMPILERNODE_H
 
 #include "VuoBaseDetail.hh"
-
 #include "VuoNode.hh"
 
-#include "VuoCompilerNodeClass.hh"
-#include "VuoCompilerPort.hh"
-#include "VuoCompilerInputEventPort.hh"
-#include "VuoCompilerInstanceData.hh"
+class VuoCompilerEventPort;
+class VuoCompilerConstantStringCache;
+class VuoCompilerInstanceData;
+class VuoCompilerNodeArgument;
+class VuoCompilerType;
+class VuoNode;
+class VuoPort;
 
 /**
  * The compiler detail class for @c VuoNode.
@@ -27,35 +29,39 @@ class VuoCompilerNode : public VuoBaseDetail<VuoNode>
 private:
 	VuoCompilerInstanceData *instanceData;
 	string graphvizIdentifier;  ///< The identifier that will appear in .vuo (Graphviz dot format) files. Defaults to the suggested Graphviz identifier prefix.
-	static const string RuntimeSuffix;
+	VuoCompilerConstantStringCache *constantStrings;
 
-	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block);
+	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block, Value *nodeIdentifierValue, Value *nodeContextValue,
+									const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));
 	bool isArgumentInFunction(VuoCompilerNodeArgument *argument, Function *function);
 	size_t getArgumentIndexInFunction(VuoCompilerNodeArgument *argument, Function *function);
-	Value * generateReceivedEventCondition(BasicBlock *block, vector<VuoPort *> selectedInputPorts);
 	string getGraphvizDeclarationWithOptions(bool shouldUsePlaceholders, bool shouldPrintPosition, double xPositionOffset, double yPositionOffset);
 	string getSerializedFormatString(void);
 
 public:
 	VuoCompilerNode(VuoNode *baseNode);
-	void generateAllocation(Module *module);
-	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *initialBlock, BasicBlock *finalBlock);
-	void generateInitFunctionCall(Module *module, BasicBlock *block);
-	void generateFiniFunctionCall(Module *module, BasicBlock *block);
-	void generateCallbackStartFunctionCall(Module *module, BasicBlock *block);
-	void generateCallbackUpdateFunctionCall(Module *module, BasicBlock *block);
-	void generateCallbackStopFunctionCall(Module *module, BasicBlock *block);
-	Value * generateReceivedEventCondition(BasicBlock *block);
-	void generatePushedReset(BasicBlock *block);
-	void generateFinalization(Module *module, BasicBlock *block, bool isInput);
+	void setConstantStringCache(VuoCompilerConstantStringCache *constantStrings);
+	Value * generateIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	Value * generateContextInit(Module *module, BasicBlock *block, Value *compositionIdentifierValue, unsigned long nodeIndex, const vector<VuoCompilerType *> &orderedTypes);
+	void generateContextFini(Module *module, BasicBlock *block, BasicBlock *finiBlock, Value *compositionIdentifierValue, Value *nodeIdentifierValue, Value *nodeContextValue);
+	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *nodeIdentifierValue);
+	void generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	void generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	void generateCallbackStartFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	void generateCallbackUpdateFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	void generateCallbackStopFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	Value * generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue);
+	Value * generateReceivedEventCondition(Module *module, BasicBlock *block, Value *nodeContextValue, vector<VuoPort *> selectedInputPorts,
+										   const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));
 	VuoCompilerInstanceData * getInstanceData(void);
 	string getIdentifier(void);
 	string getGraphvizIdentifierPrefix(void);
 	void setGraphvizIdentifier(string graphvizIdentifier);
 	string getGraphvizIdentifier(void);
 	string getGraphvizDeclaration(bool shouldPrintPosition = false, double xPositionOffset = 0, double yPositionOffset = 0);
-	Value * generateSerializedString(Module *module, BasicBlock *block);
-	void generateUnserialization(Module *module, Function *function, BasicBlock *&block, Value *graphValue);
+	Value * generateSerializedString(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	void generateUnserialization(Module *module, Function *function, BasicBlock *&block, Value *compositionIdentifierValue, Value *graphValue);
 };
 
 #endif

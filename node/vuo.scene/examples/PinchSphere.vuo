@@ -9,20 +9,17 @@
 
 digraph G
 {
-Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="351,324" _startPosition="-0.400000" _endPosition="0.300000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-50,36" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DTransform4 [type="vuo.transform.make" version="1.0.0" label="Make 3D Transform|<refresh>refresh\l|<translation>translation\l|<rotation>rotation\l|<scale>scale\l|<transform>transform\r" pos="149,56" _translation="{\"x\":0.000000,\"y\":0.000000,\"z\":0.000000}" _rotation="{\"x\":0,\"y\":0,\"z\":0}" _scale="{\"x\":0.800000,\"y\":0.800000,\"z\":0.800000}"];
-MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="745,182" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="715,152" fillcolor="green"];
-MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="342,141" _rows="64" _columns="64"];
-PinchObject2 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="535,141" fillcolor="violet" _center="{\"x\":-1.000000,\"y\":0.000000,\"z\":0.000000}"];
-RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="786,141" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="158,156" _color="{\"r\":0.957931,\"g\":0.436332,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="345,330" _startPosition="-0.400000" _endPosition="0.300000" _duration="3.000000" _curve="\"quadratic\"" _easing="\"in+out\"" _loop="\"mirror\""];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,150" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="739,176" fillcolor="green"];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="709,146" fillcolor="green"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="345,135" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.80000001192092896,0.80000001192092896,0.80000001192092896]}" _rows="64" _columns="64"];
+PinchObject2 [type="vuo.scene.pinch" version="1.0.1" label="Pinch 3D Object|<refresh>refresh\l|<object>object\l|<amount>amount\l|<center>center\l|<pinchedObject>pinchedObject\r" pos="540,135" fillcolor="violet" _center="{\"x\":-1.000000,\"y\":0.000000,\"z\":0.000000}"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="780,135" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor2 [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="165,195" _color="{\"r\":0.957931,\"g\":0.436332,\"b\":1.000000,\"a\":1.000000}" _highlightColor="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _shininess="0.900000"];
 
 Curve2:value -> PinchObject2:amount;
-FireOnStart2:started -> Make3DTransform4:refresh;
 FireOnStart2:started -> ShadeWithColor2:refresh;
-Make3DTransform4:transform -> MakeSphere2:transform;
 MakeList3:list -> RenderSceneToWindow:setWindowProperties;
 MakeList5:list -> RenderSceneToWindow:objects;
 MakeSphere2:object -> PinchObject2:object;

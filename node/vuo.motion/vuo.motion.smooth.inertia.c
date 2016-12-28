@@ -12,14 +12,14 @@
 VuoModuleMetadata({
 					  "title" : "Smooth with Inertia",
 					  "keywords" : [ "ease", "easing", "even", "calm", "steady", "continuous", "transition", "time", "speed", "velocity", "gravity", "attraction", "momentum" ],
-					  "version" : "1.0.1",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoReal", "VuoPoint2d", "VuoPoint3d" ]
 						  }
 					  },
 					  "node": {
-						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo" ]
+						  "exampleCompositions" : [ "CompareSmoothedMotion.vuo", "CompareSmoothedData.vuo", "RotateInSequence.vuo" ]
 					  }
 				 });
 
@@ -31,7 +31,13 @@ VuoModuleMetadata({
 #define bezier3 VuoGenericType1_bezier3
 #include "VuoSmooth.h"
 
-VuoSmoothInertia nodeInstanceInit(
+struct nodeInstanceData
+{
+	VuoSmoothInertia smooth;
+	bool moving;
+};
+
+struct nodeInstanceData *nodeInstanceInit(
 		VuoInputData(VuoGenericType1, {"defaults":{
 										   "VuoReal":0.,
 										   "VuoPoint2d":{"x":0.,"y":0.},
@@ -39,12 +45,17 @@ VuoSmoothInertia nodeInstanceInit(
 									   }}) setPosition
 )
 {
-	return VuoSmoothInertia_make(setPosition);
+	struct nodeInstanceData *ctx = (struct nodeInstanceData *) malloc(sizeof(struct nodeInstanceData));
+	VuoRegister(ctx, free);
+	ctx->smooth = VuoSmoothInertia_make(setPosition);
+	VuoRetain(ctx->smooth);
+	ctx->moving = false;
+	return ctx;
 }
 
 void nodeInstanceEvent
 (
-		VuoInstanceData(VuoSmoothInertia) smooth,
+		VuoInstanceData(struct nodeInstanceData *) ctx,
 		VuoInputData(VuoReal, {"default":0.0}) time,
 		VuoInputEvent({"eventBlocking":"door","data":"time"}) timeEvent,
 		VuoInputData(VuoGenericType1, {"defaults":{
@@ -61,29 +72,41 @@ void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"wall","data":"setTarget","hasPortAction":true}) setTargetEvent,
 		VuoInputData(VuoReal, {"default":1., "suggestedMin":0., "suggestedStep":0.1}) duration,
 		VuoInputEvent({"eventBlocking":"wall","data":"duration"}) durationEvent,
+
 		VuoOutputData(VuoGenericType1) position,
-		VuoOutputEvent({"data":"position"}) positionEvent
+		VuoOutputEvent({"data":"position"}) positionEvent,
+		VuoOutputEvent() reachedTarget
 )
 {
 	if (setPositionEvent)
 	{
-		VuoSmoothInertia_setPosition(*smooth, setPosition);
+		VuoSmoothInertia_setPosition((*ctx)->smooth, setPosition);
 		*position = setPosition;
+		(*ctx)->moving = true;
 	}
 
 	if (setTargetEvent)
-		VuoSmoothInertia_setTarget(*smooth, time, setTarget);
-
-	if (timeEvent)
 	{
-		VuoSmoothInertia_setDuration(*smooth, duration);
-		*positionEvent = VuoSmoothInertia_step(*smooth, time, position);
+		VuoSmoothInertia_setTarget((*ctx)->smooth, time, setTarget);
+		(*ctx)->moving = true;
+	}
+
+	if (timeEvent && (*ctx)->moving)
+	{
+		VuoSmoothInertia_setDuration((*ctx)->smooth, duration);
+		*positionEvent = VuoSmoothInertia_step((*ctx)->smooth, time, position);
+		if (!*positionEvent)
+		{
+			*reachedTarget = true;
+			(*ctx)->moving = false;
+		}
 	}
 }
 
 void nodeInstanceFini
 (
-		VuoInstanceData(VuoSmoothInertia) smooth
+		VuoInstanceData(struct nodeInstanceData *) ctx
 )
 {
+	VuoRelease((*ctx)->smooth);
 }

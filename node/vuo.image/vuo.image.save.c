@@ -30,6 +30,15 @@ VuoModuleMetadata({
 						 "exampleCompositions" : [ ]
 					 }
 				 });
+
+/**
+ * Initializes the FreeImage library.
+ */
+__attribute__((constructor)) static void vuo_image_save_init(void)
+{
+	FreeImage_Initialise(true);
+}
+
 /**
  * Given a filename and extension, returns a new string guaranteed to have the extension.
  */
@@ -76,11 +85,11 @@ static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
 {
 	if(fif != FIF_UNKNOWN)
 	{
-		VLog("Export image failed: %s.  Format: %s", message, FreeImage_GetFormatFromFIF(fif));
+		VUserLog("Export image failed: %s.  Format: %s", message, FreeImage_GetFormatFromFIF(fif));
 	}
 	else
 	{
-		VLog("Export image failed: %s", message);
+		VUserLog("Export image failed: %s", message);
 	}
 }
 
@@ -118,17 +127,79 @@ void nodeEvent
 		return;
 	}
 
-	FreeImage_Initialise(false);
-	FreeImage_SetOutputMessage(FreeImageErrorHandler);
+	unsigned int depth = VuoImage_getColorDepth(saveImage) == VuoImageColorDepth_8 ? 32 : 64;
 
-	unsigned char *buffer = VuoImage_copyBuffer(saveImage, GL_BGRA);
+	unsigned int bufferFormat = GL_BGRA;
+	if (saveImage->glInternalFormat == GL_DEPTH_COMPONENT)
+		bufferFormat = GL_DEPTH_COMPONENT16;
+	else if (depth == 64)
+		bufferFormat = GL_RGBA16I_EXT;
+	const unsigned char *buffer = VuoImage_getBuffer(saveImage, bufferFormat);
+	if (!buffer)
+	{
+		VUserLog("Error: Couldn't get pixels.");
+		return;
+	}
 
 	int width = saveImage->pixelsWide;
 	int height = saveImage->pixelsHigh;
 
-	unsigned int depth = VuoImage_getColorDepth(saveImage) == VuoImageColorDepth_8 ? 32 : 64;
-
-	FIBITMAP* fibmp = FreeImage_ConvertFromRawBits(buffer, width, height, width * 4, depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, false);
+	FIBITMAP *fibmp;
+	if (bufferFormat == GL_BGRA)
+	{
+		// VuoImage_getBuffer() provides premultiplied colors, but FreeImage expects un-premultiplied.
+		const unsigned char *b = (unsigned char *)buffer;
+		fibmp = FreeImage_AllocateT(FIT_BITMAP, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
+		for (long int y = 0; y < height; ++y)
+		{
+			unsigned char *d = (unsigned char *)FreeImage_GetScanLine(fibmp, y);
+			for (long int x = 0; x < width; ++x)
+			{
+				float alpha = (float)b[3] / 255.;
+				d[0] = (float)b[0] / alpha;
+				d[1] = (float)b[1] / alpha;
+				d[2] = (float)b[2] / alpha;
+				d[3] = b[3];
+				b += 4;
+				d += 4;
+			}
+		}
+	}
+	else if (bufferFormat == GL_RGBA16I_EXT)
+	{
+		// VuoImage_getBuffer() provides premultiplied colors, but FreeImage expects un-premultiplied.
+		const unsigned short *b = (const unsigned short *)buffer;
+		fibmp = FreeImage_AllocateT(FIT_RGBA16, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
+		for (long int y = 0; y < height; ++y)
+		{
+			unsigned short *d = (unsigned short *)FreeImage_GetScanLine(fibmp, y);
+			for (long int x = 0; x < width; ++x)
+			{
+				float alpha = (float)b[3] / 65535.;
+				d[0] = (float)b[2] / alpha;
+				d[1] = (float)b[1] / alpha;
+				d[2] = (float)b[0] / alpha;
+				d[3] = b[3];
+				b += 4;
+				d += 4;
+			}
+		}
+	}
+	else if (bufferFormat == GL_DEPTH_COMPONENT16)
+	{
+		const unsigned short *b = (const unsigned short *)buffer;
+		fibmp = FreeImage_AllocateT(FIT_UINT16, width, height, 16, 0, 0, 0);
+		for (long int y = 0; y < height; ++y)
+		{
+			unsigned short *d = (unsigned short *)FreeImage_GetScanLine(fibmp, y);
+			memcpy(d, b + y*width, width*2);
+		}
+	}
+	else
+	{
+		VUserLog("Error: Unknown bufferFormat.");
+		return;
+	}
 
 	switch(format)
 	{
@@ -181,20 +252,20 @@ void nodeEvent
 			FIBITMAP* img = FreeImage_ConvertTo8Bits(fibmp);
 			FreeImage_Save(FIF_GIF, img, absolute_path, 0);
 			FreeImage_Unload(img);
-		}		
+		}
 		break;
 
 		case VuoImageFormat_TARGA:
 		{
 			FreeImage_Save(FIF_TARGA, fibmp, absolute_path, 0);
-		}		
+		}
 		break;
 
 		// @todo https://b33p.net/kosada/node/10022
 		// case VuoImageFormat_WEBP:
 		// {
 		// 	FreeImage_Save(FIF_WEBP, fibmp, absolute_path, 0);
-		// }		
+		// }
 		// break;
 
 		default:
@@ -207,6 +278,4 @@ void nodeEvent
 	VuoRelease(absolute_path);
 
 	FreeImage_Unload(fibmp);
-
-	FreeImage_DeInitialise();
 }

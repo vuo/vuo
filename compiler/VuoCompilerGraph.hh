@@ -10,10 +10,17 @@
 #ifndef VUOCOMPILERGRAPH_HH
 #define VUOCOMPILERGRAPH_HH
 
-#include "VuoCable.hh"
-#include "VuoCompilerChain.hh"
-#include "VuoCompilerTriggerPort.hh"
+class VuoCompilerCable;
+class VuoCompilerChain;
 class VuoCompilerComposition;
+class VuoCompilerNode;
+class VuoCompilerPort;
+class VuoCompilerTriggerPort;
+class VuoCable;
+class VuoNode;
+class VuoPublishedPort;
+
+#include "VuoPortClass.hh"
 
 /**
  * Data structure used for performing graph analysis on a composition in order to compile it or check its validity.
@@ -27,6 +34,7 @@ class VuoCompilerGraph
 {
 public:
 	VuoCompilerGraph(VuoCompilerComposition *composition, set<VuoCompilerCable *> potentialCables = set<VuoCompilerCable *>());
+	VuoCompilerGraph(VuoCompilerComposition *composition, VuoCompilerNode *publishedInputNode, VuoCompilerNode *publishedOutputNode);
 	bool mayTransmit(VuoCompilerNode *fromNode, VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger);
 	bool mayTransmitEventlessly(VuoCompilerNode *node);
 	vector<VuoCompilerTriggerPort *> getTriggerPorts(void);
@@ -39,8 +47,12 @@ public:
 	vector<VuoCompilerNode *> getNodesEventlesslyDownstream(VuoCompilerNode *node);
 	set<VuoCompilerCable *> getCablesImmediatelyDownstream(VuoCompilerPort *outputPort);
 	set<VuoCompilerCable *> getCablesImmediatelyEventlesslyDownstream(VuoCompilerPort *outputPort);
+	VuoPortClass::EventBlocking getPublishedInputEventBlocking(void);
+	set<string> getPublishedOutputTriggers(void);
 	bool isRepeatedInFeedbackLoop(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
-	bool hasGatherDownstream(VuoCompilerTriggerPort *trigger);
+	bool hasGatherDownstream(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
+	bool hasGatherOverlappedByAnotherTrigger(VuoCompilerTriggerPort *trigger);
+	bool hasGatherOverlappedByAnotherTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	void checkForInfiniteFeedback(void);
 	void checkForDeadlockedFeedback(void);
 
@@ -81,11 +93,11 @@ private:
 	friend bool operator<(const Vertex &lhs, const Vertex &rhs);
 	friend bool operator<(const Edge &lhs, const Edge &rhs);
 
-	/// The vertices reachable from each trigger, including those for all published input ports (including @c vuoSimultaneous),
+	/// The vertices reachable from each trigger, including those for all published input ports,
 	/// but excluding those for published output port. The vertices are listed in topological order.
 	map<VuoCompilerTriggerPort *, vector<Vertex> > vertices;
 
-	/// The edges reachable from each trigger, including those for all published input ports (including @c vuoSimultaneous),
+	/// The edges reachable from each trigger, including those for all published input ports,
 	/// but excluding those for published output port.
 	map<VuoCompilerTriggerPort *, set<Edge> > edges;
 
@@ -95,23 +107,45 @@ private:
 	/// The vertices encountered more than once while traversing the graph. Each is within an infinite feedback loop.
 	map<VuoCompilerTriggerPort *, set<Vertex> > repeatedVertices;
 
-	/// All trigger ports, including those for published input ports (including vuoSimultaneous).
+	/// The vertices downstream of the published input trigger that always transmit an event (no intervening walls or doors).
+	vector<Vertex> verticesNonBlocking;
+
+	/// All trigger ports, including those for published input ports.
 	vector<VuoCompilerTriggerPort *> triggers;
 
 	/// For each trigger port, the node that contains it.
 	map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger;
+
+	/// The trigger port on the published input node.
+	VuoCompilerTriggerPort *publishedInputTrigger;
+
+	/// The published input node, or null if none was provided to the constructor.
+	VuoCompilerNode *publishedInputNode;
+
+	/// The published output node, or null if none was provided to the constructor.
+	VuoCompilerNode *publishedOutputNode;
 
 	/// For each node that can transmit data through their output cables without an event, the nodes they can transmit to
 	/// in that way, in topological order. The eventlessly downstream nodes may include a mix of eventlessly-transmitting and
 	/// not-eventlessly-transmitting nodes.
 	map<VuoCompilerNode *, vector<VuoCompilerNode *> > eventlesslyDownstreamNodes;
 
-	void makeTriggers(set<VuoNode *> nonPublishedNodes, VuoNode *publishedInputNode);
-	void makeVerticesAndEdges(set<VuoCable *> nonPublishedCables, set<VuoCable *> publishedInputCables,
-							  set<VuoCompilerCable *> potentialCables, VuoNode *publishedInputNode);
+	/// Cached results of getNumVerticesWithToNode().
+	map<VuoCompilerTriggerPort *, map<VuoCompilerNode *, size_t> > numVerticesWithToNode;
+
+	/// Cached results of getNodesDownstream(VuoCompilerTriggerPort *).
+	map<VuoCompilerTriggerPort *, vector<VuoCompilerNode *> > downstreamNodesForTrigger;
+
+	/// Cached results of getNodesDownstream(VuoCompilerNode *, VuoCompilerTriggerPort *).
+	map<VuoCompilerTriggerPort *, map<VuoCompilerNode *, vector<VuoCompilerNode *> > > downstreamNodesForNode;
+
+	void initialize(VuoCompilerComposition *composition, set<VuoCompilerCable *> potentialCables, VuoCompilerNode *publishedInputNode, VuoCompilerNode *publishedOutputNode);
+	void makeTriggers(set<VuoNode *> nodes);
+	void makeVerticesAndEdges(set<VuoNode *> nodes, set<VuoCable *> cables, set<VuoCable *> potentialCables, vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts);
 	void makeDownstreamVertices(void);
 	void sortVertices(void);
-	void makeEventlesslyDownstreamNodes(set<VuoNode *> nonPublishedNodes, set<VuoCable *> nonPublishedCables);
+	void makeEventlesslyDownstreamNodes(set<VuoNode *> nodes, set<VuoCable *> cables);
+	static bool mustTransmit(const set<VuoCompilerCable *> &fromCables, const set<VuoCompilerCable *> &toCables);
 	static bool mayTransmit(const set<VuoCompilerCable *> &fromCables, const set<VuoCompilerCable *> &toCables);
 	bool mayTransmit(Vertex vertex, VuoCompilerTriggerPort *trigger);
 	bool mayTransmit(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
@@ -119,7 +153,7 @@ private:
 	set<Edge> getEdgesFromVertex(Vertex vertex, VuoCompilerTriggerPort *trigger);
 	size_t getNumVerticesWithFromNode(VuoCompilerNode *fromNode, VuoCompilerTriggerPort *trigger);
 	size_t getNumVerticesWithToNode(VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger);
-	vector<Vertex> getVerticesInTopologicalOrder(VuoCompilerTriggerPort *trigger);
+	bool hasGatherOverlappedByAnotherTrigger(const vector<VuoCompilerNode *> &downstreamNodes, VuoCompilerTriggerPort *trigger);
 
 	friend class TestVuoCompilerBitcodeGenerator;
 };

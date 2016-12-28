@@ -43,6 +43,7 @@ VuoPoint3d VuoPoint3d_makeFromJson(struct json_object * js);
 struct json_object * VuoPoint3d_getJson(const VuoPoint3d value);
 char * VuoPoint3d_getSummary(const VuoPoint3d value);
 
+bool VuoPoint3d_areEqual(const VuoPoint3d value1, const VuoPoint3d value2);
 VuoPoint3d VuoPoint3d_random(const VuoPoint3d minimum, const VuoPoint3d maximum);
 VuoPoint3d VuoPoint3d_randomWithState(unsigned short state[3], const VuoPoint3d minimum, const VuoPoint3d maximum);
 

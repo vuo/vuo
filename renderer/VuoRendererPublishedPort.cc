@@ -9,104 +9,35 @@
 
 #include "VuoPortClass.hh"
 #include "VuoGenericType.hh"
+#include "VuoCompilerInputDataClass.hh"
 #include "VuoCompilerInputEventPortClass.hh"
+#include "VuoCompilerOutputDataClass.hh"
 #include "VuoCompilerOutputEventPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
+#include "VuoCompilerPort.hh"
 #include "VuoCompilerPortClass.hh"
 #include "VuoCompilerCable.hh"
 #include "VuoRendererPublishedPort.hh"
 #include "VuoRendererPort.hh"
 
 /**
- * Creates a published input or output port.
- *
- * @param basePublishedPort The base for which this renderer detail is to be created.
+ * Creates a renderer detail for the specified base published port.
  */
-VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublishedPort)
-	: VuoBaseDetail<VuoPublishedPort>("VuoRendererPublishedPort", basePublishedPort)
+VuoRendererPublishedPort::VuoRendererPublishedPort(VuoPublishedPort *basePublishedPort, bool isPublishedOutput)
+	: VuoRendererPort(basePublishedPort,
+					  NULL,
+					  // "Published input" ports are *output* ports within the published input node,
+					  // and vice versa.
+					  !isPublishedOutput,
+					  false,
+					  false
+					  )
 {
-	getBase()->setRenderer(this);
 	this->compositionViewportPos = QPoint();
 	this->isActive = false;
 
-	// We can't use the VuoPseudoPort for rendering purposes because it won't necessarily have the type that we
-	// want the rendering to reflect. (e.g., published input pseudoports are always event-only trigger ports.)
-	// Create a new VuoRendererPort to represent this published port.
-	this->portRepresentation = createPortRepresentation(getBase()->getName(), getBase()->getType(), getBase()->getInput());
-	this->portRepresentation->setProxyPublishedSidebarPort(this);
-
-	// The VuoPsuedoPort must nevertheless have its own associated VuoRendererPort -- not because it will
-	// be rendered (it will not), but so that cables connected to it will have a way to access this VuoPublishedPort.
-	VuoPort *pseudoPort = getBase()->getCompiler()->getVuoPseudoPort();
-	pseudoPort->setRenderer(new VuoRendererPort(pseudoPort, NULL, getBase()->getInput(), false, false));
-	pseudoPort->getRenderer()->setProxyPublishedSidebarPort(this);
-
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
 	updateNameRect();
-}
-
-/**
- * Creates and returns a VuoRendererPort to represent a published port within the sidebar.
- *
- * @param name The name of the published port.
- * @param type The data type of the published port.
- * @param isPublishedInput A boolean indicating whether the published port is a published input, as
- * opposed to a published output.
- */
-VuoRendererPort * VuoRendererPublishedPort::createPortRepresentation(string name, VuoType *type, bool isPublishedInput)
-{
-	VuoCompilerPort *portRepresentationCompiler;
-	if (isPublishedInput)
-	{
-		VuoCompilerOutputEventPortClass *portRepresentationOutputCompilerClass = new VuoCompilerOutputEventPortClass(name);
-
-		if (type)
-		{
-			portRepresentationOutputCompilerClass->setDataClass(new VuoCompilerOutputDataClass(name, NULL));
-			portRepresentationOutputCompilerClass->setDataVuoType(type);
-		}
-
-		portRepresentationCompiler = portRepresentationOutputCompilerClass->newPort();
-	}
-	else
-	{
-		VuoCompilerInputEventPortClass *portRepresentationInputCompilerClass = new VuoCompilerInputEventPortClass(name);
-
-		if (type)
-		{
-			portRepresentationInputCompilerClass->setDataClass(new VuoCompilerInputDataClass(name, NULL, false));
-			portRepresentationInputCompilerClass->setDataVuoType(type);
-		}
-		portRepresentationCompiler = portRepresentationInputCompilerClass->newPort();
-	}
-
-	VuoRendererPort *portRepresentation = new VuoRendererPort(
-		portRepresentationCompiler->getBase(),
-		NULL,
-		// "Published input" ports are *output* ports within the published input node,
-		// and vice versa.
-		isPublishedInput,
-		false,
-		false
-		);
-
-	return portRepresentation;
-}
-
-/**
- * Draws the published port on @c painter.
- */
-void VuoRendererPublishedPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
-{
-	portRepresentation->paint(painter, option, widget);
-}
-
-/**
- * Returns a rectangle containing the rendered published port.
- */
-QRectF VuoRendererPublishedPort::boundingRect(void) const
-{
-	return portRepresentation->boundingRect();
 }
 
 /**
@@ -114,7 +45,7 @@ QRectF VuoRendererPublishedPort::boundingRect(void) const
  */
 void VuoRendererPublishedPort::setName(string name)
 {
-	getBase()->setName(name);
+	getBase()->getClass()->setName(name);
 	updateNameRect();
 }
 
@@ -134,14 +65,15 @@ bool VuoRendererPublishedPort::canAccommodateInternalPort(VuoRendererPort *inter
 	// @todo https://b33p.net/kosada/node/5142 : Until a single cable connection can accomplish both,
 	// port publication and unpublication, don't allow an internal-external port pair to be eligibility-highlighted
 	// within a single cable drag even if their previous connected cable had a different data-carrying status.
-	if (getBase()->getCompiler()->getVuoPseudoPort()->getCableConnecting(internalPort->getBase()))
+	if (getBase()->getCableConnecting(internalPort->getBase()))
 		return false;
 
 	// If this is a published output port that already has has a connected data-carrying cable,
 	// it cannot accommodate another data-carrying cable.
-	if (getBase()->getOutput() && !eventOnlyConnection)
+	bool isPublishedOutput = getInput();
+	if (isPublishedOutput && !eventOnlyConnection)
 	{
-		foreach (VuoCable *connectedCable, getBase()->getCompiler()->getVuoPseudoPort()->getConnectedCables(true))
+		foreach (VuoCable *connectedCable, getBase()->getConnectedCables(true))
 			if (connectedCable->getRenderer()->effectivelyCarriesData() &&
 					connectedCable->getFromNode() &&
 					connectedCable->getToNode())
@@ -170,11 +102,13 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithoutSpecializationForInternal
 {
 	// Temporarily disallow direct cable connections between published inputs and published outputs.
 	// @todo: Allow for https://b33p.net/kosada/node/7756 .
-	if (internalPort->getProxyPublishedSidebarPort())
+	if (dynamic_cast<VuoRendererPublishedPort *>(internalPort))
 		return false;
 
-	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithoutSpecializationTo(internalPort, eventOnlyConnection) :
-								   internalPort->canConnectDirectlyWithoutSpecializationTo(portRepresentation, eventOnlyConnection));
+	bool isPublishedInput = !getInput();
+	return (isPublishedInput? canConnectDirectlyWithoutSpecializationTo(internalPort, eventOnlyConnection) :
+							  internalPort->canConnectDirectlyWithoutSpecializationTo(this, eventOnlyConnection));
+	return false;
 }
 
 /**
@@ -224,31 +158,39 @@ bool VuoRendererPublishedPort::isCompatibleAliasWithSpecializationForInternalPor
 
 	// Temporarily disallow direct cable connections between published inputs and published outputs.
 	// @todo: Allow for https://b33p.net/kosada/node/7756 .
-	if (internalPort->getProxyPublishedSidebarPort())
+	if (dynamic_cast<VuoRendererPublishedPort *>(internalPort))
 		return false;
 
-	return (getBase()->getInput()? portRepresentation->canConnectDirectlyWithSpecializationTo(internalPort, eventOnlyConnection, portToSpecialize, specializedTypeName) :
-								   internalPort->canConnectDirectlyWithSpecializationTo(portRepresentation, eventOnlyConnection, portToSpecialize, specializedTypeName));
+	bool isPublishedInput = !getInput();
+	return (isPublishedInput? canConnectDirectlyWithSpecializationTo(internalPort, eventOnlyConnection, portToSpecialize, specializedTypeName) :
+								   internalPort->canConnectDirectlyWithSpecializationTo(this, eventOnlyConnection, portToSpecialize, specializedTypeName));
+	return false;
 }
 
 /**
  * Returns a boolean indicating whether the @c otherExternalPort may be
  * merged with this one, taking into account
- * the respective port types (input vs. output; event-only vs.
+ * the respective port types (event-only vs.
  * event+data; respective data types), without
  * displacing any currently connected internal data ports.
  * The @c mergeWillAddData input should indicate whether
  * the @c otherExternalPort is expected to have connected data sources.
+ *
+ * Assumes that the provided @c externalOtherPort is of the same input/output
+ * type as this port, since published ports of mismatched input/output types
+ * would never be merged.
  */
 bool VuoRendererPublishedPort::canBeMergedWith(VuoPublishedPort *otherExternalPort, bool mergeWillAddData)
 {
+	bool thisIsPublishedInput = !getInput();
+
 	// For these two externally visible published ports to be eligible for merging, they must have the same type.
-	if (! ((this->getBase()->getInput() == otherExternalPort->getInput()) &&
-		   (this->getBase()->getType() == otherExternalPort->getType())))
+	if (!otherExternalPort->hasCompiler() ||
+			(static_cast<VuoCompilerPort *>(otherExternalPort->getCompiler())->getDataVuoType() != this->getDataType()))
 		return false;
 
 	// If they are input published ports and their types match, go ahead and merge them.
-	if (this->getBase()->getInput())
+	if (thisIsPublishedInput)
 		return true;
 
 	// If they are output published ports and their types match, make sure they will
@@ -256,31 +198,13 @@ bool VuoRendererPublishedPort::canBeMergedWith(VuoPublishedPort *otherExternalPo
 	if (!mergeWillAddData)
 		return true;
 
-	foreach (VuoCable *connectedCable, getBase()->getCompiler()->getVuoPseudoPort()->getConnectedCables(true))
+	foreach (VuoCable *connectedCable, getBase()->getConnectedCables(true))
 	{
 		if (connectedCable->getRenderer()->effectivelyCarriesData())
 			return false;
 	}
 
 	return true;
-}
-
-/**
- * Adds the specified @c port to the list of internal ports for which this published port is an alias.
- */
-void VuoRendererPublishedPort::addConnectedPort(VuoPort *port)
-{
-	getBase()->addConnectedPort(port);
-	updateNameRect();
-}
-
-/**
- * Removes the specified @c port from the list of internal ports for which this published port is an alias.
- */
-void VuoRendererPublishedPort::removeConnectedPort(VuoPort *port)
-{
-	getBase()->removeConnectedPort(port);
-	updateNameRect();
 }
 
 /**
@@ -302,22 +226,6 @@ void VuoRendererPublishedPort::setCompositionViewportPos(QPoint pos)
 }
 
 /**
- * Returns the VuoRendererPort that visually represents this published port.
- */
-VuoRendererPort * VuoRendererPublishedPort::getPortRepresentation()
-{
-	return portRepresentation;
-}
-
-/**
- * Updates the cached bounding box of the published port's label within the published port sidebar.
- */
-void VuoRendererPublishedPort::updateNameRect()
-{
-	portRepresentation->updateNameRect();
-}
-
-/**
  * Sets a boolean indicating whether this published port will be painted against an active
  * item background within the published port sidebar.
  */
@@ -333,4 +241,12 @@ void VuoRendererPublishedPort::setCurrentlyActive(bool active)
 bool VuoRendererPublishedPort::getCurrentlyActive()
 {
 	return this->isActive;
+}
+
+/**
+ * Returns the path of the antenna that represents any connected wireless cables, or an empty path if not applicable.
+ */
+QPainterPath VuoRendererPublishedPort::getWirelessAntennaPath() const
+{
+	return QPainterPath();
 }

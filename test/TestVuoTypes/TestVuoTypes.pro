@@ -7,6 +7,7 @@ include(../test.pri)
 HEADERS += TestVuoTypes.h
 
 TEST_VUO_TYPES_SOURCES += \
+	TestVuoArtNet.cc \
 	TestVuoAudioSamples.cc \
 	TestVuoBoolean.cc \
 	TestVuoColor.cc \
@@ -25,6 +26,7 @@ TEST_VUO_TYPES_SOURCES += \
 	TestVuoSceneObject.cc \
 	TestVuoShader.cc \
 	TestVuoText.cc \
+	TestVuoTime.cc \
 	TestVuoTransform.cc \
 	TestVuoTransform2d.cc \
 	TestVuoUrl.cc

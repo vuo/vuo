@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "animate", "frame", "stopwatch", "start", "pause", "elapsed", "count", "cue" ],
 					  "version" : "2.0.1",
 					  "node": {
-						  "exampleCompositions" : [ "ShowStopwatch.vuo", "RotateOnCue.vuo" ]
+						  "exampleCompositions" : [ "ShowStopwatch.vuo", "FlashOnMousePress.vuo", "RotateOnCue.vuo" ]
 					  },
 				  });
 

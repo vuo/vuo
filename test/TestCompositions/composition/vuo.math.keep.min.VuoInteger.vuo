@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+KeepMinimum3 [type="vuo.math.keep.min.VuoInteger" version="1.0.0" label="Keep Minimum|<refresh>refresh\l|<value>value\l|<reset>reset\l|<min>min\r" pos="390,330"];
+SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="165,330"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<refresh>refresh\r|<value>value\r|<resetEvent>resetEvent\r|<reset>reset\r" _refresh_type="event" _value_type="VuoInteger" _value="null" _resetEvent_type="VuoBoolean" _resetEvent="false" _reset_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<min>min\l" _min_type="VuoInteger"];
+
+SelectEventOutput:trueOption -> KeepMinimum3:reset;
+PublishedInputs:refresh -> KeepMinimum3:refresh;
+PublishedInputs:value -> KeepMinimum3:value;
+PublishedInputs:resetEvent -> SelectEventOutput:which;
+PublishedInputs:reset -> SelectEventOutput:in;
+KeepMinimum3:min -> PublishedOutputs:min;
+}

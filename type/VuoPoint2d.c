@@ -105,7 +105,7 @@ VuoPoint2d VuoPoint2d_makeFromJson(json_object * js)
 	if (json_object_get_type(js) == json_type_string)
 	{
 		const char *s = json_object_get_string(js);
-		sscanf(s, "%g, %g", &point.x, &point.y);
+		sscanf(s, "%20g, %20g", &point.x, &point.y);
 		return point;
 	}
 

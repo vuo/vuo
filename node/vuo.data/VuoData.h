@@ -34,6 +34,8 @@ typedef struct
 VuoData VuoData_makeFromJson(struct json_object *js);
 struct json_object *VuoData_getJson(const VuoData value);
 char *VuoData_getSummary(const VuoData value);
+
+#define VuoData_SUPPORTS_COMPARISON
 bool VuoData_areEqual(const VuoData valueA, const VuoData valueB);
 bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB);
 

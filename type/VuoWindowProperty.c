@@ -22,6 +22,7 @@ VuoModuleMetadata({
 					  "version" : "1.0.0",
 					  "dependencies" : [
 						"VuoBoolean",
+						"VuoCoordinateUnit",
 						"VuoCursor",
 						"VuoInteger",
 						"VuoReal",
@@ -45,6 +46,9 @@ VuoWindowProperty VuoWindowProperty_makeFromJson(json_object * js)
 {
 	VuoWindowProperty value = {-1};
 	json_object *o = NULL;
+
+	if (json_object_object_get_ex(js, "unit", &o))
+		value.unit = VuoCoordinateUnit_makeFromJson(o);
 
 	if (json_object_object_get_ex(js, "title", &o))
 	{
@@ -121,11 +125,13 @@ json_object * VuoWindowProperty_getJson(const VuoWindowProperty value)
 	{
 		json_object_object_add(js, "left", VuoInteger_getJson(value.left));
 		json_object_object_add(js, "top",  VuoInteger_getJson(value.top));
+		json_object_object_add(js, "unit", VuoCoordinateUnit_getJson(value.unit));
 	}
 	else if (value.type == VuoWindowProperty_Size)
 	{
 		json_object_object_add(js, "width",  VuoInteger_getJson(value.width));
 		json_object_object_add(js, "height", VuoInteger_getJson(value.height));
+		json_object_object_add(js, "unit", VuoCoordinateUnit_getJson(value.unit));
 	}
 	else if (value.type == VuoWindowProperty_AspectRatio)
 		json_object_object_add(js, "aspectRatio", VuoReal_getJson(value.aspectRatio));
@@ -159,9 +165,19 @@ char * VuoWindowProperty_getSummary(const VuoWindowProperty value)
 			return strdup("Change to Windowed");
 	}
 	else if (value.type == VuoWindowProperty_Position)
-		return VuoText_format("Change Window Position: (%lld, %lld)", value.left, value.top);
+	{
+		char *unit = VuoCoordinateUnit_getSummary(value.unit);
+		char *t = VuoText_format("Change Window Position: (%lld, %lld) %s", value.left, value.top, unit);
+		free(unit);
+		return t;
+	}
 	else if (value.type == VuoWindowProperty_Size)
-		return VuoText_format("Change Window Size: (%lld, %lld)", value.width, value.height);
+	{
+		char *unit = VuoCoordinateUnit_getSummary(value.unit);
+		char *t = VuoText_format("Change Window Size: %lldx%lld %s", value.width, value.height, unit);
+		free(unit);
+		return t;
+	}
 	else if (value.type == VuoWindowProperty_AspectRatio)
 		return VuoText_format("Change Window Aspect Ratio: %g", value.aspectRatio);
 	else if (value.type == VuoWindowProperty_AspectRatioReset)

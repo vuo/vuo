@@ -1,105 +1,106 @@
-//
-// Description : Array and textureless GLSL 2D/3D/4D simplex
-//               noise functions.
-//      Author : Ian McEwan, Ashima Arts.
-//  Maintainer : ijm
-//     Lastmod : 20110822 (ijm)
-//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
-//               Distributed under the MIT License. See LICENSE file.
-//               https://github.com/ashima/webgl-noise
-//
+/**
+ * Simplex Perlin noise.
+ * This version makes heavy use of a texture for table lookups.
+ *
+ * Author: Stefan Gustavson ITN-LiTH (stegu@itn.liu.se) 2004-12-05
+ * Simplex indexing functions by Bill Licea-Kane, ATI (bill@ati.com)
+ *
+ * You may use, modify and redistribute this code free of charge,
+ * provided that the author's names and this notice appear intact.
+ */
 
-vec3 mod289(vec3 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
+uniform sampler2D perlinTexture;
 
-vec4 mod289(vec4 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
+/**
+ * To create offsets of one texel and one half texel in the
+ * texture lookup, we need to know the texture image size.
+ */
+#define ONE 0.00390625
+#define ONEHALF 0.001953125
+// The numbers above are 1/256 and 0.5/256, change accordingly
+// if you change the code to use another texture size.
 
-vec4 permute(vec4 x) {
-	 return mod289(((x*34.0)+1.0)*x);
-}
-
-vec4 taylorInvSqrt(vec4 r)
+/**
+ * Efficient simplex indexing functions by Bill Licea-Kane, ATI. Thanks!
+ */
+void simplex( const in vec3 P, out vec3 offset1, out vec3 offset2 )
 {
-  return 1.79284291400159 - 0.85373472095314 * r;
+  vec3 offset0;
+
+  vec2 isX = step( P.yz, P.xx );         // P.x >= P.y ? 1.0 : 0.0;  P.x >= P.z ? 1.0 : 0.0;
+  offset0.x  = dot( isX, vec2( 1.0 ) );  // Accumulate all P.x >= other channels in offset.x
+  offset0.yz = 1.0 - isX;                // Accumulate all P.x <  other channels in offset.yz
+
+  float isY = step( P.z, P.y );          // P.y >= P.z ? 1.0 : 0.0;
+  offset0.y += isY;                      // Accumulate P.y >= P.z in offset.y
+  offset0.z += 1.0 - isY;                // Accumulate P.y <  P.z in offset.z
+
+  // offset0 now contains the unique values 0,1,2 in each channel
+  // 2 for the channel greater than other channels
+  // 1 for the channel that is less than one but greater than another
+  // 0 for the channel less than other channels
+  // Equality ties are broken in favor of first x, then y
+  // (z always loses ties)
+
+  offset2 = clamp(   offset0, 0.0, 1.0 );
+  // offset2 contains 1 in each channel that was 1 or 2
+  offset1 = clamp( offset0-1.0, 0.0, 1.0 );
+  // offset1 contains 1 in the single channel that was 1
 }
 
-float snoise3D1D(vec3 v)
-  {
-  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+/*
+ * 3D simplex noise. Comparable in speed to classic noise, better looking.
+ */
+float snoise3D1D(vec3 P)
+{
+// The skewing and unskewing factors are much simpler for the 3D case
+#define F3 0.333333333333
+#define G3 0.166666666667
+// This is 1.0-3.0*G3, to remove a constant multiplication later
+#define H3 0.5
 
-// First corner
-  vec3 i  = floor(v + dot(v, C.yyy) );
-  vec3 x0 =   v - i + dot(i, C.xxx) ;
+  // Skew the (x,y,z) space to determine which cell of 6 simplices we're in
+  float s = (P.x + P.y + P.z) * F3; // Factor for 3D skewing
+  vec3 Pi = floor(P + s);
+  float t = (Pi.x + Pi.y + Pi.z) * G3;
+  vec3 P0 = Pi - t; // Unskew the cell origin back to (x,y,z) space
+  Pi = Pi * ONE + ONEHALF; // Integer part, scaled and offset for texture lookup
 
-// Other corners
-  vec3 g = step(x0.yzx, x0.xyz);
-  vec3 l = 1.0 - g;
-  vec3 i1 = min( g.xyz, l.zxy );
-  vec3 i2 = max( g.xyz, l.zxy );
+  vec3 Pf0 = P - P0;  // The x,y distances from the cell origin
 
-  //   x0 = x0 - 0.0 + 0.0 * C.xxx;
-  //   x1 = x0 - i1  + 1.0 * C.xxx;
-  //   x2 = x0 - i2  + 2.0 * C.xxx;
-  //   x3 = x0 - 1.0 + 3.0 * C.xxx;
-  vec3 x1 = x0 - i1 + C.xxx;
-  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
-  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+  // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
+  // To find out which of the six possible tetrahedra we're in, we need to
+  // determine the magnitude ordering of x, y and z components of Pf0.
+  vec3 o1;
+  vec3 o2;
+  simplex(Pf0, o1, o2);
 
-// Permutations
-  i = mod289(i);
-  vec4 p = permute( permute( permute(
-			 i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-		   + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
-		   + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+  // Gradient at simplex origin
+  float perm0 = texture2D(perlinTexture, Pi.xy).a;
+  vec3  grad0 = texture2D(perlinTexture, vec2(perm0, Pi.z)).rgb * 4.0 - 1.0;
+  // Gradient at second corner
+  float perm1 = texture2D(perlinTexture, Pi.xy + o1.xy*ONE).a;
+  vec3  grad1 = texture2D(perlinTexture, vec2(perm1, Pi.z + o1.z*ONE)).rgb * 4.0 - 1.0;
+  // Gradient at third corner
+  float perm2 = texture2D(perlinTexture, Pi.xy + o2.xy*ONE).a;
+  vec3  grad2 = texture2D(perlinTexture, vec2(perm2, Pi.z + o2.z*ONE)).rgb * 4.0 - 1.0;
+  // Gradient at last corner
+  float perm3 = texture2D(perlinTexture, Pi.xy + vec2(ONE, ONE)).a;
+  vec3  grad3 = texture2D(perlinTexture, vec2(perm3, Pi.z + ONE)).rgb * 4.0 - 1.0;
 
-// Gradients: 7x7 points over a square, mapped onto an octahedron.
-// The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-  float n_ = 0.142857142857; // 1.0/7.0
-  vec3  ns = n_ * D.wyz - D.xzx;
+  vec3 Pf1 = Pf0 - o1 + G3;
+  vec3 Pf2 = Pf0 - o2 + 2.0 * G3;
+  vec3 Pf3 = Pf0 - vec3(H3);
 
-  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+  // Perform all four blend kernel computations in parallel on vec4 data
+  vec4 n0123 = 0.6 - vec4(dot(Pf0, Pf0), dot(Pf1, Pf1), dot(Pf2, Pf2), dot(Pf3, Pf3));
+  n0123 = max(n0123, 0.0);
+  n0123 *= n0123;
+  n0123 *= n0123 * vec4(dot(grad0, Pf0), dot(grad1, Pf1), dot(grad2, Pf2), dot(grad3, Pf3));
 
-  vec4 x_ = floor(j * ns.z);
-  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
-
-  vec4 x = x_ *ns.x + ns.yyyy;
-  vec4 y = y_ *ns.x + ns.yyyy;
-  vec4 h = 1.0 - abs(x) - abs(y);
-
-  vec4 b0 = vec4( x.xy, y.xy );
-  vec4 b1 = vec4( x.zw, y.zw );
-
-  //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
-  //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
-  vec4 s0 = floor(b0)*2.0 + 1.0;
-  vec4 s1 = floor(b1)*2.0 + 1.0;
-  vec4 sh = -step(h, vec4(0.0));
-
-  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-
-  vec3 p0 = vec3(a0.xy,h.x);
-  vec3 p1 = vec3(a0.zw,h.y);
-  vec3 p2 = vec3(a1.xy,h.z);
-  vec3 p3 = vec3(a1.zw,h.w);
-
-//Normalise gradients
-  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-  p0 *= norm.x;
-  p1 *= norm.y;
-  p2 *= norm.z;
-  p3 *= norm.w;
-
-// Mix final noise value
-  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-  m = m * m;
-  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
-								dot(p2,x2), dot(p3,x3) ) );
-  }
+  // Sum up and scale the result to cover the range [-1,1]
+  return 32.0 * (n0123.x + n0123.y + n0123.z + n0123.w);
+}
 
 vec2 snoise3D2D(vec3 v)
 {

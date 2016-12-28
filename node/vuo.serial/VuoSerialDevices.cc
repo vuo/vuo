@@ -14,6 +14,8 @@
 #include <dispatch/dispatch.h>
 #include <vector>
 
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
 #include <IOKit/IOTypes.h>
 #include <IOKit/serial/IOSerialKeys.h>
 #include <IOKit/usb/USBSpec.h>
@@ -26,6 +28,7 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoSerialDevices",
 					 "dependencies" : [
+						 "CoreFoundation.framework",
 						 "IOKit.framework",
 						 "VuoSerialDevice",
 						 "VuoSerialDevices",
@@ -56,7 +59,7 @@ static VuoText VuoSerial_getPropertyFromObjectOrAncestry(io_object_t o, CFString
 	kern_return_t ret = IORegistryEntryGetParentIterator(o, kIOServicePlane, &it);
 	if (ret != KERN_SUCCESS)
 	{
-		VLog("Error: Couldn't get parent iterator: %d", ret);
+		VUserLog("Error: Couldn't get parent iterator: %d", ret);
 		return NULL;
 	}
 
@@ -85,7 +88,7 @@ VuoList_VuoSerialDevice VuoSerial_getDeviceList(void)
 	CFMutableDictionaryRef match = IOServiceMatching(kIOSerialBSDServiceValue);
 	if (!match)
 	{
-		VLog("Error: Couldn't create serial matching dictionary.");
+		VUserLog("Error: Couldn't create serial matching dictionary.");
 		return NULL;
 	}
 	CFDictionarySetValue(match, CFSTR(kIOSerialBSDTypeKey), CFSTR(kIOSerialBSDAllTypes));
@@ -94,7 +97,7 @@ VuoList_VuoSerialDevice VuoSerial_getDeviceList(void)
 	kern_return_t ret = IOServiceGetMatchingServices(kIOMasterPortDefault, match, &it);
 	if (ret != KERN_SUCCESS)
 	{
-		VLog("Error: Couldn't get serial device list: %d", ret);
+		VUserLog("Error: Couldn't get serial device list: %d", ret);
 		return NULL;
 	}
 
@@ -108,7 +111,7 @@ VuoList_VuoSerialDevice VuoSerial_getDeviceList(void)
 		device.path = VuoSerial_getPropertyFromObjectOrAncestry(o, CFSTR(kIOCalloutDeviceKey));
 		if (!device.path)
 		{
-			VLog("Error: Device %d has no path.", o);
+			VUserLog("Error: Device %d has no path.", o);
 			continue;
 		}
 
@@ -185,21 +188,19 @@ static void VuoSerial_servicesChanged(void *refcon, io_iterator_t it)
  */
 void VuoSerial_use(void)
 {
-	++VuoSerial_useCount;
-
-	if (VuoSerial_useCount == 1)
+	if (__sync_add_and_fetch(&VuoSerial_useCount, 1) == 1)
 	{
 		VuoSerial_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
 		if (!VuoSerial_notificationPort)
 		{
-			VLog("Error: Couldn't create serial notification port.");
+			VUserLog("Error: Couldn't create serial notification port.");
 			return;
 		}
 
 		CFRunLoopSourceRef notificationSource = IONotificationPortGetRunLoopSource(VuoSerial_notificationPort);
 		if (!notificationSource)
 		{
-			VLog("Error: Couldn't get serial notification source.");
+			VUserLog("Error: Couldn't get serial notification source.");
 			return;
 		}
 
@@ -209,7 +210,7 @@ void VuoSerial_use(void)
 		CFMutableDictionaryRef match = IOServiceMatching(kIOSerialBSDServiceValue);
 		if (!match)
 		{
-			VLog("Error: Couldn't create serial matching dictionary.");
+			VUserLog("Error: Couldn't create serial matching dictionary.");
 			return;
 		}
 		CFDictionarySetValue(match, CFSTR(kIOSerialBSDTypeKey), CFSTR(kIOSerialBSDAllTypes));
@@ -222,7 +223,7 @@ void VuoSerial_use(void)
 		kern_return_t ret = IOServiceAddMatchingNotification(VuoSerial_notificationPort, kIOMatchedNotification, match, VuoSerial_servicesChanged, NULL, &it);
 		if (ret != KERN_SUCCESS)
 		{
-			VLog("Error: Couldn't create serial-add notification: %d", ret);
+			VUserLog("Error: Couldn't create serial-add notification: %d", ret);
 			return;
 		}
 		// The notification doesn't start firing until we've looked at all of the existing items once.
@@ -232,7 +233,7 @@ void VuoSerial_use(void)
 		ret = IOServiceAddMatchingNotification(VuoSerial_notificationPort, kIOTerminatedNotification, match, VuoSerial_servicesChanged, NULL, &it);
 		if (ret != KERN_SUCCESS)
 		{
-			VLog("Error: Couldn't create serial-remove notification: %d", ret);
+			VUserLog("Error: Couldn't create serial-remove notification: %d", ret);
 			return;
 		}
 		// The notification doesn't start firing until we've looked at all of the existing items once.
@@ -249,13 +250,11 @@ void VuoSerial_disuse(void)
 {
 	if (VuoSerial_useCount <= 0)
 	{
-		VLog("Error: Unbalanced VuoSerial_use() / _disuse() calls.");
+		VUserLog("Error: Unbalanced VuoSerial_use() / _disuse() calls.");
 		return;
 	}
 
-	--VuoSerial_useCount;
-
-	if (VuoSerial_useCount == 0)
+	if (__sync_sub_and_fetch(&VuoSerial_useCount, 1) == 0)
 		IONotificationPortDestroy(VuoSerial_notificationPort);
 }
 

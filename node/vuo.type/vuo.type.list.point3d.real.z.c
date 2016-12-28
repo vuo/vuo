@@ -10,14 +10,14 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title": "Convert 3D Point List to Real List",
+					  "title": "Convert 3D Point List to Real List (Z)",
 					  "description": "Creates a list of real numbers using the Z coordinate of the input list of 3D points.",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
 (
-	VuoInputData(VuoList_VuoPoint3d) point3d,
+	VuoInputData(VuoList_VuoPoint3d, {"name":"(X,Y,Z)"}) point3d,
 	VuoOutputData(VuoList_VuoReal) z
 )
 {
