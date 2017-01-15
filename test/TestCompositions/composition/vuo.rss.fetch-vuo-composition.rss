@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?> <rss version="2.0" xml:base="https://vuo.org/" xmlns:atom="http://www.w3.org/2005/Atom"> <channel> <title>Vuo Composition Gallery</title>
+ <description>Get Creative</description>
+ <link>https://vuo.org/</link>
+ <atom:link rel="self" href="https://vuo.org/composition/feed" />
+ <item> <title>Orthographic Color World</title>
+ <link>https://vuo.org/node/1092</link>
+ <description>&lt;a href=&quot;https://vuo.org/node/1092&quot;&gt;&lt;img typeof=&quot;foaf:Image&quot; class=&quot;image-style-large&quot; src=&quot;https://vuo.org/sites/default/files/styles/large/public/composition/OCW.png?itok=cZw-QbXq&quot; width=&quot;480&quot; height=&quot;257&quot; alt=&quot;&quot; /&gt;&lt;/a&gt;
+&lt;p&gt;Color Cubes, Aligned, Orthographic :)&lt;/p&gt;
+
+&lt;p&gt;Random Colors on each launch.&lt;/p&gt;</description>
+ <author>Bodysoulspirit</author>
+ <category>Generative Art</category>
+ <comments>https://vuo.org/node/1092</comments>
+ <enclosure url="https://vuo.org/sites/default/files/styles/large/public/composition/OCW.png?itok=cZw-QbXq" length="49012" type="image/png" />
+ <guid isPermaLink="false">https://vuo.org/node/1092</guid>
+ <pubDate>Thu, 07 Jan 2016 19:43:30 -0500</pubDate>
+ <source url="https://vuo.org/composition/feed">Vuo Composition Gallery</source>
+</item>
+</channel>
+</rss>

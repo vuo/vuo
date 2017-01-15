@@ -7,6 +7,6 @@
 	<key>CFBundleShortVersionString</key>
 	<string>@SHORT_VERSION@</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2012–2015 Kosada Incorporated.  This executable may be used and distributed according to the terms described on http://vuo.org/license.</string>
+	<string>Copyright © 2012–2016 Kosada Incorporated.  This executable may be used and distributed according to the terms described on http://vuo.org/license.</string>
 </dict>
 </plist>

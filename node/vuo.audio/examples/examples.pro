@@ -11,6 +11,7 @@ EXAMPLE_SOURCES += \
 	PlayBluesOrgan.vuo \
 	ShowLiveAudioTrail.vuo \
 	ShowLiveAudioWaveform.vuo \
+	SynchronizeOscillators.vuo \
 	VisualizeFrequencies.vuo \
 	VisualizeLoudness.vuo
 

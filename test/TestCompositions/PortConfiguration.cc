@@ -2,7 +2,7 @@
  * @file
  * PortConfiguration implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -140,7 +140,12 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 		double actualDouble = json_object_get_double(actualValue);
 		double expectedDouble = json_object_get_double(expectedValue);
 		const double DELTA = 0.000001;
-		QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, failMessage.c_str());
+		if (isnan(actualDouble) && isnan(expectedDouble))
+		{
+			// OK, since NaN was both expected and actually received.
+		}
+		else
+			QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, failMessage.c_str());
 	}
 	else
 	{

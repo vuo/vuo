@@ -2,7 +2,7 @@
  * @file
  * VuoRssItem implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -25,6 +25,7 @@ VuoModuleMetadata({
 					  "dependencies" : [
 						  "VuoImage",
 						  "VuoText",
+						  "VuoList_VuoText",
 						  "VuoTime",
 						  "VuoUrl"
 					  ]
@@ -48,7 +49,7 @@ VuoModuleMetadata({
  */
 VuoRssItem VuoRssItem_makeFromJson(json_object * js)
 {
-	VuoRssItem value = {NULL, NULL, NULL, NULL, NAN, NULL};
+	VuoRssItem value = {NULL, NULL, NULL, NULL, NAN, NULL, NULL, NULL};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "title", &o))
@@ -71,6 +72,9 @@ VuoRssItem VuoRssItem_makeFromJson(json_object * js)
 
 	if (json_object_object_get_ex(js, "image", &o))
 		value.image = VuoImage_makeFromJson(o);
+
+	if (json_object_object_get_ex(js, "categories", &o))
+		value.categories = VuoList_VuoText_makeFromJson(o);
 
 	return value;
 }
@@ -102,6 +106,9 @@ json_object * VuoRssItem_getJson(const VuoRssItem value)
 
 	json_object *imageObject = VuoImage_getJson(value.image);
 	json_object_object_add(js, "image", imageObject);
+
+	json_object *categoriesObject = VuoList_VuoText_getJson(value.categories);
+	json_object_object_add(js, "categories", categoriesObject);
 
 	return js;
 }

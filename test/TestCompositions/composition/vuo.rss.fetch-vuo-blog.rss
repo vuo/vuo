@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?><rss version="2.0" xml:base="http://vuo.org/blog" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <channel>
+    <title>Vuo Blog</title>
+    <link>http://vuo.org/blog</link>
+    <description>This feed provides the latest public information about the Vuo visual programming environment, updated once every week or two.  It&#039;s the same content as the Vuo announcements mailing list: http://vuo.org/mailinglist</description>
+    <language>en</language>
+          <item>
+    <title>20% off Vuo through December 31</title>
+    <link>http://vuo.org/node/1042</link>
+    <description>&lt;h3&gt;Community spotlight: jens probst exhibits auto accessories on 12 screens&lt;/h3&gt;
+
+&lt;p&gt;We love highlighting the amazing projects being done by people in the Vuo community! Today we&#039;re highlighting jens probst (a.k.a. &lt;a href=&quot;http://vuo.org/user/74&quot;&gt;@zwei-p&lt;/a&gt;), who used Vuo in an exhibit at one of the world&#039;s largest auto trade shows. Read more about it &lt;a href=&quot;https://vuo.org/node/1041&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://vuo.org/node/1041&quot;&gt;&lt;img src=&quot;https://vuo.org/sites/default/files/vuo_spotlight/jens%20probst%20IAA%20still%201.png&quot; alt=&quot;Photo of jens probst&amp;#039;s exhibit&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Are you using Vuo in an exhibit, performance, or other project? &lt;a href=&quot;https://vuo.org/contact&quot;&gt;Let us know!&lt;/a&gt; Your work could be featured in a future &lt;a href=&quot;https://vuo.org/spotlight&quot;&gt;community spotlight&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;— &lt;a href=&quot;https://vuo.org/user/22&quot;&gt;Jaymie&lt;/a&gt;&lt;br /&gt;
+Team Vuo&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</description>
+     <pubDate>Tue, 22 Dec 2015 04:28:43 +0000</pubDate>
+ <dc:creator>jstrecker</dc:creator>
+ <guid isPermaLink="false">1042 at http://vuo.org</guid>
+  </item>
+</channel>
+</rss>

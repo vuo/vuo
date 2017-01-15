@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -93,48 +93,69 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
 	if (http_parser_parse_url(url, strlen(url), false, &parsedUrl))
 		return false;
 
-	if (parsedUrl.field_set & (1 << UF_SCHEMA))
-		*scheme = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_SCHEMA  ].off, parsedUrl.field_data[UF_SCHEMA  ].len);
-	else
-		*scheme = NULL;
-
-	if (parsedUrl.field_set & (1 << UF_USERINFO))
-		*user   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_USERINFO].off, parsedUrl.field_data[UF_USERINFO].len);
-	else
-		*user   = NULL;
-
-	if (parsedUrl.field_set & (1 << UF_HOST))
-		*host   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_HOST    ].off, parsedUrl.field_data[UF_HOST    ].len);
-	else
-		*host   = NULL;
-
-	if (parsedUrl.field_set & (1 << UF_PORT))
-		// Explicitly-specified port
-		*port = parsedUrl.port;
-	else
+	if (scheme)
 	{
-		// Guess the port from the scheme
-		*port = 0;
-		if (strcmp(*scheme, "http") == 0)
-			*port = 80;
-		else if (strcmp(*scheme, "https") == 0)
-			*port = 443;
+		if (parsedUrl.field_set & (1 << UF_SCHEMA))
+			*scheme = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_SCHEMA  ].off, parsedUrl.field_data[UF_SCHEMA  ].len);
+		else
+			*scheme = NULL;
 	}
 
-	if (parsedUrl.field_set & (1 << UF_PATH))
-		*path     = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_PATH    ].off, parsedUrl.field_data[UF_PATH    ].len);
-	else
-		*path     = NULL;
+	if (user)
+	{
+		if (parsedUrl.field_set & (1 << UF_USERINFO))
+			*user   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_USERINFO].off, parsedUrl.field_data[UF_USERINFO].len);
+		else
+			*user   = NULL;
+	}
 
-	if (parsedUrl.field_set & (1 << UF_QUERY))
-		*query    = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_QUERY   ].off, parsedUrl.field_data[UF_QUERY   ].len);
-	else
-		*query    = NULL;
+	if (host)
+	{
+		if (parsedUrl.field_set & (1 << UF_HOST))
+			*host   = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_HOST    ].off, parsedUrl.field_data[UF_HOST    ].len);
+		else
+			*host   = NULL;
+	}
 
-	if (parsedUrl.field_set & (1 << UF_FRAGMENT))
-		*fragment = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_FRAGMENT].off, parsedUrl.field_data[UF_FRAGMENT].len);
-	else
-		*fragment = NULL;
+	if (port)
+	{
+		if (parsedUrl.field_set & (1 << UF_PORT))
+			// Explicitly-specified port
+			*port = parsedUrl.port;
+		else
+		{
+			// Guess the port from the scheme
+			*port = 0;
+			if (strcmp(*scheme, "http") == 0)
+				*port = 80;
+			else if (strcmp(*scheme, "https") == 0)
+				*port = 443;
+		}
+	}
+
+	if (path)
+	{
+		if (parsedUrl.field_set & (1 << UF_PATH))
+			*path     = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_PATH    ].off, parsedUrl.field_data[UF_PATH    ].len);
+		else
+			*path     = NULL;
+	}
+
+	if (query)
+	{
+		if (parsedUrl.field_set & (1 << UF_QUERY))
+			*query    = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_QUERY   ].off, parsedUrl.field_data[UF_QUERY   ].len);
+		else
+			*query    = NULL;
+	}
+
+	if (fragment)
+	{
+		if (parsedUrl.field_set & (1 << UF_FRAGMENT))
+			*fragment = VuoText_makeWithMaxLength(url + parsedUrl.field_data[UF_FRAGMENT].off, parsedUrl.field_data[UF_FRAGMENT].len);
+		else
+			*fragment = NULL;
+	}
 
 	return true;
 }
@@ -344,7 +365,31 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 
 	// Case: The url contains a scheme.
 	if (VuoUrl_urlContainsScheme(url))
-		resolvedUrl = strdup(url);
+	{
+		// Some URLs have literal spaces, which we need to transform into '%20' before passing to cURL.
+		size_t urlLen = strlen(url);
+		size_t spaceCount = 0;
+		for (size_t i = 0; i < urlLen; ++i)
+			if (url[i] == ' ')
+				++spaceCount;
+		if (spaceCount)
+		{
+			resolvedUrl = (char *)malloc(strlen(url) + spaceCount*2);
+			size_t p = 0;
+			for (size_t i = 0; i < urlLen; ++i)
+				if (url[i] == ' ')
+				{
+					resolvedUrl[p++] = '%';
+					resolvedUrl[p++] = '2';
+					resolvedUrl[p++] = '0';
+				}
+				else
+					resolvedUrl[p++] = url[i];
+			resolvedUrl[p] = 0;
+		}
+		else
+			resolvedUrl = strdup(url);
+	}
 
 	// Case: The url contains an absolute file path.
 	else if (VuoUrl_urlIsAbsoluteFilePath(url))

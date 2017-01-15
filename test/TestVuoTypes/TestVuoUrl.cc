@@ -2,7 +2,7 @@
  * @file
  * TestVuoUrl implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -36,6 +36,7 @@ private slots:
 		QTest::newRow("empty string")		<< ""						<< baseUrl								<< true		<< basePath;
 		QTest::newRow("absolute URL")		<< "http://vuo.org"			<< "http://vuo.org"						<< false	<< "";
 		QTest::newRow("absolute URL/")		<< "http://vuo.org/"		<< "http://vuo.org"						<< false	<< "";
+		QTest::newRow("absolute URL space")	<< "http://vuo.org/a b.png"	<< "http://vuo.org/a%20b.png"			<< false	<< "";
 		QTest::newRow("relative file")		<< "file"					<< baseUrl + "/file"					<< true		<< basePath + "/file";
 		QTest::newRow("relative file ?")	<< "file?.wav"				<< baseUrl + "/file%3f.wav"				<< true		<< basePath + "/file?.wav";
 		QTest::newRow("relative dir/")		<< "dir/"					<< baseUrl + "/dir"						<< true		<< basePath + "/dir";

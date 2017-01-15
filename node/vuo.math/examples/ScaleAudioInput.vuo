@@ -2,7 +2,7 @@
  * @file
  * Graphs the current audio loudness (on the far right) relative to the range of loudnesses observed so far (moving from right to left). When the composition starts, the graph takes up the whole vertical range. As the composition runs, background noise fades into the lower part of the vertical range, and only the loudest sounds reach the top of the range.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */

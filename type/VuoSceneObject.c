@@ -2,7 +2,7 @@
  * @file
  * VuoSceneObject implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -1512,7 +1512,7 @@ static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int l
 
 	fprintf(stderr, "%s: ", VuoSceneObject_cStringForType(so.type));
 	if (so.type == VuoSceneObjectType_Mesh)
-		fprintf(stderr, "%lu vertices, %lu elements", VuoSceneObject_getVertexCount(so), VuoSceneObject_getElementCount(so));
+		fprintf(stderr, "%lu vertices, %lu elements, shader '%s' (%p)", VuoSceneObject_getVertexCount(so), VuoSceneObject_getElementCount(so), so.shader ? so.shader->name : "", so.shader);
 	fprintf(stderr, "\n");
 
 	if (so.childObjects)

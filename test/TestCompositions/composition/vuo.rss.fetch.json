@@ -1,0 +1,235 @@
+/**
+ * @file
+ * Expected outputs for the vuo.rss.fetch node.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* `https://500px.com/popular.rss` — places `<img>` tags in the `<description>` tag */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-500px.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "500px:  ",
+			"description": " on 500px.",
+			"items": [
+				{
+					"title": "Valley of Solace by William Patino",
+					"author": null,
+					"description": "\n        \n          <a href=\"https:\/\/500px.com\/photo\/135756275\"><img src=\"https:\/\/drscdn.500px.org\/photo\/135756275\/m%3D900\/1a3bad0e1042fc8b612e2c611f49dc58\"><\/a>\n          <br\/><br\/>\n          <h2><a href=\"https:\/\/500px.com\/photo\/135756275\">Valley of Solace<\/a> by <a href=\"https:\/\/500px.com\/williampatino\">William Patino<\/a><\/h2>\n          <br\/>\n          <h3>Yosemite sunrise back in 2013. <a href=\"www.williampatino.com\">Prints|Workshops|Licencing<\/a><\/h3>\n          <br\/>\n          <small>William Patino: <a href=\"https:\/\/500px.com\/williampatino\">Photos<\/a><\/small>\n          <!--Digg rss verification-->\n          <!--6bb05c4847db4cd09753932043098fb2-->\n          <br\/><br\/>\n      ",
+					"url": "https://500px.com/photo/135756275/valley-of-solace-by-william-patino",
+					"dateTime": 474241388,
+					"imageUrl": "https://drscdn.500px.org/photo/135756275/m%3D900/1a3bad0e1042fc8b612e2c611f49dc58",
+					"image": null,
+					"categories": [],
+				},
+			]
+		}
+	},
+
+	/* `http://iconosquare.com/tagFeed/hashtag` — places `<img>` tags in the `<description>` tag */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-iconosquare.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Instagram photos for tag : hashtag",
+			"description": "Instagram's photos of hashtag - photos on Instagram | Iconosquare - The best Instagram Web Viewer!",
+			"items": [
+				{
+					"title": "#success #successful #motivate #successfulday #motivation #win #successfulstoners #erfolgreich #erfolgreicher #top #succeed #motivated #motivational #mindset #thinkbig #thinkpositive #erfolg #workingprogress #working #quotes #workhard #happy #behappy #quote #lifequotes #lifequote #hashtag #love",
+					"author": "moritz_salomon",
+					"description": "<a href='http://iconosquare.com/p/1161040000582479348_2197963898' target='_blank'><img src='https://scontent.cdninstagram.com/hphotos-xpa1/t51.2885-15/s320x320/e35/12407534_1745568565677271_5555334_n.jpg'/></a>",
+					"url": "http://iconosquare.com/p/1161040000582479348_2197963898",
+					"dateTime": 474319575,
+					"imageUrl": "https://scontent.cdninstagram.com/hphotos-xpa1/t51.2885-15/s320x320/e35/12407534_1745568565677271_5555334_n.jpg",
+					"image": null,
+					"categories": [],
+				},
+			]
+		}
+	},
+
+	/* `http://fdiv.net/rss.xml` — places `<img>` tags in the `<description>` tag */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-fdiv.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "fdiv.net",
+			"description": "",
+			"items": [
+				{
+					"title": "Who were the jockeys in Muybridge's photographs?",
+					"author": "jstrecker",
+					"description": "<p>Before 1878, few people knew what a galloping horse looked like in slow motion. That changed when Eadweard Muybridge, witnessed by the local press, used a clever apparatus to take a series of photographs as a horse galloped by. The result was <a href=\"http:\/\/commons.wikimedia.org\/wiki\/File:The_Horse_in_Motion.jpg\">&#8220;Sallie Gardner at a Gallop&#8221;<\/a>, a.k.a. &#8220;The Horse in Motion&#8221;. Back then, you could watch the series of photographs as a movie on a zoopraxiscope. Today, you can watch it in an <a href=\"http:\/\/lcls.slac.stanford.edu\/VideoViewMuybridge.aspx\">online video<\/a>.<\/p>\n\n<p>I first became aware of this piece of history when my co-worker Karl Henkel made a <a href=\"http:\/\/vuo.org\/node\/471\">colorful rendition<\/a> of related photographs, &#8220;Annie G. Galloping&#8221; (pictured at right). I looked up the story behind these photographs, but it didn&#8217;t answer the question I was wondering about: Who were the guys riding the&nbsp;horses?<\/p>\n\n<p>A fellow wonderer, Kem Royale, <a href=\"http:\/\/www.kemroyale.com\/youve-got-to-know-that-you-know-that-you-know\/race-card-black-man-was-first-motion-picture-movie-star-way-before-pickford-chaplin-valentino-keaton\">points out<\/a> just how odd this is: More is known about <a href=\"http:\/\/foolishpleasure-valerie.blogspot.com\/2009\/03\/sallie-gardner-horse-behind-photograph.html\">Sallie Gardner<\/a>, the horse, than about either of the riders — even though they&#8217;re arguably among the first people to star in a silent&nbsp;film.<\/p>\n\n<p>Well, after much poking around the internet, I can provide a bit more information about these riders. I&#8217;ve found a full name and pieced together a biography for a man who, I think, was the rider in &#8220;Sallie Gardner at a Gallop&#8221;, the mysterious G.&nbsp;Domm.<\/p>\n\n<p><img src=\"http:\/\/fdiv.net\/sites\/default\/files\/SallieGardnerAnnieG.png\" alt=\"&#039;Sallie Gardner at a Gallop&#039; and &#039;Annie G. Galloping&#039;, with names of horses and riders labeled\" title=\"&#039;Sallie Gardner at a Gallop&#039; and &#039;Annie G. Galloping&#039;, with names of horses and riders labeled\" \/><\/p>\n",
+					"url": "http://fdiv.net/2015/01/02/who-were-jockeys-muybridges-photographs",
+					"dateTime": 441949410,
+					"imageUrl": "http://fdiv.net/sites/default/files/SallieGardnerAnnieG.png",
+					"image": null,
+					"categories": [ "Photography" ],
+				},
+			]
+		}
+	},
+
+	/* `http://vuo.org/blog/rss` — places `<img>` tags in the `<description>` tag */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-vuo-blog.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Vuo Blog",
+			"description": "This feed provides the latest public information about the Vuo visual programming environment, updated once every week or two.  It's the same content as the Vuo announcements mailing list: http://vuo.org/mailinglist",
+			"items": [
+				{
+					"title": "20% off Vuo through December 31",
+					"author": "jstrecker",
+					"description": "<h3>Community spotlight: jens probst exhibits auto accessories on 12 screens<\/h3>\n\n<p>We love highlighting the amazing projects being done by people in the Vuo community! Today we're highlighting jens probst (a.k.a. <a href=\"http:\/\/vuo.org\/user\/74\">@zwei-p<\/a>), who used Vuo in an exhibit at one of the world's largest auto trade shows. Read more about it <a href=\"https:\/\/vuo.org\/node\/1041\">here<\/a>.<\/p>\n\n<p><a href=\"https:\/\/vuo.org\/node\/1041\"><img src=\"https:\/\/vuo.org\/sites\/default\/files\/vuo_spotlight\/jens%20probst%20IAA%20still%201.png\" alt=\"Photo of jens probst&#039;s exhibit\" \/><\/a><\/p>\n\n<p>Are you using Vuo in an exhibit, performance, or other project? <a href=\"https:\/\/vuo.org\/contact\">Let us know!<\/a> Your work could be featured in a future <a href=\"https:\/\/vuo.org\/spotlight\">community spotlight<\/a>.<\/p>\n\n<p>— <a href=\"https:\/\/vuo.org\/user\/22\">Jaymie<\/a><br \/>\nTeam Vuo<\/p><\/div><\/div><\/div>",
+					"url": "http://vuo.org/node/1042",
+					"dateTime": 472451323,
+					"imageUrl": "https://vuo.org/sites/default/files/vuo_spotlight/jens%20probst%20IAA%20still%201.png",
+					"image": null,
+					"categories": [ ],
+				},
+			]
+		}
+	},
+
+	/* `http://www.nature.org/photos-and-video/photography/daily-nature-photo/rss/index.htm` — places `<img>` tags in the `<description>` tag */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-nature.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Daily Nature Photo -- The Nature Conservancy",
+			"description": "A nature photo selected each day from The Nature Conservancy's online Flickr photo community.",
+			"items": [
+				{
+					"title": "Glacial Beauty",
+					"author": null,
+					"description": "\n\t\t\t\n\t\t\t<p><a href=\"https:\/\/flic.kr\/p\/u4Hjmu\" target=\"_blank\"><img border=\"0\" src=\"https:\/\/farm4.staticflickr.com\/3891\/18420000324_0641a9bf7e_z_d.jpg\" \/><\/a><\/p>\n<h3>Glacial Beauty<\/h3>\n<p>https:\/\/flic.kr\/p\/u4Hjmu<\/p>\n        \n\t\t\t \n\t\t \n\t ",
+					"url": "http://www.nature.org/photos-and-video/photography/daily-nature-photo/glacial-beauty-1.xml",
+					"dateTime": nan,
+					"imageUrl": "https://farm4.staticflickr.com/3891/18420000324_0641a9bf7e_z_d.jpg",
+					"image": null,
+					"categories": [ ],
+				},
+			]
+		}
+	},
+
+	/* `https://vuo.org/composition/feed` — places images in `<enclosure>` tags */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-vuo-composition.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Vuo Composition Gallery",
+			"description": "Get Creative",
+			"items": [
+				{
+					"title": "Orthographic Color World",
+					"author": "Bodysoulspirit",
+					"description": "<a href=\"https:\/\/vuo.org\/node\/1092\"><img typeof=\"foaf:Image\" class=\"image-style-large\" src=\"https:\/\/vuo.org\/sites\/default\/files\/styles\/large\/public\/composition\/OCW.png?itok=cZw-QbXq\" width=\"480\" height=\"257\" alt=\"\" \/><\/a>\n<p>Color Cubes, Aligned, Orthographic :)<\/p>\n\n<p>Random Colors on each launch.<\/p>",
+					"url": "https://vuo.org/node/1092",
+					"dateTime": 473906610,
+					"imageUrl": "https://vuo.org/sites/default/files/styles/large/public/composition/OCW.png?itok=cZw-QbXq",
+					"image": null,
+					"categories": [ "Generative Art" ],
+				},
+			]
+		}
+	},
+
+	/* `https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss` — places images in `<enclosure>` tags */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-nasa.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "NASA Image of the Day",
+			"description": "The latest NASA \"Image of the Day\" image.",
+			"items": [
+				{
+					"title": "Tim Peake Prepares For Friday's Spacewalk",
+					"author": null,
+					"description": "European Space Agency (ESA) astronaut Tim Peake (@astro_timpeake) shared this photo taken aboard the International Space Station on Jan. 11, 2015, during preparations for a spacewalk, or extra-vehicular activity (EVA). Peake wrote, \"Final suit fit check prior to Friday's EVA – feels just great! #Principia #spacewalk\"",
+					"url": "http://www.nasa.gov/image-feature/tim-peake-prepares-for-fridays-spacewalk",
+					"dateTime": 474309180,
+					"imageUrl": "http://www.nasa.gov/sites/default/files/thumbnails/image/24024766190_d4d4e8d284_o.jpg",
+					"image": null,
+					"categories": [ ],
+				},
+			]
+		}
+	},
+
+	/* `https://api.flickr.com/services/feeds/photos_public.gne?format=rss_200_enc` — places images in `<media:content>` and `<enclosure>` tags */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-flickr.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "Uploads from everyone",
+			"description": "",
+			"items": [
+				{
+					"title": "Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat",
+					"author": "nobody@flickr.com (Rev.JayLeal)",
+					"description": "\t\t\t<p><a href=\"https:\/\/www.flickr.com\/people\/revjayleal\/\">Rev.JayLeal<\/a> posted a photo:<\/p>\n\n<p><a href=\"https:\/\/www.flickr.com\/photos\/revjayleal\/23713444374\/\" title=\"Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat\"><img src=\"https:\/\/farm2.staticflickr.com\/1542\/23713444374_a169765a12_m.jpg\" width=\"240\" height=\"240\" alt=\"Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat\" \/><\/a><\/p>\n\n",
+					"url": "https://www.flickr.com/photos/revjayleal/23713444374/",
+					"dateTime": 474322723,
+					"imageUrl": "https://farm2.staticflickr.com/1542/23713444374_a169765a12_b.jpg",
+					"image": null,
+					"categories": [ ],
+				},
+			]
+		}
+	},
+
+	/* `http://www.smugmug.com/hack/feed.mg?Type=popular&Data=today&format=rss200` — places images in `<media:group><media:content>` tags */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"url": "vuo.rss.fetch-smugmug.rss",
+			"fetchImages": false,
+		},
+		"outputPortValues": {
+			"title": "SmugMug's most popular photos today",
+			"description": "A feed of today's most popular photos on SmugMug, calculated using PhotoRank.",
+			"items": [
+				{
+					"title": "Bellingham, WA",
+					"author": "nobody@smugmug.com (Rick Willis)",
+					"description": "<p><a href=\"http:\/\/www.rickwillis-photos.com\">Rick Willis<\/a><br \/>Bellingham, WA<\/p><p><a href=\"http:\/\/www.rickwillis-photos.com\/DailyCommunityGallerys\/Dailies-Most-Current-Images\/i-Bhxr5JV\/\" title=\"Bellingham, WA\"><img src=\"http:\/\/www.rickwillis-photos.com\/DailyCommunityGallerys\/Dailies-Most-Current-Images\/i-Bhxr5JV\/0\/Th\/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Th.jpg\" width=\"104\" height=\"150\" alt=\"Bellingham, WA\" title=\"Bellingham, WA\" style=\"border: 1px solid #000000;\" \/><\/a><\/p>",
+					"url": "http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/",
+					"dateTime": 474145151,
+					"imageUrl": "http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/O/Bellingham%2C%20WA%20-%20Area%20-%202015-123f.jpg",
+					"image": null,
+					"categories": [ "Daily Community" ],
+				},
+			]
+		}
+	},
+]}
