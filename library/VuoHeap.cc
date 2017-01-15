@@ -2,7 +2,7 @@
  * @file
  * VuoHeap implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -398,6 +398,16 @@ int VuoRelease(const void *heapPointer)
 
 	if (updatedCount == 0)
 	{
+#ifdef VUOHEAP_TRACE
+#ifndef VUOHEAP_TRACEALL
+		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
+#endif
+		{
+			fprintf(stderr, "VuoDeallocate(%p)\n", heapPointer);
+//			VuoLog_backtrace();
+		}
+#endif
+
 		deallocate((void *)heapPointer);
 	}
 	else if (updatedCount == -1 && !foundSingleton)

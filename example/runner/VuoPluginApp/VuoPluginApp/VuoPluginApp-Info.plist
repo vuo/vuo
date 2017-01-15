@@ -46,7 +46,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2014 Kosada. All rights reserved.</string>
+	<string>Copyright © 2012–2016 Kosada Incorporated. This executable may be used and distributed according to the terms described on http://vuo.org/license.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

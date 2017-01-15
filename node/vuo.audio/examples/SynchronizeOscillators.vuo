@@ -1,0 +1,50 @@
+/**
+ * @file
+ * Demonstrates how it sounds to synchronize the phase of 3 sawtooth oscillators, each with a slightly different frequency.
+ *
+ * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="465,615" _loudness="0.59999999999999998"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="930,390" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,180" fillcolor="violet" _wave="\"sawtooth\"" _frequency="64" _setPhase="0"];
+MakeAudioWave2 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,270" fillcolor="violet" _wave="\"sawtooth\"" _frequency="63.899999999999999" _setPhase="0"];
+MakeAudioWave3 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="375,360" fillcolor="violet" _wave="\"sawtooth\"" _frequency="64.099999999999994" _setPhase="0"];
+MakeList [type="vuo.list.make.3.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="539,266"];
+MakeList4 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1234,431" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1264,446" fillcolor="green"];
+MakeList7 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="403,626"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="1050,240" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="1" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1065,435" _text="\"Press space to phase-synchronize the oscillators.\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0,\"y\":-0.40000000596046448}"];
+MakeWaveformImage [type="vuo.audio.image.waveform" version="1.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<amplitude>amplitude\l|<image>image\r" pos="825,255" _fillColor="{\"r\":0.58738076686859131,\"g\":1,\"b\":0.57988858222961426,\"a\":0.25000381469726562}" _lineColor="{\"r\":0.59435415267944336,\"g\":1,\"b\":0.57405966520309448,\"a\":1}" _amplitude="200"];
+MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="585,255"];
+ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="90,210" fillcolor="yellow" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1305,420" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="645,600" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
+
+AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
+FireOnStart:started -> MakeTextLayer:refresh;
+MakeAudioWave2:samples -> MakeList:2;
+MakeAudioWave3:samples -> MakeList:3;
+MakeAudioWave:samples -> MakeList:1;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeList7:list -> AdjustLoudness:samples;
+MakeList:list -> MixAudioChannels:samples;
+MakeScaledLayer:layer -> MakeList4:1;
+MakeTextLayer:layer -> MakeList4:2;
+MakeWaveformImage:image -> MakeScaledLayer:image;
+MixAudioChannels:mixedSamples -> MakeList7:1;
+MixAudioChannels:mixedSamples -> MakeWaveformImage:samples;
+ReceiveKeyboardButtons:pressed -> MakeAudioWave2:setPhase;
+ReceiveKeyboardButtons:pressed -> MakeAudioWave3:setPhase;
+ReceiveKeyboardButtons:pressed -> MakeAudioWave:setPhase;
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
+SendLiveAudio:requestedChannels -> MakeAudioWave2:refresh;
+SendLiveAudio:requestedChannels -> MakeAudioWave3:refresh;
+SendLiveAudio:requestedChannels -> MakeAudioWave:refresh;
+}

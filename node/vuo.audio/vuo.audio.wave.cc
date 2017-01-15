@@ -2,7 +2,7 @@
  * @file
  * vuo.audio.wave node implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						  "Gamma"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "PlayAudioWave.vuo", "PlayBluesOrgan.vuo", "PanAudio.vuo" ],
+						  "exampleCompositions" : [ "PlayAudioWave.vuo", "PlayBluesOrgan.vuo", "PanAudio.vuo", "SynchronizeOscillators.vuo" ],
 					  }
 				 });
 }
@@ -35,34 +35,12 @@ struct nodeInstanceData {
 	gam::Saw<> *saw;
 };
 
-extern "C" {
-struct nodeInstanceData *nodeInstanceInit
+extern "C" struct nodeInstanceData *nodeInstanceInit
 (
 //		VuoInputData(VuoReal, {"default":48000.0, "suggestedMin":0.000001, "suggestedStep":100.0}) sampleRate,
 		VuoInputData(VuoWave, {"default":"sine"}) wave,
-		VuoInputData(VuoReal, {"default":440.0, "suggestedMin":0.000001}) frequency
-);
-void nodeInstanceEvent
-(
-//		VuoInputData(VuoReal, {"default":48000.0, "suggestedMin":0.000001}) sampleRate,
-//		VuoInputEvent({"eventBlocking":"wall","data":"sampleRate"}) sampleRateEvent,
-		VuoInputData(VuoWave, {"default":"sine"}) wave,
-		VuoInputEvent({"eventBlocking":"wall","data":"wave"}) waveEvent,
 		VuoInputData(VuoReal, {"default":440.0, "suggestedMin":0.000001}) frequency,
-		VuoInputEvent({"eventBlocking":"wall","data":"frequency"}) frequencyEvent,
-		VuoOutputData(VuoAudioSamples) samples,
-		VuoInstanceData(struct nodeInstanceData *) context
-);
-void nodeInstanceFini(
-		VuoInstanceData(struct nodeInstanceData *) context
-);
-}
-
-struct nodeInstanceData *nodeInstanceInit
-(
-//		VuoInputData(VuoReal, {"default":48000.0, "suggestedMin":0.000001, "suggestedStep":100.0}) sampleRate,
-		VuoInputData(VuoWave, {"default":"sine"}) wave,
-		VuoInputData(VuoReal, {"default":440.0, "suggestedMin":0.000001}) frequency
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) setPhase
 )
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
@@ -72,15 +50,17 @@ struct nodeInstanceData *nodeInstanceInit
 	context->sine = new gam::Sine<>;
 	*(context->sync) << *(context->sine);
 	context->sine->freq(frequency);
+	context->sine->phase(setPhase);
 
 	context->saw = new gam::Saw<>;
 	*(context->sync) << *(context->saw);
 	context->saw->freq(frequency);
+	context->saw->phase(setPhase);
 
 	return context;
 }
 
-void nodeInstanceEvent
+extern "C" void nodeInstanceEvent
 (
 //		VuoInputData(VuoReal, {"default":48000.0, "suggestedMin":0.000001, "suggestedStep":100.0}) sampleRate,
 //		VuoInputEvent({"eventBlocking":"wall","data":"sampleRate"}) sampleRateEvent,
@@ -88,6 +68,8 @@ void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"wall","data":"wave"}) waveEvent,
 		VuoInputData(VuoReal, {"default":440.0, "suggestedMin":0.000001}) frequency,
 		VuoInputEvent({"eventBlocking":"wall","data":"frequency"}) frequencyEvent,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) setPhase,
+		VuoInputEvent({"eventBlocking":"wall", "data":"setPhase", "hasPortAction":true}) setPhaseEvent,
 		VuoOutputData(VuoAudioSamples) samples,
 		VuoInstanceData(struct nodeInstanceData *) context
 )
@@ -98,8 +80,14 @@ void nodeInstanceEvent
 	(*context)->sine->freq(frequency);
 	(*context)->saw->freq(frequency);
 
+	if (setPhaseEvent)
+	{
+		(*context)->sine->phase(setPhase);
+		(*context)->saw->phase(setPhase);
+	}
+
 	// Only calculate the output samples (and thus increment the phase) if the event is going to make it to the output port.
-	if (waveEvent || frequencyEvent)
+	if (waveEvent || frequencyEvent || setPhaseEvent)
 		return;
 
 	*samples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
@@ -122,7 +110,7 @@ void nodeInstanceEvent
 	}
 }
 
-void nodeInstanceFini(
+extern "C" void nodeInstanceFini(
 	VuoInstanceData(struct nodeInstanceData *) context
 )
 {

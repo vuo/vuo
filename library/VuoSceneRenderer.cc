@@ -2,7 +2,7 @@
  * @file
  * VuoSceneRenderer implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -86,8 +86,17 @@ typedef std::map<VuoSceneRendererMeshShader, VuoSceneRendererVAOList> VuoSceneRe
 class VuoSceneRendererInternal_object
 {
 public:
-	VuoSceneRendererVAOList meshItems;
-	std::list<VuoSceneRendererInternal_object> childObjects;
+	VuoSceneRendererVAOList meshItems;	///< VAOs for each submesh.
+
+	VuoMesh overrideMesh;	///< If non-null, this mesh is rendered instead of the actual object's mesh.
+	enum
+	{
+		RealSize_Inherit,
+		RealSize_True,
+	} overrideIsRealSize;	///< If not Inherit, this overrides the actual object's isRealSize property.
+	VuoShader overrideShader;	///< If non-null, this shader is rendered instead of the actual object's shader.
+
+	std::list<VuoSceneRendererInternal_object> childObjects;	///< Hierarchy
 };
 
 /**
@@ -150,7 +159,7 @@ static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
 	glBlendEquation(GL_FUNC_ADD);
 }
 
-static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, bool *sceneObjectChanged, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache);
+static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache);
 
 #if LIBRARY_PREMIUM_AVAILABLE
 #include "premium/VuoSceneRendererPremium.h"
@@ -379,6 +388,15 @@ static void VuoSceneRenderer_addUniformSuffix(char *address, int i, const char *
  */
 static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRendererInternal_object *soi, float projectionMatrix[16], float modelviewMatrix[16], VuoSceneRendererInternal *sceneRenderer)
 {
+	// Apply the overrides just within this function's scope.
+	if (soi->overrideMesh)
+		so.mesh = soi->overrideMesh;
+	if (soi->overrideIsRealSize != VuoSceneRendererInternal_object::RealSize_Inherit)
+		so.isRealSize = soi->overrideIsRealSize;
+	if (soi->overrideShader)
+		so.shader = soi->overrideShader;
+
+
 	if (!so.mesh || !so.mesh->submeshCount || !so.shader)
 		return;
 
@@ -671,7 +689,7 @@ static void VuoSceneRenderer_drawSceneObjectsRecursively(VuoSceneObject so, VuoS
 //static void VuoSceneRenderer_drawLights(VuoSceneRendererInternal *sceneRenderer);
 static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
 static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sceneRenderer);
-static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, bool *sceneObjectChanged, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
+static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext);
 
 /**
  * Uploads the scene to the GPU (if it's changed), and renders it.
@@ -703,8 +721,7 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 		// Upload the new scenegraph.
 		sceneRenderer->rootSceneObject = sceneRenderer->rootSceneObjectPending;
 		VuoSceneObject_retain(sceneRenderer->rootSceneObject);
-		bool rootSceneObjectChanged;
-		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, sceneRenderer->rootSceneObject, &rootSceneObjectChanged, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
+		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, sceneRenderer->rootSceneObject, &sceneRenderer->rootSceneObjectInternal, sceneRenderer->glContext);
 
 		VuoSceneObject_findLights(sceneRenderer->rootSceneObject, &sceneRenderer->ambientColor, &sceneRenderer->ambientBrightness, &sceneRenderer->pointLights, &sceneRenderer->spotLights);
 		VuoRetain(sceneRenderer->pointLights);
@@ -977,18 +994,21 @@ void VuoSubmeshMesh_download(VuoSubmesh *submesh);
 /**
  * Creates a mesh and image for the specified sceneobject.
  */
-static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so)
+static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi)
 {
-	// Leave the type as-is, so subsequent uploads of the modified scene
-	// (such as when updateBackingCallback is invoked)
-	// will know they need to re-render the text.
-//	so.type = VuoSceneObjectType_Mesh;
+	// Instead of modifying the VuoSceneObject itself
+	// (which breaks Vuo's "data passed through cables is immutable" rule,
+	// since rootSceneObject is output as renderedLayers),
+	// use the shadow object to store overrides of the actual object.
 
-	so.mesh = VuoMesh_makeQuadWithoutNormals();
-	so.isRealSize = true;
+	soi->overrideMesh = VuoMesh_makeQuadWithoutNormals();
+	VuoRetain(soi->overrideMesh);
+
+	soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_True;
 
 	VuoImage textImage = VuoImage_makeText(so.text, so.font, sceneRenderer->backingScaleFactor);
-	so.shader = VuoShader_makeUnlitImageShader(textImage, 1);
+	soi->overrideShader = VuoShader_makeUnlitImageShader(textImage, 1);
+	VuoRetain(soi->overrideShader);
 }
 
 /**
@@ -1001,15 +1021,21 @@ static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer,
  *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, bool *sceneObjectChanged, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache)
+static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext, bool cache)
 {
-	*sceneObjectChanged = false;
+	soi->overrideMesh = NULL;
+	soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_Inherit;
+	soi->overrideShader = NULL;
 
 	if (so.type == VuoSceneObjectType_Text && so.text && so.text[0] != 0)
-	{
-		VuoSceneRenderer_renderText(sceneRenderer, so);
-		*sceneObjectChanged = true;
-	}
+		VuoSceneRenderer_renderText(sceneRenderer, so, soi);
+
+	// Apply the overrides just within this function's scope.
+	if (soi->overrideMesh)
+		so.mesh = soi->overrideMesh;
+	if (soi->overrideShader)
+		so.shader = soi->overrideShader;
+
 
 	if (!so.mesh || !so.mesh->submeshCount || !so.shader)
 		return;
@@ -1114,9 +1140,9 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
  *
  * @threadAnyGL
  */
-static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject &so, bool *sceneObjectChanged, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
+static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInternal *sceneRenderer, VuoSceneObject so, VuoSceneRendererInternal_object *soi, VuoGlContext glContext)
 {
-	VuoSceneRenderer_uploadSceneObject(sceneRenderer, so, sceneObjectChanged, soi, glContext, true);
+	VuoSceneRenderer_uploadSceneObject(sceneRenderer, so, soi, glContext, true);
 
 	if (!so.childObjects)
 		return;
@@ -1126,13 +1152,7 @@ static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInter
 	{
 		VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
 		VuoSceneRendererInternal_object childObjectInternal;
-		bool childObjectChanged;
-
-		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, childObject, &childObjectChanged, &childObjectInternal, glContext);
-
-		if (childObjectChanged)
-			VuoListSetValue_VuoSceneObject(so.childObjects, childObject, i);
-
+		VuoSceneRenderer_uploadSceneObjectsRecursively(sceneRenderer, childObject, &childObjectInternal, glContext);
 		soi->childObjects.push_back(childObjectInternal);
 	}
 }
@@ -1154,6 +1174,11 @@ static void VuoSceneRenderer_cleanupSceneObjectsRecursively(VuoSceneObject so, V
 	}
 
 	soi->meshItems.clear();
+
+	if (soi->overrideMesh)
+		VuoRelease(soi->overrideMesh);
+	if (soi->overrideShader)
+		VuoRelease(soi->overrideShader);
 
 	soi->childObjects.clear();
 }

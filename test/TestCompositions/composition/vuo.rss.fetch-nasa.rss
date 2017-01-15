@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?> <rss version="2.0" xml:base="http://www.nasa.gov/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/"> <channel> <title>NASA Image of the Day</title>
+ <description>The latest NASA &quot;Image of the Day&quot; image.</description>
+ <link>http://www.nasa.gov/</link>
+ <atom:link rel="self" href="http://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss" />
+ <language>en-us</language>
+ <managingEditor>yvette.smith-1@nasa.gov</managingEditor>
+ <webMaster>brian.dunbar@nasa.gov</webMaster>
+ <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+ <item> <title>Tim Peake Prepares For Friday&#039;s Spacewalk</title>
+ <link>http://www.nasa.gov/image-feature/tim-peake-prepares-for-fridays-spacewalk</link>
+ <description>European Space Agency (ESA) astronaut Tim Peake (@astro_timpeake) shared this photo taken aboard the International Space Station on Jan. 11, 2015, during preparations for a spacewalk, or extra-vehicular activity (EVA). Peake wrote, &quot;Final suit fit check prior to Friday&#039;s EVA – feels just great! #Principia #spacewalk&quot;</description>
+ <enclosure url="http://www.nasa.gov/sites/default/files/thumbnails/image/24024766190_d4d4e8d284_o.jpg" length="6548344" type="image/jpeg" />
+ <guid isPermaLink="false">http://www.nasa.gov/image-feature/tim-peake-prepares-for-fridays-spacewalk</guid>
+ <pubDate>Tue, 12 Jan 2016 11:33 EST</pubDate>
+ <source url="http://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss">NASA Image of the Day</source>
+</item>
+</channel>
+</rss>

@@ -2,7 +2,7 @@
  * @file
  * VuoSceneGet implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -186,7 +186,7 @@ static void VuoSceneObjectGet_close(aiFileIO *afio, aiFile *af)
 /**
  * Converts @c node and its children to @c VuoSceneObjects.
  */
-static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *scene, const struct aiNode *node, VuoList_VuoShader shaders, VuoSceneObject *sceneObject)
+static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *scene, const struct aiNode *node, VuoShader *shaders, bool *shadersUsed, VuoSceneObject *sceneObject)
 {
 	// Copy the node's transform into our VuoSceneObject.
 	{
@@ -210,8 +210,8 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 
 			/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
 		int materialIndex = scene->mMeshes[node->mMeshes[0]]->mMaterialIndex;
-		sceneObject->shader = VuoListGetValue_VuoShader(shaders, materialIndex+1);
-		VuoRetain(sceneObject->shader);
+		sceneObject->shader = shaders[materialIndex];
+		shadersUsed[materialIndex] = true;
 	}
 	for (unsigned int meshIndex = 0; meshIndex < node->mNumMeshes; ++meshIndex)
 	{
@@ -323,7 +323,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 	for (unsigned int child = 0; child < node->mNumChildren; ++child)
 	{
 		VuoSceneObject childSceneObject = VuoSceneObject_makeEmpty();
-		convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], shaders, &childSceneObject);
+		convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], shaders, shadersUsed, &childSceneObject);
 		if (childSceneObject.type != VuoSceneObjectType_Empty)
 			VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, childSceneObject);
 	}
@@ -387,9 +387,8 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 	VuoRetain(sceneURLWithoutFilename);
 	VuoRelease(normalizedSceneURL);
 
-	VuoList_VuoShader shaders = VuoListCreate_VuoShader();
-	VuoRetain(shaders);
-
+	VuoShader shaders[ais->mNumMaterials];
+	bool shadersUsed[ais->mNumMaterials];
 	for (int i=0; i<ais->mNumMaterials; ++i)
 	{
 		struct aiMaterial *m = ais->mMaterials[i];
@@ -565,17 +564,26 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 		else
 			shader = VuoShader_makeLitColorShader(diffuseColor, specularColor, shininess);
 
-		shader->name = strdup(name.data);
+		VuoRelease(shader->name);
+		shader->name = VuoText_make(name.data);
+		VuoRetain(shader->name);
 
 		// VLog("\tshader: %s",shader->summary);//VuoShader_getSummary(shader));
 
-		VuoListAppendValue_VuoShader(shaders, shader);
+		shaders[i] = shader;
+		shadersUsed[i] = false;
 	}
 	VuoRelease(sceneURLWithoutFilename);
 	VuoGlContext_disuse(cgl_ctx);
 
-	convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, shaders, scene);
-	VuoRelease(shaders);
+	convertAINodesToVuoSceneObjectsRecursively(ais, ais->mRootNode, shaders, shadersUsed, scene);
+
+	for (unsigned int i = 0; i < ais->mNumMaterials; ++i)
+		if (!shadersUsed[i])
+		{
+			VuoRetain(shaders[i]);
+			VuoRelease(shaders[i]);
+		}
 
 	if(center)
 		VuoSceneObject_center(scene);

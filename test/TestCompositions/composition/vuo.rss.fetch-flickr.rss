@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"
+	    xmlns:media="http://search.yahoo.com/mrss/"
+	    xmlns:dc="http://purl.org/dc/elements/1.1/"
+	    xmlns:creativeCommons="http://cyber.law.harvard.edu/rss/creativeCommonsRssModule.html"
+	    	    xmlns:flickr="urn:flickr:user" >
+	<channel>
+
+
+		<title>Uploads from everyone</title>
+		<link>https://www.flickr.com/photos/</link>
+ 		<description></description>
+		<pubDate>Tue, 12 Jan 2016 12:18:43 -0800</pubDate>
+		<lastBuildDate>Tue, 12 Jan 2016 12:18:43 -0800</lastBuildDate>
+		<generator>https://www.flickr.com/</generator>
+		<image>
+			<url>https://s.yimg.com/pw/images/buddyicon.gif</url>
+			<title>Uploads from everyone</title>
+			<link>https://www.flickr.com/photos/</link>
+		</image>
+
+		<item>
+			<title>Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat</title>
+			<link>https://www.flickr.com/photos/revjayleal/23713444374/</link>
+			<description>			&lt;p&gt;&lt;a href=&quot;https://www.flickr.com/people/revjayleal/&quot;&gt;Rev.JayLeal&lt;/a&gt; posted a photo:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.flickr.com/photos/revjayleal/23713444374/&quot; title=&quot;Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat&quot;&gt;&lt;img src=&quot;https://farm2.staticflickr.com/1542/23713444374_a169765a12_m.jpg&quot; width=&quot;240&quot; height=&quot;240&quot; alt=&quot;Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+</description>
+			<pubDate>Tue, 12 Jan 2016 12:18:43 -0800</pubDate>
+			                        <dc:date.Taken>2016-01-12T12:18:43-08:00</dc:date.Taken>
+            			<author flickr:profile="https://www.flickr.com/people/revjayleal/">nobody@flickr.com (Rev.JayLeal)</author>
+			<guid isPermaLink="false">tag:flickr.com,2004:/photo/23713444374</guid>
+                            <media:content url="https://farm2.staticflickr.com/1542/23713444374_a169765a12_b.jpg"
+                   type="image/jpeg"
+                   height="480"
+                   width="480"/>
+    <media:title>Commemorate 50 years of #Batman66 by subscribing to the new #BiffBAMBort! iTunes channel!!  Our first episode of 2016 drops tonight!!  NEW year, New channel, New Skeleton Crue!!  #Batman #GeekCore #Geek #Nerd #Podcat</media:title>
+    <media:thumbnail url="https://farm2.staticflickr.com/1542/23713444374_a169765a12_s.jpg" height="75" width="75" />
+    <media:credit role="photographer">Rev.JayLeal</media:credit>
+    <media:category scheme="urn:flickr:tags">square squareformat iphoneography instagramapp uploaded:by=instagram</media:category>
+		    <enclosure url="https://farm2.staticflickr.com/1542/23713444374_a169765a12_b.jpg" type="image/jpeg" />
+		</item>
+
+	</channel>
+</rss>
