@@ -2,7 +2,7 @@
  * @file
  * VuoTime implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -262,8 +262,24 @@ VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, V
  */
 VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 {
+	if (!rfc822 || rfc822[0] == 0)
+		return NAN;
+
 	struct tm tm;
-	strptime(rfc822, "%a, %d %b %Y %T %z", &tm);
+	// Initialize tm, since strptime adds to (rather than replacing) tm's initial values (!!).
+	// "If time relative to today is desired, initialize the tm structure with today's date before passing it to strptime()."
+	bzero(&tm, sizeof(struct tm));
+
+	char *ret = strptime(rfc822, "%a, %d %b %Y %T %z", &tm);
+	if (!ret)
+	{
+		// Parsing failed; try a backup format seen in https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss
+		// `Tue, 12 Jan 2016 11:33 EST`
+		ret = strptime(rfc822, "%a, %d %b %Y %R %Z", &tm);
+		if (!ret)
+			return NAN;
+	}
+
 	time_t timeInt = mktime(&tm);
 	return timeInt - VuoUnixTimeOffset;
 }

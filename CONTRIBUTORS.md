@@ -29,6 +29,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [ellington](https://vuo.org/user/445)
    - [emervark](https://vuo.org/user/925)
    - [errol](https://vuo.org/user/375)
+   - [Eurotrash](https://vuo.org/user/2347)
    - [franz](https://vuo.org/user/69)
    - [fRED](https://vuo.org/user/119)
    - [gabe](https://vuo.org/user/893)
@@ -88,6 +89,7 @@ Below is an alphabetical list of the people who have contributed to bringing Vuo
    - [vade](https://vuo.org/user/96)
    - [vjsatoshi](https://vuo.org/user/277)
    - [volkerku](https://vuo.org/user/898)
+   - [WARP](https://vuo.org/user/923)
    - [wmackwood](https://vuo.org/user/7975)
    - [zwei-p](https://vuo.org/user/74)
 

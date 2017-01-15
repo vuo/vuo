@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+
+<rss version="2.0">
+<channel>
+	<title>Daily Nature Photo -- The Nature Conservancy</title>
+	<link>http://www.nature.org/photos-and-video/daily-nature-photo/rss/</link>
+	<description>A nature photo selected each day from The Nature Conservancy's online Flickr photo community.</description>
+	<item>
+	 <guid>http://www.nature.org/photos-and-video/photography/daily-nature-photo/glacial-beauty-1.xml</guid>
+	 <title>Glacial Beauty</title>
+	 <pubDate></pubDate>
+	 <link>/photos-and-video/photography/daily-nature-photo/glacial-beauty-1.xml</link>
+	 <description><![CDATA[
+			
+			<p><a href="https://flic.kr/p/u4Hjmu" target="_blank"><img border="0" src="https://farm4.staticflickr.com/3891/18420000324_0641a9bf7e_z_d.jpg" /></a></p>
+<h3>Glacial Beauty</h3>
+<p>https://flic.kr/p/u4Hjmu</p>
+        
+			 
+		 ]]>
+	 </description>
+	 </item>
+</channel>
+</rss>
+<!-- the HEAD element is required by SiteStudio
+	<head>
+	</head>
+-->

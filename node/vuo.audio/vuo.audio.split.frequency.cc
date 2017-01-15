@@ -2,7 +2,7 @@
  * @file
  * vuo.audio.split.frequency node implementation.
  *
- * @copyright Copyright © 2012–2015 Kosada Incorporated.
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -40,29 +40,7 @@ struct nodeInstanceData
 	gam::Biquad<> *biquad_high;
 };
 
-extern "C"
-{
-	struct nodeInstanceData *nodeInstanceInit
-	(
-	);
-
-	void nodeInstanceEvent
-	(
-		VuoInputData(VuoAudioSamples) samples,
-		VuoInputData(VuoList_VuoReal) cutoffFrequencies,
-		VuoInputEvent() cutoffFrequenciesEvent,
-		VuoOutputData(VuoList_VuoAudioSamples) splitSamples,
-		VuoInstanceData(struct nodeInstanceData *) context
-	);
-
-	void nodeInstanceFini(
-			VuoInstanceData(struct nodeInstanceData *) context
-	);
-}
-
-struct nodeInstanceData *nodeInstanceInit
-(
-)
+extern "C" struct nodeInstanceData *nodeInstanceInit()
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
@@ -110,7 +88,7 @@ static VuoAudioSamples SamplesWithFilterAndFrequency(const VuoAudioSamples sampl
 	return filteredSamples;
 }
 
-void nodeInstanceEvent
+extern "C" void nodeInstanceEvent
 (
 	VuoInputData(VuoAudioSamples) samples,
 	VuoInputData(VuoList_VuoReal, {"default":[300, 4000]}) cutoffFrequencies,
@@ -157,7 +135,7 @@ void nodeInstanceEvent
 	free(freq);
 }
 
-void nodeInstanceFini(
+extern "C" void nodeInstanceFini(
 	VuoInstanceData(struct nodeInstanceData *) context
 )
 {

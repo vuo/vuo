@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:exif="http://www.exif.org/specifications.html" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SmugMug's most popular photos today</title>
+    <link>http://www.smugmug.com/popular/today/</link>
+    <description>A feed of today's most popular photos on SmugMug, calculated using PhotoRank.</description>
+    <atom:icon>http://www.smugmug.com/img/feed-icon.png</atom:icon>
+    <pubDate>Tue, 12 Jan 2016 12:22:50 -0800</pubDate>
+    <lastBuildDate>Tue, 12 Jan 2016 12:22:50 -0800</lastBuildDate>
+    <generator>http://www.smugmug.com/</generator>
+    <copyright>Copyright 2016, the copyright holder of each photograph.  Some portions copyright SmugMug.  All rights reserved.</copyright>
+    <image>
+      <url>http://www.smugmug.com/img/smuggy64.gif</url>
+      <title>SmugMug's most popular photos today</title>
+      <link>http://www.smugmug.com/popular/today/</link>
+    </image>
+    <atom:link rel="self" type="application/rss+xml" href="http://www.smugmug.com/hack/feed.mg?Type=popular&amp;Data=today&amp;format=rss200"/>
+    <atom:link rel="next" type="application/rss+xml" href="http://www.smugmug.com/hack/feed.mg?Type=popular&amp;Data=today&amp;format=rss200&amp;start=100&amp;PageCount=100"/>
+    <item>
+      <title>Bellingham, WA</title>
+      <link>http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/</link>
+      <description>&lt;p&gt;&lt;a href="http://www.rickwillis-photos.com"&gt;Rick Willis&lt;/a&gt;&lt;br /&gt;Bellingham, WA&lt;/p&gt;&lt;p&gt;&lt;a href="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/" title="Bellingham, WA"&gt;&lt;img src="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/Th/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Th.jpg" width="104" height="150" alt="Bellingham, WA" title="Bellingham, WA" style="border: 1px solid #000000;" /&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <category>Daily Community</category>
+      <pubDate>Sun, 10 Jan 2016 10:59:11 -0800</pubDate>
+      <author>nobody@smugmug.com (Rick Willis)</author>
+      <guid isPermaLink="false">http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/Th/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Th.jpg</guid>
+      <exif:DateTimeOriginal>2015-06-21 14:30:32</exif:DateTimeOriginal>
+      <geo:lat>48.75583333333300</geo:lat>
+      <geo:long>-122.49972222222000</geo:long>
+      <geo:alt>0</geo:alt>
+      <media:group>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/Ti/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Ti.jpg" fileSize="12151" type="image/jpeg" medium="image" width="69" height="100">
+          <media:hash algo="md5">39618c5a9ce4d48e450a1d1f7a58d15b</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/Th/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Th.jpg" fileSize="18202" type="image/jpeg" medium="image" width="104" height="150" isDefault="true">
+          <media:hash algo="md5">b5b740c96d6b4ab3b4a938c0c62f546e</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/S/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-S.jpg" fileSize="43457" type="image/jpeg" medium="image" width="208" height="300">
+          <media:hash algo="md5">7c036dce4aa7862454e237055f8fbd4c</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/M/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-M.jpg" fileSize="75875" type="image/jpeg" medium="image" width="312" height="450">
+          <media:hash algo="md5">db35e93f902335e552b9d75621fc3beb</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/L/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-L.jpg" fileSize="114210" type="image/jpeg" medium="image" width="416" height="600">
+          <media:hash algo="md5">af1b3a836a36f6f35fc538891decef1b</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/XL/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-XL.jpg" fileSize="162372" type="image/jpeg" medium="image" width="532" height="768">
+          <media:hash algo="md5">80376c43e44ad9329f0755b293caa1ca</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/X2/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-X2.jpg" fileSize="223982" type="image/jpeg" medium="image" width="666" height="960">
+          <media:hash algo="md5">81baa4200efbe5ddec860bfa3e77cd01</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/X3/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-X3.jpg" fileSize="307837" type="image/jpeg" medium="image" width="832" height="1200">
+          <media:hash algo="md5">eb60e074393383a7760def39697d89ef</media:hash>
+        </media:content>
+        <media:content url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/O/Bellingham%2C%20WA%20-%20Area%20-%202015-123f.jpg" fileSize="4387870" type="image/jpeg" medium="image" width="2712" height="3912">
+          <media:hash algo="md5">ec09da77eb6cb64c0600022319103207</media:hash>
+        </media:content>
+      </media:group>
+      <media:title type="html">Bellingham, WA</media:title>
+      <media:text type="html">&lt;p&gt;&lt;a href="http://www.rickwillis-photos.com"&gt;Rick Willis&lt;/a&gt;&lt;br /&gt;Bellingham, WA&lt;/p&gt;&lt;p&gt;&lt;a href="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/" title="Bellingham, WA"&gt;&lt;img src="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/Th/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Th.jpg" width="104" height="150" alt="Bellingham, WA" title="Bellingham, WA" style="border: 1px solid #000000;" /&gt;&lt;/a&gt;&lt;/p&gt;</media:text>
+      <media:thumbnail url="http://www.rickwillis-photos.com/DailyCommunityGallerys/Dailies-Most-Current-Images/i-Bhxr5JV/0/Th/Bellingham%2C%20WA%20-%20Area%20-%202015-123f-Th.jpg" width="104" height="150"/>
+      <media:category>Daily Community</media:category>
+      <media:keywords>adobe lightroom, flora, flower, flowers, topaz labs, usa, vertical, washington</media:keywords>
+      <media:copyright url="http://www.rickwillis-photos.com">Rick Willis</media:copyright>
+      <media:credit role="photographer">Rick Willis</media:credit>
+    </item>
+  </channel>
+</rss>
