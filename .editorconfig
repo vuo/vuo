@@ -1,0 +1,21 @@
+# http://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+indent_style = tab
+indent_size = 4
+tab_width = 4
+quote_type = single
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+curly_bracket_next_line = true
+spaces_around_operators = true
+spaces_around_brackets = outside
+indent_brace_style = Allman
+
+[*.md]
+indent_style = space
+indent_size = 3
