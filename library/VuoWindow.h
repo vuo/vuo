@@ -18,7 +18,6 @@ extern "C"
 #include <stdint.h>
 
 void VuoApp_init(void);
-bool VuoApp_isMainThread(void);
 void *VuoApp_setMenuItems(void *items);
 void VuoApp_setMenu(void *menu);
 

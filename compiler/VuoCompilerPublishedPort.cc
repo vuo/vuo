@@ -235,7 +235,16 @@ string VuoCompilerPublishedPort::getGraphvizAttributes(void)
 	json_object *details = static_cast<VuoCompilerPublishedPortClass *>(getBase()->getClass()->getCompiler())->getDetails();
 	json_object_object_foreach(details, key, val)
 	{
-		string attributeSuffix = (strcmp(key, "default") == 0 ? "" : string("_") + key);
+		string attributeSuffix;
+		if (strcmp(key, "default") == 0)
+		{
+			if (! val)
+				continue;
+
+			attributeSuffix = "";
+		}
+		else
+			attributeSuffix = string("_") + key;
 
 		string attributeValue = json_object_to_json_string_ext(val, JSON_C_TO_STRING_PLAIN);
 		string escapedAttributeValue = VuoStringUtilities::transcodeToGraphvizIdentifier(attributeValue);

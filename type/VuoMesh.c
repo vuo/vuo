@@ -153,6 +153,9 @@ unsigned long VuoSubmesh_getSplitPrimitiveCount(VuoSubmesh submesh)
  */
 unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh)
 {
+	if (submesh.elementCount == 0 && submesh.vertexCount == 0)
+		return 0;
+
 	if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
 		return submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
 	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleStrip)
@@ -167,6 +170,76 @@ unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh)
 		return submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
 
 	return 0;
+}
+
+/**
+ * Returns the number of complete elements in @c submesh.
+ *
+ * If elementCount represents an incomplete element,
+ * this function returns the rounded-down number of elements.
+ *
+ * For example, if elementCount = 5 and elementAssemblyMethod = VuoMesh_IndividualTriangles,
+ * this function returns 3, discarding the last 2 elements that fail to form a complete triangle.
+ */
+unsigned long VuoSubmesh_getCompleteElementCount(const VuoSubmesh submesh)
+{
+	unsigned long elementCount = submesh.elementCount ? submesh.elementCount : submesh.vertexCount;
+
+	if (elementCount == 0)
+		return 0;
+
+	// Verify that the input mesh has a valid number of elements.
+	if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
+	{
+		if (elementCount % 3 != 0)
+		{
+			VUserLog("Warning: VuoMesh_IndividualTriangles requires elementCount %% 3 == 0, but this mesh has %ld.  Rounding down.", elementCount);
+			return (elementCount/3)*3;
+		}
+	}
+	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleStrip)
+	{
+		if (elementCount < 3)
+		{
+			VUserLog("Warning: VuoMesh_TriangleStrip requires elementCount >= 3, but this mesh only has %ld.", elementCount);
+			return 0;
+		}
+	}
+	else if (submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
+	{
+		if (elementCount < 3)
+		{
+			VUserLog("Warning: VuoMesh_TriangleFan requires elementCount >= 3, but this mesh only has %ld.", elementCount);
+			return 0;
+		}
+	}
+	else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
+	{
+		if (elementCount % 2 != 0)
+		{
+			VUserLog("Warning: VuoMesh_IndividualLines requires elementCount %% 2 == 0, but this mesh has %ld.  Rounding down.", elementCount);
+			return (elementCount/2)*2;
+		}
+	}
+	else if (submesh.elementAssemblyMethod == VuoMesh_LineStrip)
+	{
+		if (elementCount < 2)
+		{
+			VUserLog("Warning: VuoMesh_LineStrip requires elementCount >= 2, but this mesh only has %ld.", elementCount);
+			return 0;
+		}
+	}
+	else if (submesh.elementAssemblyMethod == VuoMesh_Points)
+	{
+		// Since all points are independent, any number of points is fine.
+	}
+	else
+	{
+		VUserLog("Error: Unknown submesh element assembly method: %d", submesh.elementAssemblyMethod);
+		return 0;
+	}
+
+	return elementCount;
 }
 
 /**
@@ -879,10 +952,12 @@ bool VuoMesh_isPopulated(const VuoMesh mesh)
  */
 VuoMesh VuoMesh_makeFromJson(json_object * js)
 {
-	if (!js)
-		return NULL;
+	json_object *o = NULL;
 
-	return (VuoMesh)json_object_get_int64(js);
+	if (json_object_object_get_ex(js, "pointer", &o))
+		return (VuoMesh)json_object_get_int64(o);
+
+	return NULL;
 }
 
 /**
@@ -891,7 +966,9 @@ VuoMesh VuoMesh_makeFromJson(json_object * js)
  */
 json_object * VuoMesh_getJson(const VuoMesh value)
 {
-	return json_object_new_int64((int64_t)value);
+	json_object *js = json_object_new_object();
+	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));
+	return js;
 }
 
 /**
@@ -950,9 +1027,14 @@ char * VuoSubmesh_getSummary(const VuoSubmesh value)
 	const char * objectStringPlural = objectCount==1 ? "" : "s";
 	VuoPoint4d p = value.positions[0];
 
-	return VuoText_format("%u %s%s%lu %s%s<br>with first position (%g, %g, %g, %g)",
+	return VuoText_format("%u %s%s%lu %s%s<br>with first position (%g, %g, %g, %g)<br>%s positions<br>%s normals<br>%s tangents<br>%s bitangents<br>%s texture coordinates",
 						  value.vertexCount, vertexCountString, assemblyMethod, objectCount, objectString, objectStringPlural,
-						  p.x, p.y, p.z, p.w);
+						  p.x, p.y, p.z, p.w,
+						  value.positions          ? "✓" : "◻",
+						  value.normals            ? "✓" : "◻",
+						  value.tangents           ? "✓" : "◻",
+						  value.bitangents         ? "✓" : "◻",
+						  value.textureCoordinates ? "✓" : "◻");
 }
 
 /**

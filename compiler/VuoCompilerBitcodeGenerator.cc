@@ -66,8 +66,8 @@ VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition 
 	this->moduleKey = moduleKey;
 	this->compiler = compiler;
 
-	vector<VuoPublishedPort *> publishedInputPorts = composition->getBase()->getPublishedOutputPorts();
-	vector<VuoPublishedPort *> publishedOutputPorts = composition->getBase()->getPublishedInputPorts();
+	vector<VuoPublishedPort *> publishedInputPorts = composition->getBase()->getPublishedInputPorts();
+	vector<VuoPublishedPort *> publishedOutputPorts = composition->getBase()->getPublishedOutputPorts();
 	if (isTopLevelComposition && publishedInputPorts.empty() && publishedOutputPorts.empty())
 	{
 		publishedInputNode = NULL;
@@ -76,8 +76,8 @@ VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition 
 	}
 	else
 	{
-		publishedInputNode = compiler->createPublishedInputNode(composition->getBase()->getPublishedInputPorts());
-		publishedOutputNode = compiler->createPublishedOutputNode(composition->getBase()->getPublishedOutputPorts());
+		publishedInputNode = compiler->createPublishedInputNode(publishedInputPorts);
+		publishedOutputNode = compiler->createPublishedOutputNode(publishedOutputPorts);
 		graph = new VuoCompilerGraph(composition, publishedInputNode->getCompiler(), publishedOutputNode->getCompiler());
 	}
 	chainsForTrigger = graph->getChains();  // store in a data member, rather than calling getChains() multiple times, to preserve order of chains
@@ -639,7 +639,9 @@ void VuoCompilerBitcodeGenerator::generateCompositionContextFiniFunction(void)
 		if (isTopLevelComposition)
 			VuoCompilerCodeGenUtilities::generateIsNodeInBothCompositionsCheck(module, function, node->getGraphvizIdentifier(), block, nextBlock, finiBlock, constantStrings);
 		else
-			finiBlock = nextBlock = block;
+			// Since this is a subcomposition, all nodes must be in both compositions (pending https://b33p.net/kosada/node/11535),
+			// so skip generating the branch for removed nodes (leave finiBlock null).
+			nextBlock = block;
 
 		node->generateContextFini(module, nextBlock, finiBlock, compositionIdentifierValue, nodeIdentifierValue, nodeContextValue);
 
@@ -3540,7 +3542,7 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerSchedulerFunction(VuoType
  *   char *compositionIdentifier = (char *)((void **)context)[0];
  *   VuoImage dataCopy = (VuoImage)((void **)context)[1];
  *
- *   // If paused, ignore this event.
+ *   // If paused, ignore this event. (Not checked for the published input trigger.)
  *   if (isPaused)
  *   {
  *     free(dataCopy);
@@ -3709,15 +3711,22 @@ Function * VuoCompilerBitcodeGenerator::generateTriggerWorkerFunction(VuoCompile
 	VuoCompilerNode *triggerNode = graph->getNodesForTriggerPorts()[trigger];
 	Value *triggerNodeContextValue = triggerNode->generateGetContext(module, initialBlock, compositionIdentifierValue);
 
-	// If paused, ignore this event.
-	BasicBlock *isPausedBlock = BasicBlock::Create(module->getContext(), "isPaused", function, NULL);
-	ICmpInst *isPausedValueIsTrue = VuoCompilerCodeGenUtilities::generateIsPausedComparison(module, initialBlock);
-	BranchInst::Create(isPausedBlock, triggerBlock, isPausedValueIsTrue, initialBlock);
-	trigger->generateDataValueDiscardFromWorker(module, isPausedBlock, function);
-	trigger->generateFreeContext(module, isPausedBlock, function);
-	trigger->generateSignalForSemaphore(module, isPausedBlock, triggerNodeContextValue);
-	BranchInst::Create(finalBlock, isPausedBlock);
-	// Otherwise...
+	if (triggerNode->getBase() != publishedInputNode)
+	{
+		// If paused, ignore this event.
+		BasicBlock *isPausedBlock = BasicBlock::Create(module->getContext(), "isPaused", function, NULL);
+		ICmpInst *isPausedValueIsTrue = VuoCompilerCodeGenUtilities::generateIsPausedComparison(module, initialBlock);
+		BranchInst::Create(isPausedBlock, triggerBlock, isPausedValueIsTrue, initialBlock);
+		trigger->generateDataValueDiscardFromWorker(module, isPausedBlock, function);
+		trigger->generateFreeContext(module, isPausedBlock, function);
+		trigger->generateSignalForSemaphore(module, isPausedBlock, triggerNodeContextValue);
+		BranchInst::Create(finalBlock, isPausedBlock);
+		// Otherwise...
+	}
+	else
+	{
+		BranchInst::Create(triggerBlock, initialBlock);
+	}
 
 	bool isNodeEventForSubcomposition = (! isTopLevelComposition && trigger == getPublishedInputTrigger());
 

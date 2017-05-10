@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.make.shadertoy node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* Write premultiplied semitransparent orange to framebuffer; get same color in output image. */
+	{
+		"firingPort": "fragmentShader",
+		"inputPortValues": {
+			"fragmentShader": "void main(void) { vec4 color = vec4(0.7490196,0.2901961,0.1960784,0.50196080); color.rgb *= color.a; gl_FragColor = color; }",
+			"width": 1,
+			"height": 1,
+			"colorDepth": "8bpc",
+		},
+		"outputPortValues": {
+			"shaderImage": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+]}

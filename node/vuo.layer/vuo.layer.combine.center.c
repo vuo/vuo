@@ -25,9 +25,9 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoPoint2d) center,
-		VuoInputData(VuoReal) rotation,
-		VuoInputData(VuoPoint2d, { "default":{"x":1, "y":1}}) scale,
+		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
+		VuoInputData(VuoReal, {"default":0, "suggestedMin":0, "suggestedMax":360, "suggestedStep":15}) rotation,
+		VuoInputData(VuoPoint2d, {"default":{"x":1,"y":1}, "suggestedMin":{"x":0,"y":0}, "suggestedMax":{"x":2,"y":2}, "suggestedStep":{"x":0.1,"y":0.1}}) scale,
 		VuoInputData(VuoList_VuoLayer) layers,
 		VuoOutputData(VuoLayer) layer
 )

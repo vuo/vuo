@@ -281,24 +281,32 @@ const char *VuoGlContext_getRenderer(VuoGlContext context)
 }
 
 /**
- * Returns true if Vuo should possibly use multisampling for the specified context's GPU.
+ * Returns the maximum supported multisampling level for this GPU.
  *
  * Multisampling is known to break point rendering on some GPUs, so we intentionally disable it on those.
  *
  * - https://b33p.net/kosada/node/8225#comment-31324
  * - https://b33p.net/kosada/node/10595
  */
-bool VuoGlContext_isMultisamplingFunctional(VuoGlContext context)
+int VuoGlContext_getMaximumSupportedMultisampling(VuoGlContext context)
 {
-	static bool multisamplingFunctional = false;
+	static GLint supportedSamples = 0;
 	static dispatch_once_t multisamplingCheck = 0;
 	dispatch_once(&multisamplingCheck, ^{
 		const char *renderer = VuoGlContext_getRenderer(context);
-		multisamplingFunctional = !(strcmp(renderer, "Intel HD Graphics 4000 OpenGL Engine") == 0
-								 || strcmp(renderer, "Intel Iris Pro OpenGL Engine"        ) == 0
-								   );
+		if (strcmp(renderer, "Intel HD Graphics 4000 OpenGL Engine") == 0
+		 || strcmp(renderer, "Intel Iris OpenGL Engine"            ) == 0
+		 || strcmp(renderer, "Intel Iris Pro OpenGL Engine"        ) == 0)
+			supportedSamples = 0;
+		else
+		{
+			CGLContextObj cgl_ctx = (CGLContextObj)context;
+			glGetIntegerv(GL_MAX_SAMPLES, &supportedSamples);
+			if (supportedSamples == 1)
+				supportedSamples = 0;
+		}
 	});
-	return multisamplingFunctional;
+	return supportedSamples;
 }
 
 /**
@@ -352,10 +360,8 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 					  {
 						  // …otherwise enable 4x multisampling (unless there's a known problem with this GPU model).
 
-						  if (VuoGlContext_isMultisamplingFunctional(cgl_ctx))
-							  multisample = 4;
-						  else
-							  multisample = 0;
+						  int supportedSamples = VuoGlContext_getMaximumSupportedMultisampling(cgl_ctx);
+						  multisample = MIN(4, supportedSamples);
 					  }
 
 					  CGLDestroyContext(cgl_ctx);

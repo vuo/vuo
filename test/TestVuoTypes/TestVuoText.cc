@@ -203,6 +203,71 @@ private slots:
 		QCOMPARE(VuoText_areEqual((VuoText)text1, (VuoText)text2), expectedEqual);
 	}
 
+	void testLessThan_data()
+	{
+		QTest::addColumn<void *>("text1");
+		QTest::addColumn<void *>("text2");
+		QTest::addColumn<bool>("expectedLessThan");
+
+		QTest::newRow("both NULL")						<< (void *)NULL	<< (void *)NULL		<< false;
+
+		// NULL should be less than any string.
+		QTest::newRow("NULL, emptystring")				<< (void *)NULL	<< (void *)""		<< true;
+		QTest::newRow("NULL, string")					<< (void *)NULL	<< (void *)"foo"	<< true;
+		QTest::newRow("emptystring, NULL")				<< (void *)""	<< (void *)NULL		<< false;
+		QTest::newRow("emptystring, emptystring")		<< (void *)""	<< (void *)""		<< false;
+
+		// Emptystring should be less than any non-emptystring.
+		QTest::newRow("emptystring, string")			<< (void *)""	<< (void *)"foo"	<< true;
+		QTest::newRow("string, emptystring")			<< (void *)"foo"<< (void *)""		<< false;
+
+		// Ensure Unicode comparison works.
+		QTest::newRow("different strings 1")			<< (void *)"①"	<< (void *)"②"		<< true;
+		QTest::newRow("different strings 2")			<< (void *)"②"	<< (void *)"①"		<< false;
+		QTest::newRow("same strings, same encoding")	<< (void *)"⓪"	<< (void *)"⓪"		<< false;
+
+		{
+			// http://en.wikipedia.org/wiki/Combining_character
+			const QChar cyrillicU_combiningBreve[] = { QChar(0x0423), QChar(0x0306) };
+			QString stringAsDecomposedCharacters(cyrillicU_combiningBreve, 2);
+			const QChar cyrillicShortU(0x040E);
+			QString stringAsComposedCharacter(cyrillicShortU);
+			void *decomposed = strdup(stringAsDecomposedCharacters.toUtf8().data());
+			void *composed = strdup(stringAsComposedCharacter.toUtf8().data());
+
+			// Different Unicode compositions should be treated as equal (not less than or greater than).
+			QTest::newRow("same strings, different encoding 0") << decomposed << composed << false;
+			QTest::newRow("same strings, different encoding 1") << composed << decomposed << false;
+		}
+
+		// http://www.thai-language.com/ref/alphabetical-order
+		QTest::newRow("Thai <")					<< (void *)"สงวน"		<< (void *)"สงสัย"		<< true;
+		QTest::newRow("Thai >")					<< (void *)"สงสัย"		<< (void *)"สงวน"		<< false;
+
+		// https://en.wikipedia.org/wiki/Goj%C5%ABon
+		QTest::newRow("Japanese hiragana <")	<< (void *)"あ"			<< (void *)"い"			<< true;
+		QTest::newRow("Japanese hiragana >")	<< (void *)"い"			<< (void *)"あ"			<< false;
+
+		// https://en.wikipedia.org/wiki/Chinese_characters#Indexing
+		QTest::newRow("Chinese radical <")		<< (void *)"妈"			<< (void *)"松"			<< true;
+		QTest::newRow("Chinese radical >")		<< (void *)"松"			<< (void *)"妈"			<< false;
+
+		// Old Danish sorts "Å" at the end — http://boards.straightdope.com/sdmb/showpost.php?p=14289219&postcount=14
+		QTest::newRow("Danish <")				<< (void *)"København"	<< (void *)"Århus"		<< true;
+		QTest::newRow("Danish >")				<< (void *)"Århus"		<< (void *)"København"	<< false;
+	}
+	void testLessThan()
+	{
+		QFETCH(void *, text1);
+		QFETCH(void *, text2);
+		QFETCH(bool, expectedLessThan);
+
+		QEXPECT_FAIL("Danish <", "CFStringCompare() doesn't seem to honor this convention.", Continue);
+		QEXPECT_FAIL("Danish >", "CFStringCompare() doesn't seem to honor this convention.", Continue);
+
+		QCOMPARE(VuoText_isLessThan((VuoText)text1, (VuoText)text2), expectedLessThan);
+	}
+
 	void testTrim_data()
 	{
 		QTest::addColumn<void *>("text");

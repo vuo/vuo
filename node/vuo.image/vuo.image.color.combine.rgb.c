@@ -20,21 +20,39 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	varying vec4 fragmentTextureCoordinate;
+
 	uniform sampler2D redTexture;
+	uniform int redExists;
+
 	uniform sampler2D greenTexture;
+	uniform int greenExists;
+
 	uniform sampler2D blueTexture;
+	uniform int blueExists;
 
 	void main(void)
 	{
-		vec4 redColor   = texture2D(redTexture, fragmentTextureCoordinate.xy);
-		vec4 greenColor = texture2D(greenTexture, fragmentTextureCoordinate.xy);
-		vec4 blueColor  = texture2D(blueTexture, fragmentTextureCoordinate.xy);
-		gl_FragColor = vec4(
-					(redColor.r   + redColor.g   + redColor.b  )/3.,
-					(greenColor.r + greenColor.g + greenColor.b)/3.,
-					(blueColor.r  + blueColor.g  + blueColor.b )/3.,
-					(redColor.a   + greenColor.a + blueColor.a )/3.);
+		vec4 redColor   = VuoGlsl_sample(redTexture, fragmentTextureCoordinate.xy);
+		vec4 greenColor = VuoGlsl_sample(greenTexture, fragmentTextureCoordinate.xy);
+		vec4 blueColor  = VuoGlsl_sample(blueTexture, fragmentTextureCoordinate.xy);
+
+		vec4 result = vec4(0,0,0,0);
+
+		if (redExists == 1)
+			result += vec4((redColor.r + redColor.g + redColor.b)/3., 0., 0., redColor.a);
+
+		if (greenExists == 1)
+			result += vec4(0., (greenColor.r + greenColor.g + greenColor.b)/3., 0., greenColor.a);
+
+		if (blueExists == 1)
+			result += vec4(0., 0., (blueColor.r + blueColor.g + blueColor.b)/3., blueColor.a);
+
+		result.a /= float(redExists + greenExists + blueExists);
+
+		gl_FragColor = result;
 	}
 );
 
@@ -85,8 +103,14 @@ void nodeInstanceEvent
 	}
 
 	VuoShader_setUniform_VuoImage((*instance)->shader, "redTexture",   redImage);
-	VuoShader_setUniform_VuoImage((*instance)->shader, "greenTexture", greenImage);
+	VuoShader_setUniform_VuoInteger((*instance)->shader, "redExists",  redImage?1:0);
+
+	VuoShader_setUniform_VuoImage((*instance)->shader, "greenTexture",  greenImage);
+	VuoShader_setUniform_VuoInteger((*instance)->shader, "greenExists", greenImage?1:0);
+
 	VuoShader_setUniform_VuoImage((*instance)->shader, "blueTexture",  blueImage);
+	VuoShader_setUniform_VuoInteger((*instance)->shader, "blueExists", blueImage?1:0);
+
 	*combinedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, provokingImage->pixelsWide, provokingImage->pixelsHigh, VuoImage_getColorDepth(provokingImage));
 }
 

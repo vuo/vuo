@@ -22,6 +22,8 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform bool reflectHorizontally;
@@ -47,7 +49,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 				mirroredCoordinate.y = 1. - mirroredCoordinate.y;
 		}
 
-		gl_FragColor = texture2D(texture, mirroredCoordinate);
+		gl_FragColor = VuoGlsl_sample(texture, mirroredCoordinate);
 	}
 );
 

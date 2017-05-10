@@ -10,6 +10,7 @@
 #include "VuoAudio.h"
 #include "VuoPool.hh"
 #include "VuoTriggerSet.hh"
+#include "VuoApp.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -30,6 +31,7 @@ extern "C"
 VuoModuleMetadata({
 					 "title" : "VuoAudio",
 					 "dependencies" : [
+						 "VuoApp",
 						 "VuoAudioSamples",
 						 "VuoAudioInputDevice",
 						 "VuoAudioOutputDevice",
@@ -252,7 +254,13 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 
 		ai->pendingOutputQueue = dispatch_queue_create("VuoAudio pending output", NULL);
 
-		ai->rta = new RtAudio();
+		// Though neither RtAudio's documentation nor Apple's documentation
+		// specify that audio must be initialized on the main thread,
+		// some audio drivers (such as Jack) make that assumption.
+		// https://b33p.net/kosada/node/12068
+		VuoApp_executeOnMainThread(^{
+									   ai->rta = new RtAudio();
+								   });
 
 		RtAudio::StreamParameters inputParameters;
 		inputParameters.deviceId = deviceId;
@@ -347,20 +355,25 @@ VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
 {
 	int deviceId = -1;
 
+	__block RtAudio *temporaryRTA;	// Just for getting device info prior to opening a shared device.
+
 	try
 	{
-		RtAudio temporaryRTA;	// Just for getting device info prior to opening a shared device.
+		// https://b33p.net/kosada/node/12068
+		VuoApp_executeOnMainThread(^{
+									   temporaryRTA = new RtAudio();
+								   });
 
 		if (aid.id == -1 && strlen(aid.name) == 0)
 			// Choose the default device
-			deviceId = temporaryRTA.getDefaultInputDevice();
+			deviceId = temporaryRTA->getDefaultInputDevice();
 		else if (aid.id == -1)
 		{
 			// Choose the first input device whose name contains aid.name
-			unsigned int deviceCount = temporaryRTA.getDeviceCount();
+			unsigned int deviceCount = temporaryRTA->getDeviceCount();
 			for (unsigned int i = 0; i < deviceCount; ++i)
 			{
-				RtAudio::DeviceInfo di = temporaryRTA.getDeviceInfo(i);
+				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
 				if (di.inputChannels && di.name.find(aid.name) != std::string::npos)
 				{
 					deviceId = i;
@@ -371,11 +384,14 @@ VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
 		else
 			// Choose the device specified by aid.id
 			deviceId = aid.id;
+
+		delete temporaryRTA;
 	}
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
+		delete temporaryRTA;
 		return NULL;
 	}
 

@@ -10,6 +10,8 @@
 #include "VuoHeap.h"
 #include <dispatch/dispatch.h>
 #include <dlfcn.h>
+#include <sys/errno.h>
+#include <sys/mman.h>
 #include <map>
 #include <set>
 #include <sstream>
@@ -60,17 +62,39 @@ static set<const void *> *singletons;  ///< Known singleton pointers.
 static dispatch_semaphore_t referenceCountsSemaphore = NULL;  ///< Synchronizes access to referenceCounts.
 
 /**
- * Copies the first 16 printable characters of `pointer` into `summary`, followed by char 0.
+ * If `pointer` refers to allocated memory, copies its first 16 printable characters into `summary`, followed by char 0.
  */
 static void VuoHeap_makeSafePointerSummary(char *summary, const void *pointer)
 {
-	char *pointerAsChar = (char *)pointer;
-	for (int i = 0; i < 16; ++i)
-		if (isprint(pointerAsChar[i]))
-			summary[i] = pointerAsChar[i];
+	// Round down to the beginning of `pointer`'s heap page.
+	// Assume getpagesize() returns a power-of-two; subtracting 1 turns it into a bitmask.
+	int pageSize = getpagesize();
+	long heapPageMask = ~((long)pageSize-1);
+	long heapPage = (long)pointer & heapPageMask;
+
+	// Try to obtain information about this page and the one following it
+	// (in case the 16 bytes starting at `pointer` cross a page boundary).
+	char pageStatus[2];
+	if (mincore((void *)heapPage, pageSize*2, pageStatus) == 0)
+	{
+		// Check whether the page(s) are valid.
+		if (pageStatus[0] > 0 &&
+			(((long)pointer - heapPage + 15 < pageSize) || pageStatus[1] > 0))
+		{
+			// Page(s) are valid, so output the pointer's first 16 printable characters.
+			char *pointerAsChar = (char *)pointer;
+			for (int i = 0; i < 16; ++i)
+				if (isprint(pointerAsChar[i]))
+					summary[i] = pointerAsChar[i];
+				else
+					summary[i] = '_';
+			summary[16] = 0;
+		}
 		else
-			summary[i] = '_';
-	summary[16] = 0;
+			strcpy(summary, "(not allocated)");
+	}
+	else
+		strcpy(summary, "(unknown)");
 }
 
 /**
@@ -100,7 +124,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 #if 0
 	// Periodically dump the referenceCounts table, to help find leaks.
 	const double dumpInterval = 5.0; // seconds
-	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
 	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*dumpInterval, NSEC_PER_SEC*dumpInterval);
 	dispatch_source_set_event_handler(timer, ^{
 										  fprintf(stderr, "\n\n\n\n\nreferenceCounts:\n");
@@ -318,8 +342,10 @@ int VuoRetain(const void *heapPointer)
 
 	if (updatedCount == -1 && !foundSingleton)
 	{
+		char pointerSummary[17];
+		VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
 		ostringstream errorMessage;
-		errorMessage << "VuoRetain was called for unregistered pointer " << heapPointer;
+		errorMessage << "VuoRetain was called for unregistered pointer " << heapPointer << " \"" << pointerSummary << "\"";
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 
@@ -412,10 +438,13 @@ int VuoRelease(const void *heapPointer)
 	}
 	else if (updatedCount == -1 && !foundSingleton)
 	{
+		char pointerSummary[17];
+		VuoHeap_makeSafePointerSummary(pointerSummary, heapPointer);
 		ostringstream errorMessage;
 		errorMessage << "VuoRelease was called for "
 					 << (isRegisteredWithoutRetain ? "unretained" : "unregistered")
-					 << " pointer " << heapPointer;
+					 << " pointer " << heapPointer
+					 << " \"" << pointerSummary << "\"";
 		sendErrorWrapper(errorMessage.str().c_str());
 	}
 

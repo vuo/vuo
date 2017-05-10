@@ -21,6 +21,7 @@ extern "C" {
 #include <OpenGL/CGLMacro.h>
 
 // Be able to use these types in QTest::addColumn()
+Q_DECLARE_METATYPE(VuoColor);
 Q_DECLARE_METATYPE(VuoImage);
 
 bool TestVuoImage_freed = false;
@@ -387,6 +388,82 @@ private slots:
 		VuoRelease(ib);
 	}
 
+	void testImageCopy_data()
+	{
+		QTest::addColumn<VuoColor>("color");
+
+		QTest::newRow("opaque white")			<< VuoColor_makeWithRGBA(1,1,1,1);
+		QTest::newRow("opaque black")			<< VuoColor_makeWithRGBA(0,0,0,1);
+		QTest::newRow("transparent white")		<< VuoColor_makeWithRGBA(1,1,1,0);
+		QTest::newRow("transparent black")		<< VuoColor_makeWithRGBA(0,0,0,0);
+		QTest::newRow("semitransparent orange")	<< VuoColor_makeWithRGBA(0.7490196, 0.2901961, 0.1960784, 0.5019608);
+	}
+	void testImageCopy_verify(VuoImage image, VuoColor color)
+	{
+		const unsigned char *imageBuffer = VuoImage_getBuffer(image, GL_BGRA);
+		// VuoColor is unpremultiplied, yet VuoImage_getBuffer() returns premultiplied colors,
+		// so we need to premultiply the VuoColor before comparing.
+		// For unknown reasons the green/blue values fluctuate between 127 and 128, so use a tolerance of 2.
+		QVERIFY(fabs(imageBuffer[2] - color.a*255*color.r) < 2.);
+		QVERIFY(fabs(imageBuffer[1] - color.a*255*color.g) < 2.);
+		QVERIFY(fabs(imageBuffer[0] - color.a*255*color.b) < 2.);
+		QVERIFY(fabs(imageBuffer[3] - color.a*255        ) < 2.);
+	}
+	void testImageCopy()
+	{
+		QFETCH(VuoColor, color);
+
+		VuoImage image = VuoImage_makeColorImage(color, 640, 480);
+		QVERIFY(image);
+		VuoLocal(image);
+
+		// Ensure the initial image has the expected color.
+		testImageCopy_verify(image, color);
+
+		// Ensure an unflipped copy has the expected color.
+		{
+			VuoImage copiedImage = VuoImage_makeCopy(image, false);
+			QVERIFY(copiedImage);
+			VuoLocal(copiedImage);
+
+			testImageCopy_verify(copiedImage, color);
+		}
+
+		// Ensure a flipped copy has the expected color.
+		{
+			VuoImage copiedImage = VuoImage_makeCopy(image, true);
+			QVERIFY(copiedImage);
+			VuoLocal(copiedImage);
+
+			testImageCopy_verify(copiedImage, color);
+		}
+
+		// Create a RECT image for subsequent tests.
+		VuoImage rectImage = VuoImage_makeGlTextureRectangleCopy(image);
+		VuoLocal(rectImage);
+
+		// Ensure the initial RECT image has the expected color.
+		testImageCopy_verify(rectImage, color);
+
+		// Ensure an unflipped copy has the expected color.
+		{
+			VuoImage copiedImage = VuoImage_makeCopy(rectImage, false);
+			QVERIFY(copiedImage);
+			VuoLocal(copiedImage);
+
+			testImageCopy_verify(copiedImage, color);
+		}
+
+		// Ensure a flipped copy has the expected color.
+		{
+			VuoImage copiedImage = VuoImage_makeCopy(rectImage, true);
+			QVERIFY(copiedImage);
+			VuoLocal(copiedImage);
+
+			testImageCopy_verify(copiedImage, color);
+		}
+	}
+
 	void testImageCopyPerformance()
 	{
 		unsigned long width = 1920;
@@ -508,6 +585,41 @@ private slots:
 		VuoSceneObject_release(rootSceneObject);
 		VuoRelease(sr);
 		VuoGlContext_disuse(glContext);
+	}
+
+	/**
+	 * Ensure Vuo can read alpha-transparent BMP files saved by several apps.
+	 */
+	void testFetchImageBMPAlpha_data()
+	{
+		QTest::addColumn<bool>("dummy");
+
+		QTest::newRow("bmp-alpha-gimp.bmp")       << true;
+		QTest::newRow("bmp-alpha-osxpreview.bmp") << true;
+		QTest::newRow("bmp-alpha-photoshop.bmp")  << true;
+		QTest::newRow("bmp-alpha-vuo.bmp")        << true;
+	}
+	void testFetchImageBMPAlpha()
+	{
+		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		QVERIFY(i);
+		VuoLocal(i);
+
+		QCOMPARE(i->pixelsWide, 2UL);
+		QCOMPARE(i->pixelsHigh, 1UL);
+
+		const unsigned char *imageBuffer = VuoImage_getBuffer(i, GL_BGRA);
+//		VLog("%d %d %d %d",imageBuffer[2],imageBuffer[1],imageBuffer[0],imageBuffer[3]);
+//		VLog("%d %d %d %d",imageBuffer[6],imageBuffer[5],imageBuffer[4],imageBuffer[7]);
+		QEXPECT_FAIL("bmp-alpha-gimp.bmp", "https://sourceforge.net/p/freeimage/bugs/266/", Abort);
+		QVERIFY(abs(imageBuffer[2] -  84) < 2);
+		QVERIFY(abs(imageBuffer[1] -  67) < 2);
+		QVERIFY(abs(imageBuffer[0] -  36) < 2);
+		QVERIFY(abs(imageBuffer[3] -  84) < 2);
+		QVERIFY(abs(imageBuffer[6] - 167) < 2);
+		QVERIFY(abs(imageBuffer[5] - 128) < 2);
+		QVERIFY(abs(imageBuffer[4] -  60) < 2);
+		QVERIFY(abs(imageBuffer[7] - 168) < 2);
 	}
 };
 

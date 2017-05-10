@@ -57,6 +57,7 @@ VuoImageBlur VuoImageBlur_make(void)
 	// Multiple pass Gaussian blur implementation adapted from:
 	// http://www.geeks3d.com/20100909/shader-library-gaussian-blur-post-processing-filter-in-glsl/
 	static const char * verticalPassFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 
 		varying vec4 fragmentTextureCoordinate;
 
@@ -76,13 +77,13 @@ VuoImageBlur VuoImageBlur_make(void)
 			uv.x = (uv.x - inset/width)  *  width/(width -inset*2.);
 			uv.y = (uv.y - inset/height) * height/(height-inset*2.);
 
-			vec4 tc = texture2D(texture, uv);
+			vec4 tc = VuoGlsl_sample(texture, uv);
 			tc *= weight[0];
 
 			for (int i=1; i<3; i++)
 			{
-				tc += texture2D(texture, uv + vec2(0.0, offset[i])/height) * weight[i];
-				tc += texture2D(texture, uv - vec2(0.0, offset[i])/height) * weight[i];
+				tc += VuoGlsl_sample(texture, uv + vec2(0.0, offset[i])/height) * weight[i];
+				tc += VuoGlsl_sample(texture, uv - vec2(0.0, offset[i])/height) * weight[i];
 			}
 
 			gl_FragColor = tc;
@@ -90,6 +91,7 @@ VuoImageBlur VuoImageBlur_make(void)
 	);
 
 	static const char * horizontalPassFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 
 		varying vec4 fragmentTextureCoordinate;
 
@@ -103,13 +105,13 @@ VuoImageBlur VuoImageBlur_make(void)
 		void main(void)
 		{
 			vec2 uv = fragmentTextureCoordinate.xy;
-			vec4 tc = texture2D(texture, uv);
+			vec4 tc = VuoGlsl_sample(texture, uv);
 			tc *= weight[0];
 
 			for (int i=1; i<3; i++)
 			{
-				tc += texture2D(texture, uv + vec2(offset[i])/width, 0.0) * weight[i];
-				tc += texture2D(texture, uv - vec2(offset[i])/width, 0.0) * weight[i];
+				tc += VuoGlsl_sample(texture, uv + vec2(offset[i])/width) * weight[i];
+				tc += VuoGlsl_sample(texture, uv - vec2(offset[i])/width) * weight[i];
 			}
 
 			gl_FragColor = tc;
@@ -202,3 +204,16 @@ VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoReal radius, Vu
 
 	return img;
 }
+
+#ifndef DOXYGEN
+/**
+ * @deprecated Use VuoImageBlur_* instead.
+ */
+VuoImage VuoImage_blur(VuoImage image, VuoReal radius) __attribute__ ((deprecated("VuoImage_blur is deprecated, please use VuoImageBlur_* instead.")));
+VuoImage VuoImage_blur(VuoImage image, VuoReal radius)
+{
+	VuoImageBlur ib = VuoImageBlur_make();
+	VuoLocal(ib);
+	return VuoImageBlur_blur(ib, image, radius, false);
+}
+#endif

@@ -21,6 +21,7 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoInteger count;
+	VuoInteger finalCount;
 	VuoList_VuoGenericType1 list;
 };
 
@@ -29,6 +30,23 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 	return context;
+}
+
+void nodeInstanceTriggerStart
+(
+		VuoInstanceData(struct nodeInstanceData *) context
+)
+{
+	// If an event hits the `fire` port, but nothing is connected to the `buildItem` port,
+	// this node will forever wait for the lost `buildItem` event to return to the `builtItem` port.
+	// By resetting after a livecoding reload, the next event to `fire` will fire another event out the `buildItem` port,
+	// thus giving the composition author another chance to return the event.
+	// https://b33p.net/kosada/node/11755
+	if ((*context)->list)
+	{
+		VuoRelease((*context)->list);
+		(*context)->list = NULL;
+	}
 }
 
 void nodeInstanceEvent
@@ -58,14 +76,20 @@ void nodeInstanceEvent
 
 		(*context)->count = 1;
 		buildItem((*context)->count);
+
+		// Store the total number of iterations desired at the time iteration started,
+		// instead of using whatever value happens to be in the `fire` port each time `builtItem` receives an event.
+		// Fixes sporadic failure to fire `buildItem` events when the desired size changes faster than it takes to build the list.
+		// https://b33p.net/kosada/node/11584
+		(*context)->finalCount = fire;
 	}
 
-	if (builtItemEvent && (*context)->list && (*context)->count <= fire)
+	if (builtItemEvent && (*context)->list && (*context)->count <= (*context)->finalCount)
 	{
 		VuoListAppendValue_VuoGenericType1((*context)->list, builtItem);
 
 		++(*context)->count;
-		if ((*context)->count <= fire)
+		if ((*context)->count <= (*context)->finalCount)
 			buildItem((*context)->count);
 		else
 		{

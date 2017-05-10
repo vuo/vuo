@@ -7,6 +7,7 @@ Blends two images into a single image.
       - [Photoshop blend modes](http://help.adobe.com/en_US/photoshop/cs/using/WSfd1234e1c4b69f30ea53e41001031ab64-77eba.html)
       - [GIMP blend modes](http://docs.gimp.org/en/gimp-concepts-layer-modes.html)
    - `Foreground Opacity` — The opacity that the foreground image component should have in the blended image, ranging from 0 to 1.
+   - `Replace Opacity` — Determines how the foreground image's opacity is combined with the background image's opacity.  If true, the foreground image can make the output image more opaque (like Photoshop does).  If false, the opacity of the background image is used unmodified (like GIMP does).
 
 The resulting image uses the dimensions of the background image (unless the background image is empty, in which case it uses the dimensions of the foreground image).
 

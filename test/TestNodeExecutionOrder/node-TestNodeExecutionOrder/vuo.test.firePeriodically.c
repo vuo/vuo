@@ -8,6 +8,7 @@
  */
 
 #include "node.h"
+#include "VuoEventLoop.h"
 
 #include <dispatch/dispatch.h>
 #include <stdio.h>
@@ -50,7 +51,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const int millisecon
 		cancelRepeatingTimer(ctx);
 
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, q);
+	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
 
 	uint64_t periodNsec = milliseconds * USEC_PER_SEC;
 	dispatch_source_set_timer(ctx->timer, dispatch_time(DISPATCH_TIME_NOW, periodNsec), periodNsec, 0);

@@ -63,6 +63,49 @@ int VuoRetain(const void *heapPointer);
 
 int VuoRelease(const void *heapPointer);
 
+/**
+ * @ingroup ReferenceCountingFunctions
+ * Immediately retains `heapPointer`, and automatically releases it at the end of the local scope.
+ *
+ * When working with local reference-counted variables, typically you
+ * make the object, retain it, work with it, then release it:
+ * @code
+ * VuoThing thing = VuoThing_make();
+ * VuoRetain(thing);
+ * // do stuff
+ * VuoRelease(thing);
+ * return;
+ * @endcode
+ *
+ * But if this code has multiple exit points
+ * (for example, returning early upon encountering a runtime error),
+ * it can be tricky to remember to release at all the right times:
+ * @code
+ * VuoThing thing = VuoThing_make();
+ * VuoRetain(thing);
+ * // do stuff
+ * if (error)
+ *     return; // Bad: thing was leaked.
+ * // do stuff
+ * VuoRelease(thing);
+ * return;
+ * @endcode
+ *
+ * Instead, you can use this macro to simplify local reference-counting:
+ * @code
+ * VuoThing thing = VuoThing_make();
+ * VuoLocal(thing);
+ * // do stuff
+ * if (error)
+ *     return; // OK: VuoLocal automatically releases thing.
+ * // do stuff
+ * return; // OK: VuoLocal automatically releases thing.
+ * @endcode
+ *
+ * @hideinitializer
+ */
+#define VuoLocal(heapPointer) VuoRetain(heapPointer); VuoDefer(^{VuoRelease(heapPointer);});
+
 const char * VuoHeap_getDescription(const void *heapPointer);
 void VuoHeap_addTrace(const void *heapPointer);
 

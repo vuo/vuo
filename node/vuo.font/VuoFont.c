@@ -142,7 +142,7 @@ char * VuoFont_getSummary(const VuoFont value)
 	char *color = VuoColor_getSummary(value.color);
 	const char *alignment = getStringForAlignment(value.alignment);
 
-	char *summary = VuoText_format("%s %gpt<ul><li>color: %s</li>%s<li>%s-aligned</li><li>character spacing: %g</li><li>line spacing: %g</li></ul>",
+	char *summary = VuoText_format("%s %gpt<ul><li>color %s</li>%s<li>%s-aligned</li><li>character spacing: %g</li><li>line spacing: %g</li></ul>",
 						  fontName, value.pointSize, color, underline, alignment, value.characterSpacing, value.lineSpacing);
 
 	free(color);

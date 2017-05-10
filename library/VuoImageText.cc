@@ -10,6 +10,7 @@
 extern "C" {
 #include "module.h"
 #include "VuoImageText.h"
+#include "VuoEventLoop.h"
 
 #include <OpenGL/CGLMacro.h>
 
@@ -120,7 +121,7 @@ static void VuoImageTextCache_init(void)
 	VuoImageTextCache_canceledAndCompleted = dispatch_semaphore_create(0);
 	VuoImageTextCache = new VuoImageTextCacheType;
 
-	VuoImageTextCache_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	VuoImageTextCache_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
 	dispatch_source_set_timer(VuoImageTextCache_timer, dispatch_walltime(NULL,0), NSEC_PER_SEC * VuoImageTextCache_timeout, NSEC_PER_SEC * VuoImageTextCache_timeout);
 	dispatch_source_set_event_handler_f(VuoImageTextCache_timer, VuoImageTextCache_cleanup);
 	dispatch_source_set_cancel_handler(VuoImageTextCache_timer, ^{
@@ -165,7 +166,9 @@ static CFArrayRef VuoImageText_createCTLines(VuoText text, VuoFont font, float b
 	if (fontNameCF)
 		CFRelease(fontNameCF);
 
-	*cgColor = CGColorCreateGenericRGB(font.color.r, font.color.g, font.color.b, font.color.a);
+	CGFloat colorComponents[4] = {font.color.r, font.color.g, font.color.b, font.color.a};
+	*colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	*cgColor = CGColorCreate(*colorspace, colorComponents);
 
 	unsigned long underline = font.underline ? kCTUnderlineStyleSingle : kCTUnderlineStyleNone;
 	CFNumberRef underlineNumber = CFNumberCreate(NULL, kCFNumberCFIndexType, &underline);
@@ -174,7 +177,6 @@ static CFArrayRef VuoImageText_createCTLines(VuoText text, VuoFont font, float b
 	CFNumberRef kernNumber = CFNumberCreate(NULL, kCFNumberFloatType, &kern);
 
 	// Create a temporary context to get the bounds.
-	*colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 	CGContextRef cgContext = CGBitmapContextCreate(NULL, 1, 1, 8, 4, *colorspace, kCGImageAlphaPremultipliedLast);
 
 	// Split the user's text into lines.

@@ -46,6 +46,7 @@ CompilerClass * VuoBase<CompilerClass,RendererClass>::getCompiler(void) const
 	{
 		fprintf(stderr, "VuoBase<%s>(%p)::getCompiler() is null\n", id.c_str(), this);
 		fflush(stderr);
+		VuoLog_backtrace();
 	}
 #endif
 	return compiler;
@@ -80,6 +81,7 @@ RendererClass * VuoBase<CompilerClass,RendererClass>::getRenderer(void) const
 	{
 		fprintf(stderr, "VuoBase<%s>(%p)::getRenderer() is null\n", id.c_str(), this);
 		fflush(stderr);
+		VuoLog_backtrace();
 	}
 #endif
 	return renderer;

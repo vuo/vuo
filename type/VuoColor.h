@@ -31,6 +31,8 @@ typedef const struct VuoList_VuoColor_struct { void *l; } * VuoList_VuoColor;
  * A color, with component values specifying red, green, blue, and alpha (opacity).
  *
  * Each value is in the range [0,1], and specifies a color in the sRGB color space.
+ *
+ * RGB are not premultiplied by A.
  */
 typedef struct
 {
@@ -45,10 +47,14 @@ char * VuoColor_getSummary(const VuoColor value);
 bool VuoColor_areEqual(const VuoColor a, const VuoColor b);
 bool VuoColor_isLessThan(const VuoColor a, const VuoColor b);
 
+bool VuoColor_areEqualWithinTolerance(const VuoColor a, const VuoColor b, const float tolerance);
+
 /**
  * Returns a @c VuoColor with the given red, green, blue, alpha.
  *
  * Assumes each value is in the range [0,1], and specifies a color in the sRGB color space.
+ *
+ * You should not premultiply RGB by A.
  */
 static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, VuoReal a) __attribute__((const));
 static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, VuoReal a)
@@ -61,6 +67,8 @@ static inline VuoColor VuoColor_makeWithRGBA(VuoReal r, VuoReal g, VuoReal b, Vu
  * Gets the red, green, blue, alpha of a color.
  *
  * Each value is in the range [0,1], and specifies a color in the sRGB color space.
+ *
+ * RGB are not premultiplied by A.
  */
 static inline void VuoColor_getRGBA(VuoColor color, VuoReal *r, VuoReal *g, VuoReal *b, VuoReal *a)
 {
@@ -68,6 +76,15 @@ static inline void VuoColor_getRGBA(VuoColor color, VuoReal *r, VuoReal *g, VuoR
 	*g = color.g;
 	*b = color.b;
 	*a = color.a;
+}
+
+/**
+ * Returns a @c VuoColor whose red, green, and blue values have been multiplied by its alpha.
+ */
+static inline VuoColor VuoColor_premultiply(VuoColor c) __attribute__((const));
+static inline VuoColor VuoColor_premultiply(VuoColor c)
+{
+	return (VuoColor){ c.r*c.a, c.g*c.a, c.b*c.a, c.a };
 }
 
 VuoColor VuoColor_makeWithHSLA(VuoReal hue, VuoReal saturation, VuoReal luminosity, VuoReal alpha);

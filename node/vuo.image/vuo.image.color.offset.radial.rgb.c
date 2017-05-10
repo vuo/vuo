@@ -32,6 +32,8 @@ VuoModuleMetadata({
 
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	// Inputs
 	uniform sampler2D texture;
 	uniform float redOffset;
@@ -41,9 +43,9 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		vec4 redColor   = texture2D(texture, (fragmentTextureCoordinate.xy - vec2(.5,.5)) * redOffset   + vec2(0.5,0.5));
-		vec4 greenColor = texture2D(texture, (fragmentTextureCoordinate.xy - vec2(.5,.5)) * greenOffset + vec2(0.5,0.5));
-		vec4 blueColor  = texture2D(texture, (fragmentTextureCoordinate.xy - vec2(.5,.5)) * blueOffset  + vec2(0.5,0.5));
+		vec4 redColor   = VuoGlsl_sample(texture, (fragmentTextureCoordinate.xy - vec2(.5,.5)) * redOffset   + vec2(0.5,0.5));
+		vec4 greenColor = VuoGlsl_sample(texture, (fragmentTextureCoordinate.xy - vec2(.5,.5)) * greenOffset + vec2(0.5,0.5));
+		vec4 blueColor  = VuoGlsl_sample(texture, (fragmentTextureCoordinate.xy - vec2(.5,.5)) * blueOffset  + vec2(0.5,0.5));
 
 		gl_FragColor = vec4(redColor.r, greenColor.g, blueColor.b, (redColor.a + greenColor.a + blueColor.a)/3.);
 	}

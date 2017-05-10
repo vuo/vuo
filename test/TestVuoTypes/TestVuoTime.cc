@@ -30,6 +30,13 @@ class TestVuoTime : public QObject
 
 private slots:
 
+	void initTestCase()
+	{
+		// Force these tests to run in the EST (not EDT or America/New_York) time zone year-round;
+		// ignore daylight saving time, since that changes how Unix timestamps are locally interpreted, which breaks the tests.
+		setenv("TZ", "EST", true);
+	}
+
 	void testCurrent()
 	{
 		VuoTime t = VuoTime_getCurrent();
@@ -76,7 +83,7 @@ private slots:
 		QTest::newRow("2 seconds before Mac (and Vuo) epoch")    <<         -2.00 << true  << 2000 << 366 << 12 << 31 << 52 << VuoWeekday_Sunday    << 18 << 59 << 58.00 << "2000-12-31 18:59:58.00";
 		QTest::newRow("1 second before Mac (and Vuo) epoch")     <<         -1.00 << true  << 2000 << 366 << 12 << 31 << 52 << VuoWeekday_Sunday    << 18 << 59 << 59.00 << "2000-12-31 18:59:59.00";
 		QTest::newRow("Mac (and Vuo) epoch")                     <<          0.00 << true  << 2000 << 366 << 12 << 31 << 52 << VuoWeekday_Sunday    << 19 << 00 << 00.00 << "2000-12-31 19:00:00.00";
-		QTest::newRow("Vuo 0.5 release")                         <<  404339744.00 << true  << 2013 << 297 << 10 << 24 << 43 << VuoWeekday_Thursday  << 16 << 35 << 44.00 << "2013-10-24 16:35:44.00";
+		QTest::newRow("Vuo 0.5 release")                         <<  404343344.00 << true  << 2013 << 297 << 10 << 24 << 43 << VuoWeekday_Thursday  << 16 << 35 << 44.00 << "2013-10-24 16:35:44.00";
 		QTest::newRow("Vuo 1.0 release")                         <<  439971643.00 << true  << 2014 << 345 << 12 << 11 << 50 << VuoWeekday_Thursday  << 01 << 20 << 43.00 << "2014-12-11 01:20:43.00";
 
 		QTest::newRow("second rollover: 19:00:59.00")            <<         59.00 << true  << 2000 << 366 << 12 << 31 << 52 << VuoWeekday_Sunday    << 19 << 00 << 59.00 << "2000-12-31 19:00:59.00";
@@ -502,7 +509,7 @@ private slots:
 		VuoTime t = VuoTime_make(2015, 6, 1, 20, 19, 32.6);
 
 		//                                                                            en_US                                  en_GB                                  de_DE                                  ja_JP
-		QTest::newRow("datetime-sortable")  << t << VuoTimeFormat_DateTimeSortable << "2015-06-02 00:19:32Z"              << "2015-06-02 00:19:32Z"              << "2015-06-02 00:19:32Z"              << "2015-06-02 00:19:32Z"				;
+		QTest::newRow("datetime-sortable")  << t << VuoTimeFormat_DateTimeSortable << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"              << "2015-06-02 01:19:32Z"				;
 		QTest::newRow("datetime-short-12")  << t << VuoTimeFormat_DateTimeShort12  << "06/01/2015 08:19:32 PM"            << "01/06/2015 08:19:32 pm"            << "01.06.2015 08:19:32 pm"            << "2015/06/01 08:19:32 PM"				;
 		QTest::newRow("datetime-short-24")  << t << VuoTimeFormat_DateTimeShort24  << "06/01/2015 20:19:32"               << "01/06/2015 20:19:32"               << "01.06.2015 20:19:32"               << "2015/06/01 20時19分32秒"				;
 		QTest::newRow("datetime-medium-12") << t << VuoTimeFormat_DateTimeMedium12 << "Jun  1, 2015 08:19:32 PM"          << "Jun  1, 2015 08:19:32 pm"          << "Jun  1, 2015 08:19:32 pm"          << " 6  1, 2015 08:19:32 PM"			;

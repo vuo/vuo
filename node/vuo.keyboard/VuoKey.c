@@ -12,6 +12,7 @@
 #include "type.h"
 #include "VuoKey.h"
 #include "VuoList_VuoKey.h"
+#include "VuoApp.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -19,6 +20,7 @@ VuoModuleMetadata({
 					  "title" : "Key",
 					  "dependencies" : [
 						"VuoText",
+						"VuoApp",
 						"VuoList_VuoKey",
 						"Carbon.framework"
 					  ],
@@ -938,17 +940,21 @@ char * VuoKey_getSummary(const VuoKey value)
  * @param deadKeyState To capture key combinations (e.g. Option-E-E for "é"), pass a reference to the same integer variable
  *		on consecutive calls to this function. Before the first call, you should initialize the variable to 0.
  * @return One or more UTF8-encoded characters.
+ *
+ * @threadAny
  */
 char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned long flags, unsigned int *deadKeyState)
 {
+	__block char *characters = NULL;
+	VuoApp_executeOnMainThread(^{
 	// http://stackoverflow.com/questions/22566665/how-to-capture-unicode-from-key-events-without-an-nstextview
 	// http://stackoverflow.com/questions/12547007/convert-key-code-into-key-equivalent-string
 	// http://stackoverflow.com/questions/8263618/convert-virtual-key-code-to-unicode-string
 
 	TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
-	CFDataRef layoutData = TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
+	CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
 	if (!layoutData)
-		return NULL;
+		return;
 	const UCKeyboardLayout *keyboardLayout = (const UCKeyboardLayout *)CFDataGetBytePtr(layoutData);
 
 	UInt32 modifierKeyState = (flags >> 16) & 0xFF;
@@ -968,13 +974,14 @@ char * VuoKey_getCharactersForMacVirtualKeyCode(unsigned short keyCode, unsigned
 				   &realLength,
 				   unicodeString);
 	CFRelease(currentKeyboard);
-	CFStringRef cfString = CFStringCreateWithCharacters(kCFAllocatorDefault, unicodeString, realLength);
+	CFStringRef cfString = CFStringCreateWithCharacters(kCFAllocatorDefault, unicodeString, (CFIndex)realLength);
 
 	VuoText t = VuoText_makeFromCFString(cfString);
 	VuoRetain(t);
-	char *characters = strdup(t);
+	characters = strdup(t);
 	VuoRelease(t);
 	CFRelease(cfString);
+	});
 	return characters;
 }
 

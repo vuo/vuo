@@ -1,4 +1,4 @@
-VUO_VERSION = 1.2.1
+VUO_VERSION = 1.2.2
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -30,12 +30,12 @@ ZLIB_ROOT = /usr/local/Cellar/zlib/1.2.8
 ZMQ_ROOT = /usr/local/Cellar/zeromq/2.2.0
 OPENSSL_ROOT = /usr/local/Cellar/openssl/1.0.1g
 MUPARSER_ROOT = /usr/local/Cellar/muparser/2.2.3
-FREEIMAGE_ROOT = /usr/local/Cellar/freeimage/3.15.4
+FREEIMAGE_ROOT = /usr/local/Cellar/freeimage/3.17.0
 CURL_ROOT = /usr/local/Cellar/curl/7.30.0
 RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
 RTAUDIO_ROOT = /usr/local/Cellar/rtaudio/4.0.12
 GAMMA_ROOT = /usr/local/Cellar/gamma/0.9.5
-ASSIMP_ROOT = /usr/local/Cellar/assimp/3.1.1
+ASSIMP_ROOT = /usr/local/Cellar/assimp/3.2.0
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
 FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
 LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.9
@@ -104,10 +104,14 @@ mac {
 	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
 	!isEmpty(VUO_INFO_PLIST) : isEmpty(API_HEADER_LISTS) {
-		# Fill in version number
+		# Fill in version number.
+		# Apple requires the main app bundle's CFBundleVersion and CFBundleShortVersionString to be "three period-separated integers".
+		# https://b33p.net/kosada/node/8044#comment-50081
 		infoPlist.commands = \
 			cat "$$VUO_INFO_PLIST" \
-			| sed '"s/@SHORT_VERSION@/$$VUO_VERSION \\(r`svnversion -n` on `date +%Y.%m.%d`\\)/"' \
+			| sed '"s/@BUNDLE_VERSION@/$$VUO_VERSION/"' \
+			| sed '"s/@BUNDLE_SHORT_VERSION_STRING@/$$VUO_VERSION/"' \
+			| sed '"s/@SHORT_VERSION@/$$VUO_VERSION_AND_BUILD/"' \
 			> "$$VUO_INFO_PLIST_GENERATED"
 		infoPlist.depends = $$VUO_INFO_PLIST
 		infoPlist.target = $$VUO_INFO_PLIST_GENERATED

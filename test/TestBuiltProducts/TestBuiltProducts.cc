@@ -263,6 +263,11 @@ private slots:
 			whitelistedLoadCommandsForPath[llvmPath].insert("0x00000026");
 		}
 		{
+			string path = "libassimp.dylib";
+			whitelistedLoadCommandsForPath[path].insert("LC_VERSION_MIN_MACOSX");
+			whitelistedLoadCommandsForPath[path].insert("LC_FUNCTION_STARTS");
+		}
+		{
 			set<string> ffmpegPaths;
 			ffmpegPaths.insert("libavcodec.dylib");
 			ffmpegPaths.insert("libavdevice.dylib");
@@ -279,6 +284,11 @@ private slots:
 				whitelistedLoadCommandsForPath[ffmpegPath].insert("LC_FUNCTION_STARTS");
 				whitelistedLoadCommandsForPath[ffmpegPath].insert("0x00000026");
 			}
+		}
+		{
+			string path = "libfreeimage.dylib";
+			whitelistedLoadCommandsForPath[path].insert("LC_VERSION_MIN_MACOSX");
+			whitelistedLoadCommandsForPath[path].insert("LC_FUNCTION_STARTS");
 		}
 		{
 			string freenectPath = "libfreenect.dylib";

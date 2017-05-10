@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+MakeLineMesh2 [type="vuo.mesh.make.lines.VuoPoint2d" version="2.1.0" label="Make Line Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="150,135" _lineWidth="0.01"];
+SummarizeValue2 [type="vuo.data.summarize.VuoMesh" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="315,135"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Positions>Positions\r" _Positions_type="VuoList_VuoPoint2d" _Positions="null"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Summary>Summary\l" _Summary_type="VuoText"];
+
+MakeLineMesh2:mesh -> SummarizeValue2:value;
+PublishedInputs:Positions -> MakeLineMesh2:positions;
+SummarizeValue2:summary -> PublishedOutputs:Summary;
+}

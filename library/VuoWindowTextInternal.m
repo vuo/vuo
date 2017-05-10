@@ -9,6 +9,7 @@
 
 #import "VuoWindowTextInternal.h"
 #import "VuoWindow.h"
+#import "VuoApp.h"
 
 #include <dispatch/dispatch.h>
 
@@ -19,6 +20,7 @@ VuoModuleMetadata({
 					 "title" : "VuoWindowTextInternal",
 					 "dependencies" : [
 						"AppKit.framework",
+						"VuoApp",
 						"VuoWindow"
 					 ]
 				 });
@@ -57,7 +59,9 @@ VuoModuleMetadata({
 		self.delegate = self;
 		self.releasedWhenClosed = NO;
 
-		[self setTitle:@"Vuo Console"];
+		char *title = VuoApp_getName();
+		[self setTitle:[NSString stringWithUTF8String:title]];
+		free(title);
 
 		NSFont *_textFont = [NSFont fontWithName:@"Monaco" size:0];
 		self.textFont = _textFont;

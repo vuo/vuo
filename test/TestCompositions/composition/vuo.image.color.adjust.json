@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.color.adjust node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* Semitransparent orange. */
+	{
+		"firingPort": "image",
+		"inputPortValues": {
+			"image": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"saturation": 0,
+			"hueShift": 0,
+			"contrast": 0,
+			"brightness": 0,
+			"exposure": 0,
+			"gamma": 1,
+		},
+		"outputPortValues": {
+			"adjustedImage": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1}
+		}
+	},
+]}

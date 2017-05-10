@@ -164,6 +164,7 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoNode *> nodes, set<VuoCable *
 				VuoCompilerNode *toNode = publishedInputCable->getToNode()->getCompiler();
 				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>( publishedInputCable->getToPort()->getCompiler() );
 				VuoCompilerCable *cable = new VuoCompilerCable(fromNode, fromPort, toNode, toPort);
+				cable->setAlwaysEventOnly(publishedInputCable->getCompiler()->getAlwaysEventOnly());
 
 				VuoCompilerTriggerPort *fromTrigger = static_cast<VuoCompilerTriggerPort *>(fromPort);
 				Vertex vertex(fromTrigger, toNode);
@@ -198,6 +199,7 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoNode *> nodes, set<VuoCable *
 				VuoCompilerNode *toNode = publishedOutputNode;
 				VuoCompilerPort *toPort = static_cast<VuoCompilerPort *>( publishedOutputNode->getBase()->getInputPorts().at(toPortIndex)->getCompiler() );
 				VuoCompilerCable *cable = new VuoCompilerCable(fromNode, fromPort, toNode, toPort);
+				cable->setAlwaysEventOnly(publishedOutputCable->getCompiler()->getAlwaysEventOnly());
 				VuoCompilerTriggerPort *fromTrigger = dynamic_cast<VuoCompilerTriggerPort *>(fromPort);
 
 				Vertex vertex = (fromTrigger ? Vertex(fromTrigger, toNode) : Vertex(fromNode, toNode));

@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.make.text node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* If we request solid white, the letter should be filled with solid white. */
+	{
+		"firingPort": "Color",
+		"inputPortValues": {
+			"Color": "#ffffffff",
+		},
+		"outputPortValues": {
+			"AllEqual": true,
+		}
+	},
+
+	/* If we request semitransparent orange, the letter should be filled with semitransparent orange. */
+	{
+		"firingPort": "Color",
+		"inputPortValues": {
+			"Color": "#bf4a3280",
+		},
+		"outputPortValues": {
+			"AllEqual": true,
+		}
+	},
+]}

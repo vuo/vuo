@@ -17,7 +17,7 @@
 #include <Quartz/Quartz.h>
 #include <QuartzCore/CVImageBuffer.h>
 #include "VuoVideoFrame.h"
-#include "VuoWindow.h"
+#include "VuoApp.h"
 
 #ifndef DOXYGEN
 // Exists on 10.7 but is inexplicably missing from the CoreVideo header.
@@ -30,7 +30,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						"VuoImage",
 						"VuoImageRenderer",
-						"VuoWindow",
+						"VuoApp",
 						"QTKit.framework",
 						"QuartzCore.framework",
 						"Quartz.framework",

@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Checkerboard Image",
 					  "keywords" : [ "backdrop", "background", "checkers", "chess", "debug", "troubleshoot", "uvw", "mosaic" ],
-					  "version" : "1.0.2",
+					  "version" : "1.0.3",
 					  "node": {
 						  "exampleCompositions" : [ "MoveCheckerboardCenter.vuo" ]
 					  }
@@ -34,14 +34,12 @@ static const char * checkerboardFragmentShaderSource = VUOSHADER_GLSL_SOURCE(120
 
 		vec2 filterWidth = fwidth(fragmentTextureCoordinate.xy) / size;
 
-		vec2 checkPos = fract((fragmentTextureCoordinate.xy - center) / size);
+		vec2 checkPos = fract((fragmentTextureCoordinate.xy - center) / size + filterWidth/2);
 		vec2 p = smoothstep(vec2(0.5), filterWidth + vec2(0.5), checkPos) +
 			(1 - smoothstep(vec2(0),   filterWidth,             checkPos));
 
-		// Premultiply colors before blending, so a transparent color doesn't unduly influence an opaque color.
-		float amount = p.x*p.y + (1-p.x)*(1-p.y);
-		gl_FragColor = vec4(mix(color1.rgb*color1.a, color2.rgb*color2.a, amount),
-							mix(color1.a,            color2.a,            amount));
+		vec4 mixed = mix(color1, color2, p.x*p.y + (1-p.x)*(1-p.y));
+		gl_FragColor = mixed;
 	}
 );
 

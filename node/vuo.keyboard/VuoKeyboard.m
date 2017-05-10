@@ -90,6 +90,12 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 
 				[context->wordInProgress deleteCharactersInRange:NSMakeRange(0, [context->wordInProgress length])];
 			}
+			else if (character[0] == '\b' && character[1] == 0) // Backspace
+			{
+				NSInteger wordLength = [context->wordInProgress length];
+				if (wordLength > 0)
+					[context->wordInProgress deleteCharactersInRange:NSMakeRange(wordLength - 1, 1)];
+			}
 			else
 			{
 				[context->wordInProgress appendString:characterAsString];
@@ -102,6 +108,12 @@ static void VuoKeyboard_fireTypingIfNeeded(NSEvent *event,
 				typedLine(line);
 
 				[context->lineInProgress deleteCharactersInRange:NSMakeRange(0, [context->lineInProgress length])];
+			}
+			else if (character[0] == '\b' && character[1] == 0) // Backspace
+			{
+				NSInteger lineLength = [context->lineInProgress length];
+				if (lineLength > 0)
+					[context->lineInProgress deleteCharactersInRange:NSMakeRange(lineLength - 1, 1)];
 			}
 			else
 			{

@@ -25,7 +25,8 @@ VuoModuleMetadata({
 						 "psd", "Photoshop",
 						 "raw", "cr2", "dng", "dcr", "nef", "raf", "mos", "kdc",
 						 "tiff",
-						 "Targa", "tga"
+						 "Targa", "tga",
+						 "WebP"
 					 ],
 					 "version" : "1.0.0",
 					 "dependencies" : [

@@ -16,7 +16,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Explode 3D Object",
-					 "keywords" : [ "break", "separate", "shatter", "fireworks", "explosion", "blow up", "burst",
+					 "keywords" : [ "break", "separate", "shatter", "fireworks", "explosion", "blow up", "burst", "implode",
 						 "face", "edge", "side", "gravity", "filter" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -136,7 +136,7 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 					1);
 	}
 
-	// Some GPUs (e.g., Intel HD Graphics 4000 on @jmcc's MacBook Air) sporadically return crazy values for acos(),
+	// Some GPUs (e.g., Intel HD Graphics 4000 on @jmcc's MacBook Air) sporadically return incorrect values for acos(),
 	// so provide our own implementation (polynomial approximation).
 	float acos2(float x)
 	{
@@ -215,7 +215,10 @@ static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 			vec3 axis = normalize(cross(initialFaceNormal, normal.xyz));
 			float angle = acos2(dot(initialFaceNormal, normal.xyz));
-			if (angle > 0.0001)
+
+			// NVIDIA 9400M apparently NANs on angles closer to zero.
+			// https://b33p.net/kosada/node/11850
+			if (angle > /*0.0001*/ 0.001)
 			{
 				// Turn the axis/angle into a quaternion.
 				vec4 q;

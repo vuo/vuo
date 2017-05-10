@@ -11,10 +11,10 @@
 #import "VuoWindowTextInternal.h"
 #import "VuoWindowOpenGLInternal.h"
 #include "VuoEventLoop.h"
+#include "VuoApp.h"
 
 #include "module.h"
 
-#include <pthread.h>
 #include <mach-o/dyld.h>
 #include <libgen.h>
 #include <dirent.h>
@@ -24,58 +24,12 @@ VuoModuleMetadata({
 					 "title" : "VuoWindow",
 					 "dependencies" : [
 						 "AppKit.framework",
+						 "VuoApp",
 						 "VuoWindowTextInternal",
 						 "VuoWindowOpenGLInternal"
 					 ]
 				 });
 #endif
-
-/**
- * Is the current thread the main thread?
- */
-bool VuoApp_isMainThread(void)
-{
-	static void **VuoApp_mainThread;
-	static dispatch_once_t once = 0;
-	dispatch_once(&once, ^{
-		VuoApp_mainThread = (void **)dlsym(RTLD_SELF, "VuoApp_mainThread");
-		if (!VuoApp_mainThread)
-			VuoApp_mainThread = (void **)dlsym(RTLD_DEFAULT, "VuoApp_mainThread");
-
-		if (!VuoApp_mainThread)
-		{
-			VUserLog("Error: Couldn't find VuoApp_mainThread.");
-			exit(1);
-		}
-
-		if (!*VuoApp_mainThread)
-		{
-			VUserLog("Error: VuoApp_mainThread isn't set.");
-			exit(1);
-		}
-	});
-
-	return *VuoApp_mainThread == (void *)pthread_self();
-}
-
-/**
- * Executes the specified block on the main thread, then returns.
- *
- * Can be called from any thread, including the main thread (avoids deadlock).
- */
-void VuoApp_executeOnMainThread(void (^block)(void))
-{
-	if (VuoApp_isMainThread())
-		block();
-	else
-	{
-		VUOLOG_PROFILE_BEGIN(mainQueue);
-		dispatch_sync(dispatch_get_main_queue(), ^{
-			VUOLOG_PROFILE_END(mainQueue);
-			block();
-		});
-	}
-}
 
 /**
  * NSApplication delegate, to shut down cleanly when the user requests to quit.

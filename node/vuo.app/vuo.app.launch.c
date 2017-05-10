@@ -8,14 +8,14 @@
  */
 
 #include "node.h"
-#include "VuoApp.h"
+#include "VuoAppLaunch.h"
 
 VuoModuleMetadata({
 					 "title" : "Launch App",
 					 "keywords" : [ "execute", "run", "start", "open", "application" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						 "VuoApp"
+						 "VuoAppLaunch"
 					 ],
 					 "node": {
 						 "isInterface" : true,
@@ -30,5 +30,5 @@ void nodeEvent
 )
 {
 	if (urlEvent)
-		VuoApp_launch(url);
+		VuoAppLaunch_launch(url);
 }

@@ -24,6 +24,7 @@ VuoModuleMetadata({
 								  "VuoAudioInputDevice", "VuoAudioOutputDevice", "VuoAudioFrame", "VuoData",
 								  "VuoCoordinateUnit", "VuoDistribution3d", "VuoDragEvent",
 								  "VuoHidControl", "VuoHidDevice",
+								  "VuoImageFormat",
 								  "VuoFont", "VuoMidiController", "VuoMidiInputDevice",
 								  "VuoMidiNote", "VuoMidiOutputDevice", "VuoMidiPitchBend",
 								  "VuoMultisample", "VuoBaudRate", "VuoParity",
@@ -33,6 +34,7 @@ VuoModuleMetadata({
 								  "VuoTempoRange", "VuoNumberFormat", "VuoIconPosition", "VuoMovieFormat",
 								  "VuoVideoFrame", "VuoVideoInputDevice",
 								  "VuoTime", "VuoTimeUnit", "VuoTimeFormat", "VuoWeekday",
+								  "VuoHorizontalAlignment", "VuoVerticalAlignment"
 							  ]
 						  }
 					  },

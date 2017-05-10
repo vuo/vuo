@@ -22,7 +22,7 @@ extern "C"
  */
 typedef void * VuoGlContext;
 
-bool VuoGlContext_isMultisamplingFunctional(VuoGlContext context);
+int VuoGlContext_getMaximumSupportedMultisampling(VuoGlContext context);
 
 void VuoGlContext_setGlobalRootContext(void *rootContext);
 

@@ -275,6 +275,8 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
 	GLenum internalformat = VuoImageColorDepth_getGlInternalFormat(format, colorDepth);
 //	VLog("Using format=%s -> internalformat=%s", VuoGl_stringForConstant(format), VuoGl_stringForConstant(internalformat));
 	GLuint glTextureName = VuoGlTexturePool_use(glContext, internalformat, pixelsWide, pixelsHigh, format);
+	if (!glTextureName)
+		return NULL;
 
 	int bytesPerPixel = VuoGlTexture_getChannelCount(format);
 
@@ -350,6 +352,8 @@ VuoImage VuoImage_makeFromContextFramebuffer(VuoGlContext context)
 	GLint height = viewport[3];
 
 	GLuint glTextureName = VuoGlTexturePool_use(cgl_ctx, GL_RGBA, width, height, GL_BGRA);
+	if (!glTextureName)
+		return NULL;
 	glBindTexture(GL_TEXTURE_2D, glTextureName);
 	glReadBuffer(GL_FRONT);
 	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
@@ -398,6 +402,7 @@ VuoImage VuoImage_makeFromContextFramebuffer(VuoGlContext context)
  *    - @c GL_RGBA16I_EXT (64 bits per pixel)
  *    - @c GL_RGBA16F_ARB (64 bits per pixel)
  *    - @c GL_RGBA32F_ARB (128 bits per pixel)
+ *    - @c GL_R16 (16 bits per pixel)
  *    - @c GL_LUMINANCE (8 bits per pixel)
  *    - @c GL_LUMINANCE_ALPHA (16 bits per pixel)
  *    - @c GL_DEPTH_COMPONENT16 (16 bits per pixel)
@@ -432,6 +437,7 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 		{
 			unsigned int channels;
 			if (requestedFormat == GL_LUMINANCE
+			 || requestedFormat == GL_R16
 			 || requestedFormat == GL_DEPTH_COMPONENT16)
 				channels = 1;
 			else if (requestedFormat == GL_LUMINANCE_ALPHA)
@@ -451,6 +457,7 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 			unsigned int bytesPerChannel = 1;
 			GLuint type = GL_UNSIGNED_BYTE;
 			if (requestedFormat == GL_RGBA16I_EXT
+			 || requestedFormat == GL_R16
 			 || requestedFormat == GL_DEPTH_COMPONENT16)
 			{
 				bytesPerChannel = 2;
@@ -474,6 +481,8 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 				actualFormat = GL_BGRA;
 			else if (requestedFormat == GL_DEPTH_COMPONENT16)
 				actualFormat = GL_DEPTH_COMPONENT;
+			else if (requestedFormat == GL_R16)
+				actualFormat = GL_RED;
 
 			size_t pixelBufferSize = image->pixelsWide * image->pixelsHigh * channels * bytesPerChannel;
 			pixels = (unsigned char *)malloc(pixelBufferSize);
@@ -654,10 +663,53 @@ bool VuoImage_areEqualWithinTolerance(const VuoImage a, const VuoImage b, const 
 
 	const unsigned char *aPixels = VuoImage_getBuffer(a, GL_BGRA);
 	const unsigned char *bPixels = VuoImage_getBuffer(b, GL_BGRA);
+
+	unsigned char aChannels = VuoGlTexture_getChannelCount(a->glInternalFormat);
+	unsigned char bChannels = VuoGlTexture_getChannelCount(b->glInternalFormat);
+	if (aChannels == 4 && bChannels == 1)
+	{
+		// Treat 1-channel red images as equal to opaque greyscale BGRA images.
+		for (unsigned int i = 0; i < a->pixelsWide * a->pixelsHigh; ++i)
+			if (abs(aPixels[i*4+0] - bPixels[i*4+2]) > tolerance
+			 || abs(aPixels[i*4+1] - bPixels[i*4+2]) > tolerance
+			 || abs(aPixels[i*4+2] - bPixels[i*4+2]) > tolerance
+			 || abs(aPixels[i*4+3] - bPixels[i*4+3]) > tolerance)
+			{
+//				VLog("Failed at pixel coordinate (%ld,%ld): RGBA %d,%d,%d,%d vs %d,%d,%d,%d",
+//					 i%a->pixelsWide, i/a->pixelsWide,
+//					 aPixels[i*4+2],aPixels[i*4+1],aPixels[i*4+0],aPixels[i*4+3],
+//					 bPixels[i*4+2],bPixels[i*4+2],bPixels[i*4+2],bPixels[i*4+3]);
+				return false;
+			}
+		return true;
+	}
+	else if (aChannels == 1 && bChannels == 4)
+	{
+		// Treat 1-channel red images as equal to opaque greyscale BGRA images.
+		for (unsigned int i = 0; i < a->pixelsWide * a->pixelsHigh; ++i)
+			if (abs(aPixels[i*4+2] - bPixels[i*4+0]) > tolerance
+			 || abs(aPixels[i*4+2] - bPixels[i*4+1]) > tolerance
+			 || abs(aPixels[i*4+2] - bPixels[i*4+2]) > tolerance
+			 || abs(aPixels[i*4+3] - bPixels[i*4+3]) > tolerance)
+			{
+//				VLog("Failed at pixel coordinate (%ld,%ld): RGBA %d,%d,%d,%d vs %d,%d,%d,%d",
+//					 i%a->pixelsWide, i/a->pixelsWide,
+//					 aPixels[i*4+2],aPixels[i*4+2],aPixels[i*4+2],aPixels[i*4+3],
+//					 bPixels[i*4+2],bPixels[i*4+1],bPixels[i*4+0],bPixels[i*4+3]);
+				return false;
+			}
+		return true;
+	}
+
 	for (unsigned int i = 0; i < a->pixelsWide * a->pixelsHigh * 4; ++i)
 		if (abs(aPixels[i] - bPixels[i]) > tolerance)
 		{
-//			VLog("failed: %d,%d,%d,%d vs %d,%d,%d,%d",aPixels[i/4+2],aPixels[i/4+1],aPixels[i/4+0],aPixels[i/4+3],bPixels[i/4+2],bPixels[i/4+1],bPixels[i/4+0],bPixels[i/4+3]);
+//			unsigned int p = (i/4)*4; // Round down to the start of this 32bit pixel.
+//			VLog("Failed at pixel coordinate (%ld,%ld): abs(%d - %d) > %d (RGBA %d,%d,%d,%d vs %d,%d,%d,%d)",
+//				 i%a->pixelsWide, i/a->pixelsWide,
+//				 aPixels[i], bPixels[i], tolerance,
+//				 aPixels[p+2],aPixels[p+1],aPixels[p+0],aPixels[p+3],
+//				 bPixels[p+2],bPixels[p+1],bPixels[p+0],bPixels[p+3]);
 			return false;
 		}
 
@@ -873,34 +925,14 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 			VuoImage image2d;
 			{
 				VuoImage imageRect = VuoImage_makeClientOwnedGlTextureRectangle(textureRect, glInternalFormat, pixelsWide, pixelsHigh, VuoImage_deleteImage, NULL);
-				VuoRetain(imageRect);
+				VuoLocal(imageRect);
 
-				const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
-					// Inputs
-					uniform sampler2DRect texture;
-					uniform vec2 textureSize;
-					varying vec4 fragmentTextureCoordinate;
-
-					void main()
-					{
-						gl_FragColor = texture2DRect(texture, fragmentTextureCoordinate.xy*textureSize);
-					}
-				);
-
-				/// @todo candidate for VuoShader_makeGlTextureRectangleShader()?
-				VuoShader shader = VuoShader_make("Convert IOSurface GL_TEXTURE_RECTANGLE_ARB to GL_TEXTURE_2D");
-				VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
-				VuoRetain(shader);
-				VuoShader_setUniform_VuoImage  (shader, "texture", imageRect);
-				VuoShader_setUniform_VuoPoint2d(shader, "textureSize", VuoPoint2d_make(pixelsWide, pixelsHigh));
+				VuoShader shader = VuoShader_makeGlTextureRectangleShader(imageRect, 1);
+				VuoLocal(shader);
 
 				VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
-				VuoRetain(ir);
+				VuoLocal(ir);
 				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh, VuoImage_getColorDepth(imageRect));
-				VuoRelease(ir);
-
-				VuoRelease(shader);
-				VuoRelease(imageRect);
 			}
 
 			VuoIoSurfacePool_signal(surf);

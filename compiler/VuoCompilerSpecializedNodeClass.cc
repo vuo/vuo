@@ -84,7 +84,8 @@ VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassNam
 
 	// Find the generic node class that the given node class should specialize
 
-	if (nodeClassName.find(".") == string::npos)
+	if (nodeClassName.find(".") == string::npos
+	 || VuoStringUtilities::endsWith(nodeClassName, ".framework"))
 		return NULL;
 
 	VuoCompilerNodeClass *genericNodeClass = NULL;

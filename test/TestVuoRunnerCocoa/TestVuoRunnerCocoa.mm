@@ -578,7 +578,8 @@ private slots:
 	void testImageFilterGLTexture2D(void)
 	{
 		// Create a reddish OpenGL texture.
-		VuoImage inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,0.5,0.5,1), 10, 10);
+		VuoColor color = VuoColor_makeWithRGBA(1,0.5,0.5,1);
+		VuoImage inputVuoImage = VuoImage_makeColorImage(color, 10, 10);
 		QVERIFY(inputVuoImage);
 		VuoRetain(inputVuoImage);
 
@@ -602,17 +603,18 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage);
 	}
 
 	void testImageFilterGLTexture2DAlpha(void)
 	{
 		// Create a semitransparent reddish OpenGL texture.
-		VuoImage inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,0.5,0.5,0.5), 10, 10);
+		VuoColor color = VuoColor_makeWithRGBA(1,0.5,0.5,0.5);
+		VuoImage inputVuoImage = VuoImage_makeColorImage(color, 10, 10);
 		QVERIFY(inputVuoImage);
 		VuoRetain(inputVuoImage);
 
@@ -636,17 +638,18 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 127) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage);
 	}
 
 	void testImageFilterGLTextureRectangle(void)
 	{
 		// Create a reddish OpenGL texture.
-		VuoImage inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,0.5,0.5,1), 10, 10);
+		VuoColor color = VuoColor_makeWithRGBA(1,0.5,0.5,1);
+		VuoImage inputVuoImage = VuoImage_makeColorImage(color, 10, 10);
 		QVERIFY(inputVuoImage);
 		VuoRetain(inputVuoImage);
 
@@ -675,17 +678,18 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage);
 	}
 
 	void testImageFilterGLTextureRectangleProvider(void)
 	{
 		// Create a reddish OpenGL texture.
-		VuoImage inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,0.5,0.5,1), 10, 10);
+		VuoColor color = VuoColor_makeWithRGBA(1,0.5,0.5,1);
+		VuoImage inputVuoImage = VuoImage_makeColorImage(color, 10, 10);
 		QVERIFY(inputVuoImage);
 		VuoRetain(inputVuoImage);
 
@@ -735,10 +739,10 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage2);
 
 		VuoIoSurfacePool_signal(outputIOSurface);
@@ -750,7 +754,8 @@ private slots:
 
 
 		// Create a greenish OpenGL texture.
-		inputVuoImage = VuoImage_makeColorImage(VuoColor_makeWithRGBA(0.5,1,0.5,1), 10, 10);
+		VuoColor color2 = VuoColor_makeWithRGBA(0.5,1,0.5,1);
+		inputVuoImage = VuoImage_makeColorImage(color2, 10, 10);
 		QVERIFY(inputVuoImage);
 		VuoRetain(inputVuoImage);
 
@@ -785,10 +790,10 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color2.a*color2.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color2.a*color2.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color2.a*color2.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color2.a        *255) < 2);
 		VuoRelease(outputVuoImage2);
 
 		VuoIoSurfacePool_signal(outputIOSurface);
@@ -843,10 +848,11 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the red/green values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoColor color = VuoColor_makeWithRGBA(.5,.5,1,1);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage);
 	}
 
@@ -874,10 +880,11 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the red/green values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoColor color = VuoColor_makeWithRGBA(.5,.5,1,1);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage);
 	}
 
@@ -930,10 +937,11 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoColor color = VuoColor_makeWithRGBA(.5,.5,1,1);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color.a*color.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color.a*color.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color.a*color.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color.a        *255) < 2);
 		VuoRelease(outputVuoImage2);
 
 		VuoIoSurfacePool_signal(outputIOSurface);
@@ -976,10 +984,11 @@ private slots:
 
 		// Check pixel (5,5).
 		// For unknown reasons the green/blue values fluctuate between 126 and 127, so use a tolerance of 2.
-		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - 255) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - 127) < 2);
-		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - 255) < 2);
+		VuoColor color2 = VuoColor_makeWithRGBA(.5,1,.5,1);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+2] - color2.a*color2.r*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+1] - color2.a*color2.g*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+0] - color2.a*color2.b*255) < 2);
+		QVERIFY(abs(pixels[(10*5*4)+5*4+3] - color2.a        *255) < 2);
 		VuoRelease(outputVuoImage2);
 
 		VuoIoSurfacePool_signal(outputIOSurface);

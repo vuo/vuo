@@ -164,6 +164,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoImage) Channel3,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,
 		VuoInputData(VuoInteger, {"default":480, "suggestedMin":1, "suggestedStep":32}) height,
+		VuoInputData(VuoImageColorDepth, {"default":"8bpc"}) colorDepth,
 		VuoInputData(VuoPoint2d) mousePosition,
 		VuoInputData(VuoBoolean) mouseIsPressed,
 		VuoInputEvent({"eventBlocking":"wall","data":"mousePosition"}) mousePositionEvent,
@@ -265,7 +266,7 @@ void nodeInstanceEvent
 
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "iDate", (VuoPoint4d) { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, (tm.tm_hour * 60 * 60) + tm.tm_sec } );
 
-	*shaderImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
+	*shaderImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, colorDepth);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

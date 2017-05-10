@@ -316,8 +316,9 @@ VuoImage VuoMovieExporter::exportNextFramePremium(void)
 /**
  * Exports 1 frame.
  *
- * Returns false if exporting failed, or if enough frames have already been exported.
+ * Returns false if enough frames have already been exported.
  *
+ * @throw std::runtime_error Couldn't generate the image.
  * @throw std::runtime_error Couldn't convert the frame for export.
  */
 bool VuoMovieExporter::exportNextFrame(void)
@@ -340,7 +341,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 		{
 			image = exportNextFramePremium();
 			if (!image)
-				goto done;
+				throw std::runtime_error("couldn't generate the image; perhaps there is insufficient video memory");
 		}
 		else
 		{
@@ -348,7 +349,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 															pixelsHigh: parameters.height
 																atTime: (parameters.time + framesExportedSoFar / parameters.framerate)];
 			if (!image)
-				goto done;
+				throw std::runtime_error("couldn't generate the image; perhaps there is insufficient video memory");
 
 			VuoRetain(image);
 
@@ -489,7 +490,6 @@ bool VuoMovieExporter::exportNextFrame(void)
 		throw std::runtime_error([[exception description] UTF8String]);
 	}
 
-done:
 	++framesExportedSoFar;
 	return framesExportedSoFar < frameCount;
 }

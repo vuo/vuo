@@ -4,6 +4,7 @@ CONFIG += VuoPCH
 include(../vuo.pri)
 
 NODE_LIBRARY_SOURCES += \
+	VuoApp.m \
 	VuoBase64.cc \
 	VuoCglPixelFormat.c \
 	VuoDisplayRefresh.c \
@@ -56,6 +57,7 @@ SOURCES += \
 	VuoUrlParser.c
 
 OBJECTIVE_SOURCES += \
+	VuoApp.m \
 	VuoScreenCommon.m \
 	VuoWindow.m \
 	VuoWindowOpenGLInternal.m \
@@ -63,6 +65,7 @@ OBJECTIVE_SOURCES += \
 	VuoWindowTextInternal.m
 
 HEADERS += \
+	VuoApp.h \
 	VuoBase64.h \
 	VuoCglPixelFormat.h \
 	VuoDisplayRefresh.h \
@@ -178,8 +181,10 @@ OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS \
 	-framework ApplicationServices \
+	-framework Cocoa \
 	-framework CoreFoundation \
 	-framework IOSurface \
+	../runtime/VuoEventLoop.o \
 	../type/VuoText.o \
 	$$JSONC_ROOT/lib/libjson-c.a \
 	-L . \

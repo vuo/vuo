@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Schedule",
-					  "keywords" : [ "animate", "frame", "stopwatch", "elapsed", "count", "cue", "alarm", "clock" ],
+					  "keywords" : [ "animate", "frame", "stopwatch", "elapsed", "count", "cue", "alarm", "clock", "sequence", "order" ],
 					  "version" : "1.0.0",
 					  "node": {
 						  "exampleCompositions" : ["AnimateOnSchedule.vuo", "FlashOnMousePress.vuo"]

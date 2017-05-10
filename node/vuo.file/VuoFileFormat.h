@@ -59,7 +59,7 @@ bool VuoFileFormat_isSupportedAudioFile(const char *path)
 bool VuoFileFormat_isSupportedImageFile(const char *path)
 {
 	const char *formats[] = {"png", "jpeg", "jpg", "gif", "bmp", "exr", "hdr", "psd", "raw", "cr2",
-							 "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga"};
+							 "dng", "dcr", "nef", "raf", "mos", "kdc", "tif", "tiff", "tga", "targa", "webp"};
 	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }

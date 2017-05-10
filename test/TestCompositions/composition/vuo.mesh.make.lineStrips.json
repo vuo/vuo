@@ -1,0 +1,64 @@
+/**
+ * @file
+ * Expected outputs for the MakeLineMesh composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+
+	{
+		"firingPort" : "Positions",
+		"inputPortValues" : {
+			"Positions" : [ ]
+		},
+		"outputPortValues" : {
+			"Summary" : "(empty mesh)"
+		}
+	},
+
+	/* A line strip with just 1 element is invalid, so this should also output an empty mesh. */
+	{
+		"firingPort" : "Positions",
+		"inputPortValues" : {
+			"Positions" : [
+				{"x":0,"y":0},
+			]
+		},
+		"outputPortValues" : {
+			"Summary" : "(empty mesh)"
+		}
+	},
+
+	/* 2 elements produce 1 line. */
+	{
+		"firingPort" : "Positions",
+		"inputPortValues" : {
+			"Positions" : [
+				{"x":0,"y":0},
+				{"x":1,"y":0},
+			]
+		},
+		"outputPortValues" : {
+			"Summary" : "Mesh containing: <ul><li>2 vertices in a strip of 1 line<br>with first position (0, 0, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>◻ texture coordinates<\/li><\/ul>"
+		}
+	},
+
+	/* 3 elements produce 2 lines. */
+	{
+		"firingPort" : "Positions",
+		"inputPortValues" : {
+			"Positions" : [
+				{"x":0,"y":0},
+				{"x":1,"y":0},
+				{"x":0,"y":1},
+			]
+		},
+		"outputPortValues" : {
+			"Summary" : "Mesh containing: <ul><li>3 vertices in a strip of 2 lines<br>with first position (0, 0, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>◻ texture coordinates<\/li><\/ul>"
+		}
+	},
+
+]}

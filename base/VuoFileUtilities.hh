@@ -70,6 +70,7 @@ public:
 	static void splitPath(string path, string &dir, string &file, string &extension);
 	static string makeTmpFile(string file, string extension, string directory="/tmp");
 	static string makeTmpDir(string dir);
+	static string makeTmpDirOnSameVolumeAsPath(string path);
 	static string getTmpDir(void);
 	static void makeDir(string path);
 	static string getVuoFrameworkPath(void);
@@ -97,6 +98,7 @@ public:
 	static set<File *> findAllFilesInArchive(string archivePath);
 	static set<File *> findFilesInArchive(string archivePath, string dirPath, set<string> extensions);
 	static string getArchiveFileContentsAsString(string archivePath, string filePath);
+	static size_t getAvailableSpaceOnVolumeContainingPath(string path);
 };
 
 #endif

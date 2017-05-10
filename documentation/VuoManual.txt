@@ -1518,7 +1518,7 @@ Finally, here are a few more tips to help you troubleshoot compositions:
    - If you're having trouble with a large and complicated composition, try to simplify the problem. Create a new composition and copy a small piece of your original composition into it. It's much easier to troubleshoot a small composition than a large one. 
    - If you're having trouble with a composition that has rapidly firing trigger ports, try to slow things down. For example, in place of the \vuoNode{Render Scene to Window} node's \vuoPort{Requested Frame} trigger port, use a \vuoNode{Fire Periodically} node's \vuoPort{Fired} trigger port connected to a \vuoNode{Count} node's \vuoPort{Increment} port. 
    - If your composition used to work but now it doesn't, figure out exactly what changed. Did you add or remove some cables? Were you using a different version of Vuo? Knowing what changed will help you narrow down the problem. 
-   - Check the Console application (in your Finder application folder, \menu{Utilities > Console.app} while running your composition. Some nodes send console messages when they have problems. 
+   - Check the Console application (in your Finder application folder, \menu{Utilities > Console.app}) while running your composition. Some nodes send console messages when they have problems.
    - Try rearranging your nodes and cables so you can see the flow of events more clearly. If your nodes and cables are nicely laid out, then it can be easier to spot problems. 
    - Don't be afraid to experiment (but first save a copy of your composition). If you're not sure if a node is working as you expect, try it with various inputs. 
    - Don't be afraid to ask questions. For help, go to [Vuo Support](http://vuo.org/support). 

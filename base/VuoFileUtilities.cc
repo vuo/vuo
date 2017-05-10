@@ -100,6 +100,19 @@ string VuoFileUtilities::makeTmpDir(string dir)
 }
 
 /**
+ * Creates a new temporary directory, avoiding any name conflicts with existing files.
+ * The temporary directory will be on the same filesystem as the specified path,
+ * to facilitate using `rename()` (for example).
+ * `onSameVolumeAsPath` needn't already exist.
+ *
+ * Returns the path of the directory (without a trailing slash).
+ */
+string VuoFileUtilities::makeTmpDirOnSameVolumeAsPath(string path)
+{
+	return VuoFileUtilitiesCocoa_makeTmpDirOnSameVolumeAsPath(path);
+}
+
+/**
  * Returns the path of the default temporary directory.
  */
 string VuoFileUtilities::getTmpDir(void)
@@ -109,6 +122,8 @@ string VuoFileUtilities::getTmpDir(void)
 
 /**
  * Creates a new directory (and parent directories if needed), if it doesn't already exist.
+ *
+ * @throw std::runtime_error The directory couldn't be created.
  */
 void VuoFileUtilities::makeDir(string path)
 {
@@ -126,7 +141,7 @@ void VuoFileUtilities::makeDir(string path)
 
 	int ret = mkdir(path.c_str(), 0700);
 	if (ret != 0 && ! dirExists(path))
-		throw std::runtime_error("Couldn't create directory \"" + path + "\"");
+		throw std::runtime_error((string("Couldn't create directory \"" + path + "\": ") + strerror(errno)).c_str());
 }
 
 /**
@@ -137,10 +152,13 @@ string VuoFileUtilities::getVuoFrameworkPath(void)
 {
 	// First check whether Vuo.framework is in the list of loaded dynamic libraries.
 	const char *frameworkDylibRelativePath = "Vuo.framework/Versions/" VUO_VERSION_STRING "/Vuo";
+	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.5.0.7.
+	const char *framework111DylibRelativePath = "Vuo.framework/Versions/1.1.1/Vuo";
 	for(unsigned int i=0; i<_dyld_image_count(); ++i)
 	{
 		const char *dylibPath = _dyld_get_image_name(i);
-		if (VuoStringUtilities::endsWith(dylibPath, frameworkDylibRelativePath))
+		if (VuoStringUtilities::endsWith(dylibPath, frameworkDylibRelativePath)
+		 || VuoStringUtilities::endsWith(dylibPath, framework111DylibRelativePath))
 		{
 			string path = dylibPath;
 			string dir, file, ext;
@@ -267,6 +285,8 @@ string VuoFileUtilities::readStdinToString(void)
 
 /**
  * Reads the whole contents of the file into a string.
+ *
+ * @throw std::runtime_error The file couldn't be read.
  */
 string VuoFileUtilities::readFileToString(string path)
 {
@@ -274,10 +294,7 @@ string VuoFileUtilities::readFileToString(string path)
 
 	ifstream in(path.c_str(), ios::in | ios::binary);
 	if (! in)
-	{
-		VUserLog("Error: Couldn't read file at path '%s'.", path.c_str());
-		return "";
-	}
+		throw std::runtime_error(string("Couldn't read file: ") + strerror(errno) + " — " + path);
 
 	string contents;
 	in.seekg(0, ios::end);
@@ -299,11 +316,11 @@ void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, str
 {
 	FILE *f = fopen(file.c_str(), "wb");
 	if (! f)
-		throw std::runtime_error("Couldn't open for writing file '" + file + "' : " + strerror(errno));
+		throw std::runtime_error(string("Couldn't open file for writing: ") + strerror(errno) + " — " + file);
 
 	size_t numBytesWritten = fwrite(data, sizeof(char), numBytes, f);
 	if (numBytesWritten != numBytes)
-		throw std::runtime_error("Couldn't write all data to file '" + file + "'");
+		throw std::runtime_error(string("Couldn't write all data: ") + strerror(errno) + " — " + file);
 
 	fclose(f);
 }
@@ -387,7 +404,7 @@ void VuoFileUtilities::moveFile(string fromPath, string toPath)
 {
 	int ret = rename(fromPath.c_str(), toPath.c_str());
 	if (ret != 0)
-		throw std::runtime_error("Couldn't move file '" + fromPath + "' to '" + toPath + "'");
+		throw std::runtime_error(string("Couldn't move file: ") + strerror(errno) + " — " + toPath);
 }
 
 /**
@@ -430,6 +447,8 @@ unsigned long VuoFileUtilities::getFileLastModifiedInSeconds(string path)
  *		found in the top level of the directory will be searched recursively.
  * @param shouldSearchRecursively If true, the directory will be searched searched recursively.
  * @return All files found.
+ *
+ * @throw std::runtime_error The directory couldn't be read.
  */
 set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string dirPath, set<string> archiveExtensions,
 																		bool shouldSearchRecursively)
@@ -440,7 +459,7 @@ set<VuoFileUtilities::File *> VuoFileUtilities::findAllFilesInDirectory(string d
 	if (! d)
 	{
 		if (access(dirPath.c_str(), F_OK) != -1)
-			VUserLog("Error: Couldn't open directory '%s' to find files in it.", dirPath.c_str());
+			throw std::runtime_error(string("Couldn't read directory: ") + strerror(errno) + " — " + dirPath);
 		return files;
 	}
 
@@ -623,6 +642,16 @@ string VuoFileUtilities::getArchiveFileContentsAsString(string archivePath, stri
 }
 
 /**
+ * Returns the available space, in bytes, on the volume containing the specified path.
+ *
+ * `path` needn't exist.
+ */
+size_t VuoFileUtilities::getAvailableSpaceOnVolumeContainingPath(string path)
+{
+	return VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(path);
+}
+
+/**
  * Creates an archive with an open zip archive handle.
  *
  * If the file can't be opened as an archive, the zip archive handle is null.
@@ -734,7 +763,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 
 		FILE *pFile = fopen ( fullPath.c_str() , "rb" );
 		if (pFile==NULL)
-			throw std::runtime_error("Couldn't open file '" + fullPath + "' for reading");
+			throw std::runtime_error(string("Couldn't open file: ") + strerror(errno) + " — " + fullPath);
 
 		// obtain file size:
 		fseek (pFile , 0 , SEEK_END);
@@ -750,7 +779,7 @@ char * VuoFileUtilities::File::getContentsAsRawData(size_t &numBytes)
 		if (numBytes != lSize)
 		{
 			free(buffer);
-			throw std::runtime_error("Couldn't read file '" + fullPath + "'");
+			throw std::runtime_error(string("Couldn't read file: ") + strerror(errno) + " — " + fullPath);
 		}
 	}
 	else

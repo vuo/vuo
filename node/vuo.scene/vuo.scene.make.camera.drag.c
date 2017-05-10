@@ -366,7 +366,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoReal, {"default":0.1}) distanceMin,		// Near clip.
 		VuoInputData(VuoReal, {"default":10.0}) distanceMax,	// Far clip.
 		VuoInputEvent({"eventBlocking":"none"}) reset,
-		VuoOutputTrigger(updatedCamera, VuoSceneObject)
+		VuoOutputTrigger(updatedCamera, VuoSceneObject, {"eventThrottling":"drop"})
 )
 {
 	(*instance)->window = window;

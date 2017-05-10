@@ -13,13 +13,20 @@
 
 int main(void)
 {
-	// Compile, link, and run the composition in a new process
-	VuoRunner * runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("Count.vuo");
-	runner->start();
+	try
+	{
+		// Compile, link, and run the composition in a new process
+		VuoRunner * runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("Count.vuo");
+		runner->start();
 
-	// Stop it after 5 seconds
-	sleep(5);
-	runner->stop();
+		// Stop it after 5 seconds
+		sleep(5);
+		runner->stop();
+	}
+	catch (std::exception &e)
+	{
+		fprintf(stderr, "Error: %s", e.what());
+	}
 
 	return 0;
 }

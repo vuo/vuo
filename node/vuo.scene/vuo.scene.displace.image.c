@@ -18,7 +18,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Displace 3D Object with Image",
-					 "keywords" : [ "heightmap", "rutt", "etra", "normal", "bump", "topology", "morph" ],
+					 "keywords" : [ "filter", "heightmap", "rutt", "etra", "normal", "bump", "topology", "morph" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						 "VuoGlContext",

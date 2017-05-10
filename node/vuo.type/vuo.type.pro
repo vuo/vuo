@@ -44,9 +44,14 @@ NODE_SOURCES += \
 	vuo.type.point3d.point2d.xy.c \
 	vuo.type.point3d.point4d.xyz.c \
 	vuo.type.point3d.real.x.c \
+	vuo.type.point3d.real.y.c \
+	vuo.type.point3d.real.z.c \
 	vuo.type.point4d.point2d.xy.c \
 	vuo.type.point4d.point3d.xyz.c \
 	vuo.type.point4d.real.x.c \
+	vuo.type.point4d.real.w.c \
+	vuo.type.point4d.real.y.c \
+	vuo.type.point4d.real.z.c \
 	vuo.type.real.boolean.c \
 	vuo.type.real.point2d.x.c \
 	vuo.type.real.point2d.xy.c \
