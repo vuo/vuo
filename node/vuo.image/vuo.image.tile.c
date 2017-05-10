@@ -20,6 +20,8 @@ VuoModuleMetadata({
 				 });
 
 static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 	uniform vec2 center;
@@ -47,7 +49,7 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 		tiledPosition = mod(tiledPosition, wrapCorner) + 0.5 / imageSize;
 
-		gl_FragColor = texture2D(texture, tiledPosition);
+		gl_FragColor = VuoGlsl_sample(texture, tiledPosition);
 	}
 );
 

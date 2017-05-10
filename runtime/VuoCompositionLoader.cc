@@ -24,6 +24,9 @@ extern "C" {
 
 void *ZMQLoaderControlContext = NULL;  ///< The context for initializing sockets to control the composition loader.
 void *ZMQLoaderControl = NULL;  ///< The socket for controlling the composition loader.
+static void *ZMQLoaderSelfReceive = 0;        ///< Used to break out of a ZMQLoaderControl poll.
+static void *ZMQLoaderSelfSend = 0;           ///< Used to break out of a ZMQLoaderControl poll.
+
 void *ZMQControlContext = NULL;  ///< The context for initializing sockets to control the composition.
 void *ZMQControl = NULL;  ///< The socket for controlling the composition.
 char *controlURL = NULL;  ///< The URL that the composition will use to initialize its control socket.
@@ -45,6 +48,7 @@ bool loadResourceDylib(const char *resourceDylibPath);
 void unloadResourceDylibs(void);
 
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
+char *VuoApp_dylibPath = NULL;	///< The path of the most recently loaded composition dylib.
 
 } // extern "C"
 
@@ -139,6 +143,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	VuoDefer(^{ free(loaderControlURL); });
+
 	// Set up ZMQ connections.
 	{
 		ZMQLoaderControlContext = zmq_init(1);
@@ -147,10 +153,22 @@ int main(int argc, char **argv)
 		if(zmq_bind(ZMQLoaderControl,loaderControlURL))
 		{
 			VUserLog("The composition couldn't start because the composition loader couldn't establish communication to control the composition : %s", strerror(errno));
-			free(loaderControlURL);
 			return -1;
 		}
-		free(loaderControlURL);
+
+		ZMQLoaderSelfReceive = zmq_socket(ZMQLoaderControlContext, ZMQ_PAIR);
+		if (zmq_bind(ZMQLoaderSelfReceive, "inproc://vuo-loader-self") != 0)
+		{
+			VUserLog("Couldn't bind self-receive socket: %s (%d)", strerror(errno), errno);
+			return -1;
+		}
+
+		ZMQLoaderSelfSend = zmq_socket(ZMQLoaderControlContext, ZMQ_PAIR);
+		if (zmq_connect(ZMQLoaderSelfSend, "inproc://vuo-loader-self") != 0)
+		{
+			VUserLog("Couldn't connect self-send socket: %s (%d)", strerror(errno), errno);
+			return -1;
+		}
 	}
 
 	// Launch control responder.
@@ -160,7 +178,7 @@ int main(int argc, char **argv)
 	{
 		loaderControlCanceledSemaphore = dispatch_semaphore_create(0);
 		loaderControlQueue = dispatch_queue_create("org.vuo.runtime.loader", NULL);
-		loaderControlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,loaderControlQueue);
+		loaderControlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), loaderControlQueue);
 		dispatch_source_set_timer(loaderControlTimer, dispatch_walltime(NULL,0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 		dispatch_source_set_event_handler(loaderControlTimer, ^{
 
@@ -169,12 +187,13 @@ int main(int argc, char **argv)
 											  zmq_pollitem_t items[]=
 											  {
 												  {ZMQLoaderControl,0,ZMQ_POLLIN,0},
+												  {ZMQLoaderSelfReceive,0,ZMQ_POLLIN,0},
 											  };
-											  int itemCount = 1;
-											  long timeout = 1000;  // wait interruptably, to be able to cancel this dispatch source when the composition stops
+											  int itemCount = 2;
+											  long timeout = -1;  // Wait forever (we'll get a message on ZMQLoaderSelfReceive when it's time to stop).
 											  zmq_poll(items,itemCount,timeout);
 											  if(!(items[0].revents & ZMQ_POLLIN))
-											  return;
+												  return;
 
 											  enum VuoLoaderControlRequest control = (enum VuoLoaderControlRequest) vuoReceiveInt(ZMQLoaderControl, NULL);
 
@@ -224,11 +243,25 @@ int main(int argc, char **argv)
 		zmq_close(ZMQControl);
 
 		dispatch_source_cancel(loaderControlTimer);
+
+		// Break out of zmq_poll().
+		{
+			char z = 0;
+			zmq_msg_t message;
+			zmq_msg_init_size(&message, sizeof z);
+			memcpy(zmq_msg_data(&message), &z, sizeof z);
+			if (zmq_send(ZMQLoaderSelfSend, &message, 0) != 0)
+				VUserLog("Couldn't break: %s (%d)", strerror(errno), errno);
+			zmq_msg_close(&message);
+		}
+
 		dispatch_semaphore_wait(loaderControlCanceledSemaphore, DISPATCH_TIME_FOREVER);
 		dispatch_release(loaderControlCanceledSemaphore);
 		dispatch_release(loaderControlTimer);
 		dispatch_sync(loaderControlQueue, ^{
 			zmq_close(ZMQLoaderControl);
+			zmq_close(ZMQLoaderSelfSend);
+			zmq_close(ZMQLoaderSelfReceive);
 		});
 		dispatch_release(loaderControlQueue);
 
@@ -253,6 +286,11 @@ int main(int argc, char **argv)
  */
 bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 {
+	// Store dylibPath for VuoApp_getName().
+	if (VuoApp_dylibPath)
+		free(VuoApp_dylibPath);
+	VuoApp_dylibPath = strdup(dylibPath);
+
 	isReplacing = true;
 
 	bool isStopRequestedByComposition = false;

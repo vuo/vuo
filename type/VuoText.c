@@ -262,7 +262,7 @@ bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
 {
 	if (! text1 || ! text2)
-		return text1 && ! text2;
+		return (! text1) && text2;
 
 	CFStringRef s1 = CFStringCreateWithCString(kCFAllocatorDefault, text1, kCFStringEncodingUTF8);
 	if (!s1)
@@ -441,9 +441,24 @@ VuoText VuoText_append(VuoText *texts, size_t textsCount)
  */
 VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts, size_t *partsCount)
 {
+	if (!text || !separator)
+		return NULL;
+
 	CFMutableArrayRef splitTexts = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-	size_t textLength = VuoText_length(text);
-	size_t separatorLength = VuoText_length(separator);
+
+	CFStringRef textCF = CFStringCreateWithCString(kCFAllocatorDefault, text, kCFStringEncodingUTF8);
+	if (!textCF)
+		return NULL;
+	VuoDefer(^{ CFRelease(textCF); });
+
+	size_t textLength = CFStringGetLength(textCF);
+
+	CFStringRef separatorCF = CFStringCreateWithCString(kCFAllocatorDefault, separator, kCFStringEncodingUTF8);
+	if (!separatorCF)
+		return NULL;
+	VuoDefer(^{ CFRelease(separatorCF); });
+
+	size_t separatorLength = CFStringGetLength(separatorCF);
 
 	if (separatorLength > 0)
 	{
@@ -452,21 +467,21 @@ VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts,
 
 		while (startIndex <= textLength)
 		{
-			separatorIndex = VuoText_findFirstOccurrence(text, separator, startIndex);
-			if (separatorIndex == 0)
+			CFRange rangeToSearch = CFRangeMake(startIndex - 1, textLength - (startIndex - 1));
+			CFRange foundRange;
+			Boolean found = CFStringFindWithOptions(textCF, separatorCF, rangeToSearch, 0, &foundRange);
+			separatorIndex = foundRange.location + 1;
+			if (!found)
 				separatorIndex = textLength + 1;
 
 			if (separatorIndex > startIndex || includeEmptyParts)
 			{
-				VuoText part = VuoText_substring(text, startIndex, separatorIndex - startIndex);
-				CFStringRef partStr = CFStringCreateWithCString(kCFAllocatorDefault, part, kCFStringEncodingUTF8);
+				CFStringRef partStr = CFStringCreateWithSubstring(kCFAllocatorDefault, textCF, CFRangeMake(startIndex - 1, separatorIndex - startIndex));
 				if (partStr)
 				{
 					CFArrayAppendValue(splitTexts, partStr);
 					CFRelease(partStr);
 				}
-				VuoRetain(part);
-				VuoRelease(part);
 			}
 
 			startIndex = separatorIndex + separatorLength;
@@ -486,15 +501,12 @@ VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts,
 	{
 		for (size_t i = 1; i <= textLength; ++i)
 		{
-			VuoText part = VuoText_substring(text, i, 1);
-			CFStringRef partStr = CFStringCreateWithCString(kCFAllocatorDefault, part, kCFStringEncodingUTF8);
+			CFStringRef partStr = CFStringCreateWithSubstring(kCFAllocatorDefault, textCF, CFRangeMake(i - 1, 1));
 			if (partStr)
 			{
 				CFArrayAppendValue(splitTexts, partStr);
 				CFRelease(partStr);
 			}
-			VuoRetain(part);
-			VuoRelease(part);
 		}
 	}
 

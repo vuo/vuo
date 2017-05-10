@@ -899,7 +899,7 @@ bool VuoFfmpegDecoder::SeekToSecond(double second)
 	// Convert second to stream time
 	// double firstTimestamp = VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.first_pts);
 	// ^ ^ still unsure if this is taken into account in SecondToAvTime
-	int64_t pts = VuoFfmpegUtility::SecondToAvTime(container.videoStream, second);
+	int64_t pts = VuoFfmpegUtility::SecondToAvTime(container.videoStream, fmax(second, 0));
 	return SeekToPts(pts);
 }
 

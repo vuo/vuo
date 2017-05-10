@@ -9,8 +9,8 @@ This node is useful for playing MIDI notes aloud in Vuo. You can connect this no
 
 Examples: 
 
-   - For note number 0 (C-1), the frequency is 8.18. 
-   - For note number 60 (C4, middle C), the frequency is 261.63. 
-   - For note number 69 (A4), the frequency is 440. 
-   - For note number 69 (A4), with a pitch bend of 0 and pitch bend range of 12, the frequency is 220. 
-   - For note number 127 (G9), the frequency is 12543.85. 
+   - For note number 0 (<b>C<sub>-1</sub></b>), the frequency is 8.18 Hz.
+   - For note number 60 (<b>C<sub>4</sub></b>, middle C), the frequency is 261.63 Hz.
+   - For note number 69 (<b>A<sub>4</sub></b>), the frequency is 440 Hz.
+   - For note number 69 (<b>A<sub>4</sub></b>), with a pitch bend of 0 and pitch bend range of 12, the frequency is 220 Hz.
+   - For note number 127 (<b>G<sub>9</sub></b>), the frequency is 12543.85 Hz.

@@ -100,6 +100,7 @@ VuoSubmesh VuoSubmesh_makeGl(unsigned int vertexCount, unsigned int combinedBuff
 unsigned long VuoSubmesh_getGlMode(VuoSubmesh submesh);
 unsigned long VuoSubmesh_getSplitPrimitiveCount(VuoSubmesh submesh);
 unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh);
+unsigned long VuoSubmesh_getCompleteElementCount(const VuoSubmesh submesh);
 
 VuoMesh VuoMesh_make(unsigned int itemCount);
 void VuoMesh_upload(VuoMesh mesh);

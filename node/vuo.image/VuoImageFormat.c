@@ -56,10 +56,9 @@ VuoImageFormat VuoImageFormat_makeFromJson(json_object *js)
 		value = VuoImageFormat_GIF;
 	} else if (! strcmp(valueAsString, "TARGA")) {
 		value = VuoImageFormat_TARGA;
-	} 
-	// else if (! strcmp(valueAsString, "WEBP")) {
-	// 	value = VuoImageFormat_WEBP;
-	// }
+	}
+	else if (! strcmp(valueAsString, "WEBP"))
+		value = VuoImageFormat_WEBP;
 
 	return value;
 }
@@ -97,9 +96,9 @@ json_object * VuoImageFormat_getJson(const VuoImageFormat value)
 		case VuoImageFormat_TARGA:
 			valueAsString = "TARGA";
 			break;
-		// case VuoImageFormat_WEBP:
-		// 	valueAsString = "WEBP";
-		// 	break;
+		case VuoImageFormat_WEBP:
+			valueAsString = "WEBP";
+			break;
 	}
 
 	return json_object_new_string(valueAsString);
@@ -119,7 +118,7 @@ VuoList_VuoImageFormat VuoImageFormat_getAllowedValues(void)
 	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_EXR);
 	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_GIF);
 	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_TARGA);
-	// VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_WEBP);
+	VuoListAppendValue_VuoImageFormat(l, VuoImageFormat_WEBP);
 	return l;
 }
 
@@ -156,9 +155,9 @@ char * VuoImageFormat_getSummary(const VuoImageFormat value)
 		case VuoImageFormat_TARGA:
 			valueAsString = "TARGA";
 			break;
-		// case VuoImageFormat_WEBP:
-		// 	valueAsString = "WEBP";
-		// 	break;
+		case VuoImageFormat_WEBP:
+			valueAsString = "WEBP";
+			break;
 	}
 
 	return strdup(valueAsString);
@@ -257,14 +256,14 @@ char** VuoImageFormat_getValidFileExtensions(const VuoImageFormat value, int* le
 			return fileExtensions;
 		}
 
-		// case VuoImageFormat_WEBP:
-		// {
-		// 	*length = 1;
-		// 	char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
-		// 	fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("webp"));
-		// 	strcpy(fileExtensions[0], "webp");
-		// 	return fileExtensions;
-		// }
+		case VuoImageFormat_WEBP:
+		{
+			*length = 1;
+			char** fileExtensions = (char**)malloc(sizeof(char*) * (*length));
+			fileExtensions[0] = (char*)malloc(sizeof(char) * strlen("webp"));
+			strcpy(fileExtensions[0], "webp");
+			return fileExtensions;
+		}
 	}
 }
 
@@ -301,10 +300,26 @@ char * VuoImageFormat_getExtension(const VuoImageFormat value)
 		case VuoImageFormat_TARGA:
 			valueAsString = "tga";
 			break;
-		// case VuoImageFormat_WEBP:
-		// 	valueAsString = "webp";
-		// 	break;
+		case VuoImageFormat_WEBP:
+			valueAsString = "webp";
+			break;
 	}
 
 	return strdup(valueAsString);
+}
+
+/**
+ * Returns true if the two formats are identical.
+ */
+bool VuoImageFormat_areEqual(const VuoImageFormat value1, const VuoImageFormat value2)
+{
+	return value1 == value2;
+}
+
+/**
+ * Returns true if value1 < value2.
+ */
+bool VuoImageFormat_isLessThan(const VuoImageFormat value1, const VuoImageFormat value2)
+{
+	return value1 < value2;
 }

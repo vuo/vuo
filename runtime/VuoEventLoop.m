@@ -119,3 +119,20 @@ bool VuoEventLoop_mayBeTerminated(void)
 
 	return true;
 }
+
+/**
+ * Returns `DISPATCH_TIMER_STRICT` if it's supported on the current OS version;
+ * otherwise returns 0.
+ */
+unsigned long VuoEventLoop_getDispatchStrictMask(void)
+{
+	static unsigned long mask = 0;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		SInt32 macMinorVersion;
+		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+		if (macMinorVersion >= 9)
+			mask = 0x1; // DISPATCH_TIMER_STRICT
+	});
+	return mask;
+}

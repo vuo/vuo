@@ -38,6 +38,10 @@ struct json_object * VuoHorizontalAlignment_getJson(const VuoHorizontalAlignment
 VuoList_VuoHorizontalAlignment VuoHorizontalAlignment_getAllowedValues(void);
 char * VuoHorizontalAlignment_getSummary(const VuoHorizontalAlignment value);
 
+#define VuoHorizontalAlignment_SUPPORTS_COMPARISON
+bool VuoHorizontalAlignment_areEqual(const VuoHorizontalAlignment valueA, const VuoHorizontalAlignment valueB);
+bool VuoHorizontalAlignment_isLessThan(const VuoHorizontalAlignment valueA, const VuoHorizontalAlignment valueB);
+
 /**
  * Automatically generated function.
  */

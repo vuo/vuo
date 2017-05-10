@@ -20,13 +20,14 @@ VuoModuleMetadata({
 				 });
 
 static const char * verticalFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 
 	void main(void)
 	{
-		gl_FragColor = texture2D(texture, vec2(fragmentTextureCoordinate.x, 1-fragmentTextureCoordinate.y));
+		gl_FragColor = VuoGlsl_sample(texture, vec2(fragmentTextureCoordinate.x, 1-fragmentTextureCoordinate.y));
 	}
 );
 

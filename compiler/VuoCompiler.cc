@@ -715,14 +715,12 @@ void VuoCompiler::Environment::reifyPortTypes(Environment *outerEnvironment)
 			if (baseType && ! baseType->hasCompiler())
 			{
 				string typeName = baseType->getModuleKey();
-				__block VuoCompilerType *reifiedType = NULL;
+				VuoCompilerType *reifiedType = NULL;
 
 				VuoGenericType *genericType = dynamic_cast<VuoGenericType *>(baseType);
 				if (genericType)
 				{
-					dispatch_sync(llvmQueue, ^{
-									  reifiedType = VuoCompilerGenericType::newGenericType(genericType, searchTypes);
-								  });
+					reifiedType = VuoCompilerGenericType::newGenericType(genericType, searchTypes);
 					if (reifiedType)
 						genericTypes.insert( static_cast<VuoCompilerGenericType *>(reifiedType) );
 				}
@@ -921,6 +919,18 @@ void VuoCompiler::Environment::addCachedModulePathToSharedEnvironment(string mod
 					  string dir = getCachedModulesPath();
 					  VuoFileUtilities::File *moduleFile = new VuoFileUtilities::File(dir, moduleFileName);
 					  moduleFilesAtSearchPath[dir][moduleFile->getRelativePath()] = moduleFile;
+				  });
+}
+
+/**
+ * Removes a module file from the list cached by VuoCompiler::Environment::listModules().
+ * This function should be called after a module file is deleted from the cache's Modules folder.
+ */
+void VuoCompiler::Environment::removeCachedModulePathFromSharedEnvironment(string moduleFileName)
+{
+	dispatch_sync(environmentQueue, ^{
+					  if (moduleFilesAtSearchPath[getCachedModulesPath()].find(moduleFileName) != moduleFilesAtSearchPath[getCachedModulesPath()].end())
+						  moduleFilesAtSearchPath[getCachedModulesPath()].erase(moduleFileName);
 				  });
 }
 
@@ -1218,6 +1228,14 @@ void VuoCompiler::loadStoredLicense(bool showLicenseWarning)
 }
 
 /**
+ * @deprecated
+ */
+void VuoCompiler::loadStoredLicense(void)
+{
+	VuoCompiler::loadStoredLicense(false);
+}
+
+/**
  * Updates the nodes and ports of the composition to have the correct backing types for generic types.
  */
 void VuoCompiler::reifyGenericPortTypes(VuoCompilerComposition *composition)
@@ -1253,10 +1271,7 @@ void VuoCompiler::reifyGenericPortTypes(VuoNode *node)
 
 		if (! genericType->hasCompiler())
 		{
-			__block VuoCompilerGenericType *reifiedType;
-			dispatch_sync(llvmQueue, ^{
-							  reifiedType = VuoCompilerGenericType::newGenericType(genericType, this);
-						  });
+			VuoCompilerGenericType *reifiedType = VuoCompilerGenericType::newGenericType(genericType, this);
 			if (reifiedType)
 				port->setDataVuoType(reifiedType->getBase());
 		}
@@ -1415,8 +1430,24 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath, bool i
 	if (isVerbose)
 		print();
 
+	if (!VuoFileUtilities::fileContainsReadableData(inputPath))
+	{
+		vector<VuoCompilerError> errors;
+		VuoCompilerError error("Couldn't parse the composition", "Can't read the composition file.", set<VuoNode *>(), set<VuoCable *>());
+		errors.push_back(error);
+		throw VuoCompilerException(errors);
+	}
+
 	string compositionString = VuoFileUtilities::readFileToString(inputPath);
 	return compileCompositionString(compositionString, outputPath, isTopLevelComposition, isLiveCodeable);
+}
+
+/**
+ * @deprecated
+ */
+void VuoCompiler::compileComposition(string inputPath, string outputPath)
+{
+	compileComposition(inputPath, outputPath, true, false);
 }
 
 /**
@@ -1497,7 +1528,7 @@ bool VuoCompiler::compileSubcompositionIfNeeded(string compositionPath)
 
 	try
 	{
-		compileComposition(compositionPath, compiledCompositionPath, false);
+		compileComposition(compositionPath, compiledCompositionPath, false, true);
 	}
 	catch (VuoCompilerException &e)
 	{
@@ -1552,6 +1583,8 @@ void VuoCompiler::uninstallSubcomposition(string nodeClassName)
 {
 	string compiledSubcompositionPath = getCachedModulesPath() + "/" + nodeClassName + ".vuonode";
 	VuoFileUtilities::deleteFile(compiledSubcompositionPath);
+
+	sharedEnvironment->removeCachedModulePathFromSharedEnvironment(nodeClassName + ".vuonode");
 
 	dispatch_sync(cachedResourcesQueue, ^{
 					  combinedEnvironment.removeNodeClassFromCombinedEnvironment(nodeClassName, &myEnvironment, sharedEnvironment);
@@ -2788,7 +2821,7 @@ VuoNode * VuoCompiler::createPublishedInputNode(vector<VuoPublishedPort *> publi
 	if (static_cast<VuoCompilerSpecializedNodeClass *>(publishedInputNodeClass->getCompiler())->isFullySpecialized())
 		combinedEnvironment.addNodeClassToCombinedEnvironment( publishedInputNodeClass->getCompiler(), &myEnvironment, getSharedEnvironment() );
 
-	VuoNode *publishedInputNode = publishedInputNodeClass->getCompiler()->newNode();;
+	VuoNode *publishedInputNode = publishedInputNodeClass->getCompiler()->newNode();
 	reifyGenericPortTypes(publishedInputNode);
 	return publishedInputNode;
 }
@@ -2869,14 +2902,12 @@ VuoCompilerType * VuoCompiler::getType(const string &id)
 				  });
 	loadModulesIfNeeded();
 
-	__block VuoCompilerType *type = combinedEnvironment.getType(id);
+	VuoCompilerType *type = combinedEnvironment.getType(id);
 
 	if (! type && VuoGenericType::isGenericTypeName(id))
 	{
 		VuoGenericType *genericType = new VuoGenericType(id, vector<string>());
-		dispatch_sync(llvmQueue, ^{
-						  type = VuoCompilerGenericType::newGenericType(genericType, this);
-					  });
+		type = VuoCompilerGenericType::newGenericType(genericType, this);
 	}
 
 	return type;

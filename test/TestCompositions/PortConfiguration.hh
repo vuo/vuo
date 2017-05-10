@@ -35,6 +35,7 @@ private:
 
 	string toString(void);
 	void checkEqual(string type, json_object *actualValue, json_object *expectedValue);
+	const char *getJsonTypeDescription(enum json_type);
 
 public:
 

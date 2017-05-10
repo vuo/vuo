@@ -1,0 +1,244 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.color.combine.rgb node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* NULL. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": null,
+		}
+	},
+
+	/* Opaque grey. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque red. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque red. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent red. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque green. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque green. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent green. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque blue. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque blue. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent blue. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque yellow. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent yellow. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque magenta. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent magenta. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Opaque cyan. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent cyan. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	/* Semitransparent orange. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.7490196,"g":0.7490196,"b":0.7490196,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.2901961,"g":0.2901961,"b":0.2901961,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.1960784,"g":0.1960784,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+]}

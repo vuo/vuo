@@ -51,6 +51,7 @@ private slots:
 		QTest::addColumn<int>("expectedAudioChannels");	// negative if expected to contain some packets that are completely silent
 		QTest::addColumn<int>("optimize");	// test both AvFoundation and Ffmpeg (either can fall back on the other - this tests that too)
 
+		QTest::newRow(VuoText_format("Apple ProRes 4444 opt=%d",optimize))						<< "/MovieGauntlet/rugged_terrain_prores4444.mov"														<<  30.		<<  899	<< 1280 <<  720 <<  0 	<< optimize;
 		QTest::newRow(VuoText_format("Animated GIF opt=%d",optimize))							<< "/MovieGauntlet/count.gif"																			<<  10.1	<<  85	<<  748 <<  491	<<  0 	<< optimize;
 		QTest::newRow(VuoText_format("DIF DV NTSC opt=%d",optimize))							<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.dv"											<<  19.9	<<  596	<<  720 <<  480	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("MPEG Transport Stream opt=%d",optimize))					<< "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts"													<<  28.7	<<  860	<<  640 <<  480	<< -2 	<< optimize;
@@ -100,6 +101,9 @@ private slots:
 		}
 	}
 
+	/**
+	 * Tests repeatedly calling `VuoVideo_nextVideoFrame()`, like `vuo.video.play` does.
+	 */
 	void testDecodePerformance_data()
 	{
 		printf("	testDecodePerformance()\n"); fflush(stdout);
@@ -107,7 +111,6 @@ private slots:
 		createData(0);
 		createData(1);
 	}
-
 	void testDecodePerformance()
 	{
 		QFETCH(QString, url);
@@ -229,6 +232,10 @@ private slots:
 		VuoRelease(m);
 	}
 
+	/**
+	 * Tests repeatedly calling `VuoVideo_getFrameAtSecond()` with random timestamps,
+	 * like `vuo.video.decodeImage` does with arbitrary `frameTime` values.
+	 */
 	void testDecodeRandomPerformance_data()
 	{
 		printf("	testDecodeRandomPerformance()\n"); fflush(stdout);
@@ -246,10 +253,12 @@ private slots:
 		if (!QFile(url).exists())
 			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
 
-		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), AVFOUNDATION_OPTIMIZED == 0 ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
+		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), optimize == AVFOUNDATION_OPTIMIZED ? VuoVideoOptimization_Forward : VuoVideoOptimization_Random);
 		VuoRetain(m);
-
 		QVERIFY(m != NULL);
+
+		// when seeking around with VuoVideo_getFrameAtSecond it's faster to ignore audio entirely.
+		VuoVideo_setPlaybackRate(m, 0);
 
 		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
 
@@ -267,6 +276,113 @@ private slots:
 
 		QVERIFY(!VuoImage_isEmpty(videoFrame.image));
 		VuoRelease(videoFrame.image);
+		VuoRelease(m);
+	}
+
+	/**
+	 * Tests repeatedly calling `VuoVideo_getFrameAtSecond()` with sequential timestamps,
+	 * like `vuo.video.decodeImage` does when its `frameTime` port is connected to `requestedFrame`.
+	 */
+	void testSequentialDecodePerformance_data()
+	{
+		printf("	testSequentialDecodePerformance()\n"); fflush(stdout);
+		createData(0);
+	}
+
+	void testSequentialDecodePerformance()
+	{
+		QFETCH(QString, url);
+
+		if (!QFile(url).exists())
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+
+		if( url == QString("/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov") )
+		{
+			// I think this video has a lack of chapters or whatever they're called, which makes seeking really slow.
+			// @todo Look into speeding this scenario up.
+			QSKIP("Skipping QuickTime - H.264 - Lossless 5.1 - #1");
+		}
+
+		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
+		VuoRetain(m);
+
+		QVERIFY(m != NULL);
+
+		VuoVideo_setPlaybackRate(m, 0);
+
+		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
+
+		double duration = VuoVideo_getDuration(m) - .5;
+		VuoVideoFrame videoFrame = {NULL, 0};
+
+		int64_t max = duration * 1000;
+
+		double fps = 30;
+		double frame = 1/fps;
+
+		QElapsedTimer timer;
+		timer.start();
+
+		for(int i = 0; i < duration * fps; i++)
+		{
+			double sec = i * frame;
+
+			if(videoFrame.image != NULL)
+				VuoRelease(videoFrame.image);
+
+			if(VuoVideo_getFrameAtSecond(m, sec, &videoFrame))
+				VuoRetain(videoFrame.image);
+
+			int64_t elapsed = timer.elapsed();
+			if (elapsed > max)
+				QFAIL(QString("Taking too long to decode; after %1s (longer than the realtime duration of the movie) we're only %2% done decoding.")
+					.arg(elapsed/1000.)
+					.arg(i * 100. / (duration*fps))
+					.toUtf8().data());
+		}
+
+		QVERIFY(!VuoImage_isEmpty(videoFrame.image));
+		VuoRelease(videoFrame.image);
+		VuoRelease(m);
+	}
+
+	/**
+	 * Tests decoding out of bounds frame times.  VuoVideo_getFrameAtSecond should always return an
+	 * image, clamping to first & last frames.
+	 */
+	void testDecodeOutOfBoundsFrame_data()
+	{
+		printf("	testDecodeOutOfBoundsFrame()\n"); fflush(stdout);
+		createData(0);
+	}
+
+	void testDecodeOutOfBoundsFrame()
+	{
+		QFETCH(QString, url);
+
+		if (!QFile(url).exists())
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+
+		VuoVideo m = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
+		VuoRetain(m);
+		QVERIFY(m != NULL);
+
+		VuoVideo_setPlaybackRate(m, 0);
+
+		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(m), true, MAX_VIDEO_LOAD_TIME);
+
+		double duration = VuoVideo_getDuration(m);
+
+		VuoVideoFrame videoFrame = { NULL, 0 };
+
+		QVERIFY2( VuoVideo_getFrameAtSecond(m, -1, &videoFrame), "VuoVideo_getFrameAtSecond(-1) returned false.");
+		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(-1) returned null image" );
+		VuoRelease(videoFrame.image);
+
+		QVERIFY2( VuoVideo_getFrameAtSecond(m, duration + 10, &videoFrame), "VuoVideo_getFrameAtSecond(duration + 10) returned false." );
+		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(duration + 10) returned null image" );
+		VuoRelease(videoFrame.image);
+
 		VuoRelease(m);
 	}
 };

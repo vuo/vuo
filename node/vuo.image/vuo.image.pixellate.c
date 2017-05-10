@@ -22,26 +22,29 @@ VuoModuleMetadata({
 				 });
 
 static const char * pixelFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 
 	uniform sampler2D texture;
+	uniform vec2 viewportSize;
 	uniform vec2 pixelSize;
 	uniform vec2 center;
 
-	// https://stackoverflow.com/questions/5049041/how-do-i-perform-a-fast-pixellation-filter-on-an-image
 	void main(void)
 	{
 		vec2 pos = fragmentTextureCoordinate.xy;
 
-		if(pixelSize.x > 0)
-		{
-			vec2 centerOffset = mod(center - pixelSize/2., pixelSize);
-			vec2 distanceFromCorner = mod(pos - centerOffset, pixelSize);
-			pos = pos - distanceFromCorner + pixelSize/2.;
-		}
+		// Quantize the texture coordinate so it lands exactly on an output pixel,
+		// since mod()ding near a big pixel boundary
+		// can exaggerate the GPU's imprecise floating point math.
+		pos = vec2(int(pos.x*viewportSize.x)/viewportSize.x,
+				   int(pos.y*viewportSize.y)/viewportSize.y);
 
-		gl_FragColor = texture2D(texture, pos);
+		vec2 centerOffset = mod(center - pixelSize/2., pixelSize);
+		vec2 distanceFromCorner = mod(pos - centerOffset, pixelSize);
+		pos = pos - distanceFromCorner + pixelSize/2.;
+		gl_FragColor = VuoGlsl_sample(texture, pos);
 	}
 );
 
@@ -84,7 +87,7 @@ void nodeInstanceEvent
 	int w = image->pixelsWide, h = image->pixelsHigh;
 
 	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
-	VuoPoint2d pixelSize2d = VuoPoint2d_multiply(VuoPoint2d_make(1., (float)w/h), VuoShader_samplerSizeFromVuoSize(pixelSize));
+	VuoPoint2d pixelSize2d = VuoPoint2d_multiply(VuoPoint2d_make(1., (float)w/h), VuoShader_samplerSizeFromVuoSize(VuoReal_makeNonzero(pixelSize)));
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "pixelSize",  pixelSize2d);
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "center", VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
 

@@ -34,8 +34,8 @@ typedef enum {
 	VuoImageFormat_HDR,
 	VuoImageFormat_EXR,
 	VuoImageFormat_GIF,
-	VuoImageFormat_TARGA
-	// VuoImageFormat_WEBP // @todo https://b33p.net/kosada/node/10022
+	VuoImageFormat_TARGA,
+	VuoImageFormat_WEBP
 } VuoImageFormat;
 
 VuoImageFormat VuoImageFormat_makeFromJson(struct json_object * js);
@@ -44,6 +44,10 @@ VuoList_VuoImageFormat VuoImageFormat_getAllowedValues(void);
 char * VuoImageFormat_getSummary(const VuoImageFormat value);
 char** VuoImageFormat_getValidFileExtensions(const VuoImageFormat value, int* length);
 char * VuoImageFormat_getExtension(const VuoImageFormat value);
+
+#define VuoImageFormat_SUPPORTS_COMPARISON
+bool VuoImageFormat_areEqual(const VuoImageFormat value1, const VuoImageFormat value2);
+bool VuoImageFormat_isLessThan(const VuoImageFormat value1, const VuoImageFormat value2);
 
 /// @{
 /**

@@ -56,14 +56,17 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 		{
 			vec4 orig = texture2D(image, fragmentTextureCoordinate.xy);
 
-			float lum = brightness(orig.rgb);
+			float lum = brightness(orig.rgb/orig.a);
 
 			float gradientWidth = (1./gradientCount)/2.;
 			lum = lum * (1-gradientWidth*2) + gradientWidth;
 
 			vec4 color = texture2D(gradientStrip, vec2(clamp(lum, gradientWidth, 1-gradientWidth), .5));
 
-			gl_FragColor = mix(orig, color, amount) * orig.a;
+			vec4 mixed = mix(orig, color, amount);
+			mixed *= orig.a;
+
+			gl_FragColor = mixed;
 		}
 	);
 
@@ -74,9 +77,10 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 	for(int i = 1; i <= len; i++)
 	{
 		VuoColor col = VuoListGetValue_VuoColor(colors, i);
-		pixels[n++] = (unsigned int)(col.b*255);
-		pixels[n++] = (unsigned int)(col.g*255);
-		pixels[n++] = (unsigned int)(col.r*255);
+		// VuoColor is non-premultiplied, but VuoImage_makeFromBuffer() expects premultiplied colors, so premultiply them.
+		pixels[n++] = (unsigned int)(col.a*col.b*255);
+		pixels[n++] = (unsigned int)(col.a*col.g*255);
+		pixels[n++] = (unsigned int)(col.a*col.r*255);
 		pixels[n++] = (unsigned int)(col.a*255);
 	}
 

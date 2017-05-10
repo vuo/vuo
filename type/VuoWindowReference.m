@@ -48,7 +48,12 @@ VuoWindowReference VuoWindowReference_make(void *window)
  */
 VuoWindowReference VuoWindowReference_makeFromJson(json_object * js)
 {
-	return (void *)json_object_get_int64(js);
+	json_object *o = NULL;
+
+	if (json_object_object_get_ex(js, "pointer", &o))
+		return (VuoWindowReference)json_object_get_int64(o);
+
+	return NULL;
 }
 
 /**
@@ -57,7 +62,9 @@ VuoWindowReference VuoWindowReference_makeFromJson(json_object * js)
  */
 json_object * VuoWindowReference_getJson(const VuoWindowReference value)
 {
-	return json_object_new_int64((int64_t)value);
+	json_object *js = json_object_new_object();
+	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));
+	return js;
 }
 
 /**

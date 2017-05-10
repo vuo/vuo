@@ -56,7 +56,10 @@ VuoImageBlend VuoImageBlend_make(void)
 
 		void main(void)
 		{
-			gl_FragColor = mix(texture2D(textureA, fragmentTextureCoordinate.xy), texture2D(textureB, fragmentTextureCoordinate.xy), factor);
+			vec4 colorA = texture2D(textureA, fragmentTextureCoordinate.xy);
+			vec4 colorB = texture2D(textureB, fragmentTextureCoordinate.xy);
+			vec4 mixed = mix(colorA, colorB, factor);
+			gl_FragColor = mixed;
 		}
 	);
 

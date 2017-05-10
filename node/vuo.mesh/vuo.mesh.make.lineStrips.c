@@ -30,5 +30,11 @@ void nodeEvent
 		VuoOutputData(VuoMesh) mesh
 )
 {
+	if (VuoListGetCount_VuoGenericType1(positions) < 2)
+	{
+		*mesh = NULL;
+		return;
+	}
+
 	*mesh = VuoMesh_make_VuoGenericType1(positions, VuoMesh_LineStrip, lineWidth);
 }

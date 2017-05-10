@@ -23,4 +23,4 @@ The **address** is a piece of text beginning with `/`. Often, it looks like a fi
 
 Each **data value** is a simple piece of information (integer, real, boolean, or text). For example, a data value of 0.3 accompanying the address `/1/fader` could indicate that a fader control has been set to position 0.3. 
 
-These nodes are based on the [OSC 1.0 specification](http://opensoundcontrol.org/spec-1_0). The following type tags are supported: nil (`N`), true (`T`), false (`F`), float32 (`F`), int32 (`I`), int64 (`H`), and OSC-string (`S`). 
+These nodes are based on the [OSC 1.0 specification](http://opensoundcontrol.org/spec-1_0). When receiving OSC values, the following type tags are supported: nil (`N`), true (`T`), false (`F`), float32 (`f`), float64/double (`d`), int32 (`i`), int64 (`h`), and OSC-string (`s`).

@@ -11,6 +11,7 @@
 #include "VuoVideoDecoder.h"
 #include "VuoAvDecoder.h"
 #include "VuoFfmpegDecoder.h"
+#include "VuoEventLoop.h"
 #include <unistd.h>
 
 extern "C"
@@ -32,6 +33,12 @@ VuoModuleMetadata({
 #endif
 }
 
+/// Release and set a video frame to null if it's not null already.
+#define TRY_RELEASE_VIDEO(v) { if(v.image != NULL) { VuoRelease(v.image); v.image = NULL; v.timestamp = -1.0; } }
+
+/// Release and set an audio frame to null if it's not null already.
+#define TRY_RELEASE_AUDIO(a) { if(a.samples != NULL) { VuoRelease(a.samples); a.samples = NULL; a.timestamp = -1.0; } }
+
 VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimization)
 {
 	VuoVideoPlayer* player = new VuoVideoPlayer(url);
@@ -42,6 +49,8 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 	player->playbackRate = 1.;
 	player->audioEnabled = true;
 	player->isPlaying = false;
+	player->lastVideoTimestamp = 0.;
+	player->lastVideoFrameDelta = 0.;
 
 	/// if optimization is set to forward or auto, assume forward playback.
 	player->preferFfmpeg = optimization == VuoVideoOptimization_Random;
@@ -123,17 +132,8 @@ VuoVideoPlayer::~VuoVideoPlayer()
 	if(videoPath != NULL)
 		VuoRelease(videoPath);
 
-	if(videoFrame.image != NULL)
-	{
-		VuoRelease( videoFrame.image );
-		videoFrame.image = NULL;
-	}
-
-	if(audioFrame.samples != NULL)
-	{
-		VuoRelease( audioFrame.samples );
-		audioFrame.samples = NULL;
-	}
+	TRY_RELEASE_VIDEO(videoFrame)
+	TRY_RELEASE_AUDIO(audioFrame)
 
 	/// always locked by the Destroy() function prior to deletion
 	pthread_mutex_unlock(&decoderMutex);
@@ -352,18 +352,6 @@ bool VuoVideoPlayer::_Seek(double second)
 
 	if( decoder->SeekToSecond(second) )
 	{
-		if(videoFrame.image != NULL)
-		{
-			VuoRelease(videoFrame.image);
-			videoFrame.image = NULL;
-		}
-
-		if(audioFrame.samples != NULL)
-		{
-			VuoRelease(audioFrame.samples);
-			audioFrame.samples = NULL;
-		}
-
 		if(wasPlaying)
 		{
 			lastSentVideoTime = DISPATCH_TIME_FOREVER;
@@ -371,13 +359,25 @@ bool VuoVideoPlayer::_Seek(double second)
 		}
 		else
 		{
-			decoder->NextVideoFrame(&videoFrame);
+			VuoVideoFrame f;
+
+			if(NextVideoFrame(&f))
+			{
+				TRY_RELEASE_VIDEO(videoFrame);
+				TRY_RELEASE_AUDIO(audioFrame);
+				videoFrame = f;
+			}
 		}
 
 		return true;
 	}
 
 	return false;
+}
+
+double VuoVideoPlayer::GetLastFrameDelta()
+{
+	return lastVideoFrameDelta;
 }
 
 double VuoVideoPlayer::GetCurrentTimestamp()
@@ -418,6 +418,86 @@ unsigned int VuoVideoPlayer::GetAudioChannels()
 	return channelCount;
 }
 
+bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
+{
+	const int MAX_FRAMES_TO_STEP_BEFORE_SEEK = 5;
+	double framerate = 1. / decoder->GetFrameRate();
+
+	// first check if the last decoded frame is the one we want, or close to it
+	if(videoFrame.image != NULL)
+	{
+		double frameDelta = fabs(second - videoFrame.timestamp);
+
+		// asking for the frame that's already stored. send it.
+		if( frameDelta <= framerate )
+		{
+			// VLog("next frame procured by already matching current (sent  %.2f, %.2f", videoFrame.timestamp, second);
+			*frame = videoFrame;
+			return true;
+		}
+		// asking for the next frame, or very close to it.
+		// this depends on the caller having set an appropriate playback rate (either forwards or backwards)
+		else if( frameDelta < framerate * MAX_FRAMES_TO_STEP_BEFORE_SEEK && (second - videoFrame.timestamp > 0 == playbackRate > 0) )
+		{
+			for(int i = 0; i < MAX_FRAMES_TO_STEP_BEFORE_SEEK; i++)
+			{
+				VuoVideoFrame f;
+				bool gotNextFrame = NextVideoFrame(&f);
+
+				if(gotNextFrame)
+				{
+					TRY_RELEASE_VIDEO(videoFrame);
+					videoFrame = f;
+
+					if( (playbackRate >= 0 ? videoFrame.timestamp >= second : videoFrame.timestamp <= second) )
+					{
+						*frame = videoFrame;
+						// VLog("next frame procured by stepping (sent  %.2f, %.2f", videoFrame.timestamp, second);
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	double duration = GetDuration();
+	bool seekSuccess = false;
+
+	double target = fmin(duration, second);
+
+	// if the seek target is ≥ duration seek to a little before the end timestamp and step.
+	// that way you usually end up with a valid frame to send.
+	if(second > duration - .5)
+	{
+		seekSuccess = Seek(duration - .5);
+
+		while( videoFrame.timestamp < target )
+		{
+			VuoVideoFrame f;
+
+			if( NextVideoFrame(&f) )
+			{
+				TRY_RELEASE_VIDEO(videoFrame);
+				videoFrame = f;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	else
+	{
+		seekSuccess = Seek(second);
+	}
+
+	// VLog("ended with: %.2f / %.2f", videoFrame.timestamp, duration);
+
+	*frame = videoFrame;
+
+	return seekSuccess;
+}
+
 bool VuoVideoPlayer::GetCurrentVideoFrame(VuoVideoFrame* frame)
 {
 	if(videoFrame.image != NULL)
@@ -433,7 +513,10 @@ bool VuoVideoPlayer::GetCurrentVideoFrame(VuoVideoFrame* frame)
 
 bool VuoVideoPlayer::NextVideoFrame(VuoVideoFrame* frame)
 {
-	return !isPlaying && IsReady() && decoder->NextVideoFrame(frame);
+	if(isPlaying || !IsReady())
+		return false;
+
+	return decoder->NextVideoFrame(frame);
 }
 
 bool VuoVideoPlayer::NextAudioFrame(VuoAudioFrame* frame)
@@ -441,12 +524,11 @@ bool VuoVideoPlayer::NextAudioFrame(VuoAudioFrame* frame)
 	return !isPlaying && IsReady() && decoder->NextAudioFrame(frame);
 }
 
-
 void VuoVideoPlayer::startTimer(dispatch_source_t* timer, dispatch_time_t start, dispatch_semaphore_t* semaphore, void (VuoVideoPlayer::*func)(void))
 {
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-	*timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+	*timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
 
 	dispatch_source_set_timer(
 		*timer,
@@ -468,7 +550,6 @@ void VuoVideoPlayer::stopTimer(dispatch_source_t* timer, dispatch_semaphore_t* s
 
 	*timer = NULL;
 }
-
 
 /**
  * If a frame of video is available, send it to the output triggers.  Then attempt to decode the next frame and set
@@ -493,7 +574,6 @@ void VuoVideoPlayer::sendVideoFrame()
 	if( decoder->NextVideoFrame(&videoFrame) )
 	{
 		// translate timestamp to one considering playback rate and direction (forawrds or backwards)
-
 		double presentationRelativeTimestamp = ((videoFrame.timestamp - timestampStart) / playbackRate);
 		lastVideoFrameDelta = videoFrame.timestamp - lastVideoTimestamp;
 		lastVideoTimestamp = videoFrame.timestamp;

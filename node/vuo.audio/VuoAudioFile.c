@@ -10,6 +10,7 @@
 #include "VuoAudioFile.h"
 #include "VuoUrlFetch.h"
 #include "VuoOsStatus.h"
+#include "VuoEventLoop.h"
 
 #include <dispatch/dispatch.h>
 
@@ -296,7 +297,7 @@ VuoAudioFile VuoAudioFile_make(VuoText url)
 
 	afi->audioFileQueue = dispatch_queue_create("org.vuo.audiofile", NULL);
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, q);
+	afi->playbackTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
 	afi->playbackTimerCanceled = dispatch_semaphore_create(0);
 
 	uint64_t nanoseconds = (float)VuoAudioSamples_bufferSize/VuoAudioSamples_sampleRate * NSEC_PER_SEC;	///< @todo https://b33p.net/kosada/node/4726#comment-27512

@@ -123,10 +123,14 @@ void VuoShader_setUniform_VuoPoint4d(VuoShader shader, const char *uniformIdenti
 /**
  * Sets a @c color uniform value on the specified @c shader accepting a VuoColor.
  *
+ * `color` should be a normal un-premultiplied VuoColor;
+ * this function premultiplies its colors before passing it to the shader.
+ *
  * @threadAny
  */
-void VuoShader_setUniform_VuoColor(VuoShader shader, const char *uniformIdentifier, const VuoColor color)
+void VuoShader_setUniform_VuoColor(VuoShader shader, const char *uniformIdentifier, const VuoColor colorUnpremultiplied)
 {
+	VuoColor color = VuoColor_premultiply(colorUnpremultiplied);
 	SET_UNIFORM(VuoColor, color);
 }
 

@@ -11,6 +11,7 @@
 #import "VuoWindow.h"
 #import "VuoScreenCommon.h"
 #import "VuoCglPixelFormat.h"
+#import "VuoApp.h"
 
 #include <Carbon/Carbon.h>
 #include <OpenGL/OpenGL.h>
@@ -23,6 +24,7 @@ VuoModuleMetadata({
 					 "title" : "VuoWindowOpenGLInternal",
 					 "dependencies" : [
 						 "AppKit.framework",
+						 "VuoApp",
 						 "VuoCglPixelFormat",
 						 "VuoDisplayRefresh",
 						 "VuoGLContext",
@@ -643,7 +645,9 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 		userResizedWindow = NO;
 		programmaticallyResizingWindow = NO;
 
-		[self setTitle:@"Vuo Scene"];
+		char *title = VuoApp_getName();
+		[self setTitle:[NSString stringWithUTF8String:title]];
+		free(title);
 
 		contentRectQueue = dispatch_queue_create("vuo.window.opengl.internal.contentrect", 0);
 
@@ -866,7 +870,7 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 //		VLog("%s",VuoWindowProperty_getSummary(property));
 
 		if (property.type == VuoWindowProperty_Title)
-			[self setTitle:[NSString stringWithUTF8String:property.title]];
+			[self setTitle: property.title ? [NSString stringWithUTF8String:property.title] : @""];
 		else if (property.type == VuoWindowProperty_FullScreen)
 		{
 			NSScreen *requestedScreen = VuoScreen_getNSScreen(property.screen);
@@ -916,11 +920,27 @@ static NSRect convertPixelsToPoints(NSView *view, NSRect rect)
 				contentRect.origin.y += contentRect.size.height - propertyInPoints.size.height;
 
 				contentRect.size = NSMakeSize(propertyInPoints.size.width, propertyInPoints.size.height);
-				[self setFrame:[self frameRectForContentRect:contentRect] display:YES animate:NO];
+				@try
+				{
+					[self setFrame:[self frameRectForContentRect:contentRect] display:YES animate:NO];
+				}
+				@catch (NSException *e)
+				{
+					char *description = VuoLog_copyCFDescription(e);
+					VUserLog("Error: Couldn't change window size to %lldx%lld: %s", property.width, property.height, description);
+					free(description);
+				}
 			}
 		}
 		else if (property.type == VuoWindowProperty_AspectRatio)
 		{
+			if (property.aspectRatio < 1./10000
+			 || property.aspectRatio > 10000)
+			{
+				VUserLog("Error: Couldn't change window aspect ratio to %g since it's unrealistically narrow.", property.aspectRatio);
+				continue;
+			}
+
 			NSRect contentRect = [self contentRectForFrameRect:[self frame]];
 			[self setAspectRatioToWidth:contentRect.size.width height:contentRect.size.width/property.aspectRatio];
 		}

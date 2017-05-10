@@ -127,6 +127,7 @@ public:
 		vector<string> getBuiltInLibrarySearchPaths(void);
 		void addSearchPathsToSharedEnvironment(void);
 		void addCachedModulePathToSharedEnvironment(string moduleFileName);
+		void removeCachedModulePathFromSharedEnvironment(string moduleFileName);
 	};
 
 private:
@@ -203,12 +204,14 @@ public:
 	~VuoCompiler(void);
 	void setLicense(string licenseContent, string licenseSignature);
 	void loadStoredLicense(bool showLicenseWarning);
+	void loadStoredLicense(void);
 	static Module * readModuleFromBitcode(string inputPath);
 	static void deleteModule(Module *module);
 	map<string, VuoCompilerException> flushErrorsLoadingModules(void);
 	static set<string> getEncounteredPremiumModules();
 	void compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition=true, bool isLiveCodeable=true);
-	void compileComposition(string inputPath, string outputPath, bool isTopLevelComposition=true, bool isLiveCodeable=true);
+	void compileComposition(string inputPath, string outputPath, bool isTopLevelComposition, bool isLiveCodeable);
+	void compileComposition(string inputPath, string outputPath);
 	void compileCompositionString(const string &compositionString, string outputPath, bool isTopLevelComposition=true, bool isLiveCodeable=true);
 	VuoCompilerNodeClass * installSubcomposition(string compositionPath);
 	void compileModule(string inputPath, string outputPath);

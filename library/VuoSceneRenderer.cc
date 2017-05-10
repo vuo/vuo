@@ -154,8 +154,9 @@ static void VuoSceneRenderer_prepareContext(CGLContextObj cgl_ctx)
 {
 	glEnable(GL_DEPTH_TEST);
 
+	/// @see VuoImageRenderer_make
 	glEnable(GL_BLEND);
-	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	glBlendEquation(GL_FUNC_ADD);
 }
 
@@ -470,7 +471,11 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 		GLint ambientColorUniform = VuoGlProgram_getUniformLocation(program, "ambientColor");
 		if (ambientColorUniform != -1)
-			glUniform4f(ambientColorUniform, sceneRenderer->ambientColor.r, sceneRenderer->ambientColor.g, sceneRenderer->ambientColor.b, sceneRenderer->ambientColor.a);
+			glUniform4f(ambientColorUniform,
+						sceneRenderer->ambientColor.r * sceneRenderer->ambientColor.a,
+						sceneRenderer->ambientColor.g * sceneRenderer->ambientColor.a,
+						sceneRenderer->ambientColor.b * sceneRenderer->ambientColor.a,
+						sceneRenderer->ambientColor.a);
 		GLint ambientBrightnessUniform = VuoGlProgram_getUniformLocation(program, "ambientBrightness");
 		if (ambientBrightnessUniform != -1)
 			glUniform1f(ambientBrightnessUniform, sceneRenderer->ambientBrightness);
@@ -492,7 +497,11 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].color");
 				GLint colorUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform4f(colorUniform, pointLight.lightColor.r, pointLight.lightColor.g, pointLight.lightColor.b, pointLight.lightColor.a);
+				glUniform4f(colorUniform,
+							pointLight.lightColor.r * pointLight.lightColor.a,
+							pointLight.lightColor.g * pointLight.lightColor.a,
+							pointLight.lightColor.b * pointLight.lightColor.a,
+							pointLight.lightColor.a);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].brightness");
 				GLint brightnessUniform = VuoGlProgram_getUniformLocation(program, uniformName);
@@ -527,7 +536,11 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].color");
 				GLint colorUniform = VuoGlProgram_getUniformLocation(program, uniformName);
-				glUniform4f(colorUniform, spotLight.lightColor.r, spotLight.lightColor.g, spotLight.lightColor.b, spotLight.lightColor.a);
+				glUniform4f(colorUniform,
+							spotLight.lightColor.r * spotLight.lightColor.a,
+							spotLight.lightColor.g * spotLight.lightColor.a,
+							spotLight.lightColor.b * spotLight.lightColor.a,
+							spotLight.lightColor.a);
 
 				VuoSceneRenderer_addUniformSuffix(uniformName+prefixLength, i-1, "].brightness");
 				GLint brightnessUniform = VuoGlProgram_getUniformLocation(program, uniformName);
@@ -565,27 +578,28 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 			if (so.blendMode == VuoBlendMode_Multiply)
 			{
-				glBlendFunc(GL_DST_COLOR, GL_ZERO);
+				glBlendFuncSeparate(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendEquation(GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_DarkerComponent)
 			{
+				/// @todo https://b33p.net/kosada/node/12014
 				glBlendFunc(GL_ONE, GL_ONE);
 				glBlendEquationSeparate(GL_MIN, GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_LighterComponent)
 			{
-				glBlendFunc(GL_ONE, GL_ONE);
+				glBlendFuncSeparate(GL_ZERO, GL_ZERO, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendEquationSeparate(GL_MAX, GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_LinearDodge)
 			{
-				glBlendFunc(GL_ONE, GL_ONE);
+				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendEquation(GL_FUNC_ADD);
 			}
 			else if (so.blendMode == VuoBlendMode_Subtract)
 			{
-				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_DST_ALPHA, GL_ZERO);
+				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendEquationSeparate(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 			}
 		}
@@ -615,10 +629,11 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 				glCullFace(submesh.faceCullingMode);
 			}
 
+			unsigned long completeInputElementCount = VuoSubmesh_getCompleteElementCount(submesh);
 			if (submesh.elementCount)
-				glDrawElements(mode, (GLsizei)submesh.elementCount, GL_UNSIGNED_INT, (void*)0);
-			else
-				glDrawArrays(mode, 0, submesh.vertexCount);
+				glDrawElements(mode, completeInputElementCount, GL_UNSIGNED_INT, (void*)0);
+			else if (submesh.vertexCount)
+				glDrawArrays(mode, 0, completeInputElementCount);
 
 			glBindVertexArray(0);
 		}
@@ -627,7 +642,9 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		if (so.blendMode != VuoBlendMode_Normal)
 		{
 			glEnable(GL_DEPTH_TEST);
-			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+
+			/// @see VuoSceneRenderer_prepareContext
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			glBlendEquation(GL_FUNC_ADD);
 		}
 
@@ -1318,12 +1335,49 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 
 	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
 
+	unsigned char colorBytesPerPixel = VuoGlTexture_getBytesPerPixel(imageGlInternalFormat, GL_BGRA);
+	unsigned long requiredBytes = sceneRenderer->viewportWidth * sceneRenderer->viewportHeight * colorBytesPerPixel;
+	if (depthImage)
+		requiredBytes += sceneRenderer->viewportWidth * sceneRenderer->viewportHeight * VuoGlTexture_getBytesPerPixel(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
+
+	int supportedSamples = VuoGlContext_getMaximumSupportedMultisampling(sceneRenderer->glContext);
+	multisample = (VuoMultisample)MIN(multisample, supportedSamples);
+	bool actuallyMultisampling = multisample > 1;
+
+	// See https://b33p.net/kosada/node/12030
+	float fudge = 2.5;
+	if (multisample)
+		requiredBytes += requiredBytes * multisample * fudge;
+
+	unsigned long maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(sceneRenderer->glContext);
+	if (requiredBytes > maximumTextureBytes)
+	{
+		VUserLog("Not enough graphics memory for a %dx%d (%d bytes/pixel * %d sample) render%s.  Requires %lu MB, have %lu MB.",
+				 sceneRenderer->viewportWidth, sceneRenderer->viewportHeight,
+				 colorBytesPerPixel, multisample==0?1:multisample,
+				 depthImage ? " with depth buffer" : "",
+				 requiredBytes/1024/1024, maximumTextureBytes/1024/1024);
+		*image = NULL;
+		if (depthImage)
+			*depthImage = NULL;
+		return;
+	}
+
+
 	// Create a new GL Texture Object and Framebuffer Object.
 	GLuint outputTexture = VuoGlTexturePool_use(sceneRenderer->glContext, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA);
 
 	GLuint outputDepthTexture=0;
 	if (depthImage)
 		outputDepthTexture = VuoGlTexturePool_use(sceneRenderer->glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
+
+	if (!outputTexture || (depthImage && !outputDepthTexture))
+	{
+		*image = NULL;
+		if (depthImage)
+			*depthImage = NULL;
+		return;
+	}
 
 	GLuint outputFramebuffer;
 	glGenFramebuffers(1, &outputFramebuffer);
@@ -1334,7 +1388,6 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 	// Otherwise, directly bind the textures to the framebuffer.
 	GLuint renderBuffer=0;
 	GLuint renderDepthBuffer=0;
-	bool actuallyMultisampling = (multisample > 1 && VuoGlContext_isMultisamplingFunctional(sceneRenderer->glContext));
 	if (actuallyMultisampling)
 	{
 		glGenRenderbuffersEXT(1, &renderBuffer);

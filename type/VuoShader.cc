@@ -995,15 +995,12 @@ VuoShader VuoShader_makeFromJson(json_object *js)
 	if (!js)
 		return NULL;
 
-	VuoShader s = NULL;
+	json_object *o = NULL;
 
-	if (json_object_get_type(js) == json_type_int)
-		s = (VuoShader) json_object_get_int64(js);
+	if (json_object_object_get_ex(js, "pointer", &o))
+		return (VuoShader)json_object_get_int64(o);
 
-	if (!s)
-		return VuoShader_makeDefaultShader();
-
-	return s;
+	return VuoShader_makeDefaultShader();
 }
 
 /**
@@ -1015,7 +1012,9 @@ VuoShader VuoShader_makeFromJson(json_object *js)
  */
 json_object * VuoShader_getJson(const VuoShader value)
 {
-	return json_object_new_int64((int64_t)value);
+	json_object *js = json_object_new_object();
+	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));
+	return js;
 }
 
 /**

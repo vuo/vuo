@@ -116,7 +116,7 @@ private:
 	VuoNode * createPublishedOutputNode();
 	bool isPublishedPortNameTaken(string name, bool isPublishedInput);
 
-	string createAppBundleDirectoryStructure();
+	string createAppBundleDirectoryStructure(const QString &savePath);
 	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString, VuoCompilerDriver *driver=NULL);
 	void bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension="");
 	void bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath);

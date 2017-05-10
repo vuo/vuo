@@ -11,6 +11,7 @@
 #include "module.h"
 
 #include "VuoGlContext.h"
+#include "VuoEventLoop.h"
 
 #include <vector>
 #include <utility>	///< for pair
@@ -33,10 +34,6 @@ using namespace std;
 
 static map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > VuoGlPool __attribute__((init_priority(101)));
 static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGlPool.
-static void __attribute__((constructor)) VuoGlPool_init(void)
-{
-	VuoGlPool_semaphore = dispatch_semaphore_create(1);
-}
 
 /**
  * Returns an OpenGL Buffer Object of type @c type.
@@ -170,80 +167,9 @@ typedef pair<queue<GLuint>,double> VuoGlTextureLastUsed;	///< A queue of texture
 typedef map<GLenum, map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed > > VuoGlTexturePoolType;	///< VuoGlTexturePool[internalformat][size] gives a list of unused textures.
 static VuoGlTexturePoolType *VuoGlTexturePool;	///< A pool of GL Textures.
 static dispatch_semaphore_t VuoGlTexturePool_semaphore;	///< Serializes access to VuoGlTexturePool.
-static dispatch_semaphore_t VuoGlTexturePool_canceledAndCompleted;	///< Signals when the last VuoGlTexturePool cleanup has completed.
-static dispatch_source_t VuoGlTexturePool_timer;	///< Periodically cleans up VuoGlTexturePool.
-static double textureTimeout = 0.1;	///< Seconds a texture can remain in the pool unused, before it gets purged.
+static unsigned long VuoGlTexturePool_allocatedBytes = 0;	///< The approximate current amount of allocated texture storage (only includes textures obtained via `VuoGlTexturePool_use`).
+static unsigned long VuoGlTexturePool_allocatedBytesMax = 0;	///< The approximate maximum amount of allocated texture storage (only includes textures obtained via `VuoGlTexturePool_use`).
 
-/**
- * Purges expired textures from the GL Texture Pool.
- */
-static void VuoGlTexturePool_cleanup(void *blah)
-{
-	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
-	{
-		double now = VuoLogGetTime();
-//		VLog("pool:");
-		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool->begin(); internalformat != VuoGlTexturePool->end(); ++internalformat)
-		{
-//			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
-			for (map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed >::iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); )
-			{
-//				VLog("\t\t%dx%d: %lu unused textures (last used %gs ago)",dimensions->first.first,dimensions->first.second, dimensions->second.first.size(), now - dimensions->second.second);
-				if (now - dimensions->second.second > textureTimeout)
-				{
-					unsigned long textureCount = dimensions->second.first.size();
-					if (textureCount)
-					{
-//						VLog("\t\t\tpurging %lu expired textures", textureCount);
-						CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-						while (!dimensions->second.first.empty())
-						{
-							GLuint textureName = dimensions->second.first.front();
-							dimensions->second.first.pop();
-
-							glDeleteTextures(1, &textureName);
-						}
-						VuoGlContext_disuse(cgl_ctx);
-					}
-
-					internalformat->second.erase(dimensions++);
-				}
-				else
-					++dimensions;
-			}
-		}
-	}
-	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
-}
-/**
- * Initializes the GL Texture Pool.
- */
-static void __attribute__((constructor)) VuoGlTexturePool_init(void)
-{
-	VuoGlTexturePool_semaphore = dispatch_semaphore_create(1);
-	VuoGlTexturePool_canceledAndCompleted = dispatch_semaphore_create(0);
-	VuoGlTexturePool = new VuoGlTexturePoolType;
-
-	VuoGlTexturePool_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-	dispatch_source_set_timer(VuoGlTexturePool_timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*textureTimeout, NSEC_PER_SEC*textureTimeout);
-	dispatch_source_set_event_handler_f(VuoGlTexturePool_timer, VuoGlTexturePool_cleanup);
-	dispatch_source_set_cancel_handler(VuoGlTexturePool_timer, ^{
-										   dispatch_semaphore_signal(VuoGlTexturePool_canceledAndCompleted);
-									   });
-	dispatch_resume(VuoGlTexturePool_timer);
-}
-/**
- * Destroys the GL Texture Pool.
- */
-static void __attribute__((destructor)) VuoGlTexturePool_fini(void)
-{
-	dispatch_source_cancel(VuoGlTexturePool_timer);
-
-	// Wait for the last cleanup to complete.
-	dispatch_semaphore_wait(VuoGlTexturePool_canceledAndCompleted, DISPATCH_TIME_FOREVER);
-
-	delete VuoGlTexturePool;
-}
 
 /**
  * Returns the OpenGL texture data type corresponding with OpenGL texture `format`.
@@ -267,29 +193,34 @@ GLuint VuoGlTexture_getType(GLuint format)
 		return GL_UNSIGNED_BYTE;
 
 	VUserLog("Unknown format %s", VuoGl_stringForConstant(format));
+	VuoLog_backtrace();
 	return 0;
 }
 
 /**
- * Returns the number of color channels in the specified OpenGL texture format.
+ * Returns the number of color+alpha channels in the specified OpenGL texture format.
  */
 unsigned char VuoGlTexture_getChannelCount(GLuint format)
 {
 	if (format == GL_LUMINANCE
+	 || format == GL_LUMINANCE16F_ARB
 	 || format == GL_DEPTH_COMPONENT)
 		return 1;
 	else if (format == GL_YCBCR_422_APPLE
 		  || format == GL_LUMINANCE_ALPHA)
 		return 2;
 	else if (format == GL_RGB
+		  || format == GL_RGB16F_ARB
 		  || format == GL_BGR_EXT)
 		return 3;
 	else if (format == GL_RGBA
 		  || format == GL_RGBA8
+		  || format == GL_RGBA16F_ARB
 		  || format == GL_BGRA)
 		return 4;
 
 	VUserLog("Unknown format %s", VuoGl_stringForConstant(format));
+	VuoLog_backtrace();
 	return 1;
 }
 
@@ -313,6 +244,34 @@ unsigned char VuoGlTexture_getBytesPerPixel(GLuint internalformat, GLuint format
 		return bytes * 2;
 
 	VUserLog("Unknown internalformat %s", VuoGl_stringForConstant(internalformat));
+	VuoLog_backtrace();
+	return 0;
+}
+
+/**
+ * Returns the number of bytes required to store each pixel of the specified OpenGL texture format.
+ */
+unsigned char VuoGlTexture_getBytesPerPixelForInternalFormat(GLuint internalformat)
+{
+	if (internalformat == GL_LUMINANCE8)
+		return 1;
+	if (internalformat == GL_LUMINANCE8_ALPHA8
+	 || internalformat == GL_LUMINANCE16F_ARB
+	 || internalformat == GL_DEPTH_COMPONENT)
+		return 2;
+	if (internalformat == GL_RGB)
+		return 3;
+	if (internalformat == GL_RGBA
+	 || internalformat == GL_RGBA8
+	 || internalformat == GL_LUMINANCE_ALPHA16F_ARB)
+		return 4;
+	if (internalformat == GL_RGB16F_ARB)
+		return 6;
+	if (internalformat == GL_RGBA16F_ARB)
+		return 8;
+
+	VUserLog("Unknown internalformat %s", VuoGl_stringForConstant(internalformat));
+	VuoLog_backtrace();
 	return 0;
 }
 
@@ -340,8 +299,11 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 							  GLint textureMegabytes = 0;
 							  if (CGLDescribeRenderer(ri, i, kCGLRPTextureMemoryMegabytes, &textureMegabytes) == kCGLNoError)
 							  {
-								  // In OS X, the GPU seems to often crash with individual textures that occupy more than about 85% of texture memory.
-								  maximumTextureBytes = textureMegabytes * 1024 * 1024 * .85;
+								  // In OS X, the GPU seems to often crash with individual textures that occupy more than a certain amount of memory.
+								  // See https://b33p.net/kosada/node/10791
+								  // See https://b33p.net/kosada/node/12030
+								  maximumTextureBytes = (textureMegabytes - 85) * 1024 * 1024 * .9;
+								  VDebugLog("Texture : %ld MB", maximumTextureBytes / 1024 / 1024);
 								  break;
 							  }
 						  }
@@ -349,6 +311,20 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 					  CGLDestroyRendererInfo(ri);
 				  });
 	return maximumTextureBytes;
+}
+
+/**
+ * Returns the maximum dimension (in pixels) a texture can have.
+ */
+GLint VuoGlTexture_getMaximumTextureDimension(VuoGlContext glContext)
+{
+	static GLint maximumTextureDimension = 0;
+	static dispatch_once_t maximumTextureDimensionQuery = 0;
+	dispatch_once(&maximumTextureDimensionQuery, ^{
+					  CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+					  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maximumTextureDimension);
+				  });
+	return maximumTextureDimension;
 }
 
 /**
@@ -371,7 +347,9 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
  */
 GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsigned short width, unsigned short height, GLenum format)
 {
-//	VLog("want (%s %dx%d %s)", VuoGl_stringForConstant(internalformat), width, height, VuoGl_stringForConstant(format));
+	unsigned char bytesPerPixel = VuoGlTexture_getBytesPerPixel(internalformat, format);
+	unsigned long requiredBytes = width * height * bytesPerPixel;
+//	VLog("want (%s %dx%d %s, %lu bytes)", VuoGl_stringForConstant(internalformat), width, height, VuoGl_stringForConstant(format), requiredBytes);
 
 	GLuint name = 0;
 	VuoGlTextureDimensionsType dimensions(width,height);
@@ -383,6 +361,9 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 //		if (name) VLog("using recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
 	}
 	(*VuoGlTexturePool)[internalformat][dimensions].second = VuoLogGetTime();
+	VuoGlTexturePool_allocatedBytes += requiredBytes;
+	if (VuoGlTexturePool_allocatedBytes > VuoGlTexturePool_allocatedBytesMax)
+		VuoGlTexturePool_allocatedBytesMax = VuoGlTexturePool_allocatedBytes;
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
 
@@ -394,14 +375,21 @@ GLuint VuoGlTexturePool_use(VuoGlContext glContext, GLenum internalformat, unsig
 		unsigned long maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(glContext);
 		if (maximumTextureBytes > 0)
 		{
-			unsigned char bytesPerPixel = VuoGlTexture_getBytesPerPixel(internalformat, format);
-			unsigned long requiredBytes = width * height * bytesPerPixel;
 			if (requiredBytes > maximumTextureBytes)
 			{
 				/// @todo Better error handling per https://b33p.net/kosada/node/4724
-				VUserLog("Not enough graphics memory for %dx%d (%d bytes/pixel) texture.  Requires %lu bytes, have %lu bytes.", width, height, bytesPerPixel, requiredBytes, maximumTextureBytes);
+				VUserLog("Not enough graphics memory for a %dx%d (%d bytes/pixel) texture.  Requires %lu MB, have %lu MB.", width, height, bytesPerPixel, requiredBytes/1024/1024, maximumTextureBytes/1024/1024);
 				return 0;
 			}
+		}
+
+		// Check texture size against the GPU's allowed texture size.
+		GLint maxDimension = VuoGlTexture_getMaximumTextureDimension(glContext);
+		if (width > maxDimension || height > maxDimension)
+		{
+			/// @todo Better error handling per https://b33p.net/kosada/node/4724
+			VUserLog("This GPU doesn't support textures of size %dx%d (GPU's limit is %dx%d).", width, height, maxDimension, maxDimension);
+			return 0;
 		}
 
 		glGenTextures(1, &name);
@@ -443,15 +431,19 @@ static void VuoGlTexurePool_disuse(GLenum internalformat, unsigned short width, 
 		return;
 	}
 
+	unsigned char bytesPerPixel = VuoGlTexture_getBytesPerPixelForInternalFormat(internalformat);
+	unsigned long requiredBytes = width * height * bytesPerPixel;
+
 	VuoGlTextureDimensionsType dimensions(width,height);
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		(*VuoGlTexturePool)[internalformat][dimensions].first.push(name);
 		(*VuoGlTexturePool)[internalformat][dimensions].second = VuoLogGetTime();
+		VuoGlTexturePool_allocatedBytes -= requiredBytes;
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
 
-//	VLog("recycled %d (%s %dx%d)", name, VuoGl_stringForConstant(internalformat), width, height);
+//	VLog("recycled %d (%s %dx%d, %lu bytes)", name, VuoGl_stringForConstant(internalformat), width, height, requiredBytes);
 }
 
 
@@ -589,17 +581,73 @@ typedef map<VuoGlTextureDimensionsType, deque<VuoIoSurfacePoolEntryType> > VuoIo
 static VuoIoSurfacePoolType *VuoIoSurfacePool;	///< Unused IOSurfaces.
 static VuoIoSurfacePoolType *VuoIoSurfaceQuarantine;	///< IOSurfaces which might still be in use by the receiver.
 static dispatch_semaphore_t VuoIoSurfacePool_semaphore;	///< Serializes access to the IOSurface pool.
-static dispatch_semaphore_t VuoIoSurfacePool_canceledAndCompleted;	///< Signals when the last IOSurface pool cleanup has completed.
-static dispatch_source_t VuoIoSurfacePool_timer;	///< Periodically cleans up the IOSurface pool.
 static CFStringRef receiverFinishedWithIoSurfaceKey = CFSTR("VuoReceiverFinished");	///< Signals from the receiver to the sender, when the receiver is finished using the IOSurface.
 
-static double ioSurfaceCleanupInterval = 0.1;	///< Interval (in seconds) to promote IOSurfaces from the quarantine to the pool, and to clean old IOSurfaces from the pool.
+static double cleanupInterval = 0.1;	///< Interval (in seconds) to flush the texture and IOSurface pools.
+static dispatch_source_t VuoGlPool_timer;	///< Periodically cleans up the IOSurface pool.
+static dispatch_semaphore_t VuoGlPool_canceledAndCompleted;	///< Signals when the final cleanup has completed.
 
 /**
- * Periodically cleans up the IOSurface pool.
+ * Periodically cleans up the texture and IOSurface pools.
  */
-static void VuoIoSurfacePool_cleanup(void *blah)
+static void VuoGlPool_cleanup(void *blah)
 {
+	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
+	{
+		// Log VRAM use every 10 seconds.
+		static unsigned long cleanupCount = 0;
+		if ((++cleanupCount % (long)(10./cleanupInterval) == 0)
+		 && VuoIsDebugEnabled()
+		 && (VuoGlTexturePool_allocatedBytes > 0 || VuoGlTexturePool_allocatedBytesMax > 0))
+		{
+			unsigned long maximumTextureBytes;
+			{
+				VuoGlContext glContext = VuoGlContext_use();
+				maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(glContext);
+				VuoGlContext_disuse(glContext);
+			}
+
+			VUserLog("VRAM use: %5lu MB current (%3lu%% of system), %5lu MB max (%3lu%% of system)",
+					  VuoGlTexturePool_allocatedBytes/1024/1024,
+					  VuoGlTexturePool_allocatedBytes*100/maximumTextureBytes,
+					  VuoGlTexturePool_allocatedBytesMax/1024/1024,
+					  VuoGlTexturePool_allocatedBytesMax*100/maximumTextureBytes);
+		}
+
+		double now = VuoLogGetTime();
+//		VLog("pool:");
+		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool->begin(); internalformat != VuoGlTexturePool->end(); ++internalformat)
+		{
+//			VLog("\t%s:",VuoGl_stringForConstant(internalformat->first));
+			for (map<VuoGlTextureDimensionsType, VuoGlTextureLastUsed >::iterator dimensions = internalformat->second.begin(); dimensions != internalformat->second.end(); )
+			{
+//				VLog("\t\t%dx%d: %lu unused textures (last used %gs ago)",dimensions->first.first,dimensions->first.second, dimensions->second.first.size(), now - dimensions->second.second);
+				if (now - dimensions->second.second > cleanupInterval)
+				{
+					unsigned long textureCount = dimensions->second.first.size();
+					if (textureCount)
+					{
+//						VLog("\t\t\tpurging %lu expired textures", textureCount);
+						CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+						while (!dimensions->second.first.empty())
+						{
+							GLuint textureName = dimensions->second.first.front();
+							dimensions->second.first.pop();
+
+							glDeleteTextures(1, &textureName);
+						}
+						VuoGlContext_disuse(cgl_ctx);
+					}
+
+					internalformat->second.erase(dimensions++);
+				}
+				else
+					++dimensions;
+			}
+		}
+	}
+	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
+
 	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		// Promote IOSurfaces from the quarantine to the pool, if the receiver has finished using them.
@@ -631,7 +679,7 @@ static void VuoIoSurfacePool_cleanup(void *blah)
 			for (deque<VuoIoSurfacePoolEntryType>::iterator poolIoSurfaceEntry = poolQueue->second.begin(); poolIoSurfaceEntry != poolQueue->second.end();)
 			{
 				VuoIoSurfacePoolEntryType e = *poolIoSurfaceEntry;
-				if (now - e.lastUsedTime > ioSurfaceCleanupInterval*2.)
+				if (now - e.lastUsedTime > cleanupInterval*2.)
 				{
 					IOSurfaceRef s = (IOSurfaceRef)e.ioSurface;
 //					VLog("Purging expired IOSurface %d + GL Texture %d (%dx%d) — it's %gs old", IOSurfaceGetID(s), e.texture, poolQueue->first.first, poolQueue->first.second, now - e.lastUsedTime);
@@ -651,28 +699,37 @@ static void VuoIoSurfacePool_cleanup(void *blah)
 	}
 	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
 }
-static void __attribute__((constructor)) VuoIoSurfacePool_init(void)
+static void __attribute__((constructor)) VuoGlPool_init(void)
 {
-	VuoIoSurfacePool_semaphore = dispatch_semaphore_create(1);
-	VuoIoSurfacePool_canceledAndCompleted = dispatch_semaphore_create(0);
+	VuoGlPool_semaphore = dispatch_semaphore_create(1);
 
+	VuoGlTexturePool_semaphore = dispatch_semaphore_create(1);
+	VuoGlTexturePool = new VuoGlTexturePoolType;
+
+	VuoIoSurfacePool_semaphore = dispatch_semaphore_create(1);
 	VuoIoSurfacePool = new VuoIoSurfacePoolType;
 	VuoIoSurfaceQuarantine = new VuoIoSurfacePoolType;
 
-	VuoIoSurfacePool_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-	dispatch_source_set_timer(VuoIoSurfacePool_timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*ioSurfaceCleanupInterval, NSEC_PER_SEC*ioSurfaceCleanupInterval);
-	dispatch_source_set_event_handler_f(VuoIoSurfacePool_timer, VuoIoSurfacePool_cleanup);
-	dispatch_source_set_cancel_handler(VuoIoSurfacePool_timer, ^{
-										   dispatch_semaphore_signal(VuoIoSurfacePool_canceledAndCompleted);
+	VuoGlPool_canceledAndCompleted = dispatch_semaphore_create(0);
+	VuoGlPool_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+	dispatch_source_set_timer(VuoGlPool_timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*cleanupInterval, NSEC_PER_SEC*cleanupInterval);
+	dispatch_source_set_event_handler_f(VuoGlPool_timer, VuoGlPool_cleanup);
+	dispatch_source_set_cancel_handler(VuoGlPool_timer, ^{
+										   dispatch_semaphore_signal(VuoGlPool_canceledAndCompleted);
 									   });
-	dispatch_resume(VuoIoSurfacePool_timer);
+	dispatch_resume(VuoGlPool_timer);
 }
-static void __attribute__((destructor)) VuoIoSurfacePool_fini(void)
+/**
+ * Stops the cleanup timer, and deletes the pools.
+ */
+static void __attribute__((destructor)) VuoGlPool_fini(void)
 {
-	dispatch_source_cancel(VuoIoSurfacePool_timer);
+	dispatch_source_cancel(VuoGlPool_timer);
 
 	// Wait for the last cleanup to complete.
-	dispatch_semaphore_wait(VuoIoSurfacePool_canceledAndCompleted, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait(VuoGlPool_canceledAndCompleted, DISPATCH_TIME_FOREVER);
+
+	delete VuoGlTexturePool;
 
 	delete VuoIoSurfacePool;
 	delete VuoIoSurfaceQuarantine;
@@ -736,6 +793,7 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		CFRelease(pixelsHighCF);
 		CFRelease(bytesPerElementCF);
 		CFRelease(properties);
+//		VLog("CGLTexImageIOSurface2D(GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, %d, %d, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);", pixelsWide, pixelsHigh);
 		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)ioSurface, 0);
 		if (err != kCGLNoError)
 		{
@@ -825,6 +883,7 @@ __attribute__((constructor)) static void VuoGlShaderPool_init(void)
 	VuoGlShaderPool_semaphore = dispatch_semaphore_create(1);
 }
 
+#include "VuoGlslAlpha.h"
 #include "VuoGlslProjection.h"
 #include "VuoGlslRandom.h"
 #include "deform.h"
@@ -880,6 +939,7 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 
 		string combinedSource = source;
 
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslAlpha",      VuoGlslAlpha_glsl,      VuoGlslAlpha_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslProjection", VuoGlslProjection_glsl, VuoGlslProjection_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslRandom",     VuoGlslRandom_glsl,     VuoGlslRandom_glsl_len);
 

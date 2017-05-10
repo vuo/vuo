@@ -1388,8 +1388,12 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 			rotationString = VuoPoint3d_getSummary(value.transform.rotationSource.target);
 		}
 
-		char *valueAsString = VuoText_format("%s<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g",
-											 type, translationString, rotationLabel, rotationString, cameraViewValue, cameraViewString, value.cameraDistanceMin, value.cameraDistanceMax);
+		char *valueAsString = VuoText_format("%s named \"%s\"<br>at (%s)<br>%s (%s)<br>%g%s<br>shows objects between depth %g and %g",
+											 type, value.name ? value.name : "",
+											 translationString,
+											 rotationLabel, rotationString,
+											 cameraViewValue, cameraViewString,
+											 value.cameraDistanceMin, value.cameraDistanceMax);
 		free(rotationString);
 		free(translationString);
 		return valueAsString;
@@ -1430,7 +1434,7 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 		else
 			directionConeString = strdup("");
 
-		char *valueAsString = VuoText_format("%s<br>color (%s)<br>brightness %g%s%s",
+		char *valueAsString = VuoText_format("%s<br>color %s<br>brightness %g%s%s",
 											 type, colorString, value.lightBrightness, positionRangeString, directionConeString);
 
 		free(directionConeString);
@@ -1492,8 +1496,12 @@ char *VuoSceneObject_getSummary(const VuoSceneObject value)
 		shaderNamesSummary = strdup("");
 	VuoRelease(shaderNames);
 
-	char *valueAsString = VuoText_format("%ld vertices, %ld elements<br><br>%s<br><br>%ld child object%s%s%s",
-										 vertexCount, elementCount, transform, childObjectCount, childObjectPlural, descendants, shaderNamesSummary);
+	char *valueAsString = VuoText_format("object named \"%s\"<br>%ld vertices, %ld elements<br><br>%s<br><br>%ld child object%s%s%s",
+										 value.name ? value.name : "",
+										 vertexCount, elementCount,
+										 transform,
+										 childObjectCount, childObjectPlural,
+										 descendants, shaderNamesSummary);
 
 	free(descendants);
 	free(transform);

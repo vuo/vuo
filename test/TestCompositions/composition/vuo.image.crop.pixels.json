@@ -91,4 +91,18 @@
 			"croppedImage": { "color":{"r":1,"g":1,"b":1,"a":1}, "pixelsWide":10, "pixelsHigh":4 }
 		}
 	},
+
+	/* Semitransparent orange. */
+	{
+		"firingPort": "image",
+		"inputPortValues": {
+			"image": { "color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "pixelsWide":10, "pixelsHigh":10 },
+			"topLeft": { "x":0, "y":6 },
+			"width":  10,
+			"height": 10,
+		},
+		"outputPortValues": {
+			"croppedImage": { "color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080}, "pixelsWide":10, "pixelsHigh":4 }
+		}
+	},
 ]}

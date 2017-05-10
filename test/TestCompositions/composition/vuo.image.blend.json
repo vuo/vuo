@@ -62,27 +62,43 @@
 		}
 	},
 
-	/* Normal blend mode: clearBackground + opaqueForeground(100%) = opaqueForeground  */
+	/* Normal blend mode, replaceOpacity=true: clearBackground + opaqueForeground(100%) = opaqueForeground  */
 	{
 		"firingPort": "refresh",
 		"inputPortValues": {
 			"background": {"color":{"r":0,"g":0,"b":0,"a":0},"pixelsWide":1,"pixelsHigh":1},
 			"foreground": {"color":{"r":0.5,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blendMode": "normal",
-			"foregroundOpacity": 1
+			"foregroundOpacity": 1,
+			"replaceOpacity": true
 		},
 		"outputPortValues": {
 			"blended": {"color":{"r":0.5,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1}
 		}
 	},
-	/* Normal blend mode: opaqueBackground + clearForeground(100%) = opaqueBackground  */
+	/* Normal blend mode, replaceOpacity=false: clearBackground + opaqueForeground(100%) = clear  */
+	{
+		"firingPort": "refresh",
+		"inputPortValues": {
+			"background": {"color":{"r":0,"g":0,"b":0,"a":0},"pixelsWide":1,"pixelsHigh":1},
+			"foreground": {"color":{"r":0.5,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blendMode": "normal",
+			"foregroundOpacity": 1,
+			"replaceOpacity": false
+		},
+		"outputPortValues": {
+			"blended": {"color":{"r":0,"g":0,"b":0,"a":0},"pixelsWide":1,"pixelsHigh":1}
+		}
+	},
+	/* Normal blend mode, replaceOpacity=true: opaqueBackground + clearForeground(100%) = opaqueBackground  */
 	{
 		"firingPort": "refresh",
 		"inputPortValues": {
 			"background": {"color":{"r":0.5,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"foreground": {"color":{"r":1,"g":0,"b":0,"a":0},"pixelsWide":1,"pixelsHigh":1},
 			"blendMode": "normal",
-			"foregroundOpacity": 1
+			"foregroundOpacity": 1,
+			"replaceOpacity": true
 		},
 		"outputPortValues": {
 			"blended": {"color":{"r":0.5,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1}
@@ -150,7 +166,7 @@
 			"foregroundOpacity": 0.5
 		},
 		"outputPortValues": {
-			"blended": {"color":{"r":0.375,"g":1,"b":0.75,"a":0.625},"pixelsWide":1,"pixelsHigh":1}
+			"blended": {"color":{"r":0.3,"g":1,"b":0.6,"a":0.625},"pixelsWide":1,"pixelsHigh":1}
 		}
 	},
 ]}

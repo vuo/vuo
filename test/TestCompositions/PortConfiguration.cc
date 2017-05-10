@@ -86,6 +86,23 @@ void PortConfiguration::checkOutputValue(VuoRunner *runner, VuoRunner::Port *por
 }
 
 /**
+ * Returns a string description of the specified JSON type.
+ */
+const char *PortConfiguration::getJsonTypeDescription(enum json_type type)
+{
+	switch (type)
+	{
+		case json_type_null:	return "json_type_null";
+		case json_type_boolean:	return "json_type_boolean";
+		case json_type_double:	return "json_type_double";
+		case json_type_int:		return "json_type_int";
+		case json_type_object:	return "json_type_object";
+		case json_type_array:	return "json_type_array";
+		case json_type_string:	return "json_type_string";
+	}
+}
+
+/**
  * Checks that the port values are equal (or approximately equal, for doubles).
  */
 void PortConfiguration::checkEqual(string type, json_object *actualValue, json_object *expectedValue)
@@ -98,6 +115,7 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 
 	string failMessage = toString() + " --- " + expectedString + " != " + actualString;
 
+//	VLog("type=%s expectedJson=%s actualJson=%s", type.c_str(), getJsonTypeDescription(expectedType), getJsonTypeDescription(actualType));
 	if (expectedType == json_type_object && actualType == json_type_object)
 	{
 		if (type == "VuoImage")
@@ -105,6 +123,18 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 			VuoImage expectedImage = VuoImage_makeFromJson(expectedValue);
 			VuoImage   actualImage = VuoImage_makeFromJson(actualValue);
 			QVERIFY2(VuoImage_areEqualWithinTolerance(actualImage, expectedImage, 1), failMessage.c_str());
+			return;
+		}
+		else if (type == "VuoColor")
+		{
+			VuoColor expected = VuoColor_makeFromJson(expectedValue);
+			VuoColor   actual = VuoColor_makeFromJson(actualValue);
+			QVERIFY2(VuoColor_areEqualWithinTolerance(actual, expected, 0.01), failMessage.c_str());
+			return;
+		}
+		else if (type == "VuoWindowReference")
+		{
+			// Since VuoWindowReference is a pointer, tests can't expect an exact value.
 			return;
 		}
 
@@ -148,9 +178,7 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 			QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, failMessage.c_str());
 	}
 	else
-	{
 		QVERIFY2(actualString == expectedString, failMessage.c_str());
-	}
 }
 
 /**

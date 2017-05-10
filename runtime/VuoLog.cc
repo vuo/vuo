@@ -177,6 +177,23 @@ void VuoLog(const char *file, const unsigned int line, const char *function, con
 			formattedFunction = strndup(function + 3 + (int)log10(actualFunctionLength), actualFunctionLength);
 		else
 			formattedFunction = strndup(function + 2, strrchr(function + 2, '_') - (function + 2));
+
+		// We may now be left with a C++-mangled symbol followed by `_block`,
+		// such as `_ZN9VuoRunner18replaceCompositionESsSsSs_block`.
+		// Extract just the method name (the last length-specified section).
+		if (strncmp(formattedFunction, "_ZN", 3) == 0)
+		{
+			int pos = 3;
+			int len, priorLen;
+			while ((len = atoi(formattedFunction + pos)))
+			{
+				pos += 1 + (int)log10(len) + len;
+				priorLen = len;
+			}
+			char *f2 = strndup(formattedFunction + pos - priorLen, priorLen);
+			free(formattedFunction);
+			formattedFunction = f2;
+		}
 	}
 
 	// Add a trailing `()`, unless it's an Objective-C method.
@@ -193,13 +210,19 @@ void VuoLog(const char *file, const unsigned int line, const char *function, con
 		}
 	}
 
+	const char *formattedFile = file;
+
+	// Trim the path, if present.
+	if (const char *lastSlash = strrchr(file, '/'))
+		formattedFile = lastSlash + 1;
+
 	double time = VuoLogGetElapsedTime();
 
-	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4u  %41s \t%s\033[0m\n", getpid()%212+19, getpid(), time, file, line, formattedFunction ? formattedFunction : function, formattedString);
+	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4u  %41s \t%s\033[0m\n", getpid()%212+19, getpid(), time, formattedFile, line, formattedFunction ? formattedFunction : function, formattedString);
 
 	aslmsg msg = asl_new(ASL_TYPE_MSG);
 	asl_set(msg, ASL_KEY_READ_UID, "-1");
-	asl_log(NULL, msg, ASL_LEVEL_WARNING, "%s:%u  %s  %s", file, line, formattedFunction ? formattedFunction : function, formattedString);
+	asl_log(NULL, msg, ASL_LEVEL_WARNING, "%s:%u  %s  %s", formattedFile, line, formattedFunction ? formattedFunction : function, formattedString);
 	asl_free(msg);
 
 	static dispatch_once_t historyInitialized = 0;
@@ -213,7 +236,7 @@ void VuoLog(const char *file, const unsigned int line, const char *function, con
 	// Keep the most recent messages in VuoLogHistory.
 	{
 		char *formattedPrefixedString;
-		asprintf(&formattedPrefixedString, "t=%8.4fs  %s:%u  %s  %s", time, file, line, formattedFunction ? formattedFunction : function, formattedString);
+		asprintf(&formattedPrefixedString, "t=%8.4fs  %s:%u  %s  %s", time, formattedFile, line, formattedFunction ? formattedFunction : function, formattedString);
 		free(formattedString);
 		if (formattedFunction)
 			free(formattedFunction);

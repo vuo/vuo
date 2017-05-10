@@ -46,6 +46,17 @@ __attribute__((constructor)) static void VuoImageGet_init(void)
 }
 
 /**
+ * Logs error messages coming from FreeImage.
+ */
+static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
+{
+	if (fif != FIF_UNKNOWN)
+		VUserLog("Error: %s (%s format)", message, FreeImage_GetFormatFromFIF(fif));
+	else
+		VUserLog("Error: %s", message);
+}
+
+/**
  * @ingroup VuoImage
  * Retrieves the image at the specified @c imageURL, and creates a @c VuoImage from it.
  *
@@ -62,6 +73,7 @@ VuoImage VuoImage_get(const char *imageURL)
 		return NULL;
 
 	// Decode the memory buffer into a straightforward array of BGRA pixels
+	FreeImage_SetOutputMessage(FreeImageErrorHandler);
 	FIBITMAP *dib;
 	GLuint format;
 	VuoImageColorDepth colorDepth;

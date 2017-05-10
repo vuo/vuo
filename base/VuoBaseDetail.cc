@@ -37,6 +37,7 @@ BaseClass * VuoBaseDetail<BaseClass>::getBase(void) const
 	{
 		fprintf(stderr, "VuoBaseDetail<%s>(%p)::getBase() is null\n", description.c_str(), this);
 		fflush(stderr);
+		VuoLog_backtrace();
 	}
 #endif
 	return base;

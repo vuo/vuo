@@ -49,6 +49,7 @@ static void setMovie(struct nodeInstanceData *context, VuoText url)
 		VuoRelease(context->player);
 
 	context->player = VuoVideo_make(url, VuoVideoOptimization_Random);
+	VuoVideo_setPlaybackRate(context->player, 0);
 
 	if(context->player != NULL)
 	{

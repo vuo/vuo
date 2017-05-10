@@ -20,34 +20,40 @@ VuoModuleMetadata({
 				 });
 
 static const char *redShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 
 	void main(void)
 	{
-		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
 		gl_FragColor = vec4(color.r, color.r, color.r, color.a);
 	}
 );
 
 static const char *greenShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 
 	void main(void)
 	{
-		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
 		gl_FragColor = vec4(color.g, color.g, color.g, color.a);
 	}
 );
 
 static const char *blueShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
 
 	void main(void)
 	{
-		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
 		gl_FragColor = vec4(color.b, color.b, color.b, color.a);
 	}
 );

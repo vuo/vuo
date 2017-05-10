@@ -120,6 +120,11 @@ VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
 
 	glGenFramebuffers(1, &imageRenderer->outputFramebuffer);
 
+	/// @see VuoSceneRenderer_prepareContext
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
+
 	return (VuoImageRenderer)imageRenderer;
 }
 
@@ -134,7 +139,11 @@ VuoImage VuoImageRenderer_draw(VuoImageRenderer ir, VuoShader shader, unsigned i
 	if (pixelsWide < 1 || pixelsHigh < 1)
 		return NULL;
 
-	return VuoImage_make(VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,imageColorDepth,false,false,0), VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth), pixelsWide, pixelsHigh);
+	GLuint outputTexture = VuoImageRenderer_draw_internal(ir,shader,pixelsWide,pixelsHigh,imageColorDepth,false,false,0);
+	if (!outputTexture)
+		return NULL;
+
+	return VuoImage_make(outputTexture, VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth), pixelsWide, pixelsHigh);
 }
 
 /**
@@ -168,6 +177,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 			{
 				glGenTextures(1, &outputTexture);
 				glBindTexture(GL_TEXTURE_RECTANGLE_ARB, outputTexture);
+//				VLog("glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, %s, %d, %d, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);", VuoGl_stringForConstant(textureTargetInternalFormat), pixelsWide, pixelsHigh);
 				glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, textureTargetInternalFormat, pixelsWide, pixelsHigh, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
 
 				glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -181,6 +191,9 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 			else
 				outputTexture = VuoGlTexturePool_use(imageRenderer->glContext, textureTargetInternalFormat, pixelsWide, pixelsHigh, GL_BGRA);
 		}
+
+		if (!outputTexture)
+			return 0;
 
 		glBindFramebuffer(GL_FRAMEBUFFER, imageRenderer->outputFramebuffer);
 //		VLog("glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, %s, %d, 0);", VuoGl_stringForConstant(textureTarget), outputTexture);

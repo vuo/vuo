@@ -28,6 +28,7 @@ VuoModuleMetadata({
 								  "VuoFont",
 								  "VuoHidControl",
 								  "VuoHidDevice",
+								  "VuoImageFormat",
 								  "VuoMidiPitchBend",
 								  "VuoMultisample",
 								  "VuoNumberFormat",

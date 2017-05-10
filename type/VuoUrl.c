@@ -349,6 +349,10 @@ static const char *VuoUrl_fileScheme = "file://";
  * If `url` contains a URL schema, this function assumes that all necessary characters are already URL-encoded.
  * Otherwise, this function assumes that _no_ characters in `url` are URL-encoded, and encodes the characters necessary to make it a valid URL.
  *
+ * If `url` is a Unix file path, and if all components of that path exist,
+ * this function attempts to resolve it into a canonical path
+ * by removing ".", "..", and extra slashes, and dereferencing symlinks.
+ *
  * If `isSave` is true and this function is called from an exported app, relative file paths will be resolved to Desktop instead
  * of the app resources folder.
  *
@@ -394,8 +398,12 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 	// Case: The url contains an absolute file path.
 	else if (VuoUrl_urlIsAbsoluteFilePath(url))
 	{
-		VuoText escapedPath = VuoUrl_escapePosixPath(url);
+		char *realPath = realpath(url, NULL);
+		// If realpath() fails, it's probably because the path doesn't exist, so just use the non-realpath()ed path.
+		VuoText escapedPath = VuoUrl_escapePosixPath(realPath ? realPath : url);
 		VuoRetain(escapedPath);
+		if (realPath)
+			free(realPath);
 
 		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
 		strcpy(resolvedUrl, VuoUrl_fileScheme);
@@ -407,45 +415,42 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 	// Case: The url contains a user-relative file path.
 	else if (VuoUrl_urlIsUserRelativeFilePath(url))
 	{
-		VuoText escapedPath = VuoUrl_escapePosixPath(url);
-		VuoRetain(escapedPath);
-
-		VuoText escapedHomeDir;
+		// 1. Expand the tilde into an absolute path.
+		VuoText absolutePath;
 		{
 			char *homeDir = getenv("HOME");
-			escapedHomeDir = VuoUrl_escapePosixPath(homeDir);
-			VuoRetain(escapedHomeDir);
+			VuoText paths[2] = { homeDir, url+1 };
+			absolutePath = VuoText_append(paths, 2);
 		}
+		VuoLocal(absolutePath);
 
-		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedHomeDir) + strlen(escapedPath) - 1 + 1);
+		// 2. Try to canonicalize the absolute path, and URL-escape it.
+		char *realPath = realpath(absolutePath, NULL);
+		// If realpath() fails, it's probably because the path doesn't exist, so just use the non-realpath()ed path.
+		VuoText escapedPath = VuoUrl_escapePosixPath(realPath ? realPath : absolutePath);
+		VuoLocal(escapedPath);
+		if (realPath)
+			free(realPath);
+
+		// 3. Prepend the URL scheme.
+		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
 		strcpy(resolvedUrl, VuoUrl_fileScheme);
-		strcat(resolvedUrl, escapedHomeDir);
-		strcat(resolvedUrl, escapedPath + 1);
-
-		VuoRelease(escapedPath);
-		VuoRelease(escapedHomeDir);
+		strcat(resolvedUrl, escapedPath);
 	}
 
 	// Case: The url contains a relative file path.
 	else
 	{
-		VuoText escapedPath = VuoUrl_escapePosixPath(url);
-		VuoRetain(escapedPath);
+		char currentWorkingDir[PATH_MAX+1];
+		getcwd(currentWorkingDir, PATH_MAX+1);
 
 		bool compositionIsExportedApp = false;
 
-		VuoText escapedCurrentWorkingDir;
-		{
-			char currentWorkingDir[PATH_MAX+1];
-			getcwd(currentWorkingDir, PATH_MAX+1);
-			escapedCurrentWorkingDir = VuoUrl_escapePosixPath(currentWorkingDir);
-			VuoRetain(escapedCurrentWorkingDir);
-		}
-
 		// If the current working directory is "/", assume that we are working with an exported app;
-		// resolve resources relative to the app bundle's "Resources" directory, which can
-		// be derived from its executable path.
-		if (!strcmp(escapedCurrentWorkingDir, "/"))
+		// resolve loaded resources relative to the app bundle's "Resources" directory, and
+		// resolve saved resources relative to the user's Desktop.
+		char *absolutePath;
+		if (!strcmp(currentWorkingDir, "/"))
 		{
 			// Get the exported executable path.
 			char rawExecutablePath[PATH_MAX+1];
@@ -473,41 +478,21 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 			{
 				compositionIsExportedApp = true;
 
-				// make relative to desktop if isSave
-				if(isSave)
+				if (isSave)
 				{
-					VuoText escapedHomeDir;
-					{
-						char *homeDir = getenv("HOME");
-						escapedHomeDir = VuoUrl_escapePosixPath(homeDir);
-						VuoRetain(escapedHomeDir);
-					}
-
-					const char* desktop = "/Desktop/";
-					resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedHomeDir) + strlen(desktop) + strlen(escapedPath) + 1);
-					strcpy(resolvedUrl, VuoUrl_fileScheme);
-					strcat(resolvedUrl, escapedHomeDir);
-					strcat(resolvedUrl, desktop);
-					strcat(resolvedUrl, escapedPath);
-
-					VuoRelease(escapedHomeDir);
+					char *homeDir = getenv("HOME");
+					const char *desktop = "/Desktop/";
+					absolutePath = (char *)malloc(strlen(homeDir) + strlen(desktop) + strlen(url) + 1);
+					strcpy(absolutePath, homeDir);
+					strcat(absolutePath, desktop);
+					strcat(absolutePath, url);
 				}
 				else
 				{
-					VuoText escapedCleanedResourcesPath;
-					{
-						escapedCleanedResourcesPath = VuoUrl_escapePosixPath(cleanedResourcesPath);
-						VuoRetain(escapedCleanedResourcesPath);
-					}
-
-					// Include the scheme and absolute file path in the url passed to cURL.
-					resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedCleanedResourcesPath) + strlen("/") + strlen(escapedPath) + 1);
-					strcpy(resolvedUrl, VuoUrl_fileScheme);
-					strcat(resolvedUrl, escapedCleanedResourcesPath);
-					strcat(resolvedUrl, "/");
-					strcat(resolvedUrl, escapedPath);
-
-					VuoRelease(escapedCleanedResourcesPath);
+					absolutePath = (char *)malloc(strlen(cleanedResourcesPath) + strlen("/") + strlen(url) + 1);
+					strcpy(absolutePath, cleanedResourcesPath);
+					strcat(absolutePath, "/");
+					strcat(absolutePath, url);
 				}
 			}
 		}
@@ -515,16 +500,24 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 		// If we are not working with an exported app, resolve resources relative to the current working directory.
 		if (!compositionIsExportedApp)
 		{
-			// Include the scheme and absolute file path in the url passed to cURL.
-			resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedCurrentWorkingDir) + strlen("/") + strlen(escapedPath) + 1);
-			strcpy(resolvedUrl, VuoUrl_fileScheme);
-			strcat(resolvedUrl, escapedCurrentWorkingDir);
-			strcat(resolvedUrl, "/");
-			strcat(resolvedUrl, escapedPath);
+			absolutePath = (char *)malloc(strlen(currentWorkingDir) + strlen("/") + strlen(url) + 1);
+			strcpy(absolutePath, currentWorkingDir);
+			strcat(absolutePath, "/");
+			strcat(absolutePath, url);
 		}
 
-		VuoRelease(escapedCurrentWorkingDir);
-		VuoRelease(escapedPath);
+		char *realPath = realpath(absolutePath, NULL);
+		// If realpath() fails, it's probably because the path doesn't exist, so just use the non-realpath()ed path.
+		VuoText escapedPath = VuoUrl_escapePosixPath(realPath ? realPath : absolutePath);
+		VuoLocal(escapedPath);
+		if (realPath)
+			free(realPath);
+		free(absolutePath);
+
+		// Prepend the URL scheme.
+		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
+		strcpy(resolvedUrl, VuoUrl_fileScheme);
+		strcat(resolvedUrl, escapedPath);
 	}
 
 	// Remove trailing slash, if any.

@@ -19,7 +19,7 @@ VuoModuleMetadata({
 						"multiply", "darker", "linear burn", "color burn", "burn",
 						"screen", "lighter", "linear dodge", "color dodge", "dodge",
 						"overlay", "soft light", "hard light", "vivid light", "linear light", "pin light", "light", "hard mix",
-						"difference", "exclusion", "subtract", "divide",
+						"difference", "exclusion", "subtract", "divide", "power",
 						"hue", "saturation", "color", "luminosity",
 						"tint", "tone", "chroma" ],
 					 "version" : "1.0.0",
@@ -62,7 +62,7 @@ static VuoPoint3d getRGB(VuoColor col)
 
 static VuoColor colorWithRgbAndA(VuoPoint3d rgb, float a)
 {
-	return VuoColor_makeWithRGBA(rgb.x, rgb.y, rgb.z, a);
+	return VuoColor_makeWithRGBA(rgb.x, rgb.y, rgb.z, MIN(a,1.));
 }
 
 static float BlendLinearDodgef(float base, float blend) { return min(base + blend, 1.0); }
@@ -533,6 +533,22 @@ static VuoColor blendLuminosity(VuoColor base, VuoColor blend, float foregroundO
 	return colorWithRgbAndA( VuoPoint3d_lerp(baseRGB, result, foregroundOpacity), base.a + blend.a * foregroundOpacity);
 }
 
+static VuoColor blendPower(VuoColor base, VuoColor blend, float foregroundOpacity)
+{
+	VuoPoint3d baseRGB = getRGB(base);
+	VuoPoint3d blendRGB = getRGB(blend);
+
+	VuoPoint3d result = (VuoPoint3d){ pow(baseRGB.x,blendRGB.x),
+									  pow(baseRGB.y,blendRGB.y),
+									  pow(baseRGB.z,blendRGB.z) };
+
+	result = VuoPoint3d_lerp(baseRGB, result, blend.a);
+	result = VuoPoint3d_lerp(blendRGB, result, base.a);
+
+	result = VuoPoint3d_lerp(baseRGB, result, foregroundOpacity);
+
+	return	colorWithRgbAndA(result, base.a + blend.a * foregroundOpacity);
+}
 
 void nodeEvent
 (
@@ -622,6 +638,9 @@ void nodeEvent
 			break;
 		case VuoBlendMode_Luminosity:
 			*blendedColor = blendLuminosity(background, foreground, foregroundOpacity);
+			break;
+		case VuoBlendMode_Power:
+			*blendedColor = blendPower(background, foreground, foregroundOpacity);
 			break;
 	}
 }

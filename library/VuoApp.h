@@ -7,6 +7,14 @@
  * For more information, see http://vuo.org/license.
  */
 
-#include "module.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void VuoApp_launch(VuoText rawUrl);
+bool VuoApp_isMainThread(void);
+void VuoApp_executeOnMainThread(void (^block)(void));
+char *VuoApp_getName(void);
+
+#ifdef __cplusplus
+}
+#endif

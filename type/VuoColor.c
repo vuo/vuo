@@ -145,11 +145,15 @@ json_object * VuoColor_getJson(const VuoColor value)
 
 /**
  * @ingroup VuoColor
- * Returns a compact string representation of @c value (comma-separated components).
+ * Returns an HTML representation of @c value (comma-separated components).
  */
 char * VuoColor_getSummary(const VuoColor value)
 {
-	return VuoText_format("%g, %g, %g, %g", value.r, value.g, value.b, value.a);
+	return VuoText_format("<span style='background-color:#%02x%02x%02x;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> %4.02f, %4.02f, %4.02f, %4.02f",
+						  (unsigned int)(VuoReal_clamp(value.r,0,1) * 255),
+						  (unsigned int)(VuoReal_clamp(value.g,0,1) * 255),
+						  (unsigned int)(VuoReal_clamp(value.b,0,1) * 255),
+						  value.r, value.g, value.b, value.a);
 }
 
 /**
@@ -283,6 +287,17 @@ bool VuoColor_areEqual(const VuoColor value1, const VuoColor value2)
 		&& VuoReal_areEqual(value1.g, value2.g)
 		&& VuoReal_areEqual(value1.b, value2.b)
 		&& VuoReal_areEqual(value1.a, value2.a);
+}
+
+/**
+ * Like @ref VuoColor_areEqual(), but permits color channel values to differ by up to `tolerance`.
+ */
+bool VuoColor_areEqualWithinTolerance(const VuoColor a, const VuoColor b, const float tolerance)
+{
+	return fabs(a.r - b.r) <= tolerance
+		&& fabs(a.g - b.g) <= tolerance
+		&& fabs(a.b - b.b) <= tolerance
+		&& fabs(a.a - b.a) <= tolerance;
 }
 
 /**

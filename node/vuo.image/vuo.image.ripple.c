@@ -29,6 +29,8 @@ VuoModuleMetadata({
 
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	// Inputs
 	uniform sampler2D texture;
 	uniform float angle;
@@ -41,7 +43,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	{
 		float samplerPhase = cos(angle)*fragmentTextureCoordinate.x + sin(angle)*fragmentTextureCoordinate.y;
 		float offset = sin(samplerPhase/wavelength + phase) * amplitude;
-		gl_FragColor = texture2D(texture, fragmentTextureCoordinate.xy + vec2(cos(angle)*offset,sin(angle)*offset));
+		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy + vec2(cos(angle)*offset,sin(angle)*offset));
 	}
 );
 

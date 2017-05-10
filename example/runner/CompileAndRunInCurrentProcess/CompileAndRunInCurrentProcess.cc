@@ -14,21 +14,28 @@
 
 int main(void)
 {
-	// Compile, link, and run the composition in the current process
-	VuoRunner * runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile("Count.vuo");
-	runner->start();
+	try
+	{
+		// Compile, link, and run the composition in the current process
+		VuoRunner * runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile("Count.vuo");
+		runner->start();
 
-	// On a separate thread, wait 5 seconds, then stop the composition
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	dispatch_async(queue, ^{
-		sleep(5);
-		runner->stop();
-	});
+		// On a separate thread, wait 5 seconds, then stop the composition
+		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+		dispatch_async(queue, ^{
+			sleep(5);
+			runner->stop();
+		});
 
-	// Perform the work the composition needs on the main thread, and wait for the compostion to stop
-	runner->runOnMainThread();
+		// Perform the work the composition needs on the main thread, and wait for the compostion to stop
+		runner->runOnMainThread();
 
-	delete runner;
+		delete runner;
+	}
+	catch (std::exception &e)
+	{
+		fprintf(stderr, "Error: %s", e.what());
+	}
 
 	return 0;
 }

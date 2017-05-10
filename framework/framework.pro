@@ -30,7 +30,7 @@ MODULE_LIBRARY_OBJECTS += \
 	$$ZMQ_ROOT/lib/libzmq.a \
 	$$JSONC_ROOT/lib/libjson-c.a \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
-	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
+	$$FREEIMAGE_ROOT/lib/libfreeimage.dylib \
 	$$OPENSSL_ROOT/lib/libssl.a \
 	$$OPENSSL_ROOT/lib/libcrypto.a \
 	$$CURL_ROOT/lib/libcurl.a \
@@ -49,8 +49,8 @@ MODULE_LIBRARY_OBJECTS += \
 	$$OSCPACK_ROOT/lib/liboscpack.a \
 	$$ZXING_ROOT/lib/libzxing.a \
 	$$LIBXML2_ROOT/lib/libxml2.a \
-	$$ASSIMP_ROOT/lib/libassimp.a
-	MODULE_LIBRARY_OBJECTS += $$ROOT/node/vuo.leap/Leap/libLeap.dylib
+	$$ASSIMP_ROOT/lib/libassimp.dylib \
+	$$ROOT/node/vuo.leap/Leap/libLeap.dylib
 
 
 # Create and populate Headers directory
@@ -167,6 +167,8 @@ copyLibraryModules.commands = \
 	&& install_name_tool -change "$$FFMPEG_ROOT/lib/libavutil.52.dylib" "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libswscale.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libavutil.dylib" "$$MODULES_DEST_DIR/libavutil.dylib" \
 	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libLeap.dylib" "$$MODULES_DEST_DIR/libLeap.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libfreeimage.dylib" "$$MODULES_DEST_DIR/libfreeimage.dylib" \
+	&& install_name_tool -id "@rpath/$$MODULES_DEST_DIR/libassimp.dylib" "$$MODULES_DEST_DIR/libassimp.dylib" \
 	&& chmod -w "$$MODULES_DEST_DIR/*.dylib"
 copyLibraryModules.depends += $$MODULE_LIBRARY_OBJECTS
 copyLibraryModules.target = $$MODULES_DEST_DIR/libLeap.dylib
@@ -345,8 +347,9 @@ LIBS += \
 	-F$$FRAMEWORKS_DEST_DIR \
 	-Wl,-reexport_framework,llvm \
 	$$MUPARSER_ROOT/lib/libmuparser.a \
-	$$FREEIMAGE_ROOT/lib/libfreeimage.a \
+	$$MODULES_DEST_DIR/libfreeimage.dylib \
 	$$CURL_ROOT/lib/libcurl.a \
+	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoBase64.o \
 	$$ROOT/library/VuoIOReturn.o \
 	$$ROOT/library/VuoImageRenderer.o \

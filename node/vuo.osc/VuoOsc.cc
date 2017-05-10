@@ -12,9 +12,11 @@
 
 #include <map>
 #include <set>
+#include <vector>
 #include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <ifaddrs.h>
 #include <oscpack/osc/OscOutboundPacketStream.h>
 #include <oscpack/osc/OscPacketListener.h>
 #include <oscpack/ip/UdpSocket.h>
@@ -518,8 +520,8 @@ public:
 typedef struct _VuoOscOut_internal
 {
 	VuoOscOutputDevice device;		///< The target device this instance represents.
-	UdpTransmitSocket *socket;
-	CFNetServiceRef netService;
+	std::vector<UdpTransmitSocket *> sockets;
+	std::vector<CFNetServiceRef> netServices;
 	dispatch_queue_t queue;
 } *VuoOscOut_internal;
 
@@ -566,41 +568,85 @@ VUOKEYEDPOOL(VuoOscOutputIdentifier, VuoOscOut_internal);
 static void VuoOscOut_destroy(VuoOscOut_internal ai);
 VuoOscOut_internal VuoOscOut_make(VuoOscOutputIdentifier device)
 {
-	IpEndpointName *endpoint;
+	if (VuoIsDebugEnabled())
+	{
+		char *summary = VuoOscOutputDevice_getSummary(device.device);
+		VUserLog("%s", summary);
+		free(summary);
+	}
+
 	VuoInteger actualPort = device.device.port;
-	if (device.device.ipAddress && actualPort)
-		endpoint = new IpEndpointName(device.device.ipAddress, actualPort);
-	else if (actualPort)
-		endpoint = new IpEndpointName(actualPort);
+	if (!actualPort)
+		actualPort = VuoOsc_findAvailableUdpPort();
+
+	std::vector<IpEndpointName *> endpoints;
+	if (device.device.ipAddress)
+		endpoints.push_back(new IpEndpointName(device.device.ipAddress, actualPort));
 	else
-		endpoint = new IpEndpointName(VuoOsc_findAvailableUdpPort());
-
-
-	UdpTransmitSocket *socket;
-	try
 	{
-		socket = new UdpTransmitSocket(*endpoint);
+		// If we don't have a specific IP address,
+		// then we should broadcast to all interfaces (not just the default interface).
+
+		struct ifaddrs *interfaces;
+		if (getifaddrs(&interfaces))
+		{
+			VUserLog("Using link-local broadcast, since I couldn't get a list of host interfaces: %s", strerror(errno));
+			endpoints.push_back(new IpEndpointName("255.255.255.255", actualPort));
+		}
+		else
+		{
+			for (struct ifaddrs *address = interfaces; address; address = address->ifa_next)
+			{
+				if (address->ifa_addr->sa_family != AF_INET)
+					continue;
+
+				struct sockaddr_in *ip = (struct sockaddr_in *)address->ifa_dstaddr;
+				endpoints.push_back(new IpEndpointName(ntohl(ip->sin_addr.s_addr), actualPort));
+			}
+			freeifaddrs(interfaces);
+		}
 	}
-	catch (std::exception const &e)
+
+
+	std::vector<UdpTransmitSocket *> sockets;
+	std::vector<CFNetServiceRef> netServices;
+	for (std::vector<IpEndpointName *>::iterator endpoint = endpoints.begin(); endpoint != endpoints.end(); ++endpoint)
 	{
-		char s[IpEndpointName::ADDRESS_AND_PORT_STRING_LENGTH];
-		endpoint->AddressAndPortAsString(s);
-		VUserLog("Error: %s %s", s, e.what());
-		delete endpoint;
-		return NULL;
+		try
+		{
+			if (VuoIsDebugEnabled())
+			{
+				char s[IpEndpointName::ADDRESS_AND_PORT_STRING_LENGTH];
+				(*endpoint)->AddressAndPortAsString(s);
+				VUserLog("\t%s", s);
+			}
+			UdpTransmitSocket *socket = new UdpTransmitSocket(**endpoint);
+			socket->SetEnableBroadcast(true);
+			sockets.push_back(socket);
+
+			netServices.push_back(VuoOsc_createNetService((char *)device.device.name, (*endpoint)->port, false));
+		}
+		catch (std::exception const &e)
+		{
+			char s[IpEndpointName::ADDRESS_AND_PORT_STRING_LENGTH];
+			(*endpoint)->AddressAndPortAsString(s);
+			VUserLog("Error: %s %s", s, e.what());
+			delete *endpoint;
+			return NULL;
+		}
+		delete *endpoint;
 	}
-	delete endpoint;
 
 
-	VuoOscOut_internal ai = (VuoOscOut_internal)calloc(1, sizeof(_VuoOscOut_internal));
+	VuoOscOut_internal ai = new _VuoOscOut_internal;
 	VuoRegister(ai, (DeallocateFunctionType)VuoOscOut_destroy);
 
-	ai->netService = VuoOsc_createNetService((char *)device.device.name, endpoint->port, false);
+	ai->netServices = netServices;
 
 	ai->device = device.device;
 	VuoOscOutputDevice_retain(ai->device);
 
-	ai->socket = socket;
+	ai->sockets = sockets;
 
 	ai->queue = dispatch_queue_create("org.vuo.osc.send", NULL);
 
@@ -608,11 +654,11 @@ VuoOscOut_internal VuoOscOut_make(VuoOscOutputIdentifier device)
 }
 static void VuoOscOut_destroy(VuoOscOut_internal ai)
 {
-	if (ai->netService)
-		VuoOsc_destroyNetService(ai->netService);
+	for (std::vector<CFNetServiceRef>::iterator netService = ai->netServices.begin(); netService != ai->netServices.end(); ++netService)
+		VuoOsc_destroyNetService(*netService);
 
-	if (ai->socket)
-		delete ai->socket;
+	for (std::vector<UdpTransmitSocket *>::iterator socket = ai->sockets.begin(); socket != ai->sockets.end(); ++socket)
+		delete *socket;
 
 	VuoOscOut_internalPool->removeSharedInstance(ai->device);
 
@@ -696,7 +742,8 @@ void VuoOscOut_sendMessages(VuoOscOut ao, VuoList_VuoOscMessage messages)
 							   if (messageCount > 1)
 								   p << osc::EndBundle;
 
-							   aii->socket->Send(p.Data(), p.Size());
+							   for (std::vector<UdpTransmitSocket *>::iterator socket = aii->sockets.begin(); socket != aii->sockets.end(); ++socket)
+								   (*socket)->Send(p.Data(), p.Size());
 							   done = true;
 						   }
 						   catch (osc::OutOfBufferMemoryException const &e)

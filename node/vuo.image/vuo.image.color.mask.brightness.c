@@ -15,7 +15,12 @@
 
 VuoModuleMetadata({
 					  "title" : "Mask Image by Brightness",
-					  "keywords" : [ "threshold", "remove", "depth", "cut", "magic", "wand", "transparent", "filter" ],
+					  "keywords" : [
+						  "threshold", "remove", "cut", "keying", "depth", "transparent",
+						  "luminance", "luma", "red", "green", "blue", "chroma", "alpha",
+						  "magic", "wand",
+						  "filter"
+					  ],
 					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
@@ -23,6 +28,7 @@ VuoModuleMetadata({
 				 });
 
 static const char *thresholdFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
@@ -32,12 +38,15 @@ static const char *thresholdFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 rgb = texture2D(texture, fragmentTextureCoordinate.xy);
-		vec3 hsl = rgbToHsl(rgb.rgb);
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		color.rgb /= color.a > 0. ? color.a : 1.;
 
-		rgb *= smoothstep(threshold*sharpness, threshold*(2-sharpness), hsl.z);
+		vec3 hsl = rgbToHsl(color.rgb);
 
-		gl_FragColor = rgb;
+		color *= smoothstep(threshold*sharpness, threshold*(2-sharpness), hsl.z);
+		color.rgb *= color.a;
+
+		gl_FragColor = color;
 	}
 );
 
@@ -53,9 +62,11 @@ static const char *colorFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	void main(void)
 	{
 		vec4 rgb = texture2D(texture, fragmentTextureCoordinate.xy);
+		rgb.rgb /= rgb.a > 0. ? rgb.a : 1.;
 		vec4 val = rgb*mask;
 
 		rgb *= smoothstep(threshold*sharpness, threshold*(2-sharpness), max(max(val.x, val.y), max(val.z, val.a)));
+		rgb.rgb *= rgb.a;
 
 		gl_FragColor = rgb;
 	}

@@ -1,0 +1,53 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AreAllTrue [type="vuo.logic.areAllTrue" version="2.0.0" label="Are All True|<refresh>refresh\l|<values>values\l|<allTrue>allTrue\r" pos="1140,30"];
+AreEqual [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="930,-15" _tolerance="0.02"];
+AreEqual2 [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="930,60" _tolerance="0.02"];
+AreEqual3 [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="930,135" _tolerance="0.02"];
+AreEqual4 [type="vuo.math.areEqual.VuoReal" version="2.0.1" label="Are Equal|<refresh>refresh\l|<values>values\l|<tolerance>tolerance\l|<equal>equal\r" pos="930,210" _tolerance="0.02"];
+GetRGBColorValues [type="vuo.color.get.rgb" version="2.0.0" label="Get RGB Color Values|<refresh>refresh\l|<color>color\l|<red>red\r|<green>green\r|<blue>blue\r|<opacity>opacity\r" pos="630,135"];
+GetRGBColorValues2 [type="vuo.color.get.rgb" version="2.0.0" label="Get RGB Color Values|<refresh>refresh\l|<color>color\l|<red>red\r|<green>green\r|<blue>blue\r|<opacity>opacity\r" pos="630,30"];
+MakeFont [type="vuo.font.make" version="1.0.0" label="Make Font|<refresh>refresh\l|<fontName>fontName\l|<pointSize>pointSize\l|<underlined>underlined\l|<color>color\l|<horizontalAlignment>horizontalAlignment\l|<characterSpacing>characterSpacing\l|<lineSpacing>lineSpacing\l|<font>font\r" pos="45,150" _fontName="\"HelveticaNeue-CondensedBlack\"" _pointSize="28." _underlined="false" _horizontalAlignment="\"left\"" _characterSpacing="1." _lineSpacing="1."];
+MakeList10 [type="vuo.list.make.4.VuoBoolean" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="1094,41"];
+MakeList4 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="863,-4"];
+MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="863,71"];
+MakeList6 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="863,146"];
+MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="863,221"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="210,135" _text="\"A\""];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.0.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<color>color\r" pos="405,135" _center="{\"x\":0,\"y\":-0.30000001192092896}" _width="0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Color>Color\r" _Color_type="VuoColor" _Color="{\"r\":0.7479972243309021,\"g\":0.29100480675697327,\"b\":0.19800107181072235,\"a\":0.50000762939453125}"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<AllEqual>AllEqual\l" _AllEqual_type="VuoBoolean"];
+
+AreAllTrue:allTrue -> PublishedOutputs:AllEqual;
+AreEqual2:equal -> MakeList10:2;
+AreEqual3:equal -> MakeList10:3;
+AreEqual4:equal -> MakeList10:4;
+AreEqual:equal -> MakeList10:1;
+GetRGBColorValues2:blue -> MakeList6:1;
+GetRGBColorValues2:green -> MakeList5:1;
+GetRGBColorValues2:opacity -> MakeList7:1;
+GetRGBColorValues2:red -> MakeList4:1;
+GetRGBColorValues:blue -> MakeList6:2;
+GetRGBColorValues:green -> MakeList5:2;
+GetRGBColorValues:opacity -> MakeList7:2;
+GetRGBColorValues:red -> MakeList4:2;
+MakeFont:font -> MakeTextImage:font;
+MakeList10:list -> AreAllTrue:values;
+MakeList4:list -> AreEqual:values;
+MakeList5:list -> AreEqual2:values;
+MakeList6:list -> AreEqual3:values;
+MakeList7:list -> AreEqual4:values;
+MakeTextImage:image -> SampleColorFromImage:image;
+PublishedInputs:Color -> GetRGBColorValues2:color;
+PublishedInputs:Color -> MakeFont:color;
+SampleColorFromImage:color -> GetRGBColorValues:color;
+}
