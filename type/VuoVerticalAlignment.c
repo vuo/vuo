@@ -95,3 +95,19 @@ char * VuoVerticalAlignment_getSummary(const VuoVerticalAlignment value)
 
 	return strdup(valueAsString);
 }
+
+/**
+ * Returns true if the two values are equal.
+ */
+bool VuoVerticalAlignment_areEqual(const VuoVerticalAlignment valueA, const VuoVerticalAlignment valueB)
+{
+	return valueA == valueB;
+}
+
+/**
+ * Returns true if `valueA` is less than `valueB`.
+ */
+bool VuoVerticalAlignment_isLessThan(const VuoVerticalAlignment valueA, const VuoVerticalAlignment valueB)
+{
+	return valueA < valueB;
+}

@@ -17,7 +17,7 @@ extern "C" {
 VuoModuleMetadata({
 					  "title" : "Detect Audio Beats",
 					  "keywords" : [ "tempo", "BPM", "synchronize", "metronome", "track" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoBeatDetektor",
 						  "VuoDsp"
@@ -72,6 +72,7 @@ extern "C" void nodeInstanceEvent
 		VuoInputEvent({"eventBlocking":"door","data":"time"}) timeEvent,
 		VuoInputData(VuoAudioSamples) samples,
 		VuoInputData(VuoTempoRange, {"default":"moderato"}) tempoRange,
+		VuoInputEvent({"eventBlocking":"wall","data":"tempoRange"}) tempoRangeEvent,
 		VuoInputEvent({"eventBlocking":"wall","data":"samples"}) samplesEvent,
 		VuoInputEvent({"eventBlocking":"wall"}) nudge,
 		VuoInputEvent({"eventBlocking":"wall"}) reset,
@@ -123,6 +124,8 @@ extern "C" void nodeInstanceEvent
 		float *amplitudesFloatsArray = &(amplitudesFloats[0]);
 		for (VuoInteger i = 0; i < amplitudesCount; ++i)
 			amplitudesFloatsArray[i] = (float)amplitudesArray[i];
+
+		free(amplitudesArray);
 
 		// Execute the BeatDetektor.
 		VuoReal t = VuoLogGetElapsedTime();

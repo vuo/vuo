@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Apply Mask",
-					  "keywords" : [ "transparency", "negative", "remove", "cut", "magic", "wand" ],
+					  "keywords" : [ "transparency", "alpha", "luma", "brightness", "opacity", "negative", "remove", "cut", "magic", "wand" ],
 					  "version" : "1.1.1",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieWithStar.vuo" ]
@@ -20,6 +20,7 @@ VuoModuleMetadata({
 				 });
 
 static const char *maskFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
@@ -28,12 +29,15 @@ static const char *maskFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
-		vec4 maskColor = texture2D(mask, fragmentTextureCoordinate.xy);
-		float maskAmount = maskColor.a * rgbToHsl(maskColor.rgb).z;
-		color.rgb *= maskAmount;
-		color.a *= maskAmount;
-		gl_FragColor = color;
+		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+		vec4 maskColor = VuoGlsl_sample(mask, fragmentTextureCoordinate.xy);
+
+		// VuoGlsl_sample() returns premultiplied colors,
+		// so we can take into account both the mask's luminance and alpha
+		// by just looking at its (premultiplied) luminance.
+		float maskAmount = rgbToHsl(maskColor.rgb).z;
+
+		gl_FragColor = color * maskAmount;
 	}
 );
 

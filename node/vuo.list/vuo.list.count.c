@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Count Items in List",
-					  "keywords" : [ "amount", "length", "how many", "elements", "number", "size" ],
+					  "keywords" : [ "amount", "length", "how many", "elements", "number", "size", "get" ],
 					  "version" : "1.0.0",
 					  "node" : {
 						  "exampleCompositions" : [ ]

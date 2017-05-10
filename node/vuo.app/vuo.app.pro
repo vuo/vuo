@@ -7,9 +7,9 @@ NODE_SOURCES += \
 	vuo.app.launch.c
 
 NODE_LIBRARY_SOURCES += \
-	VuoApp.m
+	VuoAppLaunch.m
 
 HEADERS += \
-	VuoApp.h
+	VuoAppLaunch.h
 
 include(../../module.pri)

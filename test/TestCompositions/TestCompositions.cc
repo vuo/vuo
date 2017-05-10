@@ -33,6 +33,7 @@ private:
 		dispatch_semaphore_wait(portConfigurationsSemaphore, DISPATCH_TIME_FOREVER);
 		while (true)
 		{
+			QVERIFY(! portConfigurations.empty());
 			PortConfiguration *currentPortConfiguration = portConfigurations.front();
 			currentPortConfiguration->setInputValuesAndFireEvent(runner);
 			if (! currentPortConfiguration->isDoneChecking())

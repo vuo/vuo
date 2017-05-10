@@ -16,7 +16,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Sample Color from Image",
-					  "keywords" : [ "coordinate", "eyedrop", "sample", "grab" ],
+					  "keywords" : [ "coordinate", "eyedrop", "sample", "grab", "get", "average", "box", "rectangle", "square" ],
 					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "ShowColorFromImage.vuo" ]
@@ -42,10 +42,17 @@ static void colorAtCoordinate(const unsigned char* pixels,
 {
 	const unsigned char* position = &pixels[((4 * width * y)) + (x * 4)];
 
-	*r = ((unsigned int)position[2]) * UINT_TO_FLOAT_COLOR;
-	*g = ((unsigned int)position[1]) * UINT_TO_FLOAT_COLOR;
-	*b = ((unsigned int)position[0]) * UINT_TO_FLOAT_COLOR;
 	*a = ((unsigned int)position[3]) * UINT_TO_FLOAT_COLOR;
+	if (fabs(*a) > 0.000001)
+	{
+		// The buffer returned by VuoImage_getBuffer() has its RGB values premultiplied by A,
+		// so we need to un-premultiply them here since VuoColor expects un-premultiplied values.
+		*r = ((unsigned int)position[2]) * UINT_TO_FLOAT_COLOR / *a;
+		*g = ((unsigned int)position[1]) * UINT_TO_FLOAT_COLOR / *a;
+		*b = ((unsigned int)position[0]) * UINT_TO_FLOAT_COLOR / *a;
+	}
+	else
+		*r = *g = *b = 0;
 }
 
 void nodeEvent

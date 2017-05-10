@@ -59,18 +59,38 @@ VuoInputEditorMenuItem *VuoInputEditorBlendMode::setUpMenuTree(json_object *deta
 	}
 	else
 	{
-		for(int i = 0; i < VuoBlendMode_Luminosity+1; i++)
-		{
-			addBlendMode(optionsTree, (VuoBlendMode)i);
-
-			// Add separators after the last item in each group.
-			if (i == VuoBlendMode_Normal
-					|| i == VuoBlendMode_ColorBurn
-					|| i == VuoBlendMode_ColorDodge
-					|| i == VuoBlendMode_HardMix
-					|| i == VuoBlendMode_Divide)
-				optionsTree->addSeparator();
-		}
+		addBlendMode(optionsTree, VuoBlendMode_Normal);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_Multiply);
+		addBlendMode(optionsTree, VuoBlendMode_DarkerComponent);
+		addBlendMode(optionsTree, VuoBlendMode_DarkerColor);
+		addBlendMode(optionsTree, VuoBlendMode_LinearBurn);
+		addBlendMode(optionsTree, VuoBlendMode_ColorBurn);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_Screen);
+		addBlendMode(optionsTree, VuoBlendMode_LighterComponent);
+		addBlendMode(optionsTree, VuoBlendMode_LighterColor);
+		addBlendMode(optionsTree, VuoBlendMode_LinearDodge);
+		addBlendMode(optionsTree, VuoBlendMode_ColorDodge);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_Overlay);
+		addBlendMode(optionsTree, VuoBlendMode_SoftLight);
+		addBlendMode(optionsTree, VuoBlendMode_HardLight);
+		addBlendMode(optionsTree, VuoBlendMode_VividLight);
+		addBlendMode(optionsTree, VuoBlendMode_LinearLight);
+		addBlendMode(optionsTree, VuoBlendMode_PinLight);
+		addBlendMode(optionsTree, VuoBlendMode_HardMix);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_Difference);
+		addBlendMode(optionsTree, VuoBlendMode_Exclusion);
+		addBlendMode(optionsTree, VuoBlendMode_Subtract);
+		addBlendMode(optionsTree, VuoBlendMode_Divide);
+		addBlendMode(optionsTree, VuoBlendMode_Power);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_Hue);
+		addBlendMode(optionsTree, VuoBlendMode_Saturation);
+		addBlendMode(optionsTree, VuoBlendMode_Color);
+		addBlendMode(optionsTree, VuoBlendMode_Luminosity);
 	}
 
 	return optionsTree;

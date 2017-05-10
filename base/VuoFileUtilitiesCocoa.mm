@@ -48,3 +48,77 @@ void VuoFileUtilitiesCocoa_moveFileToTrash(string filePath)
 	if (!success)
 		throw std::runtime_error("Couldn't move file '" + filePath + "' to the trash.");
 }
+
+/**
+ * Creates a new temporary directory, avoiding any name conflicts with existing files.
+ * The temporary directory will be on the same filesystem as the specified path,
+ * to facilitate using `rename()` (for example).
+ * `onSameVolumeAsPath` needn't already exist.
+ *
+ * Returns the path of the directory (without a trailing slash).
+ *
+ * @throw std::runtime_error
+ */
+string VuoFileUtilitiesCocoa_makeTmpDirOnSameVolumeAsPath(string path)
+{
+	NSString *pathNS = [NSString stringWithUTF8String:path.c_str()];
+	if (!pathNS)
+		throw std::runtime_error("Path \"" + path + "\" isn't a valid UTF-8 string.");
+
+	NSURL *baseURL = [NSURL fileURLWithPath:pathNS isDirectory:YES];
+	if (!baseURL)
+		throw std::runtime_error("Path \"" + path + "\" isn't a valid directory.");
+
+	NSError *error = nil;
+	NSURL *temporaryDirectoryURL = [[NSFileManager defaultManager] URLForDirectory:NSItemReplacementDirectory
+																		  inDomain:NSUserDomainMask
+																 appropriateForURL:baseURL
+																			create:YES
+																			 error:&error];
+	if (error)
+		throw std::runtime_error([[error localizedDescription] UTF8String]);
+	if (!temporaryDirectoryURL)
+		throw std::runtime_error("Couldn't get a temp folder for path \"" + path + "\".");
+
+	return [[temporaryDirectoryURL path] UTF8String];
+}
+
+/**
+ * Returns the available space, in bytes, on the volume containing the specified path.
+ *
+ * `path` needn't exist.
+ *
+ * @throw std::runtime_error
+ */
+size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path)
+{
+	NSString *pathNS = [NSString stringWithUTF8String:path.c_str()];
+	if (!pathNS)
+		throw std::runtime_error("Path \"" + path + "\" isn't a valid UTF-8 string.");
+
+	NSDictionary *fileAttributes;
+	while (true)
+	{
+		NSError *error = nil;
+		fileAttributes = [[NSFileManager defaultManager] attributesOfFileSystemForPath:pathNS error:&error];
+		if (error)
+		{
+			NSError *underlyingError = [[error userInfo] objectForKey:NSUnderlyingErrorKey];
+			if ([[underlyingError domain] isEqualToString:NSPOSIXErrorDomain]
+			  && [underlyingError code] == ENOENT)
+			{
+				// File not found; go up a directory and try again.
+				pathNS = [pathNS stringByDeletingLastPathComponent];
+			}
+			else
+				throw std::runtime_error([[error localizedDescription] UTF8String]);
+		}
+		else if (!fileAttributes)
+			throw std::runtime_error("Couldn't get information about path \"" + path + "\".");
+		else
+			break;
+	}
+
+	unsigned long long freeSpace = [[fileAttributes objectForKey:NSFileSystemFreeSize] longLongValue];
+	return freeSpace;
+}

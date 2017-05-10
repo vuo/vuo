@@ -111,7 +111,7 @@ private:
 	/// The last video timestamp received from the video decoder
 	double lastVideoTimestamp;
 
-	/// The current video timestamp - the previously received video timestamp
+	/// The current video timestamp minus the previously received video timestamp
 	double lastVideoFrameDelta;
 
 	/// The last audio timestamp received from the video decoder
@@ -201,11 +201,15 @@ public:
 	bool Seek(double second);
 	/// Returns the last decoded video frame timestamp.
 	double GetCurrentTimestamp();
+	/// Returns the last frame delta (current frame timestamp - last frame timestamp).  This is not guaranteed to be accurate to the framerate, as video can have variable rates.
+	double GetLastFrameDelta();
 	/// Returns the duration in seconds of the video associated with this player.
 	double GetDuration();
 	/// Get the last decoded image.  This may be null, and will return false in the event that no frame
 	/// is available.  Images associated with returned frames have a retain count of 1.
 	bool GetCurrentVideoFrame(VuoVideoFrame* frame);
+	/// Get a video frame at the requested second.
+	bool GetVideoFrameAtSecond(double second, VuoVideoFrame* videoFrame);
 	/// Return the number of audio channels available.
 	unsigned int GetAudioChannels();
 	/// True if the video is loaded and ready to play, else false.  If false, some values may not yet be available (duration, channel counts, etc)

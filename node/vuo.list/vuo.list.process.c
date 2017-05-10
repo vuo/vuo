@@ -33,6 +33,23 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	return context;
 }
 
+void nodeInstanceTriggerStart
+(
+		VuoInstanceData(struct nodeInstanceData *) context
+)
+{
+	// If an event hits the `fire` port, but nothing is connected to the `processItem` port,
+	// this node will forever wait for the lost `processItem` event to return to the `processedItem` port.
+	// By resetting after a livecoding reload, the next event to `fire` will fire another event out the `processItem` port,
+	// thus giving the composition author another chance to return the event.
+	// https://b33p.net/kosada/node/11755
+	if ((*context)->processedList)
+	{
+		VuoRelease((*context)->processedList);
+		(*context)->processedList = NULL;
+	}
+}
+
 void nodeInstanceEvent
 (
 		VuoInputData(VuoList_VuoGenericType1) fire,

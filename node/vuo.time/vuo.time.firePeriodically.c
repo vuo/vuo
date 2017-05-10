@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "VuoEventLoop.h"
+
 VuoModuleMetadata({
 					 "title" : "Fire Periodically",
 					 "keywords" : [ "lfo", "wave generator", "signal", "tempo", "timer", "stop watch", "stopwatch", "clock",
@@ -52,7 +54,7 @@ static void setRepeatingTimer(struct nodeInstanceData *ctx, const VuoReal second
 		return;
 
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, q);
+	ctx->timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), q);
 
 	uint64_t nanoseconds = (seconds > 0.001 ? (seconds * NSEC_PER_SEC) : (NSEC_PER_SEC / 1000));
 	dispatch_source_set_timer(ctx->timer, dispatch_time(DISPATCH_TIME_NOW, nanoseconds), nanoseconds, 0);

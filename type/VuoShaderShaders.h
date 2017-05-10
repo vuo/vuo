@@ -150,6 +150,8 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
 	const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
 
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs from ports
 		uniform sampler2D texture;
 		uniform float alpha;
@@ -160,22 +162,16 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
 
 		void main()
 		{
-			// Work around ATI 7970 and AMD FirePro D300-D600 bug.
-			// GPU crashes unless we initialize the output with a uniform.
-			// https://b33p.net/kosada/node/11300
-			gl_FragColor = blah;
-
-			vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
-			color.a *= alpha;
-			if (color.a < 1./255.)
-				discard;
+			vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+			color *= alpha;
+			VuoGlsl_discardInvisible(color.a);
 			gl_FragColor = color;
 		}
 	);
 
 	const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs from ports
 		uniform sampler2D texture;
 		uniform float alpha;
@@ -196,12 +192,9 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
 			vertexPosition;
 			vertexPlaneToWorld;
 
-			vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
-			color.a *= alpha;
-			if (color.a < 1./255.)
-				discard;
+			vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+			color *= alpha;
+			VuoGlsl_discardInvisible(color.a);
 			gl_FragColor = color;
 		}
 	);
@@ -227,7 +220,9 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
 
 /**
  * Returns a shader that renders objects with an image (ignoring lighting).
- * Alpha values are passed through unmodified.
+ *
+ * This shader now handles alpha the same way @ref VuoShader_makeUnlitImageShader does,
+ * so the only difference is that this shader also provides flipping.
  *
  * @c image must be @c GL_TEXTURE_2D.
  *
@@ -236,6 +231,8 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
 VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image, bool flipped)
 {
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs from ports
 		uniform sampler2D texture;
 
@@ -244,11 +241,15 @@ VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image, bool flipp
 
 		void main()
 		{
-			gl_FragColor = texture2D(texture, fragmentTextureCoordinate.xy);
+			vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+			VuoGlsl_discardInvisible(color.a);
+			gl_FragColor = color;
 		}
 	);
 
 	const char *fragmentShaderSourceFlipped = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs from ports
 		uniform sampler2D texture;
 
@@ -257,7 +258,9 @@ VuoShader VuoShader_makeUnlitAlphaPassthruImageShader(VuoImage image, bool flipp
 
 		void main()
 		{
-			gl_FragColor = texture2D(texture, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y));
+			vec4 color = VuoGlsl_sample(texture, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y));
+			VuoGlsl_discardInvisible(color.a);
+			gl_FragColor = color;
 		}
 	);
 
@@ -283,6 +286,8 @@ VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha)
 		return NULL;
 
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs
 		uniform sampler2DRect texture;
 		uniform vec2 textureSize;
@@ -291,12 +296,9 @@ VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha)
 
 		void main()
 		{
-			vec4 color = texture2DRect(texture, fragmentTextureCoordinate.xy*textureSize);
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
-			color.a *= alpha;
-			if (color.a < 1./255.)
-				discard;
+			vec4 color = VuoGlsl_sampleRect(texture, fragmentTextureCoordinate.xy*textureSize);
+			color *= alpha;
+			VuoGlsl_discardInvisible(color.a);
 			gl_FragColor = color;
 		}
 	);
@@ -311,7 +313,9 @@ VuoShader VuoShader_makeGlTextureRectangleShader(VuoImage image, VuoReal alpha)
 
 /**
  * Returns a shader that renders objects with an image (ignoring lighting).
- * Alpha values are passed through unmodified.
+ *
+ * This shader now handles alpha the same way @ref VuoShader_makeUnlitImageShader does,
+ * so the only difference is that this shader also provides flipping.
  *
  * @c image must be @c GL_TEXTURE_RECTANGLE_ARB.
  *
@@ -323,6 +327,8 @@ VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image, bo
 		return NULL;
 
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs
 		uniform sampler2DRect texture;
 		uniform vec2 textureSize;
@@ -330,11 +336,15 @@ VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image, bo
 
 		void main()
 		{
-			gl_FragColor = texture2DRect(texture, fragmentTextureCoordinate.xy*textureSize);
+			vec4 color = VuoGlsl_sampleRect(texture, fragmentTextureCoordinate.xy*textureSize);
+			VuoGlsl_discardInvisible(color.a);
+			gl_FragColor = color;
 		}
 	);
 
 	const char *fragmentShaderSourceFlipped = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
+
 		// Inputs
 		uniform sampler2DRect texture;
 		uniform vec2 textureSize;
@@ -342,7 +352,9 @@ VuoShader VuoShader_makeGlTextureRectangleAlphaPassthruShader(VuoImage image, bo
 
 		void main()
 		{
-			gl_FragColor = texture2DRect(texture, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y) * textureSize);
+			vec4 color = VuoGlsl_sampleRect(texture, vec2(fragmentTextureCoordinate.x, 1. - fragmentTextureCoordinate.y) * textureSize);
+			VuoGlsl_discardInvisible(color.a);
+			gl_FragColor = color;
 		}
 	);
 
@@ -444,7 +456,7 @@ VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness)
 		{
 			float dist = distance(fragmentTextureCoordinate.xy, vec2(0.5,0.5));
 			float delta = fwidth(dist);
-			gl_FragColor = mix(color, vec4(color.rgb,0), smoothstep(sharpness/2 - delta, 1 - sharpness/2 + delta, dist*2));
+			gl_FragColor = mix(color, vec4(0.), smoothstep(sharpness/2 - delta, 1 - sharpness/2 + delta, dist*2));
 		}
 	);
 
@@ -542,7 +554,7 @@ VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal shar
 			 || (roundness2 > 0.1 && delta > 0.1))
 				delta = 0.;
 
-			gl_FragColor = mix(color, vec4(color.rgb, 0.), smoothstep(sharpness / 2. - delta, 1. - sharpness / 2. + delta, dist));
+			gl_FragColor = mix(color, vec4(0.), smoothstep(sharpness / 2. - delta, 1. - sharpness / 2. + delta, dist));
 		}
 	);
 
@@ -728,6 +740,7 @@ VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor h
 	const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
 
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 		include(lighting)
 
 		// Inputs from vertex shader
@@ -746,12 +759,9 @@ VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor h
 			// https://b33p.net/kosada/node/11256
 			gl_FragColor = specularColor;
 
-			vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
-			color.a *= alpha;
-			if (color.a < 1./255.)
-				discard;
+			vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+			color *= alpha;
+			VuoGlsl_discardInvisible(color.a);
 
 			vec3 ambientContribution = vec3(0.);
 			vec3 diffuseContribution = vec3(0.);
@@ -803,6 +813,7 @@ VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, Vuo
 	const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
 
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 		include(lighting)
 
 		// Inputs from vertex shader
@@ -822,12 +833,9 @@ VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, Vuo
 			// https://b33p.net/kosada/node/11256
 			gl_FragColor = blah;
 
-			vec4 color = texture2D(texture, fragmentTextureCoordinate.xy);
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
-			color.a *= alpha;
-			if (color.a < 1./255.)
-				discard;
+			vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
+			color *= alpha;
+			VuoGlsl_discardInvisible(color.a);
 
 			vec3 ambientContribution = vec3(0.);
 			vec3 diffuseContribution = vec3(0.);
@@ -880,6 +888,7 @@ VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, Vuo
 VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount)
 {
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 		include(VuoGlslRandom)
 
 		uniform float gradientCount;
@@ -922,11 +931,9 @@ VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d
 
 			float gradientWidth = (1./gradientCount)/2.;
 			x = x * (1-gradientWidth*2) + gradientWidth;	// scale to account for the gradient/2 offsets
-			vec4 color = texture2D(gradientStrip, vec2(clamp(x , gradientWidth, 1.-gradientWidth), .5));
-			if (color.a < 1./255.)
-				discard;
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
+
+			vec4 color = VuoGlsl_sample(gradientStrip, vec2(clamp(x , gradientWidth, 1.-gradientWidth), .5));
+			VuoGlsl_discardInvisible(color.a);
 
 			color.rgb += (VuoGlsl_random2D3D(fragmentTextureCoordinate.xy) - 0.5) * noiseAmount;
 
@@ -941,10 +948,10 @@ VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d
 	for(int i = 1; i <= len; i++)
 	{
 		VuoColor col = VuoListGetValue_VuoColor(colors, i);
-		pixels[n++] = (unsigned int)(col.a*col.b*255);
-		pixels[n++] = (unsigned int)(col.a*col.g*255);
-		pixels[n++] = (unsigned int)(col.a*col.r*255);
-		pixels[n++] = (unsigned int)(col.a*255);
+		pixels[n++] = VuoInteger_clamp(col.a*col.b*255, 0, 255);
+		pixels[n++] = VuoInteger_clamp(col.a*col.g*255, 0, 255);
+		pixels[n++] = VuoInteger_clamp(col.a*col.r*255, 0, 255);
+		pixels[n++] = VuoInteger_clamp(col.a      *255, 0, 255);
 	}
 
 	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
@@ -969,6 +976,7 @@ VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d
 VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount)
 {
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 		include(VuoGlslRandom)
 
 		uniform float gradientCount;
@@ -992,11 +1000,9 @@ VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d
 
 			float gradientWidth = (1./gradientCount)/2.;
 			x = x * (1-gradientWidth*2) + gradientWidth;
-			vec4 color = texture2D(gradientStrip, vec2(clamp(x , gradientWidth, 1.-gradientWidth), .5));
-			if (color.a < 1./255.)
-				discard;
-			color.a = min(color.a, 1.);	// clamp alpha at 1 (for floating-point textures)
-			color.rgb /= color.a;	// un-premultiply
+
+			vec4 color = VuoGlsl_sample(gradientStrip, vec2(clamp(x , gradientWidth, 1.-gradientWidth), .5));
+			VuoGlsl_discardInvisible(color.a);
 
 			color.rgb += (VuoGlsl_random2D3D(fragmentTextureCoordinate.xy) - 0.5) * noiseAmount;
 
@@ -1014,10 +1020,10 @@ VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d
 	for(int i = 1; i <= len; i++)
 	{
 		VuoColor col = VuoListGetValue_VuoColor(colors, i);
-		pixels[n++] = (unsigned int)(col.a*col.b*255);
-		pixels[n++] = (unsigned int)(col.a*col.g*255);
-		pixels[n++] = (unsigned int)(col.a*col.r*255);
-		pixels[n++] = (unsigned int)(col.a*255);
+		pixels[n++] = VuoInteger_clamp(col.a*col.b*255, 0, 255);
+		pixels[n++] = VuoInteger_clamp(col.a*col.g*255, 0, 255);
+		pixels[n++] = VuoInteger_clamp(col.a*col.r*255, 0, 255);
+		pixels[n++] = VuoInteger_clamp(col.a      *255, 0, 255);
 	}
 	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
 
@@ -1062,6 +1068,7 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 	const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
 
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 		include(noise3D)
 
 		// Inputs provided by VuoSceneRenderer
@@ -1092,13 +1099,13 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 				vec2 noiseOffset = snoise3D2D(noiseCoordinate * noiseScale);
 
 				// Red
-				accumulatedColor += texture2D(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. - chromaticAberration/3.)) * vec4(1.,0.,0.,1./3.);
+				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. - chromaticAberration/3.)) * vec4(1.,0.,0.,1./3.);
 
 				// Green
-				accumulatedColor += texture2D(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount)                                * vec4(0.,1.,0.,1./3.);
+				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount)                                * vec4(0.,1.,0.,1./3.);
 
 				// Blue
-				accumulatedColor += texture2D(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. + chromaticAberration/3.)) * vec4(0.,0.,1.,1./3.);
+				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. + chromaticAberration/3.)) * vec4(0.,0.,1.,1./3.);
 			}
 
 			gl_FragColor = color * accumulatedColor / float(iterations);
@@ -1106,6 +1113,7 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 	);
 
 	const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
+		include(VuoGlslAlpha)
 		include(noise3D)
 
 		// Inputs provided by VuoSceneRenderer
@@ -1146,13 +1154,13 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 				vec2 noiseOffset = snoise3D2D(noiseCoordinate * noiseScale);
 
 				// Red
-				accumulatedColor += texture2D(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. - chromaticAberration/3.)) * vec4(1.,0.,0.,1./3.);
+				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. - chromaticAberration/3.)) * vec4(1.,0.,0.,1./3.);
 
 				// Green
-				accumulatedColor += texture2D(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount)                                * vec4(0.,1.,0.,1./3.);
+				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount)                                * vec4(0.,1.,0.,1./3.);
 
 				// Blue
-				accumulatedColor += texture2D(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. + chromaticAberration/3.)) * vec4(0.,0.,1.,1./3.);
+				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. + chromaticAberration/3.)) * vec4(0.,0.,1.,1./3.);
 			}
 
 			gl_FragColor = color * accumulatedColor / float(iterations);
@@ -1178,7 +1186,7 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
  */
 void VuoShader_setFrostedGlassShaderValues(VuoShader shader, VuoColor color, VuoReal brightness, VuoReal noiseTime, VuoReal noiseAmount, VuoReal noiseScale, VuoReal chromaticAberration, VuoInteger iterations)
 {
-	VuoShader_setUniform_VuoPoint4d(shader, "color",               VuoPoint4d_make(color.r*brightness, color.g*brightness, color.b*brightness, color.a));
+	VuoShader_setUniform_VuoPoint4d(shader, "color",               VuoPoint4d_make(color.r*brightness*color.a, color.g*brightness*color.a, color.b*brightness*color.a, color.a));
 	VuoShader_setUniform_VuoReal   (shader, "noiseTime",           noiseTime);
 	VuoShader_setUniform_VuoReal   (shader, "noiseAmount",         MAX(0.,noiseAmount/10.));
 	VuoShader_setUniform_VuoReal   (shader, "noiseScale",          1./VuoReal_makeNonzero(noiseScale));

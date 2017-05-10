@@ -66,7 +66,7 @@ private slots:
 		QTest::addColumn<QString>("json");
 
 		QTest::newRow("emptystring")	<< VuoSceneObject_makeFromString("")
-										<< "0 vertices, 0 elements<br><br>identity transform (no change)<br><br>0 child objects"
+										<< "object named \"\"<br>0 vertices, 0 elements<br><br>identity transform (no change)<br><br>0 child objects"
 										<< QUOTE({"type":"empty","transform":"identity"});
 
 		{
@@ -76,8 +76,9 @@ private slots:
 						VuoTransform_makeIdentity(),
 						VuoListCreate_VuoSceneObject()
 					);
+			o.name = VuoText_make("quad");
 			QTest::newRow("quad")		<< o
-										<< "4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
+										<< "object named \"quad\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
 										<< "";	// Don't test serialization since it includes object pointers.
 		}
 
@@ -95,7 +96,7 @@ private slots:
 					);
 
 			QTest::newRow("quad image")	<< o
-										<< "4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Image Shader (Unlit)</li></ul>"
+										<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>0 child objects<br><br>shaders:<ul><li>Image Shader (Unlit)</li></ul>"
 										<< "";	// Don't test serialization since it includes object pointers.
 
 			VuoGlContext_disuse(glContext);
@@ -120,7 +121,7 @@ private slots:
 					);
 
 			QTest::newRow("quad quad")	<< o2
-										<< "4 vertices, 6 elements<br><br>identity transform (no change)<br><br>1 child object<br>1 descendant<br><br>total, including descendants:<br>8 vertices, 12 elements<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
+										<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>1 child object<br>1 descendant<br><br>total, including descendants:<br>8 vertices, 12 elements<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
 										<< "";	// Don't test serialization since it includes object pointers.
 		}
 
@@ -153,7 +154,7 @@ private slots:
 					);
 
 			QTest::newRow("quad quad quad")	<< o3
-											<< "4 vertices, 6 elements<br><br>identity transform (no change)<br><br>1 child object<br>2 descendants<br><br>total, including descendants:<br>12 vertices, 18 elements<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
+											<< "object named \"\"<br>4 vertices, 6 elements<br><br>identity transform (no change)<br><br>1 child object<br>2 descendants<br><br>total, including descendants:<br>12 vertices, 18 elements<br><br>shaders:<ul><li>Default Shader (Checkerboard)</li></ul>"
 											<< "";	// Don't test serialization since it includes object pointers.
 		}
 
@@ -171,7 +172,7 @@ private slots:
 						20.0
 					);
 			QTest::newRow("perspective camera")		<< o
-													<< "camera-perspective<br>at (42, 43, 44)<br>rotated (-0, 28.6479, 57.2958)<br>42° field of view<br>shows objects between depth 1 and 20"
+													<< "camera-perspective named \"vuocam\"<br>at (42, 43, 44)<br>rotated (-0, 28.6479, 57.2958)<br>42° field of view<br>shows objects between depth 1 and 20"
 													<< "{\"type\":\"camera-perspective\",\"cameraDistanceMin\":1,\"cameraDistanceMax\":20,\"cameraFieldOfView\":42,\"name\":\"vuocam\",\"transform\":{\"translation\":[42,43,44],\"eulerRotation\":[0,-0.5,-1],\"scale\":[1,1,1]}}";
 		}
 
@@ -189,7 +190,7 @@ private slots:
 						20.0
 					);
 			QTest::newRow("targeted perspective camera")	<< o
-															<< "camera-perspective<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
+															<< "camera-perspective named \"vuocam\"<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view<br>shows objects between depth 1 and 20"
 															<< QUOTE({"type":"camera-perspective","cameraDistanceMin":1,"cameraDistanceMax":20,"cameraFieldOfView":42,"name":"vuocam","transform":{"translation":[42,43,44],"target":[45,46,47],"upDirection":[0,1,0]}});
 		}
 
@@ -209,7 +210,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("targeted stereo camera")	<< o
-													<< "camera-stereo<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view (stereoscopic)<br>shows objects between depth 1 and 20"
+													<< "camera-stereo named \"vuocam\"<br>at (42, 43, 44)<br>target (45, 46, 47)<br>42° field of view (stereoscopic)<br>shows objects between depth 1 and 20"
 													<< QUOTE({"type":"camera-stereo","cameraDistanceMin":1,"cameraDistanceMax":20,"cameraFieldOfView":42,"cameraConfocalDistance":1,"cameraIntraocularDistance":0.5,"name":"vuocam","transform":{"translation":[42,43,44],"target":[45,46,47],"upDirection":[0,1,0]}});
 		}
 
@@ -227,7 +228,7 @@ private slots:
 						22.0
 					);
 			QTest::newRow("orthographic camera")	<< o
-													<< "camera-orthographic<br>at (52, 53, 54)<br>rotated (-0, 28.6479, 57.2958)<br>2 unit width<br>shows objects between depth 3 and 22"
+													<< "camera-orthographic named \"vuocam ortho\"<br>at (52, 53, 54)<br>rotated (-0, 28.6479, 57.2958)<br>2 unit width<br>shows objects between depth 3 and 22"
 													<< "{\"type\":\"camera-orthographic\",\"cameraDistanceMin\":3,\"cameraDistanceMax\":22,\"cameraWidth\":2,\"name\":\"vuocam ortho\",\"transform\":{\"translation\":[52,53,54],\"eulerRotation\":[0,-0.5,-1],\"scale\":[1,1,1]}}";
 		}
 
@@ -237,7 +238,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("ambient light")	<< o
-											<< "light-ambient<br>color (0, 0.5, 1, 1)<br>brightness 0.5"
+											<< "light-ambient<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5"
 											<< QUOTE({"type":"light-ambient","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5});
 		}
 
@@ -250,7 +251,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("point light")	<< o
-											<< "light-point<br>color (0, 0.5, 1, 1)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
+											<< "light-point<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
 											<< QUOTE({"type":"light-point","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
@@ -264,7 +265,7 @@ private slots:
 						0.5
 					);
 			QTest::newRow("spotlight")	<< o
-											<< "light-spot<br>color (0, 0.5, 1, 1)<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
+											<< "light-spot<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
 											<< QUOTE({"type":"light-spot","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"lightCone":0.78539818525314331,"transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
@@ -282,7 +283,7 @@ private slots:
 						22.0
 					);
 			QTest::newRow("targeted orthographic camera")	<< o
-															<< "camera-orthographic<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
+															<< "camera-orthographic named \"vuocam ortho\"<br>at (52, 53, 54)<br>target (55, 56, 57)<br>2 unit width<br>shows objects between depth 3 and 22"
 															<< QUOTE({"type":"camera-orthographic","cameraDistanceMin":3,"cameraDistanceMax":22,"cameraWidth":2,"name":"vuocam ortho","transform":{"translation":[52,53,54],"target":[55,56,57],"upDirection":[0,1,0]}});
 		}
 	}

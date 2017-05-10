@@ -293,10 +293,11 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 	}
 #endif
 
+		unsigned long completeInputElementCount = VuoSubmesh_getCompleteElementCount(submesh);
 		if (submesh.elementCount)
-			glDrawElements(mode, submesh.elementCount, GL_UNSIGNED_INT, (void*)0);
-		else
-			glDrawArrays(mode, 0, submesh.vertexCount);
+			glDrawElements(mode, completeInputElementCount, GL_UNSIGNED_INT, (void*)0);
+		else if (submesh.vertexCount)
+			glDrawArrays(mode, 0, completeInputElementCount);
 
 #ifdef PROFILE
 	double seconds;

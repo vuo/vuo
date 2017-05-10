@@ -23,6 +23,7 @@ VuoModuleMetadata({
  * http://www.geeks3d.com/20091027/shader-library-posterization-post-processing-effect-glsl/
  */
 static const char *posterizeFrag = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
@@ -31,7 +32,7 @@ static const char *posterizeFrag = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		vec4 ca = texture2D(texture, fragmentTextureCoordinate.xy);
+		vec4 ca = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
 		vec3 c = ca.rgb;
 		c = pow(c, vec3(gamma));
 		c = c * numColors;

@@ -9,23 +9,23 @@
 
 digraph G
 {
-AdjustImageColors [type="vuo.image.color.adjust" version="1.1.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="68,476" _saturation="0" _contrast="0" _exposure="0" _gamma="1.000000"];
-CombineImageRGBChannels [type="vuo.image.color.combine.rgb" version="1.0.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<combinedImage>combinedImage\r" pos="275,385" fillcolor="violet"];
-Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="42,739"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-515,320" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-362,385" _url="\"mountains.jpg\""];
-MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="354,706" fillcolor="green"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-371,520" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderImageToWindow2 [type="vuo.image.render.window" version="3.1.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="400,680" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-117,519" _start="-0.750000" _end="0.750000" _scaledStart="-1.000000" _scaledEnd="1.000000"];
-SplitImageRGBColors [type="vuo.image.color.split.rgb" version="1.0.0" label="Split Image RGB Colors|<refresh>refresh\l|<image>image\l|<redImage>redImage\r|<greenImage>greenImage\r|<blueImage>blueImage\r" pos="-195,384" fillcolor="violet"];
+AdjustImageColors [type="vuo.image.color.adjust" version="1.2.0" label="Adjust Image Colors|<refresh>refresh\l|<image>image\l|<saturation>saturation\l|<hueShift>hueShift\l|<contrast>contrast\l|<brightness>brightness\l|<exposure>exposure\l|<gamma>gamma\l|<adjustedImage>adjustedImage\r" pos="75,480" fillcolor="violet" _saturation="0" _hueShift="0" _contrast="0" _exposure="0" _gamma="1.000000"];
+CombineImageRGBChannels [type="vuo.image.color.combine.rgb" version="1.0.0" label="Combine Image RGB Channels|<refresh>refresh\l|<redImage>redImage\l|<greenImage>greenImage\l|<blueImage>blueImage\l|<combinedImage>combinedImage\r" pos="270,390" fillcolor="violet"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="45,735"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-465,330" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="-315,390" _url="\"mountains.jpg\""];
+MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="364,701" fillcolor="green"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.3" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-330,540" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="405,675" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="-75,540" _start="-0.750000" _end="0.750000" _scaledStart="-1.000000" _scaledEnd="1.000000"];
+SplitImageRGBColors [type="vuo.image.color.split.rgb" version="1.0.0" label="Split Image RGB Colors|<refresh>refresh\l|<image>image\l|<redImage>redImage\r|<greenImage>greenImage\r|<blueImage>blueImage\r" pos="-165,390" fillcolor="violet"];
 
 AdjustImageColors:adjustedImage -> CombineImageRGBChannels:blueImage;
 CombineImageRGBChannels:combinedImage -> RenderImageToWindow2:image;
 Convert2DPointToReal:y -> Scale:value;
 FireOnStart:started -> GetImage3:refresh;
 GetImage3:image -> SplitImageRGBColors:image;
-MakeList:list -> RenderImageToWindow2:setWindowProperties;
+MakeList2:list -> RenderImageToWindow2:setWindowProperties;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
 RenderImageToWindow2:showedWindow -> ReceiveMouseMoves:window;
 Scale:scaledValue -> AdjustImageColors:brightness;

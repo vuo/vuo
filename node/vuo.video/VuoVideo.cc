@@ -141,6 +141,13 @@ double VuoVideo_getLastDecodedVideoTimestamp(VuoVideo player)
 	return obj->GetCurrentTimestamp();
 }
 
+double VuoVideo_getLastFrameDelta(VuoVideo player)
+{
+	VuoVideoPlayer* obj = (VuoVideoPlayer*) player;
+	if(obj == NULL) return 0.;
+	return obj->GetLastFrameDelta();
+}
+
 bool VuoVideo_getFrameAtSecond(VuoVideo player, VuoReal second, VuoVideoFrame* videoFrame)
 {
 	VuoVideoPlayer* obj = (VuoVideoPlayer*)player;
@@ -148,10 +155,7 @@ bool VuoVideo_getFrameAtSecond(VuoVideo player, VuoReal second, VuoVideoFrame* v
 	if(obj == NULL)
 		return false;
 
-	if( !obj->Seek(second) )
-		return false;
-
-	return obj->GetCurrentVideoFrame(videoFrame);
+	return obj->GetVideoFrameAtSecond(second, videoFrame);
 }
 
 bool VuoVideo_nextVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame)

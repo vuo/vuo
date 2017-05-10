@@ -118,6 +118,7 @@ VuoBlendMode VuoBlendMode_makeFromJson(json_object *js)
 	if( !strcmp(valueAsString, "luminosity") ) {
 		value = VuoBlendMode_Luminosity;
 	}
+	else if (strcmp(valueAsString, "power") == 0) return VuoBlendMode_Power;
 
 	return value;
 }
@@ -210,7 +211,9 @@ json_object * VuoBlendMode_getJson(const VuoBlendMode value)
 		case VuoBlendMode_Luminosity:
 			valueAsString = "luminosity";
 			break;
-
+		case VuoBlendMode_Power:
+			valueAsString = "power";
+			break;
 	}
 	return json_object_new_string(valueAsString);
 }
@@ -221,7 +224,7 @@ json_object * VuoBlendMode_getJson(const VuoBlendMode value)
 VuoList_VuoBlendMode VuoBlendMode_getAllowedValues(void)
 {
 	VuoList_VuoBlendMode l = VuoListCreate_VuoBlendMode();
-	for (VuoBlendMode b = VuoBlendMode_Normal; b <= VuoBlendMode_Luminosity; ++b)
+	for (VuoBlendMode b = VuoBlendMode_Normal; b <= VuoBlendMode_Power; ++b)
 		VuoListAppendValue_VuoBlendMode(l, b);
 	return l;
 }
@@ -313,6 +316,9 @@ char * VuoBlendMode_getSummary(const VuoBlendMode value)
 			break;
 		case VuoBlendMode_Luminosity:
 			valueAsString = "Luminosity";
+			break;
+		case VuoBlendMode_Power:
+			valueAsString = "Power — b^f";
 			break;
 	}
 	return strdup(valueAsString);

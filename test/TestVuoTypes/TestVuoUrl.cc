@@ -7,6 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include <sys/stat.h>
+
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoUrlFetch.h"
@@ -27,27 +29,51 @@ private slots:
 		QTest::addColumn<QString>("expectedNormalizedUrl");
 		QTest::addColumn<bool>("expectedValidPosixPath");
 		QTest::addColumn<QString>("expectedPosixPath");
+		QTest::addColumn<QString>("expectedAppLoadPath");
+		QTest::addColumn<QString>("expectedAppSavePath");
 
 		QString fileScheme = "file://";
 		QString basePath = getcwd(NULL,0);
 		QString baseUrl = fileScheme + basePath;
 		QString homeDir = getenv("HOME");
 
-		QTest::newRow("empty string")		<< ""						<< baseUrl								<< true		<< basePath;
-		QTest::newRow("absolute URL")		<< "http://vuo.org"			<< "http://vuo.org"						<< false	<< "";
-		QTest::newRow("absolute URL/")		<< "http://vuo.org/"		<< "http://vuo.org"						<< false	<< "";
-		QTest::newRow("absolute URL space")	<< "http://vuo.org/a b.png"	<< "http://vuo.org/a%20b.png"			<< false	<< "";
-		QTest::newRow("relative file")		<< "file"					<< baseUrl + "/file"					<< true		<< basePath + "/file";
-		QTest::newRow("relative file ?")	<< "file?.wav"				<< baseUrl + "/file%3f.wav"				<< true		<< basePath + "/file?.wav";
-		QTest::newRow("relative dir/")		<< "dir/"					<< baseUrl + "/dir"						<< true		<< basePath + "/dir";
-		QTest::newRow("relative dir/file")	<< "dir/file"				<< baseUrl + "/dir/file"				<< true		<< basePath + "/dir/file";
-		QTest::newRow("absolute file")		<< "/mach_kernel"			<< fileScheme + "/mach_kernel"			<< true		<< "/mach_kernel";
-		QTest::newRow("absolute dir/")		<< "/usr/include/"			<< fileScheme + "/usr/include"			<< true		<< "/usr/include";
-		QTest::newRow("absolute dir space")	<< "/Library/Desktop Pictures" << "file:///Library/Desktop%20Pictures" << true	<< "/Library/Desktop Pictures";
-		QTest::newRow("absolute dir/file")	<< "/usr/include/stdio.h"	<< fileScheme + "/usr/include/stdio.h"	<< true		<< "/usr/include/stdio.h";
-		QTest::newRow("user homedir")		<< "~"						<< fileScheme + homeDir					<< true		<< homeDir;
-		QTest::newRow("user homedir/")		<< "~/"						<< fileScheme + homeDir					<< true		<< homeDir;
-		QTest::newRow("user homedir/file")	<< "~/.DS_Store"			<< fileScheme + homeDir + "/.DS_Store"	<< true		<< homeDir + "/.DS_Store";
+		QString basePathParent = basePath;
+		basePathParent.truncate(basePath.lastIndexOf("/TestVuoTypes"));
+		QString baseUrlParent = fileScheme + basePathParent;
+
+		QString basePathParentParent = basePathParent;
+		basePathParentParent.truncate(basePathParent.lastIndexOf("/test"));
+		QString baseUrlParentParent = fileScheme + basePathParentParent;
+
+		QString resourcesPath = basePathParent + "/Resources";
+		QString resourcesPathParent = basePathParent;
+		QString resourcesPathParentParent = basePathParentParent;
+
+		QString desktopPath = homeDir + "/Desktop";
+
+		//											   url							   expectedNormalizedUrl					   posix?   expectedPosixPath					   expectedAppLoadPath						   expectedAppSavePath
+		QTest::newRow("empty string")				<< ""							<< baseUrl									<< true  << basePath							<< resourcesPath							<< desktopPath;
+		QTest::newRow("absolute URL")				<< "http://vuo.org"				<< "http://vuo.org"							<< false << ""									<< ""										<< "";
+		QTest::newRow("absolute URL/")				<< "http://vuo.org/"			<< "http://vuo.org"							<< false << ""									<< ""										<< "";
+		QTest::newRow("absolute URL space")			<< "http://vuo.org/a b.png"		<< "http://vuo.org/a%20b.png"				<< false << ""									<< ""										<< "";
+		QTest::newRow("relative file")				<< "file"						<< baseUrl + "/file"						<< true  << basePath + "/file"					<< resourcesPath + "/file"					<< desktopPath + "/file";
+		QTest::newRow("relative file ?")			<< "file?.wav"					<< baseUrl + "/file%3f.wav"					<< true  << basePath + "/file?.wav"				<< resourcesPath + "/file?.wav"				<< desktopPath + "/file?.wav";
+		QTest::newRow("relative dir/")				<< "dir/"						<< baseUrl + "/dir"							<< true  << basePath + "/dir"					<< resourcesPath + "/dir"					<< desktopPath + "/dir";
+		QTest::newRow("relative dir/file")			<< "dir/file"					<< baseUrl + "/dir/file"					<< true  << basePath + "/dir/file"				<< resourcesPath + "/dir/file"				<< desktopPath + "/dir/file";
+		QTest::newRow("relative ./file")			<< "./Makefile"					<< baseUrl + "/Makefile"					<< true  << basePath + "/Makefile"				<< resourcesPath + "/Makefile"				<< desktopPath + "/Makefile";
+		QTest::newRow("relative ../file")			<< "../Makefile"				<< baseUrlParent + "/Makefile"				<< true  << basePathParent + "/Makefile"		<< resourcesPathParent + "/Makefile"		<< desktopPath + "/../Makefile" /* Doesn't exist, so ".." remains. */;
+		QTest::newRow("relative ../../file")		<< "../../Makefile"				<< baseUrlParentParent + "/Makefile"		<< true  << basePathParentParent + "/Makefile"	<< resourcesPathParentParent + "/Makefile"	<< desktopPath + "/../../Makefile" /* Doesn't exist, so "../.." remains. */;
+		QTest::newRow("absolute file")				<< "/mach_kernel"				<< fileScheme + "/mach_kernel"				<< true  << "/mach_kernel"						<< "/mach_kernel"							<< "/mach_kernel";
+		QTest::newRow("absolute dir/")				<< "/usr/include/"				<< fileScheme + "/usr/include"				<< true  << "/usr/include"						<< "/usr/include"							<< "/usr/include";
+		QTest::newRow("absolute dir space")			<< "/Library/Desktop Pictures"	<< "file:///Library/Desktop%20Pictures"		<< true  << "/Library/Desktop Pictures"			<< "/Library/Desktop Pictures"				<< "/Library/Desktop Pictures";
+		QTest::newRow("absolute dir/file")			<< "/usr/include/stdio.h"		<< fileScheme + "/usr/include/stdio.h"		<< true  << "/usr/include/stdio.h"				<< "/usr/include/stdio.h"					<< "/usr/include/stdio.h";
+		QTest::newRow("absolute link/dir")			<< "/var/tmp"					<< fileScheme + "/private/var/tmp"			<< true  << "/private/var/tmp"					<< "/private/var/tmp"						<< "/private/var/tmp";
+		QTest::newRow("absolute dir/../link")		<< "/usr/../var"				<< fileScheme + "/private/var"				<< true  << "/private/var"						<< "/private/var"							<< "/private/var";
+		QTest::newRow("user homedir")				<< "~"							<< fileScheme + homeDir						<< true  << homeDir								<< homeDir									<< homeDir;
+		QTest::newRow("user homedir/")				<< "~/"							<< fileScheme + homeDir						<< true  << homeDir								<< homeDir									<< homeDir;
+		QTest::newRow("user homedir/file")			<< "~/.DS_Store"				<< fileScheme + homeDir + "/.DS_Store"		<< true  << homeDir + "/.DS_Store"				<< homeDir + "/.DS_Store"					<< homeDir + "/.DS_Store";
+		QTest::newRow("user homedir/filenex")		<< "~/nonexistent"				<< fileScheme + homeDir + "/nonexistent"	<< true  << homeDir + "/nonexistent"			<< homeDir + "/nonexistent"					<< homeDir + "/nonexistent";
+		QTest::newRow("user homedir/dir/../dir")	<< "~/Library/../Downloads"		<< fileScheme + homeDir + "/Downloads"		<< true  << homeDir + "/Downloads"				<< homeDir + "/Downloads"					<< homeDir + "/Downloads";
 	}
 	void testNormalize()
 	{
@@ -55,6 +81,8 @@ private slots:
 		QFETCH(QString, expectedNormalizedUrl);
 		QFETCH(bool, expectedValidPosixPath);
 		QFETCH(QString, expectedPosixPath);
+		QFETCH(QString, expectedAppLoadPath);
+		QFETCH(QString, expectedAppSavePath);
 
 		VuoUrl normalizedUrl = VuoUrl_normalize(url.toUtf8().data(), false);
 		VuoRetain(normalizedUrl);
@@ -69,6 +97,54 @@ private slots:
 
 			VuoText escapedPosixPath = VuoUrl_escapePosixPath(expectedPosixPath.toUtf8().data());
 			QCOMPARE(QString("file://") + escapedPosixPath, QString(expectedNormalizedUrl));
+
+
+			// Simulate being inside an exported app bundle.
+			{
+				QString resourcesDir = "../Resources";
+				mkdir(resourcesDir.toUtf8().data(), 0755);
+				QVERIFY(QDir(resourcesDir).exists());
+
+				// Create makefiles where the test data expect them to exist
+				QString resourcesMakefile = resourcesDir + "/Makefile";
+				fclose(fopen(resourcesMakefile.toUtf8().data(), "w"));
+				QVERIFY(QFile(resourcesMakefile).exists());
+
+				QString desktopMakefile = QString(getenv("HOME")) + "/Desktop/Makefile";
+				fclose(fopen(desktopMakefile.toUtf8().data(), "w"));
+				QVERIFY(QFile(desktopMakefile).exists());
+
+				char *formerWorkingDir = getcwd(NULL, 0);
+				chdir("/");
+
+				{
+					VuoUrl appLoadUrl = VuoUrl_normalize(url.toUtf8().data(), false);
+					VuoLocal(appLoadUrl);
+
+					VuoText appLoadPath = VuoUrl_getPosixPath(appLoadUrl);
+					VuoLocal(appLoadPath);
+					QCOMPARE(appLoadPath, expectedAppLoadPath.toUtf8().data());
+				}
+
+				{
+					VuoUrl appSaveUrl = VuoUrl_normalize(url.toUtf8().data(), true);
+					VuoLocal(appSaveUrl);
+
+					VuoText appSavePath = VuoUrl_getPosixPath(appSaveUrl);
+					VuoLocal(appSavePath);
+					QCOMPARE(appSavePath, expectedAppSavePath.toUtf8().data());
+				}
+
+				chdir(formerWorkingDir);
+
+				unlink(desktopMakefile.toUtf8().data());
+				QVERIFY(!QFile(desktopMakefile).exists());
+
+				unlink(resourcesMakefile.toUtf8().data());
+				QVERIFY(!QFile(resourcesMakefile).exists());
+				rmdir(resourcesDir.toUtf8().data());
+				QVERIFY(!QDir(resourcesDir).exists());
+			}
 		}
 		else
 			QCOMPARE(posixPath, (VuoText)NULL);

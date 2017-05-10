@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
 	{
 		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-		timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,queue);
+		timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(),queue);
 		dispatch_source_set_timer(timer, dispatch_walltime(NULL, NSEC_PER_SEC/4), NSEC_PER_SEC/2, NSEC_PER_SEC/100);
 		dispatch_source_set_event_handler(timer, ^{
 			{

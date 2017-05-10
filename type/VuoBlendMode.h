@@ -52,7 +52,8 @@ typedef enum {
 	VuoBlendMode_Hue,				///< Hue
 	VuoBlendMode_Saturation,		///< Saturation
 	VuoBlendMode_Color,				///< Color
-	VuoBlendMode_Luminosity			///< Luminosity
+	VuoBlendMode_Luminosity,		///< Luminosity
+	VuoBlendMode_Power				///< Power
 } VuoBlendMode;
 
 VuoBlendMode VuoBlendMode_makeFromJson(struct json_object * js);

@@ -516,10 +516,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	{
 		telemetryCanceledSemaphore = dispatch_semaphore_create(0);
 		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-		SInt32 macMinorVersion;
-		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-		unsigned long mask = (macMinorVersion >= 9 ? 0x1 : 0x0);  // DISPATCH_TIMER_STRICT
-		telemetryTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, mask, queue);
+		telemetryTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
 		dispatch_source_set_timer(telemetryTimer, dispatch_walltime(NULL, 0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 		dispatch_source_set_event_handler(telemetryTimer, ^{
 
@@ -558,7 +555,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	if (hasZMQConnection)
 	{
 		controlCanceledSemaphore = dispatch_semaphore_create(0);
-		controlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,VuoControlQueue);
+		controlTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), VuoControlQueue);
 		dispatch_source_set_timer(controlTimer, dispatch_walltime(NULL,0), NSEC_PER_SEC/1000, NSEC_PER_SEC/1000);
 		dispatch_source_set_event_handler(controlTimer, ^{
 
@@ -1193,7 +1190,7 @@ void vuoStopComposition(void)
 						   vuoTelemetrySend(VuoTelemetryStopRequested, NULL, 0);
 
 						   // If we haven't received a response to VuoTelemetryStopRequested within 2 seconds, stop anyway.
-						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, VuoControlQueue);
+						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), VuoControlQueue);
 						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.), NSEC_PER_SEC * 2, NSEC_PER_SEC/10);
 						   dispatch_source_set_event_handler(waitForStopTimer, ^{
 							   stopComposition(false);

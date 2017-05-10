@@ -88,7 +88,10 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		float d = dot(normalize(projectedNormal), normalize(cameraPosition));
 		d = gl_FrontFacing ? - d : d;
 		d = smoothstep(sharpness, 1.0000001 - sharpness, width + d);
-		gl_FragColor = vec4(color.rgb, d * color.a + (1. - d) * interiorOpacity);
+		gl_FragColor = mix(
+					vec4(0.),
+					vec4(color.rgb, 1.),
+					d * color.a + (1. - d) * interiorOpacity);
 	}
 );
 
@@ -129,7 +132,10 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 		float dy = smoothstep(sharpness-delta/2., 1.0000001 - sharpness + delta/2., y + w - 0.5)
 				 + smoothstep(1.0000001 - sharpness + delta/2.,  sharpness - delta/2., y - w + 0.5);
 		float d = min(1., sqrt(pow(dx,2.) + pow(dy,2.)));
-		gl_FragColor = vec4(color.rgb, d * color.a + (1. - d) * interiorOpacity);
+		gl_FragColor = mix(
+					vec4(0.),
+					vec4(color.rgb, 1.),
+					d * color.a + (1. - d) * interiorOpacity);
 	}
 );
 
@@ -153,7 +159,9 @@ void nodeEvent
 
 	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSource, NULL,      fragmentShaderSource);
 
-	VuoShader_setUniform_VuoColor(*shader, "color",           color);
+	// Use VuoPoint4d instead of VuoColor since the shader can more efficiently work with a straight (un-premultiplied) color.
+	VuoShader_setUniform_VuoPoint4d(*shader, "color", (VuoPoint4d){color.r, color.g, color.b, color.a});
+
 	VuoShader_setUniform_VuoReal (*shader, "width",           width*2.);
 	VuoShader_setUniform_VuoReal (*shader, "sharpness",       MAX(0.,MIN(1.,sharpness)) / 2.);
 	VuoShader_setUniform_VuoReal (*shader, "interiorOpacity", interiorOpacity);

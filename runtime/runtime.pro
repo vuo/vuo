@@ -91,6 +91,7 @@ runtime_loader.commands = \
 		-Wl,-rpath,@loader_path/../../../../.. \
 		-Wl,-sectcreate,__TEXT,__info_plist,$$VUO_INFO_PLIST_GENERATED \
 		-Wl,-exported_symbol,_VuoApp_mainThread \
+		-Wl,-exported_symbol,_VuoApp_dylibPath \
 		$$QMAKE_LFLAGS \
 		${QMAKE_FILE_IN} \
 		-o ${QMAKE_FILE_OUT}

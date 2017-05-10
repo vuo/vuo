@@ -20,6 +20,7 @@ VuoModuleMetadata({
 				 });
 
 static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
@@ -30,8 +31,7 @@ static const char * cropFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 pos = fragmentTextureCoordinate.xy * vec2(width, height) + vec2(x,y);
-		gl_FragColor = texture2D(texture, pos);
+		gl_FragColor = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy * vec2(width, height) + vec2(x,y));
 	}
 );
 

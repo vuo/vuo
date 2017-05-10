@@ -26,6 +26,8 @@ VuoModuleMetadata({
 
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
 	// Inputs
 	uniform sampler2D texture;
 	uniform float aspectRatio;
@@ -56,7 +58,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 			coord.y *= aspectRatio;
 			coord += center;
 		}
-		gl_FragColor = texture2D(texture, coord);
+		gl_FragColor = VuoGlsl_sample(texture, coord);
 	}
 );
 

@@ -89,3 +89,19 @@ char * VuoHorizontalAlignment_getSummary(const VuoHorizontalAlignment value)
 
 	return strdup(valueAsString);
 }
+
+/**
+ * Returns true if the two values are equal.
+ */
+bool VuoHorizontalAlignment_areEqual(const VuoHorizontalAlignment valueA, const VuoHorizontalAlignment valueB)
+{
+	return valueA == valueB;
+}
+
+/**
+ * Returns true if `valueA` is less than `valueB`.
+ */
+bool VuoHorizontalAlignment_isLessThan(const VuoHorizontalAlignment valueA, const VuoHorizontalAlignment valueB)
+{
+	return valueA < valueB;
+}

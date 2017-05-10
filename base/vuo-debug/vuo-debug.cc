@@ -98,7 +98,7 @@ int main (int argc, char * const argv[])
 			string file, executableDir, ext;
 			VuoFileUtilities::splitPath(executablePath, executableDir, file, ext);
 
-			VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, executableDir);
+			VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(executablePath, executableDir, false, false);
 
 			TelemetryLogger *logger = new TelemetryLogger();
 			runner->setDelegate(logger);

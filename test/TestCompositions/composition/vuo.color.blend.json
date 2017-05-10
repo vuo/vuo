@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Expected outputs for the vuo.color.blend node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+/* normal blend mode ====================================================== */
+/* transparent black + transparent     black @ 100% = transparent     black */ {"firingPort":"background", "inputPortValues":{"background":"#0000", "foreground":"#0000", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0  ,"g":0  ,"b":0  ,"a":0  }}},
+/* opaque      black + transparent     black @ 100% = opaque          black */ {"firingPort":"background", "inputPortValues":{"background":"#000f", "foreground":"#0000", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0  ,"g":0  ,"b":0  ,"a":1  }}},
+/* transparent black + opaque          black @ 100% = opaque          black */ {"firingPort":"background", "inputPortValues":{"background":"#0000", "foreground":"#000f", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0  ,"g":0  ,"b":0  ,"a":1  }}},
+/* opaque      black + opaque          black @ 100% = opaque          black */ {"firingPort":"background", "inputPortValues":{"background":"#000f", "foreground":"#000f", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0  ,"g":0  ,"b":0  ,"a":1  }}},
+/* transparent white + transparent     white @ 100% = transparent     white */ {"firingPort":"background", "inputPortValues":{"background":"#fff0", "foreground":"#fff0", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":1  ,"g":1  ,"b":1  ,"a":0  }}},
+/* opaque      black + opaque          white @ 100% = opaque          white */ {"firingPort":"background", "inputPortValues":{"background":"#000f", "foreground":"#ffff", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":1  ,"g":1  ,"b":1  ,"a":1  }}},
+/* opaque      black + opaque          white @  60% = opaque          grey  */ {"firingPort":"background", "inputPortValues":{"background":"#000f", "foreground":"#ffff", "blendMode":"normal", "foregroundOpacity":0.6}, "outputPortValues":{"blendedColor":{"r":0.6,"g":0.6,"b":0.6,"a":1  }}},
+/* opaque      black + semitransparent white @ 100% = opaque          grey  */ {"firingPort":"background", "inputPortValues":{"background":"#000f", "foreground":"#fff9", "blendMode":"normal", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0.6,"g":0.6,"b":0.6,"a":1  }}},
+/* transparent black + opaque          white @  60% = semitransparent grey  */ {"firingPort":"background", "inputPortValues":{"background":"#0000", "foreground":"#ffff", "blendMode":"normal", "foregroundOpacity":0.6}, "outputPortValues":{"blendedColor":{"r":0.6,"g":0.6,"b":0.6,"a":0.6}}},
+
+/* add blend mode ========================================================= */
+/* opaque      black + opaque          white @ 100% = opaque          white */ {"firingPort":"background", "inputPortValues":{"background":"#000f", "foreground":"#ffff", "blendMode":"linear-dodge", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":1  ,"g":1  ,"b":1  ,"a":1  }}},
+/* opaque   dark red + opaque     dark green @ 100% = opaque    dark yellow */ {"firingPort":"background", "inputPortValues":{"background":"#600f", "foreground":"#060f", "blendMode":"linear-dodge", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0.4,"g":0.4,"b":0  ,"a":1  }}},
+/* opaque   dark red + opaque     dark red   @ 100% = opaque     bright red */ {"firingPort":"background", "inputPortValues":{"background":"#600f", "foreground":"#600f", "blendMode":"linear-dodge", "foregroundOpacity":1  }, "outputPortValues":{"blendedColor":{"r":0.8,"g":0  ,"b":0  ,"a":1  }}},
+]}

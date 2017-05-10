@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "type.h"
+#include "VuoTime.h"
 #include "VuoTimeFormat.h"
 #include "VuoList_VuoTimeFormat.h"
 
@@ -22,6 +23,7 @@ VuoModuleMetadata({
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "dependencies" : [
+						  "VuoTime",
 						  "VuoList_VuoTimeFormat"
 					  ]
 				  });
@@ -128,32 +130,34 @@ VuoList_VuoTimeFormat VuoTimeFormat_getAllowedValues(void)
  */
 char *VuoTimeFormat_getSummary(const VuoTimeFormat value)
 {
-	char *valueAsString = "Date & Time — Sortable (UTC)";
-
-	if (value == VuoTimeFormat_DateTimeShort12)
-		valueAsString = "Date & Time — Short — 12-hour";
+	VuoText formatted = VuoTime_format(VuoTime_getCurrent(), value);
+	VuoLocal(formatted);
+	if (value == VuoTimeFormat_DateTimeSortable)
+		return VuoText_format("Date & Time — Sortable, UTC (%s)", formatted);
+	else if (value == VuoTimeFormat_DateTimeShort12)
+		return VuoText_format("Date & Time — Short — 12-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeShort24)
-		valueAsString = "Date & Time — Short — 24-hour";
+		return VuoText_format("Date & Time — Short — 24-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeMedium12)
-		valueAsString = "Date & Time — Medium — 12-hour";
+		return VuoText_format("Date & Time — Medium 12-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeMedium24)
-		valueAsString = "Date & Time — Medium — 24-hour";
+		return VuoText_format("Date & Time — Medium 24-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeLong12)
-		valueAsString = "Date & Time — Long — 12-hour";
+		return VuoText_format("Date & Time — Long 12-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateTimeLong24)
-		valueAsString = "Date & Time — Long — 24-hour";
+		return VuoText_format("Date & Time — Long 24-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_DateShort)
-		valueAsString = "Date — Short";
+		return VuoText_format("Date — Short (%s)", formatted);
 	else if (value == VuoTimeFormat_DateMedium)
-		valueAsString = "Date — Medium";
+		return VuoText_format("Date — Medium (%s)", formatted);
 	else if (value == VuoTimeFormat_DateLong)
-		valueAsString = "Date — Long";
+		return VuoText_format("Date — Long (%s)", formatted);
 	else if (value == VuoTimeFormat_Time12)
-		valueAsString = "Time — 12-hour";
+		return VuoText_format("Time — 12-hour (%s)", formatted);
 	else if (value == VuoTimeFormat_Time24)
-		valueAsString = "Time — 24-hour";
-
-	return strdup(valueAsString);
+		return VuoText_format("Time — 24-hour (%s)", formatted);
+	else
+		return strdup(formatted);
 }
 
 /**

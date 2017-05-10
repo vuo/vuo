@@ -37,7 +37,9 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		noiseCoordinate *= scale;
 		noiseCoordinate -= center;
 		float intensity = snoise3D1D(noiseCoordinate) / 2. + .5;
-		gl_FragColor = mix(colorA, colorB, intensity);
+
+		vec4 mixed = mix(colorA, colorB, intensity);
+		gl_FragColor = mixed;
 	}
 );
 

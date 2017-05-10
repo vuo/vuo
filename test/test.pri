@@ -31,7 +31,7 @@ QMAKE_LFLAGS += \
 	$$FFMPEG_ROOT/lib/libavutil.dylib \
 	$$FFMPEG_ROOT/lib/libswresample.dylib \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
-	$$FREEIMAGE_ROOT/lib/libFreeImage.a \
+	$$ROOT/framework/Vuo.framework/Modules/libfreeimage.dylib \
 	$$CURL_ROOT/lib/libcurl.a \
 	-lssl \
 	-lcrypto \
@@ -52,6 +52,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
+	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoBase64.o \
 	$$ROOT/library/VuoCglPixelFormat.o \
 	$$ROOT/library/VuoDisplayRefresh.o \

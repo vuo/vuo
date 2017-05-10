@@ -69,6 +69,12 @@ void VuoVideo_setPlaybackLooping(VuoVideo player, VuoLoopType loop);
 double VuoVideo_getLastDecodedVideoTimestamp(VuoVideo player);
 
 /**
+ * Return the timestamp of the last decoded video frame minus the timestamp of the frame prior to that.
+ * If no frames have been decoded yet, 0 is returned.
+ */
+double VuoVideo_getLastFrameDelta(VuoVideo player);
+
+/**
  * Get the total duration of this movie in seconds.
  */
 double VuoVideo_getDuration(VuoVideo player);

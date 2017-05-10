@@ -27,6 +27,7 @@ void VuoEventLoop_processEvent(VuoEventLoopMode mode);
 void VuoEventLoop_break(void);
 void VuoEventLoop_switchToAppMode(void);
 bool VuoEventLoop_mayBeTerminated(void);
+unsigned long VuoEventLoop_getDispatchStrictMask(void);
 
 #ifdef __cplusplus
 }

@@ -36,11 +36,11 @@ private slots:
 
 		QTest::newRow("quad")			<< VuoMesh_makeQuadWithoutNormals()
 //										<< false
-										<< "Mesh containing: <ul><li>4 vertices, 2 triangles<br>with first position (-0.5, -0.5, 0, 1)</li></ul>";
+										<< "Mesh containing: <ul><li>4 vertices, 2 triangles<br>with first position (-0.5, -0.5, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>✓ texture coordinates</li></ul>";
 
 		QTest::newRow("tri")			<< VuoMesh_makeEquilateralTriangle()
 //										<< true
-										<< "Mesh containing: <ul><li>3 vertices in a strip of 1 triangle<br>with first position (-2.52368e-08, 0.57735, 0, 1)</li></ul>";
+										<< "Mesh containing: <ul><li>3 vertices in a strip of 1 triangle<br>with first position (-2.52368e-08, 0.57735, 0, 1)<br>✓ positions<br>✓ normals<br>✓ tangents<br>✓ bitangents<br>✓ texture coordinates</li></ul>";
 	}
 	void testSerializationAndSummary()
 	{

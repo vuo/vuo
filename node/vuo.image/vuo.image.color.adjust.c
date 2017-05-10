@@ -17,11 +17,12 @@ VuoModuleMetadata({
 					 "keywords" : [ "saturation", "desaturate", "grayscale", "greyscale", "tint", "tone", "chroma", "brightness", "contrast", "gamma", "exposure", "filter" ],
 					 "version" : "1.2.0",
 					 "node" : {
-						 "exampleCompositions" : [ ]
+						 "exampleCompositions" : [ "EnhanceBlue.vuo" ]
 					 }
 				 });
 
 static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 	include(hsl)
 
 	varying vec4 fragmentTextureCoordinate;
@@ -37,8 +38,7 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	void main(void)
 	{
 		// http://stackoverflow.com/questions/944713/help-with-pixel-shader-effect-for-brightness-and-contrast
-		vec4 pixelColor = texture2D(image, fragmentTextureCoordinate.xy);
-		pixelColor.rgb /= pixelColor.a;
+		vec4 pixelColor = VuoGlsl_sample(image, fragmentTextureCoordinate.xy);
 
 		// compensate for channels that are completely void - this allows a fully exposed pixel
 		// to always be white, regardless of starting value. .001 is the minimum resolution that
@@ -70,10 +70,6 @@ static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		pixelColor.r = pow(pixelColor.r, gamma);
 		pixelColor.g = pow(pixelColor.g, gamma);
 		pixelColor.b = pow(pixelColor.b, gamma);
-
-
-		// Return final pixel color.
-		pixelColor.rgb *= pixelColor.a;
 
 		gl_FragColor = pixelColor;
 	}

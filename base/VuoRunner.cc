@@ -285,6 +285,14 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executableP
 }
 
 /**
+ * @deprecated
+ */
+VuoRunner * VuoRunner::newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool deleteExecutableWhenFinished)
+{
+	return newSeparateProcessRunnerFromExecutable(executablePath, sourceDir, false, deleteExecutableWhenFinished);
+}
+
+/**
  * Creates a runner object that can run a composition in a new process
  * and replace the composition with a new version while it's running.
  *
@@ -921,6 +929,8 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string resourceD
 						  return;
 					  }
 
+					  VDebugLog("Loading composition…");
+
 					  if (dylibPath != compositionDylibPath)
 					  {
 						  if (shouldDeleteBinariesWhenFinished)
@@ -937,6 +947,7 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string resourceD
 					  {
 						  if (! paused)
 						  {
+							  VDebugLog("	Pausing…");
 							  vuoControlRequestSend(VuoControlRequestCompositionPause,NULL,0);
 							  vuoControlReplyReceive(VuoControlReplyCompositionPaused);
 						  }
@@ -948,6 +959,9 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string resourceD
 						  vuoInitMessageWithString(&messages[1], resourceDylibPath.c_str());
 						  vuoInitMessageWithString(&messages[2], compositionDiff.c_str());
 
+						  if (! paused)
+							  VDebugLog("	Replacing composition…");
+
 						  vuoLoaderControlRequestSend(VuoLoaderControlRequestCompositionReplace,messages,3);
 						  vuoLoaderControlReplyReceive(VuoLoaderControlReplyCompositionReplaced);
 
@@ -955,9 +969,12 @@ void VuoRunner::replaceComposition(string compositionDylibPath, string resourceD
 
 						  if (! paused)
 						  {
+							  VDebugLog("	Unpausing…");
 							  vuoControlRequestSend(VuoControlRequestCompositionUnpause,NULL,0);
 							  vuoControlReplyReceive(VuoControlReplyCompositionUnpaused);
 						  }
+
+						  VDebugLog("	Done.");
 					  }
 					  catch (exception &e)
 					  {
@@ -1076,11 +1093,15 @@ void VuoRunner::stop(void)
 						  if (it != allCompositionWritePipes.end())
 							  allCompositionWritePipes.erase(it);
 
-						  // Wait for child process to end.
-						  // Can't use waitpid() since it only waits on child processes, yet compositionPid is a grandchild.
-						  // Instead, do a blocking read() — the grandchild never writes anything to the pipe, and when the grandchild exits,
-						  // read() will return EOF (since it was the last process that had it open for writing).
-						  read(runnerReadCompositionWritePipe[0], &buf, 1);
+						  if (! lostContact)
+						  {
+							  // Wait for child process to end.
+							  // Can't use waitpid() since it only waits on child processes, yet compositionPid is a grandchild.
+							  // Instead, do a blocking read() — the grandchild never writes anything to the pipe, and when the grandchild exits,
+							  // read() will return EOF (since it was the last process that had it open for writing).
+							  read(runnerReadCompositionWritePipe[0], &buf, 1);
+						  }
+
 						  close(runnerReadCompositionWritePipe[0]);
 
 						  if (! lostContact)
@@ -1129,15 +1150,16 @@ void VuoRunner::cleanUpConnections(void)
 	zmq_close(ZMQControl);
 	ZMQControl = NULL;
 
-	listenCanceled = true;
-
-	// Break out of zmq_poll().
-	char z = 0;
-	zmq_msg_t message;
-	zmq_msg_init_size(&message, sizeof z);
-	memcpy(zmq_msg_data(&message), &z, sizeof z);
-	zmq_send(ZMQSelfSend, &message, 0);
-	zmq_msg_close(&message);
+	if (ZMQSelfSend)
+	{
+		// Break out of zmq_poll().
+		char z = 0;
+		zmq_msg_t message;
+		zmq_msg_init_size(&message, sizeof z);
+		memcpy(zmq_msg_data(&message), &z, sizeof z);
+		zmq_send(ZMQSelfSend, &message, 0);
+		zmq_msg_close(&message);
+	}
 
 	dispatch_semaphore_wait(endedListeningSemaphore, DISPATCH_TIME_FOREVER);
 	dispatch_semaphore_signal(endedListeningSemaphore);
@@ -1849,7 +1871,7 @@ vector<VuoRunner::Port *> VuoRunner::getCachedPublishedPorts(bool input)
 vector<VuoRunner::Port *> VuoRunner::refreshPublishedPorts(bool input)
 {
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	dispatch_source_t timeout = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+	dispatch_source_t timeout = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), queue);
 	dispatch_source_set_timer(timeout, dispatch_time(DISPATCH_TIME_NOW, 5*NSEC_PER_SEC), NSEC_PER_SEC, NSEC_PER_SEC/10);
 	dispatch_source_set_event_handler(timeout, ^{
 										  stopBecauseLostContact("The connection between the composition and runner timed out when trying to receive the list of published ports");
@@ -2238,12 +2260,16 @@ bool VuoRunner::listen(string &error)
 				}
 			}
 		}
-		else if (! listenCanceled)
+		else if (! listenCanceled)	// Either the 1-second timeout elapsed, or we got a stop-listening message from ZMQSelfSend
 		{
 			listenCanceled = true;
-			string dir, file, ext;
-			VuoFileUtilities::splitPath(executablePath, dir, file, ext);
-			stopBecauseLostContact("The connection between the composition ('" + file + "') and runner timed out while listening for telemetry.");
+			if ( ! (items[1].revents & ZMQ_POLLIN) )
+			{
+				// Timeout.
+				string dir, file, ext;
+				VuoFileUtilities::splitPath(executablePath, dir, file, ext);
+				stopBecauseLostContact("The connection between the composition ('" + file + "') and runner timed out while listening for telemetry.");
+			}
 		}
 	}
 

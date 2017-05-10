@@ -612,22 +612,35 @@ private slots:
 
 		{
 			map<string, set<string> > expectedNodesForTriggerOrNode;
-			expectedNodesForTriggerOrNode["FirePeriodically:fired"].insert("FirePeriodically");
-			expectedNodesForTriggerOrNode["FirePeriodically:fired"].insert("ShareValue1");
-			expectedNodesForTriggerOrNode["FirePeriodically:fired ShareValue1"].insert("HoldValue");
-			expectedNodesForTriggerOrNode["FirePeriodically:fired HoldValue"].insert("ShareValue2");
-			expectedNodesForTriggerOrNode["FirePeriodically:fired ShareValue2"].insert("MakeButton");
-			expectedNodesForTriggerOrNode["MakeButton:updatedLayer"].insert("MakeButton");
-			expectedNodesForTriggerOrNode["MakeButton:updatedLayer"].insert("MakeList");
-			expectedNodesForTriggerOrNode["MakeButton:updatedLayer"].insert("RenderLayersToWindow");
-			expectedNodesForTriggerOrNode["MakeButton:updatedLayer"].insert("HoldValue");
-			expectedNodesForTriggerOrNode["MakeButton:updatedLayer MakeList"].insert("RenderLayersToWindow");
-			expectedNodesForTriggerOrNode["MakeButton:updatedLayer RenderLayersToWindow"].insert("HoldValue");
-			expectedNodesForTriggerOrNode["MakeButton:pressed"].insert("MakeButton");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage"].insert("CaptureImageOfScreen");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage"].insert("ShareValue1");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage ShareValue1"].insert("ShareValue2");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage ShareValue2"].insert("BlendImages");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage BlendImages"].insert("MakeImageLayer");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("MakeList1");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeImageLayer"].insert("MakeList2");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeList1"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage MakeList2"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["CaptureImageOfScreen:capturedImage RenderLayersToImage"].insert("HoldValue");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("HoldValue");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("BlendImages");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("MakeImageLayer");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("MakeList1");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("MakeList2");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("RenderLayersToWindow");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("ShareValue2");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame ShareValue2"].insert("MakeButton");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame HoldValue"].insert("BlendImages");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame BlendImages"].insert("MakeImageLayer");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("MakeList1");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("MakeList2");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("HoldValue");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeList1"].insert("RenderLayersToWindow");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeList2"].insert("RenderLayersToImage");
+			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame RenderLayersToImage"].insert("HoldValue");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:showedWindow"].insert("RenderLayersToWindow");
+			// expectedNodesForTriggerOrNode["RenderLayersToWindow:renderedLayers"].insert("RenderLayersToWindow");
 			QTest::newRow("Triggers entering a feedback loop at different points") << "TriggersEnteringFeedback" << expectedNodesForTriggerOrNode;
 		}
 
@@ -894,7 +907,7 @@ private slots:
 		for (int i = 0; i < 2; ++i)
 		{
 			bool isTopLevelComposition = (i == 0);
-			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition);
+			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition, false);
 
 			Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
 			remove(bcPath.c_str());

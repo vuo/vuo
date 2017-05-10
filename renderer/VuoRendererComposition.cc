@@ -46,6 +46,7 @@
 
 #include <sys/stat.h>
 #include <regex.h>
+#include <stdexcept>
 
 #ifdef MAC
 #include <objc/runtime.h>
@@ -1100,8 +1101,15 @@ string VuoRendererComposition::takeSnapshot(void)
  */
 VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const QString &savePath, VuoCompiler *compiler, string &errString, VuoCompilerDriver *driver)
 {
+	try
+	{
+		// Before attempting to export, ensure at least 20 MB of disk space is available, since Mac OS X's 'ld' crashes if it runs out of disk space.
+		size_t freeSpace = VuoFileUtilities::getAvailableSpaceOnVolumeContainingPath(savePath.toUtf8().constData());
+		if (freeSpace < 20 * 1024 * 1024)
+			throw std::runtime_error("Not enough disk space");
+
 	// Set up the directory structure for the app bundle in a temporary location.
-	string tmpAppPath = createAppBundleDirectoryStructure();
+	string tmpAppPath = createAppBundleDirectoryStructure(savePath);
 
 	// Generate and bundle the composition executable.
 	string dir, file, ext;
@@ -1142,15 +1150,15 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 	string backedUpAppPath = "";
 	if (nameConflict)
 	{
-		string dir, file, ext;
-		VuoFileUtilities::splitPath(savePath.toUtf8().constData(), dir, file, ext);
-		backedUpAppPath = VuoFileUtilities::makeTmpDir(file);
-
-		rename(savePath.toUtf8().constData(), backedUpAppPath.c_str());
+		backedUpAppPath = VuoFileUtilities::makeTmpDirOnSameVolumeAsPath(savePath.toUtf8().data());
+		bool backupSucceeded = !rename(savePath.toUtf8().constData(), backedUpAppPath.c_str());
+		if (!backupSucceeded)
+			throw std::runtime_error(string("Couldn't back up existing app \"") + savePath.toUtf8().constData() + "\": " + strerror(errno));
 	}
 
 	// Move the generated app bundle to the desired save path.
 	bool saveSucceeded = (! rename(tmpAppPath.c_str(), savePath.toUtf8().constData()));
+	int renameError = errno;
 
 	if (!saveSucceeded)
 	{
@@ -1158,6 +1166,8 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 		// try to restore the backed-up app (if any).
 		if (nameConflict)
 			rename(backedUpAppPath.c_str(), savePath.toUtf8().constData());
+
+		errString = strerror(renameError);
 
 		return exportSaveFailure;
 	}
@@ -1170,6 +1180,13 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
 
 		return exportSuccess;
 	}
+
+	}
+	catch (const exception &e)
+	{
+		errString = e.what();
+		return exportSaveFailure;
+	}
 }
 
 /**
@@ -1177,46 +1194,48 @@ VuoRendererComposition::appExportResult VuoRendererComposition::exportApp(const 
  *
  * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
  * @return The path of the temporary .app bundle.
+ *
+ * @throw std::runtime_error The directory couldn't be created.
  */
-string VuoRendererComposition::createAppBundleDirectoryStructure()
+string VuoRendererComposition::createAppBundleDirectoryStructure(const QString &savePath)
 {
-	string appPath = VuoFileUtilities::makeTmpDir("VuoExportedApp");
+	string appPath = VuoFileUtilities::makeTmpDirOnSameVolumeAsPath(savePath.toUtf8().data());
 
 	string contentsPath = appPath + "/Contents";
-	mkdir(contentsPath.c_str(), 0755);
+	VuoFileUtilities::makeDir(contentsPath);
 
 	string macOSPath = contentsPath + "/MacOS";
-	mkdir(macOSPath.c_str(), 0755);
+	VuoFileUtilities::makeDir(macOSPath);
 
 	string resourcesPath = contentsPath + "/Resources";
-	mkdir(resourcesPath.c_str(), 0755);
+	VuoFileUtilities::makeDir(resourcesPath);
 
 	string resourcesFontsPath = contentsPath + "/Resources/Fonts";
-	mkdir(resourcesFontsPath.c_str(), 0755);
+	VuoFileUtilities::makeDir(resourcesFontsPath);
 
 	string frameworksPath = contentsPath + "/Frameworks";
-	mkdir(frameworksPath.c_str(), 0755);
+	VuoFileUtilities::makeDir(frameworksPath);
 
 	string vuoFrameworkPath = frameworksPath + "/Vuo.framework";
-	mkdir(vuoFrameworkPath.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworkPath);
 
 	string vuoFrameworksPathVersions = vuoFrameworkPath + "/Versions";
-	mkdir(vuoFrameworksPathVersions.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworksPathVersions);
 
 	string vuoFrameworksPathVersionsCurrent = vuoFrameworksPathVersions + "/" + VUO_VERSION_STRING;
-	mkdir(vuoFrameworksPathVersionsCurrent.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworksPathVersionsCurrent);
 
 	string vuoFrameworksPathVersionsCurrentFrameworks = vuoFrameworksPathVersionsCurrent + "/Frameworks";
-	mkdir(vuoFrameworksPathVersionsCurrentFrameworks.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworksPathVersionsCurrentFrameworks);
 
 	string vuoFrameworksPathVersionsCurrentModules = vuoFrameworksPathVersionsCurrent + "/Modules";
-	mkdir(vuoFrameworksPathVersionsCurrentModules.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworksPathVersionsCurrentModules);
 
 	string vuoFrameworksPathVersionsCurrentDocumentation = vuoFrameworksPathVersionsCurrent + "/Documentation";
-	mkdir(vuoFrameworksPathVersionsCurrentDocumentation.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworksPathVersionsCurrentDocumentation);
 
 	string vuoFrameworksPathVersionsCurrentLicenses = vuoFrameworksPathVersionsCurrent + "/Documentation/Licenses";
-	mkdir(vuoFrameworksPathVersionsCurrentLicenses.c_str(), 0755);
+	VuoFileUtilities::makeDir(vuoFrameworksPathVersionsCurrentLicenses);
 
 	return appPath;
 }
@@ -1357,6 +1376,8 @@ void VuoRendererComposition::bundleResourceFiles(string targetResourceDir, bool 
 						appDir.mkpath(modifiedRelativeDir.c_str());
 
 					QString targetFilePath = appDir.filePath(QDir(modifiedRelativeDir.c_str()).filePath(resourceFileName.c_str()));
+
+					VDebugLog("Copying \"%s\" (from %s:%s)", url, node->getTitle().c_str(), port->getClass()->getName().c_str());
 					copyFileOrDirectory(sourceFilePath.toUtf8().constData(), targetFilePath.toUtf8().constData());
 
 					if (isSupportedSceneFile(sourceFilePath.toUtf8().constData()))
@@ -1450,13 +1471,15 @@ string VuoRendererComposition::modifyResourcePathForNewDir(string path, QDir new
 
 /**
  * Recursively copies the provided file or directory from @c sourcePath to @c targetPath.
+ *
+ * @throw std::runtime_error The file couldn't be copied.
  */
 void VuoRendererComposition::copyFileOrDirectory(string sourcePath, string targetPath)
 {
 	QFileInfo sourceFileInfo = QFileInfo(sourcePath.c_str());
 
 	if (sourceFileInfo.isFile())
-		QFile::copy(sourcePath.c_str(),targetPath.c_str());
+		VuoFileUtilities::copyFile(sourcePath, targetPath);
 
 	else if (sourceFileInfo.isDir())
 	{
@@ -1493,7 +1516,10 @@ void VuoRendererComposition::bundleAuxiliaryFilesForSceneFile(QString sourceFile
 		QString sourceFile = QString(sourceDirName.c_str()) + QDir::separator() + auxiliaryFile;
 		QString targetFile = QString(targetDirName.c_str()) + QDir::separator() + auxiliaryFile;
 		if (!QFileInfo(targetFile).exists())
+		{
+			VDebugLog("Copying \"%s\"", QFileInfo(targetFile).fileName().toUtf8().constData());
 			copyFileOrDirectory(sourceFile.toUtf8().constData(), targetFile.toUtf8().constData());
+		}
 	}
 
 	// Bundle texture folders in the same directory as the mesh file.
@@ -1504,7 +1530,10 @@ void VuoRendererComposition::bundleAuxiliaryFilesForSceneFile(QString sourceFile
 		QString sourceTextureDir = QString(sourceDirName.c_str()) + QDir::separator() + textureFolderName;
 		QString targetTextureDir = QString(targetDirName.c_str()) + QDir::separator() + textureFolderName;
 		if (!QFileInfo(targetTextureDir).exists())
+		{
+			VDebugLog("Copying \"%s\"", QFileInfo(targetTextureDir).fileName().toUtf8().constData());
 			copyFileOrDirectory(sourceTextureDir.toUtf8().constData(), targetTextureDir.toUtf8().constData());
+		}
 	}
 
 	// @todo: Bundle texture folders in the parent directory of the mesh file.
@@ -1588,6 +1617,8 @@ bool VuoRendererComposition::hasURLType(VuoPort *port)
  * Otherwise, only files with the specified extension are copied.
  *
  * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ *
+ * @throw std::runtime_error The file couldn't be written.
  */
 void VuoRendererComposition::bundleVuoFrameworkFolder(string sourceVuoFrameworkPath, string targetVuoFrameworkPath, string onlyCopyExtension)
 {
@@ -1605,8 +1636,9 @@ void VuoRendererComposition::bundleVuoFrameworkFolder(string sourceVuoFrameworkP
 			VuoFileUtilities::splitPath(vuoFrameworkModuleName.toUtf8().constData(), dir, file, extension);
 
 			if (!onlyCopyExtension.length() || extension == onlyCopyExtension)
-				QFile::copy(sourceVuoFrameworkDir.filePath(vuoFrameworkModuleName),
-							targetVuoFrameworkDir.filePath(vuoFrameworkModuleName));
+				VuoFileUtilities::copyFile(
+							sourceVuoFrameworkDir.filePath(vuoFrameworkModuleName).toUtf8().constData(),
+							targetVuoFrameworkDir.filePath(vuoFrameworkModuleName).toUtf8().constData());
 		}
 	}
 }
@@ -1617,6 +1649,8 @@ void VuoRendererComposition::bundleVuoFrameworkFolder(string sourceVuoFrameworkP
  * Assumes that the "Frameworks" directory exists within the source and target directories already.
  *
  * Helper function for VuoRendererComposition::exportApp(const QString &savePath).
+ *
+ * @throw std::runtime_error The file couldn't be copied.
  */
 void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPath, string targetVuoFrameworkPath)
 {
@@ -1636,17 +1670,16 @@ void VuoRendererComposition::bundleVuoSubframeworks(string sourceVuoFrameworkPat
 			{
 				// Vuo.framework/Frameworks/<x>.framework
 				QDir targetVuoSubframeworkPath(targetVuoSubframeworksPath.filePath(subframeworkDirName));
-				mkdir(targetVuoSubframeworkPath.absolutePath().toUtf8().constData(), 0755);
+				VuoFileUtilities::makeDir(targetVuoSubframeworkPath.absolutePath().toUtf8().constData());
 
 				QDir sourceVuoSubframeworkPath(sourceVuoSubframeworksPath.filePath(subframeworkDirName));
 				QStringList subframeworkDirContentsList(sourceVuoSubframeworkPath.entryList(QDir::Files|QDir::Readable));
 
 				// Vuo.framework/Frameworks/<x>.framework/<topLevelFiles>
 				foreach (QString subframeworkTopLevelFile, subframeworkDirContentsList)
-				{
-					QFile::copy(sourceVuoSubframeworkPath.filePath(subframeworkTopLevelFile),
-								targetVuoSubframeworkPath.filePath(subframeworkTopLevelFile));
-				}
+					VuoFileUtilities::copyFile(
+								sourceVuoSubframeworkPath.filePath(subframeworkTopLevelFile).toUtf8().constData(),
+								targetVuoSubframeworkPath.filePath(subframeworkTopLevelFile).toUtf8().constData());
 			}
 		}
 	}

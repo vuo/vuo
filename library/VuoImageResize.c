@@ -26,6 +26,7 @@ VuoModuleMetadata({
  * Fragment shader that scales and offsets an image.
  */
 static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
@@ -40,7 +41,7 @@ static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	void main(void)
 	{
 		vec2 uv = (vec2(fragmentTextureCoordinate.x, fragmentTextureCoordinate.y)-offset) * scale;
-		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : texture2D(texture, uv);
+		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : VuoGlsl_sample(texture, uv);
 	}
 );
 

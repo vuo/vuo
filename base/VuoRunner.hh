@@ -73,7 +73,8 @@ public:
 	class Port;
 	static VuoRunner * newSeparateProcessRunnerFromCompositionFile(string compositionPath, bool continueIfRunnerDies = false, bool useExistingCache = false);
 	static VuoRunner * newSeparateProcessRunnerFromCompositionString(string compositionString, string name, string sourceDir, bool continueIfRunnerDies = false, bool useExistingCache = false);
-	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool continueIfRunnerDies = false, bool deleteExecutableWhenFinished = false);
+	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool continueIfRunnerDies, bool deleteExecutableWhenFinished);
+	static VuoRunner * newSeparateProcessRunnerFromExecutable(string executablePath, string sourceDir, bool deleteExecutableWhenFinished = false);
 	static VuoRunner * newSeparateProcessRunnerFromDynamicLibrary(string compositionLoaderPath, string compositionDylibPath, string resourceDylibPath, string sourceDir, bool continueIfRunnerDies = false, bool deleteDylibsWhenFinished = false);
 	static VuoRunner * newCurrentProcessRunnerFromDynamicLibrary(string dylibPath, string sourceDir, bool deleteDylibWhenFinished = false);
 	~VuoRunner(void);

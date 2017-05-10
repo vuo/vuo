@@ -19,10 +19,14 @@
 
 VuoModuleMetadata({
 					 "title" : "Save Image",
-					  "keywords" : [ "file", "write", "png", "jpeg", "tiff", "gif" ],
-					 "version" : "1.0.0",
+					 "keywords" : [
+						 "file", "write", "export",
+						 "png", "jpg", "jpeg", "tiff", "bmp", "hdr", "exr", "gif", "tga", "targa", "webp"
+					 ],
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "FreeImage",
+						 "VuoInteger",
 						 "VuoUrl"
 					 ],
 					 "node": {
@@ -99,7 +103,8 @@ void nodeEvent
 		VuoInputData(VuoImage) saveImage,
 		VuoInputEvent({"eventBlocking":"none","data":"saveImage"}) saveImageEvent,
 		VuoInputData(VuoBoolean, {"default":true, "name":"Overwrite URL"}) overwriteUrl,
-		VuoInputData(VuoImageFormat, {"default":"png"}) format
+		VuoInputData(VuoImageFormat, {"default":"png"}) format,
+		VuoOutputEvent() done
 )
 {
 	if(!saveImageEvent || saveImage == NULL)
@@ -110,16 +115,14 @@ void nodeEvent
 
 	// do the dance of the url format
 	VuoUrl extensioned_url = VuoText_make(path);
-	VuoRetain(extensioned_url);
+	VuoLocal(extensioned_url);
 	free(path);
 
 	VuoUrl normalized_url = VuoUrl_normalize(extensioned_url, true);
-	VuoRetain(normalized_url);
-	VuoRelease(extensioned_url);
+	VuoLocal(normalized_url);
 
 	VuoText absolute_path = VuoUrl_getPosixPath(normalized_url);
-	VuoRetain(absolute_path);
-	VuoRelease(normalized_url);
+	VuoLocal(absolute_path);
 
 	// if overwrite file is false, and the file already exists, return.
 	if(!overwriteUrl && access(absolute_path, F_OK) != -1)
@@ -128,11 +131,16 @@ void nodeEvent
 	}
 
 	unsigned int depth = VuoImage_getColorDepth(saveImage) == VuoImageColorDepth_8 ? 32 : 64;
+	VDebugLog("Input format : %s (depth = %dbpc)",VuoGl_stringForConstant(saveImage->glInternalFormat), depth/4);
 
 	unsigned int bufferFormat = GL_BGRA;
 	if (saveImage->glInternalFormat == GL_DEPTH_COMPONENT)
 		bufferFormat = GL_DEPTH_COMPONENT16;
-	else if (depth == 64)
+	else if (saveImage->glInternalFormat == GL_LUMINANCE
+		  || saveImage->glInternalFormat == GL_LUMINANCE16F_ARB)
+		bufferFormat = GL_R16;	// 1 channel, 16bit integer (just like depth)
+	else if (depth == 64
+		  || saveImage->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB)
 		bufferFormat = GL_RGBA16I_EXT;
 	const unsigned char *buffer = VuoImage_getBuffer(saveImage, bufferFormat);
 	if (!buffer)
@@ -144,9 +152,11 @@ void nodeEvent
 	int width = saveImage->pixelsWide;
 	int height = saveImage->pixelsHigh;
 
+	FreeImage_SetOutputMessage(FreeImageErrorHandler);
 	FIBITMAP *fibmp;
 	if (bufferFormat == GL_BGRA)
 	{
+		VDebugLog("Output format: RGBA 8bpc integer");
 		// VuoImage_getBuffer() provides premultiplied colors, but FreeImage expects un-premultiplied.
 		const unsigned char *b = (unsigned char *)buffer;
 		fibmp = FreeImage_AllocateT(FIT_BITMAP, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
@@ -156,9 +166,11 @@ void nodeEvent
 			for (long int x = 0; x < width; ++x)
 			{
 				float alpha = (float)b[3] / 255.;
-				d[0] = (float)b[0] / alpha;
-				d[1] = (float)b[1] / alpha;
-				d[2] = (float)b[2] / alpha;
+				// Clamp after un-premultiplying, to ensure the `unsigned char` values don't wrap
+				// https://b33p.net/kosada/node/11821
+				d[0] = VuoInteger_clamp((float)b[0] / alpha, 0, 255);
+				d[1] = VuoInteger_clamp((float)b[1] / alpha, 0, 255);
+				d[2] = VuoInteger_clamp((float)b[2] / alpha, 0, 255);
 				d[3] = b[3];
 				b += 4;
 				d += 4;
@@ -167,6 +179,8 @@ void nodeEvent
 	}
 	else if (bufferFormat == GL_RGBA16I_EXT)
 	{
+		bool mono = (saveImage->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB);
+		VDebugLog("Output format: RGBA 16bpc integer%s", mono?" (mono)":"");
 		// VuoImage_getBuffer() provides premultiplied colors, but FreeImage expects un-premultiplied.
 		const unsigned short *b = (const unsigned short *)buffer;
 		fibmp = FreeImage_AllocateT(FIT_RGBA16, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
@@ -176,17 +190,21 @@ void nodeEvent
 			for (long int x = 0; x < width; ++x)
 			{
 				float alpha = (float)b[3] / 65535.;
-				d[0] = (float)b[2] / alpha;
-				d[1] = (float)b[1] / alpha;
-				d[2] = (float)b[0] / alpha;
+				// Clamp after un-premultiplying, to ensure the `unsigned short` values don't wrap
+				// https://b33p.net/kosada/node/11821
+				d[0] = VuoInteger_clamp((float)b[       2] / alpha, 0, 65535);
+				d[1] = VuoInteger_clamp((float)b[mono?2:1] / alpha, 0, 65535);
+				d[2] = VuoInteger_clamp((float)b[mono?2:0] / alpha, 0, 65535);
 				d[3] = b[3];
 				b += 4;
 				d += 4;
 			}
 		}
 	}
-	else if (bufferFormat == GL_DEPTH_COMPONENT16)
+	else if (bufferFormat == GL_DEPTH_COMPONENT16
+		  || bufferFormat == GL_R16)
 	{
+		VDebugLog("Output format: mono 16bpc integer");
 		const unsigned short *b = (const unsigned short *)buffer;
 		fibmp = FreeImage_AllocateT(FIT_UINT16, width, height, 16, 0, 0, 0);
 		for (long int y = 0; y < height; ++y)
@@ -219,15 +237,17 @@ void nodeEvent
 
 		case VuoImageFormat_TIFF:
 		{
-			FIBITMAP* img = FreeImage_ConvertTo24Bits(fibmp);
-			FreeImage_Save(FIF_TIFF, img, absolute_path, 0);
-			FreeImage_Unload(img);
+			FreeImage_Save(FIF_TIFF, fibmp, absolute_path, 0);
 		}
 		break;
 
 		case VuoImageFormat_BMP:
 		{
-			FreeImage_Save(FIF_BMP, fibmp, absolute_path, 0);
+			// `FreeImage_Save(FIF_BMP, …)` fails when called with >32bpp images, so reduce it first.
+			FIBITMAP *img32 = FreeImage_ConvertTo32Bits(fibmp);
+			VuoDefer(^{ FreeImage_Unload(img32); });
+
+			FreeImage_Save(FIF_BMP, img32, absolute_path, 0);
 		}
 		break;
 
@@ -249,24 +269,57 @@ void nodeEvent
 
 		case VuoImageFormat_GIF:
 		{
-			FIBITMAP* img = FreeImage_ConvertTo8Bits(fibmp);
-			FreeImage_Save(FIF_GIF, img, absolute_path, 0);
-			FreeImage_Unload(img);
+			// GIFs are <=8bpp.  `FreeImage_ConvertTo8Bits()` converts to greyscale,
+			// which is probably not what most people will expect when using this node.
+			// Use `FreeImage_ColorQuantize()` instead since it tries to retain some colors.
+
+			// `FreeImage_ColorQuantize()` can only deal with 24bit images.
+			FIBITMAP *img24 = FreeImage_ConvertTo24Bits(fibmp);
+			VuoDefer(^{ FreeImage_Unload(img24); });
+
+			// Quantize to 254 colors, leaving one for transparency.
+			FIBITMAP *imgQuant = FreeImage_ColorQuantizeEx(img24, FIQ_WUQUANT, 254, 0, NULL);
+			VuoDefer(^{ FreeImage_Unload(imgQuant); });
+
+			unsigned char transparentIndex = 255;
+			FreeImage_SetTransparentIndex(imgQuant, transparentIndex);
+
+			// Find fully-transparent pixels in the 32bpp image,
+			// and set the corresponding pixel in the 8bpp image to the transparent index.
+			FIBITMAP *img32 = FreeImage_ConvertTo32Bits(fibmp);
+			VuoDefer(^{ FreeImage_Unload(img32); });
+			for (long int y = 0; y < height; ++y)
+			{
+				unsigned char *rgba    = (unsigned char *)FreeImage_GetScanLine(img32, y);
+				unsigned char *indexed = (unsigned char *)FreeImage_GetScanLine(imgQuant, y);
+				for (long int x = 0; x < width; ++x)
+					if (rgba[x*4 + 3] == 0)
+						indexed[x] = transparentIndex;
+			}
+
+			FreeImage_Save(FIF_GIF, imgQuant, absolute_path, 0);
 		}
 		break;
 
 		case VuoImageFormat_TARGA:
 		{
-			FreeImage_Save(FIF_TARGA, fibmp, absolute_path, 0);
+			// `FreeImage_Save(FIF_TARGA, …)` fails when called with >32bpp images, so reduce it first.
+			FIBITMAP *img32 = FreeImage_ConvertTo32Bits(fibmp);
+			VuoDefer(^{ FreeImage_Unload(img32); });
+
+			FreeImage_Save(FIF_TARGA, img32, absolute_path, 0);
 		}
 		break;
 
-		// @todo https://b33p.net/kosada/node/10022
-		// case VuoImageFormat_WEBP:
-		// {
-		// 	FreeImage_Save(FIF_WEBP, fibmp, absolute_path, 0);
-		// }
-		// break;
+		case VuoImageFormat_WEBP:
+		{
+			// `FreeImage_Save(FIF_WEBP, …)` fails when called with >32bpp images, so reduce it first.
+			FIBITMAP *img32 = FreeImage_ConvertTo32Bits(fibmp);
+			VuoDefer(^{ FreeImage_Unload(img32); });
+
+			FreeImage_Save(FIF_WEBP, img32, absolute_path, 0);
+		}
+		break;
 
 		default:
 		{
@@ -274,8 +327,6 @@ void nodeEvent
 		}
 		break;
 	}
-
-	VuoRelease(absolute_path);
 
 	FreeImage_Unload(fibmp);
 }

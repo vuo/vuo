@@ -20,6 +20,7 @@ VuoModuleMetadata({
 				 });
 
 static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 
@@ -33,11 +34,14 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	void main(void)
 	{
 		vec4 col = texture2D(texture, fragmentTextureCoordinate.xy);
+		col.a = clamp(col.a, 0., 1.);	// for floating-point textures
+
 		float dist = distance(fragmentTextureCoordinate.xy, vec2(0.5,0.5));
-		vec3 mixed = mix(edgeColor.rgb * edgeColor.a, col.rgb * col.a, smoothstep(outerRadius, innerRadius, dist) );
+		vec3 mixed = mix(edgeColor.rgb, col.rgb, smoothstep(outerRadius, innerRadius, dist) );
 		float a = mix(edgeColor.a, col.a, smoothstep(outerRadius, innerRadius, dist));
 
-		gl_FragColor = replaceOpacity ? vec4(mixed, a) : mix(col, vec4(mixed, a), edgeColor.a);
+		vec4 mixed2 = replaceOpacity ? vec4(mixed,a) : mix(col, vec4(mixed, a), edgeColor.a);
+		gl_FragColor = mixed2;
 	}
 );
 

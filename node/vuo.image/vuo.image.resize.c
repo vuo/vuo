@@ -11,7 +11,7 @@
 #include "VuoImageRenderer.h"
 #include "VuoSizingMode.h"
 #include "VuoImageResize.h"
- 
+
 VuoModuleMetadata({
 					  "title" : "Resize Image",
 					  "keywords" : [ "size", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
@@ -56,8 +56,14 @@ void nodeInstanceEvent
 		VuoInputData(VuoInteger, {"default":480}) height,
 		VuoOutputData(VuoImage) resizedImage
 )
-{	
-	*resizedImage = VuoImageResize_resize(image, (*instance)->shader, (*instance)->imageRenderer, sizingMode, width, height);
+{
+	if(!image)
+		return;
+
+	if(image->pixelsWide == width && image->pixelsHigh == height)
+		*resizedImage = image;
+	else
+		*resizedImage = VuoImageResize_resize(image, (*instance)->shader, (*instance)->imageRenderer, sizingMode, width, height);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)

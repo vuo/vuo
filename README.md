@@ -135,8 +135,8 @@ Install Qt 5.3.1:
 
     # https://bugreports.qt.io/browse/QTBUG-44620
     # https://b33p.net/kosada/node/11273
-    curl -OL https://b33p.net/sites/default/files/qt-colorpanel-size.patch
-    patch -p1 < qt-colorpanel-size.patch
+    curl -OL https://b33p.net/sites/default/files/qt-colorpanel-size_1.patch
+    patch -p1 < qt-colorpanel-size_1.patch
 
     # https://bugreports.qt.io/browse/QTBUG-31406
     # https://b33p.net/kosada/node/6228
@@ -234,25 +234,26 @@ If you're running any version of Mac OS X:
 ### FreeImage
 
     cd /tmp
-    curl -OL http://downloads.sourceforge.net/freeimage/FreeImage3154.zip
-    unzip FreeImage3154.zip
-    cd FreeImage
-
-If you're running Mac OS 10.8 or earlier:
-
-    curl -OL http://sourceforge.net/p/freeimage/bugs/228/attachment/Makefile.osx2
-    make -f Makefile.osx2
-
-If you're running Mac OS 10.9:
-
-    curl -OL http://sourceforge.net/p/freeimage/bugs/_discuss/thread/33613606/8561/attachment/Makefile.osx-10.9
-    make -f Makefile.osx-10.9
-
-If you're running any version of Mac OS X:
-
-    mkdir -p /usr/local/Cellar/freeimage/3.15.4/{lib,include}
-    cp libfreeimage.a-x86_64 /usr/local/Cellar/freeimage/3.15.4/lib/libfreeimage.a
-    cp Source/FreeImage.h /usr/local/Cellar/freeimage/3.15.4/include/
+    curl -OL http://downloads.sourceforge.net/freeimage/FreeImage3170.zip
+    unzip FreeImage3170.zip
+    mv FreeImage FreeImage3170
+    rm -Rf FreeImage3170/Source/LibJPEG
+    curl -OL http://downloads.sourceforge.net/project/libjpeg-turbo/1.4.2/libjpeg-turbo-1.4.2.tar.gz
+    tar zxf libjpeg-turbo-1.4.2.tar.gz
+    mv libjpeg-turbo-1.4.2 FreeImage3170/Source/LibJPEG
+    cd FreeImage3170/Source/LibJPEG
+    NASM=/usr/local/Cellar/yasm/1.2.0/bin/yasm ./configure
+    make -j9
+    # Make will output some "ignoring" warnings you can ignore.
+    cd ../..
+    curl -OL https://b33p.net/sites/default/files/freeimage3170-makefile_0.patch
+    patch -p1 < freeimage3170-makefile_0.patch
+    bash gensrclist.sh
+    make -j9
+    # Make will output some warnings you can ignore.
+    mkdir -p /usr/local/Cellar/freeimage/3.17.0/{lib,include}
+    cp libfreeimage-3.17.0.dylib-x86_64 /usr/local/Cellar/freeimage/3.17.0/lib/libfreeimage.dylib
+    cp Source/FreeImage.h /usr/local/Cellar/freeimage/3.17.0/include/
 
 ### cURL
 
@@ -335,36 +336,27 @@ If you're running any version of Mac OS X:
 If you're running any version of Mac OS X:
 
     cd /tmp
-    curl -OL http://downloads.sourceforge.net/project/assimp/assimp-3.1/assimp-3.1.1.zip
-    unzip assimp-3.1.1.zip
-    cd assimp-3.1.1
-    # Disable Blender BMesh triangulation (it's crashy).
-    # https://vuo.org/node/834
-    # https://b33p.net/kosada/node/10594
-    curl -OL https://github.com/assimp/assimp/commit/b483be30691803ce77cdb605f519ddbb4c07a040.patch
-    patch -p1 < b483be30691803ce77cdb605f519ddbb4c07a040.patch
-    # Collapse multiple spaces in OBJ files.
-    # https://vuo.org/node/945
-    # https://b33p.net/kosada/node/11103
-    curl -OL https://github.com/assimp/assimp/commit/36c82fe5b05bfb15bc3b999d521b9ca26367992e.patch
-    patch -p1 < 36c82fe5b05bfb15bc3b999d521b9ca26367992e.patch
-    curl -OL https://github.com/assimp/assimp/commit/0c5605d07df4f3faa0be7b55cc197ff979f35d84.patch
-    patch -p1 < 0c5605d07df4f3faa0be7b55cc197ff979f35d84.patch
+    curl -L https://github.com/assimp/assimp/archive/v3.2.tar.gz -o assimp-3.2.0.tar.gz
+    tar zxf assimp-3.2.0.tar.gz
+    mv assimp-3.2 assimp-3.2.0
+    cd assimp-3.2.0
 
-If you're running Mac OS 10.9 or 10.10:
+If you're running Mac OS 10.9 or 10.10 or 10.11:
 
-    cmake -DCMAKE_C_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang' -DCMAKE_CXX_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang++' -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=ON -DBUILD_SHARED_LIBS=OFF -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF
+    cmake -DCMAKE_C_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang' -DCMAKE_CXX_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang++' -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DCMAKE_COMPILER_IS_GNUCC=ON -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=OFF -DBUILD_SHARED_LIBS=ON -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF -DASSIMP_BUILD_TESTS=OFF
+    # You may see a warning about `MACOSX_RPATH`; this is safe to ignore.
 
 If you're running Mac OS 10.7 or 10.8:
 
-    cmake -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=ON -DBUILD_SHARED_LIBS=OFF -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF
+    cmake -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DCMAKE_COMPILER_IS_GNUCC=ON -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=OFF -DBUILD_SHARED_LIBS=ON -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF -DASSIMP_BUILD_TESTS=OFF
 
 If you're running any version of Mac OS X:
 
     make -j9
-    mkdir -p /usr/local/Cellar/assimp/3.1.1/{lib,include}
-    cp lib/libassimp.a /usr/local/Cellar/assimp/3.1.1/lib
-    cp -R include/assimp/ /usr/local/Cellar/assimp/3.1.1/include/
+    mkdir -p /usr/local/Cellar/assimp/3.2.0/{lib,include}
+    cp lib/libassimp.3.2.0.dylib /usr/local/Cellar/assimp/3.2.0/lib/libassimp.dylib
+    cp -R include/assimp/ /usr/local/Cellar/assimp/3.2.0/include/
+    ln -s /usr/local/Cellar/assimp/3.2.0/include /usr/local/Cellar/assimp/3.2.0/include/assimp
 
 ### Discount
 

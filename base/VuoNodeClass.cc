@@ -161,6 +161,7 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.last.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.populated.")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.list.get.random.")
+			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.point.length")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.scene.frameRequest.get")
 			|| VuoStringUtilities::beginsWith(nodeClassName, "vuo.transform.get.")
 			|| nodeClassName == "vuo.audio.mix"
