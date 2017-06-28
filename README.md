@@ -1,3 +1,5 @@
+![](https://tokei.rs/b1/github/vuo/vuo) ![](https://tokei.rs/b1/github/vuo/vuo?category=comments)
+
 These instructions are for building Vuo Base, Vuo Compiler, Vuo Renderer, Vuo Runtime, and the built-in Vuo Nodes and Types from source code.
 
 Vuo's source code is available so you can learn about how Vuo works, tinker with it, and maybe even help develop Vuo.
