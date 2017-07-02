@@ -12,6 +12,7 @@
 
 #include "VuoGlContext.h"
 #include "VuoVideoFrame.h"
+#include "VuoVideoInputDevice.h"
 
 /**
  * Manages receiving video frames via a QTCaptureSession.
@@ -25,11 +26,11 @@
 
 	CVImageBufferRef 					mCurrentImageBuffer;				///< The latest received frame.
 	void (*callback)(VuoVideoFrame);												///< Called when a frame is received.
+	double								lastFrameReceived;					///< The timestamp at which the last frame was received.
 
 	NSArray 							*mVideoInputDevices;				///< All available video input devices. @todo Make this a singleton?
 
-	NSString 							*mDesiredDeviceName;				///< The desired device name.
-	NSString 							*mDesiredDeviceID;					///< The desired device id.
+	VuoVideoInputDevice 				desiredDevice;						///< The device the user has requested.
 	BOOL 								userWantsRunning;					///< Was startRunning called (without calling stopRunning)?
 	CVOpenGLTextureCacheRef 			textureCache;						///< GL_TEXTURE_RECTANGLEs from the video feed
 	VuoGlContext						glContext;							///< The OpenGL context to convert CVImageBufferRef to gl textures with.
@@ -40,11 +41,11 @@
  *	first using ID, then name.  If a matching device is not found, the listener will wait for a device
  *	matching the description until it is either registered, or told to stop.
  */
-- (BOOL) initWithDevice:(NSString*)name id:(NSString*)uniqueID callback:(void(*)(VuoVideoFrame))receivedFrame;
+- (BOOL) initWithDevice:(VuoVideoInputDevice)device callback:(void(*)(VuoVideoFrame))receivedFrame;
 - (BOOL) isInitialized;
 - (BOOL) isRunning;
 
-- (void) setInputDevice:(NSString*)name id:(NSString*)uniqueID;
+- (void) setInputDevice:(VuoVideoInputDevice)device;
 
 - (void) startRunning;
 - (void) stopRunning;

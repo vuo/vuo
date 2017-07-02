@@ -10,8 +10,12 @@
 #ifndef VUOINPUTEDITORPOINT3D_HH
 #define VUOINPUTEDITORPOINT3D_HH
 
-#include "VuoInputEditorWithLineEdit.hh"
+#include "VuoInputEditorWithDialog.hh"
+#include "VuoDoubleSpinbox.hh"
 
+extern "C" {
+#include "VuoPoint3d.h"
+}
 
 /**
  * A VuoInputEditorPoint3d factory.
@@ -45,45 +49,43 @@ public:
  *   }
  * }
  */
-class VuoInputEditorPoint3d : public VuoInputEditorWithLineEdit
+class VuoInputEditorPoint3d : public VuoInputEditorWithDialog
 {
 	Q_OBJECT
 
 protected:
 	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
 	json_object * getAcceptedValue(void);
-	QString convertToLineEditFormat(json_object *value);
-	json_object * convertFromLineEditsFormat(const QString &xValueAsString,
-											 const QString &yValueAsString,
-											 const QString &zValueAsString);
-	bool eventFilter(QObject *object, QEvent *event);
+
+	/**
+	 * Indicates that this input editor supports tabbing.
+	 */
+	virtual bool supportsTabbingBetweenPorts(void) { return true; }
 
 private:
-	enum coord
-	{
-		x,
-		y,
-		z
+
+	enum coord {
+		coord_x, coord_y, coord_z
 	};
 
-	map<coord, double> suggestedMinForCoord;	///< The minimum <coord>-value selectable via spinbox or slider.
-	map<coord, double> suggestedMaxForCoord;	///< The maximum <coord>-value selectable via spinbox or slider.
-	map<coord, double> suggestedStepForCoord;	///< The spinbox step value for <coord>.
-	map<coord, QLineEdit *> lineEditForCoord;
-	map<coord, QSlider *> sliderForCoord;
-	map<coord, QDoubleSpinBox *> spinBoxForCoord;
-	map<coord, QLabel *> labelForCoord;
+	VuoPoint3d current;							///< The current value.
+	map<coord, double> suggestedMinForCoord; 	///< The minimum values selectable via spinbox or slider.
+	map<coord, double> suggestedMaxForCoord;	///< The maximum values selectable via spinbox or slider.
+	map<coord, double> suggestedStepForCoord;	///< The step value via spinbox or slider.
 
-	int lineEditValueToScaledSliderValue(double lineEditValue, coord whichCoord);
-	double sliderValueToScaledLineEditValue(int sliderValue, coord whichCoord);
+	map<coord, QSlider*> sliderForCoord; ///< For use when both the suggestedMinX and suggestedMaxX port annotation values are provided by the node class designer.
+	map<coord, VuoDoubleSpinBox*> spinboxForCoord; ///< For use when both the suggestedMinX and suggestedMaxX port annotation values are provided by the node class designer.
 
-	void updateLineEditValue(int newSliderValue, coord whichCoord);
+	bool getCoordFromQObject(QObject* sender, VuoInputEditorPoint3d::coord* whichCoord); ///< Determine what coord a GUI field belongs to.
+	void setCoord(coord c, double value); ///< Set the coordinate value on current.
+
+	VuoDoubleSpinBox* initSpinBox(coord whichCoord, QDialog& dialog, double initialValue);
+	QSlider* initSlider(coord whichCoord, QDialog& dialog, double initialValue);
 
 private slots:
-	void updateSliderValue(QString newLineEditText);
-	void updateLineEditValue();
-	void updateLineEditValue(int newSliderValue);
 
+	void onSliderUpdate(int sliderValue);
+	void onSpinboxUpdate(QString spinboxValue);
 	void emitValueChanged();
 };
 

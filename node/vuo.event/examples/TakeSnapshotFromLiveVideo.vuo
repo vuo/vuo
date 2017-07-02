@@ -1,0 +1,27 @@
+/**
+ * @file
+ * Captures and displays the first image from the video camera. Each time the mouse is clicked, updates the display to show the most recent image from the video camera.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AllowFirstValue2 [type="vuo.event.allowFirstValue.VuoVideoFrame" version="1.0.0" label="Allow First Value|<refresh>refresh\l|<value>value\l|<reset>reset\l|<firstValue>firstValue\r" pos="375,225" fillcolor="violet"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="825,330"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,165" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="619,251" fillcolor="green"];
+ReceiveLiveVideo [type="vuo.video.receive" version="1.0.2" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="165,150" fillcolor="yellow" _receivedFrame_eventThrottling="drop"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="135,270" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="660,225" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+AllowFirstValue2:firstValue -> ConvertFrameToImage:frame;
+ConvertFrameToImage:image -> RenderImageToWindow:image;
+FireOnStart2:started -> ReceiveLiveVideo:start;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+ReceiveLiveVideo:receivedFrame -> AllowFirstValue2:value;
+ReceiveMouseButtons:released -> AllowFirstValue2:reset;
+RenderImageToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
+}

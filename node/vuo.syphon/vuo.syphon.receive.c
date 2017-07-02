@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Image via Syphon",
 					  "keywords" : [ "application", "client", "frame", "get", "interprocess", "IOSurface", "output", "share", "video" ],
-					  "version" : "1.0.1",
+					  "version" : "1.0.2",
 					  "node": {
 						  "isInterface" : true,
 						  "exampleCompositions" : [ "ReceiveImages.vuo", "ReceiveImagesPreferablyFromVuo.vuo", "ReceiveImagesOnlyFromVuo.vuo" ]
@@ -63,9 +63,19 @@ void nodeInstanceTriggerStart
 	updateServer(*context, serverDescription, receivedImage);
 }
 
+void nodeInstanceTriggerUpdate
+(
+	VuoInputData(VuoSyphonServerDescription) serverDescription,
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoOutputTrigger(receivedImage, VuoImage)
+)
+{
+	updateServer(*context, serverDescription, receivedImage);
+}
+
 void nodeInstanceEvent
 (
-		VuoInputData(VuoSyphonServerDescription) serverDescription,
+		VuoInputData(VuoSyphonServerDescription, {"name":"Server"}) serverDescription,
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoOutputTrigger(receivedImage, VuoImage, {"eventThrottling":"drop"})
 )

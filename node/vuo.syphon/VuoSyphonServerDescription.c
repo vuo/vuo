@@ -16,7 +16,7 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					  "title" : "Syphon Server Description",
+					  "title" : "Syphon Server",
 					  "description" : "Syphon Server information.",
 					  "keywords" : ["syphon", "server", "pipe"],
 					  "version" : "1.0.0",
@@ -62,14 +62,23 @@ json_object * VuoSyphonServerDescription_getJson(const VuoSyphonServerDescriptio
 {
 	json_object *js = json_object_new_object();
 
-	json_object *uuidObject = VuoText_getJson(value.serverUUID);
-	json_object_object_add(js, "serverUUID", uuidObject);
+	if (value.serverUUID)
+	{
+		json_object *uuidObject = VuoText_getJson(value.serverUUID);
+		json_object_object_add(js, "serverUUID", uuidObject);
+	}
 
-	json_object *serverName = VuoText_getJson(value.serverName);
-	json_object_object_add(js, "serverName", serverName);
+	if (value.serverName)
+	{
+		json_object *serverName = VuoText_getJson(value.serverName);
+		json_object_object_add(js, "serverName", serverName);
+	}
 
-	json_object *applicationName = VuoText_getJson(value.applicationName);
-	json_object_object_add(js, "applicationName", applicationName);
+	if (value.applicationName)
+	{
+		json_object *applicationName = VuoText_getJson(value.applicationName);
+		json_object_object_add(js, "applicationName", applicationName);
+	}
 
 	return js;
 }

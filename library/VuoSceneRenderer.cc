@@ -1018,8 +1018,8 @@ static void VuoSceneRenderer_renderText(VuoSceneRendererInternal *sceneRenderer,
 	// since rootSceneObject is output as renderedLayers),
 	// use the shadow object to store overrides of the actual object.
 
-	soi->overrideMesh = VuoMesh_makeQuadWithoutNormals();
-	VuoRetain(soi->overrideMesh);
+	// soi->overrideMesh = VuoMesh_makeQuadWithoutNormals();
+	// VuoRetain(soi->overrideMesh);
 
 	soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_True;
 
@@ -1350,7 +1350,7 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 		requiredBytes += requiredBytes * multisample * fudge;
 
 	unsigned long maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(sceneRenderer->glContext);
-	if (requiredBytes > maximumTextureBytes)
+	if (maximumTextureBytes > 0 && requiredBytes > maximumTextureBytes)
 	{
 		VUserLog("Not enough graphics memory for a %dx%d (%d bytes/pixel * %d sample) render%s.  Requires %lu MB, have %lu MB.",
 				 sceneRenderer->viewportWidth, sceneRenderer->viewportHeight,

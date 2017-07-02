@@ -11,7 +11,7 @@
 #include "VuoSyphon.h"
 
 VuoModuleMetadata({
-					  "title" : "Get Server Description Values",
+					  "title" : "Get Syphon Server Values",
 					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video" ],
 					  "version" : "1.0.1",
 					  "node": {
@@ -25,7 +25,7 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-	VuoInputData(VuoSyphonServerDescription) serverDescription,
+	VuoInputData(VuoSyphonServerDescription, {"name":"Server"}) serverDescription,
 	VuoOutputData(VuoText) serverName,
 	VuoOutputData(VuoText) applicationName
 )

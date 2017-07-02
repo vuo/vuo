@@ -20,13 +20,13 @@ VuoModuleMetadata({
 						  "aac", "m4a", "ac3",
 						  "3gp", "amr"
 					  ],
-					  "version" : "1.1.0",
+					  "version" : "1.2.0",
 					  "dependencies" : [
 						  "VuoAudioFile"
 					  ],
 					  "node" : {
 						  "isInterface" : true,
-						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioFileAndLoop.vuo" ]
+						  "exampleCompositions" : [ "PlayAudioFile.vuo" ]
 					  }
 				 });
 
@@ -39,7 +39,7 @@ struct nodeInstanceData
 struct nodeInstanceData *nodeInstanceInit
 (
 		VuoInputData(VuoText) url,
-//		VuoInputData(VuoLoopType, {"default":"loop"}) loop,
+		VuoInputData(VuoLoopType) loop,
 		VuoInputData(VuoReal, {"default":""}) setTime
 )
 {
@@ -48,7 +48,7 @@ struct nodeInstanceData *nodeInstanceInit
 
 	context->af = VuoAudioFile_make(url);
 	VuoRetain(context->af);
-//	VuoAudioFile_setLoopType(context->af, loop);
+	VuoAudioFile_setLoopType(context->af, loop);
 	VuoAudioFile_setTime(context->af, setTime);
 
 	context->url = url;
@@ -67,13 +67,19 @@ void nodeInstanceTriggerStart
 	VuoAudioFile_enableTriggers((*context)->af, decodedChannels, finishedPlayback);
 }
 
+void nodeInstanceTriggerUpdate( VuoInputData(VuoLoopType, {"default":"none", "includeValues":["none","loop"]}) loop,
+								VuoInstanceData(struct nodeInstanceData *) context  )
+{
+	VuoAudioFile_setLoopType((*context)->af, loop);
+}
+
 void nodeInstanceEvent
 (
 		VuoInputData(VuoText, {"name":"URL"}) url,
 		VuoInputEvent({"eventBlocking":"none","data":"url"}) urlEvent,
 		VuoInputEvent({"eventBlocking":"none"}) play,
 		VuoInputEvent({"eventBlocking":"none"}) pause,
-//		VuoInputData(VuoLoopType, {"default":"loop"}) loop,
+		VuoInputData(VuoLoopType, {"default":"none", "includeValues":["none","loop"]}) loop,
 		VuoInputData(VuoReal, {"default":""}) setTime,
 		VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
 		VuoOutputTrigger(decodedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"enqueue"}),
@@ -95,7 +101,7 @@ void nodeInstanceEvent
 		(*context)->url = url;
 		VuoRetain((*context)->url);
 
-//		VuoAudioFile_setLoopType((*context)->af, loop);
+		VuoAudioFile_setLoopType((*context)->af, loop);
 		VuoAudioFile_setTime((*context)->af, setTime);
 
 		if (wasPlaying)
@@ -108,7 +114,7 @@ void nodeInstanceEvent
 	if (pause)
 		VuoAudioFile_pause((*context)->af);
 
-//	VuoAudioFile_setLoopType((*context)->af, loop);
+	VuoAudioFile_setLoopType((*context)->af, loop);
 
 	if (setTimeEvent)
 		VuoAudioFile_setTime((*context)->af, setTime);

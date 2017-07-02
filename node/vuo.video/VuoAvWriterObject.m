@@ -23,7 +23,6 @@ VuoModuleMetadata({
 #endif
 
 const double TIMEBASE = 1000.;  ///< The resolution with which to measure time.  This means 1./1000 sec.
-#define AUDIO_TIMEBASE VuoAudioSamples_sampleRate	///< The audio timebase.  Currently clamped to 48k.
 
 const long MIN_AUDIO_BITRATE = 64000;	///< Minimum audio bitrate used when encoding AAC.
 const long MAX_AUDIO_BITRATE = 320000;	///< Maximum audio bitrate used when encoding AAC.
@@ -72,13 +71,17 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 {
 	NSError *error = nil;
 
+	self.lastTimestamp = kCMTimeNegativeInfinity;
+
 	self.originalWidth = width;
 	self.originalHeight = height;
 
 	NSString* videoEncoding = AVVideoCodecJPEG;
 
 	if (format.imageEncoding == VuoMovieImageEncoding_H264)
+	{
 		videoEncoding = AVVideoCodecH264;
+	}
 	else if(format.imageEncoding == VuoMovieImageEncoding_ProRes4444)
 	{
 		if (!VuoAvWriterObject_isProResAvailable())
@@ -241,7 +244,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	return YES;
 }
 
-- (void) appendImage:(VuoImage)image
+- (void) appendImage:(VuoImage)image presentationTime:(double)timestamp
 {
 	if(image->pixelsWide != self.originalWidth || image->pixelsHigh != self.originalHeight)
 	{
@@ -255,14 +258,12 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		return;
 	}
 
-
 	if (VuoIsTrial())
 	{
 		VuoImage watermarkedImage = VuoImage_watermark(image);
 		VuoRetain(watermarkedImage);
 		image = watermarkedImage;
 	}
-
 
 	CVPixelBufferRef pb = nil;
 
@@ -308,45 +309,35 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		return;
 	}
 
-	CMTime presentationTime;
+	CMTime presentationTime = CMTimeMakeWithSeconds(timestamp, TIMEBASE);
 
-	if(self.firstFrame)
-	{
-		self.firstFrame = false;
-		self.startDate = [NSDate date];
-		presentationTime = CMTimeMake(0, TIMEBASE);
-	}
-	else
-	{
-		presentationTime = CMTimeMake([[NSDate date] timeIntervalSinceDate:self.startDate] * TIMEBASE, TIMEBASE);
-	}
-
-	if(CMTimeCompare(presentationTime, self.lastTimestamp) == 0)
-	{
+	while (CMTimeCompare(presentationTime, self.lastTimestamp) <= 0)
 		presentationTime.value++;
-	}
 
 	self.lastTimestamp = presentationTime;
 
-	// VUserLog("time: %f  interval: %f", [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime));
+//	VLog("video time: %lld %f  pts: %f  ts=%g", presentationTime.value, [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime),timestamp);
 
 	if (![self.avAdaptor appendPixelBuffer:pb withPresentationTime:presentationTime])
 	{
-		VUserLog("Problem at time: %lld (%f)", presentationTime.value, CMTimeGetSeconds(presentationTime));
+		VUserLog("Couldn't write frame %lld (%fs): %s", presentationTime.value, CMTimeGetSeconds(presentationTime), [[_assetWriter.error description] UTF8String]);
 	}
 
 	if(pb)
 		CVPixelBufferRelease(pb);
 }
 
-- (void) appendAudio:(VuoList_VuoAudioSamples) samples
+- (void) appendAudio:(VuoList_VuoAudioSamples) samples presentationTime:(VuoReal)timestamp
 {
 	long sampleCount = VuoAudioSamples_bufferSize;
 	long channelCount = VuoListGetCount_VuoAudioSamples(samples);
 
 	if(channelCount != self.originalChannelCount)
 	{
-		VUserLog("Error: Attempting to write %lu channels to a video file with %u channels!", channelCount, self.originalChannelCount);
+		if (self.originalChannelCount == -1)
+			VUserLog("Error: Attempting to write %lu audio channels to a silent movie.", channelCount);
+		else
+			VUserLog("Error: Attempting to write %lu audio channels to a movie with %d channels.", channelCount, self.originalChannelCount);
 		return;
 	}
 
@@ -362,10 +353,22 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	size_t buflen = sampleCount * channelCount * sizeof(float);
 
 	float* interleaved = (float*)malloc(sizeof(float) * sampleCount * channelCount);
+	VuoDefer(^{ free(interleaved); });
 
 	for(int n = 0; n < channelCount; n++)
 	{
-		double* channel = VuoListGetValue_VuoAudioSamples(samples, n+1).samples;
+		VuoAudioSamples s = VuoListGetValue_VuoAudioSamples(samples, n+1);
+		double *channel = s.samples;
+		if (!channel)
+		{
+			VUserLog("Error: Attempting to write a NULL audio sample buffer.  Skipping this audio frame.");
+			return;
+		}
+		if (s.sampleCount != VuoAudioSamples_bufferSize)
+		{
+			VUserLog("Error: Attempting to write an audio sample buffer that has %lld samples, but expected %lld.  Skipping this audio frame.", s.sampleCount, VuoAudioSamples_bufferSize);
+			return;
+		}
 
 		for(int i = 0; i < sampleCount; i++)
 		{
@@ -395,19 +398,28 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		return;
 	}
 
-	CMTime timestamp;
-	if(self.firstFrame)
-	{
-		self.firstFrame = false;
-		self.startDate = [NSDate date];
-		timestamp = CMTimeMake(0, AUDIO_TIMEBASE);
-	}
-	else
-	{
-		timestamp = CMTimeMake([[NSDate date] timeIntervalSinceDate:self.startDate] * AUDIO_TIMEBASE, AUDIO_TIMEBASE);
-	}
+	CMTime presentationTime = CMTimeMakeWithSeconds(timestamp, TIMEBASE);
+
+	// if(self.firstFrame)
+	// {
+	// 	self.firstFrame = false;
+	// 	self.startDate = [NSDate date];
+	// 	timestamp = CMTimeMake(0, AUDIO_TIMEBASE);
+	// }
+	// else
+	// {
+	// 	timestamp = CMTimeMake([[NSDate date] timeIntervalSinceDate:self.startDate] * AUDIO_TIMEBASE, AUDIO_TIMEBASE);
+	// }
+
 	// CMTime timestamp = CMTimeMake(self.audio_sample_position, VuoAudioSamples_sampleRate);
 	// self.audio_sample_position += sampleCount;
+
+	while (CMTimeCompare(presentationTime, self.lastTimestamp) <= 0)
+		presentationTime.value++;
+
+	self.lastTimestamp = presentationTime;
+
+//	VLog("audio time: %lld %f  pts: %f  ts=%g", presentationTime.value, [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime),timestamp);
 
 	status = CMAudioSampleBufferCreateWithPacketDescriptions(	kCFAllocatorDefault,
 																bbuf,
@@ -416,7 +428,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 																NULL,
 																self.audio_fmt_desc,
 																VuoAudioSamples_bufferSize,
-																timestamp,
+																presentationTime,
 																NULL, &sbuf);
 
 	if (status != noErr) {
@@ -429,8 +441,6 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 		VUserLog("AppendSampleBuffer error");
 	}
 
-	free(interleaved);
-
 	CFRelease(bbuf);
 	CFRelease(sbuf);
 	bbuf = nil;
@@ -442,14 +452,12 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	if( self.assetWriter )
 	{
 		[self.videoInput markAsFinished];
-		if(self.audioInput != nil) [self.audioInput markAsFinished];
 
-		[self.assetWriter finishWriting];		// deprecated @ 10.9
+		if(self.audioInput != nil)
+			[self.audioInput markAsFinished];
 
-		// AssetWriter releases inputs when it's dealloc'ed
-		// [self.videoInput release];
-		// if(self.audioInput != nil) [self.audioInput release];
-
+		// deprecated @ 10.9
+		[self.assetWriter finishWriting];
 		[self.assetWriter release];
 
 		self.assetWriter = nil;

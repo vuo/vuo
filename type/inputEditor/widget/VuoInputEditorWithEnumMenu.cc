@@ -33,11 +33,11 @@ VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree(json_object *
 	allowedValuesFunctionType allowedValuesFunction = (allowedValuesFunctionType)dlsym(RTLD_SELF, allowedValuesFunctionName.toUtf8().constData());
 
 	QString summaryFunctionName = this->type + "_getSummary";
-	typedef char *(*summaryFunctionType)(int);
+	typedef char *(*summaryFunctionType)(unsigned long);
 	summaryFunctionType summaryFunction = (summaryFunctionType)dlsym(RTLD_SELF, summaryFunctionName.toUtf8().constData());
 
 	QString jsonFunctionName = this->type + "_getJson";
-	typedef json_object *(*jsonFunctionType)(int);
+	typedef json_object *(*jsonFunctionType)(unsigned long);
 	jsonFunctionType jsonFunction = (jsonFunctionType)dlsym(RTLD_SELF, jsonFunctionName.toUtf8().constData());
 
 	QString listCountFunctionName = "VuoListGetCount_" + this->type;
@@ -45,42 +45,22 @@ VuoInputEditorMenuItem * VuoInputEditorWithEnumMenu::setUpMenuTree(json_object *
 	listCountFunctionType listCountFunction = (listCountFunctionType)dlsym(RTLD_SELF, listCountFunctionName.toUtf8().constData());
 
 	QString listValueFunctionName = "VuoListGetValue_" + this->type;
-	typedef int (*listValueFunctionType)(void *, unsigned long);
+	typedef unsigned long (*listValueFunctionType)(void *, unsigned long);
 	listValueFunctionType listValueFunction = (listValueFunctionType)dlsym(RTLD_SELF, listValueFunctionName.toUtf8().constData());
 
 	if (allowedValuesFunction && summaryFunction && jsonFunction && listCountFunction && listValueFunction)
 	{
-		json_object *includeValues = NULL;
-		json_object_object_get_ex(details, "includeValues", &includeValues);
-		int includeValuesCount = includeValues ? json_object_array_length(includeValues) : 0;
-
 		void *allowedValues = allowedValuesFunction();
 		unsigned long count = listCountFunction(allowedValues);
 		for (unsigned long i=1; i<=count; ++i)
 		{
-			int value = listValueFunction(allowedValues, i);
+			unsigned long value = listValueFunction(allowedValues, i);
 			json_object *valueJson = jsonFunction(value);
+			if (!shouldIncludeValue(valueJson))
+				continue;
+
 			char *summary = summaryFunction(value);
-
-			bool includeThisValue = true;
-			if (includeValuesCount)
-			{
-				includeThisValue = false;
-				const char *valueString = json_object_to_json_string(valueJson);
-				for (int j = 0; j < includeValuesCount; ++j)
-				{
-					const char *includeValueString = json_object_to_json_string(json_object_array_get_idx(includeValues, j));
-					if (strcmp(valueString, includeValueString) == 0)
-					{
-						includeThisValue = true;
-						break;
-					}
-				}
-			}
-
-			if (includeThisValue)
-				rootMenuItem->addItem(new VuoInputEditorMenuItem(summary, valueJson));
-
+			rootMenuItem->addItem(new VuoInputEditorMenuItem(summary, valueJson));
 			free(summary);
 		}
 	}

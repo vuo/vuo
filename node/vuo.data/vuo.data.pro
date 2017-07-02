@@ -10,6 +10,7 @@ GENERIC_NODE_SOURCES += \
 	vuo.data.hold.list.c \
 	vuo.data.isGreaterThan.c \
 	vuo.data.isLessThan.c \
+	vuo.data.save.c \
 	vuo.data.share.c \
 	vuo.data.share.list.c \
 	vuo.data.summarize.c

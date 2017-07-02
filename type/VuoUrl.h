@@ -48,6 +48,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave);
 VuoText VuoUrl_getPosixPath(const VuoUrl url);
 VuoText VuoUrl_escapePosixPath(const VuoText posixPath);
 bool VuoUrl_isBundle(const VuoUrl url);
+VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtensions, const unsigned int extensionsLength);
 
 /// @{
 /**

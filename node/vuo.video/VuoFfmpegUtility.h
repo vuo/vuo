@@ -46,6 +46,8 @@ namespace VuoFfmpegUtility
 	/// Converts AVStream presentation timestamp to fractional seconds.
 	static double AvTimeToSecond(AVStream* stream, int64_t pts)
 	{
+		if (pts == INT64_MAX)
+			return DBL_MAX;
 		return av_rescale_q(pts, stream->time_base, AV_TIME_BASE_Q) * USEC_TO_SECOND;
 	}
 

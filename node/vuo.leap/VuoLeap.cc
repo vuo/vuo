@@ -43,7 +43,7 @@ VuoModuleMetadata({
 
 
 /**
- * Scales the specified @a milimeters into Vuo Coordinates,
+ * Scales the specified @a millimeters into Vuo Coordinates,
  * using the width of the interaction box as a reference.
  */
 static double VuoLeap_vuoDistanceFromLeapMillimeters(double millimeters, Leap::InteractionBox ibox)
@@ -154,43 +154,53 @@ private:
 		Leap::PointableList allPointables = frame.pointables();
 
 		for (Leap::PointableList::const_iterator pointable = allPointables.begin(); pointable != allPointables.end(); ++pointable)
+		{
+			VuoPoint3d position = VuoLeap_vuoPointFromLeapPosition((*pointable).tipPosition(), interactionBox);
+			VuoPoint3d stabilized = VuoLeap_vuoPointFromLeapPosition((*pointable).stabilizedTipPosition(), interactionBox);
+			VuoPoint3d tipPosition = VuoPoint3d_make(stabilized.x, stabilized.y, position.z);
+
 			VuoListAppendValue_VuoLeapPointable(pointables, VuoLeapPointable_make(
 													(*pointable).id(),
 													(*pointable).isFinger() ? VuoLeapPointableType_Finger : VuoLeapPointableType_Tool,
 													VuoLeap_vuoDistanceFromLeapMillimeters((*pointable).length(), interactionBox),
 													VuoLeap_vuoDistanceFromLeapMillimeters((*pointable).width(), interactionBox),
 													VuoPoint3dWithLeapVector( (*pointable).direction() ),	// leave as is
-													VuoLeap_vuoPointFromLeapPosition((*pointable).stabilizedTipPosition(), interactionBox),
+													tipPosition,
 													VuoLeap_vuoPointFromLeapVector((*pointable).tipVelocity(), interactionBox),
 													(*pointable).timeVisible(),
 													(*pointable).touchDistance(),
 													VuoLeap_vuoLeapTouchZoneFromLeapTouchZone((*pointable).touchZone()),
 													(*pointable).isExtended()
 													));
-
+		}
 
 		VuoList_VuoLeapHand hands = VuoListCreate_VuoLeapHand();
 
 		for(Leap::HandList::const_iterator hand = allHands.begin(); hand != allHands.end(); ++hand)
 		{
 			VuoList_VuoLeapPointable handPointables = VuoListCreate_VuoLeapPointable();
-
 			Leap::FingerList fingers = (*hand).fingers();
 
 			for (Leap::FingerList::const_iterator pointable = fingers.begin(); pointable != fingers.end(); ++pointable)
+			{
+				VuoPoint3d position = VuoLeap_vuoPointFromLeapPosition((*pointable).tipPosition(), interactionBox);
+				VuoPoint3d stabilized = VuoLeap_vuoPointFromLeapPosition((*pointable).stabilizedTipPosition(), interactionBox);
+				VuoPoint3d tipPosition = VuoPoint3d_make(stabilized.x, stabilized.y, position.z);
+
 				VuoListAppendValue_VuoLeapPointable(handPointables, VuoLeapPointable_make(
 														(*pointable).id(),
-														VuoLeapPointableType_Finger,	// it's a finger.
+														VuoLeapPointableType_Finger,
 														VuoLeap_vuoDistanceFromLeapMillimeters((*pointable).length(), interactionBox),
 														VuoLeap_vuoDistanceFromLeapMillimeters((*pointable).width(), interactionBox),
 														VuoPoint3dWithLeapVector( (*pointable).direction() ),
-														VuoLeap_vuoPointFromLeapPosition((*pointable).stabilizedTipPosition(), interactionBox),
+														tipPosition,
 														VuoLeap_vuoPointFromLeapVector((*pointable).tipVelocity(), interactionBox),
 														(*pointable).timeVisible(),
 														(*pointable).touchDistance(),
 														VuoLeap_vuoLeapTouchZoneFromLeapTouchZone((*pointable).touchZone()),
 														(*pointable).isExtended()
 													));
+			}
 
 			Leap::Matrix basis = (*hand).basis();
 			if ((*hand).isLeft())
@@ -199,6 +209,7 @@ private:
 				// https://developer.leapmotion.com/documentation/skeletal/cpp/api/Leap.Hand.html#cppclass_leap_1_1_hand_1a4ff50b291a30106f8306ba26d55ada76
 				basis.xBasis *= -1;
 			}
+
 			Leap::Matrix basisInverse = basis.rigidInverse();
 			VuoPoint3d basisPoint3d[3] = {
 				VuoPoint3dWithLeapVector(basisInverse.xBasis),
@@ -206,22 +217,25 @@ private:
 				VuoPoint3dWithLeapVector(basisInverse.zBasis)
 			};
 
-				VuoListAppendValue_VuoLeapHand(hands, VuoLeapHand_make(
-													(*hand).id(),
-													VuoTransform_quaternionFromBasis(basisPoint3d),
-													VuoLeap_vuoPointFromLeapPosition((*hand).stabilizedPalmPosition(), interactionBox),
-													VuoLeap_vuoPointFromLeapVector((*hand).palmVelocity(), interactionBox),
-													VuoLeap_vuoDistanceFromLeapMillimeters((*hand).sphereRadius(), interactionBox),
-													VuoLeap_vuoPointFromLeapPosition((*hand).sphereCenter(), interactionBox),
-													VuoLeap_vuoDistanceFromLeapMillimeters((*hand).palmWidth(), interactionBox),
-													VuoLeap_vuoPointFromLeapPosition( (*hand).wristPosition(), interactionBox ),
-													(*hand).pinchStrength(),
-													(*hand).grabStrength(),
-													(*hand).timeVisible(),
-													(*hand).isLeft(),
-													(*hand).confidence(),
-													handPointables)
-						);
+			VuoPoint3d position = VuoLeap_vuoPointFromLeapPosition((*hand).palmPosition(), interactionBox);
+			VuoPoint3d stabilized = VuoLeap_vuoPointFromLeapPosition((*hand).stabilizedPalmPosition(), interactionBox);
+			VuoPoint3d palmPosition = VuoPoint3d_make(stabilized.x, stabilized.y, position.z);
+
+			VuoListAppendValue_VuoLeapHand(hands, VuoLeapHand_make(
+												(*hand).id(),
+												VuoTransform_quaternionFromBasis(basisPoint3d),
+												palmPosition,
+												VuoLeap_vuoPointFromLeapVector((*hand).palmVelocity(), interactionBox),
+												VuoLeap_vuoDistanceFromLeapMillimeters((*hand).sphereRadius(), interactionBox),
+												VuoLeap_vuoPointFromLeapPosition((*hand).sphereCenter(), interactionBox),
+												VuoLeap_vuoDistanceFromLeapMillimeters((*hand).palmWidth(), interactionBox),
+												VuoLeap_vuoPointFromLeapPosition( (*hand).wristPosition(), interactionBox ),
+												(*hand).pinchStrength(),
+												(*hand).grabStrength(),
+												(*hand).timeVisible(),
+												(*hand).isLeft(),
+												(*hand).confidence(),
+												handPointables));
 		}
 
 		receivedFrame(VuoLeapFrame_make(frame.id(), hands, pointables));

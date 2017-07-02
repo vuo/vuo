@@ -32,7 +32,9 @@ typedef enum
 	VuoDmxColorMap_RGBA,
 	VuoDmxColorMap_RGBAW,
 	VuoDmxColorMap_RGBW,
-	VuoDmxColorMap_WWCW
+	VuoDmxColorMap_WWCW,
+	VuoDmxColorMap_CMY,
+	VuoDmxColorMap_HSL,
 } VuoDmxColorMap;
 
 VuoDmxColorMap VuoDmxColorMap_makeFromJson(struct json_object *js);

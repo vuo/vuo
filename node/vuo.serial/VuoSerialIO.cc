@@ -287,7 +287,11 @@ void VuoSerial_sendData(VuoSerial device, const VuoData data)
 
 	VuoSerial_internal si = (VuoSerial_internal)device;
 	dispatch_async(si->queue, ^{
-					   write(si->fileHandle, data.data, data.size);
+					   ssize_t ret = write(si->fileHandle, data.data, data.size);
+					   if (ret == -1)
+						   VUserLog("Error: %s", strerror(errno));
+					   else if (ret != data.size)
+						   VUserLog("Warning: Could only write %ld bytes (of %lld bytes total).", ret, data.size);
 				   });
 }
 

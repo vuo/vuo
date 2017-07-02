@@ -34,10 +34,13 @@ protected:
 	 */
 	virtual VuoInputEditorMenuItem *setUpMenuTree(void);
 
+	bool shouldIncludeValue(json_object *value);
+
 private slots:
 	void acceptAction(QAction *action);
 
 private:
+	json_object *details;
 	json_object *acceptedValue;
 };
 

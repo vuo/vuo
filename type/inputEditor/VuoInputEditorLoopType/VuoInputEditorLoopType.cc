@@ -34,6 +34,9 @@ VuoInputEditorMenuItem * VuoInputEditorLoopType::setUpMenuTree()
 	for(int i = 0; i < VuoLoopType_None+1; i++)
 	{
 		json_object *optionAsJson = VuoLoopType_getJson( (VuoLoopType)i );
+		if (!shouldIncludeValue(optionAsJson))
+			continue;
+
 		char *optionSummary = VuoLoopType_getSummary( (VuoLoopType)i );
 		VuoInputEditorMenuItem *optionItem = new VuoInputEditorMenuItem(optionSummary, optionAsJson, renderMenuIconWithLoopType((VuoLoopType)i));
 		free(optionSummary);

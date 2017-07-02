@@ -1,8 +1,8 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
+	SaveWordOfTheDay.vuo \
 	ShowBarChart.vuo \
-	ShowMousePosition.vuo \
 	StoreMousePosition.vuo
 
 include(../../../example.pri)

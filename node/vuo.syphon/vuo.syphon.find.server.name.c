@@ -25,9 +25,9 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoSyphonServerDescription) serverDescriptions,
+		VuoInputData(VuoList_VuoSyphonServerDescription, {"name":"Servers"}) serverDescriptions,
 		VuoInputData(VuoText, {"default":""}) serverName,
-		VuoOutputData(VuoList_VuoSyphonServerDescription) foundServerDescriptions
+		VuoOutputData(VuoList_VuoSyphonServerDescription, {"name":"Found Servers"}) foundServerDescriptions
 )
 {
 	VuoSyphonServerDescription partialDescription = VuoSyphonServerDescription_make(VuoText_make(""), serverName, VuoText_make(""));

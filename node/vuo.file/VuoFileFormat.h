@@ -116,6 +116,16 @@ bool VuoFileFormat_isSupportedDataFile(const char *path)
 	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
 }
 
+/**
+ * Returns true if the file is of one of the supported app file formats.
+ */
+bool VuoFileFormat_isSupportedAppFile(const char *path)
+{
+	const char *formats[] = {"app", "app/"};
+	size_t numFormats = sizeof(formats)/sizeof(formats[0]);
+	return VuoFileFormat_isFileOfFormat(path, formats, numFormats);
+}
+
 #ifdef __cplusplus
 }
 #endif

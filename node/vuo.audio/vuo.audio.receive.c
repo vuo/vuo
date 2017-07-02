@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Live Audio",
 					  "keywords" : [ "sound", "microphone", "music", "listen", "device" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoAudio"
 					  ],
@@ -61,6 +61,21 @@ void nodeInstanceTriggerStart
 )
 {
 	VuoAudioIn_addTrigger((*context)->audioManager, receivedChannels);
+}
+
+void nodeInstanceTriggerUpdate
+(
+		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoInputData(VuoAudioInputDevice) device,
+		VuoOutputTrigger(receivedChannels, VuoList_VuoAudioSamples, {"eventThrottling":"drop"})
+)
+{
+	if (! VuoAudioInputDevice_areEqual(device, (*context)->device))
+	{
+		VuoAudioIn_removeTrigger((*context)->audioManager, receivedChannels);
+		updateDevice(*context, device);
+		VuoAudioIn_addTrigger((*context)->audioManager, receivedChannels);
+	}
 }
 
 void nodeInstanceEvent

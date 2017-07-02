@@ -70,3 +70,22 @@ void VuoDoubleSpinBox::setButtonMaximum(double buttonMaximum)
 {
 	this->buttonMaximum = buttonMaximum;
 }
+
+/**
+ * Convert an integer range value to a double value.
+ */
+double VuoDoubleSpinBox::sliderToDouble(int sliderMin, int sliderMax, double valueMin, double valueMax, int value)
+{
+	double normalized = ((double)value - sliderMin) / (sliderMax - sliderMin);
+	return valueMin + (normalized * (valueMax - valueMin));
+}
+
+/**
+ * Convert a double value to an integer range value.
+ */
+int VuoDoubleSpinBox::doubleToSlider(int sliderMin, int sliderMax, double valueMin, double valueMax, double value)
+{
+	double normalized = (value - valueMin) / (valueMax - valueMin);
+	int rounded = (int) (normalized * (sliderMax - sliderMin));
+	return sliderMin + rounded;
+}

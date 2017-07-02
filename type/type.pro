@@ -5,6 +5,7 @@ TARGET = VuoType
 include(../vuo.pri)
 
 TYPE_SOURCES += \
+	VuoAnchor.c \
 	VuoAudioSamples.c \
 	VuoBoolean.c \
 	VuoBlendMode.c \
@@ -42,6 +43,7 @@ TYPE_SOURCES += \
 	VuoWrapMode.c
 
 TYPE_HEADERS = \
+	VuoAnchor.h \
 	VuoAudioSamples.h \
 	VuoBoolean.h \
 	VuoBlendMode.h \

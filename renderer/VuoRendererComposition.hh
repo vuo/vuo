@@ -99,6 +99,7 @@ protected:
 	static bool isSupportedSceneFile(string path);
 	static bool isSupportedFeedFile(string path);
 	static bool isSupportedDataFile(string path);
+	static bool isSupportedAppFile(string path);
 
 	VuoCompilerGraphvizParser *parser; ///< The Graphviz parser instance used by this composition.
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this composition.

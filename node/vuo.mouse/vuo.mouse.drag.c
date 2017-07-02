@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Drags",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "move" ],
-					  "version" : "1.0.2",
+					  "version" : "1.0.3",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
@@ -57,7 +57,7 @@ void nodeInstanceTriggerStart
 	(*context)->isTriggerStopped = false;
 	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, button, window, modifierKey);
 	VuoMouse_startListeningForDrags((*context)->dragMovedToListener, dragMovedTo, button, window, modifierKey);
-	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey);
+	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey, true);
 }
 
 void nodeInstanceTriggerUpdate
@@ -78,7 +78,7 @@ void nodeInstanceTriggerUpdate
 	VuoMouse_stopListening((*context)->dragEndedListener);
 	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, button, window, modifierKey);
 	VuoMouse_startListeningForDrags((*context)->dragMovedToListener, dragMovedTo, button, window, modifierKey);
-	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey);
+	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey, true);
 }
 
 void nodeInstanceEvent
@@ -99,7 +99,7 @@ void nodeInstanceEvent
 	VuoMouse_stopListening((*context)->dragEndedListener);
 	VuoMouse_startListeningForPresses((*context)->dragStartedListener, dragStarted, button, window, modifierKey);
 	VuoMouse_startListeningForDrags((*context)->dragMovedToListener, dragMovedTo, button, window, modifierKey);
-	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey);
+	VuoMouse_startListeningForReleases((*context)->dragEndedListener, dragEnded, button, window, modifierKey, true);
 }
 
 void nodeInstanceTriggerStop

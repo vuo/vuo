@@ -9,29 +9,32 @@
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="600,73" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="4" _height="1.250000" _rows="3"];
-BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.0" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="314,74" fillcolor="violet" _fire="12" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
-ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="915,554"];
-ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="497,385"];
-DecodeMovieImage [type="vuo.video.decodeImage" version="2.0.0" label="Decode Movie Image|<refresh>refresh\l|<url>url\l|<frameTime>frameTime\l|<videoFrame>videoFrame\r" pos="378,356"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-293,74" fillcolor="yellow" _started_eventThrottling="enqueue"];
-GetMovieInfo [type="vuo.video.info" version="2.0.0" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="-5,427"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="831,99" fillcolor="green"];
-MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="801,84" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="663,342" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="872,73" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="192,366" _start="1.000000" _end="12.000000" _scaledStart="0.000000"];
-ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-142,185" _value="\"\\/System\\/Library\\/Compositions\\/Fish.mov\""];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="600,75" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="1.800000" _columns="4" _height="1.250000" _rows="3"];
+BuildList2 [type="vuo.list.build.VuoLayer" version="1.0.1" label="Build List|<refresh>refresh\l|<fire>fire\l|<builtItem>builtItem\l|<builtList>builtList\r|<buildItem>buildItem\r" pos="315,75" fillcolor="violet" _fire="12" _builtList_eventThrottling="enqueue" _buildItem_eventThrottling="enqueue"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="915,555"];
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="495,390"];
+DecodeMovieImage [type="vuo.video.decodeImage" version="2.2.0" label="Decode Movie Image|<refresh>refresh\l|<url>url\l|<frameTime>frameTime\l|<loop>loop\l|<videoFrame>videoFrame\r" pos="375,360" _loop="\"loop\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-300,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetMovieInfo [type="vuo.video.info" version="2.0.2" label="Get Movie Info|<refresh>refresh\l|<url>url\l|<duration>duration\r" pos="-90,450"];
+HoldValue2 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="75,435"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="829,101" fillcolor="green"];
+MakeList5 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="799,86" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="660,345" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="870,75" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="210,375" _start="1.000000" _end="12.000000" _scaledStart="0.000000"];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-135,180" _value="\"\\/System\\/Library\\/Compositions\\/Fish.mov\""];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList5:1;
 BuildList2:buildItem -> ConvertIntegerToRealNumber:integer;
+BuildList2:buildItem -> HoldValue2:refresh;
 BuildList2:builtList -> ArrangeLayersInGrid:layers;
 ConvertFrameToImage:image -> MakeScaledLayer:image;
 ConvertIntegerToRealNumber:real -> Scale:value;
 DecodeMovieImage:videoFrame -> ConvertFrameToImage:frame;
 FireOnStart:started -> BuildList2:fire;
 FireOnStart:started -> ShareValue2:refresh;
-GetMovieInfo:duration -> Scale:scaledEnd;
+GetMovieInfo:duration -> HoldValue2:newValue;
+HoldValue2:heldValue -> Scale:scaledEnd;
 MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList5:list -> RenderLayersToWindow:layers;
 MakeScaledLayer:layer -> BuildList2:builtItem;

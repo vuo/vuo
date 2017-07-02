@@ -1,0 +1,94 @@
+/**
+ * @file
+ * Expected outputs for the vuo.color.dmx.list node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+// RGB
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 2 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ ]}},
+/* black */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[0,0,0,0              ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* blueish */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[96,128,160           ]}, "outputPortValues":{"colors":[ {"r":0.376471,"g":0.501961,"b":0.627451,"a":1} ]}},
+/* reddish, blueish */ {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgb",   "dmx":[160,128,96,96,128,160]}, "outputPortValues":{"colors":[ {"r":0.627451,"g":0.501961,"b":0.376471,"a":1}, {"r":0.376471,"g":0.501961,"b":0.627451,"a":1} ]}},
+
+// RGBA
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 2 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 3 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ ]}},
+/* black */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,0,0,0              ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,0,0,0,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* red */              {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[255,0,0,0            ]}, "outputPortValues":{"colors":[ {"r":1,"g":0,"b":0,"a":1} ]}},
+/* green */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,255,0,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":1,"b":0,"a":1} ]}},
+/* blue */             {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,0,255,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":1,"a":1} ]}},
+/* amber */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[0,0,0,255            ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":0,"a":1} ]}},
+/* white */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgba",  "dmx":[255,255,255,255      ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+
+// RGBAW
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 2 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 3 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 4 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,0,0              ]}, "outputPortValues":{"colors":[ ]}},
+/* black */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,0,0,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,0,0,0,0          ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* red */              {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[255,0,0,0,0          ]}, "outputPortValues":{"colors":[ {"r":1,"g":0,"b":0,"a":1} ]}},
+/* green */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,255,0,0,0          ]}, "outputPortValues":{"colors":[ {"r":0,"g":1,"b":0,"a":1} ]}},
+/* blue */             {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,255,0,0          ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":1,"a":1} ]}},
+/* amber */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,0,255,0          ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":0,"a":1} ]}},
+/* white 1 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[0,0,0,0,255          ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+/* white 2 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[255,255,255,0,0      ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+/* white 3 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbaw", "dmx":[255,255,255,255,255  ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+
+// RGBW
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 2 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 3 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ ]}},
+/* black */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,0,0,0              ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,0,0,0,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* red */              {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[255,0,0,0            ]}, "outputPortValues":{"colors":[ {"r":1,"g":0,"b":0,"a":1} ]}},
+/* green */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,255,0,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":1,"b":0,"a":1} ]}},
+/* blue */             {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,0,255,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":1,"a":1} ]}},
+/* white 1 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[0,0,0,255            ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+/* white 2 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[255,255,255,0        ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+/* white 3 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"rgbw",  "dmx":[255,255,255,255      ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+
+// WwCw
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* black */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* neutral grey */     {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[136,136              ]}, "outputPortValues":{"colors":[ {"r":0.533333,"g":0.533333,"b":0.533333,"a":1} ]}},
+/* warm white */       {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[255,79               ]}, "outputPortValues":{"colors":[ {"r":0.676929,"g":0.654902,"b":0.632874,"a":1} ]}},
+/* cool white */       {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[79,255               ]}, "outputPortValues":{"colors":[ {"r":0.632874,"g":0.654902,"b":0.676929,"a":1} ]}},
+/* white */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"wwcw",  "dmx":[255,255              ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+
+// CMY
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 2 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ ]}},
+/* black */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[255,255,255          ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[255,255,255,0        ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* blue */             {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[255,255,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":1,"a":1} ]}},
+/* red, blue */        {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[0,255,255,255,255,0  ]}, "outputPortValues":{"colors":[ {"r":1,"g":0,"b":0,"a":1}, {"r":0,"g":0,"b":1,"a":1} ]}},
+/* white */            {"firingPort":"dmx", "inputPortValues":{"colorMap":"cmy",   "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+
+// HSL
+/* insufficient 0 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[                     ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 1 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[0                    ]}, "outputPortValues":{"colors":[ ]}},
+/* insufficient 2 */   {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[0,0                  ]}, "outputPortValues":{"colors":[ ]}},
+/* black 1 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[0,0,0                ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black 2 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[255,255,0            ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* black + extra 1 */  {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[255,255,0,0          ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0,"a":1} ]}},
+/* blue */             {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[170,255,127          ]}, "outputPortValues":{"colors":[ {"r":0,"g":0,"b":0.996078,"a":1} ]}},
+/* red, blue */        {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[0,255,127,170,255,127]}, "outputPortValues":{"colors":[ {"r":0.996078,"g":0,"b":0,"a":1}, {"r":0,"g":0,"b":0.996078,"a":1} ]}},
+/* white 1 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[0,0,255              ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+/* white 2 */          {"firingPort":"dmx", "inputPortValues":{"colorMap":"hsl",   "dmx":[255,255,255          ]}, "outputPortValues":{"colors":[ {"r":1,"g":1,"b":1,"a":1} ]}},
+]}

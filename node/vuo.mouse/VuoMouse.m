@@ -12,11 +12,13 @@
 
 #include "VuoMouse.h"
 #include "VuoWindowOpenGLInternal.h"
+#include "VuoApp.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					"title" : "VuoMouse",
 					"dependencies" : [
+						"VuoApp",
 						"VuoBoolean",
 						"VuoModifierKey",
 						"VuoMouseButton",
@@ -102,8 +104,11 @@ static VuoPoint2d VuoMouse_convertViewToVuoCoordinates(NSPoint pointInView, NSVi
 {
 	NSRect bounds = [(VuoWindowOpenGLView *)view viewport];
 	VuoPoint2d pointInVuo;
-	pointInVuo.x = ((pointInView.x - NSMinX(bounds) - NSWidth(bounds) /2.) * 2.) / NSWidth(bounds);
-	pointInVuo.y = ((pointInView.y - NSMinY(bounds) - NSHeight(bounds)/2.) * 2.) / NSWidth(bounds);
+	double viewMaxX = NSWidth(bounds) - 1;
+	double viewMaxY = NSHeight(bounds) - 1;
+	pointInVuo.x = ((pointInView.x - NSMinX(bounds) - viewMaxX /2.) * 2.) / viewMaxX;
+	pointInVuo.y = ((pointInView.y - NSMinY(bounds) - viewMaxY/2.) * 2.) / viewMaxX;
+	pointInVuo.y /= (NSWidth(bounds)/viewMaxX) * (viewMaxY/NSHeight(bounds));
 	return pointInVuo;
 }
 
@@ -113,9 +118,13 @@ static VuoPoint2d VuoMouse_convertViewToVuoCoordinates(NSPoint pointInView, NSVi
 static VuoPoint2d VuoMouse_convertFullScreenToVuoCoordinates(NSPoint pointInScreen, NSWindow *window, bool *isInScreen)
 {
 	NSRect fullScreenFrame = [[window screen] frame];
-	// Expand the frame by one point, since NSPointInRect() decides the topmost point (largest Y value) is outside the rectangle.
-	// (Allow using the top edge, per Fitts's Law.)
-	fullScreenFrame = NSInsetRect(fullScreenFrame, 0, -1);
+
+	// [NSEvent mouseLocation] returns points between [0, screenSize] (inclusive!?)
+	// (i.e., somehow Cocoa invents an extra row and column of pixels).
+	// Scale to [0, screenSize-1],
+	// then quantize to pixels to get exact coordinate values when the mouse hits the edges.
+	pointInScreen.x = VuoReal_snap(pointInScreen.x * fullScreenFrame.size.width  / (fullScreenFrame.size.width+1),  0, 1);
+	pointInScreen.y = VuoReal_snap(pointInScreen.y * fullScreenFrame.size.height / (fullScreenFrame.size.height+1), 0, 1);
 
 	NSView *view = [window contentView];
 	NSPoint pointInView = NSMakePoint(pointInScreen.x - fullScreenFrame.origin.x,
@@ -130,6 +139,17 @@ static VuoPoint2d VuoMouse_convertFullScreenToVuoCoordinates(NSPoint pointInScre
  */
 VuoPoint2d VuoMouse_convertWindowToVuoCoordinates(NSPoint pointInWindow, NSWindow *window, bool *shouldFire)
 {
+	// https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Transforms/Transforms.html says:
+	// "Cocoa event objects return y coordinate values that are 1-based (in window coordinates) instead of 0-based.
+	// Thus, a mouse click on the bottom left corner of a window or view would yield the point (0, 1) in Cocoa and not (0, 0).
+	// Only y-coordinates are 1-based."
+	// …so, compensate for that.
+	--pointInWindow.y;
+
+	// Then quantize to pixels to get exact coordinate values when the mouse hits the edges of the window.
+	pointInWindow.x = VuoReal_snap(pointInWindow.x, 0, 1);
+	pointInWindow.y = VuoReal_snap(pointInWindow.y, 0, 1);
+
 	NSView *view = [window contentView];
 	NSPoint pointInView = [view convertPoint:pointInWindow fromView:nil];
 	*shouldFire = NSPointInRect(pointInView, [view frame]);
@@ -342,7 +362,27 @@ void VuoMouse_startListeningForScrollsWithCallback(VuoMouse *mouseListener, void
 }
 
 /**
+ * If `window` is non-NULL and `modifierKey` is Any or None, invokes `movedTo` with the mouse's current position.
+ */
+static void VuoMouse_fireInitialEvent(void (^movedTo)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
+{
+	if (window && (modifierKey == VuoModifierKey_Any || modifierKey == VuoModifierKey_None))
+	{
+		VuoMouseStatus_use();
+
+		VuoPoint2d position;
+		VuoBoolean isPressed;
+		if (VuoMouse_getStatus(&position, &isPressed, VuoMouseButton_Any, window, VuoModifierKey_Any))
+			movedTo(position);
+
+		VuoMouseStatus_disuse();
+	}
+}
+
+/**
  * Starts listening for mouse move events, and calling the trigger function (with mouse position) for each one,.
+ *
+ * If `window` is non-NULL and `modifierKey` is Any or None, immediately invokes `movedTo` with the mouse's current position.
  */
 void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(VuoPoint2d), VuoWindowReference window, VuoModifierKey modifierKey)
 {
@@ -353,10 +393,14 @@ void VuoMouse_startListeningForMoves(VuoMouse *mouseListener, void (*movedTo)(Vu
 
 	struct VuoMouseContext *context = (struct VuoMouseContext *)mouseListener;
 	context->monitor = monitor;
+
+	VuoMouse_fireInitialEvent(^(VuoPoint2d point){ movedTo(point); }, window, modifierKey);
 }
 
 /**
  * Starts listening for mouse move events, and calling the given block for each one.
+ *
+ * If `window` is non-NULL and `modifierKey` is Any or None, immediately invokes `movedTo` with the mouse's current position.
  */
 void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (^movedTo)(VuoPoint2d),
 									 VuoWindowReference window, VuoModifierKey modifierKey)
@@ -368,6 +412,8 @@ void VuoMouse_startListeningForMovesWithCallback(VuoMouse *mouseListener, void (
 
 	struct VuoMouseContext *context = (struct VuoMouseContext *)mouseListener;
 	context->monitor = monitor;
+
+	VuoMouse_fireInitialEvent(movedTo, window, modifierKey);
 }
 
 /**
@@ -427,7 +473,7 @@ void VuoMouse_startListeningForDragsWithCallback(VuoMouse *mouseListener, void (
  */
 void VuoMouse_startListeningForDrags(VuoMouse *mouseListener, void (*dragMovedTo)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
 {
-	VuoMouse_startListeningForDragsWithCallback(mouseListener, ^(VuoPoint2d point){ dragMovedTo(point); }, button, window, modifierKey, false);
+	VuoMouse_startListeningForDragsWithCallback(mouseListener, ^(VuoPoint2d point){ dragMovedTo(point); }, button, window, modifierKey, true);
 }
 
 /**
@@ -517,9 +563,9 @@ void VuoMouse_startListeningForReleasesWithCallback(VuoMouse *mouseListener, voi
 /**
  * Starts listening for mouse release events, and calling the trigger function for each one.
  */
-void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey)
+void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released)(VuoPoint2d), VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey, bool fireRegardlessOfPosition)
 {
-	VuoMouse_startListeningForReleasesWithCallback(mouseListener, ^(VuoPoint2d point){ released(point); }, button, window, modifierKey, false);
+	VuoMouse_startListeningForReleasesWithCallback(mouseListener, ^(VuoPoint2d point){ released(point); }, button, window, modifierKey, fireRegardlessOfPosition);
 }
 
 /**
@@ -597,6 +643,80 @@ void VuoMouse_stopListening(VuoMouse *mouseListener)
 	}
 }
 
+static unsigned int VuoMouseStatus_useCount = 0;		///< Process-wide count of callers (typically node instances) using @ref VuoMouse_getStatus.
+static id VuoMouseStatus_monitor            = nil;		///< Process-wide mouse event monitor for @ref VuoMouse_getStatus.
+static NSPoint VuoMouseStatus_position;					///< The mouse's position in screen coordinates, as reported by the most recent non-filtered event.
+static bool VuoMouseStatus_leftButton       = false;	///< The mouse's current button status, as reported by recent non-filtered events.
+static bool VuoMouseStatus_middleButton     = false;	///< The mouse's current button status, as reported by recent non-filtered events.
+static bool VuoMouseStatus_rightButton      = false;	///< The mouse's current button status, as reported by recent non-filtered events.
+
+/**
+ * Starts tracking mouse events to later be reported by @ref VuoMouse_getStatus.
+ */
+void VuoMouseStatus_use(void)
+{
+	if (__sync_add_and_fetch(&VuoMouseStatus_useCount, 1) == 1)
+	{
+		// Ensure +[NSEvent mouseLocation] is called for the first time on the main thread, else we get console message
+		// "!!! BUG: The current event queue and the main event queue are not the same. Events will not be handled correctly. This is probably because _TSGetMainThread was called for the first time off the main thread."
+		VuoApp_executeOnMainThread(^{
+			VuoMouseStatus_position = [NSEvent mouseLocation];
+		});
+		VuoMouseStatus_leftButton   = false;
+		VuoMouseStatus_middleButton = false;
+		VuoMouseStatus_rightButton  = false;
+		VuoMouseStatus_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:
+				NSMouseMovedMask
+				|NSLeftMouseDraggedMask|NSRightMouseDraggedMask|NSOtherMouseDraggedMask
+				|NSLeftMouseDownMask|NSOtherMouseDownMask|NSRightMouseDownMask
+				|NSLeftMouseUpMask|NSOtherMouseUpMask|NSRightMouseUpMask
+			handler:^(NSEvent *event) {
+				// Despite the name, -locationInWindow sometimes returns screen coordinates.
+				NSPoint p = [event locationInWindow];
+				NSWindow *window = [event window];
+				if (window)
+				{
+					NSRect rectInWindow = NSMakeRect(p.x, p.y, 0, 0);
+					VuoMouseStatus_position = [window convertRectToScreen:rectInWindow].origin;
+				}
+				else
+					VuoMouseStatus_position = p;
+
+				// https://b33p.net/kosada/node/11580
+				// We shouldn't report mouse button presses while resizing the window.
+				// I went through all the data that NSEvent (and the underlying CGEvent) provides,
+				// but couldn't find anything different between normal mouse-down events
+				// and mouse-down events that led to resizing the window.
+				// Disgusting hack: check whether the system has overridden the application's
+				// mouse cursor and turned it into a resize arrow.
+				bool reportPress = NSEqualPoints([[NSCursor currentCursor] hotSpot], [[NSCursor currentSystemCursor] hotSpot]);
+				switch ([event type])
+				{
+					case NSLeftMouseDown:   if (reportPress) VuoMouseStatus_leftButton   = true;  break;
+					case NSLeftMouseUp:                      VuoMouseStatus_leftButton   = false; break;
+					case NSOtherMouseDown:  if (reportPress) VuoMouseStatus_middleButton = true;  break;
+					case NSOtherMouseUp:                     VuoMouseStatus_middleButton = false; break;
+					case NSRightMouseDown:  if (reportPress) VuoMouseStatus_rightButton  = true;  break;
+					case NSRightMouseUp:                     VuoMouseStatus_rightButton  = false; break;
+					default: ;
+				}
+
+				return event;
+			}];
+	}
+}
+
+/**
+ * Stops tracking mouse events for @ref VuoMouse_getStatus.
+ */
+void VuoMouseStatus_disuse(void)
+{
+	if (__sync_sub_and_fetch(&VuoMouseStatus_useCount, 1) == 0)
+	{
+		[NSEvent removeMonitor:VuoMouseStatus_monitor];
+		VuoMouseStatus_monitor = nil;
+	}
+}
 
 /**
  * Outputs the current mouse position and whether the mouse is currently pressed.
@@ -608,56 +728,77 @@ void VuoMouse_stopListening(VuoMouse *mouseListener)
  *
  * If a window is given, the mouse position is in Vuo coordinates relative to the window's content view.
  * Otherwise, the mouse position is in screen coordinates.
+ *
+ * Returns true if `position` was updated.
  */
-void VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
+bool VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
 						VuoMouseButton button, VuoWindowReference windowRef, VuoModifierKey modifierKey)
 {
 	if (! [NSApp isActive])
-		return;
+		return false;
 
 	bool shouldTrackPresses;
 	if (windowRef)
 	{
-		NSWindow *targetWindow = (NSWindow *)windowRef;
-		NSPoint pointInWindow = [targetWindow mouseLocationOutsideOfEventStream];
-		*position = VuoMouse_convertWindowToVuoCoordinates(pointInWindow, targetWindow, &shouldTrackPresses);
-		shouldTrackPresses = shouldTrackPresses && [targetWindow isKeyWindow];
+		VuoWindowOpenGLInternal *targetWindow = (VuoWindowOpenGLInternal *)windowRef;
+		NSPoint pointInScreen = VuoMouseStatus_position;
+
+		if ([[targetWindow glView] isFullScreen])
+			*position = VuoMouse_convertFullScreenToVuoCoordinates(pointInScreen, targetWindow, &shouldTrackPresses);
+		else
+		{
+			NSRect rectInScreen = NSMakeRect(pointInScreen.x, pointInScreen.y, 0, 0);
+			NSPoint pointInWindow = [targetWindow convertRectFromScreen:rectInScreen].origin;
+			*position = VuoMouse_convertWindowToVuoCoordinates(pointInWindow, targetWindow, &shouldTrackPresses);
+			shouldTrackPresses = shouldTrackPresses && [targetWindow isKeyWindow];
+		}
 	}
 	else
 	{
-		NSPoint pointInScreen = [NSEvent mouseLocation];
+		NSPoint pointInScreen = VuoMouseStatus_position;
 		pointInScreen.y = CGDisplayPixelsHigh(CGMainDisplayID()) - pointInScreen.y;
 		*position = VuoPoint2d_make(pointInScreen.x, pointInScreen.y);
 
 		shouldTrackPresses = true;
 	}
 
-	if (! shouldTrackPresses)
-		return;
+	if ( !shouldTrackPresses)
+	{
+		if (*isPressed)
+		{
+			// The existing button state is pressed.
+			// If the button been released, we should update isPressed to reflect that release (even though we're ignoring presses).
+		}
+		else
+			// The existing button state is not-pressed.  Since we're ignoring presses, we shouldn't change it.
+			return true;
+	}
 
-	NSUInteger buttonMask = 0;
+	*isPressed = false;
 	switch (button)
 	{
 		case VuoMouseButton_Left:
-			buttonMask = 1 << 0;
+			*isPressed = VuoMouseStatus_leftButton;
 			break;
 		case VuoMouseButton_Right:
-			buttonMask = 1 << 1;
+			*isPressed = VuoMouseStatus_rightButton;
 
 			// Also return true for control-leftclicks.
-			if (([NSEvent pressedMouseButtons] & 1) && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], VuoModifierKey_Control))
+			if (VuoMouseStatus_leftButton && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], VuoModifierKey_Control))
 			{
 				*isPressed = true;
-				return;
+				return true;
 			}
 
 			break;
 		case VuoMouseButton_Middle:
-			buttonMask = 1 << 2;
+			*isPressed = VuoMouseStatus_middleButton;
 			break;
 		case VuoMouseButton_Any:
-			buttonMask = (1 << 0) | (1 << 1) | (1 << 2);
+			*isPressed = VuoMouseStatus_leftButton || VuoMouseStatus_middleButton || VuoMouseStatus_rightButton;
 			break;
 	}
-	*isPressed = ([NSEvent pressedMouseButtons] & buttonMask) && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], modifierKey);
+	*isPressed = *isPressed && VuoModifierKey_doMacEventFlagsMatch([NSEvent modifierFlags], modifierKey);
+
+	return true;
 }

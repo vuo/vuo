@@ -60,7 +60,7 @@ private slots:
 		QTest::newRow(VuoText_format("MPEG v4 AVC opt=%d",optimize))							<< "/MovieGauntlet/audio+video synchronization/Lip Sync Test Markers.m4v"								<<  67.9	<< 2044	<<  640 <<  480	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("Ogg - Theora - Ogg LR opt=%d",optimize))					<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.oggtheora.ogv"								<<  24.0	<< 	503	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("Ogg - Theora - Ogg 5.1 opt=%d",optimize))					<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.ogg"											<<  19.5	<<  466	<<  320 <<  240	<< -6 	<< optimize;
-		QTest::newRow(VuoText_format("QuickTime - Animation - None opt=%d",optimize))			<< "/MovieGauntlet/demo to mov3.mov"																	<<   1.0	<<   28	<<  640 <<  480	<<  0 	<< optimize;
+		QTest::newRow(VuoText_format("QuickTime - Animation - None opt=%d",optimize))			<< "/MovieGauntlet/demo to mov3.mov"																	<<   1.0	<<   29	<<  640 <<  480	<<  0 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - H.264 - Lossless 5.1 - #1 opt=%d",optimize))	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/french — H.264 — Apple Lossless 5.1.mov"				<<  19.5	<<  469	<< 1920 << 3240	<< -6 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - H.264 - Lossless 5.1 - #2 opt=%d",optimize))	<< "/MovieGauntlet/Audio Codecs/Compressor 4.1.3/typewriter-barnyard — H.264 — Apple Lossless 5.1.mov"	<<  15.7	<<  376	<< 1440 <<  900	<< -6 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - H.264 - Lossless LR opt=%d",optimize))		<< "/MovieGauntlet/out-sd.mov"																			<< 275.2	<< 6608	<<  640 <<  360	<< -2 	<< optimize;
@@ -347,6 +347,48 @@ private slots:
 	}
 
 	/**
+	 * https://b33p.net/kosada/node/12217
+	 * https://b33p.net/kosada/node/12227
+	 * Ensures that requesting the first frame actually returns a frame with timestamp 0.
+	 */
+	void testDecodeFirstFrame_data()
+	{
+		printf("	testDecodeFirstFrame()\n"); fflush(stdout);
+		createData(0);
+	}
+	void testDecodeFirstFrame()
+	{
+		QFETCH(QString, url);
+
+		if (!QFile(url).exists())
+			QSKIP(QString("Test movie '%1' not found").arg(url).toUtf8().data(), SkipOne);
+		if (url == "/MovieGauntlet/interlaced/SD_NTSC_29.97_640x480.ts")
+			QSKIP("This movie starts at PTS 600");
+		if (url == "/MovieGauntlet/interlaced/interlace_test2.mpeg")
+			QSKIP("This movie starts at PTS 0.5");
+		if (url == "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.webmhd.webm")
+			QSKIP("This movie starts at PTS 4.125");
+		if (url == "/MovieGauntlet/out-sd.mov")
+			QSKIP("This movie starts at PTS 0.083000");
+
+		VuoVideo video = VuoVideo_make(strdup(url.toUtf8().data()), VuoVideoOptimization_Random);
+		VuoRetain(video);
+		QVERIFY(video);
+
+		VuoVideo_setPlaybackRate(video, 0);
+
+		QTRY_COMPARE_WITH_TIMEOUT(VuoVideo_isReady(video), true, MAX_VIDEO_LOAD_TIME);
+
+		VuoVideoFrame videoFrame;
+		QVERIFY(VuoVideo_getFrameAtSecond(video, 0, &videoFrame));
+		QVERIFY(videoFrame.image);
+		QVERIFY2(VuoReal_areEqual(videoFrame.timestamp, 0),
+			QString("Requested timestamp 0 but actually got %1").arg(videoFrame.timestamp).toUtf8().data());
+
+		VuoRelease(video);
+	}
+
+	/**
 	 * Tests decoding out of bounds frame times.  VuoVideo_getFrameAtSecond should always return an
 	 * image, clamping to first & last frames.
 	 */
@@ -377,11 +419,9 @@ private slots:
 
 		QVERIFY2( VuoVideo_getFrameAtSecond(m, -1, &videoFrame), "VuoVideo_getFrameAtSecond(-1) returned false.");
 		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(-1) returned null image" );
-		VuoRelease(videoFrame.image);
 
 		QVERIFY2( VuoVideo_getFrameAtSecond(m, duration + 10, &videoFrame), "VuoVideo_getFrameAtSecond(duration + 10) returned false." );
 		QVERIFY2( videoFrame.image != NULL, "VuoVideo_getFrameAtSecond(duration + 10) returned null image" );
-		VuoRelease(videoFrame.image);
 
 		VuoRelease(m);
 	}

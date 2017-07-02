@@ -623,3 +623,37 @@ bool VuoUrl_isBundle(const VuoUrl url)
 	}
 	return outItemInfo.flags & kLSItemInfoIsPackage;
 }
+
+/**
+ * Given a filename and set of valid extensions, returns a new VuoUrl guaranteed to have the extension.
+ */
+VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtensions, const unsigned int extensionsLength)
+{
+	char* fileSuffix = strrchr(filename, '.');
+	char* curExtension = fileSuffix != NULL ? strdup(fileSuffix+1) : NULL;
+
+	if(curExtension != NULL)
+		for(char *p = &curExtension[0]; *p; p++) *p = tolower(*p);
+
+	// if the string already has one of the valid file extension suffixes, return.
+	for(int i = 0; i < extensionsLength; i++)
+	{
+		if(curExtension != NULL && strcmp(curExtension, validExtensions[i]) == 0)
+		{
+			free(curExtension);
+			return VuoText_make(filename);
+		}
+	}
+
+	free(curExtension);
+
+	size_t buf_size = strlen(filename) + strlen(validExtensions[0]) + 2;
+	char* newfilepath = (char*)malloc(buf_size * sizeof(char));
+	snprintf(newfilepath, buf_size, "%s.%s", filename, validExtensions[0]);
+
+	VuoText text = VuoText_make(newfilepath);
+	free(newfilepath);
+
+	return text;
+}
+

@@ -5,10 +5,12 @@ include(../../vuo.pri)
 
 GENERIC_NODE_SOURCES += \
 	vuo.event.allowChanges.c \
+	vuo.event.allowFirstValue.c \
 	vuo.event.changed.c \
 	vuo.event.decreased.c \
 	vuo.event.emptyList.c \
-	vuo.event.increased.c
+	vuo.event.increased.c \
+	vuo.event.spinOffValue.c
 
 NODE_SOURCES += \
 	vuo.event.areAllHit.2.c \

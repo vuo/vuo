@@ -240,7 +240,7 @@ VuoModuleMetadata({
 void VuoWindowOpenGLView_draw(VuoReal frameRequest, void *context)
 {
 	VuoWindowOpenGLView *glView = (VuoWindowOpenGLView *)context;
-	if (glView->callerRequestedRedraw)
+	if (glView->callerRequestedRedraw && !glView->skipDrawRect)
 	{
 		glView->callerRequestedRedraw = false;
 

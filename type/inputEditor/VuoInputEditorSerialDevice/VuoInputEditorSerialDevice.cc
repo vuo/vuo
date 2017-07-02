@@ -29,27 +29,34 @@ VuoInputEditorMenuItem * VuoInputEditorSerialDevice::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *optionsTree = new VuoInputEditorMenuItem("root");
 
-	{
-		VuoSerialDevice device;
-		device.matchType = VuoSerialDevice_MatchName;
-		device.name = VuoText_make("");
-		device.path = NULL;
-		VuoSerialDevice_retain(device);
-		optionsTree->addItem(new VuoInputEditorMenuItem("First available device", VuoSerialDevice_getJson(device)));
-		VuoSerialDevice_release(device);
-	}
-
+	optionsTree->addItem(new VuoInputEditorMenuItem("First available device", NULL));
 	optionsTree->addSeparator();
-	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device", NULL, NULL, false));
+	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device (by name)", NULL, NULL, false));
 
 	VuoList_VuoSerialDevice devices = VuoSerial_getDeviceList();
-
 	unsigned long deviceCount = VuoListGetCount_VuoSerialDevice(devices);
+
 	if (deviceCount)
 		for (unsigned long i = 1; i <= deviceCount; ++i)
 		{
 			VuoSerialDevice device = VuoListGetValue_VuoSerialDevice(devices, i);
+			device.matchType = VuoSerialDevice_MatchName;
+			device.path = NULL;
 			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s", device.name), VuoSerialDevice_getJson(device)));
+		}
+	else
+		optionsTree->addItem(new VuoInputEditorMenuItem("      (no devices found)", NULL, NULL, false));
+
+	optionsTree->addSeparator();
+	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device (by path)", NULL, NULL, false));
+
+	if (deviceCount)
+		for (unsigned long i = 1; i <= deviceCount; ++i)
+		{
+			VuoSerialDevice device = VuoListGetValue_VuoSerialDevice(devices, i);
+			device.matchType = VuoSerialDevice_MatchPath;
+			device.name = NULL;
+			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s", device.path), VuoSerialDevice_getJson(device)));
 		}
 	else
 		optionsTree->addItem(new VuoInputEditorMenuItem("      (no devices found)", NULL, NULL, false));

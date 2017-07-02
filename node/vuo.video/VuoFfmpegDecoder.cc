@@ -116,7 +116,6 @@ bool VuoFfmpegDecoder::Initialize()
 		return false;
 	}
 
-
 	// Load video context
 	if(avformat_find_stream_info(container.formatCtx, NULL) < 0)
 	{
@@ -184,8 +183,6 @@ bool VuoFfmpegDecoder::InitializeVideo(VuoFfmpegDecoder::AVContainer& container)
 	// Flash can't seek, so when seeking just jet to 0 and step
 	if(videoCodec->id == AV_CODEC_ID_FLV1 || videoCodec->id == AV_CODEC_ID_GIF)
 		container.seekUnavailable = true;
-
-//	avcodec_alloc_context3(videoCodec);
 
 	// Open codec
 	if(avcodec_open2(container.videoCodecCtx, videoCodec, NULL) < 0)
@@ -303,21 +300,34 @@ bool VuoFfmpegDecoder::InitializeVideoInfo()
 		return false;
 	}
 
-	VideoInfo& vi = container.videoInfo;
 	VideoFrame frame;
+	videoFrames.Peek(&frame);
+
+	// first frame is sometimes incorrect - seek to re-orient then test timestamps
+	SeekToPts(frame.pts, NULL);
+
+	if(!DecodeVideoFrame())
+	{
+		DEBUG_LOG("Couldn't decode first video frame (2)");
+		return false;
+	}
+
+	VideoInfo& vi = container.videoInfo;
 	videoFrames.Peek(&frame);
 	vi.first_pts = frame.pts;
 
 	if(container.videoStream->duration != AV_NOPTS_VALUE)
-	{
+		// will be just an estimate until NextVideoFrame gets
+		// called to exhaustion
 		vi.duration = container.videoStream->duration;
-		vi.last_pts = frame.pts + vi.duration;
-	}
 	else
-	{
 		vi.duration = AV_NOPTS_VALUE;
-		vi.last_pts = AV_NOPTS_VALUE;
-	}
+
+	vi.last_pts = AV_NOPTS_VALUE;
+	vi.max_pts = AV_NOPTS_VALUE;
+
+	SeekToPts(vi.first_pts, NULL);
+
 
 	if(ContainsAudio())
 	{
@@ -396,7 +406,8 @@ bool VuoFfmpegDecoder::NextPacket()
 {
 	AVPacket packet;
 
-	while(av_read_frame(container.formatCtx, &packet) >= 0)
+	int ret;
+	while((ret = av_read_frame(container.formatCtx, &packet)) >= 0)
 	{
 		if( packet.stream_index == container.videoStreamIndex ||
 			packet.stream_index == container.audioStreamIndex )
@@ -418,6 +429,9 @@ bool VuoFfmpegDecoder::NextPacket()
 			av_free_packet(&packet);
 		}
 	}
+
+	if (ret != AVERROR_EOF)
+		VUserLog("Error: %s", av_err2str(ret));
 
 	return false;
 }
@@ -445,6 +459,7 @@ bool VuoFfmpegDecoder::NextVideoFrame(VuoVideoFrame* videoFrame)
 
 	videoFrame->image = queuedFrame.image;
 	videoFrame->timestamp = queuedFrame.timestamp;
+	videoFrame->duration = queuedFrame.duration;
 
 	lastVideoTimestamp = queuedFrame.timestamp;
 	lastSentVideoPts = queuedFrame.pts;
@@ -453,7 +468,6 @@ bool VuoFfmpegDecoder::NextVideoFrame(VuoVideoFrame* videoFrame)
 	if( !seeking && AudioOffset() < MAX_AUDIO_LATENCY )
 	{
 		DEBUG_LOG("dup video frame: v: %.3f, a: %.3f => %f", lastVideoTimestamp, lastAudioTimestamp, AudioOffset());
-
 		VuoRetain(queuedFrame.image);
 		videoFrames.Unshift(queuedFrame);
 	}
@@ -466,10 +480,15 @@ bool VuoFfmpegDecoder::NextVideoFrame(VuoVideoFrame* videoFrame)
  * this won't release anything associated iwth frames (decodevideo is smart enough not to read image
  * data if not necessary, and seeking is not necessary)
  */
-bool VuoFfmpegDecoder::StepVideoFrame(int64_t pts)
+bool VuoFfmpegDecoder::StepVideoFrame(int64_t pts, VuoVideoFrame *frame)
 {
+	if (frame)
+		frame->image = NULL;
+
 	VideoFrame queuedFrame;
 
+	const double floatingPointError = 0.0001;
+	double requestedFrameTime = VuoFfmpegUtility::AvTimeToSecond(container.videoStream, pts);
 	do
 	{
 		while(!videoFrames.Shift(&queuedFrame))
@@ -480,13 +499,24 @@ bool VuoFfmpegDecoder::StepVideoFrame(int64_t pts)
 			}
 		}
 		if (queuedFrame.image)
-			VuoRelease(queuedFrame.image);
-	} while(queuedFrame.pts < pts);
+		{
+			if (frame)
+			{
+				if (frame->image)
+					VuoRelease(frame->image);
+				*frame = VuoVideoFrame_make(queuedFrame.image, queuedFrame.timestamp, queuedFrame.duration);
+			}
+			else
+				VuoRelease(queuedFrame.image);
+		}
+	} while (queuedFrame.timestamp + queuedFrame.duration < requestedFrameTime + floatingPointError);
 
 	lastVideoTimestamp = queuedFrame.timestamp;
 	lastSentVideoPts = queuedFrame.pts;
 
-	while(videoFrames.Shift(&queuedFrame)) {}
+	while(videoFrames.Shift(&queuedFrame))
+		if (queuedFrame.image)
+			VuoRelease(queuedFrame.image);
 
 	return true;
 }
@@ -551,7 +581,7 @@ bool VuoFfmpegDecoder::DecodePreceedingVideoFrames()
 	videoFrames.first = NULL;
 	videoFrames.last = NULL;
 
-	if( !SeekToSecond(seekTarget) )
+	if( !SeekToSecond(seekTarget, NULL) )
 		return false;
 
 	vframe.timestamp = lastVideoTimestamp;
@@ -596,12 +626,30 @@ SKIP_VIDEO_FRAME:
 		{
 			if(!NextPacket())
 			{
-				av_free(frame);
-				return false;
+				// https://b33p.net/kosada/node/12217
+				// No next packet is available, but FFmpeg may still have a few frames in its internal buffer.
+				// So instead of giving up now, call avcodec_decode_video2() with an empty packet to flush it.
+				av_new_packet(&packet, 0);
+				break;
 			}
 		}
 
 		avcodec_decode_video2(container.videoCodecCtx, frame, &frameFinished, &packet);
+
+		if (frameFinished == 0 && packet.size == 0)
+		{
+			// After we fed it an empty packet, FFmpeg says it doesn't have a frame for us,
+			// so decoding is maybe actually finished now.
+
+			VideoInfo& v = container.videoInfo;
+
+			// out of video packets.  last_pts is now accurate.
+			if( v.last_pts == AV_NOPTS_VALUE && v.max_pts != AV_NOPTS_VALUE )
+				v.last_pts = v.max_pts;
+
+			av_free(frame);
+			return false;
+		}
 	}
 
 	if( frameFinished && frame != NULL)
@@ -610,6 +658,9 @@ SKIP_VIDEO_FRAME:
 		int64_t pts = av_frame_get_best_effort_timestamp ( frame );
 		int64_t duration = packet.duration == 0 ? pts - lastDecodedVideoPts : packet.duration;
 		lastDecodedVideoPts = pts;
+
+		if( container.videoInfo.max_pts == AV_NOPTS_VALUE || lastDecodedVideoPts > container.videoInfo.max_pts )
+			container.videoInfo.max_pts = lastDecodedVideoPts;
 
 		if( skips < MAX_FRAME_SKIP && !seeking && AudioOffset() > MAX_AUDIO_LEAD )
 		{
@@ -894,19 +945,17 @@ bool VuoFfmpegDecoder::DecodeAudioFrame()
 	}
 }
 
-bool VuoFfmpegDecoder::SeekToSecond(double second)
+bool VuoFfmpegDecoder::SeekToSecond(double second, VuoVideoFrame *frame)
 {
 	// Convert second to stream time
-	// double firstTimestamp = VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.first_pts);
-	// ^ ^ still unsure if this is taken into account in SecondToAvTime
 	int64_t pts = VuoFfmpegUtility::SecondToAvTime(container.videoStream, fmax(second, 0));
-	return SeekToPts(pts);
+	return SeekToPts(pts, frame);
 }
 
 /**
  * Seek to timestamp in video stream time-base.
  */
-bool VuoFfmpegDecoder::SeekToPts(int64_t pts)
+bool VuoFfmpegDecoder::SeekToPts(int64_t pts, VuoVideoFrame *frame)
 {
 	int64_t target_pts = pts;
 
@@ -930,15 +979,15 @@ bool VuoFfmpegDecoder::SeekToPts(int64_t pts)
 	if(ret < 0)
 		DEBUG_LOG("VuoFfmpegDecoder: Failed seeking video - ?");
 
-	seeking = true;
+//	seeking = true;
 
 	// before seeking, set a "best guess" timestamp so that if the seek was to the end of video
 	// and no stepping is required, the timestamp is still (somewhat) accurate
 	lastVideoTimestamp = VuoFfmpegUtility::AvTimeToSecond(container.videoStream, target_pts);
 	lastSentVideoPts = target_pts;
 
-	// step video and audio til the frame timestamp is greater than in pts
-	StepVideoFrame(pts);
+	// step video and audio til the frame timestamp matches pts
+	StepVideoFrame(pts, frame);
 
 	if(ContainsAudio())
 	{
@@ -948,7 +997,7 @@ bool VuoFfmpegDecoder::SeekToPts(int64_t pts)
 			StepAudioFrame(audioPts);
 	}
 
-	seeking = false;
+//	seeking = false;
 
 	return true;
 }
@@ -968,17 +1017,17 @@ double VuoFfmpegDecoder::GetDuration()
 		{
 			// need to manually run through video til end to get last pts value
 			seeking = true;
-			StepVideoFrame(INT64_MAX);
+			StepVideoFrame(INT64_MAX, NULL);
 			seeking = false;
-			container.videoInfo.last_pts = lastDecodedVideoPts;
-			// VLog("{%lld, %lld}", container.videoInfo.first_pts, container.videoInfo.last_pts);
+			container.videoInfo.duration = container.videoInfo.last_pts - container.videoInfo.first_pts;
 		}
 
 		return VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.last_pts) - VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.first_pts);
 	}
 	else
 	{
-		return VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.duration);
+		double u = VuoFfmpegUtility::AvTimeToSecond(container.videoStream, container.videoInfo.duration);
+		return u;
 	}
 }
 
@@ -990,7 +1039,7 @@ void VuoFfmpegDecoder::SetPlaybackRate(double rate)
 	if( (!audioWasEnabled && audioIsEnabled) || rate > 0 != mPlaybackRate > 0 )
 	{
 		mPlaybackRate = rate;
-		SeekToSecond(lastVideoTimestamp);
+		SeekToSecond(lastVideoTimestamp, NULL);
 	}
 	else
 	{

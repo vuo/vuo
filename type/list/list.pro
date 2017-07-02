@@ -28,6 +28,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoBlendMode:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
+		VuoControlCode:0 \
 		VuoCoordinateUnit:0 \
 		VuoCursor:2 \
 		VuoCurve:0 \
@@ -39,8 +40,10 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoDragEvent:2 \
 		VuoDmxColorMap:2 \
 		VuoDurationType:0 \
+		VuoEdgeBlend:0 \
 		VuoFileType:0 \
 		VuoFont:2 \
+		VuoAnchor:0 \
 		VuoGradientNoise:0 \
 		VuoGridType:0 \
 		VuoHidControl:2 \
@@ -86,6 +89,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \
+		VuoProjectionType:0 \
 		VuoReal:0 \
 		VuoRealRegulation:2 \
 		VuoRelativeTime:0 \

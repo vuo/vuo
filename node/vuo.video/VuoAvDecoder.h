@@ -54,7 +54,7 @@ public:
 	/// Get the next audio frame in the queue.  If playback speed is negative (or anything other than 1), this returns nothing.
 	virtual bool NextAudioFrame(VuoAudioFrame* audio);
 	/// Seek the playhead to the second.  `second` is not in timestamp format, rather, relative to movie start.
-	virtual bool SeekToSecond(double second);
+	virtual bool SeekToSecond(double second, VuoVideoFrame *frame);
 	/// The total duration of this video in seconds
 	virtual double GetDuration();
 	/// Set the playback rate.  Any value that isn't 1 will flush the audio queue and discard any future audio frames until

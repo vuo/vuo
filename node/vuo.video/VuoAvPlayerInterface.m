@@ -56,10 +56,10 @@ double VuoAvPlayer_getFrameRate(VuoAvPlayerObjPtr player)
 	return [obj getFrameRate];
 }
 
-bool VuoAvPlayer_seekToSecond(VuoAvPlayerObjPtr player, VuoReal second)
+bool VuoAvPlayer_seekToSecond(VuoAvPlayerObjPtr player, VuoReal second, VuoVideoFrame *frame)
 {
 	VuoAvPlayerObject* obj = (VuoAvPlayerObject*)player;
-	return [obj seekToSecond:second withRange:-1];
+	return [obj seekToSecond:second withRange:-1 frame:frame];
 }
 
 void VuoAvPlayer_setOnPlaybackReadyCallbackObject(VuoAvPlayerObjPtr player, void (*callback)(void* id, bool canPlayMedia), void* id)
