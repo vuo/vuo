@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeWindowPosition [type="vuo.window.position" version="1.0.0" label="Change Window Position|<refresh>refresh\l|<topLeft>topLeft\l|<unit>unit\l|<property>property\r" pos="-45,225" _topLeft="{\"x\":200,\"y\":100}" _unit="\"points\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-180,180" _started_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="179,236"];
+MakeList4 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="147,221"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.2" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="510,285" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.4" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="510,210" _modifierKey="\"any\"" _movedTo_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="225,210" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<MovedTo>MovedTo\l|<Pressed>Pressed\l|<Released>Released\l" _MovedTo_type="VuoPoint2d" _Pressed_type="VuoPoint2d" _Released_type="VuoPoint2d"];
+
+ChangeWindowPosition:property -> MakeList3:1;
+FireOnStart:started -> ChangeWindowPosition:refresh;
+MakeList3:list -> RenderLayersToWindow:setWindowProperties;
+MakeList4:list -> RenderLayersToWindow:layers;
+ReceiveMouseButtons:pressed -> PublishedOutputs:Pressed;
+ReceiveMouseButtons:released -> PublishedOutputs:Released;
+ReceiveMouseMoves:movedTo -> PublishedOutputs:MovedTo;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
+}

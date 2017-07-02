@@ -294,17 +294,6 @@ vector<string> VuoCompiler::Environment::getFrameworkSearchPaths(void)
 	return ret;
 }
 
-static const std::locale VuoCompiler_locale;	///< For hashing strings.
-static const std::collate<char> &VuoCompiler_collate = std::use_facet<std::collate<char> >(VuoCompiler_locale);	///< For hashing strings.
-
-/**
- * Returns a hash of the specified string, to optimize std::map use.
- */
-static inline long hashString(string s)
-{
-	return VuoCompiler_collate.hash(s.data(), s.data()+s.length());
-}
-
 /**
  * Data for loadModulesIntoCombinedEnvironment.
  */
@@ -368,7 +357,7 @@ void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *m
 									  string moduleKey, dir, ext;
 									  VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
 
-									  long hash = hashString(moduleKey);
+									  long hash = VuoStringUtilities::hash(moduleKey);
 									  moduleInfo[hash] = (ModuleInfo){ moduleFile, path, i };
 								  }
 							  }
@@ -378,7 +367,7 @@ void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *m
 						  {
 							  string moduleKey = *modulesToLoad.begin();
 							  modulesToLoad.erase(moduleKey);
-							  long moduleKeyHash = hashString(moduleKey);
+							  long moduleKeyHash = VuoStringUtilities::hash(moduleKey);
 
 							  bool alreadyLoadedModule = false;
 							  for (int i = 0; i < 2; ++i)
@@ -413,7 +402,7 @@ void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *m
 									  {
 										  vector<string> firstParts(parts.begin(), parts.begin() + i);
 										  string genericNodeClass = VuoStringUtilities::join(firstParts, '.');
-										  long genericNodeClassHash = hashString(genericNodeClass);
+										  long genericNodeClassHash = VuoStringUtilities::hash(genericNodeClass);
 
 										  moduleIter = moduleInfo.find(genericNodeClassHash);
 										  if (moduleIter != moduleInfo.end())
@@ -2970,7 +2959,6 @@ VuoCompilerModule * VuoCompiler::getModule(const string &id)
  *
  * @param format The format for printing the node classes.
  *	- If "", prints each class name (e.g. vuo.math.count.VuoInteger), one per line.
- *	- If "path", prints the absolute path of each node class, one per line.
  *	- If "dot", prints the declaration of a node as it would appear in a .vuo (DOT format) file,
  *		with a constant value set for each data+event input port
  *		and a comment listing metadata and port types for the node class.
@@ -2989,7 +2977,7 @@ void VuoCompiler::listNodeClasses(const string &format)
 		}
 		else if (format == "path")
 		{
-			// TODO
+			// TODO: If "path", prints the absolute path of each node class, one per line.
 		}
 		else if (format == "dot")
 		{

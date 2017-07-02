@@ -65,6 +65,7 @@ COMPOSITION_IMAGES += \
 	composition/2Recur.vuo \
 	composition/AreAllValuesTrue.vuo \
    composition/BeepWhenMouseEntersSquare.vuo \
+   composition/BlendImages.vuo \
 	composition/BuildColoredGrid.vuo \
 	composition/CalculateBoxVolume.vuo \
    composition/ChangeBackgroundColor.vuo \
@@ -105,7 +106,6 @@ COMPOSITION_IMAGES += \
    composition/SwitchControllers.vuo \
    ../node/vuo.data/examples/StoreMousePosition.vuo \
 	../node/vuo.event/examples/LoadImageAsynchronously.vuo \
-	../node/vuo.image/examples/BlendImages.vuo \
 	../node/vuo.image/examples/DisplayImage.vuo \
    ../node/vuo.list/examples/CycleSeasons.vuo \
    ../node/vuo.list/examples/DisplayGridOfImages.vuo \
@@ -121,7 +121,13 @@ COMPOSITION_IMAGES += \
    ../node/vuo.time/examples/FlashOnMousePress.vuo \
 	../node/vuo.video/examples/PlayMovie.vuo
 
-pandoc.commands = cat VuoManual.txt \
+contributors.commands = curl http://vuo.org/contributors/markdown -o contributors.md
+contributors.target = contributors.md
+QMAKE_EXTRA_TARGETS += contributors
+POST_TARGETDEPS += contributors.md
+QMAKE_CLEAN += contributors.md
+
+pandoc.commands = cat VuoManual.txt contributors.md \
 	| awk \'{sub(/VUO_VERSION/,\"$$VUO_VERSION\");print}\' \
 	| /usr/local/bin/pandoc \
 	--latex-engine=xelatex \
@@ -133,7 +139,7 @@ pandoc.commands = cat VuoManual.txt \
 	--from=markdown-yaml_metadata_block \
 	-o VuoManual.pdf \
 	-
-pandoc.depends = VuoManual.txt
+pandoc.depends = VuoManual.txt contributors.md
 NODE_CLASS_IMAGE_BASENAMES = $$basename(NODE_CLASS_IMAGES)
 for(i,NODE_CLASS_IMAGE_BASENAMES): pandoc.depends += image-generated/$$replace(i,".c$",".pdf")
 COMPOSITION_IMAGE_BASENAMES = $$basename(COMPOSITION_IMAGES)
@@ -190,7 +196,7 @@ pandocHTML.commands = \
 		; done) \
 	&& cp ../image-generated/*.png image-generated \
 	&& cp ../../editor/VuoEditorApp/Icons/vuo.png image \
-	&& cat ../VuoManual.txt \
+	&& cat ../VuoManual.txt ../contributors.md \
 		| awk \'{sub(/VUO_VERSION/,\"$$VUO_VERSION\");print}\' \
 		# Markdown -> JSON
 		| /usr/local/bin/pandoc \
@@ -218,13 +224,13 @@ pandocHTML.commands = \
 			--stringparam para.propagates.style 1 \
 			--stringparam phrase.propagates.style 1 \
 			--stringparam section.autolabel arabic \
-			--stringparam toc.section.depth 1 \
+			--stringparam toc.section.depth 2 \
 			--stringparam use.id.as.filename 1 \
 			../VuoManual.xsl \
 			- \
 		2>&1 \
 		| ( grep -v '^Writing ' || true )
-pandocHTML.depends = VuoManual.txt
+pandocHTML.depends = VuoManual.txt contributors.md
 for(i,NODE_CLASS_IMAGE_BASENAMES):  pandocHTML.depends += image-generated/$$replace(i,".c$",".pdf")
 for(i,COMPOSITION_IMAGE_BASENAMES): pandocHTML.depends += image-generated/$$replace(i,".vuo$",".pdf")
 pandocHTML.target = VuoManual/index.xhtml

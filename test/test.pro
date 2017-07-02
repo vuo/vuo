@@ -37,6 +37,7 @@ SUBDIRS += \
 	test_TestReferenceCounting \
 	test_TestReferenceCounting_node \
 	test_TestTypes \
+	test_TestWindow \
 	test_TestCompositions \
 	test_TestCompositions_node \
 	test_TestBuiltProducts
@@ -88,6 +89,9 @@ test_TestReferenceCounting_node.depends =
 
 test_TestTypes.subdir = TestTypes
 test_TestTypes.depends = test_TestCompositionExecution
+
+test_TestWindow.subdir = TestWindow
+test_TestWindow.depends =
 
 test_TestSubcompositions.subdir = TestSubcompositions
 test_TestSubcompositions.depends = test_TestCompositionExecution

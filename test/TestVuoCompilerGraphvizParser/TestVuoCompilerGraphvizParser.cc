@@ -291,17 +291,20 @@ private slots:
 		QTest::addColumn< QString >("publishedPortName");
 		QTest::addColumn< bool >("isInput");
 		QTest::addColumn< QString >("expectedDetails");
+		QTest::addColumn< QString >("expectedGraphvizAttributes");
 
-		QTest::newRow("all from published input port") << "hue" << true << "{\"default\":0.3,\"suggestedMin\":0.2,\"suggestedMax\":1.1,\"suggestedStep\":0.1}";
-		QTest::newRow("all from published output port") << "color" << false << "{}";
-		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.500000,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":1}";
-		QTest::newRow("none from published port, no connected ports") << "image" << true << "{}";
+		QTest::newRow("one from published input port") << "Wavelength" << true << "{\"default\":0.050000,\"suggestedMin\":0.000001,\"suggestedMax\":0.05}" << " _Wavelength_type=\"VuoReal\" _Wavelength_suggestedMin=\"0.000001\" _Wavelength_suggestedMax=\"0.05\" _Wavelength=\"0.050000\"";
+		QTest::newRow("all from published input port") << "hue" << true << "{\"default\":0.300000,\"suggestedMin\":0.200000,\"suggestedMax\":1.100000,\"suggestedStep\":0.100000}" << " _hue_type=\"VuoReal\" _hue_suggestedMin=\"0.200000\" _hue_suggestedMax=\"1.100000\" _hue_suggestedStep=\"0.100000\" _hue=\"0.300000\"";
+		QTest::newRow("all from published output port") << "color" << false << "{}" << " _color_type=\"VuoColor\"";
+		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.500000,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":1}" << " _saturation_type=\"VuoReal\" _saturation_suggestedMin=\"0\" _saturation_suggestedMax=\"1\" _saturation_suggestedStep=\"1\" _saturation=\"0.500000\"";
+		QTest::newRow("none from published port, no connected ports") << "image" << true << "{}" << " _image_type=\"VuoImage\"";
 	}
 	void testPublishedPortDetails()
 	{
 		QFETCH(QString, publishedPortName);
 		QFETCH(bool, isInput);
 		QFETCH(QString, expectedDetails);
+		QFETCH(QString, expectedGraphvizAttributes);
 
 		string compositionPath = getCompositionPath("PublishedPorts.vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
@@ -311,7 +314,8 @@ private slots:
 		{
 			if (publishedPort->getClass()->getName() == publishedPortName.toStdString())
 			{
-				json_object *detailsObj = static_cast<VuoCompilerPublishedPort *>(publishedPort->getCompiler())->getDetails(isInput);
+				VuoCompilerPublishedPort *cpp = static_cast<VuoCompilerPublishedPort *>(publishedPort->getCompiler());
+				json_object *detailsObj = cpp->getDetails(isInput);
 				json_object *expectedDetailsObj = json_tokener_parse(expectedDetails.toUtf8().constData());
 
 				{
@@ -332,6 +336,8 @@ private slots:
 						QCOMPARE(QString(json_object_to_json_string(o)), QString(json_object_to_json_string(val)));
 					}
 				}
+
+				QCOMPARE(QString(cpp->getGraphvizAttributes().c_str()), expectedGraphvizAttributes);
 
 				foundPublishedPort = true;
 			}

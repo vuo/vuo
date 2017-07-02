@@ -10,10 +10,13 @@
 #include "TestVuoCompiler.hh"
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerGraph.hh"
 #include "VuoCompilerGraphvizParser.hh"
 #include "VuoCompilerPort.hh"
+#include "VuoCompilerPublishedPortClass.hh"
 #include "VuoGenericType.hh"
 #include "VuoPort.hh"
+#include "VuoPublishedPort.hh"
 #include <sstream>
 
 // Be able to use these types in QTest::addColumn()
@@ -301,6 +304,105 @@ private slots:
 			}
 			QVERIFY(genericTypesSeen.size() == i);
 		}
+	}
+
+	void testGraphHash_data()
+	{
+		QTest::addColumn<long>("hash1");
+		QTest::addColumn<long>("hash2");
+		QTest::addColumn<bool>("hashesEqual");
+
+		string compositionPath = getCompositionPath("GraphHashTest.vuo");
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			long hash2 = VuoCompilerGraph::getHash(&composition);
+			QTest::newRow("identical VuoCompilerCompositions") << hash1 << hash2 << true;
+		}
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			VuoCompilerGraphvizParser *parser2 = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+			VuoCompilerComposition composition2(new VuoComposition(), parser2);
+			delete parser2;
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			long hash2 = VuoCompilerGraph::getHash(&composition2);
+			QTest::newRow("same source code, different VuoCompilerCompositions") << hash1 << hash2 << false;
+		}
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			VuoNode *addedNode1 = compiler->createNode(compiler->getNodeClass("vuo.layer.make.text"));
+			composition.getBase()->addNode(addedNode1);
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			composition.getBase()->removeNode(addedNode1);
+			delete addedNode1;
+			VuoNode *addedNode2 = compiler->createNode(compiler->getNodeClass("vuo.layer.make.text"));
+			composition.getBase()->addNode(addedNode2);
+			long hash2 = VuoCompilerGraph::getHash(&composition);
+			QTest::newRow("compositions differ by a node replaced with a similar node") << hash1 << hash2 << false;
+		}
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			map<string, VuoNode *> nodeForTitle = makeNodeForTitle(composition.getBase()->getNodes());
+			VuoNode *blurNode = nodeForTitle["Blur Image"];
+			VuoPort *blurredPort = blurNode->getOutputPortWithName("blurredImage");
+			VuoCable *cable = blurredPort->getConnectedCables().at(0);
+			composition.getBase()->removeCable(cable);
+			long hash2 = VuoCompilerGraph::getHash(&composition);
+			QTest::newRow("compositions differ by a cable") << hash1 << hash2 << false;
+		}
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			map<string, VuoNode *> nodeForTitle = makeNodeForTitle(composition.getBase()->getNodes());
+			VuoCompilerNode *captureNode = nodeForTitle["Capture Image of Screen"]->getCompiler();
+			VuoCompilerPort *screenPort = static_cast<VuoCompilerPort *>( captureNode->getBase()->getInputPortWithName("screen")->getCompiler() );
+			VuoCompilerCable *publishedCable = new VuoCompilerCable(NULL, NULL, captureNode, screenPort);
+			VuoPort *imagePort = composition.getBase()->getPublishedInputPortWithName("Image");
+			VuoNode *publishedInputNode = imagePort->getConnectedCables().at(0)->getFromNode();
+			publishedCable->getBase()->setFrom(publishedInputNode, imagePort);
+			publishedCable->setAlwaysEventOnly(true);
+			composition.getBase()->addCable(publishedCable->getBase());
+			long hash2 = VuoCompilerGraph::getHash(&composition);
+			QTest::newRow("compositions differ by a published cable") << hash1 << hash2 << false;
+		}
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			composition.getBase()->removePublishedInputPort(1);
+			long hash2 = VuoCompilerGraph::getHash(&composition);
+			QTest::newRow("compositions differ by a published input port") << hash1 << hash2 << false;
+		}
+		{
+			VuoCompilerComposition composition(new VuoComposition(), parser);
+			long hash1 = VuoCompilerGraph::getHash(&composition);
+			VuoCompilerPublishedPortClass *publishedPortClass = new VuoCompilerPublishedPortClass("test", VuoPortClass::eventOnlyPort, NULL);
+			VuoPublishedPort *publishedPort = static_cast<VuoPublishedPort *>( publishedPortClass->newPort()->getBase() );
+			composition.getBase()->addPublishedInputPort(publishedPort, 2);
+			long hash2 = VuoCompilerGraph::getHash(&composition);
+			QTest::newRow("compositions differ by a published output port") << hash1 << hash2 << false;
+		}
+		{
+			string compositionPath2 = getCompositionPath("UnknownNodeClass.vuo");
+			VuoCompilerGraphvizParser *parser2 = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath2, compiler);
+			VuoCompilerComposition composition2(new VuoComposition(), parser2);
+			delete parser2;
+			long hash1 = VuoCompilerGraph::getHash(&composition2);
+			long hash2 = VuoCompilerGraph::getHash(&composition2);
+			QTest::newRow("composition contains an unknown node class") << hash1 << hash2 << true;
+		}
+
+		delete parser;
+	}
+	void testGraphHash()
+	{
+		QFETCH(long, hash1);
+		QFETCH(long, hash2);
+		QFETCH(bool, hashesEqual);
+
+		QCOMPARE((hash1 == hash2), hashesEqual);
 	}
 
 };

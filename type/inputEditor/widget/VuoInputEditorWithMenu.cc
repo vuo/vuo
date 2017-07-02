@@ -15,6 +15,7 @@
 json_object * VuoInputEditorWithMenu::show(QPoint portLeftCenter, json_object *originalValue, json_object *details, map<QString, json_object *> portNamesAndValues)
 {
 	acceptedValue = originalValue;
+	this->details = details;
 	VuoInputEditorMenuItem *menuTree = setUpMenuTree(details);
 
 	QMenu *menu = new QMenu();
@@ -68,4 +69,31 @@ VuoInputEditorMenuItem *VuoInputEditorWithMenu::setUpMenuTree(void)
 void VuoInputEditorWithMenu::acceptAction(QAction *action)
 {
 	acceptedValue = (json_object *)action->data().value<void *>();
+}
+
+/**
+ * Returns true if `value` is in the port's `includeValues` list,
+ * or if the port doesn't have an `includeValues` list (and thus all values should be included in the menu).
+ */
+bool VuoInputEditorWithMenu::shouldIncludeValue(json_object *value)
+{
+	json_object *includeValues = NULL;
+	json_object_object_get_ex(details, "includeValues", &includeValues);
+	if (!includeValues)
+		return true;
+
+	bool includeThisValue = false;
+	int includeValuesCount = json_object_array_length(includeValues);
+	const char *valueString = json_object_to_json_string(value);
+	for (int j = 0; j < includeValuesCount; ++j)
+	{
+		const char *includeValueString = json_object_to_json_string(json_object_array_get_idx(includeValues, j));
+		if (strcmp(valueString, includeValueString) == 0)
+		{
+			includeThisValue = true;
+			break;
+		}
+	}
+
+	return includeThisValue;
 }

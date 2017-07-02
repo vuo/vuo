@@ -15,6 +15,7 @@ NODE_LIBRARY_SOURCES += \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoSceneText.c \
 	VuoImageText.cc \
 	VuoSceneObjectGet.c \
 	VuoSceneObjectRenderer.cc \
@@ -45,6 +46,7 @@ SOURCES += \
 	VuoImageGet.cc \
 	VuoImageMapColors.c \
 	VuoImageRenderer.cc \
+	VuoSceneText.c \
 	VuoImageText.cc \
 	VuoMathExpressionParser.cc \
 	VuoMeshParametric.cc \
@@ -97,6 +99,7 @@ HEADERS += \
 OTHER_FILES += \
 	VuoImageResize.h \
 	VuoImageText.h \
+	VuoSceneText.h \
 	VuoImageWatermark.h \
 	VuoTriggerSet.hh \
 	VuoWindowOpenGLInternal.h \

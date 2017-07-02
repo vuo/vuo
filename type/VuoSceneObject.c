@@ -299,6 +299,8 @@ VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontSh
 /**
  * Returns a scene object representing deferred-rendered text.
  *
+ * The caller is responsible for providing the sceneobject's mesh (e.g., @ref VuoMesh_makeQuadWithoutNormals).
+ *
  * @threadAny
  */
 VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font)
@@ -1138,6 +1140,7 @@ VuoSceneObject VuoSceneObject_makeFromJson(json_object *js)
 		{
 			VuoSceneObject o = VuoSceneObject_makeText(text, font);
 			o.transform = transform;
+			o.mesh = mesh;
 			return o;
 		}
 	}
@@ -1246,6 +1249,12 @@ json_object *VuoSceneObject_getJson(const VuoSceneObject value)
 
 			json_object *fontObject = VuoFont_getJson(value.font);
 			json_object_object_add(js, "font", fontObject);
+
+			if (value.mesh)
+			{
+				json_object *meshObject = VuoMesh_getJson(value.mesh);
+				json_object_object_add(js, "mesh", meshObject);
+			}
 
 			break;
 	}

@@ -250,6 +250,43 @@ void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoRea
 	}
 }
 
+
+/**
+ * Creates a new VuoColor from CMYK values.
+ */
+VuoColor VuoColor_makeWithCMYKA(VuoReal c, VuoReal m, VuoReal y, VuoReal k, VuoReal a)
+{
+	// http://www.rapidtables.com/convert/color/cmyk-to-rgb.htm
+	return VuoColor_makeWithRGBA(
+				(1. - c) * (1. - k),
+				(1. - m) * (1. - k),
+				(1. - y) * (1. - k),
+				a);
+}
+
+/**
+ * Get the Cyan, Magenta, Yellow, Black, and Alpha values from a VuoColor.
+ */
+void VuoColor_getCMYKA(VuoColor color, VuoReal *c, VuoReal *m, VuoReal *y, VuoReal *k, VuoReal *a)
+{
+	// http://www.rapidtables.com/convert/color/rgb-to-cmyk.htm
+
+	double 	r = color.r,
+			g = color.g,
+			b = color.b;
+
+	*k = 1. - MAX(MAX(r, g), b);
+	if (VuoReal_areEqual(*k, 1))
+		*c = *m = *y = 0;
+	else
+	{
+		*c = (1. - r - *k) / (1. - *k);
+		*m = (1. - g - *k) / (1. - *k);
+		*y = (1. - b - *k) / (1. - *k);
+	}
+	*a = color.a;
+}
+
 /**
  * Returns the weighted (by alpha) average of @c colors.
  *

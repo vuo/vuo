@@ -1115,5 +1115,27 @@ char * VuoImage_getSummary(const VuoImage value)
 	if (!value)
 		return strdup("(no image)");
 
-	return VuoText_format("GL Texture (ID %u)<br>%lux%lu", value->glTextureName, value->pixelsWide, value->pixelsHigh);
+	char *format;
+	switch (value->glInternalFormat)
+	{
+		case GL_RGB:					format = strdup("RGB, each channel stored as 8-bit integer (GL_RGB)"); break;
+		case GL_RGB16F_ARB:				format = strdup("RGB, each channel stored as 16-bit float (GL_RGB16F_ARB)"); break;
+		case GL_RGBA:					format = strdup("RGBA, each channel stored as 8-bit integer (GL_RGBA)"); break;
+		case GL_RGBA16F_ARB:			format = strdup("RGBA, each channel stored as 16-bit float (GL_RGBA16F_ARB)"); break;
+		case GL_LUMINANCE8:				format = strdup("intensity, stored as 8-bit integer (GL_LUMINANCE8)"); break;
+		case GL_LUMINANCE16F_ARB:		format = strdup("intensity, stored as 16-bit float (GL_LUMINANCE16F_ARB)"); break;
+		case GL_LUMINANCE8_ALPHA8:		format = strdup("intensity+alpha, each channel stored as 8-bit integer (GL_LUMINANCE8_ALPHA8)"); break;
+		case GL_LUMINANCE_ALPHA16F_ARB:	format = strdup("intensity+alpha, each channel stored as 16-bit float (GL_LUMINANCE_ALPHA16F_ARB)"); break;
+		case GL_DEPTH_COMPONENT:		format = strdup("intensity, stored as 16-bit float (GL_DEPTH_COMPONENT)"); break;
+		default:						format = VuoGl_stringForConstant(value->glInternalFormat);
+	}
+
+	char *summary = VuoText_format("GL Texture (ID %u)<br>Size: %lux%lu pixels<br>Type: %s",
+		value->glTextureName,
+		value->pixelsWide, value->pixelsHigh,
+		format);
+
+	free(format);
+
+	return summary;
 }

@@ -17,7 +17,7 @@ MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer
 MakeRandomValue3 [type="vuo.noise.random.VuoPoint2d" version="1.0.0" label="Make Random Value|<refresh>refresh\l|<minimum>minimum\l|<maximum>maximum\l|<value>value\r" pos="165,0" _minimum="{\"x\":-0.80000001192092896,\"y\":-0.5}" _maximum="{\"x\":0.80000001192092896,\"y\":0.5}"];
 MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="480,210" _text="\"Detecting…\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":0.5,\"g\":0.5,\"b\":0.5,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0.0,\"y\":0.0}"];
 MixAudioChannels [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="-75,270"];
-PlayAudioFile [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="-435,30" _url="\"SignalToNoise.mp3\"" _setTime="\"\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="-435,30" _url="\"SignalToNoise.mp3\"" _loop="true" _setTime="\"\"" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="930,15" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SelectInput3 [type="vuo.select.in.boolean.VuoLayer" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="690,195"];
 SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="-225,135" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
@@ -36,8 +36,6 @@ MakeTextLayer:layer -> SelectInput3:falseOption;
 MixAudioChannels:mixedSamples -> DetectAudioBeats:samples;
 PlayAudioFile:decodedChannels -> MixAudioChannels:samples;
 PlayAudioFile:decodedChannels -> SendLiveAudio:sendChannels;
-PlayAudioFile:finishedPlayback -> PlayAudioFile:play;
-PlayAudioFile:finishedPlayback -> PlayAudioFile:setTime;
 RenderLayersToWindow:requestedFrame -> DetectAudioBeats:time [style=invis];
 RenderLayersToWindow:requestedFrame -> SmoothWithSpring2:time [style=invis];
 SelectInput3:out -> MakeList5:2;

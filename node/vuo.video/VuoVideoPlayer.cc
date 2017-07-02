@@ -347,29 +347,26 @@ bool VuoVideoPlayer::_Seek(double second)
 {
 	bool wasPlaying = isPlaying;
 
-	if(wasPlaying)
-		_Pause();
-
-	if( decoder->SeekToSecond(second) )
+	if (wasPlaying)
 	{
-		if(wasPlaying)
+		_Pause();
+		if (decoder->SeekToSecond(second, NULL))
 		{
 			lastSentVideoTime = DISPATCH_TIME_FOREVER;
 			_Play( dispatch_time(DISPATCH_TIME_NOW, 0) );
+			return true;
 		}
-		else
+	}
+	else
+	{
+		VuoVideoFrame f;
+		if (decoder->SeekToSecond(second, &f))
 		{
-			VuoVideoFrame f;
-
-			if(NextVideoFrame(&f))
-			{
-				TRY_RELEASE_VIDEO(videoFrame);
-				TRY_RELEASE_AUDIO(audioFrame);
-				videoFrame = f;
-			}
+			TRY_RELEASE_VIDEO(videoFrame);
+			TRY_RELEASE_AUDIO(audioFrame);
+			videoFrame = f;
+			return true;
 		}
-
-		return true;
 	}
 
 	return false;
@@ -421,23 +418,27 @@ unsigned int VuoVideoPlayer::GetAudioChannels()
 bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
 {
 	const int MAX_FRAMES_TO_STEP_BEFORE_SEEK = 5;
-	double framerate = 1. / decoder->GetFrameRate();
+	const double floatingPointError = 0.0001;
+	double averageFrameDuration = 1. / decoder->GetFrameRate();
+	double duration = GetDuration();
+	double target = fmax(0, fmin(duration, second));
 
 	// first check if the last decoded frame is the one we want, or close to it
 	if(videoFrame.image != NULL)
 	{
-		double frameDelta = fabs(second - videoFrame.timestamp);
+		double frameDelta = fabs(target - videoFrame.timestamp);
 
 		// asking for the frame that's already stored. send it.
-		if( frameDelta <= framerate )
+		if ( ((videoFrame.timestamp < target + floatingPointError) && (target + floatingPointError < videoFrame.timestamp + videoFrame.duration))
+			|| (VuoReal_areEqual(videoFrame.timestamp + videoFrame.duration, duration) && VuoReal_areEqual(target, duration)) )
 		{
-			// VLog("next frame procured by already matching current (sent  %.2f, %.2f", videoFrame.timestamp, second);
+			// VLog("next frame procured by already matching current (sent  %.3f, %.3f)", videoFrame.timestamp, target);
 			*frame = videoFrame;
 			return true;
 		}
 		// asking for the next frame, or very close to it.
 		// this depends on the caller having set an appropriate playback rate (either forwards or backwards)
-		else if( frameDelta < framerate * MAX_FRAMES_TO_STEP_BEFORE_SEEK && (second - videoFrame.timestamp > 0 == playbackRate > 0) )
+		else if( frameDelta < averageFrameDuration * MAX_FRAMES_TO_STEP_BEFORE_SEEK && (target - videoFrame.timestamp > 0 == playbackRate > 0) )
 		{
 			for(int i = 0; i < MAX_FRAMES_TO_STEP_BEFORE_SEEK; i++)
 			{
@@ -449,10 +450,10 @@ bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
 					TRY_RELEASE_VIDEO(videoFrame);
 					videoFrame = f;
 
-					if( (playbackRate >= 0 ? videoFrame.timestamp >= second : videoFrame.timestamp <= second) )
+					if (videoFrame.timestamp + videoFrame.duration > target + floatingPointError)
 					{
 						*frame = videoFrame;
-						// VLog("next frame procured by stepping (sent  %.2f, %.2f", videoFrame.timestamp, second);
+						// VLog("next frame procured by stepping (sent  %.3f, %.3f)", videoFrame.timestamp, target);
 						return true;
 					}
 				}
@@ -460,18 +461,15 @@ bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
 		}
 	}
 
-	double duration = GetDuration();
 	bool seekSuccess = false;
-
-	double target = fmin(duration, second);
 
 	// if the seek target is ≥ duration seek to a little before the end timestamp and step.
 	// that way you usually end up with a valid frame to send.
-	if(second > duration - .5)
+	if(target > duration - .5)
 	{
 		seekSuccess = Seek(duration - .5);
 
-		while( videoFrame.timestamp < target )
+		while (videoFrame.timestamp + videoFrame.duration < target + floatingPointError)
 		{
 			VuoVideoFrame f;
 
@@ -485,13 +483,13 @@ bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
 				break;
 			}
 		}
+		// VLog("next frame procured by seek to end & backpedal (sent  %.3f, %.3f)", videoFrame.timestamp, target);
 	}
 	else
 	{
-		seekSuccess = Seek(second);
+		seekSuccess = Seek(target);
+		// VLog("next frame procured by plain ol' seek (sent  %.3f, %.3f)", videoFrame.timestamp, target);
 	}
-
-	// VLog("ended with: %.2f / %.2f", videoFrame.timestamp, duration);
 
 	*frame = videoFrame;
 
@@ -596,7 +594,7 @@ void VuoVideoPlayer::sendVideoFrame()
 			case VuoLoopType_Loop:
 				// seek back to the video start and resume playback
 				stopTimer(&audio_timer, &audio_semaphore);
-				decoder->SeekToSecond(playbackRate > 0 ? 0 : decoder->GetDuration());
+				decoder->SeekToSecond(playbackRate > 0 ? 0 : decoder->GetDuration(), NULL);
 				playbackStart = dispatch_time(DISPATCH_TIME_NOW, 0);
 				timestampStart = decoder->GetLastDecodedVideoTimeStamp();
 				lastVideoTimestamp = timestampStart;

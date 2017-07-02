@@ -16,7 +16,7 @@ VuoModuleMetadata({
 						 "read", "open", "listen",
 						 "arduino", "rs232", "rs-232", "usb", "modem"
 					 ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoSerialIO"
 					 ],
@@ -41,11 +41,16 @@ static void updateDevice(struct nodeInstanceData *context, VuoSerialDevice newDe
 		VuoSerialDevice_release(context->device);
 	}
 
-	if (VuoSerialDevice_realize(newDevice, &context->device))
+	VuoSerialDevice realizedDevice;
+	if (VuoSerialDevice_realize(newDevice, &realizedDevice))
 	{
+		context->device = newDevice;
 		VuoSerialDevice_retain(context->device);
-		context->s = VuoSerial_getShared(context->device.path);
+		context->s = VuoSerial_getShared(realizedDevice.path);
 		VuoRetain(context->s);
+
+		VuoSerialDevice_retain(realizedDevice);
+		VuoSerialDevice_release(realizedDevice);
 	}
 }
 

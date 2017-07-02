@@ -29,12 +29,11 @@ MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make 
 MakePointsAlongCurve2 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Curve|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="585,375" _startPosition="-1.000000" _endPosition="1.000000" _curve="\"exponential\"" _easing="\"out\""];
 MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="810,300"];
 MergeXYLists2 [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="810,495"];
-PlayAudioFile [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="150,75" _url="\"OndesMartenot.mp3\"" _setTime="0.000000" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+PlayAudioFile [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="150,75" _url="\"OndesMartenot.mp3\"" _loop="true" _setTime="0.000000" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
 RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1425,375" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SendLiveAudio2 [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="360,60" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
 ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="990,375" _color="{\"r\":0.659998,\"g\":0.659998,\"b\":0.659998,\"a\":1.000000}"];
 ShadeWithUnlitColor2 [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="990,570" _color="{\"r\":1.000000,\"g\":0.466438,\"b\":0.475029,\"a\":1.000000}"];
-ShareValue [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-15,195"];
 
 CalculateAmplitudeForFrequencies2:amplitudes -> HoldList6:newValue;
 CalculateAmplitudeForFrequencies:amplitudes -> HoldList5:newValue;
@@ -62,11 +61,8 @@ MergeXYLists:points -> MakeLineStripMesh2:positions;
 PlayAudioFile:decodedChannels -> GetFirstItemInList:list;
 PlayAudioFile:decodedChannels -> GetLastItemInList:list;
 PlayAudioFile:decodedChannels -> SendLiveAudio2:sendChannels;
-PlayAudioFile:finishedPlayback -> ShareValue:value;
 RenderSceneToWindow:requestedFrame -> HoldList5:refresh [style=invis];
 RenderSceneToWindow:requestedFrame -> HoldList6:refresh [style=invis];
 ShadeWithUnlitColor2:shader -> Make3DObject2:shader;
 ShadeWithUnlitColor:shader -> Make3DObject:shader;
-ShareValue:sameValue -> PlayAudioFile:play;
-ShareValue:sameValue -> PlayAudioFile:setTime [event=true];
 }

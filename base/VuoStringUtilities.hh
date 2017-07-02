@@ -10,6 +10,8 @@
 #ifndef VUOSTRINGUTILITIES_H
 #define VUOSTRINGUTILITIES_H
 
+#include <locale>
+
 /**
  * Functions for dealing with strings.
  */
@@ -37,6 +39,17 @@ public:
 	static string expandCamelCase(string camelCaseString);
 
 	static string makeRandomHash(int length);
+
+	/**
+	 * Generates an integer hash value for the string.
+	 */
+	static inline long hash(const string &s)
+	{
+		return collate.hash(s.data(), s.data() + s.length());
+	}
+
+	static const std::locale locale;  ///< For hashing strings.
+	static const std::collate<char> &collate;  ///< For hashing strings.
 };
 
 

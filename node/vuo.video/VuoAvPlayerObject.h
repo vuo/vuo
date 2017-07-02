@@ -88,7 +88,7 @@
 /// decode a number of video samples prior to the current timestamp
 - (bool) decodePreceedingVideoSamples;
 /// seek playhead to point and time range to decode within.  If range is < 0, `duration - second` is set as range.
-- (bool) seekToSecond:(float)second withRange:(float)range;
+- (bool) seekToSecond:(float)second withRange:(float)range frame:(VuoVideoFrame *)frame;
 /// Is the video ready to begin playback?
 - (bool) canBeginPlayback;
 /// Get the last decoded video frame.

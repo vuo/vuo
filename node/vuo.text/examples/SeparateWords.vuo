@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Demonstrates the visual appearance of a few control characters.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="420,150"];
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="420,300" _separator="\"\""];
+CycleThroughList2 [type="vuo.list.cycle.VuoControlCode" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="15,120" _wrapMode="\"wrap\""];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-180,0" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList10 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="371,311" _1="\"Separator: \"" _3="\"\\nClick to change.\""];
+MakeList34 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="724,191" fillcolor="green"];
+MakeList4 [type="vuo.list.make.5.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<list>list\r" pos="374,161" _1="\"A\"" _2="\"legal\"" _3="\"lethal\"" _4="\"local\"" _5="\"landfill\""];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="754,206" fillcolor="green"];
+MakeList8 [type="vuo.list.make.4.VuoControlCode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="-55,131" _1="\"newline-unix\"" _2="\"space\"" _3="\"en-space\"" _4="\"em-space\""];
+MakeTextFromControlCode [type="vuo.text.make.controlCode" version="1.0.0" label="Make Text from Control Code|<refresh>refresh\l|<controlCode>controlCode\l|<text>text\r" pos="180,120" fillcolor="violet"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="555,180" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":0,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="555,330" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"}" _center="{\"x\":-0.40000000596046448,\"y\":-0.40000000596046448}"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-240,60" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="795,180" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SummarizeValue3 [type="vuo.data.summarize.VuoControlCode" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="450,510"];
+
+AppendTexts2:compositeText -> MakeTextLayer2:text;
+AppendTexts:compositeText -> MakeTextLayer:text;
+CycleThroughList2:item -> MakeTextFromControlCode:controlCode;
+CycleThroughList2:item -> SummarizeValue3:value;
+FireOnStart2:started -> CycleThroughList2:goForward;
+MakeList10:list -> AppendTexts2:texts;
+MakeList34:list -> RenderLayersToWindow:layers;
+MakeList4:list -> AppendTexts:texts;
+MakeList5:list -> RenderLayersToWindow:setWindowProperties;
+MakeList8:list -> CycleThroughList2:list;
+MakeTextFromControlCode:text -> AppendTexts:separator;
+MakeTextLayer2:layer -> MakeList34:2;
+MakeTextLayer:layer -> MakeList34:1;
+ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
+SummarizeValue3:summary -> MakeList10:2;
+}

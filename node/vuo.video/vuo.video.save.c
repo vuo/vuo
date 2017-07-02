@@ -12,13 +12,14 @@
 #include "VuoMovieFormat.h"
 #include "VuoImageResize.h"
 #include "../vuo.image/VuoSizingMode.h"
+#include <pthread.h>
 
 VuoModuleMetadata({
 					"title" : "Save to Movie",
 					"keywords" : [
 						"record", "screen capture", "screencast", "video", "fraps", "append", "write", "export"
 					],
-					"version" : "1.0.0",
+					"version" : "1.0.1",
 					"dependencies" : [
 						"VuoAvWriter",
 						"VuoImageResize"
@@ -31,7 +32,19 @@ VuoModuleMetadata({
 					}
 				 });
 
-#define APPEND_VIDEO_AUDIO_IMAGE_INITIALIZE_DELTA .5f	///< Allow .5 seconds from reeceiving the first image to also receive audio.  If no audio detected within this range, begin recording video.
+/**
+ * AVFoundation needs to initialize audio & video at the same time.
+ * This is the buffer time between receiving a video frame and initializing
+ * video without audio.
+ */
+#define APPEND_VIDEO_AUDIO_IMAGE_INITIALIZE_DELTA .5
+
+typedef enum {
+	VuoAvWriterState_None,
+	VuoAvWriterState_Initializing,
+	VuoAvWriterState_Ready,
+	VuoAvWriterState_Failed
+} AvWriterState;
 
 struct nodeInstanceData
 {
@@ -41,6 +54,13 @@ struct nodeInstanceData
 	int imageWidth, imageHeight;
 	int channelCount;
 	double firstEvent;
+	bool stopping;
+
+	dispatch_queue_t avWriterQueue;
+	dispatch_group_t avWriterQueueGroup;
+
+	AvWriterState writerState;
+	pthread_mutex_t writerStateMutex;
 
 	// Used in the event that the image passed is not the right size
 	// for the current movie.  Not initialized by default since most
@@ -51,7 +71,11 @@ struct nodeInstanceData
 	VuoImageRenderer imageRenderer;
 };
 
-void initResizeShader( struct nodeInstanceData* instance )
+#define setWriterState(instance, state) pthread_mutex_lock(&((instance)->writerStateMutex)); \
+(instance)->writerState = (state); \
+pthread_mutex_unlock(&((instance)->writerStateMutex));
+
+static void initResizeShader( struct nodeInstanceData* instance )
 {
 	instance->resizeShaderInitialized = true;
 
@@ -64,7 +88,7 @@ void initResizeShader( struct nodeInstanceData* instance )
 	VuoRetain(instance->shader);
 }
 
-void freeResizeShader( struct nodeInstanceData* instance )
+static void freeResizeShader( struct nodeInstanceData* instance )
 {
 	instance->resizeShaderInitialized = false;
 	VuoRelease( instance->shader );
@@ -83,6 +107,12 @@ struct nodeInstanceData* nodeInstanceInit()
 	instance->lastUrl = VuoText_make("");
 	VuoRetain(instance->lastUrl);
 
+	instance->writerState = VuoAvWriterState_None;
+	pthread_mutex_init(&(instance->writerStateMutex), NULL);
+
+	instance->avWriterQueue = dispatch_queue_create("org.vuo.video_writer_queue", DISPATCH_QUEUE_SERIAL);
+	instance->avWriterQueueGroup = dispatch_group_create();
+
 	instance->firstEvent = -1;
 	instance->imageWidth = -1;
 	instance->imageHeight = -1;
@@ -91,6 +121,16 @@ struct nodeInstanceData* nodeInstanceInit()
 	instance->resizeShaderInitialized = false;
 
 	return instance;
+}
+
+static void reset(struct nodeInstanceData* instance)
+{
+	// reset
+	instance->firstEvent = -1;
+	instance->imageWidth = -1;
+	instance->imageHeight = -1;
+	instance->channelCount = -1;
+	setWriterState(instance, VuoAvWriterState_None);
 }
 
 void nodeInstanceTriggerStart(
@@ -111,93 +151,106 @@ void nodeInstanceEvent(
 	VuoInputData(VuoMovieFormat, {"default":{"imageEncoding":"H264", "imageQuality":1, "audioEncoding":"LinearPCM", "audioQuality":1}}) format
 	)
 {
+	// grab timestamp at earliest possible instance
+	VuoReal received = VuoLogGetTime();
+
+	pthread_mutex_lock(&((*instance)->writerStateMutex));
+	AvWriterState state = (*instance)->writerState;
+	pthread_mutex_unlock(&((*instance)->writerStateMutex));
+
+	// if the previous attempt to initialize failed empty the caches
+	if(state == VuoAvWriterState_Failed)
+	{
+		reset(*instance);
+		state = VuoAvWriterState_None;
+	}
+
 	if (saveImageEvent && saveImage)
 	{
-		if (!VuoAvWriter_isInitialized((*instance)->avWriter) && saveImage != NULL)
+		if ((*instance)->imageWidth == -1)
 		{
-			double curTime = VuoLogGetTime();
-
-			if( (*instance)->firstEvent < 0 )
-				(*instance)->firstEvent = curTime;
-
-			// always use the latest image
 			(*instance)->imageWidth = saveImage->pixelsWide;
 			(*instance)->imageHeight = saveImage->pixelsHigh;
+		}
 
-			if((*instance)->channelCount > 0 || ( ((*instance)->firstEvent > 0) && ((curTime - (*instance)->firstEvent) > APPEND_VIDEO_AUDIO_IMAGE_INITIALIZE_DELTA)) )
-			{
+		if (state == VuoAvWriterState_None)
+		{
+			// set to initializing so that init function isn't called repeatedly before AvWriter_Init returns,
+			// and also prevents node from tryning to write to uninitialized writer
+			setWriterState(*instance, VuoAvWriterState_Initializing);
+
+			if( (*instance)->firstEvent < 0 )
+				(*instance)->firstEvent = received;
+
+			dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^{
+				double waitForAudioStart = VuoLogGetTime();
+				while ((*instance)->channelCount == -1 && VuoLogGetTime() - waitForAudioStart < APPEND_VIDEO_AUDIO_IMAGE_INITIALIZE_DELTA)
+					usleep(USEC_PER_SEC/100);
+
 				VuoAvWriter_initializeMovie((*instance)->avWriter,
-											saveImage->pixelsWide,
-											saveImage->pixelsHigh,
+											(*instance)->imageWidth,
+											(*instance)->imageHeight,
 											(*instance)->channelCount,
 											url,
 											overwriteUrl,
 											format);
-			}
+
+				bool initSuccess = VuoAvWriter_isInitialized((*instance)->avWriter);
+				setWriterState(*instance, initSuccess ? VuoAvWriterState_Ready : VuoAvWriterState_Failed);
+			});
 		}
-		else
-		{
-			// if initialized - before appending the image, make sure it's the same dimensions as the
-			// currently recording video.  if not, resize it.
-			if( saveImage->pixelsWide != (*instance)->imageWidth || saveImage->pixelsHigh != (*instance)->imageHeight )
+
+		VuoRetain(saveImage);
+		dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^{
+			if (saveImage->pixelsWide != (*instance)->imageWidth || saveImage->pixelsHigh != (*instance)->imageHeight)
 			{
-				if(!(*instance)->resizeShaderInitialized)
-				{
+				if (!(*instance)->resizeShaderInitialized)
 					initResizeShader( (*instance) );
-				}
 
-				VuoImage resized = VuoImageResize_resize(	saveImage,
-															(*instance)->shader,
-															(*instance)->imageRenderer,
-															VuoSizingMode_Fit,
-															(*instance)->imageWidth,
-															(*instance)->imageHeight);
+				VuoImage resized = VuoImageResize_resize(saveImage,
+														 (*instance)->shader,
+														 (*instance)->imageRenderer,
+														 VuoSizingMode_Fit,
+														 (*instance)->imageWidth,
+														 (*instance)->imageHeight);
 				VuoRetain( resized );
-
-				VuoAvWriter_appendImage((*instance)->avWriter, resized);
-
+				VuoAvWriter_appendImage((*instance)->avWriter, resized, received - (*instance)->firstEvent);
 				VuoRelease( resized );
 			}
 			else
 			{
 				// safe to call appendImage all day long - it will only write if the file has been initialized and is currently
 				// recording.
-				VuoAvWriter_appendImage((*instance)->avWriter, saveImage);
+				VuoAvWriter_appendImage((*instance)->avWriter, saveImage, received - (*instance)->firstEvent);
 			}
-		}
+			VuoRelease(saveImage);
+		});
 	}
 
 	if (saveAudioEvent && saveAudio)
 	{
-		if (!VuoAvWriter_isInitialized((*instance)->avWriter) && saveAudio != NULL)
+		if ((*instance)->channelCount == -1)
 		{
+			// setting channel count lets the image processing part know that it's okay to initialize movie.
 			(*instance)->channelCount = VuoListGetCount_VuoAudioSamples(saveAudio);
-
-			// don't initialize a solely audio movie file.
-			if((*instance)->imageWidth > 0)
-			{
-				VuoAvWriter_initializeMovie((*instance)->avWriter,
-							(*instance)->imageWidth,
-							(*instance)->imageHeight,
-							(*instance)->channelCount,
-							url,
-							overwriteUrl,
-							format);
-			}
 		}
 
-		VuoAvWriter_appendAudio((*instance)->avWriter, saveAudio);
+		if (state == VuoAvWriterState_Initializing || state == VuoAvWriterState_Ready)
+		{
+			VuoRetain(saveAudio);
+			dispatch_group_async((*instance)->avWriterQueueGroup, (*instance)->avWriterQueue, ^{
+				VuoAvWriter_appendAudio((*instance)->avWriter, saveAudio, received - (*instance)->firstEvent);
+				VuoRelease(saveAudio);
+			});
+		}
 	}
 
 	if(finalize)
 	{
+		(*instance)->stopping = true;
+		dispatch_group_wait((*instance)->avWriterQueueGroup, DISPATCH_TIME_FOREVER);
 		VuoAvWriter_finalize((*instance)->avWriter);
-
-		// reset
-		(*instance)->firstEvent = -1;
-		(*instance)->imageWidth = -1;
-		(*instance)->imageHeight = -1;
-		(*instance)->channelCount = -1;
+		reset(*instance);
 	}
 }
 
@@ -205,6 +258,11 @@ void nodeInstanceTriggerStop(
 	VuoInstanceData(struct nodeInstanceData*) instance
 	)
 {
+	(*instance)->stopping = true;
+
+	// block til whatever is currently writing finishes
+	dispatch_group_wait((*instance)->avWriterQueueGroup, DISPATCH_TIME_FOREVER);
+
 	if( (*instance)->resizeShaderInitialized )
 		freeResizeShader( *instance );
 }
@@ -214,9 +272,19 @@ void nodeInstanceFini
 	VuoInstanceData(struct nodeInstanceData*) instance
 )
 {
+	(*instance)->stopping = true;
+
 	if( (*instance)->resizeShaderInitialized )
 		freeResizeShader( *instance );
 
+	int ret =  pthread_mutex_destroy(&((*instance)->writerStateMutex));
+	if(ret != 0) VUserLog("Failed destroying video writer mutex: (%i)", ret);
+
+	// wait for any existing frames to be written
+	dispatch_group_wait((*instance)->avWriterQueueGroup, DISPATCH_TIME_FOREVER);
+	dispatch_release((*instance)->avWriterQueue);
+
+	// release calls finalize
 	VuoRelease( (*instance)->avWriter );
 	VuoRelease( (*instance)->lastUrl );
 }

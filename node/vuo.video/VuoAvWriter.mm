@@ -74,8 +74,6 @@ bool VuoAvWriter_initializeMovie(VuoAvWriter writer, int width, int height, int 
 			}
 		}
 
-		// VLog("initialize with: %i, %i  %i", width, height, channels);
-
 		// try to initialize the AssetWriter
 		bool success = [av setupAssetWriterWithUrl:file_url
 						imageWidth:width
@@ -106,24 +104,24 @@ bool VuoAvWriter_isInitialized(VuoAvWriter writer)
  * Can return false in the event that a movie file already exists at url, or initialization failed for any reason.
  * After the initial call, this method always returns true.
  */
-void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image)
+void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image, VuoReal timestamp)
 {
 	VuoAvWriterObject* av = (VuoAvWriterObject*)writer;
 
 	if(image == nil || av == nil || ![av isRecording])
 		return;
 
-	[av appendImage:image];
+	[av appendImage:image presentationTime:timestamp];
 }
 
-void VuoAvWriter_appendAudio(VuoAvWriter writer, VuoList_VuoAudioSamples samples)
+void VuoAvWriter_appendAudio(VuoAvWriter writer, VuoList_VuoAudioSamples samples, VuoReal timestamp)
 {
 	VuoAvWriterObject* av = (VuoAvWriterObject*)writer;
 
 	if(samples == nil || av == nil || ![av isRecording])
 		return;
 
-	[av appendAudio:samples];
+	[av appendAudio:samples presentationTime:timestamp];
 }
 
 void VuoAvWriter_finalize(VuoAvWriter writer)

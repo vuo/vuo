@@ -1,4 +1,4 @@
-VUO_VERSION = 1.2.2
+VUO_VERSION = 1.2.3
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -38,8 +38,8 @@ GAMMA_ROOT = /usr/local/Cellar/gamma/0.9.5
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.2.0
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
 FFMPEG_ROOT = /usr/local/Cellar/ffmpeg/2.1
-LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.9
-LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.2.0
+LIBUSB_ROOT = /usr/local/Cellar/libusb/1.0.20
+LIBFREENECT_ROOT = /usr/local/Cellar/libfreenect/0.5.3
 OSCPACK_ROOT = /usr/local/Cellar/oscpack/1.1.0
 ZXING_ROOT = /usr/local/Cellar/zxing/2.3.0
 LIBXML2_ROOT = /usr/local/Cellar/libxml2/2.9.2

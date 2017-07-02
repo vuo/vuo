@@ -21,10 +21,21 @@
 #include "VuoText.h"
 
 /**
- * Information about an audio input device.
+ * Which field to match on.
+ */
+typedef enum
+{
+	VuoVideoInputDevice_MatchIdThenName,
+	VuoVideoInputDevice_MatchId,
+} VuoVideoInputDevice_MatchType;
+
+/**
+ * Information about a video input device.
  */
 typedef struct
 {
+	VuoVideoInputDevice_MatchType matchType;	///< Which field to use for matching a VuoVideoInputDevice structure to an actual device.
+
 	VuoText id;		///< [QtCaptureDevice modelUniqueID]
 	VuoText name;	///< [QtCaptureDevice localizedDisplayName]
 
@@ -48,12 +59,12 @@ void VuoVideoInputDevice_release(VuoVideoInputDevice value);
 ///@}
 
 /**
- * Returns an audio input device with the specified values.
+ * Returns a video input device with the specified values.
  */
 static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText name) __attribute__((const));
 static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText name)
 {
-	VuoVideoInputDevice device = { id, name };
+	VuoVideoInputDevice device = { VuoVideoInputDevice_MatchIdThenName, id, name };
 	return device;
 }
 

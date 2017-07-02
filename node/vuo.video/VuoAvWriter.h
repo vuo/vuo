@@ -38,12 +38,13 @@ bool VuoAvWriter_isInitialized(VuoAvWriter writer);
 /**
  * Appends an image to a movie file.  If called prior to VuoAvWriter_initializeMovie, this has no effect.
  */
-void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image);
+void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image, VuoReal timestamp);
+// void VuoAvWriter_appendImage(VuoAvWriter writer, VuoImage image);
 
 /**
  * Appends a set of audio samples to movie file.  If called prior to VuoAvWriter_initializeMovie, this has no effect.
  */
-void VuoAvWriter_appendAudio(VuoAvWriter writer, VuoList_VuoAudioSamples samples);
+void VuoAvWriter_appendAudio(VuoAvWriter writer, VuoList_VuoAudioSamples samples, VuoReal timestamp);
 
 /**
  * Stop recording and finalize rendering the movie.

@@ -55,6 +55,7 @@ public:
 	bool hasGatherOverlappedByAnotherTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	void checkForInfiniteFeedback(void);
 	void checkForDeadlockedFeedback(void);
+	static long getHash(VuoCompilerComposition *composition);
 
 private:
 	/**
@@ -130,6 +131,9 @@ private:
 	/// not-eventlessly-transmitting nodes.
 	map<VuoCompilerNode *, vector<VuoCompilerNode *> > eventlesslyDownstreamNodes;
 
+	/// Cached results of mayTransmit(VuoCompilerNode *, VuoCompilerNode *, VuoCompilerTriggerPort *).
+	map<VuoCompilerTriggerPort *, map<VuoCompilerNode *, map<VuoCompilerNode *, bool> > > vertexMayTransmit;
+
 	/// Cached results of getNumVerticesWithToNode().
 	map<VuoCompilerTriggerPort *, map<VuoCompilerNode *, size_t> > numVerticesWithToNode;
 
@@ -150,7 +154,6 @@ private:
 	bool mayTransmit(Vertex vertex, VuoCompilerTriggerPort *trigger);
 	bool mayTransmit(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger);
 	bool mayTransmit(VuoCompilerNode *fromNode, VuoCompilerNode *toNode);
-	set<Edge> getEdgesFromVertex(Vertex vertex, VuoCompilerTriggerPort *trigger);
 	size_t getNumVerticesWithFromNode(VuoCompilerNode *fromNode, VuoCompilerTriggerPort *trigger);
 	size_t getNumVerticesWithToNode(VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger);
 	bool hasGatherOverlappedByAnotherTrigger(const vector<VuoCompilerNode *> &downstreamNodes, VuoCompilerTriggerPort *trigger);

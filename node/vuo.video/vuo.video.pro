@@ -35,7 +35,9 @@ SOURCES += \
 
 OBJECTIVE_SOURCES += \
 	VuoAvPlayerObject.m \
-	VuoAvPlayerInterface.m
+	VuoAvPlayerInterface.m \
+	VuoQTCapture.mm \
+	VuoQtListener.m
 
 HEADERS += \
 	VuoAvWriter.h \

@@ -115,9 +115,36 @@ static void VuoAudioFile_decodeChannels(VuoAudioFileInternal afi)
 		if (framesRemaining)
 		{
 //			VLog("couldn't get all the frames; stopping playback");
-			afi->playing = false;
+
+			// even if LoopType is looping, still fire the finishedPlaybac event to let
+			// user know one cycle is complete
 			if (afi->finishedPlayback)
 				afi->finishedPlayback();
+
+			switch(afi->loop)
+			{
+				case VuoLoopType_Loop:
+				{
+					const SInt64 targetFrame = 0;
+
+					OSStatus err = ExtAudioFileSeek(afi->audioFile, targetFrame + afi->headerFrames);
+
+					if (err != noErr)
+					{
+						char *errStr = VuoOsStatus_getText(err);
+						VUserLog("Error seeking to sample: %s", errStr);
+						free(errStr);
+						afi->playing = false;
+						break;
+					}
+
+					break;
+				}
+
+				default:
+					afi->playing = false;
+					break;
+			}
 		}
 	});
 

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Allow Changes",
 					  "keywords" : [ "pulse", "watcher", "filter", "hold", "block", "prevent", "unchanged", "pass" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [
@@ -34,7 +34,7 @@ VuoModuleMetadata({
 								  "VuoTempoRange", "VuoNumberFormat", "VuoIconPosition", "VuoMovieFormat",
 								  "VuoVideoFrame", "VuoVideoInputDevice",
 								  "VuoTime", "VuoTimeUnit", "VuoTimeFormat", "VuoWeekday",
-								  "VuoHorizontalAlignment", "VuoVerticalAlignment"
+								  "VuoHorizontalAlignment", "VuoVerticalAlignment", "VuoAnchor"
 							  ]
 						  }
 					  },

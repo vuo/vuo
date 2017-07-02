@@ -181,7 +181,10 @@ static void renderButton(struct nodeInstanceData *context)
 	bool haveText = VuoText_length(context->label);
 	VuoLayer textLayer;
 	if (haveText)
+	{
 		textLayer.sceneObject = VuoSceneObject_makeText(context->label, context->font);
+		textLayer.sceneObject.mesh = VuoMesh_makeQuadWithoutNormals();
+	}
 
 	VuoRectangle iconContainerRectangle = contentRectangle;
 	if (context->icon)

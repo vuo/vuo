@@ -31,7 +31,7 @@ VuoModuleMetadata({
 					 ],
 					 "node": {
 						 "isInterface" : true,
-						 "exampleCompositions" : [ ]
+						 "exampleCompositions" : [ "SaveSepiaImage.vuo" ]
 					 }
 				 });
 
@@ -41,48 +41,6 @@ VuoModuleMetadata({
 __attribute__((constructor)) static void vuo_image_save_init(void)
 {
 	FreeImage_Initialise(true);
-}
-
-/**
- * Given a filename and extension, returns a new string guaranteed to have the extension.
- */
-static char *appendFileExtensionIfNecessary(const char *filename, const VuoImageFormat format)
-{
-	char* fileSuffix = strrchr(filename, '.');
-	char* curExtension = fileSuffix != NULL ? strdup(fileSuffix+1) : NULL;
-
-	if(curExtension != NULL)
-		for(char *p = &curExtension[0]; *p; p++) *p = tolower(*p);
-
-	int length;
-	char** validExtensions = VuoImageFormat_getValidFileExtensions(format, &length);
-
-	// if the string already has one of the valid file extension suffixes, return.
-	for(int i = 0; i < length; i++)
-	{
-		if(curExtension != NULL && strcmp(curExtension, validExtensions[i]) == 0)
-		{
-			for(int n = 0; n < length; n++)
-				free(validExtensions[n]);
-			free(validExtensions);
-
-			free(curExtension);
-
-			return strdup(filename);
-		}
-	}
-
-	free(curExtension);
-
-	size_t buf_size = strlen(filename) + strlen(validExtensions[0]) + 2;
-	char* newfilepath = (char*)malloc(buf_size * sizeof(char));
-	snprintf(newfilepath, buf_size, "%s.%s", filename, validExtensions[0]);
-
-	for(int n = 0; n < length; n++)
-		free(validExtensions[n]);
-	free(validExtensions);
-
-	return newfilepath;
 }
 
 static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
@@ -110,13 +68,17 @@ void nodeEvent
 	if(!saveImageEvent || saveImage == NULL)
 		return;
 
-	// make sure the file path has the correct extension
-	char* path = appendFileExtensionIfNecessary(url, format);
+	int length;
+	char** validExtensions = VuoImageFormat_getValidFileExtensions(format, &length);
 
 	// do the dance of the url format
-	VuoUrl extensioned_url = VuoText_make(path);
+	VuoUrl extensioned_url = VuoUrl_appendFileExtension(url, (const char**) validExtensions, (unsigned int) length);
 	VuoLocal(extensioned_url);
-	free(path);
+
+	for(int n = 0; n < length; n++)
+		free(validExtensions[n]);
+
+	free(validExtensions);
 
 	VuoUrl normalized_url = VuoUrl_normalize(extensioned_url, true);
 	VuoLocal(normalized_url);

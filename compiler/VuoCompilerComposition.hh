@@ -44,6 +44,7 @@ public:
 	VuoCompilerComposition(VuoComposition *baseComposition, VuoCompilerGraphvizParser *parser);
 	~VuoCompilerComposition(void);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
+	VuoCompilerGraph * getCachedGraph(void);
 	void check(const set<string> &subcompositions = set<string>());
 	void checkForMissingNodeClasses(const set<string> &subcompositions = set<string>());
 	void checkFeedback(set<VuoCompilerCable *> potentialCables = set<VuoCompilerCable *>());
@@ -58,8 +59,11 @@ public:
 
 	static const string defaultGraphDeclaration; ///< The default graph type and ID to be generated for new .vuo (Graphviz dot format) composition files.
 
+	friend class TestCompilingAndLinking;
+
 private:
 	VuoCompilerGraph *graph;
+	long graphHash;
 	map<unsigned int, bool> genericTypeSuffixUsed;
 	map<string, VuoNode *> nodeGraphvizIdentifierUsed;
 	Module *module;

@@ -9,6 +9,7 @@
 
 #include "module.h"
 #include "/usr/include/time.h"
+#include "VuoApp.h"
 #include "VuoQTCapture.h"
 #include "VuoQtListener.h"
 #include "VuoTriggerSet.hh"
@@ -21,6 +22,7 @@
 VuoModuleMetadata({
 					  "title" : "VuoQtCapture",
 					  "dependencies" : [
+						"VuoApp",
 						"VuoImage",
 						"VuoOsStatus",
 						"VuoVideoInputDevice",
@@ -34,26 +36,42 @@ VuoModuleMetadata({
 				 });
 #endif
 
+extern "C"
+{
+
 /**
  * Enable support for video capture from tethered iOS devices.
  */
-static void __attribute__((constructor)) VuoQTCapture_init()
+static void VuoQTCapture_enableTethering()
 {
-	// kCMIOHardwarePropertyAllowScreenCaptureDevices (which doesn't exist until OS X v10.10)
-	int allowScreenCaptureDevices = 'yes ';
+	static dispatch_once_t enableOnce = 0;
+	dispatch_once(&enableOnce, ^{
+		VuoApp_executeOnMainThread(^{
+			// kCMIOHardwarePropertyAllowScreenCaptureDevices (which doesn't exist until OS X v10.10)
+			int allowScreenCaptureDevices = 'yes ';
 
-	CMIOObjectPropertyAddress property = { allowScreenCaptureDevices, kCMIOObjectPropertyScopeGlobal, kCMIOObjectPropertyElementMaster };
-	if (CMIOObjectHasProperty(kCMIOObjectSystemObject, &property))
-	{
-		UInt32 yes = 1;
-		OSStatus ret = CMIOObjectSetPropertyData(kCMIOObjectSystemObject, &property, 0, NULL, sizeof(yes), &yes);
-		if (ret != kCMIOHardwareNoError)
-		{
-			char *errorText = VuoOsStatus_getText(ret);
-			VUserLog("Warning: Couldn't enable tethered iOS device support: %s", errorText);
-			free(errorText);
-		}
-	}
+			CMIOObjectPropertyAddress property = { allowScreenCaptureDevices, kCMIOObjectPropertyScopeGlobal, kCMIOObjectPropertyElementMaster };
+			double t0 = VuoLogGetTime();
+			bool hasProperty = CMIOObjectHasProperty(kCMIOObjectSystemObject, &property);
+			double t1 = VuoLogGetTime();
+			if (t1 - t0 > 1)
+				VUserLog("Warning: Apple CoreMediaIO took %.1f seconds to initialize its 3rd-party plugins.", t1 - t0);
+
+			if (hasProperty)
+			{
+				UInt32 yes = 1;
+				OSStatus ret = CMIOObjectSetPropertyData(kCMIOObjectSystemObject, &property, 0, NULL, sizeof(yes), &yes);
+				if (ret != kCMIOHardwareNoError)
+				{
+					char *errorText = VuoOsStatus_getText(ret);
+					VUserLog("Warning: Couldn't enable tethered iOS device support: %s", errorText);
+					free(errorText);
+				}
+			}
+		});
+	});
+}
+
 }
 
 /**
@@ -116,6 +134,8 @@ void VuoQTCapture_removeOnDevicesChangedCallback( VuoOutputTrigger(devicesDidCha
  */
 void VuoQTCapture_addOnDevicesChangedCallback( VuoOutputTrigger(devicesDidChange, VuoList_VuoVideoInputDevice) )
 {
+	VuoQTCapture_enableTethering();
+
 	if(deviceListener == nil)
 		deviceListener = [[OnDevicesChangedListener alloc] init];
 	[deviceListener addCallback:devicesDidChange];
@@ -201,6 +221,8 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID)
  */
 VuoList_VuoVideoInputDevice VuoQTCapture_getInputDevices(void)
 {
+	VuoQTCapture_enableTethering();
+
 	NSArray *inputDevices = [[[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeVideo] arrayByAddingObjectsFromArray:[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeMuxed]] retain];
 
 	VuoList_VuoVideoInputDevice devices = VuoListCreate_VuoVideoInputDevice();
@@ -233,9 +255,11 @@ void VuoQTCapture_free(VuoQTCapture movie);
  */
 VuoQTCapture VuoQTCapture_make(VuoVideoInputDevice inputDevice, VuoOutputTrigger(receivedFrame, VuoVideoFrame))
 {
+	VuoQTCapture_enableTethering();
+
 	VuoQtListener *listener = [[VuoQtListener alloc] init];
 
-	[listener initWithDevice:[NSString stringWithFormat:@"%s", inputDevice.name] id:[NSString stringWithFormat:@"%s", inputDevice.id] callback:receivedFrame];
+	[listener initWithDevice:inputDevice callback:receivedFrame];
 
 	VuoRegister(listener, VuoQTCapture_free);
 
@@ -248,7 +272,7 @@ VuoQTCapture VuoQTCapture_make(VuoVideoInputDevice inputDevice, VuoOutputTrigger
 void VuoQtCapture_setInputDevice(VuoQTCapture movie, VuoVideoInputDevice inputDevice)
 {
 	VuoQtListener *listener = (VuoQtListener*)movie;
-	[listener setInputDevice:[NSString stringWithFormat:@"%s", inputDevice.name] id:[NSString stringWithFormat:@"%s", inputDevice.id]];
+	[listener setInputDevice:inputDevice];
 }
 
 /**

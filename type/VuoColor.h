@@ -87,8 +87,11 @@ static inline VuoColor VuoColor_premultiply(VuoColor c)
 	return (VuoColor){ c.r*c.a, c.g*c.a, c.b*c.a, c.a };
 }
 
-VuoColor VuoColor_makeWithHSLA(VuoReal hue, VuoReal saturation, VuoReal luminosity, VuoReal alpha);
+VuoColor VuoColor_makeWithCMYKA(VuoReal c, VuoReal m, VuoReal y, VuoReal k, VuoReal a);
 void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoReal *a);
+
+VuoColor VuoColor_makeWithHSLA(VuoReal hue, VuoReal saturation, VuoReal luminosity, VuoReal alpha);
+void VuoColor_getCMYKA(VuoColor color, VuoReal *c, VuoReal *m, VuoReal *y, VuoReal *k, VuoReal *a);
 
 VuoText VuoColor_getHex(VuoColor color, VuoBoolean includeAlpha);
 

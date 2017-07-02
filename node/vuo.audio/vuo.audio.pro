@@ -53,6 +53,10 @@ TYPE_SOURCES += \
 	VuoAudioOutputDevice.c \
 	VuoTempoRange.c
 
+# For input editor.
+SOURCES += \
+	VuoAudio.cc
+
 HEADERS += \
 	VuoAudioBins.h \
 	VuoAudioBinAverageType.h \

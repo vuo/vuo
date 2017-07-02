@@ -3,10 +3,10 @@ TEMPLATE = aux
 EXAMPLE_SOURCES += \
 	BounceDotsToTheBeat.vuo \
 	ControlLoudness.vuo \
-   JumpDotToTheBeat.vuo \
+	GenerateParametricAudio.vuo \
+	JumpDotToTheBeat.vuo \
 	PanAudio.vuo \
 	PlayAudioFile.vuo \
-	PlayAudioFileAndLoop.vuo \
 	PlayAudioWave.vuo \
 	PlayBluesOrgan.vuo \
 	ShowLiveAudioTrail.vuo \

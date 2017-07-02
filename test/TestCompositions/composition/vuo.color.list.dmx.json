@@ -1,0 +1,73 @@
+/**
+ * @file
+ * Expected outputs for the vuo.color.list.dmx node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+// RGB
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgb",   "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgb",   "colors":["#000"       ]}, "outputPortValues":{"dmx":[0,0,0                ]}},
+/* blueish */          {"firingPort":"colors", "inputPortValues":{"colorMap":"rgb",   "colors":["#579"       ]}, "outputPortValues":{"dmx":[85,119,153           ]}},
+/* reddish, blueish */ {"firingPort":"colors", "inputPortValues":{"colorMap":"rgb",   "colors":["#975","#579"]}, "outputPortValues":{"dmx":[153,119,85,85,119,153]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgb",   "colors":["#fff"       ]}, "outputPortValues":{"dmx":[255,255,255          ]}},
+
+// RGBA
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":["#000"       ]}, "outputPortValues":{"dmx":[0,0,0,0              ]}},
+/* red */              {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":["#f00"       ]}, "outputPortValues":{"dmx":[255,0,0,122          ]}},
+/* green */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":["#0f0"       ]}, "outputPortValues":{"dmx":[0,255,0,122          ]}},
+/* blue */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":["#00f"       ]}, "outputPortValues":{"dmx":[0,0,255,15           ]}},
+/* amber */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":["#ff0"       ]}, "outputPortValues":{"dmx":[255,255,0,255        ]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgba",  "colors":["#fff"       ]}, "outputPortValues":{"dmx":[255,255,255,0        ]}},
+
+// RGBAW
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":["#000"       ]}, "outputPortValues":{"dmx":[0,0,0,0,0            ]}},
+/* red */              {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":["#f00"       ]}, "outputPortValues":{"dmx":[255,0,0,122,0        ]}},
+/* green */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":["#0f0"       ]}, "outputPortValues":{"dmx":[0,255,0,122,0        ]}},
+/* blue */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":["#00f"       ]}, "outputPortValues":{"dmx":[0,0,255,15,0         ]}},
+/* amber */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":["#ff0"       ]}, "outputPortValues":{"dmx":[255,255,0,255,0      ]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbaw", "colors":["#fff"       ]}, "outputPortValues":{"dmx":[255,255,255,0,255    ]}},
+
+// RGBW
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbw",  "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbw",  "colors":["#000"       ]}, "outputPortValues":{"dmx":[0,0,0,0              ]}},
+/* red */              {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbw",  "colors":["#f00"       ]}, "outputPortValues":{"dmx":[255,0,0,0            ]}},
+/* green */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbw",  "colors":["#0f0"       ]}, "outputPortValues":{"dmx":[0,255,0,0            ]}},
+/* blue */             {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbw",  "colors":["#00f"       ]}, "outputPortValues":{"dmx":[0,0,255,0            ]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"rgbw",  "colors":["#fff"       ]}, "outputPortValues":{"dmx":[255,255,255,255      ]}},
+
+// WwCw
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#000"       ]}, "outputPortValues":{"dmx":[0,0                  ]}},
+/* neutral grey */     {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#888"       ]}, "outputPortValues":{"dmx":[136,136              ]}},
+/* red */              {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#f00"       ]}, "outputPortValues":{"dmx":[255,0                ]}},
+/* green */            {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#0f0"       ]}, "outputPortValues":{"dmx":[85,170               ]}},
+/* cyan */             {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#0ff"       ]}, "outputPortValues":{"dmx":[0,255                ]}},
+/* blue */             {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#00f"       ]}, "outputPortValues":{"dmx":[84,170               ]}},
+/* warm white */       {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#fed"       ]}, "outputPortValues":{"dmx":[255,216              ]}},
+/* cool white */       {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#def"       ]}, "outputPortValues":{"dmx":[216,255              ]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"wwcw",  "colors":["#fff"       ]}, "outputPortValues":{"dmx":[255,255              ]}},
+
+// CMY
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":["#000"       ]}, "outputPortValues":{"dmx":[255,255,255          ]}},
+/* blue */             {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":["#00f"       ]}, "outputPortValues":{"dmx":[255,255,0            ]}},
+/* red, blue */        {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":["#f00","#00f"]}, "outputPortValues":{"dmx":[0,255,255,255,255,0  ]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":["#fff"       ]}, "outputPortValues":{"dmx":[0,0,0                ]}},
+/* alpha white */      {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":["#fff8"      ]}, "outputPortValues":{"dmx":[118,118,118          ]}},
+/* alpha blue */       {"firingPort":"colors", "inputPortValues":{"colorMap":"cmy",   "colors":["#00f8"      ]}, "outputPortValues":{"dmx":[255,255,118          ]}},
+
+// HSL
+/* none */             {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":[             ]}, "outputPortValues":{"dmx":[                     ]}},
+/* black */            {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":["#000"       ]}, "outputPortValues":{"dmx":[0,0,0                ]}},
+/* blue */             {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":["#00f"       ]}, "outputPortValues":{"dmx":[170,255,127          ]}},
+/* red, blue */        {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":["#f00","#00f"]}, "outputPortValues":{"dmx":[0,255,127,170,255,127]}},
+/* white */            {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":["#fff"       ]}, "outputPortValues":{"dmx":[0,0,255              ]}},
+/* alpha white */      {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":["#fff8"      ]}, "outputPortValues":{"dmx":[0,0,136              ]}},
+/* alpha blue */       {"firingPort":"colors", "inputPortValues":{"colorMap":"hsl",   "colors":["#00f8"      ]}, "outputPortValues":{"dmx":[170,255,68           ]}},
+]}

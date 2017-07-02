@@ -13,12 +13,12 @@
 VuoModuleMetadata({
 					  "title" : "Send Live Audio",
 					  "keywords" : [ "sound", "play", "speaker", "music", "samples", "device" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoAudio"
 					  ],
 					  "node": {
-						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioWave.vuo", "PanAudio.vuo" ],
+						  "exampleCompositions" : [ "PlayAudioFile.vuo", "PlayAudioWave.vuo", "PanAudio.vuo", "GenerateParametricAudio.vuo" ],
 						  "isInterface" : true
 					  }
 				 });
@@ -60,6 +60,21 @@ void nodeInstanceTriggerStart
 )
 {
 	VuoAudioOut_addTrigger((*context)->audioManager, requestedChannels);
+}
+
+void nodeInstanceTriggerUpdate
+(
+		VuoInstanceData(struct nodeInstanceData *) context,
+		VuoInputData(VuoAudioOutputDevice) device,
+		VuoOutputTrigger(requestedChannels, VuoReal)
+)
+{
+	if (! VuoAudioOutputDevice_areEqual(device, (*context)->device))
+	{
+		VuoAudioOut_removeTrigger((*context)->audioManager, requestedChannels);
+		updateDevice(*context, device);
+		VuoAudioOut_addTrigger((*context)->audioManager, requestedChannels);
+	}
 }
 
 void nodeInstanceEvent

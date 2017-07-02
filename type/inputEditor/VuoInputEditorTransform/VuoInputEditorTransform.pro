@@ -5,15 +5,19 @@ TARGET = VuoInputEditorTransform
 include(../../../vuo.pri)
 
 SOURCES +=\
-	VuoInputEditorTransform.cc
+	VuoInputEditorTransform.cc \
+	$$ROOT/type/inputEditor/VuoInputEditorReal/VuoDoubleSpinBox.cc
 
 HEADERS += \
-	VuoInputEditorTransform.hh
+	VuoInputEditorTransform.hh \
+	$$ROOT/type/inputEditor/VuoInputEditorReal/VuoDoubleSpinBox.hh
 
 OTHER_FILES += \
 	VuoInputEditorTransform.json
 
-INCLUDEPATH += $$ROOT/type/inputEditor/VuoInputEditorTransform
+INCLUDEPATH += \
+	$$ROOT/type/inputEditor/VuoInputEditorTransform \
+	$$ROOT/type/inputEditor/VuoInputEditorReal
 
 LIBS += \
 	$$ROOT/library/libVuoHeap.dylib \
