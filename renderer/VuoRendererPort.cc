@@ -1509,7 +1509,6 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return getStringForRealValue(real);
 		}
-
 		if (getDataType()->getModuleKey()=="VuoPoint2d")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -1754,8 +1753,116 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			const char *name = NULL;
 			if (json_object_object_get_ex(js, "name", &o))
 				name = json_object_get_string(o);
+			else if (json_object_object_get_ex(js, "path", &o))
+				name = json_object_get_string(o);
 
 			const char *outputString = "(first)";
+			if (name && strlen(name))
+				outputString = VuoText_truncateWithEllipsis(name, 24);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoMidiInputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(first)";
+			if (name && strlen(name))
+				outputString = VuoText_truncateWithEllipsis(name, 24);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoMidiOutputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(first)";
+			if (name && strlen(name))
+				outputString = VuoText_truncateWithEllipsis(name, 24);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoSyphonServerDescription")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "serverName", &o))
+				name = json_object_get_string(o);
+			else if (json_object_object_get_ex(js, "applicationName", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(first)";
+			if (name && strlen(name))
+				outputString = VuoText_truncateWithEllipsis(name, 24);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoVideoInputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+			else if (json_object_object_get_ex(js, "id", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(first)";
+			if (name && strlen(name))
+				outputString = VuoText_truncateWithEllipsis(name, 24);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoAudioInputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(default)";
+			if (name && strlen(name))
+				outputString = strdup(name);
+
+			json_object_put(js);
+
+			return outputString;
+		}
+		if (getDataType()->getModuleKey()=="VuoAudioOutputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = json_object_get_string(o);
+
+			const char *outputString = "(default)";
 			if (name && strlen(name))
 				outputString = strdup(name);
 
@@ -1798,6 +1905,37 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return outputString;
 		}
+		if (getDataType()->getModuleKey()=="VuoArtNetInputDevice"
+		 || getDataType()->getModuleKey()=="VuoArtNetOutputDevice")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			json_object *o = NULL;
+
+			const char *name = NULL;
+			if (json_object_object_get_ex(js, "name", &o))
+				name = VuoText_truncateWithEllipsis(json_object_get_string(o), 24);
+			else
+			{
+				if (getDataType()->getModuleKey()=="VuoArtNetInputDevice")
+					name = "any";
+				else
+					name = "broadcast";
+			}
+
+			VuoInteger net=0, subNet=0, universe=0;
+			if (json_object_object_get_ex(js, "net", &o))
+				net = json_object_get_int64(o);
+			if (json_object_object_get_ex(js, "subNet", &o))
+				subNet = json_object_get_int64(o);
+			if (json_object_object_get_ex(js, "universe", &o))
+				universe = json_object_get_int64(o);
+
+			const char *outputString = VuoText_format("%s (%lld:%lld:%lld)", name, net, subNet, universe);
+
+			json_object_put(js);
+
+			return outputString;
+		}
 		if (getDataType()->getModuleKey()=="VuoTempoRange")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -1808,6 +1946,76 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 				return strdup("100–140 BPM");
 			else if (strcmp(tempoRange, "allegro") == 0)
 				return strdup("120–180 BPM");
+		}
+
+		if (getDataType()->getModuleKey()=="VuoEdgeBlend")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+
+			double cutoff = 0, gamma = 0, crop = 0;
+			json_object *o = NULL;
+
+			if (json_object_object_get_ex(js, "cutoff", &o))
+				cutoff = json_object_get_double(o);
+
+			if (json_object_object_get_ex(js, "gamma", &o))
+				gamma = json_object_get_double(o);
+
+			if (json_object_object_get_ex(js, "crop", &o))
+				crop = json_object_get_double(o);
+
+			json_object_put(js);
+
+			double cropPercent = -crop * 100;
+			double cutoffPercent = cutoff * 100;
+			char* blendSummary = new char[32];
+			if (VuoReal_areEqual(crop, 0) && VuoReal_areEqual(cutoff, 0))
+				strcpy(blendSummary, "≡");
+			else if (VuoReal_areEqual(cutoff, 0))
+				sprintf(blendSummary, "%.0f%%", cropPercent);
+			else if (VuoReal_areEqual(gamma, 1))
+				sprintf(blendSummary, "%.0f%% %.0f%%", cropPercent, cutoffPercent);
+			else
+				sprintf(blendSummary, "%.0f%% %.0f%% @ %.2gγ", cropPercent, cutoffPercent, gamma);
+
+			return blendSummary;
+		}
+
+		if (getDataType()->getModuleKey() == "VuoAnchor")
+		{
+			json_object* js = json_tokener_parse(getConstantAsString().c_str());
+			json_object* o = NULL;
+			const char *h = "Center", *v = "Center";
+
+			if (json_object_object_get_ex(js, "horizontalAlignment", &o))
+			{
+				const char* str = json_object_get_string(o);
+				if( strcmp(str, "left") == 0 )
+					h = "Left";
+				else if( strcmp(str, "center") == 0 )
+					h = "Center";
+				else if( strcmp(str, "right") == 0 )
+					h = "Right";
+			}
+
+			if (json_object_object_get_ex(js, "verticalAlignment", &o))
+			{
+				const char* str = json_object_get_string(o);
+				if( strcmp(str, "top") == 0 )
+					v = "Top";
+				else if( strcmp(str, "center") == 0 )
+					v = "Center";
+				else if( strcmp(str, "bottom") == 0 )
+					v = "Bottom";
+			}
+
+			if( strcmp(h, "Center") == 0 && strcmp(v, "Center") == 0 )
+				return strdup("Center");
+
+			char* sum = (char*) malloc( sizeof(char) * (strlen(h) + strlen(v) + 2) );
+			sprintf(sum, "%s %s", v, h);
+
+			return sum;
 		}
 	}
 

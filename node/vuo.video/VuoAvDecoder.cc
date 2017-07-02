@@ -64,6 +64,12 @@ VuoAvDecoder* VuoAvDecoder::Create(VuoUrl url)
 		}
 	});
 
+	if(!decoder->player)
+	{
+		delete decoder;
+		decoder = NULL;
+	}
+
 	return decoder;
 }
 
@@ -129,11 +135,11 @@ bool VuoAvDecoder::NextAudioFrame(VuoAudioFrame* frame)
 	return success;
 }
 
-bool VuoAvDecoder::SeekToSecond(double second)
+bool VuoAvDecoder::SeekToSecond(double second, VuoVideoFrame *frame)
 {
 	__block bool success = false;
 	dispatch_sync(queue, ^{
-		success = VuoAvPlayer_seekToSecond(player, second);
+		success = VuoAvPlayer_seekToSecond(player, second, frame);
 	});
 	return success;
 }

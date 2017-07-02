@@ -653,13 +653,15 @@ This section gives an overview of some of Vuo's built-in nodes. The purpose is t
 
 Vuo comes with many different nodes for working with graphics. These can be roughly divided into 2D and 3D graphics (along with some nodes to convert between them).
 
-For 2D designs and animations, the \vuoNodeClass{vuo.image} and \vuoNodeClass{vuo.layer} node sets are your starting point. These let you arrange and manipulate shapes and images, and render them in a window or composite image.
+For **2D designs and animations**, the \vuoNodeClass{vuo.image} and \vuoNodeClass{vuo.layer} node sets are your starting point. These let you arrange and manipulate shapes and images, and render them in a window or composite image.
 
-For 3D models and meshes, the \vuoNodeClass{vuo.scene} node set is your starting point. It lets you load or build 3D objects, warp them, and arrange them within a scene, which you can render in a window or image. When building 3D objects, two additional node sets are helpful: \vuoNodeClass{vuo.transform} for positioning, rotating, and scaling an object, and \vuoNodeClass{vuo.shader} for painting a pattern or material on an object.
+For **3D models and meshes**, the \vuoNodeClass{vuo.scene} node set is your starting point. It lets you load or build 3D objects, warp them, and arrange them within a scene, which you can render in a window or image. When building 3D objects, two additional node sets are helpful: \vuoNodeClass{vuo.transform} for positioning, rotating, and scaling an object, and \vuoNodeClass{vuo.shader} for painting a pattern or material on an object.
 
-When working with 2D or 3D animations, the \vuoNodeClass{vuo.motion} node set lets you control the path and speed of a moving object.
+When working with 2D or 3D animations, the \vuoNodeClass{vuo.motion} node set lets you control the **path and speed of a moving object**.
 
-For video, the \vuoNodeClass{vuo.video} node set handles playing movies and receiving video from cameras. When working specifically with the cameras on a Kinect, you can use the \vuoNodeClass{vuo.kinect} node set. If you want to send and receive video between Vuo compositions and other applications, there's the \vuoNodeClass{vuo.syphon} node set.
+For **video**, the \vuoNodeClass{vuo.video} node set handles playing movies and receiving video from cameras. When working specifically with the cameras on a Kinect, you can use the \vuoNodeClass{vuo.kinect} node set. If you want to send and receive video between Vuo compositions and other applications, there's the \vuoNodeClass{vuo.syphon} node set.
+
+\vuoNode{Make Quad Layer} and related nodes in the \vuoNodeClass{vuo.layer} node set support **projection mapping**.
 
 #### Vuo Coordinates
 
@@ -757,7 +759,8 @@ When you create a composition, there is usually a problem you want to solve. Let
   1.  Drag a cable from the \vuoPort{Requested Frame} output port to \vuoNode{Blend Images}'s (highlighted) refresh port.
   1. Use the input editors on \vuoPort{Foreground Opacity} and \vuoPort{Blend Mode} to control the blending.
   1. Now you have a blended image.
-  1. Open the Editor's example compositions, and see that your composition looks likes the example, Blend Images, under vuo.image.
+
+Your final composition should look like this:
 
 \vuoCompositionImage{BlendImages}
 
@@ -1522,3 +1525,5 @@ Finally, here are a few more tips to help you troubleshoot compositions:
    - Try rearranging your nodes and cables so you can see the flow of events more clearly. If your nodes and cables are nicely laid out, then it can be easier to spot problems. 
    - Don't be afraid to experiment (but first save a copy of your composition). If you're not sure if a node is working as you expect, try it with various inputs. 
    - Don't be afraid to ask questions. For help, go to [Vuo Support](http://vuo.org/support). 
+
+# Contributors

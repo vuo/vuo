@@ -10,7 +10,12 @@
 #ifndef VUOINPUTEDITORTRANSFORM2D_HH
 #define VUOINPUTEDITORTRANSFORM2D_HH
 
-#include "VuoInputEditorWithLineEdit.hh"
+#include "VuoInputEditorWithDialog.hh"
+#include "VuoDoubleSpinBox.hh"
+
+extern "C" {
+#include "VuoTransform2d.h"
+}
 
 /**
  * A VuoInputEditorTransform2d factory.
@@ -43,22 +48,19 @@ public:
  *   }
  * }
  */
-class VuoInputEditorTransform2d : public VuoInputEditorWithLineEdit
+class VuoInputEditorTransform2d : public VuoInputEditorWithDialog
 {
 	Q_OBJECT
 
 protected:
 	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
 	json_object * getAcceptedValue(void);
-	QString convertToLineEditFormat(json_object *value);
-	json_object * convertFromLineEditsFormat(const QString &xTranslationAsString,
-											 const QString &yTranslationAsString,
-											 const QString &rotationAsString,
-											 const QString &xScaleAsString,
-											 const QString &yScaleAsString);
-	bool eventFilter(QObject *object, QEvent *event);
+	virtual bool supportsTabbingBetweenPorts(void) { return true; }			///< This editor does support tabbing between ports.
 
 private:
+
+	VuoTransform2d currentTransform;
+
 	enum coord
 	{
 		xTranslation,
@@ -71,22 +73,23 @@ private:
 	map<coord, double> suggestedMinForCoord;	///< The minimum <coord>-value selectable via spinbox or slider.
 	map<coord, double> suggestedMaxForCoord;	///< The maximum <coord>-value selectable via spinbox or slider.
 	map<coord, double> suggestedStepForCoord;	///< The spinbox step value for <coord>.
-	map<coord, QLineEdit *> lineEditForCoord;
+
 	map<coord, QSlider *> sliderForCoord;
-	map<coord, QDoubleSpinBox *> spinBoxForCoord;
-	map<coord, QLabel *> labelForCoord;
+	map<coord, VuoDoubleSpinBox *> spinboxForCoord;
 
-	int lineEditValueToScaledSliderValue(double lineEditValue, coord whichCoord);
-	double sliderValueToScaledLineEditValue(int sliderValue, coord whichCoord);
+	coord getCoordFromQObject(QObject* sender);
+	void setCoordMap(map<coord, double>* coordMap, VuoTransform2d transform);
+	void setTransformProperty(coord whichCoord, double value);
 
-	void updateLineEditValue(int newSliderValue, coord whichCoord);
+	double sliderToDouble(int sliderMin, int sliderMax, double valueMin, double valueMax, int value);
+	int doubleToSlider(int sliderMin, int sliderMax, double valueMin, double valueMax, double value);
+
+	VuoDoubleSpinBox* initSpinBox(coord whichCoord, QDialog& dialog, double initialValue);
+	QSlider* initSlider(coord c, QDialog& dialog, double initialValue);
 
 private slots:
-	void updateSliderValue(QString newLineEditText);
-	void updateLineEditValue();
-	void updateLineEditValue(int newSliderValue);
-
-	void emitValueChanged();
+	void onSliderUpdate(int sliderValue);
+	void onSpinboxUpdate(QString spinboxValue);
 };
 
 #endif // VUOINPUTEDITORTRANSFORM2D_HH

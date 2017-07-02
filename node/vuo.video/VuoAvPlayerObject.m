@@ -380,7 +380,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	{
 		// if was reverse and now is forward
 		if(rate > 0)
-			[self seekToSecond:videoTimestamp withRange:-1];
+			[self seekToSecond:videoTimestamp withRange:-1 frame:NULL];
 		else
 			[self clearFrameQueue];
 	}
@@ -413,7 +413,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	audioBufferSamplesPerChannel = 0;
 }
 
-- (bool) seekToSecond:(float)second withRange:(float)range
+- (bool) seekToSecond:(float)second withRange:(float)range frame:(VuoVideoFrame *)frame
 {
 	if(![self canBeginPlayback])
 		return false;
@@ -436,6 +436,14 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	{
 		videoTimestamp = [self getDuration];
 	}
+
+	if (frame)
+		if (![self nextVideoFrame:frame])
+		{
+			frame->image = NULL;
+			frame->timestamp = 0;
+			frame->duration = 0;
+		}
 
 	return true;
 }
@@ -489,7 +497,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 		return false;
 
 	float seek = fmax(0, videoTimestamp - rewindIncrement);
-	[self seekToSecond:seek withRange:rewindIncrement];
+	[self seekToSecond:seek withRange:rewindIncrement frame:NULL];
 
 	while([self copyNextVideoSampleBuffer]) {}
 
@@ -591,6 +599,9 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 			return false;
 
 		float timestamp = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer));
+		float duration  = CMTimeGetSeconds(CMSampleBufferGetDuration(sampleBuffer));
+		if (isnan(duration))
+			duration = 1./nominalFrameRate;
 
 		CVPixelBufferRef buffer = (CVPixelBufferRef) CMSampleBufferGetImageBuffer(sampleBuffer);
 
@@ -620,7 +631,7 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 		sampleBuffer = nil;
 
 		VuoVideoFrame* frame = (VuoVideoFrame*) malloc(sizeof(VuoVideoFrame));
-		*frame = VuoVideoFrame_make(image, timestamp);
+		*frame = VuoVideoFrame_make(image, timestamp, duration);
 		VuoVideoFrame_retain(*frame);
 		NSValue* val = [NSValue valueWithPointer:frame];
 		[videoQueue addObject:val];

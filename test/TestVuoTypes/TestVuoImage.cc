@@ -91,13 +91,13 @@ private slots:
 										<< false
 										<< "";
 
-		QTest::newRow("texture")		<< "{\"glTextureName\":42,\"glInternalFormat\":0,\"pixelsWide\":640,\"pixelsHigh\":480}"
+		QTest::newRow("texture")		<< "{\"glTextureName\":42,\"glInternalFormat\":6408,\"pixelsWide\":640,\"pixelsHigh\":480}"
 										<< true
-										<< "GL Texture (ID 42)<br>640x480";
+										<< "GL Texture (ID 42)<br>Size: 640x480 pixels<br>Type: RGBA, each channel stored as 8-bit integer (GL_RGBA)";
 
-		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(43,0,640,480)))
+		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(43,GL_RGBA,640,480)))
 										<< true
-										<< "GL Texture (ID 43)<br>640x480";
+										<< "GL Texture (ID 43)<br>Size: 640x480 pixels<br>Type: RGBA, each channel stored as 8-bit integer (GL_RGBA)";
 	}
 	void testSerializationAndSummary()
 	{

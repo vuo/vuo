@@ -9,13 +9,13 @@ EXAMPLE_SOURCES += \
 	DisplayImage.vuo \
 	EnhanceBlue.vuo \
 	EnlargeMovie.vuo \
+	ExploreCheckerboard.vuo \
 	FlipMovie.vuo \
 	FlyAtWarpSpeed.vuo \
 	GenerateCheckerboardImage.vuo \
 	MaskMovieByBrightness.vuo \
 	MaskMovieWithStar.vuo \
 	MirrorMovie.vuo \
-	MoveCheckerboardCenter.vuo \
 	MoveLinearGradient.vuo \
 	MoveRadialGradient.vuo \
 	OffsetColors.vuo \
@@ -24,6 +24,7 @@ EXAMPLE_SOURCES += \
 	RenderTextImage.vuo \
 	RippleImageGradients.vuo \
 	RotateMovie.vuo \
+	SaveSepiaImage.vuo \
 	ScanBarcodes.vuo \
 	SeparateRedGreenBlue.vuo \
 	ShowColorFromImage.vuo \

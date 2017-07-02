@@ -287,9 +287,13 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 					  GLint contextRendererID;
 					  CGLGetParameter(cgl_ctx, kCGLCPCurrentRendererID, &contextRendererID);
 
+					  // https://b33p.net/kosada/node/12177
+					  // https://developer.apple.com/library/mac/qa/qa1168/_index.html says:
+					  // "If you are looking for the VRAM sizes of all the renderers on your system […]
+					  // you may specify a -1/0xFFFFFFFF display mask in the CGLQueryRendererInfo() function.
 					  CGLRendererInfoObj ri;
 					  GLint rendererCount = 0;
-					  CGLQueryRendererInfo(CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()), &ri, &rendererCount);
+					  CGLQueryRendererInfo(-1, &ri, &rendererCount);
 					  for (int i = 0; i < rendererCount; ++i)
 					  {
 						  GLint rendererID;
@@ -302,7 +306,7 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 								  // In OS X, the GPU seems to often crash with individual textures that occupy more than a certain amount of memory.
 								  // See https://b33p.net/kosada/node/10791
 								  // See https://b33p.net/kosada/node/12030
-								  maximumTextureBytes = (textureMegabytes - 85) * 1024 * 1024 * .9;
+								  maximumTextureBytes = (textureMegabytes - 85) * 1048576UL * .9;
 								  VDebugLog("Texture : %ld MB", maximumTextureBytes / 1024 / 1024);
 								  break;
 							  }
@@ -607,11 +611,16 @@ static void VuoGlPool_cleanup(void *blah)
 				VuoGlContext_disuse(glContext);
 			}
 
-			VUserLog("VRAM use: %5lu MB current (%3lu%% of system), %5lu MB max (%3lu%% of system)",
+			if (maximumTextureBytes > 0)
+				VUserLog("VRAM use: %5lu MB current (%3lu%% of system), %5lu MB max (%3lu%% of system)",
 					  VuoGlTexturePool_allocatedBytes/1024/1024,
 					  VuoGlTexturePool_allocatedBytes*100/maximumTextureBytes,
 					  VuoGlTexturePool_allocatedBytesMax/1024/1024,
 					  VuoGlTexturePool_allocatedBytesMax*100/maximumTextureBytes);
+			else
+				VUserLog("VRAM use: %5lu MB current, %5lu MB max",
+					  VuoGlTexturePool_allocatedBytes/1024/1024,
+					  VuoGlTexturePool_allocatedBytesMax/1024/1024);
 		}
 
 		double now = VuoLogGetTime();

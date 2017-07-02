@@ -51,7 +51,7 @@ double VuoAvPlayer_getFrameRate(VuoAvPlayerObjPtr player);
 /**
  * Seek playhead to second.
  */
-bool VuoAvPlayer_seekToSecond(VuoAvPlayerObjPtr player, VuoReal second);
+bool VuoAvPlayer_seekToSecond(VuoAvPlayerObjPtr player, VuoReal second, VuoVideoFrame *frame);
 
 /**
  * Set the VuoVideoPlayer instance to call OnDecoderPlaybackReady

@@ -47,6 +47,7 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 	getBase()->setCompiler(this);
 
 	graph = NULL;
+	graphHash = 0;
 	module = NULL;
 
 	if (parser)
@@ -93,6 +94,22 @@ VuoCompilerComposition * VuoCompilerComposition::newCompositionFromGraphvizDecla
 	VuoCompilerComposition *composition = new VuoCompilerComposition(new VuoComposition(), parser);
 	delete parser;
 	return composition;
+}
+
+/**
+ * Returns the graph for this composition, using the most recently generated graph if it still applies.
+ */
+VuoCompilerGraph * VuoCompilerComposition::getCachedGraph(void)
+{
+	long currentHash = VuoCompilerGraph::getHash(this);
+	if (currentHash != graphHash)
+	{
+		delete graph;
+		graph = new VuoCompilerGraph(this);
+		graphHash = currentHash;
+	}
+
+	return graph;
 }
 
 /**
@@ -163,11 +180,17 @@ void VuoCompilerComposition::checkForMissingNodeClasses(const set<string> &subco
  */
 void VuoCompilerComposition::checkFeedback(set<VuoCompilerCable *> potentialCables)
 {
-	delete graph;
-	graph = new VuoCompilerGraph(this, potentialCables);
+	VuoCompilerGraph *graph;
+	if (! potentialCables.empty())
+		graph = new VuoCompilerGraph(this, potentialCables);
+	else
+		graph = getCachedGraph();
 
 	graph->checkForInfiniteFeedback();
 	graph->checkForDeadlockedFeedback();
+
+	if (! potentialCables.empty())
+		delete graph;
 }
 
 /**

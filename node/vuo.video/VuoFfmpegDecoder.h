@@ -55,7 +55,7 @@ public:
 	/// Get the next audio frame in the queue.  If playback speed is negative (or anything other than 1), this returns nothing.
 	virtual bool NextAudioFrame(VuoAudioFrame* audio);
 	/// Seek the playhead to the second.  `second` is not in timestamp format, rather, relative to movie start = 0.
-	virtual bool SeekToSecond(double second);
+	virtual bool SeekToSecond(double second, VuoVideoFrame *frame);
 	/// Returns true if video contains an audio track.
 	bool ContainsAudio();
 	/// The total duration of this video in seconds
@@ -345,6 +345,7 @@ private:
 	{
 		int64_t first_pts;		// first pts value in video stream time
 		int64_t last_pts;		// finish in video stream time
+		int64_t max_pts;		// largest decoded pts in video stream time
 		int64_t duration;		// duration in video stream time
 	};
 
@@ -448,14 +449,14 @@ private:
 	bool FillAudioBuffer();
 
 	// Seek to presentation timestamp.
-	bool SeekToPts(int64_t pts);
+	bool SeekToPts(int64_t pts, VuoVideoFrame *frame);
 
 	/// If currently seeking, this lets the decode audio/video functions know so they can skip
 	/// unnecessary stuff
 	bool seeking;
 
 	// After av_seek, use this to step the decoded frames to a more exact position
-	bool StepVideoFrame(int64_t pts);
+	bool StepVideoFrame(int64_t pts, VuoVideoFrame *frame);
 	bool StepAudioFrame(int64_t pts);
 
 	void ClearAudioBuffer();

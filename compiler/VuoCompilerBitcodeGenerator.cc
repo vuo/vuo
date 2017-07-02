@@ -72,13 +72,15 @@ VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition 
 	{
 		publishedInputNode = NULL;
 		publishedOutputNode = NULL;
-		graph = new VuoCompilerGraph(composition, NULL, NULL);
+		graph = composition->getCachedGraph();
+		ownsGraph = false;
 	}
 	else
 	{
 		publishedInputNode = compiler->createPublishedInputNode(publishedInputPorts);
 		publishedOutputNode = compiler->createPublishedOutputNode(publishedOutputPorts);
 		graph = new VuoCompilerGraph(composition, publishedInputNode->getCompiler(), publishedOutputNode->getCompiler());
+		ownsGraph = true;
 	}
 	chainsForTrigger = graph->getChains();  // store in a data member, rather than calling getChains() multiple times, to preserve order of chains
 	makeOrderedNodes();
@@ -93,7 +95,8 @@ VuoCompilerBitcodeGenerator::VuoCompilerBitcodeGenerator(VuoCompilerComposition 
  */
 VuoCompilerBitcodeGenerator::~VuoCompilerBitcodeGenerator(void)
 {
-	delete graph;
+	if (ownsGraph)
+		delete graph;
 
 	for (vector<VuoPort *>::iterator i = modelOutputPorts.begin(); i != modelOutputPorts.end(); ++i)
 	{

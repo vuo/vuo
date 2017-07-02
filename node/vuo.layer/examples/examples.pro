@@ -5,12 +5,14 @@ EXAMPLE_SOURCES += \
 	ChangeGridSpacing.vuo \
 	ChangeLayerBlendMode.vuo \
 	CompareLayerGradients.vuo \
+  DemoProjectionMappingCalibration.vuo \
 	DisplayImagesOnLayers.vuo \
 	DrawRainbowTrail.vuo \
 	DrawShapes.vuo \
 	IsMouseWithinLayer.vuo \
 	RenderTextLayer.vuo \
 	RotateGears.vuo \
-    StretchOvalWithBounds.vuo
+	ShowTextAnchor.vuo \
+  StretchOvalWithBounds.vuo
 
 include(../../../example.pri)

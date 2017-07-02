@@ -82,6 +82,9 @@ json_object * VuoCompilerPublishedPort::getDetails(bool isInput)
 		for (vector<VuoCable *>::iterator i = connectedCables.begin(); i != connectedCables.end(); ++i)
 		{
 			VuoPort *connectedPort = (*i)->getToPort();
+			if (!connectedPort)
+				continue;
+
 			VuoCompilerInputEventPortClass *connectedInputEventPortClass = dynamic_cast<VuoCompilerInputEventPortClass *>(connectedPort->getClass()->getCompiler());
 			if (connectedInputEventPortClass)
 			{
@@ -232,7 +235,7 @@ string VuoCompilerPublishedPort::getGraphvizAttributes(void)
 	if (! VuoGenericType::isGenericTypeName(typeName))
 		output << attributePrefix << "_type=\"" << escapedTypeName << "\"";
 
-	json_object *details = static_cast<VuoCompilerPublishedPortClass *>(getBase()->getClass()->getCompiler())->getDetails();
+	json_object *details = getDetails(true);
 	json_object_object_foreach(details, key, val)
 	{
 		string attributeSuffix;

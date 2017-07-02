@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Check Mouse Status",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "button", "press", "get", "current" ],
-					  "version" : "1.0.2",
+					  "version" : "1.0.3",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
@@ -21,8 +21,15 @@ VuoModuleMetadata({
 					  }
 				  });
 
-void nodeEvent
+void *nodeInstanceInit(void)
+{
+	VuoMouseStatus_use();
+	return NULL;
+}
+
+void nodeInstanceEvent
 (
+		VuoInstanceData(void *) context,
 		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoMouseButton, {"default":"left"}) button,
 		VuoInputData(VuoModifierKey, {"default":"any"}) modifierKey,
@@ -34,4 +41,12 @@ void nodeEvent
 		return;
 
 	VuoMouse_getStatus(position, isPressed, button, window, modifierKey);
+}
+
+void nodeInstanceFini
+(
+		VuoInstanceData(void *) context
+)
+{
+	VuoMouseStatus_disuse();
 }

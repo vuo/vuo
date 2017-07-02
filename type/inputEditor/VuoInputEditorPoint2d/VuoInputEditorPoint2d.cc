@@ -8,13 +8,6 @@
  */
 
 #include "VuoInputEditorPoint2d.hh"
-#include "VuoDoubleSpinBox.hh"
-
-extern "C"
-{
-	#include "VuoPoint2d.h"
-	#include "VuoReal.h"
-}
 
 /**
  * Constructs a VuoInputEditorPoint2d object.
@@ -25,27 +18,66 @@ VuoInputEditor * VuoInputEditorPoint2dFactory::newInputEditor()
 }
 
 /**
+ * Creates a new label with sizePolicy(Max, Max)
+ */
+QLabel* makeLabel(const char* text)
+{
+	QLabel* label = new QLabel(text);
+	label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	return label;
+}
+
+/**
+ * Alloc and init a new VuoDoubleSpinBox.
+ */
+VuoDoubleSpinBox* VuoInputEditorPoint2d::initSpinBox(coord whichCoord, QDialog& dialog, double initialValue)
+{
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
+	spin->setDecimals(decimalPrecision);
+	spin->setButtonMinimum(suggestedMinForCoord[whichCoord]);
+	spin->setButtonMaximum(suggestedMaxForCoord[whichCoord]);
+	spin->setSingleStep(suggestedStepForCoord[whichCoord]);
+	spin->setValue(initialValue);
+	return spin;
+}
+
+/**
+ * Alloc and init a new QSlider.
+ */
+QSlider* VuoInputEditorPoint2d::initSlider(coord whichCoord, QDialog& dialog, double initialValue)
+{
+	double min = suggestedMinForCoord[whichCoord];
+	double max = suggestedMaxForCoord[whichCoord];
+	double step = suggestedStepForCoord[whichCoord];
+	double range = max - min;
+
+	QSlider* slider = new QSlider(&dialog);
+	slider->setAttribute(Qt::WA_MacSmallSize);
+	slider->setOrientation(Qt::Horizontal);
+	slider->setFocusPolicy(Qt::NoFocus);
+	slider->setMinimum(0);
+	slider->setMaximum(slider->width());
+	slider->setSingleStep( fmax(1, step * (slider->maximum() - slider->minimum()) / range ) );
+	slider->setValue( VuoDoubleSpinBox::doubleToSlider(slider->minimum(), slider->maximum(), min, max, initialValue) );
+	return slider;
+}
+
+/**
  * Sets up a dialog containing either a slider and line edit (if @c details contains both "suggestedMin"
  * and "suggestedMax") or a spin box (which includes a line edit).
  */
 void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
-	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;;
+	current = VuoPoint2d_makeFromJson(originalValue);
 
-	suggestedMinX = -std::numeric_limits<double>::max();
-	suggestedMaxX = std::numeric_limits<double>::max();
+	const double max_dbl = std::numeric_limits<double>::max();
 
-	suggestedMinY = -std::numeric_limits<double>::max();
-	suggestedMaxY = std::numeric_limits<double>::max();
+	VuoPoint2d suggestedMin = VuoPoint2d_make(-max_dbl, -max_dbl);
+	VuoPoint2d suggestedMax = VuoPoint2d_make( max_dbl,  max_dbl);
+	VuoPoint2d suggestedStep = VuoPoint2d_make(1.0, 1.0);
 
-	double suggestedStepX = 1.0;
-	double suggestedStepY = 1.0;
-
-	bool detailsIncludeSuggestedMin = false;
-	bool detailsIncludeSuggestedMax = false;
-
-	QDoubleValidator *validator = new QDoubleValidator(this);
-
+	bool hasMinMax = true;
 	bool tabCycleForward = true;
 
 	// Parse supported port annotations from the port's "details" JSON object:
@@ -58,183 +90,153 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 		// "suggestedMin"
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
-		{
-			suggestedMinX = VuoPoint2d_makeFromJson(suggestedMinValue).x;
-			suggestedMinY = VuoPoint2d_makeFromJson(suggestedMinValue).y;
-			detailsIncludeSuggestedMin = true;
-		}
+			suggestedMin = VuoPoint2d_makeFromJson(suggestedMinValue);
+		else
+			hasMinMax = false;
 
 		// "suggestedMax"
 		json_object *suggestedMaxValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMax", &suggestedMaxValue))
-		{
-			suggestedMaxX = VuoPoint2d_makeFromJson(suggestedMaxValue).x;
-			suggestedMaxY = VuoPoint2d_makeFromJson(suggestedMaxValue).y;
-			detailsIncludeSuggestedMax = true;
-		}
+			suggestedMax = VuoPoint2d_makeFromJson(suggestedMaxValue);
+		else
+			hasMinMax = false;
 
 		// "suggestedStep"
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
-		{
-			suggestedStepX = VuoPoint2d_makeFromJson(suggestedStepValue).x;
-			suggestedStepY = VuoPoint2d_makeFromJson(suggestedStepValue).y;
-		}
+			suggestedStep = VuoPoint2d_makeFromJson(suggestedStepValue);
 	}
 
-	// Display a QSlider or QSpinBox widget, depending whether a suggestedMin and suggestedMax were
-	// both provided in the port's annotation details.
-	sliderX = NULL;
-	spinBoxX = NULL;
+	suggestedMinForCoord[coord_x] = suggestedMin.x;
+	suggestedMinForCoord[coord_y] = suggestedMin.y;
+	suggestedMaxForCoord[coord_x] = suggestedMax.x;
+	suggestedMaxForCoord[coord_y] = suggestedMax.y;
+	suggestedStepForCoord[coord_x] = suggestedStep.x;
+	suggestedStepForCoord[coord_y] = suggestedStep.y;
 
-	sliderY = NULL;
-	spinBoxY = NULL;
+	spinboxForCoord[coord_x] = initSpinBox(coord_x, dialog, current.x);
+	spinboxForCoord[coord_y] = initSpinBox(coord_y, dialog, current.y);
+	connect(spinboxForCoord[coord_x], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	connect(spinboxForCoord[coord_y], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+
+	if(hasMinMax)
+	{
+		sliderForCoord[coord_x] = initSlider(coord_x, dialog, current.x);
+		sliderForCoord[coord_y] = initSlider(coord_y, dialog, current.y);
+		connect(sliderForCoord[coord_x], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		connect(sliderForCoord[coord_y], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	}
+
+	// layout dialog
+	QGridLayout* layout = new QGridLayout;
+	dialog.setLayout(layout);
+
+	// left, top, right, bottom
+	// when showing sliders, add a little extra margin on the bottom since QSlider takes up the
+	// entire vertical spacing
+	layout->setContentsMargins(4, 4, 16, 4);
+	layout->setSpacing(8);
+
+	int row = 0;
+
+	layout->addWidget(makeLabel("x"), row, 0, Qt::AlignHCenter);
+	layout->addWidget(spinboxForCoord[coord_x], row++, 1);
+	if(hasMinMax) layout->addWidget(sliderForCoord[coord_x], row++, 1);
+
+	layout->addWidget(makeLabel("y"), row, 0, Qt::AlignHCenter);
+	layout->addWidget(spinboxForCoord[coord_y], row++, 1);
+	if(hasMinMax) layout->addWidget(sliderForCoord[coord_y], row++, 1);
+
+	dialog.setMaximumWidth(1);
+	dialog.setMaximumHeight(1);
+
+	dialog.adjustSize();
 
 	// Layout details
-	const int widgetVerticalSpacing = 4;
-	const int widgetHorizontalSpacing = 5;
-
-	QLabel *labelX = new QLabel(&dialog);
-	labelX->setText("x");
-	labelX->resize(QSize(labelX->fontMetrics().boundingRect(labelX->text()).width()+widgetHorizontalSpacing, labelX->height()));
-
-	QLabel *labelY = new QLabel(&dialog);
-	labelY->setText("y");
-	labelY->resize(QSize(labelY->fontMetrics().boundingRect(labelY->text()).width()+widgetHorizontalSpacing, labelY->height()));
-
-	// If suggestedMin and suggestedMax have both been provided, display a slider.
-	if (detailsIncludeSuggestedMin && detailsIncludeSuggestedMax)
-	{
-		validator->setDecimals(decimalPrecision);
-
-		// X value
-		lineEditX = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditX, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).x));
-		lineEditX->setValidator(validator);
-		lineEditX->installEventFilter(this);
-
-		sliderX = new QSlider(&dialog);
-		sliderX->setAttribute(Qt::WA_MacSmallSize);
-		sliderX->setOrientation(Qt::Horizontal);
-		sliderX->setFocusPolicy(Qt::NoFocus);
-		sliderX->setMinimum(0);
-		sliderX->setMaximum(sliderX->width());
-		sliderX->setSingleStep(fmax(1, suggestedStepX*(sliderX->maximum()-sliderX->minimum())/(suggestedMaxX-suggestedMinX)));
-
-		double lineEditValueX = VuoPoint2d_makeFromJson(originalValue).x;
-		int sliderValueX = lineEditValueToScaledSliderValue(lineEditValueX, x);
-		sliderX->setValue(sliderValueX);
-
-		connect(sliderX, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-		connect(lineEditX, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-		connect(lineEditX, SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
-
-		// Y value
-		lineEditY = new QLineEdit(&dialog);
-		setUpLineEdit(lineEditY, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).y));
-		lineEditY->setValidator(validator);
-		lineEditY->installEventFilter(this);
-
-		sliderY = new QSlider(&dialog);
-		sliderY->setAttribute(Qt::WA_MacSmallSize);
-		sliderY->setOrientation(Qt::Horizontal);
-		sliderY->setFocusPolicy(Qt::NoFocus);
-		sliderY->setMinimum(0);
-		sliderY->setMaximum(sliderY->width());
-		sliderY->setSingleStep(fmax(1, suggestedStepY*(sliderY->maximum()-sliderY->minimum())/(suggestedMaxY-suggestedMinY)));
-
-		double lineEditValueY = VuoPoint2d_makeFromJson(originalValue).y;
-		int sliderValueY = lineEditValueToScaledSliderValue(lineEditValueY, y);
-		sliderY->setValue(sliderValueY);
-
-		connect(sliderY, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-		connect(lineEditY, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-		connect(lineEditY, SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
-
-		// Layout details
-		setFirstWidgetInTabOrder(lineEditX);
-		setLastWidgetInTabOrder(lineEditY);
-
-		labelX->move(labelX->pos().x(), labelX->pos().y());
-		lineEditX->move(labelX->pos().x()+labelX->width()+widgetHorizontalSpacing, lineEditX->pos().y());
-		sliderX->move(lineEditX->pos().x(), lineEditX->pos().y() + lineEditX->height() + widgetVerticalSpacing);
-		sliderX->resize(sliderX->width(), sliderX->height() - 10);
-		lineEditX->resize(sliderX->width(), lineEditX->height());
-
-		labelY->move(labelY->pos().x(), sliderX->pos().y() + sliderX->height() + widgetVerticalSpacing);
-		lineEditY->move(labelY->pos().x()+labelY->width()+widgetHorizontalSpacing, sliderX->pos().y() + sliderX->height() + widgetVerticalSpacing);
-		sliderY->move(lineEditY->pos().x(), lineEditY->pos().y() + lineEditY->height() + widgetVerticalSpacing);
-		sliderY->resize(sliderY->width(), sliderY->height() - 10);
-		lineEditY->resize(sliderY->width(), lineEditY->height());
-
-		labelX->show();
-		sliderX->show();
-
-		labelY->show();
-		sliderY->show();
-	}
-
-	// If either suggestedMin or suggestedMax is left unspecified, display a spinbox.
-	else
-	{
-		// X value
-		spinBoxX = new VuoDoubleSpinBox(&dialog);
-		static_cast<VuoDoubleSpinBox *>(spinBoxX)->setButtonMinimum(suggestedMinX);
-		static_cast<VuoDoubleSpinBox *>(spinBoxX)->setButtonMaximum(suggestedMaxX);
-		spinBoxX->setSingleStep(suggestedStepX);
-		spinBoxX->setDecimals(decimalPrecision);
-		spinBoxX->setValue(VuoPoint2d_makeFromJson(originalValue).x);
-
-		// For some reason the VuoPoint2d input editor is extremely wide
-		// without the following resize() call:
-		spinBoxX->resize(spinBoxX->size());
-
-		lineEditX = spinBoxX->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditX, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).x));
-		spinBoxX->setKeyboardTracking(false);
-
-		connect(spinBoxX, SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
-
-		// Y value
-		spinBoxY = new VuoDoubleSpinBox(&dialog);
-		static_cast<VuoDoubleSpinBox *>(spinBoxY)->setButtonMinimum(suggestedMinY);
-		static_cast<VuoDoubleSpinBox *>(spinBoxY)->setButtonMaximum(suggestedMaxY);
-		spinBoxY->setSingleStep(suggestedStepY);
-		spinBoxY->setDecimals(decimalPrecision);
-		spinBoxY->setValue(VuoPoint2d_makeFromJson(originalValue).y);
-
-		// For some reason the VuoPoint2d input editor is extremely wide
-		// without the following resize() call:
-		spinBoxY->resize(spinBoxY->size());
-
-		lineEditY = spinBoxY->findChild<QLineEdit *>();
-		VuoInputEditorWithLineEdit::setUpLineEdit(lineEditY, VuoReal_getJson(VuoPoint2d_makeFromJson(originalValue).y));
-		spinBoxY->setKeyboardTracking(false);
-
-		connect(spinBoxY, SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
-
-		// Layout details
-		setFirstWidgetInTabOrder(spinBoxX);
-		setLastWidgetInTabOrder(spinBoxY);
-
-		labelX->move(labelX->pos().x(), labelX->pos().y());
-		spinBoxX->move(labelX->pos().x()+labelX->width()+widgetHorizontalSpacing, spinBoxX->pos().y());
-
-		labelY->move(labelY->pos().x(), spinBoxX->pos().y() + spinBoxX->height() + widgetVerticalSpacing);
-		spinBoxY->move(spinBoxX->pos().x(), labelY->pos().y());
-
-		labelX->show();
-		spinBoxX->show();
-
-		labelY->show();
-		spinBoxY->show();
-	}
+	setFirstWidgetInTabOrder(spinboxForCoord[coord_x]);
+	setLastWidgetInTabOrder(spinboxForCoord[coord_y]);
 
 	// Return focus to the topmost line edit by default, or to the bottommost
 	// line edit if tab-cycling backwards.
 	// To be handled properly for https://b33p.net/kosada/node/6365 .
-	(tabCycleForward? lineEditX : lineEditY)->setFocus();
-	(tabCycleForward? lineEditX : lineEditY)->selectAll();
+	(tabCycleForward ? spinboxForCoord[coord_x] : spinboxForCoord[coord_y])->setFocus();
+	(tabCycleForward ? spinboxForCoord[coord_x] : spinboxForCoord[coord_y])->selectAll();
+}
+
+bool VuoInputEditorPoint2d::getCoordFromQObject(QObject* sender, VuoInputEditorPoint2d::coord* whichCoord)
+{
+	if(sender == spinboxForCoord[coord_x] || sender == sliderForCoord[coord_x])
+		*whichCoord = coord_x;
+	else if(sender == spinboxForCoord[coord_y] || sender == sliderForCoord[coord_y])
+		*whichCoord = coord_y;
+	else
+		return false;
+
+	return true;
+}
+
+void VuoInputEditorPoint2d::setCoord(coord c, double value)
+{
+	if(c == coord_x)
+		current.x = value;
+	else if(c == coord_y)
+		current.y = value;
+}
+
+/**
+ * Update the spinbox and stored VuoPoint2d property.
+ */
+void VuoInputEditorPoint2d::onSliderUpdate(int sliderValue)
+{
+	coord whichCoord;
+
+	if(!getCoordFromQObject(QObject::sender(), &whichCoord))
+		return;
+
+	QSlider *targetSlider =	sliderForCoord[whichCoord];
+
+	double value = VuoDoubleSpinBox::sliderToDouble(targetSlider->minimum(),
+													targetSlider->maximum(),
+													suggestedMinForCoord[whichCoord],
+													suggestedMaxForCoord[whichCoord],
+													sliderValue);
+	setCoord(whichCoord, value);
+
+	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
+	disconnect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	spinboxForCoord[whichCoord]->setValue( value );
+	connect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+
+	spinboxForCoord[whichCoord]->setFocus();
+	spinboxForCoord[whichCoord]->selectAll();
+
+	emit valueChanged( getAcceptedValue() );
+}
+
+/**
+ * Update the slider and stored VuoPoint2d.
+ */
+void VuoInputEditorPoint2d::onSpinboxUpdate(QString spinboxValue)
+{
+	coord whichCoord;
+
+	if(!getCoordFromQObject(QObject::sender(), &whichCoord))
+		return;
+
+	double value = QLocale::system().toDouble(spinboxValue);
+	setCoord(whichCoord, value);
+
+	QSlider *targetSlider =	sliderForCoord[whichCoord];
+
+	if(targetSlider != NULL)
+	{
+		int sliderValue = VuoDoubleSpinBox::doubleToSlider(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], value);
+		disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		targetSlider->setValue( sliderValue );
+		connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	}
+
+	emit valueChanged( getAcceptedValue() );
 }
 
 /**
@@ -242,189 +244,13 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
  */
 json_object * VuoInputEditorPoint2d::getAcceptedValue(void)
 {
-	return convertFromLineEditsFormat(lineEditX->text(), lineEditY->text());
+	return VuoPoint2d_getJson(current);
 }
 
 /**
- * Returns the text that should appear in the line edit to represent @c value.
+ * Send valueChanged.
  */
-QString VuoInputEditorPoint2d::convertToLineEditFormat(json_object *value)
-{
-	QString valueAsStringInDefaultLocale = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
-	double realValue = QLocale(QLocale::C).toDouble(valueAsStringInDefaultLocale);
-	QString valueAsStringInUserLocale = QLocale::system().toString(realValue);
-
-	if (qAbs(realValue) >= 1000.0)
-		valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
-
-	return valueAsStringInUserLocale;
-}
-
-/**
- * Formats the value from the line edit to conform to the JSON specification for numbers.
- */
-json_object * VuoInputEditorPoint2d::convertFromLineEditsFormat(const QString &xValueAsString, const QString &yValueAsString)
-{
-	// X value
-	double xValue = QLocale::system().toDouble(xValueAsString);
-	QString xValueAsStringInDefaultLocale = QLocale(QLocale::C).toString(xValue);
-
-	if (qAbs(xValue) >= 1000.0)
-		xValueAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! xValueAsStringInDefaultLocale.isEmpty() && xValueAsStringInDefaultLocale[0] == '.')
-		xValueAsStringInDefaultLocale = "0" + xValueAsStringInDefaultLocale;
-
-	// Y value
-	double yValue = QLocale::system().toDouble(yValueAsString);
-	QString yValueAsStringInDefaultLocale = QLocale(QLocale::C).toString(yValue);
-
-	if (qAbs(yValue) >= 1000.0)
-		yValueAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! yValueAsStringInDefaultLocale.isEmpty() && yValueAsStringInDefaultLocale[0] == '.')
-		yValueAsStringInDefaultLocale = "0" + yValueAsStringInDefaultLocale;
-
-	// Point
-	VuoPoint2d point;
-	point.x = VuoReal_makeFromString(xValueAsStringInDefaultLocale.toUtf8().constData());
-	point.y = VuoReal_makeFromString(yValueAsStringInDefaultLocale.toUtf8().constData());
-	return VuoPoint2d_getJson(point);
-}
-
-/**
- * Converts the input @c newLineEditText to an integer and updates this
- * input editor's @c slider widget to reflect that integer value.
- */
-void VuoInputEditorPoint2d::updateSliderValue(QString newLineEditText)
-{
-	QObject *sender = QObject::sender();
-	coord whichCoord = (sender == lineEditX? x : y);
-
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
-	int newSliderValue = lineEditValueToScaledSliderValue(newLineEditValue, whichCoord);
-
-	QSlider *targetSlider = (whichCoord == x? sliderX : sliderY);
-
-	disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	targetSlider->setValue(newSliderValue);
-	connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-}
-
-/**
- * Converts the slider's current value() to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- */
-
-void VuoInputEditorPoint2d::updateLineEditValue()
-{
-	QObject *sender = QObject::sender();
-	coord whichCoord = (sender == sliderX? x : y);
-	updateLineEditValue(((QSlider *)sender)->value(), whichCoord);
-}
-
-void VuoInputEditorPoint2d::updateLineEditValue(int newSliderValue)
-{
-	QObject *sender = QObject::sender();
-	coord whichCoord = (sender == sliderX? x : y);
-
-	updateLineEditValue(newSliderValue, whichCoord);
-}
-
-/**
- * Converts the input @c newSliderValue to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- *
- * Note: The slider's sliderMoved(int) signal must be connected to this
- * slot rather than to the version of this slot that takes no arguments
- * in order to respect the most recently updated slider value.
- */
-void VuoInputEditorPoint2d::updateLineEditValue(int newSliderValue, coord whichCoord)
-{
-	double newLineEditValue = sliderValueToScaledLineEditValue(newSliderValue, whichCoord);
-	QLineEdit *targetLineEdit = (whichCoord == x? lineEditX : lineEditY);
-	const QString originalLineEditText = targetLineEdit->text();
-	QString newLineEditText = QLocale::system().toString(newLineEditValue, 'g');
-
-	if (qAbs(newLineEditValue) >= 1000.0)
-		newLineEditText.remove(QLocale::system().groupSeparator());
-
-	if (originalLineEditText != newLineEditText)
-	{
-		targetLineEdit->setText(newLineEditText);
-		targetLineEdit->setFocus();
-		targetLineEdit->selectAll();
-
-		emitValueChanged();
-	}
-}
-
-/**
- * Scales the input @c lineEditValue to match the range of the slider.
- */
-int VuoInputEditorPoint2d::lineEditValueToScaledSliderValue(double lineEditValue, coord whichCoord)
-{
-	QSlider *targetSlider = (whichCoord == x? sliderX : sliderY);
-	double suggestedMin = (whichCoord == x? suggestedMinX : suggestedMinY);
-	double suggestedMax = (whichCoord == x? suggestedMaxX : suggestedMaxY);
-	const double lineEditRange = suggestedMax - suggestedMin;
-
-	const int sliderRange = targetSlider->maximum() - targetSlider->minimum();
-	int scaledSliderValue = targetSlider->minimum() + ((lineEditValue-suggestedMin)/(1.0*(lineEditRange)))*sliderRange;
-
-	return scaledSliderValue;
-}
-
-/**
- * Scales the input @c sliderValue to match the range of the
- * port's suggestedMin and suggestedMax.
- */
-double VuoInputEditorPoint2d::sliderValueToScaledLineEditValue(int sliderValue, coord whichCoord)
-{
-	QSlider *targetSlider = (whichCoord == x? sliderX : sliderY);
-	double suggestedMin = (whichCoord == x? suggestedMinX : suggestedMinY);
-	double suggestedMax = (whichCoord == x? suggestedMaxX : suggestedMaxY);
-	const double lineEditRange = suggestedMax - suggestedMin;
-
-	const int sliderRange = targetSlider->maximum() - targetSlider->minimum();
-	double scaledLineEditValue = suggestedMin + ((sliderValue-targetSlider->minimum())/(1.0*sliderRange))*lineEditRange;
-
-	return scaledLineEditValue;
-}
-
 void VuoInputEditorPoint2d::emitValueChanged()
 {
 	emit valueChanged(getAcceptedValue());
-}
-
-/**
- * Filters events on watched objects.
- */
-bool VuoInputEditorPoint2d::eventFilter(QObject *object, QEvent *event)
-{
-	QSlider *targetSlider = (object==lineEditX? sliderX :
-							(object==lineEditY? sliderY :
-												NULL));
-
-	if (event->type()==QEvent::Wheel && targetSlider)
-	{
-		// Let the slider handle mouse wheel events.
-		QApplication::sendEvent(targetSlider, event);
-		return true;
-	}
-
-	else if (event->type()==QEvent::KeyPress && targetSlider)
-	{
-		// Let the slider handle keypresses of the up and down arrows.
-		QKeyEvent *keyEvent = (QKeyEvent *)(event);
-		if ((keyEvent->key() == Qt::Key_Up) || (keyEvent->key() == Qt::Key_Down))
-		{
-			QApplication::sendEvent(targetSlider, event);
-			return true;
-		}
-	}
-
-	return VuoInputEditorWithLineEdit::eventFilter(object, event);
 }

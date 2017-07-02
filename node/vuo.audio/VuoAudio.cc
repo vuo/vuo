@@ -405,20 +405,25 @@ VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod)
 {
 	int deviceId = -1;
 
+	__block RtAudio *temporaryRTA;	// Just for getting device info prior to opening a shared device.
+
 	try
 	{
-		RtAudio temporaryRTA;	// Just for getting device info prior to opening a shared device.
+		// https://b33p.net/kosada/node/12068
+		VuoApp_executeOnMainThread(^{
+									   temporaryRTA = new RtAudio();
+								   });
 
 		if (aod.id == -1 && strlen(aod.name) == 0)
 			// Choose the default device
-			deviceId = temporaryRTA.getDefaultOutputDevice();
+			deviceId = temporaryRTA->getDefaultOutputDevice();
 		else if (aod.id == -1)
 		{
 			// Choose the first output device whose name contains aid.name
-			unsigned int deviceCount = temporaryRTA.getDeviceCount();
+			unsigned int deviceCount = temporaryRTA->getDeviceCount();
 			for (unsigned int i = 0; i < deviceCount; ++i)
 			{
-				RtAudio::DeviceInfo di = temporaryRTA.getDeviceInfo(i);
+				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
 				if (di.outputChannels && di.name.find(aod.name) != std::string::npos)
 				{
 					deviceId = i;
@@ -429,11 +434,14 @@ VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod)
 		else
 			// Choose the device specified by aid.id
 			deviceId = aod.id;
+
+		delete temporaryRTA;
 	}
 	catch (RtError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
+		delete temporaryRTA;
 		return NULL;
 	}
 

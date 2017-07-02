@@ -100,6 +100,51 @@ private slots:
 		QCOMPARE(aActual, aExpected);
 	}
 
+	void testConversionBetweenRGBAAndCMYKA_data()
+	{
+		QTest::addColumn<VuoReal>("r");
+		QTest::addColumn<VuoReal>("g");
+		QTest::addColumn<VuoReal>("b");
+		QTest::addColumn<VuoReal>("a");
+		QTest::addColumn<VuoReal>("c");
+		QTest::addColumn<VuoReal>("m");
+		QTest::addColumn<VuoReal>("y");
+		QTest::addColumn<VuoReal>("k");
+
+		//                                         R            G            B           A      C     M      Y           K
+		QTest::newRow("white")					<< 1.        << 1.        << 1.       << 1.  << 0. << 0.  << 0.       << 0.      ;
+		QTest::newRow("black")					<< 0.        << 0.        << 0.       << 1.  << 0. << 0.  << 0.       << 1.      ;
+		QTest::newRow("semi-transparent gray")	<< 0.5       << 0.5       << 0.5      << 0.5 << 0. << 0.  << 0.       << 0.5     ;
+		QTest::newRow("red")					<< 1.        << 0.        << 0.       << 1.  << 0. << 1.  << 1.       << 0.      ;
+		QTest::newRow("chocolate")				<< 210./255. << 105./255. << 30./255. << 1.  << 0. << 0.5 << 0.857143 << 0.176471;
+	}
+
+	void testConversionBetweenRGBAAndCMYKA()
+	{
+		QFETCH(VuoReal, r);
+		QFETCH(VuoReal, g);
+		QFETCH(VuoReal, b);
+		QFETCH(VuoReal, a);
+		QFETCH(VuoReal, c);
+		QFETCH(VuoReal, m);
+		QFETCH(VuoReal, y);
+		QFETCH(VuoReal, k);
+
+		// Test converting CMYKA to RGBA.
+		VuoColor colorFromRGBA  = VuoColor_makeWithRGBA(r, g, b, a);
+		VuoColor colorFromCMYKA = VuoColor_makeWithCMYKA(c, m, y, k, a);
+		QVERIFY2(VuoColor_areEqual(colorFromRGBA,colorFromCMYKA), QString("%1 != %2").arg(VuoColor_getHex(colorFromRGBA,true)).arg(VuoColor_getHex(colorFromCMYKA,true)).toUtf8().constData());
+
+		// Test convereting RGBA to CMYKA.
+		VuoReal cActual, yActual, mActual, kActual, aActual;
+		VuoColor_getCMYKA(colorFromRGBA, &cActual, &mActual, &yActual, &kActual, &aActual);
+		QVERIFY2(VuoReal_areEqual(c,cActual), QString("%1 != %2").arg(c).arg(cActual).toUtf8().constData());
+		QVERIFY2(VuoReal_areEqual(m,mActual), QString("%1 != %2").arg(m).arg(mActual).toUtf8().constData());
+		QVERIFY2(VuoReal_areEqual(y,yActual), QString("%1 != %2").arg(y).arg(yActual).toUtf8().constData());
+		QVERIFY2(VuoReal_areEqual(k,kActual), QString("%1 != %2").arg(k).arg(kActual).toUtf8().constData());
+		QVERIFY2(VuoReal_areEqual(a,aActual), QString("%1 != %2").arg(a).arg(aActual).toUtf8().constData());
+	}
+
 	void testAverage_data()
 	{
 		QTest::addColumn<VuoList_VuoColor>("colorsToAverage");

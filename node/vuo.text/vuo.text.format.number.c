@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						  "CoreFoundation.framework"
 					  ],
 					  "node" : {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "ShowMousePosition.vuo" ]
 					  }
 				  });
 

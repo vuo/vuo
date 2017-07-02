@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Receive MIDI Events",
 					 "keywords" : [ "note", "controller", "synthesizer", "sequencer", "music", "instrument", "device" ],
-					 "version" : "2.1.0",
+					 "version" : "2.1.1",
 					 "dependencies" : [
 						 "VuoMidi"
 					 ],
@@ -90,6 +90,26 @@ void nodeInstanceTriggerStart
 	(*context)->receivedController = receivedController;
 	(*context)->receivedPitchBend = receivedPitchBend;
 	VuoMidiIn_enableTriggers((*context)->midiManager, receivedNoteWrapper, receivedControllerWrapper, receivedPitchBendWrapper, *context);
+}
+
+void nodeInstanceTriggerUpdate
+(
+	VuoInstanceData(struct nodeInstanceData *) context,
+	VuoInputData(VuoMidiInputDevice) device,
+	VuoOutputTrigger(receivedNote, VuoMidiNote),
+	VuoOutputTrigger(receivedController, VuoMidiController),
+	VuoOutputTrigger(receivedPitchBend, VuoMidiPitchBend)
+)
+{
+	if (! VuoMidiInputDevice_areEqual(device, (*context)->device))
+	{
+		VuoMidiIn_disableTriggers((*context)->midiManager);
+		updateDevice(*context, device);
+		(*context)->receivedNote = receivedNote;
+		(*context)->receivedController = receivedController;
+		(*context)->receivedPitchBend = receivedPitchBend;
+		VuoMidiIn_enableTriggers((*context)->midiManager, receivedNoteWrapper, receivedControllerWrapper, receivedPitchBendWrapper, *context);
+	}
 }
 
 void nodeInstanceEvent

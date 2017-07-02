@@ -42,7 +42,7 @@ void VuoMouse_startListeningForPresses(VuoMouse *mouseListener, void (*pressed)(
 void VuoMouse_startListeningForPressesWithCallback(VuoMouse *mouseListener, void (^pressed)(VuoPoint2d),
 												   VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
 void VuoMouse_startListeningForReleases(VuoMouse *mouseListener, void (*released)(VuoPoint2d),
-										VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
+										VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey, bool fireRegardlessOfPosition);
 void VuoMouse_startListeningForReleasesWithCallback(VuoMouse *mouseListener, void (^released)(VuoPoint2d),
 													VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey, bool fireRegardlessOfPosition);
 void VuoMouse_startListeningForClicks(VuoMouse *mouseListener, void (*singleClicked)(VuoPoint2d), void (*doubleClicked)(VuoPoint2d),
@@ -51,7 +51,9 @@ void VuoMouse_startListeningForClicks(VuoMouse *mouseListener, void (*singleClic
 
 void VuoMouse_stopListening(VuoMouse *mouseListener);
 
-void VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
+void VuoMouseStatus_use(void);
+void VuoMouseStatus_disuse(void);
+bool VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
 						VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
 
 #ifdef NSAppKitVersionNumber10_0

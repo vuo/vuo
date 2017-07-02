@@ -15,9 +15,9 @@ void printHelp(char *argv0)
 	printf("Usage: %s [options] file\n"
 		   "Options:\n"
 		   "  --help                         Display this information.\n"
-		   "  --list-node-classes[=<arg>]    Display a list of all loaded node classes. <arg> can be 'path' or 'dot'.\n"
+		   "  --list-node-classes[=dot]      Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "  --output <file>                Place the compiled code into <file>.\n"
-		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.7.0').\n"
+//		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.7.0').\n"
 		   "  --format <arg>                 Output the given type of binary file. <arg> can be 'executable' or 'dylib'. The default is 'executable'.\n"
 		   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
 		   "  --framework-search-path <dir>  Search for Mac OS X frameworks in <dir>. This option may be specified more than once.\n"
@@ -143,8 +143,9 @@ int main (int argc, char * const argv[])
 					outputPath += ".dylib";
 			}
 
-			if (! target.empty())
-				compiler.setTarget(target);
+			/// @todo https://b33p.net/kosada/node/12220
+//			if (! target.empty())
+//				compiler.setTarget(target);
 
 			VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild;
 			if (! optimizationOption.empty())

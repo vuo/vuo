@@ -155,6 +155,10 @@ private slots:
 			VuoCompilerNodeClass *nodeClass = *i;
 			string nodeClassName = nodeClass->getBase()->getClassName();
 
+			// https://b33p.net/kosada/node/12090
+			if (nodeClassName == "vuo.video.receive")
+				continue;
+
 			// Test each node class in its original (possibly generic) form.
 			QTest::newRow(nodeClassName.c_str()) << QString::fromStdString(nodeClassName);
 

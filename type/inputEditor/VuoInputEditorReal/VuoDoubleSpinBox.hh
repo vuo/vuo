@@ -22,6 +22,9 @@ public:
 	void setButtonMinimum(double buttonMinimum);
 	void setButtonMaximum(double buttonMaximum);
 
+	static double sliderToDouble(int sliderMin, int sliderMax, double valueMin, double valueMax, int value);
+	static int doubleToSlider(int sliderMin, int sliderMax, double valueMin, double valueMax, double value);
+
 private:
 	double buttonMinimum;
 	double buttonMaximum;

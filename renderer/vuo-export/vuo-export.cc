@@ -22,7 +22,7 @@ void printHelp(char *argv0)
 		   "Global options:\n"
 		   "    --help                         Display this information.\n"
 		   "    --output <file>                Place the exported composition into <file>.\n"
-		   "    --list-node-classes[=<arg>]    Display a list of all loaded node classes. <arg> can be 'path' or 'dot'.\n"
+		   "    --list-node-classes[=dot]      Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "    --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
 		   "    --framework-search-path <dir>  Search for Mac OS X frameworks in <dir>. This option may be specified more than once.\n"
 		   "    --verbose                      Output diagnostic information.\n"
@@ -30,7 +30,7 @@ void printHelp(char *argv0)
 		   "Commands:\n"
 		   "\n"
 		   "    macosx — Builds the composition as a standalone Mac OS App. Options:\n"
-		   "        --target                   Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.7.0').\n"
+//		   "        --target                   Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.7.0').\n"
 		   "\n"
 		   "    movie — Builds and runs the composition, saving the rendered output to a movie file. Options:\n"
 		   "        --size=1024x768            Suggested size, in pixels.\n"
@@ -266,8 +266,16 @@ int main (int argc, char * argv[])
 				if (outputPath.empty())
 					outputPath = inputDir + inputFile + ".app";
 
-				if (! target.empty())
-					compiler.setTarget(target);
+				// Ensure outputPath is an absolute POSIX path (since `exportApp()` expects one).
+				VuoUrl outputUrl = VuoUrl_normalize(outputPath.c_str(), true);
+				VuoLocal(outputUrl);
+				VuoText outputPathV = VuoUrl_getPosixPath(outputUrl);
+				VuoLocal(outputPathV);
+				outputPath = outputPathV;
+
+				/// @todo https://b33p.net/kosada/node/12220
+//				if (! target.empty())
+//					compiler.setTarget(target);
 
 				VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(inputPath, &compiler);
 				VuoComposition *baseComposition = new VuoComposition();
@@ -276,12 +284,14 @@ int main (int argc, char * argv[])
 				VuoRendererComposition *rendererComposition = new VuoRendererComposition(baseComposition);
 
 				string exportErrString;
-				rendererComposition->exportApp(outputPath.c_str(), &compiler, exportErrString);
-
+				VuoRendererComposition::appExportResult result;
+				result = rendererComposition->exportApp(outputPath.c_str(), &compiler, exportErrString);
 				delete parser;
 				delete compilerComposition;
 				delete rendererComposition;
 				delete baseComposition;
+				if (result != VuoRendererComposition::exportSuccess)
+					throw std::runtime_error(exportErrString);
 			}
 			else if (command == "movie")
 			{

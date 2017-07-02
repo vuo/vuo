@@ -29,12 +29,12 @@
  * Add an image to the currently recording AVWriter.  setupAssetWriterUrl must have been called prior.
  * Use [VuoAvWriter appendImage].
  */
-- (void) appendImage:(VuoImage) image;
+- (void) appendImage:(VuoImage)image presentationTime:(double)timestamp;
 
 /**
  * Adds a set of audio samples to this movie file.  setupAssetWriterWithUrl must have been called prior.
  */
-- (void) appendAudio:(VuoList_VuoAudioSamples) samples;
+- (void) appendAudio:(VuoList_VuoAudioSamples) samples presentationTime:(VuoReal)timestamp;
 
 /**
  * Finalize the currently recording video.

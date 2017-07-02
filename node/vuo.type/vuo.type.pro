@@ -4,6 +4,7 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 NODE_SOURCES += \
+	vuo.type.audio.list.real.c \
 	vuo.type.audioframe.audiosamples.c \
 	vuo.type.audioframe.real.c \
 	vuo.type.boolean.integer.c \

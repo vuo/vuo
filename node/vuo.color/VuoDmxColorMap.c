@@ -51,6 +51,10 @@ VuoDmxColorMap VuoDmxColorMap_makeFromJson(json_object *js)
 		value = VuoDmxColorMap_RGBW;
 	else if (strcmp(valueAsString, "wwcw") == 0)
 		value = VuoDmxColorMap_WWCW;
+	else if (strcmp(valueAsString, "cmy") == 0)
+		value = VuoDmxColorMap_CMY;
+	else if (strcmp(valueAsString, "hsl") == 0)
+		value = VuoDmxColorMap_HSL;
 
 	return value;
 }
@@ -70,6 +74,10 @@ json_object *VuoDmxColorMap_getJson(const VuoDmxColorMap value)
 		valueAsString = "rgbw";
 	else if (value == VuoDmxColorMap_WWCW)
 		valueAsString = "wwcw";
+	else if (value == VuoDmxColorMap_CMY)
+		valueAsString = "cmy";
+	else if (value == VuoDmxColorMap_HSL)
+		valueAsString = "hsl";
 
 	return json_object_new_string(valueAsString);
 }
@@ -85,6 +93,8 @@ VuoList_VuoDmxColorMap VuoDmxColorMap_getAllowedValues(void)
 	VuoListAppendValue_VuoDmxColorMap(l, VuoDmxColorMap_RGBAW);
 	VuoListAppendValue_VuoDmxColorMap(l, VuoDmxColorMap_RGBW);
 	VuoListAppendValue_VuoDmxColorMap(l, VuoDmxColorMap_WWCW);
+	VuoListAppendValue_VuoDmxColorMap(l, VuoDmxColorMap_CMY);
+	VuoListAppendValue_VuoDmxColorMap(l, VuoDmxColorMap_HSL);
 	return l;
 }
 
@@ -103,6 +113,10 @@ char * VuoDmxColorMap_getSummary(const VuoDmxColorMap value)
 		valueAsString = "Red, Green, Blue, White";
 	else if (value == VuoDmxColorMap_WWCW)
 		valueAsString = "Warm white, Cool white";
+	else if (value == VuoDmxColorMap_CMY)
+		valueAsString = "Cyan, Magenta, Yellow";
+	else if (value == VuoDmxColorMap_HSL)
+		valueAsString = "Hue, Saturation, Lightness";
 
 	return strdup(valueAsString);
 }

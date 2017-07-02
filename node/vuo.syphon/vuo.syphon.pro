@@ -23,6 +23,12 @@ NODE_LIBRARY_SOURCES += \
 	VuoSyphonSender.m \
 	VuoSyphonServerNotifier.m
 
+OBJECTIVE_SOURCES += \
+	VuoSyphon.m \
+	VuoSyphonListener.m \
+	VuoSyphonSender.m \
+	VuoSyphonServerNotifier.m
+
 HEADERS += \
 	VuoSyphon.h
 

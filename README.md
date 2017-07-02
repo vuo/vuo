@@ -75,6 +75,8 @@ Install Graphviz 2.28.0:
     curl -OL http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.28.0.tar.gz
     tar zxf graphviz-2.28.0.tar.gz
     cd graphviz-2.28.0
+    curl -OL https://b33p.net/sites/default/files/graphviz-skip-dot-layout.patch
+    patch -p0 < graphviz-skip-dot-layout.patch
 
 If you're running Mac OS 10.7:
 
@@ -397,21 +399,21 @@ If you're running any version of Mac OS X:
 ### libusb
 
     cd /tmp
-    curl -OL http://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2
-    tar jxf libusb-1.0.9.tar.bz2
-    cd libusb-1.0.9
-    ./configure LDFLAGS='-framework IOKit -framework CoreFoundation' --prefix=/usr/local/Cellar/libusb/1.0.9
-    make -j9
+    curl -OL https://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.20/libusb-1.0.20.tar.bz2
+    tar jxf libusb-1.0.20.tar.bz2
+    cd libusb-1.0.20
+    ./configure --prefix=/usr/local/Cellar/libusb/1.0.20
+    make
     make install
-    ln -s libusb-1.0.0.dylib /usr/local/Cellar/libusb/1.0.9/lib/libusb.dylib
+    ln -s libusb-1.0.0.dylib /usr/local/Cellar/libusb/1.0.20/lib/libusb.dylib
 
 ### libfreenect
 
     cd /tmp
-    git clone git://github.com/OpenKinect/libfreenect.git
-    cd libfreenect
-    git checkout c4505ccacd # v0.2.0
-    LDFLAGS='-framework IOKit -framework CoreFoundation -lobjc' cmake -DLIBUSB_1_INCLUDE_DIR='/usr/local/Cellar/libusb/1.0.9/include;/usr/local/Cellar/libusb/1.0.9/include/libusb-1.0' -DLIBUSB_1_LIBRARY=/usr/local/Cellar/libusb/1.0.9/lib/libusb.dylib -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/Cellar/libfreenect/0.2.0 .
+    curl -L https://github.com/OpenKinect/libfreenect/archive/v0.5.3.tar.gz -o libfreenect-0.5.3.tar.gz
+    tar zxf libfreenect-0.5.3.tar.gz
+    cd libfreenect-0.5.3
+    cmake -DLIBUSB_1_INCLUDE_DIR='/usr/local/Cellar/libusb/1.0.20/include;/usr/local/Cellar/libusb/1.0.20/include/libusb-1.0' -DLIBUSB_1_LIBRARY=/usr/local/Cellar/libusb/1.0.20/lib/libusb.dylib -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/Cellar/libfreenect/0.5.3 .
     make -j9
     make install
 
@@ -519,7 +521,6 @@ Edit source files:
 
     xcodebuild
     cp ./build/Release-assert/ld $ROOT/compiler/binary/ld
-    $UPX --ultra-brute $ROOT/compiler/binary/ld
 
 
 ## Install dependencies for building the RunImageFilter-GLFW API example code (optional)

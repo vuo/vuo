@@ -35,23 +35,23 @@ VuoModuleMetadata({
  *   {
  *     "image" : NULL,
  *     "timestamp" : 0.0
+ *     "duration" : 0.0
  *   }
  * }
  */
 VuoVideoFrame VuoVideoFrame_makeFromJson(json_object *js)
 {
-	VuoVideoFrame value = {NULL,0.0};
+	VuoVideoFrame value = {NULL,0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "image", &o))
 		value.image = VuoImage_makeFromJson(o);
-	else
-		value.image = NULL;
 
 	if (json_object_object_get_ex(js, "timestamp", &o))
 		value.timestamp = VuoReal_makeFromJson(o);
-	else
-		value.timestamp = 0.0;
+
+	if (json_object_object_get_ex(js, "duration", &o))
+		value.duration = VuoReal_makeFromJson(o);
 
 	return value;
 }
@@ -69,6 +69,9 @@ json_object * VuoVideoFrame_getJson(const VuoVideoFrame value)
 	json_object *timestampObject = VuoReal_getJson(value.timestamp);
 	json_object_object_add(js, "timestamp", timestampObject);
 
+	json_object *durationObject = VuoReal_getJson(value.duration);
+	json_object_object_add(js, "duration", durationObject);
+
 	return js;
 }
 
@@ -77,7 +80,7 @@ json_object * VuoVideoFrame_getJson(const VuoVideoFrame value)
  */
 char * VuoVideoFrame_getSummary(const VuoVideoFrame value)
 {
-	return VuoText_format("%s<br />Timestamp: %f", VuoImage_getSummary(value.image), value.timestamp );
+	return VuoText_format("%s<br />Timestamp: %f<br />Duration: %f", VuoImage_getSummary(value.image), value.timestamp, value.duration);
 }
 
 /**
@@ -86,5 +89,7 @@ char * VuoVideoFrame_getSummary(const VuoVideoFrame value)
 bool VuoVideoFrame_areEqual(VuoVideoFrame value1, VuoVideoFrame value2)
 {
 	// Maybe this should just check image?
-	return ( abs(value1.timestamp - value2.timestamp) < .001 && VuoImage_areEqual(value1.image, value2.image) );
+	return VuoReal_areEqual(value1.timestamp, value2.timestamp)
+		&& VuoReal_areEqual(value1.duration, value2.duration)
+		&& VuoImage_areEqual(value1.image, value2.image);
 }

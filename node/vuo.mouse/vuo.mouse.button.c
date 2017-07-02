@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Buttons",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer", "click", "tap" ],
-					  "version" : "1.0.2",
+					  "version" : "1.0.3",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
@@ -52,7 +52,7 @@ void nodeInstanceTriggerStart
 {
 	(*context)->isTriggerStopped = false;
 	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, button, window, modifierKey);
-	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey);
+	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey, false);
 }
 
 void nodeInstanceTriggerUpdate
@@ -70,7 +70,7 @@ void nodeInstanceTriggerUpdate
 	VuoMouse_stopListening((*context)->pressedListener);
 	VuoMouse_stopListening((*context)->releasedListener);
 	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, button, window, modifierKey);
-	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey);
+	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey, false);
 }
 
 void nodeInstanceEvent
@@ -88,7 +88,7 @@ void nodeInstanceEvent
 	VuoMouse_stopListening((*context)->pressedListener);
 	VuoMouse_stopListening((*context)->releasedListener);
 	VuoMouse_startListeningForPresses((*context)->pressedListener, pressed, button, window, modifierKey);
-	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey);
+	VuoMouse_startListeningForReleases((*context)->releasedListener, released, button, window, modifierKey, false);
 }
 
 void nodeInstanceTriggerStop

@@ -1749,6 +1749,15 @@ bool VuoRendererComposition::isSupportedDataFile(string path)
 }
 
 /**
+ * Returns a boolean indicating whether the file at the provided @c path is
+ * a supported app file.
+ */
+bool VuoRendererComposition::isSupportedAppFile(string path)
+{
+	return VuoFileFormat_isSupportedAppFile(path.c_str());
+}
+
+/**
  * Specifies the opacity at which grid lines should be rendered on the canvas.
  */
 void VuoRendererComposition::setGridLineOpacity(int opacity)

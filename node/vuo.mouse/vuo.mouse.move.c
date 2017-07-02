@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Mouse Moves",
 					  "keywords" : [ "trackpad", "trackball", "touchpad", "cursor", "pointer" ],
-					  "version" : "1.0.3",
+					  "version" : "1.0.5",
 					  "dependencies" : [ "VuoMouse" ],
 					  "node": {
 						  "isInterface" : true,
@@ -25,6 +25,9 @@ struct nodeInstanceData
 {
 	bool isTriggerStopped;
 	VuoMouse *movedListener;
+
+	VuoWindowReference window;
+	VuoModifierKey modifierKey;
 };
 
 struct nodeInstanceData * nodeInstanceInit()
@@ -46,6 +49,8 @@ void nodeInstanceTriggerStart
 )
 {
 	(*context)->isTriggerStopped = false;
+	(*context)->window = window;
+	(*context)->modifierKey = modifierKey;
 	VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
 }
 
@@ -59,8 +64,15 @@ void nodeInstanceTriggerUpdate
 {
 	if ((*context)->isTriggerStopped)
 		return;
-	VuoMouse_stopListening((*context)->movedListener);
-	VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+
+	if (window != (*context)->window
+	 || modifierKey != (*context)->modifierKey)
+	{
+		VuoMouse_stopListening((*context)->movedListener);
+		(*context)->window = window;
+		(*context)->modifierKey = modifierKey;
+		VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+	}
 }
 
 void nodeInstanceEvent
@@ -73,8 +85,15 @@ void nodeInstanceEvent
 {
 	if ((*context)->isTriggerStopped)
 		return;
-	VuoMouse_stopListening((*context)->movedListener);
-	VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+
+	if ((*context)->window != window
+	 || (*context)->modifierKey != modifierKey)
+	{
+		VuoMouse_stopListening((*context)->movedListener);
+		(*context)->window = window;
+		(*context)->modifierKey = modifierKey;
+		VuoMouse_startListeningForMoves((*context)->movedListener, movedTo, window, modifierKey);
+	}
 }
 
 void nodeInstanceTriggerStop
@@ -83,6 +102,8 @@ void nodeInstanceTriggerStop
 )
 {
 	(*context)->isTriggerStopped = true;
+	(*context)->window = NULL;
+	(*context)->modifierKey = VuoModifierKey_None;
 	VuoMouse_stopListening((*context)->movedListener);
 }
 

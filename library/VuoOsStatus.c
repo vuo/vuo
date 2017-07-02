@@ -37,7 +37,7 @@ char *VuoOsStatus_getText(OSStatus error)
 	else if (error == fnfErr)
 		return strdup("File not found");
 
-	char *errorString = (char *)calloc(1, 7);
+	char *errorString = (char *)calloc(1, 12);  // ceil(log10(INT_MAX)) + 1 (optional negative sign) + 1 (null terminator)
 
 	*(UInt32 *)(errorString + 1) = CFSwapInt32HostToBig(error);
 	if (isprint(errorString[1]) && isprint(errorString[2]) && isprint(errorString[3]) && isprint(errorString[4]))

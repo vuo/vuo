@@ -644,7 +644,9 @@ string VuoFileUtilities::getArchiveFileContentsAsString(string archivePath, stri
 /**
  * Returns the available space, in bytes, on the volume containing the specified path.
  *
- * `path` needn't exist.
+ * `path` should be an absolute POSIX path.  Its last few path components needn't exist.
+ *
+ * @throw std::runtime_error
  */
 size_t VuoFileUtilities::getAvailableSpaceOnVolumeContainingPath(string path)
 {

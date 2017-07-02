@@ -24,7 +24,7 @@ VuoModuleMetadata({
 						  "quicktime", "qt", "aic", "prores",
 						  "video",
 					  ],
-					  "version" : "2.0.2",
+					  "version" : "2.2.0",
 					  "node": {
 						  "isInterface" : true,
 						  "exampleCompositions" : [ "SkimMovie.vuo" ]
@@ -79,6 +79,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoText, {"name":"URL"}) url,
 		VuoInputEvent({"eventBlocking":"wall","data":"url","hasPortAction":true}) urlEvent,
 		VuoInputData(VuoReal, {"suggestedMin":0.}) frameTime,
+		VuoInputData(VuoLoopType, {"default":"loop"}) loop,
 		VuoOutputData(VuoVideoFrame) videoFrame
 )
 {
@@ -88,7 +89,24 @@ void nodeInstanceEvent
 	}
 
 	if((*context)->player != NULL)
-		VuoVideo_getFrameAtSecond((*context)->player, frameTime, videoFrame);
+	{
+		bool reverse = frameTime < 0;
+		double timestamp = frameTime;
+		double dur = (*context)->duration;
+
+		if(loop != VuoLoopType_None && (frameTime < 0 || frameTime > dur))
+		{
+			timestamp = fabs(frameTime);
+			float mod = fmod(timestamp, dur);
+
+			if(loop == VuoLoopType_Loop)
+				timestamp = reverse ? dur - mod : mod;
+			else if(loop == VuoLoopType_Mirror)
+				timestamp = ((int)floor(timestamp / dur) % 2) ? dur - mod : mod;
+		}
+
+		VuoVideo_getFrameAtSecond((*context)->player, timestamp, videoFrame);
+	}
 }
 
 void nodeInstanceFini

@@ -30,6 +30,9 @@ NODE_SOURCES += \
 NODE_LIBRARY_SOURCES += \
 	VuoMidi.cc
 
+SOURCES += \
+	VuoMidi.cc
+
 HEADERS += \
 	VuoMidi.h \
 	VuoMidiController.h \

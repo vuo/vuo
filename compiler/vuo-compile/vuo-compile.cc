@@ -24,9 +24,9 @@ void printHelp(char *argv0)
 		   "Options:\n"
 		   "  --help                       Display this information.\n"
 		   "  --header-search-path <dir>   Add the specified directory to the search path for include files. This option may be specified more than once. Only affects compiling .c files.\n"
-		   "  --list-node-classes[=<arg>]  Display a list of all loaded node classes. <arg> can be 'path' or 'dot'.\n"
+		   "  --list-node-classes[=dot]    Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "  --output <file>              Place the compiled code into <file>.\n"
-		   "  --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.7.0').\n"
+//		   "  --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.7.0').\n"
 		   "  --verbose                    Output diagnostic information.\n",
 		   argv0);
 }
@@ -110,7 +110,7 @@ int main (int argc, char * const argv[])
 			printHelp(argv[0]);
 		else if (doListNodeClasses)
 		{
-			if (listNodeClassesOption == "" || listNodeClassesOption == "path" || listNodeClassesOption == "dot")
+			if (listNodeClassesOption == "" || listNodeClassesOption == "dot")
 				compiler.listNodeClasses(listNodeClassesOption);
 			else
 				throw std::runtime_error("unrecognized option '" + listNodeClassesOption + "' for --list-node-classes");
@@ -149,8 +149,9 @@ int main (int argc, char * const argv[])
 				if (outputPath.empty())
 					outputPath = inputDir + inputFile + ".bc";
 
-				if (! target.empty())
-					compiler.setTarget(target);
+				/// @todo https://b33p.net/kosada/node/12220
+//				if (! target.empty())
+//					compiler.setTarget(target);
 
 				if (inputExtension == "vuo")
 					compiler.compileComposition(inputPath, outputPath, true, false);

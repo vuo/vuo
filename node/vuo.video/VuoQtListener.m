@@ -45,12 +45,13 @@ VuoModuleMetadata({
  * Initializes for listening to a specific device.
 
  */
-- (BOOL) initWithDevice:(NSString*)name id:(NSString*)uniqueID callback:(void(*)(VuoVideoFrame))receivedFrame
+- (BOOL) initWithDevice:(VuoVideoInputDevice)device callback:(void(*)(VuoVideoFrame))receivedFrame
 {
 	NSError *error;
 
 	mCaptureSession = [[QTCaptureSession alloc] init];
 	mMovie = [[QTMovie alloc] initToWritableData:[NSMutableData data] error:&error];
+	lastFrameReceived = -1;
 
 	if (!mMovie) {
 		VUserLog("Failed initializing QTMovie");
@@ -68,7 +69,7 @@ VuoModuleMetadata({
 		return false;
 	}
 
-	[self setInputDevice:name id:uniqueID];
+	[self setInputDevice:device];
 
 	mCaptureDecompressedVideoOutput = [[QTCaptureDecompressedVideoOutput alloc] init];
 
@@ -183,8 +184,7 @@ VuoModuleMetadata({
 
 	[mCaptureDecompressedVideoOutput release];
 
-	[mDesiredDeviceName release];
-	[mDesiredDeviceID release];
+	VuoVideoInputDevice_release(desiredDevice);
 
 	CVBufferRelease( mCurrentImageBuffer );
 
@@ -195,16 +195,11 @@ VuoModuleMetadata({
  *	Set the input device - does not start or stop recording, just changes what the input
  *	device is.
  */
-- (void) setInputDevice:(NSString*)name id:(NSString*)uniqueID
+- (void) setInputDevice:(VuoVideoInputDevice)device
 {
-	if(mDesiredDeviceName != nil) [mDesiredDeviceName release];
-	if(mDesiredDeviceID != nil) [mDesiredDeviceID release];
-
-	mDesiredDeviceName = name == nil ? @"" : name;	// Don't allow null strings
-	[mDesiredDeviceName retain];
-
-	mDesiredDeviceID = uniqueID == nil ? @"" : uniqueID;
-	[mDesiredDeviceID retain];
+	VuoVideoInputDevice_release(desiredDevice);
+	desiredDevice = device;
+	VuoVideoInputDevice_retain(desiredDevice);
 
 	[self refreshDevices];
 
@@ -245,7 +240,7 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 	mVideoInputDevices = [[[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeVideo] arrayByAddingObjectsFromArray:[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeMuxed]] retain];
 
 	// If looking for a specific device, make sure to call setCaptureDevice, even if device == null.
-	BOOL lookingForDevice = [mDesiredDeviceName length] != 0 || [mDesiredDeviceID length] != 0;
+	BOOL lookingForDevice = VuoText_length(desiredDevice.name) != 0 || VuoText_length(desiredDevice.id) != 0;
 
 	QTCaptureDevice *device;
 
@@ -256,15 +251,17 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 	}
 	else
 	{
-		device = [QTCaptureDevice deviceWithUniqueID:mDesiredDeviceID];
+		device = [QTCaptureDevice deviceWithUniqueID:[NSString stringWithUTF8String:desiredDevice.id]];
 
 		// If that fails, try to match the device name
-		if(!device || ![device isConnected])
+		if ( desiredDevice.matchType == VuoVideoInputDevice_MatchIdThenName
+			 && VuoText_length(desiredDevice.name) > 0
+			 && (!device || ![device isConnected]) )
 		{
 			for(QTCaptureDevice *qd in mVideoInputDevices)
 			{
 				NSString *deviceName = [NSString stringWithFormat:@"%@ %@", VuoQTCapture_getVendorNameForUniqueID([qd uniqueID]), [qd localizedDisplayName]];
-				if ([deviceName rangeOfString:mDesiredDeviceName].location != NSNotFound)
+				if (strstr([deviceName UTF8String], desiredDevice.name))
 				{
 					device = qd;
 					break;
@@ -273,7 +270,8 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 		}
 	}
 
-	if( mCaptureDeviceInput && device == [mCaptureDeviceInput device] )
+	// If it's been a while since the last frame was actually received, try reopening the device.
+	if( mCaptureDeviceInput && device == [mCaptureDeviceInput device] && (VuoLogGetElapsedTime() - lastFrameReceived < 2) )
 	{
 		// The currently running device is already correct - do nothing.
 		return;
@@ -582,10 +580,12 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 		QTTime time = [sampleBuffer presentationTime];
 		float second = (float)time.timeValue / (float)time.timeScale;
 
-		callback( VuoVideoFrame_make(image, second) );
+		callback( VuoVideoFrame_make(image, second, VuoLogGetElapsedTime() - lastFrameReceived) );
 	}
 
 	CVBufferRelease(imageBuffer);
+
+	lastFrameReceived = VuoLogGetElapsedTime();
 }
 
 /**

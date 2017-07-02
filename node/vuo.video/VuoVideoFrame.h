@@ -29,6 +29,7 @@ typedef struct
 {
 	VuoImage image;
 	VuoReal timestamp;
+	VuoReal duration;
 
 	char blah[42];	///< @todo https://b33p.net/kosada/node/4124
 
@@ -52,10 +53,10 @@ void VuoVideoFrame_release(VuoVideoFrame value);
 /**
  * Returns a VuoVideoFrame with image and timestamp.
  */
-static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp) __attribute__((const));
-static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp)
+static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp, VuoReal duration) __attribute__((const));
+static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp, VuoReal duration)
 {
-	VuoVideoFrame device = { image, timestamp };
+	VuoVideoFrame device = { image, timestamp, duration };
 	return device;
 }
 

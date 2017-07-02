@@ -27,41 +27,89 @@ VuoInputEditor * VuoInputEditorTransform2dFactory::newInputEditor()
 }
 
 /**
+ * Creates a new label with sizePolicy(Max, Max)
+ */
+QLabel* makeLabel(const char* text)
+{
+	QLabel* label = new QLabel(text);
+	label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	return label;
+}
+
+/**
+ * Set all values on a map<coord, double> type with transform.
+ */
+void VuoInputEditorTransform2d::setCoordMap(map<coord, double>* coordMap, VuoTransform2d transform)
+{
+	(*coordMap)[xTranslation] = transform.translation.x;
+	(*coordMap)[yTranslation] = transform.translation.y;
+	(*coordMap)[rotation] = RAD2DEG * transform.rotation;
+	(*coordMap)[xScale] = transform.scale.x;
+	(*coordMap)[yScale] = transform.scale.y;
+}
+
+/**
+ * Alloc and init a new VuoDoubleSpinBox.
+ */
+VuoDoubleSpinBox* VuoInputEditorTransform2d::initSpinBox(coord whichCoord, QDialog& dialog, double initialValue)
+{
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
+	spin->setDecimals(decimalPrecision);
+	spin->setButtonMinimum(suggestedMinForCoord[whichCoord]);
+	spin->setButtonMaximum(suggestedMaxForCoord[whichCoord]);
+	spin->setSingleStep(suggestedStepForCoord[whichCoord]);
+	spin->setValue(initialValue);
+	spin->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
+
+	return spin;
+}
+
+/**
+ * Alloc and init a new QSlider.
+ */
+QSlider* VuoInputEditorTransform2d::initSlider(coord whichCoord, QDialog& dialog, double initialValue)
+{
+	double min = suggestedMinForCoord[whichCoord];
+	double max = suggestedMaxForCoord[whichCoord];
+	double step = suggestedStepForCoord[whichCoord];
+	double range = max - min;
+
+	QSlider* slider = new QSlider(&dialog);
+	slider->setAttribute(Qt::WA_MacSmallSize);
+	slider->setOrientation(Qt::Horizontal);
+	slider->setFocusPolicy(Qt::NoFocus);
+	slider->setMinimum(0);
+	slider->setMaximum(slider->width());
+	slider->setSingleStep( fmax(1, step * (slider->maximum() - slider->minimum()) / range ) );
+	slider->setValue( VuoDoubleSpinBox::doubleToSlider(slider->minimum(), slider->maximum(), min, max, initialValue) );
+
+	return slider;
+}
+
+/**
  * Sets up a dialog containing either a slider and line edit (if @c details contains both "suggestedMin"
  * and "suggestedMax") or a spin box (which includes a line edit).
  */
-void VuoInputEditorTransform2d::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
+void VuoInputEditorTransform2d::setUpDialog(QDialog& dialog, json_object *originalValue, json_object *details)
 {
-	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
-
-	suggestedMinForCoord[xTranslation] = -1.;
-	suggestedMaxForCoord[xTranslation] = 1.;
-	suggestedStepForCoord[xTranslation] = .01;
-
-	suggestedMinForCoord[yTranslation] = -0.75;
-	suggestedMaxForCoord[yTranslation] = 0.75;
-	suggestedStepForCoord[yTranslation] = 0.01;
-
-	suggestedMinForCoord[rotation] = 0.;
-	suggestedMaxForCoord[rotation] = 360.;
-	suggestedStepForCoord[rotation] = 5.0;
-
-	suggestedMinForCoord[xScale] = 0.;
-	suggestedMaxForCoord[xScale] = 2.;
-	suggestedStepForCoord[xScale] = 1.0;
-
-	suggestedMinForCoord[yScale] = 0.;
-	suggestedMaxForCoord[yScale] = 2.;
-	suggestedStepForCoord[yScale] = 1.0;
-
-	QDoubleValidator *validator = new QDoubleValidator(this);
+	currentTransform = VuoTransform2d_makeFromJson(originalValue);
 
 	bool tabCycleForward = true;
+
+	VuoTransform2d default_min = VuoTransform2d_make( VuoPoint2d_make(-1, -.75), 0., VuoPoint2d_make(0,0));
+	VuoTransform2d default_max = VuoTransform2d_make( VuoPoint2d_make(1, .75), 360. * DEG2RAD, VuoPoint2d_make(2,2));
+	VuoTransform2d default_step = VuoTransform2d_make( VuoPoint2d_make(.01, .01), 5. * DEG2RAD, VuoPoint2d_make(.01,.01));
+
+	setCoordMap(&suggestedMinForCoord, default_min);
+	setCoordMap(&suggestedMaxForCoord, default_max);
+	setCoordMap(&suggestedStepForCoord, default_step);
 
 	// Parse supported port annotations from the port's "details" JSON object:
 	if (details)
 	{
 		json_object *forwardTabTraversal = NULL;
+
 		if (json_object_object_get_ex(details, "forwardTabTraversal", &forwardTabTraversal))
 			tabCycleForward = json_object_get_boolean(forwardTabTraversal);
 
@@ -69,233 +117,129 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog &dialog, json_object *origin
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
 		{
-			suggestedMinForCoord[xTranslation] = VuoTransform2d_makeFromJson(suggestedMinValue).translation.x;
-			suggestedMinForCoord[yTranslation] = VuoTransform2d_makeFromJson(suggestedMinValue).translation.y;
-			suggestedMinForCoord[rotation] = RAD2DEG * VuoTransform2d_makeFromJson(suggestedMinValue).rotation;
-			suggestedMinForCoord[xScale] = VuoTransform2d_makeFromJson(suggestedMinValue).scale.x;
-			suggestedMinForCoord[yScale] = VuoTransform2d_makeFromJson(suggestedMinValue).scale.y;
+			VuoTransform2d minTransform = VuoTransform2d_makeFromJson(suggestedMinValue);
+			setCoordMap(&suggestedMinForCoord, minTransform);
 		}
 
 		// "suggestedMax"
 		json_object *suggestedMaxValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMax", &suggestedMaxValue))
 		{
-			suggestedMaxForCoord[xTranslation] = VuoTransform2d_makeFromJson(suggestedMaxValue).translation.x;
-			suggestedMaxForCoord[yTranslation] = VuoTransform2d_makeFromJson(suggestedMaxValue).translation.y;
-			suggestedMaxForCoord[rotation] = RAD2DEG * VuoTransform2d_makeFromJson(suggestedMaxValue).rotation;
-			suggestedMaxForCoord[xScale] = VuoTransform2d_makeFromJson(suggestedMaxValue).scale.x;
-			suggestedMaxForCoord[yScale] = VuoTransform2d_makeFromJson(suggestedMaxValue).scale.y;
+			VuoTransform2d maxTransform = VuoTransform2d_makeFromJson(suggestedMaxValue);
+			setCoordMap(&suggestedMaxForCoord, maxTransform);
 		}
 
 		// "suggestedStep"
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 		{
-			suggestedStepForCoord[xTranslation] = VuoTransform2d_makeFromJson(suggestedStepValue).translation.x;
-			suggestedStepForCoord[yTranslation] = VuoTransform2d_makeFromJson(suggestedStepValue).translation.y;
-			suggestedStepForCoord[rotation] = RAD2DEG * VuoTransform2d_makeFromJson(suggestedStepValue).rotation;
-			suggestedStepForCoord[xScale] = VuoTransform2d_makeFromJson(suggestedStepValue).scale.x;
-			suggestedStepForCoord[yScale] = VuoTransform2d_makeFromJson(suggestedStepValue).scale.y;
+			VuoTransform2d stepTransform = VuoTransform2d_makeFromJson(suggestedStepValue);
+			setCoordMap(&suggestedStepForCoord, stepTransform);
 		}
 	}
 
-	// Layout details
-	const int widgetVerticalSpacing = 4;
-	const int widgetHorizontalSpacing = -3; // Something odd going on here, but a negative value results in the desired spacing.
-
-	labelForCoord[xTranslation] = new QLabel(&dialog);
-	labelForCoord[xTranslation]->setText("x-translation");
-	labelForCoord[xTranslation]->resize(QSize(labelForCoord[xTranslation]->fontMetrics().boundingRect(labelForCoord[xTranslation]->text()).width()+widgetHorizontalSpacing, labelForCoord[xTranslation]->height()));
-
-	labelForCoord[yTranslation] = new QLabel(&dialog);
-	labelForCoord[yTranslation]->setText("y-translation");
-	labelForCoord[yTranslation]->resize(QSize(labelForCoord[yTranslation]->fontMetrics().boundingRect(labelForCoord[yTranslation]->text()).width()+widgetHorizontalSpacing, labelForCoord[yTranslation]->height()));
-
-	labelForCoord[rotation] = new QLabel(&dialog);
-	labelForCoord[rotation]->setText("rotation");
-	labelForCoord[rotation]->resize(QSize(labelForCoord[rotation]->fontMetrics().boundingRect(labelForCoord[rotation]->text()).width()+widgetHorizontalSpacing, labelForCoord[rotation]->height()));
-
-	labelForCoord[xScale] = new QLabel(&dialog);
-	labelForCoord[xScale]->setText("x-scale");
-	labelForCoord[xScale]->resize(QSize(labelForCoord[xScale]->fontMetrics().boundingRect(labelForCoord[xScale]->text()).width()+widgetHorizontalSpacing, labelForCoord[xScale]->height()));
-
-	labelForCoord[yScale] = new QLabel(&dialog);
-	labelForCoord[yScale]->setText("y-scale");
-	labelForCoord[yScale]->resize(QSize(labelForCoord[yScale]->fontMetrics().boundingRect(labelForCoord[yScale]->text()).width()+widgetHorizontalSpacing, labelForCoord[yScale]->height()));
-
-
-	validator->setDecimals(decimalPrecision);
-
 	// x-translation
-	lineEditForCoord[xTranslation] = new QLineEdit(&dialog);
-	setUpLineEdit(lineEditForCoord[xTranslation], VuoReal_getJson(VuoTransform2d_makeFromJson(originalValue).translation.x));
-	lineEditForCoord[xTranslation]->setValidator(validator);
-	lineEditForCoord[xTranslation]->installEventFilter(this);
-
-	sliderForCoord[xTranslation] = new QSlider(&dialog);
-	sliderForCoord[xTranslation]->setAttribute(Qt::WA_MacSmallSize);
-	sliderForCoord[xTranslation]->setOrientation(Qt::Horizontal);
-	sliderForCoord[xTranslation]->setFocusPolicy(Qt::NoFocus);
-	sliderForCoord[xTranslation]->setMinimum(0);
-	sliderForCoord[xTranslation]->setMaximum(sliderForCoord[xTranslation]->width());
-	sliderForCoord[xTranslation]->setSingleStep(fmax(1, suggestedStepForCoord[xTranslation]*(sliderForCoord[xTranslation]->maximum()-sliderForCoord[xTranslation]->minimum())/(suggestedMaxForCoord[xTranslation]-suggestedMinForCoord[xTranslation])));
-
-	double lineEditValueXTranslation = VuoTransform2d_makeFromJson(originalValue).translation.x;
-	int sliderValueXTranslation = lineEditValueToScaledSliderValue(lineEditValueXTranslation, xTranslation);
-	sliderForCoord[xTranslation]->setValue(sliderValueXTranslation);
-
-	connect(sliderForCoord[xTranslation], SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	connect(lineEditForCoord[xTranslation], SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-	connect(lineEditForCoord[xTranslation], SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
+	spinboxForCoord[xTranslation] = initSpinBox(xTranslation, dialog, currentTransform.translation.x);
+	sliderForCoord[xTranslation] = initSlider(xTranslation, dialog, currentTransform.translation.x);
+	connect(sliderForCoord[xTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(spinboxForCoord[xTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
 	// y-translation
-	lineEditForCoord[yTranslation] = new QLineEdit(&dialog);
-	setUpLineEdit(lineEditForCoord[yTranslation], VuoReal_getJson(VuoTransform2d_makeFromJson(originalValue).translation.y));
-	lineEditForCoord[yTranslation]->setValidator(validator);
-	lineEditForCoord[yTranslation]->installEventFilter(this);
+	spinboxForCoord[yTranslation] = initSpinBox(yTranslation, dialog, currentTransform.translation.y);
+	sliderForCoord[yTranslation] = initSlider(yTranslation, dialog, currentTransform.translation.y);
+	connect(sliderForCoord[yTranslation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(spinboxForCoord[yTranslation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
-	sliderForCoord[yTranslation] = new QSlider(&dialog);
-	sliderForCoord[yTranslation]->setAttribute(Qt::WA_MacSmallSize);
-	sliderForCoord[yTranslation]->setOrientation(Qt::Horizontal);
-	sliderForCoord[yTranslation]->setFocusPolicy(Qt::NoFocus);
-	sliderForCoord[yTranslation]->setMinimum(0);
-	sliderForCoord[yTranslation]->setMaximum(sliderForCoord[yTranslation]->width());
-	sliderForCoord[yTranslation]->setSingleStep(fmax(1, suggestedStepForCoord[yTranslation]*(sliderForCoord[yTranslation]->maximum()-sliderForCoord[yTranslation]->minimum())/(suggestedMaxForCoord[yTranslation]-suggestedMinForCoord[yTranslation])));
-
-	double lineEditValueYTranslation = VuoTransform2d_makeFromJson(originalValue).translation.y;
-	int sliderValueYTranslation = lineEditValueToScaledSliderValue(lineEditValueYTranslation, yTranslation);
-	sliderForCoord[yTranslation]->setValue(sliderValueYTranslation);
-
-	connect(sliderForCoord[yTranslation], SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	connect(lineEditForCoord[yTranslation], SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-	connect(lineEditForCoord[yTranslation], SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
-
-	// Rotation
-	lineEditForCoord[rotation] = new QLineEdit(&dialog);
-	setUpLineEdit(lineEditForCoord[rotation], VuoReal_getJson(RAD2DEG * VuoTransform2d_makeFromJson(originalValue).rotation));
-	lineEditForCoord[rotation]->setValidator(validator);
-	lineEditForCoord[rotation]->installEventFilter(this);
-
-	sliderForCoord[rotation] = new QSlider(&dialog);
-	sliderForCoord[rotation]->setAttribute(Qt::WA_MacSmallSize);
-	sliderForCoord[rotation]->setOrientation(Qt::Horizontal);
-	sliderForCoord[rotation]->setFocusPolicy(Qt::NoFocus);
-	sliderForCoord[rotation]->setMinimum(0);
-	sliderForCoord[rotation]->setMaximum(sliderForCoord[rotation]->width());
-	sliderForCoord[rotation]->setSingleStep(fmax(1, suggestedStepForCoord[rotation]*(sliderForCoord[rotation]->maximum()-sliderForCoord[rotation]->minimum())/(suggestedMaxForCoord[rotation]-suggestedMinForCoord[rotation])));
-
-	double lineEditValueRotation = RAD2DEG * VuoTransform2d_makeFromJson(originalValue).rotation;
-	int sliderValueRotation = lineEditValueToScaledSliderValue(lineEditValueRotation, rotation);
-	sliderForCoord[rotation]->setValue(sliderValueRotation);
-
-	connect(sliderForCoord[rotation], SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	connect(lineEditForCoord[rotation], SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-	connect(lineEditForCoord[rotation], SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
+	// rotation
+	spinboxForCoord[rotation] = initSpinBox(rotation, dialog, currentTransform.rotation * RAD2DEG);
+	sliderForCoord[rotation] = initSlider(rotation, dialog, currentTransform.rotation * RAD2DEG);
+	connect(sliderForCoord[rotation], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(spinboxForCoord[rotation], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
 	// x-scale
-	lineEditForCoord[xScale] = new QLineEdit(&dialog);
-	setUpLineEdit(lineEditForCoord[xScale], VuoReal_getJson(VuoTransform2d_makeFromJson(originalValue).scale.x));
-	lineEditForCoord[xScale]->setValidator(validator);
-	lineEditForCoord[xScale]->installEventFilter(this);
-
-	sliderForCoord[xScale] = new QSlider(&dialog);
-	sliderForCoord[xScale]->setAttribute(Qt::WA_MacSmallSize);
-	sliderForCoord[xScale]->setOrientation(Qt::Horizontal);
-	sliderForCoord[xScale]->setFocusPolicy(Qt::NoFocus);
-	sliderForCoord[xScale]->setMinimum(0);
-	sliderForCoord[xScale]->setMaximum(sliderForCoord[xScale]->width());
-	sliderForCoord[xScale]->setSingleStep(fmax(1, suggestedStepForCoord[xScale]*(sliderForCoord[xScale]->maximum()-sliderForCoord[xScale]->minimum())/(suggestedMaxForCoord[xScale]-suggestedMinForCoord[xScale])));
-
-	double lineEditValueXScale = VuoTransform2d_makeFromJson(originalValue).scale.x;
-	int sliderValueXScale = lineEditValueToScaledSliderValue(lineEditValueXScale, xScale);
-	sliderForCoord[xScale]->setValue(sliderValueXScale);
-
-	connect(sliderForCoord[xScale], SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	connect(lineEditForCoord[xScale], SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-	connect(lineEditForCoord[xScale], SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
+	spinboxForCoord[xScale] = initSpinBox(xScale, dialog, currentTransform.scale.x);
+	sliderForCoord[xScale] = initSlider(xScale, dialog, currentTransform.scale.x);
+	connect(sliderForCoord[xScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(spinboxForCoord[xScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
 	// y-scale
-	lineEditForCoord[yScale] = new QLineEdit(&dialog);
-	setUpLineEdit(lineEditForCoord[yScale], VuoReal_getJson(VuoTransform2d_makeFromJson(originalValue).scale.y));
-	lineEditForCoord[yScale]->setValidator(validator);
-	lineEditForCoord[yScale]->installEventFilter(this);
+	spinboxForCoord[yScale] = initSpinBox(yScale, dialog, currentTransform.scale.y);
+	sliderForCoord[yScale] = initSlider(yScale, dialog, currentTransform.scale.y);
+	connect(sliderForCoord[yScale], SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	connect(spinboxForCoord[yScale], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
-	sliderForCoord[yScale] = new QSlider(&dialog);
-	sliderForCoord[yScale]->setAttribute(Qt::WA_MacSmallSize);
-	sliderForCoord[yScale]->setOrientation(Qt::Horizontal);
-	sliderForCoord[yScale]->setFocusPolicy(Qt::NoFocus);
-	sliderForCoord[yScale]->setMinimum(0);
-	sliderForCoord[yScale]->setMaximum(sliderForCoord[yScale]->width());
-	sliderForCoord[yScale]->setSingleStep(fmax(1, suggestedStepForCoord[yScale]*(sliderForCoord[yScale]->maximum()-sliderForCoord[yScale]->minimum())/(suggestedMaxForCoord[yScale]-suggestedMinForCoord[yScale])));
+	// layout dialog
+	QGridLayout* layout = new QGridLayout;
+	dialog.setLayout(layout);
 
-	double lineEditValueYScale = VuoTransform2d_makeFromJson(originalValue).scale.y;
-	int sliderValueYScale = lineEditValueToScaledSliderValue(lineEditValueYScale, yScale);
-	sliderForCoord[yScale]->setValue(sliderValueYScale);
+	// left, top, right, bottom
+	// when showing sliders, add a little extra margin on the bottom since QSlider takes up the
+	// entire vertical spacing
+	layout->setContentsMargins(4, 4, 16, 4);
+	layout->setSpacing(8);
 
-	connect(sliderForCoord[yScale], SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	connect(lineEditForCoord[yScale], SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-	connect(lineEditForCoord[yScale], SIGNAL(editingFinished()), this, SLOT(emitValueChanged()));
+	unsigned int row = 0;
+
+	layout->addWidget(makeLabel("x"), row, 1, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("y"), row, 2, Qt::AlignHCenter);
+
+	row++;
+
+	layout->addWidget(makeLabel("translation"), row, 0);
+	layout->addWidget( spinboxForCoord[xTranslation], row, 1);
+	layout->addWidget( spinboxForCoord[yTranslation], row, 2);
+
+	row++;
+
+	layout->addWidget( sliderForCoord[xTranslation], row, 1);
+	layout->addWidget( sliderForCoord[yTranslation], row, 2);
+
+	row++;
+
+	layout->addWidget(makeLabel("rotation"), row, 0);
+
+	QHBoxLayout* rotation_layout = new QHBoxLayout;
+	rotation_layout->addStretch(0);
+	QVBoxLayout* rotation_vertical = new QVBoxLayout();
+	rotation_vertical->addWidget( spinboxForCoord[rotation] );
+	rotation_vertical->addWidget( sliderForCoord[rotation] );
+	rotation_layout->addLayout(rotation_vertical);
+	rotation_layout->addStretch(0);
+
+	layout->addLayout(rotation_layout, row, 1, 2, 2);
+
+	row++;
+
+	layout->addWidget(makeLabel(""), row, 0);
+
+	row++;
+
+	layout->addWidget(makeLabel("scale"), row, 0);
+	layout->addWidget( spinboxForCoord[xScale], row, 1);
+	layout->addWidget( spinboxForCoord[yScale], row, 2);
+
+	row++;
+
+	layout->addWidget( sliderForCoord[xScale], row, 1);
+	layout->addWidget( sliderForCoord[yScale], row, 2);
+
+	row++;
+
+	// min acceptable size
+	dialog.setMaximumWidth(1);
+	dialog.setMaximumHeight(1);
+
+	dialog.adjustSize();
 
 	// Layout details
-	setFirstWidgetInTabOrder(lineEditForCoord[xTranslation]);
-	setLastWidgetInTabOrder(lineEditForCoord[yScale]);
-
-	labelForCoord[xTranslation]->move(labelForCoord[xTranslation]->pos().x(), labelForCoord[xTranslation]->pos().y());
-	lineEditForCoord[xTranslation]->move(labelForCoord[xTranslation]->pos().x()+labelForCoord[xTranslation]->width()+widgetHorizontalSpacing, lineEditForCoord[xTranslation]->pos().y());
-	sliderForCoord[xTranslation]->move(lineEditForCoord[xTranslation]->pos().x(), lineEditForCoord[xTranslation]->pos().y() + lineEditForCoord[xTranslation]->height() + widgetVerticalSpacing);
-	sliderForCoord[xTranslation]->resize(sliderForCoord[xTranslation]->width(), sliderForCoord[xTranslation]->height() - 10);
-	lineEditForCoord[xTranslation]->resize(sliderForCoord[xTranslation]->width(), lineEditForCoord[xTranslation]->height());
-
-	labelForCoord[yTranslation]->move(labelForCoord[xTranslation]->pos().x(), sliderForCoord[xTranslation]->pos().y() + sliderForCoord[xTranslation]->height() + widgetVerticalSpacing);
-	lineEditForCoord[yTranslation]->move(lineEditForCoord[xTranslation]->pos().x(), sliderForCoord[xTranslation]->pos().y() + sliderForCoord[xTranslation]->height() + widgetVerticalSpacing);
-	sliderForCoord[yTranslation]->move(lineEditForCoord[yTranslation]->pos().x(), lineEditForCoord[yTranslation]->pos().y() + lineEditForCoord[yTranslation]->height() + widgetVerticalSpacing);
-	sliderForCoord[yTranslation]->resize(sliderForCoord[yTranslation]->width(), sliderForCoord[yTranslation]->height() - 10);
-	lineEditForCoord[yTranslation]->resize(sliderForCoord[yTranslation]->width(), lineEditForCoord[yTranslation]->height());
-
-	labelForCoord[rotation]->move(labelForCoord[yTranslation]->pos().x(), sliderForCoord[yTranslation]->pos().y() + sliderForCoord[yTranslation]->height() + widgetVerticalSpacing);
-	lineEditForCoord[rotation]->move(lineEditForCoord[yTranslation]->pos().x(), sliderForCoord[yTranslation]->pos().y() + sliderForCoord[yTranslation]->height() + widgetVerticalSpacing);
-	sliderForCoord[rotation]->move(lineEditForCoord[rotation]->pos().x(), lineEditForCoord[rotation]->pos().y() + lineEditForCoord[rotation]->height() + widgetVerticalSpacing);
-	sliderForCoord[rotation]->resize(sliderForCoord[rotation]->width(), sliderForCoord[rotation]->height() - 10);
-	lineEditForCoord[rotation]->resize(sliderForCoord[rotation]->width(), lineEditForCoord[rotation]->height());
-
-	labelForCoord[xScale]->move(labelForCoord[rotation]->pos().x(), sliderForCoord[rotation]->pos().y() + sliderForCoord[rotation]->height() + widgetVerticalSpacing);
-	lineEditForCoord[xScale]->move(lineEditForCoord[rotation]->pos().x(), sliderForCoord[rotation]->pos().y() + sliderForCoord[rotation]->height() + widgetVerticalSpacing);
-	sliderForCoord[xScale]->move(lineEditForCoord[xScale]->pos().x(), lineEditForCoord[xScale]->pos().y() + lineEditForCoord[xScale]->height() + widgetVerticalSpacing);
-	sliderForCoord[xScale]->resize(sliderForCoord[xScale]->width(), sliderForCoord[xScale]->height() - 10);
-	lineEditForCoord[xScale]->resize(sliderForCoord[xScale]->width(), lineEditForCoord[xScale]->height());
-
-	labelForCoord[yScale]->move(labelForCoord[xScale]->pos().x(), sliderForCoord[xScale]->pos().y() + sliderForCoord[xScale]->height() + widgetVerticalSpacing);
-	lineEditForCoord[yScale]->move(lineEditForCoord[xScale]->pos().x(), sliderForCoord[xScale]->pos().y() + sliderForCoord[xScale]->height() + widgetVerticalSpacing);
-	sliderForCoord[yScale]->move(lineEditForCoord[yScale]->pos().x(), lineEditForCoord[yScale]->pos().y() + lineEditForCoord[yScale]->height() + widgetVerticalSpacing);
-	sliderForCoord[yScale]->resize(sliderForCoord[yScale]->width(), sliderForCoord[yScale]->height() - 10);
-	lineEditForCoord[yScale]->resize(sliderForCoord[yScale]->width(), lineEditForCoord[yScale]->height());
-
-	dialog.resize(labelForCoord[xTranslation]->width()+
-				  widgetHorizontalSpacing+
-				  sliderForCoord[xTranslation]->width(),
-				  sliderForCoord[yScale]->pos().y()+
-				  sliderForCoord[yScale]->height());
-
-	labelForCoord[xTranslation]->show();
-	sliderForCoord[xTranslation]->show();
-
-	labelForCoord[yTranslation]->show();
-	sliderForCoord[yTranslation]->show();
-
-	labelForCoord[rotation]->show();
-	sliderForCoord[rotation]->show();
-
-	labelForCoord[xScale]->show();
-	sliderForCoord[xScale]->show();
-
-	labelForCoord[yScale]->show();
-	sliderForCoord[yScale]->show();
+	setFirstWidgetInTabOrder(spinboxForCoord[xTranslation]);
+	setLastWidgetInTabOrder(spinboxForCoord[yScale]);
 
 	// Return focus to the topmost line edit by default, or to the bottommost
 	// line edit if tab-cycling backwards.
 	// To be handled properly for https://b33p.net/kosada/node/6365 .
-	(tabCycleForward? lineEditForCoord[xTranslation] : lineEditForCoord[yScale])->setFocus();
-	(tabCycleForward? lineEditForCoord[xTranslation] : lineEditForCoord[yScale])->selectAll();
+	(tabCycleForward ? spinboxForCoord[xTranslation] : spinboxForCoord[yScale])->setFocus();
+	(tabCycleForward ? spinboxForCoord[xTranslation] : spinboxForCoord[yScale])->selectAll();
 }
 
 /**
@@ -303,249 +247,76 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog &dialog, json_object *origin
  */
 json_object * VuoInputEditorTransform2d::getAcceptedValue(void)
 {
-	return convertFromLineEditsFormat(lineEditForCoord[xTranslation]->text(),
-									  lineEditForCoord[yTranslation]->text(),
-									  lineEditForCoord[rotation]->text(),
-									  lineEditForCoord[xScale]->text(),
-									  lineEditForCoord[yScale]->text());
+	return VuoTransform2d_getJson(currentTransform);
+}
+
+void VuoInputEditorTransform2d::setTransformProperty(coord whichCoord, double value)
+{
+	if(whichCoord == xTranslation)
+		currentTransform.translation.x = value;
+	else if(whichCoord == yTranslation)
+		currentTransform.translation.y = value;
+	else if(whichCoord == rotation)
+		currentTransform.rotation = value * DEG2RAD;
+	else if(whichCoord == xScale)
+		currentTransform.scale.x = value;
+	else if(whichCoord == yScale)
+		currentTransform.scale.y = value;
+}
+
+VuoInputEditorTransform2d::coord VuoInputEditorTransform2d::getCoordFromQObject(QObject* sender)
+{
+	if( sender == sliderForCoord[xTranslation] || sender == spinboxForCoord[xTranslation] )
+		return xTranslation;
+	else if( sender == sliderForCoord[yTranslation] || sender == spinboxForCoord[yTranslation] )
+		return yTranslation;
+	else if( sender == sliderForCoord[rotation] || sender == spinboxForCoord[rotation] )
+		return rotation;
+	else if( sender == sliderForCoord[xScale] || sender == spinboxForCoord[xScale] )
+		return xScale;
+	else if( sender == sliderForCoord[yScale] || sender == spinboxForCoord[yScale] )
+		return yScale;
+
+	return xTranslation;
 }
 
 /**
- * Returns the text that should appear in the line edit to represent @c value.
+ * Update the spinbox and stored transform property.
  */
-QString VuoInputEditorTransform2d::convertToLineEditFormat(json_object *value)
+void VuoInputEditorTransform2d::onSliderUpdate(int sliderValue)
 {
-	QString valueAsStringInDefaultLocale = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
-	double realValue = QLocale(QLocale::C).toDouble(valueAsStringInDefaultLocale);
-	QString valueAsStringInUserLocale = QLocale::system().toString(realValue);
+	coord whichCoord = getCoordFromQObject(QObject::sender());
+	QSlider *targetSlider =	sliderForCoord[whichCoord];
+	double value = VuoDoubleSpinBox::sliderToDouble(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], sliderValue);
+	setTransformProperty(whichCoord, value);
 
-	if (qAbs(realValue) >= 1000.0)
-		valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
+	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
+	disconnect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	spinboxForCoord[whichCoord]->setValue( value );
+	connect(spinboxForCoord[whichCoord], SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
-	return valueAsStringInUserLocale;
+	spinboxForCoord[whichCoord]->setFocus();
+	spinboxForCoord[whichCoord]->selectAll();
+
+	emit valueChanged( getAcceptedValue() );
 }
 
 /**
- * Formats the value from the line edit to conform to the JSON specification for numbers.
+ * Update the slider and stored transform property.
  */
-json_object * VuoInputEditorTransform2d::convertFromLineEditsFormat(const QString &xTranslationAsString,
-																const QString &yTranslationAsString,
-																const QString &rotationAsString,
-																const QString &xScaleAsString,
-																const QString &yScaleAsString)
+void VuoInputEditorTransform2d::onSpinboxUpdate(QString spinboxValue)
 {
-	// x-translation
-	double xTranslation = QLocale::system().toDouble(xTranslationAsString);
-	QString xTranslationAsStringInDefaultLocale = QLocale(QLocale::C).toString(xTranslation);
+	coord whichCoord = getCoordFromQObject(QObject::sender());
 
-	if (qAbs(xTranslation) >= 1000.0)
-		xTranslationAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! xTranslationAsStringInDefaultLocale.isEmpty() && xTranslationAsStringInDefaultLocale[0] == '.')
-		xTranslationAsStringInDefaultLocale = "0" + xTranslationAsStringInDefaultLocale;
-
-	// y-translation
-	double yTranslation = QLocale::system().toDouble(yTranslationAsString);
-	QString yTranslationAsStringInDefaultLocale = QLocale(QLocale::C).toString(yTranslation);
-
-	if (qAbs(yTranslation) >= 1000.0)
-		yTranslationAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! yTranslationAsStringInDefaultLocale.isEmpty() && yTranslationAsStringInDefaultLocale[0] == '.')
-		yTranslationAsStringInDefaultLocale = "0" + yTranslationAsStringInDefaultLocale;
-
-	// Rotation
-	double rotation = QLocale::system().toDouble(rotationAsString);
-	QString rotationAsStringInDefaultLocale = QLocale(QLocale::C).toString(rotation);
-
-	if (qAbs(rotation) >= 1000.0)
-		rotationAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! rotationAsStringInDefaultLocale.isEmpty() && rotationAsStringInDefaultLocale[0] == '.')
-		rotationAsStringInDefaultLocale = "0" + rotationAsStringInDefaultLocale;
-
-	// x-scale
-	double xScale = QLocale::system().toDouble(xScaleAsString);
-	QString xScaleAsStringInDefaultLocale = QLocale(QLocale::C).toString(xScale);
-
-	if (qAbs(xScale) >= 1000.0)
-		xScaleAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! xScaleAsStringInDefaultLocale.isEmpty() && xScaleAsStringInDefaultLocale[0] == '.')
-		xScaleAsStringInDefaultLocale = "0" + xScaleAsStringInDefaultLocale;
-
-	// y-scale
-	double yScale = QLocale::system().toDouble(yScaleAsString);
-	QString yScaleAsStringInDefaultLocale = QLocale(QLocale::C).toString(yScale);
-
-	if (qAbs(yScale) >= 1000.0)
-		yScaleAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! yScaleAsStringInDefaultLocale.isEmpty() && yScaleAsStringInDefaultLocale[0] == '.')
-		yScaleAsStringInDefaultLocale = "0" + yScaleAsStringInDefaultLocale;
-
-	// 2d Transform
-	VuoTransform2d transform;
-	transform.translation.x = VuoReal_makeFromString(xTranslationAsStringInDefaultLocale.toUtf8().constData());
-	transform.translation.y = VuoReal_makeFromString(yTranslationAsStringInDefaultLocale.toUtf8().constData());
-	transform.rotation = DEG2RAD * VuoReal_makeFromString(rotationAsStringInDefaultLocale.toUtf8().constData());
-	transform.scale.x = VuoReal_makeFromString(xScaleAsStringInDefaultLocale.toUtf8().constData());
-	transform.scale.y = VuoReal_makeFromString(yScaleAsStringInDefaultLocale.toUtf8().constData());
-	return VuoTransform2d_getJson(transform);
-}
-
-/**
- * Converts the input @c newLineEditText to an integer and updates this
- * input editor's @c slider widget to reflect that integer value.
- */
-void VuoInputEditorTransform2d::updateSliderValue(QString newLineEditText)
-{
-	QObject *sender = QObject::sender();
-	coord whichCoord =	(sender == lineEditForCoord[xTranslation]?	xTranslation :
-						(sender == lineEditForCoord[yTranslation]?	yTranslation :
-						(sender == lineEditForCoord[rotation]?		rotation :
-						(sender == lineEditForCoord[xScale]?		xScale :
-																	yScale))));
-
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
-	int newSliderValue = lineEditValueToScaledSliderValue(newLineEditValue, whichCoord);
+	double value = QLocale::system().toDouble(spinboxValue);
+	setTransformProperty(whichCoord, value);
 
 	QSlider *targetSlider =	sliderForCoord[whichCoord];
+	int sliderValue = VuoDoubleSpinBox::doubleToSlider(targetSlider->minimum(), targetSlider->maximum(), suggestedMinForCoord[whichCoord], suggestedMaxForCoord[whichCoord], value);
 
-	disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	targetSlider->setValue(newSliderValue);
-	connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-}
+	disconnect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	targetSlider->setValue( sliderValue );
+	connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
 
-/**
- * Converts the slider's current value() to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- */
-
-void VuoInputEditorTransform2d::updateLineEditValue()
-{
-	QObject *sender = QObject::sender();
-	coord whichCoord =	(sender == sliderForCoord[xTranslation]?	xTranslation :
-						(sender == sliderForCoord[yTranslation]?	yTranslation :
-						(sender == sliderForCoord[rotation]?		rotation :
-						(sender == sliderForCoord[xScale]?			xScale :
-																	yScale))));
-
-	updateLineEditValue(((QSlider *)sender)->value(), whichCoord);
-}
-
-void VuoInputEditorTransform2d::updateLineEditValue(int newSliderValue)
-{
-	QObject *sender = QObject::sender();
-	coord whichCoord =	(sender == sliderForCoord[xTranslation]?	xTranslation :
-						(sender == sliderForCoord[yTranslation]?	yTranslation :
-						(sender == sliderForCoord[rotation]?		rotation :
-						(sender == sliderForCoord[xScale]?			xScale :
-																	yScale))));
-
-	updateLineEditValue(newSliderValue, whichCoord);
-}
-
-/**
- * Converts the input @c newSliderValue to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- *
- * Note: The slider's sliderMoved(int) signal must be connected to this
- * slot rather than to the version of this slot that takes no arguments
- * in order to respect the most recently updated slider value.
- */
-void VuoInputEditorTransform2d::updateLineEditValue(int newSliderValue, coord whichCoord)
-{
-	double newLineEditValue = sliderValueToScaledLineEditValue(newSliderValue, whichCoord);
-	QLineEdit *targetLineEdit = lineEditForCoord[whichCoord];
-
-	const QString originalLineEditText = targetLineEdit->text();
-	QString newLineEditText = QLocale::system().toString(newLineEditValue, 'g');
-
-	if (qAbs(newLineEditValue) >= 1000.0)
-		newLineEditText.remove(QLocale::system().groupSeparator());
-
-	if (originalLineEditText != newLineEditText)
-	{
-		targetLineEdit->setText(newLineEditText);
-		targetLineEdit->setFocus();
-		targetLineEdit->selectAll();
-
-		emitValueChanged();
-	}
-}
-
-/**
- * Scales the input @c lineEditValue to match the range of the slider.
- */
-int VuoInputEditorTransform2d::lineEditValueToScaledSliderValue(double lineEditValue, coord whichCoord)
-{
-	QSlider *targetSlider = sliderForCoord[whichCoord];
-	double suggestedMin = suggestedMinForCoord[whichCoord];
-	double suggestedMax = suggestedMaxForCoord[whichCoord];
-
-	const double lineEditRange = suggestedMax - suggestedMin;
-
-	const int sliderRange = targetSlider->maximum() - targetSlider->minimum();
-	int scaledSliderValue = targetSlider->minimum() + ((lineEditValue-suggestedMin)/(1.0*(lineEditRange)))*sliderRange;
-
-	return scaledSliderValue;
-}
-
-/**
- * Scales the input @c sliderValue to match the range of the
- * port's suggestedMin and suggestedMax.
- */
-double VuoInputEditorTransform2d::sliderValueToScaledLineEditValue(int sliderValue, coord whichCoord)
-{
-	QSlider *targetSlider = sliderForCoord[whichCoord];
-	double suggestedMin = suggestedMinForCoord[whichCoord];
-	double suggestedMax = suggestedMaxForCoord[whichCoord];
-
-	const double lineEditRange = suggestedMax - suggestedMin;
-
-	const int sliderRange = targetSlider->maximum() - targetSlider->minimum();
-	double scaledLineEditValue = suggestedMin + ((sliderValue-targetSlider->minimum())/(1.0*sliderRange))*lineEditRange;
-
-	return scaledLineEditValue;
-}
-
-void VuoInputEditorTransform2d::emitValueChanged()
-{
-	emit valueChanged(getAcceptedValue());
-}
-
-/**
- * Filters events on watched objects.
- */
-bool VuoInputEditorTransform2d::eventFilter(QObject *object, QEvent *event)
-{
-	QSlider *targetSlider = (object==lineEditForCoord[xTranslation]? sliderForCoord[xTranslation] :
-							(object==lineEditForCoord[yTranslation]? sliderForCoord[yTranslation] :
-							(object==lineEditForCoord[rotation]? sliderForCoord[rotation] :
-							(object==lineEditForCoord[xScale]? sliderForCoord[xScale] :
-							(object==lineEditForCoord[yScale]? sliderForCoord[yScale] :
-														NULL)))));
-
-	if (event->type()==QEvent::Wheel && targetSlider)
-	{
-		// Let the slider handle mouse wheel events.
-		QApplication::sendEvent(targetSlider, event);
-		return true;
-	}
-
-	else if (event->type()==QEvent::KeyPress && targetSlider)
-	{
-		// Let the slider handle keypresses of the up and down arrows.
-		QKeyEvent *keyEvent = (QKeyEvent *)(event);
-		if ((keyEvent->key() == Qt::Key_Up) || (keyEvent->key() == Qt::Key_Down))
-		{
-			QApplication::sendEvent(targetSlider, event);
-			return true;
-		}
-	}
-
-	return VuoInputEditorWithLineEdit::eventFilter(object, event);
+	emit valueChanged( getAcceptedValue() );
 }

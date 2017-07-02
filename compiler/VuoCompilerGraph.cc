@@ -18,6 +18,7 @@
 #include "VuoPort.hh"
 #include "VuoPublishedPort.hh"
 #include "VuoStringUtilities.hh"
+#include <sstream>
 #include <stdexcept>
 #include <stack>
 
@@ -269,11 +270,12 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoNode *> nodes, set<VuoCable *
 		set<Edge> edgesVisited;
 
 		for (set<Vertex>::iterator j = allVertices.begin(); j != allVertices.end(); ++j)
-		{
-			Vertex vertex = *j;
-			if (vertex.fromTrigger == trigger)
-				verticesToVisit.insert(vertex);
-		}
+			if ((*j).fromTrigger == trigger)
+				verticesToVisit.insert(*j);
+
+		map<VuoCompilerNode *, set<Vertex> > outgoingVerticesForNode;  // Cached data to speed up search for outgoing vertices.
+		for (set<Vertex>::iterator j = allVertices.begin(); j != allVertices.end(); ++j)
+			outgoingVerticesForNode[(*j).fromNode].insert(*j);
 
 		while (! verticesToVisit.empty())
 		{
@@ -282,13 +284,13 @@ void VuoCompilerGraph::makeVerticesAndEdges(set<VuoNode *> nodes, set<VuoCable *
 				vertices[trigger].push_back(vertex);
 			verticesToVisit.erase(verticesToVisit.begin());
 
-			for (set<Vertex>::iterator j = allVertices.begin(); j != allVertices.end(); ++j)
+			set<Vertex> potentialOutgoingVertices = outgoingVerticesForNode[vertex.toNode];
+			for (set<Vertex>::iterator j = potentialOutgoingVertices.begin(); j != potentialOutgoingVertices.end(); ++j)
 			{
 				Vertex outgoingVertex = *j;
 
-				if (vertex.toNode == outgoingVertex.fromNode &&
-						(mayTransmit(vertex.cableBundle, outgoingVertex.cableBundle) ||
-						 (trigger == publishedInputTrigger && publishedOutputVertices.find(outgoingVertex) != publishedOutputVertices.end())))
+				if (mayTransmit(vertex.cableBundle, outgoingVertex.cableBundle) ||
+						(trigger == publishedInputTrigger && publishedOutputVertices.find(outgoingVertex) != publishedOutputVertices.end()))
 				{
 					Edge outgoingEdge(vertex, outgoingVertex);
 					if (edgesVisited.find(outgoingEdge) == edgesVisited.end())  // Avoid infinite feedback loops.
@@ -359,6 +361,10 @@ void VuoCompilerGraph::makeDownstreamVertices(void)
 			if ((*j).fromTrigger == trigger)
 				verticesToVisit.push_back(*j);
 
+		map<Vertex, set<Vertex> > outgoingVerticesFromVertex;  // Cached data to speed up search for outgoing vertices.
+		for (set<Edge>::iterator j = edges[trigger].begin(); j != edges[trigger].end(); ++j)
+			outgoingVerticesFromVertex[(*j).fromVertex].insert((*j).toVertex);
+
 		while (! verticesToVisit.empty())
 		{
 			// Visit the vertex at the top of the stack.
@@ -368,10 +374,10 @@ void VuoCompilerGraph::makeDownstreamVertices(void)
 			bool areDownstreamVerticesComplete = true;
 
 			// Consider each vertex immediately downstream of this vertex.
-			set<Edge> outgoingEdges = getEdgesFromVertex(currentVertex, trigger);
-			for (set<Edge>::iterator j = outgoingEdges.begin(); j != outgoingEdges.end(); ++j)
+			set<Vertex> outgoingVertices = outgoingVerticesFromVertex[currentVertex];
+			for (set<Vertex>::iterator j = outgoingVertices.begin(); j != outgoingVertices.end(); ++j)
 			{
-				Vertex outgoingVertex = (*j).toVertex;
+				Vertex outgoingVertex = *j;
 				currentDownstreamVertices.insert(outgoingVertex);
 
 				if (downstreamVertices[trigger].find(outgoingVertex) != downstreamVertices[trigger].end())
@@ -462,6 +468,10 @@ void VuoCompilerGraph::sortVertices(void)
 			if ((*j).fromTrigger == trigger)
 				verticesToVisit.push_back(*j);
 
+		map<VuoCompilerNode *, set<Vertex> > outgoingVerticesForNode;  // Cached data to speed up topological sort.
+		for (vector<Vertex>::iterator j = verticesToSort.begin(); j != verticesToSort.end(); ++j)
+			outgoingVerticesForNode[(*j).fromNode].insert(*j);
+
 		while (! verticesToVisit.empty())
 		{
 			// Visit the vertex at the top of the stack.
@@ -475,19 +485,16 @@ void VuoCompilerGraph::sortVertices(void)
 			// But, if this vertex is at the end of a feedback loop, it doesn't include vertices
 			// beyond the end of the feedback loop.
 			set<Vertex> outgoingVertices;
-			for (vector<Vertex>::iterator j = verticesToSort.begin(); j != verticesToSort.end(); ++j)
+			set<Vertex> potentialOutgoingVertices = outgoingVerticesForNode[currentVertex.toNode];
+			for (set<Vertex>::iterator j = potentialOutgoingVertices.begin(); j != potentialOutgoingVertices.end(); ++j)
 			{
 				Vertex outgoingVertex = *j;
-				if (currentVertex.toNode == outgoingVertex.fromNode)
+				if (downstreamVertices[trigger][outgoingVertex].find(currentVertex) == downstreamVertices[trigger][outgoingVertex].end())
+					outgoingVertices.insert(outgoingVertex);
+				else
 				{
-					set<Vertex> furtherDownstreamVertices = downstreamVertices[trigger][outgoingVertex];
-					if (furtherDownstreamVertices.find(currentVertex) == furtherDownstreamVertices.end())
-						outgoingVertices.insert(outgoingVertex);
-					else
-					{
-						outgoingVertices.clear();
-						break;
-					}
+					outgoingVertices.clear();
+					break;
 				}
 			}
 
@@ -499,8 +506,7 @@ void VuoCompilerGraph::sortVertices(void)
 				if (verticesCompleted[outgoingVertex])
 				{
 					// The dependent vertex has already been visited, so add its dependent vertices to this vertex's.
-					set<Vertex> furtherDependentVertices = dependentVertices[outgoingVertex];
-					currentDependentVertices.insert( furtherDependentVertices.begin(), furtherDependentVertices.end() );
+					currentDependentVertices.insert( dependentVertices[outgoingVertex].begin(), dependentVertices[outgoingVertex].end() );
 				}
 				else if (find(verticesToVisit.begin(), verticesToVisit.end(), outgoingVertex) == verticesToVisit.end())
 				{
@@ -519,24 +525,14 @@ void VuoCompilerGraph::sortVertices(void)
 		}
 
 		// Put the vertices in descending order of the number of vertices that can't be reached until after the vertex.
+		vector< pair<size_t, Vertex> > verticesAndDependents;
+		for (map<Vertex, set<Vertex> >::iterator j = dependentVertices.begin(); j != dependentVertices.end(); ++j)
+			verticesAndDependents.push_back( make_pair(j->second.size(), j->first) );
+		sort(verticesAndDependents.begin(), verticesAndDependents.end());
 
 		vector<Vertex> sortedVertices;
-		while (! verticesToSort.empty())
-		{
-			size_t maxSize = 0;
-			size_t maxIndex = 0;
-			for (size_t j = 0; j < verticesToSort.size(); ++j)
-			{
-				size_t currSize = dependentVertices[verticesToSort[j]].size();
-				if (currSize > maxSize)
-				{
-					maxSize = currSize;
-					maxIndex = j;
-				}
-			}
-			sortedVertices.push_back(verticesToSort[maxIndex]);
-			verticesToSort.erase(maxIndex + verticesToSort.begin());
-		}
+		for (vector< pair<size_t, Vertex> >::reverse_iterator j = verticesAndDependents.rbegin(); j != verticesAndDependents.rend(); ++j)
+			sortedVertices.push_back((*j).second);
 
 		vertices[trigger] = sortedVertices;
 	}
@@ -750,7 +746,11 @@ bool VuoCompilerGraph::mayTransmit(VuoCompilerNode *node, VuoCompilerTriggerPort
  */
 bool VuoCompilerGraph::mayTransmit(VuoCompilerNode *fromNode, VuoCompilerNode *toNode, VuoCompilerTriggerPort *trigger)
 {
-	return find(vertices[trigger].begin(), vertices[trigger].end(), Vertex(fromNode, toNode)) != vertices[trigger].end();
+	if (vertexMayTransmit[trigger].empty() && ! vertices[trigger].empty())
+		for (vector<Vertex>::iterator i = vertices[trigger].begin(); i != vertices[trigger].end(); ++i)
+			vertexMayTransmit[trigger][(*i).fromNode][(*i).toNode] = true;
+
+	return vertexMayTransmit[trigger][fromNode][toNode];
 }
 
 /**
@@ -775,20 +775,6 @@ vector<VuoCompilerTriggerPort *> VuoCompilerGraph::getTriggerPorts(void)
 map<VuoCompilerTriggerPort *, VuoCompilerNode *> VuoCompilerGraph::getNodesForTriggerPorts(void)
 {
 	return nodeForTrigger;
-}
-
-/**
- * Returns the outgoing edges from @a vertex that are reachable from @a trigger.
- */
-set<VuoCompilerGraph::Edge> VuoCompilerGraph::getEdgesFromVertex(Vertex vertex, VuoCompilerTriggerPort *trigger)
-{
-	set<Edge> edgesFromVertex;
-
-	for (set<Edge>::iterator i = edges[trigger].begin(); i != edges[trigger].end(); ++i)
-		if ((*i).fromVertex == vertex)
-			edgesFromVertex.insert(*i);
-
-	return edgesFromVertex;
 }
 
 /**
@@ -1364,6 +1350,58 @@ void VuoCompilerGraph::checkForDeadlockedFeedback(void)
 
 	if (! errors.empty())
 		throw VuoCompilerException(errors);
+}
+
+/**
+ * Generates a unique, consistent hash value for the elements of composition structure analyzed by this class.
+ */
+long VuoCompilerGraph::getHash(VuoCompilerComposition *composition)
+{
+	ostringstream s;
+
+	// nodes — pointers, identifiers
+	s << "[";
+	set<VuoNode *> nodes = composition->getBase()->getNodes();
+	for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	{
+		VuoCompilerNode *compilerNode = NULL;
+		string identifier;
+		if ((*i)->hasCompiler())
+		{
+			compilerNode = (*i)->getCompiler();
+			identifier = compilerNode->getIdentifier();
+		}
+		s << "{" << compilerNode << "," << identifier << "},";
+	}
+	s << "]";
+
+	// cables — pointers, node identifiers, port identifiers
+	s << "[";
+	set<VuoCable *> cables = composition->getBase()->getCables();
+	for (set<VuoCable *>::iterator i = cables.begin(); i != cables.end(); ++i)
+	{
+		/// @todo Check for change in to-port's event blocking (https://b33p.net/kosada/node/8197)
+		string fromNode = ((*i)->getFromNode() && (*i)->getFromNode()->hasCompiler()) ? (*i)->getFromNode()->getCompiler()->getIdentifier() : "";
+		string fromPort = (*i)->getFromPort() ? (*i)->getFromPort()->getClass()->getName() : "";
+		string toNode = ((*i)->getToNode() && (*i)->getToNode()->hasCompiler()) ? (*i)->getToNode()->getCompiler()->getIdentifier() : "";
+		string toPort = (*i)->getToPort() ? (*i)->getToPort()->getClass()->getName() : "";
+		s << "{" << (*i)->getCompiler() << "," << fromNode << "," << fromPort << "," << toNode << "," << toPort << "},";
+	}
+	s << "]";
+
+	// published ports — pointers, identifiers
+	s << "[";
+	vector<VuoPublishedPort *> publishedInputPorts = composition->getBase()->getPublishedInputPorts();
+	for (vector<VuoPublishedPort *>::iterator i = publishedInputPorts.begin(); i != publishedInputPorts.end(); ++i)
+		s << "{" << (*i)->getCompiler() << "," << (*i)->getClass()->getName() << "},";
+	s << "]";
+	s << "[";
+	vector<VuoPublishedPort *> publishedOutputPorts = composition->getBase()->getPublishedOutputPorts();
+	for (vector<VuoPublishedPort *>::iterator i = publishedOutputPorts.begin(); i != publishedOutputPorts.end(); ++i)
+		s << "{" << (*i)->getCompiler() << "," << (*i)->getClass()->getName() << "},";
+	s << "]";
+
+	return VuoStringUtilities::hash(s.str());
 }
 
 /**

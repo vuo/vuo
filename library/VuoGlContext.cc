@@ -412,13 +412,18 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 	if (!fragmentOnGPU)
 		VuoLog(file, line, func, "OpenGL warning: Falling back to software renderer for fragment shader.  This will slow things down.");
 
+	bool foundError = false;
 	do
 	{
 		GLenum error = glGetError();
 		if (error == GL_NO_ERROR)
 			break;
 		_VGL_describe(error, cgl_ctx, file, line, func);
+		foundError = true;
 	} while (true);
+
+	if (foundError)
+		VuoLog_backtrace();
 }
 
 /**

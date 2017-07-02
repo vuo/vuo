@@ -33,6 +33,9 @@ private:
 	VuoCompiler *compiler;
 	VuoCompilerGraph *graph;
 
+	/// True if this object created @c graph and therefore is responsible for destroying it.
+	bool ownsGraph;
+
 	/// True if extra code should be generated for this composition to interact with the Vuo runtime as a top-level composition,
 	/// false if the extra code should not be generated since this composition will be used as a subcomposition.
 	bool isTopLevelComposition;

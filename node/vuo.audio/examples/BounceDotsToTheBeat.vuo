@@ -12,8 +12,8 @@ digraph G
 Add [type="vuo.math.add.VuoReal" version="2.0.0" label="Add|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="750,15"];
 Curve5 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="915,-135" _startPosition="{\"x\":-0.10000000149011612,\"y\":-0.25}" _endPosition="{\"x\":-0.10000000149011612,\"y\":0.25}" _duration="0.5" _curve="\"cubic\"" _easing="\"out\"" _loop="\"mirror\""];
 Curve7 [type="vuo.motion.curve.VuoPoint2d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="915,15" _startPosition="{\"x\":0.10000000149011612,\"y\":-0.25}" _endPosition="{\"x\":0.10000000149011612,\"y\":0.25}" _duration="0.5" _curve="\"cubic\"" _easing="\"out\"" _loop="\"mirror\""];
-DetectAudioBeats [type="vuo.audio.detectBeats" version="1.0.0" label="Detect Audio Beats|<refresh>refresh\l|<time>time\l|<samples>samples\l|<nudge>nudge\l|<reset>reset\l|<beatsPerMinute>beatsPerMinute\r|<beat>beat\r|<clock>clock\r" pos="600,-165" fillcolor="violet"];
-FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="75,-285" fillcolor="yellow" _started_eventThrottling="enqueue"];
+DetectAudioBeats [type="vuo.audio.detectBeats" version="1.0.0" label="Detect Audio Beats|<refresh>refresh\l|<time>time\l|<tempoRange>tempoRange\l|<samples>samples\l|<nudge>nudge\l|<reset>reset\l|<beatsPerMinute>beatsPerMinute\r|<beat>beat\r|<clock>clock\r" pos="600,-165" fillcolor="violet" _tempoRange="\"moderato\""];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,-285" fillcolor="yellow" _started_eventThrottling="enqueue"];
 MakeList10 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1384,-169" fillcolor="green"];
 MakeList11 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="704,26" _2="0.5"];
 MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1414,-154" fillcolor="green"];
@@ -21,11 +21,10 @@ MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer
 MakeOvalLayer2 [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="1065,-15" _color="{\"r\":1,\"g\":1,\"b\":0,\"a\":1}" _rotation="0.0" _width="0.20000000000000001" _height="0.20000000000000001" _sharpness="1"];
 MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1065,-255" _text="\"Detecting…\"" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":0.5,\"g\":0.5,\"b\":0.5,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0.0,\"y\":0.0}"];
 MixAudioChannels2 [type="vuo.audio.mix" version="2.0.0" label="Mix Audio Channels|<refresh>refresh\l|<samples>samples\l|<mixedSamples>mixedSamples\r" pos="630,0"];
-PlayAudioFile2 [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="225,-225" _url="\"SignalToNoise.mp3\"" _setTime="0" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
+PlayAudioFile2 [type="vuo.audio.file.play" version="1.1.0" label="Play Audio File|<refresh>refresh\l|<url>url\l|<play>play\l|<pause>pause\l|<loop>loop\l|<setTime>setTime\l|<decodedChannels>decodedChannels\r|<finishedPlayback>finishedPlayback\r" pos="225,-225" _url="\"SignalToNoise.mp3\"" _loop="true" _setTime="0" _decodedChannels_eventThrottling="enqueue" _finishedPlayback_eventThrottling="enqueue"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1455,-180" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 SelectLatest2 [type="vuo.select.latest.2.VuoLayer" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="1245,-180"];
 SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="600,-240" _requestedChannels_eventThrottling="enqueue"];
-ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="90,-60" _value="\"\""];
 
 Add:sum -> Curve7:time;
 Curve5:value -> MakeOvalLayer:center;
@@ -43,9 +42,6 @@ MakeTextLayer:layer -> SelectLatest2:option1;
 MixAudioChannels2:mixedSamples -> DetectAudioBeats:samples;
 PlayAudioFile2:decodedChannels -> MixAudioChannels2:samples;
 PlayAudioFile2:decodedChannels -> SendLiveAudio:sendChannels;
-PlayAudioFile2:finishedPlayback -> ShareValue2:refresh;
 RenderLayersToWindow:requestedFrame -> DetectAudioBeats:time [style=invis];
 SelectLatest2:latest -> MakeList10:1;
-ShareValue2:sameValue -> PlayAudioFile2:play;
-ShareValue2:sameValue -> PlayAudioFile2:setTime [event=true];
 }

@@ -276,3 +276,6 @@ string VuoStringUtilities::makeRandomHash(int length)
 
 	return hash;
 }
+
+const std::locale VuoStringUtilities::locale;
+const std::collate<char> &VuoStringUtilities::collate = std::use_facet<std::collate<char> >(VuoStringUtilities::locale);

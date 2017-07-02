@@ -12,7 +12,7 @@
 #include "VuoSyphonServerDescription.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Server Description",
+					  "title" : "Make Syphon Server",
 					  "keywords" : [ "application", "frame", "input", "interprocess", "IOSurface", "output", "share", "video" ],
 					  "version" : "1.0.0",
 					  "node": {
@@ -28,7 +28,7 @@ void nodeEvent
 (
 	VuoInputData(VuoText) serverName,
 	VuoInputData(VuoText) applicationName,
-	VuoOutputData(VuoSyphonServerDescription) serverDescription
+	VuoOutputData(VuoSyphonServerDescription, {"name":"Server"}) serverDescription
 )
 {
 	(*serverDescription) = VuoSyphonServerDescription_make(VuoText_make(""), serverName, applicationName);

@@ -1,0 +1,44 @@
+/**
+ * @file
+ * Demonstrates the 9 text anchor options.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="-15,540" _separator="\" \""];
+CycleThroughList2 [type="vuo.list.cycle.VuoAnchor" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="-210,300" _wrapMode="\"wrap\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-360,135" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="120,285" _name="\"\"" _color="{\"r\":1,\"g\":0,\"b\":0,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="0.10000000000000001" _height="0.0050000000000000001"];
+MakeColorLayer2 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="120,420" _color="{\"r\":1,\"g\":0,\"b\":0,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="0.0050000000000000001" _height="0.10000000000000001"];
+MakeList13 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="304,296" fillcolor="green"];
+MakeList14 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="-66,551" _1="\"Anchor is\"" _3="\"\\n\\nClick to change the anchor.\""];
+MakeList2 [type="vuo.list.make.9.VuoAnchor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="-280,311" _1="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _2="{\"horizontalAlignment\":\"right\",\"verticalAlignment\":\"top\"}" _3="{\"horizontalAlignment\":\"right\",\"verticalAlignment\":\"center\"}" _4="{\"horizontalAlignment\":\"right\",\"verticalAlignment\":\"bottom\"}" _5="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"bottom\"}" _6="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"bottom\"}" _7="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"center\"}" _8="{\"horizontalAlignment\":\"left\",\"verticalAlignment\":\"top\"}" _9="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"top\"}"];
+MakeList9 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="334,311" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="120,165" fillcolor="violet" _text="\"Hello World!\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0,\"y\":0}"];
+MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="120,570" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.5}"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-420,195" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="375,285" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SummarizeValue2 [type="vuo.data.summarize.VuoAnchor" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="-120,420"];
+
+AppendTexts:compositeText -> MakeTextLayer3:text;
+CycleThroughList2:item -> MakeTextLayer:anchor;
+CycleThroughList2:item -> SummarizeValue2:value;
+FireOnStart:started -> CycleThroughList2:goForward;
+FireOnStart:started -> MakeColorLayer2:refresh;
+FireOnStart:started -> MakeColorLayer:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
+MakeColorLayer2:layer -> MakeList13:2;
+MakeColorLayer:layer -> MakeList13:1;
+MakeList13:list -> RenderLayersToWindow:layers;
+MakeList14:list -> AppendTexts:texts;
+MakeList2:list -> CycleThroughList2:list;
+MakeList9:list -> RenderLayersToWindow:setWindowProperties;
+MakeTextLayer3:layer -> MakeList13:4;
+MakeTextLayer:layer -> MakeList13:3;
+ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
+SummarizeValue2:summary -> MakeList14:2;
+}

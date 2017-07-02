@@ -35,16 +35,19 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 	if (json_object_object_get_ex(details, "showArrow", &o))
 		showArrow = json_object_get_boolean(o);
 
-
 	VuoDialogForInputEditor dialog(isDark, showArrow);
 	dialogPointer = &dialog;
 	setUpDialog(dialog, originalValue, details);
 
-	// Move children to account for margins.
+	// Move children to account for margins if no autolayout is used.
 	QMargins margin = dialog.getPopoverContentsMargins();
-	QPoint topLeftMargin = QPoint(margin.left(),margin.top());
-	foreach (QObject *widget, dialog.children())
-		static_cast<QWidget *>(widget)->move(static_cast<QWidget *>(widget)->pos() + topLeftMargin);
+
+	if( dialog.layout() == 0 )
+	{
+		QPoint topLeftMargin = QPoint(margin.left(),margin.top());
+		foreach (QObject *widget, dialog.children())
+			static_cast<QWidget *>(widget)->move(static_cast<QWidget *>(widget)->pos() + topLeftMargin);
+	}
 
 	// Resize dialog to enclose child widgets and margins.
 	dialog.adjustSize();
@@ -52,6 +55,7 @@ json_object * VuoInputEditorWithDialog::show(QPoint portLeftCenter, json_object 
 	// Position the right center of the dialog at the left center of the port.
 	QPoint dialogTopLeft = portLeftCenter - QPoint(dialog.width() - (showArrow ? 0 : margin.right()), dialog.height()/2.);
 	dialog.move(dialogTopLeft);
+
 
 	dialog.show();  // Needed to position the dialog. (https://bugreports.qt-project.org/browse/QTBUG-31406)
 	dialog.exec();
