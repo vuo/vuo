@@ -1,4 +1,5 @@
 ![](https://tokei.rs/b1/github/vuo/vuo) ![](https://tokei.rs/b1/github/vuo/vuo?category=comments)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ca246f89ad984204a5ba66698c9b3228)](https://www.codacy.com/app/smokris/vuo?utm_source=github.com&utm_medium=referral&utm_content=vuo/vuo&utm_campaign=badger)
 
 These instructions are for building Vuo Base, Vuo Compiler, Vuo Renderer, Vuo Runtime, and the built-in Vuo Nodes and Types from source code.
 
