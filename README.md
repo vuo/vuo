@@ -15,6 +15,8 @@ You ***do not*** need to build Vuo from source if you want to:
 
 # Building Vuo on Mac OS X
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ca246f89ad984204a5ba66698c9b3228)](https://www.codacy.com/app/smokris/vuo?utm_source=github.com&utm_medium=referral&utm_content=vuo/vuo&utm_campaign=badger)
+
 
 ## Install required dependencies
 
