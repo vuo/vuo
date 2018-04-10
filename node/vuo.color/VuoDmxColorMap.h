@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODMXCOLORMAP_H
-#define VUODMXCOLORMAP_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoDmxColorMap;
@@ -56,4 +55,3 @@ void VuoDmxColorMap_release(VuoDmxColorMap value);
  * @}
  */
 
-#endif // VUODMXCOLORMAP_H

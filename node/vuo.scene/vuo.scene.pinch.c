@@ -79,7 +79,7 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoSceneObject) object,
 		VuoInputData(VuoReal, {"default":0.5,"suggestedMin":-1.0,"suggestedMax":1.0,"suggestedStep":0.1}) amount,
-		VuoInputData(VuoPoint3d, {"default":{"x":0,"y":0,"z":0},"suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
+		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMin":{"x":-1.0,"y":-1.0,"z":-1.0}, "suggestedMax":{"x":1.0,"y":1.0,"z":1.0}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
 		VuoOutputData(VuoSceneObject) pinchedObject
 )
 {

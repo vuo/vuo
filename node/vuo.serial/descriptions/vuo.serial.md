@@ -26,7 +26,7 @@ If you're not sure whether Vuo is detecting your serial device:
 If Vuo isn't detecting your device:
 
    - Make sure your composition is referring to the correct device. (Sometimes two devices of the same model can have different names and URLs.)
-   - Make sure you've installed any necessary drivers for the device. (On Mac OS 10.8 and earlier, you may need to install [FTDI's VCP driver](http://www.ftdichip.com/Drivers/VCP.htm).)
+   - Make sure you've installed any necessary drivers for the device. (On macOS 10.8 and earlier, you may need to install [FTDI's VCP driver](http://www.ftdichip.com/Drivers/VCP.htm).)
    - Make sure the device is securely plugged in.
    - Try plugging the device into a different port on your computer.
 

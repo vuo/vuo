@@ -5,6 +5,7 @@ TARGET = widget
 include(../../../vuo.pri)
 
 SOURCES += \
+	dummy.mm \
 	VuoDialogForInputEditor.cc \
 	VuoInputEditor.cc \
 	VuoInputEditorWithEnumMenu.cc \

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOIMAGE_H
-#define VUOIMAGE_H
+#pragma once
 
 #ifndef DISPATCH_RETURNS_RETAINED_BLOCK
 	/// Disable DISPATCH_RETURNS_RETAINED_BLOCK, which emits warnings on Mac OS 10.10.
@@ -62,6 +61,7 @@ struct _VuoImage
 	// Common
 	unsigned long int pixelsWide; ///< The horizontal size of the image, in pixels.
 	unsigned long int pixelsHigh; ///< The vertical size of the image, in pixels.
+	float scaleFactor;            ///< Number of linear pixels per point in this image.  scaleFactor=1 for @1x images, 2 for @2x (Retina) images.
 
 	void *freeCallbackContext;	///< User data for @c freeCallback.  See @ref VuoImage_makeClientOwned.
 
@@ -79,8 +79,9 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
 VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsigned int pixelsHigh);
 VuoImage VuoImage_makeCopy(VuoImage image, bool flip);
 VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image);
-VuoImage VuoImage_makeFromContextFramebuffer(VuoGlContext context);
 const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFormat);
+
+VuoImageWrapMode VuoImage_getWrapMode(VuoImage image);
 void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode);
 
 VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal filterOpacity);
@@ -113,5 +114,3 @@ void VuoImage_release(VuoImage value);
 /**
  * @}
  */
-
-#endif

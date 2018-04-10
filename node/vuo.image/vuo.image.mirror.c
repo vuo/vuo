@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					  "title" : "Mirror Image",
 					  "keywords" : [ "reflect", "flip", "rotate", "horizontal", "vertical", "filter" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "MirrorMovie.vuo" ]
 					  }
@@ -87,7 +87,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*reflectedImage = NULL;
 		return;
+	}
 
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture",             image);
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "reflectHorizontally", horizontalReflection != VuoHorizontalReflection_None);

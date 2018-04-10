@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERGENERICTYPE_HH
-#define VUOCOMPILERGENERICTYPE_HH
+#pragma once
 
 #include "VuoCompilerType.hh"
 
@@ -36,5 +35,3 @@ private:
 
 	static const string defaultBackingTypeName;
 };
-
-#endif

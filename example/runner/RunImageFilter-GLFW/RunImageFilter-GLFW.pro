@@ -1,5 +1,6 @@
 TEMPLATE = app
 CONFIG -= qt
+include(../../vuo-macosx-sdk.pri)
 cache()
 
 SOURCES += \
@@ -14,12 +15,14 @@ QMAKE_CXX = $$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/llvm.framework/Helpers
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
 QMAKE_LINK = $$QMAKE_CXX
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
+QMAKE_CXXFLAGS -= -stdlib=libc++
 QMAKE_CXXFLAGS += -F $$VUO_FRAMEWORK_PATH -DEXAMPLE_PATH=\\\"$$system(pwd)\\\"
-QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.7 -Xlinker -no_function_starts -Xlinker -no_version_load_command \
+QMAKE_LFLAGS -= -stdlib=libc++
+QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.8 -Xlinker -no_function_starts -Xlinker -no_version_load_command \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoHeap.dylib \
 	$$VUO_FRAMEWORK_PATH/Vuo.framework/Modules/libVuoGlContext.dylib
 
-QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH
+QMAKE_RPATHDIR = ../../../$$VUO_FRAMEWORK_PATH
 QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
 
 QMAKE_CLEAN = -r $${TARGET}.app

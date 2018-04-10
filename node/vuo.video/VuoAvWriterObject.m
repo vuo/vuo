@@ -52,7 +52,8 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 @property long audio_sample_position;  ///< The current frame of audio being written.  Increases by sampleCount for each audioSample array fed in.
 
 @property (retain) NSDate* startDate;  ///< The time and date that the first frame was written.
-@property CMTime lastTimestamp;				///< Last time-stamp relative to start (curTime - firstTimestamp)
+@property CMTime lastImageTimestamp;	///< Last image timestamp written to the movie file
+@property CMTime lastAudioTimestamp;	///< Last audio timestamp written to the movie file
 
 @property int originalChannelCount;  ///< How many audio channels are received in `appendAudio`.  Cannot change once writing has commenced.
 @property int originalWidth;	///< The width of image this movie will write.  Cannot change once writing has commenced.
@@ -71,7 +72,8 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 {
 	NSError *error = nil;
 
-	self.lastTimestamp = kCMTimeNegativeInfinity;
+	self.lastImageTimestamp = kCMTimeNegativeInfinity;
+	self.lastAudioTimestamp = kCMTimeNegativeInfinity;
 
 	self.originalWidth = width;
 	self.originalHeight = height;
@@ -103,6 +105,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	// allocate the writer object with our output file URL
 	self.assetWriter = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:AVFileTypeQuickTimeMovie error:&error];
+	_assetWriter.movieFragmentInterval = CMTimeMake(TIMEBASE*10, TIMEBASE);
 
 	if (error) {
 		VUserLog("AVAssetWriter initWithURL failed with error %s", [[error localizedDescription] UTF8String]);
@@ -311,10 +314,10 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 
 	CMTime presentationTime = CMTimeMakeWithSeconds(timestamp, TIMEBASE);
 
-	while (CMTimeCompare(presentationTime, self.lastTimestamp) <= 0)
+	while (CMTimeCompare(presentationTime, self.lastImageTimestamp) <= 0)
 		presentationTime.value++;
 
-	self.lastTimestamp = presentationTime;
+	self.lastImageTimestamp = presentationTime;
 
 //	VLog("video time: %lld %f  pts: %f  ts=%g", presentationTime.value, [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime),timestamp);
 
@@ -414,10 +417,10 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	// CMTime timestamp = CMTimeMake(self.audio_sample_position, VuoAudioSamples_sampleRate);
 	// self.audio_sample_position += sampleCount;
 
-	while (CMTimeCompare(presentationTime, self.lastTimestamp) <= 0)
+	while (CMTimeCompare(presentationTime, self.lastAudioTimestamp) <= 0)
 		presentationTime.value++;
 
-	self.lastTimestamp = presentationTime;
+	self.lastAudioTimestamp = presentationTime;
 
 //	VLog("audio time: %lld %f  pts: %f  ts=%g", presentationTime.value, [[NSDate date] timeIntervalSinceDate:self.startDate], CMTimeGetSeconds(presentationTime),timestamp);
 

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORMENUITEM_HH
-#define VUOINPUTEDITORMENUITEM_HH
+#pragma once
 
 #include <QtGui/QIcon>
 
@@ -106,6 +105,3 @@ private:
 	bool isSeparator;
 	bool isEnabled;
 };
-
-#endif // VUOINPUTEDITORMENUITEM_CC
-

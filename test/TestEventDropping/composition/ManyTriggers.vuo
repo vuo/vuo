@@ -1,0 +1,62 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,45" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically10 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,585" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically12 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,45" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically14 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,105" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically15 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,165" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically16 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,585" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically17 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,225" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically18 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,285" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically19 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,345" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically2 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,105" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically20 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,405" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically21 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,465" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically22 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="255,525" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically23 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,225" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically24 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,45" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically26 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,585" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically27 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,345" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically28 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,405" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically29 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,465" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically3 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,165" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically30 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,525" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically31 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,165" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically32 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,285" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically33 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="465,105" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically34 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,105" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically36 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,405" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically37 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,465" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically38 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,525" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically39 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,165" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically4 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,225" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically40 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,585" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically41 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,345" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically42 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,285" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically43 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,45" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically44 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="675,225" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically45 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,285" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically46 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,225" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically47 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,45" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically48 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,525" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically49 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,165" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically5 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,285" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically50 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,585" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically51 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,345" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically52 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,105" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically54 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,405" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically55 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="885,465" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically6 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,345" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically7 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,405" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically8 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,465" _seconds="0.001" _fired_eventThrottling="drop"];
+FirePeriodically9 [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="45,525" _seconds="0.001" _fired_eventThrottling="drop"];
+}

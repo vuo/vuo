@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERGRAPHVIZPARSER_H
-#define VUOCOMPILERGRAPHVIZPARSER_H
+#pragma once
 
 class VuoCable;
 class VuoNode;
@@ -73,5 +72,3 @@ public:
 	string getDescription(void);
 	string getCopyright(void);
 };
-
-#endif

@@ -5,13 +5,16 @@ include(../../vuo.pri)
 
 NODE_SOURCES += \
 	vuo.time.after.timeOfDay.c \
+	vuo.time.allowPeriodic.c \
 	vuo.time.before.timeOfDay.c \
 	vuo.time.bpm.seconds.c \
+	vuo.time.changeSpeed.c \
 	vuo.time.elapsed.c \
 	vuo.time.equal.dateTime.c \
 	vuo.time.equal.timeOfDay.c \
 	vuo.time.fetch.c \
 	vuo.time.firePeriodically.c \
+	vuo.time.firePeriodically2.c \
 	vuo.time.format.c \
 	vuo.time.get.c \
 	vuo.time.make.c \

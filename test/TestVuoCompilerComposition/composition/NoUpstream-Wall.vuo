@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Divide [type="vuo.math.divide.VuoReal" version="2.0.0" label="Divide|<refresh>refresh\l|<a>a\l|<b>b\l|<quotient>quotient\r" pos="300,315" _b="10"];
+HoldValue2 [type="vuo.data.hold.VuoReal" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="135,285"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="439,161"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="480,135" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RippleImage [type="vuo.image.ripple" version="2.1.0" label="Ripple Image|<refresh>refresh\l|<image>image\l|<angle>angle\l|<amplitude>amplitude\l|<wavelength>wavelength\l|<phase>phase\l|<rippledImage>rippledImage\r" pos="510,300" _amplitude="0.1" _wavelength="0.05" _phase="0.0"];
+
+Divide:quotient -> RippleImage:angle;
+HoldValue2:heldValue -> Divide:a;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+RenderImageToWindow:requestedFrame -> HoldValue2:newValue;
+RippleImage:rippledImage -> RenderImageToWindow:image;
+}

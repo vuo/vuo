@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERCONSTANTSTRINGCACHE_H
-#define VUOCOMPILERCONSTANTSTRINGCACHE_H
+#pragma once
 
 /**
  * A cache of LLVM constant values generated for a module. Reduces the number of constants in generated bitcode.
@@ -22,5 +21,3 @@ public:
 private:
 	map<string, Constant *> constantStrings;
 };
-
-#endif

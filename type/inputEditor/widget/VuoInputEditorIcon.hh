@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORICON_HH
-#define VUOINPUTEDITORICON_HH
+#pragma once
 
 #include <QtGui/QIcon>
 
@@ -32,6 +31,9 @@ public:
 		p.setRenderHint(QPainter::Antialiasing);
 		render(p);
 
+		// https://b33p.net/kosada/node/12462
+		px->setDevicePixelRatio(1);
+
 		return px;
 	}
 
@@ -47,5 +49,3 @@ public:
 		return icon;
 	}
 };
-
-#endif

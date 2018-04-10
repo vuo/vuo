@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINTEGER_H
-#define VUOINTEGER_H
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -158,5 +157,3 @@ void VuoInteger_release(VuoInteger value);
 /**
  * @}
  */
-
-#endif

@@ -7,9 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLAYER_H
-#define VUOLAYER_H
+#pragma once
 
+#include "VuoAnchor.h"
 #include "VuoColor.h"
 #include "VuoPoint2d.h"
 #include "VuoSceneObject.h"
@@ -39,11 +39,13 @@ typedef struct VuoLayer
 
 VuoLayer VuoLayer_makeEmpty(void);
 VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transform);
+VuoList_VuoLayer VuoLayer_getChildLayers(VuoLayer layer);
 
 VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha);
+VuoLayer VuoLayer_makeWithTransform(VuoText name, VuoImage image, VuoTransform2d transform, VuoReal alpha);
 VuoLayer VuoLayer_makeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance);
-VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha);
-VuoLayer VuoLayer_makeRealSizeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance);
+VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoBoolean preservePhysicalSize);
+VuoLayer VuoLayer_makeRealSizeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoBoolean preservePhysicalSize, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance);
 
 VuoLayer VuoLayer_makeColor(VuoText name, VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height);
 VuoLayer VuoLayer_makeOval(VuoText name, VuoColor color, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal sharpness);
@@ -53,6 +55,7 @@ VuoLayer VuoLayer_makeLinearGradient(VuoText name, VuoList_VuoColor colors, VuoP
 VuoLayer VuoLayer_makeRadialGradient(VuoText name, VuoList_VuoColor colors, VuoPoint2d gradientCenter, VuoReal radius, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal noiseAmount);
 
 VuoRectangle VuoLayer_getBoundingRectangle(VuoLayer layer, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor);
+VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor);
 
 bool VuoLayer_isPopulated(VuoLayer layer);
 
@@ -73,5 +76,3 @@ void VuoLayer_release(VuoLayer value);
 /**
  * @}
  */
-
-#endif

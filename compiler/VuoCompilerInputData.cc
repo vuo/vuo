@@ -17,7 +17,9 @@
 VuoCompilerInputData::VuoCompilerInputData(VuoCompilerInputDataClass *dataClass) :
 	VuoCompilerData(dataClass)
 {
-	setInitialValue( dataClass->getDefaultValue() );
+	setInitialValue( dataClass->getAutoSupersedesDefaultValue()?
+						 dataClass->getAutoValue() :
+						 dataClass->getDefaultValue() );
 }
 
 /**

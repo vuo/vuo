@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOKEY_H
-#define VUOKEY_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoKey_struct { void *l; } * VuoList_VuoKey;
@@ -168,5 +167,3 @@ char * VuoKey_getString(const VuoKey value);
 /**
  * @}
 */
-
-#endif

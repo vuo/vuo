@@ -1,4 +1,4 @@
-Save an image to a file.
+Saves an image to a file.
 
 When an image is sent to the `Save Image` port, it is saved to the file path specified by a `URL`.
 

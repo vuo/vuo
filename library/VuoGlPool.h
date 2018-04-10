@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOGLPOOL_H
-#define VUOGLPOOL_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C"
@@ -61,11 +60,16 @@ void VuoGlTexture_retain(GLuint glTextureName, VuoImage_freeCallback freeCallbac
 void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned short height, GLuint glTextureName, GLuint glTextureTarget);
 void VuoGlTexture_disown(GLuint glTextureName);
 
-typedef void * VuoIoSurface;	///< A Mac OS X IOSurface.
+typedef void * VuoIoSurface;	///< A container for a Mac OS X IOSurface.
 VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, GLuint *outputTexture);
-uint32_t VuoIoSurfacePool_getId(VuoIoSurface ioSurface);
-void VuoIoSurfacePool_disuse(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, VuoIoSurface ioSurface, GLuint texture);
-void VuoIoSurfacePool_signal(VuoIoSurface ioSurface);
+uint32_t VuoIoSurfacePool_getId(VuoIoSurface vis);
+void *VuoIoSurfacePool_getIOSurfaceRef(VuoIoSurface vis);
+unsigned short VuoIoSurfacePool_getWidth(VuoIoSurface vis);
+unsigned short VuoIoSurfacePool_getHeight(VuoIoSurface vis);
+GLuint VuoIoSurfacePool_getTexture(VuoIoSurface vis);
+void VuoIoSurfacePool_disuse(VuoIoSurface vis);
+
+void VuoIoSurfacePool_signal(void *ioSurface);
 
 GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source);
 
@@ -86,8 +90,8 @@ void VuoGlProgram_unlock(GLuint programName);
 
 char *VuoGl_stringForConstant(GLenum constant);
 
+extern dispatch_semaphore_t VuoGlSemaphore;
+
 #ifdef __cplusplus
 }
-#endif
-
 #endif

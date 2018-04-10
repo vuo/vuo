@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Displays an image URL and, meanwhile, downloads the image and displays it when available.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="735,195" _horizontalAlignment="\"center\"" _horizontalMargin="0.0" _verticalAlignment="\"center\"" _verticalMargin="0.0"];
+AlignLayerToWindow2 [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="735,45" _horizontalAlignment="\"center\"" _horizontalMargin="0.0" _verticalAlignment="\"top\"" _verticalMargin="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-165,0" fillcolor="yellow" _started_eventThrottling="enqueue"];
+GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="315,225"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="972,101" fillcolor="green"];
+MakeList6 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="992,116" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="525,210" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="1" _opacity="1.0"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="540,60" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1020,90" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-15,60" _value="\"http:\\/\\/vuo.org\\/sites\\/all\\/themes\\/vuo_theme\\/logo.png\""];
+SpinOffValue2 [type="vuo.event.spinOffValue.VuoText" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="135,225" fillcolor="violet" _spunOff_eventThrottling="enqueue"];
+
+AlignLayerToWindow2:alignedLayer -> MakeList2:1;
+AlignLayerToWindow:alignedLayer -> MakeList2:2;
+FireOnStart:started -> ShareValue2:refresh;
+GetImage:image -> MakeScaledLayer:image;
+MakeList2:list -> RenderLayersToWindow:layers;
+MakeList6:list -> RenderLayersToWindow:setWindowProperties;
+MakeScaledLayer:layer -> AlignLayerToWindow:layer;
+MakeTextLayer:layer -> AlignLayerToWindow2:layer;
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow2:window [style=invis];
+RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window [style=invis];
+ShareValue2:sameValue -> MakeTextLayer:text;
+ShareValue2:sameValue -> SpinOffValue2:value;
+SpinOffValue2:spunOff -> GetImage:url;
+}

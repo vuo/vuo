@@ -12,6 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Make Dictionary",
+					  "description": "Creates a dictionary from a list of keys and values.",
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
 					  "node": {

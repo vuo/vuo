@@ -60,6 +60,10 @@ VuoAudioBins VuoAudioBins_makeFromJson(json_object *js)
 		value = VuoAudioBins_1023;
 	else if (!strcmp(valueAsString, "2047"))
 		value = VuoAudioBins_2047;
+	else if (!strcmp(valueAsString, "4095"))
+		value = VuoAudioBins_4095;
+	else if (!strcmp(valueAsString, "8191"))
+		value = VuoAudioBins_8191;
 
 	return value;
 }
@@ -104,6 +108,12 @@ json_object * VuoAudioBins_getJson(const VuoAudioBins value)
 		case VuoAudioBins_2047:
 			valueAsString = "2047";
 			break;
+		case VuoAudioBins_4095:
+			valueAsString = "4095";
+			break;
+		case VuoAudioBins_8191:
+			valueAsString = "8191";
+			break;
 	}
 
 	return json_object_new_string(valueAsString);
@@ -126,6 +136,8 @@ VuoList_VuoAudioBins VuoAudioBins_getAllowedValues(void)
 	VuoListAppendValue_VuoAudioBins(l, VuoAudioBins_511);
 	VuoListAppendValue_VuoAudioBins(l, VuoAudioBins_1023);
 	VuoListAppendValue_VuoAudioBins(l, VuoAudioBins_2047);
+	VuoListAppendValue_VuoAudioBins(l, VuoAudioBins_4095);
+	VuoListAppendValue_VuoAudioBins(l, VuoAudioBins_8191);
 
 	return l;
 }
@@ -168,6 +180,12 @@ char * VuoAudioBins_getSummary(const VuoAudioBins value)
 			break;
 		case VuoAudioBins_2047:
 			valueAsString = "2047";
+			break;
+		case VuoAudioBins_4095:
+			valueAsString = "4095";
+			break;
+		case VuoAudioBins_8191:
+			valueAsString = "8191";
 			break;
 	}
 

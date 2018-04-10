@@ -11,7 +11,7 @@
 #include "VuoLayer.h"
 
 VuoModuleMetadata({
-					 "title" : "Copy Layer",
+					 "title" : "Copy Layer (TRS)",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate" ],
 					 "version" : "2.0.1",
 					 "node": {
@@ -42,8 +42,7 @@ void nodeEvent
 		return;
 	}
 
-	unsigned int len = t;
-	if(len < r || len < s) len = r > s ? r : s;
+	unsigned int len = MAX(t, MAX(r, s));
 
 	VuoList_VuoLayer layers = VuoListCreate_VuoLayer();
 

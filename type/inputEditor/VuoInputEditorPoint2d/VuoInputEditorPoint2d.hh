@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORPOINT2D_HH
-#define VUOINPUTEDITORPOINT2D_HH
+#pragma once
 
 #include "VuoInputEditorWithDialog.hh"
 #include "VuoDoubleSpinbox.hh"
@@ -89,4 +88,3 @@ private slots:
 	void emitValueChanged();
 };
 
-#endif // VUOINPUTEDITORPOINT2D_HH

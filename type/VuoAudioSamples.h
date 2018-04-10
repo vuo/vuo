@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOAUDIOSAMPLES_H
-#define VUOAUDIOSAMPLES_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -58,5 +57,4 @@ void VuoAudioSamples_release(VuoAudioSamples value);
  * @}
  */
 
-#endif // VUOAUDIOSAMPLES_H
 

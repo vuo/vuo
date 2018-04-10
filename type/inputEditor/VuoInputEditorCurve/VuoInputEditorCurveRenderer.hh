@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORCURVERENDERER_HH
-#define VUOINPUTEDITORCURVERENDERER_HH
+#pragma once
 
 #include "VuoInputEditorIcon.hh"
 
@@ -142,4 +141,3 @@ static QIcon *renderMenuIconWithSizingMode(VuoSizingMode sizingMode)
 
 #pragma clang diagnostic pop
 
-#endif // VUOINPUTEDITORCURVERENDERER_HH

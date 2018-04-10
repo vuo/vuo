@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMIDICONTROLLER_H
-#define VUOMIDICONTROLLER_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -60,5 +59,3 @@ char * VuoMidiController_getString(const VuoMidiController value);
 /**
  * @}
  */
-
-#endif

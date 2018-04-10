@@ -18,7 +18,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Icosphere",
 					  "keywords" : [ "mesh", "3d", "scene", "sphere", "soccer", "shape", "ball", "futbol", "football" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -210,19 +210,9 @@ void nodeEvent
 		elements[i+2] = i+2;
 	}
 
-	// build the mesh!
-	VuoSubmesh submesh;
-
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.elements = elements;
-	submesh.normals = normals;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
-	submesh.elementCount = vertexCount;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-	submesh.faceCullingMode = GL_BACK;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, normals, NULL, NULL, textures,
+													vertexCount, elements, VuoMesh_IndividualTriangles);
 
 	VuoPoint2d min, max;
 
@@ -263,18 +253,17 @@ void nodeEvent
 		max.y = fmax(max.y, textures[i].y);
 	}
 
-	VuoPoint2d scale = { 1 / (max.x - min.x), 1 / (max.y - min.y) };
+	// let uvs roam free
+	// https://b33p.net/kosada/node/12372#comment-53659
+	// VuoPoint2d scale = { 1 / (max.x - min.x), 1 / (max.y - min.y) };
+	// for(int i = 0; i < submesh.vertexCount; i++)
+	// {
+	// 	textures[i].x -= min.x;
+	// 	textures[i].y -= min.y;
+	// 	textures[i].x *= scale.x;
+	// 	textures[i].y *= scale.y;
+	// }
 
-	for(int i = 0; i < submesh.vertexCount; i++)
-	{
-		textures[i].x -= min.x;
-		textures[i].y -= min.y;
-		textures[i].x *= scale.x;
-		textures[i].y *= scale.y;
-	}
-
-
-	submesh.textureCoordinates = textures;
 	VuoMeshUtility_calculateTangents(&submesh);
 
 	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
@@ -283,4 +272,5 @@ void nodeEvent
 	VuoTransform t2 = VuoTransform_composite(VuoTransform_makeEuler((VuoPoint3d){0,0,0}, (VuoPoint3d){0,-PI/2,0}, (VuoPoint3d){1,1,1}), transform);
 
 	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), t2, NULL);
+	object->name = VuoText_make("Icosphere");
 }

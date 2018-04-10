@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Get Audio Input Values",
 					  "keywords" : [ "sound", "input", "microphone", "music", "listen", "device" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -24,10 +24,12 @@ void nodeEvent
 		VuoInputData(VuoAudioInputDevice) device,
 		VuoOutputData(VuoInteger, {"name":"ID"}) id,
 		VuoOutputData(VuoText) name,
+		VuoOutputData(VuoText) modelCode,
 		VuoOutputData(VuoInteger) channelCount
 )
 {
 	*id = device.id;
 	*name = device.name;
+	*modelCode = device.modelUid;
 	*channelCount = device.channelCount;
 }

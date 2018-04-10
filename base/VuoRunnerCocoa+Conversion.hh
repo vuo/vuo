@@ -7,10 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
-#if defined(__OBJC__) || defined(DOXYGEN)
+#pragma once
 
-#ifndef VUORUNNERCOCOACONVERSION_H
-#define VUORUNNERCOCOACONVERSION_H
+#if defined(__OBJC__) || defined(DOXYGEN)
 
 #include <string>
 using namespace std;
@@ -92,7 +91,5 @@ extern "C" {
 @interface NSArray (VuoRunnerCocoaConversion)
 - (json_object *)vuoValue;
 @end
-
-#endif // VUORUNNERCOCOACONVERSION_H
 
 #endif // defined(__OBJC__) || defined(DOXYGEN)

@@ -14,7 +14,9 @@
 #undef slots
 #endif
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <AppKit/AppKit.h>
 #include <objc/runtime.h>
 

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOEDGEBLEND_H
-#define VUOEDGEBLEND_H
+#pragma once
 
 /**
  * Apply a crop, fade and gamma curve to an edge.
@@ -43,5 +42,3 @@ char * VuoEdgeBlend_getString(const VuoEdgeBlend value);
 void VuoEdgeBlend_retain(VuoEdgeBlend value);
 void VuoEdgeBlend_release(VuoEdgeBlend value);
 ///@}
-
-#endif

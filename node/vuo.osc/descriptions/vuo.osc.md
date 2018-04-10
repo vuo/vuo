@@ -23,4 +23,19 @@ The **address** is a piece of text beginning with `/`. Often, it looks like a fi
 
 Each **data value** is a simple piece of information (integer, real, boolean, or text). For example, a data value of 0.3 accompanying the address `/1/fader` could indicate that a fader control has been set to position 0.3. 
 
-These nodes are based on the [OSC 1.0 specification](http://opensoundcontrol.org/spec-1_0). When receiving OSC values, the following type tags are supported: nil (`N`), true (`T`), false (`F`), float32 (`f`), float64/double (`d`), int32 (`i`), int64 (`h`), and OSC-string (`s`).
+These nodes are based on the [OSC 1.0 specification](http://opensoundcontrol.org/spec-1_0).
+
+### Data types
+
+When receiving OSC values, the following type tags are supported: nil (`N`), true (`T`), false (`F`), float32 (`f`), float64/double (`d`), int32 (`i`), int64 (`h`), and OSC-string (`s`).
+
+When sending OSC values, the same data types, except nil, are supported.  When you use a `Make Message` node, Vuo chooses the OSC data type based on each generic `Data` port's specialized type, and the value of the corresponding `Type` port.  When the `Type` port is set to `(auto)`, Vuo uses the following mappings:
+
+Vuo Type | OSC Data Type
+-------- | -------------
+Boolean  | true (`T`) or false (`F`)
+Integer  | int64 (`h`)
+Real     | float64/double (`d`)
+Text     | OSC-string (`s`)
+
+That is, Vuo sends 64-bit integer and real values by default.  To send 32-bit values, change the `Type` port to `Integer (32-bit)` or `Floating point (32-bit)` and specialize the `Data` port to `Integer` or `Real` accordingly.

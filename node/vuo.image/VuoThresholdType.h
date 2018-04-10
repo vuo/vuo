@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTHRESHOLDTYPE_H
-#define VUOTHRESHOLDTYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoThresholdType_struct { void *l; } * VuoList_VuoThresholdType;
@@ -50,5 +49,3 @@ char * VuoThresholdType_getString(const VuoThresholdType value);
 /**
  * @}
 */
-
-#endif

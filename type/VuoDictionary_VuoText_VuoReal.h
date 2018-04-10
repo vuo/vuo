@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODICTIONARY_VUOTEXT_VUOREAL_H
-#define VUODICTIONARY_VUOTEXT_VUOREAL_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -57,5 +56,3 @@ void VuoDictionary_VuoText_VuoReal_release(VuoDictionary_VuoText_VuoReal value);
 /**
  * @}
  */
-
-#endif

@@ -55,15 +55,15 @@ static void VuoPoint4d_getGradientRange(VuoPoint4d *start, VuoPoint4d *end)
 void nodeEvent
 (
 	VuoInputData(VuoGenericType1, {"default":{"x":0,"y":0,"z":0,"w":0}}) position,
-	VuoInputData(VuoGradientNoise, {"default":"perlin"}) gradientNoise,
+	VuoInputData(VuoGradientNoise, {"default":"rectangular"}) gradientNoise,
 	VuoInputData(VuoGenericType2, {"defaults":{"VuoReal":-1., "VuoPoint2d":{"x":-1.,"y":-1.}, "VuoPoint3d":{"x":-1.,"y":-1.,"z":-1.}, "VuoPoint4d":{"x":-1.,"y":-1.,"z":-1.,"w":-1.}}}) scaledStart,
 	VuoInputData(VuoGenericType2, {"defaults":{"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":1.}, "VuoPoint4d":{"x":1.,"y":1.,"z":1.,"w":1.}}}) scaledEnd,
 	VuoOutputData(VuoGenericType2) value
 )
 {
-	if (gradientNoise == VuoGradientNoise_Perlin)
+	if (gradientNoise == VuoGradientNoise_Rectangular)
 		*value = VuoGradientNoise_perlin_VuoGenericType1_VuoGenericType2(position);
-	else if (gradientNoise == VuoGradientNoise_Simplex)
+	else if (gradientNoise == VuoGradientNoise_Triangular)
 		*value = VuoGradientNoise_simplex_VuoGenericType1_VuoGenericType2(position);
 
 	VuoGenericType2 start, end;

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOAUDIOINPUTDEVICE_H
-#define VUOAUDIOINPUTDEVICE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -27,7 +26,8 @@
 typedef struct
 {
 	VuoInteger id;	///< If @c id is non-negative, use the specified device identifier.
-	VuoText name;	///< If @c id is negative, use the first device whose name contains @c name.
+	VuoText modelUid;	///< If `id` is negative, use the first device whose modelUid contains `modelUid`.
+	VuoText name;		///< If `id` is negative and `modelUid` is empty, use the first device whose name matches `name`.  This is a localized display name, so its value will differ depending on the currently-selected system language.
 
 	VuoInteger channelCount;	///< The number of input channels on this device.
 } VuoAudioInputDevice;
@@ -50,16 +50,14 @@ void VuoAudioInputDevice_release(VuoAudioInputDevice value);
 /**
  * Returns an audio input device with the specified values.
  */
-static inline VuoAudioInputDevice VuoAudioInputDevice_make(VuoInteger id, VuoText name, VuoInteger channelCount) __attribute__((const));
-static inline VuoAudioInputDevice VuoAudioInputDevice_make(VuoInteger id, VuoText name, VuoInteger channelCount)
+static inline VuoAudioInputDevice VuoAudioInputDevice_make(VuoInteger id, VuoText modelUid, VuoText name, VuoInteger channelCount) __attribute__((const));
+static inline VuoAudioInputDevice VuoAudioInputDevice_make(VuoInteger id, VuoText modelUid, VuoText name, VuoInteger channelCount)
 {
-	VuoAudioInputDevice aid = {id,name,channelCount};
-	return aid;
+	return (VuoAudioInputDevice){id, modelUid, name, channelCount};
 }
 
 /**
  * @}
  */
 
-#endif // VUOAUDIOINPUTDEVICE_H
 

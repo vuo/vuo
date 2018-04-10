@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOANCHOR_H
-#define VUOANCHOR_H
+#pragma once
 
 #include "VuoHorizontalAlignment.h"
 #include "VuoVerticalAlignment.h"
@@ -73,5 +72,4 @@ void VuoAnchor_release(VuoAnchor value);
  * @}
  */
 
-#endif // VuoAnchor_H
 

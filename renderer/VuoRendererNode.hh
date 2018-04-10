@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERNODE_HH
-#define VUORENDERERNODE_HH
+#pragma once
 
 #include "VuoRendererItem.hh"
 #include "VuoRendererPortList.hh"
@@ -167,4 +166,3 @@ private:
 	QPointF getPortPoint(VuoRendererPort *port, unsigned int portIndex) const;
 };
 
-#endif // VUORENDERERNODE_HH

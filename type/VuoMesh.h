@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMESH_H
-#define VUOMESH_H
+#pragma once
 
 #include "VuoPoint2d.h"
 #include "VuoPoint3d.h"
@@ -75,6 +74,7 @@ typedef struct
 	{
 		unsigned int combinedBuffer;
 		unsigned int combinedBufferSize;
+		unsigned int combinedBufferStride;	// Number of bytes per buffer entry.  If 0, the stride is calculated automatically based on sizeof(VuoPoint4d) multiplied by 1 (position) + the number of non-NULL offsets below.
 
 		void *normalOffset;
 		void *tangentOffset;
@@ -96,11 +96,15 @@ typedef struct _VuoMesh
 } *VuoMesh;
 
 VuoSubmesh VuoSubmesh_make(unsigned int vertexCount, unsigned int elementCount);
-VuoSubmesh VuoSubmesh_makeGl(unsigned int vertexCount, unsigned int combinedBuffer, unsigned int combinedBufferSize, void *normalOffset, void *tangentOffset, void *bitangentOffset, void *textureCoordinateOffset, unsigned int elementCount, unsigned int elementBuffer, unsigned int elementBufferSize, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
+VuoSubmesh VuoSubmesh_makeFromBuffers(unsigned int vertexCount,
+									  VuoPoint4d *positions, VuoPoint4d *normals, VuoPoint4d *tangents, VuoPoint4d *bitangents, VuoPoint4d *textureCoordinates,
+									  unsigned int elementCount, unsigned int *elements, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
+VuoSubmesh VuoSubmesh_makeGl(unsigned int vertexCount, unsigned int combinedBuffer, unsigned int combinedBufferSize, unsigned int combinedBufferStride, void *normalOffset, void *tangentOffset, void *bitangentOffset, void *textureCoordinateOffset, unsigned int elementCount, unsigned int elementBuffer, unsigned int elementBufferSize, VuoMesh_ElementAssemblyMethod elementAssemblyMethod);
 unsigned long VuoSubmesh_getGlMode(VuoSubmesh submesh);
 unsigned long VuoSubmesh_getSplitPrimitiveCount(VuoSubmesh submesh);
 unsigned long VuoSubmesh_getSplitVertexCount(VuoSubmesh submesh);
 unsigned long VuoSubmesh_getCompleteElementCount(const VuoSubmesh submesh);
+unsigned long VuoSubmesh_getStride(const VuoSubmesh submesh);
 
 VuoMesh VuoMesh_make(unsigned int itemCount);
 void VuoMesh_upload(VuoMesh mesh);
@@ -108,6 +112,7 @@ VuoMesh VuoMesh_makeFromSingleSubmesh(VuoSubmesh submesh);
 VuoMesh VuoMesh_makeQuad(void);
 VuoMesh VuoMesh_makeQuadWithoutNormals(void);
 VuoMesh VuoMesh_makeEquilateralTriangle(void);
+VuoMesh VuoMesh_makeCube(void);
 VuoMesh VuoMesh_make_VuoPoint2d(VuoList_VuoPoint2d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize);
 VuoMesh VuoMesh_make_VuoPoint3d(VuoList_VuoPoint3d positions, VuoMesh_ElementAssemblyMethod elementAssemblyMethod, VuoReal primitiveSize);
 
@@ -118,6 +123,7 @@ bool VuoMesh_isPopulated(const VuoMesh mesh);
 
 VuoMesh VuoMesh_makeFromJson(struct json_object * js);
 struct json_object * VuoMesh_getJson(const VuoMesh value);
+struct json_object * VuoMesh_getInterprocessJson(const VuoMesh value);
 char * VuoMesh_getSummary(const VuoMesh value);
 
 /**
@@ -149,5 +155,3 @@ void VuoMesh_release(const VuoMesh v);
 /**
  * @}
  */
-
-#endif

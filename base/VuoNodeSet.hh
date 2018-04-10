@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONODESET_HH
-#define VUONODESET_HH
+#pragma once
 
 #include "VuoFileUtilities.hh"
 
@@ -42,5 +41,3 @@ private:
 	string archivePath;  ///< The path of the archive file that contains this node set.
 	map<string, string> cachedDescriptions;  ///< Maps file names in the `descriptions` folder to file contents.
 };
-
-#endif

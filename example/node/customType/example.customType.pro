@@ -1,6 +1,7 @@
 TEMPLATE = lib
 CONFIG += plugin
 TARGET = ExampleLanguageInputEditor
+include(../../vuo-macosx-sdk.pri)
 cache()
 
 
@@ -115,6 +116,7 @@ HEADERS += \
 OTHER_FILES += \
 	ExampleLanguageInputEditor.json
 
+QMAKE_CXXFLAGS -= -stdlib=libc++
 QMAKE_CXXFLAGS += \
 	-F$$VUO_FRAMEWORK_PATH \
 	-F$$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks
@@ -128,7 +130,9 @@ LIBS += \
 	-framework QtCore \
 	-framework QtGui \
 	-framework QtWidgets
+QMAKE_LFLAGS -= -stdlib=libc++
 QMAKE_LFLAGS += -Wl,-no_function_starts -Wl,-no_version_load_command
+QMAKE_LFLAGS_RPATH =
 
 QMAKE_POST_LINK = \
 	install_name_tool -change "$$QT_ROOT/lib/QtCore.framework/Versions/$$QT_MAJOR_VERSION/QtCore" "@rpath/QtCore.framework/QtCore" lib$${TARGET}.dylib && \

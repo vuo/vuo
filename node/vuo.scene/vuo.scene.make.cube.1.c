@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					"title" : "Make Cube",
 					"keywords" : [ "3D", "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
-					"version" : "1.0.0",
+					"version" : "1.0.1",
 					"genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -32,5 +32,6 @@ void nodeEvent
 )
 {
 	VuoShader shader = VuoShader_make_VuoGenericType1(material);
-	*cube = VuoSceneObject_makeCube(transform, shader, shader, shader, shader, shader, shader);
+	*cube = VuoSceneObject_makeCube1(transform, shader);
+	cube->name = VuoText_make("Cube");
 }

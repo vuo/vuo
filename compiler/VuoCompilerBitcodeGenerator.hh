@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERBITCODEGENERATOR_H
-#define VUOCOMPILERBITCODEGENERATOR_H
+#pragma once
 
 #include "VuoCompilerConstantStringCache.hh"
 
@@ -40,9 +39,6 @@ private:
 	/// false if the extra code should not be generated since this composition will be used as a subcomposition.
 	bool isTopLevelComposition;
 
-	/// True if extra code should be generated so that this composition can used in live coding.
-	bool isLiveCodeable;
-
 	/// For subcompositions, the node class name. This is used as a unique prefix for function names.
 	string moduleKey;
 
@@ -64,6 +60,9 @@ private:
 
 	/// A topologically sorted list of the linear chains of nodes reachable from each trigger port.
 	map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > chainsForTrigger;
+
+	/// A topologically sorted list of the nodes reachable from each trigger port, plus the node containing the trigger port.
+	map<VuoCompilerTriggerPort *, vector<VuoCompilerNode *> > downstreamNodesForTrigger;
 
 	/// A standard order in which nodes must be waited on to avoid deadlock.
 	vector<VuoCompilerNode *> orderedNodes;
@@ -87,14 +86,14 @@ private:
 	map<VuoCompilerTriggerPort *, Function *> topLevelTriggerFunctions;
 
 	/// For top-level compositions only: the trigger scheduler function for each trigger on a node within a subcomposition.
-	map<string, map<VuoCompilerTriggerDescription *, Function *> > subcompositionTriggerFunctions;
+	map<string, map<size_t, map<VuoCompilerTriggerDescription *, Function *> > > subcompositionTriggerFunctions;
 
 	bool debugMode;
 
 	/// The key of the top-level composition when looking up node contexts.
 	static const string topLevelCompositionIdentifier;
 
-	VuoCompilerBitcodeGenerator(VuoCompilerComposition *composition, bool isTopLevelComposition, bool isLiveCodeable, string moduleKey, VuoCompiler *compiler);
+	VuoCompilerBitcodeGenerator(VuoCompilerComposition *composition, bool isTopLevelComposition, string moduleKey, VuoCompiler *compiler);
 	void makeOrderedNodes(void);
 	void sortNodes(vector<VuoCompilerNode *> &nodes);
 	static bool areNodeListsSortedBySize(const vector<VuoCompilerNode *> &nodes1, const vector<VuoCompilerNode *> &nodes2);
@@ -108,6 +107,9 @@ private:
 	void generateCompositionMetadata(void);
 	void generateCompositionContextInitFunction(bool isStatefulComposition);
 	void generateCompositionContextFiniFunction(void);
+	void generateCompositionCreateNodeContextFunction(void);
+	void generateCompositionDestroyNodeContextFunction(void);
+	void generateCompositionReleasePortDataFunction(void);
 	void generateSetInputDataFromNodeFunctionArguments(Function *function, BasicBlock *block, Value *compositionIdentifierValue, map<VuoPort *, size_t> indexOfParameter, bool shouldUpdateTriggers);
 	void generateNodeEventFunction(bool isStatefulComposition);
 	void generateNodeInstanceInitFunction(void);
@@ -142,8 +144,6 @@ private:
 	void generateSendOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *sentDataValue, Value *outputDataSummaryValue);
 	void generateSendPublishedOutputPortUpdated(BasicBlock *block, VuoCompilerPort *outputPort, Value *sentDataValue, Value *outputDataSummaryValue);
 	void generateSendEventDropped(BasicBlock *block, string portIdentifier);
-	void generateCompositionSerializeFunction(void);
-	void generateCompositionUnserializeFunction(void);
 	void generateAllocation(void);
 	void generateSetupFunction(void);
 	void generateCleanupFunction(void);
@@ -151,11 +151,10 @@ private:
 	void generateInstanceFiniFunction(bool isStatefulComposition);
 	void generateInstanceTriggerStartFunction(bool isStatefulComposition);
 	void generateInstanceTriggerStopFunction(bool isStatefulComposition);
-	void generateSerializeFunction(void);
-	void generateUnserializeFunction(void);
 	void generateTriggerFunctions(void);
-	Function * generateTriggerSchedulerFunction(VuoType *dataType, string compositionIdentifier, string nodeIdentifier,
-												string portIdentifier, int portContextIndex, bool canDropEvents, Function *workerFunction);
+	Function * generateTriggerSchedulerFunction(VuoType *dataType, string compositionIdentifier, size_t nodeIndex,
+												string portIdentifier, int portContextIndex, bool canDropEvents, bool isNodeEventForSubcomposition, int minThreadsNeeded, int maxThreadsNeeded, int chainCount,
+												Function *workerFunction);
 	Function * generateTriggerWorkerFunction(VuoCompilerTriggerPort *trigger);
 	void generateAndScheduleChainWorkerFunctions(BasicBlock *schedulerBlock, Value *contextValueInScheduler, const vector<VuoCompilerChain *> &chainsToSchedule, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
 												const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
@@ -173,11 +172,9 @@ private:
 
 public:
 	static VuoCompilerBitcodeGenerator * newBitcodeGeneratorFromComposition(VuoCompilerComposition *composition,
-																			bool isTopLevelComposition, bool isLiveCodeable,
+																			bool isTopLevelComposition,
 																			string moduleKey, VuoCompiler *compiler);
 	~VuoCompilerBitcodeGenerator(void);
 	Module * generateBitcode(void);
 	void setDebugMode(bool debugMode);
 };
-
-#endif

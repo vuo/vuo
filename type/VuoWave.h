@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOWAVE_H
-#define VUOWAVE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoWave_struct { void *l; } * VuoList_VuoWave;
@@ -50,5 +49,3 @@ void VuoWave_release(VuoWave value);
 /**
  * @}
 */
-
-#endif

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCABLE_HH
-#define VUOCABLE_HH
+#pragma once
 
 #include "VuoBase.hh"
 
@@ -41,5 +40,3 @@ private:
 	VuoNode * toNode;
 	VuoPort * toPort;
 };
-
-#endif // VUOCABLE_HH

@@ -1,0 +1,34 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="90,45" _seconds="0.001" _fired_eventThrottling="drop"];
+Passthru5 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,45"];
+Passthru510 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,585"];
+Passthru52 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,105"];
+Passthru53 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,165"];
+Passthru54 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,225"];
+Passthru55 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,285"];
+Passthru56 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,345"];
+Passthru57 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,465"];
+Passthru58 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,405"];
+Passthru59 [type="vuo.test.passthru5" version="" label="Passthru 5|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="315,525"];
+
+FirePeriodically:fired -> Passthru510:Value;
+FirePeriodically:fired -> Passthru52:Value;
+FirePeriodically:fired -> Passthru53:Value;
+FirePeriodically:fired -> Passthru54:Value;
+FirePeriodically:fired -> Passthru55:Value;
+FirePeriodically:fired -> Passthru56:Value;
+FirePeriodically:fired -> Passthru57:Value;
+FirePeriodically:fired -> Passthru58:Value;
+FirePeriodically:fired -> Passthru59:Value;
+FirePeriodically:fired -> Passthru5:Value;
+}

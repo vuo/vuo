@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLEAPPOINTABLETYPE_H
-#define VUOLEAPPOINTABLETYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoLeapPointableType_struct { void *l; } * VuoList_VuoLeapPointableType;
@@ -47,5 +46,3 @@ char * VuoLeapPointableType_getString(const VuoLeapPointableType value);
 /**
  * @}
 */
-
-#endif

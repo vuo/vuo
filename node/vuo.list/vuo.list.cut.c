@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Cut List",
 					 "keywords" : [ "part", "piece", "extract", "truncate", "trim", "sublist" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node" : {
 						  "exampleCompositions" : [ "SpliceSquares.vuo" ]
 					 }
@@ -26,6 +26,5 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) partialList
 )
 {
-	*partialList = VuoListCopy_VuoGenericType1(list);
-	VuoListCut_VuoGenericType1(*partialList, startPosition, itemCount);
+	*partialList = VuoListSubset_VuoGenericType1(list, startPosition, itemCount);
 }

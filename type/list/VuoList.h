@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef LIST_TYPE_H
-#define LIST_TYPE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -75,10 +74,14 @@ ELEMENT_TYPE *VuoListGetData_ELEMENT_TYPE(const LIST_TYPE list);
 /**
  * Changes the @ref ELEMENT_TYPE at @c index.
  * Index values start at 1.
- * If the list has no items, nothing is changed.
+ *
+ * If `expandListIfNeeded` is false: If the list has no items, nothing is changed.
  * Attempting to change an out-of-bounds index changes the first item in the list (if the index is 0), or last item in the list (if the index is greater than the list size).
+ *
+ * If `expandListIfNeeded` is true: If the list has less than `index` elements, it is expanded to accommodate the specified `index`.
+ * If `index` is 0, the list is resized to contain 1 item set to `value`.
  */
-void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index);
+void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index, bool expandListIfNeeded);
 
 /**
  * Inserts the `ELEMENT_TYPE` immediately before `index`.
@@ -135,9 +138,11 @@ void VuoListShuffle_ELEMENT_TYPE(LIST_TYPE list, const double chaos);
 void VuoListReverse_ELEMENT_TYPE(LIST_TYPE list);
 
 /**
- * Removes items from the list except those in the range specified by `startIndex` and `itemCount`.
+ * Returns a new list containing items from the original list in the range specified by `startIndex` and `itemCount`.
+ *
+ * Items in the new list are retained (not copied) from the original list.
  */
-void VuoListCut_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const unsigned long itemCount);
+LIST_TYPE VuoListSubset_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const unsigned long itemCount);
 
 /**
  * Removes the first value from @c list.
@@ -196,5 +201,3 @@ char * LIST_TYPE_getString(const LIST_TYPE value);
 /**
  * @}
  */
-
-#endif

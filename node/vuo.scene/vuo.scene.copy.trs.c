@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Copy 3D Object",
+					 "title" : "Copy 3D Object (TRS)",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
 					 "version" : "2.0.2",
 					 "node": {
@@ -39,10 +39,7 @@ void nodeEvent
 		return;
 	}
 
-	// I wonder what the most succinct way of writing this would be?
-	unsigned int len = t;
-	if(len < r || len < s)
-		len = r > s ? r : s;
+	unsigned int len = MAX(t, MAX(r, s));
 
 	*copies = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), VuoTransform_makeIdentity());
 

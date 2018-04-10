@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="285,90"];
+SelectEventOutput4 [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="90,165"];
+SelectOutput3 [type="vuo.select.out.boolean.VuoReal" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="75,45"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<timeEvent>timeEvent\r|<time>time\r|<speed>speed\r|<resetEvent>resetEvent\r|<reset>reset\r" _timeEvent_type="VuoBoolean" _timeEvent="false" _time_type="VuoReal" _speed_type="VuoReal" _speed_suggestedMin="-4" _speed_suggestedMax="4" _speed="1.0" _resetEvent_type="VuoBoolean" _resetEvent="false" _reset_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<changedTime>changedTime\l" _changedTime_type="VuoReal"];
+
+ChangeSpeed:changedTime -> PublishedOutputs:changedTime;
+PublishedInputs:reset -> SelectEventOutput4:in;
+PublishedInputs:resetEvent -> SelectEventOutput4:which;
+PublishedInputs:speed -> ChangeSpeed:speed;
+PublishedInputs:time -> SelectOutput3:in;
+PublishedInputs:timeEvent -> SelectOutput3:which;
+SelectEventOutput4:trueOption -> ChangeSpeed:reset;
+SelectOutput3:trueOption -> ChangeSpeed:time;
+}

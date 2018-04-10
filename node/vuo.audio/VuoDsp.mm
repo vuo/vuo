@@ -13,7 +13,9 @@ extern "C" {
 #include "VuoDsp.h"
 #include <Accelerate/Accelerate.h>
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <Cocoa/Cocoa.h>
 #undef NS_RETURNS_INNER_POINTER
 
@@ -41,7 +43,7 @@ VuoModuleMetadata({
 	float* _window;			///< Holds windowed real values from samples.
 }
 
-- (VuoReal *) frequenciesForSampleData:(float *) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count;
+- (VuoReal *) frequenciesForSampleData:(float *) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count newSumming:(bool)newSumming;
 - (id) initWithSize:(unsigned int)frameSize windowing:(VuoWindowing)windowMode;
 @end
 
@@ -97,7 +99,7 @@ VuoModuleMetadata({
 /**
  * ...
  */
-- (VuoReal *) frequenciesForSampleData:(float *) sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count
+- (VuoReal *)frequenciesForSampleData:(float *)sampleData numFrames:(int)frames mode:(VuoAudioBinAverageType)frequencyMode outputCount:(unsigned int *)count newSumming:(bool)newSumming
 {
 	VuoReal *freqChannel = (VuoReal *)malloc(sizeof(VuoReal) * frames/2);
 	// see vDSP_Library.pdf, page 20
@@ -123,7 +125,7 @@ VuoModuleMetadata({
 	vDSP_fft_zrip( _fftSetup, &lSplit, 1, log2f(_frameSize), kFFTDirection_Forward );
 
 	// scale by 1/2*n because vDSP_fft_zrip doesn't use the right scaling factors natively ("for better performances")
-	if(_window == NULL)
+	if(_window == NULL || newSumming)
 	{
 		// const float scale = 1.0f/(2.0f*(float)frames);
 		const float scale = 1.0f/frames;
@@ -136,19 +138,19 @@ VuoModuleMetadata({
 
 	// collapse split complex array into a real array.
 	// split[0] contains the DC, and the values we're interested in are split[1] to split[len/2] (since the rest are complex conjugates)
-	vDSP_zvabs( &lSplit, 1, _frequency, 1, frames/2 );
-
 	float *lFrequency = _frequency;
-	int n = 0;
+	vDSP_zvabs( &lSplit, 1, lFrequency, 1, frames/2 );
+
 	switch(frequencyMode)
 	{
 		case VuoAudioBinAverageType_None:	// Linear Raw
 		{
-			for( i=1; i<frames/2; ++i )
-			{
-				n++;
-				freqChannel[i-1] = lFrequency[i] * ((float)sqrtf(i)*2.f + 1.f);
-			}
+			if (newSumming)
+				for( i=1; i<frames/2; ++i )
+					freqChannel[i-1] = lFrequency[i];
+			else
+				for( i=1; i<frames/2; ++i )
+					freqChannel[i-1] = lFrequency[i] * ((float)sqrtf(i)*2.f + 1.f);
 			*count = frames/2 - 1;
 			break;
 		}
@@ -237,7 +239,7 @@ VuoDsp VuoDsp_make(unsigned int frameSize, VuoWindowing windowing)
 /**
  * Analyze the provided audio samples using the specified bin averaging method.  Returns the spectrum band as a double * array putting the size into spectrumSize.
  */
-VuoReal* VuoDsp_frequenciesForSamples(VuoDsp dspObject, VuoReal* audio, unsigned int sampleCount, VuoAudioBinAverageType binAveraging, unsigned int* spectrumSize)
+VuoReal* VuoDsp_frequenciesForSamples(VuoDsp dspObject, VuoReal* audio, unsigned int sampleCount, VuoAudioBinAverageType binAveraging, unsigned int* spectrumSize, bool newSumming)
 {
 	VuoDspObject* dsp = (VuoDspObject*)dspObject;
 
@@ -247,7 +249,7 @@ VuoReal* VuoDsp_frequenciesForSamples(VuoDsp dspObject, VuoReal* audio, unsigned
 	float* vals = (float*)malloc(sizeof(float)*sampleCount);
 	for(int i = 0; i < sampleCount; i++) vals[i] = (float)audio[i];
 
-	VuoReal *freq = [dsp frequenciesForSampleData:vals numFrames:sampleCount mode:binAveraging outputCount:spectrumSize];
+	VuoReal *freq = [dsp frequenciesForSampleData:vals numFrames:sampleCount mode:binAveraging outputCount:spectrumSize newSumming:newSumming];
 	free(vals);
 
 	return freq;

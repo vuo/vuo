@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTELEMETRY_H
-#define VUOTELEMETRY_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -564,6 +563,4 @@ void vuoMemoryBarrier(void);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

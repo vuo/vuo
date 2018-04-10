@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODISPERSION_H
-#define VUODISPERSION_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -44,4 +43,3 @@ void VuoDispersion_release(VuoDispersion value);
  * @}
  */
 
-#endif // VUODISPERSION_H

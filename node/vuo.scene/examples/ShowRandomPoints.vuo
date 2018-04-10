@@ -44,5 +44,6 @@ MakeUnlit3DObjectFromImage:object -> MakeList6:2;
 Multiply:product -> ConvertRealTo3DPoint:y;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
 RenderSceneToWindow:requestedFrame -> MakeList3:1 [style=invis];
+RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
 SummarizeValue:summary -> MakeList4:2;
 }

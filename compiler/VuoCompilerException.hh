@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILEREXCEPTION_HH
-#define VUOCOMPILEREXCEPTION_HH
+#pragma once
 
 class VuoCable;
 class VuoNode;
@@ -50,5 +49,3 @@ private:
 	vector<VuoCompilerError> errors;
 	string description;
 };
-
-#endif

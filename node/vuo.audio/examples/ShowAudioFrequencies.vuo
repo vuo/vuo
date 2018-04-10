@@ -9,8 +9,8 @@
 
 digraph G
 {
-CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft" version="1.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="105,330" fillcolor="violet" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
-CalculateAmplitudeForFrequencies2 [type="vuo.audio.analyze.fft" version="1.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="105,525" fillcolor="violet" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
+CalculateAmplitudeForFrequencies [type="vuo.audio.analyze.fft2" version="2.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="105,330" fillcolor="violet" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
+CalculateAmplitudeForFrequencies2 [type="vuo.audio.analyze.fft2" version="2.0.0" label="Calculate Amplitude for Frequencies|<refresh>refresh\l|<samples>samples\l|<frequencyBins>frequencyBins\l|<frequencyBinAveraging>frequencyBinAveraging\l|<amplitudes>amplitudes\r" pos="105,525" fillcolor="violet" _frequencyBins="\"2047\"" _frequencyBinAveraging="\"none\""];
 CountItemsInList2 [type="vuo.list.count.VuoReal" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="420,480"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="780,600" fillcolor="yellow" _started_eventThrottling="enqueue"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-15,45" fillcolor="yellow" _started_eventThrottling="enqueue"];
@@ -18,8 +18,8 @@ GetFirstItemInList [type="vuo.list.get.first.VuoAudioSamples" version="1.0.0" la
 GetLastItemInList [type="vuo.list.get.last.VuoAudioSamples" version="1.0.0" label="Get Last Item in List|<refresh>refresh\l|<list>list\l|<lastItem>lastItem\r" pos="165,675"];
 HoldList5 [type="vuo.data.hold.list.VuoReal" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="435,315"];
 HoldList6 [type="vuo.data.hold.list.VuoReal" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="435,510"];
-Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1200,375" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,0.0001500000071246177,1]}"];
-Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1200,570" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,-0.0001500000071246177,1]}"];
+Make3DObject [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1200,375" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,8,1]}"];
+Make3DObject2 [type="vuo.scene.make" version="2.0.0" label="Make 3D Object|<refresh>refresh\l|<mesh>mesh\l|<shader>shader\l|<transform>transform\l|<object>object\r" pos="1200,570" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1,-8,1]}"];
 MakeLineStripMesh2 [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="1005,300" _lineWidth="0.002000"];
 MakeLineStripMesh3 [type="vuo.mesh.make.lineStrips.VuoPoint2d" version="2.1.0" label="Make Line Strip Mesh|<refresh>refresh\l|<positions>positions\l|<lineWidth>lineWidth\l|<mesh>mesh\r" pos="1005,495" _lineWidth="0.002000"];
 MakeList15 [type="vuo.list.make.0.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="394,326"];

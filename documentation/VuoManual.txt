@@ -596,6 +596,7 @@ A \term{protocol} is a predetermined set of published ports with certain names a
          - \vuoPort{time} (Real) — A number that changes over time, used to control animations or other changing effects. When previewing the composition in the Vuo Editor, this number is the time, in seconds, since the composition started running. In other applications, this number should be described in their instructions for creating Vuo compositions. 
          - \vuoPort{offlineRender} (Boolean) — Optional. In the Vuo Editor and the `vuo-export` command-line tool, this port's value is *true* if the composition is being exported to a movie and *false* otherwise.
          - \vuoPort{offlineFramerate} (Real) — Optional. In the Vuo Editor and the `vuo-export` command-line tool, this port's value is the movie framerate, in frames per second, if the composition is being exported to a movie and 0 otherwise.
+         - \vuoPort{offlineMotionBlur} (Integer) — Optional. In the Vuo Editor and the `vuo-export` command-line tool, this port's value is the number of frames rendered per output frame.  1 means motion blur is disabled; 2, 4, 8, 16, 32, or 64 means motion blur is enabled.
       - Published output ports: 
          - \vuoPort{outputImage} — The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports. 
 
@@ -711,11 +712,13 @@ Two node sets let you fine-tune how a composition's windows are displayed on the
 
 ## Adding nodes to your Node Library
 
-You can expand the things that Vuo can do, or save yourself the work of creating the same composition pieces over and over, by adding nodes to your Node Library.
+You can expand the things that Vuo can do by adding nodes to your Node Library.
 
-### Creating your own node
+### Creating a subcomposition
 
-One way to add a new node to your Node Library is by building a composition out of existing nodes and using \menu{File > Save Composition to Node Library} or \menu{File > Move Composition to Node Library}. See the section on [Working with subcompositions](#working-with-subcompositions).
+One way to add a new node to your Node Library is by building a composition out of existing nodes and using \menu{File > Save Composition to Node Library} or \menu{File > Move Composition to Node Library}. For an explanation of subcompositions, see [Using subcompositions inside of other compositions](#using-subcompositions-inside-of-other-compositions).
+
+### Creating a text node
 
 Another option is to implement a new node with text programming, using Vuo's API. See [Developing Node Classes and Types for Vuo](http://api.vuo.org/VUO_VERSION/group__DevelopingNodeClassesTypes.html).
 
@@ -726,7 +729,7 @@ Other people in the Vuo community have created nodes that you can download and i
 First, place the file in one of Vuo's Modules folders. Subcomposition files can only be installed in the User Modules folder, while node files can be installed in either the User Modules or the System Modules folder. You can get to these folders via menu items in the Editor:
 
    - \menu{Tools > Open User Modules Folder}
-      - Or, if you'd rather find the folder yourself: In your home folder, go to \directory{Library/Application Support/Vuo/Modules}. (On Mac OS X 10.7 and above, the \directory{Library} folder is hidden by default. To find it, go to Finder, then hold down the Option key and select the \menu{Go > Library} menu option.)
+      - Or, if you'd rather find the folder yourself: In your home folder, go to \directory{Library/Application Support/Vuo/Modules}. (On macOS 10.7 and above, the \directory{Library} folder is hidden by default. To find it, go to Finder, then hold down the Option key and select the \menu{Go > Library} menu option.)
    - \menu{Tools > Open System Modules Folder}
       - Or, if you'd rather find the folder yourself: In the top-level folder on your hard drive, go to \directory{Library/Application Support/Vuo/Modules}.
 
@@ -876,7 +879,7 @@ If you want to cycle through a series of things other than numbers, you can use 
 
 The previous section showed how to do something with each list item in turn, using a \vuoNode{Cycle through List} node. For each event the \vuoNode{Cycle through List} node receives, it outputs one list item. If instead you want an event to do something to all list items, you can use the \vuoNode{Process List} node.
 
-Here's an example (\menu{File > Open Example > vuo.list > Display Grid Of Images}) that turns a list of images into a list of layers using \vuoNode{Process List}. When \vuoNode{Process List} gets an event and list of images into its \vuoPort{Fire} port, it rapidly fires a series of events through its \vuoPort{Process Item} port, one event for each image in the list. The image and event go through the \vuoNode{Make Scaled Layer} node, and the created layer and event go into the \vuoNode{Process List} node's \vuoPort{Processed Item} port. Once that port has received as many events as \vuoPort{Process Item} fired, the \vuoNode{Processed List} port fires an event with the accumulated list of created layers.
+Here's an example (\menu{File > Open Example > vuo.list > Display Grid Of Images}) that turns a list of images into a list of layers using \vuoNode{Process List}. When \vuoNode{Process List} gets an event and list of images into its \vuoPort{Fire} port, it rapidly fires a series of events through its \vuoPort{Process Item} port, one event for each image in the list. The image and event go through the \vuoNode{Make Image Layer} node, and the created layer and event go into the \vuoNode{Process List} node's \vuoPort{Processed Item} port. Once that port has received as many events as \vuoPort{Process Item} fired, the \vuoNode{Processed List} port fires an event with the accumulated list of created layers.
 
 \vuoCompositionImage{DisplayGridOfImages}
 
@@ -972,6 +975,135 @@ Here's an example (\menu{File > Open Example > vuo.event > Load Image Asynchrono
 
 
 
+# Using subcompositions inside of other compositions
+
+If you find yourself copying and pasting the same group of nodes and cables into many compositions, you may want to turn those nodes and cables into a \term{subcomposition}. A subcomposition is a composition that can be used as a node inside of other compositions. A subcomposition saves you the effort of having to recreate the same nodes and cables over and over. They're packaged neatly inside a node, which you can drag from the Node Library onto your canvas just like any other node.
+
+Let's walk through an example. Suppose you often draw hemispheres (half spheres) in your 3D compositions, and it would be convenient to have a \vuoNode{Make Hemisphere} node in your Node Library. The first step is to identify the nodes and cables that you want to package into a subcomposition.
+
+\vuoScreenshot{DisplayRotatingHemispheres-noSubcomps}
+
+The composition above renders two rotating hemispheres to a window. (The \vuoNode{Trim 3D Object} node cuts off half of the sphere. The \vuoNode{Show Back of 3D Object} node makes the inside of the sphere visible.) In other compositions, you might want to create any number of hemispheres. The hemispheres could have different rotations, positions, sizes, and colors. They could be rendered to a window or an image. For the subcomposition, let's choose a piece of the composition that's flexible enough to be used in all of these cases: the nodes and cables tinted magenta.
+
+The next step is to create the subcomposition, which starts as a regular composition (\menu{File > New Composition}). You can copy and paste a piece of an existing composition into the new composition.
+
+\vuoScreenshot{MakeHemisphere-noCables}
+
+The subcomposition above contains the nodes that were repeated in the previous composition to make two hemispheres. In the previous composition, the \vuoNode{Make Sphere} node's \vuoPort{Material} input port and the \vuoNode{Transform 3D Object} node's \vuoPort{Transform} input port controlled the color, position, rotation, and size of the hemisphere. The \vuoNode{Transform 3D Object} node outputted a Scene Object that was sent to the \vuoNode{Render Scene to Window} node.
+
+But in this subcomposition, since there aren't any cables going into the first node in the line (\vuoNode{Make Sphere}), none of the nodes will execute. And since there aren't any cables going out of the last node in the line (\vuoNode{Transform 3D Object}), the Scene Object won't be rendered. In short, this composition won't do anything. The next step is to add some cables.
+
+\vuoScreenshot{MakeHemisphere-cables}
+
+The subcomposition above now has published ports and cables. Published ports are the subcomposition's way of inputting/outputting events and data from/to the composition that contains it. When you turn the subcomposition into a node (in the next step), its published input and output ports will become the input and output ports on the node.
+
+The above subcomposition has published input ports for the hemisphere's \vuoPort{Transform} and \vuoPort{Color}. These published input ports provide enough flexibility to change the hemisphere's position, rotation, size, and color. They don't allow changing the \vuoNode{Trim 3D Object} node's inputs, since that would make the subcomposition output a shape other than a hemisphere.
+
+Now that the subcomposition contains the nodes needed to create a hemisphere and the published ports and cables needed to input and output data and events, you can turn the subcomposition into a node. Go to \menu{File > Move Composition to Node Library} (or \menu{File > Save Composition to Node Library} if you haven't yet saved the composition). This makes the subcomposition appear as a node in your Node Library. You can now use the node inside of other compositions, as demonstrated below.
+
+\vuoScreenshot{DisplayRotatingHemispheres-subcomps}
+
+## Reasons to use subcompositions
+
+The \vuoNode{Make Hemisphere} subcomposition illustrated one motivation for using subcompositions: to avoid recreating the same composition pieces over and over again. A subcomposition enables you to assemble a composition piece once and reuse it many times. If you notice a problem with the subcomposition or want to improve it, you only have to make the change in one place to have it apply everywhere the subcomposition is used.
+
+Another reason you may want to use subcompositions is to better organize large compositions to make them more readable. You can replace a complex network of nodes and cables with a subcomposition that has a descriptive title and a clearly defined set of inputs and outputs.
+
+A third reason for using subcompositions is to share your work with others in a modular format. When you create a composition piece that other people might like to use inside of their compositions, you can package it as a subcomposition that others can install in their Node Libraries.
+
+## Saving a subcomposition
+
+When you turn a composition into a node with \menu{File > Move Composition to Node Library}, Vuo automatically moves the composition file to your User Modules folder.
+
+If you haven't yet saved the composition file, the menu item is \menu{File > Save Composition to Node Library}, and Vuo saves the composition file to your User Modules folder.
+
+## Naming a subcomposition
+
+When you turn an already-saved composition into a node, the node's title derives from the composition's file name. A composition file called \code{Scribble.vuo} or \code{scribble.vuo} would be turned into a node titled \vuoNode{Scribble}. A composition file called \code{Solve Anagram.vuo} or \code{SolveAnagram.vuo} would be turned into a node titled \vuoNode{Solve Anagram}.
+
+If you haven't yet saved the composition file, Vuo prompts you to enter a node title.
+
+The node's class name is your Vuo user name followed by a period followed by a lower-camel-case version of the node title — for example, \vuoNodeClass{me.scribble} or \vuoNodeClass{me.solveAnagram}.
+
+After turning a subcomposition into a node, if you want to change the node's title and class name, you can rename the installed subcomposition file. Do this by right-clicking on the subcomposition node in the Node Library and choosing the menu item \menu{Open Enclosing Folder}, finding your installed subcomposition in that folder (for example, \code{me.scribble.vuo}), renaming the file, and restarting Vuo. Be careful renaming a subcomposition, because any compositions that use the subcomposition by its old name will have an error until you substitute in the new version of the subcomposition.
+
+## Editing a subcomposition
+
+\vuoScreenshot{MakeHemisphere-node}
+
+You can recognize a subcomposition node by the icon in its top-right corner. The icon consists of two overlapping squares, symbolizing that the subcomposition node has a composition inside of it that you can view and edit.
+
+You can open that composition by double-clicking on the subcomposition node on the canvas, or by right-clicking on the subcomposition node on the canvas or in the Node Library and choosing \menu{Edit Composition...}. When you save changes made to the subcomposition, the changes apply everywhere the subcomposition is used — every instance of the subcomposition node in the composition you have open, and all other compositions that contain the subcomposition.
+
+## How events travel through a subcomposition
+
+### Events into a subcomposition
+
+When an event hits any input port of a subcomposition node, the event travels into the subcomposition through *all* of its published input ports.
+
+To illustrate, here's a composition that uses a subcomposition node called \vuoNode{Connect Recent Points} to draw a series of connected line segments behind the mouse cursor as it moves. Below that is the \vuoNode{Connect Recent Points} subcomposition.
+
+\vuoScreenshot{DrawTailBehindMouse-fixedLength}
+
+\vuoScreenshot{ConnectRecentPoints}
+
+When an event hits the \vuoPort{Add Point} input port of the \vuoNode{Connect Recent Points} node (in the first composition above), it travels into the subcomposition (second composition above) through both of the subcomposition's published input ports, \vuoPort{Add Point} and \vuoPort{Max Recent Points}.
+
+If you were to edit the \vuoNode{Connect Recent Points} node's \vuoPort{Max Recent Points} port's constant value, the \vuoNode{Enqueue} node's \vuoPort{Max Item Count} port's value would immediately change, but the \vuoNode{Enqueue} node wouldn't execute. The next event into the \vuoNode{Connect Recent Points} node's \vuoPort{Add Point} port would cause the \vuoNode{Enqueue} node to execute and, thus, the new \vuoPort{Max Item Count} port value to take effect.
+
+Here's a modification of the first composition above that allows the user to toggle between a short tail and a long tail by pressing any key.
+
+\vuoScreenshot{DrawTailBehindMouse-variableLength}
+
+If the user stops moving the mouse and repeatedly presses a key to change the number of recent points, something unintended happens: each time the user toggles back to the short tail, the tail gets even shorter than it was before. After several keypresses, the tail disappears completely. Why?
+
+When the event fired from the \vuoNode{Receive Keyboard Buttons} node hits the \vuoNode{Connect Recent Points} node's \vuoPort{Max Recent Points} port, it goes into the subcomposition through *both* of the subcomposition's published input ports. Inside the subcomposition, the event hits both the \vuoPort{Max Item Count} and \vuoPort{Add Item} port of the \vuoNode{Enqueue} node. This means that not only is the maximum number of points altered, but the most recently added point is added to the queue again — bumping the least recent point out of the queue. Since changing the maximum number of points has the unintended side effect of deleting the oldest point in the tail, the tail gets shorter and shorter.
+
+To avoid this problem, you can modify the subcomposition to block the event into the \vuoNode{Enqueue} node's \vuoPort{Add Item} port when it carries the same point twice in a row. The modified subcomposition below accomplishes this with an \vuoNode{Allow Changes} node.
+
+\vuoScreenshot{ConnectRecentPoints-allowChanges}
+
+### Events out of a subcomposition
+
+If an event reaches the published output port of a subcomposition, it travels out of the corresponding output port of the subcomposition node.
+
+If an event into a subcomposition node reaches multiple published output ports of the subcomposition, it travels out of all of the subcomposition node's output ports simultaneously. For example, in the subcomposition below, even though the \vuoNode{Calculate} nodes can execute concurrently and may not output their values at exactly the same time, the \vuoNode{Convert Cartesian To Polar} subcomposition node always outputs the event from its \vuoPort{R} and \vuoPort{Theta} ports simultaneously.
+
+\vuoScreenshot{ConvertCartesianToPolar}
+
+If an event that comes in through a subcomposition's published input ports reaches at least one of the subcomposition's published output ports, then the event comes out of *all* of the subcomposition node's output ports.
+
+If an event that comes in through a subcomposition's published input ports doesn't reach any of the subcomposition's published output ports (because of wall or door ports within the subcomposition), then the event doesn't come of out any of the subcomposition node's output ports. The subcomposition node blocks the event.
+
+The refresh port is an exception. When an event hits the subcomposition node's refresh port, the event always comes out of all of the subcomposition node's output ports.
+
+A subcomposition can fire events, as demonstrated below. The \vuoNode{Fire At Tempo} subcomposition node is set to fire at a rate of 120 beats per minute.
+
+\vuoScreenshot{Metronome}
+
+\vuoScreenshot{FireAtTempo}
+
+### Constant input port values
+
+A variation on the previous example demonstrates an important point about how events flow into and through a subcomposition.
+
+\vuoScreenshot{ConstantMetronome}
+
+In the composition above, when the event from \vuoNode{Fire on Start} hits the \vuoNode{Fire At Tempo} subcomposition node, the event travels through the \vuoNode{Convert Beats Per Minute to Seconds} node and on to the \vuoNode{Fire Periodically} node, changing that node's firing rate to 120 times per minute. But if you edit the constant value of the \vuoNode{Fire At Tempo} node's \vuoPort{Beats Per Minute} input port, the firing rate doesn't change. Why?
+
+When you edit the \vuoPort{Fire At Tempo} node's \vuoPort{Beats Per Minute} port's value, the \vuoNode{Convert Beats Per Minute to Seconds} node's \vuoPort{Beats per Minute} port's value immediately changes. But there's no event to make the \vuoNode{Convert Beats Per Minute to Seconds} node execute and carry its output data to the \vuoNode{Fire Periodically} node. For the new tempo to take effect after you've edited the input port value, you have to manually fire an event from \vuoNode{Fire on Start}.
+
+
+# Using compositions in other applications
+
+Some applications can load Vuo compositions as plugins — making it possible for you to customize or add to the application's behavior. For example, [CoGe](http://cogevj.hu/) and [VDMX](https://vidvox.net/), VJ applications that do media mixing and compositing, let you mix in visual effects made with Vuo. In order for a Vuo composition to communicate with CoGe, VDMX, or another application, you need to create the composition in a special way using published ports and protocols.
+
+\noteQCUsers{In Quartz Composer, there's a single, default rendering output. VJ apps typically capture that output and mix it into the VJ app's other feeds, so there is no need for a protocol for composition playback. In Vuo, use the Image Filter or Image Generator protocol to produce output.}
+
+If you're going to use a Vuo composition in an application, usually the application expects the composition to have certain published input and output ports. For example, an application that supports Vuo compositions for video effects would expect the composition to have a published input port that receives an image and a published output port that sends an altered image. To guarantee that your composition's published ports match what the application is expecting, you can use a protocol. The composition shown above adheres to a Vuo protocol.
+
+
+
 # Exporting compositions
 
 When you create something really interesting with Vuo, you might want to share it with the world. Sometimes you may want to share the composition (.vuo) file so that other people with Vuo can see how your composition works and tweak it themselves. But other times you may want to show your work to people who don't necessarily have Vuo. The best way to do that is to export your composition to a format that other people can easily work with — a movie, an image, or an application.
@@ -1031,7 +1163,7 @@ If you want to capture an image of a composition, you can either take a screensh
 
 ## Exporting an application
 
-Using the \menu{File > Export > Mac App...} menu item, you can turn your composition into an OS X application (`.app` file).
+Using the \menu{File > Export > Mac App...} menu item, you can turn your composition into an macOS application (`.app` file).
 
 When exporting a composition that refers to files on your computer (such as images, scenes, or movies), typically the Vuo Editor will know to copy those into the exported app. If you've added these files to your composition by [dragging them onto the canvas](#dragging-files-onto-the-canvas-to-create-an-interface-node) (without holding down \keys{⌥}) — creating a node such as \vuoNode{Fetch Image} or \vuoNode{Play Movie} — then the files will automatically be copied into the exported app. In fact, the Vuo Editor will automatically copy files and folders for all relative paths found in ports named \vuoPort{URL}, \vuoPort{URLs}, or \vuoPort{Folder} on nodes that read files.
 
@@ -1043,16 +1175,6 @@ In some cases, you may want a file to be copied into the app, but the Vuo Editor
    - In the Vuo Editor, go to \menu{File > Export > Mac App...} and create `MyApp.app`. 
    - Right-click on `MyApp.app` and choose \menu{Show Package Contents}. 
    - In the package contents, go to the \directory{Contents/Resources} folder. Copy `image.png` into that folder. 
-
-
-
-# Using compositions in other applications
-
-Some applications can load Vuo compositions as plugins — making it possible for you to customize or add to the application's behavior. For example, [CoGe](http://cogevj.hu/) and [VDMX](https://vidvox.net/), VJ applications that do media mixing and compositing, let you mix in visual effects made with Vuo. In order for a Vuo composition to communicate with CoGe, VDMX, or another application, you need to create the composition in a special way using published ports and protocols.
-
-\noteQCUsers{In Quartz Composer, there's a single, default rendering output. VJ apps typically capture that output and mix it into the VJ app's other feeds, so there is no need for a protocol for composition playback. In Vuo, use the Image Filter or Image Generator protocol to produce output.}
-
-If you're going to use a Vuo composition in an application, usually the application expects the composition to have certain published input and output ports. For example, an application that supports Vuo compositions for video effects would expect the composition to have a published input port that receives an image and a published output port that sends an altered image. To guarantee that your composition's published ports match what the application is expecting, you can use a protocol. The composition shown above adheres to a Vuo protocol. 
 
 
 
@@ -1174,9 +1296,11 @@ A composition's published ports are displayed in sidebars, which you can show an
 
 You can publish any input or output port in a composition. Do this by right-clicking on the port and selecting \menu{Publish Port} from the context menu. Alternatively, drag a cable from the port to the \menu{Publish} well that appears in the sidebar when you start dragging. You can unpublish the port by right-clicking on the port again and selecting \menu{Unpublish Port}. 
 
-In the sidebars, you can rename a published port by double-clicking on the name or by right-clicking on the published port and selecting \menu{Rename Published Port}. 
-        
 \tip{If you copy a node with a published port, that port will be published under the same name (if possible) in whatever composition you paste it into. The published port will be created if it does not already exist, merged if an existing published port of the same name and compatible type does exist, or renamed if an identically named published port already exists but has an incompatible type.}
+
+In the sidebars, you can rename a published port by double-clicking on the name or by right-clicking on the published port and selecting \menu{Rename Published Port}.
+
+For published ports with numerical data types (integers, real numbers, 2D points, 3D points, and 4D points), you can modify the behavior of their input editors by right-clicking on the published port in the sidebar and selecting \menu{Edit Details...}. The Suggested Min and Suggested Max determine the range of values provided by the input editor's slider or spinbox (arrow buttons). The Suggested Step controls the amount by which each click on a spinbox button increments or decrements the value.
 
 ### Using a protocol for published ports
 
@@ -1217,28 +1341,22 @@ The Vuo Editor has several [helpful tools](#helpful-tools), such as the \term{Sh
 
 ## Working with subcompositions
 
-As you work with Vuo, you might find yourself creating compositions that perform functions of general use to you in multiple applications. \term{Subcompositions} provide a convenient way to package your compositions so that you may easily reuse them any number of times and avoid the hassle of copying and pasting the same group of nodes and cables over and over again. Once you install a subcomposition, it takes the form of a node that you can drag from the Node Library onto your canvas just like any other node.
+With a subcomposition, you can use a composition as a node within other compositions. For more on what subcompositions are and why to use them, see [Using subcompositions inside of other compositions](#using-subcompositions-inside-of-other-compositions).
 
 ### Installing a subcomposition
 
-To install a subcomposition, open or create a composition within the Vuo Editor and select the \menu{File > Move Composition to Node Library} menu item. (If your composition has not yet been saved, the menu item will read \menu{Save Composition to Node Library}, and you will be prompted to enter a title for your node.) The subcomposition node will immediately be listed and highlighted within your Node Library for use within other compositions.
-
-When designing a composition that you intend to install as a subcomposition, you can use the steps described in the [Publishing ports](#publishing-ports) section to create published input and output ports. Any published inputs that you incorporate into your composition will be displayed as input ports on the installed subcomposition node, and published outputs in the composition will be displayed as output ports of the subcomposition node.
+To install a subcomposition, open or create a composition within the Vuo Editor and select the \menu{File > Move Composition to Node Library} menu item. (If your composition has not yet been saved, the menu item will read \menu{Save Composition to Node Library}, and you'll be prompted to enter a title for your node.) The subcomposition node will immediately be listed and highlighted within your Node Library for use within other compositions.
 
 ### Editing a subcomposition
 
 There are several ways to edit a subcomposition after it has already been installed:
 
-   - Right-click on the subcomposition node, either within the Node Library or on the canvas, and select the \menu{Edit Composition…} context menu item
-   - Double-click the body of the node on the canvas
-   - Select the node on the canvas and press ⌘↓
-   - Click the "Edit Composition…" link in the node library documentation panel
+   - Right-click on the subcomposition node, either within the Node Library or on the canvas, and select the \menu{Edit Composition…} context menu item.
+   - Double-click on the body of the node on the canvas.
+   - Select the node on the canvas and press ⌘↓.
+   - Click the "Edit Composition…" link in the node library documentation panel.
 
-A subcomposition node is recognizable by the icon in its top-right corner consisting of two overlapping squares, symbolizing that the subcomposition node contains nodes of its own.
-
-\vuoScreenshot{subcompositionnode}
-
-### Removing a subcomposition
+### Uninstalling a subcomposition
 
 To remove an installed subcomposition, you can right-click on the subcomposition node within the Node Library and select the \menu{Open Enclosing Folder} context menu item, or follow the instructions in the [Installing a node](#installing-a-node) section to navigate to your User Modules folder. Locate the `.vuo` file matching the name of your subcomposition and remove it from the folder. The next time you restart the Vuo Editor, the subcomposition will no longer appear in your Node Library.
 
@@ -1248,7 +1366,7 @@ To remove an installed subcomposition, you can right-click on the subcomposition
 
 Vuo has [keyboard shortcuts](http://support.apple.com/kb/ht1343) for working with your composition and the Vuo Editor.
 
-In the keyboard shortcuts below, these symbols represent keys in Mac OS X: 
+In the keyboard shortcuts below, these symbols represent keys in macOS: 
 
 | Symbol | Definition |
 | ------:| ---------- |

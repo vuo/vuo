@@ -229,8 +229,7 @@ private slots:
 		QFETCH(int, itemCount);
 		QFETCH(VuoList_VuoText, expectedCutList);
 
-		VuoList_VuoText actualCutList = VuoListCopy_VuoText(initialList);
-		VuoListCut_VuoText(actualCutList, startIndex, itemCount);
+		VuoList_VuoText actualCutList = VuoListSubset_VuoText(initialList, startIndex, itemCount);
 
 		verifyEqual(actualCutList, expectedCutList);
 	}

@@ -23,7 +23,7 @@ MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refr
 MakeList6 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="863,146"];
 MakeList7 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="863,221"];
 MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="210,135" _text="\"A\""];
-SampleColorFromImage [type="vuo.image.sample.color" version="1.0.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<color>color\r" pos="405,135" _center="{\"x\":0,\"y\":-0.30000001192092896}" _width="0"];
+SampleColorFromImage [type="vuo.image.sample.color" version="1.0.1" label="Sample Color from Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<color>color\r" pos="405,135" _center="{\"x\":0,\"y\":-0.40000000596046448}" _width="0"];
 PublishedInputs [type="vuo.in" label="PublishedInputs|<Color>Color\r" _Color_type="VuoColor" _Color="{\"r\":0.7479972243309021,\"g\":0.29100480675697327,\"b\":0.19800107181072235,\"a\":0.50000762939453125}"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<AllEqual>AllEqual\l" _AllEqual_type="VuoBoolean"];
 

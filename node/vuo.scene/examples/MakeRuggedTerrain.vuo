@@ -11,28 +11,27 @@
 
 digraph G
 {
-CropImage [type="vuo.image.crop" version="1.1.1" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="435,255" _width="0.500000" _height="0.500000"];
-CycleThroughList2 [type="vuo.list.cycle.VuoGridType" version="1.0.2" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r" pos="240,-45" _wrapMode="\"wrap\""];
+CropImage [type="vuo.image.crop" version="1.1.1" label="Crop Image|<refresh>refresh\l|<image>image\l|<center>center\l|<width>width\l|<height>height\l|<croppedImage>croppedImage\r" pos="435,390" _width="0.500000" _height="0.500000"];
+CycleThroughList2 [type="vuo.list.cycle.VuoGridType" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="240,-45" _wrapMode="\"wrap\""];
 Displace3DObjectWithImage [type="vuo.scene.displace.image" version="1.0.0" label="Displace 3D Object with Image|<refresh>refresh\l|<object>object\l|<image>image\l|<channel>channel\l|<distance>distance\l|<deformedObject>deformedObject\r" pos="615,240" fillcolor="violet" _channel="\"luminance\"" _distance="1.500000"];
-FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="255,210" _url="\"GradientNoise.jpg\""];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-75,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-Make3DGridLines3 [type="vuo.scene.make.grid.lines.VuoShader" version="1.0.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="540,90" fillcolor="violet" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[-1.5707963705062866,0,0],\"scale\":[2,2,1]}" _rows="64" _columns="64" _lineWidth="0.005000"];
-MakeGradientNoise3 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="225,270" _gradientNoise="\"perlin\"" _scaledStart="{\"x\":-1.,\"y\":-1.}" _scaledEnd="{\"x\":1.,\"y\":1.}"];
-MakeList13 [type="vuo.list.make.3.VuoGridType" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="170,-34" _1="\"vertical\"" _2="\"horizontal\"" _3="\"horizontal-vertical\""];
-MakeList20 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="499,461" fillcolor="green"];
-MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="529,491" fillcolor="green"];
-MakeList6 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="-1,281" _2="0.100000"];
-MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="135,465" _name="\"camera\"" _position="{\"x\":1.500000,\"y\":2.800000,\"z\":1.500000}" _target="{\"x\":0.300000,\"y\":1.000000,\"z\":0.300000}" _upDirection="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _fieldOfView="75.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
-Multiply3 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="45,270"];
+Make3DGridLines3 [type="vuo.scene.make.grid.lines.VuoShader" version="1.0.0" label="Make Grid Lines Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<gridType>gridType\l|<lineWidth>lineWidth\l|<object>object\r" pos="540,90" fillcolor="violet" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[-1.5707963705062866,0,0],\"scale\":[2,2,1]}" _rows="128" _columns="128" _lineWidth="0.005000"];
+MakeGradientNoise3 [type="vuo.noise.gradient.VuoReal.VuoPoint2d" version="2.0.0" label="Make Gradient Noise|<refresh>refresh\l|<position>position\l|<gradientNoise>gradientNoise\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<value>value\r" pos="225,405" _gradientNoise="\"perlin\"" _scaledStart="{\"x\":-1.,\"y\":-1.}" _scaledEnd="{\"x\":1.,\"y\":1.}"];
+MakeList13 [type="vuo.list.make.3.VuoGridType" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="178,-34" _1="\"vertical\"" _2="\"horizontal\"" _3="\"horizontal-vertical\""];
+MakeList20 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="522,506" fillcolor="green"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="542,536" fillcolor="green"];
+MakeList6 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="12,416" _2="0.100000"];
+MakeNoiseImage [type="vuo.image.make.noise" version="1.0.0" label="Make Noise Image|<refresh>refresh\l|<colorA>colorA\l|<colorB>colorB\l|<center>center\l|<time>time\l|<scale>scale\l|<levels>levels\l|<roughness>roughness\l|<spacing>spacing\l|<width>width\l|<height>height\l|<image>image\r" pos="240,210" _colorA="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _colorB="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _scale="0.2" _levels="6" _roughness="0.5" _spacing="2.0" _width="1024" _height="1024"];
+MakeTargetedPerspectiveCamera [type="vuo.scene.make.camera.perspective.target" version="1.0.0" label="Make Targeted Perspective Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="135,510" _name="\"camera\"" _position="{\"x\":1.500000,\"y\":2.800000,\"z\":1.500000}" _target="{\"x\":0.300000,\"y\":1.000000,\"z\":0.300000}" _upDirection="{\"x\":0.000000,\"y\":1.000000,\"z\":0.000000}" _fieldOfView="75.000000" _distanceMin="0.100000" _distanceMax="10.000000"];
+Multiply3 [type="vuo.math.multiply.VuoReal" version="2.0.0" label="Multiply|<refresh>refresh\l|<values>values\l|<product>product\r" pos="45,405"];
 ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,-30" fillcolor="yellow" _key="\"Space\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="570,450" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToWindow2 [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="570,495" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 ShadeWithVertexAttribute [type="vuo.shader.make.normal" version="1.2.0" label="Shade with Vertex Attribute|<refresh>refresh\l|<attribute>attribute\l|<xColor>xColor\l|<yColor>yColor\l|<zColor>zColor\l|<shader>shader\r" pos="180,105" _attribute="\"position\"" _xColor="{\"r\":0.985565,\"g\":0.000000,\"b\":0.607385,\"a\":1.000000}" _yColor="{\"r\":0.185885,\"g\":1.000000,\"b\":0.142290,\"a\":1.000000}" _zColor="{\"r\":0.166155,\"g\":0.886000,\"b\":0.920577,\"a\":1.000000}"];
 
 CropImage:croppedImage -> Displace3DObjectWithImage:image;
 CycleThroughList2:item -> Make3DGridLines3:gridType;
 Displace3DObjectWithImage:deformedObject -> MakeList20:1;
-FetchImage:image -> CropImage:image;
-FireOnStart2:started -> FetchImage:refresh;
+FireOnStart2:started -> MakeNoiseImage:refresh;
 FireOnStart2:started -> MakeTargetedPerspectiveCamera:refresh;
 FireOnStart2:started -> ShadeWithVertexAttribute:refresh;
 Make3DGridLines3:object -> Displace3DObjectWithImage:object;
@@ -41,6 +40,7 @@ MakeList13:list -> CycleThroughList2:list;
 MakeList20:list -> RenderSceneToWindow2:objects;
 MakeList4:list -> RenderSceneToWindow2:setWindowProperties;
 MakeList6:list -> Multiply3:values;
+MakeNoiseImage:image -> CropImage:image;
 MakeTargetedPerspectiveCamera:object -> MakeList20:2;
 Multiply3:product -> MakeGradientNoise3:position;
 ReceiveKeyboardButtons:pressed -> CycleThroughList2:goForward;

@@ -1,6 +1,7 @@
 TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
-	ReceiveOsc.vuo
+	ReceiveOsc.vuo \
+	TrackSkeleton.vuo
 
 include(../../../example.pri)

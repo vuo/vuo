@@ -40,5 +40,6 @@ MakeList9:list -> RenderLayersToWindow:setWindowProperties;
 MakeTextLayer3:layer -> MakeList13:4;
 MakeTextLayer:layer -> MakeList13:3;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
 SummarizeValue2:summary -> MakeList14:2;
 }

@@ -32,6 +32,26 @@ using namespace std;
 #include <ApplicationServices/ApplicationServices.h>
 
 
+/**
+ * Work around apparent GL driver bug, wherein
+ * attempting to simultaneously bind the same buffer
+ * to multiple VAOs on separate contexts causes a crash.
+ * (Try running CompareCameras.vuo without this.)
+ *
+ * Also, using VuoSceneObjectRenderer and VuoSceneRender simultaneously seems to lead to crashes,
+ * so we also use this semaphore to serialize OpenGL Transform Feedback.
+ * https://b33p.net/kosada/node/8498
+ */
+dispatch_semaphore_t VuoGlSemaphore;
+/**
+ * Initialize `VuoGlSemaphore`.
+ */
+static void __attribute__((constructor)) VuoSceneRenderer_init()
+{
+	VuoGlSemaphore = dispatch_semaphore_create(1);
+}
+
+
 static map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > VuoGlPool __attribute__((init_priority(101)));
 static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGlPool.
 
@@ -41,7 +61,7 @@ static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGl
  * If an existing, unused buffer of the specified @c type and @c size is available, it is returned.
  * Otherwise, a new buffer is created.
  *
- * @todo https://b33p.net/kosada/node/6901 The returned buffer's storage ~~is~~ will be preallocated (so the caller can efficiently upload data using [glBufferSubData](http://www.opengl.org/sdk/docs/man/xhtml/glBufferSubData.xml)),
+ * The returned buffer's storage is will be preallocated (so the caller can efficiently upload data using [glBufferSubData](http://www.opengl.org/sdk/docs/man/xhtml/glBufferSubData.xml)).
  *
  * @threadAnyGL
  */
@@ -49,26 +69,26 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
 {
 	GLuint name = 0;
 
-//	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-//		if (VuoGlPool[type][size].size())
-//		{
-//			name = VuoGlPool[type][size].back();
-//			VuoGlPool[type][size].pop_back();
-//		}
-//		else
+		if (VuoGlPool[type][size].size())
 		{
-//			VLog("allocating %d",type);
+			name = VuoGlPool[type][size].back();
+			VuoGlPool[type][size].pop_back();
+//			VLog("using recycled type=%d name=%d",type,name);
+		}
+		else
+		{
 			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 
 			if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
 			{
 				glGenBuffers(1, &name);
-/// @todo https://b33p.net/kosada/node/6901
-//				GLenum bufferType = type == VuoGlPool_ArrayBuffer ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
-//				glBindBuffer(bufferType, name);
-//				glBufferData(bufferType, size, NULL, GL_STREAM_DRAW);
-//				glBindBuffer(bufferType, 0);
+				GLenum bufferType = type == VuoGlPool_ArrayBuffer ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+				glBindBuffer(bufferType, name);
+				glBufferData(bufferType, size, NULL, GL_STREAM_DRAW);
+				glBindBuffer(bufferType, 0);
+//				VLog("allocated type=%d name=%d",type,name);
 			}
 			else
 				VUserLog("Unknown pool type %d.", type);
@@ -76,7 +96,7 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
 			VuoGlContext_disuse(cgl_ctx);
 		}
 	}
-//	dispatch_semaphore_signal(VuoGlPool_semaphore);
+	dispatch_semaphore_signal(VuoGlPool_semaphore);
 
 	return name;
 }
@@ -91,19 +111,14 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
  */
 void VuoGlPool_disuse(VuoGlPoolType type, unsigned long size, GLuint name)
 {
-//	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait(VuoGlPool_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
-		{
-			CGLContextObj cgl_ctx=(CGLContextObj)VuoGlContext_use();
-			glDeleteBuffers(1, &name);
-			VuoGlContext_disuse(cgl_ctx);
-//			VuoGlPool[type][size].push_back(name);
-		}
+			VuoGlPool[type][size].push_back(name);
 		else
 			VUserLog("Unknown pool type %d.", type);
 	}
-//	dispatch_semaphore_signal(VuoGlPool_semaphore);
+	dispatch_semaphore_signal(VuoGlPool_semaphore);
 }
 
 typedef map<GLuint, unsigned int> VuoGlPoolReferenceCounts;	///< The number of times each OpenGL Buffer Object is retained.
@@ -204,18 +219,23 @@ unsigned char VuoGlTexture_getChannelCount(GLuint format)
 {
 	if (format == GL_LUMINANCE
 	 || format == GL_LUMINANCE16F_ARB
+	 || format == GL_LUMINANCE32F_ARB
 	 || format == GL_DEPTH_COMPONENT)
 		return 1;
 	else if (format == GL_YCBCR_422_APPLE
-		  || format == GL_LUMINANCE_ALPHA)
+		  || format == GL_LUMINANCE_ALPHA
+		  || format == GL_LUMINANCE_ALPHA16F_ARB
+		  || format == GL_LUMINANCE_ALPHA32F_ARB)
 		return 2;
 	else if (format == GL_RGB
 		  || format == GL_RGB16F_ARB
+		  || format == GL_RGB32F_ARB
 		  || format == GL_BGR_EXT)
 		return 3;
 	else if (format == GL_RGBA
 		  || format == GL_RGBA8
 		  || format == GL_RGBA16F_ARB
+		  || format == GL_RGBA32F_ARB
 		  || format == GL_BGRA)
 		return 4;
 
@@ -242,6 +262,11 @@ unsigned char VuoGlTexture_getBytesPerPixel(GLuint internalformat, GLuint format
 		  || internalformat == GL_LUMINANCE16F_ARB
 		  || internalformat == GL_LUMINANCE_ALPHA16F_ARB)
 		return bytes * 2;
+	else if (internalformat == GL_RGB32F_ARB
+		  || internalformat == GL_RGBA32F_ARB
+		  || internalformat == GL_LUMINANCE32F_ARB
+		  || internalformat == GL_LUMINANCE_ALPHA32F_ARB)
+		return bytes * 4;
 
 	VUserLog("Unknown internalformat %s", VuoGl_stringForConstant(internalformat));
 	VuoLog_backtrace();
@@ -263,12 +288,18 @@ unsigned char VuoGlTexture_getBytesPerPixelForInternalFormat(GLuint internalform
 		return 3;
 	if (internalformat == GL_RGBA
 	 || internalformat == GL_RGBA8
-	 || internalformat == GL_LUMINANCE_ALPHA16F_ARB)
+	 || internalformat == GL_LUMINANCE_ALPHA16F_ARB
+	 || internalformat == GL_LUMINANCE32F_ARB)
 		return 4;
 	if (internalformat == GL_RGB16F_ARB)
 		return 6;
-	if (internalformat == GL_RGBA16F_ARB)
+	if (internalformat == GL_RGBA16F_ARB
+	 || internalformat == GL_LUMINANCE_ALPHA32F_ARB)
 		return 8;
+	if (internalformat == GL_RGB32F_ARB)
+		return 12;
+	if (internalformat == GL_RGBA32F_ARB)
+		return 16;
 
 	VUserLog("Unknown internalformat %s", VuoGl_stringForConstant(internalformat));
 	VuoLog_backtrace();
@@ -521,7 +552,7 @@ void VuoGlTexture_release(GLenum internalformat, unsigned short width, unsigned 
 			if (t.freeCallback)
 			{
 				// Client-owned texture
-				struct _VuoImage i = (struct _VuoImage){glTextureName, internalformat, glTextureTarget, width, height, t.freeCallbackContext};
+				struct _VuoImage i = (struct _VuoImage){glTextureName, internalformat, glTextureTarget, width, height, 1, t.freeCallbackContext};
 				t.freeCallback(&i);
 			}
 			else
@@ -577,8 +608,10 @@ void VuoGlTexture_disown(GLuint glTextureName)
  */
 typedef struct
 {
-	VuoIoSurface ioSurface;
+	IOSurfaceRef ioSurface;
 	GLuint texture;
+	unsigned short pixelsWide;
+	unsigned short pixelsHigh;
 	double lastUsedTime;
 } VuoIoSurfacePoolEntryType;
 typedef map<VuoGlTextureDimensionsType, deque<VuoIoSurfacePoolEntryType> > VuoIoSurfacePoolType;	///< VuoIoSurfacePoolType[size] gives a list of IOSurfaces.
@@ -665,16 +698,15 @@ static void VuoGlPool_cleanup(void *blah)
 			for (deque<VuoIoSurfacePoolEntryType>::iterator quarantinedIoSurfaceEntry = quarantinedQueue->second.begin(); quarantinedIoSurfaceEntry != quarantinedQueue->second.end();)
 			{
 				VuoIoSurfacePoolEntryType e = *quarantinedIoSurfaceEntry;
-				IOSurfaceRef s = (IOSurfaceRef)e.ioSurface;
-				CFBooleanRef finished = (CFBooleanRef)IOSurfaceCopyValue(s, receiverFinishedWithIoSurfaceKey);
+				CFBooleanRef finished = (CFBooleanRef)IOSurfaceCopyValue(e.ioSurface, receiverFinishedWithIoSurfaceKey);
 				if (finished)
 				{
-					IOSurfaceRemoveValue(s, receiverFinishedWithIoSurfaceKey);
+					IOSurfaceRemoveValue(e.ioSurface, receiverFinishedWithIoSurfaceKey);
 
 					(*VuoIoSurfacePool)[quarantinedQueue->first].push_back(e);
 					quarantinedIoSurfaceEntry = quarantinedQueue->second.erase(quarantinedIoSurfaceEntry);
 
-//					VLog("Promoted IOSurface %d + GL Texture %d (%dx%d) from quarantine to pool", IOSurfaceGetID(s), e.texture, quarantinedQueue->first.first, quarantinedQueue->first.second);
+//					VLog("Promoted IOSurface %d + GL Texture %d (%dx%d) from quarantine to pool", IOSurfaceGetID(e.ioSurface), e.texture, quarantinedQueue->first.first, quarantinedQueue->first.second);
 				}
 				else
 					++quarantinedIoSurfaceEntry;
@@ -690,10 +722,9 @@ static void VuoGlPool_cleanup(void *blah)
 				VuoIoSurfacePoolEntryType e = *poolIoSurfaceEntry;
 				if (now - e.lastUsedTime > cleanupInterval*2.)
 				{
-					IOSurfaceRef s = (IOSurfaceRef)e.ioSurface;
-//					VLog("Purging expired IOSurface %d + GL Texture %d (%dx%d) — it's %gs old", IOSurfaceGetID(s), e.texture, poolQueue->first.first, poolQueue->first.second, now - e.lastUsedTime);
+//					VLog("Purging expired IOSurface %d + GL Texture %d (%dx%d) — it's %gs old", IOSurfaceGetID(e.ioSurface), e.texture, poolQueue->first.first, poolQueue->first.second, now - e.lastUsedTime);
 
-					CFRelease(s);
+					CFRelease(e.ioSurface);
 
 					CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 					glDeleteTextures(1, &e.texture);
@@ -758,10 +789,11 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		if ((*VuoIoSurfacePool)[dimensions].size())
 		{
 			VuoIoSurfacePoolEntryType e = (*VuoIoSurfacePool)[dimensions].front();
-			ioSurface = e.ioSurface;
+			ioSurface = malloc(sizeof(VuoIoSurfacePoolEntryType));
+			memcpy(ioSurface, &e, sizeof(VuoIoSurfacePoolEntryType));
 			*outputTexture = e.texture;
 			(*VuoIoSurfacePool)[dimensions].pop_front();
-//			VLog("Using recycled IOSurface %d + GL Texture %d (%dx%d) from pool", IOSurfaceGetID((IOSurfaceRef)ioSurface), *outputTexture, pixelsWide, pixelsHigh);
+//			VLog("Using recycled IOSurface %d + GL Texture %d (%dx%d) from pool", IOSurfaceGetID(e.ioSurface), *outputTexture, pixelsWide, pixelsHigh);
 		}
 	}
 	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
@@ -797,16 +829,22 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 		glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 //		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		ioSurface = (VuoIoSurface)IOSurfaceCreate(properties);
+		VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)malloc(sizeof(VuoIoSurfacePoolEntryType));
+		ioSurface = e;
+		e->ioSurface = IOSurfaceCreate(properties);
+		e->texture = *outputTexture;
+		e->pixelsWide = pixelsWide;
+		e->pixelsHigh = pixelsHigh;
+		e->lastUsedTime = -1;
 		CFRelease(pixelsWideCF);
 		CFRelease(pixelsHighCF);
 		CFRelease(bytesPerElementCF);
 		CFRelease(properties);
-//		VLog("CGLTexImageIOSurface2D(GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, %d, %d, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);", pixelsWide, pixelsHigh);
-		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)ioSurface, 0);
+		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, e->ioSurface, 0);
 		if (err != kCGLNoError)
 		{
-			VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
+			VUserLog("Error in CGLTexImageIOSurface2D(GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, %d, %d, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, %d): %s",
+					 pixelsWide, pixelsHigh, IOSurfaceGetID(e->ioSurface), CGLErrorString(err));
 			return NULL;
 		}
 
@@ -821,40 +859,75 @@ VuoIoSurface VuoIoSurfacePool_use(VuoGlContext glContext, unsigned short pixelsW
 /**
  * Returns the IOSurface's interprocess ID.
  */
-uint32_t VuoIoSurfacePool_getId(VuoIoSurface ioSurface)
+uint32_t VuoIoSurfacePool_getId(VuoIoSurface vis)
 {
-	IOSurfaceRef surf = (IOSurfaceRef)ioSurface;
-	return IOSurfaceGetID(surf);
+	VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)vis;
+	return IOSurfaceGetID(e->ioSurface);
+}
+
+/**
+ * Returns the IOSurface.
+ */
+void *VuoIoSurfacePool_getIOSurfaceRef(VuoIoSurface vis)
+{
+	VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)vis;
+	return e->ioSurface;
+}
+
+/**
+ * Returns the IOSurface's width in pixels.
+ */
+unsigned short VuoIoSurfacePool_getWidth(VuoIoSurface vis)
+{
+	VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)vis;
+	return e->pixelsWide;
+}
+
+/**
+ * Returns the IOSurface's height in pixels.
+ */
+unsigned short VuoIoSurfacePool_getHeight(VuoIoSurface vis)
+{
+	VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)vis;
+	return e->pixelsHigh;
+}
+
+/**
+ * Returns the IOSurface's OpenGL texture name.
+ */
+GLuint VuoIoSurfacePool_getTexture(VuoIoSurface vis)
+{
+	VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)vis;
+	return e->texture;
 }
 
 /**
  * Called by the sending end of an IOSurface texture transfer to indicate that it is finished using the IOSurface's texture.
  * This enables the IOSurface to be reused for another texture transfer (once the receiving end indicates it is done with it, via VuoIoSurfacePool_signal()).
  */
-void VuoIoSurfacePool_disuse(VuoGlContext glContext, unsigned short pixelsWide, unsigned short pixelsHigh, VuoIoSurface ioSurface, GLuint texture)
+void VuoIoSurfacePool_disuse(VuoIoSurface vis)
 {
-	VuoGlTextureDimensionsType dimensions(pixelsWide,pixelsHigh);
-
-	VuoIoSurfacePoolEntryType e;
-	e.ioSurface = ioSurface;
-	e.texture = texture;
-	e.lastUsedTime = VuoLogGetTime();
+	VuoIoSurfacePoolEntryType *e = (VuoIoSurfacePoolEntryType *)vis;
+	VuoGlTextureDimensionsType dimensions(e->pixelsWide, e->pixelsHigh);
+	e->lastUsedTime = VuoLogGetTime();
 
 	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		(*VuoIoSurfaceQuarantine)[dimensions].push_back(e);
+		(*VuoIoSurfaceQuarantine)[dimensions].push_back(*e);
 	}
 	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
+
+	free(e);
 }
 
 /**
  * Called by the receiving end of an IOSurface texture transfer to indicate that it is finished using the IOSurface's texture.
  * This enables the sender to reuse the IOSurface for another texture transfer.
  */
-void VuoIoSurfacePool_signal(VuoIoSurface ioSurface)
+void VuoIoSurfacePool_signal(void *ios)
 {
-	IOSurfaceRef surf = (IOSurfaceRef)ioSurface;
-	IOSurfaceSetValue(surf, receiverFinishedWithIoSurfaceKey, kCFBooleanTrue);
+	IOSurfaceRef ioSurface = (IOSurfaceRef)ios;
+	IOSurfaceSetValue(ioSurface, receiverFinishedWithIoSurfaceKey, kCFBooleanTrue);
 }
 
 
@@ -864,7 +937,7 @@ void VuoIoSurfacePool_signal(VuoIoSurface ioSurface)
  *
  * @threadAnyGL
  */
-void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
+void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj, const GLchar *source)
 {
 	int infologLength = 0;
 	int charsWritten  = 0;
@@ -877,6 +950,7 @@ void VuoGlShader_printShaderInfoLog(CGLContextObj cgl_ctx, GLuint obj)
 		infoLog = (char *)malloc(infologLength);
 		glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
 		VUserLog("%s",infoLog);
+		VUserLog("Source code:\n%s", source);
 		free(infoLog);
 	}
 }
@@ -892,6 +966,7 @@ __attribute__((constructor)) static void VuoGlShaderPool_init(void)
 	VuoGlShaderPool_semaphore = dispatch_semaphore_create(1);
 }
 
+#include "GPUNoiseLib.h"
 #include "VuoGlslAlpha.h"
 #include "VuoGlslProjection.h"
 #include "VuoGlslRandom.h"
@@ -948,6 +1023,7 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 
 		string combinedSource = source;
 
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "GPUNoiseLib",       GPUNoiseLib_glsl,       GPUNoiseLib_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslAlpha",      VuoGlslAlpha_glsl,      VuoGlslAlpha_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslProjection", VuoGlslProjection_glsl, VuoGlslProjection_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslRandom",     VuoGlslRandom_glsl,     VuoGlslRandom_glsl_len);
@@ -968,7 +1044,7 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 		const GLchar *combinedSourceCString = combinedSource.c_str();
 		glShaderSource(shader, 1, (const GLchar**)&combinedSourceCString, &length);
 		glCompileShader(shader);
-		VuoGlShader_printShaderInfoLog(cgl_ctx, shader);
+		VuoGlShader_printShaderInfoLog(cgl_ctx, shader, combinedSourceCString);
 
 		VuoGlShaderPool[type][hash] = shader;
 	}

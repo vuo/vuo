@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOIMAGESTEREOTYPE_H
-#define VUOIMAGESTEREOTYPE_H
+#pragma once
 
 #ifndef DOXYGEN
 typedef const struct VuoList_VuoImageStereoType_struct { void *l; } * VuoList_VuoImageStereoType;
@@ -59,5 +58,3 @@ char * VuoImageStereoType_getString(const VuoImageStereoType value);
 /**
  * @}
 */
-
-#endif

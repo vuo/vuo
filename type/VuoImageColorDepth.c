@@ -51,14 +51,38 @@ unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, Vuo
 	if (baseFormat == GL_RGB
 	 || baseFormat == GL_BGR
 	 || baseFormat == GL_YCBCR_422_APPLE)
-		return (imageColorDepth == VuoImageColorDepth_16) ? GL_RGB16F_ARB             : GL_RGB;
+	{
+		if (imageColorDepth == VuoImageColorDepth_16)
+			return GL_RGB16F_ARB;
+		if (imageColorDepth == VuoImageColorDepth_32)
+			return GL_RGB32F_ARB;
+		return GL_RGB;
+	}
 	else if (baseFormat == GL_RGBA
 		  || baseFormat == GL_BGRA)
-		return (imageColorDepth == VuoImageColorDepth_16) ? GL_RGBA16F_ARB            : GL_RGBA;
+	{
+		if (imageColorDepth == VuoImageColorDepth_16)
+			return GL_RGBA16F_ARB;
+		if (imageColorDepth == VuoImageColorDepth_32)
+			return GL_RGBA32F_ARB;
+		return GL_RGBA;
+	}
 	else if (baseFormat == GL_LUMINANCE)
-		return (imageColorDepth == VuoImageColorDepth_16) ? GL_LUMINANCE16F_ARB       : GL_LUMINANCE8;
+	{
+		if (imageColorDepth == VuoImageColorDepth_16)
+			return GL_LUMINANCE16F_ARB;
+		if (imageColorDepth == VuoImageColorDepth_32)
+			return GL_LUMINANCE32F_ARB;
+		return GL_LUMINANCE8;
+	}
 	else if (baseFormat == GL_LUMINANCE_ALPHA)
-		return (imageColorDepth == VuoImageColorDepth_16) ? GL_LUMINANCE_ALPHA16F_ARB : GL_LUMINANCE8_ALPHA8;
+	{
+		if (imageColorDepth == VuoImageColorDepth_16)
+			return GL_LUMINANCE_ALPHA16F_ARB;
+		if (imageColorDepth == VuoImageColorDepth_32)
+			return GL_LUMINANCE_ALPHA32F_ARB;
+		return GL_LUMINANCE8_ALPHA8;
+	}
 
 	char *formatString = VuoGl_stringForConstant(baseFormat);
 	VUserLog("Error: Unknown baseFormat %x (%s)", baseFormat, formatString);
@@ -81,6 +105,8 @@ VuoImageColorDepth VuoImageColorDepth_makeFromJson(json_object * js)
 
 	if (! strcmp(valueAsString, "16bpc"))
 		value = VuoImageColorDepth_16;
+	else if (! strcmp(valueAsString, "32bpc"))
+		value = VuoImageColorDepth_32;
 
 	return value;
 }
@@ -100,6 +126,9 @@ json_object * VuoImageColorDepth_getJson(const VuoImageColorDepth value)
 		case VuoImageColorDepth_16:
 			valueAsString = "16bpc";
 			break;
+		case VuoImageColorDepth_32:
+			valueAsString = "32bpc";
+			break;
 	}
 
 	return json_object_new_string(valueAsString);
@@ -113,6 +142,7 @@ VuoList_VuoImageColorDepth VuoImageColorDepth_getAllowedValues(void)
 	VuoList_VuoImageColorDepth l = VuoListCreate_VuoImageColorDepth();
 	VuoListAppendValue_VuoImageColorDepth(l, VuoImageColorDepth_8);
 	VuoListAppendValue_VuoImageColorDepth(l, VuoImageColorDepth_16);
+	VuoListAppendValue_VuoImageColorDepth(l, VuoImageColorDepth_32);
 	return l;
 }
 
@@ -126,6 +156,8 @@ char * VuoImageColorDepth_getSummary(const VuoImageColorDepth value)
 		bits = 8;
 	else if (value == VuoImageColorDepth_16)
 		bits = 16;
+	else if (value == VuoImageColorDepth_32)
+		bits = 32;
 
 	return VuoText_format("%d bits per channel", bits);
 }

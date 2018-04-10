@@ -21,6 +21,7 @@ VuoModuleMetadata({
 						  "VuoCurve"
 					  ],
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "ShowLiveAudioWaveform.vuo" ]
 					  }
 				 });

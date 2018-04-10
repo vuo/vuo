@@ -21,4 +21,5 @@ LIBS += \
 	$$ROOT/node/vuo.keyboard/VuoKey.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoText.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoKey.o

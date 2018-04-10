@@ -4,6 +4,7 @@ EXAMPLE_SOURCES += \
 	CompareEasingCurves.vuo \
 	CompareSmoothedData.vuo \
 	CompareSmoothedMotion.vuo \
+	CrossfadeRectangleSizes.vuo \
 	DrawCurve.vuo \
 	ExplodeClay.vuo \
    OffsetOscillations.vuo \

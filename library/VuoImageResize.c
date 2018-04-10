@@ -7,6 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include <OpenGL/CGLMacro.h>
+
 #include "node.h"
 #include "VuoImageResize.h"
 #include "../node/vuo.image/VuoSizingMode.h"
@@ -40,25 +42,78 @@ static const char * applyScaleFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 	void main(void)
 	{
-		vec2 uv = (vec2(fragmentTextureCoordinate.x, fragmentTextureCoordinate.y)-offset) * scale;
+		vec2 uv = (fragmentTextureCoordinate.xy - offset) * scale;
 		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : VuoGlsl_sample(texture, uv);
 	}
 );
 
 /**
- * Create and compile a resize shader for reuse with VuoImage_resizeWithShaderAndContext.
+ * Fragment shader that scales and offsets an image.
  */
-VuoShader VuoImageResize_makeShader()
+static const char *applyScaleFragmentShaderRect = VUOSHADER_GLSL_SOURCE(120,
+	include(VuoGlslAlpha)
+
+	varying vec4 fragmentTextureCoordinate;
+	uniform sampler2DRect texture;
+	uniform vec2 scale;
+	uniform vec2 offset;
+	uniform vec2 textureSize;
+
+	bool outOfBounds(vec2 coord)
+	{
+		return coord.x < 0 || coord.x > 1 || coord.y < 0 || coord.y > 1;
+	}
+
+	void main(void)
+	{
+		vec2 uv = (fragmentTextureCoordinate.xy - offset) * scale;
+		gl_FragColor = outOfBounds(uv) ? vec4(0.,0.,0.,0.) : VuoGlsl_sampleRect(texture, uv * textureSize);
+	}
+);
+
+/**
+ * VuoImageResize state data.
+ */
+struct VuoImageResize_internal
 {
-	VuoShader shader = VuoShader_make("Resize Image Shader");
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, applyScaleFragmentShader);
-	return shader;
+	VuoShader shader;
+	VuoShader shaderRect;
+};
+
+/**
+ * Frees VuoImageResize state data.
+ */
+void VuoImageResize_free(void *ir)
+{
+	struct VuoImageResize_internal *resize = ir;
+	VuoRelease(resize->shader);
+	VuoRelease(resize->shaderRect);
+	free(ir);
 }
 
 /**
- * Returns a new image resized from image.  Use with VuoImageResize_makeShader().
+ * Create and compile a resize shader for reuse with VuoImage_resizeWithShaderAndContext.
  */
-VuoImage VuoImageResize_resize(VuoImage image, VuoShader shader, VuoImageRenderer renderer, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height)
+VuoImageResize VuoImageResize_make(void)
+{
+	struct VuoImageResize_internal *ir = (struct VuoImageResize_internal *)malloc(sizeof(struct VuoImageResize_internal));
+	VuoRegister(ir, VuoImageResize_free);
+
+	ir->shader = VuoShader_make("Resize Image Shader");
+	VuoRetain(ir->shader);
+	VuoShader_addSource(ir->shader, VuoMesh_IndividualTriangles, NULL, NULL, applyScaleFragmentShader);
+
+	ir->shaderRect = VuoShader_make("Resize Image Shader (Rect)");
+	VuoRetain(ir->shaderRect);
+	VuoShader_addSource(ir->shaderRect, VuoMesh_IndividualTriangles, NULL, NULL, applyScaleFragmentShaderRect);
+
+	return ir;
+}
+
+/**
+ * Returns a new image resized from image.  Use with @ref VuoImageResize_make().
+ */
+VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize ir, VuoImageRenderer renderer, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height)
 {
 	if (!image)
 		return NULL;
@@ -99,6 +154,21 @@ VuoImage VuoImageResize_resize(VuoImage image, VuoShader shader, VuoImageRendere
 				offset = (VuoPoint2d) { ((width-(image->pixelsWide*v))/2)/width, 0 };
 			}
 			break;
+	}
+
+	VuoShader shader;
+	struct VuoImageResize_internal *resize = ir;
+	if (image->glTextureTarget == GL_TEXTURE_2D)
+		shader = resize->shader;
+	else if (image->glTextureTarget == GL_TEXTURE_RECTANGLE_ARB)
+	{
+		shader = resize->shaderRect;
+		VuoShader_setUniform_VuoPoint2d(shader, "textureSize", (VuoPoint2d){image->pixelsWide, image->pixelsHigh});
+	}
+	else
+	{
+		VUserLog("Error: Unknown texture target %s.", VuoGl_stringForConstant(image->glTextureTarget));
+		return NULL;
 	}
 
 	VuoShader_setUniform_VuoImage  ( shader, "texture", image );

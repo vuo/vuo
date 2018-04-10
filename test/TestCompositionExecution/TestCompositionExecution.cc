@@ -43,6 +43,26 @@ string TestCompositionExecution::getCompositionPath(string compositionFileName)
 }
 
 /**
+ * Copies the composition at @a compositionPath to the User Modules folder, renaming it to @a nodeClassName.
+ */
+void TestCompositionExecution::installSubcomposition(string compositionPath, string nodeClassName, VuoCompiler *compiler)
+{
+	string installedSubcompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
+	VuoFileUtilities::copyFile(compositionPath, installedSubcompositionPath);
+	compiler->installSubcomposition(installedSubcompositionPath);
+}
+
+/**
+ * Removes the subcomposition called @a nodeClassName from the User Modules folder and uninstalls it.
+ */
+void TestCompositionExecution::uninstallSubcomposition(string nodeClassName, VuoCompiler *compiler)
+{
+	compiler->uninstallSubcomposition(nodeClassName);
+	string copiedCompositionPath = VuoFileUtilities::getUserModulesPath() + "/" + nodeClassName + ".vuo";
+	remove(copiedCompositionPath.c_str());
+}
+
+/**
  * Returns a string containing a composition that consists of an instance of a node class
  * with all its input and output ports published.
  */

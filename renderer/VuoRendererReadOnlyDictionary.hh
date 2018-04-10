@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERREADONLYDICTIONARY_HH
-#define VUORENDERERREADONLYDICTIONARY_HH
+#pragma once
 
 #include "VuoRendererHiddenInputAttachment.hh"
 #include "VuoRendererPort.hh"
@@ -32,4 +31,3 @@ private:
 	VuoNode * getValueListNode();
 };
 
-#endif // VUORENDERERREADONLYDICTIONARY_HH

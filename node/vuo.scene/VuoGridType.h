@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOGRIDTYPE_H
-#define VUOGRIDTYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoGridType_struct { void *l; } * VuoList_VuoGridType;
@@ -52,4 +51,3 @@ void VuoGridType_release(VuoGridType value);
  * @}
  */
 
-#endif // VuoGridType_H

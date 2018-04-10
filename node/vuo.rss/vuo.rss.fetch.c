@@ -21,7 +21,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Fetch RSS Items",
-					  "keywords" : [ ],
+					  "keywords" : [
+						  "download", "load", "import", "http", "get", "read",
+						  "feed", "syndication",
+					  ],
 					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ "DisplayRssItems.vuo" ]
@@ -29,14 +32,10 @@ VuoModuleMetadata({
 					  "dependencies" : [
 						  "xml2",
 						  "VuoImageGet",
+						  "VuoTextHtml", // calls xmlInitParser();
 						  "VuoUrlFetch"
 					  ]
 				 });
-
-static void __attribute__((constructor)) init()
-{
-	xmlInitParser();
-}
 
 // some rss feeds embed HTML image tags in CDATA in the description, so the following attempts to
 // extract those images.

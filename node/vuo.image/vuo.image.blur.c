@@ -12,8 +12,13 @@
 
 VuoModuleMetadata({
 					  "title" : "Blur Image",
-					  "keywords" : [ "gaussian", "distort", "obscure", "smudge", "filter", "censor", "smooth", "soften", "unfocus", "defocus", "detail" ],
-					  "version" : "1.2.1",
+					  "keywords" : [
+						  "filter",
+						  "distort", "obscure", "smudge", "censor", "smooth", "soften", "unfocus", "defocus", "detail",
+						  "gaussian", "linear", "ramp", "triangle", "box", "disc", "disk",
+						  "variable", "depth of field", "DOF",
+					  ],
+					  "version" : "1.3.0",
 					  "dependencies" : [
 						  "VuoImageBlur"
 					  ],
@@ -31,12 +36,15 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(VuoImageBlur *) blur,
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoReal, {"default":4, "suggestedMin":0, "suggestedMax":20}) radius,
+		VuoInputData(VuoImage) mask,
+		VuoInputData(VuoBlurShape, {"default":"gaussian"}) shape,
+		VuoInputData(VuoReal, {"default":4, "suggestedMin":0, "suggestedMax":50}) radius,
 		VuoInputData(VuoBoolean, {"default":false}) expandBounds,
+		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":1}) quality,
 		VuoOutputData(VuoImage) blurredImage
 )
 {
-	*blurredImage = VuoImageBlur_blur(*blur, image, radius, expandBounds);
+	*blurredImage = VuoImageBlur_blur(*blur, image, mask, shape, radius, quality, expandBounds);
 }
 
 void nodeInstanceFini(VuoInstanceData(VuoImageBlur *) blur)

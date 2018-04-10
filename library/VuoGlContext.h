@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOGLCONTEXT_H
-#define VUOGLCONTEXT_H
+#pragma once
 
 #include <OpenGL/OpenGL.h>
 
@@ -36,7 +35,7 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
  */
 #define VuoGlContext_disuse(glContext) VuoGlContext_disuseF(glContext, __FILE__, __LINE__, __func__)
 
-void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer);
+void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Core);
 
 void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func);
 
@@ -59,6 +58,4 @@ void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, cons
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

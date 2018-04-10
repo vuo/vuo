@@ -12,6 +12,8 @@ EXAMPLE_SOURCES += \
 	IsMouseWithinLayer.vuo \
 	RenderTextLayer.vuo \
 	RotateGears.vuo \
+	ShowArrangedLayers.vuo \
+   ShowArrangedTextLayers.vuo \
 	ShowTextAnchor.vuo \
   StretchOvalWithBounds.vuo
 

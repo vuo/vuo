@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORREALREGULATION_HH
-#define VUOINPUTEDITORREALREGULATION_HH
+#pragma once
 
 #include "VuoInputEditorWithLineEditList.hh"
 
@@ -47,5 +46,3 @@ private:
 	json_object *convertFromLineEditListFormat(const QList<QString> &lineEditTexts);
 	int row;
 };
-
-#endif

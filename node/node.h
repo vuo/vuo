@@ -7,9 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef NODE_H
-#define NODE_H
-
+#pragma once
 
 #include "module.h"
 
@@ -71,6 +69,11 @@
  *			- "includeValues" (array of strings) — Enum types by default display all `_allowedValues()` in a menu.
  *			  When this detail is present, only the values listed will be displayed in the menu.
  *			  The values should be string keys — the output of `_getJson()`.
+ *			- "auto" — For VuoInteger and VuoReal ports, a special port value that signifies that the node should calculate
+ *			  the value for this port automatically instead of using the set value.
+ *			- "autoSupersedesDefault" — For ports with an "auto" value, true if the port should have the "auto" value instead of
+ *            the "default" value when the node is instantiated. This is useful if you want the port to start with the "auto"
+ *            value but default to the "default" value if the user deselects the "auto" value in the port's input editor.
  *			.
  *		Additional keys may be recognized by the port type's input editor (see @ref DevelopingInputEditors).
  *
@@ -340,6 +343,3 @@ void nodeInstanceFini(...);
 /**
  * @}
  */
-
-
-#endif

@@ -25,7 +25,7 @@ VuoModuleMetadata({
 						  "quicktime", "qt", "aic", "prores",
 						  "video", "gif"
 					],
-					"version" : "2.0.2",
+					"version" : "2.0.3",
 					"dependencies" : [
 						"VuoVideo",
 						"VuoFfmpegDecoder",
@@ -89,8 +89,22 @@ bool setVideoPath(struct nodeInstanceData* instance, VuoUrl url)
 	return false;
 }
 
+/**
+ * Validates the specified time, seeks to the specified time, and sets the playback rate (in case mirror loop mode is or was used).
+ */
+static void vuo_video_play_setTime(struct nodeInstanceData *instance, VuoReal time)
+{
+	VuoReal duration = VuoVideo_getDuration(instance->player);
+	int direction;
+	VuoReal sought = VuoVideo_validateTimestamp(time, duration, instance->loop, &direction);
+	instance->lastSoughtTime = sought;
+	VuoVideo_seekToSecond(instance->player, sought);
+	VuoVideo_setPlaybackRate(instance->player, instance->playbackRate * direction);
+}
+
 struct nodeInstanceData* nodeInstanceInit(
 	VuoInputData(VuoText) url,
+	VuoInputData(VuoLoopType) loop,
 	VuoInputData(VuoReal) playbackRate,
 	VuoInputData(VuoReal) setTime,
 	VuoInputData(VuoVideoOptimization) optimization
@@ -102,10 +116,10 @@ struct nodeInstanceData* nodeInstanceInit(
 	instance->isPlaying = false;
 	instance->playbackRate = playbackRate;
 	instance->optimizeFor = optimization;
-	instance->lastSoughtTime = setTime;
+	instance->loop = loop;
 
 	setVideoPath(instance, url);
-	VuoVideo_seekToSecond(instance->player, setTime);
+	vuo_video_play_setTime(instance, setTime);
 
 	return instance;
 }
@@ -146,7 +160,7 @@ void nodeInstanceEvent(
 	VuoInputEvent({"eventBlocking":"none"}) play,
 	VuoInputEvent({"eventBlocking":"none"}) pause,
 	VuoInputData(VuoLoopType, {"default":"loop"}) loop,
-	VuoInputData(VuoReal, {"default":1}) playbackRate,
+	VuoInputData(VuoReal, {"default":1, "suggestedMin":-2, "suggestedMax":2, "suggestedStep":0.1}) playbackRate,
 	VuoInputData(VuoReal, {"default":""}) setTime,
 	VuoInputEvent({"eventBlocking":"none","data":"setTime"}) setTimeEvent,
 	VuoInputData(VuoVideoOptimization, {"default":"auto"}) optimization,
@@ -155,10 +169,16 @@ void nodeInstanceEvent(
 	VuoOutputTrigger(decodedAudio, VuoList_VuoAudioSamples)
 	)
 {
-	if( setTimeEvent )
+	if(urlEvent)
 	{
-		(*instance)->lastSoughtTime = setTime;
-		VuoVideo_seekToSecond((*instance)->player, setTime);
+		if(setVideoPath(*instance, url))
+		{
+			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
+			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+
+			if((*instance)->isPlaying)
+				VuoVideo_play((*instance)->player);
+		}
 	}
 
 	if(optimizationChanged)
@@ -172,7 +192,7 @@ void nodeInstanceEvent(
 
 		VuoVideo_seekToSecond((*instance)->player, timestamp);
 
-		if((*instance)->isPlaying)
+		if( (*instance)->isPlaying )
 		{
 			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
 			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
@@ -181,19 +201,22 @@ void nodeInstanceEvent(
 		}
 	}
 
-	if(urlEvent)
-	{
-		if(setVideoPath(*instance, url))
-		{
-			VuoVideo_setVideoDelegate((*instance)->player, decodedVideo);
-			VuoVideo_setAudioDelegate((*instance)->player, decodedAudio);
+	(*instance)->loop = loop;
 
-			if((*instance)->isPlaying)
+	if( setTimeEvent )
+	{
+		if((*instance)->player != NULL)
+		{
+			vuo_video_play_setTime(*instance, setTime);
+
+			// if loop mode is none & playback has run it's course the player
+			// and node play states will be out of sync
+			if( (*instance)->isPlaying && !VuoVideo_isPlaying((*instance)->player) )
 				VuoVideo_play((*instance)->player);
 		}
 	}
 
-	if(play && !(*instance)->isPlaying)
+	if(play && (!(*instance)->isPlaying || !VuoVideo_isPlaying((*instance)->player)))
 	{
 		(*instance)->isPlaying = true;
 		VuoVideo_play((*instance)->player);
@@ -257,6 +280,7 @@ void nodeInstanceTriggerUpdate(
 		}
 	}
 
+	(*instance)->loop = loop;
 	VuoVideo_setPlaybackLooping((*instance)->player, loop);
 
 	if( !VuoReal_areEqual((*instance)->playbackRate, playbackRate) )
@@ -266,10 +290,7 @@ void nodeInstanceTriggerUpdate(
 	}
 
 	if( !VuoReal_areEqual((*instance)->lastSoughtTime, setTime) )
-	{
-		(*instance)->lastSoughtTime = setTime;
-		VuoVideo_seekToSecond((*instance)->player, setTime);
-	}
+		vuo_video_play_setTime(*instance, setTime);
 }
 
 void nodeInstanceFini

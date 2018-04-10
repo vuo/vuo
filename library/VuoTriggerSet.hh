@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTRIGGERSET_HH
-#define VUOTRIGGERSET_HH
+#pragma once
 
 #include <set>
 #include <dispatch/dispatch.h>
@@ -112,4 +111,3 @@ void VuoTriggerSet<TriggerDataType>::fire(TriggerDataType data)
 				   });
 }
 
-#endif // VUOTRIGGERSET_HH

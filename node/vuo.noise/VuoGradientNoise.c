@@ -38,13 +38,16 @@ VuoGradientNoise VuoGradientNoise_makeFromJson(json_object *js)
 	if (json_object_get_type(js) == json_type_string)
 		valueAsString = json_object_get_string(js);
 
-	VuoGradientNoise gn = VuoGradientNoise_Perlin;
+	VuoGradientNoise gn = VuoGradientNoise_Rectangular;
 
-	if (strcmp(valueAsString, "perlin") == 0) {
-		gn = VuoGradientNoise_Perlin;
-	} else if (strcmp(valueAsString, "simplex") == 0) {
-		gn = VuoGradientNoise_Simplex;
-	}
+	if (strcmp(valueAsString, "rectangular") == 0)
+		gn = VuoGradientNoise_Rectangular;
+	else if (strcmp(valueAsString, "triangular") == 0)
+		gn = VuoGradientNoise_Triangular;
+	else if (strcmp(valueAsString, "perlin") == 0)
+		gn = VuoGradientNoise_Rectangular;
+	else if (strcmp(valueAsString, "simplex") == 0)
+		gn = VuoGradientNoise_Triangular;
 
 	return gn;
 }
@@ -58,11 +61,11 @@ json_object * VuoGradientNoise_getJson(const VuoGradientNoise value)
 	char * valueAsString = "";
 
 	switch (value) {
-		case VuoGradientNoise_Perlin:
-			valueAsString = "perlin";
+		case VuoGradientNoise_Rectangular:
+			valueAsString = "rectangular";
 			break;
-		case VuoGradientNoise_Simplex:
-			valueAsString = "simplex";
+		case VuoGradientNoise_Triangular:
+			valueAsString = "triangular";
 			break;
 	}
 
@@ -75,8 +78,8 @@ json_object * VuoGradientNoise_getJson(const VuoGradientNoise value)
 VuoList_VuoGradientNoise VuoGradientNoise_getAllowedValues(void)
 {
 	VuoList_VuoGradientNoise l = VuoListCreate_VuoGradientNoise();
-	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Perlin);
-	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Simplex);
+	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Rectangular);
+	VuoListAppendValue_VuoGradientNoise(l, VuoGradientNoise_Triangular);
 	return l;
 }
 
@@ -89,11 +92,11 @@ char * VuoGradientNoise_getSummary(const VuoGradientNoise value)
 	char * valueAsString = "";
 
 	switch (value) {
-		case VuoGradientNoise_Perlin:
-			valueAsString = "Perlin";
+		case VuoGradientNoise_Rectangular:
+			valueAsString = "Rectangular (Perlin)";
 			break;
-		case VuoGradientNoise_Simplex:
-			valueAsString = "Simplex";
+		case VuoGradientNoise_Triangular:
+			valueAsString = "Triangular (Simplex)";
 			break;
 	}
 

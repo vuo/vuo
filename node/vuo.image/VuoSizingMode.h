@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSIZINGMODE_H
-#define VUOSIZINGMODE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoSizingMode_struct { void *l; } * VuoList_VuoSizingMode;
@@ -50,5 +49,3 @@ void VuoSizingMode_release(VuoSizingMode value);
 /**
  * @}
 */
-
-#endif

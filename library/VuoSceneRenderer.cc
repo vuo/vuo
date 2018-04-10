@@ -57,25 +57,6 @@ static bool VuoProfileSort(const VuoProfileEntry &first, const VuoProfileEntry &
 }
 #endif
 
-/**
- * Work around apparent GL driver bug, wherein
- * attempting to simultaneously bind the same buffer
- * to multiple VAOs on separate contexts causes a crash.
- * (Try running CompareCameras.vuo without this.)
- *
- * Also, using VuoSceneObjectRenderer and VuoSceneRender simultaneously seems to lead to crashes,
- * so we also use this semaphore to serialize OpenGL Transform Feedback.
- * https://b33p.net/kosada/node/8498
- */
-dispatch_semaphore_t VuoSceneRenderer_vertexArraySemaphore;
-/**
- * Initialize @c VuoSceneRenderer_vertexArraySemaphore.
- */
-static void __attribute__((constructor)) VuoSceneRenderer_init()
-{
-	VuoSceneRenderer_vertexArraySemaphore = dispatch_semaphore_create(1);
-}
-
 typedef std::list<GLuint> VuoSceneRendererVAOList;	///< The VAO for each VuoSubmesh
 typedef std::pair<void *, void *> VuoSceneRendererMeshShader;	///< A VuoMesh/VuoShader combination
 typedef std::map<VuoSceneRendererMeshShader, VuoSceneRendererVAOList> VuoSceneRendererMeshShaderVAOs;	///< The VAO for each VuoMesh/VuoShader combination
@@ -173,6 +154,7 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
  */
 VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScaleFactor)
 {
+	VDebugLog("backingScaleFactor=%g", backingScaleFactor);
 	VuoSceneRendererInternal *sceneRenderer = new VuoSceneRendererInternal;
 	VuoRegister(sceneRenderer, VuoSceneRenderer_destroy);
 
@@ -186,6 +168,8 @@ VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScal
 	VuoSceneObject_retain(sceneRenderer->camera);
 	sceneRenderer->glContext = glContext;
 	sceneRenderer->backingScaleFactor = backingScaleFactor;
+	sceneRenderer->viewportWidth = 0;
+	sceneRenderer->viewportHeight = 0;
 
 	sceneRenderer->vignetteShader = NULL;
 #if LIBRARY_PREMIUM_AVAILABLE
@@ -207,6 +191,7 @@ static void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRenderer
  */
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sr, unsigned int width, unsigned int height)
 {
+	VDebugLog("%dx%d", width, height);
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
@@ -247,7 +232,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 
 	// Build a projection matrix for a camera located at the origin, facing along the -z axis.
 	float aspectRatio = (float)sceneRenderer->viewportWidth/(float)sceneRenderer->viewportHeight;
-	if (camera.type == VuoSceneObjectType_PerspectiveCamera)
+	if (camera.type == VuoSceneObjectSubType_PerspectiveCamera)
 	{
 		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
 
@@ -273,7 +258,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
 		sceneRenderer->projectionMatrix[15] = 0;
 	}
-	else if (camera.type == VuoSceneObjectType_StereoCamera)
+	else if (camera.type == VuoSceneObjectSubType_StereoCamera)
 	{
 		float halfFieldOfView = (camera.cameraFieldOfView * (float)M_PI/180.f) / 2.f;
 		float top = camera.cameraDistanceMin * tanf(halfFieldOfView);
@@ -306,7 +291,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		sceneRenderer->projectionMatrix[14] = 2.f*camera.cameraDistanceMax*camera.cameraDistanceMin/(camera.cameraDistanceMin-camera.cameraDistanceMax);
 		sceneRenderer->projectionMatrix[15] = 0;
 	}
-	else if (camera.type == VuoSceneObjectType_OrthographicCamera)
+	else if (camera.type == VuoSceneObjectSubType_OrthographicCamera)
 	{
 		float halfWidth = camera.cameraWidth / 2.f;
 
@@ -332,7 +317,7 @@ void VuoSceneRenderer_regenerateProjectionMatrixInternal(VuoSceneRendererInterna
 		sceneRenderer->projectionMatrix[14] = -(camera.cameraDistanceMax+camera.cameraDistanceMin)/(camera.cameraDistanceMax-camera.cameraDistanceMin);
 		sceneRenderer->projectionMatrix[15] = 1;
 	}
-	else if (camera.type == VuoSceneObjectType_FisheyeCamera)
+	else if (camera.type == VuoSceneObjectSubType_FisheyeCamera)
 	{
 		bzero(sceneRenderer->projectionMatrix, sizeof(float)*16);
 #if LIBRARY_PREMIUM_AVAILABLE
@@ -402,6 +387,8 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		return;
 
 	VuoImage image = VuoShader_getUniform_VuoImage(so.shader, "texture");
+	if (so.isRealSize && !image)
+		return;
 
 	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
@@ -440,14 +427,14 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 		GLint useFisheyeProjectionUniform = VuoGlProgram_getUniformLocation(program, "useFisheyeProjection");
 		if (useFisheyeProjectionUniform != -1)
-			glUniform1i(useFisheyeProjectionUniform, sceneRenderer->camera.type == VuoSceneObjectType_FisheyeCamera);
+			glUniform1i(useFisheyeProjectionUniform, sceneRenderer->camera.type == VuoSceneObjectSubType_FisheyeCamera);
 
 		GLint modelviewMatrixUniform = VuoGlProgram_getUniformLocation(program, "modelviewMatrix");
 
 		if (so.isRealSize)
 		{
 			float billboardMatrix[16];
-			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, billboardMatrix);
+			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, modelviewMatrix[12], modelviewMatrix[13], sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, sceneRenderer->backingScaleFactor, billboardMatrix);
 			glUniformMatrix4fv(modelviewMatrixUniform, 1, GL_FALSE, billboardMatrix);
 		}
 		else
@@ -581,13 +568,13 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 				glBlendFuncSeparate(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendEquation(GL_FUNC_ADD);
 			}
-			else if (so.blendMode == VuoBlendMode_DarkerComponent)
+			else if (so.blendMode == VuoBlendMode_DarkerComponents)
 			{
 				/// @todo https://b33p.net/kosada/node/12014
 				glBlendFunc(GL_ONE, GL_ONE);
 				glBlendEquationSeparate(GL_MIN, GL_FUNC_ADD);
 			}
-			else if (so.blendMode == VuoBlendMode_LighterComponent)
+			else if (so.blendMode == VuoBlendMode_LighterComponents)
 			{
 				glBlendFuncSeparate(GL_ZERO, GL_ZERO, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 				glBlendEquationSeparate(GL_MAX, GL_FUNC_ADD);
@@ -605,7 +592,6 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 		}
 
 		unsigned int i = 0;
-		dispatch_semaphore_wait(VuoSceneRenderer_vertexArraySemaphore, DISPATCH_TIME_FOREVER);
 		for (VuoSceneRendererVAOList::iterator vi = soi->meshItems.begin(); vi != soi->meshItems.end(); ++vi, ++i)
 		{
 			glBindVertexArray(*vi);
@@ -637,7 +623,6 @@ static void VuoSceneRenderer_drawSceneObject(VuoSceneObject so, VuoSceneRenderer
 
 			glBindVertexArray(0);
 		}
-		dispatch_semaphore_signal(VuoSceneRenderer_vertexArraySemaphore);
 
 		if (so.blendMode != VuoBlendMode_Normal)
 		{
@@ -713,15 +698,14 @@ static void VuoSceneRenderer_uploadSceneObjectsRecursively(VuoSceneRendererInter
  *
  * @threadAnyGL
  */
-void VuoSceneRenderer_draw(VuoSceneRenderer sr)
+extern "C" void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
-	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
 	if (!sceneRenderer->rootSceneObjectPendingValid && !sceneRenderer->rootSceneObjectValid)
 		return;
 
-	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
+	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
 
 	if (sceneRenderer->rootSceneObjectPendingUpdated)
 	{
@@ -763,14 +747,9 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 
 
 #if LIBRARY_PREMIUM_AVAILABLE
-	if (sceneRenderer->camera.type == VuoSceneObjectType_FisheyeCamera)
+	if (sceneRenderer->camera.type == VuoSceneObjectSubType_FisheyeCamera)
 		VuoSceneRendererPremium_drawVignette(sceneRenderer);
 #endif
-
-
-	// Make sure the render commands actually execute before we release the semaphore,
-	// since the textures we're using might immediately be recycled (if the rootSceneObject is released).
-	glFlushRenderAPPLE();
 
 #ifdef PROFILE
 	VL();
@@ -788,12 +767,9 @@ void VuoSceneRenderer_draw(VuoSceneRenderer sr)
 	sceneRenderer->profileTimes.clear();
 #endif
 
-	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
-}
-
-extern "C"
-{
-void VuoSubmeshMesh_download(VuoSubmesh *submesh);
+	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
+	glFlushRenderAPPLE();
+	dispatch_semaphore_signal(VuoGlSemaphore);
 }
 
 /**
@@ -823,7 +799,7 @@ void VuoSubmeshMesh_download(VuoSubmesh *submesh);
 	for (unsigned int i = 0; i < so.mesh->submeshCount; i++)
 	{
 		VuoSubmesh submesh = so.mesh->submeshes[i];
-		VuoSubmeshMesh_download(&submesh);
+		VuoSubmesh_download(&submesh);
 
 		for(unsigned int m = 0; m < submesh.vertexCount; m++)
 		{
@@ -1044,7 +1020,7 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 	soi->overrideIsRealSize = VuoSceneRendererInternal_object::RealSize_Inherit;
 	soi->overrideShader = NULL;
 
-	if (so.type == VuoSceneObjectType_Text && so.text && so.text[0] != 0)
+	if (so.type == VuoSceneObjectSubType_Text && so.text && so.text[0] != 0)
 		VuoSceneRenderer_renderText(sceneRenderer, so, soi);
 
 	// Apply the overrides just within this function's scope.
@@ -1078,7 +1054,6 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 	VuoShader_getAttributeLocations(so.shader, so.mesh->submeshes[0].elementAssemblyMethod, glContext, &positionAttribute, &normalAttribute, &tangentAttribute, &bitangentAttribute, &textureCoordinateAttribute);
 
 	// For each mesh item in the sceneobject...
-	dispatch_semaphore_wait(VuoSceneRenderer_vertexArraySemaphore, DISPATCH_TIME_FOREVER);
 	for (unsigned long i = 0; i < so.mesh->submeshCount; ++i)
 	{
 		VuoSubmesh meshItem = so.mesh->submeshes[i];
@@ -1095,42 +1070,33 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 
 
 		// Populate the Vertex Array Object with the various vertex attributes.
-		int bufferCount = 0;
-		++bufferCount; // position
-		if (meshItem.glUpload.normalOffset)
-			++bufferCount;
-		if (meshItem.glUpload.tangentOffset)
-			++bufferCount;
-		if (meshItem.glUpload.bitangentOffset)
-			++bufferCount;
-		if (meshItem.glUpload.textureCoordinateOffset)
-			++bufferCount;
 
+		int stride = VuoSubmesh_getStride(so.mesh->submeshes[i]);
 		glEnableVertexAttribArray((GLuint)positionAttribute);
-		glVertexAttribPointer((GLuint)positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, (void*)0);
+		glVertexAttribPointer((GLuint)positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, (void*)0);
 
 		if (meshItem.glUpload.normalOffset && normalAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)normalAttribute);
-			glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, so.mesh->submeshes[i].glUpload.normalOffset);
+			glVertexAttribPointer((GLuint)normalAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.normalOffset);
 		}
 
 		if (meshItem.glUpload.tangentOffset && tangentAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)tangentAttribute);
-			glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, so.mesh->submeshes[i].glUpload.tangentOffset);
+			glVertexAttribPointer((GLuint)tangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.tangentOffset);
 		}
 
 		if (meshItem.glUpload.bitangentOffset && bitangentAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)bitangentAttribute);
-			glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, so.mesh->submeshes[i].glUpload.bitangentOffset);
+			glVertexAttribPointer((GLuint)bitangentAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.bitangentOffset);
 		}
 
 		if (meshItem.glUpload.textureCoordinateOffset && textureCoordinateAttribute>=0)
 		{
 			glEnableVertexAttribArray((GLuint)textureCoordinateAttribute);
-			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, so.mesh->submeshes[i].glUpload.textureCoordinateOffset);
+			glVertexAttribPointer((GLuint)textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, so.mesh->submeshes[i].glUpload.textureCoordinateOffset);
 		}
 
 
@@ -1144,7 +1110,6 @@ static void VuoSceneRenderer_uploadSceneObject(VuoSceneRendererInternal *sceneRe
 		soi->meshItems.push_back(vertexArray);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	dispatch_semaphore_signal(VuoSceneRenderer_vertexArraySemaphore);
 
 	if (cache)
 		sceneRenderer->meshShaderItems[meshShader] = soi->meshItems;
@@ -1207,11 +1172,9 @@ static void VuoSceneRenderer_cleanupMeshShaderItems(VuoSceneRendererInternal *sc
 {
 	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
-	dispatch_semaphore_wait(VuoSceneRenderer_vertexArraySemaphore, DISPATCH_TIME_FOREVER);
 	for (VuoSceneRendererMeshShaderVAOs::iterator msi = sceneRenderer->meshShaderItems.begin(); msi != sceneRenderer->meshShaderItems.end(); ++msi)
 		for (VuoSceneRendererVAOList::iterator i = msi->second.begin(); i != msi->second.end(); ++i)
 			glDeleteVertexArrays(1, &(*i));
-	dispatch_semaphore_signal(VuoSceneRenderer_vertexArraySemaphore);
 
 	sceneRenderer->meshShaderItems.clear();
 }
@@ -1293,6 +1256,8 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
+	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+
 	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 
 	VuoShader_cleanupContext(sceneRenderer->glContext);
@@ -1321,23 +1286,23 @@ void VuoSceneRenderer_destroy(VuoSceneRenderer sr)
 	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
 	dispatch_release(sceneRenderer->scenegraphSemaphore);
 
+	dispatch_semaphore_signal(VuoGlSemaphore);
+
 	free(sceneRenderer);
 }
 
 /**
- * Creates an OpenGL Framebuffer Object, and uses it to render the scene to @c image and @c depthImage.
+ * Helper for `VuoSceneRenderer_render*`.
  */
-void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage)
+extern "C" bool VuoSceneRenderer_renderInternal(VuoSceneRenderer sr, GLuint *outputTexture, GLenum target, GLuint imageGlInternalFormat, VuoMultisample multisample, GLuint *outputDepthTexture)
 {
 	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
 
 	CGLContextObj cgl_ctx = (CGLContextObj)sceneRenderer->glContext;
 
-	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
-
 	unsigned char colorBytesPerPixel = VuoGlTexture_getBytesPerPixel(imageGlInternalFormat, GL_BGRA);
 	unsigned long requiredBytes = sceneRenderer->viewportWidth * sceneRenderer->viewportHeight * colorBytesPerPixel;
-	if (depthImage)
+	if (outputDepthTexture)
 		requiredBytes += sceneRenderer->viewportWidth * sceneRenderer->viewportHeight * VuoGlTexture_getBytesPerPixel(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
 
 	int supportedSamples = VuoGlContext_getMaximumSupportedMultisampling(sceneRenderer->glContext);
@@ -1355,29 +1320,21 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 		VUserLog("Not enough graphics memory for a %dx%d (%d bytes/pixel * %d sample) render%s.  Requires %lu MB, have %lu MB.",
 				 sceneRenderer->viewportWidth, sceneRenderer->viewportHeight,
 				 colorBytesPerPixel, multisample==0?1:multisample,
-				 depthImage ? " with depth buffer" : "",
+				 outputDepthTexture ? " with depth buffer" : "",
 				 requiredBytes/1024/1024, maximumTextureBytes/1024/1024);
-		*image = NULL;
-		if (depthImage)
-			*depthImage = NULL;
-		return;
+		return false;
 	}
 
 
 	// Create a new GL Texture Object and Framebuffer Object.
-	GLuint outputTexture = VuoGlTexturePool_use(sceneRenderer->glContext, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA);
+	if (!*outputTexture)
+		*outputTexture = VuoGlTexturePool_use(sceneRenderer->glContext, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_BGRA);
 
-	GLuint outputDepthTexture=0;
-	if (depthImage)
-		outputDepthTexture = VuoGlTexturePool_use(sceneRenderer->glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
+	if (outputDepthTexture)
+		*outputDepthTexture = VuoGlTexturePool_use(sceneRenderer->glContext, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, GL_DEPTH_COMPONENT);
 
-	if (!outputTexture || (depthImage && !outputDepthTexture))
-	{
-		*image = NULL;
-		if (depthImage)
-			*depthImage = NULL;
-		return;
-	}
+	if (!*outputTexture || (outputDepthTexture && !*outputDepthTexture))
+		return false;
 
 	GLuint outputFramebuffer;
 	glGenFramebuffers(1, &outputFramebuffer);
@@ -1396,7 +1353,7 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, multisample, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER_EXT, renderBuffer);
 
-		if (depthImage)
+		if (outputDepthTexture)
 		{
 			glGenRenderbuffersEXT(1, &renderDepthBuffer);
 			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, renderDepthBuffer);
@@ -1406,13 +1363,14 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 	}
 	else
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTexture, 0);
-		if (depthImage)
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, outputDepthTexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, *outputTexture, 0);
+		if (outputDepthTexture)
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *outputDepthTexture, 0);
 	}
 
 
 	// Render.
+	dispatch_semaphore_wait(sceneRenderer->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	{
 		glViewport(0, 0, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 		glClearColor(0,0,0,0);
@@ -1430,9 +1388,9 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, outputFramebuffer2);
 
 		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTexture, 0);
-			if (depthImage)
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, outputDepthTexture, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, *outputTexture, 0);
+			if (outputDepthTexture)
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *outputDepthTexture, 0);
 
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, outputFramebuffer);
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -1442,8 +1400,8 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 								 GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
 								 GL_NEAREST);
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-			if (depthImage)
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
+			if (outputDepthTexture)
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 		}
 
@@ -1451,13 +1409,13 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 		glDeleteFramebuffers(1, &outputFramebuffer2);
 
 		glDeleteRenderbuffersEXT(1, &renderBuffer);
-		if (depthImage)
+		if (outputDepthTexture)
 			glDeleteRenderbuffersEXT(1, &renderDepthBuffer);
 	}
 	else
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-		if (depthImage)
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
+		if (outputDepthTexture)
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 	}
 
@@ -1465,7 +1423,55 @@ void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoIma
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDeleteFramebuffers(1, &outputFramebuffer);
 
-	*image = VuoImage_make(outputTexture, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
+	// Make sure the render commands are actually submitted before we release the semaphore,
+	// since the textures we're using might immediately be recycled (if the rootSceneObject is released).
+	glFlushRenderAPPLE();
+
+	dispatch_semaphore_signal(sceneRenderer->scenegraphSemaphore);
+
+	return true;
+}
+
+/**
+ * Renders the scene onto `image` and optionally `depthImage`.
+ */
+void VuoSceneRenderer_renderToImage(VuoSceneRenderer sr, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage)
+{
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
+	GLuint texture = 0;
+	GLuint depthTexture = 0;
+	if (!VuoSceneRenderer_renderInternal(sr, &texture, GL_TEXTURE_2D, imageGlInternalFormat, multisample, depthImage ? &depthTexture : NULL))
+	{
+		*image = NULL;
+		if (depthImage)
+			*depthImage = NULL;
+	}
+
+	*image = VuoImage_make(texture, imageGlInternalFormat, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
 	if (depthImage)
-		*depthImage = VuoImage_make(outputDepthTexture, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
+		*depthImage = VuoImage_make(depthTexture, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
+}
+
+/**
+ * Renders the scene onto an IOSurface.
+ */
+VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sr, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, bool includeDepthBuffer)
+{
+	VuoSceneRendererInternal *sceneRenderer = (VuoSceneRendererInternal *)sr;
+	GLuint imageGlInternalFormat = VuoImageColorDepth_getGlInternalFormat(GL_BGRA, imageColorDepth);
+	GLuint texture = 0;
+	VuoIoSurface ios = VuoIoSurfacePool_use(sceneRenderer->glContext, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight, &texture);
+	GLuint depthTexture = 0;
+	if (!VuoSceneRenderer_renderInternal(sr, &texture, GL_TEXTURE_RECTANGLE_ARB, imageGlInternalFormat, multisample, includeDepthBuffer ? &depthTexture : NULL))
+		return NULL;
+
+	if (includeDepthBuffer)
+	{
+		VuoImage depthImage = VuoImage_make(depthTexture, GL_DEPTH_COMPONENT, sceneRenderer->viewportWidth, sceneRenderer->viewportHeight);
+		VuoRetain(depthImage);
+		VuoRelease(depthImage);
+	}
+
+	return ios;
 }

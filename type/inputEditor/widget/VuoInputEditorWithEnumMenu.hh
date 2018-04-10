@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORWITHENUMMENU_HH
-#define VUOINPUTEDITORWITHENUMMENU_HH
+#pragma once
 
 #include "VuoInputEditorWithMenu.hh"
 
@@ -27,4 +26,3 @@ public:
 	VuoInputEditorMenuItem *setUpMenuTree(json_object *details);
 };
 
-#endif // VUOINPUTEDITORWITHENUMMENU_HH

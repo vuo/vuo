@@ -14,13 +14,13 @@ VuoModuleMetadata({
 					 "keywords" : [ "sound", "music", "merge", "combine" ],
 					 "version" : "2.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "PanAudio.vuo" ],
+						 "exampleCompositions" : [ "CompareMixAndRingModulate.vuo", "PanAudio.vuo" ],
 					 }
 				 });
 
 void nodeEvent
 (
-		VuoInputData(VuoList_VuoAudioSamples) samples,
+		VuoInputData(VuoList_VuoAudioSamples, {"name":"Channels"}) samples,
 		VuoOutputData(VuoAudioSamples) mixedSamples
 )
 {

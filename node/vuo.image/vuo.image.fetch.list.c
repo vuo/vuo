@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Fetch List of Images",
 					 "keywords" : [
-						 "download", "open", "load", "import", "http", "url", "file", "get",
+						 "download", "open", "load", "import", "http", "url", "file", "get", "read",
 						 "photograph", "picture", "bitmap", "texture", "icon",
 						 "png",
 						 "jpeg", "jpg",

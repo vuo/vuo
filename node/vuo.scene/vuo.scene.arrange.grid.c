@@ -22,7 +22,7 @@ void nodeEvent
 (
 		VuoInputData(VuoList_VuoSceneObject) objects,
 		VuoInputData(VuoBoolean, {"name":"Scale to Fit", "default":true}) scaleToFit,
-		VuoInputData(VuoPoint3d, {"default":[{"x":0,"y":0,"z":0}], "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
+		VuoInputData(VuoPoint3d, {"default":{"x":0.0,"y":0.0,"z":0.0}, "suggestedMin":{"x":-1.0,"y":-1.0,"z":-1.0}, "suggestedMax":{"x":1.0,"y":1.0,"z":1.0}, "suggestedStep":{"x":0.1,"y":0.1,"z":0.1}}) center,
 		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) width,
 		VuoInputData(VuoInteger, {"default":2, "suggestedMin":1}) columns,
 		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":0.0, "suggestedStep":0.1}) height,

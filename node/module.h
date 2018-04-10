@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef MODULE_H
-#define MODULE_H
+#pragma once
 
 #include "VuoHeap.h"
 
@@ -79,7 +78,7 @@
  *   - "compatibleOperatingSystems" — A set of operating systems on which this module can run. Unless this key is present, the module is assumed to run on all operating systems.
  *      This object contains keys for operating system names and values for the range of versions supported. Each range may specify "min", "max", or both.
  *      The operating systems and versions currently supported are:
- *      - "macosx" — "10.7", "10.8", "10.9"
+ *      - "macosx" — "10.8", "10.9"
  *   - "genericTypes" — Information about generic types used by this module.
  *      (This key is optional even if the module uses generic types. Currently, this key is only supported for node classes.)
  *      This object contains keys for generic type names and values for details about those types.
@@ -181,5 +180,3 @@ static inline void VuoAddCompositionFiniCallback(VuoCompositionFiniCallback fini
 	if (vuoAddCompositionFiniCallback)
 		vuoAddCompositionFiniCallback(fini);
 }
-
-#endif

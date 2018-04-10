@@ -24,4 +24,4 @@ If Vuo detects your device, but doesn't seem to be receiving any data:
    - Make sure your composition is referring to the correct device, especially if you have multiple similar devices connected.
    - Make sure that another Vuo composition or application isn't already exclusively connected to the device. (Check the Console application for messages.)
    - Try unplugging the device and plugging it back in. (If another Vuo composition was using the device but isn't using it anymore, this will make your current composition retry connecting to the device.)
-   - To exclusively read from a keyboard, Mac OS X requires `root` access.
+   - To exclusively read from a keyboard, macOS requires `root` access.

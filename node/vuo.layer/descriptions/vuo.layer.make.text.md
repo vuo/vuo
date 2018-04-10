@@ -1,10 +1,10 @@
 Creates a layer that can be combined with other layers to create a composite image.
 
-This node makes it easy to create sharp text — it always renders text at pixel-perfect resolution.  The layer is always rendered at its original size and rotation in the composite image — if you want to scale and rotate the layer, use the `Make Text Image` and `Make Scaled Layer` nodes instead.
+The layer created by this node will keep the text sharp. The text will be rendered at pixel-perfect resolution.
+
+Since this node creates a Real Size layer, the layer will be rendered at its original size and rotation in the composite image. If you want to scale and rotate the layer, use the `Make Text Image` and `Make Image Layer (Scaled)` nodes instead.
 
    - `Text` — The text to render.
    - `Font` — The font used to render the text.  See also the `Make Font` node.
-   - `Anchor` — The part of the text's area that `Position` represents.  For example, if Anchor is Left Center, Position represents the left center of the text rectangle, so the text grows rightward from Position.
-   - `Position` — The origin point of the text, in Vuo Coordinates.  The position is snapped so that it aligns exactly with a pixel.
-
-![](anchor.png)
+   - `Anchor` — The point within the layer that should be fixed at `Position`.
+   - `Position` — The point within the composite image where the layer should be placed, in Vuo Coordinates. The position is snapped so that it aligns exactly with a pixel.

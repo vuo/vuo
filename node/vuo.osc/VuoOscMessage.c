@@ -21,6 +21,7 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						"VuoOscType",
 						"VuoText"
 					 ]
 				 });
@@ -38,7 +39,10 @@ void VuoOscMessage_free(void *message)
 {
 	VuoOscMessage o = (VuoOscMessage)message;
 	VuoRelease(o->address);
-	json_object_put(o->data);
+
+	for (unsigned int i = 0; i < o->dataCount; ++i)
+		json_object_put(o->data[i]);
+
 	free(o);
 }
 
@@ -47,10 +51,10 @@ void VuoOscMessage_free(void *message)
  * Creates an OSC message having the specified @c address and carrying the specified @c data.
  * @c data should be a JSON array, and can contain zero or more values of any type.
  *
- * The VuoOscMessage takes ownership of @c data (expected to have json_object retain count 1);
- * the caller should not @c json_object_put it, or modify it after calling this function.
+ * The VuoOscMessage takes ownership of the `json_object`s in `data` (expected to have json_object retain count 1);
+ * the caller should not `json_object_put` the objects, or modify them after calling this function.
  */
-VuoOscMessage VuoOscMessage_make(VuoText address, json_object *data)
+VuoOscMessage VuoOscMessage_make(VuoText address, unsigned int dataCount, struct json_object **data, VuoOscType *dataTypes)
 {
 	VuoOscMessage o = (VuoOscMessage)malloc(sizeof(struct _VuoOscMessage));
 	VuoRegister(o, VuoOscMessage_free);
@@ -58,7 +62,15 @@ VuoOscMessage VuoOscMessage_make(VuoText address, json_object *data)
 	o->address = address;
 	VuoRetain(o->address);
 
-	o->data = data;
+	if (dataCount > VUOOSC_MAX_MESSAGE_ARGUMENTS)
+		VUserLog("Warning: OSC message has more than %d arguments; ignoring extras.", VUOOSC_MAX_MESSAGE_ARGUMENTS);
+
+	o->dataCount = MIN(dataCount, VUOOSC_MAX_MESSAGE_ARGUMENTS);
+	if (dataCount > 0)
+	{
+		memcpy(o->data,      data,      sizeof(struct json_object *) * o->dataCount);
+		memcpy(o->dataTypes, dataTypes, sizeof(VuoOscType)           * o->dataCount);
+	}
 
 	return o;
 }
@@ -85,11 +97,23 @@ VuoOscMessage VuoOscMessage_makeFromJson(json_object * js)
 	if (json_object_object_get_ex(js, "address", &o))
 		address = VuoText_makeFromJson(o);
 
-	json_object *data = NULL;
+	unsigned int dataCount = 0;
+	json_object *data[VUOOSC_MAX_MESSAGE_ARGUMENTS];
+	VuoOscType dataTypes[VUOOSC_MAX_MESSAGE_ARGUMENTS];
 	if (json_object_object_get_ex(js, "data", &o))
-		data = json_object_get(o);
+	{
+		dataCount = json_object_array_length(o);
+		for (unsigned int i = 0; i < dataCount; ++i)
+		{
+			json_object *v;
+			if (json_object_object_get_ex(js, "type", &v))
+				dataTypes[i] = VuoOscType_makeFromJson(v);
+			if (json_object_object_get_ex(js, "data", &v))
+				data[i] = json_object_get(v);
+		}
+	}
 
-	return VuoOscMessage_make(address, data);
+	return VuoOscMessage_make(address, dataCount, data, dataTypes);
 }
 
 /**
@@ -106,14 +130,20 @@ json_object * VuoOscMessage_getJson(const VuoOscMessage value)
 	if (value->address)
 		json_object_object_add(js, "address", json_object_new_string(value->address));
 
-	if (value->data)
-		json_object_object_add(js, "data", json_object_get(value->data));
+	if (value->dataCount)
+	{
+		struct json_object *data = json_object_new_array();
+		for (unsigned int i = 0; i < value->dataCount; ++i)
+		{
+			struct json_object *dataObject = json_object_new_object();
+			json_object_object_add(js, "type", VuoOscType_getJson(value->dataTypes[i]));
+			json_object_object_add(js, "data", value->data[i]);
+		}
+		json_object_object_add(js, "data", data);
+	}
 
 	return js;
 }
-
-/// How many OSC values should the summary include?
-#define SUMMARY_ITEMS_TO_SHOW 4
 
 /**
  * @ingroup VuoOscMessage
@@ -124,14 +154,13 @@ char * VuoOscMessage_getSummary(const VuoOscMessage value)
 	if (!value)
 		return strdup("(no message)");
 
-	char *data[SUMMARY_ITEMS_TO_SHOW];
-	int dataCount = 0;
-	if (value->data)
+	int dataCount = value->dataCount;
+	char *data[dataCount];
+	if (dataCount)
 	{
-		dataCount = json_object_array_length(value->data);
-		for (int i=0; i<MIN(SUMMARY_ITEMS_TO_SHOW,dataCount); ++i)
+		for (int i = 0; i < dataCount; ++i)
 		{
-			json_object *o = json_object_array_get_idx(value->data, i);
+			json_object *o = value->data[i];
 			switch (json_object_get_type(o))
 			{
 				case json_type_null:
@@ -162,46 +191,25 @@ char * VuoOscMessage_getSummary(const VuoOscMessage value)
 	}
 
 	int dataSize = 0;
-	for (int i=0; i<MIN(SUMMARY_ITEMS_TO_SHOW,dataCount); ++i)
+	for (int i = 0; i < dataCount; ++i)
 		dataSize += strlen(data[i]);
 	if (dataCount > 1)
-		dataSize += (MIN(SUMMARY_ITEMS_TO_SHOW,dataCount) - 1) * strlen(", ");
-	if (dataCount > SUMMARY_ITEMS_TO_SHOW)
-		dataSize += strlen(", ...");
+		dataSize += (dataCount - 1) * strlen(", ");
 
 	char *compositeData = (char *)malloc(dataSize+1);
 	compositeData[0] = 0;
-	for (int i=0; i<MIN(SUMMARY_ITEMS_TO_SHOW,dataCount); ++i)
+	for (int i = 0; i < dataCount; ++i)
 	{
 		if (i>0)
 			strcat(compositeData, ", ");
 		strcat(compositeData, data[i]);
 	}
-	if (dataCount > SUMMARY_ITEMS_TO_SHOW)
-		strcat(compositeData, ", ...");
 
 	char *valueAsString = VuoText_format("%s<br>[ %s ]", value->address, compositeData);
 
 	free(compositeData);
-	for (int i=0; i<MIN(SUMMARY_ITEMS_TO_SHOW,dataCount); ++i)
+	for (int i = 0; i < dataCount; ++i)
 		free(data[i]);
 
 	return valueAsString;
-}
-
-/**
- * Returns the number of data values in the OSC message.
- */
-int VuoOscMessage_getDataCount(const VuoOscMessage value)
-{
-	return json_object_array_length(value->data);
-}
-
-/**
- * Returns a JSON object representing the OSC message's data value at @c index.
- * The @c index values start at 1.
- */
-struct json_object * VuoOscMessage_getDataJson(const VuoOscMessage value, int index)
-{
-	return json_object_array_get_idx(value->data, index-1);
 }

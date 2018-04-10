@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERCOLORS_HH
-#define VUORENDERERCOLORS_HH
+#pragma once
 
 #include "VuoNode.hh"
 #include "VuoRendererNode.hh"
@@ -115,4 +114,3 @@ private:
 	static const int activityFadeDuration; ///< Time period, in ms, over which a component fades to its minimum alpha level following activity (e.g., node execution) while in 'Show Events' mode.
 };
 
-#endif // VUORENDERERCOLORS_HH

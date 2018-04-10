@@ -2,6 +2,9 @@ TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
 	AnimateOnSchedule.vuo \
+   ChangeRipplePeriodically.vuo \
+   ChangeSpeedWithMouse.vuo \
+   CountSecondsWithFadeout.vuo \
 	FlashOnMousePress.vuo \
 	RotateOnCue.vuo \
 	ShowElapsedTime.vuo \

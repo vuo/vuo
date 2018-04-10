@@ -20,7 +20,7 @@ VuoModuleMetadata({
 						 "separate", "move",
 						 "prism", "chromatic", "aberration", "shift",
 						 "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
@@ -87,7 +87,10 @@ void nodeInstanceEvent
 )
 {
 	if (! image)
+	{
+		*offsetImage = NULL;
 		return;
+	}
 
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture",     image);
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "redOffset",   VuoShader_samplerCoordinatesFromVuoCoordinates(redOffset,   image));

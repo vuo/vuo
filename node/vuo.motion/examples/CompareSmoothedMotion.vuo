@@ -1,6 +1,6 @@
 /**
  * @file
- * Compares the different ways of smoothing an animated object's movement from one point to another. 
+ * Compares the different ways of smoothing an animated object's movement from one point to another.
  *
  * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -9,10 +9,10 @@
 
 digraph G
 {
-CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="794,921"];
-CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="795,1002"];
-CombineLayers3 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="797,1086"];
-CombineLayers4 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="789,828"];
+CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="794,921"];
+CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="795,1002"];
+CombineLayers3 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="797,1086"];
+CombineLayers4 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="789,828"];
 ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="23,413" fillcolor="yellow"];
 CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-571,132" _increment="1" _decrement="1" _setCount="0" _minimum="0" _maximum="1" _wrapMode="\"wrap\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-26,1014" fillcolor="yellow" _started_eventThrottling="enqueue"];

@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Expected outputs for the vuo.text.insert node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"text", "inputPortValues":{"text":null, "position":1, "newText":null}, "outputPortValues": {"compositeText":null  }},
+	{"firingPort":"text", "inputPortValues":{"text":null, "position":1, "newText":""  }, "outputPortValues": {"compositeText":""    }},
+	{"firingPort":"text", "inputPortValues":{"text":"",   "position":1, "newText":null}, "outputPortValues": {"compositeText":""    }},
+	{"firingPort":"text", "inputPortValues":{"text":"",   "position":1, "newText":""  }, "outputPortValues": {"compositeText":""    }},
+
+	{"firingPort":"text", "inputPortValues":{"text":"a",  "position":1, "newText":""  }, "outputPortValues": {"compositeText":"a"   }},
+
+	{"firingPort":"text", "inputPortValues":{"text":"a",  "position":0, "newText":"1" }, "outputPortValues": {"compositeText":"1a"  }},
+	{"firingPort":"text", "inputPortValues":{"text":"a",  "position":1, "newText":"1" }, "outputPortValues": {"compositeText":"1a"  }},
+	{"firingPort":"text", "inputPortValues":{"text":"a",  "position":2, "newText":"1" }, "outputPortValues": {"compositeText":"a1"  }},
+	{"firingPort":"text", "inputPortValues":{"text":"a",  "position":3, "newText":"1" }, "outputPortValues": {"compositeText":"a1"  }},
+
+	{"firingPort":"text", "inputPortValues":{"text":"ab", "position":0, "newText":"12"}, "outputPortValues": {"compositeText":"12ab"}},
+	{"firingPort":"text", "inputPortValues":{"text":"ab", "position":1, "newText":"12"}, "outputPortValues": {"compositeText":"12ab"}},
+	{"firingPort":"text", "inputPortValues":{"text":"ab", "position":2, "newText":"12"}, "outputPortValues": {"compositeText":"a12b"}},
+	{"firingPort":"text", "inputPortValues":{"text":"ab", "position":3, "newText":"12"}, "outputPortValues": {"compositeText":"ab12"}},
+	{"firingPort":"text", "inputPortValues":{"text":"ab", "position":4, "newText":"12"}, "outputPortValues": {"compositeText":"ab12"}},
+]}

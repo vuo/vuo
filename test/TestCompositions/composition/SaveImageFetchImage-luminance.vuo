@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AreEqual [type="vuo.image.areEqual" version="1.0.0" label="Are Equal|<refresh>refresh\l|<images>images\l|<tolerance>tolerance\l|<equal>equal\r" pos="750,225" _tolerance="0.01"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="750,15"];
+HoldValue2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="630,15"];
+MakeAudioWave [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="-60,90" _wave="\"sine\"" _frequency="440.0" _setPhase="0.0"];
+MakeImageFromChannels [type="vuo.audio.image.channels" version="1.1.0" label="Make Image from Channels|<refresh>refresh\l|<channels>channels\l|<image>image\r" pos="135,90"];
+MakeList2 [type="vuo.list.make.2.VuoImage" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="683,236"];
+MakeList4 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="89,101"];
+SaveImage [type="vuo.image.save" version="1.0.0" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="495,75" _overwriteUrl="true" _format="\"png\""];
+ShareValue2 [type="vuo.data.share.VuoText" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="360,30" _value="\"SaveImageFetchImage-luminance.png\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<CalculateSamples>CalculateSamples\r" _CalculateSamples_type="event"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<equal>equal\l" _equal_type="VuoBoolean"];
+
+AreEqual:equal -> PublishedOutputs:equal;
+FetchImage:image -> MakeList2:1;
+HoldValue2:heldValue -> FetchImage:url;
+MakeAudioWave:samples -> MakeList4:1;
+MakeImageFromChannels:image -> MakeList2:2;
+MakeImageFromChannels:image -> SaveImage:saveImage;
+MakeImageFromChannels:image -> ShareValue2:refresh;
+MakeList2:list -> AreEqual:images;
+MakeList4:list -> MakeImageFromChannels:channels;
+PublishedInputs:CalculateSamples -> MakeAudioWave:calculateSamples;
+SaveImage:done -> HoldValue2:refresh;
+ShareValue2:sameValue -> HoldValue2:newValue;
+ShareValue2:sameValue -> SaveImage:url;
+}

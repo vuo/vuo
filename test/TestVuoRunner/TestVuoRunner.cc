@@ -246,7 +246,7 @@ private slots:
 
 	void testSetGlobalRootContext(void)
 	{
-		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true);
+		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false);
 		CGLContextObj rootContext;
 		CGLError error = CGLCreateContext(pf, NULL, &rootContext);
 		if (error != kCGLNoError)

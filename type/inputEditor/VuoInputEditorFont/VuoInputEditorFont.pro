@@ -13,9 +13,6 @@ HEADERS += \
 OTHER_FILES += \
 		VuoInputEditorFont.json
 
-INCLUDEPATH += \
-	$$ROOT/node/vuo.font
-
 LIBS += \
-	$$ROOT/node/vuo.font/VuoFont.o \
+	$$ROOT/type/VuoFont.o \
 	-Wl,-undefined,dynamic_lookup

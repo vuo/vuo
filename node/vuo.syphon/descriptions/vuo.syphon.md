@@ -6,7 +6,7 @@ With Syphon, one application (the Syphon **server**) can send video or still ima
 
 Each Syphon server has a **UUID** (unique ID) assigned by Syphon and, optionally, a **name** assigned by the application running the server. 
 
-A Syphon client can get a list of all available Syphon servers and pick one to connect to. Or the client can look up a specific server by the name of the server or the name of the application running the server. On Mac OS X, you can look up an application's name in the Activity Monitor application. 
+A Syphon client can get a list of all available Syphon servers and pick one to connect to. Or the client can look up a specific server by the name of the server or the name of the application running the server. On macOS, you can look up an application's name in the Activity Monitor application. 
 
 To receive images into a Vuo composition from a Syphon server, use the `Receive Image via Syphon` node. 
 

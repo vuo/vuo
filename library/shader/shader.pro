@@ -1,6 +1,7 @@
 TEMPLATE = aux
 
 SHADERS += \
+	GPUNoiseLib.glsl \
 	VuoGlslAlpha.glsl \
 	VuoGlslProjection.glsl \
 	VuoGlslRandom.glsl \

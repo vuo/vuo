@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOWINDOWREFERENCE_H
-#define VUOWINDOWREFERENCE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -30,11 +29,13 @@ VuoWindowReference VuoWindowReference_make(void *window);
 
 VuoWindowReference VuoWindowReference_makeFromJson(struct json_object * js);
 struct json_object * VuoWindowReference_getJson(const VuoWindowReference value);
+struct json_object * VuoWindowReference_getInterprocessJson(const VuoWindowReference value);
 char * VuoWindowReference_getSummary(const VuoWindowReference value);
 
 VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value);
 void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height, float *backingScaleFactor);
 bool VuoWindowReference_isFocused(const VuoWindowReference value);
+bool VuoWindowReference_isFullscreen(const VuoWindowReference value);
 
 /// @{
 /**
@@ -49,5 +50,3 @@ void VuoWindowReference_release(VuoWindowReference value);
 /**
  * @}
  */
-
-#endif

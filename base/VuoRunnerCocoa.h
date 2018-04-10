@@ -7,17 +7,18 @@
  * For more information, see http://vuo.org/license.
  */
 
-#if defined(__OBJC__) || defined(DOXYGEN)
+#pragma once
 
-#ifndef VUOCOCOA_H
-#define VUOCOCOA_H
+#if defined(__OBJC__) || defined(DOXYGEN)
 
 #ifdef NS_RETURNS_INNER_POINTER
 	#undef NS_RETURNS_INNER_POINTER
 #endif
 /// Disable NS_RETURNS_INNER_POINTER (new in Mac OS 10.10's system headers), since Clang 3.2 doesn't support it.
 /// https://b33p.net/kosada/node/9140
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <Cocoa/Cocoa.h>
 #undef NS_RETURNS_INNER_POINTER
 
@@ -125,7 +126,5 @@ typedef struct json_object json_object;
 #undef VuoCompiler
 #undef VuoComposition
 #undef VuoProtocol
-
-#endif // VUOCOCOA_H
 
 #endif // defined(__OBJC__) || defined(DOXYGEN)

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORTEXT_HH
-#define VUOINPUTEDITORTEXT_HH
+#pragma once
 
 #include "VuoInputEditorWithLineEdit.hh"
 
@@ -60,4 +59,3 @@ private:
 	bool isCodeEditor;
 };
 
-#endif // VUOINPUTEDITORTEXT_HH

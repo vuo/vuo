@@ -97,6 +97,7 @@ private slots:
 	void initTestCase()
 	{
 		compiler = initCompiler();
+		compiler->loadStoredLicense();
 
 		set<string> customModuleDirs;
 		customModuleDirs.insert( VuoFileUtilities::getUserModulesPath() );
@@ -154,6 +155,9 @@ private slots:
 		{
 			VuoCompilerNodeClass *nodeClass = *i;
 			string nodeClassName = nodeClass->getBase()->getClassName();
+
+			if (nodeClassName == "vuo.app.stopComposition")
+				continue;
 
 			// https://b33p.net/kosada/node/12090
 			if (nodeClassName == "vuo.video.receive")
@@ -235,6 +239,14 @@ private slots:
 		printf("%s\n", nodeClassName.toUtf8().constData()); fflush(stdout);
 
 		VuoCompilerNodeClass *nodeClass = compiler->getNodeClass(nodeClassName.toStdString());
+
+		VuoText trimmedDescription = VuoText_trim(nodeClass->getBase()->getDescription().c_str());
+		VuoLocal(trimmedDescription);
+		if (!nodeClass->getBase()->getDeprecated()
+		  && !dynamic_cast<VuoCompilerSpecializedNodeClass *>(nodeClass)
+		  && VuoText_isEmpty(trimmedDescription))
+			QFAIL("Missing node description.");
+
 		string composition = wrapNodeInComposition(nodeClass, compiler);
 
 		string compiledCompositionPath = VuoFileUtilities::makeTmpFile("testEachNode", "bc");

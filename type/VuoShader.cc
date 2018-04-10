@@ -723,7 +723,10 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 			VuoShaderUniform uniform = shader->uniforms[i];
 			GLint location = VuoGlProgram_getUniformLocation(program->program, uniform.name);
 			if (location == -1)
+			{
+				VDebugLog("Warning: Shader '%s' has a value for '%s', but the linked program has no uniform by that name.", shader->name, uniform.name);
 				continue;
+			}
 
 			if (strcmp(uniform.type, "VuoImage") == 0)
 			{
@@ -1012,9 +1015,22 @@ VuoShader VuoShader_makeFromJson(json_object *js)
  */
 json_object * VuoShader_getJson(const VuoShader value)
 {
+	if (!value)
+		return NULL;
+
 	json_object *js = json_object_new_object();
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));
 	return js;
+}
+
+/**
+ * Calls VuoShader_getJson(). Interprocess support is not yet implemented.
+ *
+ * @threadAny
+ */
+json_object * VuoShader_getInterprocessJson(const VuoShader value)
+{
+	return VuoShader_getJson(value);
 }
 
 /**

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPOSITION_HH
-#define VUOCOMPOSITION_HH
+#pragma once
 
 #include "VuoBase.hh"
 
@@ -73,5 +72,3 @@ private:
 
 	VuoPublishedPort * getPublishedPortWithName(string name, bool isInput);
 };
-
-#endif // VUOCOMPOSITION_HH

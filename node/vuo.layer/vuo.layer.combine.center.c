@@ -11,9 +11,9 @@
 #include "VuoLayer.h"
 
 VuoModuleMetadata({
-					  "title" : "Combine Layers",
+					  "title" : "Combine Layers (Center)",
 					  "keywords" : [ "group", "join", "together", "merge" ],
-					  "version" : "1.0.0",
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ ]
 					  }
@@ -25,7 +25,8 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
+		VuoInputData(VuoAnchor, {"default": {"horizontalAlignment":"center", "verticalAlignment":"center"}}) anchor,
+		VuoInputData(VuoPoint2d, {"name":"Position", "default":{"x":0,"y":0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":0, "suggestedMax":360, "suggestedStep":15}) rotation,
 		VuoInputData(VuoPoint2d, {"default":{"x":1,"y":1}, "suggestedMin":{"x":0,"y":0}, "suggestedMax":{"x":2,"y":2}, "suggestedStep":{"x":0.1,"y":0.1}}) scale,
 		VuoInputData(VuoList_VuoLayer) layers,
@@ -57,4 +58,6 @@ void nodeEvent
 
 	layer->sceneObject.transform = VuoTransform_makeFromMatrix4x4(applied);
 	layer->sceneObject.transform.translation = VuoPoint3d_add(layer->sceneObject.transform.translation, (VuoPoint3d) { center.x, center.y, 0 });
+
+	*layer = VuoLayer_setAnchor(*layer, anchor, -1, -1, -1);
 }

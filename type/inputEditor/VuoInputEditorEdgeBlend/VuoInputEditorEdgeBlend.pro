@@ -25,4 +25,5 @@ LIBS += \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoReal.o

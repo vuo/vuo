@@ -1,5 +1,5 @@
 TEMPLATE = aux
-CONFIG += zmq VuoPCH VuoPCH_objc graphviz json
+CONFIG += zmq VuoPCH VuoPCH_objc json
 
 VUO_INFO_PLIST = VuoCompositionLoader-Info.plist
 VUO_INFO_PLIST_GENERATED = VuoCompositionLoader-Info-generated.plist
@@ -23,6 +23,12 @@ OTHER_FILES += $$RUNTIME_CXX_SOURCES $$RUNTIME_C_SOURCES $$RUNTIME_OBJC_SOURCES 
 HEADERS += \
 	VuoEventLoop.h \
 	VuoRuntime.h
+
+QMAKE_CFLAGS += \
+	-I$$ROOT/library \
+	-I$$ROOT/node \
+	-I$$ROOT/type \
+	-I$$ROOT/type/list
 
 QMAKE_CLEAN += VuoCompositionLoader
 

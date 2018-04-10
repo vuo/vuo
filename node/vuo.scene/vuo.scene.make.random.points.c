@@ -13,7 +13,9 @@
 
 VuoModuleMetadata({
 					"title" : "Make Random Points Object",
-					"keywords" : [ ],
+					"keywords" : [
+						"stars", "starfield",
+					],
 					"version" : "1.0.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {
@@ -112,18 +114,11 @@ void nodeEvent
 				0, 1};
 	}
 
-	VuoSubmesh submesh;
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.normals = normals;
-	submesh.tangents = tangents;
-	submesh.bitangents = bitangents;
-	submesh.textureCoordinates = textures;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, normals, tangents, bitangents, textures,
+													0, NULL, VuoMesh_Points);
 	submesh.faceCullingMode = GL_NONE;
-	submesh.elementCount = 0;
 	submesh.primitiveSize = pointSize;
-	submesh.elements = NULL;
-	submesh.elementAssemblyMethod = VuoMesh_Points;
 
 	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
 

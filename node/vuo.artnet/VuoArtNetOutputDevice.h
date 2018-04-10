@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOARTNETOUTPUTDEVICE_H
-#define VUOARTNETOUTPUTDEVICE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -57,4 +56,3 @@ void VuoArtNetOutputDevice_release(VuoArtNetOutputDevice value);
  * @}
  */
 
-#endif // VUOARTNETOUTPUTDEVICE_H

@@ -35,8 +35,12 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 	QString styleSheet = "* { " + VuoInputEditor::getDefaultFontCss() + " } ";
 	if (isDark)
 		styleSheet += STRINGIFY(
+						  QCheckBox,
 						  QLabel {
 							  color: #cfcfcf;
+						  }
+						  QLabel:disabled {
+							  color: #8f8f8f;
 						  }
 
 
@@ -51,39 +55,14 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 							  selection-background-color: #1f365b;
 							  selection-color: #ffffff;
 						  }
-
-
-						  QDoubleSpinBox,
-						  QSpinBox {
-							  padding-right: 12px; /* make room for the arrows */
+						  QLineEdit:disabled,
+						  QPlainTextEdit:disabled,
+						  QDoubleSpinBox:disabled,
+						  QSpinBox:disabled {
+							color: #8f8f8f;
+							border: 2px solid #606060;
+							background: #353535;
 						  }
-						  QDoubleSpinBox::up-button,
-						  QSpinBox::up-button {
-							  subcontrol-origin: border;
-							  subcontrol-position: top right;
-							  width: 14px; /* 12px padding + 2px parent border */
-							  border: none;
-						  }
-						  QDoubleSpinBox::up-arrow,
-						  QSpinBox::up-arrow {
-							  image: url(:/Icons/spinbox-inc.png);
-							  width: 12px;
-							  height: 12px;
-						  }
-						  QDoubleSpinBox::down-button,
-						  QSpinBox::down-button {
-							  subcontrol-origin: border;
-							  subcontrol-position: bottom right;
-							  width: 14px; /* 12px padding + 2px parent border */
-							  border: none;
-						  }
-						  QDoubleSpinBox::down-arrow,
-						  QSpinBox::down-arrow {
-							  image: url(:/Icons/spinbox-dec.png);
-							  width: 12px;
-							  height: 12px;
-						  }
-
 
 						  QSlider::groove:horizontal {
 							  height: 4px;
@@ -91,15 +70,119 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 							  border-radius: 2px;
 							  margin: 5px 5px;
 						  }
+						  QSlider::groove:horizontal:disabled {
+							  background: #484848;
+						  }
+
 						  QSlider::handle:horizontal {
-							  background: rgba(32,32,32,224);
+							  background: #262626;
 							  border: 1px solid #808080;
 							  border-radius: 2px;
 							  width: 10px;
 							  height: 10px;
 							  margin: -5px -5px;
 						  }
+						  QSlider::handle:horizontal:disabled {
+							  background: #3b3b3b;
+							  border: 1px solid #686868;
+						  }
+
+
+						  QComboBox {
+							  border: 2px solid #707070;
+							  border-radius: 4px;
+							  padding: 2px 22px 2px 4px;
+							  background: #1a1a1a;
+							  color: #cfcfcf;
+						  }
+						  QComboBox:on {
+							  color: black;
+						  }
+						  QComboBox:off {
+							  color: black;
+						  }
+						  QComboBox:selected {
+							  background: #143B7D;//palette(highlight);
+							  selection-color: white;
+						  }
+						  QComboBox:focus {
+							  background: #1a1a1a;
+							  color: #cfcfcf;
+						  }
+						  QComboBox::drop-down {
+							  width: 22px;
+							  background: #1a1a1a;
+						  }
+						  QComboBox::down-arrow {
+							  image: url(:/Icons/spinbox-dec.png);
+						  }
 						  );
+
+	// Restyle spinboxes both in light and dark mode.
+	styleSheet += STRINGIFY(
+		QDoubleSpinBox,
+		QSpinBox {
+			padding-right: -1px;
+			padding-bottom: 1px;
+		}
+
+		QDoubleSpinBox::up-button,
+		QSpinBox::up-button {
+			subcontrol-origin: content;
+			subcontrol-position: top right;
+			border: none;
+		}
+		QDoubleSpinBox::up-arrow,
+		QSpinBox::up-arrow {
+			image: url(:/Icons/spinbox-inc.png);
+			width: 11px;
+			height: 7px;
+		}
+		QDoubleSpinBox::down-button,
+		QSpinBox::down-button {
+			subcontrol-origin: content;
+			subcontrol-position: bottom right;
+			border: none;
+		}
+		QDoubleSpinBox::down-arrow,
+		QSpinBox::down-arrow {
+			image: url(:/Icons/spinbox-dec.png);
+			width: 11px;
+			height: 7px;
+		}
+
+		QDoubleSpinBox::up-arrow:hover,
+		QDoubleSpinBox::down-arrow:hover,
+		QSpinBox::up-arrow:hover,
+		QSpinBox::down-arrow:hover {
+			background: %1;
+		}
+
+		// The `off` state is applied when the current value is at the max/min of the range.
+		QDoubleSpinBox::up-arrow:disabled,
+		QSpinBox::up-arrow:disabled,
+		QDoubleSpinBox::up-arrow:off,
+		QSpinBox::up-arrow:off {
+			image: url(:/Icons/spinbox-inc-disabled.png);
+		}
+		QDoubleSpinBox::down-arrow:disabled,
+		QSpinBox::down-arrow:disabled,
+		QDoubleSpinBox::down-arrow:off,
+		QSpinBox::down-arrow:off {
+			image: url(:/Icons/spinbox-dec-disabled.png);
+		}
+	)
+	.arg(isDark ? "#3a3a3a" : "#c4c4c4");
+
+	if (!isDark)
+		styleSheet += STRINGIFY(
+			QDoubleSpinBox,
+			QSpinBox {
+				border: 1px solid #c9c9c9;
+				border-radius: 1px;
+			}
+		);
+
 
 	setStyleSheet(styleSheet);
 }

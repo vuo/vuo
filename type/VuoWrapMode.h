@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOWRAPMODE_H
-#define VUOWRAPMODE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoWrapMode_struct { void *l; } * VuoList_VuoWrapMode;
@@ -49,5 +48,3 @@ void VuoWrapMode_release(VuoWrapMode value);
 /**
  * @}
 */
-
-#endif

@@ -17,7 +17,7 @@
 VuoModuleMetadata({
 					 "title" : "Ripple Image",
 					 "keywords" : [ "wave", "sinusoidal", "sine", "cosine", "undulate", "ruffle", "swish", "swing", "flap", "sway", "billow", "water", "filter" ],
-					 "version" : "2.1.0",
+					 "version" : "2.1.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
@@ -84,7 +84,10 @@ void nodeInstanceEvent
 )
 {
 	if (! image)
+	{
+		*rippledImage = NULL;
 		return;
+	}
 
 	double nonzeroWavelength = VuoReal_makeNonzero(wavelength);
 

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPOINT4D_H
-#define VUOPOINT4D_H
+#pragma once
 
 #include <math.h>
 
@@ -253,5 +252,3 @@ static inline VuoPoint4d VuoPoint4d_snap(VuoPoint4d a, VuoPoint4d center, VuoPoi
 /**
  * @}
  */
-
-#endif

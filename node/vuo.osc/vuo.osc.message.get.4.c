@@ -47,22 +47,20 @@ void nodeEvent
 		VuoOutputData(VuoGenericType4) data4
 )
 {
-	if (!message || !message->data)
+	if (!message || !message->dataCount)
 		return;
 
 	*address = message->address;
 
-	int dataCount = VuoOscMessage_getDataCount(message);
+	if (1 <= message->dataCount)
+		*data1 = VuoGenericType1_makeFromJson(message->data[0]);
 
-	if (1 <= dataCount)
-		*data1 = VuoGenericType1_makeFromJson(VuoOscMessage_getDataJson(message, 1));
+	if (2 <= message->dataCount)
+		*data2 = VuoGenericType2_makeFromJson(message->data[1]);
 
-	if (2 <= dataCount)
-		*data2 = VuoGenericType2_makeFromJson(VuoOscMessage_getDataJson(message, 2));
+	if (3 <= message->dataCount)
+		*data3 = VuoGenericType3_makeFromJson(message->data[2]);
 
-	if (3 <= dataCount)
-		*data3 = VuoGenericType3_makeFromJson(VuoOscMessage_getDataJson(message, 3));
-
-	if (4 <= dataCount)
-		*data4 = VuoGenericType4_makeFromJson(VuoOscMessage_getDataJson(message, 4));
+	if (4 <= message->dataCount)
+		*data4 = VuoGenericType4_makeFromJson(message->data[3]);
 }

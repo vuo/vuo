@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORMOVIEFORMAT_HH
-#define VUOINPUTEDITORMOVIEFORMAT_HH
+#pragma once
 
 #include "VuoInputEditorWithLineEdit.hh"
 #include <dlfcn.h>
@@ -107,4 +106,3 @@ private slots:
 	void emitValueChanged();
 };
 
-#endif // VUOINPUTEDITORMOVIEFORMAT_HH

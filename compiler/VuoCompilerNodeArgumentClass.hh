@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERNODEARGUMENTCLASS_H
-#define VUOCOMPILERNODEARGUMENTCLASS_H
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoPortClass.hh"
@@ -56,5 +55,3 @@ public:
 	size_t getIndexInCallbackStopFunction(void);
 	void setIndexInCallbackStopFunction(size_t indexInCallbackStopFunction);
 };
-
-#endif

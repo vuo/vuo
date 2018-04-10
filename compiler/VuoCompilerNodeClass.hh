@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERNODECLASS_H
-#define VUOCOMPILERNODECLASS_H
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoCompilerModule.hh"
@@ -98,8 +97,6 @@ public:
 	virtual Function * getCallbackStopFunction(void);
 	virtual Function * getCompositionContextInitFunction(void);
 	virtual Function * getCompositionContextFiniFunction(void);
-	virtual Function * getCompositionSerializeFunction(void);
-	virtual Function * getCompositionUnserializeFunction(void);
 	virtual Function * getTriggerWorkerFunction(string portIdentifier);
 	virtual vector<VuoCompilerTriggerDescription *> getTriggerDescriptions(void);
 	virtual VuoCompilerInstanceDataClass * getInstanceDataClass(void);
@@ -109,5 +106,3 @@ public:
 	virtual bool isStateful(void);
 	bool isSubcomposition(void);
 };
-
-#endif

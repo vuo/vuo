@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOVIDEOFRAME_H
-#define VUOVIDEOFRAME_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -20,6 +19,10 @@
  */
 
 #include "VuoImage.h"
+#include <float.h>
+
+/// VuoVideoFrame.timestamp's value when no timestamp is available.
+#define VuoVideoFrame_NoTimestamp -INFINITY
 
 /**
  * An image and timestamp for a single frame
@@ -64,5 +67,4 @@ static inline VuoVideoFrame VuoVideoFrame_make(VuoImage image, VuoReal timestamp
  * @}
  */
 
-#endif // VuoVideoFrame_H
 

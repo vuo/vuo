@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOIMAGEFORMAT_H
-#define VUOIMAGEFORMAT_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoImageFormat_struct { void *l; } * VuoList_VuoImageFormat;
@@ -62,5 +61,3 @@ void VuoImageFormat_release(VuoImageFormat value);
 /**
  * @}
 */
-
-#endif

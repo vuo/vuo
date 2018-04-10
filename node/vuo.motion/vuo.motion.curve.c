@@ -34,8 +34,15 @@ void nodeEvent
 		VuoInputData(VuoCurve, {"default":"quadratic"}) curve,
 		VuoInputData(VuoCurveEasing, {"default":"in"}) easing,
 		VuoInputData(VuoLoopType, {"default":"none"}) loop,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) phase,
 		VuoOutputData(VuoGenericType1) value
 )
 {
-	*value = VuoGenericType1_curve(time, startPosition, endPosition, duration, curve, easing, loop);
+	VuoReal timeAdjusted = time;
+	if (loop == VuoLoopType_Mirror)
+		timeAdjusted += phase * duration * 2;
+	else
+		timeAdjusted += phase * duration;
+
+	*value = VuoGenericType1_curve(timeAdjusted, startPosition, endPosition, duration, curve, easing, loop);
 }

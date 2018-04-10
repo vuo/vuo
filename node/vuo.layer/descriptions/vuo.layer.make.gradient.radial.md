@@ -1,11 +1,12 @@
 Creates a circular gradient that transitions smoothly between the given colors.
 
-   - `Name` — A name to identify the layer, allowing other nodes to select it from a group of layers. 
+   - `Name` — A name to identify the layer, allowing other nodes to select it from a group of layers.
    - `Colors` — The colors to transition between, in order from center outward.
    - `Gradient Center` — The center point, where the first color appears, in Vuo Coordinates relative to a layer whose corners are at (-1, -1) and (1, 1).
    - `Gradient Radius` — The distance from the center to where the next-to-last color finishes transitioning to the last color, in Vuo Coordinates relative to a layer whose corners are at (-1, -1) and (1, 1).
    - `Gradient Noise Amount` — How much random noise to add to the gradient.  A small amount of noise can help gradients look smoother.
-   - `Layer Center` — The center point of the output layer, in Vuo Coordinates.
+   - `Layer Anchor` — The point within the layer that should be fixed at `Layer Position`.
+   - `Layer Position` — The point within the composite image where the layer should be placed, in Vuo Coordinates.
    - `Layer Rotation` — The output layer's rotation counterclockwise, in degrees.
    - `Layer Width` — The output layer's width, in Vuo Coordinates.
    - `Layer Height` — The output layer's height, in Vuo Coordinates.

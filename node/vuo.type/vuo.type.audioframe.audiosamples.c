@@ -20,8 +20,8 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoAudioFrame) frame,
-		VuoOutputData(VuoList_VuoAudioSamples) samples
+		VuoOutputData(VuoList_VuoAudioSamples) channels
 )
 {
-	*samples = frame.samples;
+	*channels = frame.channels;
 }

@@ -40,7 +40,7 @@ void nodeInstanceEvent
 	if (window && !VuoWindowReference_isFocused(window))
 		return;
 
-	VuoMouse_getStatus(position, isPressed, button, window, modifierKey);
+	VuoMouse_getStatus(position, isPressed, button, window, modifierKey, true);
 }
 
 void nodeInstanceFini

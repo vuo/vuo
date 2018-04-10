@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLEAPFRAME_H
-#define VUOLEAPFRAME_H
+#pragma once
 
 #include "VuoInteger.h"
 #include "VuoLeapHand.h"
@@ -62,5 +61,3 @@ void VuoLeapFrame_release(VuoLeapFrame value);
 /**
  * @}
  */
-
-#endif

@@ -64,7 +64,6 @@ void VuoInputEditorText::setUpDialog(QDialog &dialog, json_object *originalValue
 
 	resizeToFitText();  // Although the height may be adjusted later, the width needs to be set now so the dialog's position can be calculated.
 	connect(textEdit, SIGNAL(textChanged()), this, SLOT(resizeToFitText()));
-	textEdit->verticalScrollBar()->installEventFilter(this);
 
 	textEdit->setAcceptDrops(true);
 	textEdit->installEventFilter(this);
@@ -100,14 +99,15 @@ json_object * VuoInputEditorText::convertFromTextEditFormat(const QString &value
  */
 void VuoInputEditorText::resizeToFitText(void)
 {
-	int textEditWidth = (isCodeEditor ? 600 : 270);
+	int scrollbarWidth = 15; // textEdit->verticalScrollBar()->width() returns the wrong value the first couple times it's called…
+	int textEditWidth = (isCodeEditor ? 600 : 270) - scrollbarWidth;
 
 	QTextDocument *document = textEdit->document();
 	qreal margin = document->documentMargin() + textEdit->frameWidth();
 	int textWidth = textEditWidth - 2*margin;
 	document->setTextWidth(textWidth);
 	QFontMetrics fm(textEdit->font());
-	int textHeight = document->lineCount() * fm.lineSpacing();
+	int textHeight = document->lineCount() * (fm.lineSpacing() + 1);
 	int textEditHeight = textHeight + 2*margin;
 
 	QRect screenRect = QApplication::desktop()->availableGeometry(textEdit);
@@ -116,9 +116,8 @@ void VuoInputEditorText::resizeToFitText(void)
 	int minTextEditHeight = fm.lineSpacing() + 2*margin;
 	textEditHeight = qMax(textEditInScreenRect.height(), minTextEditHeight);
 
-	int scrollBarWidth = (textEdit->verticalScrollBar()->isVisible() ? textEdit->verticalScrollBar()->width() : 0);
-	textEdit->viewport()->setFixedSize(textEditWidth, textEditHeight);
-	textEdit->setFixedSize(textEditWidth + scrollBarWidth, textEditHeight);
+	textEdit->viewport()->setFixedSize(textEditWidth, textEditHeight - 1);
+	textEdit->setFixedSize(textEditWidth + scrollbarWidth, textEditHeight + 3);
 	getDialog()->setFixedSize(getDialog()->sizeHint());  // adjustSize() limits to 2/3 of the screen's size (http://doc.qt.io/qt-5/qwidget.html#adjustSize)
 
 	textEdit->ensureCursorVisible();
@@ -189,16 +188,6 @@ bool VuoInputEditorText::eventFilter(QObject *object, QEvent *event)
 			textEdit->selectAll();
 		}
 
-		return false;
-	}
-
-	// When the text edit gains or loses its vertical scroll bar, resize and reposition the input editor.
-	if (object == textEdit->verticalScrollBar() && (event->type() == QEvent::Show || event->type() == QEvent::Hide))
-	{
-		int scrollBarWidth = textEdit->verticalScrollBar()->width();
-		int offset = (event->type() == QEvent::Show ? -scrollBarWidth : scrollBarWidth);
-		getDialog()->move( getDialog()->x() + offset, getDialog()->y() );
-		resizeToFitText();
 		return false;
 	}
 

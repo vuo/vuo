@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMIDIPITCHBEND_H
-#define VUOMIDIPITCHBEND_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -55,5 +54,4 @@ void VuoMidiPitchBend_release(VuoMidiPitchBend value);
  * @}
  */
 
-#endif // VUOMIDIPITCHBEND_H
 

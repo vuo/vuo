@@ -27,7 +27,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoList_VuoGenericType1) values,
-		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.00001}}) tolerance,
+		VuoInputData(VuoGenericType1, {"defaults":{"VuoInteger":0, "VuoReal":0.00001},"suggestedMin":{"VuoInteger":0, "VuoReal":0.0}}) tolerance,
 		VuoOutputData(VuoBoolean) notEqual
 )
 {

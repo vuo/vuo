@@ -11,7 +11,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Adjust Loudness",
-					 "keywords" : [ "sound", "music", "gain", "decibel", "volume" ],
+					 "keywords" : [
+						 "sound", "music",
+						 "volume", "amplitude", "gain", "rms", "root mean square", "decibel",
+						 "multiply", "scale", "*"
+					 ],
 					 "version" : "2.0.0",
 					 "node": {
 						 "exampleCompositions" : [ "ControlLoudness.vuo", "PanAudio.vuo" ],
@@ -36,11 +40,11 @@ struct nodeInstanceData *nodeInstanceInit()
 
 void nodeInstanceEvent
 (
-		VuoInputData(VuoList_VuoAudioSamples) samples,
+		VuoInputData(VuoList_VuoAudioSamples, {"name":"Channels"}) samples,
 		VuoInputEvent({"data":"samples"}) samplesEvent,
 		VuoInputData(VuoReal, {"suggestedMin":0, "suggestedMax":2, "default":1}) loudness,
 		VuoInputEvent({"data":"loudness", "eventBlocking":"wall"}) loudnessEvent,
-		VuoOutputData(VuoList_VuoAudioSamples) adjustedSamples,
+		VuoOutputData(VuoList_VuoAudioSamples, {"name":"Adjusted Channels"}) adjustedSamples,
 		VuoInstanceData(struct nodeInstanceData *)context
 )
 {

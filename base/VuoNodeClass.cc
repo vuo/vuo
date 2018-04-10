@@ -171,7 +171,9 @@ bool VuoNodeClass::isTypecastNodeClass(void)
 			|| nodeClassName == "vuo.mesh.populated"
 			|| nodeClassName == "vuo.scene.populated"
 			|| nodeClassName == "vuo.text.populated"
-			|| nodeClassName == "vuo.window.cursor.populated");
+			|| nodeClassName == "vuo.window.cursor.populated"
+			|| nodeClassName == "vuo.layer.get.child"
+			|| nodeClassName == "vuo.scene.get.child");
 
 #if 0
 	if (inputPortClasses.size() != VuoNodeClass::unreservedInputPortStartIndex+1)

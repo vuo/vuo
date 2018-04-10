@@ -135,7 +135,7 @@ VuoList_VuoControlCode VuoControlCode_getAllowedValues(void)
  */
 char *VuoControlCode_getSummary(const VuoControlCode value)
 {
-	char *valueAsString = "New Line (Unix + Mac OS X)";
+	char *valueAsString = "New Line (Unix + macOS)";
 
 	if(value == VuoControlCode_NewLineWindows)
 		valueAsString = "New Line (Windows)";

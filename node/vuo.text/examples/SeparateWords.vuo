@@ -39,5 +39,6 @@ MakeTextFromControlCode:text -> AppendTexts:separator;
 MakeTextLayer2:layer -> MakeList34:2;
 MakeTextLayer:layer -> MakeList34:1;
 ReceiveMouseButtons:pressed -> CycleThroughList2:goForward;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
 SummarizeValue3:summary -> MakeList10:2;
 }

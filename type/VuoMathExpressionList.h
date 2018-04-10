@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMATHEXPRESSIONLIST_H
-#define VUOMATHEXPRESSIONLIST_H
+#pragma once
 
 #include "VuoMathExpressionParser.h"
 #include "VuoDictionary_VuoText_VuoReal.h"
@@ -54,5 +53,3 @@ void VuoMathExpressionList_release(VuoMathExpressionList value);
 /**
  * @}
  */
-
-#endif

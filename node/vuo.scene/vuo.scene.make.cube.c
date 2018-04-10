@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Cube with Materials",
 					 "keywords" : [ "3D", "box", "d6", "hexahedron", "Platonic", "rectangular", "square" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
 						  "exampleCompositions" : [ ]
 					 }
@@ -62,18 +62,9 @@ static VuoSubmesh makePlane(unsigned int rows, unsigned int columns)
 		}
 	}
 
-	VuoSubmesh submesh;
-
-	submesh.positions = positions;
-	submesh.normals = normals;
-	submesh.textureCoordinates = uvs;
-	submesh.tangents = tangents;
-	submesh.bitangents = bitangents;
-	submesh.elements = triangles;
-	submesh.elementCount = triangleCount;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-	submesh.vertexCount = vertexCount;
-	submesh.faceCullingMode = GL_BACK;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													positions, normals, tangents, bitangents, uvs,
+													triangleCount, triangles, VuoMesh_IndividualTriangles);
 	return submesh;
 }
 
@@ -169,4 +160,6 @@ void nodeEvent
 	}
 
 	*cube = VuoSceneObject_make(NULL, NULL, transform, cubeChildObjects);
+	cube->name = VuoText_make("Cube");
+	cube->type = VuoSceneObjectSubType_Group;
 }

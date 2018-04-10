@@ -1,0 +1,55 @@
+/**
+ * @file
+ * Shows an image with 3 different directional blur shapes.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="1245,-195" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":-0.10000000149011612}" _width="2.0" _columns="4" _height="0.75" _rows="2"];
+BlurImageDirectionally [type="vuo.image.blur.directional" version="1.0.0" label="Blur Image Directionally|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<radius>radius\l|<angle>angle\l|<symmetric>symmetric\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="450,-15" fillcolor="violet" _shape="\"gaussian\"" _radius="20" _angle="45" _symmetric="true" _expandBounds="false" _quality="1"];
+BlurImageDirectionally2 [type="vuo.image.blur.directional" version="1.0.0" label="Blur Image Directionally|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<radius>radius\l|<angle>angle\l|<symmetric>symmetric\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="450,150" fillcolor="violet" _shape="\"linear\"" _radius="20" _angle="45" _symmetric="true" _expandBounds="false" _quality="1"];
+BlurImageDirectionally3 [type="vuo.image.blur.directional" version="1.0.0" label="Blur Image Directionally|<refresh>refresh\l|<image>image\l|<mask>mask\l|<shape>shape\l|<radius>radius\l|<angle>angle\l|<symmetric>symmetric\l|<expandBounds>expandBounds\l|<quality>quality\l|<blurredImage>blurredImage\r" pos="450,315" fillcolor="violet" _shape="\"box\"" _radius="20" _angle="45" _symmetric="true" _expandBounds="false" _quality="1"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="30,-225" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.1.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<type>type\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="180,-180" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.5" _sharpness="1.0" _angle="0." _type="\"horizontal-vertical\"" _center="{\"x\":0.0,\"y\":0.0}" _width="240" _height="240"];
+MakeImageLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="690,-195" _center="{\"x\":0.0,\"y\":0.0}" _opacity="1.0" _preservePhysicalSize="true"];
+MakeImageLayer2 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="690,-30" _center="{\"x\":0.0,\"y\":0.0}" _opacity="1.0" _preservePhysicalSize="true"];
+MakeImageLayer3 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="690,135" _center="{\"x\":0.0,\"y\":0.0}" _opacity="1.0" _preservePhysicalSize="true"];
+MakeImageLayer7 [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="690,300" _center="{\"x\":0.0,\"y\":0.0}" _opacity="1.0" _preservePhysicalSize="true"];
+MakeList11 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1474,-154" fillcolor="green"];
+MakeList6 [type="vuo.list.make.8.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="1163,-184"];
+MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1444,-184" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="975,0" _text="\"Gaussian\\nDirectional\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":0.43529412150382996,\"b\":0.81176471710205078,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"top\"}" _center="{\"x\":0,\"y\":0}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="975,165" _text="\"Linear\\nDirectional\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":0.43529412150382996,\"b\":0.81176471710205078,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"top\"}" _center="{\"x\":0,\"y\":0}"];
+MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="975,330" _text="\"Box\\nDirectional\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":0.43529412150382996,\"b\":0.81176471710205078,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"top\"}" _center="{\"x\":0,\"y\":0}"];
+MakeTextLayer4 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="975,-165" _text="\"Original\\n\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":0.43529412150382996,\"b\":0.81176471710205078,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"top\"}" _center="{\"x\":0,\"y\":0}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1515,-195" fillcolor="green" _multisampling="\"off\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+ArrangeLayersInGrid:griddedLayer -> MakeList9:1;
+BlurImageDirectionally2:blurredImage -> MakeImageLayer3:image;
+BlurImageDirectionally3:blurredImage -> MakeImageLayer7:image;
+BlurImageDirectionally:blurredImage -> MakeImageLayer2:image;
+FireOnStart:started -> MakeCheckerboardImage:refresh;
+MakeCheckerboardImage:image -> BlurImageDirectionally2:image;
+MakeCheckerboardImage:image -> BlurImageDirectionally3:image;
+MakeCheckerboardImage:image -> BlurImageDirectionally:image;
+MakeCheckerboardImage:image -> MakeImageLayer:image;
+MakeImageLayer2:layer -> MakeList6:2;
+MakeImageLayer2:layer -> MakeTextLayer:refresh;
+MakeImageLayer3:layer -> MakeList6:3;
+MakeImageLayer3:layer -> MakeTextLayer2:refresh;
+MakeImageLayer7:layer -> MakeList6:4;
+MakeImageLayer7:layer -> MakeTextLayer3:refresh;
+MakeImageLayer:layer -> MakeList6:1;
+MakeImageLayer:layer -> MakeTextLayer4:refresh;
+MakeList11:list -> RenderLayersToWindow:setWindowProperties;
+MakeList6:list -> ArrangeLayersInGrid:layers;
+MakeList9:list -> RenderLayersToWindow:layers;
+MakeTextLayer2:layer -> MakeList6:7;
+MakeTextLayer3:layer -> MakeList6:8;
+MakeTextLayer4:layer -> MakeList6:5;
+MakeTextLayer:layer -> MakeList6:6;
+}

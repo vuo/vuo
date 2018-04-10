@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMIDIINPUTDEVICE_H
-#define VUOMIDIINPUTDEVICE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -61,4 +60,3 @@ static inline VuoMidiInputDevice VuoMidiInputDevice_make(VuoInteger id, VuoText 
  * @}
  */
 
-#endif // VUOMIDIINPUTDEVICE_H

@@ -22,6 +22,7 @@ VuoModuleMetadata({
 					 ],
 					 "node" : {
 						 "exampleCompositions" : [ "ShowAudioFrequencies.vuo" ],
+						 "isDeprecated": true,
 					 }
 				 });
 
@@ -86,7 +87,7 @@ void nodeInstanceEvent
 
 		for(int i = 0; i < samples.sampleCount/binSize; ++i)
 		{
-			VuoReal* freq = VuoDsp_frequenciesForSamples((*instance)->vdsp, &samples.samples[(binSize*i)], binSize, frequencyBinAveraging, &freqCount);
+			VuoReal *freq = VuoDsp_frequenciesForSamples((*instance)->vdsp, &samples.samples[(binSize*i)], binSize, frequencyBinAveraging, &freqCount, false);
 
 			for(int n = 0; n < freqCount; n++)
 				avg[n] += freq[n];
@@ -94,12 +95,11 @@ void nodeInstanceEvent
 			free(freq);
 		}
 
-		VuoList_VuoReal frequencies = VuoListCreate_VuoReal();
-
+		*amplitudes = VuoListCreateWithCount_VuoReal(freqCount, 0);
+		VuoReal *amplitudeReals = VuoListGetData_VuoReal(*amplitudes);
 		for(int i = 0; i < freqCount; i++)
-			VuoListAppendValue_VuoReal(frequencies, avg[i] / (float)(samples.sampleCount/binSize));
+			amplitudeReals[i] = avg[i] / (float)(samples.sampleCount/binSize);
 
-		*amplitudes = frequencies;
 		free(avg);
 	}
 	else
@@ -112,15 +112,13 @@ void nodeInstanceEvent
 		// copy new data into rear of array
 		memcpy((*instance)->sampleQueue + (binSize - sampleCount), samples.samples, sampleCount * sizeof(VuoReal));
 
-		VuoReal* freq = VuoDsp_frequenciesForSamples((*instance)->vdsp, (*instance)->sampleQueue, binSize, frequencyBinAveraging, &freqCount);
+		VuoReal *freq = VuoDsp_frequenciesForSamples((*instance)->vdsp, (*instance)->sampleQueue, binSize, frequencyBinAveraging, &freqCount, false);
 
-		VuoList_VuoReal frequencies = VuoListCreate_VuoReal();
-		for(int i = 0; i < freqCount; i++)
-			VuoListAppendValue_VuoReal(frequencies, freq[i]);
+		*amplitudes = VuoListCreateWithCount_VuoReal(freqCount, 0);
+		VuoReal *amplitudeReals = VuoListGetData_VuoReal(*amplitudes);
+		memcpy(amplitudeReals, freq, sizeof(VuoReal) * freqCount);
 
 		free(freq);
-
-		*amplitudes = frequencies;
 	}
 }
 

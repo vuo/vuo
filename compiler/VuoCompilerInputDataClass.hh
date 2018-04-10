@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERINPUTDATACLASS_H
-#define VUOCOMPILERINPUTDATACLASS_H
+#pragma once
 
 #include "VuoCompilerDataClass.hh"
 
@@ -26,7 +25,7 @@ public:
 	VuoCompilerInputDataClass(string name, Type *type, bool twoParameters);
 	VuoCompilerData * newData(void);
 	string getDefaultValue(void);
+	string getAutoValue(void);
+	bool getAutoSupersedesDefaultValue(void);
 	bool isLoweredToTwoParameters(void);
 };
-
-#endif

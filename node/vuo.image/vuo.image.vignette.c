@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Vignette Image",
 					  "keywords" : [ "border", "surround", "encapsulate", "darken", "post-process", "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "filter" ],
-					  "version" : "1.1.2",
+					  "version" : "1.1.3",
 					  "node": {
 						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
 					  }
@@ -81,7 +81,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*vignettedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);

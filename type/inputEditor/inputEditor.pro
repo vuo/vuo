@@ -17,6 +17,7 @@ SUBDIRS += \
 	VuoInputEditorFont \
 	VuoInputEditorHidDevice \
 	VuoInputEditorInteger \
+	VuoInputEditorIntegerRange \
 	VuoInputEditorKey \
 	VuoInputEditorLoopType \
 	VuoInputEditorMathExpressionList \
@@ -28,6 +29,7 @@ SUBDIRS += \
 	VuoInputEditorPoint2d \
 	VuoInputEditorPoint3d \
 	VuoInputEditorPoint4d \
+	VuoInputEditorRange \
 	VuoInputEditorReal \
 	VuoInputEditorRealRegulation \
 	VuoInputEditorScreen \
@@ -56,6 +58,7 @@ VuoInputEditorEdgeBlend.depends = widget
 VuoInputEditorFont.depends = widget
 VuoInputEditorHidDevice.depends = widget
 VuoInputEditorInteger.depends = widget
+VuoInputEditorIntegerRange.depends = widget
 VuoInputEditorKey.depends = widget
 VuoInputEditorLoopType.depends = widget
 VuoInputEditorMathExpressionList.depends = widget
@@ -67,6 +70,7 @@ VuoInputEditorOscOutputDevice.depends = widget
 VuoInputEditorPoint2d.depends = widget
 VuoInputEditorPoint3d.depends = widget
 VuoInputEditorPoint4d.depends = widget
+VuoInputEditorRange.depends = widget
 VuoInputEditorReal.depends = widget
 VuoInputEditorRealRegulation.depends = widget
 VuoInputEditorScreen.depends = widget

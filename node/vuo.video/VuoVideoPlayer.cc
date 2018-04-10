@@ -37,7 +37,7 @@ VuoModuleMetadata({
 #define TRY_RELEASE_VIDEO(v) { if(v.image != NULL) { VuoRelease(v.image); v.image = NULL; v.timestamp = -1.0; } }
 
 /// Release and set an audio frame to null if it's not null already.
-#define TRY_RELEASE_AUDIO(a) { if(a.samples != NULL) { VuoRelease(a.samples); a.samples = NULL; a.timestamp = -1.0; } }
+#define TRY_RELEASE_AUDIO(a) { if (a.channels != NULL) { VuoRelease(a.channels); a.channels = NULL; a.timestamp = -1.0; } }
 
 VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimization)
 {
@@ -89,7 +89,7 @@ VuoVideoPlayer* VuoVideoPlayer::Create(VuoUrl url, VuoVideoOptimization optimiza
 
 	player->isReady = player->decoder != NULL && player->decoder->IsReady();
 
-	player->audioFrame.samples = NULL;
+	player->audioFrame.channels = NULL;
 	player->videoFrame.image = NULL;
 
 	if(player->decoder == NULL)
@@ -268,6 +268,8 @@ void VuoVideoPlayer::Pause()
 void VuoVideoPlayer::SetPlaybackRate(double rate)
 {
 	pthread_mutex_lock(&decoderMutex);
+
+	userSetPlaybackRate = rate;
 
 	if(!IsReady())
 		onReadyPlaybackRate = rate;
@@ -594,6 +596,11 @@ void VuoVideoPlayer::sendVideoFrame()
 			case VuoLoopType_Loop:
 				// seek back to the video start and resume playback
 				stopTimer(&audio_timer, &audio_semaphore);
+				if( !VuoReal_areEqual(playbackRate, userSetPlaybackRate) )
+				{
+					playbackRate = userSetPlaybackRate;
+					decoder->SetPlaybackRate(userSetPlaybackRate);
+				}
 				decoder->SeekToSecond(playbackRate > 0 ? 0 : decoder->GetDuration(), NULL);
 				playbackStart = dispatch_time(DISPATCH_TIME_NOW, 0);
 				timestampStart = decoder->GetLastDecodedVideoTimeStamp();
@@ -632,17 +639,17 @@ void VuoVideoPlayer::sendVideoFrame()
 
 void VuoVideoPlayer::sendAudioFrame()
 {
-	if( audioFrame.samples != NULL && VuoListGetCount_VuoAudioSamples(audioFrame.samples) > 0 )
+	if (audioFrame.channels != NULL && VuoListGetCount_VuoAudioSamples(audioFrame.channels) > 0)
 	{
 		if(audioFrameReceivedDelegate != NULL)
-			audioFrameReceivedDelegate(audioFrame.samples);
+			audioFrameReceivedDelegate(audioFrame.channels);
 
-		VuoRelease(audioFrame.samples);
-		audioFrame.samples = NULL;
+		VuoRelease(audioFrame.channels);
+		audioFrame.channels = NULL;
 	}
 
 	audioFrame = VuoAudioFrame_make(VuoListCreate_VuoAudioSamples(), 0);
-	VuoRetain(audioFrame.samples);
+	VuoRetain(audioFrame.channels);
 
 	if( decoder->NextAudioFrame(&audioFrame) )
 	{
@@ -657,8 +664,8 @@ void VuoVideoPlayer::sendAudioFrame()
 	}
 	else
 	{
-		VuoRelease(audioFrame.samples);
-		audioFrame.samples = NULL;
+		VuoRelease(audioFrame.channels);
+		audioFrame.channels = NULL;
 	}
 }
 

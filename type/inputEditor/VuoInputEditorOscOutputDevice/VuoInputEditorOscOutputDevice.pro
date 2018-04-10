@@ -25,6 +25,7 @@ LIBS += \
 	$$ROOT/node/vuo.osc/VuoOscOutputDevice.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoText.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoOscInputDevice.o \
 	$$ROOT/type/list/VuoList_VuoOscOutputDevice.o \
 	-framework IOKit

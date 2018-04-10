@@ -27,6 +27,7 @@ LIBS += \
 	$$ROOT/type/VuoScreen.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoBoolean.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$ROOT/type/list/VuoList_VuoScreen.o \
 	-framework IOKit \

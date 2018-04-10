@@ -4,6 +4,7 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 GENERIC_NODE_SOURCES += \
+	vuo.motion.crossfade.c \
 	vuo.motion.curve.c \
 	vuo.motion.smooth.duration.c \
 	vuo.motion.smooth.inertia.c \

@@ -23,7 +23,7 @@
 VuoModuleMetadata({
 					 "title" : "Render Layers to Window",
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
-					 "version" : "2.3.0",
+					 "version" : "2.4.0",
 					 "dependencies" : [
 						 "VuoSceneRenderer",
 						 "VuoWindow"
@@ -37,20 +37,23 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
+	VuoGlContext glContext;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer *sceneRenderer;
+	VuoMultisample multisampling;
+
 	dispatch_queue_t sceneRendererQueue;
 };
 
-void vuo_layer_render_window_init(VuoGlContext glContext, float backingScaleFactor, void *ctx)
+void vuo_layer_render_window_init(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
-	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
+	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 }
 
-void vuo_layer_render_window_updateBacking(VuoGlContext glContext, void *ctx, float backingScaleFactor)
+void vuo_layer_render_window_updateBacking(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
@@ -62,7 +65,7 @@ void vuo_layer_render_window_updateBacking(VuoGlContext glContext, void *ctx, fl
 	dispatch_sync(context->sceneRendererQueue, ^{
 	VuoRelease(context->sceneRenderer);
 
-	context->sceneRenderer = VuoSceneRenderer_make(glContext, backingScaleFactor);
+	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 				  });
 	if (valid)
@@ -72,23 +75,22 @@ void vuo_layer_render_window_updateBacking(VuoGlContext glContext, void *ctx, fl
 	}
 }
 
-void vuo_layer_render_window_resize(VuoGlContext glContext, void *ctx, unsigned int width, unsigned int height)
+void vuo_layer_render_window_resize(void *ctx, unsigned int width, unsigned int height)
 {
 	struct nodeInstanceData *context = ctx;
-
-	VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
+	dispatch_sync(context->sceneRendererQueue, ^{
+		VuoSceneRenderer_regenerateProjectionMatrix(context->sceneRenderer, width, height);
+	});
 }
 
-void vuo_layer_render_window_draw(VuoGlContext glContext, void *ctx)
+VuoIoSurface vuo_layer_render_window_draw(void *ctx)
 {
 	struct nodeInstanceData *context = ctx;
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-
-	glClearColor(0,0,0,0);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	VuoSceneRenderer_draw(context->sceneRenderer);
+	__block VuoIoSurface vis;
+	dispatch_sync(context->sceneRendererQueue, ^{
+		vis = VuoSceneRenderer_renderToIOSurface(context->sceneRenderer, VuoImageColorDepth_8, context->multisampling, false);
+	});
+	return vis;
 }
 
 struct nodeInstanceData *nodeInstanceInit(void)
@@ -96,11 +98,12 @@ struct nodeInstanceData *nodeInstanceInit(void)
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 
+	context->glContext = VuoGlContext_use();
+
 	context->sceneRenderer = NULL;
 	context->sceneRendererQueue = dispatch_queue_create("org.vuo.scene.render.window.sceneRenderer", NULL);
 
 	context->window = VuoWindowOpenGl_make(
-				false,
 				vuo_layer_render_window_init,
 				vuo_layer_render_window_updateBacking,
 				vuo_layer_render_window_resize,
@@ -126,6 +129,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) context,
 		VuoInputData(VuoList_VuoLayer) layers,
+		VuoInputData(VuoMultisample, {"default":"4"}) multisampling,
 		VuoInputData(VuoList_VuoWindowProperty) setWindowProperties,
 		VuoInputEvent({"eventBlocking":"none","data":"setWindowProperties"}) setWindowPropertiesEvent,
 		VuoOutputTrigger(showedWindow, VuoWindowReference),
@@ -133,6 +137,8 @@ void nodeInstanceEvent
 		VuoOutputData(VuoRenderedLayers) renderedLayers
 )
 {
+	(*context)->multisampling = multisampling;
+
 	if (setWindowPropertiesEvent)
 		VuoWindowOpenGl_setProperties((*context)->window, setWindowProperties);
 
@@ -170,4 +176,5 @@ void nodeInstanceFini
 											 });
 	VuoRelease((*context)->window);
 	dispatch_release((*context)->sceneRendererQueue);
+	VuoGlContext_disuse((*context)->glContext);
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSHADER_H
-#define VUOSHADER_H
+#pragma once
 
 #include "VuoColor.h"
 #include "VuoImage.h"
@@ -168,11 +167,15 @@ VuoShader VuoShader_makeUnlitRoundedRectangleShader(VuoColor color, VuoReal shar
 VuoShader VuoShader_makeLitColorShader(VuoColor diffuseColor, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, VuoImage specularImage, VuoImage normalImage);
-VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount);
-VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount);
+
+VuoShader VuoShader_makeLinearGradientShader(void);
+void VuoShader_setLinearGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount);
+
+VuoShader VuoShader_makeRadialGradientShader(void);
+void VuoShader_setRadialGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount);
 
 VuoShader VuoShader_makeFrostedGlassShader(void);
-void VuoShader_setFrostedGlassShaderValues(VuoShader shader, VuoColor color, VuoReal brightness, VuoReal noiseTime, VuoReal noiseAmount, VuoReal noiseScale, VuoReal chromaticAberration, VuoInteger iterations);
+void VuoShader_setFrostedGlassShaderValues(VuoShader shader, VuoColor color, VuoReal brightness, VuoReal noiseTime, VuoReal noiseAmount, VuoReal noiseScale, VuoReal chromaticAberration, VuoInteger levels, VuoReal roughness, VuoReal spacing, VuoInteger iterations);
 /// @}
 
 
@@ -211,6 +214,7 @@ VuoReal VuoShader_samplerSizeFromVuoSize(VuoReal vuoSize);
 char * VuoShader_getSummary(const VuoShader value);
 VuoShader VuoShader_makeFromJson(struct json_object * js);
 struct json_object * VuoShader_getJson(const VuoShader value);
+struct json_object * VuoShader_getInterprocessJson(const VuoShader value);
 
 /// Automatically generated function.
 VuoShader VuoShader_makeFromString(const char *str);
@@ -226,5 +230,3 @@ void VuoShader_release(VuoShader value);
 /**
  * @}
  */
-
-#endif

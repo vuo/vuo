@@ -1,0 +1,1 @@
+Converts a real value to a 2D Transform with the specified scale (in Vuo Coordinates) along both the X and Y axes.  Translation and rotation values are set to Transform identity `(0,0)` and `0°` respectively.

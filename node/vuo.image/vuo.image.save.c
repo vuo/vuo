@@ -23,7 +23,7 @@ VuoModuleMetadata({
 						 "file", "write", "export",
 						 "png", "jpg", "jpeg", "tiff", "bmp", "hdr", "exr", "gif", "tga", "targa", "webp"
 					 ],
-					 "version" : "1.0.1",
+					 "version" : "1.0.2",
 					 "dependencies" : [
 						 "FreeImage",
 						 "VuoInteger",
@@ -61,7 +61,7 @@ void nodeEvent
 		VuoInputData(VuoImage) saveImage,
 		VuoInputEvent({"eventBlocking":"none","data":"saveImage"}) saveImageEvent,
 		VuoInputData(VuoBoolean, {"default":true, "name":"Overwrite URL"}) overwriteUrl,
-		VuoInputData(VuoImageFormat, {"default":"png"}) format,
+		VuoInputData(VuoImageFormat, {"default":"PNG"}) format,
 		VuoOutputEvent() done
 )
 {
@@ -92,7 +92,10 @@ void nodeEvent
 		return;
 	}
 
-	unsigned int depth = VuoImage_getColorDepth(saveImage) == VuoImageColorDepth_8 ? 32 : 64;
+	VuoImageColorDepth cd = VuoImage_getColorDepth(saveImage);
+	unsigned int depth = 32;
+	if (cd == VuoImageColorDepth_16) depth = 64;
+	if (cd == VuoImageColorDepth_32) depth = 128;
 	VDebugLog("Input format : %s (depth = %dbpc)",VuoGl_stringForConstant(saveImage->glInternalFormat), depth/4);
 
 	unsigned int bufferFormat = GL_BGRA;
@@ -104,6 +107,16 @@ void nodeEvent
 	else if (depth == 64
 		  || saveImage->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB)
 		bufferFormat = GL_RGBA16I_EXT;
+	else if (depth == 128)
+	{
+		// FreeImage only supports 32bpc EXR, HDR, and TIFF.
+		if (format == VuoImageFormat_EXR
+		 || format == VuoImageFormat_HDR
+		 || format == VuoImageFormat_TIFF)
+			bufferFormat = GL_RGBA32F_ARB;
+		else
+			bufferFormat = GL_RGBA16I_EXT;
+	}
 	const unsigned char *buffer = VuoImage_getBuffer(saveImage, bufferFormat);
 	if (!buffer)
 	{
@@ -114,54 +127,117 @@ void nodeEvent
 	int width = saveImage->pixelsWide;
 	int height = saveImage->pixelsHigh;
 
+	// https://b33p.net/kosada/node/12362
+	// For image formats that support variable transparency, FreeImage expects unpremultiplied colors.
+	// For image formats that don't support variable transparency, we should leave colors premultiplied
+	// so the output image isn't abnormally bright.
+	bool shouldUnpremultiply = true;
+	if (format == VuoImageFormat_EXR
+	 || format == VuoImageFormat_GIF
+	 || format == VuoImageFormat_HDR
+	 || format == VuoImageFormat_JPEG)
+		shouldUnpremultiply = false;
+
 	FreeImage_SetOutputMessage(FreeImageErrorHandler);
 	FIBITMAP *fibmp;
 	if (bufferFormat == GL_BGRA)
 	{
-		VDebugLog("Output format: RGBA 8bpc integer");
-		// VuoImage_getBuffer() provides premultiplied colors, but FreeImage expects un-premultiplied.
+		VDebugLog("Output format: RGBA 8bpc integer%s", shouldUnpremultiply?" (unpremultiplied)":"");
 		const unsigned char *b = (unsigned char *)buffer;
 		fibmp = FreeImage_AllocateT(FIT_BITMAP, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
-		for (long int y = 0; y < height; ++y)
-		{
-			unsigned char *d = (unsigned char *)FreeImage_GetScanLine(fibmp, y);
-			for (long int x = 0; x < width; ++x)
+		if (shouldUnpremultiply)
+			for (long int y = 0; y < height; ++y)
 			{
-				float alpha = (float)b[3] / 255.;
-				// Clamp after un-premultiplying, to ensure the `unsigned char` values don't wrap
-				// https://b33p.net/kosada/node/11821
-				d[0] = VuoInteger_clamp((float)b[0] / alpha, 0, 255);
-				d[1] = VuoInteger_clamp((float)b[1] / alpha, 0, 255);
-				d[2] = VuoInteger_clamp((float)b[2] / alpha, 0, 255);
-				d[3] = b[3];
-				b += 4;
-				d += 4;
+				unsigned char *d = (unsigned char *)FreeImage_GetScanLine(fibmp, y);
+				for (long int x = 0; x < width; ++x)
+				{
+					float alpha = (float)b[3] / 255.;
+					// Clamp after un-premultiplying, to ensure the `unsigned char` values don't wrap
+					// https://b33p.net/kosada/node/11821
+					d[0] = VuoInteger_clamp((float)b[0] / alpha, 0, 255);
+					d[1] = VuoInteger_clamp((float)b[1] / alpha, 0, 255);
+					d[2] = VuoInteger_clamp((float)b[2] / alpha, 0, 255);
+					d[3] = b[3];
+					b += 4;
+					d += 4;
+				}
 			}
-		}
+		else
+			memcpy(FreeImage_GetBits(fibmp), buffer, width*height*4);
 	}
 	else if (bufferFormat == GL_RGBA16I_EXT)
 	{
 		bool mono = (saveImage->glInternalFormat == GL_LUMINANCE_ALPHA16F_ARB);
-		VDebugLog("Output format: RGBA 16bpc integer%s", mono?" (mono)":"");
-		// VuoImage_getBuffer() provides premultiplied colors, but FreeImage expects un-premultiplied.
+		VDebugLog("Output format: RGBA 16bpc integer%s%s", mono?" (mono)":"", shouldUnpremultiply?" (unpremultiplied)":"");
 		const unsigned short *b = (const unsigned short *)buffer;
 		fibmp = FreeImage_AllocateT(FIT_RGBA16, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
-		for (long int y = 0; y < height; ++y)
-		{
-			unsigned short *d = (unsigned short *)FreeImage_GetScanLine(fibmp, y);
-			for (long int x = 0; x < width; ++x)
+		if (shouldUnpremultiply)
+			for (long int y = 0; y < height; ++y)
 			{
-				float alpha = (float)b[3] / 65535.;
-				// Clamp after un-premultiplying, to ensure the `unsigned short` values don't wrap
-				// https://b33p.net/kosada/node/11821
-				d[0] = VuoInteger_clamp((float)b[       2] / alpha, 0, 65535);
-				d[1] = VuoInteger_clamp((float)b[mono?2:1] / alpha, 0, 65535);
-				d[2] = VuoInteger_clamp((float)b[mono?2:0] / alpha, 0, 65535);
-				d[3] = b[3];
-				b += 4;
-				d += 4;
+				unsigned short *d = (unsigned short *)FreeImage_GetScanLine(fibmp, y);
+				for (long int x = 0; x < width; ++x)
+				{
+					float alpha = (float)b[3] / 65535.;
+					// Clamp after un-premultiplying, to ensure the `unsigned short` values don't wrap
+					// https://b33p.net/kosada/node/11821
+					d[0] = VuoInteger_clamp((float)b[       2] / alpha, 0, 65535);
+					d[1] = VuoInteger_clamp((float)b[mono?2:1] / alpha, 0, 65535);
+					d[2] = VuoInteger_clamp((float)b[mono?2:0] / alpha, 0, 65535);
+					d[3] = b[3];
+					b += 4;
+					d += 4;
+				}
 			}
-		}
+		else
+			for (long int y = 0; y < height; ++y)
+			{
+				unsigned short *d = (unsigned short *)FreeImage_GetScanLine(fibmp, y);
+				for (long int x = 0; x < width; ++x)
+				{
+					d[0] = b[2];
+					d[1] = b[mono?2:1];
+					d[2] = b[mono?2:0];
+					d[3] = b[3];
+					b += 4;
+					d += 4;
+				}
+			}
+	}
+	else if (bufferFormat == GL_RGBA32F_ARB)
+	{
+		bool mono = (saveImage->glInternalFormat == GL_LUMINANCE_ALPHA32F_ARB);
+		VDebugLog("Output format: RGBA 32bpc float%s%s", mono?" (mono)":"", shouldUnpremultiply?" (unpremultiplied)":"");
+		const float *b = (const float *)buffer;
+		fibmp = FreeImage_AllocateT(FIT_RGBAF, width, height, depth, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK);
+		if (shouldUnpremultiply)
+			for (long int y = 0; y < height; ++y)
+			{
+				float *d = (float *)FreeImage_GetScanLine(fibmp, y);
+				for (long int x = 0; x < width; ++x)
+				{
+					float alpha = b[3];
+					d[0] = b[       2] / alpha;
+					d[1] = b[mono?2:1] / alpha;
+					d[2] = b[mono?2:0] / alpha;
+					d[3] = b[3];
+					b += 4;
+					d += 4;
+				}
+			}
+		else
+			for (long int y = 0; y < height; ++y)
+			{
+				float *d = (float *)FreeImage_GetScanLine(fibmp, y);
+				for (long int x = 0; x < width; ++x)
+				{
+					d[0] = b[2];
+					d[1] = b[mono?2:1];
+					d[2] = b[mono?2:0];
+					d[3] = b[3];
+					b += 4;
+					d += 4;
+				}
+			}
 	}
 	else if (bufferFormat == GL_DEPTH_COMPONENT16
 		  || bufferFormat == GL_R16)

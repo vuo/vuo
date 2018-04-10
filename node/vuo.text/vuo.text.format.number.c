@@ -15,7 +15,10 @@
 
 VuoModuleMetadata({
 					  "title" : "Format Number",
-					  "keywords" : [ "currency", "dollar", "euro", "percentage", "round" ],
+					  "keywords" : [
+						  "currency", "dollar", "euro", "percentage", "round",
+						  "convert", "real", // so it shows up when searching for "convert real text"
+					  ],
 					  "version" : "1.1.0",
 					  "dependencies" : [
 						  "CoreFoundation.framework"

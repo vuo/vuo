@@ -33,7 +33,7 @@ void VuoInputEditorEdgeBlend::setupSpinBox(VuoDoubleSpinBox* spin, double min, d
 
 void VuoInputEditorEdgeBlend::setupSlider(QSlider* slider, double min, double max, double step, double value)
 {
-	slider->setAttribute(Qt::WA_MacSmallSize);
+	// slider->setAttribute(Qt::WA_MacSmallSize);
 	slider->setOrientation(Qt::Horizontal);
 	slider->setFocusPolicy(Qt::NoFocus);
 	slider->setMinimum(0);
@@ -104,7 +104,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 	// when showing sliders, add a little extra margin on the bottom since VuoDoubleSpinBox takes up the
 	// entire vertical spacing
 	layout->setContentsMargins(4, 6, 12, hasMinMax ? 6 : 4);
-	layout->setSpacing(4);
+	layout->setSpacing(8);
 
 	currentValue = VuoEdgeBlend_makeFromJson(originalValue);
 
@@ -116,7 +116,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 		setupSpinBox(spinBox_crop, suggestedMin.crop, suggestedMax.crop, suggestedStep.crop, currentValue.crop);
 		connect(spinBox_crop, SIGNAL(valueChanged(QString)), this, SLOT(setCrop(QString)));
 
-		layout->addWidget( new QLabel("crop"), row, 0 );
+		layout->addWidget( new QLabel("Crop"), row, 0 );
 		layout->addWidget( spinBox_crop, row, 1 );
 
 		row++;
@@ -146,7 +146,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 		setupSpinBox(spinBox_cutoff, suggestedMin.cutoff, suggestedMax.cutoff, suggestedStep.cutoff, currentValue.cutoff);
 
 		connect(spinBox_cutoff, SIGNAL(valueChanged(QString)), this, SLOT(setCutoff(QString)));
-		layout->addWidget( new QLabel("cutoff"), row, 0 );
+		layout->addWidget( new QLabel("Cutoff"), row, 0 );
 		layout->addWidget( spinBox_cutoff, row, 1);
 
 		row++;
@@ -177,7 +177,7 @@ void VuoInputEditorEdgeBlend::setUpDialog(QDialog &dialog, json_object *original
 		setupSpinBox(spinBox_gamma, suggestedMin.gamma, suggestedMax.gamma, suggestedStep.gamma, currentValue.gamma);
 		connect(spinBox_gamma, SIGNAL(valueChanged(QString)), this, SLOT(setGamma(QString)));
 
-		layout->addWidget( new QLabel("gamma"), row, 0 );
+		layout->addWidget( new QLabel("Gamma"), row, 0 );
 		layout->addWidget( spinBox_gamma, row, 1 );
 
 		row++;
@@ -243,39 +243,49 @@ void VuoInputEditorEdgeBlend::setCropSlider(int newSliderValue)
 void VuoInputEditorEdgeBlend::setCutoff(QString newLineEditText)
 {
 	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
-	int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_cutoff->minimum(), slider_cutoff->maximum(), suggestedMin.cutoff, suggestedMax.cutoff, newLineEditValue);
 
-	disconnect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
-	slider_cutoff->setValue(newSliderValue);
-	connect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
+	if(slider_cutoff != NULL)
+	{
+		int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_cutoff->minimum(), slider_cutoff->maximum(), suggestedMin.cutoff, suggestedMax.cutoff, newLineEditValue);
+		disconnect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
+		slider_cutoff->setValue(newSliderValue);
+		connect(slider_cutoff, SIGNAL(valueChanged(int)), this, SLOT(setCutoffSlider(int)));
+	}
 
 	currentValue.cutoff = newLineEditValue;
-
 	emit valueChanged( getAcceptedValue() );
 }
 
 void VuoInputEditorEdgeBlend::setGamma(QString newLineEditText)
 {
 	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
-	int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_gamma->minimum(), slider_gamma->maximum(), suggestedMin.gamma, suggestedMax.gamma, newLineEditValue);
 
-	disconnect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
-	slider_gamma->setValue(newSliderValue);
-	connect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
+	if(slider_gamma != NULL)
+	{
+		int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_gamma->minimum(), slider_gamma->maximum(), suggestedMin.gamma, suggestedMax.gamma, newLineEditValue);
+
+		disconnect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
+		slider_gamma->setValue(newSliderValue);
+		connect(slider_gamma, SIGNAL(valueChanged(int)), this, SLOT(setGammaSlider(int)));
+	}
 
 	currentValue.gamma = newLineEditValue;
-
 	emit valueChanged( getAcceptedValue() );
 }
 
 void VuoInputEditorEdgeBlend::setCrop(QString newLineEditText)
 {
 	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
-	int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_crop->minimum(), slider_crop->maximum(), suggestedMin.crop, suggestedMax.crop, newLineEditValue);
 
-	disconnect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
-	slider_crop->setValue(newSliderValue);
-	connect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
+	if(slider_crop != NULL)
+	{
+		int newSliderValue = VuoDoubleSpinBox::doubleToSlider(slider_crop->minimum(), slider_crop->maximum(), suggestedMin.crop, suggestedMax.crop, newLineEditValue);
+
+		disconnect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
+		slider_crop->setValue(newSliderValue);
+		connect(slider_crop, SIGNAL(valueChanged(int)), this, SLOT(setCropSlider(int)));
+	}
+
 	currentValue.crop = newLineEditValue;
 	emit valueChanged( getAcceptedValue() );
 }

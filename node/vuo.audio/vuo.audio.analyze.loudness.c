@@ -11,7 +11,10 @@
 
 VuoModuleMetadata({
 					 "title" : "Calculate Loudness",
-					 "keywords" : [ "sound", "music", "volume", "gain", "rms", "root mean square", "decibel" ],
+					 "keywords" : [
+						 "sound", "music",
+						 "volume", "amplitude", "gain", "rms", "root mean square", "decibel"
+					 ],
 					 "version" : "2.0.0",
 					 "node" : {
 						 "exampleCompositions" : [ "VisualizeLoudness.vuo" ],

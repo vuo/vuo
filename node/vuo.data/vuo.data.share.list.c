@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title" : "Share List",
 					  "keywords" : [ "splitter", "input splitter", "output splitter", "hold", "pass", "preserve", "keep",
-						"constant", "identity", "convert" ],
+						"constant", "identity", "convert", "make" ],
 					  "version" : "1.0.0"
 				  });
 

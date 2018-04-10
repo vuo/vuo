@@ -117,7 +117,7 @@ extern "C" void nodeInstanceEvent
 
 		// Process the FFT.
 		unsigned int amplitudesCount;
-		VuoReal *amplitudesArray = VuoDsp_frequenciesForSamples((*context)->vdsp, (*context)->sampleQueue, binSize, VuoAudioBinAverageType_None, &amplitudesCount);
+		VuoReal *amplitudesArray = VuoDsp_frequenciesForSamples((*context)->vdsp, (*context)->sampleQueue, binSize, VuoAudioBinAverageType_None, &amplitudesCount, true);
 
 		// Convert to vector<float> since that's what BeatDetektor expects.
 		std::vector<float> amplitudesFloats(amplitudesCount);

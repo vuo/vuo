@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONUMBERCOMPARISON_H
-#define VUONUMBERCOMPARISON_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoNumberComparison;
@@ -53,5 +52,3 @@ void VuoNumberComparison_release(VuoNumberComparison value);
 /**
  * @}
 */
-
-#endif

@@ -11,7 +11,9 @@
 #include "VuoScreenCapture.h"
 #include"VuoGlPool.h"
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
 
@@ -167,7 +169,7 @@ VuoScreenCapture VuoScreenCapture_make(VuoScreen screen, VuoRectangle rectangle,
 
 	{
 		sci->glContext = (CGLContextObj)VuoGlContext_use();
-		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false);
+		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false);
 		CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, sci->glContext, pf, NULL, &sci->textureCache);
 		CGLReleasePixelFormat(pf);
 

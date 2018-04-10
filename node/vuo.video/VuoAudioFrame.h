@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOAUDIOFRAME_H
-#define VUOAUDIOFRAME_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -21,13 +20,17 @@
 
 #include "VuoAudioSamples.h"
 #include "VuoList_VuoAudioSamples.h"
+#include <float.h>
+
+/// VuoAudioFrame.timestamp's value when no timestamp is available.
+#define VuoAudioFrame_NoTimestamp -INFINITY
 
 /**
 * A list of VuoAudioSamples (per-channel) and timestamp for one frame of audio.
  */
 typedef struct
 {
-	VuoList_VuoAudioSamples samples;
+	VuoList_VuoAudioSamples channels;
 	VuoReal timestamp;
 
 	char blah[42];	///< @todo https://b33p.net/kosada/node/4124
@@ -52,10 +55,10 @@ void VuoAudioFrame_release(VuoAudioFrame value);
 /**
  * Returns a new VuoAudioFrame.
  */
-static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples samples, VuoReal timestamp) __attribute__((const));
-static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples samples, VuoReal timestamp)
+static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples channels, VuoReal timestamp) __attribute__((const));
+static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples channels, VuoReal timestamp)
 {
-	VuoAudioFrame audioFrame = { samples, timestamp };
+	VuoAudioFrame audioFrame = { channels, timestamp };
 	return audioFrame;
 }
 
@@ -63,5 +66,4 @@ static inline VuoAudioFrame VuoAudioFrame_make(VuoList_VuoAudioSamples samples, 
  * @}
  */
 
-#endif // VuoAudioFrame_H
 

@@ -256,11 +256,42 @@ VuoRunner * VuoRunner::newSeparateProcessRunnerFromCompositionString(string comp
  */
 void VuoRunner::initializeCompilerCache()
 {
-	string composition = "digraph G {}";
-	string name = "InitializeCompilerCache";
-	string sourceDir = VuoFileUtilities::getTmpDir();
-	VuoRunner *r = newSeparateProcessRunnerFromCompositionString(composition, name, sourceDir, false, false);
-	delete r;
+	string vuoFrameworkDir = VuoFileUtilities::getVuoFrameworkPath();
+	string vuoLinkPath = vuoFrameworkDir + "/Helpers/vuo-link";
+
+	int fd[2];
+	int ret = pipe(fd);
+	if (ret != 0)
+	{
+		VUserLog("Error: Couldn't open pipe to linker.");
+		return;
+	}
+
+	pid_t linkPid = fork();
+	if (linkPid == 0)
+	{
+		execl(vuoLinkPath.c_str(), "vuo-link", "--prepare-for-fast-build", NULL);
+		VUserLog("Error: Couldn't run '%s'.", vuoLinkPath.c_str());
+		_exit(-1);
+	}
+	else if (linkPid > 0)
+	{
+		int status;
+		int ret;
+		do {
+			ret = waitpid(linkPid, &status, 0);
+		} while (ret == -1 && errno == EINTR);
+		if (WIFEXITED(status) && WEXITSTATUS(status))
+		{
+			VUserLog("Error: Couldn't invoke linker to prepare for fast build.");
+			return;
+		}
+	}
+	else
+	{
+		VUserLog("Error: Couldn't fork '%s'.", vuoLinkPath.c_str());
+		return;
+	}
 }
 
 /**
@@ -535,9 +566,18 @@ void VuoRunner::startInternal(void)
 		args.push_back("--vuo-control=" + ZMQControlURL);
 		args.push_back("--vuo-telemetry=" + ZMQTelemetryURL);
 
-		ostringstream oss;
-		oss << compositionReadRunnerWritePipe[0];
-		args.push_back("--vuo-runner-pipe=" + oss.str());
+		{
+			ostringstream oss;
+			oss << getpid();
+			args.push_back("--vuo-runner-pid=" + oss.str());
+		}
+
+		{
+			ostringstream oss;
+			oss << compositionReadRunnerWritePipe[0];
+			args.push_back("--vuo-runner-pipe=" + oss.str());
+		}
+
 		if (shouldContinueIfRunnerDies)
 			args.push_back("--vuo-continue-if-runner-dies");
 
@@ -1047,6 +1087,8 @@ void VuoRunner::stop(void)
 							  // do nothing; doesn't matter if connection timed out
 						  }
 					  }
+
+					  saturating_semaphore_signal(anyPublishedPortEventSemaphore, &anyPublishedPortEventSignaled);
 
 					  cleanUpConnections();
 
@@ -2504,6 +2546,8 @@ void VuoRunner::setDelegate(VuoRunnerDelegate *delegate)
  */
 void VuoRunner::stopBecauseLostContact(string errorMessage)
 {
+	saturating_semaphore_signal(anyPublishedPortEventSemaphore, &anyPublishedPortEventSignaled);
+
 	__block bool alreadyLostContact;
 	dispatch_sync(delegateQueue, ^{
 					  alreadyLostContact = lostContact;
@@ -2538,6 +2582,16 @@ void VuoRunner::stopBecauseLostContact(string errorMessage)
 	}
 
 	VUserLog("%s", errorMessage.c_str());
+}
+
+/**
+ * Returns the Unix process id of the running composition.
+ *
+ * Only applicable for compositions running in a separate process.
+ */
+pid_t VuoRunner::getCompositionPid()
+{
+	return compositionPid;
 }
 
 /**

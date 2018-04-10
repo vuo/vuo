@@ -9,12 +9,15 @@
 
 #include <string.h>
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <AppKit/AppKit.h>
 
 #include "type.h"
 #include "VuoWindowReference.h"
-#include "VuoWindowOpenGLInternal.h"
+#include "VuoGraphicsWindow.h"
+#include "VuoGraphicsWindowDrag.h"
 #include "VuoText.h"
 
 /// @{
@@ -23,6 +26,8 @@ VuoModuleMetadata({
 					  "title" : "Window",
 					  "version" : "1.0.0",
 					  "dependencies" : [
+						"VuoGraphicsWindow",
+						"VuoGraphicsWindowDrag",
 						"VuoInteger",
 						"VuoReal",
 						"VuoText",
@@ -62,9 +67,21 @@ VuoWindowReference VuoWindowReference_makeFromJson(json_object * js)
  */
 json_object * VuoWindowReference_getJson(const VuoWindowReference value)
 {
+	if (!value)
+		return NULL;
+
 	json_object *js = json_object_new_object();
 	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));
 	return js;
+}
+
+/**
+ * @ingroup VuoWindowReference
+ * Calls VuoWindowReference_getJson(). Interprocess support is not yet implemented.
+ */
+json_object * VuoWindowReference_getInterprocessJson(const VuoWindowReference value)
+{
+	return VuoWindowReference_getJson(value);
 }
 
 /**
@@ -99,7 +116,7 @@ VuoReal VuoWindowReference_getAspectRatio(const VuoWindowReference value)
  */
 void VuoWindowReference_getContentSize(const VuoWindowReference value, VuoInteger *width, VuoInteger *height, float *backingScaleFactor)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)value;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
 	NSRect contentRect = [window convertRectToBacking:[window contentRectCached]];
 	*width = contentRect.size.width;
 	*height = contentRect.size.height;
@@ -117,6 +134,15 @@ bool VuoWindowReference_isFocused(const VuoWindowReference value)
 }
 
 /**
+ * Returns true if the window is currently fullscreen.
+ */
+bool VuoWindowReference_isFullscreen(const VuoWindowReference value)
+{
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)value;
+	return window.isFullScreen;
+}
+
+/**
  * Adds callbacks to be invoked when files are dragged from Finder.
  */
 void VuoWindowReference_addDragCallbacks(const VuoWindowReference wr,
@@ -128,7 +154,7 @@ void VuoWindowReference_addDragCallbacks(const VuoWindowReference wr,
 	if (!wr)
 		return;
 
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)wr;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)wr;
 	[window addDragEnteredCallback:dragEnteredCallback
 			   dragMovedToCallback:dragMovedToCallback
 			 dragCompletedCallback:dragCompletedCallback
@@ -147,7 +173,7 @@ void VuoWindowReference_removeDragCallbacks(const VuoWindowReference wr,
 	if (!wr)
 		return;
 
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)wr;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)wr;
 	[window removeDragEnteredCallback:dragEnteredCallback
 				  dragMovedToCallback:dragMovedToCallback
 				dragCompletedCallback:dragCompletedCallback

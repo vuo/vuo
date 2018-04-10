@@ -60,6 +60,38 @@ string VuoCompilerInputDataClass::getDefaultValue(void)
 }
 
 /**
+ * Returns the string representation of @c auto value for port data instantiated
+ * from this data type.
+ */
+string VuoCompilerInputDataClass::getAutoValue(void)
+{
+	if (details)
+	{
+		json_object *value = NULL;
+		if (json_object_object_get_ex(details, "auto", &value))
+			return json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
+	}
+
+	return "";
+}
+
+/**
+ * Returns the boolean @c autoSupersedesDefault value for port data instantiated
+ * from this data type.
+ */
+bool VuoCompilerInputDataClass::getAutoSupersedesDefaultValue(void)
+{
+	if (details)
+	{
+		json_object *value = NULL;
+		if (json_object_object_get_ex(details, "autoSupersedesDefault", &value))
+			return json_object_get_boolean(value);
+	}
+
+	return false;
+}
+
+/**
  * Returns true if, in the node event function, Clang converts this one parameter in source code
  * to two parameters in the compiled bitcode.
  */

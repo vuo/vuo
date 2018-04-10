@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPOINT3D_H
-#define VUOPOINT3D_H
+#pragma once
 
 #include "VuoReal.h"
 #include "VuoBoolean.h"
@@ -359,5 +358,3 @@ static inline VuoBoolean VuoBox_intersects(VuoBox a, VuoBox b)
 /**
  * @}
  */
-
-#endif

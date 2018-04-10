@@ -49,7 +49,7 @@ If your library module is written in C, you can compile it with the `vuo-compile
 
 If your library module is written in another language, you can compile it with [Clang](http://clang.llvm.org/). For example: 
 @code
-clang -cc1 -triple x86_64-apple-macosx10.7.0 -emit-llvm-bc MyModule.c -o MyModule.bc
+clang -cc1 -triple x86_64-apple-macosx10.8.0 -emit-llvm-bc MyModule.c -o MyModule.bc
 @endcode
 
 If your library module is written in C++, the @ref VuoModuleMetadata call and any exported functions need to be enclosed by `extern "C" { ... }` so that symbols are exported with C names (instead of C++ mangled names). 

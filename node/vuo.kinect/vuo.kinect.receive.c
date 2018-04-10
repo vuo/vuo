@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					  "title" : "Receive Kinect Images",
 					  "keywords" : [ "video", "camera", "infrared", "depth", "sensor", "controller", "motion", "body" ],
-					  "version" : "2.0.0",
+					  "version" : "2.0.1",
 					  "dependencies" : [
 						  "freenect",
 						  "usb"
@@ -34,6 +34,7 @@ struct nodeInstanceData
 	freenect_context *freenectContext;
 	freenect_device *freenectDevice;
 
+	dispatch_queue_t triggerQueue;	// Ensures the below trigger callbacks don't change between the null check and invocation.
 	void (*receivedImage)(VuoImage);
 	void (*receivedDepthImage)(VuoImage);
 };
@@ -69,7 +70,10 @@ void vuo_kinect_receive_depth_callback(freenect_device *dev, void *v_depth, uint
 	}
 
 	VuoImage image = VuoImage_makeFromBuffer(depthOutput, GL_LUMINANCE_ALPHA, mode.width, mode.height, VuoImageColorDepth_16, ^(void *buffer){ free(buffer); });
-	context->receivedDepthImage(image);
+	dispatch_sync(context->triggerQueue, ^{
+		if (context->receivedDepthImage)
+			context->receivedDepthImage(image);
+	});
 }
 
 void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t timestamp)
@@ -86,7 +90,10 @@ void vuo_kinect_receive_rgb_callback(freenect_device *dev, void *rgb, uint32_t t
 		memcpy(rgbOut+stride*(lines-i-1), rgb + stride*i, size);
 
 	VuoImage image = VuoImage_makeFromBuffer(rgbOut, GL_RGB, mode.width, mode.height, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
-	context->receivedImage(image);
+	dispatch_sync(context->triggerQueue, ^{
+		if (context->receivedImage)
+			context->receivedImage(image);
+	});
 }
 
 void vuo_kinect_receive_worker(void *ctx)
@@ -174,6 +181,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 
 	context->cancelRequested = false;
 	context->canceled = dispatch_semaphore_create(0);
+	context->triggerQueue = dispatch_queue_create("vuo.kinect.receive", NULL);
+
+	dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), context, vuo_kinect_receive_worker);
 
 	return context;
 }
@@ -185,10 +195,10 @@ void nodeInstanceTriggerStart
 		VuoOutputTrigger(receivedDepthImage, VuoImage, {"eventThrottling":"drop"})
 )
 {
-	(*context)->receivedImage = receivedImage;
-	(*context)->receivedDepthImage = receivedDepthImage;
-
-	dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), *context, vuo_kinect_receive_worker);
+	dispatch_sync((*context)->triggerQueue, ^{
+		(*context)->receivedImage = receivedImage;
+		(*context)->receivedDepthImage = receivedDepthImage;
+	});
 }
 
 void nodeInstanceEvent
@@ -203,11 +213,10 @@ void nodeInstanceTriggerStop
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
-	(*context)->cancelRequested = true;
-	dispatch_semaphore_wait((*context)->canceled, DISPATCH_TIME_FOREVER);
-
-	(*context)->receivedImage = NULL;
-	(*context)->receivedDepthImage = NULL;
+	dispatch_sync((*context)->triggerQueue, ^{
+		(*context)->receivedImage = NULL;
+		(*context)->receivedDepthImage = NULL;
+	});
 }
 
 void nodeInstanceFini
@@ -215,5 +224,9 @@ void nodeInstanceFini
 		VuoInstanceData(struct nodeInstanceData *) context
 )
 {
+	(*context)->cancelRequested = true;
+	dispatch_semaphore_wait((*context)->canceled, DISPATCH_TIME_FOREVER);
+
 	dispatch_release((*context)->canceled);
+	dispatch_release((*context)->triggerQueue);
 }

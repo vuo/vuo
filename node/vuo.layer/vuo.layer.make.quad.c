@@ -173,19 +173,9 @@ static VuoSubmesh makeQuadSubmesh(const VuoPoint2d topLeft, const VuoPoint2d top
 	if(vertexCount == 4)
 		calculateHomogeneousCoordinates(m_positions, m_textures);
 
-	VuoSubmesh submesh;
-
-	submesh.vertexCount 			= vertexCount;
-	submesh.elementCount			= elementCount;
-	submesh.positions 				= m_positions;
-	submesh.textureCoordinates 		= m_textures;
-	submesh.elements				= m_elements;
-	submesh.elementAssemblyMethod 	= VuoMesh_IndividualTriangles;
-	submesh.normals 				= NULL;
-	submesh.tangents				= NULL;
-	submesh.bitangents				= NULL;
-	submesh.faceCullingMode 		= GL_BACK;
-
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													m_positions, NULL, NULL, NULL, m_textures,
+													elementCount, m_elements, VuoMesh_IndividualTriangles);
 	return submesh;
 }
 

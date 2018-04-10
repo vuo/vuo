@@ -12,49 +12,28 @@
 
 VuoModuleMetadata({
 					  "title" : "Split Image RGB Channels",
-					  "keywords" : [ "separate", "colors", "filter" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "separate", "colors", "filter", "alpha" ],
+					  "version" : "1.1.1",
 					  "node" : {
 						  "exampleCompositions" : [ "SeparateRedGreenBlue.vuo", "EnhanceBlue.vuo" ]
 					  }
 				 });
 
-static const char *redShader = VUOSHADER_GLSL_SOURCE(120,
+static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 	include(VuoGlslAlpha)
 
 	varying vec4 fragmentTextureCoordinate;
 	uniform sampler2D texture;
+	uniform vec4 colorMask;
+	uniform bool alpha;	// false = use texture's alpha; true = 100%
 
 	void main(void)
 	{
 		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
-		gl_FragColor = vec4(color.r, color.r, color.r, color.a);
-	}
-);
-
-static const char *greenShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-
-	varying vec4 fragmentTextureCoordinate;
-	uniform sampler2D texture;
-
-	void main(void)
-	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
-		gl_FragColor = vec4(color.g, color.g, color.g, color.a);
-	}
-);
-
-static const char *blueShader = VUOSHADER_GLSL_SOURCE(120,
-	include(VuoGlslAlpha)
-
-	varying vec4 fragmentTextureCoordinate;
-	uniform sampler2D texture;
-
-	void main(void)
-	{
-		vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
-		gl_FragColor = vec4(color.b, color.b, color.b, color.a);
+		if (alpha && color.a > 0.)
+			color.rgb /= color.a;
+		float luminance = dot(color, colorMask);
+		gl_FragColor = vec4(luminance, luminance, luminance, alpha ? 1. : color.a);
 	}
 );
 
@@ -62,9 +41,7 @@ struct nodeInstanceData
 {
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
-	VuoShader redShader;
-	VuoShader greenShader;
-	VuoShader blueShader;
+	VuoShader shader;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
@@ -77,17 +54,9 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
-	instance->redShader = VuoShader_make("Split Image RGB Colors Shader (Red)");
-	VuoShader_addSource(instance->redShader, VuoMesh_IndividualTriangles, NULL, NULL, redShader);
-	VuoRetain(instance->redShader);
-
-	instance->greenShader = VuoShader_make("Split Image RGB Colors Shader (Green)");
-	VuoShader_addSource(instance->greenShader, VuoMesh_IndividualTriangles, NULL, NULL, greenShader);
-	VuoRetain(instance->greenShader);
-
-	instance->blueShader = VuoShader_make("Split Image RGB Colors Shader (Blue)");
-	VuoShader_addSource(instance->blueShader, VuoMesh_IndividualTriangles, NULL, NULL, blueShader);
-	VuoRetain(instance->blueShader);
+	instance->shader = VuoShader_make("Split Image RGB Colors Shader");
+	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
+	VuoRetain(instance->shader);
 
 	return instance;
 }
@@ -96,29 +65,38 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
+		VuoInputData(VuoBoolean, {"default":true}) preserveOpacity,
 		VuoOutputData(VuoImage) redImage,
 		VuoOutputData(VuoImage) greenImage,
-		VuoOutputData(VuoImage) blueImage
+		VuoOutputData(VuoImage) blueImage,
+		VuoOutputData(VuoImage) opacityImage
 )
 {
 	if (!image)
+	{
+		*redImage = *greenImage = *blueImage = *opacityImage = NULL;
 		return;
+	}
 
-	VuoShader_setUniform_VuoImage((*instance)->redShader, "texture", image);
-	*redImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->redShader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	VuoShader_setUniform_VuoImage((*instance)->shader, "texture", image);
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){1,0,0,0});
+	VuoShader_setUniform_VuoBoolean((*instance)->shader, "alpha", !preserveOpacity);
+	*redImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
-	VuoShader_setUniform_VuoImage((*instance)->greenShader, "texture", image);
-	*greenImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->greenShader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){0,1,0,0});
+	*greenImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
-	VuoShader_setUniform_VuoImage((*instance)->blueShader, "texture", image);
-	*blueImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->blueShader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){0,0,1,0});
+	*blueImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+
+	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){0,0,0,1});
+	VuoShader_setUniform_VuoBoolean((*instance)->shader, "alpha", true);
+	*opacityImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
-	VuoRelease((*instance)->redShader);
-	VuoRelease((*instance)->greenShader);
-	VuoRelease((*instance)->blueShader);
+	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

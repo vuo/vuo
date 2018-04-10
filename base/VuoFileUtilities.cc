@@ -154,11 +154,14 @@ string VuoFileUtilities::getVuoFrameworkPath(void)
 	const char *frameworkDylibRelativePath = "Vuo.framework/Versions/" VUO_VERSION_STRING "/Vuo";
 	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.5.0.7.
 	const char *framework111DylibRelativePath = "Vuo.framework/Versions/1.1.1/Vuo";
+	// Workaround to support copying a more recent Vuo.framework into VDMX5 b8.6.0.6.
+	const char *framework123DylibRelativePath = "Vuo.framework/Versions/1.2.3/Vuo";
 	for(unsigned int i=0; i<_dyld_image_count(); ++i)
 	{
 		const char *dylibPath = _dyld_get_image_name(i);
 		if (VuoStringUtilities::endsWith(dylibPath, frameworkDylibRelativePath)
-		 || VuoStringUtilities::endsWith(dylibPath, framework111DylibRelativePath))
+		 || VuoStringUtilities::endsWith(dylibPath, framework111DylibRelativePath)
+		 || VuoStringUtilities::endsWith(dylibPath, framework123DylibRelativePath))
 		{
 			string path = dylibPath;
 			string dir, file, ext;
@@ -320,7 +323,10 @@ void VuoFileUtilities::writeRawDataToFile(const char *data, size_t numBytes, str
 
 	size_t numBytesWritten = fwrite(data, sizeof(char), numBytes, f);
 	if (numBytesWritten != numBytes)
+	{
+		fclose(f);
 		throw std::runtime_error(string("Couldn't write all data: ") + strerror(errno) + " — " + file);
+	}
 
 	fclose(f);
 }
@@ -658,9 +664,9 @@ size_t VuoFileUtilities::getAvailableSpaceOnVolumeContainingPath(string path)
  *
  * If the file can't be opened as an archive, the zip archive handle is null.
  */
-VuoFileUtilities::Archive::Archive(string path)
+VuoFileUtilities::Archive::Archive(string path) :
+	path(path)
 {
-	this->path = path;
 	this->referenceCount = 0;
 
 	// mz_zip_reader_init_file sometimes ends up with a garbage function pointer if the mz_zip_archive isn't initialized to zeroes
@@ -686,10 +692,10 @@ VuoFileUtilities::Archive::~Archive(void)
 /**
  * Creates a reference to a file that is in a directory.
  */
-VuoFileUtilities::File::File(string dirPath, string filePath)
+VuoFileUtilities::File::File(string dirPath, string filePath) :
+	filePath(filePath),
+	dirPath(dirPath)
 {
-	this->filePath = filePath;
-	this->dirPath = dirPath;
 	this->fileDescriptor = -1;
 	this->archive = NULL;
 }
@@ -700,9 +706,9 @@ VuoFileUtilities::File::File(string dirPath, string filePath)
  * After this constructor is called, it's important to call the destructor.
  * The archive will be closed when all File objects that used it are destroyed.
  */
-VuoFileUtilities::File::File(Archive *archive, string filePath)
+VuoFileUtilities::File::File(Archive *archive, string filePath) :
+	filePath(filePath)
 {
-	this->filePath = filePath;
 	this->fileDescriptor = -1;
 	this->archive = archive;
 	++archive->referenceCount;
@@ -849,4 +855,14 @@ void VuoFileUtilities::File::unlock(void)
 	flock(fileDescriptor, LOCK_UN);
 	close(fileDescriptor);
 	fileDescriptor = -1;
+}
+
+/**
+ * Attempts to focus the specified `pid` (i.e., bring all its windows to the front and make one of them key).
+ *
+ * @threadMain
+ */
+void VuoFileUtilities::focusProcess(pid_t pid, bool force)
+{
+	VuoFileUtilitiesCocoa_focusProcess(pid, force);
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODRAGEVENT_H
-#define VUODRAGEVENT_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -68,5 +67,3 @@ void VuoDragEvent_release(VuoDragEvent value);
 /**
  * @}
  */
-
-#endif

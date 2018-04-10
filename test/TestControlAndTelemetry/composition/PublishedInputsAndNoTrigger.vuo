@@ -9,18 +9,18 @@
 
 digraph G 
 {
-PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedIncrementOne>publishedIncrementOne\r|<publishedDecrementBoth>publishedDecrementBoth\r" _publishedIncrementOne="42"];
-Count1 [type="vuo.math.count.VuoInteger" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r"];
-Count2 [type="vuo.math.count.VuoInteger" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1"];
-MakeList1 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList1|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r"];
-Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add1|<refresh>refresh\l|<values>values\l|<sum>sum\r"];
-PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedSum>publishedSum\l"];
+Add1 [type="vuo.math.add.VuoInteger" version="2.0.0" label="Add1|<refresh>refresh\l|<values>values\l|<sum>sum\r" pos="165,-30"];
+Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="-45,-60" _setCount="0"];
+Count2 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="-45,75" _increment="1" _setCount="0"];
+MakeList1 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="MakeList1|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="119,-19"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<publishedIncrementOne>publishedIncrementOne\r|<publishedDecrementBoth>publishedDecrementBoth\r" _publishedIncrementOne_type="VuoInteger" _publishedIncrementOne="42" _publishedDecrementBoth_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<publishedSum>publishedSum\l" _publishedSum_type="VuoInteger"];
 
-PublishedInputs:publishedIncrementOne -> Count1:increment;
-PublishedInputs:publishedDecrementBoth -> Count1:decrement;
-PublishedInputs:publishedDecrementBoth -> Count2:decrement;
+Add1:sum -> PublishedOutputs:publishedSum;
 Count1:count -> MakeList1:1;
 Count2:count -> MakeList1:2;
 MakeList1:list -> Add1:values;
-Add1:sum -> PublishedOutputs:publishedSum;
+PublishedInputs:publishedDecrementBoth -> Count1:decrement;
+PublishedInputs:publishedDecrementBoth -> Count2:decrement;
+PublishedInputs:publishedIncrementOne -> Count1:increment;
 }

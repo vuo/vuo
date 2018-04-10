@@ -33,7 +33,7 @@ bool VuoRendererReadOnlyDictionary::isReadOnlyDictionary(VuoNode *baseNode)
 	VuoNode *hostNode = getUnderlyingHostNodeForNode(baseNode);
 	bool isInputToCalculateNode = ((hostPort &&
 									(hostPort->getClass()->getName() == "values") &&
-									hostNode->getNodeClass()->getClassName() == "vuo.math.calculate"));
+									VuoStringUtilities::beginsWith(hostNode->getNodeClass()->getClassName(), "vuo.math.calculate")));
 	return isInputToCalculateNode;
 }
 

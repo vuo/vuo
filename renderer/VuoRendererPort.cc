@@ -22,7 +22,9 @@
 #include "VuoRendererSignaler.hh"
 
 #include "VuoCompilerCable.hh"
+#include "VuoCompilerDataClass.hh"
 #include "VuoCompilerInputEventPort.hh"
+#include "VuoCompilerEventPortClass.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNode.hh"
@@ -35,6 +37,8 @@
 extern "C" {
 #include "VuoColor.h"
 #include "VuoImage.h"
+#include "VuoIntegerRange.h"
+#include "VuoRange.h"
 #include "VuoScreen.h"
 #include "VuoTransform.h"
 }
@@ -105,6 +109,9 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
 								   portInnerRect.width(),
 								   VuoRendererPort::constantFlagHeight);
 	updatePortConstantPath();
+
+	if (getConstantAsStringToRender() != getConstantAsTruncatedStringToRender())
+		setToolTip(QString("<span></span>") + getConstantAsStringToRender().c_str());
 }
 
 /**
@@ -112,7 +119,7 @@ VuoRendererPort::VuoRendererPort(VuoPort * basePort, VuoRendererSignaler *signal
  */
 void VuoRendererPort::updatePortConstantPath()
 {
-	QString constantText = QString::fromUtf8(getConstantAsStringToRender().c_str());
+	QString constantText = QString::fromUtf8(getConstantAsTruncatedStringToRender().c_str());
 	this->portConstantInsetPath = getPortConstantPath(this->portHybridRect, constantText, &this->portConstantPath);
 }
 
@@ -579,7 +586,7 @@ set<VuoRendererInputAttachment *> VuoRendererPort::getAllUnderlyingUpstreamInput
 QRectF VuoRendererPort::getPortConstantTextRect(void) const
 {
 	return (isConstant()?
-				getPortConstantTextRectForText(QString::fromUtf8(getConstantAsStringToRender().c_str())) :
+				getPortConstantTextRectForText(QString::fromUtf8(getConstantAsTruncatedStringToRender().c_str())) :
 				QRectF());
 }
 
@@ -1075,7 +1082,7 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 		}
 		else
 		{
-			QString constantText = QString::fromUtf8(getConstantAsStringToRender().c_str());
+			QString constantText = QString::fromUtf8(getConstantAsTruncatedStringToRender().c_str());
 			QBrush constantFlagBackgroundBrush = colors->constantFill();
 
 			// Constant flag
@@ -1478,8 +1485,34 @@ string VuoRendererPort::getConstantAsString(void) const
 }
 
 /**
- * Returns the string representation of this port's constant data value as it should be rendered
+ * Returns the truncated string representation of this port's constant data value as it should be rendered
  * in its constant data flag, or an empty string if it has no currently assigned constant data value.
+ */
+string VuoRendererPort::getConstantAsTruncatedStringToRender(void) const
+{
+	string fullString = getConstantAsStringToRender();
+
+	if (getDataType() && (getDataType()->getModuleKey() == "VuoColor"))
+		return "   ";
+
+	bool truncateFromBeginning = (getDataType() &&
+								  (getDataType()->getModuleKey()=="VuoArtNetInputDevice" ||
+								   getDataType()->getModuleKey()=="VuoArtNetOutputDevice" ||
+								   VuoRendererComposition::hasURLType(getBase())));
+
+	VuoText t = VuoText_truncateWithEllipsis(fullString.c_str(), 30, truncateFromBeginning?
+												 VuoTextTruncation_Beginning :
+												 VuoTextTruncation_End);
+	VuoRetain(t);
+	string truncatedString = strdup(t);
+	VuoRelease(t);
+
+	return truncatedString;
+}
+
+/**
+ * Returns the untruncated string representation of this port's constant data value as it should be rendered
+ * in a port tooltip, or an empty string if it has no currently assigned constant data value.
  */
 string VuoRendererPort::getConstantAsStringToRender(void) const
 {
@@ -1499,7 +1532,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 		if (getDataType()->getModuleKey()=="VuoColor")
 		{
-			return "   ";
+			string colorRGBAJsonString = getConstantAsString();
+			VuoColor c = VuoColor_makeFromString(colorRGBAJsonString.c_str());
+			return VuoColor_getSummary(c);
 		}
 		if (getDataType()->getModuleKey()=="VuoReal")
 		{
@@ -1507,7 +1542,33 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			double real = json_object_get_double(js);
 			json_object_put(js);
 
+			if (getBase()->getClass()->hasCompiler() && !dynamic_cast<VuoPublishedPort *>(getBase()))
+			{
+				json_object *portDetails = static_cast<VuoCompilerEventPortClass *>(getBase()->getClass()->getCompiler())->getDataClass()->getDetails();
+				json_object *autoObject = NULL;
+				if (json_object_object_get_ex(portDetails, "auto", &autoObject))
+					if (real == json_object_get_double(autoObject))
+						return "auto";
+			}
+
 			return getStringForRealValue(real);
+		}
+		if (getDataType()->getModuleKey()=="VuoInteger")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+			VuoInteger i = json_object_get_int64(js);
+			json_object_put(js);
+
+			if (getBase()->getClass()->hasCompiler() && !dynamic_cast<VuoPublishedPort *>(getBase()))
+			{
+				json_object *portDetails = static_cast<VuoCompilerEventPortClass *>(getBase()->getClass()->getCompiler())->getDataClass()->getDetails();
+				json_object *autoObject = NULL;
+				if (json_object_object_get_ex(portDetails, "auto", &autoObject))
+					if (i == json_object_get_int64(autoObject))
+						return "auto";
+			}
+
+			return VuoText_format("%lld", i);
 		}
 		if (getDataType()->getModuleKey()=="VuoPoint2d")
 		{
@@ -1599,10 +1660,8 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 						json_object *itemObject = json_object_array_get_idx(expressionsObject, 0);
 						if (json_object_get_type(itemObject) == json_type_string)
 						{
-							VuoText t = VuoText_truncateWithEllipsis(json_object_get_string(itemObject), 30);
-							VuoRetain(t);
-							expression = strdup(t);
-							VuoRelease(t);
+							expression = json_object_get_string(itemObject);
+							json_object_put(itemObject);
 						}
 					}
 				}
@@ -1756,9 +1815,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			else if (json_object_object_get_ex(js, "path", &o))
 				name = json_object_get_string(o);
 
-			const char *outputString = "(first)";
+			string outputString = "(first)";
 			if (name && strlen(name))
-				outputString = VuoText_truncateWithEllipsis(name, 24);
+				outputString = name;
 
 			json_object_put(js);
 
@@ -1773,9 +1832,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			if (json_object_object_get_ex(js, "name", &o))
 				name = json_object_get_string(o);
 
-			const char *outputString = "(first)";
+			string outputString = "(first)";
 			if (name && strlen(name))
-				outputString = VuoText_truncateWithEllipsis(name, 24);
+				outputString = name;
 
 			json_object_put(js);
 
@@ -1790,9 +1849,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			if (json_object_object_get_ex(js, "name", &o))
 				name = json_object_get_string(o);
 
-			const char *outputString = "(first)";
+			string outputString = "(first)";
 			if (name && strlen(name))
-				outputString = VuoText_truncateWithEllipsis(name, 24);
+				outputString = name;
 
 			json_object_put(js);
 
@@ -1809,9 +1868,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			else if (json_object_object_get_ex(js, "applicationName", &o))
 				name = json_object_get_string(o);
 
-			const char *outputString = "(first)";
+			string outputString = "(first)";
 			if (name && strlen(name))
-				outputString = VuoText_truncateWithEllipsis(name, 24);
+				outputString = name;
 
 			json_object_put(js);
 
@@ -1828,9 +1887,9 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			else if (json_object_object_get_ex(js, "id", &o))
 				name = json_object_get_string(o);
 
-			const char *outputString = "(first)";
+			string outputString = "(first)";
 			if (name && strlen(name))
-				outputString = VuoText_truncateWithEllipsis(name, 24);
+				outputString = name;
 
 			json_object_put(js);
 
@@ -1913,7 +1972,7 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			const char *name = NULL;
 			if (json_object_object_get_ex(js, "name", &o))
-				name = VuoText_truncateWithEllipsis(json_object_get_string(o), 24);
+				name = json_object_get_string(o);
 			else
 			{
 				if (getDataType()->getModuleKey()=="VuoArtNetInputDevice")
@@ -1981,36 +2040,96 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			return blendSummary;
 		}
 
+		if (getDataType()->getModuleKey()=="VuoRange")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+
+			double minimum = VuoRange_NoMinimum, maximum = VuoRange_NoMaximum;
+
+			json_object *o = NULL;
+
+			if (json_object_object_get_ex(js, "minimum", &o))
+				minimum = json_object_get_double(o);
+
+			if (json_object_object_get_ex(js, "maximum", &o))
+				maximum = json_object_get_double(o);
+
+			json_object_put(js);
+
+			char* rangeSummary = (char*) malloc(sizeof(char) * 32);
+
+			if (minimum != VuoRange_NoMinimum && maximum != VuoRange_NoMaximum)
+				sprintf(rangeSummary, "%.2g to %.2g", minimum, maximum);
+			else if (minimum != VuoRange_NoMinimum)
+				sprintf(rangeSummary, "%.2g to ∞", minimum);
+			else if (maximum != VuoRange_NoMaximum)
+				sprintf(rangeSummary, "-∞ to %.2g", maximum);
+			else
+				sprintf(rangeSummary, "-∞ to ∞");
+
+			return rangeSummary;
+		}
+
+		if (getDataType()->getModuleKey()=="VuoIntegerRange")
+		{
+			json_object *js = json_tokener_parse(getConstantAsString().c_str());
+
+			VuoInteger minimum = VuoIntegerRange_NoMinimum, maximum = VuoIntegerRange_NoMaximum;
+
+			json_object *o = NULL;
+
+			if (json_object_object_get_ex(js, "minimum", &o))
+				minimum = json_object_get_int64(o);
+
+			if (json_object_object_get_ex(js, "maximum", &o))
+				maximum = json_object_get_int64(o);
+
+			json_object_put(js);
+
+			char* rangeSummary = (char*) malloc(sizeof(char) * 32);
+
+			if (minimum != VuoIntegerRange_NoMinimum && maximum != VuoIntegerRange_NoMaximum)
+				sprintf(rangeSummary, "%lld to %lld", minimum, maximum);
+			else if (minimum != VuoIntegerRange_NoMinimum)
+				sprintf(rangeSummary, "%lld to ∞", minimum);
+			else if (maximum != VuoIntegerRange_NoMaximum)
+				sprintf(rangeSummary, "-∞ to %lld", maximum);
+			else
+				sprintf(rangeSummary, "-∞ to ∞");
+
+			return rangeSummary;
+		}
+
 		if (getDataType()->getModuleKey() == "VuoAnchor")
 		{
 			json_object* js = json_tokener_parse(getConstantAsString().c_str());
 			json_object* o = NULL;
-			const char *h = "Center", *v = "Center";
+			const char *h = "center", *v = "center";
 
 			if (json_object_object_get_ex(js, "horizontalAlignment", &o))
 			{
 				const char* str = json_object_get_string(o);
 				if( strcmp(str, "left") == 0 )
-					h = "Left";
+					h = "left";
 				else if( strcmp(str, "center") == 0 )
-					h = "Center";
+					h = "center";
 				else if( strcmp(str, "right") == 0 )
-					h = "Right";
+					h = "right";
 			}
 
 			if (json_object_object_get_ex(js, "verticalAlignment", &o))
 			{
 				const char* str = json_object_get_string(o);
 				if( strcmp(str, "top") == 0 )
-					v = "Top";
+					v = "top";
 				else if( strcmp(str, "center") == 0 )
-					v = "Center";
+					v = "center";
 				else if( strcmp(str, "bottom") == 0 )
-					v = "Bottom";
+					v = "bottom";
 			}
 
-			if( strcmp(h, "Center") == 0 && strcmp(v, "Center") == 0 )
-				return strdup("Center");
+			if( strcmp(h, "center") == 0 && strcmp(v, "center") == 0 )
+				return strdup("center");
 
 			char* sum = (char*) malloc( sizeof(char) * (strlen(h) + strlen(v) + 2) );
 			sprintf(sum, "%s %s", v, h);
@@ -2019,17 +2138,14 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 	}
 
-	// If it's a JSON string (e.g., VuoText or an enum identifier), unescape and truncate it.
+	// If it's a JSON string (e.g., VuoText or an enum identifier), unescape it.
 	json_object *js = json_tokener_parse(getConstantAsString().c_str());
 	if (json_object_get_type(js) == json_type_string)
 	{
 		string textWithoutQuotes = json_object_get_string(js);
 		json_object_put(js);
-		VuoText t = VuoText_truncateWithEllipsis(textWithoutQuotes.c_str(), 30);
-		VuoRetain(t);
-		char *valueAsString = strdup(t);
-		VuoRelease(t);
-		return valueAsString;
+
+		return textWithoutQuotes;
 	}
 	json_object_put(js);
 
@@ -2051,6 +2167,12 @@ void VuoRendererPort::setConstant(string constantValue)
 		eventPort->getData()->setInitialValue(constantValue);
 
 		updatePortConstantPath();
+
+		if (getConstantAsStringToRender() != getConstantAsTruncatedStringToRender())
+			setToolTip(QString("<span></span>") + getConstantAsStringToRender().c_str());
+		else
+			setToolTip("");
+
 		setCacheMode(normalCacheMode);
 		getRenderedParentNode()->layoutConnectedInputDrawersAtAndAbovePort(eventPort->getBase()->getRenderer());
 	}
@@ -2123,7 +2245,7 @@ bool VuoRendererPort::getPublishable() const
 	bool isMathExpressionInputToCalculateNode = (this->getDataType() &&
 												 (this->getDataType()->getModuleKey() == "VuoMathExpressionList") &&
 												 this->getUnderlyingParentNode() &&
-												 (this->getUnderlyingParentNode()->getBase()->getNodeClass()->getClassName() == "vuo.math.calculate"));
+												 VuoStringUtilities::beginsWith(this->getUnderlyingParentNode()->getBase()->getNodeClass()->getClassName(), "vuo.math.calculate"));
 
 
 	// @todo: Allow direct connections between external published inputs and external published outputs

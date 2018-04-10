@@ -26,7 +26,7 @@ void printHelp(char *argv0)
 		   "  --header-search-path <dir>   Add the specified directory to the search path for include files. This option may be specified more than once. Only affects compiling .c files.\n"
 		   "  --list-node-classes[=dot]    Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "  --output <file>              Place the compiled code into <file>.\n"
-//		   "  --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.7.0').\n"
+//		   "  --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.8.0').\n"
 		   "  --verbose                    Output diagnostic information.\n",
 		   argv0);
 }
@@ -154,7 +154,7 @@ int main (int argc, char * const argv[])
 //					compiler.setTarget(target);
 
 				if (inputExtension == "vuo")
-					compiler.compileComposition(inputPath, outputPath, true, false);
+					compiler.compileComposition(inputPath, outputPath, true);
 				else if (inputExtension == "c" || inputExtension == "cc" || inputExtension == "m" || inputExtension == "mm")
 					compiler.compileModule(inputPath, outputPath);
 				else

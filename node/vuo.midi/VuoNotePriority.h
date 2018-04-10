@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONOTEPRIORITY_H
-#define VUONOTEPRIORITY_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoNotePriority;
@@ -53,4 +52,3 @@ void VuoNotePriority_release(VuoNotePriority value);
  * @}
  */
 
-#endif // VUONOTEPRIORITY_H

@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Changes the speed and direction of stripes sliding across the window as the mouse is moved left or right.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="360,195" fillcolor="violet"];
+Convert2DPointToReal [type="vuo.type.point2d.real.x" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<x>x\r" pos="555,315"];
+ConvertRealTo2DPoint [type="vuo.type.real.point2d.x" version="1.0.1" label="Convert Real to 2D Point|<refresh>refresh\l|<x>x\l|<point2d>point2d\r" pos="705,300"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="615,105" _upperLeftColor="{\"r\":0.17001602053642273,\"g\":7.6295109465718269e-05,\"b\":0.1748683899641037,\"a\":1}" _upperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.40000000000000002" _sharpness="1" _angle="0" _width="640" _height="480"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="842,131" fillcolor="green"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="105,210" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="870,105" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+
+ChangeSpeed:changedTime -> ConvertRealTo2DPoint:x;
+Convert2DPointToReal:x -> ChangeSpeed:speed;
+ConvertRealTo2DPoint:point2d -> MakeCheckerboardImage:center;
+MakeCheckerboardImage:image -> RenderImageToWindow:image;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
+RenderImageToWindow:requestedFrame -> ChangeSpeed:time;
+RenderImageToWindow:showedWindow -> ReceiveMouseMoves:window;
+}

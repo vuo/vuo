@@ -57,6 +57,40 @@ static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
 }
 
 /**
+ * Returns the VuoImage::scaleFactor for the specified URL.
+ *
+ * If the image has a filename like `image@2x.png`, this function returns 2.
+ *
+ * If no scale factor suffix is found, returns 1.
+ */
+float VuoImage_getScaleFactor(const char *url)
+{
+	VuoText resolvedUrl = VuoUrl_normalize(url, false);
+	if (!resolvedUrl)
+		return 1;
+	VuoLocal(resolvedUrl);
+
+	VuoText path;
+	if (!VuoUrl_getParts(resolvedUrl, NULL, NULL, NULL, NULL, &path, NULL, NULL))
+		return 1;
+	VuoLocal(path);
+
+	size_t lastDot = VuoText_findLastOccurrence(path, ".");
+	if (lastDot < 6)
+		return 1;
+
+	// `@` is URL-escaped as `%40`.
+	if (path[lastDot-6] == '%' && path[lastDot-5] == '4' && path[lastDot-4] == '0' && path[lastDot-2] == 'x')
+	{
+		char c = path[lastDot-3];
+		if (c >= '1' && c <= '9')
+			return c - '0';
+	}
+
+	return 1;
+}
+
+/**
  * @ingroup VuoImage
  * Retrieves the image at the specified @c imageURL, and creates a @c VuoImage from it.
  *
@@ -78,6 +112,8 @@ VuoImage VuoImage_get(const char *imageURL)
 	GLuint format;
 	VuoImageColorDepth colorDepth;
 	unsigned char *pixels;
+	unsigned long pixelsWide;
+	unsigned long pixelsHigh;
 	{
 		FIMEMORY *hmem = FreeImage_OpenMemory((BYTE *)data, dataLength);
 
@@ -93,7 +129,7 @@ VuoImage VuoImage_get(const char *imageURL)
 			return NULL;
 		}
 
-		dib = FreeImage_LoadFromMemory(fif, hmem, 0);
+		dib = FreeImage_LoadFromMemory(fif, hmem, JPEG_EXIFROTATE);
 		FreeImage_CloseMemory(hmem);
 
 		if (!dib)
@@ -102,16 +138,28 @@ VuoImage VuoImage_get(const char *imageURL)
 			return NULL;
 		}
 
+		pixelsWide = FreeImage_GetWidth(dib);
+		pixelsHigh = FreeImage_GetHeight(dib);
+
 		const FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
 		const unsigned int bpp = FreeImage_GetBPP(dib);
 		const FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(dib);
+		VDebugLog("ImageFormat=%d  ImageType=%d  BPP=%d  ImageColorType=%d", fif, type, bpp, colorType);
 
 		if (type == FIT_FLOAT
-		 || type == FIT_DOUBLE)
+		 || type == FIT_DOUBLE
+		 || type == FIT_UINT16
+		 || type == FIT_INT16
+		 || type == FIT_UINT32
+		 || type == FIT_INT32)
 		{
 			// If it is > 8bpc greyscale, convert to float.
 			colorDepth = VuoImageColorDepth_16;
 			format = GL_LUMINANCE;
+
+			FIBITMAP *dibFloat = FreeImage_ConvertToFloat(dib);
+			FreeImage_Unload(dib);
+			dib = dibFloat;
 		}
 		else if (type == FIT_RGB16
 			  || type == FIT_RGBF)
@@ -124,37 +172,69 @@ VuoImage VuoImage_get(const char *imageURL)
 			FreeImage_Unload(dib);
 			dib = dibFloat;
 		}
-		else if (type == FIT_BITMAP && bpp == 24)
+		else if (type == FIT_RGBA16
+			  || type == FIT_RGBAF)
 		{
-			// Fast path for RGB images — no need to add a fully-opaque alpha channel.
-			colorDepth = VuoImageColorDepth_8;
-			format = GL_BGR;
+			// If it is > 8bpc WITH an alpha channel, convert to float.
+			colorDepth = VuoImageColorDepth_16;
+			format = GL_RGBA;
+
+			FIBITMAP *dibFloat = FreeImage_ConvertToRGBAF(dib);
+			FreeImage_Unload(dib);
+			dib = dibFloat;
+
+			// FreeImage_PreMultiplyWithAlpha() only works on 8bpc images, so do it ourself.
+			float *pixels = (float *)FreeImage_GetBits(dib);
+			if (!pixels)
+			{
+				VUserLog("Error: '%s': Couldn't get pixels from image.", imageURL);
+				FreeImage_Unload(dib);
+				return NULL;
+			}
+			for (int y = 0; y < pixelsHigh; ++y)
+				for (int x = 0; x < pixelsWide; ++x)
+				{
+					float alpha = pixels[(y*pixelsWide + x)*4 + 3];
+					pixels[(y*pixelsWide + x)*4 + 0] *= alpha;
+					pixels[(y*pixelsWide + x)*4 + 1] *= alpha;
+					pixels[(y*pixelsWide + x)*4 + 2] *= alpha;
+				}
 		}
 		else
 		{
 			// Upload other images as 8bpc.
-			// If it is > 8bpc WITH an alpha channel, convert to 8bpc (since FreeImage doesn't yet support converting to RGBAF).
 			colorDepth = VuoImageColorDepth_8;
-			format = GL_BGRA;
 
-			if (colorType == FIC_MINISBLACK && bpp == 16)
+			if (colorType == FIC_MINISWHITE
+			 || colorType == FIC_MINISBLACK)
 			{
-				// Truncate 16bpc grey images to 8bpc, since `FreeImage_ConvertTo32Bits()` alone doesn't do this.
-				FIBITMAP *dibConverted = FreeImage_ConvertTo32Bits(FreeImage_ConvertToStandardType(dib));
+				format = GL_LUMINANCE;
+
+				FIBITMAP *dibConverted = FreeImage_ConvertTo8Bits(dib);
 				FreeImage_Unload(dib);
 				dib = dibConverted;
 			}
-
-			if (bpp != 32)
+			else if (colorType == FIC_RGB
+				 || (colorType == FIC_PALETTE && !FreeImage_IsTransparent(dib)))
 			{
-//				VLog("Converting %d bpp to 32 bpp.", bpp);
+				format = GL_BGR;
+
+				FIBITMAP *dibConverted = FreeImage_ConvertTo24Bits(dib);
+				FreeImage_Unload(dib);
+				dib = dibConverted;
+			}
+			else if (colorType == FIC_RGBALPHA
+				 || (colorType == FIC_PALETTE && FreeImage_IsTransparent(dib)))
+			{
+				format = GL_BGRA;
+
 				FIBITMAP *dibConverted = FreeImage_ConvertTo32Bits(dib);
 				FreeImage_Unload(dib);
 				dib = dibConverted;
-			}
 
-			if (!FreeImage_PreMultiplyWithAlpha(dib))
-				VUserLog("Warning: Premultiplication failed.");
+				if (!FreeImage_PreMultiplyWithAlpha(dib))
+					VUserLog("Warning: Premultiplication failed.");
+			}
 		}
 
 		pixels = FreeImage_GetBits(dib);
@@ -166,13 +246,12 @@ VuoImage VuoImage_get(const char *imageURL)
 		}
 	}
 
-	unsigned long pixelsWide = FreeImage_GetWidth(dib);
-	unsigned long pixelsHigh = FreeImage_GetHeight(dib);
-
 	VuoImage vuoImage = VuoImage_makeFromBuffer(pixels, format, pixelsWide, pixelsHigh, colorDepth, ^(void *buffer){
 		FreeImage_Unload(dib);
 		free(data);
 	});
+
+	vuoImage->scaleFactor = VuoImage_getScaleFactor(imageURL);
 
 	return vuoImage;
 }

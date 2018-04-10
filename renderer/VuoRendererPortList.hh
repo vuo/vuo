@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERPORTLIST_HH
-#define VUORENDERERPORTLIST_HH
+#pragma once
 
 class VuoRendererNode;
 class VuoRendererPort;
@@ -26,4 +25,3 @@ public:
 	QList<VuoRendererPort *> childItems() const;
 };
 
-#endif // VUORENDERERPORTLIST_HH

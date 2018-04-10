@@ -1,6 +1,6 @@
 /**
  * @file
- * Compares different easing curves used to control an animated object's speed as it moves from one point to another. 
+ * Compares different easing curves used to control an animated object's speed as it moves from one point to another.
  *
  * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -11,10 +11,10 @@ digraph G
 {
 AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="717,1003" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.130000"];
 AlignLayerToWindow2 [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="712,857" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"top\"" _verticalMargin="0.130000"];
-CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="669,289"];
-CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="675,385"];
-CombineLayers3 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="672,486"];
-CombineLayers4 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers with Transform|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="676,582"];
+CombineLayers [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="669,289"];
+CombineLayers2 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="675,385"];
+CombineLayers3 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="672,486"];
+CombineLayers4 [type="vuo.layer.combine" version="1.0.0" label="Combine Layers|<refresh>refresh\l|<transform>transform\l|<layers>layers\l|<layer>layer\r" pos="676,582"];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="-123,-451" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"in\"" _loop="\"none\""];
 Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="-125,-304" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"out\"" _loop="\"none\""];
 Curve4 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="-124,-155" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="3.000000" _easing="\"in+out\"" _loop="\"none\""];
@@ -104,5 +104,6 @@ ReceiveMouseButtons:released -> CycleThroughList2:goForward;
 RenderLayersToWindow:requestedFrame -> LimitToRange2:value;
 RenderLayersToWindow:showedWindow -> AlignLayerToWindow2:window;
 RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
 SummarizeValue2:summary -> MakeTextLayer5:text;
 }

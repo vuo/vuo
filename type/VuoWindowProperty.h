@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOWINDOWPROPERTY_H
-#define VUOWINDOWPROPERTY_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -85,5 +84,4 @@ void VuoWindowProperty_release(VuoWindowProperty value);
  * @}
  */
 
-#endif // VUOWINDOWPROPERTY_H
 

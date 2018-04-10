@@ -119,6 +119,7 @@ static VuoImage VuoImage_make_internal(unsigned int glTextureName, unsigned int 
 	t->glInternalFormat = glInternalFormat;
 	t->pixelsWide = pixelsWide;
 	t->pixelsHigh = pixelsHigh;
+	t->scaleFactor = 1;
 
 	t->freeCallbackContext = freeCallbackContext;
 
@@ -340,52 +341,6 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
 }
 
 /**
- * Returns an image with the contents of the `context`'s framebuffer.
- */
-VuoImage VuoImage_makeFromContextFramebuffer(VuoGlContext context)
-{
-	CGLContextObj cgl_ctx = (CGLContextObj)context;
-
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	GLint width  = viewport[2];
-	GLint height = viewport[3];
-
-	GLuint glTextureName = VuoGlTexturePool_use(cgl_ctx, GL_RGBA, width, height, GL_BGRA);
-	if (!glTextureName)
-		return NULL;
-	glBindTexture(GL_TEXTURE_2D, glTextureName);
-	glReadBuffer(GL_FRONT);
-	glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
-	GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-	glReadBuffer(GL_BACK);
-	glFlush();
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	GLenum syncResult = glClientWaitSync(sync, 0, NSEC_PER_SEC);
-
-	// The glCopyTexImage2D() shouldn't sit in the GPU queue for more than 1 second,
-	// so we can assume the window's main context has been killed.
-	if (syncResult == GL_TIMEOUT_EXPIRED)
-	{
-		VUserLog("Sync timed out");
-		return NULL;
-	}
-
-	// Not sure why this would happen.
-	if (syncResult != GL_CONDITION_SATISFIED && syncResult != GL_ALREADY_SIGNALED)
-	{
-		char *s = VuoGl_stringForConstant(syncResult);
-		VUserLog("%s",s);
-		free(s);
-		VGL();
-		return NULL;
-	}
-
-	return VuoImage_make(glTextureName, GL_RGBA, width, height);
-}
-
-/**
  * Downloads the specified image's pixel data from the GPU to the CPU (or returns it from a cache),
  * and returns the CPU memory buffer.
  *
@@ -528,6 +483,33 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 }
 
 /**
+ * Returns the image's wrap mode.
+ */
+VuoImageWrapMode VuoImage_getWrapMode(VuoImage image)
+{
+	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+
+	glBindTexture(image->glTextureTarget, image->glTextureName);
+
+	GLint wrapModeGL;
+	glGetTexParameteriv(image->glTextureTarget, GL_TEXTURE_WRAP_S, &wrapModeGL);
+	// Ignore GL_TEXTURE_WRAP_T since Vuo assumes it's the same as _S.
+
+	glBindTexture(image->glTextureTarget, 0);
+
+	VuoGlContext_disuse(cgl_ctx);
+
+	if (wrapModeGL == GL_CLAMP_TO_EDGE)
+		return VuoImageWrapMode_ClampEdge;
+	else if (wrapModeGL == GL_REPEAT)
+		return VuoImageWrapMode_Repeat;
+	else if (wrapModeGL == GL_MIRRORED_REPEAT)
+		return VuoImageWrapMode_MirroredRepeat;
+
+	return VuoImageWrapMode_None;
+}
+
+/**
  * Changes the image's wrap mode.
  */
 void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
@@ -547,7 +529,7 @@ void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
 	glTexParameteri(image->glTextureTarget, GL_TEXTURE_WRAP_S, wrapModeGL);
 	glTexParameteri(image->glTextureTarget, GL_TEXTURE_WRAP_T, wrapModeGL);
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(image->glTextureTarget, 0);
 
 	// Ensure the command queue gets executed before we return,
 	// since the VuoShader might immediately be used on another context.
@@ -675,10 +657,10 @@ bool VuoImage_areEqualWithinTolerance(const VuoImage a, const VuoImage b, const 
 			 || abs(aPixels[i*4+2] - bPixels[i*4+2]) > tolerance
 			 || abs(aPixels[i*4+3] - bPixels[i*4+3]) > tolerance)
 			{
-//				VLog("Failed at pixel coordinate (%ld,%ld): RGBA %d,%d,%d,%d vs %d,%d,%d,%d",
-//					 i%a->pixelsWide, i/a->pixelsWide,
-//					 aPixels[i*4+2],aPixels[i*4+1],aPixels[i*4+0],aPixels[i*4+3],
-//					 bPixels[i*4+2],bPixels[i*4+2],bPixels[i*4+2],bPixels[i*4+3]);
+				VDebugLog("Difference found at pixel coordinate (%ld,%ld): RGBA %d,%d,%d,%d vs %d,%d,%d,%d",
+					i%a->pixelsWide, i/a->pixelsWide,
+					aPixels[i*4+2],aPixels[i*4+1],aPixels[i*4+0],aPixels[i*4+3],
+					bPixels[i*4+2],bPixels[i*4+2],bPixels[i*4+2],bPixels[i*4+3]);
 				return false;
 			}
 		return true;
@@ -692,10 +674,10 @@ bool VuoImage_areEqualWithinTolerance(const VuoImage a, const VuoImage b, const 
 			 || abs(aPixels[i*4+2] - bPixels[i*4+2]) > tolerance
 			 || abs(aPixels[i*4+3] - bPixels[i*4+3]) > tolerance)
 			{
-//				VLog("Failed at pixel coordinate (%ld,%ld): RGBA %d,%d,%d,%d vs %d,%d,%d,%d",
-//					 i%a->pixelsWide, i/a->pixelsWide,
-//					 aPixels[i*4+2],aPixels[i*4+2],aPixels[i*4+2],aPixels[i*4+3],
-//					 bPixels[i*4+2],bPixels[i*4+1],bPixels[i*4+0],bPixels[i*4+3]);
+				VDebugLog("Difference found at pixel coordinate (%ld,%ld): RGBA %d,%d,%d,%d vs %d,%d,%d,%d",
+					i%a->pixelsWide, i/a->pixelsWide,
+					aPixels[i*4+2],aPixels[i*4+2],aPixels[i*4+2],aPixels[i*4+3],
+					bPixels[i*4+2],bPixels[i*4+1],bPixels[i*4+0],bPixels[i*4+3]);
 				return false;
 			}
 		return true;
@@ -704,12 +686,12 @@ bool VuoImage_areEqualWithinTolerance(const VuoImage a, const VuoImage b, const 
 	for (unsigned int i = 0; i < a->pixelsWide * a->pixelsHigh * 4; ++i)
 		if (abs(aPixels[i] - bPixels[i]) > tolerance)
 		{
-//			unsigned int p = (i/4)*4; // Round down to the start of this 32bit pixel.
-//			VLog("Failed at pixel coordinate (%ld,%ld): abs(%d - %d) > %d (RGBA %d,%d,%d,%d vs %d,%d,%d,%d)",
-//				 i%a->pixelsWide, i/a->pixelsWide,
-//				 aPixels[i], bPixels[i], tolerance,
-//				 aPixels[p+2],aPixels[p+1],aPixels[p+0],aPixels[p+3],
-//				 bPixels[p+2],bPixels[p+1],bPixels[p+0],bPixels[p+3]);
+			unsigned int p = (i/4)*4; // Round down to the start of this 32bit pixel.
+			VDebugLog("Difference found at pixel coordinate (%ld,%ld): abs(%d - %d) > %d (RGBA %d,%d,%d,%d vs %d,%d,%d,%d)",
+				i%a->pixelsWide, i/a->pixelsWide,
+				aPixels[i], bPixels[i], tolerance,
+				aPixels[p+2],aPixels[p+1],aPixels[p+0],aPixels[p+3],
+				bPixels[p+2],bPixels[p+1],bPixels[p+0],bPixels[p+3]);
 			return false;
 		}
 
@@ -794,6 +776,11 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
 		  || image->glInternalFormat == GL_RGB16F_ARB
 		  || image->glInternalFormat == GL_RGBA16F_ARB)
 		return VuoImageColorDepth_16;
+	else if (image->glInternalFormat == GL_LUMINANCE32F_ARB
+			 || image->glInternalFormat == GL_LUMINANCE_ALPHA32F_ARB
+			 || image->glInternalFormat == GL_RGB32F_ARB
+			 || image->glInternalFormat == GL_RGBA32F_ARB)
+		return VuoImageColorDepth_32;
 
 	char *formatString = VuoGl_stringForConstant(image->glInternalFormat);
 	VUserLog("Error: Unknown glInternalFormat %x (%s)", image->glInternalFormat, formatString);
@@ -813,13 +800,10 @@ VuoImageColorDepth VuoImage_getColorDepth(const VuoImage image)
  *
  * @param js A JSON object containing one of the following schemas:
  *
- *    - a GL Texture Name, format, and the texture's width and height in pixels:
+ *    - a pointer to a @c VuoImage:
  * @eg{
  *	{
- *		"glTextureName": 42,
- *		"glInternalFormat": 6407,
- *		"pixelsWide": 640,
- *		"pixelsHigh": 480
+ *		"pointer": ...
  *	}
  * }
  *
@@ -846,10 +830,17 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 	if (!js)
 		return NULL;
 
+	{
+		json_object * o;
+		if (json_object_object_get_ex(js, "pointer", &o))
+			return (VuoImage)json_object_get_int64(o);
+	}
+
 	unsigned int glTextureName;
 	unsigned int glInternalFormat = 0;
 	unsigned long int pixelsWide;
 	unsigned long int pixelsHigh;
+	float scaleFactor = 1;
 
 	{
 		json_object * o;
@@ -870,19 +861,19 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 
 	{
 		json_object * o;
+		if (json_object_object_get_ex(js, "scaleFactor", &o))
+			scaleFactor = json_object_get_double(o);
+	}
+
+	{
+		json_object * o;
 		if (json_object_object_get_ex(js, "color", &o))
 			return VuoImage_makeColorImage(VuoColor_makeFromJson(o), pixelsWide, pixelsHigh);
 	}
 
 	{
 		json_object * o;
-		if (json_object_object_get_ex(js, "glTextureName", &o))
-		{
-			glTextureName = json_object_get_int64(o);
-			if (json_object_object_get_ex(js, "glInternalFormat", &o))
-				glInternalFormat = json_object_get_int64(o);
-		}
-		else if (json_object_object_get_ex(js, "ioSurface", &o))
+		if (json_object_object_get_ex(js, "ioSurface", &o))
 		{
 			IOSurfaceID surfID = json_object_get_int(o);
 //			VLog("Converting IOSurfaceID %d",surfID);
@@ -939,13 +930,18 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 			CFRelease(surf);
 
 			VuoGlContext_disuse(glContext);
+
+			image2d->scaleFactor = scaleFactor;
+
 			return image2d;
 		}
 		else
 			return NULL;
 	}
 
-	return VuoImage_make(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
+	VuoImage i = VuoImage_make(glTextureName, glInternalFormat, pixelsWide, pixelsHigh);
+	i->scaleFactor = scaleFactor;
+	return i;
 }
 
 /**
@@ -1023,25 +1019,8 @@ json_object * VuoImage_getJson(const VuoImage value)
 	if (!value)
 		return NULL;
 
-	json_object * js = json_object_new_object();
-
-	{
-		json_object * o = json_object_new_int64(value->glTextureName);
-		json_object_object_add(js, "glTextureName", o);
-	}
-	{
-		json_object * o = json_object_new_int64(value->glInternalFormat);
-		json_object_object_add(js, "glInternalFormat", o);
-	}
-	{
-		json_object * o = json_object_new_int64(value->pixelsWide);
-		json_object_object_add(js, "pixelsWide", o);
-	}
-	{
-		json_object * o = json_object_new_int64(value->pixelsHigh);
-		json_object_object_add(js, "pixelsHigh", o);
-	}
-
+	json_object *js = json_object_new_object();
+	json_object_object_add(js, "pointer", json_object_new_int64((int64_t)value));
 	return js;
 }
 
@@ -1094,6 +1073,10 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 		json_object * o = json_object_new_int64(value->pixelsHigh);
 		json_object_object_add(js, "pixelsHigh", o);
 	}
+	{
+		json_object *o = json_object_new_double(value->scaleFactor);
+		json_object_object_add(js, "scaleFactor", o);
+	}
 	// VuoShader_makeUnlitImageShader retains the image; VuoRelease(shader) then releases it.
 	// So don't release the shader until we're done with the image, in case this release is its last.
 	VuoRelease(shader);
@@ -1118,21 +1101,26 @@ char * VuoImage_getSummary(const VuoImage value)
 	char *format;
 	switch (value->glInternalFormat)
 	{
-		case GL_RGB:					format = strdup("RGB, each channel stored as 8-bit integer (GL_RGB)"); break;
-		case GL_RGB16F_ARB:				format = strdup("RGB, each channel stored as 16-bit float (GL_RGB16F_ARB)"); break;
-		case GL_RGBA:					format = strdup("RGBA, each channel stored as 8-bit integer (GL_RGBA)"); break;
-		case GL_RGBA16F_ARB:			format = strdup("RGBA, each channel stored as 16-bit float (GL_RGBA16F_ARB)"); break;
-		case GL_LUMINANCE8:				format = strdup("intensity, stored as 8-bit integer (GL_LUMINANCE8)"); break;
-		case GL_LUMINANCE16F_ARB:		format = strdup("intensity, stored as 16-bit float (GL_LUMINANCE16F_ARB)"); break;
-		case GL_LUMINANCE8_ALPHA8:		format = strdup("intensity+alpha, each channel stored as 8-bit integer (GL_LUMINANCE8_ALPHA8)"); break;
-		case GL_LUMINANCE_ALPHA16F_ARB:	format = strdup("intensity+alpha, each channel stored as 16-bit float (GL_LUMINANCE_ALPHA16F_ARB)"); break;
-		case GL_DEPTH_COMPONENT:		format = strdup("intensity, stored as 16-bit float (GL_DEPTH_COMPONENT)"); break;
+		case GL_RGB:					format = strdup("RGB, each channel stored as 8-bit unsigned integer (GL_RGB)"); break;
+		case GL_RGB16F_ARB:				format = strdup("RGB, each channel stored as 16-bit signed float (GL_RGB16F_ARB)"); break;
+		case GL_RGB32F_ARB:				format = strdup("RGB, each channel stored as 32-bit signed float (GL_RGB32F_ARB)"); break;
+		case GL_RGBA:					format = strdup("RGBA, each channel stored as 8-bit unsigned integer (GL_RGBA)"); break;
+		case GL_RGBA16F_ARB:			format = strdup("RGBA, each channel stored as 16-bit signed float (GL_RGBA16F_ARB)"); break;
+		case GL_RGBA32F_ARB:			format = strdup("RGBA, each channel stored as 32-bit signed float (GL_RGBA32F_ARB)"); break;
+		case GL_LUMINANCE8:				format = strdup("intensity, stored as 8-bit unsigned integer (GL_LUMINANCE8)"); break;
+		case GL_LUMINANCE16F_ARB:		format = strdup("intensity, stored as 16-bit signed float (GL_LUMINANCE16F_ARB)"); break;
+		case GL_LUMINANCE32F_ARB:		format = strdup("intensity, stored as 32-bit signed float (GL_LUMINANCE32F_ARB)"); break;
+		case GL_LUMINANCE8_ALPHA8:		format = strdup("intensity+alpha, each channel stored as 8-bit unsigned integer (GL_LUMINANCE8_ALPHA8)"); break;
+		case GL_LUMINANCE_ALPHA16F_ARB:	format = strdup("intensity+alpha, each channel stored as 16-bit signed float (GL_LUMINANCE_ALPHA16F_ARB)"); break;
+		case GL_LUMINANCE_ALPHA32F_ARB:	format = strdup("intensity+alpha, each channel stored as 32-bit signed float (GL_LUMINANCE_ALPHA32F_ARB)"); break;
+		case GL_DEPTH_COMPONENT:		format = strdup("intensity, stored as 16-bit signed float (GL_DEPTH_COMPONENT)"); break;
 		default:						format = VuoGl_stringForConstant(value->glInternalFormat);
 	}
 
-	char *summary = VuoText_format("GL Texture (ID %u)<br>Size: %lux%lu pixels<br>Type: %s",
+	char *summary = VuoText_format("GL Texture (ID %u)<br>Size: %lux%lu pixels<br>Scale Factor: %gx<br>Type: %s",
 		value->glTextureName,
 		value->pixelsWide, value->pixelsHigh,
+		value->scaleFactor,
 		format);
 
 	free(format);

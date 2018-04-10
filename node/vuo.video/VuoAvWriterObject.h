@@ -8,7 +8,9 @@
  */
 
 /// https://b33p.net/kosada/node/9140
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <Cocoa/Cocoa.h>
 #undef NS_RETURNS_INNER_POINTER
 

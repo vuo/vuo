@@ -90,21 +90,7 @@ void nodeInstanceEvent
 
 	if((*context)->player != NULL)
 	{
-		bool reverse = frameTime < 0;
-		double timestamp = frameTime;
-		double dur = (*context)->duration;
-
-		if(loop != VuoLoopType_None && (frameTime < 0 || frameTime > dur))
-		{
-			timestamp = fabs(frameTime);
-			float mod = fmod(timestamp, dur);
-
-			if(loop == VuoLoopType_Loop)
-				timestamp = reverse ? dur - mod : mod;
-			else if(loop == VuoLoopType_Mirror)
-				timestamp = ((int)floor(timestamp / dur) % 2) ? dur - mod : mod;
-		}
-
+		double timestamp = VuoVideo_validateTimestamp(frameTime, (*context)->duration, loop, NULL);
 		VuoVideo_getFrameAtSecond((*context)->player, timestamp, videoFrame);
 	}
 }

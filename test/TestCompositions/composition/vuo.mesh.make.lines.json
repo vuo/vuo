@@ -42,7 +42,7 @@
 			]
 		},
 		"outputPortValues" : {
-			"Summary" : "Mesh containing: <ul><li>2 vertices, 1 line<br>with first position (0, 0, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>◻ texture coordinates<\/li><\/ul>"
+			"Summary" : "Mesh containing: 2 vertices, 1 linewith first position (0, 0, 0, 1)✓ positions◻ normals◻ tangents◻ bitangents◻ texture coordinates"
 		}
 	},
 
@@ -57,7 +57,7 @@
 			]
 		},
 		"outputPortValues" : {
-			"Summary" : "Mesh containing: <ul><li>3 vertices, 1 line<br>with first position (0, 0, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>◻ texture coordinates<\/li><\/ul>"
+			"Summary" : "Mesh containing: 3 vertices, 1 linewith first position (0, 0, 0, 1)✓ positions◻ normals◻ tangents◻ bitangents◻ texture coordinates"
 		}
 	},
 
@@ -73,7 +73,7 @@
 			]
 		},
 		"outputPortValues" : {
-			"Summary" : "Mesh containing: <ul><li>4 vertices, 2 lines<br>with first position (0, 0, 0, 1)<br>✓ positions<br>◻ normals<br>◻ tangents<br>◻ bitangents<br>◻ texture coordinates<\/li><\/ul>"
+			"Summary" : "Mesh containing: 4 vertices, 2 lineswith first position (0, 0, 0, 1)✓ positions◻ normals◻ tangents◻ bitangents◻ texture coordinates"
 		}
 	},
 

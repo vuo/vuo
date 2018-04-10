@@ -24,9 +24,9 @@ void nodeEvent
 		VuoInputData(VuoWindowReference) window,
 		VuoInputData(VuoLayer) layer,
 		VuoInputData(VuoHorizontalAlignment, {"default":"left"}) horizontalAlignment,
-		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedStep":0.1}) horizontalMargin,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) horizontalMargin,
 		VuoInputData(VuoVerticalAlignment, {"default":"top"}) verticalAlignment,
-		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedStep":0.1}) verticalMargin,
+		VuoInputData(VuoReal, {"default":0.0, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) verticalMargin,
 		VuoOutputData(VuoLayer) alignedLayer
 )
 {

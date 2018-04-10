@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPORTCLASS_HH
-#define VUOPORTCLASS_HH
+#pragma once
 
 #include "VuoBase.hh"
 
@@ -74,5 +73,3 @@ private:
 	bool portAction; ///< Whether the port has a port action. Only applies to input ports.
 	enum EventThrottling defaultEventThrottling; ///< The port's default event-throttling behavior. Only applies to trigger ports.
 };
-
-#endif // VUOPORTCLASS_HH
