@@ -18,7 +18,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Message",
 					 "keywords" : [ ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "genericTypes": {
 						 "VuoGenericType10" : {
 							 "defaultType" : "VuoReal",
@@ -74,34 +74,68 @@ void nodeEvent
 (
 		VuoInputData(VuoText, {"default":"/example"}) address,
 		VuoInputData(VuoGenericType10) data1,
+		VuoInputData(VuoOscType, {"default":"auto"}) type1,
 		VuoInputData(VuoGenericType11) data2,
+		VuoInputData(VuoOscType, {"default":"auto"}) type2,
 		VuoInputData(VuoGenericType12) data3,
+		VuoInputData(VuoOscType, {"default":"auto"}) type3,
 		VuoInputData(VuoGenericType13) data4,
+		VuoInputData(VuoOscType, {"default":"auto"}) type4,
 		VuoInputData(VuoGenericType14) data5,
+		VuoInputData(VuoOscType, {"default":"auto"}) type5,
 		VuoInputData(VuoGenericType15) data6,
+		VuoInputData(VuoOscType, {"default":"auto"}) type6,
 		VuoInputData(VuoGenericType16) data7,
+		VuoInputData(VuoOscType, {"default":"auto"}) type7,
 		VuoInputData(VuoGenericType17) data8,
+		VuoInputData(VuoOscType, {"default":"auto"}) type8,
 		VuoInputData(VuoGenericType18) data9,
+		VuoInputData(VuoOscType, {"default":"auto"}) type9,
 		VuoInputData(VuoGenericType19) data10,
+		VuoInputData(VuoOscType, {"default":"auto"}) type10,
 		VuoInputData(VuoGenericType20) data11,
+		VuoInputData(VuoOscType, {"default":"auto"}) type11,
 		VuoOutputData(VuoOscMessage) message
 )
 {
 	if (!address)
 		return;
 
-	struct json_object *data = json_object_new_array();
-	json_object_array_put_idx(data, 0, VuoGenericType10_getJson(data1));
-	json_object_array_put_idx(data, 1, VuoGenericType11_getJson(data2));
-	json_object_array_put_idx(data, 2, VuoGenericType12_getJson(data3));
-	json_object_array_put_idx(data, 3, VuoGenericType13_getJson(data4));
-	json_object_array_put_idx(data, 4, VuoGenericType14_getJson(data5));
-	json_object_array_put_idx(data, 5, VuoGenericType15_getJson(data6));
-	json_object_array_put_idx(data, 6, VuoGenericType16_getJson(data7));
-	json_object_array_put_idx(data, 7, VuoGenericType17_getJson(data8));
-	json_object_array_put_idx(data, 8, VuoGenericType18_getJson(data9));
-	json_object_array_put_idx(data, 9, VuoGenericType19_getJson(data10));
-	json_object_array_put_idx(data, 10, VuoGenericType20_getJson(data11));
+	struct json_object *data[11];
+	VuoOscType dataTypes[11];
 
-	*message = VuoOscMessage_make(address, data);
+		 data[0] = VuoGenericType10_getJson(data1);
+	dataTypes[0] = type1;
+
+		 data[1] = VuoGenericType11_getJson(data2);
+	dataTypes[1] = type2;
+
+		 data[2] = VuoGenericType12_getJson(data3);
+	dataTypes[2] = type3;
+
+		 data[3] = VuoGenericType13_getJson(data4);
+	dataTypes[3] = type4;
+
+		 data[4] = VuoGenericType14_getJson(data5);
+	dataTypes[4] = type5;
+
+		 data[5] = VuoGenericType15_getJson(data6);
+	dataTypes[5] = type6;
+
+		 data[6] = VuoGenericType16_getJson(data7);
+	dataTypes[6] = type7;
+
+		 data[7] = VuoGenericType17_getJson(data8);
+	dataTypes[7] = type8;
+
+		 data[8] = VuoGenericType18_getJson(data9);
+	dataTypes[8] = type9;
+
+		 data[9] = VuoGenericType19_getJson(data10);
+	dataTypes[9] = type10;
+
+		 data[10] = VuoGenericType20_getJson(data11);
+	dataTypes[10] = type11;
+
+	*message = VuoOscMessage_make(address, 11, data, dataTypes);
 }

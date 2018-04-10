@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERINPUTDRAWER_HH
-#define VUORENDERERINPUTDRAWER_HH
+#pragma once
 
 #include "VuoNode.hh"
 #include "VuoRendererInputAttachment.hh"
@@ -38,4 +37,3 @@ protected:
 	qreal drawerBottomExtensionHeight; ///< The height, in pixels, of the input drawer (excluding the arm and drag handle).
 };
 
-#endif // VUORENDERERINPUTDRAWER_HH

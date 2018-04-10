@@ -49,10 +49,9 @@ public:
 	/**
 	 * Creates an error object copied from the muParser error.
 	 */
-	VuoMathExpressionErrorInternal(const mu::ParserError &error)
+	VuoMathExpressionErrorInternal(const mu::ParserError &error) :
+		message(error.GetMsg())
 	{
-		message = error.GetMsg();
-
 		size_t positionIndex = message.find(" at position ");
 		if (positionIndex != string::npos)
 			message = message.substr(0, positionIndex);
@@ -61,17 +60,17 @@ public:
 	/**
 	 * Creates an error object with the given description.
 	 */
-	VuoMathExpressionErrorInternal(const string &message)
+	VuoMathExpressionErrorInternal(const string &message) :
+		message(message)
 	{
-		this->message = message;
 	}
 
 	/**
 	 * Creates an error object with the given description.
 	 */
-	VuoMathExpressionErrorInternal(const char *message)
+	VuoMathExpressionErrorInternal(const char *message) :
+		message(message)
 	{
-		this->message = message;
 	}
 };
 
@@ -217,6 +216,7 @@ void VuoMathExpressionParser_defineStandardLibrary(void *p)
 {
 	mu::Parser *muParser = (mu::Parser *)p;
 
+	muParser->DefineConst("pi", (double)3.14159265359);
 	muParser->DefineConst("PI", (double)3.14159265359);
 
 	muParser->DefineOprt("%", fmod, mu::prMUL_DIV, mu::oaLEFT, true);
@@ -303,10 +303,10 @@ public:
 	 *
 	 * @throw mu::ParserError @a expression contains a syntax error.
 	 */
-	VuoMathExpressionParserInternal(const string &expression, const vector<string> &outputVariableNames_ = vector<string>())
+	VuoMathExpressionParserInternal(const string &expression, const vector<string> &outputVariableNames_ = vector<string>()) :
+		outputVariableNames(outputVariableNames_)
 	{
 		this->variableCount = 0;
-		this->outputVariableNames = outputVariableNames_;
 
 		VuoMathExpressionParser_defineStandardLibrary(&muParser);
 
@@ -678,4 +678,60 @@ VuoDictionary_VuoText_VuoReal VuoMathExpressionParser_calculate(VuoMathExpressio
 	}
 
 	return VuoDictionaryCreateWithLists_VuoText_VuoReal(keys, values);
+}
+
+/**
+ * Evaluates the expression for each of `xValues`.
+ */
+VuoList_VuoReal VuoMathExpressionParser_calculateList(VuoMathExpressionParser m, VuoList_VuoReal xValues, VuoDictionary_VuoText_VuoReal constants)
+{
+	if (!m || !xValues)
+		return NULL;
+
+	VuoMathExpressionParserInternal *mi = static_cast<VuoMathExpressionParserInternal *>(m);
+
+	for (size_t i = 0; i < MAX_VARIABLE_COUNT; ++i)
+		mi->variableValues[i] = 0;
+
+	VuoText *inputVariablesArray = VuoListGetData_VuoText(constants.keys);
+	VuoReal *inputValuesArray = VuoListGetData_VuoReal(constants.values);
+	unsigned long inputCount = VuoListGetCount_VuoText(constants.keys);
+	for (int i = 0; i < inputCount; ++i)
+	{
+		map<string, size_t>::iterator variableIter = mi->variableNamesAndIndices.find(inputVariablesArray[i]);
+		if (variableIter != mi->variableNamesAndIndices.end())
+		{
+			size_t index = variableIter->second;
+			mi->variableValues[index] = inputValuesArray[i];
+		}
+	}
+
+	map<string, size_t>::iterator xIterLC = mi->variableNamesAndIndices.find("x");
+	double *xLC = NULL;
+	if (xIterLC != mi->variableNamesAndIndices.end())
+		xLC = &mi->variableValues[xIterLC->second];
+
+	map<string, size_t>::iterator xIterUC = mi->variableNamesAndIndices.find("X");
+	double *xUC = NULL;
+	if (xIterUC != mi->variableNamesAndIndices.end())
+		xUC = &mi->variableValues[xIterUC->second];
+
+	unsigned long xValueCount = VuoListGetCount_VuoReal(xValues);
+	VuoReal *xValueReals = (VuoReal *)VuoListGetData_VuoReal(xValues);
+
+	VuoList_VuoReal results = VuoListCreateWithCount_VuoReal(xValueCount, 0);
+	VuoReal *resultReals = (VuoReal *)VuoListGetData_VuoReal(results);
+
+	for (unsigned long i = 0; i < xValueCount; ++i)
+	{
+		if (xLC)
+			*xLC = xValueReals[i];
+		if (xUC)
+			*xUC = xValueReals[i];
+
+		int outputCount;
+		resultReals[i] = mi->muParser.Eval(outputCount)[0];
+	}
+
+	return results;
 }

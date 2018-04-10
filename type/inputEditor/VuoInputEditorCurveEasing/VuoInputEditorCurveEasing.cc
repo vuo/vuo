@@ -32,10 +32,12 @@ VuoInputEditorMenuItem * VuoInputEditorCurveEasing::setUpMenuTree()
 {
 	VuoInputEditorMenuItem *rootMenuItem = new VuoInputEditorMenuItem("root");
 
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_In),		VuoCurveEasing_getJson(VuoCurveEasing_In),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_In)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_Out),		VuoCurveEasing_getJson(VuoCurveEasing_Out),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_Out)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_InOut),		VuoCurveEasing_getJson(VuoCurveEasing_InOut),		renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_InOut)));
-	rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(VuoCurveEasing_Middle),	VuoCurveEasing_getJson(VuoCurveEasing_Middle),	renderMenuIconWithCurve(VuoCurve_Quadratic, VuoCurveEasing_Middle)));
+	for (VuoCurveEasing i = VuoCurveEasing_In; i <= VuoCurveEasing_Middle; ++i)
+	{
+		json_object *js = VuoCurveEasing_getJson(i);
+		if (shouldIncludeValue(js))
+			rootMenuItem->addItem(new VuoInputEditorMenuItem(VuoCurveEasing_getSummary(i), js, renderMenuIconWithCurve(VuoCurve_Quadratic, i)));
+	}
 
 	return rootMenuItem;
 }

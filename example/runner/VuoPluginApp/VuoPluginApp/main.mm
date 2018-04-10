@@ -47,5 +47,10 @@ void VuoPluginApp_createOpenGLContext(void)
 int main(int argc, const char * argv[])
 {
 	VuoPluginApp_createOpenGLContext();
+
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		[VuoRunnerCocoa prepareForFastBuild];
+	});
+
     return NSApplicationMain(argc, argv);
 }

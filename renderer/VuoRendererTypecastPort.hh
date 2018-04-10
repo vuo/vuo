@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERTYPECASTPORT_HH
-#define VUORENDERERTYPECASTPORT_HH
+#pragma once
 
 #include "VuoRendererPort.hh"
 
@@ -43,4 +42,3 @@ private:
 	QString getCanvasTypecastTitle(void) const;
 };
 
-#endif // VUORENDERERTYPECASTPORT_HH

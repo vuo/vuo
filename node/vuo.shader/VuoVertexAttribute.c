@@ -50,7 +50,11 @@ VuoVertexAttribute VuoVertexAttribute_makeFromJson(json_object *js)
 	else if (strcmp(valueAsString, "bitangent") == 0)
 		value = VuoVertexAttribute_Bitangent;
 	else if (strcmp(valueAsString, "textureCoordinate") == 0)
-		value = VuoVertexAttribute_TextureCoordinate;
+		value = VuoVertexAttribute_TextureCoordinateChecker;
+	else if (strcmp(valueAsString, "textureCoordinateChecker") == 0)
+		value = VuoVertexAttribute_TextureCoordinateChecker;
+	else if (strcmp(valueAsString, "textureCoordinateGradient") == 0)
+		value = VuoVertexAttribute_TextureCoordinateGradient;
 
 	return value;
 }
@@ -68,8 +72,10 @@ json_object *VuoVertexAttribute_getJson(const VuoVertexAttribute value)
 		valueAsString = "tangent";
 	else if (value == VuoVertexAttribute_Bitangent)
 		valueAsString = "bitangent";
-	else if (value == VuoVertexAttribute_TextureCoordinate)
-		valueAsString = "textureCoordinate";
+	else if (value == VuoVertexAttribute_TextureCoordinateChecker)
+		valueAsString = "textureCoordinateChecker";
+	else if (value == VuoVertexAttribute_TextureCoordinateGradient)
+		valueAsString = "textureCoordinateGradient";
 
 	return json_object_new_string(valueAsString);
 }
@@ -84,7 +90,8 @@ VuoList_VuoVertexAttribute VuoVertexAttribute_getAllowedValues(void)
 	VuoListAppendValue_VuoVertexAttribute(l, VuoVertexAttribute_Normal);
 	VuoListAppendValue_VuoVertexAttribute(l, VuoVertexAttribute_Tangent);
 	VuoListAppendValue_VuoVertexAttribute(l, VuoVertexAttribute_Bitangent);
-	VuoListAppendValue_VuoVertexAttribute(l, VuoVertexAttribute_TextureCoordinate);
+	VuoListAppendValue_VuoVertexAttribute(l, VuoVertexAttribute_TextureCoordinateChecker);
+	VuoListAppendValue_VuoVertexAttribute(l, VuoVertexAttribute_TextureCoordinateGradient);
 	return l;
 }
 
@@ -101,8 +108,10 @@ char *VuoVertexAttribute_getSummary(const VuoVertexAttribute value)
 		valueAsString = "Tangent";
 	else if (value == VuoVertexAttribute_Bitangent)
 		valueAsString = "Bitangent";
-	else if (value == VuoVertexAttribute_TextureCoordinate)
-		valueAsString = "Texture Coordinate";
+	else if (value == VuoVertexAttribute_TextureCoordinateChecker)
+		valueAsString = "Texture Coordinate (Checker)";
+	else if (value == VuoVertexAttribute_TextureCoordinateGradient)
+		valueAsString = "Texture Coordinate (Gradient)";
 
 	return strdup(valueAsString);
 }

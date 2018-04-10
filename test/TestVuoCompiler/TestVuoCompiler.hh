@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef TESTVUOCOMPILER_H
-#define TESTVUOCOMPILER_H
+#pragma once
 
 #include <QtCore/QString>
 #include <QtTest/QtTest>
@@ -35,5 +34,3 @@ protected:
 	map<string, VuoNode *> makeNodeForTitle(vector<VuoNode *> nodes);
 	map<string, VuoNode *> makeNodeForTitle(set<VuoNode *> nodes);
 };
-
-#endif

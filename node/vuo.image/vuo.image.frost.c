@@ -12,8 +12,12 @@
 
 VuoModuleMetadata({
 					  "title" : "Frost Image",
-					  "keywords" : [ "filter", "texture", "blur", "bend", "tint", "refraction", "diffraction" ],
-					  "version" : "1.0.0",
+					  "keywords" : [
+						  "filter", "texture",
+						  "perlin", "simplex", "gradient",
+						  "blur", "bend", "tint", "refraction", "diffraction",
+					  ],
+					  "version" : "1.0.1",
 					  "dependencies" : [
 						  "VuoGlContext",
 						  "VuoImageRenderer"
@@ -57,14 +61,20 @@ void nodeInstanceEvent
 	VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) noiseAmount,
 	VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) noiseScale,
 	VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) chromaticAberration,
-	VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":50}) iterations,
+	VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":4}) levels,
+	VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) roughness,
+	VuoInputData(VuoReal, {"default":2.0, "suggestedMin":1.0, "suggestedMax":5.0, "suggestedStep":0.1}) spacing,
+	VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":8}) iterations,
 	VuoOutputData(VuoImage) frostedImage
 )
 {
 	if (! image)
+	{
+		*frostedImage = NULL;
 		return;
+	}
 
-	VuoShader_setFrostedGlassShaderValues((*instance)->shader, color, brightness, noiseTime, noiseAmount, noiseScale, chromaticAberration, iterations);
+	VuoShader_setFrostedGlassShaderValues((*instance)->shader, color, brightness, noiseTime, noiseAmount, noiseScale, chromaticAberration, levels, roughness, spacing, iterations);
 	VuoShader_setUniform_VuoImage((*instance)->shader, "colorBuffer", image);
 
 	*frostedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));

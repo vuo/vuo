@@ -170,10 +170,6 @@ private slots:
 		QVERIFY(userName != NULL);
 		blacklistedLibraryPaths.push_back(userName);
 
-		// It's OK for libLeap.dylib to reference libc++, since Leap requires Mac OS 10.7+ anyway.
-		if (!VuoStringUtilities::endsWith(binaryPath, "libLeap.dylib"))
-			blacklistedLibraryPaths.push_back("libc++");
-
 		string command = string("otool -L \"") + binaryPath + string("\"");
 		vector<string> linesFromCommand;
 		getLinesFromCommand(command, linesFromCommand);
@@ -197,6 +193,7 @@ private slots:
 		QVERIFY(! isFirst);
 	}
 
+/* Disabled for now, since there are no longer any known-bad load commands.
 	void testLoadCommands_data()
 	{
 		QTest::addColumn< string >("binaryPath");
@@ -212,9 +209,9 @@ private slots:
 		QFETCH(string, binaryPath);
 
 		set<string> blacklistedLoadCommands;
-		blacklistedLoadCommands.insert("LC_VERSION_MIN_MACOSX");	// 0x24
-		blacklistedLoadCommands.insert("LC_FUNCTION_STARTS");		// 0x26
-		blacklistedLoadCommands.insert("LC_MAIN");					// 0x28
+		blacklistedLoadCommands.insert("LC_VERSION_MIN_MACOSX");	// 0x24; available on Mac OS 10.7+
+		blacklistedLoadCommands.insert("LC_FUNCTION_STARTS");		// 0x26; available on Mac OS 10.7+
+		blacklistedLoadCommands.insert("LC_MAIN");					// 0x28; available on Mac OS 10.8+
 
 		map<string, set<string> > whitelistedLoadCommandsForPath;
 		{
@@ -354,6 +351,7 @@ private slots:
 				QVERIFY2(line.find(loadCommand) == string::npos, (binaryPath + " : " + line).c_str());
 		}
 	}
+*/
 
 	void testInstructions_data()
 	{

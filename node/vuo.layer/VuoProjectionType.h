@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPROJECTIONTYPE_H
-#define VUOPROJECTIONTYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoProjectionType_struct { void *l; } * VuoList_VuoProjectionType;
@@ -49,5 +48,3 @@ void VuoProjectionType_release(VuoProjectionType value);
 /**
  * @}
 */
-
-#endif

@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Used to generate example images for node descriptions.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="435,600" _wave="\"sine\"" _frequency="375" _setPhase="0"];
+MakeAudioWave2 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="435,510" _wave="\"sine\"" _frequency="93.75" _setPhase="0.75"];
+MakeAudioWave3 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="435,690" _wave="\"sine\"" _frequency="1500" _setPhase="0"];
+MakeAudioWave4 [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="435,780" _wave="\"sine\"" _frequency="6000" _setPhase="0"];
+MakeImageFromChannels [type="vuo.audio.image.channels" version="1.1.0" label="Make Image from Channels|<refresh>refresh\l|<channels>channels\l|<image>image\r" pos="630,585"];
+MakeImageLayer [type="vuo.layer.make.stretched" version="1.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<transform>transform\l|<opacity>opacity\l|<layer>layer\r" pos="930,570" _transform="{\"translation\":[0,0],\"rotation\":0,\"scale\":[2,1]}" _opacity="1.0"];
+MakeList13 [type="vuo.list.make.2.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="162,506" fillcolor="green"];
+MakeList15 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1127,611" fillcolor="green"];
+MakeList18 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1102,581" fillcolor="green"];
+MakeList19 [type="vuo.list.make.4.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="597,596"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1155,570" fillcolor="green" _multisampling="\"off\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SaveImage [type="vuo.image.save" version="1.0.1" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="930,675" _url="\"~\\/Desktop\\/channels-image\"" _overwriteUrl="true" _format="\"PNG\""];
+SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="195,480" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
+
+MakeAudioWave2:samples -> MakeList19:1;
+MakeAudioWave3:samples -> MakeList19:3;
+MakeAudioWave4:samples -> MakeList19:4;
+MakeAudioWave:samples -> MakeList19:2;
+MakeImageFromChannels:image -> MakeImageLayer:image;
+MakeImageFromChannels:image -> SaveImage:saveImage;
+MakeImageLayer:layer -> MakeList18:1;
+MakeList13:list -> SendLiveAudio:sendChannels;
+MakeList15:list -> RenderLayersToWindow:setWindowProperties;
+MakeList18:list -> RenderLayersToWindow:layers;
+MakeList19:list -> MakeImageFromChannels:channels;
+SendLiveAudio:requestedChannels -> MakeAudioWave2:refresh;
+SendLiveAudio:requestedChannels -> MakeAudioWave3:refresh;
+SendLiveAudio:requestedChannels -> MakeAudioWave4:refresh;
+SendLiveAudio:requestedChannels -> MakeAudioWave:refresh;
+}

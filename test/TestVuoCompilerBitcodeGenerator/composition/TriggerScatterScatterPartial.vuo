@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="60,135" _seconds="1.0" _fired_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue1|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="285,45"];
+ShareValue3 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue2|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="495,-45"];
+ShareValue4 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue3|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="495,75"];
+ShareValue5 [type="vuo.data.share.VuoInteger" version="1.0.0" label="ShareValue4|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="285,225"];
+
+FirePeriodically:fired -> ShareValue2:value;
+FirePeriodically:fired -> ShareValue5:value;
+ShareValue2:sameValue -> ShareValue3:value;
+ShareValue2:sameValue -> ShareValue4:value;
+}

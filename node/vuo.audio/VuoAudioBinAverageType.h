@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOAUDIOBINAVERAGETYPE_H
-#define VUOAUDIOBINAVERAGETYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoAudioBinAverageType_struct { void *l; } * VuoList_VuoAudioBinAverageType;
@@ -29,7 +28,7 @@ typedef const struct VuoList_VuoAudioBinAverageType_struct { void *l; } * VuoLis
 typedef enum {
 	VuoAudioBinAverageType_None,		///< aka - linear
 	VuoAudioBinAverageType_Quadratic,
-	VuoAudioBinAverageType_Logarithmic 
+	VuoAudioBinAverageType_Logarithmic
 } VuoAudioBinAverageType;
 
 VuoAudioBinAverageType VuoAudioBinAverageType_makeFromJson(struct json_object * js);
@@ -50,5 +49,3 @@ void VuoAudioBinAverageType_release(VuoAudioBinAverageType value);
 /**
  * @}
 */
-
-#endif

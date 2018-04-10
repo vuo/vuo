@@ -1,0 +1,128 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.areEqual node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	/* No images = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [],
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+
+	/* One image = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+
+	/* Two identical images = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+			"tolerance": 0,
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+
+	/* Three identical images = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+			"tolerance": 0,
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+
+	/* Four identical images = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+			"tolerance": 0,
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+
+	/* Two different images + tolerance=0 = output false. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.52196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+			"tolerance": 0,
+		},
+		"outputPortValues": {
+			"equal": false,
+		}
+	},
+
+	/* Two different images + tolerance=0.1 = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.52196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+			"tolerance": 0.1,
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+
+	/* Three different images + tolerance=0.1 = output true. */
+	{
+		"firingPort": "images",
+		"inputPortValues": {
+			"images": [
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.52196080},"pixelsWide":10,"pixelsHigh":10},
+				{"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.59196080},"pixelsWide":10,"pixelsHigh":10},
+			],
+			"tolerance": 0.1,
+		},
+		"outputPortValues": {
+			"equal": true,
+		}
+	},
+]}

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOBASE_HH
-#define VUOBASE_HH
+#pragma once
 
 /**
  * This class is intended to be inherited by a base class that can have compiler and/or renderer detail classes.
@@ -37,5 +36,3 @@ private:
    CompilerClass * compiler; ///< The base class instance's compiler detail class instance.
    RendererClass * renderer; ///< The base class instance's renderer detail class instance.
 };
-
-#endif // VUOBASE_HH

@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG -= qt app_bundle
 CONFIG += console
+include(../../vuo-macosx-sdk.pri)
 cache()
 
 SOURCES += \
@@ -12,8 +13,10 @@ QMAKE_CXX = $$VUO_FRAMEWORK_PATH/Vuo.framework/Frameworks/llvm.framework/Helpers
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
 QMAKE_LINK = $$QMAKE_CXX
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_LINK = $$QMAKE_LINK
+QMAKE_CXXFLAGS -= -stdlib=libc++
 QMAKE_CXXFLAGS += -F $$VUO_FRAMEWORK_PATH
-QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.7
+QMAKE_LFLAGS -= -stdlib=libc++
+QMAKE_LFLAGS += -F $$VUO_FRAMEWORK_PATH -mmacosx-version-min=10.8
 QMAKE_RPATHDIR = $$VUO_FRAMEWORK_PATH
 QMAKE_LFLAGS_RPATH = -rpath$$LITERAL_WHITESPACE
 

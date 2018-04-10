@@ -72,7 +72,7 @@ json_object *VuoUrl_getJson(const VuoUrl value)
  */
 char *VuoUrl_getSummary(const VuoUrl value)
 {
-	VuoText t = VuoText_truncateWithEllipsis(value, 50);
+	VuoText t = VuoText_truncateWithEllipsis(value, 50, VuoTextTruncation_End);
 	VuoRetain(t);
 	char *summary = strdup(t);
 	VuoRelease(t);
@@ -86,7 +86,7 @@ char *VuoUrl_getSummary(const VuoUrl value)
  */
 bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *host, VuoInteger *port, VuoText *path, VuoText *query, VuoText *fragment)
 {
-	if (!url || url[0] == 0)
+	if (VuoText_isEmpty(url))
 		return false;
 
 	struct http_parser_url parsedUrl;
@@ -169,7 +169,7 @@ bool VuoUrl_getParts(const VuoUrl url, VuoText *scheme, VuoText *user, VuoText *
  */
 bool VuoUrl_getFileParts(const VuoUrl url, VuoText *path, VuoText *folder, VuoText *filename, VuoText *extension)
 {
-	if (!url || url[0] == 0)
+	if (VuoText_isEmpty(url))
 		return false;
 
 	*path = VuoUrl_getPosixPath(url);
@@ -314,7 +314,7 @@ VuoText VuoUrl_escapePosixPath(const VuoText path)
 	const char *hexCharSet = "0123456789abcdef";
 	for (unsigned long inIndex = 0; inIndex < inLength; ++inIndex)
 	{
-		char c = path[inIndex];
+		unsigned char c = path[inIndex];
 		bool foundEscape = false;
 		for (int j = 0; j < sizeof(VuoUrl_reservedCharacters); ++j)
 			if (c == VuoUrl_reservedCharacters[j])
@@ -324,6 +324,19 @@ VuoText VuoUrl_escapePosixPath(const VuoText path)
 				escapedUrl[outIndex++] = hexCharSet[c & 0x0f];
 				foundEscape = true;
 				break;
+			}
+
+		// https://b33p.net/kosada/node/12361
+		// If it's a UTF-8 "Modifier Letter Colon", translate it back into an escaped ASCII-7 colon
+		// (since URLs can handle colons, unlike POSIX paths on macOS).
+		if (inIndex+2 < inLength)
+			if (c == 0xea && (unsigned char)path[inIndex+1] == 0x9e && (unsigned char)path[inIndex+2] == 0x89)
+			{
+				escapedUrl[outIndex++] = '%';
+				escapedUrl[outIndex++] = hexCharSet[':' >> 4];
+				escapedUrl[outIndex++] = hexCharSet[':' & 0x0f];
+				foundEscape = true;
+				inIndex += 2;
 			}
 
 		if (!foundEscape)
@@ -545,32 +558,33 @@ VuoText VuoUrl_getPosixPath(const VuoUrl url)
 	if (strncmp(url, VuoUrl_fileScheme, fileSchemeLength) != 0)
 		return NULL;
 
-
-	// Figure out how many characters we need to allocate for the unescaped string.
-	unsigned long inLength = strlen(url);
-	long unescapedLength = 0;
-	for (unsigned long inIndex = fileSchemeLength; inIndex < inLength; ++inIndex)
-	{
-		char c = url[inIndex];
-		if (c == '%')
-			unescapedLength -= 2; // Collapse "%xx" to 1 character.
-		++unescapedLength;
-	}
-
 	// Unescape the string.
-	char *unescapedUrl = (char *)malloc(unescapedLength + 1);
+	unsigned long inLength = strlen(url);
+	// Make room for Unicode colons.
+	char *unescapedUrl = (char *)malloc(inLength*3 + 1);
 	unsigned long outIndex = 0;
-	for (unsigned long inIndex = fileSchemeLength; inIndex < inLength; ++inIndex)
+	for (unsigned long inIndex = fileSchemeLength; inIndex < inLength; ++inIndex, ++outIndex)
 	{
 		char c = url[inIndex];
 		if (c == '%')
 		{
 			char highNibbleASCII = url[++inIndex];
 			char lowNibbleASCII = url[++inIndex];
-			unescapedUrl[outIndex++] = (VuoInteger_makeFromHexByte(highNibbleASCII) << 4) + VuoInteger_makeFromHexByte(lowNibbleASCII);
+			unescapedUrl[outIndex] = (VuoInteger_makeFromHexByte(highNibbleASCII) << 4) + VuoInteger_makeFromHexByte(lowNibbleASCII);
 		}
 		else
-			unescapedUrl[outIndex++] = c;
+			unescapedUrl[outIndex] = c;
+
+		// https://b33p.net/kosada/node/12361
+		// macOS presents colons as forward-slashes (https://developer.apple.com/library/mac/qa/qa1392/).
+		// To avoid confusion with dates, change ASCII-7 colon to UTF-8 "Modifier Letter Colon"
+		// (which looks visually identical to ASCII-7 colon).
+		if (unescapedUrl[outIndex] == ':')
+		{
+			unescapedUrl[outIndex++] = 0xea;
+			unescapedUrl[outIndex++] = 0x9e;
+			unescapedUrl[outIndex]   = 0x89;
+		}
 	}
 	unescapedUrl[outIndex] = 0;
 
@@ -591,7 +605,7 @@ VuoText VuoUrl_getPosixPath(const VuoUrl url)
  */
 bool VuoUrl_isBundle(const VuoUrl url)
 {
-	if (!url || url[0] == 0)
+	if (VuoText_isEmpty(url))
 		return false;
 
 	{

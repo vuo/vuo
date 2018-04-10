@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERCOMPOSITION_HH
-#define VUORENDERERCOMPOSITION_HH
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoCable.hh"
@@ -41,12 +40,12 @@ public:
 	void createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler);
 	VuoRendererNode * createAndConnectMakeListNode(VuoNode *toNode, VuoPort *toPort, VuoCompiler *compiler, VuoRendererCable *&rendererCable);
 	void createAndConnectDictionaryAttachmentsForNode(VuoNode *node, VuoCompiler *compiler, set<VuoRendererNode *> &createdNodes, set<VuoRendererCable *> &createdCables);
-	vector<string> extractInputVariableListFromExpressionsConstant(string constant);
+	vector<string> extractInputVariableListFromExpressionsConstant(string constant, string nodeClassName);
 	void addPublishedPort(VuoPublishedPort *publishedPort, bool isPublishedInput, VuoCompiler *compiler);
 	int removePublishedPort(VuoPublishedPort *publishedPort, bool isPublishedInput, VuoCompiler *compiler);
 	VuoRendererPublishedPort * createRendererForPublishedPortInComposition(VuoPublishedPort *publishedPort, bool isPublishedInput);
 	void setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name, VuoCompiler *compiler);
-	string getUniquePublishedPortName(string baseName, bool isInput);
+	string getUniquePublishedPortName(string baseName);
 	vector<VuoRendererNode *> collapseTypecastNodes(void);
 	VuoRendererTypecastPort * collapseTypecastNode(VuoRendererNode *rn);
 	void uncollapseTypecastNode(VuoRendererNode *typecastNode);
@@ -79,6 +78,8 @@ public:
 
 	string takeSnapshot(void);
 	VuoRendererComposition::appExportResult exportApp(const QString &savePath, VuoCompiler *compiler, string &errString, VuoCompilerDriver *driver=NULL);
+
+	static bool hasURLType(VuoPort *port);
 
 	// Drawing configuration
 	static const int majorGridLineSpacing; ///< Distance, in pixels at 1:1 zoom, between major gridlines.
@@ -115,7 +116,7 @@ private:
 	void createAndConnectDrawersToReadOnlyDictionaryInputPorts(VuoRendererNode *node, VuoCompiler *compiler);
 	VuoNode * createPublishedInputNode();
 	VuoNode * createPublishedOutputNode();
-	bool isPublishedPortNameTaken(string name, bool isPublishedInput);
+	bool isPublishedPortNameTaken(string name);
 
 	string createAppBundleDirectoryStructure(const QString &savePath);
 	bool bundleExecutable(VuoCompiler *compiler, string targetExecutablePath, string &errString, VuoCompilerDriver *driver=NULL);
@@ -126,7 +127,6 @@ private:
 	string modifyResourcePathForAppBundle(string path);
 	string modifyResourcePathForNewDir(string path, QDir newDir);
 	void copyFileOrDirectory(string sourcePath, string targetPath);
-	bool hasURLType(VuoPort *port);
 	bool hasRelativeReadURLConstantValue(VuoPort *port);
 
 	static int gridLineOpacity; ///< The opacity at which grid lines should be rendered on the canvas.
@@ -134,4 +134,3 @@ private:
 	bool renderActivity; ///< Should renderings reflect recent component activity (e.g., node executions, event firings)?
 };
 
-#endif // VUORENDERERCOMPOSITION_HH

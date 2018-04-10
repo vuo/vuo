@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef EXAMPLELANGUAGEINPUTEDITOR_HH
-#define EXAMPLELANGUAGEINPUTEDITOR_HH
+#pragma once
 
 #include "VuoInputEditorWithMenu.hh"
 
@@ -35,5 +34,3 @@ class ExampleLanguageInputEditor : public VuoInputEditorWithMenu
 public:
 	VuoInputEditorMenuItem * setUpMenuTree();
 };
-
-#endif

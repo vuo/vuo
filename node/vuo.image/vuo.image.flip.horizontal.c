@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Flip Image Horizontally",
 					  "keywords" : [ "mirror", "rotate" ],
-					  "version" : "1.1.1",
+					  "version" : "1.1.2",
 					  "node": {
 						  "exampleCompositions" : [ "FlipMovie.vuo" ]
 					  }
@@ -63,7 +63,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*flippedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 

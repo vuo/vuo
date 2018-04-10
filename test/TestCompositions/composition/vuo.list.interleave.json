@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.interleave node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"list1", "inputPortValues":{"list1":[   ], "list2":[   ]}, "outputPortValues":{"interleavedList":[       ]}},
+	{"firingPort":"list1", "inputPortValues":{"list1":[1  ], "list2":[   ]}, "outputPortValues":{"interleavedList":[1      ]}},
+	{"firingPort":"list1", "inputPortValues":{"list1":[   ], "list2":[1  ]}, "outputPortValues":{"interleavedList":[1      ]}},
+	{"firingPort":"list1", "inputPortValues":{"list1":[1  ], "list2":[2  ]}, "outputPortValues":{"interleavedList":[1,2    ]}},
+	{"firingPort":"list1", "inputPortValues":{"list1":[1,3], "list2":[2  ]}, "outputPortValues":{"interleavedList":[1,2,3,2]}},
+	{"firingPort":"list1", "inputPortValues":{"list1":[1  ], "list2":[2,3]}, "outputPortValues":{"interleavedList":[1,2,1,3]}},
+]}

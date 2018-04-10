@@ -7,10 +7,13 @@
  * For more information, see http://vuo.org/license.
  */
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <AppKit/AppKit.h>
 
 #include "VuoKeyboard.h"
+#include "VuoWindow.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -19,6 +22,7 @@ VuoModuleMetadata({
 						"VuoKey",
 						"VuoModifierKey",
 						"VuoText",
+						"VuoWindow",
 						"VuoWindowReference",
 						"AppKit.framework"
 					]
@@ -43,6 +47,10 @@ struct VuoKeyboardContext
  */
 VuoKeyboard * VuoKeyboard_make(void)
 {
+	// https://b33p.net/kosada/node/11966
+	// Keyboard events are only received if the process is in app mode.
+	VuoApp_init();
+
 	struct VuoKeyboardContext *context = (struct VuoKeyboardContext *)calloc(1, sizeof(struct VuoKeyboardContext));
 	VuoRegister(context, free);
 	return (VuoKeyboard *)context;

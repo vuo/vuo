@@ -85,8 +85,7 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		}
 	}
 
-	dialog.setStyleSheet("");
-	QFont font = QFont("Signika", 10, QFont::Light, false);
+	QFont font = getDefaultFont();
 
 	// Display menus for "Image Encoding" and "Audio Encoding".
 	{
@@ -115,7 +114,6 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		lineEditImageQuality->installEventFilter(this);
 
 		sliderImageQuality = new QSlider(&dialog);
-		sliderImageQuality->setAttribute(Qt::WA_MacSmallSize);
 		sliderImageQuality->setOrientation(Qt::Horizontal);
 		sliderImageQuality->setFocusPolicy(Qt::NoFocus);
 		sliderImageQuality->setMinimum(0);
@@ -140,7 +138,6 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 		lineEditAudioQuality->installEventFilter(this);
 
 		sliderAudioQuality = new QSlider(&dialog);
-		sliderAudioQuality->setAttribute(Qt::WA_MacSmallSize);
 		sliderAudioQuality->setOrientation(Qt::Horizontal);
 		sliderAudioQuality->setFocusPolicy(Qt::NoFocus);
 		sliderAudioQuality->setMinimum(0);
@@ -172,18 +169,6 @@ void VuoInputEditorMovieFormat::setUpDialog(QDialog &dialog, json_object *origin
 
 		setFirstWidgetInTabOrder(lineEditImageQuality);
 		setLastWidgetInTabOrder(lineEditAudioQuality);
-
-		// Formatting specific to Dark Interface mode
-		// @todo https://b33p.net/kosada/node/10139 : Adapt global dark-mode stylesheet to handle disabled widgets.
-		if (isDark)
-		{
-			QPalette labelPalette = labelImageEncoding->palette();
-			labelPalette.setColor(QPalette::Foreground, darkModeEnabledLabelTextColor);
-			labelImageEncoding->setPalette(labelPalette);
-			labelAudioEncoding->setPalette(labelPalette);
-			labelImageQuality->setPalette(labelPalette);
-			labelAudioQuality->setPalette(labelPalette);
-		}
 
 		updateQualitySliderEnabledStatus();
 
@@ -443,23 +428,6 @@ void VuoInputEditorMovieFormat::updateQualitySliderEnabledStatus()
 	{
 		int sliderValueAudioQuality = lineEditValueToScaledSliderValue(1., audioQuality);
 		sliderAudioQuality->setValue(sliderValueAudioQuality);
-	}
-
-	// Formatting specific to Dark Interface mode
-	// @todo https://b33p.net/kosada/node/10139 : Adapt global dark-mode stylesheet to handle disabled widgets.
-	if (isDark)
-	{
-		// Image Quality
-		QPalette imageLabelPalette = labelImageQuality->palette();
-		imageLabelPalette.setColor(QPalette::Foreground,
-								   (enableImageQualityWidgets? darkModeEnabledLabelTextColor : darkModeDisabledLabelTextColor));
-		labelImageQuality->setPalette(imageLabelPalette);
-
-		// Audio Quality
-		QPalette audioLabelPalette = labelAudioQuality->palette();
-		audioLabelPalette.setColor(QPalette::Foreground,
-								   (enableAudioQualityWidgets? darkModeEnabledLabelTextColor : darkModeDisabledLabelTextColor));
-		labelAudioQuality->setPalette(audioLabelPalette);
 	}
 
 	QLineEdit *firstEnabledLineEdit = (enableImageQualityWidgets? lineEditImageQuality :

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOBLENDMODE_H
-#define VUOBLENDMODE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoBlendMode_struct { void *l; } * VuoList_VuoBlendMode;
@@ -29,12 +28,12 @@ typedef const struct VuoList_VuoBlendMode_struct { void *l; } * VuoList_VuoBlend
 typedef enum {
 	VuoBlendMode_Normal,			///< Standard alpha compositing.  Foreground colors replace background colors, unless they're alpha-transparent.
 	VuoBlendMode_Multiply,			///< Multiplies each component of the foreground and background colors.  Makes the composite image darker.
-	VuoBlendMode_DarkerComponent,	///< Chooses the darker of each of the foreground and background color's RGB components.
+	VuoBlendMode_DarkerComponents,	///< Chooses the darker of each of the foreground and background color's RGB components.
 	VuoBlendMode_DarkerColor,		///< Chooses the darker color by comparing the luminance of each color.
 	VuoBlendMode_LinearBurn,		///< Linear burn
 	VuoBlendMode_ColorBurn,			///< Color burn
 	VuoBlendMode_Screen,			///< Screen
-	VuoBlendMode_LighterComponent,	///< Chooses the lighter of each of the foreground and background color's RGB components.
+	VuoBlendMode_LighterComponents,	///< Chooses the lighter of each of the foreground and background color's RGB components.
 	VuoBlendMode_LighterColor,		///< Chooses the lighter color by comparing the luminance of each color.
 	VuoBlendMode_LinearDodge,		///< Adds each component of the foreground and background colors.  Makes the composite image lighter.
 	VuoBlendMode_ColorDodge,		///< Color dodge
@@ -74,5 +73,3 @@ void VuoBlendMode_release(VuoBlendMode value);
 /**
  * @}
 */
-
-#endif

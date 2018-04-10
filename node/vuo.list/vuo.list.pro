@@ -8,15 +8,20 @@ GENERIC_NODE_SOURCES += \
 	vuo.list.append.c \
 	vuo.list.build.c \
 	vuo.list.change.c \
+	vuo.list.comb.c \
 	vuo.list.count.c \
 	vuo.list.cut.c \
 	vuo.list.cycle.c \
+	vuo.list.deinterleave.c \
 	vuo.list.enqueue.c \
 	vuo.list.get.c \
 	vuo.list.get.first.c \
 	vuo.list.get.last.c \
+	vuo.list.get.multiple.c \
 	vuo.list.get.random.c \
+	vuo.list.get.range.c \
 	vuo.list.insert.c \
+	vuo.list.interleave.c \
 	vuo.list.populated.c \
 	vuo.list.process.c \
 	vuo.list.reverse.c \

@@ -9,15 +9,15 @@
 
 digraph G
 {
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="803,222" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="2.000000" _columns="10" _height="1.250000" _rows="5"];
-FetchListOfImages [type="vuo.image.fetch.list" version="1.0.0" label="Fetch List of Images|<refresh>refresh\l|<urls>urls\l|<images>images\r" pos="320,218"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="1,166" fillcolor="yellow" _started_eventThrottling="enqueue"];
-ListFiles [type="vuo.file.list" version="1.0.0" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="166,214" _folder="\"\\/Library\\/User Pictures\"" _includeSubfolders="true" _fileType="\"image\""];
-MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1026,246" fillcolor="green"];
-MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="996,231" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="535,360" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
-ProcessList3 [type="vuo.list.process.VuoImage.VuoLayer" version="1.0.0" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="528,220" fillcolor="violet" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1067,220" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="810,225" _scaleToFit="true" _center="[{\"x\":0,\"y\":0}]" _width="2.000000" _columns="10" _height="1.250000" _rows="5"];
+FetchListOfImages [type="vuo.image.fetch.list" version="1.0.0" label="Fetch List of Images|<refresh>refresh\l|<urls>urls\l|<images>images\r" pos="315,225"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,165" fillcolor="yellow" _started_eventThrottling="enqueue"];
+ListFiles [type="vuo.file.list" version="1.0.2" label="List Files|<refresh>refresh\l|<folder>folder\l|<includeSubfolders>includeSubfolders\l|<fileType>fileType\l|<files>files\r" pos="165,210" _folder="\"\\/Library\\/User Pictures\"" _includeSubfolders="true" _fileType="\"image\""];
+MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1037,251" fillcolor="green"];
+MakeList9 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1020,236" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="540,360" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="2.000000" _opacity="1.000000"];
+ProcessList3 [type="vuo.list.process.VuoImage.VuoLayer" version="1.0.1" label="Process List|<refresh>refresh\l|<fire>fire\l|<processedItem>processedItem\l|<processedList>processedList\r|<processItem>processItem\r" pos="525,225" fillcolor="violet" _processedList_eventThrottling="enqueue" _processItem_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1065,225" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 
 ArrangeLayersInGrid:griddedLayer -> MakeList9:1;
 FetchListOfImages:images -> ProcessList3:fire;

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILEROUTPUTDATA_H
-#define VUOCOMPILEROUTPUTDATA_H
+#pragma once
 
 #include "VuoCompilerData.hh"
 
@@ -24,6 +23,3 @@ class VuoCompilerOutputData : public VuoCompilerData
 public:
 	VuoCompilerOutputData(VuoCompilerOutputDataClass *dataClass);
 };
-
-
-#endif

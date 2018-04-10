@@ -208,7 +208,8 @@ void VuoRendererNode::layoutConnectedInputDrawersAtAndAbovePort(VuoRendererPort 
 }
 
 /**
- * Calculates and sets the positions of the node's connected input drawer at the provided index @c i.
+ * Calculates and sets the position, tint, and selection status of the node's connected input drawer
+ * at the provided index @c i.
  */
 void VuoRendererNode::layoutConnectedInputDrawer(unsigned int i)
 {
@@ -228,6 +229,7 @@ void VuoRendererNode::layoutConnectedInputDrawer(unsigned int i)
 		drawer->setHorizontalDrawerOffset(inputDrawerOffset.x());
 		drawer->setPos(mapToScene(point-inputDrawerOffset));
 		drawer->getBase()->setTintColor(this->getBase()->getTintColor());
+		drawer->setSelected(this->isSelected());
 	}
 }
 

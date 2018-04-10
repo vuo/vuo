@@ -27,8 +27,8 @@ VuoModuleMetadata({
 void nodeEvent
 (
 		VuoInputData(VuoReal, {"default":0.0}) time,
-		VuoInputData(VuoText, {"default":"u"}) xExpression,
-		VuoInputData(VuoText, {"default":"u"}) yExpression,
+		VuoInputData(VuoText, {"default":"U"}) xExpression,
+		VuoInputData(VuoText, {"default":"U"}) yExpression,
 		VuoInputData(VuoText, {"default":"0"}) zExpression,
 		VuoInputData(VuoInteger, {"default":16,"suggestedMin":1}) subdivisions,
 		VuoInputData(VuoReal, {"default":0.0, "suggestedStep":0.1}) uMin,

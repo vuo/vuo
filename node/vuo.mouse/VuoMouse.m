@@ -7,11 +7,14 @@
  * For more information, see http://vuo.org/license.
  */
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <AppKit/AppKit.h>
 
 #include "VuoMouse.h"
-#include "VuoWindowOpenGLInternal.h"
+#include "VuoGraphicsWindow.h"
+#include "VuoGraphicsView.h"
 #include "VuoApp.h"
 
 #ifdef VUO_COMPILER
@@ -20,11 +23,13 @@ VuoModuleMetadata({
 					"dependencies" : [
 						"VuoApp",
 						"VuoBoolean",
+						"VuoGraphicsView",
+						"VuoGraphicsWindow",
 						"VuoModifierKey",
 						"VuoMouseButton",
 						"VuoPoint2d",
+						"VuoWindow",
 						"VuoWindowReference",
-						"VuoWindowOpenGLInternal",
 						"AppKit.framework"
 					]
 				 });
@@ -67,6 +72,10 @@ struct VuoMouseContext
  */
 VuoMouse * VuoMouse_make(void)
 {
+	// https://b33p.net/kosada/node/11966
+	// Mouse events are only received if the process is in app mode.
+	VuoApp_init();
+
 	struct VuoMouseContext *context = (struct VuoMouseContext *)calloc(1, sizeof(struct VuoMouseContext));
 	VuoRegister(context, free);
 	return (VuoMouse *)context;
@@ -85,7 +94,7 @@ static VuoPoint2d VuoMouse_convertWindowToScreenCoordinates(NSPoint pointInWindo
 	NSInteger windowNumberForPoint = [NSWindow windowNumberAtPoint:pointInScreen belowWindowWithWindowNumber:0];
 	for (NSWindow *w in [NSApp windows])
 		if ([w windowNumber] == windowNumberForPoint
-		 && [w isKindOfClass:[VuoWindowOpenGLInternal class]]
+		 && [w isKindOfClass:[VuoGraphicsWindow class]]
 		 && NSPointInRect(pointInScreen, [w convertRectToScreen:[[w contentView] frame]]))
 		{
 			*shouldFire = true;
@@ -102,7 +111,18 @@ static VuoPoint2d VuoMouse_convertWindowToScreenCoordinates(NSPoint pointInWindo
  */
 static VuoPoint2d VuoMouse_convertViewToVuoCoordinates(NSPoint pointInView, NSView *view)
 {
-	NSRect bounds = [(VuoWindowOpenGLView *)view viewport];
+	NSRect bounds = [view convertRectFromBacking:((VuoGraphicsView *)view).viewport];
+	VuoGraphicsWindow *w = (VuoGraphicsWindow *)[view window];
+	if (w.isFullScreen)
+	{
+		// If the view is fullscreen, its origin might not line up with the screen's origin
+		// (such as when the window is aspect-locked or size-locked).
+		NSPoint windowOrigin = [w frameRectForContentRect:w.frame].origin;
+		NSPoint screenOrigin = w.screen.frame.origin;
+		bounds.origin.x += windowOrigin.x - screenOrigin.x;
+		bounds.origin.y += windowOrigin.y - screenOrigin.y;
+	}
+
 	VuoPoint2d pointInVuo;
 	double viewMaxX = NSWidth(bounds) - 1;
 	double viewMaxY = NSHeight(bounds) - 1;
@@ -169,6 +189,21 @@ static VuoPoint2d VuoMouse_convertDeltaToVuoCoordinates(NSPoint delta, NSWindow 
 	return deltaInVuo;
 }
 
+/**
+ * Returns true if the mouse is potentially involved in a window resize
+ * (and thus we should ignore the button).
+ */
+bool VuoMouse_isResizing(void)
+{
+	// https://b33p.net/kosada/node/11580
+	// We shouldn't report mouse button presses while resizing the window.
+	// I went through all the data that NSEvent (and the underlying CGEvent) provides,
+	// but couldn't find anything different between normal mouse-down events
+	// and mouse-down events that led to resizing the window.
+	// Disgusting hack: check whether the system has overridden the application's
+	// mouse cursor and turned it into a resize arrow.
+	return !NSEqualPoints([[NSCursor currentCursor] hotSpot], [[NSCursor currentSystemCursor] hotSpot]);
+}
 
 /**
  * If the mouse was scrolled a non-zero amount, calls the trigger function and passes it the scroll delta.
@@ -215,7 +250,7 @@ static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, NSPoint fullscree
 	NSWindow *targetWindow = (NSWindow *)windowRef;
 	if (targetWindow)
 	{
-		if ([(VuoWindowOpenGLView *)[targetWindow contentView] isFullScreen])
+		if (((VuoGraphicsWindow *)targetWindow).isFullScreen)
 		{
 			// https://b33p.net/kosada/node/8489
 			// When in fullscreen mode with multiple displays, -[event locationInWindow] produces inconsistent results,
@@ -233,6 +268,11 @@ static void VuoMouse_fireMousePositionIfNeeded(NSEvent *event, NSPoint fullscree
 			NSPoint pointInWindow = [targetWindow convertRectFromScreen:rectInWindowOrScreen].origin;
 			convertedPoint = VuoMouse_convertWindowToVuoCoordinates(pointInWindow, targetWindow, &shouldFire);
 		}
+		else
+			// Our window isn't focused, so ignore this event.
+			return;
+
+		shouldFire = shouldFire && !VuoMouse_isResizing();
 	}
 	else
 		convertedPoint = VuoMouse_convertWindowToScreenCoordinates(pointInWindowOrScreen, [event window], &shouldFire);
@@ -264,7 +304,7 @@ static void VuoMouse_fireMouseDeltaIfNeeded(NSEvent *event, VuoWindowReference w
 	NSWindow *targetWindow = (NSWindow *)windowRef;
 	if (targetWindow)
 	{
-		if ([(VuoWindowOpenGLView *)[targetWindow contentView] isFullScreen])
+		if (((VuoGraphicsWindow *)targetWindow).isFullScreen)
 		{
 			// https://b33p.net/kosada/node/8489
 			// When in fullscreen mode with multiple displays, -[event locationInWindow] produces inconsistent results,
@@ -316,7 +356,7 @@ static void VuoMouse_fireMouseClickIfNeeded(struct VuoMouseContext *context, NSE
 		fired = singleClicked;
 	else if (clickCount == 2)
 		fired = doubleClicked;
-	else if (clickCount == 3)
+	else if (clickCount >= 3)
 		fired = tripleClicked;
 	if (! fired)
 		return;
@@ -372,7 +412,7 @@ static void VuoMouse_fireInitialEvent(void (^movedTo)(VuoPoint2d), VuoWindowRefe
 
 		VuoPoint2d position;
 		VuoBoolean isPressed;
-		if (VuoMouse_getStatus(&position, &isPressed, VuoMouseButton_Any, window, VuoModifierKey_Any))
+		if (VuoMouse_getStatus(&position, &isPressed, VuoMouseButton_Any, window, VuoModifierKey_Any, false))
 			movedTo(position);
 
 		VuoMouseStatus_disuse();
@@ -657,6 +697,10 @@ void VuoMouseStatus_use(void)
 {
 	if (__sync_add_and_fetch(&VuoMouseStatus_useCount, 1) == 1)
 	{
+		// https://b33p.net/kosada/node/11966
+		// Mouse events are only received if the process is in app mode.
+		VuoApp_init();
+
 		// Ensure +[NSEvent mouseLocation] is called for the first time on the main thread, else we get console message
 		// "!!! BUG: The current event queue and the main event queue are not the same. Events will not be handled correctly. This is probably because _TSGetMainThread was called for the first time off the main thread."
 		VuoApp_executeOnMainThread(^{
@@ -682,14 +726,7 @@ void VuoMouseStatus_use(void)
 				else
 					VuoMouseStatus_position = p;
 
-				// https://b33p.net/kosada/node/11580
-				// We shouldn't report mouse button presses while resizing the window.
-				// I went through all the data that NSEvent (and the underlying CGEvent) provides,
-				// but couldn't find anything different between normal mouse-down events
-				// and mouse-down events that led to resizing the window.
-				// Disgusting hack: check whether the system has overridden the application's
-				// mouse cursor and turned it into a resize arrow.
-				bool reportPress = NSEqualPoints([[NSCursor currentCursor] hotSpot], [[NSCursor currentSystemCursor] hotSpot]);
+				bool reportPress = !VuoMouse_isResizing();
 				switch ([event type])
 				{
 					case NSLeftMouseDown:   if (reportPress) VuoMouseStatus_leftButton   = true;  break;
@@ -721,7 +758,7 @@ void VuoMouseStatus_disuse(void)
 /**
  * Outputs the current mouse position and whether the mouse is currently pressed.
  *
- * If the application is not active, then neither @a position nor @a isPressed is modified.
+ * If `onlyUpdateWhenActive` is true, and the application is not active, then neither `position` nor `isPressed` is modified.
  *
  * If a window is given, but it's not the key window or the mouse is not within the window, then
  * @a position is modified but @a isPressed is not.
@@ -732,18 +769,19 @@ void VuoMouseStatus_disuse(void)
  * Returns true if `position` was updated.
  */
 bool VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
-						VuoMouseButton button, VuoWindowReference windowRef, VuoModifierKey modifierKey)
+						VuoMouseButton button, VuoWindowReference windowRef, VuoModifierKey modifierKey,
+						bool onlyUpdateWhenActive)
 {
-	if (! [NSApp isActive])
+	if (onlyUpdateWhenActive && ! [NSApp isActive])
 		return false;
 
 	bool shouldTrackPresses;
 	if (windowRef)
 	{
-		VuoWindowOpenGLInternal *targetWindow = (VuoWindowOpenGLInternal *)windowRef;
+		VuoGraphicsWindow *targetWindow = (VuoGraphicsWindow *)windowRef;
 		NSPoint pointInScreen = VuoMouseStatus_position;
 
-		if ([[targetWindow glView] isFullScreen])
+		if (((VuoGraphicsWindow *)targetWindow).isFullScreen)
 			*position = VuoMouse_convertFullScreenToVuoCoordinates(pointInScreen, targetWindow, &shouldTrackPresses);
 		else
 		{

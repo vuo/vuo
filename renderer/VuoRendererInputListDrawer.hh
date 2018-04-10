@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERINPUTLISTDRAWER_HH
-#define VUORENDERERINPUTLISTDRAWER_HH
+#pragma once
 
 #include "VuoRendererInputDrawer.hh"
 
@@ -53,4 +52,3 @@ private:
 	bool dragHandleIsHovered;
 };
 
-#endif // VUORENDERERINPUTLISTDRAWER_HH

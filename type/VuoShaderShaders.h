@@ -41,9 +41,15 @@ static VuoShader VuoShader_makeDefaultShaderInternal(void)
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// Inputs
 		varying vec4 fragmentTextureCoordinate;
+		uniform vec4 blah;
 
 		void main()
 		{
+			// Work around ATI Radeon HD 5770 bug.
+			// It seems that the rest of the shader isn't executed unless we initialize the output with a uniform.
+			// https://b33p.net/kosada/node/11256
+			gl_FragColor = blah;
+
 			// Based on the Gritz/Baldwin antialiased checkerboard shader.
 
 			vec3 color0 = vec3(1   -fragmentTextureCoordinate.x, fragmentTextureCoordinate.y,      1);
@@ -155,13 +161,18 @@ VuoShader VuoShader_makeUnlitImageShader(VuoImage image, VuoReal alpha)
 		// Inputs from ports
 		uniform sampler2D texture;
 		uniform float alpha;
+		uniform vec4 blah;
 
 		// Inputs from vertex/geometry shader
 		varying vec4 fragmentTextureCoordinate;
-		uniform vec4 blah;
 
 		void main()
 		{
+			// Work around ATI Radeon HD 5770 bug.
+			// It seems that the rest of the shader isn't executed unless we initialize the output with a uniform.
+			// https://b33p.net/kosada/node/11256
+			gl_FragColor = blah;
+
 			vec4 color = VuoGlsl_sample(texture, fragmentTextureCoordinate.xy);
 			color *= alpha;
 			VuoGlsl_discardInvisible(color.a);
@@ -447,6 +458,9 @@ VuoShader VuoShader_makeUnlitColorShader(VuoColor color)
  */
 VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness)
 {
+	const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120, include(trianglePoint));
+	const char *lineGeometryShaderSource  = VUOSHADER_GLSL_SOURCE(120, include(triangleLine));
+
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		uniform vec4 color;
 		uniform float sharpness;
@@ -462,7 +476,15 @@ VuoShader VuoShader_makeUnlitCircleShader(VuoColor color, VuoReal sharpness)
 
 	VuoShader shader = VuoShader_make("Circle Shader");
 	shader->objectScale = 0.5;
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+
+	VuoShader_addSource                      (shader, VuoMesh_Points,              defaultVertexShaderSourceForGeometryShader, pointGeometryShaderSource, fragmentShaderSource);
+	VuoShader_setExpectedOutputPrimitiveCount(shader, VuoMesh_Points, 2);
+
+	VuoShader_addSource                      (shader, VuoMesh_IndividualLines,     defaultVertexShaderSourceForGeometryShader, lineGeometryShaderSource,  fragmentShaderSource);
+	VuoShader_setExpectedOutputPrimitiveCount(shader, VuoMesh_IndividualLines, 2);
+
+	VuoShader_addSource                      (shader, VuoMesh_IndividualTriangles, NULL,                                       NULL,                      fragmentShaderSource);
+
 	VuoShader_setUniform_VuoColor(shader, "color", color);
 	VuoShader_setUniform_VuoReal (shader, "sharpness", VuoReal_clamp(sharpness, 0, 1));
 	return shader;
@@ -880,18 +902,18 @@ VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, Vuo
 }
 
 /**
- * Returns a shader that renders a linear gradient using the provided colors and start and end coordinates.
- * Coordinates should be passed in Vuo scene coordinates (-1,-1) to (1,1).
+ * Returns a linear gradient shader.
  *
  * @threadAny
  */
-VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount)
+VuoShader VuoShader_makeLinearGradientShader(void)
 {
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		include(VuoGlslAlpha)
 		include(VuoGlslRandom)
 
-		uniform float gradientCount;
+		uniform float inputColorCount;
+		uniform float stripColorCount;
 		uniform sampler2D gradientStrip;
 		uniform vec2 start;
 		uniform vec2 end;
@@ -925,11 +947,11 @@ VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d
 			float x = dot(pol-start, end-start) > 0 ? distance(start, pol)/ distance(start, end) : 0;
 
 			// Give x a smooth second-derivative, to reduce the ridges between colors.
-			x *= gradientCount - 1.;
+			x *= inputColorCount - 1.;
 			x = floor(x) + smoothstep(0.,1.,fract(x));
-			x /= gradientCount - 1.;
+			x /= inputColorCount - 1.;
 
-			float gradientWidth = (1./gradientCount)/2.;
+			float gradientWidth = (1./stripColorCount)/2.;
 			x = x * (1-gradientWidth*2) + gradientWidth;	// scale to account for the gradient/2 offsets
 
 			vec4 color = VuoGlsl_sample(gradientStrip, vec2(clamp(x , gradientWidth, 1.-gradientWidth), .5));
@@ -941,45 +963,83 @@ VuoShader VuoShader_makeLinearGradientShader(VuoList_VuoColor colors, VuoPoint2d
 		}
 	);
 
-	int len = VuoListGetCount_VuoColor(colors);
-
-	unsigned char* pixels = (unsigned char*)malloc(sizeof(char)*len*4);
-	int n = 0;
-	for(int i = 1; i <= len; i++)
-	{
-		VuoColor col = VuoListGetValue_VuoColor(colors, i);
-		pixels[n++] = VuoInteger_clamp(col.a*col.b*255, 0, 255);
-		pixels[n++] = VuoInteger_clamp(col.a*col.g*255, 0, 255);
-		pixels[n++] = VuoInteger_clamp(col.a*col.r*255, 0, 255);
-		pixels[n++] = VuoInteger_clamp(col.a      *255, 0, 255);
-	}
-
-	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
-
 	VuoShader shader = VuoShader_make("Linear Gradient Shader");
 	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
-	VuoShader_setUniform_VuoImage  (shader, "gradientStrip", gradientStrip);
-	VuoShader_setUniform_VuoReal   (shader, "gradientCount", len);
-	VuoShader_setUniform_VuoPoint2d(shader, "start", VuoPoint2d_make((start.x+1)/2, (start.y+1)/2));
-	VuoShader_setUniform_VuoPoint2d(shader, "end", VuoPoint2d_make((end.x+1)/2, (end.y+1)/2));
-	VuoShader_setUniform_VuoReal   (shader, "noiseAmount", MAX(0.,noiseAmount/10.));
 	return shader;
 }
 
 /**
- * Returns a shader that renders a radial gradient using the provided colors, center point, and radius.
- * Center and radius are expected in Vuo scene coordinates.  Width and Height may be either pixels or scene coordinates, as they
- * are only used to calculate the aspect ratio.
+ * Creates a gradient strip texture, and sets shader uniforms.
+ */
+static void VuoShader_setGradientStrip(VuoShader shader, VuoList_VuoColor colors)
+{
+	// https://b33p.net/kosada/node/12582
+	// Instead of creating an image with only one pixel per color stop,
+	// create `gradientExpansion` pixels per stop, to compensate for GPUs
+	// that have limited ability to interpolate between pixels.
+	// E.g., the Intel HD Graphics 3000 GPU limits interpolation to 64 steps.
+	// On Intel 3000, gradientExpansion=4 would result in 256 steps (64*4);
+	// go beyond that to provide some extra detail when rendering to 16bpc textures.
+	int gradientExpansion = 16;
+
+	int inputColorCount = VuoListGetCount_VuoColor(colors);
+	int stripColorCount = (inputColorCount - 1) * gradientExpansion + 1;
+
+	unsigned char *pixels = (unsigned char*)malloc(stripColorCount*4);
+	int inputColor = 1;
+	int step = 0;
+	for (int i = 0; i < stripColorCount; ++i)
+	{
+		VuoColor col1 = VuoListGetValue_VuoColor(colors, inputColor);
+		VuoColor col2 = VuoListGetValue_VuoColor(colors, inputColor+1);
+
+		VuoColor col = VuoColor_lerp(col1, col2, (float)step / gradientExpansion);
+
+		pixels[i*4  ] = VuoInteger_clamp(col.a*col.b*255, 0, 255);
+		pixels[i*4+1] = VuoInteger_clamp(col.a*col.g*255, 0, 255);
+		pixels[i*4+2] = VuoInteger_clamp(col.a*col.r*255, 0, 255);
+		pixels[i*4+3] = VuoInteger_clamp(col.a      *255, 0, 255);
+
+		++step;
+		if (step >= gradientExpansion)
+		{
+			step = 0;
+			++inputColor;
+		}
+	}
+
+	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_BGRA, stripColorCount, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
+
+	VuoShader_setUniform_VuoImage  (shader, "gradientStrip", gradientStrip);
+	VuoShader_setUniform_VuoReal   (shader, "inputColorCount", inputColorCount);
+	VuoShader_setUniform_VuoReal   (shader, "stripColorCount", stripColorCount);
+}
+
+/**
+ * Sets parameters for the linear gradient shader using the provided colors and start and end coordinates.
+ * Coordinates should be passed in Vuo scene coordinates (-1,-1) to (1,1).
+ */
+void VuoShader_setLinearGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount)
+{
+	VuoShader_setGradientStrip(shader, colors);
+	VuoShader_setUniform_VuoPoint2d(shader, "start", VuoPoint2d_make((start.x+1)/2, (start.y+1)/2));
+	VuoShader_setUniform_VuoPoint2d(shader, "end", VuoPoint2d_make((end.x+1)/2, (end.y+1)/2));
+	VuoShader_setUniform_VuoReal   (shader, "noiseAmount", MAX(0.,noiseAmount/10.));
+}
+
+/**
+ * Returns a radial gradient shader.
  *
  * @threadAny
  */
-VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount)
+VuoShader VuoShader_makeRadialGradientShader(void)
 {
 	const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		include(VuoGlslAlpha)
 		include(VuoGlslRandom)
 
-		uniform float gradientCount;
+		uniform float inputColorCount;
+		uniform float stripColorCount;
 		uniform sampler2D gradientStrip;
 		uniform vec2 center;
 		uniform vec2 scale;	// if image is not square, multiply texCoord by this to account for stretch
@@ -994,11 +1054,11 @@ VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d
 			float x = distance(center*scale, scaledTexCoord)/radius;
 
 			// Give x a smooth second-derivative, to reduce the ridges between colors.
-			x *= gradientCount - 1.;
+			x *= inputColorCount - 1.;
 			x = floor(x) + smoothstep(0.,1.,fract(x));
-			x /= gradientCount - 1.;
+			x /= inputColorCount - 1.;
 
-			float gradientWidth = (1./gradientCount)/2.;
+			float gradientWidth = (1./stripColorCount)/2.;
 			x = x * (1-gradientWidth*2) + gradientWidth;
 
 			vec4 color = VuoGlsl_sample(gradientStrip, vec2(clamp(x , gradientWidth, 1.-gradientWidth), .5));
@@ -1010,32 +1070,26 @@ VuoShader VuoShader_makeRadialGradientShader(VuoList_VuoColor colors, VuoPoint2d
 		}
 	);
 
+	VuoShader shader = VuoShader_make("Radial Gradient Shader");
+	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
+	return shader;
+}
+
+/**
+ * Sets parameters for the radial gradient shader using the provided colors, center point, and radius.
+ * Center and radius are expected in Vuo scene coordinates.  Width and Height may be either pixels or scene coordinates, as they
+ * are only used to calculate the aspect ratio.
+ */
+void VuoShader_setRadialGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount)
+{
 	// VuoPoint2d scale = width < height ? VuoPoint2d_make(1., height/(float)width) : VuoPoint2d_make(width/(float)height, 1.);
 	VuoPoint2d scale = VuoPoint2d_make(1., height/(float)width);
 
-	// todo Is this used enough to warrant it's own function?
-	int len = VuoListGetCount_VuoColor(colors);
-	unsigned char* pixels = (unsigned char*)malloc(sizeof(char)*len*4);
-	int n = 0;
-	for(int i = 1; i <= len; i++)
-	{
-		VuoColor col = VuoListGetValue_VuoColor(colors, i);
-		pixels[n++] = VuoInteger_clamp(col.a*col.b*255, 0, 255);
-		pixels[n++] = VuoInteger_clamp(col.a*col.g*255, 0, 255);
-		pixels[n++] = VuoInteger_clamp(col.a*col.r*255, 0, 255);
-		pixels[n++] = VuoInteger_clamp(col.a      *255, 0, 255);
-	}
-	VuoImage gradientStrip = VuoImage_makeFromBuffer(pixels, GL_BGRA, len, 1, VuoImageColorDepth_8, ^(void *buffer){ free(buffer); });
-
-	VuoShader shader = VuoShader_make("Radial Gradient Shader");
-	VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderSource);
-	VuoShader_setUniform_VuoImage  (shader, "gradientStrip", gradientStrip);
-	VuoShader_setUniform_VuoReal   (shader, "gradientCount", len);
+	VuoShader_setGradientStrip(shader, colors);
 	VuoShader_setUniform_VuoPoint2d(shader, "center", VuoPoint2d_make((center.x+1)/2, (center.y+1)/2));
 	VuoShader_setUniform_VuoReal   (shader, "radius", radius > 0. ? radius/2. : 0);
 	VuoShader_setUniform_VuoPoint2d(shader, "scale",  VuoPoint2d_make(scale.x, scale.y));
 	VuoShader_setUniform_VuoReal   (shader, "noiseAmount", MAX(0.,noiseAmount/10.));
-	return shader;
 }
 
 /**
@@ -1077,11 +1131,15 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 
 		// Inputs from ports
 		uniform vec4 color;
+		uniform float aspectRatio;
 		uniform float noiseTime;
 		uniform float noiseAmount;
 		uniform float noiseScale;
 		uniform float chromaticAberration;
 		uniform int iterations;
+		uniform int levels;
+		uniform float roughness;
+		uniform float spacing;
 
 		// Inputs from vertex shader
 		varying vec4 fragmentTextureCoordinate;
@@ -1095,8 +1153,9 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 			{
 				// 3D noise, since we want a continuous 2D texture that moves continuously through time.
 				// The iteration index needn't be continuous.
-				vec3 noiseCoordinate = vec3(fragmentTextureCoordinate.x + float(i), fragmentTextureCoordinate.y, noiseTime);
-				vec2 noiseOffset = snoise3D2D(noiseCoordinate * noiseScale);
+				vec3 noiseCoordinate = vec3(fragmentTextureCoordinate.x - .5 + float(i), (fragmentTextureCoordinate.y - .5) / aspectRatio, noiseTime);
+				noiseCoordinate.xy *= noiseScale;
+				vec2 noiseOffset = snoise3D2DFractal(noiseCoordinate, levels, roughness, spacing);
 
 				// Red
 				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. - chromaticAberration/3.)) * vec4(1.,0.,0.,1./3.);
@@ -1108,7 +1167,12 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. + chromaticAberration/3.)) * vec4(0.,0.,1.,1./3.);
 			}
 
-			gl_FragColor = color * accumulatedColor / float(iterations);
+			vec4 c = accumulatedColor / float(iterations);
+			c.rgb /= c.a;
+			c *= color;
+			c.rgb = clamp(c.rgb, 0., 1.);
+			c.rgb *= c.a;
+			gl_FragColor = c;
 		}
 	);
 
@@ -1122,11 +1186,15 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 
 		// Inputs from ports
 		uniform vec4 color;
+		uniform float aspectRatio;
 		uniform float noiseTime;
 		uniform float noiseAmount;
 		uniform float noiseScale;
 		uniform float chromaticAberration;
 		uniform int iterations;
+		uniform int levels;
+		uniform float roughness;
+		uniform float spacing;
 
 		// Inputs from geometry shader
 		varying vec4 vertexPosition;
@@ -1150,8 +1218,9 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 			{
 				// 3D noise, since we want a continuous 2D texture that moves continuously through time.
 				// The iteration index needn't be continuous.
-				vec3 noiseCoordinate = vec3(fragmentTextureCoordinate.x + float(i), fragmentTextureCoordinate.y, noiseTime);
-				vec2 noiseOffset = snoise3D2D(noiseCoordinate * noiseScale);
+				vec3 noiseCoordinate = vec3(fragmentTextureCoordinate.x - .5 + float(i), (fragmentTextureCoordinate.y - .5) / aspectRatio, noiseTime);
+				noiseCoordinate.xy *= noiseScale
+				vec2 noiseOffset = snoise3D2DFractal(noiseCoordinate, levels, roughness, spacing);
 
 				// Red
 				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. - chromaticAberration/3.)) * vec4(1.,0.,0.,1./3.);
@@ -1163,7 +1232,12 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 				accumulatedColor += VuoGlsl_sample(colorBuffer, viewportTextureCoordinate + noiseOffset * noiseAmount * (1. + chromaticAberration/3.)) * vec4(0.,0.,1.,1./3.);
 			}
 
-			gl_FragColor = color * accumulatedColor / float(iterations);
+			vec4 c = accumulatedColor / float(iterations);
+			c.rgb /= c.a;
+			c *= color;
+			c.rgb = clamp(c.rgb, 0., 1.);
+			c.rgb *= c.a;
+			gl_FragColor = c;
 		}
 	);
 
@@ -1184,12 +1258,15 @@ VuoShader VuoShader_makeFrostedGlassShader(void)
 /**
  * Sets parameters for the frosted glass shader.
  */
-void VuoShader_setFrostedGlassShaderValues(VuoShader shader, VuoColor color, VuoReal brightness, VuoReal noiseTime, VuoReal noiseAmount, VuoReal noiseScale, VuoReal chromaticAberration, VuoInteger iterations)
+void VuoShader_setFrostedGlassShaderValues(VuoShader shader, VuoColor color, VuoReal brightness, VuoReal noiseTime, VuoReal noiseAmount, VuoReal noiseScale, VuoReal chromaticAberration, VuoInteger levels, VuoReal roughness, VuoReal spacing, VuoInteger iterations)
 {
-	VuoShader_setUniform_VuoPoint4d(shader, "color",               VuoPoint4d_make(color.r*brightness*color.a, color.g*brightness*color.a, color.b*brightness*color.a, color.a));
+	VuoShader_setUniform_VuoPoint4d(shader, "color",               VuoPoint4d_make(color.r*brightness, color.g*brightness, color.b*brightness, color.a));
 	VuoShader_setUniform_VuoReal   (shader, "noiseTime",           noiseTime);
 	VuoShader_setUniform_VuoReal   (shader, "noiseAmount",         MAX(0.,noiseAmount/10.));
 	VuoShader_setUniform_VuoReal   (shader, "noiseScale",          1./VuoReal_makeNonzero(noiseScale));
 	VuoShader_setUniform_VuoReal   (shader, "chromaticAberration", VuoReal_clamp(chromaticAberration, 0, 2));
 	VuoShader_setUniform_VuoInteger(shader, "iterations",          MAX(1, iterations));
+	VuoShader_setUniform_VuoInteger(shader, "levels",              MAX(1, levels));
+	VuoShader_setUniform_VuoReal   (shader, "roughness",           roughness);
+	VuoShader_setUniform_VuoReal   (shader, "spacing",             spacing);
 }

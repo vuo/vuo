@@ -13,6 +13,9 @@
 #include "VuoCompilerComposition.hh"
 #include "VuoCompilerException.hh"
 #include "VuoCompilerNode.hh"
+#include "VuoCompilerPublishedInputNodeClass.hh"
+#include "VuoCompilerPublishedOutputNodeClass.hh"
+#include "VuoCompilerTriggerDescription.hh"
 #include "VuoCompilerTriggerPort.hh"
 #include "VuoNodeClass.hh"
 #include "VuoPort.hh"
@@ -83,6 +86,7 @@ void VuoCompilerGraph::initialize(VuoCompilerComposition *composition, set<VuoCo
 						 composition->getBase()->getPublishedInputPorts(), composition->getBase()->getPublishedOutputPorts());
 	makeDownstreamVertices();
 	sortVertices();
+	makeVertexDistances();
 	makeEventlesslyDownstreamNodes(nodes, nonPublishedCables);
 }
 
@@ -442,7 +446,7 @@ void VuoCompilerGraph::makeDownstreamVertices(void)
 					Vertex potentialUpstreamVertex = j->first;
 					set<Vertex> downstreamVerticesForVertex = j->second;
 
-					if (find(downstreamVerticesForVertex.begin(), downstreamVerticesForVertex.end(), potentialUpstreamVertex) != downstreamVerticesForVertex.end())
+					if (find(downstreamVerticesForVertex.begin(), downstreamVerticesForVertex.end(), vertex) != downstreamVerticesForVertex.end())
 						downstreamVertices[publishedInputTrigger][potentialUpstreamVertex].insert(gatherVertex);
 				}
 			}
@@ -535,6 +539,53 @@ void VuoCompilerGraph::sortVertices(void)
 			sortedVertices.push_back((*j).second);
 
 		vertices[trigger] = sortedVertices;
+	}
+}
+
+/**
+ * Sets up VuoCompilerGraph::vertexDistanceFromTrigger and VuoCompilerGraph::vertexMustTransmitFromTrigger.
+ */
+void VuoCompilerGraph::makeVertexDistances(void)
+{
+	for (map<VuoCompilerTriggerPort *, vector<Vertex> >::iterator i = vertices.begin(); i != vertices.end(); ++i)
+	{
+		VuoCompilerTriggerPort *trigger = i->first;
+		vector<Vertex> verticesDownstream = i->second;
+
+		// Handle vertices immediately downstream of the trigger.
+		for (vector<Vertex>::iterator i = verticesDownstream.begin(); i != verticesDownstream.end(); ++i)
+		{
+			Vertex vertex = *i;
+			if (vertex.fromTrigger == trigger)
+			{
+				vertexDistanceFromTrigger[trigger][vertex] = 1;
+				triggerMustTransmitToVertex[trigger][vertex] = true;
+			}
+		}
+
+		// Handle vertices further downstream.
+		for (vector<Vertex>::iterator i = verticesDownstream.begin(); i != verticesDownstream.end(); ++i)
+		{
+			Vertex vertex = *i;
+			if (vertex.fromTrigger != trigger)
+			{
+				size_t minDistance = verticesDownstream.size();
+				bool anyMustTransmit = false;
+				for (vector<Vertex>::iterator j = verticesDownstream.begin(); j != i; ++j)
+				{
+					Vertex upstreamVertex = *j;
+					if (upstreamVertex.toNode == vertex.fromNode)
+					{
+						minDistance = min(vertexDistanceFromTrigger[trigger][upstreamVertex], minDistance);
+						bool currMustTransmit = triggerMustTransmitToVertex[trigger][upstreamVertex] && mustTransmit(upstreamVertex, trigger);
+						anyMustTransmit = currMustTransmit || anyMustTransmit;
+					}
+				}
+
+				vertexDistanceFromTrigger[trigger][vertex] = minDistance + 1;
+				triggerMustTransmitToVertex[trigger][vertex] = anyMustTransmit;
+			}
+		}
 	}
 }
 
@@ -670,6 +721,25 @@ bool VuoCompilerGraph::mustTransmit(const set<VuoCompilerCable *> &fromCables, c
 }
 
 /**
+ * Returns true if an event through the vertex must always transmit to outgoing cables from @c vertex.toNode .
+ */
+bool VuoCompilerGraph::mustTransmit(Vertex vertex, VuoCompilerTriggerPort *trigger)
+{
+	set<VuoCompilerCable *> cablesBetweenFromNodeAndToNode = vertex.cableBundle;
+
+	set<VuoCompilerCable *> cablesOutOfToNode;
+	for (vector<Vertex>::iterator i = vertices[trigger].begin(); i != vertices[trigger].end(); ++i)
+	{
+		Vertex otherVertex = *i;
+		if (vertex.toNode == otherVertex.fromNode)
+			cablesOutOfToNode.insert(otherVertex.cableBundle.begin(), otherVertex.cableBundle.end());
+	}
+
+	return mustTransmit(cablesBetweenFromNodeAndToNode, cablesOutOfToNode);
+}
+
+
+/**
  * Returns true if an event coming into a node through @a fromCables may transmit to outgoing @a toCables, based
  * on the event-blocking behavior of the ports in the node.
  *
@@ -703,7 +773,7 @@ bool VuoCompilerGraph::mayTransmit(const set<VuoCompilerCable *> &fromCables, co
 }
 
 /**
- * Returns true if an event through the vertex will transmit to any outgoing cables from @c vertex.toNode .
+ * Returns true if an event through the vertex may transmit to outgoing cables from @c vertex.toNode .
  */
 bool VuoCompilerGraph::mayTransmit(Vertex vertex, VuoCompilerTriggerPort *trigger)
 {
@@ -825,7 +895,8 @@ size_t VuoCompilerGraph::getNumVerticesWithToNode(VuoCompilerNode *toNode, VuoCo
  */
 map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > VuoCompilerGraph::getChains(void)
 {
-	map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > chains;
+	if (! chains.empty())
+		return chains;
 
 	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
 	{
@@ -834,6 +905,7 @@ map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > VuoCompilerGraph::get
 		// Visit the vertices in topological order, and put the nodes into lists (chains-in-progress).
 		vector< vector<VuoCompilerNode *> > chainsInProgress;
 		set<VuoCompilerNode *> nodesAdded;
+		bool skippedPublishedOutputNode = false;
 		for (vector<Vertex>::iterator j = vertices[trigger].begin(); j != vertices[trigger].end(); ++j)
 		{
 			Vertex vertex = *j;
@@ -841,6 +913,13 @@ map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > VuoCompilerGraph::get
 
 			if (nodesAdded.find(vertex.toNode) != nodesAdded.end())
 				continue;  // Avoid creating duplicate chains for nodes with gathers (multiple incoming vertices).
+
+			if (vertex.toNode == publishedOutputNode)
+			{
+				skippedPublishedOutputNode = true;
+				continue;  // Save the published output node for last.
+			}
+
 			nodesAdded.insert(vertex.toNode);
 
 			if (vertex.fromNode)
@@ -891,6 +970,13 @@ map<VuoCompilerTriggerPort *, vector<VuoCompilerChain *> > VuoCompilerGraph::get
 				VuoCompilerChain *chain = new VuoCompilerChain(vector<VuoCompilerNode *>(1, node), true);
 				chains[trigger].push_back(chain);
 			}
+		}
+
+		// Create a new chain for the published output node.
+		if (skippedPublishedOutputNode)
+		{
+			VuoCompilerChain *chain = new VuoCompilerChain(vector<VuoCompilerNode *>(1, publishedOutputNode), false);
+			chains[trigger].push_back(chain);
 		}
 	}
 
@@ -1030,6 +1116,235 @@ set<VuoCompilerCable *> VuoCompilerGraph::getCablesImmediatelyEventlesslyDownstr
 }
 
 /**
+ * Calculates the minimum and maximum number of threads that may be simultaneously waiting on dispatch semaphores,
+ * queues, or groups (i.e., counted toward the Dispatch Thread Soft Limit) while executing the chain of nodes.
+ */
+void VuoCompilerGraph::getWorkerThreadsNeeded(VuoCompilerChain *chain, int &minThreadsNeeded, int &maxThreadsNeeded)
+{
+	// Non-subcomposition nodes need 1 thread.
+	minThreadsNeeded = 1;
+	maxThreadsNeeded = 1;
+
+	vector<VuoCompilerNode *> nodes = chain->getNodes();
+	for (vector<VuoCompilerNode *>::iterator j = nodes.begin(); j != nodes.end(); ++j)
+	{
+		VuoCompilerNodeClass *nodeClass = (*j)->getBase()->getNodeClass()->getCompiler();
+		vector<VuoCompilerTriggerDescription *> triggerDescriptions = nodeClass->getTriggerDescriptions();
+
+		for (vector<VuoCompilerTriggerDescription *>::iterator k = triggerDescriptions.begin(); k != triggerDescriptions.end(); ++k)
+		{
+			if ((*k)->getNodeIdentifier() == VuoNodeClass::publishedInputNodeIdentifier)
+			{
+				// Subcomposition nodes need 1 thread plus those needed within the subcomposition.
+				int minThreadsNeededForSubcomposition, maxThreadsNeededForSubcomposition;
+				(*k)->getWorkerThreadsNeeded(minThreadsNeededForSubcomposition, maxThreadsNeededForSubcomposition);
+				minThreadsNeeded = max(minThreadsNeeded, minThreadsNeededForSubcomposition + 1);
+				maxThreadsNeeded = max(maxThreadsNeeded, maxThreadsNeededForSubcomposition + 1);
+				break;
+			}
+		}
+	}
+}
+
+/**
+ * Calculates the minimum and maximum number of threads that may be simultaneously waiting on dispatch semaphores,
+ * queues, or groups (i.e., counted toward the Dispatch Thread Soft Limit) while an event fired from this trigger
+ * is propagating through the composition.
+ */
+void VuoCompilerGraph::getWorkerThreadsNeeded(VuoCompilerTriggerPort *trigger, int &minThreadsNeeded, int &maxThreadsNeeded)
+{
+	// Make a data structure of the number of threads needed for each chain.
+	vector<VuoCompilerChain *> chainsForTrigger = getChains()[trigger];
+	map<VuoCompilerChain *, pair<int, int> > threadsNeededForChain;
+	for (vector<VuoCompilerChain *>::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+
+		int minThreadsNeededForChain, maxThreadsNeededForChain;
+		getWorkerThreadsNeeded(chain, minThreadsNeededForChain, maxThreadsNeededForChain);
+
+		threadsNeededForChain[chain] = make_pair(minThreadsNeededForChain, maxThreadsNeededForChain);
+	}
+
+	// Make a data structure of which chains are downstream of which.
+	map<VuoCompilerChain *, set<VuoCompilerChain *> > chainsDownstream;
+	for (vector<VuoCompilerChain *>::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+		VuoCompilerNode *lastNodeInThisChain = chain->getNodes().back();
+
+		vector<VuoCompilerNode *> nodesDownstream = getNodesDownstream(lastNodeInThisChain, trigger);
+
+		for (vector<VuoCompilerChain *>::iterator j = i+1; j != chainsForTrigger.end(); ++j)
+		{
+			VuoCompilerChain *otherChain = *j;
+			VuoCompilerNode *firstNodeInOtherChain = otherChain->getNodes().front();
+
+			if (find(nodesDownstream.begin(), nodesDownstream.end(), firstNodeInOtherChain) != nodesDownstream.end())
+				chainsDownstream[chain].insert(otherChain);
+		}
+	}
+
+	// Make a data structure of which chains are immediately downstream and upstream of which.
+	map<VuoCompilerChain *, set<VuoCompilerChain *> > chainsImmediatelyDownstream;
+	map<VuoCompilerChain *, set<VuoCompilerChain *> > chainsImmediatelyUpstream;
+	for (vector<VuoCompilerChain *>::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+	{
+		VuoCompilerChain *chain = *i;
+		VuoCompilerNode *lastNodeInThisChain = chain->getNodes().back();
+
+		vector<VuoCompilerNode *> nodesDownstream = getNodesImmediatelyDownstream(lastNodeInThisChain, trigger);
+
+		for (vector<VuoCompilerChain *>::iterator j = i+1; j != chainsForTrigger.end(); ++j)
+		{
+			VuoCompilerChain *otherChain = *j;
+			VuoCompilerNode *firstNodeInOtherChain = otherChain->getNodes().front();
+
+			if (find(nodesDownstream.begin(), nodesDownstream.end(), firstNodeInOtherChain) != nodesDownstream.end())
+			{
+				chainsImmediatelyDownstream[chain].insert(otherChain);
+				chainsImmediatelyUpstream[otherChain].insert(chain);
+			}
+		}
+	}
+
+	// Every trigger worker needs at least 1 thread, since it waits on the trigger node's semaphore.
+	minThreadsNeeded = 1;
+	maxThreadsNeeded = 1;
+
+
+	// Find the maximum number of threads required — an approximation. Ideally, this is the thread count if
+	// all chains that can possibly execute concurrently do so. This is approximated by adding up the thread
+	// count for all scatters, scatters of scatters, etc., without taking into account any gathers. It may
+	// be an overestimate of the ideal thread count.
+
+	// Collect the chains immediately downstream of the trigger.
+	vector< pair<VuoCompilerChain *, vector<VuoCompilerChain *> > > potentialScatters;
+	vector<VuoCompilerChain *> scatterForTrigger;
+	for (vector<VuoCompilerChain *>::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+		if (chainsImmediatelyUpstream.find(*i) == chainsImmediatelyUpstream.end())
+			scatterForTrigger.push_back(*i);
+	potentialScatters.push_back( make_pair((VuoCompilerChain *)NULL, scatterForTrigger) );
+
+	// Add in the chains immediately downstream of each chain.
+	for (vector<VuoCompilerChain *>::iterator i = chainsForTrigger.begin(); i != chainsForTrigger.end(); ++i)
+	{
+		vector<VuoCompilerChain *> scatterForChain(chainsImmediatelyDownstream[*i].begin(), chainsImmediatelyDownstream[*i].end());
+		potentialScatters.push_back( make_pair(*i, scatterForChain) );
+	}
+
+	map<VuoCompilerChain *, int> threadsNeededForScatters;
+	for (vector< pair<VuoCompilerChain *, vector<VuoCompilerChain *> > >::reverse_iterator i = potentialScatters.rbegin(); i != potentialScatters.rend(); ++i)
+	{
+		VuoCompilerChain *chain = (*i).first;
+		vector<VuoCompilerChain *> scatterChains = (*i).second;
+
+		// Discard any chains that are downstream of another in the collection,
+		// leaving a group of chains that may all execute concurrently.
+		for (size_t j = 0; j < scatterChains.size(); ++j)
+		{
+			VuoCompilerChain *outer = scatterChains[j];
+
+			for (size_t k = j+1; k < scatterChains.size(); ++k)
+			{
+				VuoCompilerChain *inner = scatterChains[k];
+
+				if (chainsDownstream[inner].find(outer) != chainsDownstream[inner].end())
+				{
+					scatterChains.erase( scatterChains.begin() + j-- );
+					break;
+				}
+
+				if (chainsDownstream[outer].find(inner) != chainsDownstream[outer].end())
+					scatterChains.erase( scatterChains.begin() + k-- );
+			}
+		}
+
+		// Add up the threads needed for the chains in the scatter.
+		int threadsNeededForScatter = 0;
+		for (vector<VuoCompilerChain *>::iterator j = scatterChains.begin(); j != scatterChains.end(); ++j)
+			threadsNeededForScatter += threadsNeededForScatters[*j];
+
+		// Factor in the threads needed for this chain itself.
+		threadsNeededForScatter = max(threadsNeededForScatter, threadsNeededForChain[chain].second);
+
+		threadsNeededForScatters[chain] = threadsNeededForScatter;
+	}
+
+	// Find the maximum threads needed for any chain and its downstream scatters.
+	for (map<VuoCompilerChain *, int>::iterator i = threadsNeededForScatters.begin(); i != threadsNeededForScatters.end(); ++i)
+		maxThreadsNeeded = max(maxThreadsNeeded, i->second);
+
+
+	// Find the minimum number of threads required. This is the thread count if all chains execute sequentially,
+	// which is the maximum of the minimum threads needed across all chains in the composition. If the trigger
+	// has no downstream chains, the trigger worker still needs 1 thread to wait on the trigger node's semaphore.
+
+	for (map<VuoCompilerChain *, pair<int, int> >::iterator i = threadsNeededForChain.begin(); i != threadsNeededForChain.end(); ++i)
+		minThreadsNeeded = max(minThreadsNeeded, i->second.first);
+}
+
+/**
+ * Returns the trigger port that is nearest upstream to @a node, or null if no trigger is upstream.
+ *
+ * The "nearest" trigger is based on two criteria: How many cables are between the trigger and the node,
+ * and are there any intervening doors? If there are any triggers that must always transmit to the node
+ * (no intervening doors), then the one with the fewest intervening cables is chosen. Otherwise, the trigger
+ * (with intervening doors) with the fewest intervening cables is chosen.
+ *
+ * If there's a tie between two nearest triggers, the one returned is consistent across calls of this function.
+ */
+VuoCompilerTriggerPort * VuoCompilerGraph::findNearestUpstreamTrigger(VuoCompilerNode *node)
+{
+	vector< pair<VuoCompilerTriggerPort *, size_t> > distancesForMusts;
+	vector< pair<VuoCompilerTriggerPort *, size_t> > distancesForMays;
+
+	for (map<VuoCompilerTriggerPort *, vector<Vertex> >::iterator i = vertices.begin(); i != vertices.end(); ++i)
+	{
+		VuoCompilerTriggerPort *trigger = i->first;
+		vector<Vertex> verticesDownstream = i->second;
+
+		for (vector<Vertex>::iterator j = verticesDownstream.begin(); j != verticesDownstream.end(); ++j)
+		{
+			Vertex vertex = *j;
+			if (vertex.toNode == node)
+			{
+				pair<VuoCompilerTriggerPort *, size_t> p = make_pair(trigger, vertexDistanceFromTrigger[trigger][vertex]);
+				if (triggerMustTransmitToVertex[trigger][vertex])
+					distancesForMusts.push_back(p);
+				else
+					distancesForMays.push_back(p);
+			}
+		}
+	}
+
+	if (! distancesForMusts.empty())
+	{
+		sort(distancesForMusts.begin(), distancesForMusts.end(), compareTriggers);
+		return distancesForMusts[0].first;
+	}
+	else if (! distancesForMays.empty())
+	{
+		sort(distancesForMays.begin(), distancesForMays.end(), compareTriggers);
+		return distancesForMays[0].first;
+	}
+	else
+		return NULL;
+}
+
+/**
+ * Returns true if the index for @a lhs is before the index for @a rhs, with ties broken by lexicographic order of the
+ * unique identifiers for @a lhs and @a rhs.
+ */
+bool VuoCompilerGraph::compareTriggers(const pair<VuoCompilerTriggerPort *, size_t> &lhs, const pair<VuoCompilerTriggerPort *, size_t> &rhs)
+{
+	if (lhs.second == rhs.second)
+		return lhs.first->getIdentifier() < rhs.first->getIdentifier();
+
+	return lhs.second < rhs.second;
+}
+
+/**
  * Returns the type of event blocking for the published input ports, based on whether an event from the
  * published input trigger always (none), never (wall), or sometimes (door) reaches the published output ports.
  * If there are no event-only or data-and-event published output ports to reach, returns "none".
@@ -1132,64 +1447,113 @@ bool VuoCompilerGraph::hasGatherDownstream(VuoCompilerNode *node, VuoCompilerTri
 }
 
 /**
- * Returns true if there's a scatter originating at @a trigger, a gather downstream of the scatter,
- * and another trigger's path overlapping some nodes downstream of the scatter and upstream of a gather.
+ * Returns true if there's a scatter originating at @a trigger, and some but not all nodes
+ * downstream of @a trigger are also downstream of another trigger.
  */
-bool VuoCompilerGraph::hasGatherOverlappedByAnotherTrigger(VuoCompilerTriggerPort *trigger)
+bool VuoCompilerGraph::hasScatterPartiallyOverlappedByAnotherTrigger(VuoCompilerTriggerPort *trigger)
 {
 	bool isScatterAtTrigger = getNodesImmediatelyDownstream(trigger).size() > 1;
 	if (isScatterAtTrigger)
 	{
 		vector<VuoCompilerNode *> downstreamNodes = getNodesDownstream(trigger);
-		return hasGatherOverlappedByAnotherTrigger(downstreamNodes, trigger);
+		return areNodesPartiallyOverlappedByAnotherTrigger(downstreamNodes, trigger);
 	}
 
 	return false;
 }
 
 /**
- * Returns true if there's a scatter originating at @a node for events from @a trigger, a gather downstream of the scatter,
- * and another trigger's path overlapping some nodes downstream of the scatter and upstream of a gather.
+ * Returns true if there's a scatter originating at @a node for events from @a trigger, and some but not all nodes
+ * downstream of @a node are also downstream of another trigger.
  */
-bool VuoCompilerGraph::hasGatherOverlappedByAnotherTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
+bool VuoCompilerGraph::hasScatterPartiallyOverlappedByAnotherTrigger(VuoCompilerNode *node, VuoCompilerTriggerPort *trigger)
 {
 	bool isScatterAtNode = getNodesImmediatelyDownstream(node, trigger).size() > 1;
 	if (isScatterAtNode)
 	{
 		vector<VuoCompilerNode *> downstreamNodes = getNodesDownstream(node, trigger);
-		return hasGatherOverlappedByAnotherTrigger(downstreamNodes, trigger);
+		return areNodesPartiallyOverlappedByAnotherTrigger(downstreamNodes, trigger);
 	}
 
 	return false;
 }
 
 /**
- * Returns true if there's a gather downstream of any of @a downstreamNodes for events from @a trigger,
- * and another trigger's path overlapping some nodes including or downstream of @a downstreamNodes and upstream of a gather.
+ * Returns true if there is a trigger that is upstream of some but not all of @a nodes.
  */
-bool VuoCompilerGraph::hasGatherOverlappedByAnotherTrigger(const vector<VuoCompilerNode *> &downstreamNodes, VuoCompilerTriggerPort *trigger)
+bool VuoCompilerGraph::areNodesPartiallyOverlappedByAnotherTrigger(const vector<VuoCompilerNode *> &nodes, VuoCompilerTriggerPort *trigger)
 {
-	for (vector<VuoCompilerNode *>::const_iterator i = downstreamNodes.begin(); i != downstreamNodes.end(); ++i)
+	for (vector<VuoCompilerTriggerPort *>::iterator i = triggers.begin(); i != triggers.end(); ++i)
 	{
-		VuoCompilerNode *downstreamNode = *i;
+		VuoCompilerTriggerPort *otherTrigger = *i;
+		if (otherTrigger == trigger)
+			continue;
 
-		bool isGatherDownstreamOfNode = hasGatherDownstream(downstreamNode, trigger);
-		if (isGatherDownstreamOfNode)
+		vector<VuoCompilerNode *> nodesDownstreamOfOtherTrigger = getNodesDownstream(otherTrigger);
+
+		bool hasOverlappedNode = false;
+		bool hasNonOverlappedNode = false;
+		for (vector<VuoCompilerNode *>::const_iterator j = nodes.begin(); j != nodes.end(); ++j)
 		{
-			for (vector<VuoCompilerTriggerPort *>::iterator j = triggers.begin(); j != triggers.end(); ++j)
-			{
-				VuoCompilerTriggerPort *otherTrigger = *j;
-				if (otherTrigger == trigger)
-					continue;
+			VuoCompilerNode *downstreamNode = *j;
 
-				vector<VuoCompilerNode *> nodesDownstreamOfOtherTrigger = getNodesDownstream(otherTrigger);
-				if (find(nodesDownstreamOfOtherTrigger.begin(), nodesDownstreamOfOtherTrigger.end(), downstreamNode) != nodesDownstreamOfOtherTrigger.end())
-					return true;
-			}
+			if (find(nodesDownstreamOfOtherTrigger.begin(), nodesDownstreamOfOtherTrigger.end(), downstreamNode) != nodesDownstreamOfOtherTrigger.end())
+				hasOverlappedNode = true;
+			else
+				hasNonOverlappedNode = true;
 		}
+
+		if (hasOverlappedNode && hasNonOverlappedNode)
+			return true;
 	}
 
 	return false;
+}
+
+/**
+ * Returns true if this trigger port causes a `Spin Off` node to fire, and this trigger and the `Spin Off` trigger
+ * have downstream nodes in common.
+ */
+bool VuoCompilerGraph::hasOverlapWithSpinOff(VuoCompilerTriggerPort *trigger)
+{
+	vector<VuoCompilerNode *> nodesDownstreamOfTrigger = getNodesDownstream(trigger);
+	vector<VuoCompilerNode *> nodesDownstreamOfSpinOffs;
+
+	// Collect all nodes downstream of Spin Off nodes downstream of this trigger
+	// (including Spin Offs downstream of other Spin Offs downstream of this trigger).
+	vector<VuoCompilerNode *> nodesToCheck = nodesDownstreamOfTrigger;
+	map<VuoCompilerNode *, bool> nodesChecked;
+	while (! nodesToCheck.empty())
+	{
+		VuoCompilerNode *node = nodesToCheck.back();
+		nodesToCheck.pop_back();
+
+		if (nodesChecked[node])
+			continue;
+		nodesChecked[node] = true;
+
+		string nodeClassName = node->getBase()->getNodeClass()->getClassName();
+		if (nodeClassName == "vuo.event.spinOffEvent" || nodeClassName == "vuo.event.spinOffEvents" ||
+				VuoStringUtilities::beginsWith(nodeClassName, "vuo.event.spinOffValue."))
+		{
+			VuoPort *spinOffOutput = node->getBase()->getOutputPorts().at(VuoNodeClass::unreservedOutputPortStartIndex);
+			VuoCompilerTriggerPort *spinOffTrigger = static_cast<VuoCompilerTriggerPort *>( spinOffOutput->getCompiler() );
+			vector<VuoCompilerNode *> nodesDownstream = getNodesDownstream(spinOffTrigger);
+
+			nodesDownstreamOfSpinOffs.insert(nodesDownstreamOfSpinOffs.end(), nodesDownstream.begin(), nodesDownstream.end());
+			nodesToCheck.insert(nodesToCheck.end(), nodesDownstream.begin(), nodesDownstream.end());
+		}
+	}
+
+	sort(nodesDownstreamOfTrigger.begin(), nodesDownstreamOfTrigger.end());
+	sort(nodesDownstreamOfSpinOffs.begin(), nodesDownstreamOfSpinOffs.end());
+
+	// Do this trigger and the Spin Offs have any downstream nodes in common?
+	set<VuoCompilerNode *> nodesDownstreamOfBoth;
+	set_intersection(nodesDownstreamOfTrigger.begin(), nodesDownstreamOfTrigger.end(),
+					 nodesDownstreamOfSpinOffs.begin(), nodesDownstreamOfSpinOffs.end(),
+					 std::inserter(nodesDownstreamOfBoth, nodesDownstreamOfBoth.begin()));
+	return ! nodesDownstreamOfBoth.empty();
 }
 
 /**

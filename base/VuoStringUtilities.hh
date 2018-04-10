@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSTRINGUTILITIES_H
-#define VUOSTRINGUTILITIES_H
+#pragma once
 
 #include <locale>
 
@@ -51,6 +50,3 @@ public:
 	static const std::locale locale;  ///< For hashing strings.
 	static const std::collate<char> &collate;  ///< For hashing strings.
 };
-
-
-#endif

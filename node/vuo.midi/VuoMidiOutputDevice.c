@@ -75,7 +75,7 @@ json_object * VuoMidiOutputDevice_getJson(const VuoMidiOutputDevice md)
  */
 char * VuoMidiOutputDevice_getSummary(const VuoMidiOutputDevice md)
 {
-	if (md.id == -1 && (!md.name || md.name[0] == 0))
+	if (md.id == -1 && VuoText_isEmpty(md.name))
 		return VuoText_format("The first MIDI output device");
 	else if (md.id == -1)
 		return VuoText_format("The first MIDI output device whose name contains \"%s\"", md.name);

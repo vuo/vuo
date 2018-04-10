@@ -1,6 +1,6 @@
 /**
  * @file
- * Plays notes when you press keys on the keyboard. 
+ * Plays notes when you press keys on the keyboard.
  *
  * @copyright Copyright © 2012–2016 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
@@ -17,13 +17,13 @@ ConvertNoteNumberToFrequency [type="vuo.midi.note.frequency" version="2.0.0" lab
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="180,420" fillcolor="yellow" _started_eventThrottling="enqueue"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="360,360" _url="\"keyboard.png\""];
 HoldValue2 [type="vuo.data.hold.VuoInteger" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="375,270"];
-MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<samples>samples\r" pos="645,75" fillcolor="violet" _wave="\"triangle\""];
-MakeLayer [type="vuo.layer.make.realSize" version="2.0.0" label="Make Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<layer>layer\r" pos="540,345" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000"];
-MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="919,356" fillcolor="green"];
-MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="949,371" fillcolor="green"];
-MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="824,86" fillcolor="violet"];
-MakeList4 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="494,266"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="525,480" _text="\"Play the keyboard.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.100000}"];
+MakeAudioWave2 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="645,60" fillcolor="violet" _wave="\"triangle\"" _setPhase="0.0"];
+MakeLayer [type="vuo.layer.make.realSize" version="2.0.1" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<opacity>opacity\l|<preservePhysicalSize>preservePhysicalSize\l|<layer>layer\r" pos="540,345" _center="{\"x\":0.000000,\"y\":0.000000}" _opacity="1.000000" _preservePhysicalSize="false"];
+MakeList [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="942,356" fillcolor="green"];
+MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="962,371" fillcolor="green"];
+MakeList3 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="840,86" fillcolor="violet"];
+MakeList4 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="507,266"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="525,480" _text="\"Play the keyboard.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.100000}"];
 ReceiveKeyboardButtons [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,-225" fillcolor="yellow" _key="\"A\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 ReceiveKeyboardButtons2 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,-120" fillcolor="yellow" _key="\"S\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 ReceiveKeyboardButtons3 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,-15" fillcolor="yellow" _key="\"D\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
@@ -32,25 +32,25 @@ ReceiveKeyboardButtons5 [type="vuo.keyboard.button" version="1.0.1" label="Recei
 ReceiveKeyboardButtons6 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,300" fillcolor="yellow" _key="\"H\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 ReceiveKeyboardButtons7 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,405" fillcolor="yellow" _key="\"J\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
 ReceiveKeyboardButtons8 [type="vuo.keyboard.button" version="1.0.1" label="Receive Keyboard Buttons|<refresh>refresh\l|<window>window\l|<key>key\l|<modifierKey>modifierKey\l|<repeatWhenHeld>repeatWhenHeld\l|<pressed>pressed\r|<released>released\r" pos="-135,510" fillcolor="yellow" _key="\"K\"" _modifierKey="\"any\"" _repeatWhenHeld="false" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="990,345" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="990,345" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 SelectEventOutput [type="vuo.select.out.boolean.event" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="675,255"];
 SelectLatest2 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="870,180" _option1="0.500000" _option2="0.000000"];
 SelectLatest3 [type="vuo.select.latest.8.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="180,255" _option1="60" _option2="63" _option3="65" _option4="66" _option5="67" _option6="70" _option7="72" _option8="75"];
 SelectLatest6 [type="vuo.select.latest.8.VuoInteger" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<option3>option3\l|<option4>option4\l|<option5>option5\l|<option6>option6\l|<option7>option7\l|<option8>option8\l|<latest>latest\r" pos="180,90" _option1="60" _option2="63" _option3="65" _option4="66" _option5="67" _option6="70" _option7="72" _option8="75"];
-SendLiveAudio [type="vuo.audio.send" version="1.0.0" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="1035,60" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
-ShareValue2 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Audio Event|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="255,-30" fillcolor="violet"];
+SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="1035,60" fillcolor="violet" _requestedChannels_eventThrottling="enqueue"];
+ShareValue2 [type="vuo.data.share.VuoGenericType1" version="1.0.0" label="Audio Event|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="180,0" fillcolor="violet"];
 
 AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
 AlignLayerToWindow:alignedLayer -> MakeList:2;
 AllowFirstEvent:firstEvent -> SelectLatest2:option2;
 AreEqual2:equal -> SelectEventOutput:in;
 AreEqual2:equal -> SelectEventOutput:which;
-ConvertNoteNumberToFrequency:frequency -> MakeAudioWave:frequency;
+ConvertNoteNumberToFrequency:frequency -> MakeAudioWave2:frequency;
 FireOnStart:started -> GetImage:refresh;
 FireOnStart:started -> MakeTextLayer:refresh;
 GetImage:image -> MakeLayer:image;
 HoldValue2:heldValue -> MakeList4:2;
-MakeAudioWave:samples -> MakeList3:1;
+MakeAudioWave2:samples -> MakeList3:1;
 MakeLayer:layer -> MakeList:1;
 MakeList0:list -> RenderLayersToWindow:setWindowProperties;
 MakeList3:list -> AdjustLoudness:samples;
@@ -83,5 +83,5 @@ SelectLatest6:latest -> HoldValue2:newValue;
 SelectLatest6:latest -> SelectLatest2:option1 [event=true];
 SendLiveAudio:requestedChannels -> ShareValue2:refresh;
 ShareValue2:sameValue -> AllowFirstEvent:event;
-ShareValue2:sameValue -> MakeAudioWave:refresh;
+ShareValue2:sameValue -> MakeAudioWave2:calculateSamples;
 }

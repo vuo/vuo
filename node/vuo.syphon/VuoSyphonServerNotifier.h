@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSYPHONSERVERNOTIFIER_H
-#define VUOSYPHONSERVERNOTIFIER_H
+#pragma once
 
 #include "node.h"
 #include "VuoSyphonServerDescription.h"
@@ -27,5 +26,3 @@ void VuoSyphonServerNotifier_setNotificationMethod(VuoSyphonServerNotifier serve
 												   id object, SEL method);
 void VuoSyphonServerNotifier_start(VuoSyphonServerNotifier serverNotifier);
 void VuoSyphonServerNotifier_stop(VuoSyphonServerNotifier serverNotifier);
-
-#endif

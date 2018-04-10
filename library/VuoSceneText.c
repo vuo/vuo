@@ -34,53 +34,43 @@ VuoModuleMetadata({
  */
 static VuoMesh makeAnchoredQuad(VuoAnchor anchor)
 {
-	VuoSubmesh sm;
+	unsigned int vertexCount = 4;
 
-	sm.vertexCount = 4;
+	VuoPoint4d *positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d) * vertexCount);
+	positions[0] = VuoPoint4d_make(-.5,-.5,0,1);
+	positions[1] = VuoPoint4d_make( .5,-.5,0,1);
+	positions[2] = VuoPoint4d_make(-.5, .5,0,1);
+	positions[3] = VuoPoint4d_make( .5, .5,0,1);
 
-	sm.positions = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	{
-		sm.positions[0] = VuoPoint4d_make(-.5,-.5,0,1);
-		sm.positions[1] = VuoPoint4d_make( .5,-.5,0,1);
-		sm.positions[2] = VuoPoint4d_make(-.5, .5,0,1);
-		sm.positions[3] = VuoPoint4d_make( .5, .5,0,1);
-	}
+	VuoPoint4d *textureCoordinates = (VuoPoint4d *)malloc(sizeof(VuoPoint4d) * vertexCount);
+	textureCoordinates[0] = VuoPoint4d_make(0,0,0,1);
+	textureCoordinates[1] = VuoPoint4d_make(1,0,0,1);
+	textureCoordinates[2] = VuoPoint4d_make(0,1,0,1);
+	textureCoordinates[3] = VuoPoint4d_make(1,1,0,1);
 
-	sm.normals = NULL;
-	sm.tangents = NULL;
-	sm.bitangents = NULL;
-
-	sm.textureCoordinates = (VuoPoint4d *)malloc(sizeof(VuoPoint4d)*sm.vertexCount);
-	{
-		sm.textureCoordinates[0] = VuoPoint4d_make(0,0,0,1);
-		sm.textureCoordinates[1] = VuoPoint4d_make(1,0,0,1);
-		sm.textureCoordinates[2] = VuoPoint4d_make(0,1,0,1);
-		sm.textureCoordinates[3] = VuoPoint4d_make(1,1,0,1);
-	}
-
-	sm.elementCount = 6;
-	sm.elements = (unsigned int *)malloc(sizeof(unsigned int)*sm.elementCount);
-	sm.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-	sm.faceCullingMode = GL_BACK;
-
+	unsigned int elementCount = 6;
+	unsigned int *elements = (unsigned int *)malloc(sizeof(unsigned int) * elementCount);
 	// Order the elements so that the diagonal edge of each triangle
 	// is last, so that vuo.shader.make.wireframe can optionally omit them.
-	sm.elements[0] = 2;
-	sm.elements[1] = 0;
-	sm.elements[2] = 1;
-	sm.elements[3] = 1;
-	sm.elements[4] = 3;
-	sm.elements[5] = 2;
+	elements[0] = 2;
+	elements[1] = 0;
+	elements[2] = 1;
+	elements[3] = 1;
+	elements[4] = 3;
+	elements[5] = 2;
 
 	float horizontal = anchor.horizontalAlignment == VuoHorizontalAlignment_Left ? .5f : (anchor.horizontalAlignment == VuoHorizontalAlignment_Right ? -.5f : 0.f);
 	float vertical = anchor.verticalAlignment == VuoVerticalAlignment_Top ? -.5f : (anchor.verticalAlignment == VuoVerticalAlignment_Bottom ? .5f : 0.f);
 
-	for(int i = 0; i < sm.vertexCount; i++)
+	for(int i = 0; i < vertexCount; i++)
 	{
-		sm.positions[i].x += horizontal;
-		sm.positions[i].y += vertical;
+		positions[i].x += horizontal;
+		positions[i].y += vertical;
 	}
 
+	VuoSubmesh sm = VuoSubmesh_makeFromBuffers(vertexCount,
+											   positions, NULL, NULL, NULL, textureCoordinates,
+											   elementCount, elements, VuoMesh_IndividualTriangles);
 	return VuoMesh_makeFromSingleSubmesh(sm);
 }
 

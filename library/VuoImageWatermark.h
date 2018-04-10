@@ -7,6 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include <OpenGL/CGLMacro.h>
+
 #import "VuoFont.h"
 #import "VuoImageRenderer.h"
 #import "VuoImageText.h"
@@ -41,10 +43,35 @@ static inline VuoImage VuoImage_watermark(VuoImage image)
 				gl_FragColor = base + blend;
 			}
 		);
+		static const char *fragmentShaderRect = VUOSHADER_GLSL_SOURCE(120,
+			uniform sampler2DRect background;
+			uniform sampler2D foreground;
+			uniform vec2 scale;
+			varying vec4 fragmentTextureCoordinate;
+			uniform vec2 backgroundSize;
+			void main()
+			{
+				vec4 base = texture2DRect(background, fragmentTextureCoordinate.xy * backgroundSize);
+				vec4 blend = texture2D(foreground, mod(fragmentTextureCoordinate.xy / scale, 1.));
+				gl_FragColor = base + blend;
+			}
+		);
 
 		VuoShader shader = VuoShader_make("Watermark Shader");
 		VuoRetain(shader);
-		VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
+
+		if (image->glTextureTarget == GL_TEXTURE_2D)
+			VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
+		else if (image->glTextureTarget == GL_TEXTURE_RECTANGLE_ARB)
+		{
+			VuoShader_addSource(shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShaderRect);
+			VuoShader_setUniform_VuoPoint2d(shader, "backgroundSize", (VuoPoint2d){image->pixelsWide, image->pixelsHigh});
+		}
+		else
+		{
+			VUserLog("Error: Unknown texture target %s.", VuoGl_stringForConstant(image->glTextureTarget));
+			return NULL;
+		}
 
 		VuoShader_setUniform_VuoImage  (shader, "background", image);
 		VuoShader_setUniform_VuoImage  (shader, "foreground", textImage);

@@ -10,6 +10,7 @@
 extern "C" {
 #include "TestVuoTypes.h"
 #include "VuoText.h"
+#include "VuoTextCase.h"
 #include "VuoData.h"
 #include <json-c/json.h>
 }
@@ -35,7 +36,7 @@ private slots:
 
 		QCOMPARE(QString::fromUtf8(VuoText_getString(NULL)), QString("null"));
 
-		QCOMPARE(QString::fromUtf8(VuoText_getSummary(NULL)), QString("<code></code>"));
+		QCOMPARE(QString::fromUtf8(VuoText_getSummary(NULL)), QString("<code>&#0;</code>"));
 
 		QCOMPARE(VuoText_length(NULL), (size_t)0);
 
@@ -64,7 +65,7 @@ private slots:
 		QTest::addColumn<QString>("value");
 		QTest::addColumn<QString>("summary");
 
-		QTest::newRow("empty string")		<< ""									<< "<code></code>";
+		QTest::newRow("empty string")		<< ""									<< "<code>&#0;</code>";
 		QTest::newRow("short")				<< "a"									<< "<code>a</code>";
 		QTest::newRow("borderline")			<< "01234567890123456789012345678901234567890123456789"	<< "<code>01234567890123456789012345678901234567890123456789</code>";
 		QTest::newRow("long")				<< "012345678901234567890123456789012345678901234567890"	<< "<code>01234567890123456789012345678901234567890123456789…</code>";
@@ -99,6 +100,24 @@ private slots:
 		QCOMPARE(VuoText_length(value.toUtf8().data()), (size_t)length);
 	}
 
+	void testEmpty_data()
+	{
+		QTest::addColumn<void *>("text");
+		QTest::addColumn<bool>("expectedEmpty");
+
+		QTest::newRow("NULL")		   << (void *)NULL << true;
+		QTest::newRow("empty string")  << (void *)""   << true;
+		QTest::newRow("space")         << (void *)" "  << false;
+		QTest::newRow("letter")        << (void *)"a"  << false;
+	}
+	void testEmpty()
+	{
+		QFETCH(void *, text);
+		QFETCH(bool, expectedEmpty);
+
+		QCOMPARE(VuoText_isEmpty((VuoText)text), expectedEmpty);
+	}
+
 	void testSubstring_data()
 	{
 		QTest::addColumn<QString>("value");
@@ -128,6 +147,128 @@ private slots:
 		QFETCH(QString, substring);
 
 		QCOMPARE(QString::fromUtf8(VuoText_substring(value.toUtf8().data(), startIndex, length)), substring);
+	}
+
+	void testInsert_data()
+	{
+		QTest::addColumn<QString>("value");
+		QTest::addColumn<int>("startIndex");
+		QTest::addColumn<QString>("newText");
+		QTest::addColumn<QString>("result");
+
+		QTest::newRow("emptyValue") 		<< "" 			<<  0	<< "Hello"		<< "Hello";
+		QTest::newRow("emptyInsert") 		<< "Goodbye" 	<<  0	<< "" 			<< "Goodbye";
+		QTest::newRow("endOfString") 		<< "Hello" 		<<  6	<< "Goodbye" 	<< "HelloGoodbye";
+		QTest::newRow("startOfString") 		<< "Hello" 		<<  1	<< "Goodbye" 	<< "GoodbyeHello";
+		QTest::newRow("beforeString") 		<< "Hello" 		<< -1	<< "Goodbye" 	<< "GoodbyeHello";
+		QTest::newRow("afterString") 		<< "Hello" 		<< 10	<< "Goodbye" 	<< "HelloGoodbye";
+		QTest::newRow("middleOfString")		<< "Hello" 		<<  2	<< "Goodbye" 	<< "HGoodbyeello";
+		QTest::newRow("middleOfString2")	<< "Hello" 		<<  5	<< "Goodbye" 	<< "HellGoodbyeo";
+	}
+
+	void testInsert()
+	{
+		QFETCH(QString, value);
+		QFETCH(int, startIndex);
+		QFETCH(QString, newText);
+		QFETCH(QString, result);
+
+		VuoText ins = VuoText_insert( (const char*)value.toUtf8().data(), startIndex, (const char*)newText.toUtf8().data());
+		VuoRetain(ins);
+
+		QCOMPARE(QString::fromUtf8(ins), result);
+
+		VuoRelease(ins);
+	}
+
+	void testConvertUtf32_data()
+	{
+		QTest::addColumn<QString>("value");
+		QTest::addColumn<unsigned int>("decimalValue");
+
+		QTest::newRow("ASCII: a") 			<< "a"	<< (unsigned int)97;
+		QTest::newRow("ASCII: H") 			<< "H"	<< (unsigned int)72;
+		QTest::newRow("OSX New Line") 		<< "\n"	<< (unsigned int)10;
+		QTest::newRow("Windows New Line") 	<< "\r"	<< (unsigned int)13;
+		QTest::newRow("Diacritics é") 		<< "é"	<< (unsigned int)233;
+		QTest::newRow("Diacritics ü") 		<< "ü"	<< (unsigned int)252;
+		QTest::newRow("Chess Knight") 		<< "♞"	<< (unsigned int)9822;
+		QTest::newRow("Space") 				<< " "	<< (unsigned int)32;
+
+		QTest::newRow("Sentence") 			<< "Héllo, this is an über séntence\twith\nweird characters like ∑ and Ѩ.\n" << (unsigned int)72;
+	}
+
+	void testConvertUtf32()
+	{
+		QFETCH(QString, value);
+		QFETCH(unsigned int, decimalValue);
+
+		VuoText text = VuoText_make( (const char*)value.toUtf8().data() );
+		VuoLocal(text);
+
+		size_t len;
+		uint32_t* buffer = VuoText_getUtf32Values(text, &len);
+
+		QCOMPARE(buffer[0], decimalValue);
+
+		VuoText converted = VuoText_makeFromUtf32(buffer, len);
+		VuoLocal(converted);
+		free(buffer);
+
+		QCOMPARE(QString::fromUtf8(converted), value);
+	}
+
+	void testConvertMacRoman_data()
+	{
+		QTest::addColumn<void *>("macRoman");
+		QTest::addColumn<void *>("utf8");
+
+		// https://b33p.net/kosada/node/12507
+		QTest::newRow("French Audio Output") << (void *)"Sortie int\216gr\216e" << (void *)"Sortie intégrée";
+	}
+	void testConvertMacRoman()
+	{
+		QFETCH(void *, macRoman);
+		QFETCH(void *, utf8);
+
+		VuoText text = VuoText_makeFromMacRoman((const char *)macRoman);
+		QVERIFY(text);
+		VuoLocal(text);
+
+		QVERIFY(VuoText_areEqual(text, (VuoText)utf8));
+	}
+
+	void testRemoveAt_data()
+	{
+		QTest::addColumn<QString>("value");
+		QTest::addColumn<int>("startIndex");
+		QTest::addColumn<int>("length");
+		QTest::addColumn<QString>("result");
+
+		QTest::newRow("emptyValue") 		<< "" 			<<  0  <<  1 << "";
+		QTest::newRow("noLength") 			<< "Hello" 		<<  1  <<  0 << "Hello";
+		QTest::newRow("negativeLength") 	<< "Hello" 		<<  1  <<  -3 << "Hello";
+		QTest::newRow("removeMultiple") 	<< "Hello" 		<<  1  <<  3 << "lo";
+		QTest::newRow("firstLetter") 		<< "Hello" 		<<  1  <<  1 << "ello";
+		QTest::newRow("middleChar") 		<< "Hello" 		<<  3  <<  1 << "Helo";
+		QTest::newRow("lastChar") 			<< "Hello" 		<<  5  <<  1 << "Hell";
+		QTest::newRow("beforeFirst1Len")	<< "Hello" 		<<  -1  <<  1 << "Hello";
+		QTest::newRow("beforeFirst3Len")	<< "Hello" 		<<  -1  <<  3 << "ello";
+		QTest::newRow("outOfBounds")		<< "Hello" 		<<  10  <<  2 << "Hello";
+		QTest::newRow("allCharacters")		<< "Hello" 		<<  1  <<  5 << "";
+	}
+
+	void testRemoveAt()
+	{
+		QFETCH(QString, value);
+		QFETCH(int, startIndex);
+		QFETCH(int, length);
+		QFETCH(QString, result);
+
+		VuoText rm = VuoText_removeAt( (const char*)value.toUtf8().data(), startIndex, length);
+		VuoLocal(rm);
+
+		QCOMPARE(QString::fromUtf8(rm), result);
 	}
 
 	void testAppend_data()
@@ -343,6 +484,50 @@ private slots:
 		QFETCH(QString, expectedReplacedString);
 
 		QVERIFY(VuoText_areEqual(VuoText_replace(subject.toUtf8().data(), stringToFind.toUtf8().data(), replacement.toUtf8().data()), expectedReplacedString.toUtf8().data()));
+	}
+
+	void testCapitalization_data()
+	{
+		QTest::addColumn<QString>("sentence");
+		QTest::addColumn<QString>("lowercaseAll");
+		QTest::addColumn<QString>("uppercaseAll");
+		QTest::addColumn<QString>("uppercaseFirstLetterWord");
+		QTest::addColumn<QString>("uppercaseFirstLetterSentence");
+
+		QTest::newRow("Mixed Case") 			<< "loRem IPsum dolor? moRE words." 													<< "lorem ipsum dolor? more words." 													<< "LOREM IPSUM DOLOR? MORE WORDS." 													<< "Lorem Ipsum Dolor? More Words." 													<< "Lorem ipsum dolor? More words.";
+		QTest::newRow("Mixed Case w/ Symbols") 	<< "$$$sOme (words) in THE MIDdl&e.  ANOTHER SENTeNcE!"									<< "$$$some (words) in the middl&e.  another sentence!" 								<< "$$$SOME (WORDS) IN THE MIDDL&E.  ANOTHER SENTENCE!" 								<< "$$$Some (Words) In The Middl&E.  Another Sentence!" 								<< "$$$some (words) in the middl&e.  Another sentence!";
+		// The sentence-case does not capitalize the first 'f' in Feliz Cumpleaños due to locale settings.
+		QTest::newRow("Diacritics") 			<< "¡Feliz cumpleaños! Fußgängerübergänge means \"Pedestrian crossings\" in English." 	<< "¡feliz cumpleaños! fußgängerübergänge means \"pedestrian crossings\" in english." 	<< "¡FELIZ CUMPLEAÑOS! FUSSGÄNGERÜBERGÄNGE MEANS \"PEDESTRIAN CROSSINGS\" IN ENGLISH." 	<< "¡Feliz Cumpleaños! Fußgängerübergänge Means \"Pedestrian Crossings\" In English." 	<< "¡feliz cumpleaños! Fußgängerübergänge means \"pedestrian crossings\" in english.";
+	}
+
+	void testCapitalization()
+	{
+		QFETCH(QString, sentence);
+		QFETCH(QString, lowercaseAll);
+		QFETCH(QString, uppercaseAll);
+		QFETCH(QString, uppercaseFirstLetterWord);
+		QFETCH(QString, uppercaseFirstLetterSentence);
+
+		VuoText v_lowercaseAll = VuoText_changeCase(sentence.toUtf8().data(), VuoTextCase_LowercaseAll);
+		VuoText v_uppercaseAll = VuoText_changeCase(sentence.toUtf8().data(), VuoTextCase_UppercaseAll);
+		VuoText v_uppercaseFirstLetterWord = VuoText_changeCase(sentence.toUtf8().data(), VuoTextCase_UppercaseFirstLetterWord);
+		VuoText v_uppercaseFirstLetterSentence = VuoText_changeCase(sentence.toUtf8().data(), VuoTextCase_UppercaseFirstLetterSentence);
+
+		if(v_lowercaseAll != NULL) VuoRetain(v_lowercaseAll);
+		if(v_uppercaseAll != NULL) VuoRetain(v_uppercaseAll);
+		if(v_uppercaseFirstLetterWord != NULL) VuoRetain(v_uppercaseFirstLetterWord);
+		if(v_uppercaseFirstLetterSentence != NULL) VuoRetain(v_uppercaseFirstLetterSentence);
+
+		QVERIFY( VuoText_areEqual(lowercaseAll.toUtf8().data(), v_lowercaseAll) );
+		QVERIFY( VuoText_areEqual(uppercaseAll.toUtf8().data(), v_uppercaseAll) );
+		QVERIFY( VuoText_areEqual(uppercaseFirstLetterWord.toUtf8().data(), v_uppercaseFirstLetterWord) );
+		QVERIFY( VuoText_areEqual(uppercaseFirstLetterSentence.toUtf8().data(), v_uppercaseFirstLetterSentence) );
+
+		if(v_lowercaseAll != NULL) VuoRelease(v_lowercaseAll);
+		if(v_uppercaseAll != NULL) VuoRelease(v_uppercaseAll);
+		if(v_uppercaseFirstLetterWord != NULL) VuoRelease(v_uppercaseFirstLetterWord);
+		if(v_uppercaseFirstLetterSentence != NULL) VuoRelease(v_uppercaseFirstLetterSentence);
+
 	}
 
 	void testFromData_data()

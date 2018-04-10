@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPOINT2D_H
-#define VUOPOINT2D_H
+#pragma once
 
 #include "VuoReal.h"
 #include <math.h>
@@ -291,5 +290,3 @@ static inline VuoPoint2d VuoPoint2d_snap(VuoPoint2d a, VuoPoint2d center, VuoPoi
 /**
  * @}
  */
-
-#endif

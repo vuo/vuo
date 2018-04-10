@@ -9,7 +9,9 @@
 
 #include "VuoAppLaunch.h"
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <AppKit/AppKit.h>
 
 #include "module.h"
@@ -29,7 +31,7 @@ VuoModuleMetadata({
  */
 void VuoAppLaunch_launch(VuoText rawUrl)
 {
-	if (!rawUrl || rawUrl[0] == 0)
+	if (VuoText_isEmpty(rawUrl))
 		return;
 
 	VuoUrl normalizedUrl = VuoUrl_normalize(rawUrl, false);

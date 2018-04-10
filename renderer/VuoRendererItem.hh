@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERITEM_HH
-#define VUORENDERERITEM_HH
+#pragma once
 
 /**
  * Subclass of QGraphicsItem, which can show bounding rects for debugging.
@@ -44,4 +43,3 @@ protected:
 	QGraphicsItem::CacheMode getCurrentDefaultCacheMode() const;
 };
 
-#endif // VUORENDERERITEM_HH

@@ -7,7 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <QTKit/QTkit.h>
 
 #include "VuoGlContext.h"

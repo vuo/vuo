@@ -197,19 +197,15 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 }
 
 /**
- * Generates code that submits a function for asynchronous execution on the global dispatch queue.
- * @a contextValue is passed as an argument.
+ * Generates code that schedules the worker function for this chain to execute on the global dispatch queue.
  *
- * @return The submitted function. The caller is responsible for filling in the body of this function.
+ * @return The scheduled function. The caller is responsible for filling in the body of this function.
  */
-Function * VuoCompilerChain::generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, Value *contextValue,
-																string triggerIdentifier)
+Function * VuoCompilerChain::generateScheduleWorker(Module *module, BasicBlock *block, Value *contextValue, string triggerIdentifier,
+													int minThreadsNeeded, int maxThreadsNeeded, size_t chainIndex,
+													vector<size_t> upstreamChainIndices)
 {
 	Type *voidPointerType = contextValue->getType();
-
-	// dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	// dispatch_async_f(globalQueue, (void *)context, chainWorker);
-
 	FunctionType *workerFunctionType = FunctionType::get(Type::getVoidTy(module->getContext()), voidPointerType, false);
 
 	string workerFunctionName = triggerIdentifier + "__" + nodes.front()->getIdentifier();
@@ -219,7 +215,13 @@ Function * VuoCompilerChain::generateSubmissionForDispatchGroup(Module *module, 
 	Function *workerFunction = Function::Create(workerFunctionType, GlobalValue::InternalLinkage, workerFunctionName, module);
 
 	Value *globalQueue = VuoCompilerCodeGenUtilities::generateGetGlobalDispatchQueue(module, block);
-	VuoCompilerCodeGenUtilities::generateAsynchronousSubmissionToDispatchQueue(module, block, globalQueue, workerFunction, contextValue);
+
+	Value *compositionIdentifierValue = generateCompositionIdentifierValue(module, block, contextValue);
+	Value *eventIdValue = generateEventIdValue(module, block, contextValue);
+
+	VuoCompilerCodeGenUtilities::generateScheduleChainWorker(module, block, globalQueue, contextValue, workerFunction,
+															 minThreadsNeeded, maxThreadsNeeded,
+															 eventIdValue, compositionIdentifierValue, chainIndex, upstreamChainIndices);
 
 	return workerFunction;
 }

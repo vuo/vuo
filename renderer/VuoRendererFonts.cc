@@ -8,8 +8,6 @@
  */
 
 #include "VuoRendererFonts.hh"
-#include "VuoCompiler.hh"
-
 
 VuoRendererFonts *VuoRendererFonts::sharedFonts = NULL;
 
@@ -19,6 +17,7 @@ const qreal VuoRendererFonts::midPenWidth = VuoRendererFonts::thickPenWidth/10.0
 const qreal VuoRendererFonts::nodeTitleFontSize = thickPenWidth*12.0/16.0;
 const qreal VuoRendererFonts::nodeDetailFontSize = thickPenWidth*9.0/16.0;
 const qreal VuoRendererFonts::portDetailFontSize = thickPenWidth*8.0/16.0;
+const QString VuoRendererFonts::fontFamily = "Signika";
 
 /**
  * Returns a shared font provider.
@@ -78,7 +77,7 @@ void VuoRendererFonts::addFont(QString font)
  */
 QFont VuoRendererFonts::nodeTitleFont(void)
 {
-	return QFont("Signika", nodeTitleFontSize, QFont::Bold, false);
+	return QFont(fontFamily, nodeTitleFontSize, QFont::Bold, false);
 }
 
 /**
@@ -86,7 +85,7 @@ QFont VuoRendererFonts::nodeTitleFont(void)
  */
 QFont VuoRendererFonts::nodeClassFont(void)
 {
-	return QFont("Signika", nodeDetailFontSize, QFont::Normal, false);
+	return QFont(fontFamily, nodeDetailFontSize, QFont::Light, false);
 }
 
 /**
@@ -94,7 +93,7 @@ QFont VuoRendererFonts::nodeClassFont(void)
  */
 QFont VuoRendererFonts::nodePortTitleFont(void)
 {
-	return QFont("Signika", nodeDetailFontSize, QFont::Normal, false);
+	return QFont(fontFamily, nodeDetailFontSize, QFont::Light, false);
 }
 
 /**
@@ -102,7 +101,7 @@ QFont VuoRendererFonts::nodePortTitleFont(void)
  */
 QFont VuoRendererFonts::nodePortConstantFont(void)
 {
-	return QFont("Signika", portDetailFontSize, QFont::Normal, false);
+	return QFont(fontFamily, portDetailFontSize, QFont::Light, false);
 }
 
 /**
@@ -110,7 +109,15 @@ QFont VuoRendererFonts::nodePortConstantFont(void)
  */
 QFont VuoRendererFonts::portPopoverFont(void)
 {
-	return QFont("Signika", nodeDetailFontSize, QFont::Normal, false);
+	return QFont(fontFamily, nodeDetailFontSize, QFont::Light, false);
+}
+
+/**
+ * Returns the font for text headings in dialog boxes.
+ */
+QFont VuoRendererFonts::dialogTextFont(void)
+{
+	return QFont(fontFamily, 13, QFont::Light, false);
 }
 
 /**
@@ -125,4 +132,22 @@ double VuoRendererFonts::getHorizontalOffset(const QFont font, const QString tex
 	QPainterPath p;
 	p.addText(0, 0, font, text[0]);
 	return p.boundingRect().x();
+}
+
+/**
+ * Returns a CSS string selecting the specified font.
+ */
+QString VuoRendererFonts::getCSS(QFont font)
+{
+	int qtweight = font.weight();
+	int cssweight = 400; // "normal"
+	if (qtweight < 40)
+		cssweight = 300; // "light"
+	else if (qtweight > 60)
+		cssweight = 700; // "bold"
+
+	return QString("font-family: %1; font-size: %2pt; font-weight: %3;")
+			.arg(font.family())
+			.arg(font.pointSizeF())
+			.arg(cssweight);
 }

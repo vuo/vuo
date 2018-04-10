@@ -25,5 +25,5 @@ void nodeEvent
 		VuoOutputData(VuoAudioOutputDevice) device
 )
 {
-	*device = VuoAudioOutputDevice_make(-1, name, -1);
+	*device = VuoAudioOutputDevice_make(-1, NULL, name, -1);
 }

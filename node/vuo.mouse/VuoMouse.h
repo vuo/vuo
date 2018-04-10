@@ -54,7 +54,8 @@ void VuoMouse_stopListening(VuoMouse *mouseListener);
 void VuoMouseStatus_use(void);
 void VuoMouseStatus_disuse(void);
 bool VuoMouse_getStatus(VuoPoint2d *position, VuoBoolean *isPressed,
-						VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey);
+						VuoMouseButton button, VuoWindowReference window, VuoModifierKey modifierKey,
+						bool onlyUpdateWhenActive);
 
 #ifdef NSAppKitVersionNumber10_0
 VuoPoint2d VuoMouse_convertWindowToVuoCoordinates(NSPoint pointInWindow, NSWindow *window, bool *shouldFire);

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONODECLASS_HH
-#define VUONODECLASS_HH
+#pragma once
 
 #include "VuoBase.hh"
 #include "VuoModule.hh"
@@ -74,5 +73,3 @@ private:
 	vector<VuoPortClass *> inputPortClasses; ///< Includes refresh port.
 	vector<VuoPortClass *> outputPortClasses;
 };
-
-#endif // VUONODECLASS_HH

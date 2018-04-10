@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTIMEUTILITIES_H
-#define VUOTIMEUTILITIES_H
+#pragma once
 
 /**
  * Functions for measuring times at microsecond precision.
@@ -21,5 +20,3 @@ public:
 	static struct timeval getElapsedTime(const struct timeval &start, const struct timeval &end);
 	static void printTime(const struct timeval &time);
 };
-
-#endif

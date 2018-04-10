@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCURVE_H
-#define VUOCURVE_H
+#pragma once
 
 #include "VuoReal.h"
 #include "VuoPoint2d.h"
@@ -62,5 +61,3 @@ VuoPoint3d	VuoPoint3d_curve(	VuoReal time, VuoPoint3d startPosition,	VuoPoint3d 
 /**
  * @}
 */
-
-#endif

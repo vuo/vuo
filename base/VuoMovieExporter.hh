@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMOVIEEXPORTER_HH
-#define VUOMOVIEEXPORTER_HH
+#pragma once
 
 #include <string>
 #include <map>
@@ -95,7 +94,7 @@ class VuoMovieExporter
 
 	VuoImageRenderer resizeImageRenderer;
 	VuoGlContext resizeContext;
-	VuoShader resizeShader;
+	void *resize;
 
 	VuoImageBlend blender;
 
@@ -110,5 +109,3 @@ private:
 	void init(NSString *compositionString, std::string name, std::string sourcePath, std::string outputMovieFile, VuoMovieExporterParameters parameters);
 	VuoImage exportNextFramePremium(void);
 };
-
-#endif // VUOMOVIEEXPORTER_HH

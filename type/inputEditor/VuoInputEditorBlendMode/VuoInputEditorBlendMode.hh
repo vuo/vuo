@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORBLENDMODE_HH
-#define VUOINPUTEDITORBLENDMODE_HH
+#pragma once
 
 #include "VuoInputEditorWithMenu.hh"
 
@@ -36,4 +35,3 @@ public:
 	VuoInputEditorMenuItem *setUpMenuTree(json_object *details);
 };
 
-#endif // VUOINPUTEDITORBLENDMODE_HH

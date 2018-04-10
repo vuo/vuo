@@ -53,27 +53,25 @@ struct VuoImageRendererInternal
 	GLuint outputFramebuffer;
 
 	GLuint vertexArray;
-	GLuint quadDataBuffer;
-	GLuint quadElementBuffer;
+	GLuint triDataBuffer;
+	GLuint triElementBuffer;
 };
 
 /**
- * Positions and texture coordinates for a quad.
+ * Positions and texture coordinates for a full-screen triangle.
  */
-static const GLfloat quadData[] = {
+static const GLfloat triData[] = {
 	// Positions
 	-1, -1, 0, 1,
-	 1, -1, 0, 1,
-	-1,  1, 0, 1,
-	 1,  1, 0, 1,
+	 3, -1, 0, 1,
+	-1,  3, 0, 1,
 
 	// Texture Coordinates
 	0, 0, 0, 0,
-	1, 0, 0, 0,
-	0, 1, 0, 0,
-	1, 1, 0, 0
+	2, 0, 0, 0,
+	0, 2, 0, 0,
 };
-static const GLushort quadElements[] = { 0, 1, 2, 3 };	///< The order of @c quadData's elements.
+static const GLushort triElements[] = { 0, 1, 2 };	///< The order of `triData`'s elements.
 /**
  * An identity matrix.
  */
@@ -99,24 +97,25 @@ VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext)
 	imageRenderer->glContext = glContext;
 	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
+	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+
 	glGenVertexArrays(1, &imageRenderer->vertexArray);
 	glBindVertexArray(imageRenderer->vertexArray);
 	{
-		imageRenderer->quadDataBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, sizeof(quadData));
-		VuoGlPool_retain(imageRenderer->quadDataBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STREAM_DRAW);
-/// @todo https://b33p.net/kosada/node/6901
-//		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quadData), quadData);
+		imageRenderer->triDataBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, sizeof(triData));
+		VuoGlPool_retain(imageRenderer->triDataBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->triDataBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(triData), triData);
 
-		imageRenderer->quadElementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer, sizeof(quadElements));
-		VuoGlPool_retain(imageRenderer->quadElementBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->quadElementBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadElements), quadElements, GL_STREAM_DRAW);
-/// @todo https://b33p.net/kosada/node/6901
-//		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(quadElements), quadElements);
+		imageRenderer->triElementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer, sizeof(triElements));
+		VuoGlPool_retain(imageRenderer->triElementBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, imageRenderer->triElementBuffer);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(triElements), triElements);
 	}
 	glBindVertexArray(0);
+
+	glFlushRenderAPPLE();
+	dispatch_semaphore_signal(VuoGlSemaphore);
 
 	glGenFramebuffers(1, &imageRenderer->outputFramebuffer);
 
@@ -202,6 +201,8 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		glClearColor(0,0,0,0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+
 		// Execute the shader.
 		{
 			GLint positionAttribute;
@@ -212,7 +213,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				VUserLog("Error: Failed to get attribute locations.");
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				if (outputToIOSurface)
-					VuoIoSurfacePool_disuse(cgl_ctx, pixelsWide, pixelsHigh, ioSurface, outputTexture);
+					VuoIoSurfacePool_disuse(ioSurface);
 				else if (outputToSpecificTexture)
 				{}
 				else
@@ -258,7 +259,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				if (viewportSizeUniform != -1)
 					glUniform2f(viewportSizeUniform, (float)pixelsWide, (float)pixelsHigh);
 
-				glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->quadDataBuffer);
+				glBindBuffer(GL_ARRAY_BUFFER, imageRenderer->triDataBuffer);
 
 				glEnableVertexAttribArray(positionAttribute);
 				glVertexAttribPointer(positionAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)0);
@@ -266,7 +267,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 				if (textureCoordinateAttribute != -1)
 				{
 					glEnableVertexAttribArray(textureCoordinateAttribute);
-					glVertexAttribPointer(textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)(sizeof(GLfloat)*16));
+					glVertexAttribPointer(textureCoordinateAttribute, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (void*)(sizeof(GLfloat)*12));
 				}
 
 #ifdef PROFILE
@@ -290,7 +291,7 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 	}
 #endif
 
-				glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
+				glDrawElements(GL_TRIANGLE_STRIP, 3, GL_UNSIGNED_SHORT, (void*)0);
 
 #ifdef PROFILE
 	double seconds;
@@ -328,10 +329,11 @@ unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader 
 		if (outputToIOSurface)
 		{
 			surfID = VuoIoSurfacePool_getId(ioSurface);
-			VuoIoSurfacePool_disuse(cgl_ctx, pixelsWide, pixelsHigh, ioSurface, outputTexture);
+			VuoIoSurfacePool_disuse(ioSurface);
 		}
 
 		glFlushRenderAPPLE();
+		dispatch_semaphore_signal(VuoGlSemaphore);
 	}
 
 	if (outputToIOSurface)
@@ -355,8 +357,8 @@ void VuoImageRenderer_destroy(VuoImageRenderer ir)
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	VuoGlPool_release(VuoGlPool_ElementArrayBuffer, sizeof(quadElements), imageRenderer->quadElementBuffer);
-	VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(quadData), imageRenderer->quadDataBuffer);
+	VuoGlPool_release(VuoGlPool_ElementArrayBuffer, sizeof(triElements), imageRenderer->triElementBuffer);
+	VuoGlPool_release(VuoGlPool_ArrayBuffer, sizeof(triData), imageRenderer->triDataBuffer);
 
 	glDeleteVertexArrays(1, &imageRenderer->vertexArray);
 	glDeleteFramebuffers(1, &imageRenderer->outputFramebuffer);

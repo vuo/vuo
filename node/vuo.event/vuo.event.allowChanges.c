@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Allow Changes",
-					  "keywords" : [ "pulse", "watcher", "filter", "hold", "block", "prevent", "unchanged", "pass" ],
+					  "keywords" : [ "pulse", "watcher", "filter", "hold", "block", "prevent", "unchanged", "same", "duplicate", "pass" ],
 					  "version" : "1.1.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

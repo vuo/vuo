@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORWITHLINEEDIT_HH
-#define VUOINPUTEDITORWITHLINEEDIT_HH
+#pragma once
 
 #include "VuoInputEditorWithDialog.hh"
 
@@ -35,4 +34,3 @@ private:
 	int width;
 };
 
-#endif // VUOINPUTEDITORWITHLINEEDIT_HH

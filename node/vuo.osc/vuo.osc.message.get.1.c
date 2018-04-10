@@ -32,13 +32,11 @@ void nodeEvent
 		VuoOutputData(VuoGenericType1) data1
 )
 {
-	if (!message || !message->data)
+	if (!message || !message->dataCount)
 		return;
 
 	*address = message->address;
 
-	int dataCount = VuoOscMessage_getDataCount(message);
-
-	if (1 <= dataCount)
-		*data1 = VuoGenericType1_makeFromJson(VuoOscMessage_getDataJson(message, 1));
+	if (1 <= message->dataCount)
+		*data1 = VuoGenericType1_makeFromJson(message->data[0]);
 }

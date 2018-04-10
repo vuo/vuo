@@ -14,6 +14,7 @@ struct PortContext
 {
 	bool event;  ///< Whether this port has just received an event.
 	void *data;  ///< A pointer to the port's data, or null if this port is event-only.
+	bool dataRetained;  ///< A rudimentary retain system for `data`. If retained, `data` won't be freed when the port context is.
 	dispatch_queue_t triggerQueue;  ///< A queue for synchronizing fired events, or null if this is not a trigger port.
 	dispatch_semaphore_t triggerSemaphore;  ///< A semaphore for checking if events should be dropped, or null if this is not a trigger port.
 	void *triggerFunction;  ///< A function pointer for the trigger scheduler function, or null if this is not a trigger port.
@@ -25,6 +26,7 @@ struct PortContext
 struct NodeContext
 {
 	struct PortContext **portContexts;  ///< An array of contexts for input and output ports, or null if this node is a subcomposition.
+	unsigned long portContextCount;  ///< The number of elements in `portContexts`.
 	void *instanceData;  ///< A pointer to the node's instance data, or null if this node is stateless.
 	dispatch_semaphore_t semaphore;  ///< A semaphore to wait on while a node's event function is executing.
 	unsigned long claimingEventId;  ///< The ID of the event that currently has exclusive claim on the node.
@@ -41,6 +43,7 @@ struct PortContext * vuoCreatePortContext(void *data, bool isTrigger, const char
 	struct PortContext *portContext = (struct PortContext *)malloc(sizeof(struct PortContext));
 	portContext->event = false;
 	portContext->data = data;
+	portContext->dataRetained = false;
 	portContext->triggerFunction = NULL;
 
 	if (isTrigger)
@@ -64,6 +67,7 @@ struct NodeContext * vuoCreateNodeContext(bool hasInstanceData, bool isCompositi
 {
 	struct NodeContext *nodeContext = (struct NodeContext *)malloc(sizeof(struct NodeContext));
 	nodeContext->portContexts = NULL;
+	nodeContext->portContextCount = 0;
 	nodeContext->semaphore = dispatch_semaphore_create(1);
 	nodeContext->claimingEventId = 0;
 	nodeContext->executingEventId = 0;
@@ -96,7 +100,8 @@ struct NodeContext * vuoCreateNodeContext(bool hasInstanceData, bool isCompositi
  */
 void vuoFreePortContext(struct PortContext *portContext)
 {
-	free(portContext->data);
+	if (! portContext->dataRetained)
+		free(portContext->data);
 	if (portContext->triggerQueue)
 		dispatch_release(portContext->triggerQueue);
 	if (portContext->triggerSemaphore)
@@ -107,9 +112,9 @@ void vuoFreePortContext(struct PortContext *portContext)
 /**
  * Frees the port context and its fields.
  */
-void vuoFreeNodeContext(struct NodeContext *nodeContext, size_t portContextCount)
+void vuoFreeNodeContext(struct NodeContext *nodeContext)
 {
-	for (size_t i = 0; i < portContextCount; ++i)
+	for (size_t i = 0; i < nodeContext->portContextCount; ++i)
 		vuoFreePortContext(nodeContext->portContexts[i]);
 
 	free(nodeContext->portContexts);
@@ -128,6 +133,14 @@ void vuoFreeNodeContext(struct NodeContext *nodeContext, size_t portContextCount
 void vuoSetPortContextEvent(struct PortContext *portContext, bool event)
 {
 	portContext->event = event;
+}
+
+/**
+ * Sets the port context's data field.
+ */
+void vuoSetPortContextData(struct PortContext *portContext, void *data)
+{
+	portContext->data = data;
 }
 
 /**
@@ -179,11 +192,20 @@ void * vuoGetPortContextTriggerFunction(struct PortContext *portContext)
 }
 
 /**
- * Sets the node context's portContexts field.
+ * Prevents the port context's data field from being freed by `vuoFreePortContext()`.
  */
-void vuoSetNodeContextPortContexts(struct NodeContext *nodeContext, struct PortContext **portContexts)
+void vuoRetainPortContextData(struct PortContext *portContext)
+{
+	portContext->dataRetained = true;
+}
+
+/**
+ * Sets the node context's portContexts and portContextCount fields.
+ */
+void vuoSetNodeContextPortContexts(struct NodeContext *nodeContext, struct PortContext **portContexts, unsigned long portContextCount)
 {
 	nodeContext->portContexts = portContexts;
+	nodeContext->portContextCount = portContextCount;
 }
 
 /**
@@ -278,8 +300,8 @@ bool vuoGetNodeContextOutputEvent(struct NodeContext *nodeContext, size_t index)
 /**
  * Sets the event field to false for all of the port contexts in this node context.
  */
-void vuoResetNodeContextEvents(struct NodeContext *nodeContext, size_t portCount)
+void vuoResetNodeContextEvents(struct NodeContext *nodeContext)
 {
-	for (size_t i = 0; i < portCount; ++i)
+	for (size_t i = 0; i < nodeContext->portContextCount; ++i)
 		nodeContext->portContexts[i]->event = false;
 }

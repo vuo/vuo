@@ -24,17 +24,17 @@ LIBS += \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/VuoApp.o \
-	$$ROOT/library/VuoCglPixelFormat.o \
 	$$ROOT/library/VuoDisplayRefresh.o \
+	$$ROOT/library/VuoGraphicsView.o \
+	$$ROOT/library/VuoGraphicsWindow.o \
+	$$ROOT/library/VuoGraphicsWindowDelegate.o \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoImageResize.o \
 	$$ROOT/library/VuoImageText.o \
 	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoWindow.o \
 	$$ROOT/library/VuoWindowRecorder.o \
-	$$ROOT/library/VuoWindowOpenGLInternal.o \
 	$$ROOT/library/VuoWindowTextInternal.o \
-	$$ROOT/node/vuo.font/VuoFont.o \
 	$$ROOT/node/vuo.syphon/VuoSyphon.o \
 	$$ROOT/node/vuo.syphon/VuoSyphonSender.o \
 	$$ROOT/node/vuo.syphon/VuoSyphonServerDescription.o \
@@ -45,6 +45,7 @@ LIBS += \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoCoordinateUnit.o \
 	$$ROOT/type/VuoCursor.o \
+	$$ROOT/type/VuoFont.o \
 	$$ROOT/type/VuoMesh.o \
 	$$ROOT/type/VuoImage.o \
 	$$ROOT/type/VuoImageColorDepth.o \

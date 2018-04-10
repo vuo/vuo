@@ -7,9 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef PORTCONFIGURATION_HH
-#define PORTCONFIGURATION_HH
-
+#pragma once
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -28,7 +26,7 @@
 class PortConfiguration
 {
 private:
-
+	string itemName;		///< The display name of this test datum.
 	string firingPortName;  ///< The name of the published input port to fire an event through.
 	map<string, string> valueForInputPortName;  ///< The value to set for each published input port.
 	map<string, string> valueForOutputPortName;  ///< The expected value to result for each published output port.
@@ -38,8 +36,7 @@ private:
 	const char *getJsonTypeDescription(enum json_type);
 
 public:
-
-	PortConfiguration(string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName);
+	PortConfiguration(string itemName, string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName);
 	void setInputValuesAndFireEvent(VuoRunner *runner);
 	void checkOutputValue(VuoRunner *runner, VuoRunner::Port *port);
 	bool isDoneChecking(void);
@@ -47,5 +44,3 @@ public:
 	static void readListFromJSONFile(string path, list<PortConfiguration *> &portConfigurations);
 	void checkEqual(PortConfiguration &other);
 };
-
-#endif // PORTCONFIGURATION_HH

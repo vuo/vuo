@@ -9,7 +9,7 @@
 
 #import "VuoWindow.h"
 #import "VuoWindowTextInternal.h"
-#import "VuoWindowOpenGLInternal.h"
+#import "VuoGraphicsWindow.h"
 #include "VuoEventLoop.h"
 #include "VuoApp.h"
 
@@ -25,8 +25,8 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						 "AppKit.framework",
 						 "VuoApp",
-						 "VuoWindowTextInternal",
-						 "VuoWindowOpenGLInternal"
+						 "VuoGraphicsWindow",
+						 "VuoWindowTextInternal"
 					 ]
 				 });
 #endif
@@ -164,10 +164,6 @@ static void VuoApp_initNSApplication(void)
 
 	// Stop bouncing in the dock.
 	[app finishLaunching];
-
-	// Force the app to the front, so you can see the composition's window when running from Vuo Editor.
-	/// @todo Have Vuo Editor activate the composition's process instead, using `-[NSRunningApplication activateWithOptions:NSApplicationActivateAllWindows]`, so Vuo apps behave more like typical Mac apps when launched from, say, Finder or Terminal.
-	[app activateIgnoringOtherApps:YES];
 
 	VuoEventLoop_switchToAppMode();
 
@@ -369,25 +365,23 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl w);
  */
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
-		bool useDepthBuffer,
-		void (*initCallback)(VuoGlContext glContext, float backingScaleFactor, void *),
-		void (*updateBackingCallback)(VuoGlContext glContext, void *, float backingScaleFactor),
-		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
-		void (*drawCallback)(VuoGlContext glContext, void *),
+		void (*initCallback)(void *, float backingScaleFactor),
+		void (*updateBackingCallback)(void *, float backingScaleFactor),
+		void (*resizeCallback)(void *, unsigned int, unsigned int),
+		VuoIoSurface (*drawCallback)(void *),
 		void *context
 )
 {
-	__block VuoWindowOpenGLInternal *window = NULL;
+	__block VuoGraphicsWindow *window = NULL;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
 					  VuoApp_init();
-					  window = [[VuoWindowOpenGLInternal alloc] initWithDepthBuffer:useDepthBuffer
-						  initCallback:initCallback
-						  updateBackingCallback:updateBackingCallback
-						  resizeCallback:resizeCallback
-						  drawCallback:drawCallback
-						  drawContext:context];
+					  window = [[VuoGraphicsWindow alloc] initWithInitCallback:initCallback
+														 updateBackingCallback:updateBackingCallback
+																resizeCallback:resizeCallback
+																  drawCallback:drawCallback
+																	  userData:context];
 					  [window makeKeyAndOrderFront:nil];
 				  });
 	VuoRegister(window, VuoWindowOpenGl_destroy);
@@ -406,12 +400,8 @@ void VuoWindowOpenGl_enableTriggers
 		VuoOutputTrigger(requestedFrame, VuoReal)
 )
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
-	VUOLOG_PROFILE_BEGIN(mainQueue);
-	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VUOLOG_PROFILE_END(mainQueue);
-					  [window enableShowedWindowTrigger:showedWindow requestedFrameTrigger:requestedFrame];
-				  });
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
+	[window enableShowedWindowTrigger:showedWindow requestedFrameTrigger:requestedFrame];
 }
 
 /**
@@ -421,12 +411,8 @@ void VuoWindowOpenGl_enableTriggers
  */
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
-	VUOLOG_PROFILE_BEGIN(mainQueue);
-	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VUOLOG_PROFILE_END(mainQueue);
-					  [window disableTriggers];
-				  });
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
+	[window disableTriggers];
 }
 
 /**
@@ -436,7 +422,7 @@ void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w)
  */
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
 	[window scheduleRedraw];
 }
 
@@ -447,7 +433,7 @@ void VuoWindowOpenGl_redraw(VuoWindowOpenGl w)
  */
 void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty properties)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
@@ -464,7 +450,7 @@ void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty 
  */
 void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToExecute)(VuoGlContext glContext))
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
 	[window executeWithWindowContext:blockToExecute];
 }
 
@@ -476,7 +462,7 @@ void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToE
  */
 void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, unsigned int pixelsHigh)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_async(dispatch_get_main_queue(), ^{
 					   VUOLOG_PROFILE_END(mainQueue);
@@ -491,7 +477,7 @@ void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, 
  */
 void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)w;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_async(dispatch_get_main_queue(), ^{
 					   VUOLOG_PROFILE_END(mainQueue);
@@ -506,7 +492,7 @@ void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w)
  */
 void VuoWindowOpenGl_close(VuoWindowOpenGl vw)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)vw;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)vw;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
@@ -521,7 +507,7 @@ void VuoWindowOpenGl_close(VuoWindowOpenGl vw)
  */
 void VuoWindowOpenGl_destroy(VuoWindowOpenGl vw)
 {
-	VuoWindowOpenGLInternal *window = (VuoWindowOpenGLInternal *)vw;
+	VuoGraphicsWindow *window = (VuoGraphicsWindow *)vw;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
@@ -532,6 +518,28 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl vw)
 					  VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
 				  });
 }
+
+/**
+ * Overrides keyDown event handling.
+ */
+@interface VuoNSMenu : NSMenu
+@end
+@implementation VuoNSMenu
+/**
+ * Overrides keyDown event handling.
+ */
+- (BOOL)performKeyEquivalent:(NSEvent *)theEvent
+{
+	if ([super performKeyEquivalent:theEvent] == NO)
+		if ([[NSApp servicesMenu] performKeyEquivalent:theEvent] == NO)
+			[[theEvent window] sendEvent:theEvent];
+
+	// https://b33p.net/kosada/node/11966
+	// Always return YES, even if the event wasn't handled, to prevent the `NSBeep()`
+	// (which happens by default if no window or menu handles the event).
+	return YES;
+}
+@end
 
 /**
  * Replaces the top-level menus in the menu bar, except for application-wide menus,
@@ -545,7 +553,7 @@ void *VuoApp_setMenuItems(void *items)
 {
 	NSMenu *oldMenu = [NSApp mainMenu];
 
-	NSMenu *menubar = [[NSMenu new] autorelease];
+	NSMenu *menubar = [[VuoNSMenu new] autorelease];
 
 	// Application menu
 	{

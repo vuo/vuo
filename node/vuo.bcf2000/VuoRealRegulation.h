@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOREALREGULATION_H
-#define VUOREALREGULATION_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -53,5 +52,4 @@ void VuoRealRegulation_release(VuoRealRegulation value);
  * @}
  */
 
-#endif // VUOREALREGULATION_H
 

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOVERTICALALIGNMENT_H
-#define VUOVERTICALALIGNMENT_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoVerticalAlignment_struct { void *l; } * VuoList_VuoVerticalAlignment;
@@ -56,5 +55,4 @@ void VuoVerticalAlignment_release(VuoVerticalAlignment value);
  * @}
  */
 
-#endif // VUOVERTICALALIGNMENT_H
 

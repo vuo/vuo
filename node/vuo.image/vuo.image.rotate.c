@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					 "title" : "Rotate Image",
 					 "keywords" : [ "spin", "90", "180", "flip" ],
-					 "version" : "1.0.1",
+					 "version" : "1.0.2",
 					 "dependencies" : [
 						 "VuoLayer",
 						 "VuoGlContext",
@@ -83,7 +83,11 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) rotatedImage
 )
 {
-	if(!image) return;
+	if (!image)
+	{
+		*rotatedImage = NULL;
+		return;
+	}
 
 	int width = image->pixelsWide;
 	int height = image->pixelsHigh;

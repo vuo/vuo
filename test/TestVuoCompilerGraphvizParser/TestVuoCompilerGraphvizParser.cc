@@ -149,7 +149,7 @@ private slots:
 		QTest::newRow("data-and-event published output cable") << "ShareValue10" << "sameValue" << "PublishedOutputs" << "sameValue1" << true << false;
 		QTest::newRow("event-only published output cable between event-only ports") << "BecameTrue3" << "becameTrue" << "PublishedOutputs" << "becameTrue1" << false << false;
 		QTest::newRow("event-only published output cable between data-and-event ports") << "ShareValue11" << "sameValue" << "PublishedOutputs" << "sameValue2" << false << false;
-		
+
 		QTest::newRow("hidden data-and-event cable") << "ShareValue12" << "sameValue" << "ShareValue13" << "value" << true << true;
 		QTest::newRow("hidden always-event-only cable") << "ShareValue14" << "sameValue" << "ShareValue15" << "value" << false << true;
 	}
@@ -296,7 +296,7 @@ private slots:
 		QTest::newRow("one from published input port") << "Wavelength" << true << "{\"default\":0.050000,\"suggestedMin\":0.000001,\"suggestedMax\":0.05}" << " _Wavelength_type=\"VuoReal\" _Wavelength_suggestedMin=\"0.000001\" _Wavelength_suggestedMax=\"0.05\" _Wavelength=\"0.050000\"";
 		QTest::newRow("all from published input port") << "hue" << true << "{\"default\":0.300000,\"suggestedMin\":0.200000,\"suggestedMax\":1.100000,\"suggestedStep\":0.100000}" << " _hue_type=\"VuoReal\" _hue_suggestedMin=\"0.200000\" _hue_suggestedMax=\"1.100000\" _hue_suggestedStep=\"0.100000\" _hue=\"0.300000\"";
 		QTest::newRow("all from published output port") << "color" << false << "{}" << " _color_type=\"VuoColor\"";
-		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.500000,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":1}" << " _saturation_type=\"VuoReal\" _saturation_suggestedMin=\"0\" _saturation_suggestedMax=\"1\" _saturation_suggestedStep=\"1\" _saturation=\"0.500000\"";
+		QTest::newRow("some from published port, some from connected ports") << "saturation" << true << "{\"default\":0.500000,\"suggestedMin\":0,\"suggestedMax\":1,\"suggestedStep\":0.1}" << " _saturation_type=\"VuoReal\" _saturation_suggestedMin=\"0\" _saturation_suggestedMax=\"1\" _saturation_suggestedStep=\"0.1\" _saturation=\"0.500000\"";
 		QTest::newRow("none from published port, no connected ports") << "image" << true << "{}" << " _image_type=\"VuoImage\"";
 	}
 	void testPublishedPortDetails()

@@ -78,7 +78,7 @@ static size_t VuoUrl_curlCallback(void *contents, size_t size, size_t nmemb, voi
  */
 bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 {
-	if (!url || url[0] == 0)
+	if (VuoText_isEmpty(url))
 		return false;
 
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};

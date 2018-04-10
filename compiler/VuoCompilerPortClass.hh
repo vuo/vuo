@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERPORTCLASS_H
-#define VUOCOMPILERPORTCLASS_H
+#pragma once
 
 #include "VuoCompilerNodeArgumentClass.hh"
 #include "VuoPortClass.hh"
@@ -58,5 +57,3 @@ public:
 	void setDetails(struct json_object *details);
 	json_object * getDetails(void);
 };
-
-#endif

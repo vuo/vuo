@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPROTOCOL_HH
-#define VUOPROTOCOL_HH
+#pragma once
 
 /**
  * This class represents a protocol. A protocol consists of an ordered list of
@@ -46,5 +45,3 @@ private:
 	vector<pair<string, string> > inputPortNamesAndTypes;
 	vector<pair<string, string> > outputPortNamesAndTypes;
 };
-
-#endif // VUOPROTOCOL_HH

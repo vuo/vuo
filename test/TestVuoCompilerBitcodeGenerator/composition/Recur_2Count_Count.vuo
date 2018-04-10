@@ -9,18 +9,14 @@
 
 digraph G 
 {
-graph [rankdir=LR];
-node [shape=Mrecord];
+Count1 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="255,15" _increment="1" _decrement="1" _setCount="0"];
+Count2 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="465,15" _decrement="1" _setCount="0"];
+Count3 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count3|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="255,120" _increment="1" _decrement="1" _setCount="0"];
+Count4 [type="vuo.math.count.VuoInteger" version="1.0.0" label="Count4|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<count>count\r" pos="465,120" _decrement="1" _setCount="0"];
+FirePeriodically1 [type="vuo.time.firePeriodically" version="1.0.2" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="0,60" _seconds="1" _fired_eventThrottling="enqueue"];
 
-FirePeriodically1 [type="vuo.time.firePeriodically" label="FirePeriodically1|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" _seconds="1"];
-Count1 [type="vuo.math.count.VuoInteger" label="Count1|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1" _decrement="1"];
-Count2 [type="vuo.math.count.VuoInteger" label="Count2|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1" _decrement="1"];
-Count3 [type="vuo.math.count.VuoInteger" label="Count3|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1" _decrement="1"];
-Count4 [type="vuo.math.count.VuoInteger" label="Count4|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<count>count\r" _increment="1" _decrement="1"];
-
-FirePeriodically1:fired -> Count1:increment;
 Count1:count -> Count2:increment;
-FirePeriodically1:fired -> Count3:increment;
 Count3:count -> Count4:increment;
-
+FirePeriodically1:fired -> Count1:increment;
+FirePeriodically1:fired -> Count3:increment;
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORMATHEXPRESSIONLIST_HH
-#define VUOINPUTEDITORMATHEXPRESSIONLIST_HH
+#pragma once
 
 #include "VuoInputEditorWithLineEditList.hh"
 
@@ -69,5 +68,3 @@ private:
 	QRegExpValidator *validator;
 	json_object *originalValue;
 };
-
-#endif

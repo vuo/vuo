@@ -36,6 +36,8 @@ static void __attribute__((constructor)) VuoRuntimeMain_init(void)
 int main(int argc, char **argv)
 {
 	vuoInit(argc, argv);
+	VuoEventLoop_installSignalHandlers();
+	VuoEventLoop_disableAppNap();
 
 	while (! isStopped)
 		VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);

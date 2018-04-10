@@ -7,10 +7,10 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOOSCMESSAGE_H
-#define VUOOSCMESSAGE_H
+#pragma once
 
 #include "VuoText.h"
+#include "VuoOscType.h"
 
 /**
  * @ingroup VuoTypes
@@ -20,23 +20,26 @@
  * @{
  */
 
+/// Maximum supported number of OSC message arguments.
+#define VUOOSC_MAX_MESSAGE_ARGUMENTS 256
+
 /**
  * An OSC message.
  */
 typedef struct _VuoOscMessage
 {
 	VuoText address;
-	struct json_object *data;
+
+	unsigned int dataCount;
+	struct json_object *data[VUOOSC_MAX_MESSAGE_ARGUMENTS];
+	VuoOscType dataTypes[VUOOSC_MAX_MESSAGE_ARGUMENTS];
 } *VuoOscMessage;
 
-VuoOscMessage VuoOscMessage_make(VuoText address, struct json_object *data);
+VuoOscMessage VuoOscMessage_make(VuoText address, unsigned int dataCount, struct json_object **data, VuoOscType *dataTypes);
 
 VuoOscMessage VuoOscMessage_makeFromJson(struct json_object * js);
 struct json_object * VuoOscMessage_getJson(const VuoOscMessage value);
 char * VuoOscMessage_getSummary(const VuoOscMessage value);
-
-int VuoOscMessage_getDataCount(const VuoOscMessage value);
-struct json_object * VuoOscMessage_getDataJson(const VuoOscMessage value, int index);
 
 ///@{
 /**
@@ -51,5 +54,3 @@ void VuoOscMessage_release(VuoOscMessage value);
 /**
  * @}
  */
-
-#endif

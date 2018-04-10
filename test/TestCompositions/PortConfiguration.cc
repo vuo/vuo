@@ -19,8 +19,9 @@
 /**
  * Creates a PortConfiguration.
  */
-PortConfiguration::PortConfiguration(string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName)
+PortConfiguration::PortConfiguration(string itemName, string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName)
 {
+	this->itemName = itemName;
 	this->firingPortName = firingPortName;
 	this->valueForInputPortName = valueForInputPortName;
 	this->valueForOutputPortName = valueForOutputPortName;
@@ -113,7 +114,7 @@ void PortConfiguration::checkEqual(string type, json_object *actualValue, json_o
 	string actualString = json_object_to_json_string_ext(actualValue, JSON_C_TO_STRING_PLAIN);
 	string expectedString = json_object_to_json_string_ext(expectedValue, JSON_C_TO_STRING_PLAIN);
 
-	string failMessage = toString() + " --- " + expectedString + " != " + actualString;
+	string failMessage = (itemName.empty() ? toString() : "\"" + itemName + "\"") + " --- " + expectedString + " != " + actualString;
 
 //	VLog("type=%s expectedJson=%s actualJson=%s", type.c_str(), getJsonTypeDescription(expectedType), getJsonTypeDescription(actualType));
 	if (expectedType == json_type_object && actualType == json_type_object)
@@ -219,12 +220,31 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 
 	json_object *portConfigurationListObject;
 	QVERIFY( json_object_object_get_ex(rootObject, "portConfiguration", &portConfigurationListObject) );
-	QCOMPARE(json_object_get_type(portConfigurationListObject), json_type_array);
+	json_type type = json_object_get_type(portConfigurationListObject);
+	QVERIFY2(type == json_type_array || type == json_type_object, "The portConfiguration key must contain either an array [] or object {}.");
 
-	int numPortConfigurationObjects = json_object_array_length(portConfigurationListObject);
+	int numPortConfigurationObjects;
+	struct lh_entry *it;
+	if (type == json_type_array)
+		numPortConfigurationObjects = json_object_array_length(portConfigurationListObject);
+	else // json_type_object
+	{
+		numPortConfigurationObjects = json_object_object_length(portConfigurationListObject);
+		it = json_object_get_object(portConfigurationListObject)->head;
+	}
+
 	for (int i = 0; i < numPortConfigurationObjects; ++i)
 	{
-		json_object *portConfigurationObject = json_object_array_get_idx(portConfigurationListObject, i);
+		string itemName;
+		json_object *portConfigurationObject;
+		if (type == json_type_array)
+			portConfigurationObject = json_object_array_get_idx(portConfigurationListObject, i);
+		else // json_type_object
+		{
+			portConfigurationObject = (struct json_object*)it->v;
+			itemName = (char *)it->k;
+			it = it->next;
+		}
 		QVERIFY(portConfigurationObject != NULL);
 
 		string firingPortName;
@@ -242,7 +262,7 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 		if (json_object_object_get_ex(portConfigurationObject, "outputPortValues", &outputPortValuesObject))
 			readValueForPortNameFromJSONObject(outputPortValuesObject, valueForOutputPort);
 
-		portConfigurations.push_back( new PortConfiguration(firingPortName, valueForInputPort, valueForOutputPort) );
+		portConfigurations.push_back( new PortConfiguration(itemName, firingPortName, valueForInputPort, valueForOutputPort) );
 	}
 
 	QVERIFY(! portConfigurations.empty());

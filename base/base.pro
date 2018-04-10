@@ -8,7 +8,7 @@ TARGET = VuoBase
 include(../vuo.pri)
 exists($$ROOT/licensetools/licensetools.pro) {
 	include($$ROOT/licensetools/licensetools.pro)
-	QMAKE_OBJECTIVE_CFLAGS += -DENCRYPTED_DATE=\\\"$${ENCRYPTED_DATE}\\\"
+	QMAKE_OBJCFLAGS_USE_PRECOMPILE += -DENCRYPTED_DATE=\\\"$${ENCRYPTED_DATE}\\\"
 }
 include (base.pri)
 
@@ -42,9 +42,10 @@ createCoreTypesHeader.depends = ../type/type.pro ../type/list/list.pro
 createCoreTypesHeader.target = ../type/coreTypes.h
 POST_TARGETDEPS += ../type/coreTypes.h
 QMAKE_EXTRA_TARGETS += createCoreTypesHeader
-QMAKE_CLEAN += ../type/coreTypes.h ../type/coreTypesStringify.h ../type/coreTypesStringify.hh
+QMAKE_CLEAN += ../type/coreTypes.h
 
 QMAKE_OBJECTIVE_CFLAGS += \
 	-I../type \
 	-I../type/list \
-	-I../library
+	-I../library \
+	-I../node

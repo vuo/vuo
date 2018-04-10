@@ -126,18 +126,66 @@ private slots:
 	void testPercentOfEventsDropped_data()
 	{
 		QTest::addColumn< QString >("compositionName");
+		QTest::addColumn< QStringList >("subcompositionNames");
 		QTest::addColumn< QString >("triggerNodeIdentifier");
 
-		QTest::newRow("2 fast-firing overlapping immediately") << "2FastDropsImmediately" << "";
-		QTest::newRow("2 fast-firing overlapping downstream") << "2FastDropsDownstream" << "";
-		QTest::newRow("1 fast-firing overlapping 1 slow-firing immediately") << "FastDropSlowDropImmediately" << "FirePeriodically1";
-		QTest::newRow("1 slow-firing overlapping 1 fast-firing immediately") << "FastDropSlowDropImmediately" << "FirePeriodically2";
+		QStringList noSubcompositions;
+
+		QTest::newRow("2 fast-firing overlapping immediately") << "2FastDropsImmediately" << noSubcompositions << "";
+		QTest::newRow("2 fast-firing overlapping downstream") << "2FastDropsDownstream" << noSubcompositions << "";
+		QTest::newRow("1 fast-firing overlapping 1 slow-firing immediately") << "FastDropSlowDropImmediately" << noSubcompositions << "FirePeriodically1";
+		QTest::newRow("1 slow-firing overlapping 1 fast-firing immediately") << "FastDropSlowDropImmediately" << noSubcompositions << "FirePeriodically2";
+		QTest::newRow("50 triggers") << "ManyTriggers" << noSubcompositions << "";
+		{
+			QStringList subcompositions;
+			subcompositions.append("vuo.test.passthru1");
+			subcompositions.append("vuo.test.passthru2");
+			subcompositions.append("vuo.test.passthru3");
+			subcompositions.append("vuo.test.passthru4");
+			subcompositions.append("vuo.test.passthru5");
+			QTest::newRow("1 trigger into 10 multi-level subcompositions") << "ManyPassthruSubcompositions" << subcompositions << "";
+		}
+		{
+			QStringList subcompositions;
+			subcompositions.append("vuo.test.passthru1");
+			subcompositions.append("vuo.test.passthru2");
+			subcompositions.append("vuo.test.passthru3");
+			subcompositions.append("vuo.test.passthru4");
+			subcompositions.append("vuo.test.passthru5");
+			QTest::newRow("10 triggers each into a multi-level subcomposition") << "ManyPassthruSubcompositionsAndTriggers" << subcompositions << "";
+		}
+		{
+			QStringList subcompositions;
+			subcompositions.append("vuo.test.fireFromWithin1");
+			subcompositions.append("vuo.test.fireFromWithin2");
+			subcompositions.append("vuo.test.fireFromWithin3");
+			subcompositions.append("vuo.test.fireFromWithin4");
+			subcompositions.append("vuo.test.fireFromWithin5");
+			QTest::newRow("5 multi-level subcompositions that fire events, drop at top level") << "ManyFiringSubcompositions_drop" << subcompositions << "";
+		}
+		{
+			QStringList subcompositions;
+			subcompositions.append("vuo.test.fireFromWithin1_drop");
+			subcompositions.append("vuo.test.fireFromWithin2_drop");
+			subcompositions.append("vuo.test.fireFromWithin3_drop");
+			subcompositions.append("vuo.test.fireFromWithin4_drop");
+			subcompositions.append("vuo.test.fireFromWithin5_drop");
+			QTest::newRow("5 multi-level subcompositions that fire events, drop at bottom level") << "ManyFiringSubcompositions" << subcompositions << "";
+		}
 	}
 	void testPercentOfEventsDropped()
 	{
 		QFETCH(QString, compositionName);
+		QFETCH(QStringList, subcompositionNames);
 		QFETCH(QString, triggerNodeIdentifier);
 		printf("	%s\n", compositionName.toUtf8().data()); fflush(stdout);
+
+		foreach (QString s, subcompositionNames)
+		{
+			string nodeClassName = s.toStdString();
+			string subcompositionPath = getCompositionPath(nodeClassName + ".vuo");
+			installSubcomposition(subcompositionPath, nodeClassName, compiler);
+		}
 
 		TestEventDroppingRunnerDelegate delegate(compositionName.toStdString(), compiler);
 
@@ -166,6 +214,12 @@ private slots:
 
 		// This benchmark result actually represents % of total events that are dropped. QTest::Events was the closest option available.
 		QTest::setBenchmarkResult(100 * numEventsDropped / (qreal)(numEventsFired + numEventsDropped), QTest::Events);
+
+		foreach (QString s, subcompositionNames)
+		{
+			string nodeClassName = s.toStdString();
+			uninstallSubcomposition(nodeClassName, compiler);
+		}
 	}
 };
 

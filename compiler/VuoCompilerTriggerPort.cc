@@ -37,15 +37,17 @@ Value * VuoCompilerTriggerPort::generateCreatePortContext(Module *module, BasicB
 }
 
 /**
- * Generates code to submit a task to this trigger's dispatch queue. Returns the worker function, which will be called
- * by the dispatch queue to execute the task. The caller is responsible for filling in the body of the worker function.
+ * Generates code that schedules the worker function for this trigger to execute on the trigger's dispatch queue.
  *
- * Assumes @a block is inside the function associated with this trigger. Passes the argument of that
- * function, if any, as the context which will be passed to the worker function.
+ * The caller is responsible for filling in the body of @a workerFunction.
+ *
+ * If this trigger carries data, the argument to @a function is stored in a context value that is passed to @a workerFunction.
  */
-void VuoCompilerTriggerPort::generateAsynchronousSubmissionToDispatchQueue(Module *module, Function *function, BasicBlock *block,
-																		   Value *compositionIdentifierValue, Value *portContextValue,
-																		   VuoType *dataType, Function *workerFunction)
+void VuoCompilerTriggerPort::generateScheduleWorker(Module *module, Function *function, BasicBlock *block,
+													Value *compositionIdentifierValue, Value *eventIdValue,
+													Value *portContextValue, VuoType *dataType,
+													int minThreadsNeeded, int maxThreadsNeeded, int chainCount,
+													Function *workerFunction)
 {
 	PointerType *voidPointer = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
@@ -67,18 +69,30 @@ void VuoCompilerTriggerPort::generateAsynchronousSubmissionToDispatchQueue(Modul
 		dataCopyAsVoidPointer = ConstantPointerNull::get(voidPointer);
 	}
 
-	// void **context = (void **)malloc(2 * sizeof(void *));
+	// unsigned long *eventIdCopy = (unsigned long *)malloc(sizeof(unsigned long));
+	// *eventIdCopy = eventId;
+	Type *eventIdType = VuoCompilerCodeGenUtilities::generateNoEventIdConstant(module)->getType();
+	Value *eventIdCopyAddress = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, eventIdType, eventIdValue);
+	new StoreInst(eventIdValue, eventIdCopyAddress, false, block);
+	Value *eventIdAsVoidPointer = new BitCastInst(eventIdCopyAddress, voidPointer, "", block);
+
+	// void **context = (void **)malloc(3 * sizeof(void *));
 	// context[0] = (void *)compositionIdentifier;
 	// context[1] = (void *)dataCopy;
-	ConstantInt *twoValue = ConstantInt::get(module->getContext(), APInt(64, 2));
-	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointer, twoValue);
+	// context[2] = (void *)eventIdCopy;
+	ConstantInt *sizeValue = ConstantInt::get(module->getContext(), APInt(64, 3));
+	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointer, sizeValue);
 	Value *compositionIdentifierAsVoidPointer = new BitCastInst(compositionIdentifierValue, voidPointer, "", block);
 	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 0, compositionIdentifierAsVoidPointer);
 	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 1, dataCopyAsVoidPointer);
+	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 2, eventIdAsVoidPointer);
 	Value *contextAsVoidPointer = new BitCastInst(contextValue, voidPointer, "", block);
 
 	Value *dispatchQueueValue = VuoCompilerCodeGenUtilities::generateGetPortContextTriggerQueue(module, block, portContextValue);
-	VuoCompilerCodeGenUtilities::generateAsynchronousSubmissionToDispatchQueue(module, block, dispatchQueueValue, workerFunction, contextAsVoidPointer);
+
+	VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(module, block, dispatchQueueValue, contextAsVoidPointer, workerFunction,
+															   minThreadsNeeded, maxThreadsNeeded,
+															   eventIdValue, compositionIdentifierValue, chainCount);
 }
 
 /**
@@ -184,6 +198,7 @@ Value * VuoCompilerTriggerPort::generateLoadPreviousData(Module *module, BasicBl
 void VuoCompilerTriggerPort::generateFreeContext(Module *module, BasicBlock *block, Function *workerFunction)
 {
 	// free(((void **)context)[1]);
+	// free(((void **)context)[2]);
 	// free(context);
 
 	Value *contextValue = workerFunction->arg_begin();
@@ -192,8 +207,10 @@ void VuoCompilerTriggerPort::generateFreeContext(Module *module, BasicBlock *blo
 
 	BitCastInst *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
 	Value *dataValue = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 1);
+	Value *eventIdValue = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 2);
 
 	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, dataValue);
+	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, eventIdValue);
 	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, contextValue);
 }
 
@@ -233,6 +250,27 @@ Value * VuoCompilerTriggerPort::generateDataValue(Module *module, BasicBlock *bl
 	PointerType *pointerToDataType = PointerType::get(getDataType(), 0);
 	Value *dataCopyValue = new BitCastInst(dataCopyAsVoidPointer, pointerToDataType, "", block);
 	return new LoadInst(dataCopyValue, "", block);
+}
+
+/**
+ * Generates code to get the event ID from the context created by generateAsynchronousSubmissionToDispatchQueue()
+ * and passed to @a workerFunction.
+ */
+Value * VuoCompilerTriggerPort::generateEventIdValue(Module *module, BasicBlock *block, Function *workerFunction)
+{
+	// unsigned long *eventIdCopy = (unsigned long *)((void **)context)[2];
+	// unsigned long eventId = *eventIdCopy;
+
+	Value *contextValue = workerFunction->arg_begin();
+	Type *voidPointerType = contextValue->getType();
+	Type *voidPointerPointerType = PointerType::get(voidPointerType, 0);
+	Type *eventIdType = VuoCompilerCodeGenUtilities::generateNoEventIdConstant(module)->getType();
+
+	Value *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
+	Value *eventIdCopyAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 2);
+	PointerType *pointerToEventIdType = PointerType::get(eventIdType, 0);
+	Value *eventIdCopyValue = new BitCastInst(eventIdCopyAsVoidPointer, pointerToEventIdType, "", block);
+	return new LoadInst(eventIdCopyValue, "", block);
 }
 
 /**

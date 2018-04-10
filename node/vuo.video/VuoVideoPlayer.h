@@ -56,6 +56,11 @@ private:
 	/// video is playing at the speed requested by the file, where 2 is twice as fast, and -1 is reversed.
 	double playbackRate;
 
+	/// When mirroring video, the actual playback rate may not match the user set playback rate.  Storing this
+	/// separately allows the player to correctly handle the case where mirror has modified the playback rate
+	/// and the user has in the interim set loop mode back to 'loop'.
+	double userSetPlaybackRate;
+
 	/// Release resources associated with this instance.
 	class VuoVideoDecoder* decoder;
 
@@ -214,6 +219,8 @@ public:
 	unsigned int GetAudioChannels();
 	/// True if the video is loaded and ready to play, else false.  If false, some values may not yet be available (duration, channel counts, etc)
 	bool IsReady();
+	/// True if the player is running, false otherwise.
+	bool IsPlaying() { return isPlaying; }
 	/// Get the next video frame.  Always false if currently playing.
 	bool NextVideoFrame(VuoVideoFrame* frame);
 	/// Get the next audio frame.  Always false if currently playing.

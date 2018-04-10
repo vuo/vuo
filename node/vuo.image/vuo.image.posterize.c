@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Posterize Image",
 					  "keywords" : [ "filter", "stroke", "alias", "contour", "edge", "banding", "raster", "gif", "quantize", "gradient", "reduce" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "PosterizeMovie.vuo" ]
 					  }
@@ -77,7 +77,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*posterizedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 

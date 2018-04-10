@@ -291,6 +291,18 @@ VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d)
 }
 
 /**
+ * Creates a 2D transform from a 3D transform.
+ */
+VuoTransform2d VuoTransform_get2d(VuoTransform transform)
+{
+	VuoTransform2d t;
+	t.translation = (VuoPoint2d){transform.translation.x, transform.translation.y};
+	t.rotation = VuoTransform_getEuler(transform).z;
+	t.scale = (VuoPoint2d){transform.scale.x, transform.scale.y};
+	return t;
+}
+
+/**
  * Create a transform that translates to @c position and looks at @c target with roll determined by @c upDirection.
  *
  * Similar to @c gluLookAt.
@@ -399,8 +411,17 @@ VuoRectangle VuoTransform_transformRectangle(const float *matrix, VuoRectangle r
 /**
  * Returns a column-major matrix of 16 values that transforms a 1x1 quad so that it renders the specified image at real (pixel-perfect) size.
  */
-void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, float *billboardMatrix)
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, float *billboardMatrix)
 {
+	VuoReal combinedScaleFactor = 1;
+	if (preservePhysicalSize)
+		combinedScaleFactor = backingScaleFactor / imageScaleFactor;
+
+//	VLog("%lldx%lld@%gx preservePhysicalSize=%ld  on  %lldx%lld@%gx  = %gx",imageWidth,imageHeight,imageScaleFactor,preservePhysicalSize,viewportWidth,viewportHeight,backingScaleFactor,combinedScaleFactor);
+
+	imageWidth  *= combinedScaleFactor;
+	imageHeight *= combinedScaleFactor;
+
 	VuoTransform_getMatrix(VuoTransform_makeIdentity(), billboardMatrix);
 
 	// Apply scale to make the image appear at real size (1:1).

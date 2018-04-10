@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef TESTCOMPOSITIONEXECUTION_H
-#define TESTCOMPOSITIONEXECUTION_H
+#pragma once
 
 #include <fstream>
 
@@ -29,6 +28,8 @@ class TestCompositionExecution : public QObject
 public:
 	static QDir getCompositionDir(void);
 	static string getCompositionPath(string compositionFileName);
+	static void installSubcomposition(string compositionPath, string nodeClassName, VuoCompiler *compiler);
+	static void uninstallSubcomposition(string nodeClassName, VuoCompiler *compiler);
 	static string wrapNodeInComposition(VuoCompilerNodeClass *nodeClass, VuoCompiler *compiler);
 	static void printMemoryUsage(string label);
 
@@ -52,5 +53,3 @@ class TestRunnerDelegate : public VuoRunnerDelegateAdapter
 		QFAIL("lostContactWithComposition");
 	}
 };
-
-#endif

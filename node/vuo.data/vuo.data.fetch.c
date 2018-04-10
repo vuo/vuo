@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Fetch Data",
 					 "keywords" : [
-						 "download", "open", "load", "import", "http", "url", "file", "get",
+						 "download", "open", "load", "import", "http", "url", "file", "get", "read",
 						 "text", "binary",
 						 "csv", "tsv", "xml", "json",
 					 ],

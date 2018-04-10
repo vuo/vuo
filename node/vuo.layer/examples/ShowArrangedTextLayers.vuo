@@ -1,0 +1,51 @@
+/**
+ * @file
+ * Arranges text layers in columns, demonstrating horizontal alignment of layers within a column and of text within a layer.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AllowFirstValue2 [type="vuo.event.allowFirstValue.VuoRenderedLayers" version="1.0.0" label="Allow First Value|<refresh>refresh\l|<value>value\l|<reset>reset\l|<firstValue>firstValue\r" pos="240,585"];
+ArrangeLayersInColumn [type="vuo.layer.arrange.column" version="1.0.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="570,210" fillcolor="violet" _horizontalAlignment="\"left\"" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _position="{\"x\":-0.5,\"y\":0}" _spacing="0"];
+ArrangeLayersInColumn2 [type="vuo.layer.arrange.column" version="1.0.0" label="Arrange Layers in Column|<refresh>refresh\l|<layers>layers\l|<renderedLayers>renderedLayers\l|<horizontalAlignment>horizontalAlignment\l|<anchor>anchor\l|<position>position\l|<spacing>spacing\l|<arrangedLayer>arrangedLayer\r" pos="570,360" fillcolor="violet" _horizontalAlignment="\"right\"" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _position="{\"x\":0.5,\"y\":0}" _spacing="0"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-165,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList10 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="492,371" fillcolor="violet"];
+MakeList5 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="799,296" fillcolor="green"];
+MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="829,326" fillcolor="green"];
+MakeList9 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="488,221" fillcolor="violet"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="30,180" _text="\"In this row, the font is\\nleft-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+MakeTextLayer2 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="30,300" _text="\"In this row, the font is\\ncenter-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"center\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+MakeTextLayer3 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="30,420" _text="\"In this row, the font is\\nright-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"right\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+MakeTextLayer4 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="330,135" _text="\"This column is left-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+MakeTextLayer5 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="330,465" _text="\"This column is right-aligned.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":36,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="870,285" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SpinOffValue2 [type="vuo.event.spinOffValue.VuoRenderedLayers" version="1.0.0" label="Spin Off Value|<refresh>refresh\l|<value>value\l|<spunOff>spunOff\r" pos="405,585" _spunOff_eventThrottling="enqueue"];
+
+AllowFirstValue2:firstValue -> SpinOffValue2:value;
+ArrangeLayersInColumn2:arrangedLayer -> MakeList5:2;
+ArrangeLayersInColumn:arrangedLayer -> MakeList5:1;
+FireOnStart:started -> MakeTextLayer2:refresh;
+FireOnStart:started -> MakeTextLayer3:refresh;
+FireOnStart:started -> MakeTextLayer4:refresh;
+FireOnStart:started -> MakeTextLayer5:refresh;
+FireOnStart:started -> MakeTextLayer:refresh;
+MakeList10:list -> ArrangeLayersInColumn2:layers;
+MakeList5:list -> RenderLayersToWindow:layers;
+MakeList8:list -> RenderLayersToWindow:setWindowProperties;
+MakeList9:list -> ArrangeLayersInColumn:layers;
+MakeTextLayer2:layer -> MakeList10:3;
+MakeTextLayer2:layer -> MakeList9:3;
+MakeTextLayer3:layer -> MakeList10:4;
+MakeTextLayer3:layer -> MakeList9:4;
+MakeTextLayer4:layer -> MakeList9:1;
+MakeTextLayer5:layer -> MakeList10:1;
+MakeTextLayer:layer -> MakeList10:2;
+MakeTextLayer:layer -> MakeList9:2;
+RenderLayersToWindow:renderedLayers -> AllowFirstValue2:value;
+SpinOffValue2:spunOff -> ArrangeLayersInColumn2:renderedLayers;
+SpinOffValue2:spunOff -> ArrangeLayersInColumn:renderedLayers;
+}

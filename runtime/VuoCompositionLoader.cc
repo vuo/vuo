@@ -92,7 +92,6 @@ void vuoControlReplyReceive(enum VuoControlReply expectedReply)
 int main(int argc, char **argv)
 {
 	char *loaderControlURL = NULL;
-	runnerPid = getppid();
 
 	// Parse commandline arguments.
 	{
@@ -103,6 +102,7 @@ int main(int argc, char **argv)
 			{"vuo-runner-pipe", required_argument, NULL, 0},
 			{"vuo-continue-if-runner-dies", no_argument, NULL, 0},
 			{"vuo-full", no_argument, NULL, 0},
+			{"vuo-runner-pid", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -132,6 +132,9 @@ int main(int argc, char **argv)
 					break;
 				case 5: // "vuo-full"
 					trialRestrictionsEnabled = false;
+					break;
+				case 6:  // --vuo-runner-pid
+					runnerPid = atoi(optarg);
 					break;
 			}
 		}
@@ -228,6 +231,9 @@ int main(int argc, char **argv)
 		dispatch_resume(loaderControlTimer);
 	}
 
+	VuoEventLoop_installSignalHandlers();
+	VuoEventLoop_disableAppNap();
+
 	// Wait until the composition is permanently stopped (not just temporarily stopped for replacing).
 	{
 		bool isStoppedInitially = false;
@@ -295,7 +301,6 @@ bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 
 	bool isStopRequestedByComposition = false;
 	char *serializedTelemetryState = NULL;
-	char *serializedComposition = NULL;
 	void *VuoCompositionFiniCallbackList = NULL;
 
 	// Serialize and stop the old composition (if any).
@@ -309,16 +314,6 @@ bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 		}
 		free(*compositionDiff);
 		*compositionDiff = updatedCompositionDiff;
-
-		typedef char * (* vuoSerializeType)(void);
-		vuoSerializeType vuoSerialize = (vuoSerializeType) dlsym(dylibHandle, "vuoSerialize");
-		if (! vuoSerialize)
-		{
-			VUserLog("The composition couldn't be replaced because vuoSerialize() couldn't be found in the composition library : %s", dlerror());
-			return false;
-		}
-
-		serializedComposition = vuoSerialize();
 
 		stopComposition();
 
@@ -395,22 +390,8 @@ bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true, runnerPid, runnerPipe, continueIfRunnerDies, trialRestrictionsEnabled, VuoCompositionFiniCallbackList);
 	}
 
-	// Unserialize the old composition's state (if any) into the new composition.
-	char **compositionDiff = NULL;
-	if (serializedComposition)
+	if (serializedTelemetryState)
 	{
-		compositionDiff = (char **)dlsym(dylibHandle, "compositionDiff");
-		if (! compositionDiff)
-		{
-			VUserLog("The composition couldn't be replaced because compositionDiff couldn't be found in '%s' : %s", dylibPath, dlerror());
-			return false;
-		}
-		*compositionDiff = updatedCompositionDiff;
-
-		typedef void (* vuoUnserializeType)(char *);
-		vuoUnserializeType vuoUnserialize = (vuoUnserializeType) dlsym(dylibHandle, "vuoUnserialize");
-		vuoUnserialize(serializedComposition);
-
 		typedef void (* vuoUnserializePortsType)(char *);
 		vuoUnserializePortsType vuoUnserializeTelemetryState = (vuoUnserializePortsType) dlsym(dylibHandle, "vuoUnserializeTelemetryState");
 		vuoUnserializeTelemetryState(serializedTelemetryState);

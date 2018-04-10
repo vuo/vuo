@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Test composition
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Passthru3 [type="vuo.test.passthru3" version="" label="Passthru 3|<refresh>refresh\l|<Value>Value\l|<SameValue>SameValue\r" pos="255,135"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Value>Value\r" _Value_type="VuoInteger"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<SameValue>SameValue\l" _SameValue_type="VuoInteger"];
+
+Passthru3:SameValue -> PublishedOutputs:SameValue;
+PublishedInputs:Value -> Passthru3:Value;
+}

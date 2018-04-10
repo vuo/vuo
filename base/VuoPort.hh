@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPORT_HH
-#define VUOPORT_HH
+#pragma once
 
 #include "VuoBase.hh"
 #include "VuoPortClass.hh"
@@ -48,5 +47,3 @@ private:
 	vector<VuoCable *> connectedCables;
 	VuoPortClass::EventThrottling eventThrottling; ///< The port's default event-throttling behavior. Only applies to trigger ports.
 };
-
-#endif // VUOPORT_HH

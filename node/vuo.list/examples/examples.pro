@@ -7,8 +7,10 @@ EXAMPLE_SOURCES += \
 	DisplayMovieFrames.vuo \
 	DisplayRainbowOvals.vuo \
 	InsertSquare.vuo \
+   ReorderRangesOfItems.vuo \
 	ReplaceColorsInGradient.vuo \
 	ReverseGradient.vuo \
+   SelectLayerFromList.vuo \
 	ShiftSquares.vuo \
 	ShuffleLetters.vuo \
 	SpliceSquares.vuo \

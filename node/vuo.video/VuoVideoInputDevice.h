@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOVIDEOINPUTDEVICE_H
-#define VUOVIDEOINPUTDEVICE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -72,5 +71,4 @@ static inline VuoVideoInputDevice VuoVideoInputDevice_make(VuoText id, VuoText n
  * @}
  */
 
-#endif // VUOVIDEOINPUTDEVICE_H
 

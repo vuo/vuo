@@ -48,7 +48,7 @@ private slots:
 		QTest::addColumn<int>("expectedFrameCount");
 		QTest::addColumn<int>("expectedPixelsWide");
 		QTest::addColumn<int>("expectedPixelsHigh");
-		QTest::addColumn<int>("expectedAudioChannels");	// negative if expected to contain some packets that are completely silent
+		QTest::addColumn<int>("expectedAudioChannels");	// negative if expected to contain some packets that are completely silent; 999 to decode audio but skip checking the number of channels
 		QTest::addColumn<int>("optimize");	// test both AvFoundation and Ffmpeg (either can fall back on the other - this tests that too)
 
 		QTest::newRow(VuoText_format("Apple ProRes 4444 opt=%d",optimize))						<< "/MovieGauntlet/rugged_terrain_prores4444.mov"														<<  30.		<<  899	<< 1280 <<  720 <<  0 	<< optimize;
@@ -58,6 +58,7 @@ private slots:
 		QTest::newRow(VuoText_format("MPEG v2 opt=%d",optimize))								<< "/MovieGauntlet/interlaced/interlace_test2.mpeg"														<<  39.9	<<  997	<<  720 <<  576	<< -2 	<< optimize;
 		QTest::newRow(VuoText_format("MPEG v4 1 opt=%d",optimize))								<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.large1080p.mp4"								<<  24.0	<<  585	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("MPEG v4 AVC opt=%d",optimize))							<< "/MovieGauntlet/audio+video synchronization/Lip Sync Test Markers.m4v"								<<  67.9	<< 2044	<<  640 <<  480	<<  2 	<< optimize;
+		QTest::newRow(VuoText_format("MPEG v4 HE AAC opt=%d",optimize))							<< "/MovieGauntlet/Audio Codecs/fish-mpeg4-he-aac-mono.mp4"												<<  20.0	<<  598	<< 1280 <<  720 <<  999	<< optimize;
 		QTest::newRow(VuoText_format("Ogg - Theora - Ogg LR opt=%d",optimize))					<< "/MovieGauntlet/Audio Codecs/Miro Video Converter/french.oggtheora.ogv"								<<  24.0	<< 	503	<<  320 <<  240	<<  2 	<< optimize;
 		QTest::newRow(VuoText_format("Ogg - Theora - Ogg 5.1 opt=%d",optimize))					<< "/MovieGauntlet/Audio Codecs/Quicktime Player 7/french.ogg"											<<  19.5	<<  466	<<  320 <<  240	<< -6 	<< optimize;
 		QTest::newRow(VuoText_format("QuickTime - Animation - None opt=%d",optimize))			<< "/MovieGauntlet/demo to mov3.mov"																	<<   1.0	<<   29	<<  640 <<  480	<<  0 	<< optimize;
@@ -135,7 +136,8 @@ private slots:
 
 		/// make sure audio channels are correct
 		int audioChannels = (int) VuoVideo_getAudioChannels(m);
-		QCOMPARE(audioChannels, abs(expectedAudioChannels));
+		if (expectedAudioChannels != 999)
+			QCOMPARE(audioChannels, abs(expectedAudioChannels));
 
 		int videoFrameCount = 0,
 			audioFrameCount = 0;
@@ -163,21 +165,22 @@ private slots:
 					gotVideo = VuoVideo_nextVideoFrame(m, &videoFrame);
 
 					VuoAudioFrame audioFrame = VuoAudioFrame_make(VuoListCreate_VuoAudioSamples(), 0);
-					VuoRetain(audioFrame.samples);
+					VuoRetain(audioFrame.channels);
 
 					bool gotAudio = VuoVideo_nextAudioFrame(m, &audioFrame);
 
 					QVERIFY(gotAudio);
 
-					int receivedChannels = VuoListGetCount_VuoAudioSamples(audioFrame.samples);
+					int receivedChannels = VuoListGetCount_VuoAudioSamples(audioFrame.channels);
 
-					QCOMPARE(receivedChannels, abs(expectedAudioChannels));
+					if (expectedAudioChannels != 999)
+						QCOMPARE(receivedChannels, abs(expectedAudioChannels));
 
 					audioFrameCount++;
 
 					for (int i = 1; i <= receivedChannels; ++i)
 					{
-						if(VuoAudioSamples_isEmpty(VuoListGetValue_VuoAudioSamples(audioFrame.samples, i)))
+						if(VuoAudioSamples_isEmpty(VuoListGetValue_VuoAudioSamples(audioFrame.channels, i)))
 							emptyAudioFrames++;
 					}
 
@@ -187,7 +190,7 @@ private slots:
 						VuoRelease(videoFrame.image);
 					}
 
-					VuoRelease(audioFrame.samples);
+					VuoRelease(audioFrame.channels);
 
 				} while(gotVideo);
 

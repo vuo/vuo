@@ -32,4 +32,5 @@ LIBS += \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoHidControl.o \
 	$$ROOT/type/list/VuoList_VuoHidDevice.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	-framework IOKit

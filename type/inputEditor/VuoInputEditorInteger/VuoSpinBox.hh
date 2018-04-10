@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSPINBOX_HH
-#define VUOSPINBOX_HH
+#pragma once
 
 /**
  * A spin box where the buttons can have a different minimum and maximum than the line edit.
@@ -21,9 +20,13 @@ public:
 	void setButtonMinimum(int buttonMinimum);
 	void setButtonMaximum(int buttonMaximum);
 
+protected:
+	QAbstractSpinBox::StepEnabled stepEnabled() const;
+	virtual void hideEvent(QHideEvent * event);
+	virtual void focusOutEvent(QFocusEvent * event);
+
 private:
 	int buttonMinimum;
 	int buttonMaximum;
 };
 
-#endif // VUOSPINBOX_HH

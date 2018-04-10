@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERPUBLISHEDPORT_HH
-#define VUORENDERERPUBLISHEDPORT_HH
+#pragma once
 
 #include "VuoRendererPort.hh"
 #include "VuoPublishedPort.hh"
@@ -44,4 +43,3 @@ private:
 
 };
 
-#endif // VUORENDERERPUBLISHEDPORT_HH

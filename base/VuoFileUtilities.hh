@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOFILEUTILITIES_H
-#define VUOFILEUTILITIES_H
+#pragma once
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunreachable-code"
@@ -99,6 +98,5 @@ public:
 	static set<File *> findFilesInArchive(string archivePath, string dirPath, set<string> extensions);
 	static string getArchiveFileContentsAsString(string archivePath, string filePath);
 	static size_t getAvailableSpaceOnVolumeContainingPath(string path);
+	static void focusProcess(pid_t pid, bool force=false);
 };
-
-#endif

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sstream>
 #include <locale>
+#include <CoreFoundation/CoreFoundation.h>
 #include "VuoCompiler.hh"
 #include "VuoCompilerBitcodeGenerator.hh"
 #include "VuoCompilerBitcodeParser.hh"
@@ -340,94 +341,105 @@ void VuoCompiler::Environment::loadModulesIntoCombinedEnvironment(Environment *m
 						  }
 					  }
 
-					  if (! modulesToLoad.empty())
-					  {
-						  // Load the modules in modulesToLoad and their dependencies.
+					  // Load the modules in modulesToLoad and their dependencies.
 
-						  map<long, ModuleInfo> moduleInfo;
+					  map<long, ModuleInfo> moduleInfo;
+
+					  while (! modulesToLoad.empty())
+					  {
+						  string moduleKey = *modulesToLoad.begin();
+						  modulesToLoad.erase(moduleKey);
+
+						  // Check if the module has already been loaded.
+						  bool alreadyLoadedModule = false;
 						  for (int i = 0; i < 2; ++i)
 						  {
-							  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
+							  if (envs[i]->nodeClasses.find(moduleKey) != envs[i]->nodeClasses.end() ||
+								  envs[i]->types.find(moduleKey) != envs[i]->types.end() ||
+								  envs[i]->libraryModules.find(moduleKey) != envs[i]->libraryModules.end())
 							  {
-								  string path = *j;
-								  set<VuoFileUtilities::File *> moduleFiles = envs[i]->listModules(path);
-								  for (set<VuoFileUtilities::File *>::iterator k = moduleFiles.begin(); k != moduleFiles.end(); ++k)
-								  {
-									  VuoFileUtilities::File *moduleFile = *k;
-									  string moduleKey, dir, ext;
-									  VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
+								  alreadyLoadedModule = true;
+							  }
+						  }
+						  if (alreadyLoadedModule)
+						  {
+							  continue;
+						  }
 
-									  long hash = VuoStringUtilities::hash(moduleKey);
-									  moduleInfo[hash] = (ModuleInfo){ moduleFile, path, i };
+						  // Lazily initialize a map for looking up module info (to avoid taking the time if no modules need to be loaded).
+						  if (moduleInfo.empty())
+						  {
+							  for (int i = 0; i < 2; ++i)
+							  {
+								  for (vector<string>::iterator j = envs[i]->moduleSearchPaths.begin(); j != envs[i]->moduleSearchPaths.end(); ++j)
+								  {
+									  string path = *j;
+									  set<VuoFileUtilities::File *> moduleFiles = envs[i]->listModules(path);
+									  for (set<VuoFileUtilities::File *>::iterator k = moduleFiles.begin(); k != moduleFiles.end(); ++k)
+									  {
+										  VuoFileUtilities::File *moduleFile = *k;
+										  string moduleKey, dir, ext;
+										  VuoFileUtilities::splitPath(moduleFile->getRelativePath(), dir, moduleKey, ext);
+
+										  long hash = VuoStringUtilities::hash(moduleKey);
+										  moduleInfo[hash] = (ModuleInfo){ moduleFile, path, i };
+									  }
 								  }
 							  }
 						  }
 
-						  while (! modulesToLoad.empty())
+						  long moduleKeyHash = VuoStringUtilities::hash(moduleKey);
+
+						  map<long, ModuleInfo>::iterator moduleIter = moduleInfo.find(moduleKeyHash);
+						  if (moduleIter == moduleInfo.end())
 						  {
-							  string moduleKey = *modulesToLoad.begin();
-							  modulesToLoad.erase(moduleKey);
-							  long moduleKeyHash = VuoStringUtilities::hash(moduleKey);
-
-							  bool alreadyLoadedModule = false;
-							  for (int i = 0; i < 2; ++i)
+							  if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(moduleKey))
 							  {
-								  if (envs[i]->nodeClasses.find(moduleKey) != envs[i]->nodeClasses.end() ||
-									  envs[i]->types.find(moduleKey) != envs[i]->types.end() ||
-									  envs[i]->libraryModules.find(moduleKey) != envs[i]->libraryModules.end())
-								  {
-									  alreadyLoadedModule = true;
-								  }
-							  }
-							  if (alreadyLoadedModule)
+								  // For a `Make List` node class, also need to load the item and list types.
+								  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
+								  string itemType = parts.back();
+								  modulesToLoad.insert(itemType);
+								  modulesToLoad.insert(VuoType::listTypeNamePrefix + itemType);
 								  continue;
-
-							  map<long, ModuleInfo>::iterator moduleIter = moduleInfo.find(moduleKeyHash);
-							  if (moduleIter == moduleInfo.end())
+							  }
+							  else
 							  {
-								  if (VuoCompilerMakeListNodeClass::isMakeListNodeClassName(moduleKey))
+								  bool foundGenericNodeClass = false;
+
+								  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
+								  for (int i = parts.size() - 1; i >= 1; --i)
 								  {
-									  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
-									  string itemType = parts.back();
-									  modulesToLoad.insert(itemType);
-									  modulesToLoad.insert(VuoType::listTypeNamePrefix + itemType);
+									  vector<string> firstParts(parts.begin(), parts.begin() + i);
+									  string genericNodeClass = VuoStringUtilities::join(firstParts, '.');
+									  long genericNodeClassHash = VuoStringUtilities::hash(genericNodeClass);
+
+									  moduleIter = moduleInfo.find(genericNodeClassHash);
+									  if (moduleIter != moduleInfo.end())
+									  {
+										  // For a generic node class, also need to load the types to which it's specialized.
+										  foundGenericNodeClass = true;
+										  modulesToLoad.insert(parts.begin() + i, parts.end());
+										  break;
+									  }
+								  }
+
+								  if (! foundGenericNodeClass)
+								  {
 									  continue;
 								  }
-								  else
-								  {
-									  bool foundGenericNodeClass = false;
-
-									  vector<string> parts = VuoStringUtilities::split(moduleKey, '.');
-									  for (int i = parts.size() - 1; i >= 1; --i)
-									  {
-										  vector<string> firstParts(parts.begin(), parts.begin() + i);
-										  string genericNodeClass = VuoStringUtilities::join(firstParts, '.');
-										  long genericNodeClassHash = VuoStringUtilities::hash(genericNodeClass);
-
-										  moduleIter = moduleInfo.find(genericNodeClassHash);
-										  if (moduleIter != moduleInfo.end())
-										  {
-											  foundGenericNodeClass = true;
-											  modulesToLoad.insert(parts.begin() + i, parts.end());
-											  break;
-										  }
-									  }
-
-									  if (! foundGenericNodeClass)
-										  continue;
-								  }
 							  }
+						  }
 
-							  ModuleInfo mi = moduleIter->second;
-							  VuoCompilerModule *module = envs[mi.env]->loadModule(mi.file, mi.searchPath);
+						  // Actually load the module.
+						  ModuleInfo mi = moduleIter->second;
+						  VuoCompilerModule *module = envs[mi.env]->loadModule(mi.file, mi.searchPath);
 
-							  if (module)
-							  {
-								  wereModulesLoaded = true;
+						  if (module)
+						  {
+							  wereModulesLoaded = true;
 
-								  set<string> dependencies = module->getDependencies();
-								  modulesToLoad.insert(dependencies.begin(), dependencies.end());
-							  }
+							  set<string> dependencies = module->getDependencies();
+							  modulesToLoad.insert(dependencies.begin(), dependencies.end());
 						  }
 					  }
 
@@ -828,8 +840,6 @@ vector<string> VuoCompiler::Environment::getBuiltInLibrarySearchPaths(void)
 		builtInLibrarySearchPaths.push_back(VUO_ROOT "/type/list");
 		builtInLibrarySearchPaths.push_back(VUO_ROOT "/runtime");
 
-		builtInLibrarySearchPaths.push_back(GRAPHVIZ_ROOT "/lib");
-		builtInLibrarySearchPaths.push_back(GRAPHVIZ_ROOT "/lib/graphviz");
 		builtInLibrarySearchPaths.push_back(JSONC_ROOT "/lib");
 		builtInLibrarySearchPaths.push_back(ZMQ_ROOT "/lib");
 		builtInLibrarySearchPaths.push_back(LEAP_ROOT);
@@ -874,7 +884,6 @@ void VuoCompiler::Environment::addSearchPathsToSharedEnvironment(void)
 	{
 		headerSearchPaths.push_back(VUO_ROOT "/library");
 		headerSearchPaths.push_back(VUO_ROOT "/node");
-		headerSearchPaths.push_back(VUO_ROOT "/node/vuo.font");
 		headerSearchPaths.push_back(VUO_ROOT "/type");
 		headerSearchPaths.push_back(VUO_ROOT "/type/list");
 		headerSearchPaths.push_back(VUO_ROOT "/runtime");
@@ -966,6 +975,7 @@ VuoCompiler::VuoCompiler(void)
 	dependenciesCacheQueue = dispatch_queue_create("org.vuo.compiler.dependencies", NULL);
 	modulesToLoadQueue = dispatch_queue_create("org.vuo.compiler.modules", NULL);
 	shouldLoadAllModules = true;
+	hasLoadedAllModules = false;
 	isVerbose = false;
 
 	Environment *env = getSharedEnvironment();
@@ -1112,7 +1122,7 @@ void VuoCompiler::loadModulesIfNeeded(void)
 
 							  subcompositionModules.insert(file);
 
-							  if ((subcompositionsBeingCompiled.empty() && shouldLoadAllModules) || modulesToLoad.find(file) != modulesToLoad.end())
+							  if ((subcompositionsBeingCompiled.empty() && shouldLoadAllModules && ! hasLoadedAllModules) || modulesToLoad.find(file) != modulesToLoad.end())
 							  {
 								  if (find(subcompositionsBeingCompiled.begin(), subcompositionsBeingCompiled.end(), subcompositionPath) == subcompositionsBeingCompiled.end())
 								  {
@@ -1188,7 +1198,12 @@ void VuoCompiler::loadModulesIfNeeded(void)
 										 std::inserter(remainingModulesToLoad, remainingModulesToLoad.end()));
 						  modulesToLoad = remainingModulesToLoad;
 
-						  combinedEnvironment.loadModulesIntoCombinedEnvironment( &myEnvironment, getSharedEnvironment(), shouldLoadAllModules, modulesToLoadThisIteration );
+						  combinedEnvironment.loadModulesIntoCombinedEnvironment( &myEnvironment, getSharedEnvironment(), shouldLoadAllModules && ! hasLoadedAllModules, modulesToLoadThisIteration );
+
+						  if (shouldLoadAllModules)
+						  {
+							  hasLoadedAllModules = true;
+						  }
 					  });
 	}
 	while (! subcompositionsToCompile.empty());
@@ -1341,7 +1356,7 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
 	if (! module)
 	{
 		vector<VuoCompilerError> errors;
-		string details = "The node <code>" + file + "</code> couldn't be compiled to bitcode.  Check the OS X Console for details.";
+		string details = "The node <code>" + file + "</code> couldn't be compiled to bitcode.  Check the macOS Console for details.";
 		VuoCompilerError error("Broken node", details, set<VuoNode *>(), set<VuoCable *>());
 		errors.push_back(error);
 		throw VuoCompilerException(errors);
@@ -1372,10 +1387,9 @@ void VuoCompiler::compileModule(string inputPath, string outputPath, const vecto
  * @param composition The composition to compile.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
  * @param isTopLevelComposition True if the composition is top-level, false if it's a subcomposition.
- * @param isLiveCodeable True if the composition is intended to be used in live coding (either as a top-level composition or as a subcomposition).
  * @throw VuoCompilerException The composition is invalid.
  */
-void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition, bool isLiveCodeable)
+void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition)
 {
 	__block set<string> subcompositionModulesCopy;
 	if (! isTopLevelComposition)
@@ -1391,7 +1405,6 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
 	string moduleKey = getModuleNameForPath(outputPath);
 	VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(composition,
 																											 isTopLevelComposition,
-																											 isLiveCodeable,
 																											 moduleKey, this);
 	if (telemetry == "console")
 		generator->setDebugMode(true);
@@ -1411,24 +1424,26 @@ void VuoCompiler::compileComposition(VuoCompilerComposition *composition, string
  * @param inputPath The .vuo file containing the composition.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
  * @param isTopLevelComposition True if the composition is top-level, false if it's a subcomposition.
- * @param isLiveCodeable True if the composition is intended to be used in live coding (either as a top-level composition or as a subcomposition).
  * @throw VuoCompilerException The composition is invalid.
  */
-void VuoCompiler::compileComposition(string inputPath, string outputPath, bool isTopLevelComposition, bool isLiveCodeable)
+void VuoCompiler::compileComposition(string inputPath, string outputPath, bool isTopLevelComposition)
 {
+	VDebugLog("Compiling '%s'…", inputPath.c_str());
 	if (isVerbose)
 		print();
 
 	if (!VuoFileUtilities::fileContainsReadableData(inputPath))
 	{
 		vector<VuoCompilerError> errors;
-		VuoCompilerError error("Couldn't parse the composition", "Can't read the composition file.", set<VuoNode *>(), set<VuoCable *>());
+		string details = "The composition file at '" + inputPath + "' couldn't be read or was empty.";
+		VuoCompilerError error("Couldn't parse the composition", details, set<VuoNode *>(), set<VuoCable *>());
 		errors.push_back(error);
 		throw VuoCompilerException(errors);
 	}
 
 	string compositionString = VuoFileUtilities::readFileToString(inputPath);
-	return compileCompositionString(compositionString, outputPath, isTopLevelComposition, isLiveCodeable);
+	compileCompositionString(compositionString, outputPath, isTopLevelComposition);
+	VDebugLog("Done.");
 }
 
 /**
@@ -1436,7 +1451,7 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath, bool i
  */
 void VuoCompiler::compileComposition(string inputPath, string outputPath)
 {
-	compileComposition(inputPath, outputPath, true, false);
+	compileComposition(inputPath, outputPath, true);
 }
 
 /**
@@ -1445,13 +1460,12 @@ void VuoCompiler::compileComposition(string inputPath, string outputPath)
  * @param compositionString A string containing the composition.
  * @param outputPath The file in which to save the compiled LLVM bitcode.
  * @param isTopLevelComposition True if the composition is top-level, false if it's a subcomposition.
- * @param isLiveCodeable True if the composition is intended to be used in live coding (either as a top-level composition or as a subcomposition).
  * @throw VuoCompilerException The composition is invalid.
  */
-void VuoCompiler::compileCompositionString(const string &compositionString, string outputPath, bool isTopLevelComposition, bool isLiveCodeable)
+void VuoCompiler::compileCompositionString(const string &compositionString, string outputPath, bool isTopLevelComposition)
 {
 	VuoCompilerComposition *composition = VuoCompilerComposition::newCompositionFromGraphvizDeclaration(compositionString, this);
-	compileComposition(composition, outputPath, isTopLevelComposition, isLiveCodeable);
+	compileComposition(composition, outputPath, isTopLevelComposition);
 
 	VuoComposition *baseComposition = composition->getBase();
 	delete composition;
@@ -1517,7 +1531,7 @@ bool VuoCompiler::compileSubcompositionIfNeeded(string compositionPath)
 
 	try
 	{
-		compileComposition(compositionPath, compiledCompositionPath, false, true);
+		compileComposition(compositionPath, compiledCompositionPath, false);
 	}
 	catch (VuoCompilerException &e)
 	{
@@ -1783,6 +1797,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
  */
 set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCompositionPath)
 {
+	VDebugLog("Gathering dependencies for '%s'…", compiledCompositionPath.c_str());
 	set<string> dependencies;
 
 	// Add the node classes in the top-level composition and their dependencies.
@@ -1854,6 +1869,7 @@ set<string> VuoCompiler::getDependenciesForComposition(const string &compiledCom
 	vector<string> coreDependencies = getCoreVuoDependencies();
 	dependencies.insert(coreDependencies.begin(), coreDependencies.end());
 
+	VDebugLog("Done.");
 	return dependencies;
 }
 
@@ -2094,6 +2110,23 @@ void VuoCompiler::getCachedResources(bool shouldUseExistingCache)
  */
 void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 {
+	static dispatch_once_t checked = 0;
+	static bool prelinkCache = true;
+	dispatch_once(&checked, ^{
+		Boolean valid;
+		bool result = CFPreferencesGetAppBooleanValue(CFSTR("prelinkCache"), CFSTR("org.vuo.Editor"), &valid);
+		if (valid)
+			prelinkCache = result;
+	});
+	if (!prelinkCache)
+	{
+		VDebugLog("Ignoring the cache since the 'prelinkCache' preference is false.");
+		return;
+	}
+
+	try
+	{
+
 	bool hasTriedAllCachedResources = true;
 	for (int i = 0; i < NUM_CACHES; ++i)
 		hasTriedAllCachedResources = hasTriedAllCachedResources && hasTriedCachedResources[i];
@@ -2113,6 +2146,7 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 	if (! shouldUseExistingCache)
 	{
 		// Add the loaded modules, the core dependencies, and their dependencies to the list.
+		VDebugLog("Building cache list…");
 
 		env = getSharedEnvironment();
 		loadModulesIfNeeded();
@@ -2217,6 +2251,7 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 
 
 			// Part 2: Check if the cache contains an up-to-date version of each of the expected resources.
+			VDebugLog("Checking %s cache status…", cacheFileNames[i].c_str());
 
 			cacheFilePaths[i] = cacheDir + "/" + cacheFileNames[i];
 			string indexFilePath = cacheDir + "/" + indexFileNames[i];
@@ -2332,10 +2367,12 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 			{
 				if (isCacheUpToDate)
 				{
+					VDebugLog("\tUp-to-date.");
 					cachedResources[i].insert(indexedResources.begin(), indexedResources.end());
 				}
 				else
 				{
+					VDebugLog("\tRebuilding…");
 					// Try to upgrade the file lock for writing.
 					bool gotLock = cacheFile.lockForWriting(true);
 
@@ -2372,6 +2409,14 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 				VUserLog("Warning: Could not create the cache for the \"faster build\" optimization: %s", e.what());
 			}
 		}
+	}
+
+	VDebugLog("Done.");
+
+	}
+	catch (const exception &e)
+	{
+		VUserLog("Warning: Could not initialize caches: %s", e.what());
 	}
 }
 
@@ -2413,6 +2458,7 @@ void VuoCompiler::setLoadAllModules(bool shouldLoadAllModules)
  */
 void VuoCompiler::link(string outputPath, const set<Module *> &modules, const set<string> &libraries, const set<string> &frameworks, bool isDylib, string rPath)
 {
+	VDebugLog("Linking '%s'…", outputPath.c_str());
 	// http://stackoverflow.com/questions/11657529/how-to-generate-an-executable-from-an-llvmmodule
 
 
@@ -2527,7 +2573,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 	IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
 	clang::DiagnosticsEngine Diags(DiagID, diagOptions, diagClient);
 
-	clang::driver::Driver TheDriver(args[0], "x86_64-apple-macosx10.7.0", outputPath, true, Diags);
+	clang::driver::Driver TheDriver(args[0], "x86_64-apple-macosx10.8.0", outputPath, true, Diags);
 
 	TheDriver.CCCIsCXX = true;  // clang++ instead of clang
 
@@ -2567,6 +2613,7 @@ void VuoCompiler::link(string outputPath, const set<Module *> &modules, const se
 		errors.push_back(error);
 		throw VuoCompilerException(errors);
 	}
+	VDebugLog("Done.");
 }
 
 /**
@@ -2759,7 +2806,7 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
 	{
 		// llvm::sys::getDefaultTargetTriple() finds a target based on the host, but the "default" target is not necessarily the
 		// same target that results from invoking command-line clang without a -target argument. That is the "effective" target.
-		// For example, the "default" target could be x86_64-apple-darwin10.8.0 and the "effective" target could be x86_64-apple-macosx10.7.0.
+		// For example, the "default" target could be x86_64-apple-darwin10.8.0 and the "effective" target could be x86_64-apple-macosx10.8.0.
 
 		llvm::sys::Path clangPath = getClangPath();
 
@@ -2778,7 +2825,7 @@ void VuoCompiler::setTargetForModule(Module *module, string target)
 
 	module->setTargetTriple(effectiveTarget);
 */
-	module->setTargetTriple("x86_64-apple-macosx10.7.0");
+	module->setTargetTriple("x86_64-apple-macosx10.8.0");
 }
 
 /**
@@ -2860,6 +2907,11 @@ VuoCompilerNodeClass * VuoCompiler::getNodeClass(const string &id)
 	{
 		if (static_cast<VuoCompilerSpecializedNodeClass *>(baseNodeClass->getCompiler())->isFullySpecialized())
 			combinedEnvironment.addNodeClassToCombinedEnvironment( baseNodeClass->getCompiler(), &myEnvironment, getSharedEnvironment() );
+
+		set<string> dependencies = baseNodeClass->getCompiler()->getDependencies();
+		modulesToLoad.insert(dependencies.begin(), dependencies.end());
+		loadModulesIfNeeded();
+
 		return baseNodeClass->getCompiler();
 	}
 
@@ -3004,13 +3056,6 @@ vector<string> VuoCompiler::getCoreVuoDependencies(void)
 	dependencies.push_back("VuoRuntimeHelper.bc");
 	dependencies.push_back("VuoTelemetry.bc");
 	dependencies.push_back("zmq");
-	dependencies.push_back("gvc");
-	dependencies.push_back("graph");
-	dependencies.push_back("cdt");
-	dependencies.push_back("pathplan");
-	dependencies.push_back("xdot");
-	dependencies.push_back("gvplugin_dot_layout");
-	dependencies.push_back("gvplugin_core");
 	dependencies.push_back("json-c");
 	dependencies.push_back("objc");
 	dependencies.push_back("c");
@@ -3091,7 +3136,7 @@ void VuoCompiler::addLibrarySearchPath(const string &path)
 }
 
 /**
- * Adds a Mac OS X framework search path to use when linking a composition.
+ * Adds a macOS framework search path to use when linking a composition.
  */
 void VuoCompiler::addFrameworkSearchPath(const string &path)
 {
@@ -3202,7 +3247,7 @@ VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionFile(string comp
 	VuoFileUtilities::splitPath(compositionFilePath, directory, file, extension);
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
 	string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file + "-linked", "");
-	compiler.compileComposition(compositionFilePath, compiledCompositionPath, true, false);
+	compiler.compileComposition(compositionFilePath, compiledCompositionPath, true);
 	compiler.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, Optimization_FastBuild);
 	remove(compiledCompositionPath.c_str());
 	return VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, directory, false, true);
@@ -3220,7 +3265,7 @@ VuoRunner * VuoCompiler::newSeparateProcessRunnerFromCompositionString(string co
 	VuoCompiler compiler;
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
 	string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition-linked", "");
-	compiler.compileCompositionString(composition, compiledCompositionPath, true, false);
+	compiler.compileCompositionString(composition, compiledCompositionPath, true);
 	compiler.linkCompositionToCreateExecutable(compiledCompositionPath, linkedCompositionPath, Optimization_FastBuild);
 	remove(compiledCompositionPath.c_str());
 	return VuoRunner::newSeparateProcessRunnerFromExecutable(linkedCompositionPath, workingDirectory, false, true);
@@ -3237,7 +3282,7 @@ VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionFile(string compo
 	string directory, file, extension;
 	VuoFileUtilities::splitPath(compositionFilePath, directory, file, extension);
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
-	compiler.compileComposition(compositionFilePath, compiledCompositionPath, true, false);
+	compiler.compileComposition(compositionFilePath, compiledCompositionPath, true);
 	string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 	compiler.linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath, Optimization_FastBuild);
 	remove(compiledCompositionPath.c_str());
@@ -3255,7 +3300,7 @@ VuoRunner * VuoCompiler::newCurrentProcessRunnerFromCompositionString(string com
 {
 	VuoCompiler compiler;
 	string compiledCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "bc");
-	compiler.compileCompositionString(composition, compiledCompositionPath, true, false);
+	compiler.compileCompositionString(composition, compiledCompositionPath, true);
 	string linkedCompositionPath = VuoFileUtilities::makeTmpFile("VuoRunnerComposition", "dylib");
 	compiler.linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath, Optimization_FastBuild);
 	remove(compiledCompositionPath.c_str());

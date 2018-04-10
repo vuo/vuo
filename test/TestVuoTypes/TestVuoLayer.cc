@@ -51,14 +51,18 @@ private slots:
 
 		{
 			VuoList_VuoLayer childLayers = VuoListCreate_VuoLayer();
-			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_makeRealSize("child1", VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make(-1,0), 1));
-			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_makeRealSize("child2", VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make( 0,1), 1));
+			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_makeRealSize(VuoText_make("child1"), VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make(-1,0), 1, false));
+			VuoListAppendValue_VuoLayer(childLayers, VuoLayer_makeRealSize(VuoText_make("child2"), VuoImage_makeColorImage(VuoColor_makeWithRGBA(1,1,1,1), 1,1), VuoPoint2d_make( 0,1), 1, true ));
 
 			VuoLayer parent = VuoLayer_makeGroup(childLayers, VuoTransform2d_makeIdentity());
 			QTest::newRow("two real size layers")	<< parent
 													<< VuoPoint2d_make(-.4,.4) << VuoPoint2d_make(1.2,1.2)
 													<< VuoPoint2d_make(-.5,.5) << VuoPoint2d_make(1,1);
 		}
+
+		QTest::newRow("oval layer")	<< VuoLayer_makeOval(VuoText_make("child1"), VuoColor_makeWithRGBA(1,1,1,1), (VuoPoint2d){0,0}, 0, 1,1, 1)
+									<< (VuoPoint2d){0,0} << (VuoPoint2d){1,1}
+									<< (VuoPoint2d){0,0} << (VuoPoint2d){1,1};
 	}
 	void testBounds()
 	{

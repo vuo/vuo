@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERPUBLISHEDPORTCLASS_HH
-#define VUOCOMPILERPUBLISHEDPORTCLASS_HH
+#pragma once
 
 #include "VuoPortClass.hh"
 #include "VuoCompilerPortClass.hh"
@@ -34,5 +33,3 @@ public:
 private:
 	VuoType *vuoType;
 };
-
-#endif // VUOCOMPILERPUBLISHEDPORTCLASS_HH

@@ -41,6 +41,7 @@ static void *ZMQTelemetry = 0;		///< The telemetry socket. Use only on VuoTeleme
 static bool hasBeenUnpaused;  ///< True if node execution was unpaused initially, or if it has since been unpaused.
 bool isStopped; ///< True if composition execution has stopped.
 bool isStopRequested;  ///< True if vuoStopComposition() has been called.
+
 #ifndef DOXYGEN
 bool *VuoTrialRestrictionsEnabled;	///< If true, some nodes may restrict how they can be used.
 #endif
@@ -56,8 +57,8 @@ static bool isSendingAllTelemetry = false;  ///< True if all telemetry should be
 static bool isSendingEventTelemetry = false;  ///< True if all telemetry about events (not including data) should be sent.
 static set<string> portsSendingDataTelemetry;  ///< Port identifiers for which data-and-event telemetry should be sent.
 
-static pid_t runnerPid;  ///< Process ID of the runner that started the composition.
-static void stopComposition(bool isBeingReplaced);
+pid_t VuoApp_runnerPid = 0;  ///< Process ID of the runner that started the composition.
+static void stopComposition(bool isBeingReplaced, int timeoutInSeconds);
 void vuoStopComposition(void);
 char * getInputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization);
 char * getOutputPortString(char *portIdentifier, bool shouldUseInterprocessSerialization);
@@ -70,6 +71,7 @@ VuoCompositionFiniCallbackListType *VuoCompositionFiniCallbackList;	///< Fini ca
 static dispatch_queue_t VuoCompositionFiniCallbackQueue = NULL;	///< Serializes access to the list of fini callbacks.
 
 static dispatch_queue_t VuoCompositionStopQueue = NULL;	///< Ensures stops happen serially.
+static bool wasStopCompositionCalled = false;  ///< Prevents the composition from being finalized twice.
 
 
 /**
@@ -102,7 +104,10 @@ void vuoTelemetrySend(enum VuoTelemetry type, zmq_msg_t *messages, unsigned int 
  * Defined in VuoRuntimeHelper. Declared 'extern' here to avoid duplicate symbol errors between VuoRuntime and VuoRuntimeHelper.
  */
 extern bool isPaused;
+extern dispatch_group_t vuoTriggerWorkersScheduled;
 extern char *compositionDiff;
+extern void vuoInitWorkerThreadPool(void);
+extern void vuoFiniWorkerThreadPool(void);
 //@}
 
 //@{
@@ -144,7 +149,7 @@ void vuoInit(int argc, char **argv)
 	char *controlURL = NULL;
 	char *telemetryURL = NULL;
 	bool _isPaused = false;
-	pid_t _runnerPid = getppid();
+	pid_t _runnerPid = 0;
 	int runnerPipe = -1;
 	bool continueIfRunnerDies = false;
 	bool doPrintHelp = false;
@@ -179,6 +184,7 @@ void vuoInit(int argc, char **argv)
 			{"vuo-continue-if-runner-dies", no_argument, NULL, 0},
 			{"vuo-licenses", no_argument, NULL, 0},
 			{"vuo-trial", no_argument, NULL, 0},
+			{"vuo-runner-pid", required_argument, NULL, 0},
 			{NULL, no_argument, NULL, 0}
 		};
 		int optionIndex=-1;
@@ -217,6 +223,9 @@ void vuoInit(int argc, char **argv)
 					break;
 				case 8:  // --vuo-trial
 					trialRestrictionsEnabled = true;
+					break;
+				case 9:  // --vuo-runner-pid
+					_runnerPid = atoi(optarg);
 					break;
 			}
 		}
@@ -382,6 +391,31 @@ char *VuoRuntime_mergeEnumDetails(string type, char *details)
 }
 
 /**
+ * If the composition is not stopped within the timeout, kills this process.
+ */
+void VuoRuntime_watchdog(int timeoutInSeconds)
+{
+	if (timeoutInSeconds < 0)
+		return;
+
+	if (VuoApp_runnerPid == getpid())
+		// If the runner is in the same process as the composition (and possibly other current-process compositions),
+		// it would be overkill to kill all of it.
+		return;
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC),
+				   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		if (VuoEventLoop_mayBeTerminated())
+		{
+			vuoControlReplySend(VuoControlReplyCompositionStopping, NULL, 0);
+			zmq_close(ZMQControl);  // wait until message fully sends
+			VUserLog("Warning: Waited %d seconds for the composition to cleanly shut down, but it's still running. Now I'm force-quitting it.", timeoutInSeconds);
+			kill(getpid(), SIGKILL);
+		}
+	});
+}
+
+/**
  * Sets up ZMQ control and telemetry sockets, then calls the generated function @c vuoSetup().
  * If the composition is not paused, also calls @c vuoInstanceInit() and @c vuoInstanceTriggerStart().
  */
@@ -447,6 +481,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	isPaused = _isPaused;
 	isStopped = false;
 	isStopRequested = false;
+	vuoTriggerWorkersScheduled = dispatch_group_create();
 
 	if (!VuoCompositionFiniCallbackQueue)
 		VuoCompositionFiniCallbackQueue = dispatch_queue_create("vuo.runtime.finiCallback", NULL);
@@ -456,6 +491,7 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 		VuoCompositionFiniCallbackList = new VuoCompositionFiniCallbackListType;
 
 	VuoCompositionStopQueue = dispatch_queue_create("vuo.runtime.stop", NULL);
+	wasStopCompositionCalled = false;
 
 	// Set the `VuoTrialRestrictionsEnabled` global, and protect it.
 	{
@@ -484,11 +520,13 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 	}
 
 
-	runnerPid = _runnerPid;
+	VuoApp_runnerPid = _runnerPid;
 	waitForStopCanceledSemaphore = dispatch_semaphore_create(0);
 
 	// set up composition
 	{
+		vuoInitWorkerThreadPool();
+
 		vuoSetup();
 
 		if (! isPaused)
@@ -587,27 +625,13 @@ void vuoInitInProcess(void *_ZMQContext, const char *controlURL, const char *tel
 					int timeoutInSeconds = vuoReceiveInt(ZMQControl, NULL);
 					bool isBeingReplaced = vuoReceiveBool(ZMQControl, NULL);
 
-					if (timeoutInSeconds >= 0)
-					{
-						// If the composition is not stopped within the timeout, kill its process.
-						dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeoutInSeconds * NSEC_PER_SEC),
-									   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-							if (VuoEventLoop_mayBeTerminated())
-							{
-								vuoControlReplySend(VuoControlReplyCompositionStopping,NULL,0);
-								zmq_close(ZMQControl);  // wait until message fully sends
-								kill(getpid(), SIGKILL);
-							}
-						});
-					}
-
 					if (! isBeingReplaced)
 					{
 						free(compositionDiff);
 						compositionDiff = NULL;
 					}
 
-					stopComposition(isBeingReplaced);
+					stopComposition(isBeingReplaced, timeoutInSeconds);
 
 					if (timeoutInSeconds >= 0)
 					{
@@ -1105,8 +1129,6 @@ void vuoUnserializeTelemetryState(char *serialized)
 }
 
 
-static bool wasStopCompositionCalled = false;  ///< Prevents the composition from being finalized twice.
-
 /**
  * This function is called when the composition receives a stop request (@ref VuoControlRequestCompositionStop),
  * or when the a node or library requests a clean shutdown (@ref VuoStopComposition).
@@ -1116,7 +1138,7 @@ static bool wasStopCompositionCalled = false;  ///< Prevents the composition fro
  *
  * @threadQueue{VuoControlQueue}
  */
-void stopComposition(bool isBeingReplaced)
+void stopComposition(bool isBeingReplaced, int timeoutInSeconds)
 {
 	dispatch_sync(VuoCompositionStopQueue, ^{
 
@@ -1125,6 +1147,8 @@ void stopComposition(bool isBeingReplaced)
 	if (wasStopCompositionCalled)
 		return;
 	wasStopCompositionCalled = true;
+
+	VuoRuntime_watchdog(timeoutInSeconds);
 
 	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 		if (hasBeenUnpaused)
@@ -1146,6 +1170,8 @@ void stopComposition(bool isBeingReplaced)
 					  });
 
 	vuoCleanup();
+
+	vuoFiniWorkerThreadPool();
 
 	if (controlTimer)
 		dispatch_source_cancel(controlTimer);
@@ -1193,7 +1219,7 @@ void vuoStopComposition(void)
 						   waitForStopTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, VuoEventLoop_getDispatchStrictMask(), VuoControlQueue);
 						   dispatch_source_set_timer(waitForStopTimer, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.), NSEC_PER_SEC * 2, NSEC_PER_SEC/10);
 						   dispatch_source_set_event_handler(waitForStopTimer, ^{
-							   stopComposition(false);
+							   stopComposition(false, 5);
 							   dispatch_source_cancel(waitForStopTimer);
 						   });
 						   dispatch_source_set_cancel_handler(waitForStopTimer, ^{
@@ -1203,7 +1229,7 @@ void vuoStopComposition(void)
 					   }
 					   else
 					   {
-						   stopComposition(false);
+						   stopComposition(false, 5);
 					   }
 				   });
 

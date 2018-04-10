@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTRANSFORM2D_H
-#define VUOTRANSFORM2D_H
+#pragma once
 
 #include "VuoPoint2d.h"
 #include "VuoReal.h"
@@ -33,6 +32,7 @@ typedef struct
 
 VuoTransform2d VuoTransform2d_makeIdentity(void);
 VuoTransform2d VuoTransform2d_make(VuoPoint2d translation, VuoReal rotation, VuoPoint2d scale);
+// See VuoTransform.h for 2D-3D conversions.
 
 VuoTransform2d VuoTransform2d_makeFromJson(struct json_object *js);
 struct json_object * VuoTransform2d_getJson(const VuoTransform2d value);
@@ -64,5 +64,3 @@ static inline bool VuoTransform2d_isIdentity(const VuoTransform2d transform)
 /**
  * @}
  */
-
-#endif

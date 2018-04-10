@@ -10,7 +10,9 @@
 
 #include "node.h"
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <AppKit/AppKit.h>
 #import <Syphon.h>
 

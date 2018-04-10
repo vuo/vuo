@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTRANSFORM_H
-#define VUOTRANSFORM_H
+#pragma once
 
 #include "VuoInteger.h"
 #include "VuoPoint3d.h"
@@ -62,14 +61,17 @@ typedef struct
 } VuoTransform;
 
 void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
-void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, float *billboardMatrix);
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, float *billboardMatrix);
 VuoPoint3d VuoTransform_getEuler(const VuoTransform transform);
 VuoPoint4d VuoTransform_getQuaternion(const VuoTransform transform);
 VuoPoint3d VuoTransform_getDirection(const VuoTransform transform);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale);
+
 VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d);
+VuoTransform2d VuoTransform_get2d(VuoTransform transform);
+
 VuoTransform VuoTransform_makeFromTarget(VuoPoint3d position, VuoPoint3d target, VuoPoint3d upDirection);
 VuoTransform VuoTransform_makeFromMatrix4x4(const float *matrix);
 VuoTransform VuoTransform_composite(const VuoTransform a, const VuoTransform b);
@@ -261,5 +263,3 @@ void VuoTransform_release(VuoTransform value);
 /**
  * @}
  */
-
-#endif

@@ -66,6 +66,7 @@ GLuint vertexShader;
 GLuint fragmentShader;
 GLuint program;
 int windowWillClose(void);
+CGLContextObj cgl_ctx;
 
 int main(void)
 {
@@ -81,14 +82,10 @@ int main(void)
 	glfwOpenWindow(640,480,8,8,8,8,8,0,GLFW_WINDOW);
 	glfwSetWindowCloseCallback(windowWillClose);
 
-	CGLContextObj cgl_ctx = CGLGetCurrentContext();
+	cgl_ctx = CGLGetCurrentContext();
 
 	// Share the GL Context with the Vuo Composition
 	VuoGlContext_setGlobalRootContext((void *)cgl_ctx);
-
-	// Compile, link, and run the composition
-	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(EXAMPLE_PATH "/RippleImage.vuo");
-	runner->start();
 
 	// Upload a quad, for rendering the texture later on
 	glGenVertexArrays(1, &vertexArray);
@@ -126,6 +123,10 @@ int main(void)
 
 	GLint positionAttribute = glGetAttribLocation(program, "position");
 	GLint textureUniform = glGetUniformLocation(program, "texture");
+
+	// Compile, link, and run the composition
+	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(EXAMPLE_PATH "/RippleImage.vuo");
+	runner->start();
 
 	// Pass the GL Texture to the Vuo Composition
 	VuoRunner::Port * inputImagePort = runner->getPublishedInputPortWithName("inputImage");
@@ -181,8 +182,6 @@ int windowWillClose(void)
 {
 	runner->stop();
 	delete runner;
-
-	CGLContextObj cgl_ctx = CGLGetCurrentContext();
 
 	glDetachShader(program, vertexShader);
 	glDetachShader(program, fragmentShader);

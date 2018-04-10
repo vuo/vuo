@@ -91,13 +91,9 @@ private slots:
 										<< false
 										<< "";
 
-		QTest::newRow("texture")		<< "{\"glTextureName\":42,\"glInternalFormat\":6408,\"pixelsWide\":640,\"pixelsHigh\":480}"
-										<< true
-										<< "GL Texture (ID 42)<br>Size: 640x480 pixels<br>Type: RGBA, each channel stored as 8-bit integer (GL_RGBA)";
-
 		QTest::newRow("make")			<< QString(VuoImage_getString(VuoImage_make(43,GL_RGBA,640,480)))
 										<< true
-										<< "GL Texture (ID 43)<br>Size: 640x480 pixels<br>Type: RGBA, each channel stored as 8-bit integer (GL_RGBA)";
+										<< "GL Texture (ID 43)<br>Size: 640x480 pixels<br>Scale Factor: 1x<br>Type: RGBA, each channel stored as 8-bit unsigned integer (GL_RGBA)";
 	}
 	void testSerializationAndSummary()
 	{
@@ -380,7 +376,7 @@ private slots:
 		VuoRetain(ib);
 
 		QBENCHMARK {
-			VuoImage i = VuoImageBlur_blur(ib, sourceImage, 1, FALSE);
+			VuoImage i = VuoImageBlur_blur(ib, sourceImage, NULL, VuoBlurShape_Gaussian, 1, 1, FALSE);
 			VuoRetain(i);
 			VuoRelease(i);
 		}
@@ -620,6 +616,77 @@ private slots:
 		QVERIFY(abs(imageBuffer[5] - 128) < 2);
 		QVERIFY(abs(imageBuffer[4] -  60) < 2);
 		QVERIFY(abs(imageBuffer[7] - 168) < 2);
+	}
+
+	/**
+	 * Ensure Vuo reads images into the expected texture types.
+	 *
+	 * Test images from http://www.schaik.com/pngsuite/
+	 * ("Permission to use, copy, modify and distribute these images for any
+	 * purpose and without fee is hereby granted. (c) Willem van Schaik, 1996, 2011").
+	 */
+	void testFetchImageType_data()
+	{
+		QTest::addColumn<GLint>("glInternalFormat");
+
+		QTest::newRow("basn0g01.png") << GL_LUMINANCE8;       // black & white
+		QTest::newRow("basn0g02.png") << GL_LUMINANCE8;       // 2 bit (4 level) grayscale
+		QTest::newRow("basn0g04.png") << GL_LUMINANCE8;       // 4 bit (16 level) grayscale
+		QTest::newRow("basn0g08.png") << GL_LUMINANCE8;       // 8 bit (256 level) grayscale
+		QTest::newRow("basn0g16.png") << GL_LUMINANCE16F_ARB; // 16 bit (64k level) grayscale
+		QTest::newRow("basn2c08.png") << GL_RGB;              // 3x8 bits rgb color
+		QTest::newRow("basn2c16.png") << GL_RGB16F_ARB;       // 3x16 bits rgb color
+		QTest::newRow("basn3p01.png") << GL_RGB;              // 1 bit (2 color) paletted
+		QTest::newRow("basn3p02.png") << GL_RGB;              // 2 bit (4 color) paletted
+		QTest::newRow("basn3p04.png") << GL_RGB;              // 4 bit (16 color) paletted
+		QTest::newRow("basn3p08.png") << GL_RGB;              // 8 bit (256 color) paletted
+		QTest::newRow("basn4a08.png") << GL_LUMINANCE_ALPHA;  // 8 bit grayscale + 8 bit alpha-channel
+		QTest::newRow("basn4a16.png") << GL_LUMINANCE_ALPHA;  // 16 bit grayscale + 16 bit alpha-channel
+		QTest::newRow("basn6a08.png") << GL_RGBA;             // 3x8 bits rgb color + 8 bit alpha-channel
+		QTest::newRow("basn6a16.png") << GL_RGBA16F_ARB;      // 3x16 bits rgb color + 16 bit alpha-channel
+
+		QTest::newRow("../gif-alpha.gif") << GL_RGBA;
+	}
+	void testFetchImageType()
+	{
+		QFETCH(GLint, glInternalFormat);
+
+		VuoImage i = VuoImage_get((QString("resources/SchaikPngSuite/") + QTest::currentDataTag()).toUtf8().data());
+		QVERIFY(i);
+		VuoLocal(i);
+
+		QCOMPARE(i->pixelsWide, 32UL);
+		QCOMPARE(i->pixelsHigh, 32UL);
+
+		QEXPECT_FAIL("basn0g04.png", "FreeImage unexpectedly reports this greyscale image as RGB", Abort);
+		QEXPECT_FAIL("basn4a08.png", "FreeImage unexpectedly reports this greyscale+alpha image as RGBA", Abort);
+		QEXPECT_FAIL("basn4a16.png", "FreeImage unexpectedly reports this greyscale+alpha image as RGBA", Abort);
+		QVERIFY2(glInternalFormat == i->glInternalFormat, QString("expected %1, got %2")
+			.arg(VuoGl_stringForConstant(glInternalFormat))
+			.arg(VuoGl_stringForConstant(i->glInternalFormat))
+			.toUtf8().constData());
+	}
+
+	/**
+	 * Ensure Vuo reads image scaleFactor properly.
+	 */
+	void testFetchImageScaleFactor_data()
+	{
+		QTest::addColumn<double>("expectedScaleFactor");
+
+		QTest::newRow("spinbox-inc.png")    << 1.;
+		QTest::newRow("spinbox-inc@2x.png") << 2.;
+		QTest::newRow("spinbox-inc@3x.png") << 3.;
+	}
+	void testFetchImageScaleFactor()
+	{
+		QFETCH(double, expectedScaleFactor);
+
+		VuoImage i = VuoImage_get((QString("resources/") + QTest::currentDataTag()).toUtf8().data());
+		QVERIFY(i);
+		VuoLocal(i);
+
+		QCOMPARE(i->scaleFactor, expectedScaleFactor);
 	}
 };
 

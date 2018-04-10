@@ -15,3 +15,4 @@ using namespace std;
 void VuoFileUtilitiesCocoa_moveFileToTrash(string filePath);
 string VuoFileUtilitiesCocoa_makeTmpDirOnSameVolumeAsPath(string onSameVolumeAsPath);
 size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path);
+void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force);

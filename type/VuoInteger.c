@@ -25,11 +25,28 @@ VuoModuleMetadata({
 
 /**
  * @ingroup VuoInteger
- * Decodes the JSON object @c js, expected to contain a 64-bit integer, to create a new value.
+ * Decodes the JSON object `js` to create a new value.
  */
 VuoInteger VuoInteger_makeFromJson(json_object * js)
 {
-	return json_object_get_int64(js);
+	if (!js)
+		return 0;
+
+	json_type t = json_object_get_type(js);
+	if (t == json_type_int)
+		return json_object_get_int64(js);
+	else
+	{
+		// Use strtold() instead of json_object_get_int64(),
+		// since the latter doesn't support JSON strings with scientific notation.
+		// Use `long double strtold()` instead of `double atof()`
+		// since `long double` can precisely represent the int64 max value, whereas `double` can't.
+		const char *s = json_object_get_string(js);
+		if (s)
+			return strtold(s, NULL);
+		else
+			return 0;
+	}
 }
 
 /**

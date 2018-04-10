@@ -197,14 +197,14 @@ ELEMENT_TYPE *VuoListGetData_ELEMENT_TYPE(const LIST_TYPE list)
 	return &((*l)[0]);
 }
 
-void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index)
+void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index, bool expandListIfNeeded)
 {
 	if (!list)
 		return;
 
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
-	if (l->size() == 0)
+	if (!expandListIfNeeded && l->size() == 0)
 		return;
 
 	unsigned long clampedIndex = index - 1;
@@ -212,13 +212,22 @@ void VuoListSetValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value
 	if (index == 0)
 		clampedIndex = 0;
 
-	if (index > l->size())
-		clampedIndex = l->size() - 1;
+	if (expandListIfNeeded && clampedIndex >= l->size())
+	{
+		l->resize(clampedIndex + 1);
+		(*l)[clampedIndex] = value;
+		RETAIN(value);
+	}
+	else
+	{
+		if (index > l->size())
+			clampedIndex = l->size() - 1;
 
-	ELEMENT_TYPE oldValue = (*l)[clampedIndex];
-	(*l)[clampedIndex] = value;
-	RETAIN(value);
-	RELEASE(oldValue);
+		ELEMENT_TYPE oldValue = (*l)[clampedIndex];
+		(*l)[clampedIndex] = value;
+		RETAIN(value);
+		RELEASE(oldValue);
+	}
 }
 
 void VuoListInsertValue_ELEMENT_TYPE(const LIST_TYPE list, const ELEMENT_TYPE value, const unsigned long index)
@@ -373,16 +382,16 @@ void VuoListReverse_ELEMENT_TYPE(LIST_TYPE list)
 	std::reverse(l->begin(), l->end());
 }
 
-void VuoListCut_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const unsigned long itemCount)
+LIST_TYPE VuoListSubset_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const unsigned long itemCount)
 {
 	if (!list)
-		return;
+		return NULL;
 
 	std::vector<ELEMENT_TYPE> * l = (std::vector<ELEMENT_TYPE> *)list;
 
 	size_t size = l->size();
 	if (size == 0)
-		return;
+		return NULL;
 
 	signed long clampedStartIndex = startIndex - 1;
 	signed long clampedEndIndex = clampedStartIndex + itemCount - 1;
@@ -393,16 +402,17 @@ void VuoListCut_ELEMENT_TYPE(LIST_TYPE list, const signed long startIndex, const
 		clampedEndIndex = size - 1;
 
 	if (clampedStartIndex > clampedEndIndex)
-	{
-		VuoListRemoveAll_ELEMENT_TYPE(list);
-		return;
-	}
+		return NULL;
 
-	while (clampedStartIndex--)
-		VuoListRemoveFirstValue_ELEMENT_TYPE(list);
+	std::vector<ELEMENT_TYPE> *newList = new std::vector<ELEMENT_TYPE>(
+				l->begin() + clampedStartIndex,
+				l->begin() + clampedEndIndex + 1);
+	VuoRegister(newList, VuoListDestroy_ELEMENT_TYPE);
 
-	while (clampedEndIndex++ < (signed long)size-1)
-		VuoListRemoveLastValue_ELEMENT_TYPE(list);
+	for (std::vector<ELEMENT_TYPE>::iterator i = newList->begin(); i != newList->end(); ++i)
+		RETAIN(*i);
+
+	return reinterpret_cast<LIST_TYPE>(newList);
 }
 
 void VuoListRemoveFirstValue_ELEMENT_TYPE(LIST_TYPE list)

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSCREEN_H
-#define VUOSCREEN_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -127,4 +126,3 @@ static inline VuoScreenType VuoScreen_typeFromCString(const char *typeString)
  * @}
  */
 
-#endif // VUOSCREEN_H

@@ -18,7 +18,7 @@ GetImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>re
 Make3DPoint [type="vuo.point.make.VuoPoint3d" version="2.0.0" label="Make 3D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<z>z\l|<point>point\r" pos="525,1140"];
 Make3DSquare2 [type="vuo.scene.make.square.VuoShader" version="1.0.0" label="Make 3D Square|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="480,240" _transform="{\"translation\":[0,-0.5,-0.10000000149011612],\"eulerRotation\":[4.7123889923095703,0,0],\"scale\":[100,100,1]}" _rows="2" _columns="2"];
 MakeAmbientLight [type="vuo.scene.make.light.ambient" version="1.0.0" label="Make Ambient Light|<refresh>refresh\l|<color>color\l|<brightness>brightness\l|<object>object\r" pos="450,165" _color="{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000}" _brightness="0.080000"];
-MakeCheckerboardImage [type="vuo.image.make.checkerboard" version="1.1.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<type>type\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-75,870" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _type="\"horizontal-vertical\"" _center="{\"x\":0,\"y\":0}" _width="1280" _height="640"];
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="-75,870" _upperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _upperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _squareSize="0.100000" _sharpness="1.0" _angle="0." _center="{\"x\":0,\"y\":0}" _width="1280" _height="640"];
 MakeColorImage [type="vuo.image.make.color" version="1.0.1" label="Make Color Image|<refresh>refresh\l|<color>color\l|<width>width\l|<height>height\l|<image>image\r" pos="-60,645" _color="{\"r\":1.000000,\"g\":0.999969,\"b\":0.999985,\"a\":0.689998}" _width="1" _height="1"];
 MakeList [type="vuo.list.make.9.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<9>9\l|<list>list\r" pos="934,446" fillcolor="green"];
 MakeList5 [type="vuo.list.make.2.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="149,1301" _2="30.000000"];
@@ -76,6 +76,7 @@ Multiply3:product -> CalculateSine:angle;
 ReceiveMouseButtons:released -> Toggle:toggle;
 RenderSceneToWindow:requestedFrame -> MakeList5:1 [style=invis];
 RenderSceneToWindow:requestedFrame -> SmoothWithDuration2:time [style=invis];
+RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
 SelectInput2:out -> SmoothWithDuration2:setTarget;
 ShadeWithColor4:shader -> Make3DSquare2:material;
 ShadeWithColor:shader -> MakeSphere3:material;

@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeWindowAspectRatio [type="vuo.window.aspectRatio" version="1.0.1" label="Change Window Aspect Ratio|<refresh>refresh\l|<width>width\l|<height>height\l|<property>property\r" pos="-45,300" _width="1" _height="1"];
+ChangeWindowPosition [type="vuo.window.position" version="1.0.0" label="Change Window Position|<refresh>refresh\l|<topLeft>topLeft\l|<unit>unit\l|<property>property\r" pos="-45,225" _topLeft="{\"x\":200,\"y\":100}" _unit="\"points\""];
+MakeList4 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="314,206"];
+MakeList5 [type="vuo.list.make.1.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="342,236"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="375,195" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SelectEventOutput2 [type="vuo.select.out.event.8" version="2.0.0" label="Select Event Output|<refresh>refresh\l|<which>which\l|<in>in\l|<option1>option1\r|<option2>option2\r|<option3>option3\r|<option4>option4\r|<option5>option5\r|<option6>option6\r|<option7>option7\r|<option8>option8\r" pos="-255,195"];
+SelectLatest2 [type="vuo.select.latest.2.VuoWindowProperty" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="195,225"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Which>Which\r" _Which_type="VuoInteger" _Which_suggestedMin="1" _Which_suggestedMax="2" _Which="1"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<ShowedWindow>ShowedWindow\l" _ShowedWindow_type="VuoWindowReference"];
+
+ChangeWindowAspectRatio:property -> SelectLatest2:option2;
+ChangeWindowPosition:property -> SelectLatest2:option1;
+MakeList4:list -> RenderLayersToWindow:layers;
+MakeList5:list -> RenderLayersToWindow:setWindowProperties;
+PublishedInputs:Which -> SelectEventOutput2:which;
+RenderLayersToWindow:showedWindow -> PublishedOutputs:ShowedWindow;
+SelectEventOutput2:option1 -> ChangeWindowPosition:refresh;
+SelectEventOutput2:option2 -> ChangeWindowAspectRatio:refresh;
+SelectEventOutput2:option3 -> RenderLayersToWindow:refresh;
+SelectLatest2:latest -> MakeList5:1;
+}

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERNODE_H
-#define VUOCOMPILERNODE_H
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoNode.hh"
@@ -30,22 +29,25 @@ private:
 	VuoCompilerInstanceData *instanceData;
 	string graphvizIdentifier;  ///< The identifier that will appear in .vuo (Graphviz dot format) files. Defaults to the suggested Graphviz identifier prefix.
 	VuoCompilerConstantStringCache *constantStrings;
+	size_t indexInOrderedNodes;
 
-	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block, Value *nodeIdentifierValue, Value *nodeContextValue,
+	CallInst * generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeContextValue,
 									const map<VuoCompilerEventPort *, Value *> &portContextForEventPort = (map<VuoCompilerEventPort *, Value *>()));
 	bool isArgumentInFunction(VuoCompilerNodeArgument *argument, Function *function);
 	size_t getArgumentIndexInFunction(VuoCompilerNodeArgument *argument, Function *function);
-	string getGraphvizDeclarationWithOptions(bool shouldUsePlaceholders, bool shouldPrintPosition, double xPositionOffset, double yPositionOffset);
-	string getSerializedFormatString(void);
 
 public:
 	VuoCompilerNode(VuoNode *baseNode);
+	void setIndexInOrderedNodes(size_t indexInOrderedNodes);
+	size_t getIndexInOrderedNodes(void);
 	void setConstantStringCache(VuoCompilerConstantStringCache *constantStrings);
-	Value * generateIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	Value * generateIdentifierValue(Module *module);
+	Value * generateSubcompositionIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
 	Value * generateGetContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	Value * generateContextInit(Module *module, BasicBlock *block, Value *compositionIdentifierValue, unsigned long nodeIndex, const vector<VuoCompilerType *> &orderedTypes);
-	void generateContextFini(Module *module, BasicBlock *block, BasicBlock *finiBlock, Value *compositionIdentifierValue, Value *nodeIdentifierValue, Value *nodeContextValue);
-	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *nodeIdentifierValue);
+	void generateAddMetadata(Module *module, BasicBlock *block, Value *compositionIdentifierValue, const vector<VuoCompilerType *> &orderedTypes);
+	Value * generateCreateContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
+	void generateDestroyContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeContextValue);
+	void generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock, Value *compositionIdentifierValue);
 	void generateInitFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
 	void generateFiniFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
 	void generateCallbackStartFunctionCall(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
@@ -60,8 +62,4 @@ public:
 	void setGraphvizIdentifier(string graphvizIdentifier);
 	string getGraphvizIdentifier(void);
 	string getGraphvizDeclaration(bool shouldPrintPosition = false, double xPositionOffset = 0, double yPositionOffset = 0);
-	Value * generateSerializedString(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	void generateUnserialization(Module *module, Function *function, BasicBlock *&block, Value *compositionIdentifierValue, Value *graphValue);
 };
-
-#endif

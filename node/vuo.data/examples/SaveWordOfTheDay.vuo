@@ -13,7 +13,7 @@ AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh
 AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="780,420" _separator="\"\\n\""];
 AppendTexts3 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="660,150" _separator="\"\\n\""];
 ConvertTextToData5 [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="795,195"];
-FetchRSSItems [type="vuo.rss.fetch" version="1.1.0" label="Fetch RSS Items|<refresh>refresh\l|<url>url\l|<fetchImages>fetchImages\l|<title>title\r|<description>description\r|<items>items\r" pos="135,105" _url="\"https:\\/\\/wordsmith.org\\/awad\\/rss1.xml\"" _fetchImages="false"];
+FetchRSSItems [type="vuo.rss.fetch" version="1.1.0" label="Fetch RSS Items|<refresh>refresh\l|<url>url\l|<fetchImages>fetchImages\l|<title>title\r|<description>description\r|<items>items\r" pos="135,105" _url="\"http:\\/\\/vuo.org\\/wotd.rss\"" _fetchImages="false"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="0,60" fillcolor="yellow" _started_eventThrottling="enqueue"];
 GetFirstItemInList [type="vuo.list.get.first.VuoRssItem" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="510,300"];
 GetFirstItemInList4 [type="vuo.list.get.first.VuoText" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="570,555"];

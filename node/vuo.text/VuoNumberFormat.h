@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONUMBERFORMAT_H
-#define VUONUMBERFORMAT_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoNumberFormat;
@@ -56,5 +55,4 @@ void VuoNumberFormat_release(VuoNumberFormat value);
  * @}
  */
 
-#endif // VUONUMBERFORMAT_H
 

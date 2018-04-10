@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOURL_H
-#define VUOURL_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -66,6 +65,4 @@ void VuoUrl_release(VuoUrl value);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

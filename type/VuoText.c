@@ -13,7 +13,6 @@
 #include "VuoText.h"
 #include "VuoData.h"
 
-
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -22,7 +21,10 @@ VuoModuleMetadata({
 					 "keywords" : [ "char *", "character" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
-						"Carbon.framework"
+						"Carbon.framework",
+						"VuoInteger",
+						"VuoTextCase",
+						"VuoList_VuoInteger"
 					 ]
 				 });
 #endif
@@ -57,20 +59,26 @@ json_object * VuoText_getJson(const VuoText value)
  *
  * If `subject` is greater than `maxLength`, truncates `subject` to `maxLength` characters and adds a Unicode ellipsis.
  */
-VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength)
+VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength, VuoTextTruncation where)
 {
 	if (!subject)
 		return VuoText_make("");
 
 	VuoText valueWithReturn = VuoText_replace(subject, "\n", "⏎");
 
-	if (VuoText_length(subject) <= maxLength)
+	size_t length = VuoText_length(subject);
+	if (length <= maxLength)
 		return valueWithReturn;
 	else
 	{
-		VuoText abbreviation = VuoText_substring(valueWithReturn, 1, maxLength);
+		VuoText abbreviation = VuoText_substring(valueWithReturn, (where == VuoTextTruncation_End ? 1 : 1 + length - maxLength), maxLength);
 		VuoText ellipsis = VuoText_make("…");
 		VuoText summaryParts[2] = { abbreviation, ellipsis };
+		if (where == VuoTextTruncation_Beginning)
+		{
+			summaryParts[0] = ellipsis;
+			summaryParts[1] = abbreviation;
+		}
 		VuoText summaryWhole = VuoText_append(summaryParts, 2);
 
 		VuoRetain(valueWithReturn);
@@ -92,7 +100,10 @@ VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength)
  */
 char * VuoText_getSummary(const VuoText value)
 {
-	VuoText truncatedText = VuoText_truncateWithEllipsis(value, 50);
+	if (VuoText_isEmpty(value))
+		return strdup("<code>&#0;</code>");
+
+	VuoText truncatedText = VuoText_truncateWithEllipsis(value, 50, VuoTextTruncation_End);
 	VuoRetain(truncatedText);
 	VuoText escapedText = VuoText_replace(truncatedText, "<", "&lt;");
 	VuoRetain(escapedText);
@@ -208,6 +219,61 @@ VuoText VuoText_makeFromData(const unsigned char *data, const unsigned long size
 }
 
 /**
+ * Creates a new VuoText from a MacRoman-encoded string.
+ */
+VuoText VuoText_makeFromMacRoman(const char *string)
+{
+	if (!string)
+		return NULL;
+
+	size_t len = strlen(string);
+	CFStringRef cf = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)string, len, kCFStringEncodingMacRoman, false);
+	if (!cf)
+		return NULL;
+
+	VuoText t = VuoText_makeFromCFString(cf);
+
+	CFRelease(cf);
+	return t;
+}
+
+/**
+ * Create a new VuoText string from an array of UTF-32 values.
+ *
+ * Returns NULL if `data` is not valid UTF-32 text.
+ *
+ * `data` is copied.
+ */
+VuoText VuoText_makeFromUtf32(const uint32_t* data, size_t size)
+{
+	CFStringRef cf_str = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*) data, size * sizeof(uint32_t), kCFStringEncodingUTF32LE, false);
+
+	if(cf_str != NULL)
+	{
+		CFIndex str_len = CFStringGetLength(cf_str);
+		CFRange range = CFRangeMake(0, str_len);
+		CFIndex usedBufLen;
+		CFIndex length = CFStringGetBytes(cf_str, range, kCFStringEncodingUTF8, '?', false, NULL, str_len, &usedBufLen );
+
+		if(length > 0)
+		{
+			char* buffer = (char*) malloc(sizeof(char) * usedBufLen + 1);
+			CFIndex used;
+			CFStringGetBytes(cf_str, range, kCFStringEncodingUTF8, '?', false, (uint8_t*) buffer, usedBufLen + 1, &used);
+			buffer[used] = '\0';
+			VuoText text = VuoText_make(buffer);
+			free(buffer);
+			CFRelease(cf_str);
+			return text;
+		}
+
+		CFRelease(cf_str);
+	}
+
+	return VuoText_make("");
+}
+
+/**
  * @ingroup VuoText
  * Returns the number of Unicode characters in the text.
  */
@@ -223,6 +289,14 @@ size_t VuoText_length(const VuoText text)
 	size_t length = CFStringGetLength(s);
 	CFRelease(s);
 	return length;
+}
+
+/**
+ * Returns true if `text` is empty (is NULL or is non-NULL with zero length).
+ */
+bool VuoText_isEmpty(const VuoText text)
+{
+	return !text || text[0] == 0;
 }
 
 /**
@@ -292,7 +366,7 @@ bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
  */
 size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring, const size_t startIndex)
 {
-	if (!substring || (substring && substring[0] == 0))
+	if (VuoText_isEmpty(substring))
 		return 1;
 
 	if (! string)
@@ -326,7 +400,7 @@ size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring
  */
 size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring)
 {
-	if (!substring || (substring && substring[0] == 0))
+	if (VuoText_isEmpty(substring))
 	{
 		if (string)
 			return VuoText_length(string) + 1;
@@ -354,6 +428,34 @@ size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring)
 	}
 
 	return foundIndex;
+}
+
+/**
+ * Returns a list containing all occurrences of `substring` in `string`.
+ *
+ * This function will find occurrences that consist of the same Unicode characters as @a substring, but won't find
+ * occurrences that consist of the same Unicode string decomposed into a different number of Unicode characters.
+ */
+VuoList_VuoInteger VuoText_findOccurrences(const VuoText string, const VuoText substring)
+{
+	if (VuoText_isEmpty(string) || VuoText_isEmpty(substring))
+		return NULL;
+
+	size_t stringLength = VuoText_length(string);
+	size_t substringLength = VuoText_length(substring);
+	if (stringLength < substringLength)
+		return 0;
+
+	VuoList_VuoInteger found = VuoListCreate_VuoInteger();
+	for (size_t i = 1; i <= stringLength - substringLength + 1; ++i)
+	{
+		VuoText currSubstring = VuoText_substring(string, i, substringLength);
+		VuoLocal(currSubstring);
+		if (VuoText_areEqual(substring, currSubstring))
+			VuoListAppendValue_VuoInteger(found, i);
+	}
+
+	return found;
 }
 
 /**
@@ -529,6 +631,11 @@ VuoText * VuoText_split(VuoText text, VuoText separator, bool includeEmptyParts,
  */
 VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replacement)
 {
+	if (!subject)
+		return NULL;
+	if (!stringToFind)
+		return subject;
+
 	CFMutableStringRef subjectCF = CFStringCreateMutable(NULL, 0);
 	CFStringAppendCString(subjectCF, subject, kCFStringEncodingUTF8);
 
@@ -539,22 +646,88 @@ VuoText VuoText_replace(VuoText subject, VuoText stringToFind, VuoText replaceme
 		return subject;
 	}
 
-	CFStringRef replacementCF = CFStringCreateWithCString(NULL, replacement, kCFStringEncodingUTF8);
-	if (!replacementCF)
+	CFStringRef replacementCF = nil;
+	if (replacement)
 	{
-		CFRelease(stringToFindCF);
-		CFRelease(subjectCF);
-		return subject;
+		replacementCF = CFStringCreateWithCString(NULL, replacement, kCFStringEncodingUTF8);
+		if (!replacementCF)
+		{
+			CFRelease(stringToFindCF);
+			CFRelease(subjectCF);
+			return subject;
+		}
 	}
 
 	CFStringFindAndReplace(subjectCF, stringToFindCF, replacementCF, CFRangeMake(0,CFStringGetLength(subjectCF)), kCFCompareNonliteral);
 
 	VuoText replacedSubject = VuoText_makeFromCFString(subjectCF);
-	CFRelease(replacementCF);
+	if (replacementCF)
+		CFRelease(replacementCF);
 	CFRelease(stringToFindCF);
 	CFRelease(subjectCF);
 
 	return replacedSubject;
+}
+
+/**
+ * Returns a new string with @c newText inserted at the @c startIndex.
+ * @c startIndex is 1 indexed, not 0.
+ * If @c startIndex is less than 1, @c newText is inserted at the beginning of @c string.
+ * If @c startIndex is greater than @c string length, @c newText is appended to the ending of @c string.
+ */
+VuoText VuoText_insert(const VuoText string, int startIndex, const VuoText newText)
+{
+	if (!newText)
+		return string;
+	if (!string)
+		return newText;
+
+	int len = VuoText_length(string);
+
+	if(startIndex > len) {
+		const char *append[2] = { string, newText };
+		return VuoText_append(append, 2);
+	} else if(startIndex <= 1) {
+		const char *append[2] = { newText, string };
+		return VuoText_append(append, 2);
+	}
+
+	VuoText left = VuoText_substring(string, 1, startIndex - 1);
+	VuoText right = VuoText_substring(string, startIndex, (len + 1) - startIndex);
+
+	VuoLocal(left);
+	VuoLocal(right);
+
+	const char *append[3] = { left, newText, right };
+	return VuoText_append(append, 3);
+}
+
+/**
+ * Returns a new string where characters from @c startIndex to @c startIndex + @c length are removed.
+ *
+ * @c startIndex is 1 indexed, not 0.
+ */
+VuoText VuoText_removeAt(const VuoText string, int startIndex, int length)
+{
+	int len = VuoText_length(string);
+
+	if(startIndex < 1)
+	{
+		length -= (1 - startIndex);
+		startIndex = 1;
+	}
+
+	// if start is greater than original length or start + len is the whole array
+	if(startIndex > len || length < 1)
+		return VuoText_format("%s", string);
+
+	VuoText left = VuoText_substring(string, 1, startIndex - 1);
+	VuoText right = VuoText_substring(string, startIndex + length, (len + 1) - startIndex);
+
+	VuoLocal(left);
+	VuoLocal(right);
+
+	return VuoText_format("%s%s", left, right);
 }
 
 /**
@@ -599,4 +772,112 @@ VuoText VuoText_trim(const VuoText text)
 	for (lastNonSpace = len-1; lastNonSpace > firstNonSpace && isspace(text[lastNonSpace]); --lastNonSpace);
 
 	return VuoText_makeWithMaxLength(text + firstNonSpace, lastNonSpace - firstNonSpace + 1);
+}
+
+/**
+ * Returns a new string with the @c text characters cased in the @c textCase style.
+ */
+VuoText VuoText_changeCase(const VuoText text, VuoTextCase textCase)
+{
+	if (!text)
+		return NULL;
+
+	CFMutableStringRef mutable_str = CFStringCreateMutable(NULL, 0);
+	CFStringAppendCString(mutable_str, text, kCFStringEncodingUTF8);
+	CFLocaleRef locale = CFLocaleCopyCurrent();
+
+	switch( textCase )
+	{
+		case VuoTextCase_LowercaseAll:
+			CFStringLowercase(mutable_str, locale);
+			break;
+
+		case VuoTextCase_UppercaseAll:
+			CFStringUppercase(mutable_str, locale);
+			break;
+
+		case VuoTextCase_UppercaseFirstLetterWord:
+			CFStringCapitalize(mutable_str, locale);
+			break;
+
+		case VuoTextCase_UppercaseFirstLetterSentence:
+		{
+			// The rest of the string functions lower-case everything by default
+			CFStringLowercase(mutable_str, locale);
+
+			// the sentence tokenizer does a better job when all characters are capitalized
+			CFStringRef tmp = CFStringCreateWithSubstring(kCFAllocatorDefault, mutable_str, CFRangeMake(0, CFStringGetLength(mutable_str)));
+			CFMutableStringRef all_upper = CFStringCreateMutableCopy(NULL, 0, tmp);
+			CFRelease(tmp);
+			CFStringUppercase(all_upper, locale);
+
+			CFStringTokenizerRef tokenizer = CFStringTokenizerCreate( 	kCFAllocatorDefault,
+																		all_upper,
+																		CFRangeMake(0, CFStringGetLength(all_upper)),
+																		kCFStringTokenizerUnitSentence,
+																		locale);
+
+			CFStringTokenizerTokenType tokenType = kCFStringTokenizerTokenNone;
+
+			// http://stackoverflow.com/questions/15515128/capitalize-first-letter-of-every-sentence-in-nsstring
+			while(kCFStringTokenizerTokenNone != (tokenType = CFStringTokenizerAdvanceToNextToken(tokenizer)))
+			{
+			    CFRange tokenRange = CFStringTokenizerGetCurrentTokenRange(tokenizer);
+
+				if (tokenRange.location != kCFNotFound && tokenRange.length > 0)
+				{
+					CFRange firstCharRange = CFRangeMake(tokenRange.location, 1);
+					CFStringRef firstLetter = CFStringCreateWithSubstring(kCFAllocatorDefault, mutable_str, firstCharRange);
+					CFMutableStringRef upperFirst = CFStringCreateMutableCopy(NULL, 0, firstLetter);
+					CFRelease(firstLetter);
+					CFStringCapitalize(upperFirst, locale);
+					CFStringReplace(mutable_str, firstCharRange, upperFirst);
+					CFRelease(upperFirst);
+				}
+			}
+
+			CFRelease(all_upper);
+			CFRelease(tokenizer);
+		}
+		break;
+	}
+
+	VuoText processedString = VuoText_makeFromCFString(mutable_str);
+
+	CFRelease(locale);
+	CFRelease(mutable_str);
+
+	return processedString;
+}
+
+/**
+ * Returns an array of unicode 32 bit decimal values for each character in a string.
+ *
+ * If conversion fails, @c length will be set to 0 null is returned.  Otherwise an
+ * array is returned and @c length is set to the size of the array.
+ *
+ * \sa VuoText_makeFromUtf32
+ */
+uint32_t* VuoText_getUtf32Values(const VuoText text, size_t* length)
+{
+	CFMutableStringRef cf_str = CFStringCreateMutable(NULL, 0);
+	CFStringAppendCString(cf_str, text, kCFStringEncodingUTF8);
+
+	size_t str_len = CFStringGetLength(cf_str);
+
+	CFRange range = CFRangeMake(0, str_len);
+	CFIndex usedBufLen;
+	*length = (size_t) CFStringGetBytes(cf_str, range, kCFStringEncodingUTF32, '?', false, NULL, str_len, &usedBufLen );
+
+	uint32_t* decimal = (uint32_t*) NULL;
+
+	if(*length > 0)
+	{
+		decimal = (uint32_t*) malloc( sizeof(uint32_t) * usedBufLen );
+		CFStringGetBytes(cf_str, range, kCFStringEncodingUTF32, '?', false, (uint8_t*) decimal, usedBufLen, NULL);
+	}
+
+	CFRelease(cf_str);
+
+	return decimal;
 }

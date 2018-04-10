@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERDRIVER_HH
-#define VUOCOMPILERDRIVER_HH
+#pragma once
 
 class VuoCompiler;
 class VuoCompilerComposition;
@@ -29,5 +28,3 @@ public:
 private:
 	VuoCompilerGraphvizParser *parser;
 };
-
-#endif // VUOCOMPILERDRIVER_HH

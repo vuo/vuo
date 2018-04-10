@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Fetch Date-Time",
-					  "keywords" : [ "wall", "clock", "watch", "current" ],
+					  "keywords" : [ "wall", "clock", "watch", "current", "now", "today" ],
 					  "version" : "1.0.0",
 					  "dependencies" : [ ],
 					  "node" : {

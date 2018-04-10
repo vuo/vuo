@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCONTROLCODE_H
-#define VUOCONTROLCODE_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoControlCode;
@@ -61,5 +60,4 @@ void VuoControlCode_release(VuoControlCode value);
  * @}
  */
 
-#endif // VuoControlCode_H
 

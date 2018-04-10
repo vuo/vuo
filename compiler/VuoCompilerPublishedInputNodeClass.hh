@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERPUBLISHEDINPUTNODECLASS_H
-#define VUOCOMPILERPUBLISHEDINPUTNODECLASS_H
+#pragma once
 
 #include "VuoCompilerSpecializedNodeClass.hh"
 
@@ -36,5 +35,3 @@ private:
 	VuoCompilerPublishedInputNodeClass(VuoCompilerPublishedInputNodeClass *compilerNodeClass);
 	VuoCompilerPublishedInputNodeClass(VuoNodeClass *baseNodeClass);
 };
-
-#endif

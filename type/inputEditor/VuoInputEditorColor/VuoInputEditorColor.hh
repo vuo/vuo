@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORCOLOR_HH
-#define VUOINPUTEDITORCOLOR_HH
+#pragma once
 
 #include "VuoInputEditor.hh"
 
@@ -47,4 +46,3 @@ private slots:
 	void currentColorChanged(const QColor &color);
 };
 
-#endif // VUOINPUTEDITORCOLOR_HH

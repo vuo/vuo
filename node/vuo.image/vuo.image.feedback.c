@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Blend Image with Feedback",
 					 "keywords" : [ "combine", "mix", "fade", "merge", "layer", "composite", "feedback" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoLayer",
@@ -52,10 +52,11 @@ void nodeInstanceEvent
 		VuoInputData(VuoTransform2d) imageTransform,
 		VuoInputData(VuoTransform2d) feedbackTransform,
 		VuoInputData(VuoReal, {"default":0.7,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.01}) feedbackOpacity,
+		VuoInputData(VuoBlendMode, {"default":"normal", "restrictToOpenGlBlendModes":true}) feedbackBlendMode,
 		VuoInputData(VuoBoolean, {"default":false}) pixelAligned,
 		VuoInputData(VuoBoolean, {"default":true, "name":"Image in Foreground"}) imageInForeground,
-		VuoInputData(VuoInteger, {"default":1024, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) width,
-		VuoInputData(VuoInteger, {"default":768, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256}) height,
+		VuoInputData(VuoInteger, {"default":1024, "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256, "auto":0, "autoSupersedesDefault":true}) width,
+		VuoInputData(VuoInteger, {"default":768,  "suggestedMin":1, "suggestedMax":4096, "suggestedStep":256, "auto":0, "autoSupersedesDefault":true}) height,
 		VuoInputData(VuoImageColorDepth, {"default":"8bpc"}) colorDepth,
 		VuoOutputData(VuoImage) feedbackImage
 )
@@ -66,13 +67,16 @@ void nodeInstanceEvent
 		return;
 	}
 
+	VuoInteger realizedWidth  = width  ? width  : (image ? image->pixelsWide : (*instance)->previousFeedbackImage->pixelsWide);
+	VuoInteger realizedHeight = height ? height : (image ? image->pixelsHigh : (*instance)->previousFeedbackImage->pixelsWide);
+
 	// Convert the new image into a layer.
 	VuoImage newImage = (image ? image : VuoImage_makeColorImage(VuoColor_makeWithRGBA(0,0,0,0),1,1));
 	VuoLayer newImageLayer = VuoLayer_make(VuoText_make("New Image"),
 												   newImage,
 												   (VuoPoint2d){0,0},
 												   0,
-												   (2.*newImage->pixelsWide)/width,
+												   (2.*newImage->pixelsWide)/realizedWidth,
 												   1.);
 	VuoList_VuoLayer newImageLayerList = VuoListCreate_VuoLayer();
 	VuoListAppendValue_VuoLayer(newImageLayerList, newImageLayer);
@@ -83,8 +87,9 @@ void nodeInstanceEvent
 												   previousFeedbackImage,
 												   (VuoPoint2d){0,0},
 												   0,
-												   (2.*previousFeedbackImage->pixelsWide)/width,
+												   (2.*previousFeedbackImage->pixelsWide)/realizedWidth,
 												   1. - pow(1. - feedbackOpacity, 3.));
+	previousFeedbackLayer.sceneObject.blendMode = feedbackBlendMode;
 	VuoList_VuoLayer previousFeedbackLayerList = VuoListCreate_VuoLayer();
 	VuoListAppendValue_VuoLayer(previousFeedbackLayerList, previousFeedbackLayer);
 
@@ -94,7 +99,7 @@ void nodeInstanceEvent
 
 	VuoTransform2d feedbackTransform2 = pixelAligned
 			? VuoTransform2d_make(
-				  VuoPoint2d_snap(feedbackTransform.translation, VuoPoint2d_make(0,0), VuoPoint2d_make(2./width,2./width)),
+				  VuoPoint2d_snap(feedbackTransform.translation, VuoPoint2d_make(0,0), VuoPoint2d_make(2./realizedWidth,2./realizedWidth)),
 				  VuoReal_snap(feedbackTransform.rotation, 0, M_PI/2),
 				  VuoPoint2d_make(1,1))
 			: feedbackTransform;
@@ -112,7 +117,7 @@ void nodeInstanceEvent
 
 	VuoSceneObject rootSceneObject = VuoLayer_makeGroup(compositeLayerList, VuoTransform2d_makeIdentity()).sceneObject;
 	VuoSceneRenderer_setRootSceneObject((*instance)->sceneRenderer, rootSceneObject);
-	VuoSceneRenderer_regenerateProjectionMatrix((*instance)->sceneRenderer, width, height);
+	VuoSceneRenderer_regenerateProjectionMatrix((*instance)->sceneRenderer, realizedWidth, realizedHeight);
 
 	// Render the composite scene.
 	VuoSceneRenderer_renderToImage((*instance)->sceneRenderer, feedbackImage, colorDepth, VuoMultisample_Off, NULL);

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERCABLE_HH
-#define VUORENDERERCABLE_HH
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoCable.hh"
@@ -98,4 +97,3 @@ private:
 	bool isConnectedToSelectedNode(void);
 };
 
-#endif // VUORENDERERCABLE_HH

@@ -23,6 +23,7 @@ LIBS += \
 	$$ROOT/node/vuo.video/VuoMovieImageEncoding.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$ROOT/type/list/VuoList_VuoAudioEncoding.o \
 	$$ROOT/type/list/VuoList_VuoMovieImageEncoding.o \

@@ -18,6 +18,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.1.0",
 					  "node": {
+						  "isDeprecated" : true,
 						  "exampleCompositions" : [ "ExploreCheckerboard.vuo" ]
 					  }
 				 });
@@ -84,7 +85,7 @@ void nodeInstanceEvent
 		VuoInputData(VuoReal, {"default":1.0, "suggestedMin":0, "suggestedMax":1}) sharpness,
 		VuoInputData(VuoReal, {"default":0., "suggestedMin":0., "suggestedMax":360.}) angle,
 		VuoInputData(VuoGridType, {"default":"horizontal-vertical"}) type,
-		VuoInputData(VuoPoint2d, {"default":{"x":0,"y":0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
+		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoInteger, {"default":640, "suggestedMin":1, "suggestedStep":32}) width,
 		VuoInputData(VuoInteger, {"default":480, "suggestedMin":1, "suggestedStep":32}) height,
 		VuoOutputData(VuoImage) image

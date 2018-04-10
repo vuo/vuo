@@ -54,16 +54,17 @@ MODULE_LIBRARY_OBJECTS += \
 
 
 # Create and populate Headers directory
-FRAMEWORK_VUO_HEADERS.files += \
-	../type/coreTypes.h \
-	../type/coreTypesStringify.h \
-	../type/coreTypesStringify.hh
+FRAMEWORK_VUO_HEADERS.files += ../type/coreTypes.h
 HEADERS_DEST_DIR = "Vuo.framework/Versions/$${QMAKE_FRAMEWORK_VERSION}/Headers"
 createHeadersDir.commands += rm -rf $${HEADERS_DEST_DIR} &&
 createHeadersDir.commands += mkdir -p $${HEADERS_DEST_DIR} &&
 createHeadersDir.commands += ln -s . $${HEADERS_DEST_DIR}/Vuo &&
-createHeadersDir.commands += cp $$FRAMEWORK_VUO_HEADERS.files $${HEADERS_DEST_DIR} &&
-createHeadersDir.commands += cp Vuo.h $${HEADERS_DEST_DIR}/Vuo.h
+
+# Hard-link, so `#pragma once` knows the headers in Vuo.framework are the same as the headers in the source tree;
+# otherwise modules that use both Vuo.framework and the source tree (e.g., vuo-export) will see duplicate definitions.
+createHeadersDir.commands += ln -f $$FRAMEWORK_VUO_HEADERS.files $${HEADERS_DEST_DIR} &&
+createHeadersDir.commands += ln Vuo.h $${HEADERS_DEST_DIR}/Vuo.h
+
 createHeadersDir.depends += $$FRAMEWORK_VUO_HEADERS.files $$FRAMEWORK_VUO_STUB_HEADER Vuo.h
 createHeadersDir.target = $${HEADERS_DEST_DIR}/Vuo.h
 POST_TARGETDEPS += $${HEADERS_DEST_DIR}/Vuo.h
@@ -182,7 +183,9 @@ VUOCOMPOSITIONLOADER_DEST_DIR = "$$HELPERS_DEST_DIR/VuoCompositionLoader.app/Con
 copyHelpers.commands = \
 	   rm -rf $$HELPERS_DEST_DIR \
 	&& mkdir -p $$VUOCOMPOSITIONLOADER_DEST_DIR \
-	&& cp VuoCompositionLoader.plist $$VUOCOMPOSITIONLOADER_DEST_DIR/../Info.plist \
+	&& cp ../runtime/VuoCompositionLoader-Info-generated.plist $$VUOCOMPOSITIONLOADER_DEST_DIR/../Info.plist \
+	&& mkdir $$VUOCOMPOSITIONLOADER_DEST_DIR/../Resources \
+	&& cp $$ROOT/editor/VuoEditorApp/Icons/vuo-composition.icns $$VUOCOMPOSITIONLOADER_DEST_DIR/../Resources \
 	&& cp $$ROOT/runtime/VuoCompositionLoader $$VUOCOMPOSITIONLOADER_DEST_DIR
 copyHelpers.depends += $$ROOT/runtime/VuoCompositionLoader
 copyHelpers.target = $$HELPERS_DEST_DIR
@@ -199,6 +202,7 @@ copyZeroMQHeaders.commands += rm -rf $${ZEROMQ_HEADERS_DEST_DIR} &&
 copyZeroMQHeaders.commands += mkdir -p $${ZEROMQ_HEADERS_DEST_DIR} &&
 copyZeroMQHeaders.commands += cp -a $${ZMQ_ROOT}/include/* $${ZEROMQ_HEADERS_DEST_DIR}
 copyZeroMQHeaders.target = $${ZEROMQ_HEADERS_DEST_DIR}/zmq.h
+copyZeroMQHeaders.depends = $${HEADERS_DEST_DIR}/Vuo.h
 POST_TARGETDEPS += $${ZEROMQ_HEADERS_DEST_DIR}/zmq.h
 QMAKE_EXTRA_TARGETS += copyZeroMQHeaders
 
@@ -209,6 +213,7 @@ copyJsonHeaders.commands += rm -rf $${JSON_HEADERS_DEST_DIR} &&
 copyJsonHeaders.commands += mkdir -p $${JSON_HEADERS_DEST_DIR} &&
 copyJsonHeaders.commands += cp -r $${JSONC_ROOT}/include/json-c/* $${JSON_HEADERS_DEST_DIR}
 copyJsonHeaders.target = $${JSON_HEADERS_DEST_DIR}/json.h
+copyJsonHeaders.depends = $${HEADERS_DEST_DIR}/Vuo.h
 POST_TARGETDEPS += $${JSON_HEADERS_DEST_DIR}/json.h
 QMAKE_EXTRA_TARGETS += copyJsonHeaders
 
@@ -230,6 +235,7 @@ copyMacOsHeaders.commands += cp -r /usr/include/secure $${MACOS_HEADERS_DEST_DIR
 copyMacOsHeaders.commands += cp -r /usr/include/sys $${MACOS_HEADERS_DEST_DIR}/ ;
 copyMacOsHeaders.commands += cp /System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/*.h $${MACOS_HEADERS_DEST_DIR}/OpenGL
 copyMacOsHeaders.target = $${MACOS_HEADERS_DEST_DIR}
+copyMacOsHeaders.depends = $${HEADERS_DEST_DIR}/Vuo.h
 POST_TARGETDEPS += $${MACOS_HEADERS_DEST_DIR}
 QMAKE_EXTRA_TARGETS += copyMacOsHeaders
 
@@ -284,22 +290,6 @@ copyAndCleanQtFrameworks.commands = \
 		$${QT_ROOT}/lib/QtXml.framework \
 		$${QT_ROOT}/lib/QtNetwork.framework \
 		$$RESOURCES_SUBDIR \
-	&& mv "$$RESOURCES_SUBDIR/QtCore.framework/Contents" "$$RESOURCES_SUBDIR/QtCore.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtCore.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtGui.framework/Contents" "$$RESOURCES_SUBDIR/QtGui.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtGui.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtWidgets.framework/Contents" "$$RESOURCES_SUBDIR/QtWidgets.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtWidgets.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtMacExtras.framework/Contents" "$$RESOURCES_SUBDIR/QtMacExtras.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtMacExtras.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtPrintSupport.framework/Contents" "$$RESOURCES_SUBDIR/QtPrintSupport.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtPrintSupport.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtOpenGL.framework/Contents" "$$RESOURCES_SUBDIR/QtOpenGL.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtOpenGL.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtXml.framework/Contents" "$$RESOURCES_SUBDIR/QtXml.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtXml.framework/Resources" \
-	&& mv "$$RESOURCES_SUBDIR/QtNetwork.framework/Contents" "$$RESOURCES_SUBDIR/QtNetwork.framework/Versions/5/Resources" \
-	&& ln -s Versions/Current/Resources "$$RESOURCES_SUBDIR/QtNetwork.framework/Resources" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Qt*.prl" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Qt*_debug" \
 	&& rm -f  "$$RESOURCES_SUBDIR/Qt*.framework/Versions/$$QT_MAJOR_VERSION/Qt*_debug" \
@@ -321,11 +311,9 @@ copyAndCleanQtFrameworks.commands = \
 	&& install_name_tool -id "@rpath/QtXml.framework/QtXml" "$$RESOURCES_SUBDIR/QtXml.framework/QtXml" \
 	&& chmod +wx "$$RESOURCES_SUBDIR/QtNetwork.framework/Versions/$$QT_MAJOR_VERSION/QtNetwork" \
 	&& install_name_tool -id "@rpath/QtNetwork.framework/QtNetwork" "$$RESOURCES_SUBDIR/QtNetwork.framework/QtNetwork" \
-	&& rm -rf $$QTPLUGINS_DEST_DIR \
-	&& mkdir -p $$QTPLUGINS_DEST_DIR \
-	&& cp -R $$QT_ROOT/plugins/accessible $$QTPLUGINS_DEST_DIR/accessible \
-	&& mkdir -p $$QTPLUGINS_DEST_DIR/platforms \
-	&& cp -R $$QT_ROOT/plugins/platforms/libqcocoa.dylib $$QTPLUGINS_DEST_DIR/platforms \
+	&& rm -rf \"$$QTPLUGINS_DEST_DIR\" \
+	&& mkdir -p \"$$QTPLUGINS_DEST_DIR/platforms\" \
+	&& cp -R \"$$QT_ROOT/plugins/platforms/libqcocoa.dylib\" \"$$QTPLUGINS_DEST_DIR/platforms\" \
 	&& rm -f "$$QTPLUGINS_DEST_DIR/*/*_debug.dylib" \
 	&& ./fixRpaths.sh $$QT_ROOT $$RESOURCES_SUBDIR $$QT_MAJOR_VERSION \
 	&& ./fixRpaths.sh /usr/local $$RESOURCES_SUBDIR $$QT_MAJOR_VERSION
@@ -456,6 +444,7 @@ coverage {
 linkVuoFramework.target = $$VUO_FRAMEWORK_BINARY
 linkVuoFramework.depends = \
 	$$LLVM_DYLIB_DEST \
+	$$MODULES_DEST_DIR/libLeap.dylib \
 	../library/libVuoGlContext.dylib \
 	../library/libVuoGlPool.dylib \
 	../library/libVuoHeap.dylib \
@@ -493,7 +482,7 @@ QMAKE_EXTRA_TARGETS += createLinks
 # As a litmus test, we know that vuo-link should depend on Vuo.framework's Vuo.h, so re-run qmake if it doesn't.
 fixOtherProjects.commands = \
 	( \
-		grep -q framework/Vuo.framework/Versions/$${VUO_VERSION}/Headers/Vuo.h ../compiler/vuo-link/Makefile \
+		grep -q framework/Vuo.framework/Headers/Vuo/Vuo.h ../compiler/vuo-link/Makefile \
 		|| (cd .. && /usr/local/bin/qmake -spec macx-clang CONFIG+="'$$VUO_QMAKE_CONFIG'" -r) \
 	) \
 	&& rm -Rf $$ROOT/editor/VuoEditorApp/pch \

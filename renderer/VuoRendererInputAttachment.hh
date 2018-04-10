@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERINPUTATTACHMENT_HH
-#define VUORENDERERINPUTATTACHMENT_HH
+#pragma once
 
 #include "VuoRendererNode.hh"
 #include "VuoNode.hh"
@@ -33,4 +32,3 @@ protected:
 	static VuoNode * getListNodeConnectedToInputPort(VuoPort *port);
 };
 
-#endif // VUORENDERERINPUTATTACHMENT_HH

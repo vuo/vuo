@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERPORT_HH
-#define VUORENDERERPORT_HH
+#pragma once
 
 #include "VuoRendererItem.hh"
 
@@ -73,6 +72,7 @@ public:
 	bool isConstant(void) const;
 	bool effectivelyHasConnectedDataCable(bool includePublishedCables) const;
 	string getConstantAsString(void) const;
+	string getConstantAsTruncatedStringToRender(void) const;
 	string getConstantAsStringToRender(void) const;
 	string getStringForRealValue(double value) const;
 	void setConstant(string constantValue);
@@ -167,4 +167,3 @@ protected:
 	VuoRendererSignaler *signaler; ///< The Qt signaler used by this port.
 };
 
-#endif // VUORENDERERPORT_HH

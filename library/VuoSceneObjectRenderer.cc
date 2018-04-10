@@ -8,7 +8,6 @@
  */
 
 #include "VuoSceneObjectRenderer.h"
-#include "VuoSceneRenderer.h"
 #include "VuoGlContext.h"
 #include "VuoGlPool.h"
 
@@ -36,7 +35,6 @@ VuoModuleMetadata({
 					 "title" : "VuoSceneObjectRenderer",
 					 "dependencies" : [
 						 "VuoSceneObject",
-						 "VuoSceneRenderer",
 						 "VuoShader",
 						 "VuoGlContext",
 						 "VuoGlPool",
@@ -153,8 +151,6 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 	if (!sceneObject->mesh)
 		return;
 
-	dispatch_semaphore_wait(VuoSceneRenderer_vertexArraySemaphore, DISPATCH_TIME_FOREVER);
-
 	VuoRetain(sceneObject->mesh);
 
 	VuoMesh newMesh = VuoMesh_make(sceneObject->mesh->submeshCount);
@@ -191,18 +187,6 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 		// Attach the input combinedBuffer for rendering.
 		glBindBuffer(GL_ARRAY_BUFFER, submesh.glUpload.combinedBuffer);
 
-		int bufferCount = 0;
-		++bufferCount; // position
-		if (submesh.glUpload.normalOffset)
-			++bufferCount;
-		if (submesh.glUpload.tangentOffset)
-			++bufferCount;
-		if (submesh.glUpload.bitangentOffset)
-			++bufferCount;
-		if (submesh.glUpload.textureCoordinateOffset)
-			++bufferCount;
-
-
 		VuoGlProgram program;
 		if (!VuoShader_activate(sceneObjectRenderer->shader, submesh.elementAssemblyMethod, sceneObjectRenderer->glContext, &program))
 		{
@@ -225,27 +209,31 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 		}
 
 
+		int stride = VuoSubmesh_getStride(submesh);
 		glEnableVertexAttribArray(attributes.position);
-		glVertexAttribPointer(attributes.position, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, (void*)0);
+		glVertexAttribPointer(attributes.position, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, (void*)0);
 		if (submesh.glUpload.normalOffset && attributes.normal >= 0)
 		{
 			glEnableVertexAttribArray(attributes.normal);
-			glVertexAttribPointer(attributes.normal, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, submesh.glUpload.normalOffset);
+			glVertexAttribPointer(attributes.normal, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, submesh.glUpload.normalOffset);
 		}
-		if (submesh.glUpload.tangentOffset && attributes.tangent >= 0)
+		bool hasTangents = submesh.glUpload.tangentOffset && attributes.tangent >= 0;
+		if (hasTangents)
 		{
 			glEnableVertexAttribArray(attributes.tangent);
-			glVertexAttribPointer(attributes.tangent, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, submesh.glUpload.tangentOffset);
+			glVertexAttribPointer(attributes.tangent, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, submesh.glUpload.tangentOffset);
 		}
-		if (submesh.glUpload.bitangentOffset && attributes.bitangent >= 0)
+		bool hasBitangents = submesh.glUpload.bitangentOffset && attributes.bitangent >= 0;
+		if (hasBitangents)
 		{
 			glEnableVertexAttribArray(attributes.bitangent);
-			glVertexAttribPointer(attributes.bitangent, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, submesh.glUpload.bitangentOffset);
+			glVertexAttribPointer(attributes.bitangent, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, submesh.glUpload.bitangentOffset);
 		}
-		if (submesh.glUpload.textureCoordinateOffset && attributes.textureCoordinate >= 0)
+		bool hasTextureCoordinates = submesh.glUpload.textureCoordinateOffset && attributes.textureCoordinate >= 0;
+		if (hasTextureCoordinates)
 		{
 			glEnableVertexAttribArray(attributes.textureCoordinate);
-			glVertexAttribPointer(attributes.textureCoordinate, 4 /* XYZW */, GL_FLOAT, GL_FALSE, sizeof(VuoPoint4d)*bufferCount, submesh.glUpload.textureCoordinateOffset);
+			glVertexAttribPointer(attributes.textureCoordinate, 4 /* XYZW */, GL_FLOAT, GL_FALSE, stride, submesh.glUpload.textureCoordinateOffset);
 		}
 
 
@@ -262,7 +250,7 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 		GLuint combinedOutputBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, combinedOutputBufferSize);
 		VuoGlPool_retain(combinedOutputBuffer);
 		glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, combinedOutputBuffer);
-		glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, combinedOutputBufferSize, NULL, GL_STATIC_READ);
+//		glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, combinedOutputBufferSize, NULL, GL_STATIC_READ);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER_EXT, 0, combinedOutputBuffer);
 
 
@@ -329,11 +317,11 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 		if (submesh.glUpload.elementBuffer)
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		if (submesh.glUpload.textureCoordinateOffset && attributes.textureCoordinate >= 0)
+		if (hasTextureCoordinates)
 			glDisableVertexAttribArray(attributes.textureCoordinate);
-		if (submesh.glUpload.bitangentOffset && attributes.bitangent >= 0)
+		if (hasBitangents)
 			glDisableVertexAttribArray(attributes.bitangent);
-		if (submesh.glUpload.tangentOffset && attributes.tangent >= 0)
+		if (hasTangents)
 			glDisableVertexAttribArray(attributes.tangent);
 		if (submesh.glUpload.normalOffset && attributes.normal >= 0)
 			glDisableVertexAttribArray(attributes.normal);
@@ -363,13 +351,17 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 //			VL();
 //		}
 
+		// https://vuo.org/node/1571 @@@ b33p
+		// The output buffer will always contain all 5 vertex attributes,
+		// though (depending on input) some might not contain contain useful data.
+		unsigned long combinedOutputBufferStride = sizeof(VuoPoint4d) * 5;
 
 		newMesh->submeshes[i] = VuoSubmesh_makeGl(
-					actualVertexCount, combinedOutputBuffer, combinedOutputBufferSize,
-					(void*)(sizeof(VuoPoint4d)*1),
-					(void*)(sizeof(VuoPoint4d)*2),
-					(void*)(sizeof(VuoPoint4d)*3),
-					(void*)(sizeof(VuoPoint4d)*4),
+					actualVertexCount, combinedOutputBuffer, combinedOutputBufferSize, combinedOutputBufferStride,
+					submesh.glUpload.normalOffset            ? (void*)(sizeof(VuoPoint4d)*1) : NULL,
+					submesh.glUpload.tangentOffset           ? (void*)(sizeof(VuoPoint4d)*2) : NULL,
+					submesh.glUpload.bitangentOffset         ? (void*)(sizeof(VuoPoint4d)*3) : NULL,
+					submesh.glUpload.textureCoordinateOffset ? (void*)(sizeof(VuoPoint4d)*4) : NULL,
 					0, 0, 0, // Since transform feedback doesn't provide an elementBuffer, render this submesh using glDrawArrays().
 					outputPrimitiveMode);
 		newMesh->submeshes[i].faceCullingMode = submesh.faceCullingMode;
@@ -379,8 +371,6 @@ static void VuoSceneObjectRenderer_drawSingle(CGLContextObj cgl_ctx, struct VuoS
 //	VuoRetain(newMesh);
 	VuoRelease(sceneObject->mesh);
 	sceneObject->mesh = newMesh;
-
-	dispatch_semaphore_signal(VuoSceneRenderer_vertexArraySemaphore);
 }
 
 /**
@@ -401,6 +391,8 @@ VuoSceneObject VuoSceneObjectRenderer_draw(VuoSceneObjectRenderer sor, VuoSceneO
 	struct VuoSceneObjectRendererInternal *sceneObjectRenderer = (struct VuoSceneObjectRendererInternal *)sor;
 	CGLContextObj cgl_ctx = (CGLContextObj)sceneObjectRenderer->glContext;
 
+	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+
 	VuoSceneObject_apply(&sceneObjectCopy, ^(VuoSceneObject *currentObject, float modelviewMatrix[16]) {
 							 VuoSceneObjectRenderer_drawSingle(cgl_ctx, sceneObjectRenderer, currentObject, modelviewMatrix);
 						 });
@@ -410,6 +402,8 @@ VuoSceneObject VuoSceneObjectRenderer_draw(VuoSceneObjectRenderer sor, VuoSceneO
 	// Ensure commands are submitted before we try to use the generated object on another context.
 	// https://b33p.net/kosada/node/10467
 	glFlushRenderAPPLE();
+
+	dispatch_semaphore_signal(VuoGlSemaphore);
 
 	return sceneObjectCopy;
 }

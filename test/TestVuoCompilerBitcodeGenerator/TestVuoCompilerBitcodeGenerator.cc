@@ -237,7 +237,7 @@ private slots:
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, false, compositionName.toStdString(), compiler);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 
 		vector<string> triggerTitles;
 		for (map<VuoCompilerTriggerPort *, VuoCompilerNode *>::iterator i = generator->graph->nodeForTrigger.begin(); i != generator->graph->nodeForTrigger.end(); ++i)
@@ -321,7 +321,7 @@ private slots:
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, false, compositionName.toStdString(), compiler);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 		vector<VuoCompilerNode *> orderedNodes = generator->orderedNodes;
 
 		set<VuoNode *> expectedNodes = composition.getBase()->getNodes();
@@ -515,10 +515,12 @@ private slots:
 			map<string, set<string> > chains;
 			chains["FirePeriodically1:fired"].insert("Subtract1");
 			chains["FirePeriodically1:fired"].insert("Subtract2");
-			chains["FirePeriodically1:fired"].insert("Subtract3 " + VuoNodeClass::publishedOutputNodeIdentifier);
+			chains["FirePeriodically1:fired"].insert("Subtract3");
+			chains["FirePeriodically1:fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
 			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract1");
 			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract2");
-			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract3 " + VuoNodeClass::publishedOutputNodeIdentifier);
+			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert("Subtract3");
+			chains[VuoNodeClass::publishedInputNodeIdentifier + ":fired"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
 			QTest::newRow("Published input and output ports.") << "Recur_Subtract_published" << chains;
 		}
 
@@ -542,7 +544,7 @@ private slots:
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, false, compositionName.toStdString(), compiler);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodeForTrigger = generator->graph->nodeForTrigger;
 
 		map<string, set<string> > actualChains;
@@ -594,6 +596,58 @@ private slots:
 		delete generator;
 	}
 
+	void testWorkerThreadsNeeded_data()
+	{
+		QTest::addColumn<QString>("compositionName");
+		QTest::addColumn<QString>("triggerNode");
+		QTest::addColumn<QString>("triggerPort");
+		QTest::addColumn<int>("expectedMinThreadsNeeded");
+		QTest::addColumn<int>("expectedMaxThreadsNeeded");
+
+		QTest::newRow("Trigger with no downstream nodes") << "TriggerBypassFeedbackLoop" << "DisplayConsoleWindow" << "typedLine" << 1 << 1;
+		QTest::newRow("Single chain") << "2Recur_Count_Count" << "FirePeriodically1" << "fired" << 1 << 1;
+		QTest::newRow("Bypass") << "Recur_Count_Count_gather_Count" << "FirePeriodically1" << "fired" << 1 << 1;
+		QTest::newRow("Scatter") << "Recur_2Count_Count" << "FirePeriodically1" << "fired" << 1 << 2;
+		QTest::newRow("Scatter, gather") << "TriggerScatterGather" << "FirePeriodically1" << "fired" << 1 << 2;
+		QTest::newRow("Scatter, scatter all branches") << "TriggerScatterScatter" << "FirePeriodically1" << "fired" << 1 << 5;
+		QTest::newRow("Scatter, scatter one branch") << "TriggerScatterScatterPartial" << "FirePeriodically1" << "fired" << 1 << 3;
+		QTest::newRow("Scatter, gather, scatter") << "TriggerScatterGatherScatter" << "FirePeriodically1" << "fired" << 1 << 6;  // ideal max = 3
+		QTest::newRow("Small feedback loop") << "PassiveBypassFeedbackLoop" << "FirePeriodically" << "fired" << 1 << 3;
+		QTest::newRow("Large feedback loop") << "StoreRecentText" << "FirePeriodically" << "fired" << 1 << 2;
+	}
+	void testWorkerThreadsNeeded()
+	{
+		QFETCH(QString, compositionName);
+		QFETCH(QString, triggerNode);
+		QFETCH(QString, triggerPort);
+		QFETCH(int, expectedMinThreadsNeeded);
+		QFETCH(int, expectedMaxThreadsNeeded);
+
+		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoCompilerComposition composition(new VuoComposition(), parser);
+		VuoCompilerGraph graph(&composition);
+
+		VuoCompilerTriggerPort *trigger = NULL;
+		set<VuoNode *> nodes = composition.getBase()->getNodes();
+		for (set<VuoNode *>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+		{
+			VuoNode *node = *i;
+			if (node->getTitle() == triggerNode.toStdString())
+			{
+				VuoPort *port = node->getOutputPortWithName(triggerPort.toStdString());
+				trigger = dynamic_cast<VuoCompilerTriggerPort *>( port->getCompiler() );
+			}
+		}
+		QVERIFY(trigger);
+
+		int actualMinThreadsNeeded, actualMaxThreadsNeeded;
+		graph.getWorkerThreadsNeeded(trigger, actualMinThreadsNeeded, actualMaxThreadsNeeded);
+
+		QCOMPARE(actualMinThreadsNeeded, expectedMinThreadsNeeded);
+		QCOMPARE(actualMaxThreadsNeeded, expectedMaxThreadsNeeded);
+	}
+
 	void testNodesToWaitOn_data()
 	{
 		QTest::addColumn< QString >("compositionName");
@@ -633,9 +687,6 @@ private slots:
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame BlendImages"].insert("MakeImageLayer");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("MakeList1");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("MakeList2");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("RenderLayersToWindow");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("RenderLayersToImage");
-			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeImageLayer"].insert("HoldValue");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeList1"].insert("RenderLayersToWindow");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame MakeList2"].insert("RenderLayersToImage");
 			expectedNodesForTriggerOrNode["RenderLayersToWindow:requestedFrame RenderLayersToImage"].insert("HoldValue");
@@ -648,7 +699,9 @@ private slots:
 			map<string, set<string> > expectedNodesForTriggerOrNode;
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("FirePeriodically1");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue1");
+			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue2");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue3");
+			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue4");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired ShareValue1"].insert("ShareValue2");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired ShareValue3"].insert("ShareValue4");
 			expectedNodesForTriggerOrNode["FirePeriodically2:fired"].insert("FirePeriodically2");
@@ -708,7 +761,11 @@ private slots:
 			map<string, set<string> > expectedNodesForTriggerOrNode;
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("FirePeriodically1");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue1");
+			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue2");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue3");
+			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue4");
+			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue5");
+			expectedNodesForTriggerOrNode["FirePeriodically1:fired"].insert("ShareValue6");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired ShareValue1"].insert("ShareValue2");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired ShareValue2"].insert("ShareValue5");
 			expectedNodesForTriggerOrNode["FirePeriodically1:fired ShareValue3"].insert("ShareValue4");
@@ -759,7 +816,72 @@ private slots:
 			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired AddToList"].insert("HoldList");
 			expectedNodesForTriggerOrNode[VuoNodeClass::publishedInputNodeIdentifier + ":fired HoldList"].insert(VuoNodeClass::publishedOutputNodeIdentifier);
 			expectedNodesForTriggerOrNode["FireOnStart:started"].insert("FireOnStart");
-			QTest::newRow("Leaf nodes gather at published output node.") << "PublishedOutputGather" << expectedNodesForTriggerOrNode;
+			QTest::newRow("Leaf nodes gather at published output node") << "PublishedOutputGather" << expectedNodesForTriggerOrNode;
+		}
+
+		{
+			map<string, set<string> > expectedNodesForTriggerOrNode;
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Fire on Start");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Spin Off Event");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make RGB Color");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make Color Image");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Fire on Start:started Make RGB Color"].insert("Make Color Image");
+			expectedNodesForTriggerOrNode["Fire on Start:started Make Color Image"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Fire on Start:started Select Latest"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Spin Off Event");
+			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Fetch Image");
+			expectedNodesForTriggerOrNode["Spin Off Event:spunOff Fetch Image"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Spin Off Event:spunOff Select Latest"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:showedWindow"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Render Image to Window");
+			QTest::newRow("Trigger overlaps with Spin Off node") << "SpinOffEventFetchImage" << expectedNodesForTriggerOrNode;
+		}
+
+		{
+			map<string, set<string> > expectedNodesForTriggerOrNode;
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Allow First Event");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Spin Off Value");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Make Color Image");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Spin Off Value");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Make Color Image");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Allow First Event"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Make Color Image"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame Select Latest"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Spin Off Value");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Fetch Image");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Fetch Image"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Select Latest"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:showedWindow"].insert("Render Image to Window");
+			QTest::newRow("Trigger overlaps with Spin Off node whose downstream nodes are out of order") << "SpinOffValueFetchImage" << expectedNodesForTriggerOrNode;
+		}
+
+		{
+			map<string, set<string> > expectedNodesForTriggerOrNode;
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Fire on Start");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Spin Off Event");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make RGB Color");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Make Color Image");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Fire on Start:started"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Fire on Start:started Make RGB Color"].insert("Make Color Image");
+			expectedNodesForTriggerOrNode["Fire on Start:started Make Color Image"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Fire on Start:started Select Latest"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Spin Off Event");
+			expectedNodesForTriggerOrNode["Spin Off Event:spunOff"].insert("Spin Off Value");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Spin Off Value");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff"].insert("Fetch Image");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Fetch Image"].insert("Select Latest");
+			expectedNodesForTriggerOrNode["Spin Off Value:spunOff Select Latest"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:showedWindow"].insert("Render Image to Window");
+			expectedNodesForTriggerOrNode["Render Image to Window:requestedFrame"].insert("Render Image to Window");
+			QTest::newRow("Trigger overlaps indirectly with Spin Off node") << "SpinOffEventValueFetchImage" << expectedNodesForTriggerOrNode;
 		}
 	}
 	void testNodesToWaitOn()
@@ -770,7 +892,7 @@ private slots:
 		string compositionPath = getCompositionPath(compositionName.toStdString() + ".vuo");
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, false, compositionName.toStdString(), compiler);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, compositionName.toStdString(), compiler);
 
 		map<string, vector<string> > actualNodesForTriggerOrNode;
 		map<VuoCompilerTriggerPort *, VuoCompilerNode *> nodesForTriggers = generator->graph->getNodesForTriggerPorts();
@@ -907,7 +1029,7 @@ private slots:
 		for (int i = 0; i < 2; ++i)
 		{
 			bool isTopLevelComposition = (i == 0);
-			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition, false);
+			compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition);
 
 			Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
 			remove(bcPath.c_str());
@@ -924,40 +1046,6 @@ private slots:
 			QVERIFY((functionNames.find(prefix + "nodeInstanceTriggerStart") != functionNames.end()) == isStateful);
 			QVERIFY((functionNames.find(prefix + "nodeInstanceTriggerStop") != functionNames.end()));
 			QVERIFY((functionNames.find(prefix + "nodeInstanceTriggerUpdate") != functionNames.end()) == (! isTopLevelComposition && isStateful));
-		}
-	}
-
-	void testLiveCodingFunctions()
-	{
-		string compositionPath = getCompositionPath("StoreRecentText.vuo");
-		string dir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
-		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		string bcFile;
-		VuoFileUtilities::splitPath(bcPath, dir, bcFile, extension);
-		string prefix = VuoStringUtilities::transcodeToIdentifier(bcFile) + "__";
-
-		for (int i = 0; i < 2; ++i)
-		{
-			bool isTopLevelComposition = (i == 0);
-			for (int j = 0; j < 2; ++j)
-			{
-				bool isLiveCodeable = (j == 0);
-				compiler->compileComposition(compositionPath, bcPath, isTopLevelComposition, isLiveCodeable);
-
-				Module *module = VuoCompiler::readModuleFromBitcode(bcPath);
-				remove(bcPath.c_str());
-
-				set<string> functionNames;
-				Module::FunctionListType& functions = module->getFunctionList();
-				for (Module::FunctionListType::iterator i = functions.begin(); i != functions.end(); ++i)
-					functionNames.insert( i->getName() );
-
-				QVERIFY((functionNames.find(prefix + "compositionSerialize") != functionNames.end()) == isLiveCodeable);
-				QVERIFY((functionNames.find(prefix + "compositionUnserialize") != functionNames.end()) == isLiveCodeable);
-				QVERIFY((functionNames.find("vuoSerialize") != functionNames.end()) == (isTopLevelComposition && isLiveCodeable));
-				QVERIFY((functionNames.find("vuoUnserialize") != functionNames.end()) == (isTopLevelComposition && isLiveCodeable));
-			}
 		}
 	}
 

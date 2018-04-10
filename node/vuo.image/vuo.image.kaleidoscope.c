@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Kaleidoscope Image",
 					  "keywords" : [ "reflect", "mirror", "flip", "rotate", "shard", "radial", "filter" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "CompareKaleidoscopes.vuo" ]
 					  }
@@ -86,14 +86,17 @@ void nodeInstanceEvent
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":6., "suggestedMin":1., "suggestedMax":16.}) sides,
 		VuoInputData(VuoReal, {"default":0., "suggestedMin":0., "suggestedMax":360.}) angle,
-		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) bladeCenter,
-		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) imageCenter,
+		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) bladeCenter,
+		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) imageCenter,
 		VuoInputData(VuoBoolean, {"default":true}) reflectOddSides,
 		VuoOutputData(VuoImage) reflectedImage
 )
 {
 	if (!image)
+	{
+		*reflectedImage = NULL;
 		return;
+	}
 
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture",          image);
 

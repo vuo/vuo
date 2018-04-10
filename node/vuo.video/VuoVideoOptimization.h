@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOVIDEOOPTIMIZATION_H
-#define VUOVIDEOOPTIMIZATION_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoVideoOptimization_struct { void *l; } * VuoList_VuoVideoOptimization;
@@ -52,5 +51,3 @@ void VuoVideoOptimization_release(VuoVideoOptimization value);
 /**
  * @}
 */
-
-#endif

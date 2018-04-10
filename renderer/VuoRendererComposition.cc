@@ -39,6 +39,7 @@
 #include "VuoRendererFonts.hh"
 
 #include "VuoPort.hh"
+#include "VuoStringUtilities.hh"
 
 #include "VuoHeap.h"
 
@@ -257,7 +258,7 @@ void VuoRendererComposition::removeCable(VuoRendererCable *rc)
  */
 void VuoRendererComposition::createAndConnectInputAttachments(VuoRendererNode *node, VuoCompiler *compiler)
 {
-	if (node->getBase()->getNodeClass()->getClassName() == "vuo.math.calculate")
+	if (VuoStringUtilities::beginsWith(node->getBase()->getNodeClass()->getClassName(), "vuo.math.calculate"))
 		createAndConnectDrawersToReadOnlyDictionaryInputPorts(node, compiler);
 
 	createAndConnectDrawersToListInputPorts(node, compiler);
@@ -405,7 +406,7 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
 	// Extract the variable names from the math expressions.
 	VuoCompilerInputEventPort *expressionInputEventPort = static_cast<VuoCompilerInputEventPort *>(expressionInputPortCompiler);
 	string expressionConstant = expressionInputEventPort->getData()->getInitialValue();
-	vector<string> inputVariables = extractInputVariableListFromExpressionsConstant(expressionConstant);
+	vector<string> inputVariables = extractInputVariableListFromExpressionsConstant(expressionConstant, node->getNodeClass()->getClassName());
 	unsigned long itemCount = inputVariables.size();
 
 	string keyListClassName = VuoCompilerMakeListNodeClass::buildNodeClassName(itemCount, "VuoText");
@@ -463,8 +464,10 @@ void VuoRendererComposition::createAndConnectDictionaryAttachmentsForNode(VuoNod
 /**
  * Extracts the input variables from the provided "inputVariables" @c constant
  * and returns the variables in an ordered list.
+ *
+ * Excludes variables that shouldn't be presented in the UI ("x" in the `Calculate List` node).
  */
-vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsConstant(string constant)
+vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsConstant(string constant, string nodeClassName)
 {
 	vector<string> inputVariables;
 
@@ -480,7 +483,14 @@ vector<string> VuoRendererComposition::extractInputVariableListFromExpressionsCo
 			{
 				json_object *itemObject = json_object_array_get_idx(expressionsObject, i);
 				if (json_object_get_type(itemObject) == json_type_string)
+				{
+					const char *variableName = json_object_get_string(itemObject);
+					if (nodeClassName == "vuo.math.calculate.list"
+							&& strcasecmp(variableName, "x") == 0)
+						continue;
+
 					inputVariables.push_back(json_object_get_string(itemObject));
+				}
 			}
 		}
 	}
@@ -563,8 +573,7 @@ int VuoRendererComposition::removePublishedPort(VuoPublishedPort *publishedPort,
  */
 void VuoRendererComposition::setPublishedPortName(VuoRendererPublishedPort *publishedPort, string name, VuoCompiler *compiler)
 {
-	bool isPublishedInput = !publishedPort->getInput();
-	publishedPort->setName(getUniquePublishedPortName(name, isPublishedInput));
+	publishedPort->setName(getUniquePublishedPortName(name));
 }
 
 /**
@@ -590,16 +599,15 @@ VuoNode * VuoRendererComposition::createPublishedOutputNode()
 }
 
 /**
- * Returns a string derived from the input @c baseName that is guaranteed
- * to be unique either among the published input port names or among the published
- * output port names for this composition, as specified by @c isInput.
+ * Returns a string derived from the input @c baseName that is guaranteed to be unique
+ * among the published input and output port names for this composition.
  */
-string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool isPublishedInput)
+string VuoRendererComposition::getUniquePublishedPortName(string baseName)
 {
 	string uniquePortName = baseName;
 	string uniquePortNamePrefix = uniquePortName;
 	int portNameInstanceNum = 1;
-	while (isPublishedPortNameTaken(uniquePortName, isPublishedInput) || uniquePortName.empty())
+	while (isPublishedPortNameTaken(uniquePortName) || uniquePortName.empty())
 	{
 		ostringstream oss;
 		oss << ++portNameInstanceNum;
@@ -611,18 +619,15 @@ string VuoRendererComposition::getUniquePublishedPortName(string baseName, bool 
 
 /**
  * Returns a boolean indicating whether the input @c name is already taken
- * either by a published input port or by a published output port associated with this
- * composition, as specified by @c isInput.
+ * by a published input or output port associated with this composition.
  */
-bool VuoRendererComposition::isPublishedPortNameTaken(string name, bool isPublishedInput)
+bool VuoRendererComposition::isPublishedPortNameTaken(string name)
 {
 	if (name == "refresh")
 		return true;
 
-	VuoPublishedPort *publishedPort = (isPublishedInput ?
-										   getBase()->getPublishedInputPortWithName(name) :
-										   getBase()->getPublishedOutputPortWithName(name));
-	return (publishedPort != NULL);
+	return (getBase()->getPublishedInputPortWithName(name) ||
+			getBase()->getPublishedOutputPortWithName(name));
 }
 
 /**
@@ -1629,6 +1634,16 @@ void VuoRendererComposition::bundleVuoFrameworkFolder(string sourceVuoFrameworkP
 	{
 		QStringList vuoFrameworkModulesList(sourceVuoFrameworkDir.entryList(QDir::Files|QDir::Readable));
 
+		// Don't copy Graphviz dylibs, since exported apps never need them.
+		set<string> omit;
+		omit.insert("libcdt");
+		omit.insert("libgraph");
+		omit.insert("libgvc");
+		omit.insert("libgvplugin_core");
+		omit.insert("libgvplugin_dot_layout");
+		omit.insert("libpathplan");
+		omit.insert("libxdot");
+
 		// Vuo.framework/Modules/<topLevelFiles>
 		foreach (QString vuoFrameworkModuleName, vuoFrameworkModulesList)
 		{
@@ -1636,9 +1651,15 @@ void VuoRendererComposition::bundleVuoFrameworkFolder(string sourceVuoFrameworkP
 			VuoFileUtilities::splitPath(vuoFrameworkModuleName.toUtf8().constData(), dir, file, extension);
 
 			if (!onlyCopyExtension.length() || extension == onlyCopyExtension)
+			{
+				if (onlyCopyExtension == "dylib")
+					if (omit.find(file) != omit.end())
+						continue;
+
 				VuoFileUtilities::copyFile(
 							sourceVuoFrameworkDir.filePath(vuoFrameworkModuleName).toUtf8().constData(),
 							targetVuoFrameworkDir.filePath(vuoFrameworkModuleName).toUtf8().constData());
+			}
 		}
 	}
 }

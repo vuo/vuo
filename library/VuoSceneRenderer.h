@@ -24,14 +24,12 @@ typedef void * VuoSceneRenderer;
 VuoSceneRenderer VuoSceneRenderer_make(VuoGlContext glContext, float backingScaleFactor);
 void VuoSceneRenderer_regenerateProjectionMatrix(VuoSceneRenderer sceneRenderer, unsigned int width, unsigned int height);
 
-void VuoSceneRenderer_draw(VuoSceneRenderer sceneRenderer);
 void VuoSceneRenderer_renderToImage(VuoSceneRenderer sceneRenderer, VuoImage *image, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, VuoImage *depthImage);
+VuoIoSurface VuoSceneRenderer_renderToIOSurface(VuoSceneRenderer sceneRenderer, VuoImageColorDepth imageColorDepth, VuoMultisample multisample, bool includeDepthBuffer);
 
 void VuoSceneRenderer_setRootSceneObject(VuoSceneRenderer sceneRenderer, VuoSceneObject rootSceneObject);
 VuoSceneObject VuoSceneRenderer_getRootSceneObject(VuoSceneRenderer sceneRenderer, bool *isValid);
 void VuoSceneRenderer_setCameraName(VuoSceneRenderer sceneRenderer, VuoText cameraName, VuoBoolean useLeftCamera);
-
-extern dispatch_semaphore_t VuoSceneRenderer_vertexArraySemaphore;
 
 #ifdef __cplusplus
 }

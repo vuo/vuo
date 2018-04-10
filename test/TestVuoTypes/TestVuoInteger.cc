@@ -32,11 +32,18 @@ private slots:
 
 		QTest::newRow("zero") << "0" << (VuoInteger)0 << true;
 		QTest::newRow("positive") << "1" << (VuoInteger)1 << true;
+		QTest::newRow("positive with leading +") << "+1" << (VuoInteger)0 << false; // According to the JSON spec, numbers can't have a leading +…
+		QTest::newRow("positive string") << "\"1\"" << (VuoInteger)1 << false;
+		QTest::newRow("positive string with leading +") << "\"+1\"" << (VuoInteger)1 << false; // …but json-c can handle the leading + when converting JSON strings to numbers.
 		QTest::newRow("negative") << "-1" << (VuoInteger)-1 << true;
+		QTest::newRow("negative string") << "\"-1\"" << (VuoInteger)-1 << false;
 		QTest::newRow("positive max") << "9223372036854775807" << (VuoInteger)9223372036854775807 << true;
+		QTest::newRow("positive max string") << "\"9223372036854775807\"" << (VuoInteger)9223372036854775807 << false;
 		// http://lists.cs.uiuc.edu/pipermail/cfe-dev/2012-February/019751.html
 		QTest::newRow("negative min") << "-9223372036854775808" << (VuoInteger)-9223372036854775807-1 << true;
+		QTest::newRow("negative min string") << "\"-9223372036854775808\"" << (VuoInteger)-9223372036854775807-1 << false;
 		QTest::newRow("noninteger") << "Otto von Bismarck" << (VuoInteger)0 << false;
+		QTest::newRow("noninteger string") << "\"Otto von Bismarck\"" << (VuoInteger)0 << false;
 	}
 	void testStringConversion()
 	{

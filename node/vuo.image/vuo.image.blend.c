@@ -360,7 +360,7 @@ void nodeInstanceEvent
 			case VuoBlendMode_Multiply:
 				fragmentShaderSource = fragmentShaderSource_blendMultiply;
 				break;
-			case VuoBlendMode_DarkerComponent:
+			case VuoBlendMode_DarkerComponents:
 				fragmentShaderSource = fragmentShaderSource_blendDarkerComponent;
 				break;
 			case VuoBlendMode_DarkerColor:
@@ -375,7 +375,7 @@ void nodeInstanceEvent
 			case VuoBlendMode_Screen:
 				fragmentShaderSource = fragmentShaderSource_blendScreen;
 				break;
-			case VuoBlendMode_LighterComponent:
+			case VuoBlendMode_LighterComponents:
 				fragmentShaderSource = fragmentShaderSource_blendLighterComponent;
 				break;
 			case VuoBlendMode_LighterColor:

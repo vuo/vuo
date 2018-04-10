@@ -1140,22 +1140,6 @@ Function * VuoCompilerNodeClass::getCompositionContextFiniFunction(void)
 }
 
 /**
- * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionSerialize function.  Otherwise null.
- */
-Function * VuoCompilerNodeClass::getCompositionSerializeFunction(void)
-{
-	return parser->getFunction(nameForGlobal("compositionSerialize"));
-}
-
-/**
- * If this node class is a subcomposition, returns an LLVM Function for this subcomposition's implementation of the @c compositionUnserialize function.  Otherwise null.
- */
-Function * VuoCompilerNodeClass::getCompositionUnserializeFunction(void)
-{
-	return parser->getFunction(nameForGlobal("compositionUnserialize"));
-}
-
-/**
  * If this node class is a subcomposition, returns this subcomposition's implementation of the trigger worker function for the trigger with identifier @a portIdentifier.
  */
 Function * VuoCompilerNodeClass::getTriggerWorkerFunction(string portIdentifier)
@@ -1213,8 +1197,15 @@ string VuoCompilerNodeClass::getDoxygenDocumentation(void)
 	ostringstream documentation;
 
 	documentation << "/**" << endl;
-	documentation << " * " << getBase()->getDescription() << endl;
-	documentation << " * " << endl;
+
+	string description = getBase()->getDescription();
+	// Description is empty for nodes in the SDK's framework,
+	// since the `descriptions/` folder is removed from each node set.
+	if (!description.empty())
+	{
+		documentation << " * " << description << endl;
+		documentation << " * " << endl;
+	}
 
 	vector<VuoPortClass *> inputPortClasses = getBase()->getInputPortClasses();
 	vector<VuoPortClass *> outputPortClasses = getBase()->getOutputPortClasses();

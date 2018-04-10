@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOGRADIENTNOISE_H
-#define VUOGRADIENTNOISE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoGradientNoise_struct { void *l; } * VuoList_VuoGradientNoise;
@@ -27,8 +26,8 @@ typedef const struct VuoList_VuoGradientNoise_struct { void *l; } * VuoList_VuoG
  * An enum defining different types of noise.
  */
 typedef enum {
-	VuoGradientNoise_Perlin,
-	VuoGradientNoise_Simplex
+	VuoGradientNoise_Rectangular,
+	VuoGradientNoise_Triangular
 } VuoGradientNoise;
 
 VuoGradientNoise VuoGradientNoise_makeFromJson(struct json_object * js);
@@ -47,5 +46,3 @@ char * VuoGradientNoise_getString(const VuoGradientNoise value);
 /**
  * @}
 */
-
-#endif

@@ -13,9 +13,9 @@
 /**
  * Creates a VuoNodeSet for the given node set archive file.
  */
-VuoNodeSet::VuoNodeSet(string archivePath)
+VuoNodeSet::VuoNodeSet(string archivePath) :
+	archivePath(archivePath)
 {
-	this->archivePath = archivePath;
 }
 
 /**

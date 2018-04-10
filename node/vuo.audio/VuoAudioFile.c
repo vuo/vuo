@@ -206,7 +206,7 @@ void VuoAudioFile_free(void *af)
  */
 VuoAudioFile VuoAudioFile_make(VuoText url)
 {
-	if (!url || url[0] == 0)
+	if (VuoText_isEmpty(url))
 		return NULL;
 
 	VuoAudioFileInternal afi = calloc(1, sizeof(struct VuoAudioFileInternal));

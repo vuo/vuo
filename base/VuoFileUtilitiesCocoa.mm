@@ -10,7 +10,9 @@
 #include "VuoFileUtilities.hh"
 #include "VuoFileUtilitiesCocoa.hh"
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <Cocoa/Cocoa.h>
 
 #include <stdexcept>
@@ -22,29 +24,8 @@
  */
 void VuoFileUtilitiesCocoa_moveFileToTrash(string filePath)
 {
-	SInt32 macMinorVersion;
-	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-	bool success;
-	if (macMinorVersion >= 8)
-	{
-		NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:filePath.c_str()]];
-		NSFileManager *fm = [NSFileManager defaultManager];
-		SEL trashItemSel = @selector(trashItemAtURL:resultingItemURL:error:);
-		IMP trashItem = [fm methodForSelector:trashItemSel];
-		success = trashItem(fm, trashItemSel, url, nil, nil);
-	}
-	else
-	{
-		string dir, file, ext;
-		VuoFileUtilities::splitPath(filePath.c_str(), dir, file, ext);
-		string fileWithExt = file + "." + ext;
-		success = [[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation
-															   source:[NSString stringWithUTF8String:dir.c_str()]
-														  destination:@""
-																files:[NSArray arrayWithObject:[NSString stringWithUTF8String:fileWithExt.c_str()]]
-																  tag:nil];
-	}
-
+	NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:filePath.c_str()]];
+	bool success = [[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:nil];
 	if (!success)
 		throw std::runtime_error("Couldn't move file '" + filePath + "' to the trash.");
 }
@@ -121,4 +102,15 @@ size_t VuoFileUtilitiesCocoa_getAvailableSpaceOnVolumeContainingPath(string path
 
 	unsigned long long freeSpace = [[fileAttributes objectForKey:NSFileSystemFreeSize] longLongValue];
 	return freeSpace;
+}
+
+/**
+ * Attempts to focus the specified `pid` (i.e., bring all its windows to the front and make one of them key).
+ *
+ * @threadMain
+ */
+void VuoFileUtilitiesCocoa_focusProcess(pid_t pid, bool force)
+{
+	NSRunningApplication *compositionApp = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
+	[compositionApp activateWithOptions: force ? NSApplicationActivateIgnoringOtherApps : NSApplicationActivateAllWindows];
 }

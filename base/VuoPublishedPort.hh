@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPUBLISHEDPORT_HH
-#define VUOPUBLISHEDPORT_HH
+#pragma once
 
 #include <set>
 #include "VuoBase.hh"
@@ -29,5 +28,3 @@ public:
 private:
 	bool protocolPort;
 };
-
-#endif // VUOPUBLISHEDPORT_HH

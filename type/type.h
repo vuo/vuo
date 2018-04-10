@@ -63,6 +63,10 @@ MyType MyType_makeFromJson(json_object *js);
  *
  * This function is required.
  *
+ * If this function serializes the value in a format that won't allow another process to unserialize it
+ * (for example, if the serialization contains a memory address), then MyType_getInterprocessJson()
+ * needs to be implemented, too.
+ *
  * @param value The value to serialize. May be null.
  * @return A JSON-C object. It should have a format accepted by MyType_makeFromJson().
  */

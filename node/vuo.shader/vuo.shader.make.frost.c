@@ -11,9 +11,13 @@
 
 VuoModuleMetadata({
 					  "title" : "Shade with Frosted Glass",
-					  "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
-						  "blur", "bend", "tint", "refraction", "diffraction" ],
-					  "version" : "1.0.0",
+					  "keywords" : [
+						  "texture",
+						  "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
+						  "perlin", "simplex", "gradient",
+						  "blur", "bend", "tint", "refraction", "diffraction",
+					  ],
+					  "version" : "1.1.0",
 					  "node" : {
 						  "exampleCompositions" : [ "ShowSphereThroughWarpedPlastic.vuo" ]
 					  }
@@ -27,10 +31,13 @@ void nodeEvent
 		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) noiseAmount,
 		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) noiseScale,
 		VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0., "suggestedMax":1., "suggestedStep":0.1}) chromaticAberration,
-		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":50}) iterations,
+		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":4}) levels,
+		VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) roughness,
+		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":1.0, "suggestedMax":5.0, "suggestedStep":0.1}) spacing,
+		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":8}) iterations,
 		VuoOutputData(VuoShader) shader
 )
 {
 	*shader = VuoShader_makeFrostedGlassShader();
-	VuoShader_setFrostedGlassShaderValues(*shader, color, brightness, noiseTime, noiseAmount, noiseScale, chromaticAberration, iterations);
+	VuoShader_setFrostedGlassShaderValues(*shader, color, brightness, noiseTime, noiseAmount, noiseScale, chromaticAberration, levels, roughness, spacing, iterations);
 }

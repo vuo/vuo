@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.get.multiple node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "positions":[1        ]}, "outputPortValues":{"items":[11            ]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "positions":[2,3,5    ]}, "outputPortValues":{"items":[22,33,55      ]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "positions":[4,4      ]}, "outputPortValues":{"items":[44,44         ]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "positions":[5,4,1,3,2]}, "outputPortValues":{"items":[55,44,11,33,22]}},
+
+   {"firingPort":"list","inputPortValues":{"list":[              ], "positions":[         ]}, "outputPortValues":{"items":[              ]}},
+   {"firingPort":"list","inputPortValues":{"list":[              ], "positions":[1        ]}, "outputPortValues":{"items":[0             ]}},
+   {"firingPort":"list","inputPortValues":{"list":[11            ], "positions":[         ]}, "outputPortValues":{"items":[              ]}},
+
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "positions":[-1,0,3,6 ]}, "outputPortValues":{"items":[11,11,33,55   ]}},
+]}

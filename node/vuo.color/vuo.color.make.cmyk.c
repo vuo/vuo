@@ -17,11 +17,11 @@ VuoModuleMetadata({
 
 void nodeEvent
 (
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) cyan,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) magenta,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) yellow,
-		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1}) black,
-		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1}) alpha,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) cyan,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) magenta,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) yellow,
+		VuoInputData(VuoReal, {"default":0.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) black,
+		VuoInputData(VuoReal, {"default":1.0,"suggestedMin":0,"suggestedMax":1,"suggestedStep":0.1}) alpha,
 		VuoOutputData(VuoColor) color
 )
 {

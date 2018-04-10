@@ -33,11 +33,23 @@ float VuoGlsl_random3D1D(vec3 co)
 	return fract(sin(sn) * c);
 }
 
+vec2 VuoGlsl_random2D2D(vec2 v)
+{
+	return vec2(VuoGlsl_random2D1D(vec2(v.x,   v.y)),
+				VuoGlsl_random2D1D(vec2(v.x+1, v.y+1)));
+}
+
 vec3 VuoGlsl_random2D3D(vec2 v)
 {
 	return vec3(VuoGlsl_random2D1D(vec2(v.x-1, v.y-1)),
 				VuoGlsl_random2D1D(vec2(v.x,   v.y)),
 				VuoGlsl_random2D1D(vec2(v.x+1, v.y+1)));
+}
+
+vec2 VuoGlsl_random3D2D(vec3 v)
+{
+	return vec2(VuoGlsl_random3D1D(vec3(v.x,   v.y,   v.z)),
+				VuoGlsl_random3D1D(vec3(v.x+1, v.y+1, v.z+1)));
 }
 
 vec3 VuoGlsl_random3D3D(vec3 v)

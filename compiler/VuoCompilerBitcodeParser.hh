@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERBITCODEPARSER_H
-#define VUOCOMPILERBITCODEPARSER_H
+#pragma once
 
 
 /**
@@ -32,6 +31,3 @@ public:
 	bool isFirstOfTwoLoweredArguments(Argument *firstArgument);
 	vector<pair<Argument *, string> > getAnnotatedArguments(Function *function);
 };
-
-
-#endif

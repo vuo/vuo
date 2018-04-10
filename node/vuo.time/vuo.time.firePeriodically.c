@@ -24,6 +24,7 @@ VuoModuleMetadata({
 						"metronome", "repeat", "seconds", "interval", "rate" ],
 					 "version" : "1.0.2",
 					 "node": {
+						  "isDeprecated":true,
 						  "exampleCompositions" : [ ]
 					 }
 				 });

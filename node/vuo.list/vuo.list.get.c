@@ -12,9 +12,9 @@
 VuoModuleMetadata({
 					 "title" : "Get Item from List",
 					 "keywords" : [ "pick", "select", "choose", "element", "member", "index" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "SelectLayerFromList.vuo" ]
 					 }
 				 });
 
@@ -25,5 +25,6 @@ void nodeEvent
 		VuoOutputData(VuoGenericType1) item
 )
 {
-	*item = VuoListGetValue_VuoGenericType1(list, which);
+	unsigned long whichUnsigned = MAX(0, which);
+	*item = VuoListGetValue_VuoGenericType1(list, whichUnsigned);
 }

@@ -13,7 +13,9 @@ VuoModuleMetadata({
 					 "title" : "Spin Off Value",
 					 "keywords" : [ "scatter", "fork", "spawn", "thread", "multithread", "multicore", "parallel", "concurrent", "asynchronous", "background", "data" ],
 					 "version" : "1.0.0",
-					 "node": {}
+					 "node": {
+						  "exampleCompositions" : [ "LoadImageAsynchronouslyAndShowUrl.vuo" ]
+					 }
 				 });
 
 void nodeEvent

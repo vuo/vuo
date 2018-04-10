@@ -37,8 +37,14 @@ GENERIC_NODE_SOURCES += \
 
 NODE_SOURCES += \
 	vuo.math.calculate.c \
+	vuo.math.calculate.list.c \
 	vuo.math.divide.VuoInteger.c \
 	vuo.math.divide.VuoReal.c \
+	vuo.math.get.range.VuoInteger.c \
+	vuo.math.get.range.VuoReal.c \
+	vuo.math.make.range.VuoInteger.c \
+	vuo.math.make.range.VuoReal.c \
+	vuo.math.make.range.center.VuoReal.c \
 	vuo.math.round.c \
 	vuo.math.roundDown.c \
 	vuo.math.roundUp.c

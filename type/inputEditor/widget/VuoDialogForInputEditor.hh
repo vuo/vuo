@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODIALOGFORINPUTEDITOR_HH
-#define VUODIALOGFORINPUTEDITOR_HH
+#pragma once
 
 /**
  * A dialog that closes when the Enter key is pressed.
@@ -36,4 +35,3 @@ private:
 	bool _showArrow;
 };
 
-#endif // VUODIALOGFORINPUTEDITOR_HH

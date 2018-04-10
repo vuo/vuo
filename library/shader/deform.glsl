@@ -14,7 +14,7 @@ uniform mat4 modelviewMatrix;
 uniform mat4 modelviewMatrixInverse;
 
 attribute vec4 position;
-attribute vec4 normal;
+//attribute vec4 normal;	// The input normal isn't used; outNormal is calculated from the transformed tangent and bitangent.
 attribute vec4 tangent;
 attribute vec4 bitangent;
 attribute vec4 textureCoordinate;

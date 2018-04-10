@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Expected outputs for the vuo.type.transform.transform2d node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"identity" : {"firingPort": "transform", "inputPortValues": {"transform":"identity"}, "outputPortValues": {"transform2d":"identity"}},
+	"transform": {"firingPort": "transform", "inputPortValues": {"transform":{"translation":[1,2,3],"eulerRotation":[4,5,6],"scale":[7,8,9]}}, "outputPortValues": {"transform2d":{"translation":[1,2],"rotation":6,"scale":[7,8]}}},
+}}

@@ -18,6 +18,9 @@ NODE_SOURCES += \
 	vuo.scene.facet.c \
 	vuo.scene.fetch.c \
 	vuo.scene.fetch.list.c \
+	vuo.scene.find.c \
+	vuo.scene.get2.c \
+	vuo.scene.get.child.c \
 	vuo.scene.make.c \
 	vuo.scene.make.camera.drag.c \
 	vuo.scene.make.camera.orthographic.c \
@@ -31,10 +34,11 @@ NODE_SOURCES += \
 	vuo.scene.make.light.point.c \
 	vuo.scene.make.light.spot.c \
 	vuo.scene.make.light.spot.target.c \
-	vuo.scene.normalize.c \
 	vuo.scene.noise.c \
+	vuo.scene.normalize.c \
 	vuo.scene.pinch.c \
 	vuo.scene.populated.c \
+	vuo.scene.quantize.c \
 	vuo.scene.render.image.c \
 	vuo.scene.render.window.c \
 	vuo.scene.ripple.c \
@@ -42,10 +46,14 @@ NODE_SOURCES += \
 	vuo.scene.shader.material.c \
 	vuo.scene.skew.c \
 	vuo.scene.spike.c \
+	vuo.scene.tc.remove.c \
+	vuo.scene.tile.c \
+	vuo.scene.transform.c \
 	vuo.scene.trim.c \
 	vuo.scene.twirl.c
 
 GENERIC_NODE_SOURCES += \
+	vuo.scene.copy.trs.material.c \
 	vuo.scene.make.grid.lines.c \
 	vuo.scene.make.grid.points.c \
 	vuo.scene.make.random.points.c \
@@ -67,14 +75,18 @@ HEADERS += \
 	VuoDispersion.h \
 	VuoDisplacement.h \
 	VuoDistribution3d.h \
+	VuoExtrapolationMode.h \
 	VuoGridType.h \
-	VuoMultisample.h
+	VuoMultisample.h \
+	VuoSceneObjectType.h
 
 TYPE_SOURCES += \
 	VuoDispersion.c \
 	VuoDisplacement.c \
 	VuoDistribution3d.c \
+	VuoExtrapolationMode.c \
 	VuoGridType.c \
-	VuoMultisample.c
+	VuoMultisample.c \
+	VuoSceneObjectType.c
 
 include(../../module.pri)

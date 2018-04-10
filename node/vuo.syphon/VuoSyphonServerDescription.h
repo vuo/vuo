@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSYPHONSERVERDESCRIPTION_H
-#define VUOSYPHONSERVERDESCRIPTION_H
+#pragma once
 
 #include "VuoText.h"
 
@@ -51,5 +50,3 @@ void VuoSyphonServerDescription_release(VuoSyphonServerDescription value);
 /**
  * @}
  */
-
-#endif

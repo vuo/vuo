@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORTRANSFORM2D_HH
-#define VUOINPUTEDITORTRANSFORM2D_HH
+#pragma once
 
 #include "VuoInputEditorWithDialog.hh"
 #include "VuoDoubleSpinBox.hh"
@@ -92,4 +91,3 @@ private slots:
 	void onSpinboxUpdate(QString spinboxValue);
 };
 
-#endif // VUOINPUTEDITORTRANSFORM2D_HH

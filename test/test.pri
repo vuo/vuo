@@ -7,7 +7,7 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/node/vuo.artnet \
 	-I$$ROOT/node/vuo.audio \
 	-I$$ROOT/node/vuo.data \
-	-I$$ROOT/node/vuo.font \
+	-I$$ROOT/node/vuo.image \
 	-I$$ROOT/node/vuo.layer \
 	-I$$ROOT/node/vuo.math \
 	-I$$ROOT/node/vuo.midi \
@@ -56,6 +56,9 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoBase64.o \
 	$$ROOT/library/VuoCglPixelFormat.o \
 	$$ROOT/library/VuoDisplayRefresh.o \
+	$$ROOT/library/VuoGraphicsView.o \
+	$$ROOT/library/VuoGraphicsWindow.o \
+	$$ROOT/library/VuoGraphicsWindowDelegate.o \
 	$$ROOT/library/VuoImageBlur.o \
 	$$ROOT/library/VuoImageGet.o \
 	$$ROOT/library/VuoImageMapColors.o \
@@ -71,7 +74,6 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/library/VuoUrlParser.o \
 	$$ROOT/library/VuoWindow.o \
-	$$ROOT/library/VuoWindowOpenGLInternal.o \
 	$$ROOT/library/VuoWindowRecorder.o \
 	$$ROOT/library/VuoWindowTextInternal.o \
 	$$ROOT/type/VuoAudioSamples.o \
@@ -79,13 +81,13 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoBlendMode.o \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoCoordinateUnit.o \
+	$$ROOT/type/VuoFont.o \
 	$$ROOT/type/VuoImage.o \
 	$$ROOT/type/VuoImageColorDepth.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/node/vuo.artnet/VuoArtNetInputDevice.o \
 	$$ROOT/node/vuo.artnet/VuoArtNetOutputDevice.o \
 	$$ROOT/node/vuo.data/VuoData.o \
-	$$ROOT/node/vuo.font/VuoFont.o \
 	$$ROOT/node/vuo.layer/VuoLayer.o \
 	$$ROOT/node/vuo.midi/VuoMidiNote.o \
 	$$ROOT/node/vuo.noise/VuoGradientNoiseCommon.bc \

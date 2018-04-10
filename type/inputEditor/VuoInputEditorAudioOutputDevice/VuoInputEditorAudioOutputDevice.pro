@@ -31,6 +31,7 @@ LIBS += \
 	$$ROOT/type/list/VuoList_VuoAudioInputDevice.o \
 	$$ROOT/type/list/VuoList_VuoAudioOutputDevice.o \
 	$$ROOT/type/list/VuoList_VuoAudioSamples.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$RTAUDIO_ROOT/lib/librtaudio.a \
 	-framework CoreAudio

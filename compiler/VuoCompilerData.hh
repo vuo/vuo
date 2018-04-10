@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERDATA_H
-#define VUOCOMPILERDATA_H
+#pragma once
 
 #include "VuoCompilerNodeArgument.hh"
 
@@ -22,5 +21,3 @@ class VuoCompilerData : public VuoCompilerNodeArgument
 protected:
 	VuoCompilerData(VuoCompilerDataClass *dataClass);
 };
-
-#endif

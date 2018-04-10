@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORWITHLINEEDITLIST_HH
-#define VUOINPUTEDITORWITHLINEEDITLIST_HH
+#pragma once
 
 #include "VuoInputEditorWithDialog.hh"
 
@@ -61,5 +60,3 @@ private:
 	static const int horizontalSpacing;
 	static const int verticalSpacing;
 };
-
-#endif

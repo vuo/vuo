@@ -2,7 +2,8 @@ MODULE_INCLUDEPATH = \
 	$$JSONC_ROOT/include \
 	$${ROOT}/library \
 	$${ROOT}/node \
-	$${ROOT}/node/vuo.font \
+	$${ROOT}/node/vuo.image \
+	$${ROOT}/node/vuo.scene \
 	$${ROOT}/node/vuo.ui \
 	$${ROOT}/type \
 	$${ROOT}/type/list \
@@ -53,7 +54,7 @@ CLANG_NODE_LIBRARY_INCLUDEPATH = \
 	$$JSONC_ROOT/include \
 	$$NODE_LIBRARY_INCLUDEPATH
 CLANG_NODE_LIBRARY_FLAGS = \
-	-target x86_64-apple-macosx10.7.0 \
+	-target x86_64-apple-macosx10.8.0 \
 	-fblocks \
 	-fexceptions \
 	-emit-llvm \

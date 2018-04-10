@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOAUDIOBINS_H
-#define VUOAUDIOBINS_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoAudioBins_struct { void *l; } * VuoList_VuoAudioBins;
@@ -36,7 +35,9 @@ typedef enum {					// actual samples per-bin
 	VuoAudioBins_255 = 512,		// 512
 	VuoAudioBins_511 = 1024,	// 1024
 	VuoAudioBins_1023 = 2048,	// 2048
-	VuoAudioBins_2047 = 4096 	// 4096
+	VuoAudioBins_2047 = 4096, 	// 4096
+	VuoAudioBins_4095 = 8192, 	// 8192
+	VuoAudioBins_8191 = 16384, 	// 16384
 } VuoAudioBins;
 
 VuoAudioBins VuoAudioBins_makeFromJson(struct json_object * js);
@@ -57,5 +58,3 @@ void VuoAudioBins_release(VuoAudioBins value);
 /**
  * @}
 */
-
-#endif

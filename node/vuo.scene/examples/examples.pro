@@ -25,6 +25,7 @@ EXAMPLE_SOURCES += \
 	PaintSceneWithCheckerboard.vuo \
 	PinchRectangles.vuo \
 	PinchSphere.vuo \
+	QuantizeObject.vuo \
 	RewindCheckerboardExplosion.vuo \
 	RippleGrid.vuo \
 	RippleImageOfSphere.vuo \
@@ -34,6 +35,7 @@ EXAMPLE_SOURCES += \
 #	ShowTreesWithFisheye.vuo \
 	SpikeSphere.vuo \
 	SwitchCameras.vuo \
+	TileStarfield.vuo \
 	TrimSphere.vuo \
 	TwirlGrid.vuo 
 

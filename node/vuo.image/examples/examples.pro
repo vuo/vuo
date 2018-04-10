@@ -2,10 +2,14 @@ TEMPLATE = aux
 
 EXAMPLE_SOURCES += \
 	AnimateConcentricCircles.vuo \
+	AnimateStripeWidth.vuo \
 	BlendImages.vuo \
 	BlurMovie.vuo \
 	BulgeCheckerboard.vuo \
-	CompareKaleidoscopes.vuo \
+   CapSaturation.vuo \
+	CompareDirectionalBlurs.vuo \
+        CompareKaleidoscopes.vuo \
+        CompareNoiseTypes.vuo \
 	DisplayImage.vuo \
 	EnhanceBlue.vuo \
 	EnlargeMovie.vuo \
@@ -13,6 +17,7 @@ EXAMPLE_SOURCES += \
 	FlipMovie.vuo \
 	FlyAtWarpSpeed.vuo \
 	GenerateCheckerboardImage.vuo \
+	MakeStainedGlassImage.vuo \
 	MaskMovieByBrightness.vuo \
 	MaskMovieWithStar.vuo \
 	MirrorMovie.vuo \
@@ -26,14 +31,21 @@ EXAMPLE_SOURCES += \
 	RotateMovie.vuo \
 	SaveSepiaImage.vuo \
 	ScanBarcodes.vuo \
+   SeparateHueSaturationLightness.vuo \
 	SeparateRedGreenBlue.vuo \
+	SharpenMovie.vuo \
 	ShowColorFromImage.vuo \
 	ShowFrostNoise.vuo \
 	ShowNoiseImage.vuo \
 	ShowRandomImage.vuo \
 	SimulateFilmProjector.vuo \
+ 	SimulateMotionBlur.vuo \
+ 	SimulatePrintedImage.vuo \
+ 	SpinWaterySphere.vuo \
 	TileMovie.vuo \
+	UnscrambleImage.vuo \
 	VignetteMovie.vuo \
-#	WarpImageForFisheyeProjection.vuo
+#	WarpImageForFisheyeProjection.vuo \
+   ZoomBlurHue.vuo
 
 include(../../../example.pri)

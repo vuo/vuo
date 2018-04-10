@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLEAPTOUCHZONE_H
-#define VUOLEAPTOUCHZONE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoLeapTouchZone_struct { void *l; } * VuoList_VuoLeapTouchZone;
@@ -48,5 +47,3 @@ char * VuoLeapTouchZone_getString(const VuoLeapTouchZone value);
 /**
  * @}
 */
-
-#endif

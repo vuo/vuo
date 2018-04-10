@@ -33,11 +33,29 @@ VuoModuleMetadata({
 
 /**
  * @ingroup VuoSceneObject
- * Decodes the JSON object @c js, expected to contain a double, to create a new value.
+ * Decodes the JSON object `js` to create a new value.
  */
 VuoReal VuoReal_makeFromJson(json_object * js)
 {
-	return json_object_get_double(js);
+	if (!js)
+		return 0;
+
+	json_type t = json_object_get_type(js);
+	if (t == json_type_double)
+		return json_object_get_double(js);
+	else if (t == json_type_int)
+		return json_object_get_int64(js);
+	else
+	{
+		// Use atof() instead of json_object_get_double(),
+		// since the latter doesn't support JSON strings with scientific notation
+		// or nonnumeric characters following the number.
+		const char *s = json_object_get_string(js);
+		if (s)
+			return atof(s);
+		else
+			return 0;
+	}
 }
 
 /**
@@ -46,6 +64,18 @@ VuoReal VuoReal_makeFromJson(json_object * js)
  */
 json_object * VuoReal_getJson(const VuoReal value)
 {
+	// json spec doesn't support inf or nan by default,
+	// but VuoReal_makeFromJson does.
+	if( !isfinite(value) )
+	{
+		if(isnan(value))
+			return json_object_new_string("nan");
+		else if(value == -INFINITY)
+			return json_object_new_string("-inf");
+		else
+			return json_object_new_string("inf");
+	}
+
 	return json_object_new_double(value);
 }
 

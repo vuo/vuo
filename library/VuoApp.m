@@ -13,11 +13,14 @@
 
 /// Disable NS_RETURNS_INNER_POINTER (new in Mac OS 10.10's system headers), since Clang 3.2 doesn't support it.
 /// https://b33p.net/kosada/node/9140
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <AppKit/AppKit.h>
 #undef NS_RETURNS_INNER_POINTER
 
 #include <pthread.h>
+#include <libproc.h>
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
@@ -83,13 +86,16 @@ void VuoApp_executeOnMainThread(void (^block)(void))
  * If the composition has been saved, this matches the composition's source filename.
  * If not, it returns the text "Vuo Composition".
  *
+ * If the composition is running via VuoRunner (but not via VuoCompositionLoader),
+ * it returns the name of the VuoRunner process.
+ *
  * If the composition is running standalone, it tries the following Info.plist keys:
  *
  *    - CFBundleDisplayName
  *    - CFBundleName
  *    - CFBundleExecutable
  *
- * If none of those keys exist, it uses the executable's path.
+ * If none of those keys exist, it uses the composition executable's filename.
  *
  * The caller is responsible for freeing the returned string.
  */
@@ -112,6 +118,16 @@ char *VuoApp_getName(void)
 
 			return name;
 		}
+
+	pid_t *runnerPid = (pid_t *)dlsym(RTLD_SELF, "VuoApp_runnerPid");
+	if (!runnerPid)
+		runnerPid = (pid_t *)dlsym(RTLD_DEFAULT, "VuoApp_runnerPid");
+	if (runnerPid && *runnerPid)
+	{
+		char *runnerName = (char *)malloc(2*MAXCOMLEN);
+		proc_name(*runnerPid, runnerName, 2*MAXCOMLEN);
+		return runnerName;
+	}
 
 	NSBundle *mainBundle = [NSBundle mainBundle];
 	NSString *name = [mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];

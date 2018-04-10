@@ -7,11 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERINSTANCEDATACLASS_H
-#define VUOCOMPILERINSTANCEDATACLASS_H
+#pragma once
 
 #include "VuoCompilerNodeArgumentClass.hh"
-
 
 /**
  * A type of node instance data.
@@ -23,6 +21,3 @@ class VuoCompilerInstanceDataClass : public VuoCompilerNodeArgumentClass
 public:
 	VuoCompilerInstanceDataClass(string name, Type *type);
 };
-
-
-#endif

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORWITHDIALOG_HH
-#define VUOINPUTEDITORWITHDIALOG_HH
+#pragma once
 
 #include "VuoInputEditor.hh"
 
@@ -50,4 +49,3 @@ private:
 	QWidget *lastWidgetInTabOrder;
 };
 
-#endif // VUOINPUTEDITORWITHDIALOG_HH

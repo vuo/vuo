@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERNODEARGUMENT_H
-#define VUOCOMPILERNODEARGUMENT_H
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoPort.hh"
@@ -27,5 +26,3 @@ protected:
 public:
 	virtual ~VuoCompilerNodeArgument(void);
 };
-
-#endif

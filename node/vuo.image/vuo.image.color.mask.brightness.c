@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						  "magic", "wand",
 						  "filter"
 					  ],
-					  "version" : "1.1.1",
+					  "version" : "1.1.2",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieByBrightness.vuo" ]
 					  }
@@ -106,7 +106,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*maskedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 

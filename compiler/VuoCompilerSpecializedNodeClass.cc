@@ -825,12 +825,6 @@ Function * VuoCompilerSpecializedNodeClass::getCompositionContextInitFunction(vo
 Function * VuoCompilerSpecializedNodeClass::getCompositionContextFiniFunction(void)
 { return backingNodeClass ? backingNodeClass->getCompositionContextFiniFunction() : VuoCompilerNodeClass::getCompositionContextFiniFunction(); }
 
-Function * VuoCompilerSpecializedNodeClass::getCompositionSerializeFunction(void)
-{ return backingNodeClass ? backingNodeClass->getCompositionSerializeFunction() : VuoCompilerNodeClass::getCompositionSerializeFunction(); }
-
-Function * VuoCompilerSpecializedNodeClass::getCompositionUnserializeFunction(void)
-{ return backingNodeClass ? backingNodeClass->getCompositionUnserializeFunction() : VuoCompilerNodeClass::getCompositionUnserializeFunction(); }
-
 Function * VuoCompilerSpecializedNodeClass::getTriggerWorkerFunction(string portIdentifier)
 { return backingNodeClass ? backingNodeClass->getTriggerWorkerFunction(portIdentifier) : VuoCompilerNodeClass::getTriggerWorkerFunction(portIdentifier); }
 

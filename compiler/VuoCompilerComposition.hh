@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERCOMPOSITION_HH
-#define VUOCOMPILERCOMPOSITION_HH
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoComposition.hh"
@@ -52,6 +51,7 @@ public:
 	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
 	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
 	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
+	VuoPort * findNearestUpstreamTriggerPort(VuoNode *node);
 	void setModule(Module *module);
 	string getGraphvizDeclaration(string header = "", string footer = "");
 	string getGraphvizDeclarationForComponents(set<VuoNode *> nodeSet, set<VuoCable *> cableSet, vector<VuoPublishedPort *> publishedInputPorts, vector<VuoPublishedPort *> publishedOutputPorts, string header="", string footer="", double xPositionOffset=0, double yPositionOffset=0);
@@ -72,5 +72,3 @@ private:
 	static bool compareGraphvizIdentifiersOfNodes(VuoNode *lhs, VuoNode *rhs);
 	static bool compareGraphvizIdentifiersOfCables(VuoCable *lhs, VuoCable *rhs);
 };
-
-#endif // VUOCOMPILERCOMPOSITION_HH

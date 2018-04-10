@@ -15,18 +15,18 @@
 VuoModuleMetadata({
 					 "title" : "Resize Image if Larger",
 					 "keywords" : [ "size", "scale", "stretch", "fill", "tile", "shrink", "blow up", "enlarge", "magnify" ],
-					 "version" : "1.1.1",
+					 "version" : "1.1.2",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 },
 					 "dependencies": [
-					 	"VuoImageResize"
+						"VuoImageResize"
 					 ]
 				 });
 
 struct nodeInstanceData
 {
-	VuoShader shader;
+	VuoImageResize resize;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -41,8 +41,8 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
-	instance->shader = VuoImageResize_makeShader();
-	VuoRetain(instance->shader);
+	instance->resize = VuoImageResize_make();
+	VuoRetain(instance->resize);
 
 	return instance;
 }
@@ -58,17 +58,20 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*resizedImage = NULL;
 		return;
+	}
 
 	if(image->pixelsWide < width && image->pixelsHigh < height)
 		*resizedImage = image;
 	else
-		*resizedImage = VuoImageResize_resize(image, (*instance)->shader, (*instance)->imageRenderer, sizingMode, width, height);
+		*resizedImage = VuoImageResize_resize(image, (*instance)->resize, (*instance)->imageRenderer, sizingMode, width, height);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
-	VuoRelease((*instance)->shader);
+	VuoRelease((*instance)->resize);
 	VuoRelease((*instance)->imageRenderer);
 	VuoGlContext_disuse((*instance)->glContext);
 }

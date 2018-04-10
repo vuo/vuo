@@ -8,12 +8,6 @@
  */
 
 #include "VuoInputEditorInteger.hh"
-#include "VuoSpinBox.hh"
-
-extern "C"
-{
-	#include "VuoInteger.h"
-}
 
 /**
  * Constructs a VuoInputEditorInteger object.
@@ -29,193 +23,187 @@ VuoInputEditor * VuoInputEditorIntegerFactory::newInputEditor()
  */
 void VuoInputEditorInteger::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
-	int suggestedMin = INT_MIN;
-	int suggestedMax = INT_MAX;
-	int suggestedStep = 1;
+	current = VuoInteger_makeFromJson(originalValue);
 
-	bool detailsIncludeSuggestedMin = false;
-	bool detailsIncludeSuggestedMax = false;
+	suggestedMin = INT_MIN;
+	suggestedMax = INT_MAX;
+	VuoInteger suggestedStep = 1;
+	previous = current;
+	defaultValue = 0;
 
-	QIntValidator *validator = new QIntValidator(this);
+	bool hasMinMax = details != NULL, hasAutoValue = details != NULL;
 
 	// Parse supported port annotations from the port's "details" JSON object:
 	if (details)
 	{
+		// "auto"
+		json_object *autoJsonValue = NULL;
+		if (json_object_object_get_ex(details, "auto", &autoJsonValue))
+			autoValue = VuoInteger_makeFromJson(autoJsonValue);
+		else
+			hasAutoValue = false;
+
 		// "suggestedMin"
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
-		{
-			suggestedMin = json_object_get_int(suggestedMinValue);
-			detailsIncludeSuggestedMin = true;
-		}
+			suggestedMin = VuoInteger_makeFromJson(suggestedMinValue);
+		else
+			hasMinMax = false;
 
 		// "suggestedMax"
 		json_object *suggestedMaxValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMax", &suggestedMaxValue))
-		{
-			suggestedMax = json_object_get_int(suggestedMaxValue);
-			detailsIncludeSuggestedMax = true;
-		}
+			suggestedMax = VuoInteger_makeFromJson(suggestedMaxValue);
+		else
+			hasMinMax = false;
 
 		// "suggestedStep"
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
-			suggestedStep = json_object_get_int(suggestedStepValue);
+			suggestedStep = VuoInteger_makeFromJson(suggestedStepValue);
+
+		// "default"
+		json_object *defaultJsonValue = NULL;
+		if (json_object_object_get_ex(details, "default", &defaultJsonValue))
+			defaultValue = VuoInteger_makeFromJson(defaultJsonValue);
 	}
 
-	// Display a QSlider or QSpinBox widget, depending whether a suggestedMin and suggestedMax were
-	// both provided in the port's annotation details.
-	slider = NULL;
-	spinBox = NULL;
+	spinbox = new VuoSpinBox(&dialog);
+	spinbox->setButtonMinimum(suggestedMin);
+	spinbox->setButtonMaximum(suggestedMax);
+	spinbox->setSingleStep(suggestedStep);
+	spinbox->setValue(current);
+	spinbox->setEnabled(autoToggle == NULL || !autoToggle->isChecked());
 
-	// If suggestedMin and suggestedMax have both been provided, display a slider.
-	if (detailsIncludeSuggestedMin && detailsIncludeSuggestedMax)
+	connect(spinbox, SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+
+	if(hasMinMax)
 	{
-		VuoInputEditorWithLineEdit::setUpDialog(dialog, originalValue, details);
-		lineEdit->setValidator(validator);
-		lineEdit->installEventFilter(this);
-
 		slider = new QSlider(&dialog);
 		slider->setOrientation(Qt::Horizontal);
 		slider->setFocusPolicy(Qt::NoFocus);
 		slider->setMinimum(suggestedMin);
 		slider->setMaximum(suggestedMax);
 		slider->setSingleStep(suggestedStep);
+		slider->setValue(current);
+		slider->setEnabled(autoToggle == NULL || !autoToggle->isChecked());
 
-		slider->setValue(VuoInteger_makeFromJson(originalValue));
-
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-		connect(lineEdit, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-
-		setFirstWidgetInTabOrder(lineEdit);
-		setLastWidgetInTabOrder(lineEdit);
-
-		const int widgetVerticalSpacing = 1;
-		slider->move(slider->pos().x(), slider->pos().y() + lineEdit->height() + widgetVerticalSpacing);
-
-		slider->resize(slider->width(), slider->height() - 10);
-		lineEdit->resize(slider->width(), lineEdit->height());
-
-		slider->show();
+		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
 	}
 
-	// If either suggestedMin or suggestedMax is left unspecified, display a spinbox.
+	// layout dialog
+	QGridLayout* layout = new QGridLayout;
+	dialog.setLayout(layout);
+
+	// left, top, right, bottom
+	// when showing sliders, add a little extra margin on the bottom since QSlider takes up the
+	// entire vertical spacing
+	layout->setContentsMargins(4, 4, 12, 4);
+	layout->setSpacing(4);
+	if(hasAutoValue) layout->setHorizontalSpacing(8);
+
+	int row = 0;
+
+	if(hasAutoValue)
+	{
+		autoToggle = new QCheckBox("Auto");
+		connect(autoToggle, SIGNAL(stateChanged(int)), this, SLOT(setAutoToggled(int)));
+		bool currentIsAuto = (current == autoValue);
+		autoToggle->setChecked(currentIsAuto);
+		if (currentIsAuto)
+			previous = defaultValue;
+
+		layout->addWidget(autoToggle, row++, 0);
+		autoToggle->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	}
+
+	layout->addWidget(spinbox, row++, 0);
+
+	if(hasMinMax)
+	{
+		// stick the slider in a horizontal layout so that we can apply a separate margin.
+		// necessary because QSlider aligns itself with about 4px left padding and 0px right
+		QHBoxLayout* sliderLayout = new QHBoxLayout();
+		sliderLayout->setContentsMargins(-2, 0, 2, 0);
+		sliderLayout->addWidget(slider);
+		layout->addLayout(sliderLayout, row++, 0);
+	}
+
+	dialog.setMaximumWidth(1);
+	dialog.setMaximumHeight(1);
+	dialog.adjustSize();
+
+	setFirstWidgetInTabOrder(spinbox);
+	setLastWidgetInTabOrder(spinbox);
+
+	spinbox->setFocus();
+}
+
+/**
+ * Responds to changes in the state of the "Auto" checkbox.
+ */
+void VuoInputEditorInteger::setAutoToggled(int state)
+{
+	if(state == Qt::Unchecked)
+	{
+		spinbox->setSpecialValueText("");
+		spinbox->setMinimum(suggestedMin);
+		spinbox->setMaximum(suggestedMax);
+		current = previous;
+	}
 	else
 	{
-		spinBox = new VuoSpinBox(&dialog);
-		static_cast<VuoSpinBox *>(spinBox)->setButtonMinimum(suggestedMin);
-		static_cast<VuoSpinBox *>(spinBox)->setButtonMaximum(suggestedMax);
-		spinBox->setSingleStep(suggestedStep);
-		spinBox->setValue(VuoInteger_makeFromJson(originalValue));
-
-		// For some reason the input editor is extremely wide
-		// without the following resize() call:
-		spinBox->resize(spinBox->size());
-
-		VuoInputEditorWithLineEdit::setUpLineEdit(spinBox->findChild<QLineEdit *>(), originalValue);
-		lineEdit->setValidator(validator);
-
-		spinBox->setKeyboardTracking(false);
-		connect(spinBox, SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
-
-		setFirstWidgetInTabOrder(spinBox);
-		setLastWidgetInTabOrder(spinBox);
-
-		spinBox->show();
+		previous = current;
+		current = autoValue;
+		spinbox->setSpecialValueText(" Auto            ");
+		spinbox->setMinimum(autoValue);
+		spinbox->setMaximum(autoValue);
 	}
+
+	spinbox->setValue(current);
+	spinbox->setEnabled(!autoToggle->isChecked());
+	if(slider) slider->setEnabled(!autoToggle->isChecked());
 }
 
 /**
- * Formats the value from the line edit to conform to the JSON specification for numbers.
+ * Update the spinbox and stored VuoInteger property.
  */
-json_object * VuoInputEditorInteger::convertFromLineEditFormat(const QString &valueAsString)
+void VuoInputEditorInteger::onSliderUpdate(int sliderValue)
 {
-	QString valueAsStringCopy = valueAsString;
-	int value = QLocale::system().toInt(valueAsString);
-	QString valueAsStringInDefaultLocale = QLocale(QLocale::C).toString(value);
+	current = sliderValue;
 
-	if (qAbs(value) >= 1000)
-		valueAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
+	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
+	disconnect(spinbox, SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
+	spinbox->setValue( current );
+	connect(spinbox, SIGNAL(valueChanged(QString)), this, SLOT(onSpinboxUpdate(QString)));
 
-	return VuoInteger_getJson( VuoInteger_makeFromString(valueAsStringInDefaultLocale.toUtf8().constData()) );
+	spinbox->setFocus();
+	spinbox->selectAll();
+
+	emit valueChanged( getAcceptedValue() );
 }
 
 /**
- * Converts the input @c newTextValue to an integer and updates this
- * input editor's @c slider widget to reflect that integer value.
+ * Update the slider and stored VuoInteger.
  */
-void VuoInputEditorInteger::updateSliderValue(QString newTextValue)
+void VuoInputEditorInteger::onSpinboxUpdate(QString spinboxValue)
 {
-	int newValue = QLocale::system().toInt(newTextValue);
+	current = QLocale::system().toInt(spinboxValue);
 
-	disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	slider->setValue(newValue);
-	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-}
-
-/**
- * Converts the slider's current value() to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- */
-void VuoInputEditorInteger::updateLineEditValue()
-{
-	updateLineEditValue(slider->value());
-}
-
-/**
- * Converts the input @c newSliderValue to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- *
- * Note: The slider's sliderMoved(int) signal must be connected to this
- * slot rather than to the version of this slot that takes no arguments
- * in order to respect the most recently updated slider value.
- */
-void VuoInputEditorInteger::updateLineEditValue(int newSliderValue)
-{
-	const QString originalLineEditText = lineEdit->text();
-	QString newLineEditText = QLocale::system().toString(newSliderValue);
-
-	if (qAbs(newSliderValue) >= 1000)
-		newLineEditText.remove(QLocale::system().groupSeparator());
-
-	if (originalLineEditText != newLineEditText)
+	if(slider != NULL)
 	{
-		lineEdit->setText(newLineEditText);
-		lineEdit->setFocus();
-		lineEdit->selectAll();
-		emitValueChanged();
+		disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		slider->setValue( current );
+		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
 	}
-}
 
-void VuoInputEditorInteger::emitValueChanged()
-{
 	emit valueChanged(getAcceptedValue());
 }
 
 /**
- * Filters events on watched objects.
+ * Returns the current text in the line edits.
  */
-bool VuoInputEditorInteger::eventFilter(QObject *object, QEvent *event)
+json_object * VuoInputEditorInteger::getAcceptedValue(void)
 {
-	if (event->type()==QEvent::Wheel && slider)
-	{
-		// Let the slider handle mouse wheel events.
-		QApplication::sendEvent(slider, event);
-		return true;
-	}
-
-	else if (event->type()==QEvent::KeyPress && slider)
-	{
-		// Let the slider handle keypresses of the up and down arrows.
-		QKeyEvent *keyEvent = (QKeyEvent *)(event);
-		if ((keyEvent->key() == Qt::Key_Up) || (keyEvent->key() == Qt::Key_Down))
-		{
-			QApplication::sendEvent(slider, event);
-			return true;
-		}
-	}
-
-	return VuoInputEditorWithLineEdit::eventFilter(object, event);
+	return VuoInteger_getJson(current);
 }

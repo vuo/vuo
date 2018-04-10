@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Apply Mask",
 					  "keywords" : [ "transparency", "alpha", "luma", "brightness", "opacity", "negative", "remove", "cut", "magic", "wand" ],
-					  "version" : "1.1.1",
+					  "version" : "1.1.2",
 					  "node": {
 						  "exampleCompositions" : [ "MaskMovieWithStar.vuo" ]
 					  }
@@ -73,8 +73,11 @@ void nodeInstanceEvent
 		VuoOutputData(VuoImage) maskedImage
 )
 {
-	if (!image || !mask)
+	if (!image)
+	{
+		*maskedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 

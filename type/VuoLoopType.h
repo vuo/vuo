@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLOOPTYPE_H
-#define VUOLOOPTYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoLoopType_struct { void *l; } * VuoList_VuoLoopType;
@@ -50,5 +49,3 @@ void VuoLoopType_release(VuoLoopType value);
 /**
  * @}
 */
-
-#endif

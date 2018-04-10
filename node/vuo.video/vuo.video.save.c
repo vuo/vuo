@@ -9,6 +9,7 @@
 
 #include "node.h"
 #include "VuoAvWriter.h"
+#include "VuoEventLoop.h"
 #include "VuoMovieFormat.h"
 #include "VuoImageResize.h"
 #include "../vuo.image/VuoSizingMode.h"
@@ -28,7 +29,8 @@ VuoModuleMetadata({
 					"isInterface" : true,
 					"exampleCompositions" : [
 						"RecordMovie.vuo"
-					]
+					],
+						"isDeprecated": true
 					}
 				 });
 
@@ -66,7 +68,7 @@ struct nodeInstanceData
 	// for the current movie.  Not initialized by default since most
 	// times this won't be necessary.
 	bool resizeShaderInitialized;
-	VuoShader shader;
+	VuoImageResize resize;
 	VuoGlContext glContext;
 	VuoImageRenderer imageRenderer;
 };
@@ -84,14 +86,14 @@ static void initResizeShader( struct nodeInstanceData* instance )
 	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
 	VuoRetain(instance->imageRenderer);
 
-	instance->shader = VuoImageResize_makeShader();
-	VuoRetain(instance->shader);
+	instance->resize = VuoImageResize_make();
+	VuoRetain(instance->resize);
 }
 
 static void freeResizeShader( struct nodeInstanceData* instance )
 {
 	instance->resizeShaderInitialized = false;
-	VuoRelease( instance->shader );
+	VuoRelease(instance->resize);
 	VuoRelease( instance->imageRenderer );
 	VuoGlContext_disuse( instance->glContext );
 }
@@ -197,6 +199,9 @@ void nodeInstanceEvent(
 
 				bool initSuccess = VuoAvWriter_isInitialized((*instance)->avWriter);
 				setWriterState(*instance, initSuccess ? VuoAvWriterState_Ready : VuoAvWriterState_Failed);
+
+				if (initSuccess)
+					VuoEventLoop_disableTermination();
 			});
 		}
 
@@ -208,7 +213,7 @@ void nodeInstanceEvent(
 					initResizeShader( (*instance) );
 
 				VuoImage resized = VuoImageResize_resize(saveImage,
-														 (*instance)->shader,
+														 (*instance)->resize,
 														 (*instance)->imageRenderer,
 														 VuoSizingMode_Fit,
 														 (*instance)->imageWidth,
@@ -251,6 +256,9 @@ void nodeInstanceEvent(
 		dispatch_group_wait((*instance)->avWriterQueueGroup, DISPATCH_TIME_FOREVER);
 		VuoAvWriter_finalize((*instance)->avWriter);
 		reset(*instance);
+
+		if ((*instance)->writerState == VuoAvWriterState_Ready)
+			VuoEventLoop_enableTermination();
 	}
 }
 
@@ -287,4 +295,7 @@ void nodeInstanceFini
 	// release calls finalize
 	VuoRelease( (*instance)->avWriter );
 	VuoRelease( (*instance)->lastUrl );
+
+	if ((*instance)->writerState == VuoAvWriterState_Ready)
+		VuoEventLoop_enableTermination();
 }

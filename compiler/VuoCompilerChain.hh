@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERCHAIN_H
-#define VUOCOMPILERCHAIN_H
+#pragma once
 
 class VuoCompilerNode;
 
@@ -29,12 +28,9 @@ public:
 	static Value * generateCompositionIdentifierValue(Module *module, BasicBlock *block, Value *contextValue);
 	static Value * generateEventIdValue(Module *module, BasicBlock *block, Value *contextValue);
 	static Function * getFreeContextFunction(Module *module);
-	Function * generateSubmissionForDispatchGroup(Module *module, BasicBlock *block, Value *contextValue, string triggerIdentifier);
+	Function * generateScheduleWorker(Module *module, BasicBlock *block, Value *contextValue, string triggerIdentifier, int minThreadsNeeded, int maxThreadsNeeded, size_t chainIndex, vector<size_t> upstreamChainIndices);
 	void generateWaitForUpstreamChains(Module *module, BasicBlock *block, Value *contextValue, const vector<size_t> &chainIndices);
 	void generateCleanupForWorkerFunction(Module *module, BasicBlock *block, Value *contextValue, size_t chainIndex, bool hasDownstreamChains);
 	vector<VuoCompilerNode *> getNodes(void);
 	bool isLastNodeInLoop(void);
 };
-
-
-#endif

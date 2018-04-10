@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Twirl Image",
 					 "keywords" : [ "twist", "swirl", "spin", "whirl", "pivot", "swivel", "revolve", "rotate", "curl", "coil", "filter" ],
-					 "version" : "2.1.0",
+					 "version" : "2.1.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
@@ -93,7 +93,10 @@ void nodeInstanceEvent
 )
 {
 	if (! image)
+	{
+		*twirledImage = NULL;
 		return;
+	}
 
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture", image);

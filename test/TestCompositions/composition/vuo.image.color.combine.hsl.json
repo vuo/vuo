@@ -1,0 +1,122 @@
+/**
+ * @file
+ * Expected outputs for the vuo.image.color.combine.hsl node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"NULL": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": null,
+			"saturationImage": null,
+			"lightnessImage": null,
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": null,
+		}
+	},
+
+	"Alpha only": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": null,
+			"saturationImage": null,
+			"lightnessImage": null,
+			"opacityImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	"Opaque red": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#000000ff","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": {"color":"#ffffffff","pixelsWide":1,"pixelsHigh":1},
+			"lightnessImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff0000ff","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	"Opaque red with opacityImage": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#000000ff","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": {"color":"#ffffffff","pixelsWide":1,"pixelsHigh":1},
+			"lightnessImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":"#ffffffff","pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff0000ff","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+
+	"Semitransparent red": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#00000080","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": null,
+			"lightnessImage": null,
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff000080","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	"Semitransparent red with semitransparent grey lightnessImage": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#00000080","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": null,
+			"lightnessImage": {"color":"#80808080","pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff000080","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	"Semitransparent red with white opacityImage": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#00000080","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": null,
+			"lightnessImage": null,
+			"opacityImage": {"color":"#ffffffff","pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff000080","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	"Opaque red with grey opacityImage": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#000000ff","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": null,
+			"lightnessImage": null,
+			"opacityImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff000080","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	"Opaque red with saturation, lightness, and grey opacityImage": {
+		"firingPort": "hueImage",
+		"inputPortValues": {
+			"hueImage": {"color":"#000000ff","pixelsWide":1,"pixelsHigh":1},
+			"saturationImage": {"color":"#ffffffff","pixelsWide":1,"pixelsHigh":1},
+			"lightnessImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":"#808080ff","pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":"#ff000080","pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+}}

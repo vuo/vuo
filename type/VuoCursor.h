@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCURSOR_H
-#define VUOCURSOR_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoCursor_struct { void *l; } * VuoList_VuoCursor;
@@ -58,4 +57,3 @@ void VuoCursor_release(VuoCursor value);
  * @}
  */
 
-#endif // VUOCURSOR_H

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOHORIZONTALREFLECTION_H
-#define VUOHORIZONTALREFLECTION_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoHorizontalReflection_struct { void *l; } * VuoList_VuoHorizontalReflection;
@@ -48,5 +47,3 @@ char * VuoHorizontalReflection_getString(const VuoHorizontalReflection value);
 /**
  * @}
 */
-
-#endif
