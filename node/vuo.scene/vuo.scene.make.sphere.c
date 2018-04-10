@@ -16,7 +16,7 @@
 VuoModuleMetadata({
 					  "title" : "Make Sphere",
 					  "keywords" : [ "mesh", "3d", "scene", "sphere", "ball", "round", "ellipsoid", "circle", "globe", "shape" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -53,4 +53,5 @@ void nodeEvent
 												0, 1);
 
 	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
+	object->name = VuoText_make("Sphere");
 }

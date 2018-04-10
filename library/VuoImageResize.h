@@ -6,8 +6,8 @@
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
-#pragma once 
- 
+#pragma once
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -17,8 +17,10 @@ extern "C"
 #include "VuoImageRenderer.h"
 #include "../node/vuo.image/VuoSizingMode.h"
 
-VuoShader VuoImageResize_makeShader();
-VuoImage VuoImageResize_resize(VuoImage image, VuoShader shader, VuoImageRenderer renderer, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height);
+typedef void *VuoImageResize;	///< Resize state data.
+
+VuoImageResize VuoImageResize_make(void);
+VuoImage VuoImageResize_resize(VuoImage image, VuoImageResize resize, VuoImageRenderer renderer, VuoSizingMode sizingMode, VuoInteger width, VuoInteger height);
 
 #ifdef __cplusplus
 }

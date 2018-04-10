@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLOG_H
-#define VUOLOG_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,4 +173,3 @@ static inline void VuoDeferCleanup(void (^*b)(void)) { (*b)(); }
 }
 #endif
 
-#endif // VUOLOG_H

@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					 "title" : "Copy 3D Object with Transforms",
+					 "title" : "Copy 3D Object (Transform)",
 					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate" ],
 					 "version" : "2.0.2",
 					 "node": {

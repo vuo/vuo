@@ -40,6 +40,23 @@ VuoCompilerNode::VuoCompilerNode(VuoNode *baseNode)
 	graphvizIdentifier = getGraphvizIdentifierPrefix();
 
 	constantStrings = NULL;
+	indexInOrderedNodes = ULONG_MAX - 1;
+}
+
+/**
+ * Tells the node its index in VuoCompilerBitcodeGenerator::orderedNodes. This must be called before generating bitcode.
+ */
+void VuoCompilerNode::setIndexInOrderedNodes(size_t indexInOrderedNodes)
+{
+	this->indexInOrderedNodes = indexInOrderedNodes;
+}
+
+/**
+ * Returns the node's index in VuoCompilerBitcodeGenerator::orderedNodes.
+ */
+size_t VuoCompilerNode::getIndexInOrderedNodes(void)
+{
+	return indexInOrderedNodes;
 }
 
 /**
@@ -62,13 +79,22 @@ void VuoCompilerNode::setConstantStringCache(VuoCompilerConstantStringCache *con
 }
 
 /**
- * Generates a `char *` value prefixed with @a compositionIdentifierValue and suffixed with this node's identifier.
+ * Generates a constant `char *` value consisting of the node's identifier.
  */
-Value * VuoCompilerNode::generateIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue)
+Value * VuoCompilerNode::generateIdentifierValue(Module *module)
+{
+	return constantStrings->get(module, getIdentifier());
+}
+
+/**
+ * Generates a `char *` value prefixed with @a compositionIdentifierValue and suffixed with this node's identifier.
+ * The caller is responsible for generating code to free the value.
+ */
+Value * VuoCompilerNode::generateSubcompositionIdentifierValue(Module *module, BasicBlock *block, Value *compositionIdentifierValue)
 {
 	vector<Value *> identifierParts;
 	identifierParts.push_back(compositionIdentifierValue);
-	identifierParts.push_back(constantStrings->get(module, "__" + getGraphvizIdentifier()));
+	identifierParts.push_back(constantStrings->get(module, "__" + getIdentifier()));
 	return VuoCompilerCodeGenUtilities::generateStringConcatenation(module, block, identifierParts, *constantStrings);
 }
 
@@ -77,29 +103,72 @@ Value * VuoCompilerNode::generateIdentifierValue(Module *module, BasicBlock *blo
  */
 Value * VuoCompilerNode::generateGetContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue)
 {
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
-	return nodeContextValue;
+	return VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, compositionIdentifierValue, indexInOrderedNodes);
 }
 
 /**
- * Generates code to create and initialize a data structure containing port values and other information
- * specific to this node. If this node is a subcomposition, `compositionContextInit()` is called.
- *
- * The generated code registers the created node context with the runtime.
+ * Generates code to register metadata for this node and each of its ports with the runtime.
  */
-Value * VuoCompilerNode::generateContextInit(Module *module, BasicBlock *block, Value *compositionIdentifierValue,
-											 unsigned long nodeIndex, const vector<VuoCompilerType *> &orderedTypes)
+void VuoCompilerNode::generateAddMetadata(Module *module, BasicBlock *block, Value *compositionIdentifierValue,
+										  const vector<VuoCompilerType *> &orderedTypes)
 {
-	Value *nodeContextValue;
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
+	Value *nodeIdentifierValue = generateIdentifierValue(module);
+	VuoCompilerCodeGenUtilities::generateAddNodeMetadata(module, block, compositionIdentifierValue, nodeIdentifierValue);
 
+	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
+	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
+	vector<VuoPort *> ports;
+	ports.insert(ports.end(), inputPorts.begin(), inputPorts.end());
+	ports.insert(ports.end(), outputPorts.begin(), outputPorts.end());
+	for (vector<VuoPort *>::iterator i = ports.begin(); i != ports.end(); ++i)
+	{
+		VuoCompilerPort *port = static_cast<VuoCompilerPort *>( (*i)->getCompiler() );
+
+		Value *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
+		Value *portNameValue = constantStrings->get(module, port->getBase()->getClass()->getName());
+
+		size_t typeIndex;
+		string initialValue;
+
+		VuoType *dataType = port->getDataVuoType();
+		if (dataType)
+		{
+			vector<VuoCompilerType *>::const_iterator typeIter = find(orderedTypes.begin(), orderedTypes.end(), dataType->getCompiler());
+			typeIndex = typeIter - orderedTypes.begin();
+
+			VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>(port);
+			initialValue = (inputEventPort ? inputEventPort->getData()->getInitialValue() : "");
+		}
+		else
+		{
+			typeIndex = orderedTypes.size();
+		}
+
+		Value *initialValueValue = constantStrings->get(module, initialValue);
+
+		VuoCompilerCodeGenUtilities::generateAddPortMetadata(module, block, compositionIdentifierValue, portIdentifierValue,
+															 portNameValue, typeIndex, initialValueValue);
+	}
+}
+
+/**
+ * Generates code to create the node context for this node and the port context for each of its ports.
+ * If this node is a subcomposition, the generated code calls `compositionContextInit()` for the subcomposition.
+ */
+Value * VuoCompilerNode::generateCreateContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue)
+{
+	// Create the node context.
+
+	Value *nodeContextValue;
 	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionContextInitFunction();
 	if (subcompositionFunctionSrc)
 	{
+		Value *subcompositionIdentifierValue = generateSubcompositionIdentifierValue(module, block, compositionIdentifierValue);
+
 		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
-		nodeContextValue = CallInst::Create(subcompositionFunctionDst, nodeIdentifierValue, "", block);
+		nodeContextValue = CallInst::Create(subcompositionFunctionDst, subcompositionIdentifierValue, "", block);
+
+		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, subcompositionIdentifierValue);
 
 		PointerType *pointerToNodeContextType = PointerType::get( VuoCompilerCodeGenUtilities::getNodeContextType(module), 0 );
 		nodeContextValue = new BitCastInst(nodeContextValue, pointerToNodeContextType, "", block);  // cast needed since NodeContext type comes from a different module
@@ -107,20 +176,9 @@ Value * VuoCompilerNode::generateContextInit(Module *module, BasicBlock *block, 
 	else
 	{
 		nodeContextValue = VuoCompilerCodeGenUtilities::generateCreateNodeContext(module, block, instanceData, false, 0);
-
-		VuoCompilerCodeGenUtilities::generateAddNodeContext(module, block, nodeIdentifierValue, nodeContextValue);
 	}
 
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
-
-	Value *nodeSemaphoreValue = VuoCompilerCodeGenUtilities::generateGetNodeContextSemaphore(module, block, nodeContextValue);
-	Type *unsignedLongType = IntegerType::get(module->getContext(), 64);
-	PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-	Value *nodeIndexValue = ConstantInt::get(unsignedLongType, nodeIndex);
-
-	Function *setPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(module);
-	Value *falseValue = ConstantInt::get(setPortValueFunction->getFunctionType()->getParamType(3), 0);
-	Value *trueValue = ConstantInt::get(setPortValueFunction->getFunctionType()->getParamType(3), 1);
+	// Create each port's context.
 
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
 	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
@@ -134,48 +192,6 @@ Value * VuoCompilerNode::generateContextInit(Module *module, BasicBlock *block, 
 
 		Value *portContextValue = port->generateCreatePortContext(module, block);
 		portContextValues.push_back(portContextValue);
-
-		Value *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
-		Value *portDataVariable;
-		Value *typeIndexValue;
-
-		VuoType *dataType = port->getDataVuoType();
-		if (dataType)
-		{
-			portDataVariable = VuoCompilerCodeGenUtilities::generateGetPortContextDataVariableAsVoidPointer(module, block, portContextValue);
-
-			vector<VuoCompilerType *>::const_iterator typeIter = find(orderedTypes.begin(), orderedTypes.end(), dataType->getCompiler());
-			size_t typeIndex = typeIter - orderedTypes.begin();
-			typeIndexValue = ConstantInt::get(unsignedLongType, typeIndex);
-		}
-		else
-		{
-			portDataVariable = ConstantPointerNull::get(voidPointerType);
-
-			size_t invalidTypeIndex = orderedTypes.size();
-			typeIndexValue = ConstantInt::get(unsignedLongType, invalidTypeIndex);
-		}
-
-		VuoCompilerCodeGenUtilities::generateAddPortIdentifier(module, block, compositionIdentifierValue, portIdentifierValue,
-															   portDataVariable, nodeSemaphoreValue, nodeIndexValue, typeIndexValue);
-
-		if (dataType)
-		{
-			VuoCompilerInputEventPort *inputEventPort = dynamic_cast<VuoCompilerInputEventPort *>(port);
-			string initialValue = (inputEventPort ? inputEventPort->getData()->getInitialValue() : "");
-			Value *initialValueValue = constantStrings->get(module, initialValue);
-
-			vector<Value *> setPortValueArgs;
-			setPortValueArgs.push_back(compositionIdentifierValue);
-			setPortValueArgs.push_back(portIdentifierValue);
-			setPortValueArgs.push_back(initialValueValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(trueValue);
-			CallInst::Create(setPortValueFunction, setPortValueArgs, "", block);
-		}
 	}
 
 	VuoCompilerCodeGenUtilities::generateSetNodeContextPortContexts(module, block, nodeContextValue, portContextValues);
@@ -184,78 +200,23 @@ Value * VuoCompilerNode::generateContextInit(Module *module, BasicBlock *block, 
 }
 
 /**
- * Generates code to deallocate the data structure created by code generated by VuoCompilerNode::generateContextInit().
- * If this node is a subcomposition, `compositionContextFini()` is called.
- *
- * The generated code releases the data of each data-and-event port, except for the input ports of nodes being carried
- * across a live-coding reload.
+ * Generates code to free the node context for this node.
+ * If this node is a subcomposition, the generated code calls `compositionContextFini()` for the subcomposition.
  */
-void VuoCompilerNode::generateContextFini(Module *module, BasicBlock *block, BasicBlock *releaseInputsBlock,
-										  Value *compositionIdentifierValue, Value *nodeIdentifierValue, Value *nodeContextValue)
+void VuoCompilerNode::generateDestroyContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeContextValue)
 {
-	Function *setPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(module);
-	Type *boolType = setPortValueFunction->getFunctionType()->getParamType(3);
-	Value *falseValue = ConstantInt::get(boolType, 0);
-	Value *trueValue = ConstantInt::get(boolType, 1);
-	Constant *emptyStringValue = constantStrings->get(module, "");
-
-	// Release the input port data.
-	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
-	if (releaseInputsBlock)
-	{
-		for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
-		{
-			VuoCompilerPort *port = static_cast<VuoCompilerPort *>( (*i)->getCompiler() );
-			VuoType *dataType = port->getDataVuoType();
-			if (dataType)
-			{
-				Value *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
-
-				vector<Value *> setPortValueArgs;
-				setPortValueArgs.push_back(compositionIdentifierValue);
-				setPortValueArgs.push_back(portIdentifierValue);
-				setPortValueArgs.push_back(emptyStringValue);
-				setPortValueArgs.push_back(falseValue);
-				setPortValueArgs.push_back(falseValue);
-				setPortValueArgs.push_back(falseValue);
-				setPortValueArgs.push_back(trueValue);
-				setPortValueArgs.push_back(falseValue);
-				CallInst::Create(setPortValueFunction, setPortValueArgs, "", releaseInputsBlock);
-			}
-		}
-	}
-
-	// Release the output port data.
-	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
-	for (vector<VuoPort *>::iterator i = outputPorts.begin(); i != outputPorts.end(); ++i)
-	{
-		VuoCompilerPort *port = static_cast<VuoCompilerPort *>( (*i)->getCompiler() );
-		VuoType *dataType = port->getDataVuoType();
-		if (dataType)
-		{
-			Value *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
-
-			vector<Value *> setPortValueArgs;
-			setPortValueArgs.push_back(compositionIdentifierValue);
-			setPortValueArgs.push_back(portIdentifierValue);
-			setPortValueArgs.push_back(emptyStringValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(falseValue);
-			setPortValueArgs.push_back(trueValue);
-			setPortValueArgs.push_back(falseValue);
-			CallInst::Create(setPortValueFunction, setPortValueArgs, "", block);
-		}
-	}
-
 	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionContextFiniFunction();
 	if (subcompositionFunctionSrc)
 	{
+		Value *subcompositionIdentifierValue = generateSubcompositionIdentifierValue(module, block, compositionIdentifierValue);
+
 		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
-		CallInst::Create(subcompositionFunctionDst, nodeIdentifierValue, "", block);
+		CallInst::Create(subcompositionFunctionDst, subcompositionIdentifierValue, "", block);
+
+		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, subcompositionIdentifierValue);
 	}
-	else
-		VuoCompilerCodeGenUtilities::generateFreeNodeContext(module, block, nodeContextValue, inputPorts.size() + outputPorts.size());
+
+	VuoCompilerCodeGenUtilities::generateFreeNodeContext(module, block, nodeContextValue);
 }
 
 /**
@@ -267,14 +228,14 @@ void VuoCompilerNode::generateContextFini(Module *module, BasicBlock *block, Bas
  * @param module The destination LLVM module (i.e., generated code).
  * @param function The function in which to generate code.
  * @param currentBlock The block in which to generate code.
- * @param nodeIdentifierValue This node's fully qualified identifier.
+ * @param compositionIdentifierValue The identifier of the composition containing this node.
  */
 void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *function, BasicBlock *&currentBlock,
-												Value *nodeIdentifierValue)
+												Value *compositionIdentifierValue)
 {
 	Function *functionSrc = getBase()->getNodeClass()->getCompiler()->getEventFunction();
 
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, currentBlock, nodeIdentifierValue);
+	Value *nodeContextValue = generateGetContext(module, currentBlock, compositionIdentifierValue);
 
 	map<VuoCompilerEventPort *, Value *> portContextForEventPort;
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
@@ -289,7 +250,7 @@ void VuoCompilerNode::generateEventFunctionCall(Module *module, Function *functi
 			portContextForEventPort[eventPort] = eventPort->generateGetPortContext(module, currentBlock, nodeContextValue);
 	}
 
-	generateFunctionCall(functionSrc, module, currentBlock, nodeIdentifierValue, nodeContextValue, portContextForEventPort);
+	generateFunctionCall(functionSrc, module, currentBlock, compositionIdentifierValue, nodeContextValue, portContextForEventPort);
 
 	// The output port should transmit an event if any non-blocking input port received the event.
 	// The output port should not transmit an event if no non-blocking or door input ports received the event.
@@ -366,10 +327,8 @@ void VuoCompilerNode::generateInitFunctionCall(Module *module, BasicBlock *block
 {
 	Function *functionSrc = getBase()->getNodeClass()->getCompiler()->getInitFunction();
 
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-	CallInst *call = generateFunctionCall(functionSrc, module, block, nodeIdentifierValue, nodeContextValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
+	Value *nodeContextValue = generateGetContext(module, block, compositionIdentifierValue);
+	CallInst *call = generateFunctionCall(functionSrc, module, block, compositionIdentifierValue, nodeContextValue);
 
 	Type *instanceDataType = instanceData->getBase()->getClass()->getCompiler()->getType();
 	Value *callCasted = VuoCompilerCodeGenUtilities::generateTypeCast(module, block, call, instanceDataType);
@@ -393,10 +352,8 @@ void VuoCompilerNode::generateFiniFunctionCall(Module *module, BasicBlock *block
 {
 	Function *functionSrc = getBase()->getNodeClass()->getCompiler()->getFiniFunction();
 
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-	generateFunctionCall(functionSrc, module, block, nodeIdentifierValue, nodeContextValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
+	Value *nodeContextValue = generateGetContext(module, block, compositionIdentifierValue);
+	generateFunctionCall(functionSrc, module, block, compositionIdentifierValue, nodeContextValue);
 
 	// Release the instance data.
 	Value *instanceDataValue = instanceData->generateLoad(module, block, nodeContextValue);
@@ -416,10 +373,8 @@ void VuoCompilerNode::generateCallbackStartFunctionCall(Module *module, BasicBlo
 	if (! functionSrc)
 		return;
 
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-	generateFunctionCall(functionSrc, module, block, nodeIdentifierValue, nodeContextValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
+	Value *nodeContextValue = generateGetContext(module, block, compositionIdentifierValue);
+	generateFunctionCall(functionSrc, module, block, compositionIdentifierValue, nodeContextValue);
 }
 
 /**
@@ -435,10 +390,8 @@ void VuoCompilerNode::generateCallbackUpdateFunctionCall(Module *module, BasicBl
 	if (! functionSrc)
 		return;
 
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-	generateFunctionCall(functionSrc, module, block, nodeIdentifierValue, nodeContextValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
+	Value *nodeContextValue = generateGetContext(module, block, compositionIdentifierValue);
+	generateFunctionCall(functionSrc, module, block, compositionIdentifierValue, nodeContextValue);
 }
 
 /**
@@ -454,10 +407,8 @@ void VuoCompilerNode::generateCallbackStopFunctionCall(Module *module, BasicBloc
 	if (! functionSrc)
 		return;
 
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-	generateFunctionCall(functionSrc, module, block, nodeIdentifierValue, nodeContextValue);
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
+	Value *nodeContextValue = generateGetContext(module, block, compositionIdentifierValue);
+	generateFunctionCall(functionSrc, module, block, compositionIdentifierValue, nodeContextValue);
 }
 
 /**
@@ -466,11 +417,11 @@ void VuoCompilerNode::generateCallbackStopFunctionCall(Module *module, BasicBloc
  * @param functionSrc The node class's function in the source module.
  * @param module The module in which to generate code (destination module).
  * @param block The block in which to generate code.
- * @param nodeIdentifierValue This node's fully qualified identifier.
+ * @param compositionIdentifierValue The identifier of the composition containing this node.
  * @param nodeContextValue This node's context.
  */
 CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *module, BasicBlock *block,
-												 Value *nodeIdentifierValue, Value *nodeContextValue,
+												 Value *compositionIdentifierValue, Value *nodeContextValue,
 												 const map<VuoCompilerEventPort *, Value *> &portContextForEventPort)
 {
 	Function *functionDst = VuoCompilerModule::declareFunctionInModule(module, functionSrc);
@@ -478,8 +429,12 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 	vector<Value *> args(functionDst->getFunctionType()->getNumParams());
 
 	// Set up the argument for the composition identifier (if a subcomposition).
+	Value *subcompositionIdentifierValue = NULL;
 	if (getBase()->getNodeClass()->getCompiler()->isSubcomposition())
-		args[0] = nodeIdentifierValue;
+	{
+		subcompositionIdentifierValue = generateSubcompositionIdentifierValue(module, block, compositionIdentifierValue);
+		args[0] = subcompositionIdentifierValue;
+	}
 
 	// Set up the arguments for input ports.
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
@@ -661,6 +616,9 @@ CallInst * VuoCompilerNode::generateFunctionCall(Function *functionSrc, Module *
 		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, oldInstanceDataValue);
 	}
 
+	if (getBase()->getNodeClass()->getCompiler()->isSubcomposition())
+		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, subcompositionIdentifierValue);
+
 	return call;
 }
 
@@ -828,31 +786,13 @@ string VuoCompilerNode::getGraphvizIdentifier(void)
  */
 string VuoCompilerNode::getGraphvizDeclaration(bool shouldPrintPosition, double xPositionOffset, double yPositionOffset)
 {
-	return getGraphvizDeclarationWithOptions(false, shouldPrintPosition, xPositionOffset, yPositionOffset);
-}
-
-/**
- * Returns a string containing the declaration for this node
- * as it would appear in a .vuo (Graphviz dot format) file,
- * but with printf-style placeholders for the port and instance data values.
- */
-string VuoCompilerNode::getSerializedFormatString(void)
-{
-	return getGraphvizDeclarationWithOptions(true, false, 0, 0);
-}
-
-/**
- * Helper function for getGraphvizDeclaration() and getSerializedFormatString().
- */
-string VuoCompilerNode::getGraphvizDeclarationWithOptions(bool shouldUsePlaceholders, bool shouldPrintPosition, double xPositionOffset, double yPositionOffset)
-{
 	ostringstream declaration;
 
 	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
 	vector<VuoPort *> outputPorts = getBase()->getOutputPorts();
 
 	// name
-	declaration << (shouldUsePlaceholders ? "%s" : getGraphvizIdentifier());
+	declaration << getGraphvizIdentifier();
 
 	// type
 	declaration << " [type=\"" << getBase()->getNodeClass()->getClassName() << "\"";
@@ -862,10 +802,6 @@ string VuoCompilerNode::getGraphvizDeclarationWithOptions(bool shouldUsePlacehol
 
 	// label
 	declaration << " label=\"" << VuoStringUtilities::transcodeToGraphvizIdentifier(getBase()->getTitle());
-	if (shouldUsePlaceholders)
-	{
-		declaration << "|<instanceData>instanceData\\l";
-	}
 	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
 	{
 		string portName = VuoStringUtilities::transcodeToGraphvizIdentifier((*i)->getClass()->getName());
@@ -896,9 +832,9 @@ string VuoCompilerNode::getGraphvizDeclarationWithOptions(bool shouldUsePlacehol
 		VuoPort *port = *i;
 		VuoCompilerInputEventPort *eventPort = static_cast<VuoCompilerInputEventPort *>(port->getCompiler());
 		VuoCompilerInputData *data = eventPort->getData();
-		if (data && (shouldUsePlaceholders || (! eventPort->hasConnectedDataCable() && ! data->getInitialValue().empty())))
+		if (data && (! eventPort->hasConnectedDataCable() && ! data->getInitialValue().empty()))
 		{
-			string portConstant = (shouldUsePlaceholders ? "%s" : data->getInitialValue());
+			string portConstant = data->getInitialValue();
 			string escapedPortConstant = VuoStringUtilities::transcodeToGraphvizIdentifier(portConstant);
 			declaration << " _" << port->getClass()->getName() << "=\"" << escapedPortConstant << "\"";
 		}
@@ -915,225 +851,7 @@ string VuoCompilerNode::getGraphvizDeclarationWithOptions(bool shouldUsePlacehol
 		}
 	}
 
-	// instance data
-	if (instanceData && shouldUsePlaceholders)
-	{
-		declaration << " _instanceData=\"%s\"";
-	}
-
 	declaration << "];";
 
 	return declaration.str();
-}
-
-/**
- * Generates code that creates a Graphviz-formatted declaration for this node, with the node's fully-qualified identifier
- * (including composition prefix) and the port and instance data values.
- *
- * If this node is a subcomposition, `compositionSerialize()` is called to create the declaration of each contained node.
- */
-Value * VuoCompilerNode::generateSerializedString(Module *module, BasicBlock *block, Value *compositionIdentifierValue)
-{
-	string formatString = getSerializedFormatString();
-	vector<Value *> replacementValues;
-	Function *transcodeToGraphvizIdentifierFunction = VuoCompilerCodeGenUtilities::getTranscodeToGraphvizIdentifierFunction(module);
-
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-
-	replacementValues.push_back(nodeIdentifierValue);
-
-	Function *getPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionGetPortValueFunction(module);
-	Value *stringSerializationValue = ConstantInt::get(getPortValueFunction->getFunctionType()->getParamType(2), 1);
-	Value *falseValue = ConstantInt::get(getPortValueFunction->getFunctionType()->getParamType(3), 0);
-
-	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
-	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
-	{
-		VuoCompilerInputEventPort *port = static_cast<VuoCompilerInputEventPort *>((*i)->getCompiler());
-		VuoCompilerInputData *data = port->getData();
-		if (data)
-		{
-			Constant *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
-
-			// char *serializedPort = compositionGetPortValue(compositionIdentifier, portIdentifier, 2, false);
-			vector<Value *> getPortValueArgs;
-			getPortValueArgs.push_back(compositionIdentifierValue);
-			getPortValueArgs.push_back(portIdentifierValue);
-			getPortValueArgs.push_back(stringSerializationValue);
-			getPortValueArgs.push_back(falseValue);
-			CallInst *serializedPortValue = CallInst::Create(getPortValueFunction, getPortValueArgs, "", block);
-
-			// char *escapedPort = transcodeToGraphvizIdentifier(serializedPort);
-			CallInst *escapedPortValue = CallInst::Create(transcodeToGraphvizIdentifierFunction, serializedPortValue, "", block);
-			replacementValues.push_back(escapedPortValue);
-
-			// free(serializedPort);
-			VuoCompilerCodeGenUtilities::generateFreeCall(module, block, serializedPortValue);
-		}
-	}
-
-	if (instanceData)
-	{
-		// char *serializedInstanceData = ...;
-		Value *instanceDataValue = instanceData->generateLoad(module, block, nodeContextValue);
-		Value *serializedInstanceDataValue = VuoCompilerCodeGenUtilities::generateSerialization(module, block, instanceDataValue, *constantStrings);
-
-		// char *escapedInstanceData = transcodeToGraphvizIdentifier(serializedInstanceData);
-		CallInst *escapedInstanceDataValue = CallInst::Create(transcodeToGraphvizIdentifierFunction, serializedInstanceDataValue, "", block);
-		replacementValues.push_back(escapedInstanceDataValue);
-
-		// free(serializedInstanceData);
-		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, serializedInstanceDataValue);
-	}
-
-	// sprintf(serializedNode, "...%s...", <escaped strings>);
-	Value *serializedNodeValue = VuoCompilerCodeGenUtilities::generateFormattedString(module, block, formatString, replacementValues, *constantStrings);
-
-	Value *lineSeparatorValue = constantStrings->get(module, "\n");
-	vector<Value *> serializedNodeAndLineSeparator;
-	serializedNodeAndLineSeparator.push_back(serializedNodeValue);
-	serializedNodeAndLineSeparator.push_back(lineSeparatorValue);
-	serializedNodeValue = VuoCompilerCodeGenUtilities::generateStringConcatenation(module, block, serializedNodeAndLineSeparator, *constantStrings);
-
-
-	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionSerializeFunction();
-	if (subcompositionFunctionSrc)
-	{
-		// char *serializedContainedNodes = <subcomposition>_compositionSerialize(nodeIdentifier);
-		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
-		Value *serializedContainedNodesValue = CallInst::Create(subcompositionFunctionDst, nodeIdentifierValue, "", block);
-
-		// char *serializedNodeAndContainedNodes = malloc(...);
-		// strcat(serializedNodeAndContainedNodes, serializedNode);
-		// strcat(serializedNodeAndContainedNodes, serializedContainedNodes);
-		// free(serializedNode);
-		// free(serializedContainedNodes);
-		vector<Value *> parts;
-		parts.push_back(serializedNodeValue);
-		parts.push_back(serializedContainedNodesValue);
-		Value *serializedNodeAndContainedNodesValue = VuoCompilerCodeGenUtilities::generateStringConcatenation(module, block, parts, *constantStrings);
-		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, serializedNodeValue);
-		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, serializedContainedNodesValue);
-		serializedNodeValue = serializedNodeAndContainedNodesValue;
-	}
-
-
-	// foreach (char *escapedString, <escaped strings>)
-	//   free(escapedString);
-	for (vector<Value *>::iterator i = replacementValues.begin(); i != replacementValues.end(); ++i)
-		VuoCompilerCodeGenUtilities::generateFreeCall(module, block, *i);
-
-	return serializedNodeValue;
-}
-
-/**
- * Generates code that sets this node's input port values and instance data from the declaration found in the given Graphviz graph
- * (`graph_t *`).
- *
- * If this node is a subcomposition, `compositionUnserialize()` is called to unserialize each contained node.
- */
-void VuoCompilerNode::generateUnserialization(Module *module, Function *function, BasicBlock *&block, Value *compositionIdentifierValue,
-											  Value *graphValue)
-{
-	Value *nodeIdentifierValue = generateIdentifierValue(module, block, compositionIdentifierValue);
-	Value *nodeContextValue = VuoCompilerCodeGenUtilities::generateGetNodeContext(module, block, nodeIdentifierValue);
-
-	Function *getConstantValueFromGraphvizFunction = VuoCompilerCodeGenUtilities::getGetConstantValueFromGraphvizFunction(module);
-	Function *setInputPortValueFunction = VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(module);
-
-	ConstantPointerNull *nullPointerToChar = ConstantPointerNull::get( PointerType::get(IntegerType::get(module->getContext(), 8), 0) );
-	Value *falseValue = ConstantInt::get( setInputPortValueFunction->getFunctionType()->getParamType(3), 0 );
-	Value *trueValue = ConstantInt::get( setInputPortValueFunction->getFunctionType()->getParamType(3), 1 );
-
-	vector<VuoPort *> inputPorts = getBase()->getInputPorts();
-	for (vector<VuoPort *>::iterator i = inputPorts.begin(); i != inputPorts.end(); ++i)
-	{
-		VuoCompilerInputEventPort *port = static_cast<VuoCompilerInputEventPort *>((*i)->getCompiler());
-		VuoType *type = port->getDataVuoType();
-		if (type)
-		{
-			string portName = port->getBase()->getClass()->getName();
-			Value *portNameValue = constantStrings->get(module, portName);
-			Value *portIdentifierValue = constantStrings->get(module, port->getIdentifier());
-
-			// char *serializedPort = getConstantValueFromGraphviz(graph, nodeGraphvizIdentifier, portGraphvizIdentifier);
-			vector<Value *> getConstantValueFromGraphvizArgs;
-			getConstantValueFromGraphvizArgs.push_back(graphValue);
-			getConstantValueFromGraphvizArgs.push_back(nodeIdentifierValue);
-			getConstantValueFromGraphvizArgs.push_back(portNameValue);
-			CallInst *serializedPortValue = CallInst::Create(getConstantValueFromGraphvizFunction, getConstantValueFromGraphvizArgs, "", block);
-
-			// if (serializedPort != NULL)
-			BasicBlock *setInputPortValueBlock = BasicBlock::Create(module->getContext(), "setInputPortValue", function, NULL);
-			BasicBlock *nextBlock = BasicBlock::Create(module->getContext(), "getSerializedValue", function, NULL);
-			ICmpInst *serializedPortValueNotNull = new ICmpInst(*block, ICmpInst::ICMP_NE, serializedPortValue, nullPointerToChar, "");
-			BranchInst::Create(setInputPortValueBlock, nextBlock, serializedPortValueNotNull, block);
-
-			// compositionSetInputPortValue(compositionIdentifier, portIdentifier, serializedPort, false, false);
-			vector<Value *> setInputPortValueArgs;
-			setInputPortValueArgs.push_back(compositionIdentifierValue);
-			setInputPortValueArgs.push_back(portIdentifierValue);
-			setInputPortValueArgs.push_back(serializedPortValue);
-			setInputPortValueArgs.push_back(falseValue);
-			setInputPortValueArgs.push_back(falseValue);
-			setInputPortValueArgs.push_back(falseValue);
-			setInputPortValueArgs.push_back(trueValue);
-			setInputPortValueArgs.push_back(trueValue);
-			CallInst::Create(setInputPortValueFunction, setInputPortValueArgs, "", setInputPortValueBlock);
-
-			BranchInst::Create(nextBlock, setInputPortValueBlock);
-			block = nextBlock;
-		}
-	}
-
-	if (instanceData)
-	{
-		Value *instanceDataNameValue = constantStrings->get(module, "instanceData");
-
-		// char *serializedData = getConstantValueFromGraphviz(graph, nodeGraphvizIdentifier, "instanceData");
-		vector<Value *> getConstantValueFromGraphvizArgs;
-		getConstantValueFromGraphvizArgs.push_back(graphValue);
-		getConstantValueFromGraphvizArgs.push_back(nodeIdentifierValue);
-		getConstantValueFromGraphvizArgs.push_back(instanceDataNameValue);
-		CallInst *serializedDataValue = CallInst::Create(getConstantValueFromGraphvizFunction, getConstantValueFromGraphvizArgs, "", block);
-
-		// if (serializedData != NULL)
-		BasicBlock *setInstanceDataValueBlock = BasicBlock::Create(module->getContext(), "setInstanceDataValue", function, NULL);
-		BasicBlock *nextBlock = BasicBlock::Create(module->getContext(), "getSerializedValue", function, NULL);
-		ICmpInst *serializedDataValueNotNull = new ICmpInst(*block, ICmpInst::ICMP_NE, serializedDataValue, nullPointerToChar, "");
-		BranchInst::Create(setInstanceDataValueBlock, nextBlock, serializedDataValueNotNull, block);
-
-		// { /* unserialize serializedData */ }
-		Value *oldInstanceDataValue = instanceData->generateLoad(module, setInstanceDataValueBlock, nodeContextValue);
-		VuoCompilerCodeGenUtilities::generateReleaseCall(module, setInstanceDataValueBlock, oldInstanceDataValue);
-		Value *instanceDataVariable = instanceData->getVariable(module, setInstanceDataValueBlock, nodeContextValue);
-		VuoCompilerCodeGenUtilities::generateUnserialization(module, setInstanceDataValueBlock, serializedDataValue, instanceDataVariable, *constantStrings);
-		Value *newInstanceDataValue = instanceData->generateLoad(module, setInstanceDataValueBlock, nodeContextValue);
-		VuoCompilerCodeGenUtilities::generateRetainCall(module, setInstanceDataValueBlock, newInstanceDataValue);
-
-		BranchInst::Create(nextBlock, setInstanceDataValueBlock);
-		block = nextBlock;
-	}
-
-
-	Function *subcompositionFunctionSrc = getBase()->getNodeClass()->getCompiler()->getCompositionUnserializeFunction();
-	if (subcompositionFunctionSrc)
-	{
-		Function *subcompositionFunctionDst = VuoCompilerModule::declareFunctionInModule(module, subcompositionFunctionSrc);
-
-		PointerType *pointerToCharType = static_cast<PointerType *>( subcompositionFunctionDst->getFunctionType()->getParamType(1) );
-		Value *nullSerializedCompositionValue = ConstantPointerNull::get(pointerToCharType);
-
-		Value *convertedGraphValue = VuoCompilerCodeGenUtilities::convertArgumentToParameterType(graphValue, subcompositionFunctionDst, 2, NULL, module, block);
-
-		// <subcomposition>_compositionUnserialize(nodeIdentifier, NULL, graph);
-		vector<Value *> args;
-		args.push_back(nodeIdentifierValue);
-		args.push_back(nullSerializedCompositionValue);
-		args.push_back(convertedGraphValue);
-		CallInst::Create(subcompositionFunctionDst, args, "", block);
-	}
-
-	VuoCompilerCodeGenUtilities::generateFreeCall(module, block, nodeIdentifierValue);
 }

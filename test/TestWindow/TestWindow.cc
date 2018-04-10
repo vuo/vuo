@@ -314,7 +314,9 @@ private slots:
 		VuoRunner::Port *releasedPort = runner->getPublishedOutputPortWithName("Released");
 
 		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
-		EXPECT_ANY_EVENT(^{});
+		EXPECT_ANY_EVENT(^{
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
 		// Then, the composition moves its window to a known position.
 		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
 
@@ -329,14 +331,24 @@ private slots:
 				sendMouseMove(windowX, windowY);
 			});
 
-			// Make sure the button press and release are reported
-			// (confirm that this point is considered within the window's bounds).
-			EXPECT_EVENT(pressedPort, expectedPoint, ^{
+			// https://b33p.net/kosada/node/12339
+			// Ensure that pressing the mouse in the resize area does not register as a mouse press.
+			EXPECT_NO_EVENT(^{
 				sendLeftMouseButton(windowX, windowY, true);
+			});
+			EXPECT_NO_EVENT(^{
+				sendLeftMouseButton(windowX, windowY, false);
+			});
+
+			// Move the mouse further inside the window (past the resize area).
+			// Press and release the button.
+			expectedPoint = (VuoPoint2d){ -1 + 15*2/windowContentWidth, windowContentHeight/windowContentWidth - 15*2/windowContentWidth };
+			EXPECT_EVENT(pressedPort, expectedPoint, ^{
+				sendLeftMouseButton(windowX + 15, windowY + 15, true);
 			});
 
 			EXPECT_EVENT(releasedPort, expectedPoint, ^{
-				sendLeftMouseButton(windowX, windowY, false);
+				sendLeftMouseButton(windowX + 15, windowY + 15, false);
 			});
 		}
 
@@ -350,14 +362,14 @@ private slots:
 				sendMouseMove(mouseX, mouseY);
 			});
 
-			// Make sure the button press and release are reported
-			// (confirm that this point is considered within the window's bounds).
+			// Make sure the button press and release are not reported (since this is a resize area).
+			expectedPoint = (VuoPoint2d){ 1 - 15*2/windowContentWidth, -windowContentHeight/windowContentWidth + 15*2/windowContentWidth };
 			EXPECT_EVENT(pressedPort, expectedPoint, ^{
-				sendLeftMouseButton(mouseX, mouseY, true);
+				sendLeftMouseButton(mouseX - 15, mouseY - 15, true);
 			});
 
 			EXPECT_EVENT(releasedPort, expectedPoint, ^{
-				sendLeftMouseButton(mouseX, mouseY, false);
+				sendLeftMouseButton(mouseX - 15, mouseY - 15, false);
 			});
 		}
 
@@ -393,44 +405,47 @@ private slots:
 		runner->setDelegate(&delegate);
 		runner->start();
 		VuoRunner::Port *movedToPort  = runner->getPublishedOutputPortWithName("MovedTo");
-//		VuoRunner::Port *pressedPort  = runner->getPublishedOutputPortWithName("Pressed");
-//		VuoRunner::Port *releasedPort = runner->getPublishedOutputPortWithName("Released");
+		VuoRunner::Port *pressedPort  = runner->getPublishedOutputPortWithName("Pressed");
+		VuoRunner::Port *releasedPort = runner->getPublishedOutputPortWithName("Released");
 
 		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
 		EXPECT_ANY_EVENT(^{
+			sleep(2);
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		});
 		// Then, the composition moves its window to a known position.
 		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		// Make the composition's window fullscreen.
 		EXPECT_NO_EVENT(^{
 			sendFullscreenKeystroke();
 		});
 
+		// Give the fullscreen transition time to complete.
+		sleep(2);
+
 		{
-			// Move the mouse to the top left of the screen,
-			// and make sure Vuo outputs coordinate (-1, +1/aspect).
-			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, (double)screen.height/screen.width };
+			// Move the mouse to the full-left, near-top of the screen,
+			// and make sure Vuo outputs coordinate (-1, slightly less than +1/aspect).
+			// (Can't move all the way to the top, since it reveals the menu bar.)
+			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, (double)screen.height/screen.width - 10*2/(double)screen.width };
 			EXPECT_EVENT(movedToPort, expectedPoint, ^{
-				sendMouseMove(0,0);
+				sendMouseMove(0, 10);
 			});
 
 			// https://b33p.net/kosada/node/8489
 			// Make sure the button press and release are reported
 			// (confirm that this point is considered within the screen).
-			//
-			// https://b33p.net/kosada/node/12146
-			// For unknown reasons this text doesn't work reliably on Jenkins.
-//			EXPECT_EVENT(pressedPort, expectedPoint, ^{
-//				sendLeftMouseButton(0, 0, true);
-//			});
+			EXPECT_EVENT(pressedPort, expectedPoint, ^{
+				sendLeftMouseButton(0, 10, true);
+			});
 
-//			EXPECT_EVENT(releasedPort, expectedPoint, ^{
-//				sendLeftMouseButton(0, 0, false);
-//			});
+			EXPECT_EVENT(releasedPort, expectedPoint, ^{
+				sendLeftMouseButton(0, 10, false);
+			});
 		}
 
 		{
@@ -462,6 +477,151 @@ private slots:
 		delete runner;
 	}
 
+	void testMouseEventsFullscreenAspectLocked()
+	{
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputMousePositionAndButton-AspectLocked.vuo");
+		TestWindowDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->start();
+		VuoRunner::Port *movedToPort  = runner->getPublishedOutputPortWithName("MovedTo");
+		VuoRunner::Port *pressedPort  = runner->getPublishedOutputPortWithName("Pressed");
+		VuoRunner::Port *releasedPort = runner->getPublishedOutputPortWithName("Released");
+
+		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
+		EXPECT_ANY_EVENT(^{
+			sleep(2);
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
+		// Then, the composition moves its window to a known position, resizes it, and changes its aspect ratio.
+		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
+
+		// Wait for the window to gain focus.
+		sleep(2);
+
+		// Make the composition's window fullscreen.
+		EXPECT_NO_EVENT(^{
+			sendFullscreenKeystroke();
+		});
+
+		// Give the fullscreen transition time to complete.
+		sleep(2);
+
+		// The window's aspect is 1:1, and the screen is assumed to have aspect > 1.
+		// When fullscreen, the window should be centered on the screen.
+		int windowWidth = screen.height;
+		int windowLeftInScreenCoordinates = screen.width/2 - windowWidth/2;
+		int windowRightInScreenCoordinates = screen.width/2 + windowWidth/2;
+
+		{
+			// Move the mouse to the full-left, near-top of the composition window,
+			// and make sure Vuo outputs coordinate (-1, slightly less than +1/aspect).
+			// (Can't move all the way to the top, since it reveals the menu bar.)
+
+			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, 1. - 10*2/(double)windowWidth };
+			EXPECT_EVENT(movedToPort, expectedPoint, ^{
+				sendMouseMove(windowLeftInScreenCoordinates, 10);
+			});
+
+			// https://b33p.net/kosada/node/8489
+			// Make sure the button press and release are reported
+			// (confirm that this point is considered within the screen).
+			EXPECT_EVENT(pressedPort, expectedPoint, ^{
+				sendLeftMouseButton(windowLeftInScreenCoordinates, 10, true);
+			});
+
+			EXPECT_EVENT(releasedPort, expectedPoint, ^{
+				sendLeftMouseButton(windowLeftInScreenCoordinates, 10, false);
+			});
+		}
+
+		{
+			// https://b33p.net/kosada/node/11856
+			// Move the mouse to the bottom right of the window,
+			// and make sure Vuo outputs coordinate (+1, -1).
+			// The mouse is intentionally moved to the screen's height (rather than height-1),
+			// to account for the Cocoa bug where it returns mouse coordinates with an extra row and column of pixels.
+			VuoPoint2d expectedPoint = (VuoPoint2d){ 1, -1 };
+			EXPECT_EVENT(movedToPort, expectedPoint, ^{
+				sendMouseMove(windowRightInScreenCoordinates, screen.height);
+			});
+		}
+
+		runner->stop();
+		delete runner;
+	}
+
+	void testMouseEventsFullscreenSizeLocked()
+	{
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputMousePositionAndButton-SizeLocked.vuo");
+		TestWindowDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->start();
+		VuoRunner::Port *movedToPort  = runner->getPublishedOutputPortWithName("MovedTo");
+		VuoRunner::Port *pressedPort  = runner->getPublishedOutputPortWithName("Pressed");
+		VuoRunner::Port *releasedPort = runner->getPublishedOutputPortWithName("Released");
+
+		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
+		EXPECT_ANY_EVENT(^{
+			sleep(2);
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
+		// Then, the composition moves its window to a known position, resizes it, and changes its aspect ratio.
+		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
+
+		// Wait for the window to gain focus.
+		sleep(2);
+
+		// Make the composition's window fullscreen.
+		EXPECT_NO_EVENT(^{
+			sendFullscreenKeystroke();
+		});
+
+		// Give the fullscreen transition time to complete.
+		sleep(2);
+
+		// When fullscreen, the window should be centered on the screen.
+		int windowWidth = 1024;
+		int windowHeight = 768;
+		int windowLeftInScreenCoordinates = screen.width/2 - windowWidth/2;
+		int windowRightInScreenCoordinates = screen.width/2 + windowWidth/2;
+		int windowTopInScreenCoordinates = screen.height/2 - windowHeight/2;
+		int windowBottomInScreenCoordinates = screen.height/2 + windowHeight/2;
+
+		{
+			// Move the mouse to the top-left of the composition window,
+			// and make sure Vuo outputs coordinate (-1, +1/aspect).
+
+			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, (double)windowHeight/windowWidth };
+			EXPECT_EVENT(movedToPort, expectedPoint, ^{
+				sendMouseMove(windowLeftInScreenCoordinates, windowTopInScreenCoordinates);
+			});
+
+			// https://b33p.net/kosada/node/8489
+			// Make sure the button press and release are reported
+			// (confirm that this point is considered within the screen).
+			EXPECT_EVENT(pressedPort, expectedPoint, ^{
+				sendLeftMouseButton(windowLeftInScreenCoordinates, windowTopInScreenCoordinates, true);
+			});
+
+			EXPECT_EVENT(releasedPort, expectedPoint, ^{
+				sendLeftMouseButton(windowLeftInScreenCoordinates, windowTopInScreenCoordinates, false);
+			});
+		}
+
+		{
+			// https://b33p.net/kosada/node/11856
+			// Move the mouse to the bottom right of the window,
+			// and make sure Vuo outputs coordinate (+1, -1/aspect).
+			VuoPoint2d expectedPoint = (VuoPoint2d){ 1, -(double)windowHeight/windowWidth };
+			EXPECT_EVENT(movedToPort, expectedPoint, ^{
+				sendMouseMove(windowRightInScreenCoordinates, windowBottomInScreenCoordinates);
+			});
+		}
+
+		runner->stop();
+		delete runner;
+	}
+
 	void testMouseEventsAfterTransitionFromFullscreenToWindow()
 	{
 		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputMousePositionAndButton.vuo");
@@ -474,38 +634,46 @@ private slots:
 
 		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
 		EXPECT_ANY_EVENT(^{
+			sleep(2);
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		});
 		// Then, the composition moves its window to a known position.
 		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		// Make the composition's window fullscreen.
 		EXPECT_NO_EVENT(^{
 			sendFullscreenKeystroke();
 		});
 
+		// Give the fullscreen transition time to complete.
+		sleep(2);
+
 		// Switch back from fullscreen to windowed.
 		EXPECT_NO_EVENT(^{
 			sendFullscreenKeystroke();
 		});
 
+		// Give the fullscreen transition time to complete.
+		sleep(2);
+
 		{
 			// https://b33p.net/kosada/node/6258
 			// https://b33p.net/kosada/node/7545
 			// Ensure mouse events are received after transitioning from fullscreen to a window.
-			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, windowContentHeight/windowContentWidth };
+			VuoPoint2d expectedPoint = (VuoPoint2d){ -1 + 15*2/windowContentWidth, windowContentHeight/windowContentWidth - 15*2/windowContentWidth };
 			EXPECT_EVENT(movedToPort, expectedPoint, ^{
-				sendMouseMove(windowX, windowY);
+				sendMouseMove(windowX + 15, windowY + 15);
 			});
 
 			EXPECT_EVENT(pressedPort, expectedPoint, ^{
-				sendLeftMouseButton(windowX, windowY, true);
+				sendLeftMouseButton(windowX + 15, windowY + 15, true);
 			});
 
 			EXPECT_EVENT(releasedPort, expectedPoint, ^{
-				sendLeftMouseButton(windowX, windowY, false);
+				sendLeftMouseButton(windowX + 15, windowY + 15, false);
 			});
 		}
 
@@ -539,16 +707,17 @@ private slots:
 
 		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
 		EXPECT_ANY_EVENT(^{
+			sleep(2);
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		});
 		// Then, the composition moves its window to a known position.
 		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(3);
 
 		{
 			// Click outside the window to defocus it.
-			sleep(1);
 			EXPECT_NO_EVENT(^{
 				sendLeftMouseClick(windowX - 20, windowY, 1);
 			});
@@ -559,12 +728,12 @@ private slots:
 
 			// https://vuo.org/node/1267#comment-2550
 			// The first click inside the window's content area should fire an event.
-			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, windowContentHeight/windowContentWidth };
+			VuoPoint2d expectedPoint = (VuoPoint2d){ -1 + 15*2/windowContentWidth, windowContentHeight/windowContentWidth - 15*2/windowContentWidth };
 			EXPECT_EVENT(pressedPort, expectedPoint, ^{
-				sendLeftMouseButton(windowX, windowY, true);
+				sendLeftMouseButton(windowX + 15, windowY + 15, true);
 			});
 			EXPECT_EVENT(releasedPort, expectedPoint, ^{
-				sendLeftMouseButton(windowX, windowY, false);
+				sendLeftMouseButton(windowX + 15, windowY + 15, false);
 			});
 
 			// Click outside the window to defocus it.
@@ -592,16 +761,21 @@ private slots:
 
 		// When the composition starts, showedWindow fires, causing `Receive Mouse Moves` to fire its initial position.
 		EXPECT_ANY_EVENT(^{
+			sleep(2);
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		});
 		// Then, the composition moves its window to a known position.
 		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		{
 			// Make the composition's window fullscreen.
 			sendFullscreenKeystroke();
+
+			// Give the fullscreen transition time to complete.
+			sleep(2);
 
 			// Ensure the window is fullscreen.
 			VuoPoint2d expectedPoint = (VuoPoint2d){ -1, (double)screen.height/screen.width };
@@ -614,6 +788,9 @@ private slots:
 			// Esc should switch back from fullscreen to windowed.
 			sendEscKeystroke();
 
+			// Give the fullscreen transition time to complete.
+			sleep(2);
+
 			// Ensure the window is not fullscreen.
 			expectedPoint = (VuoPoint2d){ -1, windowContentHeight/windowContentWidth };
 			EXPECT_EVENT(movedToPort, expectedPoint, ^{
@@ -625,12 +802,87 @@ private slots:
 		delete runner;
 	}
 
+	void testMouseEventsInTwoWindows()
+	{
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputMousePosition-TwoWindows.vuo");
+		TestWindowDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->start();
+		VuoRunner::Port *listeningPort  = runner->getPublishedInputPortWithName("Listening");
+		VuoRunner::Port *leftMovedPort  = runner->getPublishedOutputPortWithName("LeftMoved");
+		VuoRunner::Port *rightMovedPort = runner->getPublishedOutputPortWithName("RightMoved");
+
+		// When the composition starts, showedWindow fires, causing each `Receive Mouse Moves` to fire its initial position.
+		// But Listening=false, so no event should be output.
+		EXPECT_NO_EVENT(^{
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
+
+		// Then, the composition moves its window to a known position.
+		// It fires showedWindow again, but since it's the same window, `Receive Mouse Moves` doesn't fire again.
+
+		// Wait for the window to gain focus.
+		sleep(4);
+
+		const int windowY = 256;
+		const int leftWindowX = 256;
+		const int rightWindowX = 512;
+		const int width = 256;
+		const int height = 256;
+		json_object *t = json_object_new_boolean(true);
+
+		// Focus the left window.
+		EXPECT_NO_EVENT(^{
+			sendLeftMouseClick(leftWindowX + width/2, windowY + height/2, 1);
+		});
+
+		// Start listening
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(listeningPort, t);
+			runner->firePublishedInputPortEvent(listeningPort);
+			sleep(1);
+		});
+
+		// Move the mouse to the top-left of the left window.
+		// Only the left window (since it's focused) should fire an event.
+		VuoPoint2d expectedPoint = (VuoPoint2d){ -1, 1 };
+		EXPECT_EVENT(leftMovedPort, expectedPoint, ^{
+			sendMouseMove(leftWindowX, windowY);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// Move the mouse to the right window.
+		// Only the left window (since it's still focused) should fire an event.
+		VuoPoint2d expectedPoint2 = (VuoPoint2d){ 2. + 3./256, -1./256 };
+		EXPECT_EVENT(leftMovedPort, expectedPoint2, ^{
+			sendMouseMove(rightWindowX + width/2, windowY + height/2);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// Focus the right window.
+		EXPECT_NO_EVENT(^{
+			sendLeftMouseClick(rightWindowX + width/2, windowY + height/2, 1);
+		});
+
+		// Move the mouse to the top-left of the right window.
+		// Only the right window (since it's focused) should fire an event.
+		VuoPoint2d expectedPoint3 = (VuoPoint2d){ -1, 1 };
+		EXPECT_EVENT(rightMovedPort, expectedPoint3, ^{
+			sendMouseMove(rightWindowX, windowY);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		runner->stop();
+		delete runner;
+	}
+
 	void testMouseClicks()
 	{
 		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputMouseClick.vuo");
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *singleClickedPort = runner->getPublishedOutputPortWithName("SingleClicked");
 		VuoRunner::Port *doubleClickedPort = runner->getPublishedOutputPortWithName("DoubleClicked");
 		VuoRunner::Port *tripleClickedPort = runner->getPublishedOutputPortWithName("TripleClicked");
@@ -638,6 +890,15 @@ private slots:
 		VuoPoint2d expectedWindowedPoint = (VuoPoint2d){ -1 + 10*2/windowContentWidth, windowContentHeight/windowContentWidth - 10*2/windowContentWidth };
 
 		{
+			// https://b33p.net/kosada/node/12339
+			// Ensure that clicking the mouse in the resize area does not register as a mouse click.
+			EXPECT_NO_EVENT(^{
+				sendMouseMove(windowX, windowY);
+			});
+			EXPECT_NO_EVENT(^{
+				sendLeftMouseClick(windowX, windowY, 1);
+			});
+
 			// Single-click inside the top left of the window,
 			// and make sure the Vuo mouse coordinates are correct.
 			EXPECT_EVENT(singleClickedPort, expectedWindowedPoint, ^{
@@ -660,12 +921,16 @@ private slots:
 				sendFullscreenKeystroke();
 			});
 
-			// Single-click on the top left of the screen,
-			// and make sure the Vuo mouse coordinates are (-1, +1/aspect).
-			VuoPoint2d expectedFullscreenPoint = (VuoPoint2d){ -1, (double)screen.height/screen.width };
+			// Give the fullscreen transition time to complete.
+			sleep(2);
+
+			// Single-click on the full-left, near-top of the screen,
+			// and make sure the Vuo mouse coordinates are (-1, slightly less than +1/aspect).
+			// (Can't move all the way to the top, since it reveals the menu bar.)
+			VuoPoint2d expectedFullscreenPoint = (VuoPoint2d){ -1, (double)screen.height/screen.width - 10*2/(double)screen.width };
 			EXPECT_EVENT(singleClickedPort, expectedFullscreenPoint, ^{
-				sendMouseMove(0, 0);
-				sendLeftMouseClick(0, 0, 1);
+				sendMouseMove(0, 10);
+				sendLeftMouseClick(0, 10, 1);
 			});
 
 			// https://b33p.net/kosada/node/11005
@@ -674,8 +939,8 @@ private slots:
 			// Ensure the Vuo mouse coordinates are where the single-click occured
 			// (not where it moved to after the click).
 			EXPECT_EVENT(singleClickedPort, expectedFullscreenPoint, ^{
-				sendMouseMove(0, 0);
-				sendLeftMouseClick(0, 0, 1);
+				sendMouseMove(0, 10);
+				sendLeftMouseClick(0, 10, 1);
 				sendMouseMove(100, 100);
 			});
 
@@ -683,6 +948,9 @@ private slots:
 			EXPECT_NO_EVENT(^{
 				sendFullscreenKeystroke();
 			});
+
+			// Give the fullscreen transition time to complete.
+			sleep(2);
 		}
 
 		{
@@ -705,6 +973,16 @@ private slots:
 			});
 		}
 
+		{
+			// Make sure quadruple (and higher) clicks are reported as triple-clicks.
+			EXPECT_EVENT(tripleClickedPort, expectedWindowedPoint, ^{
+							 sendLeftMouseClick(windowX + 10, windowY + 10, 4);
+						 });
+			EXPECT_EVENT(tripleClickedPort, expectedWindowedPoint, ^{
+							 sendLeftMouseClick(windowX + 10, windowY + 10, 5);
+						 });
+		}
+
 		runner->stop();
 		delete runner;
 	}
@@ -715,6 +993,7 @@ private slots:
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *movedByPort = runner->getPublishedOutputPortWithName("MovedBy");
 
 		{
@@ -756,6 +1035,7 @@ private slots:
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *dragStartedPort = runner->getPublishedOutputPortWithName("DragStarted");
 		VuoRunner::Port *dragMovedToPort = runner->getPublishedOutputPortWithName("DragMovedTo");
 		VuoRunner::Port *dragEndedPort   = runner->getPublishedOutputPortWithName("DragEnded");
@@ -816,6 +1096,8 @@ private slots:
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		sleep(2);
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *whichPort     = runner->getPublishedInputPortWithName("Which");
 		VuoRunner::Port *positionPort  = runner->getPublishedOutputPortWithName("Position");
 		VuoRunner::Port *isPressedPort = runner->getPublishedOutputPortWithName("IsPressed");
@@ -823,7 +1105,7 @@ private slots:
 		json_object *isPressed = json_object_new_int(2);
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		{
 			// Move the mouse to the top left of the window and check its coordinates.
@@ -834,6 +1116,19 @@ private slots:
 				runner->firePublishedInputPortEvent(whichPort);
 			});
 			EXPECT_EVENT(isPressedPort, false, ^{
+				runner->setPublishedInputPortValue(whichPort, isPressed);
+				runner->firePublishedInputPortEvent(whichPort);
+			});
+
+			// https://b33p.net/kosada/node/11580
+			// Ensure that pressing the mouse in the resize area does not register as a mouse press.
+			EXPECT_EVENT(isPressedPort, false, ^{
+				sendLeftMouseButton(windowX, windowY, true);
+				runner->setPublishedInputPortValue(whichPort, isPressed);
+				runner->firePublishedInputPortEvent(whichPort);
+			});
+			EXPECT_EVENT(isPressedPort, false, ^{
+				sendLeftMouseButton(windowX, windowY, false);
 				runner->setPublishedInputPortValue(whichPort, isPressed);
 				runner->firePublishedInputPortEvent(whichPort);
 			});
@@ -945,15 +1240,20 @@ private slots:
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		sleep(2);
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *whichPort     = runner->getPublishedInputPortWithName("Which");
 		VuoRunner::Port *positionPort  = runner->getPublishedOutputPortWithName("Position");
 		json_object *position  = json_object_new_int(1);
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		// Make the composition's window fullscreen.
 		sendFullscreenKeystroke();
+
+		// Give the fullscreen transition time to complete.
+		sleep(2);
 
 		{
 			// Move the mouse to the top left of the screen,
@@ -990,6 +1290,8 @@ private slots:
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		sleep(2);
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *whichPort     = runner->getPublishedInputPortWithName("Which");
 		VuoRunner::Port *positionPort  = runner->getPublishedOutputPortWithName("Position");
 		VuoRunner::Port *isPressedPort = runner->getPublishedOutputPortWithName("IsPressed");
@@ -997,7 +1299,7 @@ private slots:
 		json_object *isPressed = json_object_new_int(2);
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		{
 			// Move the mouse outside the window and check its coordinates.
@@ -1032,6 +1334,8 @@ private slots:
 		TestWindowDelegate delegate(runner);
 		runner->setDelegate(&delegate);
 		runner->start();
+		sleep(2);
+		VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
 		VuoRunner::Port *whichPort     = runner->getPublishedInputPortWithName("Which");
 		VuoRunner::Port *positionPort  = runner->getPublishedOutputPortWithName("Position");
 		VuoRunner::Port *isPressedPort = runner->getPublishedOutputPortWithName("IsPressed");
@@ -1039,7 +1343,7 @@ private slots:
 		json_object *isPressed = json_object_new_int(2);
 
 		// Wait for the window to gain focus.
-		sleep(4);
+		sleep(2);
 
 		{
 			// Move the mouse to a known location.
@@ -1069,6 +1373,192 @@ private slots:
 		runner->stop();
 		delete runner;
 	}
+
+	void testShowedWindow()
+	{
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputShowedWindow.vuo");
+		TestWindowDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->start();
+
+		// When the composition starts, showedWindow fires.
+		EXPECT_ANY_EVENT(^{
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
+
+		// After that it shouldn't fire.
+		EXPECT_NO_EVENT(^{});
+
+		VuoRunner::Port *whichPort = runner->getPublishedInputPortWithName("Which");
+		json_object *one = json_object_new_int(1);
+		json_object *three = json_object_new_int(3);
+
+		// An event to the Select node's first output should move the window, causing showedWindow to fire.
+		EXPECT_ANY_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, one);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's third output should re-render the window, but should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, three);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// Make the composition's window fullscreen.
+		// This should fire one showedWindow event, since the window changed position/size.
+		EXPECT_ANY_EVENT(^{
+			sendFullscreenKeystroke();
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's third output should re-render the window, but should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, three);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// Switch back from fullscreen to windowed.
+		// This should fire one showedWindow event, since the window changed position/size.
+		EXPECT_ANY_EVENT(^{
+			sendEscKeystroke();
+		});
+		EXPECT_NO_EVENT(^{});
+
+		runner->stop();
+		delete runner;
+	}
+
+#if 0
+	void testShowedWindowAspectLocked()
+	{
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputShowedWindow-AspectLocked.vuo");
+		TestWindowDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->start();
+
+		// When the composition starts, showedWindow fires.
+		EXPECT_ANY_EVENT(^{
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
+
+		// After that it shouldn't fire.
+		EXPECT_NO_EVENT(^{});
+
+		VuoRunner::Port *whichPort = runner->getPublishedInputPortWithName("Which");
+		json_object *one = json_object_new_int(1);
+		json_object *two = json_object_new_int(2);
+		json_object *three = json_object_new_int(3);
+
+		// An event to the Select node's first output should move the window, causing showedWindow to fire.
+		EXPECT_ANY_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, one);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's second output should lock the window's aspect ratio and resize the window, causing showedWindow to fire.
+		EXPECT_ANY_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, two);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's third output should re-render the window, but should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, three);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// Make the composition's window fullscreen.
+		// This should fire one showedWindow event, since the window changed position/size.
+		EXPECT_ANY_EVENT(^{
+			sendFullscreenKeystroke();
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's third output should re-render the window, but should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, three);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// Switch back from fullscreen to windowed.
+		// This should fire one showedWindow event, since the window changed position/size.
+		EXPECT_ANY_EVENT(^{
+			sendEscKeystroke();
+		});
+		EXPECT_NO_EVENT(^{});
+
+		runner->stop();
+		delete runner;
+	}
+
+	void testShowedWindowSizeLocked()
+	{
+		VuoRunner *runner = VuoCompiler::newSeparateProcessRunnerFromCompositionFile("compositions/OutputShowedWindow-SizeLocked.vuo");
+		TestWindowDelegate delegate(runner);
+		runner->setDelegate(&delegate);
+		runner->start();
+
+		// When the composition starts, showedWindow fires.
+		EXPECT_ANY_EVENT(^{
+			VuoFileUtilities::focusProcess(runner->getCompositionPid(), true);
+		});
+
+		// After that it shouldn't fire.
+		EXPECT_NO_EVENT(^{});
+
+		VuoRunner::Port *whichPort = runner->getPublishedInputPortWithName("Which");
+		json_object *one = json_object_new_int(1);
+		json_object *two = json_object_new_int(2);
+		json_object *three = json_object_new_int(3);
+
+		// An event to the Select node's first output should move the window, causing showedWindow to fire.
+		EXPECT_ANY_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, one);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's second output should lock the window's aspect ratio,
+		// but since it doesn't need to resize, it should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, two);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// An event to the Select node's third output should re-render the window, but should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, three);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// Make the composition's window fullscreen.
+		// This should fire one showedWindow event, since the window changed position/size.
+		EXPECT_ANY_EVENT(^{
+			sendFullscreenKeystroke();
+		});
+		EXPECT_NO_EVENT(^{});
+
+		// An event to the Select node's third output should re-render the window, but should not cause showedWindow to fire.
+		EXPECT_NO_EVENT(^{
+			runner->setPublishedInputPortValue(whichPort, three);
+			runner->firePublishedInputPortEvent(whichPort);
+		});
+
+		// Switch back from fullscreen to windowed.
+		// This should fire one showedWindow event, since the window changed position/size.
+		EXPECT_ANY_EVENT(^{
+			sendEscKeystroke();
+		});
+		EXPECT_NO_EVENT(^{});
+
+		runner->stop();
+		delete runner;
+	}
+#endif
 };
 
 QTEST_APPLESS_MAIN(TestWindow)

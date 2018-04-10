@@ -40,10 +40,10 @@ VuoHorizontalSide VuoHorizontalSide_makeFromJson(json_object * js)
 	if (json_object_get_type(js) == json_type_string)
 		valueAsString = json_object_get_string(js);
 
-	VuoHorizontalSide value = VuoHorizontalSide_Right;
+	VuoHorizontalSide value = VuoHorizontalSide_Left;
 
-	if (! strcmp(valueAsString, "left"))
-		value = VuoHorizontalSide_Left;
+	if (! strcmp(valueAsString, "right"))
+		value = VuoHorizontalSide_Right;
 
 	return value;
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORUNNER_H
-#define VUORUNNER_H
+#pragma once
 
 #include <dispatch/dispatch.h>
 #include <stdexcept>
@@ -115,6 +114,7 @@ public:
 	void setDelegate(VuoRunnerDelegate *delegate);
 	void setTrialRestrictions(bool isTrial);
 	static void initializeCompilerCache();
+	pid_t getCompositionPid();
 
 	/**
 	 * This class represents a published port in a composition. It maintains a list of the identifiers
@@ -315,5 +315,3 @@ private:
 	virtual void receivedTelemetryError(string VUO_UNUSED_VARIABLE message) { }
 	virtual void lostContactWithComposition(void) { }
 };
-
-#endif

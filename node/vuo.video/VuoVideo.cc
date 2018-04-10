@@ -46,7 +46,7 @@ void VuoVideo_free(void* player)
  */
 VuoVideo VuoVideo_make(VuoUrl path, VuoVideoOptimization optimization)
 {
-	if (!path || path[0] == 0)
+	if (VuoText_isEmpty(path))
 		return NULL;
 
 	VuoVideoPlayer* player = VuoVideoPlayer::Create(path, optimization);
@@ -141,6 +141,13 @@ double VuoVideo_getLastDecodedVideoTimestamp(VuoVideo player)
 	return obj->GetCurrentTimestamp();
 }
 
+bool VuoVideo_isPlaying(VuoVideo player)
+{
+	VuoVideoPlayer* obj = (VuoVideoPlayer*) player;
+	if(obj == NULL) return 0.;
+	return obj->IsPlaying();
+}
+
 double VuoVideo_getLastFrameDelta(VuoVideo player)
 {
 	VuoVideoPlayer* obj = (VuoVideoPlayer*) player;
@@ -186,4 +193,38 @@ bool VuoVideo_isReady(VuoVideo player)
 	VuoVideoPlayer* obj = (VuoVideoPlayer*)player;
 	if(obj == NULL) return false;
 	return obj->IsReady();
+}
+
+bool VuoVideo_getCurrentVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame)
+{
+	VuoVideoPlayer* obj = (VuoVideoPlayer*)player;
+	if(obj == NULL) return false;
+	return obj->GetCurrentVideoFrame(videoFrame);
+}
+
+VuoReal VuoVideo_validateTimestamp(VuoReal frameTime, VuoReal duration, VuoLoopType loop, int *outputDirection)
+{
+	if (outputDirection)
+	{
+		if (loop == VuoLoopType_Mirror && ((int)floor(fabs(frameTime) / duration) % 2))
+			*outputDirection = -1;
+		else
+			*outputDirection = 1;
+	}
+
+	bool reverse = frameTime < 0;
+	VuoReal timestamp = frameTime;
+
+	if(loop != VuoLoopType_None && (frameTime < 0 || frameTime > duration))
+	{
+		timestamp = fabs(frameTime);
+		float mod = fmod(timestamp, duration);
+
+		if(loop == VuoLoopType_Loop)
+			timestamp = reverse ? duration - mod : mod;
+		else if(loop == VuoLoopType_Mirror)
+			timestamp = ((int)floor(timestamp / duration) % 2) ? duration - mod : mod;
+	}
+
+	return timestamp;
 }

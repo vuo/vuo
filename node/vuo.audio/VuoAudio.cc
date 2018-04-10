@@ -14,13 +14,14 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#include "RtAudio.h"
+#include "rtaudio/RtAudio.h"
 #pragma clang diagnostic pop
 
 #include <dispatch/dispatch.h>
 #include <map>
 #include <queue>
 #include <set>
+#include <CoreAudio/CoreAudio.h>
 
 
 extern "C"
@@ -48,6 +49,18 @@ VuoModuleMetadata({
 const VuoInteger VuoAudio_queueSize = 8;	///< The number of buffers that must be enqueued before starting playback.
 
 /**
+ * Ensure we're listening for the system's device notifications.
+ * https://b33p.net/kosada/node/12551
+ * http://lists.apple.com/archives/Coreaudio-api/2010/Aug//msg00304.html
+ */
+static void __attribute__((constructor)) VuoAudio_init()
+{
+	CFRunLoopRef theRunLoop =  NULL;
+	AudioObjectPropertyAddress theAddress = { kAudioHardwarePropertyRunLoop, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+	AudioObjectSetPropertyData(kAudioObjectSystemObject, &theAddress, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
+}
+
+/**
  * Returns a list of the available audio input devices.
  */
 VuoList_VuoAudioInputDevice VuoAudio_getInputDevices(void)
@@ -59,7 +72,7 @@ VuoList_VuoAudioInputDevice VuoAudio_getInputDevices(void)
 	{
 		RtAudio::DeviceInfo info = rta.getDeviceInfo(i);
 		if (info.inputChannels)
-			VuoListAppendValue_VuoAudioInputDevice(inputDevices, VuoAudioInputDevice_make(i, VuoText_make(info.name.c_str()), info.inputChannels));
+			VuoListAppendValue_VuoAudioInputDevice(inputDevices, VuoAudioInputDevice_make(i, VuoText_make(info.modelUid.c_str()), VuoText_make(info.name.c_str()), info.inputChannels));
 	}
 	return inputDevices;
 }
@@ -76,7 +89,7 @@ VuoList_VuoAudioOutputDevice VuoAudio_getOutputDevices(void)
 	{
 		RtAudio::DeviceInfo info = rta.getDeviceInfo(i);
 		if (info.outputChannels)
-			VuoListAppendValue_VuoAudioOutputDevice(outputDevices, VuoAudioOutputDevice_make(i, VuoText_make(info.name.c_str()), info.outputChannels));
+			VuoListAppendValue_VuoAudioOutputDevice(outputDevices, VuoAudioOutputDevice_make(i, VuoText_make(info.modelUid.c_str()), VuoText_make(info.name.c_str()), info.outputChannels));
 	}
 	return outputDevices;
 }
@@ -123,7 +136,11 @@ int VuoAudio_receivedEvent(void *outputBuffer, void *inputBuffer, unsigned int n
 //	ai->priorStreamTime=streamTime;
 
 	if (status)
-		VUserLog("Stream overflow on %s.", ai->inputDevice.name);
+		VUserLog("Stream %s (%d) on %s.",
+				 status == RTAUDIO_INPUT_OVERFLOW ? "overflow"
+					 : (status == RTAUDIO_OUTPUT_UNDERFLOW ? "underflow" : "error"),
+				 status,
+				 ai->inputDevice.name);
 
 	// Fire triggers requesting audio output buffers.
 	ai->outputTriggers.fire(streamTime);
@@ -293,7 +310,7 @@ VuoAudio_internal VuoAudio_make(unsigned int deviceId)
 					);
 		ai->rta->startStream();
 	}
-	catch (RtError &error)
+	catch (RtAudioError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to open the audio device (%d) :: %s.\n", deviceId, error.what());
@@ -324,7 +341,7 @@ static void VuoAudio_destroy(VuoAudio_internal ai)
 			ai->rta->closeStream();
 		}
 	}
-	catch (RtError &error)
+	catch (RtAudioError &error)
 	{
 		VUserLog("Failed to close the audio device (%s) :: %s.\n", ai->inputDevice.name, error.what());
 	}
@@ -364,30 +381,79 @@ VuoAudioIn VuoAudioIn_getShared(VuoAudioInputDevice aid)
 									   temporaryRTA = new RtAudio();
 								   });
 
-		if (aid.id == -1 && strlen(aid.name) == 0)
-			// Choose the default device
-			deviceId = temporaryRTA->getDefaultInputDevice();
-		else if (aid.id == -1)
+		if (aid.id == -1)
 		{
-			// Choose the first input device whose name contains aid.name
-			unsigned int deviceCount = temporaryRTA->getDeviceCount();
-			for (unsigned int i = 0; i < deviceCount; ++i)
+			if (VuoText_isEmpty(aid.modelUid) && VuoText_isEmpty(aid.name))
 			{
-				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
-				if (di.inputChannels && di.name.find(aid.name) != std::string::npos)
+				// Choose the default device
+				deviceId = temporaryRTA->getDefaultInputDevice();
+
+				if (VuoIsDebugEnabled())
 				{
-					deviceId = i;
-					break;
+					RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
+					if (di.inputChannels)
+						VUserLog("Using default device #%d, name \"%s\".", deviceId, di.name.c_str());
+				}
+			}
+			else
+			{
+				if (!VuoText_isEmpty(aid.modelUid))
+				{
+					// Choose the first input device whose name contains aid.modelUid
+					VDebugLog("Trying to match model UID \"%s\"…", aid.modelUid);
+					unsigned int deviceCount = temporaryRTA->getDeviceCount();
+					for (unsigned int i = 0; i < deviceCount; ++i)
+					{
+						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
+						if (di.inputChannels && di.modelUid.find(aid.modelUid) != std::string::npos)
+						{
+							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
+							deviceId = i;
+							break;
+						}
+					}
+				}
+
+				if (deviceId == -1 && !VuoText_isEmpty(aid.name))
+				{
+					// Choose the first input device whose name contains aid.name
+					VDebugLog("Trying to match name \"%s\"…", aid.name);
+					unsigned int deviceCount = temporaryRTA->getDeviceCount();
+					for (unsigned int i = 0; i < deviceCount; ++i)
+					{
+						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
+						if (di.inputChannels && di.name.find(aid.name) != std::string::npos)
+						{
+							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
+							deviceId = i;
+							break;
+						}
+					}
+				}
+
+				if (deviceId == -1)
+				{
+					VUserLog("Couldn't find a matching audio device.");
+					return NULL;
 				}
 			}
 		}
 		else
+		{
 			// Choose the device specified by aid.id
 			deviceId = aid.id;
 
+			if (VuoIsDebugEnabled())
+			{
+				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
+				if (di.inputChannels)
+					VUserLog("Using device #%d, name \"%s\".", deviceId, di.name.c_str());
+			}
+		}
+
 		delete temporaryRTA;
 	}
-	catch (RtError &error)
+	catch (RtAudioError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());
@@ -414,30 +480,79 @@ VuoAudioOut VuoAudioOut_getShared(VuoAudioOutputDevice aod)
 									   temporaryRTA = new RtAudio();
 								   });
 
-		if (aod.id == -1 && strlen(aod.name) == 0)
-			// Choose the default device
-			deviceId = temporaryRTA->getDefaultOutputDevice();
-		else if (aod.id == -1)
+		if (aod.id == -1)
 		{
-			// Choose the first output device whose name contains aid.name
-			unsigned int deviceCount = temporaryRTA->getDeviceCount();
-			for (unsigned int i = 0; i < deviceCount; ++i)
+			if (VuoText_isEmpty(aod.modelUid) && VuoText_isEmpty(aod.name))
 			{
-				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
-				if (di.outputChannels && di.name.find(aod.name) != std::string::npos)
+				// Choose the default device
+				deviceId = temporaryRTA->getDefaultOutputDevice();
+
+				if (VuoIsDebugEnabled())
 				{
-					deviceId = i;
-					break;
+					RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
+					if (di.outputChannels)
+						VUserLog("Using default device #%d, name \"%s\".", deviceId, di.name.c_str());
+				}
+			}
+			else
+			{
+				if (!VuoText_isEmpty(aod.modelUid))
+				{
+					// Choose the first output device whose name contains aid.modelUid
+					VDebugLog("Trying to match model UID \"%s\"…", aod.modelUid);
+					unsigned int deviceCount = temporaryRTA->getDeviceCount();
+					for (unsigned int i = 0; i < deviceCount; ++i)
+					{
+						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
+						if (di.outputChannels && di.modelUid.find(aod.modelUid) != std::string::npos)
+						{
+							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
+							deviceId = i;
+							break;
+						}
+					}
+				}
+
+				if (deviceId == -1 && !VuoText_isEmpty(aod.name))
+				{
+					// Choose the first output device whose name contains aid.name
+					VDebugLog("Trying to match name \"%s\"…", aod.name);
+					unsigned int deviceCount = temporaryRTA->getDeviceCount();
+					for (unsigned int i = 0; i < deviceCount; ++i)
+					{
+						RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(i);
+						if (di.outputChannels && di.name.find(aod.name) != std::string::npos)
+						{
+							VDebugLog("Matched device #%d, name \"%s\".", i, di.name.c_str());
+							deviceId = i;
+							break;
+						}
+					}
+				}
+
+				if (deviceId == -1)
+				{
+					VUserLog("Couldn't find a matching audio device.");
+					return NULL;
 				}
 			}
 		}
 		else
+		{
 			// Choose the device specified by aid.id
 			deviceId = aod.id;
 
+			if (VuoIsDebugEnabled())
+			{
+				RtAudio::DeviceInfo di = temporaryRTA->getDeviceInfo(deviceId);
+				if (di.outputChannels)
+					VUserLog("Using device #%d, name \"%s\".", deviceId, di.name.c_str());
+			}
+		}
+
 		delete temporaryRTA;
 	}
-	catch (RtError &error)
+	catch (RtAudioError &error)
 	{
 		/// @todo https://b33p.net/kosada/node/4724
 		VUserLog("Failed to enumerate audio devices :: %s.\n", error.what());

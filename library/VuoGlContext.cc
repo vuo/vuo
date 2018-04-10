@@ -117,7 +117,7 @@ private:
 			pf = CGLGetPixelFormat(rootContext);
 		else
 		{
-			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true);
+			pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false);
 			shouldDestroyPixelFormat = true;
 		}
 
@@ -314,7 +314,7 @@ int VuoGlContext_getMaximumSupportedMultisampling(VuoGlContext context)
  *
  * On Mac OS X, this is a @c CGLPixelFormatObj.
  */
-void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
+void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Core)
 {
 	// Check whether it's OK to use multisampling on this GPU.
 	static dispatch_once_t multisamplingCheck = 0;
@@ -328,7 +328,8 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 							  CGLPixelFormatAttribute pfa[13] = {
 								  kCGLPFAAccelerated,
 //								  kCGLPFANoRecovery,
-								  kCGLPFADoubleBuffer,
+//								  kCGLPFADoubleBuffer,
+								  kCGLPFABackingVolatile,
 								  kCGLPFAColorSize, (CGLPixelFormatAttribute) 24,
 								  kCGLPFADepthSize, (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0),
 								  (CGLPixelFormatAttribute) 0
@@ -368,13 +369,21 @@ void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer)
 				  });
 
 
-	CGLPixelFormatAttribute pfa[13];
+	CGLPixelFormatAttribute pfa[15];
 	int pfaIndex = 0;
 	pfa[pfaIndex++] = kCGLPFAAccelerated;
 //	pfa[pfaIndex++] = kCGLPFANoRecovery;
-	pfa[pfaIndex++] = kCGLPFADoubleBuffer;
+
+	// https://b33p.net/kosada/node/12525
+//	pfa[pfaIndex++] = kCGLPFADoubleBuffer;
+	pfa[pfaIndex++] = kCGLPFABackingVolatile;
+
 	pfa[pfaIndex++] = kCGLPFAColorSize; pfa[pfaIndex++] = (CGLPixelFormatAttribute) 24;
 	pfa[pfaIndex++] = kCGLPFADepthSize; pfa[pfaIndex++] = (CGLPixelFormatAttribute) (hasDepthBuffer ? 16 : 0);
+	if (openGL32Core)
+	{
+		pfa[pfaIndex++] = kCGLPFAOpenGLProfile; pfa[pfaIndex++] = (CGLPixelFormatAttribute) kCGLOGLPVersion_3_2_Core;
+	}
 
 	if (multisample)
 	{

@@ -1,0 +1,54 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AppendTexts [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="360,-45" _separator="\".\""];
+AppendTexts2 [type="vuo.text.append" version="1.1.0" label="Append Texts|<refresh>refresh\l|<texts>texts\l|<separator>separator\l|<compositeText>compositeText\r" pos="150,-150" _separator="\"\""];
+AreEqual [type="vuo.image.areEqual" version="1.0.0" label="Are Equal|<refresh>refresh\l|<images>images\l|<tolerance>tolerance\l|<equal>equal\r" pos="750,105" _tolerance="0.040000000000000001"];
+ConvertTextToInteger [type="vuo.type.text.integer" version="1.0.0" label="Convert Text to Integer|<refresh>refresh\l|<text>text\l|<integer>integer\r" pos="-180,-150"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="750,-60"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="90,-285" _started_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.data.hold.VuoText" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="630,-60"];
+MakeList [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="309,-34" _1="\"SaveImageFetchImage-gif\"" _3="\"GIF\""];
+MakeList2 [type="vuo.list.make.2.VuoImage" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="683,116"];
+MakeList6 [type="vuo.list.make.2.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="101,-139" _2="\"bpc\""];
+MakeList9 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="190,131"];
+MakeSphere3 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="30,120" _transform="{\"translation\":[-0.2,-0.2,0],\"eulerRotation\":[0,0,0],\"scale\":[1,1,1]}" _rows="32" _columns="32"];
+RenderSceneToImage2 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="255,120" _width="512" _height="512" _multisampling="\"off\""];
+SaveImage [type="vuo.image.save" version="1.0.1" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="495,0" _overwriteUrl="true" _format="\"GIF\""];
+SaveImage2 [type="vuo.image.save" version="1.0.1" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="960,-330" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"GIF\""];
+ShadeWithUnlitColor2 [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="-285,135" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+SummarizeValue [type="vuo.data.summarize.VuoImageColorDepth" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="-330,-150"];
+SummarizeValue4 [type="vuo.data.summarize.VuoInteger" version="1.0.0" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="315,-105"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<colorDepth>colorDepth\r" _colorDepth_type="VuoImageColorDepth" _colorDepth="\"8bpc\""];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<equal>equal\l" _equal_type="VuoBoolean"];
+
+AppendTexts2:compositeText -> MakeList:2;
+AppendTexts:compositeText -> HoldValue2:newValue;
+AppendTexts:compositeText -> SaveImage:url;
+AreEqual:equal -> PublishedOutputs:equal;
+ConvertTextToInteger:integer -> SummarizeValue4:value;
+FetchImage:image -> MakeList2:1;
+HoldValue2:heldValue -> FetchImage:url;
+MakeList2:list -> AreEqual:images;
+MakeList6:list -> AppendTexts2:texts;
+MakeList9:list -> RenderSceneToImage2:objects;
+MakeList:list -> AppendTexts:texts;
+MakeSphere3:object -> MakeList9:1;
+PublishedInputs:colorDepth -> RenderSceneToImage2:colorDepth;
+PublishedInputs:colorDepth -> ShadeWithUnlitColor2:refresh;
+PublishedInputs:colorDepth -> SummarizeValue:value;
+RenderSceneToImage2:image -> MakeList2:2;
+RenderSceneToImage2:image -> SaveImage:saveImage;
+SaveImage:done -> HoldValue2:refresh;
+ShadeWithUnlitColor2:shader -> MakeSphere3:material;
+SummarizeValue4:summary -> MakeList6:1;
+SummarizeValue:summary -> ConvertTextToInteger:text;
+}

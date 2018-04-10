@@ -8,12 +8,12 @@
  */
 
 #include "node.h"
-#include <stdlib.h>
+#include "json-c/json.h"
 
 VuoModuleMetadata({
 					 "title" : "Convert Text to Real",
 					 "keywords" : [ ],
-					 "version" : "1.0.0"
+					 "version" : "1.0.1"
 				 });
 
 void nodeEvent
@@ -25,5 +25,10 @@ void nodeEvent
 	if (!text)
 		return;
 
-	*real = VuoReal_makeFromString(text);
+	// Since the JSON spec is strict about numbers (e.g., can't have leading "+" or "."),
+	// treat text as a JSON string (effectivel putting double-quotes around it),
+	// since json-c is more flexible about converting JSON strings to numbers.
+	struct json_object *js = json_object_new_string(text);
+	*real = VuoReal_makeFromJson(js);
+	json_object_put(js);
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERSIGNALER_HH
-#define VUORENDERERSIGNALER_HH
+#pragma once
 
 class VuoRendererPort;
 class VuoRendererPublishedPort;
@@ -43,4 +42,3 @@ signals:
 	void dragStickinessDisableRequested(bool disable); ///< Emitted when drag stickiness for the canvas is to be disabled or re-enabled.
 };
 
-#endif // VUORENDERERSIGNALER_HH

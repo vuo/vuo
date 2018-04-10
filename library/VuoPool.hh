@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOPOOL_HH
-#define VUOPOOL_HH
+#pragma once
 
 #include <string>
 #include <map>
@@ -135,4 +134,3 @@ unsigned int VuoKeyedPool<KeyType,InstanceType>::size(void)
 	return c;
 }
 
-#endif // VUOPOOL_HH

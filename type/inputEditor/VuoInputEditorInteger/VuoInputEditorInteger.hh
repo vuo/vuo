@@ -7,10 +7,14 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORINTEGER_HH
-#define VUOINPUTEDITORINTEGER_HH
+#pragma once
 
-#include "VuoInputEditorWithLineEdit.hh"
+#include "VuoInputEditorWithDialog.hh"
+#include "VuoSpinBox.hh"
+
+extern "C" {
+#include "VuoInteger.h"
+}
 
 /**
  * A VuoInputEditorInteger factory.
@@ -38,32 +42,41 @@ public:
  *
  * @eg{
  *   {
- *     "suggestedMin" : 0,
- *     "suggestedMax" : 360,
- *     "suggestedStep" : 30
+ *     "suggestedMin" : -10,
+ *     "suggestedMax" : 10,
+ *     "suggestedStep" : 1
  *   }
  * }
  */
-class VuoInputEditorInteger : public VuoInputEditorWithLineEdit
+class VuoInputEditorInteger : public VuoInputEditorWithDialog
 {
 	Q_OBJECT
 
 protected:
 	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
-	json_object * convertFromLineEditFormat(const QString &valueAsString);
-	bool eventFilter(QObject *object, QEvent *event);
+	json_object * getAcceptedValue(void);
+	virtual bool supportsTabbingBetweenPorts(void) { return true; }		///< This editor does support tabbing between ports.
 
 private:
-	QSlider *slider;	///< For use when both the suggestedMin and suggestedMax port annotation values are provided by the node class designer.
-	QSpinBox *spinBox;	///< For use when a suggestedMin, suggestedMax, or both values, are left unspecified by the node class designer.
-	QHBoxLayout *sliderLineEditLayout;
+
+	VuoInteger previous;			///< If 'auto' was toggled then un-toggled, this lets us restore the previous value.
+	VuoInteger current;				///< The current value.
+	VuoInteger defaultValue;		///< The default value.
+	VuoInteger autoValue;			///< Value to match if auto is enabled.
+	VuoInteger suggestedMin;		///< Minimum value this field should allow.
+	VuoInteger suggestedMax;		///< Maximum value this field should allow.
+	bool hasAutoValue;				///< Does metadata provide an autoValue?
+
+	QSlider* slider; 				///< For use when both the suggestedMin and suggestedMax port annotation values are provided by the node class designer.
+	VuoSpinBox* spinbox; 			///< For use when both the suggestedMin and suggestedMax port annotation values are provided by the node class designer.
+	QCheckBox* autoToggle;			///< Enable/disable auto value.
+
+	VuoSpinBox* initSpinBox(QDialog& dialog, VuoInteger initialValue);
+	QSlider* initSlider(QDialog& dialog, VuoInteger initialValue);
 
 private slots:
-	void updateSliderValue(QString newTextValue);
-	void updateLineEditValue();
-	void updateLineEditValue(int newSliderValue);
-
-	void emitValueChanged();
+	void setAutoToggled(int state);
+	void onSliderUpdate(int sliderValue);
+	void onSpinboxUpdate(QString spinboxValue);
 };
 
-#endif // VUOINPUTEDITORINTEGER_HH

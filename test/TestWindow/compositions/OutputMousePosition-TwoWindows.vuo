@@ -1,0 +1,54 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeWindowPosition [type="vuo.window.position" version="1.0.0" label="Change Window Position|<refresh>refresh\l|<topLeft>topLeft\l|<unit>unit\l|<property>property\r" pos="105,210" _topLeft="{\"x\":256,\"y\":256}" _unit="\"points\""];
+ChangeWindowPosition2 [type="vuo.window.position" version="1.0.0" label="Change Window Position|<refresh>refresh\l|<topLeft>topLeft\l|<unit>unit\l|<property>property\r" pos="105,285" _topLeft="{\"x\":512,\"y\":256}" _unit="\"points\""];
+ChangeWindowSize [type="vuo.window.size" version="1.0.0" label="Change Window Size|<refresh>refresh\l|<width>width\l|<height>height\l|<unit>unit\l|<property>property\r" pos="105,120" _width="256" _height="256" _unit="\"points\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-60,90" _started_eventThrottling="enqueue"];
+HoldValue2 [type="vuo.data.hold.VuoBoolean" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="885,195"];
+HoldValue4 [type="vuo.data.hold.VuoBoolean" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="885,45"];
+MakeList11 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="329,251"];
+MakeList12 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="357,281"];
+MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="357,131"];
+MakeList9 [type="vuo.list.make.0.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="329,101"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="690,240" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+ReceiveMouseMoves2 [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="690,90" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="390,240" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+RenderLayersToWindow3 [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="390,90" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SelectOutput2 [type="vuo.select.out.boolean.VuoPoint2d" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1035,225"];
+SelectOutput3 [type="vuo.select.out.boolean.VuoPoint2d" version="2.0.0" label="Select Output|<refresh>refresh\l|<which>which\l|<in>in\l|<falseOption>falseOption\r|<trueOption>trueOption\r" pos="1035,75"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Listening>Listening\r" _Listening_type="VuoBoolean" _Listening="false"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<LeftMoved>LeftMoved\l|<RightMoved>RightMoved\l" _LeftMoved_type="VuoPoint2d" _RightMoved_type="VuoPoint2d"];
+
+ChangeWindowPosition2:property -> MakeList12:2;
+ChangeWindowPosition:property -> MakeList5:2;
+ChangeWindowSize:property -> MakeList12:1;
+ChangeWindowSize:property -> MakeList5:1;
+FireOnStart:started -> ChangeWindowPosition2:refresh;
+FireOnStart:started -> ChangeWindowPosition:refresh;
+FireOnStart:started -> ChangeWindowSize:refresh;
+HoldValue2:heldValue -> SelectOutput2:which;
+HoldValue4:heldValue -> SelectOutput3:which;
+MakeList11:list -> RenderLayersToWindow2:layers;
+MakeList12:list -> RenderLayersToWindow2:setWindowProperties;
+MakeList5:list -> RenderLayersToWindow3:setWindowProperties;
+MakeList9:list -> RenderLayersToWindow3:layers;
+PublishedInputs:Listening -> HoldValue2:newValue;
+PublishedInputs:Listening -> HoldValue4:newValue;
+ReceiveMouseMoves2:movedTo -> HoldValue4:refresh;
+ReceiveMouseMoves2:movedTo -> SelectOutput3:in;
+ReceiveMouseMoves:movedTo -> HoldValue2:refresh;
+ReceiveMouseMoves:movedTo -> SelectOutput2:in;
+RenderLayersToWindow2:showedWindow -> ReceiveMouseMoves:window;
+RenderLayersToWindow3:showedWindow -> ReceiveMouseMoves2:window;
+SelectOutput2:trueOption -> PublishedOutputs:RightMoved;
+SelectOutput3:trueOption -> PublishedOutputs:LeftMoved;
+}

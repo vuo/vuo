@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILEREVENTPORTCLASS_H
-#define VUOCOMPILEREVENTPORTCLASS_H
+#pragma once
 
 #include "VuoCompilerPortClass.hh"
 
@@ -34,5 +33,3 @@ public:
 	void setDataVuoType(VuoType *type);
 	string getDisplayName(void);
 };
-
-#endif

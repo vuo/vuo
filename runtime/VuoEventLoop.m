@@ -8,8 +8,11 @@
  */
 
 #include "VuoEventLoop.h"
+#include "VuoLog.h"
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <AppKit/AppKit.h>
 
 #include <dlfcn.h>
@@ -105,6 +108,10 @@ void VuoEventLoop_switchToAppMode(void)
  */
 bool VuoEventLoop_mayBeTerminated(void)
 {
+	int *terminationDisabledCount = dlsym(RTLD_DEFAULT, "VuoEventLoop_terminationDisabledCount");
+	if (terminationDisabledCount && *terminationDisabledCount > 0)
+		return false;
+
 	// Can't just use `NSApp` directly, since the composition might not link to AppKit.
 	id *nsAppGlobal = (id *)dlsym(RTLD_DEFAULT, "NSApp");
 	if (!nsAppGlobal || !*nsAppGlobal)
@@ -121,6 +128,36 @@ bool VuoEventLoop_mayBeTerminated(void)
 }
 
 /**
+ * Temporarily disables automatic termination.
+ *
+ * When a composition is asked to shut down, a watchdog timer waits a few seconds
+ * then force-quits if it hasn't cleanly shut down by then.  This disables that
+ * watchdog.
+ *
+ * Call this before entering a section where it would be undesirable
+ * to have the composition automatically force-quit,
+ * such as when saving a movie file that needs to be finalized.
+ *
+ * When the work is over, call @ref VuoEventLoop_enableTermination.
+ */
+void VuoEventLoop_disableTermination(void)
+{
+	int *terminationDisabledCount = dlsym(RTLD_DEFAULT, "VuoEventLoop_terminationDisabledCount");
+	if (terminationDisabledCount)
+		++(*terminationDisabledCount);
+}
+
+/**
+ * Resumes automatic termination after a call to @ref VuoEventLoop_disableTermination.
+ */
+void VuoEventLoop_enableTermination(void)
+{
+	int *terminationDisabledCount = dlsym(RTLD_DEFAULT, "VuoEventLoop_terminationDisabledCount");
+	if (__sync_sub_and_fetch(terminationDisabledCount, 1) < 0)
+		*terminationDisabledCount = 0;
+}
+
+/**
  * Returns `DISPATCH_TIMER_STRICT` if it's supported on the current OS version;
  * otherwise returns 0.
  */
@@ -130,9 +167,58 @@ unsigned long VuoEventLoop_getDispatchStrictMask(void)
 	static dispatch_once_t once = 0;
 	dispatch_once(&once, ^{
 		SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
 		if (macMinorVersion >= 9)
 			mask = 0x1; // DISPATCH_TIMER_STRICT
 	});
 	return mask;
+}
+
+/**
+ * Called when the process receives a SIGINT (control-C) or SIGTERM (kill).
+ */
+void VuoEventLoop_signalHandler(int signum)
+{
+	typedef void (*vuoStopCompositionType)(void);
+	vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_SELF, "vuoStopComposition");
+	if (!vuoStopComposition)
+		vuoStopComposition = (vuoStopCompositionType) dlsym(RTLD_DEFAULT, "vuoStopComposition");
+	vuoStopComposition();
+}
+
+/**
+ * Installs SIGINT and SIGTERM handlers, to cleanly shut down the composition.
+ */
+void VuoEventLoop_installSignalHandlers(void)
+{
+	struct sigaction action = {{VuoEventLoop_signalHandler}, 0, 0};
+	if (sigaction(SIGINT,  &action, NULL))
+		VUserLog("Warning: Couldn't install SIGINT handler: %s", strerror(errno));
+	if (sigaction(SIGTERM, &action, NULL))
+		VUserLog("Warning: Couldn't install SIGTERM handler: %s", strerror(errno));
+}
+
+/**
+ * Disable "App Nap" since even if our timers are set to strict (@ref VuoEventLoop_getDispatchStrictMask),
+ * the OS still prevents the process from running smoothly while taking a nap.
+ * https://b33p.net/kosada/node/12685
+ */
+void VuoEventLoop_disableAppNap(void)
+{
+	SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
+	if (macMinorVersion < 9)
+		return;
+
+	id activityToken = [[NSProcessInfo processInfo] performSelector:@selector(beginActivityWithOptions:reason:)
+		withObject: (id)((0x00FFFFFFULL | (1ULL << 20)) & ~(1ULL << 14)) // NSActivityUserInitiated & ~NSActivitySuddenTerminationDisabled
+		withObject: @"Many Vuo compositions need to process input and send output even when the app's window is not visible."];
+
+	[activityToken retain];
 }

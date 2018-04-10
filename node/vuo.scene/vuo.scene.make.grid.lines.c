@@ -100,20 +100,11 @@ void nodeEvent
 		}
 	}
 
-	// build the mesh!
-	VuoSubmesh submesh;
-
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.normals = normals;
-	submesh.tangents = tangents;
-	submesh.bitangents = bitangents;
-	submesh.textureCoordinates = textures;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, normals, tangents, bitangents, textures,
+													elementCount, elements, VuoMesh_IndividualLines);
 	submesh.faceCullingMode = GL_NONE;
-	submesh.elementCount = elementCount;
 	submesh.primitiveSize = lineWidth;
-	submesh.elements = elements;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualLines;
 
 	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
 

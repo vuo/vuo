@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Crop Image",
 					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
-					  "version" : "1.1.1",
+					  "version" : "1.1.2",
 					  "node": {
 						  "exampleCompositions" : [ "EnlargeMovie.vuo" ]
 					  }
@@ -62,14 +62,17 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
+		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":2, "suggestedStep":0.1}) width,
 		VuoInputData(VuoReal, {"default":1, "suggestedMin":0, "suggestedMax":2, "suggestedStep":0.1}) height,
 		VuoOutputData(VuoImage) croppedImage
 )
 {
 	if (!image)
+	{
+		*croppedImage = NULL;
 		return;
+	}
 
 	VuoRectangle intersection = VuoPoint2d_rectangleIntersection(
 				VuoImage_getRectangle(image),

@@ -34,6 +34,7 @@ ReceiveMouseButtons:pressed -> MeasureTime:start;
 RenderLayersToWindow:requestedFrame -> AllowFirstEvent:event;
 RenderLayersToWindow:requestedFrame -> ConvertRelativeToAbsolute2:refresh;
 RenderLayersToWindow:requestedFrame -> MeasureTime:time;
+RenderLayersToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
 Schedule:elapsedTime1 -> Toggle:toggle;
 Schedule:elapsedTime2 -> Toggle:toggle;
 Schedule:elapsedTime3 -> Toggle:toggle;

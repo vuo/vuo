@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOREAL_H
-#define VUOREAL_H
+#pragma once
 
 #include <math.h>
 #include <stdbool.h>
@@ -189,7 +188,14 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
  */
 static inline bool VuoReal_areEqual(const VuoReal value1, const VuoReal value2)
 {
-	return fabs(value1 - value2) <= 0.00001;
+	// http://stackoverflow.com/questions/1565164/what-is-the-rationale-for-all-comparisons-returning-false-for-ieee754-nan-values
+	if( isnan(value1) || isnan(value2) )
+		return false;
+	// when comparing inf or -inf don't use fuzzy values
+	else if( !isfinite(value1) || !isfinite(value2) )
+		return value1 == value2;
+	else
+		return fabs(value1 - value2) <= 0.00001;
 }
 
 /**
@@ -203,5 +209,3 @@ static inline bool VuoReal_isLessThan(const VuoReal a, const VuoReal b)
 /**
  * @}
  */
-
-#endif

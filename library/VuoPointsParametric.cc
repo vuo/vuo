@@ -56,13 +56,19 @@ VuoList_VuoPoint3d VuoPointsParametric1d_generate(
 
 	mu::value_type uVar = 0;
 
-	xParser.DefineVar("u", &uVar);
-	yParser.DefineVar("u", &uVar);
-	zParser.DefineVar("u", &uVar);
+	xParser.DefineVar("u", &uVar); xParser.DefineVar("U", &uVar);
+	yParser.DefineVar("u", &uVar); yParser.DefineVar("U", &uVar);
+	zParser.DefineVar("u", &uVar); zParser.DefineVar("U", &uVar);
 
-	xParser.DefineConst("time", (double)time);
-	yParser.DefineConst("time", (double)time);
-	zParser.DefineConst("time", (double)time);
+	mu::value_type iVar = 0;
+
+	xParser.DefineVar("i", &iVar); xParser.DefineVar("I", &iVar);
+	yParser.DefineVar("i", &iVar); yParser.DefineVar("I", &iVar);
+	zParser.DefineVar("i", &iVar); zParser.DefineVar("I", &iVar);
+
+	xParser.DefineConst("time", (double)time); xParser.DefineConst("Time", (double)time); xParser.DefineConst("TIME", (double)time);
+	yParser.DefineConst("time", (double)time); yParser.DefineConst("Time", (double)time); yParser.DefineConst("TIME", (double)time);
+	zParser.DefineConst("time", (double)time); zParser.DefineConst("Time", (double)time); zParser.DefineConst("TIME", (double)time);
 
 	VuoMathExpressionParser_defineStandardLibrary(&xParser);
 	VuoMathExpressionParser_defineStandardLibrary(&yParser);
@@ -79,6 +85,8 @@ VuoList_VuoPoint3d VuoPointsParametric1d_generate(
 				uVar = VuoReal_lerp(uMin, uMax, x/(float)(subdivisions-1.));
 			else
 				uVar = (uMin + uMax)/2.;
+
+			iVar = x + 1;
 
 			pointsArray[x] = (VuoPoint3d){
 				xParser.Eval(),
@@ -120,16 +128,26 @@ VuoList_VuoPoint3d VuoPointsParametric2d_generate(
 	mu::value_type uVar = 0;
 	mu::value_type vVar = 0;
 
-	xParser.DefineVar("u", &uVar);
-	yParser.DefineVar("u", &uVar);
-	zParser.DefineVar("u", &uVar);
-	xParser.DefineVar("v", &vVar);
-	yParser.DefineVar("v", &vVar);
-	zParser.DefineVar("v", &vVar);
+	xParser.DefineVar("u", &uVar); xParser.DefineVar("U", &uVar);
+	yParser.DefineVar("u", &uVar); yParser.DefineVar("U", &uVar);
+	zParser.DefineVar("u", &uVar); zParser.DefineVar("U", &uVar);
+	xParser.DefineVar("v", &vVar); xParser.DefineVar("V", &vVar);
+	yParser.DefineVar("v", &vVar); yParser.DefineVar("V", &vVar);
+	zParser.DefineVar("v", &vVar); zParser.DefineVar("V", &vVar);
 
-	xParser.DefineConst("time", (double)time);
-	yParser.DefineConst("time", (double)time);
-	zParser.DefineConst("time", (double)time);
+	mu::value_type iVar = 0;
+	mu::value_type jVar = 0;
+
+	xParser.DefineVar("i", &iVar); xParser.DefineVar("I", &iVar);
+	yParser.DefineVar("i", &iVar); yParser.DefineVar("I", &iVar);
+	zParser.DefineVar("i", &iVar); zParser.DefineVar("I", &iVar);
+	xParser.DefineVar("j", &jVar); xParser.DefineVar("J", &jVar);
+	yParser.DefineVar("j", &jVar); yParser.DefineVar("J", &jVar);
+	zParser.DefineVar("j", &jVar); zParser.DefineVar("J", &jVar);
+
+	xParser.DefineConst("time", (double)time); xParser.DefineConst("Time", (double)time); xParser.DefineConst("TIME", (double)time);
+	yParser.DefineConst("time", (double)time); yParser.DefineConst("Time", (double)time); yParser.DefineConst("TIME", (double)time);
+	zParser.DefineConst("time", (double)time); zParser.DefineConst("Time", (double)time); zParser.DefineConst("TIME", (double)time);
 
 	VuoMathExpressionParser_defineStandardLibrary(&xParser);
 	VuoMathExpressionParser_defineStandardLibrary(&yParser);
@@ -153,6 +171,9 @@ VuoList_VuoPoint3d VuoPointsParametric2d_generate(
 					uVar = VuoReal_lerp(uMin, uMax, x/(float)(columns-1.));
 				else
 					uVar = (uMin + uMax)/2.;
+
+				iVar = x + 1;
+				jVar = y + 1;
 
 				pointsArray[y*columns + x] = (VuoPoint3d){
 					xParser.Eval(),

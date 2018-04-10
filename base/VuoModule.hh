@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMODULE_HH
-#define VUOMODULE_HH
+#pragma once
 
 #include "VuoBase.hh"
 #include "VuoModule.hh"
@@ -52,5 +51,3 @@ private:
 	VuoNodeSet *nodeSet;
 
 };
-
-#endif // VUOMODULE_HH

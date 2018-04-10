@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERKEYLISTFORREADONLYDICTIONARY_HH
-#define VUORENDERERKEYLISTFORREADONLYDICTIONARY_HH
+#pragma once
 
 #include "VuoRendererHiddenInputAttachment.hh"
 
@@ -28,4 +27,3 @@ public:
 	static bool isKeyListForReadOnlyDictionary(VuoNode *baseNode);
 };
 
-#endif // VUORENDERERKEYLISTFORREADONLYDICTIONARY_HH

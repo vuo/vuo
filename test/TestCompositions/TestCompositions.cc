@@ -143,6 +143,7 @@ private slots:
 	void initTestCase()
 	{
 		compiler = initCompiler();
+		compiler->loadStoredLicense();
 	}
 
 	void cleanupTestCase()
@@ -164,7 +165,7 @@ private slots:
 			valueForInputPortName["degreesFahrenheit"] = "32";
 			map<string, string> valueForOutputPortName;
 			valueForOutputPortName["degreesCelsius"] = "0";
-			PortConfiguration expected(firingPortName, valueForInputPortName, valueForOutputPortName);
+			PortConfiguration expected("", firingPortName, valueForInputPortName, valueForOutputPortName);
 			portConfigurations.front()->checkEqual(expected);
 		}
 
@@ -174,7 +175,7 @@ private slots:
 			valueForInputPortName["degreesFahrenheit"] = "212";
 			map<string, string> valueForOutputPortName;
 			valueForOutputPortName["degreesCelsius"] = "100";
-			PortConfiguration expected(firingPortName, valueForInputPortName, valueForOutputPortName);
+			PortConfiguration expected("", firingPortName, valueForInputPortName, valueForOutputPortName);
 			portConfigurations.back()->checkEqual(expected);
 		}
 	}

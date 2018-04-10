@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMIDINOTE_H
-#define VUOMIDINOTE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -62,5 +61,3 @@ char * VuoMidiNote_getString(const VuoMidiNote value);
 /**
  * @}
  */
-
-#endif

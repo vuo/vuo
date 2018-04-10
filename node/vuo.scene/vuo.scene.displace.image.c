@@ -40,6 +40,7 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float amount;
 	uniform vec4 channel;
 	uniform sampler2D heightmap;
+	attribute vec4 normal;
 
 	float sum(vec3 invec)
 	{

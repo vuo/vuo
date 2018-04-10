@@ -29,9 +29,6 @@ SOURCES += \
 	VuoHidUsage.c \
 	VuoUsbVendor.c
 
-NODE_LIBRARY_INCLUDEPATH += \
-	../vuo.font
-
 HEADERS += \
 	VuoHid.h \
 	VuoHidControl.h \

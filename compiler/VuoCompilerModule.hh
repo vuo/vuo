@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERMODULE_HH
-#define VUOCOMPILERMODULE_HH
+#pragma once
 
 #include "VuoCompilerTargetSet.hh"
 
@@ -70,5 +69,3 @@ public:
 	bool isBuiltIn(void);
 	void setBuiltIn(bool builtIn);
 };
-
-#endif // VUOCOMPILERMODULE_HH

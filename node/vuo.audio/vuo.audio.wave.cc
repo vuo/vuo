@@ -22,6 +22,7 @@ VuoModuleMetadata({
 					  ],
 					  "node": {
 						  "exampleCompositions" : [ "PlayAudioWave.vuo", "PlayBluesOrgan.vuo", "PanAudio.vuo", "SynchronizeOscillators.vuo" ],
+						  "isDeprecated": true
 					  }
 				 });
 }

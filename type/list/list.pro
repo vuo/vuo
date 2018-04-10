@@ -17,8 +17,8 @@ OTHER_FILES += \
 TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoArtNetInputDevice:2 \
 		VuoArtNetOutputDevice:2 \
-		VuoAudioBins:0 \
 		VuoAudioBinAverageType:0 \
+		VuoAudioBins:0 \
 		VuoAudioEncoding:0 \
 		VuoAudioFrame:2 \
 		VuoAudioInputDevice:2 \
@@ -26,8 +26,10 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoAudioSamples:2 \
 		VuoBaudRate:2 \
 		VuoBlendMode:0 \
+		VuoBlurShape:0 \
 		VuoBoolean:0 \
 		VuoColor:0 \
+		VuoColorSample:0 \
 		VuoControlCode:0 \
 		VuoCoordinateUnit:0 \
 		VuoCursor:2 \
@@ -37,10 +39,11 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoDispersion:0 \
 		VuoDisplacement:0 \
 		VuoDistribution3d:0 \
-		VuoDragEvent:2 \
 		VuoDmxColorMap:2 \
+		VuoDragEvent:2 \
 		VuoDurationType:0 \
 		VuoEdgeBlend:0 \
+		VuoExtrapolationMode:0 \
 		VuoFileType:0 \
 		VuoFont:2 \
 		VuoAnchor:0 \
@@ -54,9 +57,12 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoIconPosition:2 \
 		VuoImage:1 \
 		VuoImageColorDepth:0 \
-		VuoImageWrapMode:0 \
+		VuoImageFormat:0 \
+		VuoImageNoise:0 \
 		VuoImageStereoType:0 \
+		VuoImageWrapMode:0 \
 		VuoInteger:0 \
+		VuoIntegerRange:0 \
 		VuoKey:0 \
 		VuoLayer:2 \
 		VuoLeapFrame:2 \
@@ -69,27 +75,28 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoMesh:2 \
 		VuoMidiController:0 \
 		VuoMidiInputDevice:2 \
-		VuoMidiOutputDevice:2 \
 		VuoMidiNote:0 \
+		VuoMidiOutputDevice:2 \
 		VuoMidiPitchBend:2 \
 		VuoModifierKey:0 \
 		VuoMouseButton:0 \
 		VuoMovieFormat:0 \
 		VuoMovieImageEncoding:0 \
-		VuoVideoOptimization:0 \
 		VuoMultisample:2 \
 		VuoNoise:0 \
 		VuoNotePriority:2 \
-		VuoNumberFormat:2 \
 		VuoNumberComparison:2 \
+		VuoNumberFormat:2 \
 		VuoOscInputDevice:2 \
-		VuoOscOutputDevice:2 \
 		VuoOscMessage:2 \
+		VuoOscOutputDevice:2 \
+		VuoOscType:0 \
 		VuoParity:2 \
 		VuoPoint2d:0 \
 		VuoPoint3d:0 \
 		VuoPoint4d:0 \
 		VuoProjectionType:0 \
+		VuoRange:0 \
 		VuoReal:0 \
 		VuoRealRegulation:2 \
 		VuoRelativeTime:0 \
@@ -97,14 +104,15 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoRoundingMethod:0 \
 		VuoRssItem:2 \
 		VuoSceneObject:2 \
+		VuoSceneObjectType:0 \
 		VuoScreen:2 \
-		VuoShader:1 \
-		VuoImageFormat:0 \
 		VuoSerialDevice:2 \
+		VuoShader:1 \
 		VuoSizingMode:0 \
 		VuoSyphonServerDescription:0 \
 		VuoTempoRange:0 \
 		VuoText:1 \
+		VuoTextCase:0 \
 		VuoThresholdType:0 \
 		VuoTime:0 \
 		VuoTimeFormat:0 \
@@ -117,6 +125,7 @@ TYPE_LIST_SOURCES = $$system( ./generateVariants.sh \
 		VuoVerticalReflection:0 \
 		VuoVideoFrame:2 \
 		VuoVideoInputDevice:2 \
+		VuoVideoOptimization:0 \
 		VuoWave:0 \
 		VuoWeekday:0 \
 		VuoWindowProperty:2 \
@@ -131,7 +140,6 @@ TYPE_INCLUDEPATH = \
 	$$ROOT/node/vuo.color \
 	$$ROOT/node/vuo.data \
 	$$ROOT/node/vuo.file \
-	$$ROOT/node/vuo.font \
 	$$ROOT/node/vuo.hid \
 	$$ROOT/node/vuo.image \
 	$$ROOT/node/vuo.keyboard \

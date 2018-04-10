@@ -11,7 +11,9 @@
 #import "VuoSyphon.h"
 #import "VuoSyphonServerNotifier.h"
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <Syphon.h>
 
 #import <objc/message.h>

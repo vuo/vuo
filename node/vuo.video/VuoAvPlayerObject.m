@@ -65,7 +65,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	if (self)
 	{
 		glContext = VuoGlContext_use();
-		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false);
+		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false);
 		CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, (CGLContextObj)glContext, pf, NULL, &textureCache);
 		CGLReleasePixelFormat(pf);
 		if (ret != kCVReturnSuccess)
@@ -191,8 +191,8 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 				 if(![self copyNextVideoSampleBuffer])
 				 {
 					VUserLog("AvFoundation successfully loaded but failed to extract a video buffer.");
-				 	isReady = false;
-				 	break;
+					isReady = false;
+					break;
 				 }
 			}
 		}
@@ -240,18 +240,18 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	{
 		AVAssetTrack* vidtrack = [videoTracks objectAtIndex:0];
 
-        // for (id formatDescription in vidtrack.formatDescriptions)
-        // {
-        //     CMFormatDescriptionRef desc = (CMFormatDescriptionRef) formatDescription;
-        //     CMVideoCodecType codec = CMFormatDescriptionGetMediaSubType(desc);
+		// for (id formatDescription in vidtrack.formatDescriptions)
+		// {
+		//     CMFormatDescriptionRef desc = (CMFormatDescriptionRef) formatDescription;
+		//     CMVideoCodecType codec = CMFormatDescriptionGetMediaSubType(desc);
 
-        //     /// jpeg files either don't play or have terrible performance with AVAssetReader,
-        //     if(codec == kCMVideoCodecType_JPEG || codec == kCMVideoCodecType_JPEG_OpenDML)
-        //     {
-        //     	VUserLog("AVFoundation detected video codec is JPEG or MJPEG.");
-        //     	return false;
-        //     }
-        // }
+		//     /// jpeg files either don't play or have terrible performance with AVAssetReader,
+		//     if(codec == kCMVideoCodecType_JPEG || codec == kCMVideoCodecType_JPEG_OpenDML)
+		//     {
+		//     	VUserLog("AVFoundation detected video codec is JPEG or MJPEG.");
+		//     	return false;
+		//     }
+		// }
 
 		nominalFrameRate = [vidtrack nominalFrameRate];
 
@@ -286,24 +286,8 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 		/// audio settings
 
-		SInt32 macMinorVersion;
-		Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
-
 		NSDictionary* audioOutputSettings;
 
-		// AVSampleRateKey is not supported on 10.7, and when not set can cause weird voice modulations
-		if(macMinorVersion == 7)
-		{
-			audioOutputSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-									[NSNumber numberWithInt: kAudioFormatLinearPCM ], AVFormatIDKey,
-									[NSNumber numberWithInt:32], AVLinearPCMBitDepthKey,
-									[NSNumber numberWithBool:NO], AVLinearPCMIsBigEndianKey,
-									[NSNumber numberWithBool:YES], AVLinearPCMIsFloatKey,
-									[NSNumber numberWithBool:NO], AVLinearPCMIsNonInterleaved,
-									nil];
-		}
-		else
-		{
 			audioOutputSettings = [NSDictionary dictionaryWithObjectsAndKeys:
 									[NSNumber numberWithInt: kAudioFormatLinearPCM ], AVFormatIDKey,
 									[NSNumber numberWithFloat: VuoAudioSamples_sampleRate], AVSampleRateKey,
@@ -312,7 +296,6 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 									[NSNumber numberWithBool:YES], AVLinearPCMIsFloatKey,
 									[NSNumber numberWithBool:NO], AVLinearPCMIsNonInterleaved,
 									nil];
-		}
 
 		// AVAssetTrack.playable isn't available pre-10.8, so just try to create the AVAssetTrackReaderOutput out
 		// of every audio track until either one sticks or we run out of tracks.
@@ -521,7 +504,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 	{
 		VuoAudioSamples samples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
 		samples.samplesPerSecond = VuoAudioSamples_sampleRate;
-		VuoListAppendValue_VuoAudioSamples(frame->samples, samples);
+		VuoListAppendValue_VuoAudioSamples(frame->channels, samples);
 	}
 
 	while(sampleIndex < sampleCapacity - 1)
@@ -538,20 +521,21 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 				/// change the audioChannelCount size
 				if(audioChannelCount != audioBufferChannelCount)
 				{
-					VuoRelease(frame->samples);
-					frame->samples = NULL;
-					const VuoAudioSamples empty = {0, NULL, 48000};
-					frame->samples = VuoListCreateWithCount_VuoAudioSamples(audioBufferChannelCount, empty);
-					VuoRetain(frame->samples);
+					VuoRelease(frame->channels);
+					frame->channels = NULL;
+					frame->channels = VuoListCreate_VuoAudioSamples();
+					VuoRetain(frame->channels);
 
 					for(int i = 0; i < audioBufferChannelCount; i++)
 					{
 						VuoAudioSamples audioSamples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
 						audioSamples.samplesPerSecond = VuoAudioSamples_sampleRate;
-						VuoListAppendValue_VuoAudioSamples(frame->samples, audioSamples);
+						VuoListAppendValue_VuoAudioSamples(frame->channels, audioSamples);
 					}
 
 					audioChannelCount = audioBufferChannelCount;
+
+					sampleIndex = 0;
 				}
 			}
 		}
@@ -560,7 +544,7 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 		for(int i = 0; i < audioChannelCount; i++)
 		{
-			VuoReal* frame_samples = VuoListGetValue_VuoAudioSamples(frame->samples, i+1).samples;
+			VuoReal* frame_samples = VuoListGetValue_VuoAudioSamples(frame->channels, i+1).samples;
 			int frame_sample_index = sampleIndex, buffer_sample_index = audioBufferSampleIndex;
 
 			for(int iterator = 0; iterator < copyLength; iterator++)

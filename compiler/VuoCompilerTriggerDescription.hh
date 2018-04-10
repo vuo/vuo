@@ -7,9 +7,9 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERTRIGGERDESCRIPTION_H
-#define VUOCOMPILERTRIGGERDESCRIPTION_H
+#pragma once
 
+class VuoCompilerGraph;
 class VuoCompilerNode;
 class VuoCompilerTriggerPort;
 class VuoType;
@@ -22,26 +22,33 @@ class VuoType;
 class VuoCompilerTriggerDescription
 {
 public:
-	static json_object * getJson(VuoCompilerNode *triggerNode, VuoCompilerTriggerPort *trigger);
+	static json_object * getJson(VuoCompilerNode *triggerNode, VuoCompilerTriggerPort *trigger, VuoCompilerGraph *graph);
 	static vector<VuoCompilerTriggerDescription *> parseFromJson(json_object *js);
 	json_object * getJsonWithinSubcomposition(VuoCompilerNode *subcompositionNode);
+	size_t getNodeIndex(void);
 	string getNodeIdentifier(void);
 	string getPortName(void);
 	int getPortContextIndex(void);
 	VuoPortClass::EventThrottling getEventThrottling(void);
 	VuoType * getDataType(void);
 	void setDataType(VuoType *dataType);
+	void getWorkerThreadsNeeded(int &minThreadsNeeded, int &maxThreadsNeeded);
+	int getChainCount(void);
 	string getSubcompositionNodeClassName(void);
 	string getSubcompositionNodeIdentifier(void);
 
 private:
+	VuoCompilerTriggerDescription(void);
+
+	size_t nodeIndex;
 	string nodeIdentifier;
 	string portName;
 	int portContextIndex;
 	VuoPortClass::EventThrottling eventThrottling;
 	VuoType *dataType;
+	int minWorkerThreadsNeeded;
+	int maxWorkerThreadsNeeded;
+	int chainCount;
 	string subcompositionNodeClassName;
 	string subcompositionNodeIdentifier;
 };
-
-#endif

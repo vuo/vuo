@@ -50,25 +50,25 @@ VuoInputEditorMenuItem *VuoInputEditorBlendMode::setUpMenuTree(json_object *deta
 	{
 		addBlendMode(optionsTree, VuoBlendMode_Normal);
 		optionsTree->addSeparator();
-		addBlendMode(optionsTree, VuoBlendMode_LinearDodge);
-		addBlendMode(optionsTree, VuoBlendMode_LighterComponent);
-		optionsTree->addSeparator();
 		addBlendMode(optionsTree, VuoBlendMode_Subtract);
 		addBlendMode(optionsTree, VuoBlendMode_Multiply);
-		addBlendMode(optionsTree, VuoBlendMode_DarkerComponent);
+		addBlendMode(optionsTree, VuoBlendMode_DarkerComponents);
+		optionsTree->addSeparator();
+		addBlendMode(optionsTree, VuoBlendMode_LinearDodge);
+		addBlendMode(optionsTree, VuoBlendMode_LighterComponents);
 	}
 	else
 	{
 		addBlendMode(optionsTree, VuoBlendMode_Normal);
 		optionsTree->addSeparator();
 		addBlendMode(optionsTree, VuoBlendMode_Multiply);
-		addBlendMode(optionsTree, VuoBlendMode_DarkerComponent);
+		addBlendMode(optionsTree, VuoBlendMode_DarkerComponents);
 		addBlendMode(optionsTree, VuoBlendMode_DarkerColor);
 		addBlendMode(optionsTree, VuoBlendMode_LinearBurn);
 		addBlendMode(optionsTree, VuoBlendMode_ColorBurn);
 		optionsTree->addSeparator();
 		addBlendMode(optionsTree, VuoBlendMode_Screen);
-		addBlendMode(optionsTree, VuoBlendMode_LighterComponent);
+		addBlendMode(optionsTree, VuoBlendMode_LighterComponents);
 		addBlendMode(optionsTree, VuoBlendMode_LighterColor);
 		addBlendMode(optionsTree, VuoBlendMode_LinearDodge);
 		addBlendMode(optionsTree, VuoBlendMode_ColorDodge);

@@ -6,7 +6,7 @@ A MIDI **output device** (such as a synthesizer, sequencer, or stage lighting eq
 
 Each MIDI device has a unique **ID**, which is assigned by the operating system. If all devices were plugged in after the computer started up, then ID 0 is usually the first device plugged in, ID 1 is usually the second device plugged in, etc. 
 
-Each MIDI device has a **name**, which is not necessarily unique. On Mac OS X, you can look up a device's name in the Audio MIDI Setup application. 
+Each MIDI device has a **name**, which is not necessarily unique. On macOS, you can look up a device's name in the Audio MIDI Setup application. 
 
 A MIDI **note** message often represents a musical note. It includes: 
 
@@ -25,4 +25,4 @@ MIDI note, controller, and pitch bend messages also include:
 
    - A **channel**, ranging from 1 to 16. Each channel has its own stream of MIDI notes and controller values. A channel often represents one musical instrument. 
 
-You can send MIDI messages between two Vuo compositions, one with a `Send MIDI Event` node and the other with a `Receive MIDI Events` node. For this to work, you need to set up a MIDI device that supports both input and output. The compositions will communicate through this device. On Mac OS X, you can set up the device like this: open the Audio MIDI Setup application and go to the MIDI window, double-click on the IAC driver, and check the box for "Device is online". Then run the compositions. 
+You can send MIDI messages between two Vuo compositions, one with a `Send MIDI Event` node and the other with a `Receive MIDI Events` node. For this to work, you need to set up a MIDI device that supports both input and output. The compositions will communicate through this device. On macOS, you can set up the device like this: open the Audio MIDI Setup application and go to the MIDI window, double-click on the IAC driver, and check the box for "Device is online". Then run the compositions. 

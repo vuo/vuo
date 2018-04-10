@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTESTFLOAT_H
-#define VUOTESTFLOAT_H
+#pragma once
 
 struct json_object;
 
@@ -20,5 +19,3 @@ typedef float VuoTestFloat;
 VuoTestFloat VuoTestFloat_makeFromJson(struct json_object *js);
 struct json_object * VuoTestFloat_getJson(const VuoTestFloat value);
 char * VuoTestFloat_getSummary(const VuoTestFloat value);
-
-#endif

@@ -13,7 +13,9 @@
 
 #import <stdexcept>
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <OpenGL/CGLMacro.h>
 #import <AVFoundation/AVFoundation.h>
 
@@ -44,7 +46,10 @@ extern "C" {
 bool VuoMovieExporterParameters::isProResAvailable(void)
 {
 	SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
 	if (macMinorVersion >= 9)
 		return true;
 
@@ -213,8 +218,8 @@ void VuoMovieExporter::init(NSString *compositionString, std::string name, std::
 
 	// Set up resize shader.
 	{
-		resizeShader = VuoImageResize_makeShader();
-		VuoRetain(resizeShader);
+		resize = VuoImageResize_make();
+		VuoRetain(resize);
 
 		// Needs its own context since VuoImageRenderer changes the glViewport.
 		resizeContext = VuoGlContext_use();
@@ -291,7 +296,7 @@ VuoMovieExporter::~VuoMovieExporter()
 
 	VuoRelease(resizeImageRenderer);
 	VuoGlContext_disuse(resizeContext);
-	VuoRelease(resizeShader);
+	VuoRelease(resize);
 
 	VuoRelease(blender);
 }
@@ -329,6 +334,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 
 	[generator setValue:(id)kCFBooleanTrue      forInputPort:@"offlineRender"];
 	[generator setValue:@(parameters.framerate) forInputPort:@"offlineFramerate"];
+	[generator setValue:@(parameters.temporalSupersample) forInputPort:@"offlineMotionBlur"];
 
 
 	// Render the image.
@@ -355,7 +361,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 
 			if (image->pixelsWide != parameters.width || image->pixelsHigh != parameters.height)
 			{
-				VuoImage resizedImage = VuoImageResize_resize(image, resizeShader, resizeImageRenderer, VuoSizingMode_Fit, parameters.width, parameters.height);
+				VuoImage resizedImage = VuoImageResize_resize(image, resize, resizeImageRenderer, VuoSizingMode_Fit, parameters.width, parameters.height);
 				if (!resizedImage)
 				{
 					VuoRelease(image);
@@ -389,6 +395,7 @@ bool VuoMovieExporter::exportNextFrame(void)
 		{
 			NSError *e = nil;
 			assetWriter = [[AVAssetWriter alloc] initWithURL:outputMovieUrl fileType:AVFileTypeQuickTimeMovie error:&e];
+			assetWriter.movieFragmentInterval = CMTimeMake(timebase*10, timebase);
 
 			NSString *codec = nil;
 			if (parameters.imageFormat == VuoMovieExporterParameters::H264)

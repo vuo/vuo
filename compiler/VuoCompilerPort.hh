@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERPORT_H
-#define VUOCOMPILERPORT_H
+#pragma once
 
 #include "VuoCompilerNodeArgument.hh"
 
@@ -50,5 +49,3 @@ private:
 	string nodeIdentifier;
 	int indexInPortContexts;
 };
-
-#endif

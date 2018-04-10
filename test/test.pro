@@ -31,6 +31,7 @@ SUBDIRS += \
 	test_TestEventDropping \
 	test_TestEventDropping_node \
 	test_TestHeap \
+	test_TestImageFilters \
 	test_TestNodes \
 	test_TestNodeExecutionOrder \
 	test_TestNodeExecutionOrder_node \
@@ -86,6 +87,9 @@ test_TestReferenceCounting.depends = test_TestCompositionExecution
 
 test_TestReferenceCounting_node.subdir = TestReferenceCounting/node-TestReferenceCounting
 test_TestReferenceCounting_node.depends =
+
+test_TestImageFilters.subdir = TestImageFilters
+test_TestImageFilters.depends = test_TestCompositionExecution
 
 test_TestTypes.subdir = TestTypes
 test_TestTypes.depends = test_TestCompositionExecution

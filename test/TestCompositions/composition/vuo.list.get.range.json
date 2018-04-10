@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.get.range node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":1,"maximum":5}]},                                                        "outputPortValues":{"items":[11,22,33,44,55]}},
+   {"firingPort":"list","inputPortValues":{"list":[11],             "ranges":[{"minimum":1,"maximum":1}]},                                                        "outputPortValues":{"items":[11]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":1,"maximum":2},{"minimum":4,"maximum":5}]},                              "outputPortValues":{"items":[11,22,44,55]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":1,"maximum":3},{"minimum":2,"maximum":4}]},                              "outputPortValues":{"items":[11,22,33,22,33,44]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":4,"maximum":4},{"minimum":2,"maximum":2}]},                              "outputPortValues":{"items":[44,22]}},
+
+   {"firingPort":"list","inputPortValues":{"list":[              ], "ranges":[]},                                                                                 "outputPortValues":{"items":[]}},
+   {"firingPort":"list","inputPortValues":{"list":[              ], "ranges":[{"minimum":1,"maximum":5}]},                                                        "outputPortValues":{"items":[]}},
+   {"firingPort":"list","inputPortValues":{"list":[11            ], "ranges":[]},                                                                                 "outputPortValues":{"items":[]}},
+
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":-3,"maximum":-1}]},                                                      "outputPortValues":{"items":[]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":0,"maximum":2}]},                                                        "outputPortValues":{"items":[11,22]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":6,"maximum":6}]},                                                        "outputPortValues":{"items":[]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":-1,"maximum":1},{"minimum":3,"maximum":3},{"minimum":10,"maximum":15}]}, "outputPortValues":{"items":[11,33]}},
+
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"maximum":-1}]},                                                                   "outputPortValues":{"items":[]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"maximum":2}]},                                                                    "outputPortValues":{"items":[11,22]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":2}]},                                                                    "outputPortValues":{"items":[22,33,44,55]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":6}]},                                                                    "outputPortValues":{"items":[]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":2},{"maximum":4}]},                                                      "outputPortValues":{"items":[22,33,44,55,11,22,33,44]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":0},{"maximum":6}]},                                                      "outputPortValues":{"items":[11,22,33,44,55,11,22,33,44,55]}},
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{}]},                                                                               "outputPortValues":{"items":[11,22,33,44,55]}},
+
+   // Inverted ranges
+   {"firingPort":"list","inputPortValues":{"list":[11,22,33,44,55], "ranges":[{"minimum":2,"maximum":1},{"minimum":5,"maximum":4}]},                              "outputPortValues":{"items":[11,22,44,55]}},
+]}

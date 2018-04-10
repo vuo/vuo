@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERDATACLASS_H
-#define VUOCOMPILERDATACLASS_H
+#pragma once
 
 #include "VuoCompilerNodeArgumentClass.hh"
 
@@ -41,6 +40,3 @@ public:
 	void setDetails(struct json_object *details);
 	json_object * getDetails(void);
 };
-
-
-#endif

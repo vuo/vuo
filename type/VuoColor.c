@@ -144,16 +144,71 @@ json_object * VuoColor_getJson(const VuoColor value)
 }
 
 /**
- * @ingroup VuoColor
- * Returns an HTML representation of @c value (comma-separated components).
+ * Returns a short HTML representation of `value`.
  */
-char * VuoColor_getSummary(const VuoColor value)
+char *VuoColor_getShortSummary(const VuoColor value)
 {
 	return VuoText_format("<span style='background-color:#%02x%02x%02x;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> %4.02f, %4.02f, %4.02f, %4.02f",
 						  (unsigned int)(VuoReal_clamp(value.r,0,1) * 255),
 						  (unsigned int)(VuoReal_clamp(value.g,0,1) * 255),
 						  (unsigned int)(VuoReal_clamp(value.b,0,1) * 255),
 						  value.r, value.g, value.b, value.a);
+}
+
+/// Creates a C string from raw text (saves having to doublequote-escape and/or use backslashes).
+#define STRINGIFY(...) #__VA_ARGS__
+
+/**
+ * Returns a detailed HTML representation of `value`.
+ */
+char *VuoColor_getSummary(const VuoColor value)
+{
+	const char *t = STRINGIFY(
+		<style>
+			th,td { text-align: right; }
+			td { font-weight: normal; }
+			.left { text-align: left; }
+		</style>
+		<table cellspacing=6>
+			<tr>
+				<td class='left'><span style='background-color:%s;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+				<th>Red</th>
+				<th>Green</th>
+				<th>Blue</th>
+				<th>Alpha</th>
+			</tr>
+			<tr>
+				<th>Normalized:</th>
+				<td>%4.03f</td>
+				<td>%4.03f</td>
+				<td>%4.03f</td>
+				<td>%4.03f</td>
+			</tr>
+			<tr>
+				<th>8-bit:</th>
+				<td>%d</td>
+				<td>%d</td>
+				<td>%d</td>
+				<td>%d</td>
+			</tr>
+			<tr>
+				<th>Hex:</th>
+				<td class='left' colspan=4>&nbsp;%s</td>
+			</tr>
+		</table>
+	);
+
+	VuoText hex = VuoColor_getHex(value, false);
+	VuoLocal(hex);
+	return VuoText_format(t,
+						  hex,
+						  value.r, value.g, value.b, value.a,
+						  (unsigned int)(VuoReal_clamp(value.r,0,1) * 255),
+						  (unsigned int)(VuoReal_clamp(value.g,0,1) * 255),
+						  (unsigned int)(VuoReal_clamp(value.b,0,1) * 255),
+						  (unsigned int)(VuoReal_clamp(value.a,0,1) * 255),
+						  hex
+						  );
 }
 
 /**
@@ -250,6 +305,15 @@ void VuoColor_getHSLA(VuoColor color, VuoReal *h, VuoReal *s, VuoReal *l, VuoRea
 	}
 }
 
+/**
+ * Returns the HSL lightness of the color, in the range [0,1].
+ */
+VuoReal VuoColor_getLightness(VuoColor color)
+{
+	float max = fmax(color.r, fmax(color.g, color.b));
+	float min = fmin(color.r, fmin(color.g, color.b));
+	return (max + min) / 2.;
+}
 
 /**
  * Creates a new VuoColor from CMYK values.

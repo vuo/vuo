@@ -713,7 +713,7 @@ SKIP_VIDEO_FRAME:
 
 bool VuoFfmpegDecoder::NextAudioFrame(VuoAudioFrame* audio)
 {
-	if(!audioIsEnabled || audio->samples == NULL)
+	if (!audioIsEnabled || audio->channels == NULL)
 		return false;
 
 	// the wanted sample size in bytes to fill each audio channel (in bytes).
@@ -728,7 +728,7 @@ bool VuoFfmpegDecoder::NextAudioFrame(VuoAudioFrame* audio)
 	{
 		VuoAudioSamples samples = VuoAudioSamples_alloc(VuoAudioSamples_bufferSize);
 		samples.samplesPerSecond = VuoAudioSamples_sampleRate;
-		VuoListAppendValue_VuoAudioSamples(audio->samples, samples);
+		VuoListAppendValue_VuoAudioSamples(audio->channels, samples);
 	}
 
 	// while audio needs more samples to fill
@@ -752,7 +752,7 @@ bool VuoFfmpegDecoder::NextAudioFrame(VuoAudioFrame* audio)
 
 		for(int i = 0; i < audio_channels; i++)
 		{
-			VuoAudioSamples samples = VuoListGetValue_VuoAudioSamples(audio->samples, i+1);
+			VuoAudioSamples samples = VuoListGetValue_VuoAudioSamples(audio->channels, i+1);
 			memcpy(samples.samples + sampleIndex/sizeof(double), audio_buf[i] + audio_buf_index, copySize);
 		}
 

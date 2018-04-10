@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILER_H
-#define VUOCOMPILER_H
+#pragma once
 
 #include "VuoFileUtilities.hh"
 
@@ -80,6 +79,14 @@ public:
 	 * A set of node classes, types, library modules, and search paths for other dependencies.
 	 *
 	 * This is public only so that the static variable VuoCompiler::sharedEnvironment can be defined.
+	 *
+	 * A VuoCompiler instance refers to 3 environments:
+	 *    - Shared environment — Most modules are in this environment. It holds:
+	 *       - node classes, types, and libraries that are built-in
+	 *       - node classes, types, and libraries located in the user or system-wide Modules folder
+	 *       - compiled subcompositions located in the compiler's cache
+	 *    - My environment — Specializations of generic node classes, including drawers and published input/output nodes.
+	 *    - Combined environment — All modules in shared environment and my environment.
 	 */
 	class Environment
 	{
@@ -150,6 +157,7 @@ private:
 	static bool hasCleanedCompiledSubcompositionDir;
 	static dispatch_queue_t hasCleanedCompiledSubcompositionDirQueue;  ///< Synchronizes access to hasCleanedCompiledSubcompositionDir.
 	bool shouldLoadAllModules;
+	bool hasLoadedAllModules;
 	set<string> modulesToLoad;
 	vector<string> subcompositionsBeingCompiled;
 	set<string> subcompositionModules;
@@ -209,10 +217,10 @@ public:
 	static void deleteModule(Module *module);
 	map<string, VuoCompilerException> flushErrorsLoadingModules(void);
 	static set<string> getEncounteredPremiumModules();
-	void compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition=true, bool isLiveCodeable=true);
-	void compileComposition(string inputPath, string outputPath, bool isTopLevelComposition, bool isLiveCodeable);
+	void compileComposition(VuoCompilerComposition *composition, string outputPath, bool isTopLevelComposition=true);
+	void compileComposition(string inputPath, string outputPath, bool isTopLevelComposition);
 	void compileComposition(string inputPath, string outputPath);
-	void compileCompositionString(const string &compositionString, string outputPath, bool isTopLevelComposition=true, bool isLiveCodeable=true);
+	void compileCompositionString(const string &compositionString, string outputPath, bool isTopLevelComposition=true);
 	VuoCompilerNodeClass * installSubcomposition(string compositionPath);
 	void compileModule(string inputPath, string outputPath);
 	void compileModule(string inputPath, string outputPath, const vector<string> &includeDirs);
@@ -245,6 +253,3 @@ public:
 	static VuoRunner * newCurrentProcessRunnerFromCompositionFile(string compositionFilePath);
 	static VuoRunner * newCurrentProcessRunnerFromCompositionString(string composition, string workingDirectory);
 };
-
-
-#endif

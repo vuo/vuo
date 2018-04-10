@@ -14,6 +14,7 @@
  */
 QFont VuoInputEditor::getDefaultFont(void)
 {
+	// Can't use VuoRendererFonts since the dependencies are complicated.
 	return QFont("Signika", 12, QFont::Light, false);
 }
 
@@ -22,7 +23,7 @@ QFont VuoInputEditor::getDefaultFont(void)
  */
 QString VuoInputEditor::getDefaultFontCss(void)
 {
-	return QString("font-family: Signika; font-size: 12pt; font-weight: lighter;");
+	return QString("font-family: Signika; font-size: 12pt; font-weight: 200;");
 }
 
 bool VuoInputEditor::supportsTabbingBetweenPorts(void)

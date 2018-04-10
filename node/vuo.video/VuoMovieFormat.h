@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMOVIEFORMAT_H
-#define VUOMOVIEFORMAT_H
+#pragma once
 
 #include "VuoMovieImageEncoding.h"
 #include "VuoAudioEncoding.h"
@@ -69,5 +68,4 @@ static inline VuoMovieFormat VuoMovieFormat_make(	VuoMovieImageEncoding imgEncod
  * @}
  */
 
-#endif // VuoMovieFormat_H
 

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
+#pragma once
 
 #include <QtOpenGL/QGLBuffer>
 #include <QtOpenGL/QGLShaderProgram>
@@ -41,6 +40,5 @@ private:
 	VuoRunner::Port *inputImagePort;
 	GLint positionAttribute;
 	GLint textureUniform;
+	CGLContextObj cgl_ctx;
 };
-
-#endif // GLWIDGET_H

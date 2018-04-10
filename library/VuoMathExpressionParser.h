@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMATHEXPRESSIONPARSER_H
-#define VUOMATHEXPRESSIONPARSER_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C"
@@ -35,6 +34,7 @@ VuoMathExpressionParser VuoMathExpressionParser_makeFromMultipleExpressions(VuoL
 VuoList_VuoText VuoMathExpressionParser_getInputVariables(VuoMathExpressionParser m);
 VuoList_VuoText VuoMathExpressionParser_getOutputVariables(VuoMathExpressionParser m);
 VuoDictionary_VuoText_VuoReal VuoMathExpressionParser_calculate(VuoMathExpressionParser m, VuoDictionary_VuoText_VuoReal inputValues);
+VuoList_VuoReal VuoMathExpressionParser_calculateList(VuoMathExpressionParser m, VuoList_VuoReal xValues, VuoDictionary_VuoText_VuoReal constants);
 
 const char * VuoMathExpressionError_getMessage(VuoMathExpressionError error);
 VuoList_VuoInteger VuoMathExpressionError_getExpressionIndices(VuoMathExpressionError error);
@@ -42,6 +42,4 @@ void VuoMathExpressionError_free(VuoMathExpressionError error);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

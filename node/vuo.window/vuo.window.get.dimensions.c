@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					 "title" : "Get Window Dimensions",
 					 "keywords" : [ "width", "height", "size" ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "node" : {
 						  "exampleCompositions" : [ ]
 					 }
@@ -29,7 +29,8 @@ void nodeEvent
 		VuoOutputData(VuoReal) top,
 		VuoOutputData(VuoReal) right,
 		VuoOutputData(VuoReal) bottom,
-		VuoOutputData(VuoReal) left
+		VuoOutputData(VuoReal) left,
+		VuoOutputData(VuoBoolean) isFullscreen
 )
 {
 	if (!window)
@@ -46,4 +47,6 @@ void nodeEvent
 	*height = *width / *aspectRatio;
 	*top = *height / 2.;
 	*bottom = -*top;
+
+	*isFullscreen = VuoWindowReference_isFullscreen(window);
 }

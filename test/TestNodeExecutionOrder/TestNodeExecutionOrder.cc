@@ -64,7 +64,7 @@ public:
 		const size_t NUM_EVENTS = 100;
 		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
 		VuoCompilerComposition composition(new VuoComposition(), parser);
-		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, false, file, compiler);
+		VuoCompilerBitcodeGenerator *generator = VuoCompilerBitcodeGenerator::newBitcodeGeneratorFromComposition(&composition, true, file, compiler);
 		size_t maxNumNodeExecutions = generator->composition->getBase()->getNodes().size() * 2 * NUM_EVENTS;  // For each event, each node can be executed at most twice (feedback).
 		QVERIFY2(NUM_EVENTS <= nodeExecutions.size() && nodeExecutions.size() <= maxNumNodeExecutions,
 				 QString("%1 <= %2 <= %3").arg(NUM_EVENTS).arg(nodeExecutions.size()).arg(maxNumNodeExecutions).toUtf8().constData());

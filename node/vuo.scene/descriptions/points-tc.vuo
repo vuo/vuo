@@ -1,0 +1,37 @@
+/**
+ * @file
+ * This composition generates the description image for the vuo.scene.tc.remove node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.1" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<griddedObject>griddedObject\r" pos="915,120" _scaleToFit="false" _center="{\"x\":0.0,\"y\":0.0,\"z\":0.0}" _width="2" _columns="1" _height="4" _rows="2" _depth="2" _slices="1"];
+FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="15,210" _url="\"..\\/..\\/vuo.image\\/descriptions\\/mountains.png\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-135,165" _started_eventThrottling="enqueue"];
+MakeGridPointsObject2 [type="vuo.scene.make.grid.points.VuoShader" version="1.0.0" label="Make Grid Points Object|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<pointSize>pointSize\l|<object>object\r" pos="330,75" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[1.75,1.75,1.75]}" _rows="8" _columns="8" _pointSize="0.20000000000000001"];
+MakeList [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="793,386"];
+MakeList3 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1212,161"];
+MakeList5 [type="vuo.list.make.8.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<7>7\l|<8>8\l|<list>list\r" pos="844,131"];
+RemoveTextureCoordinates [type="vuo.scene.tc.remove" version="1.0.0" label="Remove Texture Coordinates|<refresh>refresh\l|<object>object\l|<modifiedObject>modifiedObject\r" pos="600,75"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1245,135" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="855,375" _width="206" _height="768" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SaveImage [type="vuo.image.save" version="1.0.1" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1170,390" _url="\"~\\/Desktop\\/MyImage\"" _overwriteUrl="true" _format="\"PNG\""];
+ShadeWithUnlitImage [type="vuo.shader.make.image.unlit" version="3.0.0" label="Shade with Unlit Image|<refresh>refresh\l|<image>image\l|<opacity>opacity\l|<shader>shader\r" pos="135,210" _opacity="1.0"];
+
+Arrange3DObjectsInGrid:griddedObject -> MakeList:1;
+FetchImage:image -> ShadeWithUnlitImage:image;
+FireOnStart:started -> FetchImage:refresh;
+MakeGridPointsObject2:object -> MakeList5:1;
+MakeGridPointsObject2:object -> RemoveTextureCoordinates:object;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+MakeList5:list -> Arrange3DObjectsInGrid:objects;
+MakeList:list -> RenderSceneToImage:objects;
+RemoveTextureCoordinates:modifiedObject -> MakeList5:2;
+RenderSceneToImage:image -> RenderImageToWindow:image;
+RenderSceneToImage:image -> SaveImage:saveImage;
+ShadeWithUnlitImage:shader -> MakeGridPointsObject2:material;
+}

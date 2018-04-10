@@ -1,0 +1,1 @@
+Creates an audio frame from a list of audio channels.  The audio frame's timestamp can either be explicitly set, or (when set to "Auto") will be automatically determined when the audio frame is saved to a file.

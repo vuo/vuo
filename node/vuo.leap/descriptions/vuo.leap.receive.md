@@ -1,7 +1,5 @@
 Fires an event each time the Leap Motion device provides new hand- and finger-tracking data.
 
-This node is only compatible with Mac OS X 10.7 and up.
-
 If this node is not firing events:
 
    - Confirm that the Leap device is plugged in.

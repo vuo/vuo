@@ -10,7 +10,9 @@
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #include <OpenGL/CGLMacro.h>
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <QuartzCore/CoreImage.h>
 #include <QuartzCore/CoreVideo.h>
 
@@ -550,7 +552,7 @@ private slots:
 		CVOpenGLTextureRef inputCVOGLT;
 		{
 			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-			CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false);
+			CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(false, false);
 			CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &textureCache);
 			CGLReleasePixelFormat(pf);
 			QVERIFY(ret == kCVReturnSuccess);

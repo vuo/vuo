@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERFONTS_HH
-#define VUORENDERERFONTS_HH
+#pragma once
 
 /**
  * Provides fonts for rendered items in a composition.
@@ -23,6 +22,8 @@ public:
 	static const qreal thickPenWidth;  ///< Width, in pixels at 1:1 zoom, of the top and bottom node edges.  Many other drawing metrics are based on this value.
 	static const qreal midPenWidth;  ///< Width, in pixels at 1:1 zoom, of stateful indicator bars and typecast port edges.
 
+	static const QString fontFamily;       ///< The font family used to render all text in Vuo.
+
 	static const qreal nodeTitleFontSize;  ///< Size, in typographic points, of the node's title.
 	static const qreal nodeDetailFontSize;  ///< Size, in typographic points, of the node's class name and port labels.
 	static const qreal portDetailFontSize;  ///< Size, in typographic points, of port constant flag and typeconverter text.
@@ -32,6 +33,9 @@ public:
 	QFont nodePortTitleFont(void);
 	QFont nodePortConstantFont(void);
 	QFont portPopoverFont(void);
+	QFont dialogTextFont(void);
+
+	QString getCSS(QFont font);
 
 private:
 	VuoRendererFonts(void);
@@ -40,4 +44,3 @@ private:
 	static VuoRendererFonts *sharedFonts;
 };
 
-#endif // VUORENDERERFONTS_HH

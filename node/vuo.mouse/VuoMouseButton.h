@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMOUSEBUTTON_H
-#define VUOMOUSEBUTTON_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoMouseButton_struct { void *l; } * VuoList_VuoMouseButton;
@@ -49,5 +48,3 @@ char * VuoMouseButton_getString(const VuoMouseButton value);
 /**
  * @}
  */
-
-#endif

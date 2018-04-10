@@ -21,5 +21,6 @@ LIBS += \
 	$$ROOT/type/VuoPoint2d.o \
 	$$ROOT/type/VuoInteger.o \
 	$$ROOT/type/VuoReal.o \
+	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoReal.o \
 	$$ROOT/type/VuoText.o

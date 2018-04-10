@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODURATIONTYPE_H
-#define VUODURATIONTYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoDurationType_struct { void *l; } * VuoList_VuoDurationType;
@@ -50,5 +49,3 @@ void VuoDurationType_release(VuoDurationType value);
 /**
  * @}
 */
-
-#endif

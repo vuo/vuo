@@ -1,6 +1,6 @@
 Fires events when the mouse tries to drag a layer. 
 
-This node outputs the position that a layer would be dragged to, but does not actually move the layer. To move the layer, connect this node's `Dragged Center To` output port to the `Center` input port of the node that creates the layer (such as `Make Layer`). 
+This node outputs the position that a layer would be dragged to, but does not actually move the layer. To move the layer, connect this node's `Dragged Center To` output port to the `Center` input port of the node that creates the layer (such as `Make Oval Layer`).
 
 This node checks the mouse pointer against the layer's position within the rendered layers (composite image). For example, if a layer is scaled and rotated before being rendered, then this node would check if the mouse pointer falls within the layer's scaled and rotated bounds. (However, the output of this node would be the center of the un-scaled and un-rotated layer.) 
 

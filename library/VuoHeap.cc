@@ -24,6 +24,16 @@ using namespace std;
 static set<const void *> *VuoHeap_trace;	///< Heap pointers to trace.
 
 /**
+ * How many callers have requested that termination be temporarily disabled.
+ *
+ * @see VuoEventLoop_mayBeTerminated
+ *
+ * This variable is in the VuoHeap dylib to ensure that each composition only has a single instance
+ * (since the VuoEventLoop module may be loaded multiple times per composition).
+ */
+int VuoEventLoop_terminationDisabledCount = 0;
+
+/**
  * Calls the sendError() function defined in VuoRuntime (without introducing a direct dependency on VuoRuntime).
  */
 void sendErrorWrapper(const char *message)

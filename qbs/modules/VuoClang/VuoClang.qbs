@@ -12,7 +12,7 @@ Module {
 		'-fvisibility-inlines-hidden',
 		'-Oz',
 		'-fPIC',
-		'-mmacosx-version-min=10.7',
+		'-mmacosx-version-min=10.8',
 		'-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk',
 	]
 

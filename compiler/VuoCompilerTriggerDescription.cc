@@ -7,6 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include "VuoCompilerGraph.hh"
 #include "VuoCompilerNode.hh"
 #include "VuoCompilerTriggerDescription.hh"
 #include "VuoCompilerTriggerPort.hh"
@@ -14,10 +15,25 @@
 #include "VuoType.hh"
 
 /**
+ * Private constructor.
+ */
+VuoCompilerTriggerDescription::VuoCompilerTriggerDescription(void)
+{
+	nodeIndex = ULONG_MAX - 1;
+	portContextIndex = -1;
+	eventThrottling = VuoPortClass::EventThrottling_Enqueue;
+	dataType = NULL;
+	minWorkerThreadsNeeded = -1;
+	minWorkerThreadsNeeded = -1;
+	chainCount = -1;
+}
+
+/**
  * Returns a JSON representation of @a trigger that can later be parsed to create a VuoCompilerTriggerDescription.
  */
-json_object * VuoCompilerTriggerDescription::getJson(VuoCompilerNode *triggerNode, VuoCompilerTriggerPort *trigger)
+json_object * VuoCompilerTriggerDescription::getJson(VuoCompilerNode *triggerNode, VuoCompilerTriggerPort *trigger, VuoCompilerGraph *graph)
 {
+	size_t nodeIndex = triggerNode->getIndexInOrderedNodes();
 	string nodeIdentifier = triggerNode->getGraphvizIdentifier();
 	string portName = trigger->getBase()->getClass()->getName();
 	int portContextIndex = trigger->getIndexInPortContexts();
@@ -25,14 +41,21 @@ json_object * VuoCompilerTriggerDescription::getJson(VuoCompilerNode *triggerNod
 	string eventThrottlingStr = (eventThrottling == VuoPortClass::EventThrottling_Drop ? "drop" : "enqueue");
 	VuoType *dataType = trigger->getDataVuoType();
 	string dataTypeStr = (dataType ? dataType->getModuleKey() : "event");
+	int minWorkerThreadsNeeded, maxWorkerThreadsNeeded;
+	graph->getWorkerThreadsNeeded(trigger, minWorkerThreadsNeeded, maxWorkerThreadsNeeded);
+	int chainCount = (int)graph->getChains()[trigger].size();
 
 	json_object *js = json_object_new_object();
 
+	json_object_object_add(js, "nodeIndex", json_object_new_int64(nodeIndex));
 	json_object_object_add(js, "nodeIdentifier", json_object_new_string(nodeIdentifier.c_str()));
 	json_object_object_add(js, "portName", json_object_new_string(portName.c_str()));
 	json_object_object_add(js, "portContextIndex", json_object_new_int(portContextIndex));
 	json_object_object_add(js, "eventThrottling", json_object_new_string(eventThrottlingStr.c_str()));
 	json_object_object_add(js, "dataType", json_object_new_string(dataTypeStr.c_str()));
+	json_object_object_add(js, "minWorkerThreadsNeeded", json_object_new_int(minWorkerThreadsNeeded));
+	json_object_object_add(js, "maxWorkerThreadsNeeded", json_object_new_int(maxWorkerThreadsNeeded));
+	json_object_object_add(js, "chainCount", json_object_new_int(chainCount));
 
 	return js;
 }
@@ -52,6 +75,8 @@ vector<VuoCompilerTriggerDescription *> VuoCompilerTriggerDescription::parseFrom
 
 		VuoCompilerTriggerDescription *trigger = new VuoCompilerTriggerDescription();
 
+		if (json_object_object_get_ex(itemJs, "nodeIndex", &o))
+			trigger->nodeIndex = json_object_get_int64(o);
 		if (json_object_object_get_ex(itemJs, "nodeIdentifier", &o))
 			trigger->nodeIdentifier = json_object_get_string(o);
 		if (json_object_object_get_ex(itemJs, "portName", &o))
@@ -68,6 +93,12 @@ vector<VuoCompilerTriggerDescription *> VuoCompilerTriggerDescription::parseFrom
 			string dataTypeStr = json_object_get_string(o);
 			trigger->dataType = (dataTypeStr == "event" ? NULL : new VuoType(dataTypeStr));
 		}
+		if (json_object_object_get_ex(itemJs, "minWorkerThreadsNeeded", &o))
+			trigger->minWorkerThreadsNeeded = json_object_get_int(o);
+		if (json_object_object_get_ex(itemJs, "maxWorkerThreadsNeeded", &o))
+			trigger->maxWorkerThreadsNeeded = json_object_get_int(o);
+		if (json_object_object_get_ex(itemJs, "chainCount", &o))
+			trigger->chainCount = json_object_get_int(o);
 		if (json_object_object_get_ex(itemJs, "subcompositionNodeClassName", &o))
 			trigger->subcompositionNodeClassName = json_object_get_string(o);
 		if (json_object_object_get_ex(itemJs, "subcompositionNodeIdentifier", &o))
@@ -95,15 +126,27 @@ json_object * VuoCompilerTriggerDescription::getJsonWithinSubcomposition(VuoComp
 
 	json_object *js = json_object_new_object();
 
+	json_object_object_add(js, "nodeIndex", json_object_new_int64(nodeIndex));
 	json_object_object_add(js, "nodeIdentifier", json_object_new_string(nodeIdentifier.c_str()));
 	json_object_object_add(js, "portName", json_object_new_string(portName.c_str()));
 	json_object_object_add(js, "portContextIndex", json_object_new_int(portContextIndex));
 	json_object_object_add(js, "eventThrottling", json_object_new_string(eventThrottlingStr.c_str()));
 	json_object_object_add(js, "dataType", json_object_new_string(dataTypeStr.c_str()));
+	json_object_object_add(js, "minWorkerThreadsNeeded", json_object_new_int(minWorkerThreadsNeeded));
+	json_object_object_add(js, "maxWorkerThreadsNeeded", json_object_new_int(maxWorkerThreadsNeeded));
+	json_object_object_add(js, "chainCount", json_object_new_int(chainCount));
 	json_object_object_add(js, "subcompositionNodeClassName", json_object_new_string(subcompositionNodeClassNameStr.c_str()));
 	json_object_object_add(js, "subcompositionNodeIdentifier", json_object_new_string(subcompositionNodeIdentifierStr.c_str()));
 
 	return js;
+}
+
+/**
+ * Returns the index (in the compiler's list of ordered nodes) of the node on which the trigger port appears.
+ */
+size_t VuoCompilerTriggerDescription::getNodeIndex(void)
+{
+	return nodeIndex;
 }
 
 /**
@@ -152,6 +195,26 @@ VuoType * VuoCompilerTriggerDescription::getDataType(void)
 void VuoCompilerTriggerDescription::setDataType(VuoType *dataType)
 {
 	this->dataType = dataType;
+}
+
+/**
+ * Gives the minimum and maximum number of threads needed for an event from this trigger to propagate
+ * through the composition.
+ *
+ * @see `VuoCompilerGraph::getWorkerThreadsNeeded(VuoCompilerTriggerPort *, int&, int&)`
+ */
+void VuoCompilerTriggerDescription::getWorkerThreadsNeeded(int &minThreadsNeeded, int &maxThreadsNeeded)
+{
+	minThreadsNeeded = this->minWorkerThreadsNeeded;
+	maxThreadsNeeded = this->maxWorkerThreadsNeeded;
+}
+
+/**
+ * Returns the number of chains of nodes downstream of the trigger port.
+ */
+int VuoCompilerTriggerDescription::getChainCount(void)
+{
+	return chainCount;
 }
 
 /**

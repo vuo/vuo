@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Expected outputs for the vuo.text.find node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+	{"firingPort":"text", "inputPortValues":{"text":null,   "textToFind":null}, "outputPortValues": {"occurrences":[]     }},
+	{"firingPort":"text", "inputPortValues":{"text":null,   "textToFind":""  }, "outputPortValues": {"occurrences":[]     }},
+	{"firingPort":"text", "inputPortValues":{"text":"",     "textToFind":null}, "outputPortValues": {"occurrences":[]     }},
+	{"firingPort":"text", "inputPortValues":{"text":"",     "textToFind":""  }, "outputPortValues": {"occurrences":[]     }},
+
+	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":""  }, "outputPortValues": {"occurrences":[]     }},
+	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":"1" }, "outputPortValues": {"occurrences":[]     }},
+
+	{"firingPort":"text", "inputPortValues":{"text":"a",    "textToFind":"a" }, "outputPortValues": {"occurrences":[1]    }},
+	{"firingPort":"text", "inputPortValues":{"text":"aa",   "textToFind":"a" }, "outputPortValues": {"occurrences":[1,2]  }},
+	{"firingPort":"text", "inputPortValues":{"text":"aa",   "textToFind":"aa"}, "outputPortValues": {"occurrences":[1]    }},
+	{"firingPort":"text", "inputPortValues":{"text":"aaaa", "textToFind":"aa"}, "outputPortValues": {"occurrences":[1,2,3]}},
+	{"firingPort":"text", "inputPortValues":{"text":"abab", "textToFind":"ab"}, "outputPortValues": {"occurrences":[1,3]  }},
+]}

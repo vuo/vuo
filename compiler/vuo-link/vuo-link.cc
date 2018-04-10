@@ -17,10 +17,10 @@ void printHelp(char *argv0)
 		   "  --help                         Display this information.\n"
 		   "  --list-node-classes[=dot]      Display a list of all loaded node classes, optionally with the declaration of each as it would appear in a .vuo file.\n"
 		   "  --output <file>                Place the compiled code into <file>.\n"
-//		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.7.0').\n"
+//		   "  --target <arg>                 Target the given architecture, vendor, and OS (e.g. 'x86_64-apple-macosx10.8.0').\n"
 		   "  --format <arg>                 Output the given type of binary file. <arg> can be 'executable' or 'dylib'. The default is 'executable'.\n"
 		   "  --library-search-path <dir>    Search for libraries in <dir>. This option may be specified more than once.\n"
-		   "  --framework-search-path <dir>  Search for Mac OS X frameworks in <dir>. This option may be specified more than once.\n"
+		   "  --framework-search-path <dir>  Search for macOS frameworks in <dir>. This option may be specified more than once.\n"
 		   "  --optimization <arg>           Optimize for a faster build that links against a cache file ('fast-build') or a standalone binary that does not ('small-binary'). The default is 'fast-build'.\n"
 		   "  --verbose                      Output diagnostic information.\n",
 		   argv0);

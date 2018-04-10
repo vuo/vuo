@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERVALUELISTFORREADONLYDICTIONARY_HH
-#define VUORENDERERVALUELISTFORREADONLYDICTIONARY_HH
+#pragma once
 
 #include "VuoRendererInputDrawer.hh"
 #include "VuoRendererKeyListForReadOnlyDictionary.hh"
@@ -37,4 +36,3 @@ private:
 	string getRenderedPortNameFormForText(string text);
 };
 
-#endif // VUORENDERERVALUELISTFORREADONLYDICTIONARY_HH

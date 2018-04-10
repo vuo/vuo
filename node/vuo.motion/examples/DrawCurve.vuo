@@ -9,14 +9,14 @@
 
 digraph G
 {
-BlendImageWithFeedback [type="vuo.image.feedback" version="1.0.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1230,180" _feedbackOpacity="0.8" _imageInForeground="true" _colorDepth="\"8bpc\""];
+BlendImageWithFeedback [type="vuo.image.feedback" version="1.1.0" label="Blend Image with Feedback|<refresh>refresh\l|<image>image\l|<imageTransform>imageTransform\l|<feedbackTransform>feedbackTransform\l|<feedbackOpacity>feedbackOpacity\l|<feedbackBlendMode>feedbackBlendMode\l|<pixelAligned>pixelAligned\l|<imageInForeground>imageInForeground\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<feedbackImage>feedbackImage\r" pos="1230,180" _feedbackOpacity="0.8" _feedbackBlendMode="\"normal\"" _pixelAligned="false" _imageInForeground="true" _width="0" _height="0" _colorDepth="\"8bpc\""];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,165" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\""];
 Curve3 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="390,315" fillcolor="violet" _startPosition="-0.500000" _endPosition="0.500000" _duration="4.000000" _curve="\"quadratic\"" _easing="\"in\"" _loop="\"loop\""];
 Make2DPoint [type="vuo.point.make.VuoPoint2d" version="2.0.0" label="Make 2D Point|<refresh>refresh\l|<x>x\l|<y>y\l|<point>point\r" pos="525,255"];
 MakeList11 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="921,236"];
 MakeOvalLayer [type="vuo.layer.make.oval" version="1.0.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="750,225" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _rotation="0.0" _width="0.029999999999999999" _height="0.029999999999999999" _sharpness="1.0"];
 RenderLayersToImage2 [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="990,225" _colorDepth="\"8bpc\"" _multisampling="\"1\""];
-PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _height_type="VuoInteger"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<time>time\r|<width>width\r|<height>height\r" _time_type="VuoReal" _width_type="VuoInteger" _width_suggestedMin="1" _width_suggestedMax="4096" _width_suggestedStep="256" _height_type="VuoInteger" _height_suggestedMin="1" _height_suggestedMax="4096" _height_suggestedStep="256"];
 PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 
 Curve2:value -> Make2DPoint:x;
@@ -28,8 +28,6 @@ RenderLayersToImage2:image -> BlendImageWithFeedback:image;
 PublishedInputs:time -> Curve3:time;
 PublishedInputs:time -> Curve2:time;
 PublishedInputs:width -> RenderLayersToImage2:width;
-PublishedInputs:width -> BlendImageWithFeedback:width;
 PublishedInputs:height -> RenderLayersToImage2:height;
-PublishedInputs:height -> BlendImageWithFeedback:height;
 BlendImageWithFeedback:feedbackImage -> PublishedOutputs:outputImage;
 }

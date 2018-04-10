@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOIMAGECOLORDEPTH_H
-#define VUOIMAGECOLORDEPTH_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoImageColorDepth_struct { void *l; } * VuoList_VuoImageColorDepth;
@@ -28,7 +27,8 @@ typedef const struct VuoList_VuoImageColorDepth_struct { void *l; } * VuoList_Vu
  */
 typedef enum {
 	VuoImageColorDepth_8,			//  8 bits per channel (32 bits per RGBA pixel)
-	VuoImageColorDepth_16			// 16 bits per channel (64 bits per RGBA pixel)
+	VuoImageColorDepth_16,			// 16 bits per channel (64 bits per RGBA pixel)
+	VuoImageColorDepth_32,			// 32 bits per channel (128 bits per RGBA pixel)
 } VuoImageColorDepth;
 
 unsigned int VuoImageColorDepth_getGlInternalFormat(unsigned int baseFormat, VuoImageColorDepth imageColorDepth);
@@ -51,6 +51,3 @@ void VuoImageColorDepth_release(VuoImageColorDepth value);
 /**
  * @}
  */
-
-#endif // VUOIMAGECOLORDEPTH_H
-

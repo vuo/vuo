@@ -75,7 +75,7 @@ QSlider* VuoInputEditorTransform::initSlider(coord whichCoord, QDialog& dialog, 
 	double range = max - min;
 
 	QSlider* slider = new QSlider(&dialog);
-	slider->setAttribute(Qt::WA_MacSmallSize);
+	// slider->setAttribute(Qt::WA_MacSmallSize);
 	slider->setOrientation(Qt::Horizontal);
 	slider->setFocusPolicy(Qt::NoFocus);
 	slider->setMinimum(0);
@@ -204,13 +204,13 @@ void VuoInputEditorTransform::setUpDialog(QDialog& dialog, json_object *original
 
 	unsigned int row = 0;
 
-	layout->addWidget(makeLabel("x"), row, 1, Qt::AlignHCenter);
-	layout->addWidget(makeLabel("y"), row, 2, Qt::AlignHCenter);
-	layout->addWidget(makeLabel("z"), row, 3, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("X"), row, 1, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("Y"), row, 2, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("Z"), row, 3, Qt::AlignHCenter);
 
 	row++;
 
-	layout->addWidget(makeLabel("translation"), row, 0);
+	layout->addWidget(makeLabel("Translation"), row, 0);
 	layout->addWidget( spinboxForCoord[xTranslation], row, 1);
 	layout->addWidget( spinboxForCoord[yTranslation], row, 2);
 	layout->addWidget( spinboxForCoord[zTranslation], row, 3);
@@ -223,7 +223,7 @@ void VuoInputEditorTransform::setUpDialog(QDialog& dialog, json_object *original
 
 	row++;
 
-	layout->addWidget(makeLabel("rotation"), row, 0);
+	layout->addWidget(makeLabel("Rotation"), row, 0);
 	layout->addWidget( spinboxForCoord[xRotation], row, 1);
 	layout->addWidget( spinboxForCoord[yRotation], row, 2);
 	layout->addWidget( spinboxForCoord[zRotation], row, 3);
@@ -238,7 +238,7 @@ void VuoInputEditorTransform::setUpDialog(QDialog& dialog, json_object *original
 
 	row++;
 
-	layout->addWidget(makeLabel("scale"), row, 0);
+	layout->addWidget(makeLabel("Scale"), row, 0);
 	layout->addWidget( spinboxForCoord[xScale], row, 1);
 	layout->addWidget( spinboxForCoord[yScale], row, 2);
 	layout->addWidget( spinboxForCoord[zScale], row, 3);
@@ -251,8 +251,8 @@ void VuoInputEditorTransform::setUpDialog(QDialog& dialog, json_object *original
 
 	row++;
 
-	dialog.setMaximumWidth(312);
-	dialog.setMaximumHeight(226);
+	dialog.setMaximumWidth(1);
+	dialog.setMaximumHeight(1);
 
 	dialog.adjustSize();
 

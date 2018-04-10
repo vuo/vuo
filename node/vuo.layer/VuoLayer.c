@@ -72,6 +72,26 @@ VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal 
 
 /**
  * Creates a visible layer that shows an image.
+ *
+ * @param name The layer's name (used by, e.g., @ref VuoRenderedLayers_findLayer).
+ * @param image The image shown on the layer.
+ * @param transform The 2d transform that specifies translation, rotation, and scale relative to this layer's parent.
+ * @param alpha The opacity of the layer, 0–1.
+ */
+VuoLayer VuoLayer_makeWithTransform(VuoText name, VuoImage image, VuoTransform2d transform, VuoReal alpha)
+{
+	VuoLayer o;
+	VuoPoint3d center3d = VuoPoint3d_make(transform.translation.x, transform.translation.y, 0);
+	// VuoSceneObject_makeImage wants rotation in degrees
+	VuoPoint3d rotation3d = VuoPoint3d_make(0, 0, transform.rotation * 57.295779513f);
+	o.sceneObject = VuoSceneObject_makeImage(image, center3d, rotation3d, 2, alpha);
+	o.sceneObject.transform.scale = VuoPoint3d_make(transform.scale.x, transform.scale.y, 1);
+	o.sceneObject.name = name;
+	return o;
+}
+
+/**
+ * Creates a visible layer that shows an image.
  * The layer is the exact pixel-perfect size of the image (regardless of transform),
  * and the position is quantized so edges land on whole pixels.
  *
@@ -79,11 +99,13 @@ VuoLayer VuoLayer_make(VuoText name, VuoImage image, VuoPoint2d center, VuoReal 
  * @param image The image shown on the layer.
  * @param center The center of the layer, in Vuo Coordinates.
  * @param alpha The opacity of the layer, 0–1.
+ * @param preservePhysicalSize See @ref VuoSceneObject::preservePhysicalSize
  */
-VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha)
+VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoBoolean preservePhysicalSize)
 {
 	VuoLayer l = VuoLayer_make(name,image,center,0,0,alpha);
 	l.sceneObject.isRealSize = true;
+	l.sceneObject.preservePhysicalSize = preservePhysicalSize;
 	return l;
 }
 
@@ -96,13 +118,14 @@ VuoLayer VuoLayer_makeRealSize(VuoText name, VuoImage image, VuoPoint2d center, 
  * @param rotation The layer's angle, in degrees.
  * @param width The width of the layer, in Vuo Coordinates.
  * @param alpha The opacity of the layer, 0–1.
+ * @param preservePhysicalSize See @ref VuoSceneObject::preservePhysicalSize
  * @param shadowColor The color of the layer's shadow.
  * @param shadowBlur The amount to blur the layer's shadow, in pixels.
  * @param shadowAngle The angle of the layer's shadow, in degrees.
  * @param shadowDistance The distance that the shadow is offset from the layer, in Vuo Coordinates.
  * @param isRealSize Should this layer be rendered at actual (pixel-perfect) size?
  */
-static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance, VuoBoolean isRealSize)
+static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoBoolean preservePhysicalSize, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance, VuoBoolean isRealSize)
 {
 	if (!image)
 		return VuoLayer_makeEmpty();
@@ -121,6 +144,7 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 	VuoPoint2d layerCenter = VuoPoint2d_make(layerCenter3d.x, layerCenter3d.y);
 	VuoLayer layer = VuoLayer_make(name, image, layerCenter, rotation, width, alpha);
 	layer.sceneObject.isRealSize = isRealSize;
+	layer.sceneObject.preservePhysicalSize = preservePhysicalSize;
 
 	VuoList_VuoColor colors = VuoListCreate_VuoColor();
 	VuoRetain(colors);
@@ -131,7 +155,7 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 
 	VuoImageBlur *ib = VuoImageBlur_make();
 	VuoRetain(ib);
-	VuoImage blurredImage = VuoImageBlur_blur(ib, recoloredImage, shadowBlur, TRUE);
+	VuoImage blurredImage = VuoImageBlur_blur(ib, recoloredImage, NULL, VuoBlurShape_Gaussian, shadowBlur, 1, TRUE);
 	VuoRelease(ib);
 	float shadowAngleInRadians = shadowAngle * M_PI/180.;
 	VuoPoint3d shadowOffset3d = VuoPoint3d_make(shadowDistance * cos(shadowAngleInRadians),
@@ -142,6 +166,7 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
 	VuoReal shadowWidth = width * blurredImage->pixelsWide/image->pixelsWide;
 	VuoLayer shadow = VuoLayer_make(NULL, blurredImage, shadowCenter, rotation, shadowWidth, alpha);
 	shadow.sceneObject.isRealSize = isRealSize;
+	shadow.sceneObject.preservePhysicalSize = preservePhysicalSize;
 
 	VuoList_VuoLayer layers = VuoListCreate_VuoLayer();
 	VuoRetain(layers);
@@ -172,7 +197,7 @@ static VuoLayer VuoLayer_makeWithShadowInternal(VuoText name, VuoImage image, Vu
  */
 VuoLayer VuoLayer_makeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance)
 {
-	return VuoLayer_makeWithShadowInternal(name,image,center,rotation,width,alpha,shadowColor,shadowBlur,shadowAngle,shadowDistance,false);
+	return VuoLayer_makeWithShadowInternal(name,image,center,rotation,width,alpha,false,shadowColor,shadowBlur,shadowAngle,shadowDistance,false);
 }
 
 /**
@@ -184,14 +209,15 @@ VuoLayer VuoLayer_makeWithShadow(VuoText name, VuoImage image, VuoPoint2d center
  * @param image The image shown on the layer.
  * @param center The center of the layer, in Vuo Coordinates.
  * @param alpha The opacity of the layer, 0–1.
+ * @param preservePhysicalSize See @ref VuoSceneObject::preservePhysicalSize
  * @param shadowColor The color of the layer's shadow.
  * @param shadowBlur The amount to blur the layer's shadow, in pixels.
  * @param shadowAngle The angle of the layer's shadow, in degrees.
  * @param shadowDistance The distance that the shadow is offset from the layer, in Vuo Coordinates.
  */
-VuoLayer VuoLayer_makeRealSizeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance)
+VuoLayer VuoLayer_makeRealSizeWithShadow(VuoText name, VuoImage image, VuoPoint2d center, VuoReal alpha, VuoBoolean preservePhysicalSize, VuoColor shadowColor, VuoReal shadowBlur, VuoReal shadowAngle, VuoReal shadowDistance)
 {
-	return VuoLayer_makeWithShadowInternal(name,image,center,0,1,alpha,shadowColor,shadowBlur,shadowAngle,shadowDistance,true);
+	return VuoLayer_makeWithShadowInternal(name,image,center,0,1,alpha,preservePhysicalSize,shadowColor,shadowBlur,shadowAngle,shadowDistance,true);
 }
 
 /**
@@ -292,9 +318,11 @@ VuoLayer VuoLayer_makeRoundedRectangle(VuoText name, VuoColor color, VuoPoint2d 
  */
 VuoLayer VuoLayer_makeLinearGradient(VuoText name, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal noiseAmount)
 {
+	VuoShader shader = VuoShader_makeLinearGradientShader();
+	VuoShader_setLinearGradientShaderValues(shader, colors, start, end, noiseAmount);
 	VuoLayer o;
 	o.sceneObject = VuoSceneObject_makeQuad(
-				VuoShader_makeLinearGradientShader(colors, start, end, noiseAmount),
+				shader,
 				VuoPoint3d_make(center.x, center.y, 0),
 				VuoPoint3d_make(0, 0, rotation),
 				width,
@@ -319,9 +347,11 @@ VuoLayer VuoLayer_makeLinearGradient(VuoText name, VuoList_VuoColor colors, VuoP
  */
 VuoLayer VuoLayer_makeRadialGradient(VuoText name, VuoList_VuoColor colors, VuoPoint2d gradientCenter, VuoReal radius, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal noiseAmount)
 {
+	VuoShader shader = VuoShader_makeRadialGradientShader();
+	VuoShader_setRadialGradientShaderValues(shader, colors, gradientCenter, radius, width, height, noiseAmount);
 	VuoLayer o;
 	o.sceneObject = VuoSceneObject_makeQuad(
-				VuoShader_makeRadialGradientShader(colors, gradientCenter, radius, width, height, noiseAmount),
+				shader,
 				VuoPoint3d_make(center.x, center.y, 0),
 				VuoPoint3d_make(0, 0, rotation),
 				width,
@@ -347,6 +377,26 @@ VuoLayer VuoLayer_makeGroup(VuoList_VuoLayer childLayers, VuoTransform2d transfo
 }
 
 /**
+ * Returns a list of this layer's child layers.
+ */
+VuoList_VuoLayer VuoLayer_getChildLayers(VuoLayer layer)
+{
+	unsigned long childLayerCount = VuoListGetCount_VuoSceneObject(layer.sceneObject.childObjects);
+	if (childLayerCount == 0)
+		return NULL;
+
+	VuoList_VuoLayer childLayers = VuoListCreateWithCount_VuoLayer(childLayerCount, VuoLayer_makeEmpty());
+	VuoLayer *childLayersData = VuoListGetData_VuoLayer(childLayers);
+	VuoSceneObject *objects = VuoListGetData_VuoSceneObject(layer.sceneObject.childObjects);
+	for (unsigned int i = 0; i < childLayerCount; ++i)
+	{
+		childLayersData[i] = (VuoLayer){objects[i]};
+		VuoLayer_retain(childLayersData[i]);
+	}
+	return childLayers;
+}
+
+/**
  * Returns a rectangle enclosing the sceneobject (which is assumed to be 2-dimensional).
  */
 static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject so, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
@@ -355,9 +405,9 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 
 	float matrix[16];
 
-	if (so.type == VuoSceneObjectType_Text)
+	if (so.type == VuoSceneObjectSubType_Text)
 	{
-		b = VuoImage_getTextRectangle(so.text, so.font);
+		b = VuoImage_getTextRectangle(so.text, so.font, true);
 		b.size = VuoPoint2d_multiply(b.size, backingScaleFactor * 2./(viewportWidth));
 	}
 
@@ -365,11 +415,11 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 	{
 		VuoImage image = VuoShader_getUniform_VuoImage(so.shader, "texture");
 		if (image && so.isRealSize)
-			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, so.transform.translation.x, so.transform.translation.y, viewportWidth, viewportHeight, matrix);
+			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, so.transform.translation.x, so.transform.translation.y, viewportWidth, viewportHeight, backingScaleFactor, matrix);
 		else
 			VuoTransform_getMatrix(so.transform, matrix);
 
-		b = VuoTransform_transformRectangle(matrix, VuoRectangle_make(0,0,1,1));
+		b = VuoTransform_transformRectangle(matrix, VuoRectangle_make(0,0,so.shader->objectScale,so.shader->objectScale));
 	}
 	else
 		VuoTransform_getMatrix(so.transform, matrix);
@@ -387,6 +437,53 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 	}
 
 	return b;
+}
+
+/**
+ * Moves the pivot point of `child` by creating a parent layer and assigning child
+ * with an offset.
+ *
+ * If anchor is { Center, Center } the unmodified layer is returned.
+ */
+VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
+{
+	if( anchor.horizontalAlignment == VuoHorizontalAlignment_Center &&
+		anchor.verticalAlignment == VuoVerticalAlignment_Center )
+		return child;
+
+	VuoTransform childTransform = child.sceneObject.transform;
+	child.sceneObject.transform = VuoTransform_makeIdentity();
+
+	VuoRectangle rect = VuoLayer_getBoundingRectangle(child, viewportWidth, viewportHeight, backingScaleFactor);
+
+	VuoPoint3d childTranslation = childTransform.translation;
+	VuoPoint2d boundsCenter = rect.center;
+	VuoPoint3d parentTranslation = VuoPoint3d_make(childTranslation.x - boundsCenter.x, childTranslation.y - boundsCenter.y, 0);
+
+	if(anchor.horizontalAlignment == VuoHorizontalAlignment_Left)
+		boundsCenter.x += rect.size.x * .5f;
+	else if(anchor.horizontalAlignment == VuoHorizontalAlignment_Right)
+		boundsCenter.x -= rect.size.x * .5f;
+
+	if(anchor.verticalAlignment == VuoVerticalAlignment_Top)
+		boundsCenter.y -= rect.size.y * .5f;
+	else if(anchor.verticalAlignment == VuoVerticalAlignment_Bottom)
+		boundsCenter.y += rect.size.y * .5f;
+
+	child.sceneObject.transform.translation = VuoPoint3d_make(boundsCenter.x, boundsCenter.y, 0);
+
+	VuoTransform parentTransform = childTransform;
+	parentTransform.translation = parentTranslation;
+
+	VuoLayer parent;
+	parent.sceneObject = VuoSceneObject_makeGroup(VuoListCreate_VuoSceneObject(), parentTransform);
+
+	parent.sceneObject.name = child.sceneObject.name;
+	child.sceneObject.name = VuoText_make(VuoText_format("%s (Child)", parent.sceneObject.name));
+
+	VuoListAppendValue_VuoSceneObject(parent.sceneObject.childObjects, child.sceneObject);
+
+	return parent;
 }
 
 /**

@@ -175,9 +175,9 @@ private slots:
 		QTest::addColumn< bool >("shouldBeCompatibleWith109");
 
 		QTest::newRow("any") << "vuo.math.add.VuoInteger" << true << true << true << true;
-		QTest::newRow("Mac OS X 10.7") << "vuo.test.compatibleWith107" << false << true << false << false;
-		QTest::newRow("Mac OS X 10.7 and 10.8") << "vuo.test.compatibleWith107And108" << false << true << true << false;
-		QTest::newRow("Mac OS X 10.7 and up") << "vuo.test.compatibleWith107AndUp" << false << true << true << true;
+		QTest::newRow("macOS 10.7") << "vuo.test.compatibleWith107" << false << true << false << false;
+		QTest::newRow("macOS 10.7 and 10.8") << "vuo.test.compatibleWith107And108" << false << true << true << false;
+		QTest::newRow("macOS 10.7 and up") << "vuo.test.compatibleWith107AndUp" << false << true << true << true;
 	}
 	void testCompatibleOperatingSystems()
 	{

@@ -53,7 +53,7 @@ QSlider* VuoInputEditorPoint3d::initSlider(coord whichCoord, QDialog& dialog, do
 	double range = max - min;
 
 	QSlider* slider = new QSlider(&dialog);
-	slider->setAttribute(Qt::WA_MacSmallSize);
+	// slider->setAttribute(Qt::WA_MacSmallSize);
 	slider->setOrientation(Qt::Horizontal);
 	slider->setFocusPolicy(Qt::NoFocus);
 	slider->setMinimum(0);
@@ -146,19 +146,19 @@ void VuoInputEditorPoint3d::setUpDialog(QDialog &dialog, json_object *originalVa
 	// when showing sliders, add a little extra margin on the bottom since QSlider takes up the
 	// entire vertical spacing
 	layout->setContentsMargins(4, 4, 16, 4);
-	layout->setSpacing(8);
+	layout->setSpacing(4);
 
 	int row = 0;
 
-	layout->addWidget(makeLabel("x"), row, 0, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("X"), row, 0, Qt::AlignHCenter);
 	layout->addWidget(spinboxForCoord[coord_x], row++, 1);
 	if(hasMinMax) layout->addWidget(sliderForCoord[coord_x], row++, 1);
 
-	layout->addWidget(makeLabel("y"), row, 0, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("Y"), row, 0, Qt::AlignHCenter);
 	layout->addWidget(spinboxForCoord[coord_y], row++, 1);
 	if(hasMinMax) layout->addWidget(sliderForCoord[coord_y], row++, 1);
 
-	layout->addWidget(makeLabel("z"), row, 0, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("Z"), row, 0, Qt::AlignHCenter);
 	layout->addWidget(spinboxForCoord[coord_z], row++, 1);
 	if(hasMinMax) layout->addWidget(sliderForCoord[coord_z], row++, 1);
 
@@ -256,7 +256,7 @@ void VuoInputEditorPoint3d::onSpinboxUpdate(QString spinboxValue)
 		connect(targetSlider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
 	}
 
-	emit valueChanged( getAcceptedValue() );
+	emitValueChanged();
 }
 
 /**

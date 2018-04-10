@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMOVIEIMAGEENCODING_H
-#define VUOMOVIEIMAGEENCODING_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoMovieImageEncoding_struct { void *l; } * VuoList_VuoMovieImageEncoding;
@@ -51,5 +50,3 @@ void VuoMovieImageEncoding_release(VuoMovieImageEncoding value);
 /**
  * @}
 */
-
-#endif

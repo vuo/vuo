@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Invert Image Colors",
 					 "keywords" : [ "reverse", "negative", "filter" ],
-					 "version" : "1.1.1",
+					 "version" : "1.1.2",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 }
@@ -66,7 +66,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*invertedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 

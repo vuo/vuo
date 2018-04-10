@@ -262,7 +262,7 @@ VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, V
  */
 VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 {
-	if (!rfc822 || rfc822[0] == 0)
+	if (VuoText_isEmpty(rfc822))
 		return NAN;
 
 	struct tm tm;
@@ -520,8 +520,8 @@ VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format,
 	locale_t locale = newlocale(LC_ALL_MASK, localeIdentifier, NULL);
 	static dispatch_once_t loggedLocale = 0;
 	dispatch_once(&loggedLocale, ^{
-		VUserLog("OS X Locale: %s", localeIdentifier);
-		VUserLog("   C Locale: %s", querylocale(LC_ALL_MASK, locale));
+		VUserLog("macOS Locale: %s", localeIdentifier);
+		VUserLog("    C Locale: %s", querylocale(LC_ALL_MASK, locale));
 	});
 
 	const char *dateFormatString   = nl_langinfo_l(D_FMT,      locale);

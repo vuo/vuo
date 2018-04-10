@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMIDIOUTPUTDEVICE_H
-#define VUOMIDIOUTPUTDEVICE_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -61,4 +60,3 @@ static inline VuoMidiOutputDevice VuoMidiOutputDevice_make(VuoInteger id, VuoTex
  * @}
  */
 
-#endif // VUOMIDIOUTPUTDEVICE_H

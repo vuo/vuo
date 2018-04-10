@@ -13,8 +13,8 @@
 
 VuoModuleMetadata({
 					"title" : "Make 3D Square",
-					"keywords" : [ "heightmap", "plane", "subdivision", "rectangle" ],
-					"version" : "1.0.0",
+					"keywords" : [ "heightmap", "plane", "subdivision", "rectangle", "grid" ],
+					"version" : "1.0.1",
 					"genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -85,23 +85,14 @@ void nodeEvent
 		}
 	}
 
-	// build the mesh!
-	VuoSubmesh submesh;
-
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.normals = normals;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
-	submesh.faceCullingMode = GL_BACK;
-	submesh.elementCount = elementCount;
-	submesh.elements = elements;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, normals, NULL, NULL, textures,
+													elementCount, elements, VuoMesh_IndividualTriangles);
 
 	VuoMeshUtility_calculateTangents(&submesh);
 
 	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
 
 	*object = VuoSceneObject_make(mesh, VuoShader_make_VuoGenericType1(material), transform, NULL);
+	object->name = VuoText_make("Square");
 }

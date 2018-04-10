@@ -9,27 +9,31 @@
 
 digraph G
 {
-ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="421,410"];
-ConvertFrameToImage3 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="703,151"];
-FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="60,136" fillcolor="yellow" _started_eventThrottling="enqueue"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="805,312" fillcolor="green"];
-MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="835,327" fillcolor="green"];
-MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Scaled Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="607,255" _center="{\"x\":0.000000,\"y\":0.200000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="620,392" _text="\"A movie is being recorded and saved on your Desktop.\\nWhen you stop the composition, you can open the movie and watch it.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _center="{\"x\":0.000000,\"y\":-0.400000}"];
-ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.0" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="247,135" fillcolor="yellow" _receivedChannels_eventThrottling="drop"];
-ReceiveLiveVideo [type="vuo.video.receive" version="1.0.1" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="263,39" fillcolor="yellow" _receivedFrame_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="876,301" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-SaveToMovie [type="vuo.video.save" version="1.0.0" label="Save to Movie|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<saveAudio>saveAudio\l|<finalize>finalize\l|<overwriteUrl>overwriteUrl\l|<format>format\l" pos="604,26" fillcolor="violet" _url="\"~\\/Desktop\\/RecordedMovie.mov\"" _overwriteUrl="false" _format="{\"imageEncoding\":\"H264\",\"imageQuality\":1,\"audioEncoding\":\"LinearPCM\",\"audioQuality\":1}"];
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="495,465"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="420,405"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-150,135" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeAudioFrame [type="vuo.video.make.audioframe" version="1.0.0" label="Make Audio Frame|<refresh>refresh\l|<channels>channels\l|<timestamp>timestamp\l|<audioFrame>audioFrame\r" pos="360,135" _timestamp="\"-inf\""];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="532,371" fillcolor="green"];
+MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="557,401" fillcolor="green"];
+MakeScaledLayer [type="vuo.layer.make" version="2.0.0" label="Make Image Layer|<refresh>refresh\l|<name>name\l|<image>image\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<opacity>opacity\l|<layer>layer\r" pos="360,225" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.200000}" _rotation="0.000000" _width="1.000000" _opacity="1.000000"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="360,375" _text="\"A movie is being recorded and saved on your Desktop.\\nWhen you stop the composition, you can open the movie and watch it.\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":-0.400000}"];
+MakeVideoFrame [type="vuo.video.make.videoframe" version="1.0.0" label="Make Video Frame|<refresh>refresh\l|<image>image\l|<timestamp>timestamp\l|<videoFrame>videoFrame\r" pos="360,45" _timestamp="\"-inf\""];
+ReceiveLiveAudio [type="vuo.audio.receive" version="1.0.1" label="Receive Live Audio|<refresh>refresh\l|<device>device\l|<receivedChannels>receivedChannels\r" pos="60,135" fillcolor="yellow" _receivedChannels_eventThrottling="drop"];
+ReceiveLiveVideo [type="vuo.video.receive" version="1.0.2" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="60,45" fillcolor="yellow" _device="null" _receivedFrame_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="585,360" fillcolor="green" _multisampling="\"off\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SaveToMovie2 [type="vuo.video.save2" version="2.0.0" label="Save to Movie|<refresh>refresh\l|<url>url\l|<saveVideoFrame>saveVideoFrame\l|<saveAudioFrame>saveAudioFrame\l|<finalize>finalize\l|<overwriteUrl>overwriteUrl\l|<format>format\l" pos="645,30" fillcolor="violet" _url="\"~\\/Desktop\\/MyMovie.mov\"" _overwriteUrl="false" _format="{\"imageEncoding\":\"H264\",\"imageQuality\":1,\"audioEncoding\":\"LinearPCM\",\"audioQuality\":1}"];
 
 ConvertFrameToImage2:image -> MakeScaledLayer:image;
-ConvertFrameToImage3:image -> SaveToMovie:saveImage;
+ConvertFrameToImage:image -> MakeVideoFrame:image;
 FireOnStart:started -> MakeTextLayer:refresh;
 FireOnStart:started -> ReceiveLiveVideo:start;
+MakeAudioFrame:audioFrame -> SaveToMovie2:saveAudioFrame;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList5:list -> RenderLayersToWindow:setWindowProperties;
 MakeScaledLayer:layer -> MakeList2:1;
 MakeTextLayer:layer -> MakeList2:2;
-ReceiveLiveAudio:receivedChannels -> SaveToMovie:saveAudio;
+MakeVideoFrame:videoFrame -> SaveToMovie2:saveVideoFrame;
+ReceiveLiveAudio:receivedChannels -> MakeAudioFrame:channels;
 ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage2:frame;
-ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage3:frame;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage:frame;
 }

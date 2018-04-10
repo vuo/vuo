@@ -12,6 +12,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Get Items from Dictionary",
+					  "description": "Gets a list of keys and values from a dictionary.",
 					  "keywords" : [ "pick", "select", "choose", "element", "member", "key", "index" ],
 					  "version" : "1.0.0",
 					  "node": {

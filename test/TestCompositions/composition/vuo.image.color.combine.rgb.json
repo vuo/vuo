@@ -15,9 +15,24 @@
 			"redImage": null,
 			"greenImage": null,
 			"blueImage": null,
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": null,
+		}
+	},
+
+	/* Alpha only. */
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": null,
+			"opacityImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		}
 	},
 
@@ -28,6 +43,19 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -41,6 +69,19 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -54,6 +95,19 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": null,
 			"blueImage": null,
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": null,
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -67,9 +121,34 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": null,
 			"blueImage": null,
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": null,
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0.5,"g":0,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": null,
+			"blueImage": null,
+			"opacityImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":1,"g":0,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 		}
 	},
 
@@ -80,6 +159,19 @@
 			"redImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -93,6 +185,19 @@
 			"redImage": null,
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": null,
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -106,9 +211,34 @@
 			"redImage": null,
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": null,
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0.5,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": null,
+			"opacityImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":1,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 		}
 	},
 
@@ -119,6 +249,19 @@
 			"redImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0,"g":0,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -132,6 +275,19 @@
 			"redImage": null,
 			"greenImage": null,
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -145,9 +301,34 @@
 			"redImage": null,
 			"greenImage": null,
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+	{
+		"firingPort": "redImage",
+		"inputPortValues": {
+			"redImage": null,
+			"greenImage": null,
+			"blueImage": {"color":{"r":1,"g":1,"b":1,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+		},
+		"outputPortValues": {
+			"combinedImage": {"color":{"r":0,"g":0,"b":1,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 		}
 	},
 
@@ -158,6 +339,7 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": null,
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -171,6 +353,7 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": null,
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0.5,"b":0,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
@@ -184,6 +367,7 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": null,
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -197,6 +381,7 @@
 			"redImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": null,
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.5,"g":0,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
@@ -210,6 +395,7 @@
 			"redImage": null,
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0.5,"b":0.5,"a":1},"pixelsWide":1,"pixelsHigh":1},
@@ -223,6 +409,7 @@
 			"redImage": null,
 			"greenImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0.5,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0,"g":0.5,"b":0.5,"a":0.5},"pixelsWide":1,"pixelsHigh":1},
@@ -236,6 +423,7 @@
 			"redImage": {"color":{"r":0.7490196,"g":0.7490196,"b":0.7490196,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0.2901961,"g":0.2901961,"b":0.2901961,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0.1960784,"g":0.1960784,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": null,
 		},
 		"outputPortValues": {
 			"combinedImage": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},

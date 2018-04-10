@@ -13,7 +13,7 @@ You ***do not*** need to build Vuo from source if you want to:
 
 
 
-# Building Vuo on Mac OS X
+# Building Vuo on macOS
 
 
 ## Install required dependencies
@@ -43,18 +43,24 @@ Review the results of `brew doctor` and fix any problems it finds.
 
 ### LLVM and Clang
 
-If you're running Mac OS 10.8 or earlier:
+If you're running macOS 10.8 or earlier:
 
     export CC=gcc
     export CXX=g++
 
-If you're running Mac OS 10.9:
+If you're running macOS 10.9:
 
     brew install https://raw.github.com/Homebrew/homebrew-dupes/ad6f252e3dceb0ca26748816de57c87e0c4630f0/apple-gcc42.rb
     export CC=gcc-4.2
     export CXX=g++-4.2
 
-If you're running any version of Mac OS X:
+If you're running macOS 10.11 or later:
+
+    brew install homebrew/versions/gcc46
+    export CC=gcc-6
+    export CXX=g++-6
+
+If you're running any version of macOS:
 
     cd /tmp
     curl -OL http://llvm.org/releases/3.2/llvm-3.2.src.tar.gz
@@ -66,8 +72,8 @@ If you're running any version of Mac OS X:
     cd ..
     curl -OL https://b33p.net/sites/default/files/llvm-disable-unused-intrinsics_1.patch
     patch -p0 < llvm-disable-unused-intrinsics_1.patch
-    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.7" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-Oz" --disable-bindings --enable-targets=host --enable-shared
-    make install -j9
+    CFLAGS="-march=x86-64" CXXFLAGS="-march=x86-64" LDFLAGS="-Wl,-macosx_version_min,10.8" ./configure --prefix=/usr/local/Cellar/llvm/3.2 --enable-optimized --with-optimize-option="-O3" --disable-bindings --enable-targets=host --enable-shared
+    make install -j9 CFLAGS="-mmacosx-version-min=10.8" CXXFLAGS="-mmacosx-version-min=10.8"
     cd tools/clang
     make install -j9
 
@@ -80,17 +86,7 @@ Install Graphviz 2.28.0:
     cd graphviz-2.28.0
     curl -OL https://b33p.net/sites/default/files/graphviz-skip-dot-layout.patch
     patch -p0 < graphviz-skip-dot-layout.patch
-
-If you're running Mac OS 10.7:
-
-    export CFLAGS="-mmacosx-version-min=10.7 -mno-sse4 -mno-sse4.1 -mno-sse4.2"
-
-If you're running Mac OS 10.8 or later:
-
-    export CFLAGS="-mmacosx-version-min=10.7 -mno-avx -mno-sse4 -mno-sse4.1 -mno-sse4.2"
-
-If you're running any version of Mac OS X:
-
+    export CFLAGS="-mmacosx-version-min=10.8 -mno-avx -mno-sse4 -mno-sse4.1 -mno-sse4.2"
     export LDFLAGS='-Wl,-headerpad_max_install_names'
     ./configure --prefix=/usr/local/Cellar/graphviz/2.28.0 --disable-static --enable-shared --disable-debug --disable-dependency-tracking --without-expat --without-x --disable-ltdl --disable-swig --disable-sharp --disable-guile --disable-java --disable-lua --disable-ocaml --disable-perl --disable-php --disable-python --disable-r --disable-ruby --disable-tcl --with-qt=no --with-quartz --disable-swig --without-pangocairo --without-digcola --without-fontconfig --without-freetype2 --without-ortho --without-png --without-jpeg --without-sfdp --without-gdk-pixbuf --without-quartz
     make -j9
@@ -99,44 +95,18 @@ If you're running any version of Mac OS X:
 
 ### Qt
 
-Install Qt 5.3.1:
+Install Qt:
 
     unset CC CXX
     cd /tmp
-    curl -OL http://download.qt.io/official_releases/qt/5.3/5.3.1/single/qt-everywhere-opensource-src-5.3.1.tar.gz
-    tar xzf qt-everywhere-opensource-src-5.3.1.tar.gz
-    cd qt-everywhere-opensource-src-5.3.1
+    curl -OL http://download.qt.io/official_releases/qt/5.6/5.6.2/single/qt-everywhere-opensource-src-5.6.2.tar.gz
+    tar xzf qt-everywhere-opensource-src-5.6.2.tar.gz
+    cd qt-everywhere-opensource-src-5.6.2
     cd qtbase
 
-    # https://bugreports.qt-project.org/browse/QTBUG-36575
-    curl -OL https://bugreports.qt.io/secure/attachment/37834/qmake-objcxx-cxxflags.patch
-    patch -p1 < qmake-objcxx-cxxflags.patch
-
-    # https://bugreports.qt-project.org/browse/QTBUG-37926
-    curl -OL https://b33p.net/sites/default/files/mousebuttonstate.patch
-    patch -p1 < mousebuttonstate.patch
-
-    # https://bugreports.qt-project.org/browse/QTBUG-26795
+    # https://bugreports.qt.io/browse/QTBUG-26795
     curl -OL https://bugreports.qt.io/secure/attachment/42769/DevicePixelsRatioImageItemCache.diff
     patch -p1 < DevicePixelsRatioImageItemCache.diff
-
-    # https://bugreports.qt-project.org/browse/QTBUG-36383
-    curl -OL https://b33p.net/sites/default/files/fixloading2ximagesinrichtextdocuments.patch
-    patch -p1 < fixloading2ximagesinrichtextdocuments.patch
-
-    # https://bugreports.qt.io/browse/QTBUG-40449
-    curl -OL https://b33p.net/sites/default/files/yosemite-dragdrop.patch
-    patch -p1 < yosemite-dragdrop.patch
-
-    # https://bugreports.qt.io/browse/QTBUG-6523
-    # https://b33p.net/kosada/node/11094
-    curl -OL https://b33p.net/sites/default/files/qgraphicsview_rubberband_select_qt5_patch.diff
-    patch -p1 < qgraphicsview_rubberband_select_qt5_patch.diff
-
-    # https://bugreports.qt.io/browse/QTBUG-47383
-    # https://b33p.net/kosada/node/11098
-    curl -OL https://b33p.net/sites/default/files/qt-clang-37.patch
-    patch -p1 < qt-clang-37.patch
 
     # https://bugreports.qt.io/browse/QTBUG-44620
     # https://b33p.net/kosada/node/11273
@@ -146,43 +116,42 @@ Install Qt 5.3.1:
     # https://bugreports.qt.io/browse/QTBUG-31406
     # https://b33p.net/kosada/node/6228
     # https://vuo.org/node/111
-    curl -OL https://b33p.net/sites/default/files/qt-colorpanel-position.patch
-    patch -p1 < qt-colorpanel-position.patch
+    curl -OL https://b33p.net/sites/default/files/qt-colorpanel-position_0.patch
+    patch -p1 < qt-colorpanel-position_0.patch
+
+    # https://bugreports.qt.io/browse/QTBUG-46351
+    # https://b33p.net/kosada/node/12358
+    curl -OL https://bugreports.qt.io/secure/attachment/58221/stop-stealing-focus-on-touchbegin.patch
+    patch -p0 < stop-stealing-focus-on-touchbegin.patch
 
     cd ..
-    ./configure -prefix /usr/local/Cellar/qt/5.3.1/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -qt-xcb -optimized-qmake -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -nomake tools -nomake examples -skip qtquick1 -skip qtquickcontrols -skip qtdeclarative -skip qtscript -skip qtsvg -skip qtxmlpatterns -skip qtwebkit -skip qtmultimedia
+    ./configure -prefix /usr/local/Cellar/qt/5.6.2/ -opensource -confirm-license -release -no-c++11 -no-ssse3 -no-sse4.1 -no-sse4.2 -no-avx -no-avx2 -no-qml-debug -qt-zlib -qt-libpng -qt-libjpeg -qt-pcre -no-xcb -no-eglfs -no-directfb -no-linuxfb -no-kms -no-glib -strip -no-dbus -nomake tools -nomake examples -no-sql-mysql -no-sql-sqlite -skip 3d -skip activeqt -skip androidextras -skip canvas3d -skip connectivity -skip declarative -skip doc -skip enginio -skip graphicaleffects -skip imageformats -skip location -skip multimedia -skip quickcontrols -skip quickcontrols2 -skip script -skip sensors -skip serialbus -skip serialport -skip svg -skip tools -skip translations -skip wayland -skip webchannel -skip webengine -skip websockets -skip webview -skip winextras -skip x11extras -skip xmlpatterns -D QT_NO_GESTURES
     make -j9
     make install
-    ln -s /usr/local/Cellar/qt/5.3.1/bin/qmake /usr/local/bin/qmake
+    ln -s /usr/local/Cellar/qt/5.6.2/bin/qmake /usr/local/bin/qmake
 
 ### JSON-C
 
 Install JSON-C:
 
-If you're running Mac OS 10.11:
-
-	CFLAGS="-mmacosx-version-min=10.7"
-
-If you're running any version of Mac OS X:
-
     cd /tmp
     curl -OL https://github.com/json-c/json-c/archive/json-c-0.12-20140410.tar.gz
     tar zxf json-c-0.12-20140410.tar.gz
     cd json-c-json-c-0.12-20140410
-    CFLAGS="$CFLAGS -Wno-error" ./configure --prefix=/usr/local/Cellar/json-c/0.12
+    CFLAGS="-mmacosx-version-min=10.8 -Wno-error" ./configure --prefix=/usr/local/Cellar/json-c/0.12
     make install -j9
     make clean
-    CFLAGS="$CFLAGS -Wno-error -m32" ./configure --prefix=/usr/local/Cellar/json-c/0.12-32
+    CFLAGS="-mmacosx-version-min=10.8 -Wno-error -m32" ./configure --prefix=/usr/local/Cellar/json-c/0.12-32
     make install -j9
 
 ### ØMQ
 
-If you're running Mac OS 10.9:
+If you're running macOS 10.9:
 
     export CC=gcc-4.2
     export CXX=g++-4.2
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     cd /tmp
     curl -OL http://download.zeromq.org/zeromq-2.2.0.tar.gz
@@ -221,12 +190,12 @@ Install zlib 1.2.8:
 
 ### muParser
 
-If you're running Mac OS 10.9:
+If you're running macOS 10.9:
 
     export CC=gcc-4.2
     export CXX=g++-4.2
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     cd /tmp
     curl -OL http://downloads.sourceforge.net/project/muparser/muparser/Version%202.2.3/muparser_v2_2_3.zip
@@ -272,12 +241,12 @@ If you're running any version of Mac OS X:
 
 ### RtMidi
 
-If you're running Mac OS 10.9:
+If you're running macOS 10.9:
 
     export CC=gcc-4.2
     export CXX=g++-4.2
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     cd /tmp
     curl -OL http://www.music.mcgill.ca/~gary/rtmidi/release/rtmidi-2.0.1.tar.gz
@@ -291,31 +260,26 @@ If you're running any version of Mac OS X:
 
 ### RtAudio
 
-If you're running Mac OS 10.9:
-
-    export CC=gcc-4.2
-    export CXX=g++-4.2
-
-If you're running any version of Mac OS X:
-
+    export CC=/usr/local/Cellar/llvm/3.2/bin/clang
+    export CXX=/usr/local/Cellar/llvm/3.2/bin/clang++
     cd /tmp
-    curl -OL http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-4.0.12.tar.gz
-    tar zxf rtaudio-4.0.12.tar.gz
-    cd rtaudio-4.0.12
-    ./configure
-    make
-    mkdir -p /usr/local/Cellar/rtaudio/4.0.12/{lib,include}
-    cp librtaudio.a /usr/local/Cellar/rtaudio/4.0.12/lib
-    cp *.h /usr/local/Cellar/rtaudio/4.0.12/include
+    curl -OL http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-4.1.2.tar.gz
+    tar zxf rtaudio-4.1.2.tar.gz
+    cd rtaudio-4.1.2
+    curl -OL https://b33p.net/sites/default/files/rtaudio-modeluid.patch
+    patch < rtaudio-modeluid.patch
+    CXXFLAGS="-Oz -mmacosx-version-min=10.8 -DUNICODE" ./configure --prefix=/usr/local/Cellar/rtaudio/4.1.2 --disable-shared
+    make -j9
+    make install
 
 ### Gamma
 
-If you're running Mac OS 10.9:
+If you're running macOS 10.9:
 
     export CC=gcc-4.2
     export CXX=g++-4.2
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     cd /tmp
     curl -OL http://mat.ucsb.edu/gamma/dl/gamma-0.9.5.tar.gz
@@ -338,7 +302,7 @@ If you're running any version of Mac OS X:
 
 ### Open Asset Import
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     cd /tmp
     curl -L https://github.com/assimp/assimp/archive/v3.2.tar.gz -o assimp-3.2.0.tar.gz
@@ -346,16 +310,16 @@ If you're running any version of Mac OS X:
     mv assimp-3.2 assimp-3.2.0
     cd assimp-3.2.0
 
-If you're running Mac OS 10.9 or 10.10 or 10.11:
+If you're running macOS 10.9 or 10.10 or 10.11:
 
     cmake -DCMAKE_C_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang' -DCMAKE_CXX_COMPILER='/usr/local/Cellar/llvm/3.2/bin/clang++' -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DCMAKE_COMPILER_IS_GNUCC=ON -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=OFF -DBUILD_SHARED_LIBS=ON -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF -DASSIMP_BUILD_TESTS=OFF
     # You may see a warning about `MACOSX_RPATH`; this is safe to ignore.
 
-If you're running Mac OS 10.7 or 10.8:
+If you're running macOS 10.8:
 
     cmake -DCMAKE_CXX_FLAGS='-Oz -DNDEBUG' -DCMAKE_COMPILER_IS_GNUCC=ON -DASSIMP_ENABLE_BOOST_WORKAROUND=ON -DASSIMP_BUILD_STATIC_LIB=OFF -DBUILD_SHARED_LIBS=ON -DASSIMP_NO_EXPORT=ON -DCMAKE_OSX_ARCHITECTURES=x86_64 -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_SAMPLES=OFF -DASSIMP_BUILD_TESTS=OFF
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     make -j9
     mkdir -p /usr/local/Cellar/assimp/3.2.0/{lib,include}
@@ -405,7 +369,7 @@ If you're running any version of Mac OS X:
     curl -OL https://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.20/libusb-1.0.20.tar.bz2
     tar jxf libusb-1.0.20.tar.bz2
     cd libusb-1.0.20
-    ./configure --prefix=/usr/local/Cellar/libusb/1.0.20
+    CFLAGS="-Oz -mmacosx-version-min=10.8" ./configure --prefix=/usr/local/Cellar/libusb/1.0.20
     make
     make install
     ln -s libusb-1.0.0.dylib /usr/local/Cellar/libusb/1.0.20/lib/libusb.dylib
@@ -430,7 +394,7 @@ If you're running any version of Mac OS X:
     curl -OL https://b33p.net/sites/default/files/udpsocket-get-port-1_1_0_0.patch
     patch -p0 < udpsocket-get-port-1_1_0_0.patch
     mkdir -p /usr/local/Cellar/oscpack/1.1.0/{lib,include}
-    # On Mac OS 10.9, edit the Makefile: on line 17 ("CXX := g++"), append " -stdlib=libstdc++"
+    # On macOS 10.9, edit the Makefile: on line 17 ("CXX := g++"), append " -stdlib=libstdc++"
     make install PREFIX=/usr/local/Cellar/oscpack/1.1.0
     ar -r liboscpack.a `find . -name *.o`  # ... if liboscpack.a doesn't already exist
     cp liboscpack.a /usr/local/Cellar/oscpack/1.1.0/lib
@@ -447,16 +411,16 @@ If you're running any version of Mac OS X:
     mkdir build
     cd build
 
-If you're running prior to Mac OS 10.9:
+If you're running prior to macOS 10.9:
 
     cmake -DCMAKE_BUILD_TYPE=Release ..
 
-If you're running Mac OS 10.9:
+If you're running macOS 10.9:
 
     unset CC CXX
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-stdlib=libstdc++' ..
 
-If you're running any version of Mac OS X:
+If you're running any version of macOS:
 
     make -j9 libzxing
     mkdir -p /usr/local/Cellar/zxing/2.3.0/{lib,include}
@@ -469,7 +433,7 @@ If you're running any version of Mac OS X:
     curl -OL ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.2.tar.gz
     tar zxf libxml2-sources-2.9.2.tar.gz
     cd libxml2-2.9.2
-    CFLAGS="-Oz -mmacosx-version-min=10.7" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-output --without-pattern --without-push --without-reader --without-regexps --without-schemas --without-schematron --without-tree --without-valid --without-writer --without-xinclude --without-modules --without-lzma
+    CFLAGS="-Oz -mmacosx-version-min=10.8" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-output --without-pattern --without-push --without-reader --without-regexps --without-schemas --without-schematron --without-tree --without-valid --without-writer --without-xinclude --without-modules --without-lzma
     make -j9
     make install
 
@@ -580,7 +544,7 @@ Install Subversion v1.7.x or later (to avoid placing .svn folders in the file sy
 
 ### Build Vuo using Qt Creator
 
-Install [Qt Creator](http://qt-project.org/downloads#qt-creator).
+Install [Qt Creator](http://qt.io/downloads#qt-creator).
 
 Launch Qt Creator.
 

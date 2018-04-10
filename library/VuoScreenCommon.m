@@ -11,7 +11,9 @@
 #include "VuoScreenCommon.h"
 
 #include <IOKit/graphics/IOGraphicsLib.h>
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #include <AppKit/AppKit.h>
 
 #ifdef VUO_COMPILER
@@ -99,9 +101,16 @@ void *VuoScreen_getNSScreen(VuoScreen screen)
 	if (!realized)
 		return NULL;
 	else
+	{
+		VuoScreen_retain(realizedScreen);
 		for (NSScreen *nsscreen in [NSScreen screens])
 			if ([nsscreen deviceId] == realizedScreen.id)
+			{
+				VuoScreen_release(realizedScreen);
 				return nsscreen;
+			}
+		VuoScreen_release(realizedScreen);
+	}
 
 	return NULL;
 }

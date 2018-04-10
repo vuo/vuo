@@ -9,12 +9,12 @@
 
 digraph G 
 {
-PublishedInputs [type="vuo.in" label="PublishedInputs|<start>start\r"];
-TestFirePeriodically1 [type="vuo.test.firePeriodically" label="FirePer1|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<fired>fired\r" _nodeTitle="\"FirePer1\""];
-Conductor1 [type="vuo.test.conductor" label="Conductor1|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor1\""];
-Conductor2 [type="vuo.test.conductor" label="Conductor2|<refresh>refresh\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" _nodeTitle="\"Conductor2\""];
+Conductor1 [type="vuo.test.conductor" version="1.0.0" label="Conductor1|<refresh>refresh\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" pos="150,0" _triggerInfoIn1="\"\"" _triggerInfoIn2="\"\"" _triggerInfoIn3="\"\"" _nodeTitle="\"Conductor1\""];
+Conductor2 [type="vuo.test.conductor" version="1.0.0" label="Conductor2|<refresh>refresh\l|<triggerInfoIn0>triggerInfoIn0\l|<triggerInfoIn1>triggerInfoIn1\l|<triggerInfoIn2>triggerInfoIn2\l|<triggerInfoIn3>triggerInfoIn3\l|<nodeTitle>nodeTitle\l|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" pos="435,0" _triggerInfoIn1="\"\"" _triggerInfoIn2="\"\"" _triggerInfoIn3="\"\"" _nodeTitle="\"Conductor2\""];
+TestFirePeriodically1 [type="vuo.test.firePeriodically" version="1.0.0" label="FirePer1|<refresh>refresh\l|<milliseconds>milliseconds\l|<maxEventCount>maxEventCount\l|<triggerInfoIn>triggerInfoIn\l|<in0>in0\l|<in1>in1\l|<nodeTitle>nodeTitle\l|<fired>fired\r|<triggerInfoOut>triggerInfoOut\r|<nodeInfo>nodeInfo\r" pos="-135,0" _milliseconds="1" _maxEventCount="100" _triggerInfoIn="\"\"" _in0="\"\"" _in1="\"\"" _nodeTitle="\"FirePer1\"" _fired_eventThrottling="enqueue"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<start>start\r" _start_type="event"];
 
+Conductor1:triggerInfoOut -> Conductor2:triggerInfoIn0;
 PublishedInputs:start -> TestFirePeriodically1:refresh;
 TestFirePeriodically1:fired -> Conductor1:triggerInfoIn0;
-Conductor1:triggerInfoOut -> Conductor2:triggerInfoIn0;
 }

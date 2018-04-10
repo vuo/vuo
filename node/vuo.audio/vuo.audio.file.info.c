@@ -13,6 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Get Audio File Info",
 					  "keywords" : [
+						  "information",
 						  "sound", "music", "listen",
 						  "wave",
 						  "aiff",

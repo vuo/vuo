@@ -1,0 +1,29 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ConvertFrameToImage [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="345,465"];
+ConvertFrameToImage2 [type="vuo.type.videoframe.image" version="1.0.0" label="Convert Frame to Image|<refresh>refresh\l|<frame>frame\l|<image>image\r" pos="525,360"];
+FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-90,240" _started_eventThrottling="enqueue"];
+MakeList3 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="574,266"];
+PixellateImage [type="vuo.image.pixellate" version="1.1.1" label="Pixellate Image|<refresh>refresh\l|<image>image\l|<pixelSize>pixelSize\l|<center>center\l|<pixellatedImage>pixellatedImage\r" pos="255,360" _pixelSize="0.1" _center="{\"x\":0.0,\"y\":0.0}"];
+ReceiveLiveVideo [type="vuo.video.receive" version="1.0.1" label="Receive Live Video|<refresh>refresh\l|<device>device\l|<start>start\l|<stop>stop\l|<receivedFrame>receivedFrame\r" pos="75,240" _receivedFrame_eventThrottling="drop"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="615,240" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+SelectInput4 [type="vuo.select.in.boolean.VuoImage" version="2.0.0" label="Select Input|<refresh>refresh\l|<which>which\l|<falseOption>falseOption\l|<trueOption>trueOption\l|<out>out\r" pos="420,240" _which="true"];
+
+ConvertFrameToImage2:image -> SelectInput4:falseOption;
+ConvertFrameToImage:image -> PixellateImage:image;
+FireOnStart2:started -> ReceiveLiveVideo:start;
+MakeList3:list -> RenderImageToWindow:setWindowProperties;
+PixellateImage:pixellatedImage -> SelectInput4:trueOption;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage2:frame;
+ReceiveLiveVideo:receivedFrame -> ConvertFrameToImage:frame;
+SelectInput4:out -> RenderImageToWindow:image;
+}

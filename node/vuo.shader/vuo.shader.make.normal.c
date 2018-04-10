@@ -19,7 +19,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "mesh", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						 "colors", "direction", "heading", "facing",
 						 "position", "location", "distance", "tangent", "bitangent", "texture coordinate"],
-					 "version" : "1.2.0",
+					 "version" : "1.3.0",
 					 "node" : {
 						  "exampleCompositions" : [ ]
 					 }
@@ -58,7 +58,7 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 			vertexColor = normalize(abs(mat4to3(modelviewMatrix) * tangent.xyz));
 		else if (attr == 3)
 			vertexColor = normalize(abs(mat4to3(modelviewMatrix) * bitangent.xyz));
-		else if (attr == 4)
+		else if (attr == 4 || attr == 5)
 			vertexColor = textureCoordinate.xyz;
 		else
 			vertexColor = abs(modelviewMatrix * position).xyz;
@@ -72,6 +72,7 @@ static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 
 	// Inputs provided by VuoSceneRenderer
 	uniform mat4 modelviewMatrix;
+	uniform int attr;
 	attribute vec4 position;
 	attribute vec4 textureCoordinate;
 
@@ -81,6 +82,7 @@ static const char *vertexShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
+		attr;
 		positionForGeometry = modelviewMatrix * position;
 		textureCoordinateForGeometry = textureCoordinate;
 		gl_Position = VuoGlsl_projectPosition(positionForGeometry);
@@ -101,9 +103,11 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	void main()
 	{
-		gl_FragColor = vertexColor.x * xColor
-					 + vertexColor.y * yColor
-					 + vertexColor.z * zColor;
+		vec4 c = mix(vec4(0.,0.,0.,1.), xColor, vertexColor.x)
+			   + mix(vec4(0.,0.,0.,1.), yColor, vertexColor.y)
+			   + mix(vec4(0.,0.,0.,1.), zColor, vertexColor.z);
+		c = clamp(c, 0., 1.);
+		gl_FragColor = c;
 	}
 );
 
@@ -135,12 +139,16 @@ static const char *fragmentShaderSourceForGeometry = VUOSHADER_GLSL_SOURCE(120,
 			vertexColor = normalize(abs(vertexPlaneToWorld[0]));
 		else if (attr == 3)	// bitangent
 			vertexColor = normalize(abs(vertexPlaneToWorld[1]));
+		else if (attr == 5)
+			vertexColor = fragmentTextureCoordinate.xyz;
 		else
 			vertexColor = abs(vertexPosition.xyz);
 
-		gl_FragColor = vertexColor.x * xColor
-					 + vertexColor.y * yColor
-					 + vertexColor.z * zColor;
+		vec4 c = mix(vec4(0.,0.,0.,1.), xColor, vertexColor.x)
+			   + mix(vec4(0.,0.,0.,1.), yColor, vertexColor.y)
+			   + mix(vec4(0.,0.,0.,1.), zColor, vertexColor.z);
+		c = clamp(c, 0., 1.);
+		gl_FragColor = c;
 	}
 );
 
@@ -207,8 +215,8 @@ void nodeEvent
 		VuoOutputData(VuoShader) shader
 )
 {
-	const char *fs  = (attribute == VuoVertexAttribute_TextureCoordinate) ? checkerboardFragmentShaderSource            : fragmentShaderSource;
-	const char *fsg = (attribute == VuoVertexAttribute_TextureCoordinate) ? checkerboardFragmentShaderSourceForGeometry : fragmentShaderSourceForGeometry;
+	const char *fs  = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSource            : fragmentShaderSource;
+	const char *fsg = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSourceForGeometry : fragmentShaderSourceForGeometry;
 
 	*shader = VuoShader_make("Shade with Vertex Attribute");
 
@@ -223,6 +231,7 @@ void nodeEvent
 	VuoShader_setUniform_VuoInteger(*shader, "attr", attribute);
 	VuoShader_setUniform_VuoColor(*shader, "xColor", xColor);
 	VuoShader_setUniform_VuoColor(*shader, "yColor", yColor);
-	if (attribute != VuoVertexAttribute_TextureCoordinate)
+	if (attribute != VuoVertexAttribute_TextureCoordinateChecker
+	 && attribute != VuoVertexAttribute_TextureCoordinateGradient)
 		VuoShader_setUniform_VuoColor(*shader, "zColor", zColor);
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERINPUTEVENTPORTCLASS_H
-#define VUOCOMPILERINPUTEVENTPORTCLASS_H
+#pragma once
 
 #include "VuoCompilerEventPortClass.hh"
 
@@ -28,6 +27,3 @@ public:
 	VuoCompilerPort * newPort(VuoPort *port);
 	VuoCompilerInputDataClass * getDataClass(void);
 };
-
-
-#endif

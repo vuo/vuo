@@ -12,8 +12,8 @@
 #include "VuoTimeUnit.h"
 
 VuoModuleMetadata({
-					  "title" : "Are Times-of-Day Equal",
-					  "keywords" : [ ],
+					  "title" : "Are Equal (Time of Day)",
+					  "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare", "approximate", "tolerance", "conditional" ],
 					  "version" : "1.0.0",
 					  "dependencies" : [ ],
 					  "node" : {
@@ -24,7 +24,7 @@ VuoModuleMetadata({
 void nodeEvent
 (
 	VuoInputData(VuoList_VuoTime) times,
-	VuoInputData(VuoReal, {"default":1}) tolerance,
+	VuoInputData(VuoReal, {"default":1,"suggestedMin":0.0}) tolerance,
 	VuoInputData(VuoTimeUnit, {"default":"second",
 							   "includeValues": ['hour', 'half-hour', 'quarter-hour', 'minute', 'second']
 							  }) toleranceUnit,

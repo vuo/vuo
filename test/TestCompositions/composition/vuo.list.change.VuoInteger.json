@@ -1,0 +1,72 @@
+/**
+ * @file
+ * Expected outputs for the vuo.list.change node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": [
+
+// expandListIfNeeded = false
+
+	// Changing a value in a null list should leave the list empty.
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+
+	// Changing a value in an empty list should leave the list empty.
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[              ]}},
+
+	// Changing a value in a 1-item list should leave the list with 1 item.
+	{"firingPort":"list", "inputPortValues":{"list":[0      ], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0      ], "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0      ], "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42            ]}},
+
+	// Changing a value in a multi-item list should leave the other items intact.
+	{"firingPort":"list", "inputPortValues":{"list":[0,1    ], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42,1          ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1    ], "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42,1          ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1    ], "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,42          ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1    ], "position":3, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,42          ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":0, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42,1,2        ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":1, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[42,1,2        ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":2, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,42,2        ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":3, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,1,42        ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[0,1,2  ], "position":4, "newItem":42, "expandListIfNeeded":false}, "outputPortValues":{"modifiedList":[0,1,42        ]}},
+
+// expandListIfNeeded = true
+
+	// Changing a value in a null list should expand the list.
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":0, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":1, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":null,      "position":2, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[0,42          ]}},
+
+	// Changing a value in an empty list should expand the list.
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":0, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":1, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[       ], "position":2, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[0,42          ]}},
+
+	// Changing the value in a 1-item list should keep the list the same size.
+	{"firingPort":"list", "inputPortValues":{"list":[1      ], "position":0, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42            ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1      ], "position":1, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42            ]}},
+
+	// Changing a value past the end of a 1-item list should expand the list.
+	{"firingPort":"list", "inputPortValues":{"list":[1      ], "position":2, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,42          ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1      ], "position":3, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,0,42        ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1      ], "position":4, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,0,0,42      ]}},
+
+	// Changing a value in a multi-item list should keep the list the same size.
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":0, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42,2,3,4      ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":1, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[42,2,3,4      ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":2, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,42,3,4      ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":3, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,2,42,4      ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":4, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,2,3,42      ]}},
+
+	// Changing a value past the end of a multi-item list should expand the list.
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":5, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,2,3,4,42    ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":6, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,2,3,4,0,42  ]}},
+	{"firingPort":"list", "inputPortValues":{"list":[1,2,3,4], "position":7, "newItem":42, "expandListIfNeeded":true }, "outputPortValues":{"modifiedList":[1,2,3,4,0,0,42]}},
+]}

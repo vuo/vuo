@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORWRAPMODE_HH
-#define VUOINPUTEDITORWRAPMODE_HH
+#pragma once
 
 #include "VuoInputEditorWithMenu.hh"
 
@@ -36,4 +35,3 @@ public:
 	VuoInputEditorMenuItem * setUpMenuTree();
 };
 
-#endif // VuoInputEditorWrapMode_HH

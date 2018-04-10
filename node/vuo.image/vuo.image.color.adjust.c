@@ -15,7 +15,7 @@
 VuoModuleMetadata({
 					 "title" : "Adjust Image Colors",
 					 "keywords" : [ "saturation", "desaturate", "grayscale", "greyscale", "tint", "tone", "chroma", "brightness", "contrast", "gamma", "exposure", "filter" ],
-					 "version" : "1.2.0",
+					 "version" : "1.2.1",
 					 "node" : {
 						 "exampleCompositions" : [ "EnhanceBlue.vuo" ]
 					 }
@@ -119,7 +119,10 @@ void nodeInstanceEvent
 )
 {
 	if(!image)
+	{
+		*adjustedImage = NULL;
 		return;
+	}
 
 	VuoShader_setUniform_VuoImage((*instance)->shader, "image", image);
 

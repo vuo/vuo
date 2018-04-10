@@ -10,7 +10,7 @@
 digraph G
 {
 CombineTransforms [type="vuo.transform.combine" version="1.0.0" label="Combine Transforms|<refresh>refresh\l|<transforms>transforms\l|<composite>composite\r" pos="-405,-15"];
-Copy3DObjectWithTransforms [type="vuo.scene.copy" version="2.0.2" label="Copy 3D Object with Transforms|<refresh>refresh\l|<object>object\l|<transforms>transforms\l|<copies>copies\r" pos="-165,195"];
+Copy3DObjectWithTransforms [type="vuo.scene.copy" version="2.0.2" label="Copy 3D Object|<refresh>refresh\l|<object>object\l|<transforms>transforms\l|<copies>copies\r" pos="-165,195"];
 FireOnStart2 [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-480,90" fillcolor="yellow" _started_eventThrottling="enqueue"];
 GetFirstItemInList [type="vuo.list.get.first.VuoLeapHand" version="1.0.0" label="Get First Item in List|<refresh>refresh\l|<list>list\l|<firstItem>firstItem\r" pos="210,405"];
 GetFrameValues2 [type="vuo.leap.get.frame" version="1.0.0" label="Get Frame Values|<refresh>refresh\l|<frame>frame\l|<id>id\r|<hands>hands\r|<pointables>pointables\r" pos="-1125,-45" fillcolor="violet"];

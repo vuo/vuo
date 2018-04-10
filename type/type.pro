@@ -15,8 +15,10 @@ TYPE_SOURCES += \
 	VuoCurve.c \
 	VuoCurveEasing.c \
 	VuoDictionary_VuoText_VuoReal.c \
+	VuoFont.c \
 	VuoHorizontalAlignment.c \
 	VuoInteger.c \
+	VuoIntegerRange.c \
 	VuoImage.c \
 	VuoImageColorDepth.c \
 	VuoImageWrapMode.c \
@@ -28,11 +30,13 @@ TYPE_SOURCES += \
 	VuoPoint2d.c \
 	VuoPoint3d.c \
 	VuoPoint4d.c \
+	VuoRange.c \
 	VuoReal.c \
-	VuoSceneObject.c \
+	VuoSceneObject.cc \
 	VuoScreen.c \
 	VuoShader.cc \
 	VuoText.c \
+	VuoTextCase.c \
 	VuoTransform.c \
 	VuoTransform2d.c \
 	VuoUrl.c \
@@ -53,8 +57,10 @@ TYPE_HEADERS = \
 	VuoCurve.h \
 	VuoCurveEasing.h \
 	VuoDictionary_VuoText_VuoReal.h \
+	VuoFont.h \
 	VuoHorizontalAlignment.h \
 	VuoInteger.h \
+	VuoIntegerRange.h \
 	VuoImage.h \
 	VuoImageColorDepth.h \
 	VuoImageWrapMode.h \
@@ -66,11 +72,13 @@ TYPE_HEADERS = \
 	VuoPoint2d.h \
 	VuoPoint3d.h \
 	VuoPoint4d.h \
+	VuoRange.h \
 	VuoReal.h \
 	VuoSceneObject.h \
 	VuoScreen.h \
 	VuoShader.h \
 	VuoText.h \
+	VuoTextCase.h \
 	VuoTransform.h \
 	VuoTransform2d.h \
 	VuoUrl.h \
@@ -89,18 +97,18 @@ INCLUDEPATH += \
 	$$ROOT/library \
 	$$ROOT/node \
 	$$ROOT/node/vuo.data \
-	$$ROOT/node/vuo.font \
+	$$ROOT/node/vuo.text \
 	$$ROOT/runtime \
 	$$ROOT/type/list
 
 TYPE_INCLUDEPATH += \
 	../node/vuo.data \
-	../node/vuo.font
+	../node/vuo.text
 
 HEADERS += \
 	$$TYPE_HEADERS \
 	type.h
 
-exists(coreTypes.h) HEADERS += coreTypes.h coreTypesStringify.h coreTypesStringify.hh
+exists(coreTypes.h) HEADERS += coreTypes.h
 
 include(../module.pri)

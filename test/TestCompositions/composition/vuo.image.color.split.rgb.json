@@ -7,17 +7,33 @@
  * For more information, see http://vuo.org/license.
  */
 
-{"portConfiguration": [
-	/* Semitransparent orange. */
-	{
+{"portConfiguration": {
+	"Semitransparent orange, preserve opacity": {
 		"firingPort": "image",
 		"inputPortValues": {
 			"image": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"preserveOpacity": true,
 		},
 		"outputPortValues": {
 			"redImage": {"color":{"r":0.7490196,"g":0.7490196,"b":0.7490196,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
 			"greenImage": {"color":{"r":0.2901961,"g":0.2901961,"b":0.2901961,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
 			"blueImage": {"color":{"r":0.1960784,"g":0.1960784,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":0.50196080,"g":0.50196080,"b":0.50196080,"a":1.0},"pixelsWide":1,"pixelsHigh":1},
 		}
 	},
-]}
+
+	// When preserveOpacity=false, this node should output straight (non-premultiplied) colors.
+	"Semitransparent orange, don't preserve opacity": {
+		"firingPort": "image",
+		"inputPortValues": {
+			"image": {"color":{"r":0.7490196,"g":0.2901961,"b":0.1960784,"a":0.50196080},"pixelsWide":1,"pixelsHigh":1},
+			"preserveOpacity": false,
+		},
+		"outputPortValues": {
+			"redImage": {"color":{"r":0.7490196,"g":0.7490196,"b":0.7490196,"a":1.0},"pixelsWide":1,"pixelsHigh":1},
+			"greenImage": {"color":{"r":0.2901961,"g":0.2901961,"b":0.2901961,"a":1.0},"pixelsWide":1,"pixelsHigh":1},
+			"blueImage": {"color":{"r":0.1960784,"g":0.1960784,"b":0.1960784,"a":1.0},"pixelsWide":1,"pixelsHigh":1},
+			"opacityImage": {"color":{"r":0.50196080,"g":0.50196080,"b":0.50196080,"a":1.0},"pixelsWide":1,"pixelsHigh":1},
+		}
+	},
+}}

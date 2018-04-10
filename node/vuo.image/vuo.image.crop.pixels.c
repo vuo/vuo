@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Crop Image Pixels",
 					  "keywords" : [ "resize", "snip", "clip", "sample", "rectangle", "trim" ],
-					  "version" : "1.1.1",
+					  "version" : "1.1.2",
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -70,7 +70,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*croppedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 	float uv_x = topLeft.x/(float)w;

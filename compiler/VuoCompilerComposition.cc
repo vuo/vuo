@@ -19,6 +19,7 @@
 #include "VuoCompilerPortClass.hh"
 #include "VuoCompilerPublishedPort.hh"
 #include "VuoCompilerSpecializedNodeClass.hh"
+#include "VuoCompilerTriggerPort.hh"
 #include "VuoCompilerType.hh"
 #include "VuoFileUtilities.hh"
 #include "VuoGenericType.hh"
@@ -73,6 +74,10 @@ VuoCompilerComposition::VuoCompilerComposition(VuoComposition *baseComposition, 
 		getBase()->setCopyright(parser->getCopyright());
 
 		updateGenericPortTypes();
+
+		for (vector<VuoNode *>::iterator node = nodes.begin(); node != nodes.end(); ++node)
+			if ((*node)->hasCompiler())
+				nodeGraphvizIdentifierUsed[ (*node)->getCompiler()->getGraphvizIdentifier() ] = *node;
 	}
 }
 
@@ -454,6 +459,18 @@ set<VuoPort *> VuoCompilerComposition::getConnectedGenericPorts(VuoPort *port)
 }
 
 /**
+ * Returns the trigger port that is nearest upstream to @a node, or null if no trigger is upstream.
+ */
+VuoPort * VuoCompilerComposition::findNearestUpstreamTriggerPort(VuoNode *node)
+{
+	delete graph;
+	graph = new VuoCompilerGraph(this);
+
+	VuoCompilerTriggerPort *trigger = graph->findNearestUpstreamTrigger(node->getCompiler());
+	return trigger ? trigger->getBase() : NULL;
+}
+
+/**
  * Takes ownership of the LLVM module containing the compiled composition.
  */
 void VuoCompilerComposition::setModule(Module *module)
@@ -462,9 +479,10 @@ void VuoCompilerComposition::setModule(Module *module)
 }
 
 /**
- * If the given node has the same Graphviz identifier as some other node currently in the composition,
- * or a node that was previously passed through this function, changes the given node's Graphviz identifier
- * to one that has never been used by this composition.
+ * If the given node has the same Graphviz identifier as another node currently in the composition,
+ * a node that was in the composition when it was originally parsed from Graphviz, or a node that was
+ * previously passed through this function, changes the given node's Graphviz identifier to one that
+ * has never been used by this composition.
  */
 void VuoCompilerComposition::setUniqueGraphvizIdentifierForNode(VuoNode *node)
 {
@@ -597,23 +615,74 @@ string VuoCompilerComposition::getGraphvizDeclarationForComponents(set<VuoNode *
 /**
  * Returns a string representation of a comparison between the old and the current composition.
  *
- * This needs to be kept in sync with VuoRuntime function isNodeInBothCompositions().
- *
  * The string representation is based on the [JSON Patch](http://tools.ietf.org/html/draft-ietf-appsawg-json-patch-02) format,
- * with some extensions. The key used for each node is its Graphviz identifier. Unlike the example below (spaced for readability),
+ * with some extensions. The key used for each node is its Graphviz identifier. Unlike the examples below (spaced for readability),
  * the returned string contains no whitespace.
  *
+ * The comparison follows the compiler's rule that the PublishedInputs and PublishedOutputs pseudo-nodes are either
+ * both present or both absent in a compiled composition.
+ *
  * @eg{
+ * // The new composition contains (added) node FireOnStart. The old composition contains (removed) node Round.
  * [
  *   {"add" : "FireOnStart", "value" : {"nodeClass" : "vuo.event.fireOnStart"}},
  *   {"remove" : "Round"}
  * ]
  * }
+ *
+ * @eg{
+ * // From the old composition to the new composition, a drawer has been expanded from 2 to 3 inputs.
+ * [
+ *   {"add" : "MakeList2", "value" : {"nodeClass" : "vuo.list.make.3.VuoInteger"}},
+ *   {"remove" : "MakeList1"},
+ *   {"map" : "MakeList1", "to" : "MakeList2",
+ *     "ports" : [
+ *       {"map" : "1", "to" : "1"},
+ *       {"map" : "2", "to" : "2"},
+ *       {"map" : "list", "to" : "list}
+ *     ]
+ *   }
+ * ]
+ * }
+ *
+ * @eg{
+ * // From the old to the new composition, a published input port has been added.
+ * // Published input port "firstInput" and published output port "firstOutput" stay the same.
+ * [
+ *   {"add" : "PublishedInputs"},
+ *   {"remove" : "PublishedInputs"},
+ *   {"map" : "PublishedInputs", "to" : "PublishedInputs",
+ *     "ports" : [
+ *       {"map" : "firstInput", "to" : "firstInput"}
+ *     ]
+ *   },
+ *   {"add" : "PublishedOutputs"},
+ *   {"remove" : "PublishedOutputs"},
+ *   {"map" : "PublishedOutputs", "to" : "PublishedOutputs",
+ *     "ports" : [
+ *       {"map" : "firstOutput", "to" : "firstOutput"}
+ *     ]
+ *   }
+ * ]
+ * }
+ *
+ * @eg{
+ * // From the old to the new composition, a published input port has been added.
+ * // The old composition doesn't have any published ports.
+ * [
+ *   {"add" : "PublishedInputs"},
+ *   {"add" : "PublishedOutputs"}
+ * ]
+ * }
+ *
+ * This needs to be kept in sync with VuoRuntime function `findNodeInCompositionDiff()`.
  */
 string VuoCompilerComposition::diffAgainstOlderComposition(string oldCompositionGraphvizDeclaration, VuoCompiler *compiler,
 														   const set<NodeReplacement> &nodeReplacements)
 {
 	json_object *diff = json_object_new_array();
+
+	// Diff nodes.
 
 	VuoCompilerComposition *oldComposition = newCompositionFromGraphvizDeclaration(oldCompositionGraphvizDeclaration, compiler);
 	set<VuoNode *> oldNodes = oldComposition->getBase()->getNodes();
@@ -679,6 +748,108 @@ string VuoCompilerComposition::diffAgainstOlderComposition(string oldComposition
 		}
 		json_object_object_add(mapObj, "ports", ports);
 		json_object_array_add(diff, mapObj);
+	}
+
+	// Diff published ports.
+
+	bool publishedPortsChanged[2] = { false, false };
+	vector<VuoPublishedPort *> oldPublishedPorts[2];
+	vector<VuoPublishedPort *> newPublishedPorts[2];
+	string nodeIdentifier[2];
+	map<string, string> oldAndNewPublishedPortNames[2];
+
+	for (int i = 0; i < 2; ++i)
+	{
+		if (i == 0)
+		{
+			oldPublishedPorts[i] = oldComposition->getBase()->getPublishedInputPorts();
+			newPublishedPorts[i] = getBase()->getPublishedInputPorts();
+			nodeIdentifier[i] = "PublishedInputs";
+		}
+		else
+		{
+			oldPublishedPorts[i] = oldComposition->getBase()->getPublishedOutputPorts();
+			newPublishedPorts[i] = getBase()->getPublishedOutputPorts();
+			nodeIdentifier[i] = "PublishedOutputs";
+		}
+
+		for (vector<VuoPublishedPort *>::iterator j = oldPublishedPorts[i].begin(); j != oldPublishedPorts[i].end(); ++j)
+		{
+			VuoPublishedPort *oldPort = *j;
+			string oldPortName = oldPort->getClass()->getName();
+			VuoPublishedPort *newPort = (i == 0 ?
+											 getBase()->getPublishedInputPortWithName(oldPortName) :
+											 getBase()->getPublishedOutputPortWithName(oldPortName));
+
+			bool foundMatchByName = false;
+			if (newPort)
+			{
+				VuoType *oldType = static_cast<VuoCompilerPort *>( oldPort->getCompiler() )->getDataVuoType();
+				VuoType *newType = static_cast<VuoCompilerPort *>( newPort->getCompiler() )->getDataVuoType();
+				if (oldType == newType)
+				{
+					foundMatchByName = true;
+					oldAndNewPublishedPortNames[i][oldPortName] = oldPortName;
+				}
+			}
+
+			if (! foundMatchByName)
+				publishedPortsChanged[i] = true;
+		}
+
+		if (newPublishedPorts[i].size() > oldPublishedPorts[i].size())
+			publishedPortsChanged[i] = true;
+	}
+
+	if (publishedPortsChanged[0] || publishedPortsChanged[1])
+	{
+		bool addBoth = oldPublishedPorts[0].empty() && oldPublishedPorts[1].empty();
+		bool removeBoth = newPublishedPorts[0].empty() && newPublishedPorts[1].empty();
+
+		for (int i = 0; i < 2; ++i)
+		{
+			if (removeBoth || (! addBoth && publishedPortsChanged[i]))
+			{
+				// { "remove" : "PublishedInputs" }
+				json_object *remove = json_object_new_object();
+				json_object *nodeIdentifierObj = json_object_new_string(nodeIdentifier[i].c_str());
+				json_object_object_add(remove, "remove", nodeIdentifierObj);
+				json_object_array_add(diff, remove);
+			}
+			if (addBoth || (! removeBoth && publishedPortsChanged[i]))
+			{
+				// { "add" : "PublishedInputs" }
+				json_object *add = json_object_new_object();
+				json_object *nodeIdentifierObj = json_object_new_string(nodeIdentifier[i].c_str());
+				json_object_object_add(add, "add", nodeIdentifierObj);
+				json_object_array_add(diff, add);
+			}
+			if (! (addBoth || removeBoth) && publishedPortsChanged[i])
+			{
+				// {   "map" : "PublishedInputs",
+				//      "to" : "PublishedInputs",
+				//   "ports" : [
+				//			{ "map" : "<published port name>", "to" : "<published port name>" },
+				//			{ "map" : "<published port name>", "to" : "<published port name>" },
+				//			... ] }
+				json_object *mapObj = json_object_new_object();
+				json_object *nodeIdentifierObj = json_object_new_string(nodeIdentifier[i].c_str());
+				json_object_object_add(mapObj, "map", nodeIdentifierObj);
+				json_object_object_add(mapObj, "to", nodeIdentifierObj);
+				json_object *ports = json_object_new_array();
+				for (map<string, string>::iterator j = oldAndNewPublishedPortNames[i].begin(); j != oldAndNewPublishedPortNames[i].end(); ++j)
+				{
+					json_object *portObj = json_object_new_object();
+					json_object *oldPublishedPortName = json_object_new_string(j->first.c_str());
+					json_object_object_add(portObj, "map", oldPublishedPortName);
+					json_object *newPublishedPortName = json_object_new_string(j->second.c_str());
+					json_object_object_add(portObj, "to", newPublishedPortName);
+					json_object_array_add(ports, portObj);
+				}
+				json_object_object_add(mapObj, "ports", ports);
+				json_object_array_add(diff, mapObj);
+			}
+		}
 	}
 
 	delete oldComposition;

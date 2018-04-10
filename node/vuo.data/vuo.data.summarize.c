@@ -8,11 +8,17 @@
  */
 
 #include "node.h"
+#include "VuoTextHtml.h"
 
 VuoModuleMetadata({
 					  "title" : "Summarize Value",
-					  "keywords" : [ "convert", "text", "brief", "shorten", "debug", "troubleshoot" ],
-					  "version" : "1.0.0",
+					  "keywords" : [ "convert", "text", "brief", "shorten", "debug", "troubleshoot",
+						  "real", "number", // since we deprecated vuo.type.real.text
+					  ],
+					  "version" : "1.0.1",
+					  "dependencies": [
+						  "VuoTextHtml"
+					  ],
 					  "node" : {
 						  "exampleCompositions" : [ ]
 					  }
@@ -24,6 +30,7 @@ void nodeEvent
 		VuoOutputData(VuoText) summary
 )
 {
-	*summary = VuoGenericType1_getSummary(value);
-	VuoRegister(*summary, free);
+	char *s = VuoGenericType1_getSummary(value);
+	*summary = VuoText_removeHtml(s);
+	free(s);
 }

@@ -71,11 +71,8 @@ GLWidget::GLWidget(QWidget* parent)
 void GLWidget::initializeGL()
 {
 	// Share the GL Context with the Vuo Composition
-	VuoGlContext_setGlobalRootContext((void *)CGLGetCurrentContext());
-
-	// Compile, link, and run the composition
-	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile((QCoreApplication::applicationDirPath() + "/../Resources/RippleImage.vuo").toUtf8().constData());
-	runner->start();
+	cgl_ctx = CGLGetCurrentContext();
+	VuoGlContext_setGlobalRootContext((void *)cgl_ctx);
 
 	// Upload a quad, for rendering the texture later on
 	glGenVertexArrays(1, &vertexArray);
@@ -111,6 +108,10 @@ void GLWidget::initializeGL()
 	positionAttribute = glGetAttribLocation(program, "position");
 	textureUniform = glGetUniformLocation(program, "texture");
 
+	// Compile, link, and run the composition
+	runner = VuoCompiler::newCurrentProcessRunnerFromCompositionFile((QCoreApplication::applicationDirPath() + "/../Resources/RippleImage.vuo").toUtf8().constData());
+	runner->start();
+
 	// Pass the GL Texture to the Vuo Composition
 	inputImagePort = runner->getPublishedInputPortWithName("inputImage");
 	VuoImage t = VuoImage_make(inputTexture, internalformat, image.width(), image.height());
@@ -126,6 +127,8 @@ void GLWidget::initializeGL()
 
 void GLWidget::resizeGL(int w, int h)
 {
+	CGLSetCurrentContext(cgl_ctx);
+
 	// Set the viewport to window dimensions
 	glViewport( 0, 0, w, qMax( h, 1 ) );
 }
@@ -144,6 +147,7 @@ void GLWidget::paintGL()
 	VuoRetain(outputImage);
 
 	// Display the GL Texture onscreen
+	CGLSetCurrentContext(cgl_ctx);
 	glUseProgram(program);
 	{
 		glActiveTexture(GL_TEXTURE0);

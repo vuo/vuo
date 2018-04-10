@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOVERTEXATTRIBUTE_H
-#define VUOVERTEXATTRIBUTE_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoVertexAttribute;
@@ -32,7 +31,8 @@ typedef enum
 	VuoVertexAttribute_Normal,
 	VuoVertexAttribute_Tangent,
 	VuoVertexAttribute_Bitangent,
-	VuoVertexAttribute_TextureCoordinate,
+	VuoVertexAttribute_TextureCoordinateChecker,
+	VuoVertexAttribute_TextureCoordinateGradient,
 } VuoVertexAttribute;
 
 VuoVertexAttribute VuoVertexAttribute_makeFromJson(struct json_object *js);
@@ -58,5 +58,4 @@ void VuoVertexAttribute_release(VuoVertexAttribute value);
  * @}
  */
 
-#endif // VUOVERTEXATTRIBUTE_H
 

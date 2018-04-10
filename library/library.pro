@@ -8,6 +8,10 @@ NODE_LIBRARY_SOURCES += \
 	VuoBase64.cc \
 	VuoCglPixelFormat.c \
 	VuoDisplayRefresh.c \
+	VuoGraphicsView.m \
+	VuoGraphicsWindow.m \
+	VuoGraphicsWindowDelegate.m \
+	VuoGraphicsWindowDrag.mm \
 	VuoIoReturn.c \
 	VuoImageResize.c \
 	VuoImageBlend.c \
@@ -28,9 +32,8 @@ NODE_LIBRARY_SOURCES += \
 	VuoPointsParametric.cc \
 	VuoScreenCapture.m \
 	VuoScreenCommon.m \
+	VuoTextHtml.c \
 	VuoWindow.m \
-	VuoWindowDrag.mm \
-	VuoWindowOpenGLInternal.m \
 	VuoWindowRecorder.m \
 	VuoWindowTextInternal.m \
 	VuoUrlParser.c
@@ -60,9 +63,12 @@ SOURCES += \
 
 OBJECTIVE_SOURCES += \
 	VuoApp.m \
+	VuoGraphicsView.m \
+	VuoGraphicsWindow.m \
+	VuoGraphicsWindowDelegate.m \
+	VuoGraphicsWindowDrag.mm \
 	VuoScreenCommon.m \
 	VuoWindow.m \
-	VuoWindowOpenGLInternal.m \
 	VuoWindowRecorder.m \
 	VuoWindowTextInternal.m
 
@@ -79,6 +85,7 @@ HEADERS += \
 	VuoImageBlend.h \
 	VuoImageBlur.h \
 	VuoImageRenderer.h \
+	VuoImageText.h \
 	VuoLog.h \
 	VuoMathExpressionParser.h \
 	VuoMeshParametric.h \
@@ -92,17 +99,20 @@ HEADERS += \
 	VuoScreenCapture.h \
 	VuoScreenCommon.h \
 	VuoSmooth.h \
+	VuoTextHtml.h \
 	VuoUrlFetch.h \
 	VuoWindow.h \
 	VuoUrlParser.h
 
 OTHER_FILES += \
+	VuoGraphicsView.h \
+	VuoGraphicsWindow.h \
+	VuoGraphicsWindowDelegate.h \
+	VuoGraphicsWindowDrag.h \
 	VuoImageResize.h \
-	VuoImageText.h \
 	VuoSceneText.h \
 	VuoImageWatermark.h \
 	VuoTriggerSet.hh \
-	VuoWindowOpenGLInternal.h \
 	VuoWindowRecorder.h \
 	VuoWindowTextInternal.h
 
@@ -123,6 +133,7 @@ NODE_LIBRARY_INCLUDEPATH = \
 	../node/vuo.noise \
 	../node/vuo.scene \
 	$${FREEIMAGE_ROOT}/include \
+	$${LIBXML2_ROOT}/include/libxml2 \
 	$${MUPARSER_ROOT}/include \
 	$${CURL_ROOT}/include \
 	$${ASSIMP_ROOT}/include
@@ -181,20 +192,24 @@ NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT += \
 
 OTHER_FILES += $$NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
 
+CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS = \
+	../runtime/VuoEventLoop.o \
+	../type/VuoInteger.o \
+	../type/VuoText.o \
+	../type/list/VuoList_VuoInteger.o
 CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS = \
 	$$CLANG_NODE_LIBRARY_SHARED_GL_FLAGS \
+	$$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS \
 	-framework ApplicationServices \
 	-framework Cocoa \
 	-framework CoreFoundation \
 	-framework IOSurface \
-	../runtime/VuoEventLoop.o \
-	../type/VuoText.o \
 	$$JSONC_ROOT/lib/libjson-c.a \
 	-L . \
 	-lVuoGlContext \
 	-lVuoHeap
 node_library_shared_dependent_on_context.input = NODE_LIBRARY_SHARED_SOURCES_DEPENDENT_ON_CONTEXT
-node_library_shared_dependent_on_context.depends = libVuoGlContext.dylib
+node_library_shared_dependent_on_context.depends = libVuoGlContext.dylib $$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_LIBS
 node_library_shared_dependent_on_context.depend_command = $$QMAKE_CXX -nostdinc -MM -MF - -MG $$CLANG_NODE_LIBRARY_FLAGS ${QMAKE_FILE_NAME} | sed \"s,^.*: ,,\"
 node_library_shared_dependent_on_context.output = lib${QMAKE_FILE_IN_BASE}.dylib
 node_library_shared_dependent_on_context.commands = $$QMAKE_CXX $$CLANG_NODE_LIBRARY_SHARED_DEPENDENT_ON_CONTEXT_FLAGS ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} \

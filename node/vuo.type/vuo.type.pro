@@ -7,10 +7,13 @@ NODE_SOURCES += \
 	vuo.type.audio.list.real.c \
 	vuo.type.audioframe.audiosamples.c \
 	vuo.type.audioframe.real.c \
+	vuo.type.audiosamples.audioframe.c \
 	vuo.type.boolean.integer.c \
 	vuo.type.boolean.real.c \
 	vuo.type.boolean.text.c \
+	vuo.type.image.videoframe.c \
 	vuo.type.data.text.c \
+	vuo.type.image.layer.c \
 	vuo.type.integer.boolean.c\
 	vuo.type.integer.point2d.x.c \
 	vuo.type.integer.point2d.y.c \
@@ -38,6 +41,8 @@ NODE_SOURCES += \
 	vuo.type.list.real.point3d.x.c \
 	vuo.type.list.real.point3d.y.c \
 	vuo.type.list.real.point3d.z.c \
+	vuo.type.list.real.text.c \
+	vuo.type.list.text.real.c \
 	vuo.type.point2d.point3d.xy.c \
 	vuo.type.point2d.point4d.xy.c \
 	vuo.type.point2d.real.x.c \
@@ -70,12 +75,19 @@ NODE_SOURCES += \
 	vuo.type.rotate.real.transform2d.c \
 	vuo.type.scale.point2d.transform2d.c \
 	vuo.type.scale.point3d.transform.c \
+	vuo.type.scale.real.transform2d.x.c \
+	vuo.type.scale.real.transform2d.y.c \
+	vuo.type.scale.real.transform2d.xy.c \
 	vuo.type.text.boolean.c \
 	vuo.type.text.data.c \
 	vuo.type.text.integer.c \
 	vuo.type.text.real.c \
+	vuo.type.transform.transform2d.c \
+	vuo.type.transform2d.transform.c \
 	vuo.type.translate.point2d.transform2d.c \
 	vuo.type.translate.point3d.transform.c \
+	vuo.type.translate.real.transform2d.x.c \
+	vuo.type.translate.real.transform2d.y.c \
 	vuo.type.videoframe.image.c \
 	vuo.type.videoframe.real.c
 

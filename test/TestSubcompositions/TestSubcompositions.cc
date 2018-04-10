@@ -513,7 +513,7 @@ private slots:
 			QStringList subcompositionNames;
 			QStringMap inputPortData;
 			QStringMap expectedOutputPortData;
-			expectedOutputPortData["CompositeText"] = "<code></code>";
+			expectedOutputPortData["CompositeText"] = "<code>&#0;</code>";
 			QStringList expectedOutputPortEvents;
 			expectedOutputPortEvents.append("CompositeText");
 			QTest::newRow("Default list input port value") << "AppendWithSpaces" << subcompositionNames << "Texts" << inputPortData << expectedOutputPortData << expectedOutputPortEvents << expectedOutputPortEvents;
@@ -909,7 +909,8 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
+			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
+																			  set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// Fire an event through the published input port.
@@ -931,7 +932,8 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
+			string compositionDiff = composition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
+																			  set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 
 			// Fire an event through the published input port.
@@ -951,7 +953,8 @@ private slots:
 			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
 			remove(bcPath.c_str());
 
-			string compositionDiff = originalComposition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler, set<VuoCompilerComposition::NodeReplacement>());
+			string compositionDiff = originalComposition->diffAgainstOlderComposition(oldCompositionGraphviz, compiler,
+																					  set<VuoCompilerComposition::NodeReplacement>());
 			runner->replaceComposition(dylibPath, resourceDylibPath, compositionDiff);
 			delete originalComposition;
 		}

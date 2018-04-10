@@ -150,17 +150,10 @@ static VuoSubmesh makePipeShell(	const unsigned int columns,
 
 	free(circle);
 
-	VuoSubmesh submesh;
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.normals = NULL;//normals;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, NULL, NULL, NULL, textures,
+													elementCount, triangles, VuoMesh_IndividualTriangles);
 	submesh.faceCullingMode = culling;
-	submesh.elementCount = elementCount;
-	submesh.elements = triangles;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
 
 	VuoMeshUtility_calculateNormals(&submesh);
 
@@ -256,17 +249,9 @@ static VuoSubmesh makePipeCap(	const unsigned int columns,
 		index++;
 	}
 
-	VuoSubmesh submesh;
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.normals = NULL;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
-	submesh.faceCullingMode = GL_BACK;
-	submesh.elementCount = elementCount;
-	submesh.elements = triangles;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, NULL, NULL, NULL, textures,
+													elementCount, triangles, VuoMesh_IndividualTriangles);
 
 	VuoMeshUtility_calculateNormals(&submesh);
 	VuoMeshUtility_calculateTangents(&submesh);
@@ -320,17 +305,9 @@ static VuoSubmesh makeCylinderCap(const unsigned int columns, const float radius
 		}
 	}
 
-	VuoSubmesh submesh;
-	submesh.vertexCount = vertexCount;
-	submesh.positions = vertices;
-	submesh.normals = NULL;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
-	submesh.faceCullingMode = GL_BACK;
-	submesh.elementCount = elementCount;
-	submesh.elements = triangles;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													vertices, NULL, NULL, NULL, textures,
+													elementCount, triangles, VuoMesh_IndividualTriangles);
 
 	VuoMeshUtility_calculateNormals(&submesh);
 	VuoMeshUtility_calculateTangents(&submesh);
@@ -416,4 +393,5 @@ void nodeEvent
 	}
 
 	*object = VuoSceneObject_make(NULL, NULL, transform, meshes);
+	object->name = VuoText_make("Tube");
 }

@@ -153,14 +153,12 @@ private slots:
 		{
 			VuoList_VuoColor colorsToAverage = VuoListCreate_VuoColor();
 			QTest::newRow("no colors") << colorsToAverage << VuoColor_makeWithRGBA(0,0,0,0);
-			VuoRelease(colorsToAverage);
 		}
 
 		{
 			VuoList_VuoColor colorsToAverage = VuoListCreate_VuoColor();
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(0,0,0,1));
 			QTest::newRow("black") << colorsToAverage << VuoColor_makeWithRGBA(0,0,0,1);
-			VuoRelease(colorsToAverage);
 		}
 
 		{
@@ -168,7 +166,6 @@ private slots:
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(0,0,0,1));
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(1,1,1,1));
 			QTest::newRow("black and white") << colorsToAverage << VuoColor_makeWithRGBA(.5,.5,.5,1);
-			VuoRelease(colorsToAverage);
 		}
 
 		{
@@ -176,7 +173,6 @@ private slots:
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(0,0,0,1));
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(1,1,1,0));
 			QTest::newRow("black and transparent white") << colorsToAverage << VuoColor_makeWithRGBA(0,0,0,.5);
-			VuoRelease(colorsToAverage);
 		}
 
 		{
@@ -184,7 +180,6 @@ private slots:
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(1,0,0,1));
 			VuoListAppendValue_VuoColor(colorsToAverage, VuoColor_makeWithRGBA(0,.5,1,.25));
 			QTest::newRow("red and semitransparent cyan") << colorsToAverage << VuoColor_makeWithRGBA(.8,.1,.2,.625);
-			VuoRelease(colorsToAverage);
 		}
 	}
 	void testAverage()

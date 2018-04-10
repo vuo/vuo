@@ -18,7 +18,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Message",
 					 "keywords" : [ ],
-					 "version" : "1.0.0",
+					 "version" : "1.1.0",
 					 "genericTypes": {
 						 "VuoGenericType0" : {
 							 "defaultType" : "VuoReal",
@@ -34,14 +34,18 @@ void nodeEvent
 (
 		VuoInputData(VuoText, {"default":"/example"}) address,
 		VuoInputData(VuoGenericType0) data1,
+		VuoInputData(VuoOscType, {"default":"auto"}) type1,
 		VuoOutputData(VuoOscMessage) message
 )
 {
 	if (!address)
 		return;
 
-	struct json_object *data = json_object_new_array();
-	json_object_array_put_idx(data, 0, VuoGenericType0_getJson(data1));
+	struct json_object *data[1];
+	VuoOscType dataTypes[1];
 
-	*message = VuoOscMessage_make(address, data);
+		 data[0] = VuoGenericType0_getJson(data1);
+	dataTypes[0] = type1;
+
+	*message = VuoOscMessage_make(address, 1, data, dataTypes);
 }

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERINPUTDATA_H
-#define VUOCOMPILERINPUTDATA_H
+#pragma once
 
 #include "VuoCompilerData.hh"
 
@@ -27,6 +26,3 @@ public:
 private:
 	string initialValueAsString;
 };
-
-
-#endif

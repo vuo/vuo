@@ -119,6 +119,13 @@ void VuoOsc_clientCallback(CFNetServiceRef service, CFStreamError *error, void *
 		{
 			VuoOscInputDevice d = VuoOscInputDevice_make(name, ipAddress, port);
 			dispatch_sync(VuoOsc_deviceQueue, ^{
+							  // Sometimes Bonjour sends multiple notifications for the same device.
+							  // https://b33p.net/kosada/node/11397
+							  unsigned long deviceCount = VuoListGetCount_VuoOscInputDevice(VuoOsc_inputDevices);
+							  for (int i = 1; i <= deviceCount; ++i)
+								  if (VuoOscInputDevice_areEqual(VuoListGetValue_VuoOscInputDevice(VuoOsc_inputDevices, i), d))
+									  return;
+
 							  VuoListAppendValue_VuoOscInputDevice(VuoOsc_inputDevices, d);
 							  VuoOsc_inputDeviceCallbacks.fire(VuoOsc_inputDevices);
 						  });
@@ -127,6 +134,13 @@ void VuoOsc_clientCallback(CFNetServiceRef service, CFStreamError *error, void *
 		{
 			VuoOscOutputDevice d = VuoOscOutputDevice_makeUnicast(name, ipAddress, port);
 			dispatch_sync(VuoOsc_deviceQueue, ^{
+							  // Sometimes Bonjour sends multiple notifications for the same device.
+							  // https://b33p.net/kosada/node/11397
+							  unsigned long deviceCount = VuoListGetCount_VuoOscOutputDevice(VuoOsc_outputDevices);
+							  for (int i = 1; i <= deviceCount; ++i)
+								  if (VuoOscOutputDevice_areEqual(VuoListGetValue_VuoOscOutputDevice(VuoOsc_outputDevices, i), d))
+									  return;
+
 							  VuoListAppendValue_VuoOscOutputDevice(VuoOsc_outputDevices, d);
 							  VuoOsc_outputDeviceCallbacks.fire(VuoOsc_outputDevices);
 						  });

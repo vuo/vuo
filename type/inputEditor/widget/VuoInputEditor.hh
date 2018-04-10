@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITOR_HH
-#define VUOINPUTEDITOR_HH
+#pragma once
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -108,4 +107,3 @@ signals:
 	void tabbedBackwardPastFirstWidget();
 };
 
-#endif // VUOINPUTEDITOR_HH

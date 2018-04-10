@@ -17,6 +17,7 @@ extern bool isStopped;
  */
 bool isPaused = false;
 char *compositionDiff = NULL;
+dispatch_group_t vuoTriggerWorkersScheduled;
 //@}
 
 //@{
@@ -113,6 +114,12 @@ char * getPublishedInputPortValue(char *portIdentifier, int shouldUseInterproces
 char * getPublishedOutputPortValue(char *portIdentifier, int shouldUseInterprocessSerialization)
 {
 	return NULL;
+}
+void vuoInitWorkerThreadPool(void)
+{
+}
+void vuoFiniWorkerThreadPool(void)
+{
 }
 
 //@}

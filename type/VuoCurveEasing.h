@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCURVEEASING_H
-#define VUOCURVEEASING_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoCurveEasing_struct { void *l; } * VuoList_VuoCurveEasing;
@@ -51,5 +50,3 @@ void VuoCurveEasing_release(VuoCurveEasing value);
 /**
  * @}
 */
-
-#endif

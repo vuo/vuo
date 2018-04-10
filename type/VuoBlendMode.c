@@ -46,8 +46,11 @@ VuoBlendMode VuoBlendMode_makeFromJson(json_object *js)
 	if( !strcmp(valueAsString, "multiply") ) {
 		value = VuoBlendMode_Multiply;
 	}	else
-	if( !strcmp(valueAsString, "darker-component") ) {
-		value = VuoBlendMode_DarkerComponent;
+	if( !strcmp(valueAsString, "darker-components") ) {
+		value = VuoBlendMode_DarkerComponents;
+	}	else
+	if( !strcmp(valueAsString, "darker-component") ) { // deprecated in 1.2.4
+		value = VuoBlendMode_DarkerComponents;
 	}	else
 	if( !strcmp(valueAsString, "darker-color") ) {
 		value = VuoBlendMode_DarkerColor;
@@ -61,8 +64,11 @@ VuoBlendMode VuoBlendMode_makeFromJson(json_object *js)
 	if( !strcmp(valueAsString, "screen") ) {
 		value = VuoBlendMode_Screen;
 	}	else
-	if( !strcmp(valueAsString, "lighter-component") ) {
-		value = VuoBlendMode_LighterComponent;
+	if( !strcmp(valueAsString, "lighter-components") ) {
+		value = VuoBlendMode_LighterComponents;
+	}	else
+	if( !strcmp(valueAsString, "lighter-component") ) { // deprecated in 1.2.4
+		value = VuoBlendMode_LighterComponents;
 	}	else
 	if( !strcmp(valueAsString, "lighter-color") ) {
 		value = VuoBlendMode_LighterColor;
@@ -139,8 +145,8 @@ json_object * VuoBlendMode_getJson(const VuoBlendMode value)
 		case VuoBlendMode_Multiply:
 			valueAsString = "multiply";
 			break;
-		case VuoBlendMode_DarkerComponent:
-			valueAsString = "darker-component";
+		case VuoBlendMode_DarkerComponents:
+			valueAsString = "darker-components";
 			break;
 		case VuoBlendMode_DarkerColor:
 			valueAsString = "darker-color";
@@ -154,8 +160,8 @@ json_object * VuoBlendMode_getJson(const VuoBlendMode value)
 		case VuoBlendMode_Screen:
 			valueAsString = "screen";
 			break;
-		case VuoBlendMode_LighterComponent:
-			valueAsString = "lighter-component";
+		case VuoBlendMode_LighterComponents:
+			valueAsString = "lighter-components";
 			break;
 		case VuoBlendMode_LighterColor:
 			valueAsString = "lighter-color";
@@ -245,8 +251,8 @@ char * VuoBlendMode_getSummary(const VuoBlendMode value)
 		case VuoBlendMode_Multiply:
 			valueAsString = "Multiply — b•f";
 			break;
-		case VuoBlendMode_DarkerComponent:
-			valueAsString = "Darker Component — min(b,f)";
+		case VuoBlendMode_DarkerComponents:
+			valueAsString = "Darker Components — min(b,f)";
 			break;
 		case VuoBlendMode_DarkerColor:
 			valueAsString = "Darker Color — min(b,f)";
@@ -260,8 +266,8 @@ char * VuoBlendMode_getSummary(const VuoBlendMode value)
 		case VuoBlendMode_Screen:
 			valueAsString = "Screen — 1-(1-b)•(1-f)";
 			break;
-		case VuoBlendMode_LighterComponent:
-			valueAsString = "Lighter Component — max(b,f)";
+		case VuoBlendMode_LighterComponents:
+			valueAsString = "Lighter Components — max(b,f)";
 			break;
 		case VuoBlendMode_LighterColor:
 			valueAsString = "Lighter Color — max(b,f)";

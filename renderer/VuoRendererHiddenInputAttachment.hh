@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDERERHIDDENINPUTATTACHMENT_HH
-#define VUORENDERERHIDDENINPUTATTACHMENT_HH
+#pragma once
 
 #include "VuoRendererInputAttachment.hh"
 
@@ -29,4 +28,3 @@ private:
 	bool paintingDisabled(void) const;
 };
 
-#endif // VUORENDERERHIDDENINPUTATTACHMENT_HH

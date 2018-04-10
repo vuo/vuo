@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERINSTANCEDATA_H
-#define VUOCOMPILERINSTANCEDATA_H
+#pragma once
 
 #include "VuoCompilerNodeArgument.hh"
 
@@ -27,6 +26,3 @@ public:
 	void generateStore(Module *module, BasicBlock *block, Value *nodeContextValue, Value *instanceDataValue);
 	Value * getVariable(Module *module, BasicBlock *block, Value *nodeContextValue);
 };
-
-
-#endif

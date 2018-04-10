@@ -8,11 +8,10 @@
  */
 
 #include "VuoInputEditorReal.hh"
-#include "VuoDoubleSpinBox.hh"
 
-extern "C"
-{
-	#include "VuoReal.h"
+extern "C" {
+#include <math.h>
+#include <float.h>
 }
 
 /**
@@ -24,248 +23,243 @@ VuoInputEditor * VuoInputEditorRealFactory::newInputEditor()
 }
 
 /**
+ * Creates a new label with sizePolicy(Max, Max)
+ */
+QLabel* makeLabel(const char* text)
+{
+	QLabel* label = new QLabel(text);
+	label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	return label;
+}
+
+/**
+ * Alloc and init a new VuoDoubleSpinBox.
+ */
+VuoDoubleSpinBox* VuoInputEditorReal::initSpinBox(QDialog& dialog, double initialValue)
+{
+	VuoDoubleSpinBox* spin = new VuoDoubleSpinBox(&dialog);
+	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
+	spin->setDecimals(decimalPrecision);
+	spin->setFixedWidth(100);
+	spin->setButtonMinimum(suggestedMin);
+	spin->setButtonMaximum(suggestedMax);
+	spin->setSingleStep(suggestedStep);
+	spin->setValue(initialValue);
+	return spin;
+}
+
+/**
+ * Alloc and init a new QSlider.
+ */
+QSlider* VuoInputEditorReal::initSlider(QDialog& dialog, double initialValue)
+{
+	double min = suggestedMin;
+	double max = suggestedMax;
+	double step = suggestedStep;
+	double range = max - min;
+
+	QSlider* slider = new QSlider(&dialog);
+	slider->setOrientation(Qt::Horizontal);
+	slider->setFocusPolicy(Qt::NoFocus);
+	slider->setMinimum(0);
+	slider->setMaximum(slider->width());
+	slider->setSingleStep( fmax(1, step * (slider->maximum() - slider->minimum()) / range ) );
+	slider->setValue( VuoDoubleSpinBox::doubleToSlider(slider->minimum(), slider->maximum(), min, max, initialValue) );
+	return slider;
+}
+
+/**
  * Sets up a dialog containing either a slider and line edit (if @c details contains both "suggestedMin"
  * and "suggestedMax") or a spin box (which includes a line edit).
  */
 void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details)
 {
-	const int decimalPrecision = DBL_MAX_10_EXP + DBL_DIG;
+	current = VuoReal_makeFromJson(originalValue);
 
-	suggestedMin = -std::numeric_limits<double>::max();
-	suggestedMax = std::numeric_limits<double>::max();
-	double suggestedStep = 1.0;
+	suggestedMin = -DBL_MAX;
+	suggestedMax =  DBL_MAX;
+	suggestedStep = 1.0;
+	previous = current;
+	defaultValue = 0;
+	automatic = -INFINITY;
 
-	bool detailsIncludeSuggestedMin = false;
-	bool detailsIncludeSuggestedMax = false;
-
-	QDoubleValidator *validator = new QDoubleValidator(this);
+	bool hasMinMax = true, hasAutoValue = false;
 
 	// Parse supported port annotations from the port's "details" JSON object:
 	if (details)
 	{
+		// "default"
+		json_object *suggestedDefaultValue = NULL;
+		if (json_object_object_get_ex(details, "default", &suggestedDefaultValue))
+			defaultValue = VuoReal_makeFromJson(suggestedDefaultValue);
+
 		// "suggestedMin"
 		json_object *suggestedMinValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMin", &suggestedMinValue))
-		{
-			suggestedMin = json_object_get_double(suggestedMinValue);
-			detailsIncludeSuggestedMin = true;
-		}
+			suggestedMin = VuoReal_makeFromJson(suggestedMinValue);
+		else
+			hasMinMax = false;
 
 		// "suggestedMax"
 		json_object *suggestedMaxValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedMax", &suggestedMaxValue))
-		{
-			suggestedMax = json_object_get_double(suggestedMaxValue);
-			detailsIncludeSuggestedMax = true;
-		}
+			suggestedMax = VuoReal_makeFromJson(suggestedMaxValue);
+		else
+			hasMinMax = false;
 
 		// "suggestedStep"
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
-			suggestedStep = json_object_get_double(suggestedStepValue);
+			suggestedStep = VuoReal_makeFromJson(suggestedStepValue);
+
+		json_object *autoValue = NULL;
+		if(json_object_object_get_ex(details, "auto", &autoValue))
+		{
+			hasAutoValue = true;
+			automatic = VuoReal_makeFromJson(autoValue);
+		}
+
+		json_object *autoSupersedesValue = NULL;
+		if(json_object_object_get_ex(details, "autoSupersedesDefault", &autoSupersedesValue))
+			autoSupersedesDefault = VuoBoolean_makeFromJson(autoSupersedesValue);
 	}
 
-	// Display a QSlider or QSpinBox widget, depending whether a suggestedMin and suggestedMax were
-	// both provided in the port's annotation details.
-	slider = NULL;
-	spinBox = NULL;
+	spinbox = initSpinBox(dialog, current);
+	connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
 
-	// If suggestedMin and suggestedMax have both been provided, display a slider.
-	if (detailsIncludeSuggestedMin && detailsIncludeSuggestedMax)
+	if(hasMinMax)
 	{
-		VuoInputEditorWithLineEdit::setUpDialog(dialog, originalValue, details);
-		validator->setDecimals(decimalPrecision);
-		lineEdit->setValidator(validator);
-		lineEdit->installEventFilter(this);
-
-		slider = new QSlider(&dialog);
-		slider->setAttribute(Qt::WA_MacSmallSize);
-		slider->setOrientation(Qt::Horizontal);
-		slider->setFocusPolicy(Qt::NoFocus);
-		slider->setMinimum(0);
-		slider->setMaximum(slider->width());
-		slider->setSingleStep(fmax(1, suggestedStep*(slider->maximum()-slider->minimum())/(suggestedMax-suggestedMin)));
-
-		double lineEditValue = VuoReal_makeFromJson(originalValue);
-		int sliderValue = lineEditValueToScaledSliderValue(lineEditValue);
-		slider->setValue(sliderValue);
-
-		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-		connect(lineEdit, SIGNAL(textEdited(QString)), this, SLOT(updateSliderValue(QString)));
-
-		setFirstWidgetInTabOrder(lineEdit);
-		setLastWidgetInTabOrder(lineEdit);
-
-		const int widgetVerticalSpacing = 5;
-		slider->move(slider->pos().x(), slider->pos().y() + lineEdit->height() + widgetVerticalSpacing);
-
-		slider->resize(slider->width(), slider->height() - 10);
-		lineEdit->resize(slider->width(), lineEdit->height());
-
-		slider->show();
+		slider = initSlider(dialog, current);
+		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
 	}
 
-	// If either suggestedMin or suggestedMax is left unspecified, display a spinbox.
+	// layout dialog
+	QGridLayout* layout = new QGridLayout;
+	dialog.setLayout(layout);
+
+	// left, top, right, bottom
+	layout->setContentsMargins(4, 4, 12, 4);
+	layout->setSpacing(4);
+	if(hasAutoValue) layout->setHorizontalSpacing(8);
+
+	int row = 0;
+
+	if(hasAutoValue)
+	{
+		checkbox = new QCheckBox("Auto");
+		connect(checkbox, SIGNAL(stateChanged(int)), this, SLOT(setIsAuto(int)));
+		bool currentIsAuto = VuoReal_areEqual(current, automatic);
+		checkbox->setChecked(currentIsAuto);
+		if (currentIsAuto)
+			previous = defaultValue;
+
+		layout->addWidget(checkbox, row++, 0);
+		checkbox->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	}
+
+	layout->addWidget(spinbox, row++, 0);
+
+	if(hasMinMax)
+	{
+		// stick the slider in a horizontal layout so that we can apply a separate margin.
+		// necessary because QSlider aligns itself with about 4px left padding and 0px right
+		QHBoxLayout* sliderLayout = new QHBoxLayout();
+		sliderLayout->setContentsMargins(-2, 0, 2, 0);
+		sliderLayout->addWidget(slider);
+		layout->addLayout(sliderLayout, row++, 0);
+	}
+
+	dialog.setMaximumWidth(1);
+	dialog.setMaximumHeight(1);
+	dialog.adjustSize();
+
+	setFirstWidgetInTabOrder(spinbox);
+	setLastWidgetInTabOrder(spinbox);
+
+	spinbox->setFocus();
+}
+
+/**
+ * Responds to changes in the state of the "Auto" checkbox.
+ */
+void VuoInputEditorReal::setIsAuto(int state)
+{
+	if(state == Qt::Unchecked)
+	{
+		spinbox->setSpecialValueText("");
+		spinbox->setMinimum(suggestedMin);
+		spinbox->setMaximum(suggestedMax);
+
+		if(previous != automatic)
+			current = previous;
+		else
+			current = (suggestedMax + suggestedMin) * .5;
+	}
 	else
 	{
-		spinBox = new VuoDoubleSpinBox(&dialog);
-		static_cast<VuoDoubleSpinBox *>(spinBox)->setButtonMinimum(suggestedMin);
-		static_cast<VuoDoubleSpinBox *>(spinBox)->setButtonMaximum(suggestedMax);
-		spinBox->setSingleStep(suggestedStep);
-		spinBox->setDecimals(decimalPrecision);
-		spinBox->setValue(VuoReal_makeFromJson(originalValue));
+		previous = current;
+		current = automatic;
 
-		// For some reason the VuoReal input editor is extremely wide
-		// without the following resize() call:
-		spinBox->resize(spinBox->size());
-
-		VuoInputEditorWithLineEdit::setUpLineEdit(spinBox->findChild<QLineEdit *>(), originalValue);
-		spinBox->setKeyboardTracking(false);
-		connect(spinBox, SIGNAL(valueChanged(QString)), this, SLOT(emitValueChanged()));
-
-		setFirstWidgetInTabOrder(spinBox);
-		setLastWidgetInTabOrder(spinBox);
-
-		spinBox->show();
+		spinbox->setSpecialValueText("Auto");
+		spinbox->setMinimum(automatic);
+		spinbox->setMaximum(automatic);
 	}
+
+	spinbox->setValue(current);
+	spinbox->setEnabled(!checkbox->isChecked());
+	if(slider) slider->setEnabled(!checkbox->isChecked());
 }
 
 /**
- * Returns the text that should appear in the line edit to represent @c value.
+ * Update the spinbox and stored VuoReal property.
  */
-QString VuoInputEditorReal::convertToLineEditFormat(json_object *value)
+void VuoInputEditorReal::onSliderUpdate(int sliderValue)
 {
-	QString valueAsStringInDefaultLocale = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
-	double realValue = QLocale(QLocale::C).toDouble(valueAsStringInDefaultLocale);
-	QString valueAsStringInUserLocale = QLocale::system().toString(realValue);
+	current = VuoDoubleSpinBox::sliderToDouble(	slider->minimum(),
+												slider->maximum(),
+												suggestedMin,
+												suggestedMax,
+												sliderValue);
 
-	if (qAbs(realValue) >= 1000.0)
-		valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
+	// disconnect before setting spinbox value otherwise onSpinboxUpdate is called and the whole thing just cycles
+	disconnect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
+	spinbox->setValue( current );
+	connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(onSpinboxUpdate(double)));
 
-	return valueAsStringInUserLocale;
+	spinbox->setFocus();
+	spinbox->selectAll();
+
+	emit valueChanged( getAcceptedValue() );
 }
 
 /**
- * Formats the value from the line edit to conform to the JSON specification for numbers.
+ * Update the slider and stored VuoReal.
  */
-json_object * VuoInputEditorReal::convertFromLineEditFormat(const QString &valueAsString)
+void VuoInputEditorReal::onSpinboxUpdate(double spinboxValue)
 {
-	QString valueAsStringCopy = valueAsString;
-	double value = QLocale::system().toDouble(valueAsString);
-	QString valueAsStringInDefaultLocale = QLocale(QLocale::C).toString(value);
+	current = spinboxValue;
 
-	if (qAbs(value) >= 1000.0)
-		valueAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! valueAsStringInDefaultLocale.isEmpty() && valueAsStringInDefaultLocale[0] == '.')
-		valueAsStringInDefaultLocale = "0" + valueAsStringInDefaultLocale;
-
-	return VuoReal_getJson( VuoReal_makeFromString(valueAsStringInDefaultLocale.toUtf8().constData()) );
-}
-
-/**
- * Converts the input @c newLineEditText to an integer and updates this
- * input editor's @c slider widget to reflect that integer value.
- */
-void VuoInputEditorReal::updateSliderValue(QString newLineEditText)
-{
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
-	int newSliderValue = lineEditValueToScaledSliderValue(newLineEditValue);
-
-	disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-	slider->setValue(newSliderValue);
-	connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateLineEditValue(int)));
-}
-
-/**
- * Converts the slider's current value() to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- */
-void VuoInputEditorReal::updateLineEditValue()
-{
-	updateLineEditValue(slider->value());
-}
-
-/**
- * Converts the input @c newSliderValue to a string and updates this
- * input editor's @c lineEdit widget to reflect that string value;
- * gives keyboard focus to the @c lineEdit.
- *
- * Note: The slider's sliderMoved(int) signal must be connected to this
- * slot rather than to the version of this slot that takes no arguments
- * in order to respect the most recently updated slider value.
- */
-void VuoInputEditorReal::updateLineEditValue(int newSliderValue)
-{
-	double newLineEditValue = sliderValueToScaledLineEditValue(newSliderValue);
-	const QString originalLineEditText = lineEdit->text();
-	QString newLineEditText = QLocale::system().toString(newLineEditValue, 'g');
-
-	if (qAbs(newLineEditValue) >= 1000.0)
-		newLineEditText.remove(QLocale::system().groupSeparator());
-
-	if (originalLineEditText != newLineEditText)
+	if(slider != NULL)
 	{
-		lineEdit->setText(newLineEditText);
-		lineEdit->setFocus();
-		lineEdit->selectAll();
-		emitValueChanged();
-	}
-}
+		int sliderValue = VuoDoubleSpinBox::doubleToSlider(
+			slider->minimum(),
+			slider->maximum(),
+			suggestedMin,
+			suggestedMax,
+			current);
 
-void VuoInputEditorReal::emitValueChanged()
-{
-	emit valueChanged(getAcceptedValue());
+		disconnect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+		slider->setValue( sliderValue );
+		connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderUpdate(int)));
+	}
+
+	emit valueChanged( getAcceptedValue() );
 }
 
 /**
- * Scales the input @c lineEditValue to match the range of the slider.
+ * Returns the current text in the line edits.
  */
-int VuoInputEditorReal::lineEditValueToScaledSliderValue(double lineEditValue)
+json_object * VuoInputEditorReal::getAcceptedValue(void)
 {
-	const double lineEditRange = suggestedMax - suggestedMin;
-	const int sliderRange = slider->maximum() - slider->minimum();
-	int scaledSliderValue = slider->minimum() + ((lineEditValue-suggestedMin)/(1.0*(lineEditRange)))*sliderRange;
-
-	return scaledSliderValue;
-}
-
-/**
- * Scales the input @c sliderValue to match the range of the
- * port's suggestedMin and suggestedMax.
- */
-double VuoInputEditorReal::sliderValueToScaledLineEditValue(int sliderValue)
-{
-	const double lineEditRange = suggestedMax - suggestedMin;
-	const int sliderRange = slider->maximum() - slider->minimum();
-	double scaledLineEditValue = suggestedMin + ((sliderValue-slider->minimum())/(1.0*sliderRange))*lineEditRange;
-
-	return scaledLineEditValue;
-}
-
-/**
- * Filters events on watched objects.
- */
-bool VuoInputEditorReal::eventFilter(QObject *object, QEvent *event)
-{
-	if (event->type()==QEvent::Wheel && slider)
-	{
-		// Let the slider handle mouse wheel events.
-		QApplication::sendEvent(slider, event);
-		return true;
-	}
-
-	else if (event->type()==QEvent::KeyPress && slider)
-	{
-		// Let the slider handle keypresses of the up and down arrows.
-		QKeyEvent *keyEvent = (QKeyEvent *)(event);
-		if ((keyEvent->key() == Qt::Key_Up) || (keyEvent->key() == Qt::Key_Down))
-		{
-			QApplication::sendEvent(slider, event);
-			return true;
-		}
-	}
-
-	return VuoInputEditorWithLineEdit::eventFilter(object, event);
+	return VuoReal_getJson(current);
 }

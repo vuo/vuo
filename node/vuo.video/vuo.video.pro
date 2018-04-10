@@ -4,14 +4,19 @@ CONFIG += VuoNodeSet
 include(../../vuo.pri)
 
 NODE_SOURCES += \
+	vuo.video.get.audioframe.c \
+	vuo.video.get.videoframe.c \
 	vuo.video.decodeImage.c \
 	vuo.video.info.c \
 	vuo.video.listDevices.c \
 	vuo.video.make.format.c \
+	vuo.video.make.audioframe.c \
+	vuo.video.make.videoframe.c \
 	vuo.video.make.input.c \
 	vuo.video.play.c \
 	vuo.video.receive.c \
-	vuo.video.save.c
+	vuo.video.save.c \
+	vuo.video.save2.c
 
 NODE_LIBRARY_SOURCES += \
 	VuoVideo.cc \
@@ -72,7 +77,6 @@ TYPE_SOURCES += \
 	VuoVideoInputDevice.c
 
 NODE_LIBRARY_INCLUDEPATH = \
-	../vuo.font \
 	$${FFMPEG_ROOT}/include \
 	$${FFMPEG_ROOT}/include/libavcodec \
 	$${FFMPEG_ROOT}/include/libavformat \

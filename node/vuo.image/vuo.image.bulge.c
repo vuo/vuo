@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Bulge Image",
 					 "keywords" : [ "push", "pull", "pinch", "outward", "inward", "bump", "swell", "lump", "magnify", "filter" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoImageRenderer"
@@ -98,7 +98,10 @@ void nodeInstanceEvent
 )
 {
 	if (! image)
+	{
+		*bulgedImage = NULL;
 		return;
+	}
 
 	// Feed parameters to the shader.
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture", image);

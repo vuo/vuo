@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERPUBLISHEDPORT_HH
-#define VUOCOMPILERPUBLISHEDPORT_HH
+#pragma once
 
 #include "VuoCompilerPort.hh"
 
@@ -31,5 +30,3 @@ public:
 	string getGraphvizAttributes(void);
 	Value * generateCreatePortContext(Module *module, BasicBlock *block);
 };
-
-#endif // VUOCOMPILERPUBLISHEDPORT_HH

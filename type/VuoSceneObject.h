@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOSCENEOBJECT_H
-#define VUOSCENEOBJECT_H
+#pragma once
 
 #include "VuoText.h"
 #include "VuoMesh.h"
@@ -36,25 +35,25 @@ typedef const struct VuoList_VuoSceneObject_struct { void *l; } * VuoList_VuoSce
  */
 typedef enum
 {
-	VuoSceneObjectType_Empty,
-	VuoSceneObjectType_Group,
-	VuoSceneObjectType_Mesh,
-	VuoSceneObjectType_PerspectiveCamera,
-	VuoSceneObjectType_StereoCamera,
-	VuoSceneObjectType_OrthographicCamera,
-	VuoSceneObjectType_FisheyeCamera,
-	VuoSceneObjectType_AmbientLight,
-	VuoSceneObjectType_PointLight,
-	VuoSceneObjectType_Spotlight,
-	VuoSceneObjectType_Text
-} VuoSceneObjectType;
+	VuoSceneObjectSubType_Empty,
+	VuoSceneObjectSubType_Group,
+	VuoSceneObjectSubType_Mesh,
+	VuoSceneObjectSubType_PerspectiveCamera,
+	VuoSceneObjectSubType_StereoCamera,
+	VuoSceneObjectSubType_OrthographicCamera,
+	VuoSceneObjectSubType_FisheyeCamera,
+	VuoSceneObjectSubType_AmbientLight,
+	VuoSceneObjectSubType_PointLight,
+	VuoSceneObjectSubType_Spotlight,
+	VuoSceneObjectSubType_Text
+} VuoSceneObjectSubType;
 
 /**
  * A 3D Object: visible (mesh), or virtual (group, light, camera).
  */
 typedef struct VuoSceneObject
 {
-	VuoSceneObjectType type;
+	VuoSceneObjectSubType type;
 
 	// Data for all scene objects
 	VuoText name;
@@ -64,6 +63,7 @@ typedef struct VuoSceneObject
 	VuoMesh mesh;
 	VuoShader shader;
 	bool isRealSize;	///< If the object is real-size, it ignores rotations and scales, and is sized to match the shader's first image.
+	bool preservePhysicalSize;	///< Only used if isRealSize=true.  If preservePhysicalSize=true, uses the texture's scaleFactor and the backingScaleFactor to determine the rendered size.  If preservePhysicalSize=false, the texture is always rendered 1:1.
 	VuoBlendMode blendMode;
 
 	// Group
@@ -99,6 +99,7 @@ VuoSceneObject VuoSceneObject_makeQuadWithNormals(VuoShader shader, VuoPoint3d c
 VuoSceneObject VuoSceneObject_makeImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha);
 VuoSceneObject VuoSceneObject_makeLitImage(VuoImage image, VuoPoint3d center, VuoPoint3d rotation, VuoReal width, VuoReal alpha, VuoColor highlightColor, VuoReal shininess);
 VuoSceneObject VuoSceneObject_makeCube(VuoTransform transform, VuoShader frontShader, VuoShader leftShader, VuoShader rightShader, VuoShader backShader, VuoShader topShader, VuoShader bottomShader);
+VuoSceneObject VuoSceneObject_makeCube1(VuoTransform transform, VuoShader shader);
 VuoSceneObject VuoSceneObject_makeText(VuoText text, VuoFont font);
 
 VuoSceneObject VuoSceneObject_makePerspectiveCamera(VuoText name, VuoTransform transform, float fieldOfView, float distanceMin, float distanceMax);
@@ -150,5 +151,3 @@ void VuoSceneObject_release(VuoSceneObject value);
 /**
  * @}
  */
-
-#endif

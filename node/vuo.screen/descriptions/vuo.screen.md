@@ -4,4 +4,4 @@ The dimensions of a screen are measured in **points**. For non-Retina displays, 
 
 Positions on a screen are given in **screen coordinates**. If you have a single screen, its top left corner is at the point (0,0), and its bottom right corner matches the resolution (width and height) of the screen in points. For example, 1440x900 display would have bottom right coordinate (1440,900).
 
-On Mac OS X, you can look up information about the connected screens in System Preferences > Displays.
+On macOS, you can look up information about the connected screens in System Preferences > Displays.

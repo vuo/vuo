@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUODISPLACEMENT_H
-#define VUODISPLACEMENT_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -44,4 +43,3 @@ void VuoDisplacement_release(VuoDisplacement value);
  * @}
  */
 
-#endif // VUODISPLACEMENT_H

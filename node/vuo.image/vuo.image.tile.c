@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					  "title" : "Tile Image",
 					  "keywords" : [ "reflect", "mirror", "flip", "rotate", "linear", "affine", "wrap", "copy", "filter" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "node": {
 						  "exampleCompositions" : [ "TileMovie.vuo" ]
 					  }
@@ -81,7 +81,7 @@ void nodeInstanceEvent
 (
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
-		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
+		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0., "suggestedMax":2., "suggestedStep":0.1}) width,
 		VuoInputData(VuoBoolean, {"default":false}) reflectOddRows,
 		VuoInputData(VuoBoolean, {"default":false}) reflectOddColumns,
@@ -89,7 +89,10 @@ void nodeInstanceEvent
 )
 {
 	if (!image)
+	{
+		*tiledImage = NULL;
 		return;
+	}
 
 	VuoShader_setUniform_VuoImage  ((*instance)->shader, "texture",           image);
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "imageSize",         VuoPoint2d_make(image->pixelsWide, image->pixelsHigh));

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOBOOLEAN_H
-#define VUOBOOLEAN_H
+#pragma once
 struct json_object;
 
 /// @{
@@ -55,5 +54,3 @@ static inline bool VuoBoolean_areEqual(const VuoBoolean value1, const VuoBoolean
 /**
  * @}
  */
-
-#endif

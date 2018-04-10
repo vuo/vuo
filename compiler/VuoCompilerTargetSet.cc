@@ -99,12 +99,12 @@ string VuoCompilerTargetSet::macVersionToString(MacVersion v)
 	switch (v)
 	{
 		case MacVersion_Any:
-			return "Mac OS X (all versions)";
+			return "macOS (all versions)";
 		case MacVersion_10_7:
-			return "Mac OS X 10.7";
+			return "macOS 10.7";
 		case MacVersion_10_8:
-			return "Mac OS X 10.8";
+			return "macOS 10.8";
 		case MacVersion_10_9:
-			return "Mac OS X 10.9";
+			return "macOS 10.9";
 	}
 }

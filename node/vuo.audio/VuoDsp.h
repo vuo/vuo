@@ -39,7 +39,7 @@ VuoDsp VuoDsp_make(unsigned int frameSize, VuoWindowing windowing);
 /**
  * Return a VuoReal* array with size of spectrumSize of the analyzed audio samples.
  */
-VuoReal* VuoDsp_frequenciesForSamples(VuoDsp dspObject, VuoReal* audio, unsigned int sampleCount, VuoAudioBinAverageType binAveraging, unsigned int* spectrumSize);
+VuoReal *VuoDsp_frequenciesForSamples(VuoDsp dspObject, VuoReal *audio, unsigned int sampleCount, VuoAudioBinAverageType binAveraging, unsigned int *spectrumSize, bool newSumming);
 
 #ifdef __cplusplus
 }

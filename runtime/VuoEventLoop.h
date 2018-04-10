@@ -26,8 +26,15 @@ typedef enum
 void VuoEventLoop_processEvent(VuoEventLoopMode mode);
 void VuoEventLoop_break(void);
 void VuoEventLoop_switchToAppMode(void);
+
 bool VuoEventLoop_mayBeTerminated(void);
+void VuoEventLoop_disableTermination(void);
+void VuoEventLoop_enableTermination(void);
+
 unsigned long VuoEventLoop_getDispatchStrictMask(void);
+void VuoEventLoop_installSignalHandlers(void);
+
+void VuoEventLoop_disableAppNap(void);
 
 #ifdef __cplusplus
 }

@@ -23,7 +23,7 @@
 		}
 	},
 	/**
-	 * Should expand image bounds to 648x488
+	 * Should expand image bounds
 	 */
 	{
 		"firingPort" : "go",
@@ -31,8 +31,8 @@
 			"ExpandBounds" : true
 		},
 		"outputPortValues" : {
-			"Width" : 648,
-			"Height" : 488
+			"Width" : 658,
+			"Height" : 498
 		}
 	}
 ]}

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERTARGETSET_HH
-#define VUOCOMPILERTARGETSET_HH
+#pragma once
 
 /**
  * Stores a set of targets (operating system versions) and can be used to check compatibility.
@@ -40,5 +39,3 @@ private:
 
 	string macVersionToString(MacVersion v);
 };
-
-#endif

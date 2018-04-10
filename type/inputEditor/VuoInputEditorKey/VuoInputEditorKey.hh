@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITORKEY_HH
-#define VUOINPUTEDITORKEY_HH
+#pragma once
 
 #include "VuoInputEditorWithDialog.hh"
 #include "VuoKeyComboBox.hh"
@@ -46,4 +45,3 @@ private:
 	VuoKeyComboBox *comboBox;
 };
 
-#endif // VUOINPUTEDITORKEY_HH

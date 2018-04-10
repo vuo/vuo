@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLEAPPOINTABLE_H
-#define VUOLEAPPOINTABLE_H
+#pragma once
 
 #include "VuoInteger.h"
 #include "VuoPoint3d.h"
@@ -75,5 +74,3 @@ char * VuoLeapPointable_getString(const VuoLeapPointable value);
 /**
  * @}
  */
-
-#endif

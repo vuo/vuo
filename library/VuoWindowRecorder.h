@@ -7,21 +7,23 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOWINDOWRECORDER_HH
-#define VUOWINDOWRECORDER_HH
+#pragma once
 
+#ifndef NS_RETURNS_INNER_POINTER
 #define NS_RETURNS_INNER_POINTER
+#endif
 #import <AppKit/AppKit.h>
 
-@class VuoWindowOpenGLInternal;
+#import "VuoGlPool.h"
+
+@class VuoGraphicsWindow;
 
 /**
- * Manages recording the contents of a `VuoWindowOpenGL`.
+ * Manages recording the contents of a @ref VuoGraphicsWindow.
  */
 @interface VuoWindowRecorder : NSObject
-- (instancetype)initWithWindow:(VuoWindowOpenGLInternal *)window url:(NSURL *)url;
-- (void)captureImageOfContext:(CGLContextObj)cgl_ctx;
+- (instancetype)initWithWindow:(VuoGraphicsWindow *)window url:(NSURL *)url;
+- (void)saveImage:(VuoIoSurface)vis;
 - (void)finish;
 @end
 
-#endif // VUOWINDOWRECORDER_HH

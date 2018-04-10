@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Animates the parameters of the `Scramble Image` filter, to gradually reveal it over time.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+ChangeSpeed [type="vuo.time.changeSpeed" version="1.0.0" label="Change Speed|<refresh>refresh\l|<time>time\l|<speed>speed\l|<reset>reset\l|<changedTime>changedTime\r" pos="360,420" _speed="0.029999999999999999"];
+Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="0,375" _startPosition="1.05" _endPosition="-0.050000000000000003" _duration="10" _curve="\"linear\"" _easing="\"in\"" _loop="\"loop\"" _phase="0.0"];
+FetchImage3 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="150,225" _url="\"Sunset.jpg\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-105,195" fillcolor="yellow" _started_eventThrottling="enqueue"];
+MakeList2 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="529,251" fillcolor="green"];
+RenderImageToWindow2 [type="vuo.image.render.window" version="3.2.1" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="570,225" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ScrambleImage [type="vuo.image.scramble" version="1.0.0" label="Scramble Image|<refresh>refresh\l|<image>image\l|<squareSize>squareSize\l|<center>center\l|<chaos>chaos\l|<time>time\l|<scrambledImage>scrambledImage\r" pos="360,225" fillcolor="violet" _squareSize="0.20000000000000001" _center="{\"x\":1,\"y\":1}"];
+SnapValue2 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="150,375" _spacing="0.1" _center="0"];
+
+ChangeSpeed:changedTime -> ScrambleImage:time;
+Curve2:value -> SnapValue2:value;
+FetchImage3:image -> ScrambleImage:image;
+FireOnStart:started -> FetchImage3:refresh;
+MakeList2:list -> RenderImageToWindow2:setWindowProperties;
+RenderImageToWindow2:requestedFrame -> ChangeSpeed:time;
+RenderImageToWindow2:requestedFrame -> Curve2:time;
+ScrambleImage:scrambledImage -> RenderImageToWindow2:image;
+SnapValue2:snappedValue -> ScrambleImage:chaos;
+}

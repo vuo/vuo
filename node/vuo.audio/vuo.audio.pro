@@ -6,6 +6,8 @@ include(../../vuo.pri)
 NODE_SOURCES += \
 	vuo.audio.analyze.loudness.c \
 	vuo.audio.analyze.fft.c \
+	vuo.audio.analyze.fft2.c \
+	vuo.audio.bitCrush.c \
 	vuo.audio.detectBeats.cc \
 	vuo.audio.file.info.c \
 	vuo.audio.file.play.c \
@@ -13,18 +15,23 @@ NODE_SOURCES += \
 	vuo.audio.get.output.c \
 	vuo.audio.image.channels.c \
 	vuo.audio.image.waveform.c \
+	vuo.audio.image.waveform2.c \
 	vuo.audio.listDevices.c \
 	vuo.audio.loudness.c \
 	vuo.audio.make.input.id.c \
+	vuo.audio.make.input.model.c \
 	vuo.audio.make.input.name.c \
 	vuo.audio.make.output.id.c \
+	vuo.audio.make.output.model.c \
 	vuo.audio.make.output.name.c \
 	vuo.audio.mix.c \
 	vuo.audio.populated.c \
 	vuo.audio.receive.c \
+	vuo.audio.ringModulate.c \
 	vuo.audio.send.c \
 	vuo.audio.split.frequency.cc \
-	vuo.audio.wave.cc
+	vuo.audio.wave.cc \
+	vuo.audio.wave2.cc
 
 NODE_INCLUDEPATH += \
 	$${GAMMA_ROOT}/include \

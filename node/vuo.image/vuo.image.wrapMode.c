@@ -18,7 +18,7 @@
 VuoModuleMetadata({
 					 "title" : "Change Wrap Mode",
 					 "keywords" : [ "mirror", "rotate", "clamp", "edge", "clip", "transparent", "tile" ],
-					 "version" : "2.0.0",
+					 "version" : "2.0.1",
 					 "dependencies" : [
 						 "VuoGlContext",
 						 "VuoGlPool",
@@ -37,7 +37,10 @@ void nodeEvent
 )
 {
 	if (!image)
+	{
+		*outputImage = NULL;
 		return;
+	}
 
 	VuoImage img = VuoImage_makeCopy(image, false);
 	VuoImage_setWrapMode(img, wrapMode);

@@ -23,7 +23,7 @@ private slots:
 
 	void testNull()
 	{
-		QCOMPARE(QString::fromUtf8(VuoShader_getString(NULL)), QString("{\"pointer\":0}"));
+		QCOMPARE(QString::fromUtf8(VuoShader_getString(NULL)), QString("null"));
 		QCOMPARE(QString::fromUtf8(VuoShader_getSummary(NULL)), QString("(no shader)"));
 	}
 

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOGENERICTYPE_HH
-#define VUOGENERICTYPE_HH
+#pragma once
 
 #include "VuoType.hh"
 
@@ -49,5 +48,3 @@ private:
 	static string extractSuffixStringFromGenericTypeName(string genericTypeName);
 	static unsigned int extractSuffixFromGenericTypeName(string genericTypeName);
 };
-
-#endif

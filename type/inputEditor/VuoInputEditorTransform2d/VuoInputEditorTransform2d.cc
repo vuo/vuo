@@ -76,7 +76,7 @@ QSlider* VuoInputEditorTransform2d::initSlider(coord whichCoord, QDialog& dialog
 	double range = max - min;
 
 	QSlider* slider = new QSlider(&dialog);
-	slider->setAttribute(Qt::WA_MacSmallSize);
+	// slider->setAttribute(Qt::WA_MacSmallSize);
 	slider->setOrientation(Qt::Horizontal);
 	slider->setFocusPolicy(Qt::NoFocus);
 	slider->setMinimum(0);
@@ -180,12 +180,12 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog& dialog, json_object *origin
 
 	unsigned int row = 0;
 
-	layout->addWidget(makeLabel("x"), row, 1, Qt::AlignHCenter);
-	layout->addWidget(makeLabel("y"), row, 2, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("X"), row, 1, Qt::AlignHCenter);
+	layout->addWidget(makeLabel("Y"), row, 2, Qt::AlignHCenter);
 
 	row++;
 
-	layout->addWidget(makeLabel("translation"), row, 0);
+	layout->addWidget(makeLabel("Translation"), row, 0);
 	layout->addWidget( spinboxForCoord[xTranslation], row, 1);
 	layout->addWidget( spinboxForCoord[yTranslation], row, 2);
 
@@ -196,7 +196,7 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog& dialog, json_object *origin
 
 	row++;
 
-	layout->addWidget(makeLabel("rotation"), row, 0);
+	layout->addWidget(makeLabel("Rotation"), row, 0);
 
 	QHBoxLayout* rotation_layout = new QHBoxLayout;
 	rotation_layout->addStretch(0);
@@ -214,7 +214,7 @@ void VuoInputEditorTransform2d::setUpDialog(QDialog& dialog, json_object *origin
 
 	row++;
 
-	layout->addWidget(makeLabel("scale"), row, 0);
+	layout->addWidget(makeLabel("Scale"), row, 0);
 	layout->addWidget( spinboxForCoord[xScale], row, 1);
 	layout->addWidget( spinboxForCoord[yScale], row, 2);
 

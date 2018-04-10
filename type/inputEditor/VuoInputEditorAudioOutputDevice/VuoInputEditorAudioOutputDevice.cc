@@ -32,7 +32,7 @@ VuoInputEditorMenuItem * VuoInputEditorAudioOutputDevice::setUpMenuTree()
 	optionsTree->addItem(new VuoInputEditorMenuItem("Default device", NULL));
 
 	optionsTree->addSeparator();
-	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device", NULL, NULL, false));
+	optionsTree->addItem(new VuoInputEditorMenuItem("Specific device (by model)", NULL, NULL, false));
 
 	VuoList_VuoAudioOutputDevice devices = VuoAudio_getOutputDevices();
 
@@ -43,6 +43,7 @@ VuoInputEditorMenuItem * VuoInputEditorAudioOutputDevice::setUpMenuTree()
 			VuoAudioOutputDevice device = VuoListGetValue_VuoAudioOutputDevice(devices, i);
 
 			json_object *deviceJson = json_object_new_object();
+			json_object_object_add(deviceJson, "modelUid", VuoText_getJson(device.modelUid));
 			json_object_object_add(deviceJson, "name", VuoText_getJson(device.name));
 
 			optionsTree->addItem(new VuoInputEditorMenuItem(VuoText_format("      %s (%lld output channels)", device.name, device.channelCount), deviceJson));

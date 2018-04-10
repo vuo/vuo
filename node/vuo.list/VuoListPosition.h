@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOLISTPOSITION_H
-#define VUOLISTPOSITION_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoListPosition;
@@ -51,4 +50,3 @@ void VuoListPosition_release(VuoListPosition value);
  * @}
  */
 
-#endif // VUOLISTPOSITION_H

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERMAKELISTNODECLASS_H
-#define VUOCOMPILERMAKELISTNODECLASS_H
+#pragma once
 
 #include "VuoCompilerSpecializedNodeClass.hh"
 
@@ -48,5 +47,3 @@ public:
 	static string getNodeClassName(unsigned long itemCount, VuoCompilerType *listType);
 	static string buildNodeClassName(unsigned long itemCount, string itemTypeName);
 };
-
-#endif

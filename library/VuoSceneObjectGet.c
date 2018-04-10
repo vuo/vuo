@@ -188,6 +188,8 @@ static void VuoSceneObjectGet_close(aiFileIO *afio, aiFile *af)
  */
 static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *scene, const struct aiNode *node, VuoShader *shaders, bool *shadersUsed, VuoSceneObject *sceneObject)
 {
+	sceneObject->name = VuoText_make(node->mName.data);
+
 	// Copy the node's transform into our VuoSceneObject.
 	{
 		struct aiMatrix4x4 m = node->mTransformation;
@@ -205,7 +207,7 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 	// Convert each mesh to a VuoSubmesh instance.
 	if (node->mNumMeshes)
 	{
-		sceneObject->type = VuoSceneObjectType_Mesh;
+		sceneObject->type = VuoSceneObjectSubType_Mesh;
 		sceneObject->mesh = VuoMesh_make(node->mNumMeshes);
 
 			/// @todo Can a single aiNode use multiple aiMaterials?  If so, we need to split the aiNode into multiple VuoSceneObjects.  For now, just use the first mesh's material.
@@ -317,14 +319,14 @@ static void convertAINodesToVuoSceneObjectsRecursively(const struct aiScene *sce
 	if (node->mNumChildren)
 	{
 		sceneObject->childObjects = VuoListCreate_VuoSceneObject();
-		if (sceneObject->type == VuoSceneObjectType_Empty)
-			sceneObject->type = VuoSceneObjectType_Group;
+		if (sceneObject->type == VuoSceneObjectSubType_Empty)
+			sceneObject->type = VuoSceneObjectSubType_Group;
 	}
 	for (unsigned int child = 0; child < node->mNumChildren; ++child)
 	{
 		VuoSceneObject childSceneObject = VuoSceneObject_makeEmpty();
 		convertAINodesToVuoSceneObjectsRecursively(scene, node->mChildren[child], shaders, shadersUsed, &childSceneObject);
-		if (childSceneObject.type != VuoSceneObjectType_Empty)
+		if (childSceneObject.type != VuoSceneObjectSubType_Empty)
 			VuoListAppendValue_VuoSceneObject(sceneObject->childObjects, childSceneObject);
 	}
 }
@@ -339,7 +341,7 @@ bool VuoSceneObject_get(VuoText sceneURL, VuoSceneObject *scene, bool center, bo
 {
 	*scene = VuoSceneObject_makeEmpty();
 
-	if (!sceneURL || sceneURL[0] == 0)
+	if (VuoText_isEmpty(sceneURL))
 		return false;
 
 	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();

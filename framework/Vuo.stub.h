@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUO_H
-#define VUO_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -128,6 +127,4 @@ extern "C"
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

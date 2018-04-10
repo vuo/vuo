@@ -14,7 +14,7 @@
 VuoModuleMetadata({
 					 "title" : "Make Cone",
 					 "keywords" : [ "3D", "point", "hat", "wizard", "pyramid" ],
-					 "version" : "1.0.0",
+					 "version" : "1.0.1",
 					 "genericTypes" : {
 						"VuoGenericType1" : {
 							"compatibleTypes" : [ "VuoShader", "VuoColor", "VuoImage" ]
@@ -113,17 +113,9 @@ void nodeEvent
 		}
 	}
 
-	VuoSubmesh submesh;
-	submesh.vertexCount = vertexCount;
-	submesh.positions = positions;
-	submesh.normals = NULL;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
-	submesh.elementCount = elementCount;
-	submesh.elements = elements;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-	submesh.faceCullingMode = GL_BACK;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													positions, NULL, NULL, NULL, textures,
+													elementCount, elements, VuoMesh_IndividualTriangles);
 
 	VuoMeshUtility_calculateNormals(&submesh);
 
@@ -168,5 +160,7 @@ void nodeEvent
 									VuoShader_make_VuoGenericType1(material),
 									transform,
 									NULL);
+
+	cone->name = VuoText_make("Cone");
 
 }

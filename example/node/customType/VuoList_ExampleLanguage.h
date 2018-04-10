@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VuoList_ExampleLanguage_H
-#define VuoList_ExampleLanguage_H
+#pragma once
 
 #if !defined(VuoList_ExampleLanguage_TYPE_DEFINED)
 /**
@@ -141,5 +140,3 @@ char * VuoList_ExampleLanguage_getString(const VuoList_ExampleLanguage value);
 /**
  * @}
  */
-
-#endif

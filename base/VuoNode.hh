@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONODE_HH
-#define VUONODE_HH
+#pragma once
 
 #include "VuoBase.hh"
 
@@ -90,5 +89,3 @@ private:
 	enum TintColor tintColor;
 	string rawGraphvizDeclaration;
 };
-
-#endif // VUONODE_HH

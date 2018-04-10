@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOHEAP_H
-#define VUOHEAP_H
+#pragma once
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -111,6 +110,4 @@ void VuoHeap_addTrace(const void *heapPointer);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

@@ -15,7 +15,8 @@ NODE_SOURCES += \
 	vuo.osc.make.output.ip.c \
 	vuo.osc.receive.c \
 	vuo.osc.receive2.c \
-	vuo.osc.send.c
+	vuo.osc.send.c \
+	vuo.osc.skeleton.basic.c
 
 GENERIC_NODE_SOURCES += \
 	vuo.osc.message.get.1.c \
@@ -40,17 +41,18 @@ HEADERS += \
 	VuoOsc.h
 
 NODE_LIBRARY_INCLUDEPATH = \
-	../vuo.font \
 	$$OSCPACK_ROOT/include
 
 TYPE_SOURCES += \
 	VuoOscInputDevice.c \
 	VuoOscOutputDevice.c \
-	VuoOscMessage.c
+	VuoOscMessage.c \
+	VuoOscType.c
 
 HEADERS += \
 	VuoOscInputDevice.h \
 	VuoOscOutputDevice.h \
-	VuoOscMessage.h
+	VuoOscMessage.h \
+	VuoOscType.h
 
 include(../../module.pri)

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERTRIGGERPORTCLASS_H
-#define VUOCOMPILERTRIGGERPORTCLASS_H
+#pragma once
 
 #include "VuoCompilerPortClass.hh"
 
@@ -30,5 +29,3 @@ public:
 	VuoType * getDataVuoType(void);
 	void setDataVuoType(VuoType *type);
 };
-
-#endif

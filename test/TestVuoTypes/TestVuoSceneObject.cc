@@ -239,7 +239,7 @@ private slots:
 					);
 			QTest::newRow("ambient light")	<< o
 											<< "light-ambient<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5"
-											<< QUOTE({"type":"light-ambient","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5});
+											<< QUOTE({"type":"light-ambient","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"name":"Ambient Light"});
 		}
 
 		{
@@ -252,7 +252,7 @@ private slots:
 					);
 			QTest::newRow("point light")	<< o
 											<< "light-point<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)"
-											<< QUOTE({"type":"light-point","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
+											<< QUOTE({"type":"light-point","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"name":"Point Light","transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
 		{
@@ -266,7 +266,7 @@ private slots:
 					);
 			QTest::newRow("spotlight")	<< o
 											<< "light-spot<br>color <span style='background-color:#007fff;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> 0.00, 0.50, 1.00, 1.00<br>brightness 0.5<br>position (1, 2, 3)<br>range 2.5 units (0.5 sharpness)<br>direction (1, 0, 0)<br>cone 45°"
-											<< QUOTE({"type":"light-spot","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"lightCone":0.78539818525314331,"transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
+											<< QUOTE({"type":"light-spot","lightColor":{"r":0,"g":0.5,"b":1,"a":1},"lightBrightness":0.5,"lightRange":2.5,"lightSharpness":0.5,"lightCone":0.78539818525314331,"name":"Spot Light","transform":{"translation":[1,2,3],"eulerRotation":[0,0,0],"scale":[1,1,1]}});
 		}
 
 		{
@@ -518,7 +518,7 @@ private slots:
 			VuoSceneObject_retain(rootSceneObject);
 
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
-			VuoSceneRenderer_setCameraName(sr, "", true);
+			VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
 			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
@@ -545,7 +545,7 @@ private slots:
 
 			// Copied from vuo.scene.render.image.
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
-			VuoSceneRenderer_setCameraName(sr, "", true);
+			VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
 			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
@@ -575,7 +575,7 @@ private slots:
 
 			// Copied from vuo.scene.render.image.
 			VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
-			VuoSceneRenderer_setCameraName(sr, "", true);
+			VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 			VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 			VuoImage i;
 			VuoSceneRenderer_renderToImage(sr, &i, VuoImageColorDepth_8, VuoMultisample_Off, NULL);
@@ -604,7 +604,7 @@ private slots:
 
 		// Copied from vuo.scene.render.image.
 		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
-		VuoSceneRenderer_setCameraName(sr, "", true);
+		VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 		VuoSceneRenderer_regenerateProjectionMatrix(sr, 1920, 1080);
 
 		QBENCHMARK {
@@ -662,7 +662,7 @@ private slots:
 
 		// Copied from vuo.scene.render.image.
 		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
-		VuoSceneRenderer_setCameraName(sr, "", true);
+		VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 		VuoSceneRenderer_regenerateProjectionMatrix(sr, 640, 480);
 
 		// Render one to prime the caches.
@@ -696,7 +696,7 @@ private slots:
 
 		// Copied from vuo.scene.render.image.
 		VuoSceneRenderer_setRootSceneObject(sr, rootSceneObject);
-		VuoSceneRenderer_setCameraName(sr, "", true);
+		VuoSceneRenderer_setCameraName(sr, VuoText_make(""), true);
 
 		// Regenerate once to prime the caches.
 		VuoSceneRenderer_regenerateProjectionMatrix(sr, 640, 480);

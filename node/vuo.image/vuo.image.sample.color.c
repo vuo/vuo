@@ -9,6 +9,7 @@
 
 #include "node.h"
 #include "VuoImageRenderer.h"
+#include "VuoColorSample.h"
 
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLMacro.h>
@@ -16,8 +17,15 @@
 
 VuoModuleMetadata({
 					  "title" : "Sample Color from Image",
-					  "keywords" : [ "coordinate", "eyedrop", "sample", "grab", "get", "average", "box", "rectangle", "square" ],
-					  "version" : "1.0.1",
+					  "keywords" : [
+						  "coordinate", "eyedropper", "sample", "grab", "get",
+						  "RGBA",
+						  "average",
+						  "minimum", "darker", "darkest",
+						  "maximum", "lighter", "lightest", "brighter", "brightest",
+						  "box", "rectangle", "square", "area",
+					  ],
+					  "version" : "1.1.0",
 					  "node": {
 						  "exampleCompositions" : [ "ShowColorFromImage.vuo" ]
 					  }
@@ -62,6 +70,7 @@ void nodeEvent
 									"suggestedMin":{"x":-1, "y":-1},
 									"suggestedMax":{"x":1, "y":1}}) center,
 		VuoInputData(VuoReal, {"default":0, "suggestedMin":0, "suggestedMax":2, "suggestedStep":0.01}) width,
+		VuoInputData(VuoColorSample, {"default":"average"}) sampleType,
 		VuoOutputData(VuoColor) color
 )
 {
@@ -77,6 +86,9 @@ void nodeEvent
 	float aspect = h/(float)w;
 	unsigned int pixelRadius = clampi(((fmax(0, fmin(2, width))/2.) * (w/2)), 0, (w/2));	// clamp radius from 1px to image width / 2
 	float 	r, g, b, a, rf = 0.f, gf = 0.f, bf = 0.f, af = 0.f;
+	float lf = (sampleType == VuoColorSample_DarkestColor ? 1. : 0.);
+	if (sampleType == VuoColorSample_DarkestComponents)
+		rf = gf = bf = af = 1.f;
 
 	VuoPoint2d pixelCoord = VuoPoint2d_clamp( VuoShader_samplerCoordinatesFromVuoCoordinates(center, image), 0., 1. );
 
@@ -93,15 +105,59 @@ void nodeEvent
 
 			colorAtCoordinate(pixelData, w, h, x, y, &r, &g, &b, &a);
 
-			rf += r;
-			gf += g;
-			bf += b;
-			af += a;
+			if (sampleType == VuoColorSample_Average)
+			{
+				rf += r;
+				gf += g;
+				bf += b;
+				af += a;
+			}
+			else if (sampleType == VuoColorSample_DarkestComponents)
+			{
+				rf = MIN(rf, r);
+				gf = MIN(gf, g);
+				bf = MIN(bf, b);
+				af = MIN(af, a);
+			}
+			else if (sampleType == VuoColorSample_DarkestColor)
+			{
+				float l = VuoColor_getLightness((VuoColor){r,g,b,a});
+				if (l < lf)
+				{
+					rf = r;
+					gf = g;
+					bf = b;
+					af = a;
+					lf = l;
+				}
+			}
+			else if (sampleType == VuoColorSample_LightestComponents)
+			{
+				rf = MAX(rf, r);
+				gf = MAX(gf, g);
+				bf = MAX(bf, b);
+				af = MAX(af, a);
+			}
+			else if (sampleType == VuoColorSample_LightestColor)
+			{
+				float l = VuoColor_getLightness((VuoColor){r,g,b,a});
+				if (l > lf)
+				{
+					rf = r;
+					gf = g;
+					bf = b;
+					af = a;
+					lf = l;
+				}
+			}
 		}
 	}
 
-	*color = VuoColor_makeWithRGBA(	rf/(float)sampleCount,
-									gf/(float)sampleCount,
-									bf/(float)sampleCount,
-									af/(float)sampleCount);
+	if (sampleType == VuoColorSample_Average)
+		*color = VuoColor_makeWithRGBA(rf / (float)sampleCount,
+									   gf / (float)sampleCount,
+									   bf / (float)sampleCount,
+									   af / (float)sampleCount);
+	else
+		*color = VuoColor_makeWithRGBA(rf, gf, bf, af);
 }

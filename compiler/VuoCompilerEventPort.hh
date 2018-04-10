@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILEREVENTPORT_H
-#define VUOCOMPILEREVENTPORT_H
+#pragma once
 
 #include "VuoCompilerPort.hh"
 
@@ -41,5 +40,3 @@ protected:
 
 	VuoCompilerEventPort(VuoPort *basePort);
 };
-
-#endif

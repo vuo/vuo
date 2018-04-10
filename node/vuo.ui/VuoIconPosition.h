@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOICONPOSITION_H
-#define VUOICONPOSITION_H
+#pragma once
 
 /// @{
 typedef void * VuoList_VuoIconPosition;
@@ -55,5 +54,4 @@ void VuoIconPosition_release(VuoIconPosition value);
  * @}
  */
 
-#endif // VUOICONPOSITION_H
 

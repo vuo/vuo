@@ -47,16 +47,26 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	mu::value_type uVar = 0;
 	mu::value_type vVar = 0;
 
-	xParser.DefineVar("u", &uVar);
-	yParser.DefineVar("u", &uVar);
-	zParser.DefineVar("u", &uVar);
-	xParser.DefineVar("v", &vVar);
-	yParser.DefineVar("v", &vVar);
-	zParser.DefineVar("v", &vVar);
+	xParser.DefineVar("u", &uVar); xParser.DefineVar("U", &uVar);
+	yParser.DefineVar("u", &uVar); yParser.DefineVar("U", &uVar);
+	zParser.DefineVar("u", &uVar); zParser.DefineVar("U", &uVar);
+	xParser.DefineVar("v", &vVar); xParser.DefineVar("V", &vVar);
+	yParser.DefineVar("v", &vVar); yParser.DefineVar("V", &vVar);
+	zParser.DefineVar("v", &vVar); zParser.DefineVar("V", &vVar);
 
-	xParser.DefineConst("time", (double)time);
-	yParser.DefineConst("time", (double)time);
-	zParser.DefineConst("time", (double)time);
+	mu::value_type iVar = 0;
+	mu::value_type jVar = 0;
+
+	xParser.DefineVar("i", &iVar); xParser.DefineVar("I", &iVar);
+	yParser.DefineVar("i", &iVar); yParser.DefineVar("I", &iVar);
+	zParser.DefineVar("i", &iVar); zParser.DefineVar("I", &iVar);
+	xParser.DefineVar("j", &jVar); xParser.DefineVar("J", &jVar);
+	yParser.DefineVar("j", &jVar); yParser.DefineVar("J", &jVar);
+	zParser.DefineVar("j", &jVar); zParser.DefineVar("J", &jVar);
+
+	xParser.DefineConst("time", (double)time); xParser.DefineConst("Time", (double)time); xParser.DefineConst("TIME", (double)time);
+	yParser.DefineConst("time", (double)time); yParser.DefineConst("Time", (double)time); yParser.DefineConst("TIME", (double)time);
+	zParser.DefineConst("time", (double)time); zParser.DefineConst("Time", (double)time); zParser.DefineConst("TIME", (double)time);
 
 	VuoMathExpressionParser_defineStandardLibrary(&xParser);
 	VuoMathExpressionParser_defineStandardLibrary(&yParser);
@@ -82,6 +92,9 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 			for(int x = 0; x < width; x++)
 			{
 				uVar = VuoReal_lerp(uMin, uMax, (closeU && x==width-1) ? 0 : u);
+
+				iVar = x + 1;
+				jVar = y + 1;
 
 				positions[i].x = xParser.Eval();
 				positions[i].y = yParser.Eval();
@@ -211,19 +224,9 @@ VuoMesh VuoMeshParametric_generate(VuoReal time, VuoText xExp, VuoText yExp, Vuo
 	}
 	free(normalCount);
 
-	VuoSubmesh submesh;
-
-	submesh.vertexCount = vertexCount;
-
-	submesh.positions = positions;
-	submesh.normals = normals;
-	submesh.tangents = NULL;
-	submesh.bitangents = NULL;
-	submesh.textureCoordinates = textures;
-	submesh.elementCount = triangleCount;
-	submesh.elements = triangles;
-	submesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
-	submesh.faceCullingMode = GL_BACK;
+	VuoSubmesh submesh = VuoSubmesh_makeFromBuffers(vertexCount,
+													positions, normals, NULL, NULL, textures,
+													triangleCount, triangles, VuoMesh_IndividualTriangles);
 
 	VuoMeshUtility_calculateTangents(&submesh);
 

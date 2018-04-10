@@ -98,7 +98,29 @@ protected:
 	dispatch_semaphore_t triggerSemaphore;  ///< Synchronizes access to @c triggers.
 
 	/**
-	 * This method is called by oscpack when an OSC message has been parsed.
+	 * This method is called by oscpack when an OSC bundle has been parsed.
+	 */
+	virtual void ProcessBundle(const osc::ReceivedBundle& b, const IpEndpointName& remoteEndpoint)
+	{
+//		VLog("%ld with %d elements", b.TimeTag(), b.ElementCount());
+
+		for (osc::ReceivedBundle::const_iterator i = b.ElementsBegin(); i != b.ElementsEnd(); ++i)
+		{
+			if (i->IsBundle())
+			{
+//				VLog("	contains bundle");
+				ProcessBundle(osc::ReceivedBundle(*i), remoteEndpoint);
+			}
+			else
+			{
+//				VLog("	contains message");
+				ProcessMessage(osc::ReceivedMessage(*i), remoteEndpoint);
+			}
+		}
+	}
+
+	/**
+	 * This method is called by oscpack or @ref ProcessBundle when an OSC message has been parsed.
 	 */
 	virtual void ProcessMessage(const osc::ReceivedMessage &m, const IpEndpointName &remoteEndpoint)
 	{
@@ -108,41 +130,51 @@ protected:
 		try
 		{
 			// Convert message arguments into a JSON object.
-			json_object *jsonArguments = json_object_new_array();
-			for (osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin(); arg != m.ArgumentsEnd(); ++arg)
+			json_object *data[VUOOSC_MAX_MESSAGE_ARGUMENTS];
+			VuoOscType dataTypes[VUOOSC_MAX_MESSAGE_ARGUMENTS];
+			unsigned int i = 0;
+			for (osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin(); arg != m.ArgumentsEnd(); ++arg, ++i)
 			{
 				switch (arg->TypeTag())
 				{
 					case osc::NIL_TYPE_TAG:
-						json_object_array_add(jsonArguments, NULL);
+						data[i] = NULL;
+						dataTypes[i] = VuoOscType_Auto;
 						break;
 					case osc::TRUE_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_boolean(true));
+						data[i] = json_object_new_boolean(true);
+						dataTypes[i] = VuoOscType_Auto;
 						break;
 					case osc::FALSE_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_boolean(false));
+						data[i] = json_object_new_boolean(false);
+						dataTypes[i] = VuoOscType_Auto;
 						break;
 					case osc::FLOAT_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_double(arg->AsFloat()));
+						data[i] = json_object_new_double(arg->AsFloat());
+						dataTypes[i] = VuoOscType_Float32;
 						break;
 					case osc::DOUBLE_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_double(arg->AsDouble()));
+						data[i] = json_object_new_double(arg->AsDouble());
+						dataTypes[i] = VuoOscType_Auto;
 						break;
 					case osc::INT32_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_int(arg->AsInt32()));
+						data[i] = json_object_new_int(arg->AsInt32());
+						dataTypes[i] = VuoOscType_Int32;
 						break;
 					case osc::INT64_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_int64(arg->AsInt64()));
+						data[i] = json_object_new_int64(arg->AsInt64());
+						dataTypes[i] = VuoOscType_Auto;
 						break;
 					case osc::STRING_TYPE_TAG:
-						json_object_array_add(jsonArguments, json_object_new_string(arg->AsString()));
+						data[i] = json_object_new_string(arg->AsString());
+						dataTypes[i] = VuoOscType_Auto;
 						break;
 					default:
 						throw osc::Exception(((std::string)"unknown argument type tag '" + arg->TypeTag() + "'").c_str());
 				}
 			}
 
-			VuoOscMessage vuoMessage = VuoOscMessage_make(VuoText_make(m.AddressPattern()), jsonArguments);
+			VuoOscMessage vuoMessage = VuoOscMessage_make(VuoText_make(m.AddressPattern()), i, data, dataTypes);
 
 			// Send it to all listening nodes.
 			dispatch_semaphore_wait(triggerSemaphore, DISPATCH_TIME_FOREVER);
@@ -171,7 +203,7 @@ static void registerCallback(CFNetServiceRef theService, CFStreamError *error, v
 static CFNetServiceRef VuoOsc_createNetService(char *name, int port, bool isServer)
 {
 	bool defaultName = false;
-	if (!name || name[0] == 0)
+	if (VuoText_isEmpty(name))
 	{
 		name = VuoText_format("Vuo OSC %s", isServer ? "Server" : "Client");
 		defaultName = true;
@@ -713,25 +745,37 @@ void VuoOscOut_sendMessages(VuoOscOut ao, VuoList_VuoOscMessage messages)
 
 								   p << osc::BeginMessage(message->address);
 
-								   int dataCount = json_object_array_length(message->data);
-								   for (int i = 0; i < dataCount; ++i)
+								   for (int i = 0; i < message->dataCount; ++i)
 								   {
-									   json_object *datum = json_object_array_get_idx(message->data, i);
-									   json_type type = json_object_get_type(datum);
+									   if (message->dataTypes[i] == VuoOscType_Auto)
+									   {
+										   json_object *datum = message->data[i];
 
-									   if (type == json_type_null)
-										   p << osc::OscNil;
-									   else if (type == json_type_boolean)
-										   p << (bool)json_object_get_boolean(datum);
-									   else if (type == json_type_double)
-										   p << json_object_get_double(datum);
-									   else if (type == json_type_int)
-										   p << (osc::int64)json_object_get_int64(datum);
-									   else if (type == json_type_string)
-										   p << json_object_get_string(datum);
+										   json_type type = json_object_get_type(datum);
+
+										   if (type == json_type_null)
+											   p << osc::OscNil;
+										   else if (type == json_type_boolean)
+											   p << (bool)json_object_get_boolean(datum);
+										   else if (type == json_type_double)
+											   p << json_object_get_double(datum);
+										   else if (type == json_type_int)
+											   p << (osc::int64)json_object_get_int64(datum);
+										   else if (type == json_type_string)
+											   p << json_object_get_string(datum);
+										   else
+										   {
+											   VUserLog("Error: Unknown type: %s", json_type_to_name(type));
+											   p << osc::OscNil;
+										   }
+									   }
+									   else if (message->dataTypes[i] == VuoOscType_Int32)
+										   p << (osc::int32)json_object_get_int(message->data[i]);
+									   else if (message->dataTypes[i] == VuoOscType_Float32)
+										   p << (float)json_object_get_double(message->data[i]);
 									   else
 									   {
-										   VUserLog("Error: Unknown type: %s", json_type_to_name(type));
+										   VUserLog("Error: Unknown type: %d", message->dataTypes[i]);
 										   p << osc::OscNil;
 									   }
 								   }

@@ -14,7 +14,7 @@ CycleThroughList2 [type="vuo.list.cycle.VuoBlendMode" version="1.0.2" label="Cyc
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="180,60" fillcolor="yellow" _started_eventThrottling="enqueue"];
 FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="135,360" fillcolor="yellow" _seconds="2.000000" _fired_eventThrottling="drop"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="630,0" _url="\"WinchesterTile.jpg\""];
-MakeList11 [type="vuo.list.make.6.VuoBlendMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="245,431" _1="\"normal\"" _2="\"linear-dodge\"" _3="\"lighter-component\"" _4="\"darker-component\"" _5="\"subtract\"" _6="\"multiply\""];
+MakeList11 [type="vuo.list.make.6.VuoBlendMode" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<5>5\l|<6>6\l|<list>list\r" pos="245,431" _1="\"normal\"" _2="\"linear-dodge\"" _3="\"lighter-components\"" _4="\"darker-components\"" _5="\"subtract\"" _6="\"multiply\""];
 MakeList13 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1249,146" fillcolor="green"];
 MakeList15 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="755,566"];
 MakeList5 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1279,176" fillcolor="green"];

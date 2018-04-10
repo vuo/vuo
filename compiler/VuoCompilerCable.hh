@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERCABLE_H
-#define VUOCOMPILERCABLE_H
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoCable.hh"
@@ -37,5 +36,3 @@ private:
 
 	static bool portHasData(VuoPort *port);
 };
-
-#endif

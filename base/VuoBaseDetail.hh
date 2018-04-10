@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOBASEDETAIL_HH
-#define VUOBASEDETAIL_HH
+#pragma once
 
 /**
  * This class is intended to be inherited by a detail class attached to a base class.
@@ -28,5 +27,3 @@ private:
 	string description;
 	BaseClass * base; ///< The detail class instance's base class instance.
 };
-
-#endif // VUOBASEDETAIL_HH

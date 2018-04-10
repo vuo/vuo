@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOINPUTEDITOREDGEBLEND_HH
-#define VUOINPUTEDITOREDGEBLEND_HH
+#pragma once
 
 #include "VuoInputEditor.hh"
 #include "VuoInputEditorWithDialog.hh"
@@ -74,4 +73,3 @@ private slots:
 	void setupSlider(QSlider* slider, double min, double max, double step, double value);	///< set up a slider
 };
 
-#endif // VUOINPUTEDITOREDGEBLEND_HH

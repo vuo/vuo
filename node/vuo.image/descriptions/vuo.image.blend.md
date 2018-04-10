@@ -11,7 +11,7 @@ Blends two images into a single image.
 
 The resulting image uses the dimensions of the background image (unless the background image is empty, in which case it uses the dimensions of the foreground image).
 
-The foreground image is stretched to match the size of the background image.  If you want to blend images of different sizes without stretching them, use the `Make Layer` and `Render Layers to Image` nodes.
+The foreground image is stretched to match the size of the background image.  If you want to blend images of different sizes without stretching them, use the `Make Image Layer (Real Size)` (or `(Scaled)`) and `Render Layers to Image` nodes.
 
 Thanks to [Romain Dura](http://mouaif.wordpress.com/2009/01/05/photoshop-math-with-glsl-shaders/) for the GLSL implementations of many blend modes.
 

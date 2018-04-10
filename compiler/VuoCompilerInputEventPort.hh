@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERINPUTEVENTPORT_H
-#define VUOCOMPILERINPUTEVENTPORT_H
+#pragma once
 
 #include "VuoCompilerEventPort.hh"
 #include "VuoCompilerInputData.hh"
@@ -24,6 +23,3 @@ public:
 	VuoCompilerInputEventPort(VuoPort *basePort);
 	VuoCompilerInputData * getData(void);
 };
-
-
-#endif

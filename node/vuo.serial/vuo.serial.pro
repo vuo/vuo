@@ -32,9 +32,6 @@ SOURCES += \
 	VuoSerialDevices.cc \
 	VuoSerialIO.cc
 
-INCLUDEPATH += \
-	../../node/vuo.font
-
 NODE_LIBRARY_INCLUDEPATH += \
 	../vuo.data
 

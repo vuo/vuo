@@ -82,43 +82,41 @@ void nodeEvent
 		VuoOutputData(VuoGenericType21) data11
 )
 {
-	if (!message || !message->data)
+	if (!message || !message->dataCount)
 		return;
 
 	*address = message->address;
 
-	int dataCount = VuoOscMessage_getDataCount(message);
+	if (1 <= message->dataCount)
+		*data1 = VuoGenericType11_makeFromJson(message->data[0]);
 
-	if (1 <= dataCount)
-		*data1 = VuoGenericType11_makeFromJson(VuoOscMessage_getDataJson(message, 1));
+	if (2 <= message->dataCount)
+		*data2 = VuoGenericType12_makeFromJson(message->data[1]);
 
-	if (2 <= dataCount)
-		*data2 = VuoGenericType12_makeFromJson(VuoOscMessage_getDataJson(message, 2));
+	if (3 <= message->dataCount)
+		*data3 = VuoGenericType13_makeFromJson(message->data[2]);
 
-	if (3 <= dataCount)
-		*data3 = VuoGenericType13_makeFromJson(VuoOscMessage_getDataJson(message, 3));
+	if (4 <= message->dataCount)
+		*data4 = VuoGenericType14_makeFromJson(message->data[3]);
 
-	if (4 <= dataCount)
-		*data4 = VuoGenericType14_makeFromJson(VuoOscMessage_getDataJson(message, 4));
+	if (5 <= message->dataCount)
+		*data5 = VuoGenericType15_makeFromJson(message->data[4]);
 
-	if (5 <= dataCount)
-		*data5 = VuoGenericType15_makeFromJson(VuoOscMessage_getDataJson(message, 5));
+	if (6 <= message->dataCount)
+		*data6 = VuoGenericType16_makeFromJson(message->data[5]);
 
-	if (6 <= dataCount)
-		*data6 = VuoGenericType16_makeFromJson(VuoOscMessage_getDataJson(message, 6));
+	if (7 <= message->dataCount)
+		*data7 = VuoGenericType17_makeFromJson(message->data[6]);
 
-	if (7 <= dataCount)
-		*data7 = VuoGenericType17_makeFromJson(VuoOscMessage_getDataJson(message, 7));
+	if (8 <= message->dataCount)
+		*data8 = VuoGenericType18_makeFromJson(message->data[7]);
 
-	if (8 <= dataCount)
-		*data8 = VuoGenericType18_makeFromJson(VuoOscMessage_getDataJson(message, 8));
+	if (9 <= message->dataCount)
+		*data9 = VuoGenericType19_makeFromJson(message->data[8]);
 
-	if (9 <= dataCount)
-		*data9 = VuoGenericType19_makeFromJson(VuoOscMessage_getDataJson(message, 9));
+	if (10 <= message->dataCount)
+		*data10 = VuoGenericType20_makeFromJson(message->data[9]);
 
-	if (10 <= dataCount)
-		*data10 = VuoGenericType20_makeFromJson(VuoOscMessage_getDataJson(message, 10));
-
-	if (11 <= dataCount)
-		*data11 = VuoGenericType21_makeFromJson(VuoOscMessage_getDataJson(message, 11));
+	if (11 <= message->dataCount)
+		*data11 = VuoGenericType21_makeFromJson(message->data[10]);
 }

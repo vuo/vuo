@@ -101,6 +101,18 @@ unsigned int VuoVideo_getAudioChannels(VuoVideo player);
 bool VuoVideo_isReady(VuoVideo player);
 
 /**
+ * True if video playback is running, false otherwise.
+ */
+bool VuoVideo_isPlaying(VuoVideo player);
+
+/**
+ * If manually controlling video using VuoVideo_nextVideoFrame, use this function to retrieve the video frame stored after a seek operation.
+ * If calling VuoVideo_seekToSecond() and *not* making use of VuoVideo_getFrameAtSecond() you must release the image associated with this
+ * this frame after a seek operation.  Note that if VuoVideo_getCurrentVideoFrame() returns false no video frame was procured.
+ */
+bool VuoVideo_getCurrentVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame);
+
+/**
  * Steps the video one frame, returning the newly decoded image.  Will be forwards or backwards depending on playback rate.  The image
  * stored in videoFrame will have been registered and have a retain count of 1 - caller is responsible for release.  If returning false,
  * image will be null.
@@ -117,6 +129,11 @@ bool VuoVideo_nextVideoFrame(VuoVideo player, VuoVideoFrame* videoFrame);
  * If video is currently playing, this will always returns false.
  */
 bool VuoVideo_nextAudioFrame(VuoVideo player, VuoAudioFrame* audioFrame);
+
+/**
+ * Ensure that frameTime is a valid timestamp, wrapping or clamping the value depending on loop type.
+ */
+VuoReal VuoVideo_validateTimestamp(VuoReal frameTime, VuoReal duration, VuoLoopType loop, int *outputDirection);
 
 #ifdef __cplusplus
 }

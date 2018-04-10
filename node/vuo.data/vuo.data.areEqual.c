@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Are Equal",
+					  "title" : "Are Equal (Generic)",
 					  "keywords" : [ "==", "same", "identical", "equivalent", "match", "compare" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {

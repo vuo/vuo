@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOHORIZONTALSIDE_H
-#define VUOHORIZONTALSIDE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoHorizontalSide_struct { void *l; } * VuoList_VuoHorizontalSide;
@@ -50,5 +49,4 @@ void VuoHorizontalSide_release(VuoHorizontalSide value);
  * @}
  */
 
-#endif // VUOHORIZONTALSIDE_H
 

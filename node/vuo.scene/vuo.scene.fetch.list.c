@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Fetch List of Scenes",
 					 "keywords" : [
-						 "download", "open", "load", "import", "http", "url", "file", "get",
+						 "download", "open", "load", "import", "http", "url", "file", "get", "read",
 						 "mesh", "model", "object", "3D", "opengl", "scenegraph", "graphics",
 						 "3ds", "Studio",
 						 "Autodesk FBX",

@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOAUDIOENCODING_H
-#define VUOAUDIOENCODING_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoAudioEncoding_struct { void *l; } * VuoList_VuoAudioEncoding;
@@ -49,5 +48,3 @@ void VuoAudioEncoding_release(VuoAudioEncoding value);
 /**
  * @}
 */
-
-#endif

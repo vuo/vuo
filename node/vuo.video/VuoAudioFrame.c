@@ -16,7 +16,7 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					  "title" : "Video Frame",
+					  "title" : "Audio Frame",
 					  "description" : "VuoAudioSamples and timestamp for a single frame of audio.",
 					  "keywords" : [ ],
 					  "version" : "1.0.0",
@@ -44,10 +44,10 @@ VuoAudioFrame VuoAudioFrame_makeFromJson(json_object *js)
 	VuoAudioFrame value = {NULL, 0.0};
 	json_object *o = NULL;
 
-	if (json_object_object_get_ex(js, "samples", &o))
-		value.samples = VuoList_VuoAudioSamples_makeFromJson(o);
+	if (json_object_object_get_ex(js, "channels", &o))
+		value.channels = VuoList_VuoAudioSamples_makeFromJson(o);
 	else
-		value.samples = NULL;
+		value.channels = NULL;
 
 	if (json_object_object_get_ex(js, "timestamp", &o))
 		value.timestamp = VuoReal_makeFromJson(o);
@@ -64,8 +64,8 @@ json_object * VuoAudioFrame_getJson(const VuoAudioFrame value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *samplesObject = VuoList_VuoAudioSamples_getJson(value.samples);
-	json_object_object_add(js, "samples", samplesObject);
+	json_object *channelsObject = VuoList_VuoAudioSamples_getJson(value.channels);
+	json_object_object_add(js, "channels", channelsObject);
 
 	json_object *timestampObject = VuoReal_getJson(value.timestamp);
 	json_object_object_add(js, "timestamp", timestampObject);
@@ -78,7 +78,7 @@ json_object * VuoAudioFrame_getJson(const VuoAudioFrame value)
  */
 char * VuoAudioFrame_getSummary(const VuoAudioFrame value)
 {
-	return VuoText_format("%s<br />Timestamp: %f", VuoList_VuoAudioSamples_getSummary(value.samples), value.timestamp );
+	return VuoText_format("%s<br />Timestamp: %f", VuoList_VuoAudioSamples_getSummary(value.channels), value.timestamp );
 }
 
 /**

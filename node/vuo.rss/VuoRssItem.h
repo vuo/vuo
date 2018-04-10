@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORSSITEM_H
-#define VUORSSITEM_H
+#pragma once
 
 /**
  * @ingroup VuoTypes
@@ -56,5 +55,4 @@ void VuoRssItem_release(VuoRssItem value);
  * @}
  */
 
-#endif // VUORSSITEM_H
 

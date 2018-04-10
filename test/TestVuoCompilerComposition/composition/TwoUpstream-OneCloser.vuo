@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Convert3DPointToScale [type="vuo.type.scale.point3d.transform" version="1.0.0" label="Convert 3D Point to Scale|<refresh>refresh\l|<scale>scale\l|<transform>transform\r" pos="540,270"];
+Curve2 [type="vuo.motion.curve.VuoPoint3d" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<value>value\r" pos="240,285" _startPosition="{\"x\":1,\"y\":0,\"z\":0}" _endPosition="{\"x\":1.,\"y\":1.,\"z\":1.}" _duration="1." _curve="\"quadratic\"" _easing="\"in\"" _loop="\"mirror\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-345,75" _started_eventThrottling="enqueue"];
+MakeHSLColor [type="vuo.color.make.hsl" version="2.0.0" label="Make HSL Color|<refresh>refresh\l|<hue>hue\l|<saturation>saturation\l|<lightness>lightness\l|<opacity>opacity\l|<color>color\r" pos="-15,135" _saturation="1.0" _lightness="0.5" _opacity="1.0"];
+MakeList4 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="649,206"];
+MakeList5 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="619,176"];
+MakeSphere2 [type="vuo.scene.make.sphere.VuoShader" version="1.0.0" label="Make Sphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<rows>rows\l|<columns>columns\l|<object>object\r" pos="435,165" _rows="32" _columns="32"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.2.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="690,165" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Shade with Color|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="180,135" _highlightColor="{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.}" _shininess="0.9"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Share Value|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="-165,135" _value="0.10000000000000001"];
+
+Convert3DPointToScale:transform -> MakeSphere2:transform;
+Curve2:value -> Convert3DPointToScale:scale;
+FireOnStart:started -> ShareValue2:refresh;
+MakeHSLColor:color -> ShadeWithColor:color;
+MakeList4:list -> RenderSceneToWindow:setWindowProperties;
+MakeList5:list -> RenderSceneToWindow:objects;
+MakeSphere2:object -> MakeList5:1;
+RenderSceneToWindow:requestedFrame -> Curve2:time;
+ShadeWithColor:shader -> MakeSphere2:material;
+ShareValue2:sameValue -> MakeHSLColor:hue;
+}

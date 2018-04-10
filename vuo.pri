@@ -1,4 +1,4 @@
-VUO_VERSION = 1.2.3
+VUO_VERSION = 1.2.4
 
 ROOT = $$system(pwd)
 DEFINES += VUO_ROOT=\\\"$$ROOT\\\"
@@ -24,7 +24,7 @@ LLVM_ROOT = /usr/local/Cellar/llvm/3.2
 LLVM_DYLIB = libLLVM-3.2svn.dylib
 JSONC_ROOT = /usr/local/Cellar/json-c/0.12
 GRAPHVIZ_ROOT = /usr/local/Cellar/graphviz/2.28.0
-QT_ROOT = /usr/local/Cellar/qt/5.3.1
+QT_ROOT = /usr/local/Cellar/qt/5.6.2
 LIBFFI_ROOT = /usr/local/Cellar/libffi/3.0.11
 ZLIB_ROOT = /usr/local/Cellar/zlib/1.2.8
 ZMQ_ROOT = /usr/local/Cellar/zeromq/2.2.0
@@ -33,7 +33,7 @@ MUPARSER_ROOT = /usr/local/Cellar/muparser/2.2.3
 FREEIMAGE_ROOT = /usr/local/Cellar/freeimage/3.17.0
 CURL_ROOT = /usr/local/Cellar/curl/7.30.0
 RTMIDI_ROOT = /usr/local/Cellar/rtmidi/2.0.1
-RTAUDIO_ROOT = /usr/local/Cellar/rtaudio/4.0.12
+RTAUDIO_ROOT = /usr/local/Cellar/rtaudio/4.1.2
 GAMMA_ROOT = /usr/local/Cellar/gamma/0.9.5
 ASSIMP_ROOT = /usr/local/Cellar/assimp/3.2.0
 DISCOUNT_ROOT = /usr/local/Cellar/discount/2.1.6
@@ -57,9 +57,7 @@ analyze {
 	QMAKE_CXX = $$ROOT/base/build-and-analyze $$LLVM_ROOT/bin/clang++ $$ROOT
 	VUO_QMAKE_CONFIG += analyze
 }
-MACOSX_SDK_FOLDER = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs
-exists($$MACOSX_SDK_FOLDER/MacOSX10.9.sdk) { QMAKE_MAC_SDK.macosx.path = $$MACOSX_SDK_FOLDER/MacOSX10.9.sdk }
-else { exists($$MACOSX_SDK_FOLDER/MacOSX10.10.sdk) { QMAKE_MAC_SDK.macosx.path = $$MACOSX_SDK_FOLDER/MacOSX10.10.sdk } }
+include(vuo-macosx-sdk.pri)
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CC = $$QMAKE_CC
 QMAKE_MAC_SDK.$$basename(QMAKESPEC).$${QMAKE_MAC_SDK}.QMAKE_CXX = $$QMAKE_CXX
 QMAKE_LINK = $${LLVM_ROOT}/bin/clang++
@@ -101,7 +99,7 @@ mac {
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_function_starts
 	QMAKE_LFLAGS_X86_64 += -Wl,-no_version_load_command
 
-	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
+	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 
 	!isEmpty(VUO_INFO_PLIST) : isEmpty(API_HEADER_LISTS) {
 		# Fill in version number.
@@ -112,7 +110,7 @@ mac {
 			| sed '"s/@BUNDLE_VERSION@/$$VUO_VERSION/"' \
 			| sed '"s/@BUNDLE_SHORT_VERSION_STRING@/$$VUO_VERSION/"' \
 			| sed '"s/@SHORT_VERSION@/$$VUO_VERSION_AND_BUILD/"' \
-			> "$$VUO_INFO_PLIST_GENERATED"
+			> \"$$VUO_INFO_PLIST_GENERATED\"
 		infoPlist.depends = $$VUO_INFO_PLIST
 		infoPlist.target = $$VUO_INFO_PLIST_GENERATED
 		PRE_TARGETDEPS += "$$system(echo $$VUO_INFO_PLIST_GENERATED)"
@@ -164,6 +162,8 @@ QMAKE_CXXFLAGS_RELEASE += $$FLAGS
 QMAKE_CXXFLAGS_DEBUG += $$FLAGS
 QMAKE_OBJECTIVE_CFLAGS_RELEASE += $$FLAGS
 QMAKE_OBJECTIVE_CFLAGS_DEBUG += $$FLAGS
+QMAKE_LFLAGS -= -stdlib=libc++
+QMAKE_CXXFLAGS -= -stdlib=libc++
 QMAKE_LFLAGS += -Oz
 
 CONFIG(debug, debug|release) {
@@ -331,6 +331,7 @@ qtTest {
 		-framework Security \
 		-framework Cocoa \
 		-framework CoreFoundation \
+		-rpath $$QT_ROOT/lib \
 		-F$${QT_ROOT}/lib/ \
 		-framework QtCore \
 		-framework QtTest
@@ -377,27 +378,20 @@ VuoPCH | VuoBase | VuoCompiler | VuoRenderer | VuoEditor {
 		QMAKE_OBJCFLAGS_PRECOMPILE += $$FLAGS_ARCH
 		QMAKE_OBJCFLAGS_USE_PRECOMPILE = $$QMAKE_CFLAGS_USE_PRECOMPILE
 	} else {
-		QMAKE_OBJCFLAGS_PRECOMPILE =
 		QMAKE_OBJECTIVE_CFLAGS += $$VUO_VERSION_DEFINES
 	}
 
 	VuoPCH_objcxx {
-		QMAKE_EXT_CPP += .mm
-		QMAKE_OBJCXXFLAGS_PRECOMPILE += $$FLAGS_ARCH
 		VuoInputEditor {
-			QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_CXXFLAGS_X86_64 -Xclang -include-pch -Xclang ../widget/pch/widget/objective-c++.pch
-		} else {
-			QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_CXXFLAGS_X86_64 -Xclang -include-pch -Xclang pch/$$TARGET/objective-c++.pch
+			QMAKE_OBJCXXFLAGS_USE_PRECOMPILE = -Xclang -include-pch -Xclang ../widget/pch/widget/objective-c++.pch
+			QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_CXXFLAGS_X86_64
 		}
-	} else {
-		QMAKE_OBJCXXFLAGS_PRECOMPILE =
 	}
 
 	# For VuoLog.h
 	PCH_INCLUDE_PATHS += \
 		$$JSONC_ROOT/include \
 		$$ROOT/library \
-		$$ROOT/node/vuo.font \
 		$$ROOT/node/vuo.ui \
 		$$ROOT/type \
 		$$ROOT/type/list

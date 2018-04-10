@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "pixels", "lofi", "simplify", "cube", "square", "filter", "overenlarge", "mosaic", "censor",
 						 "pixelate" // American spelling
 					 ],
-					 "version" : "1.1.1",
+					 "version" : "1.1.2",
 					 "node" : {
 						 "exampleCompositions" : [ ]
 					 }
@@ -77,12 +77,15 @@ void nodeInstanceEvent
 		VuoInstanceData(struct nodeInstanceData *) instance,
 		VuoInputData(VuoImage) image,
 		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0, "suggestedMax":2, "suggestedStep":0.05}) pixelSize,
-		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
+		VuoInputData(VuoPoint2d, {"default":{"x":0.0,"y":0.0}, "suggestedMin":{"x":-1,"y":-1}, "suggestedMax":{"x":1,"y":1}, "suggestedStep":{"x":0.1,"y":0.1}}) center,
 		VuoOutputData(VuoImage) pixellatedImage
 )
 {
 	if (!image)
+	{
+		*pixellatedImage = NULL;
 		return;
+	}
 
 	int w = image->pixelsWide, h = image->pixelsHigh;
 

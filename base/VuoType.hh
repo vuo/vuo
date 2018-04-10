@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOTYPE_HH
-#define VUOTYPE_HH
+#pragma once
 
 #include "VuoBase.hh"
 #include "VuoModule.hh"
@@ -30,5 +29,3 @@ public:
 	static bool isDictionaryTypeName(string typeName);
 	static string extractInnermostTypeName(string typeName);
 };
-
-#endif // VUOTYPE_HH

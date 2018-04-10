@@ -8,6 +8,7 @@
 
 // Inputs from VuoSceneRenderer
 uniform mat4 projectionMatrix;
+uniform mat4 cameraMatrixInverse;
 uniform float aspectRatio;
 uniform float primitiveHalfSize;
 uniform vec3 cameraPosition;
@@ -27,7 +28,7 @@ void main()
 {
 	vec2 lineSize = vec2(primitiveHalfSize, primitiveHalfSize * aspectRatio);
 
-	vec3 cameraPosition = useFisheyeProjection ? vec3(0,0,-1000) : (projectionMatrix * vec4(cameraPosition,1)).xyz;
+	vec3 cameraPosition = useFisheyeProjection ? vec3(0,0,-1000) : (projectionMatrix * cameraMatrixInverse * vec4(cameraPosition,1)).xyz;
 
 	// Screen-space direction perpendicular to the line segment.
 	vec3 perpendicular = normalize(

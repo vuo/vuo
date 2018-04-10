@@ -39,6 +39,15 @@ VuoModuleMetadata({
 				 });
 #endif
 
+/**
+ * Private VuoQtListener data.
+ */
+@interface VuoQtListener ()
+///@{
+@property dispatch_queue_t captureQueue;
+///@}
+@end
+
 @implementation VuoQtListener
 
 /**
@@ -48,6 +57,8 @@ VuoModuleMetadata({
 - (BOOL) initWithDevice:(VuoVideoInputDevice)device callback:(void(*)(VuoVideoFrame))receivedFrame
 {
 	NSError *error;
+
+	_captureQueue = dispatch_queue_create("org.vuo.VuoQtListener", NULL);
 
 	mCaptureSession = [[QTCaptureSession alloc] init];
 	mMovie = [[QTMovie alloc] initToWritableData:[NSMutableData data] error:&error];
@@ -60,7 +71,7 @@ VuoModuleMetadata({
 
 	/// initialize texture cache for creating gl textures from CVPixelBuffer
 	glContext = VuoGlContext_use();
-	CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false);
+	CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false);
 	CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, (CGLContextObj)glContext, pf, NULL, &textureCache);
 	CGLReleasePixelFormat(pf);
 	if (ret != kCVReturnSuccess)
@@ -83,7 +94,10 @@ VuoModuleMetadata({
 
 	// @todo  https://b33p.net/kosada/node/10194
 	SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
 
 	if(VuoIsDebugEnabled())
 	{
@@ -188,6 +202,8 @@ VuoModuleMetadata({
 
 	CVBufferRelease( mCurrentImageBuffer );
 
+	dispatch_release(_captureQueue);
+
 	[super dealloc];
 }
 
@@ -290,19 +306,12 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 {
 	if(mCaptureDeviceInput)
 	{
-		if (VuoApp_isMainThread())
+		// If the device is changed to a non-default device on startup
+		// (e.g., by the initial event from `List Video Devices`),
+		// it hangs unless it executes on the main queue.
+		VuoApp_executeOnMainThread(^{
 			[mCaptureSession removeInput:mCaptureDeviceInput];
-		else
-		{
-			// If the device is changed to a non-default device on startup
-			// (e.g., by the initial event from `List Video Devices`),
-			// it hangs unless it executes on the main queue.
-			VUOLOG_PROFILE_BEGIN(mainQueue);
-			dispatch_sync(dispatch_get_main_queue(), ^{
-						  VUOLOG_PROFILE_END(mainQueue);
-						  [mCaptureSession removeInput:mCaptureDeviceInput];
-					  });
-		}
+		});
 		[[mCaptureDeviceInput device] close];
 		[mCaptureDeviceInput release];
 		mCaptureDeviceInput = nil;
@@ -387,8 +396,12 @@ NSString *VuoQTCapture_getVendorNameForUniqueID(NSString *uniqueID);
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 		VUOLOG_PROFILE_END(mainQueue);
+		[mCaptureSession removeInput:mCaptureDeviceInput];
 		[mCaptureSession stopRunning];
 	});
+
+	// Wait for last frame to finish processing.
+	dispatch_sync(_captureQueue, ^{});
 }
 
 /**
@@ -415,6 +428,8 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 - (void) captureOutput:(QTCaptureOutput *)captureOutput didOutputVideoFrame:(CVImageBufferRef)imageBuffer withSampleBuffer:(QTSampleBuffer *)sampleBuffer fromConnection:(QTCaptureConnection *)connection
 {
 	static bool firstRun = true;
+
+	dispatch_sync(_captureQueue, ^{
 
 	GLsizei texWidth    = CVPixelBufferGetWidth(imageBuffer);
 	GLsizei texHeight   = CVPixelBufferGetHeight(imageBuffer);
@@ -586,6 +601,8 @@ static void VuoAvPlayerObject_freeCallback(VuoImage imageToFree)
 	CVBufferRelease(imageBuffer);
 
 	lastFrameReceived = VuoLogGetElapsedTime();
+
+	});
 }
 
 /**

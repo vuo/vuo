@@ -21,7 +21,7 @@ VuoModuleMetadata({
 						 }
 					 },
 					 "compatibleOperatingSystems": {
-						 "macosx" : { "min": "10.7" }
+						 "macosx" : { "min": "10.8" }
 					 },
 					 "node" : {
  						  "isInterface" : false,

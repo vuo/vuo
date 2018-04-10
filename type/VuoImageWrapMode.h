@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOIMAGEWRAPMODE_H
-#define VUOIMAGEWRAPMODE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoImageWrapMode_struct { void *l; } * VuoList_VuoImageWrapMode;
@@ -51,5 +50,3 @@ void VuoImageWrapMode_release(VuoImageWrapMode value);
 /**
  * @}
 */
-
-#endif

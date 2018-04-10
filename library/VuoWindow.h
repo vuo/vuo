@@ -45,11 +45,10 @@ void VuoWindowText_close(VuoWindowText w);
 
 VuoWindowOpenGl VuoWindowOpenGl_make
 (
-		bool useDepthBuffer,
-		void (*initCallback)(VuoGlContext glContext, float backingScaleFactor, void *),
-		void (*updateBackingCallback)(VuoGlContext glContext, void *, float backingScaleFactor),
-		void (*resizeCallback)(VuoGlContext glContext, void *, unsigned int, unsigned int),
-		void (*drawCallback)(VuoGlContext glContext, void *),
+		void (*initCallback)(void *, float backingScaleFactor),
+		void (*updateBackingCallback)(void *, float backingScaleFactor),
+		void (*resizeCallback)(void *, unsigned int, unsigned int),
+		VuoIoSurface (*drawCallback)(void *),
 		void *context
 );
 void VuoWindowOpenGl_enableTriggers

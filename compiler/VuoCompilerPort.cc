@@ -83,6 +83,8 @@ void VuoCompilerPort::setNodeIdentifier(string nodeIdentifier)
 
 /**
  * Returns a unique, consistent identifier for this port.
+ *
+ * This needs to be kept consistent with runtime function `vuoReplacePortData()`.
  */
 string VuoCompilerPort::getIdentifier(void)
 {

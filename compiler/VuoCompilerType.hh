@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERTYPE_HH
-#define VUOCOMPILERTYPE_HH
+#pragma once
 
 #include "VuoBaseDetail.hh"
 #include "VuoType.hh"
@@ -57,5 +56,3 @@ public:
 	Attributes getFunctionParameterAttributes(void);
 	bool hasInterprocessStringFunction(void);
 };
-
-#endif // VUOCOMPILERTYPE_HH

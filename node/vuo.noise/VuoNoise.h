@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUONOISE_H
-#define VUONOISE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoNoise_struct { void *l; } * VuoList_VuoNoise;
@@ -51,5 +50,3 @@ char * VuoNoise_getString(const VuoNoise value);
 /**
  * @}
 */
-
-#endif

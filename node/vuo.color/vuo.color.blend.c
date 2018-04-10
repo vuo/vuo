@@ -160,7 +160,7 @@ static VuoColor blendLinearDodge(VuoColor base, VuoColor blend, float foreground
 	return colorWithRgbAndA( VuoPoint3d_lerp(baseRGB, result, foregroundOpacity), base.a + blend.a * foregroundOpacity );
 }
 
-static VuoColor blendDarkerComponent(VuoColor base, VuoColor blend, float foregroundOpacity)
+static VuoColor blendDarkerComponents(VuoColor base, VuoColor blend, float foregroundOpacity)
 {
 	VuoPoint3d baseRGB = getRGB(base);
 	VuoPoint3d blendRGB = getRGB(blend);
@@ -239,7 +239,7 @@ static VuoColor blendScreen(VuoColor base, VuoColor blend, float foregroundOpaci
 	return colorWithRgbAndA( VuoPoint3d_lerp(baseRGB, result, foregroundOpacity), base.a + blend.a * foregroundOpacity);
 }
 
-static VuoColor blendLighterComponent(VuoColor base, VuoColor blend, float foregroundOpacity)
+static VuoColor blendLighterComponents(VuoColor base, VuoColor blend, float foregroundOpacity)
 {
 	VuoPoint3d baseRGB = getRGB(base);
 	VuoPoint3d blendRGB = getRGB(blend);
@@ -567,8 +567,8 @@ void nodeEvent
 		case VuoBlendMode_Multiply:
 			*blendedColor = blendMultiply(background, foreground, foregroundOpacity);
 			break;
-		case VuoBlendMode_DarkerComponent:
-			*blendedColor = blendDarkerComponent(background, foreground, foregroundOpacity);
+		case VuoBlendMode_DarkerComponents:
+			*blendedColor = blendDarkerComponents(background, foreground, foregroundOpacity);
 			break;
 		case VuoBlendMode_DarkerColor:
 			*blendedColor = blendDarkerColor(background, foreground, foregroundOpacity);
@@ -582,8 +582,8 @@ void nodeEvent
 		case VuoBlendMode_Screen:
 			*blendedColor = blendScreen(background, foreground, foregroundOpacity);
 			break;
-		case VuoBlendMode_LighterComponent:
-			*blendedColor = blendLighterComponent(background, foreground, foregroundOpacity);
+		case VuoBlendMode_LighterComponents:
+			*blendedColor = blendLighterComponents(background, foreground, foregroundOpacity);
 			break;
 		case VuoBlendMode_LighterColor:
 			*blendedColor = blendLighterColor(background, foreground, foregroundOpacity);

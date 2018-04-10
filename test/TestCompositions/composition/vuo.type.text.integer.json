@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Expected outputs for the vuo.type.text.integer node.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration": {
+	"positive"               : {"firingPort": "text", "inputPortValues": {"text":     "123"}, "outputPortValues": {"integer":   123}},
+	"positive with leading +": {"firingPort": "text", "inputPortValues": {"text":    "+123"}, "outputPortValues": {"integer":   123}},
+	"negative"               : {"firingPort": "text", "inputPortValues": {"text":      "-5"}, "outputPortValues": {"integer":    -5}},
+	"scientific"             : {"firingPort": "text", "inputPortValues": {"text":     "1e7"}, "outputPortValues": {"integer":   1e7}},
+	"scientific +"           : {"firingPort": "text", "inputPortValues": {"text":   "20e+3"}, "outputPortValues": {"integer": 20e+3}},
+	"trailing nonnumeric"    : {"firingPort": "text", "inputPortValues": {"text":      "5a"}, "outputPortValues": {"integer":     5}},
+	"trailing nonnumeric -"  : {"firingPort": "text", "inputPortValues": {"text":     "-5a"}, "outputPortValues": {"integer":    -5}},
+	"dot"                    : {"firingPort": "text", "inputPortValues": {"text": "123.456"}, "outputPortValues": {"integer":   123}},
+	"nonnumeric"             : {"firingPort": "text", "inputPortValues": {"text":       "X"}, "outputPortValues": {"integer":     0}},
+	"leading nonnumeric"     : {"firingPort": "text", "inputPortValues": {"text":      "X2"}, "outputPortValues": {"integer":     0}},
+	"leading dot"            : {"firingPort": "text", "inputPortValues": {"text":      ".5"}, "outputPortValues": {"integer":     0}},
+}}

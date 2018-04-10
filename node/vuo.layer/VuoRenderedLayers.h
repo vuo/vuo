@@ -7,11 +7,11 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUORENDEREDLAYERS_H
-#define VUORENDEREDLAYERS_H
+#pragma once
 
 #include "VuoSceneObject.h"
 #include "VuoWindowReference.h"
+#include "VuoLayer.h"
 
 /**
  * @ingroup VuoTypes
@@ -43,9 +43,26 @@ VuoRenderedLayers VuoRenderedLayers_makeWithWindow(VuoSceneObject rootSceneObjec
 												   VuoWindowReference window);
 bool VuoRenderedLayers_findLayer(VuoRenderedLayers renderedLayers, VuoText layerName,
 								 VuoList_VuoSceneObject ancestorObjects, VuoSceneObject *foundObject);
-void VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers,
+bool VuoRenderedLayers_getTransformedLayer(VuoRenderedLayers renderedLayers,
 										   VuoList_VuoSceneObject ancestorObjects, VuoSceneObject targetObject,
 										   VuoPoint2d *layerCenter, VuoPoint2d layerCorners[4]);
+
+bool VuoRenderedLayers_getTransformedPoint(	VuoRenderedLayers renderedLayers,
+											VuoList_VuoSceneObject ancestorObjects,
+											VuoSceneObject targetObject,
+											VuoPoint2d point,
+											VuoPoint2d *transformedPoint);
+
+bool VuoRenderedLayers_getInverseTransformedPoint(	VuoRenderedLayers renderedLayers,
+													VuoList_VuoSceneObject ancestorObjects,
+													VuoSceneObject targetObject,
+													VuoPoint2d point,
+													VuoPoint2d *inverseTransformedPoint);
+
+bool VuoRenderedLayers_getRect(VuoRenderedLayers renderedLayers, VuoLayer layer, VuoRectangle* rect);
+
+VuoPoint2d VuoRenderedLayers_getTextSize(VuoRenderedLayers renderedLayers, VuoText text, VuoFont font, bool includeTrailingWhiteSpace);
+
 VuoRectangle VuoRenderedLayers_getBoundingBox(VuoPoint2d layerCorners[4]);
 bool VuoRenderedLayers_isPointInQuad(VuoPoint2d corners[4], VuoPoint2d point);
 bool VuoRenderedLayers_isPointInLayer(VuoRenderedLayers renderedLayers, VuoText layerName, VuoPoint2d point);
@@ -67,5 +84,3 @@ void VuoRenderedLayers_release(VuoRenderedLayers value);
 /**
  * @}
  */
-
-#endif

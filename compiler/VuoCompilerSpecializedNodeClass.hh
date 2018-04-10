@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOCOMPILERSPECIALIZEDNODECLASS_H
-#define VUOCOMPILERSPECIALIZEDNODECLASS_H
+#pragma once
 
 #include "VuoCompilerNodeClass.hh"
 
@@ -64,8 +63,6 @@ private:
 	Function * getCallbackStopFunction(void);
 	Function * getCompositionContextInitFunction(void);
 	Function * getCompositionContextFiniFunction(void);
-	Function * getCompositionSerializeFunction(void);
-	Function * getCompositionUnserializeFunction(void);
 	Function * getTriggerWorkerFunction(string portIdentifier);
 	vector<VuoCompilerTriggerDescription *> getTriggerDescriptions(void);
 	VuoCompilerInstanceDataClass * getInstanceDataClass(void);
@@ -101,5 +98,3 @@ public:
 	static VuoCompilerNodeClass * getNodeClassForNode(VuoCompilerNodeClass *origNodeClass, VuoCompiler *compiler);
 	static void replaceGenericTypesWithBacking(string &nodeClassSource);
 };
-
-#endif

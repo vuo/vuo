@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOMODIFIERKEY_H
-#define VUOMODIFIERKEY_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoModifierKey_struct { void *l; } * VuoList_VuoModifierKey;
@@ -55,5 +54,3 @@ void VuoModifierKey_release(VuoModifierKey value);
 /**
  * @}
 */
-
-#endif

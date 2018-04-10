@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-#ifndef VUOFILETYPE_H
-#define VUOFILETYPE_H
+#pragma once
 
 /// @{
 typedef const struct VuoList_VuoFileType_struct { void *l; } * VuoList_VuoFileType;
@@ -59,4 +58,3 @@ void VuoFileType_release(VuoFileType value);
  * @}
  */
 
-#endif // VUOFILETYPE_H

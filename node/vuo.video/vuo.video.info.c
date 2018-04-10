@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Get Movie Info",
-					  "keywords" : [
+					  "keywords" : [									  "information",
 						  "animation",
 						  "avi",
 						  "dv", "dvc",
