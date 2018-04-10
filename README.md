@@ -8,8 +8,8 @@ Vuo's source code is available so you can learn about how Vuo works, tinker with
 You ***do not*** need to build Vuo from source if you want to:
 
    - **run the Vuo Editor application**.  The Vuo Editor application is not included in this source code archive — it is available as a [separate download](https://vuo.org/download).
-   - **develop an application that uses Vuo**, and you've [bought Vuo](vuo.org/buy).  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Applications that use Vuo".
-   - **develop nodes and types for Vuo**, and you've [bought Vuo](vuo.org/buy).  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Node Classes and Port Types".
+   - **develop an application that uses Vuo**, and you've [bought Vuo](https://vuo.org/buy).  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Applications that use Vuo".
+   - **develop nodes and types for Vuo**, and you've [bought Vuo](https://vuo.org/buy).  Instead, [download the Vuo SDK](https://vuo.org/download), and follow the instructions on [api.vuo.org](http://api.vuo.org) under the section "Developing Node Classes and Port Types".
 
 
 
