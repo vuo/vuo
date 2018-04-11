@@ -1,0 +1,26 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Vuo Module",
+	"type": "object",
+	"properties": {
+		"title": {
+			"type": "string",
+			"pattern": "^[A-Z0-9][A-Za-z0-9+:,/() -]+$",
+		},
+		"description": {
+			"type": "string",
+			"pattern": ".+",
+		},
+		"dependencies": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"pattern": ".+",
+			},
+		},
+	},
+	"required": [
+		"title",
+	],
+	"additionalProperties": false,
+}

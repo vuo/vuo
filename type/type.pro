@@ -14,7 +14,9 @@ TYPE_SOURCES += \
 	VuoCursor.c \
 	VuoCurve.c \
 	VuoCurveEasing.c \
-	VuoDictionary_VuoText_VuoReal.c \
+	VuoDictionary_VuoText_VuoReal.cc \
+	VuoDictionary_VuoText_VuoText.cc \
+	VuoDiode.c \
 	VuoFont.c \
 	VuoHorizontalAlignment.c \
 	VuoInteger.c \
@@ -22,6 +24,7 @@ TYPE_SOURCES += \
 	VuoImage.c \
 	VuoImageColorDepth.c \
 	VuoImageWrapMode.c \
+	VuoListPosition.c \
 	VuoLoopType.c \
 #	VuoMathExpression.c \
 	VuoMathExpressionList.c \
@@ -35,10 +38,14 @@ TYPE_SOURCES += \
 	VuoSceneObject.cc \
 	VuoScreen.c \
 	VuoShader.cc \
+	VuoSortOrder.c \
 	VuoText.c \
 	VuoTextCase.c \
+	VuoTextComparison.c \
+	VuoTextSort.c \
 	VuoTransform.c \
 	VuoTransform2d.c \
+	VuoTree.cc \
 	VuoUrl.c \
 	VuoVerticalAlignment.c \
 	VuoWave.c \
@@ -57,6 +64,8 @@ TYPE_HEADERS = \
 	VuoCurve.h \
 	VuoCurveEasing.h \
 	VuoDictionary_VuoText_VuoReal.h \
+	VuoDictionary_VuoText_VuoText.h \
+	VuoDiode.h \
 	VuoFont.h \
 	VuoHorizontalAlignment.h \
 	VuoInteger.h \
@@ -64,6 +73,7 @@ TYPE_HEADERS = \
 	VuoImage.h \
 	VuoImageColorDepth.h \
 	VuoImageWrapMode.h \
+	VuoListPosition.h \
 	VuoLoopType.h \
 #	VuoMathExpression.h \
 	VuoMathExpressionList.h \
@@ -77,10 +87,14 @@ TYPE_HEADERS = \
 	VuoSceneObject.h \
 	VuoScreen.h \
 	VuoShader.h \
+	VuoSortOrder.h \
 	VuoText.h \
 	VuoTextCase.h \
+	VuoTextComparison.h \
+	VuoTextSort.h \
 	VuoTransform.h \
 	VuoTransform2d.h \
+	VuoTree.h \
 	VuoUrl.h \
 	VuoVerticalAlignment.h \
 	VuoWave.h \
@@ -103,7 +117,8 @@ INCLUDEPATH += \
 
 TYPE_INCLUDEPATH += \
 	../node/vuo.data \
-	../node/vuo.text
+	../node/vuo.text \
+	$${LIBXML2_ROOT}/include/libxml2
 
 HEADERS += \
 	$$TYPE_HEADERS \

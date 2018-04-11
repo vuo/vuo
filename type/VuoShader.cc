@@ -119,6 +119,7 @@ VuoShader VuoShader_make(const char *name)
 	t->objectScale = 1;
 
 	t->isTransparent = false;
+	t->useAlphaAsCoverage = false;
 
 	t->colorBuffer = NULL;
 	t->depthBuffer = NULL;
@@ -628,7 +629,7 @@ void VuoShader_initGradTexture(CGLContextObj cgl_ctx)
 }
 
 typedef std::map<VuoGlContext, GLuint> VuoShaderContextType;	///< Type for VuoShaderContextMap.
-static VuoShaderContextType VuoShaderContextMap;	///< The currently-active shader on each context.
+extern VuoShaderContextType VuoShaderContextMap;
 static dispatch_semaphore_t VuoShaderContext_semaphore;	///< Serializes access to VuoShaderContextMap.
 /**
  * Initializes VuoShaderContext_semaphore.
@@ -672,8 +673,6 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 
 	{
 		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-
-		VuoGlProgram_lock(program->program.programName);
 
 		bool alreadyActiveOnThisContext = false;
 		dispatch_semaphore_wait(VuoShaderContext_semaphore, DISPATCH_TIME_FOREVER);
@@ -882,8 +881,10 @@ bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod in
 }
 
 /**
- * Deactivates the shader program on the specified `glContext`,
- * and unbinds the shader's images from their texture units.
+ * Unbinds the shader's images from their texture units.
+ *
+ * The shader program remains in use on `glContext` (in case it's needed again soon).
+ * To disuse the shader, see @see VuoShader_resetContext.
  *
  * @param shader The shader to deactivate.
  * @param inputPrimitiveMode The shader program mode to deactivate.
@@ -961,8 +962,6 @@ void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod 
 
 		// Instead of deactivating the shader, keep it active in hope that we can reuse it during this context's next draw call.
 //		glUseProgram(0);
-
-		VuoGlProgram_unlock(program->program.programName);
 	}
 
 	dispatch_semaphore_signal((dispatch_semaphore_t)shader->lock);
@@ -970,22 +969,21 @@ void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod 
 }
 
 /**
- * Returns the context's shader state to normal (and clears VuoShader's internal cache).
+ * Disuses whatever shader (if any) is currently active on `glContext`.
  *
- * Call this when you're done using the context — after @ref VuoShader_deactivate and before @ref VuoGlContext_disuse.
+ * @threadAny
  */
-void VuoShader_cleanupContext(VuoGlContext glContext)
+void VuoShader_resetContext(VuoGlContext glContext)
 {
 	dispatch_semaphore_wait(VuoShaderContext_semaphore, DISPATCH_TIME_FOREVER);
+	VuoShaderContextType::iterator i = VuoShaderContextMap.find(glContext);
+	if (i != VuoShaderContextMap.end())
 	{
-		VuoShaderContextType::iterator i = VuoShaderContextMap.find(glContext);
-		if (i != VuoShaderContextMap.end())
-			VuoShaderContextMap.erase(i);
+		i->second = 0;
+		CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+		glUseProgram(0);
 	}
 	dispatch_semaphore_signal(VuoShaderContext_semaphore);
-
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-	glUseProgram(0);
 }
 
 /**

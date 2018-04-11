@@ -5,33 +5,34 @@
  * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
  */
 
 digraph G
 {
 AdjustLoudness [type="vuo.audio.loudness" version="2.0.0" label="Adjust Loudness|<refresh>refresh\l|<samples>samples\l|<loudness>loudness\l|<adjustedSamples>adjustedSamples\r" pos="615,30" _loudness="0.5"];
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="915,165" _scaleToFit="true" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":0}" _width="1" _columns="1" _height="1" _rows="2"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="900,165" _scaleToFit="true" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0,\"y\":0}" _width="1" _columns="1" _height="1" _rows="2"];
 ConvertImageToLayer [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="945,495"];
 ConvertImageToLayer2 [type="vuo.type.image.layer" version="1.0.0" label="Convert Image to Layer|<refresh>refresh\l|<image>image\l|<layer>layer\r" pos="945,510"];
 Curve2 [type="vuo.motion.curve.VuoReal" version="2.0.0" label="Curve|<refresh>refresh\l|<time>time\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<duration>duration\l|<curve>curve\l|<easing>easing\l|<loop>loop\l|<phase>phase\l|<value>value\r" pos="375,315" _startPosition="220" _endPosition="1760" _duration="4" _curve="\"quadratic\"" _easing="\"out\"" _loop="\"mirror\"" _phase="0.0"];
-MakeAudioWave [type="vuo.audio.wave" version="1.0.0" label="Make Audio Wave|<refresh>refresh\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="330,75" _wave="\"sine\"" _setPhase="0.0"];
-MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1154,206" fillcolor="green"];
-MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1104,176" fillcolor="green"];
-MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="839,176"];
-MakeList5 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="553,41"];
+MakeAudioWave2 [type="vuo.audio.wave2" version="2.0.0" label="Make Audio Wave|<refresh>refresh\l|<calculateSamples>calculateSamples\l|<wave>wave\l|<frequency>frequency\l|<setPhase>setPhase\l|<samples>samples\r" pos="330,75" _wave="\"sine\"" _setPhase="0.0"];
+MakeList [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1107,206" fillcolor="green"];
+MakeList2 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1074,176" fillcolor="green"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="832,176"];
+MakeList5 [type="vuo.list.make.1.VuoAudioSamples" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="561,41"];
 MakeWaveformImage [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<image>image\r" pos="570,165" fillcolor="violet" _fillColor="{\"r\":1,\"g\":0.63855952024459839,\"b\":1,\"a\":0.25000381469726562}" _lineColor="{\"r\":1,\"g\":0.48642709851264954,\"b\":1,\"a\":1}" _height="256" _syncAmplitude="0"];
 MakeWaveformImage2 [type="vuo.audio.image.waveform2" version="2.0.0" label="Make Waveform Image|<refresh>refresh\l|<samples>samples\l|<fillColor>fillColor\l|<lineColor>lineColor\l|<height>height\l|<syncAmplitude>syncAmplitude\l|<image>image\r" pos="570,285" fillcolor="violet" _fillColor="{\"r\":0.66068512201309204,\"g\":1,\"b\":1,\"a\":0.25000381469726562}" _lineColor="{\"r\":0.36191347241401672,\"g\":1,\"b\":1,\"a\":1}" _height="256" _syncAmplitude="0.5"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1200,165" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1140,165" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
 SendLiveAudio [type="vuo.audio.send" version="1.0.1" label="Send Live Audio|<refresh>refresh\l|<device>device\l|<sendChannels>sendChannels\l|<requestedChannels>requestedChannels\r" pos="810,15" fillcolor="green" _requestedChannels_eventThrottling="enqueue"];
 
 AdjustLoudness:adjustedSamples -> SendLiveAudio:sendChannels;
 ArrangeLayersInGrid:griddedLayer -> MakeList2:1;
 ConvertImageToLayer2:layer -> MakeList3:2;
 ConvertImageToLayer:layer -> MakeList3:1;
-Curve2:value -> MakeAudioWave:frequency;
-MakeAudioWave:samples -> MakeList5:1;
-MakeAudioWave:samples -> MakeWaveformImage2:samples;
-MakeAudioWave:samples -> MakeWaveformImage:samples;
+Curve2:value -> MakeAudioWave2:frequency;
+MakeAudioWave2:samples -> MakeList5:1;
+MakeAudioWave2:samples -> MakeWaveformImage2:samples;
+MakeAudioWave2:samples -> MakeWaveformImage:samples;
 MakeList2:list -> RenderLayersToWindow:layers;
 MakeList3:list -> ArrangeLayersInGrid:layers;
 MakeList5:list -> AdjustLoudness:samples;
@@ -39,5 +40,5 @@ MakeList:list -> RenderLayersToWindow:setWindowProperties;
 MakeWaveformImage2:image -> ConvertImageToLayer2:image;
 MakeWaveformImage:image -> ConvertImageToLayer:image;
 RenderLayersToWindow:requestedFrame -> Curve2:time;
-SendLiveAudio:requestedChannels -> MakeAudioWave:refresh;
+SendLiveAudio:requestedChannels -> MakeAudioWave2:calculateSamples;
 }

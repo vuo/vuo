@@ -13,11 +13,13 @@
 #include <curl/curl.h>
 
 #include "module.h"
+#include "VuoBase64.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoUrlFetch",
 					 "dependencies" : [
+						 "VuoBase64",
 						 "VuoText",
 						 "VuoUrl",
 						 "curl",
@@ -73,6 +75,9 @@ static size_t VuoUrl_curlCallback(void *contents, size_t size, size_t nmemb, voi
  *
  * The caller is responsible for `free()`ing the data.
  *
+ * `data` includes an extra trailing NULL terminator byte (not counted in `dataLength`),
+ * to make it easier to work with URLs containing plain text.
+ *
  * @return true upon success, false upon failure.
  * @todo Better error handling per https://b33p.net/kosada/node/4724
  */
@@ -80,6 +85,44 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 {
 	if (VuoText_isEmpty(url))
 		return false;
+
+	if (strncmp(url, "data:", 5) == 0)
+	{
+		// https://tools.ietf.org/html/rfc2397
+		// data:[<mediatype>][;base64],<data>
+
+		const char *urlData = url + 5;
+
+		// Skip past the <mediatype> tag(s); we only care about the <data> part.
+		urlData = strchr(urlData, ',');
+		if (!urlData)
+			return false;
+
+		// Skip past the comma.
+		++urlData;
+
+		// Does the pre-<data> part of the URI end with `;base64`?
+		bool isBase64 = (urlData - url >= 5 /* data: */ + 7 /* ;base64 */ + 1)
+					 && (strncmp(urlData - 7 - 1, ";base64", 7) == 0);
+
+		VuoText decoded = VuoUrl_decodeRFC3986(urlData);
+		VuoRetain(decoded);
+
+		if (isBase64)
+		{
+			long long outputLength;
+			*data = VuoBase64_decode(decoded, &outputLength);
+			*dataLength = outputLength;
+		}
+		else
+		{
+			*data = strdup(decoded);
+			*dataLength = strlen(decoded);
+		}
+
+		VuoRelease(decoded);
+		return true;
+	}
 
 	struct VuoUrl_curlBuffer buffer = {NULL, 0};
 	CURL *curl;
@@ -94,9 +137,11 @@ bool VuoUrl_fetch(const char *url, void **data, unsigned int *dataLength)
 
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);  // Don't use signals for the timeout logic, since they're not thread-safe.
 
-	VuoText resolvedUrl = VuoUrl_normalize(url, false);
+	VuoText resolvedUrl = VuoUrl_normalize(url, VuoUrlNormalize_default);
 	VuoRetain(resolvedUrl);
 	curl_easy_setopt(curl, CURLOPT_URL, resolvedUrl);
+
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "Vuo/" VUO_VERSION_STRING " (http://vuo.org/)");
 
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);

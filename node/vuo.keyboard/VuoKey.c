@@ -18,6 +18,7 @@
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					  "title" : "Key",
+					  "version" : "1.0.0",
 					  "dependencies" : [
 						"VuoText",
 						"VuoApp",

@@ -8,6 +8,7 @@
  */
 
 #include <sstream>
+#include <CoreFoundation/CoreFoundation.h>
 #include "VuoStringUtilities.hh"
 
 #if defined(__x86_64__) || defined(DOXYGEN)
@@ -132,21 +133,63 @@ string VuoStringUtilities::prefixSymbolName(string symbolName, string moduleKey)
 
 /**
  * Transforms a string into a valid identifier:
- *  - Replace whitespace and '.'s with '_'s
- *  - Make sure all characters match [A-Za-z0-9_]
+ *  - Replaces whitespace and '.'s with '_'s
+ *  - Strips out characters not in [A-Za-z0-9_]
  */
 string VuoStringUtilities::transcodeToIdentifier(string str)
 {
-	string sanitizedStr = str;
-	int strLen = sanitizedStr.length();
-	for (int i=0; i<strLen; i++) {
-		if (sanitizedStr[i] == '.' || isspace(sanitizedStr[i])) {sanitizedStr[i] = '_';}
-		else if (!(isValidCharInIdentifier(sanitizedStr[i]))) {
-			// For now, replace invalid characters with '0'
-			sanitizedStr[i] = '0';
-		}
+	CFMutableStringRef strCF = CFStringCreateMutable(NULL, 0);
+	CFStringAppendCString(strCF, str.c_str(), kCFStringEncodingUTF8);
+
+	CFStringNormalize(strCF, kCFStringNormalizationFormD);  // decomposes combining characters, so accents/diacritics are separated from their letters
+
+	CFStringRef empty = CFStringCreateWithCString(NULL, "", kCFStringEncodingUTF8);
+	CFStringRef underscore = CFStringCreateWithCString(NULL, "_", kCFStringEncodingUTF8);
+
+	CFIndex strLength = CFStringGetLength(strCF);
+	UniChar *strBuf = (UniChar *)malloc(strLength * sizeof(UniChar));
+	CFStringGetCharacters(strCF, CFRangeMake(0, strLength), strBuf);
+
+	for (CFIndex i = strLength-1; i >= 0; --i)
+	{
+		UniChar c = strBuf[i];
+
+		CFStringRef replacement = NULL;
+		if (c > 127)  // non-ASCII
+			replacement = empty;
+		else if (c == '.' || isspace(c))
+			replacement = underscore;
+		else if (! isValidCharInIdentifier(c))
+			replacement = empty;
+
+		if (replacement)
+			CFStringReplace(strCF, CFRangeMake(i, 1), replacement);
 	}
-	return sanitizedStr;
+
+	// http://stackoverflow.com/questions/1609565/whats-the-cfstring-equiv-of-nsstrings-utf8string
+
+	const char *useUTF8StringPtr = NULL;
+	char *freeUTF8StringPtr = NULL;
+
+	if ((useUTF8StringPtr = CFStringGetCStringPtr(strCF, kCFStringEncodingUTF8)) == NULL)
+	{
+		CFIndex maxBytes = 4 * strLength + 1;
+		freeUTF8StringPtr = (char *)malloc(maxBytes);
+		CFStringGetCString(strCF, freeUTF8StringPtr, maxBytes, kCFStringEncodingUTF8);
+		useUTF8StringPtr = freeUTF8StringPtr;
+	}
+
+	string ret = useUTF8StringPtr;
+
+	if (freeUTF8StringPtr != NULL)
+		free(freeUTF8StringPtr);
+
+	CFRelease(strCF);
+	CFRelease(empty);
+	CFRelease(underscore);
+	free(strBuf);
+
+	return ret;
 }
 
 /**
@@ -218,6 +261,11 @@ string VuoStringUtilities::generateHtmlFromMarkdown(const string &markdownString
 	char *html;
 	mkd_document(doc, &html);
 	string htmlString(html);
+
+	// Remove the final linebreak from code blocks,
+	// since Qt (unlike typical browser rendering engines) considers that whitespace significant.
+	replaceAll(htmlString, "\n</code></pre>", "</code></pre>");
+
 	return htmlString;
 }
 

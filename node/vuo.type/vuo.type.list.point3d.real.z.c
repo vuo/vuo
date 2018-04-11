@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert 3D Point List to Real List (Z)",
 					  "description": "Creates a list of real numbers using the Z coordinate of the input list of 3D points.",
-					  "version": "1.0.1"
+					  "version": "1.0.2"
 				 });
 
 void nodeEvent
@@ -21,8 +21,10 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoReal) z
 )
 {
-	*z = VuoListCreate_VuoReal();
 	unsigned long count = VuoListGetCount_VuoPoint3d(point3d);
-	for (unsigned long i = 1; i <= count; ++i)
-		VuoListAppendValue_VuoReal(*z, VuoListGetValue_VuoPoint3d(point3d, i).z);
+	VuoPoint3d *inputs = VuoListGetData_VuoPoint3d(point3d);
+	*z = VuoListCreateWithCount_VuoReal(count, 0);
+	VuoReal *outputs = VuoListGetData_VuoReal(*z);
+	for (unsigned long i = 0; i < count; ++i)
+		outputs[i] = inputs[i].z;
 }

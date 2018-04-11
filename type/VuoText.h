@@ -26,6 +26,7 @@ extern "C"
 #include <string.h>
 struct json_object;
 #include "VuoTextCase.h"
+#include "VuoTextComparison.h"
 #include "VuoInteger.h"
 #include "VuoList_VuoInteger.h"
 #include <stdint.h>
@@ -55,12 +56,16 @@ VuoText VuoText_makeFromData(const unsigned char *data, const unsigned long size
 VuoText VuoText_makeFromUtf32(const uint32_t* data, size_t length);
 VuoText VuoText_makeFromMacRoman(const char *string);
 size_t VuoText_length(const VuoText text);
+size_t VuoText_byteCount(const VuoText text);
 bool VuoText_isEmpty(const VuoText text);
 
 #define VuoText_SUPPORTS_COMPARISON
 bool VuoText_areEqual(const VuoText text1, const VuoText text2);
 bool VuoText_isLessThan(const VuoText text1, const VuoText text2);
 
+bool VuoText_isLessThanCaseInsensitive(const VuoText text1, const VuoText text2);
+bool VuoText_isLessThanNumeric(const VuoText text1, const VuoText text2);
+bool VuoText_compare(VuoText a, VuoTextComparison comparison, VuoText b);
 size_t VuoText_findFirstOccurrence(const VuoText string, const VuoText substring, const size_t startIndex);
 size_t VuoText_findLastOccurrence(const VuoText string, const VuoText substring);
 VuoList_VuoInteger VuoText_findOccurrences(const VuoText string, const VuoText substring);

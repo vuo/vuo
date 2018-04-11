@@ -26,6 +26,13 @@ void VuoInteger_release(VuoInteger v) {}
 #include "VuoReal.h"
 void VuoReal_retain(VuoReal v) {}
 void VuoReal_release(VuoReal v) {}
+VuoReal VuoReal_makeFromString(const char *str)
+{
+	json_object * js = json_tokener_parse(str);
+	VuoReal value = VuoReal_makeFromJson(js);
+	json_object_put(js);
+	return value;
+}
 
 #include "VuoColor.h"
 void VuoColor_retain(VuoColor v) {}
@@ -42,6 +49,16 @@ void VuoPoint3d_release(VuoPoint3d v) {}
 #include "VuoPoint4d.h"
 void VuoPoint4d_retain(VuoPoint4d v) {}
 void VuoPoint4d_release(VuoPoint4d v) {}
+
+#include "VuoScreen.h"
+void VuoScreen_retain(VuoScreen v)
+{
+	VuoRetain(v.name);
+}
+void VuoScreen_release(VuoScreen v)
+{
+	VuoRelease(v.name);
+}
 
 #include "VuoImage.h"
 void VuoImage_retain(VuoImage v)

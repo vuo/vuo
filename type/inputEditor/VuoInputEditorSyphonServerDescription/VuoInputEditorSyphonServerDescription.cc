@@ -76,7 +76,7 @@ extern "C"
  */
 void vuoAddCompositionStateToThreadLocalStorage(const struct VuoCompositionState *compositionState) {}
 void vuoRemoveCompositionStateFromThreadLocalStorage(void) {}
-const void * vuoGetCompositionStateFromThreadLocalStorage(void) { return NULL; }
+const void * vuoCopyCompositionStateFromThreadLocalStorage(void) { return NULL; }
 uint64_t vuoGetCompositionUniqueIdentifier(const struct VuoCompositionState *compositionState) { return 0; }
 //@}
 

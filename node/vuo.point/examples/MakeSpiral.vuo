@@ -16,7 +16,7 @@ MakeList0 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make 
 MakeList3 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="524,262" fillcolor="green"];
 MakeParametricPoints [type="vuo.point.make.parametric" version="1.0.1" label="Make Parametric Points|<refresh>refresh\l|<time>time\l|<xExpression>xExpression\l|<yExpression>yExpression\l|<zExpression>zExpression\l|<subdivisions>subdivisions\l|<uMin>uMin\l|<uMax>uMax\l|<points>points\r" pos="95,51" fillcolor="violet" _time="0.000000" _xExpression="\"cos(U*180)\\/2\"" _yExpression="\"sin(U*180)\\/2\"" _zExpression="\"0\"" _subdivisions="32" _uMin="0.000000"];
 RenderSceneToWindow [type="vuo.scene.render.window" version="2.1.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="595,251" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Shade with Unlit Color|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="142,293" _color="{\"r\":0.400000,\"g\":1.000000,\"b\":0.800000,\"a\":1.000000}"];
+ShadeWithUnlitColor [type="vuo.shader.make.color.unlit" version="2.0.0" label="Make Unlit Color Shader|<refresh>refresh\l|<color>color\l|<shader>shader\r" pos="142,293" _color="{\"r\":0.400000,\"g\":1.000000,\"b\":0.800000,\"a\":1.000000}"];
 
 FireOnStart:started -> ShadeWithUnlitColor:refresh;
 Make3DObject:object -> MakeList3:1;

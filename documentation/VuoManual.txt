@@ -11,7 +11,7 @@ Many of the compositions in this manual are available from within the Vuo Editor
 
 For more resources to help you learn Vuo, see our [support page](http://vuo.org/support) on vuo.org. 
 
-For more information on what you can do with Vuo, see our [features page](http://vuo.org/features) and [roadmap](http://vuo.org/roadmap) on vuo.org. 
+For more information on what you can do with Vuo, see our [features page](http://vuo.org/features) on vuo.org.
 
 If you have any feedback about this manual, please [let us know](https://vuo.org/contact). We want to make sure you find the manual helpful. 
 
@@ -22,11 +22,10 @@ Welcome to Vuo. Get ready to create!
 
 ## Install Vuo
 
-   - Go to [https://vuo.org/user](https://vuo.org/user) and log in to your account
-   - Click the \menu{Download} tab
-   - Under the \menu{Vuo Editor} section, download the Vuo Editor
-   - Uncompress the ZIP file (double-click on it in Finder)
-   - Move the Vuo Editor application to your \directory{Applications} folder
+   - Go to [https://vuo.org/download](https://vuo.org/download).
+   - Click the "Download Vuo" button.
+   - Uncompress the ZIP file (double-click on it in Finder).
+   - Move the Vuo Editor application to your \directory{Applications} folder.
    - Open the Vuo Editor application from the \directory{Applications} folder and the Vuo Editor will appear. The first time you open it, you'll see a dialog box prompting you to activate your software.
    - Click the "Activate Vuo" button to launch a web browser and complete the activation process. Depending on your browser, the activation might happen automatically, or you might need to follow the instructions on the web page.
 
@@ -600,7 +599,7 @@ A \term{protocol} is a predetermined set of published ports with certain names a
       - Published output ports: 
          - \vuoPort{outputImage} — The created image. Its width and height should match the \vuoPort{width} and \vuoPort{height} published input ports. 
 
-To create a composition that conforms to a protocol, go to \menu{File > New Composition with Protocol}. If you've already started working on a composition and want to make it conform to a protocol, go to \menu{Edit > Protocols} and choose a protocol.
+To create a composition that conforms to a protocol, go to \menu{File > New Composition from Template}. If you've already started working on a composition and want to make it conform to a protocol, go to \menu{Edit > Protocols} and choose a protocol.
 
 Optional published ports (\vuoPort{offlineRender} and \vuoPort{offlineFramerate}) don't automatically appear in the Vuo Editor, but you can add them just as you would other published ports. Be sure to type the names exactly as they appear in this documentation (case-sensitive).
 
@@ -686,8 +685,10 @@ There are many built-in nodes you can use to make your compositions interactive,
 
    - \vuoNodeClass{vuo.mouse} for getting input from a mouse or trackpad
    - \vuoNodeClass{vuo.keyboard} for getting input from keys typed or pressed
+   - \vuoNodeClass{vuo.hid} for getting input from a USB Human Interface Device (HID)
    - \vuoNodeClass{vuo.leap} for controlling a composition with hand and finger movements from a Leap Motion device
    - \vuoNodeClass{vuo.osc} for remotely controlling a composition via a TouchOSC interface on a phone or tablet
+   - the \vuoNode{Filter Skeleton} node for getting input from Delicode NI mate 2
 
 ### Music and stage equipment
 
@@ -697,17 +698,39 @@ Your compositions can control and be controlled by music and stage equipment —
    - \vuoNodeClass{vuo.midi} for sending and receiving MIDI events
    - \vuoNodeClass{vuo.artnet} (pro) for sending and receiving Art-Net messages
 
+The \vuoNodeClass{vuo.bcf2000} nodes interface with the Behringer BCF2000 MIDI controller.
+
+### Applications
+
+Applications that send or receive messages via the OSC, MIDI, or Art-Net protocol can communicate with your composition if you use the \vuoNodeClass{vuo.osc}, \vuoNodeClass{vuo.midi}, or \vuoNodeClass{vuo.artnet} nodes.
+
+Your composition can send video to and receive video from other applications via Syphon using the \vuoNodeClass{vuo.syphon} node set.
+
+With the \vuoNodeClass{vuo.app} node set, your composition can launch other apps and open documents in them.
+
 ### Sensors, LEDs, and motors
 
 The \vuoNodeClass{vuo.serial} nodes allow your composition to connect to serial devices, including programmable microcontrollers like Arduino. Via the Arduino, your composition can receive data from sensors, and send data to control LEDs and motors.
+
+### Displays
+
+Two node sets let you fine-tune how a composition's windows are displayed on the available screens. The \vuoNodeClass{vuo.screen} node set provides information about the available screens. The \vuoNodeClass{vuo.window} node set controls how each window is displayed, including its aspect ratio and whether it's fullscreen.
+
+### Files
+
+Your composition can open files on your computer's filesystem or download them from the internet using "fetch" nodes, such as \vuoNode{Fetch Image}, \vuoNode{Fetch Data}, and \vuoNode{Fetch XML Tree}.
+
+Your composition can save files to your computer's filesystem using "save" nodes, such as \vuoNode{Save Image}, \vuoNode{Save Data}, and \vuoNode{Save Images to Movie}.
+
+For opening, manipulating, and saving XML and JSON files, there's the \vuoNodeClass{vuo.tree} node set. And for CSV and TSV files, there's the \vuoNodeClass{vuo.table} node set.
+
+The \vuoNodeClass{vuo.file} nodes enable your composition to interact with your computer's filesystem.
 
 ### Internet
 
 With the \vuoNodeClass{vuo.rss} nodes, your composition can download RSS feeds.
 
-### Displays
-
-Two node sets let you fine-tune how a composition's windows are displayed on the available screens. The \vuoNodeClass{vuo.screen} node set provides information about the available screens. The \vuoNodeClass{vuo.window} node set controls how each window is displayed, including its aspect ratio and whether it's fullscreen.
+To retrieve data from an XML or JSON web service, you can use the \vuoNodeClass{vuo.tree} nodes.
 
 
 ## Adding nodes to your Node Library
@@ -775,10 +798,10 @@ Again, let's start with a problem you want to solve, say to display a rotating c
   1. The example composition, Spin Sphere, sounds pretty close to what you want to do, so open that.
   1. Run the example and see that it spins a sphere.
   1. Search for "cube" in the node library and find \vuoNode{Make Cube}. Add it to the scene.
-  1. Now as you inspect the example composition you see that it has a \vuoNode{Make 3D Object}. This might be where to insert the \vuoNode{Make Cube} node. But, \vuoNode{Make 3D object} has three cables going into it. You don't think you'll need \vuoNode{Make Sphere Mesh}, but what about the \vuoNode{Shade with Image}?
-  1. Start by replacing the \vuoNode{Make 3D Object} node with the \vuoNode{Make Cube} node and connect it up to the \vuoNode{Render Scene to Window} node. Leave the \vuoNode{Shade with Image} node not connected. You see that there is a \vuoPort{Transform} input port on  the \vuoNode{Make Cube}, like there was on the \vuoNode{Make 3D Object}. Connect up the output port of the \vuoNode{Make Transform} node to the \vuoPort{Transform} port. 
+  1. Now as you inspect the example composition you see that it has a \vuoNode{Make 3D Object}. This might be where to insert the \vuoNode{Make Cube} node. But, \vuoNode{Make 3D object} has three cables going into it. You don't think you'll need \vuoNode{Make Sphere Mesh}, but what about the \vuoNode{Make Lit Image Shader}?
+  1. Start by replacing the \vuoNode{Make 3D Object} node with the \vuoNode{Make Cube} node and connect it up to the \vuoNode{Render Scene to Window} node. Leave the \vuoNode{Make Lit Image Shader} node not connected. You see that there is a \vuoPort{Transform} input port on  the \vuoNode{Make Cube}, like there was on the \vuoNode{Make 3D Object}. Connect up the output port of the \vuoNode{Make Transform} node to the \vuoPort{Transform} port.
   1. Run the composition.
-  1. Now you see a large rotating cube, but it doesn't have any color on its sides, just a ghostly checkerboard. Let's connect up the \vuoNode{Shade with Image} to all sides of the cube, and run the composition again.
+  1. Now you see a large rotating cube, but it doesn't have any color on its sides, just a ghostly checkerboard. Let's connect up the \vuoNode{Make Lit Image Shader} to all sides of the cube, and run the composition again.
   1. Now the cube has a black and white checkerboard on all sides, but you'd like it to be smaller.  Adjust the \vuoPort{Scale} on the \vuoNode{Make Transform} node to 0.5, 0.5, 0.5.
   1. … and now you have a rotating cube.
 
@@ -931,7 +954,7 @@ Here's an example that draws several shapes, all of the same height. You could a
 
 ### Strip out data, leaving just an event
 
-In the previous section's example, you could think of the \vuoNode{Share Value} node as adding data to an event — an event goes into the node, and an event plus data comes out. What if you want to do the opposite — start with an event plus data, and end up with just an event? You don't need a node to do this. Instead, hold down \keys{⌥} (Option) while dragging a data-and-event cable to change it to an event-only cable.
+In the previous section's example, you could think of the \vuoNode{Share Value} node as adding data to an event — an event goes into the node, and an event plus data comes out. What if you want to do the opposite — start with an event plus data, and end up with just an event? You don't need a node to do this. Instead, hold down \keys{⇧} (Shift) while dragging a data-and-event cable to change it to an event-only cable.
 
 ### Merge data/events from multiple triggers
 
@@ -1298,13 +1321,13 @@ You can publish any input or output port in a composition. Do this by right-clic
 
 \tip{If you copy a node with a published port, that port will be published under the same name (if possible) in whatever composition you paste it into. The published port will be created if it does not already exist, merged if an existing published port of the same name and compatible type does exist, or renamed if an identically named published port already exists but has an incompatible type.}
 
-In the sidebars, you can rename a published port by double-clicking on the name or by right-clicking on the published port and selecting \menu{Rename Published Port}.
+In the sidebars, you can rename a published port by double-clicking on the name or by right-clicking on the published port and selecting \menu{Rename Published Port}. You can reorder published ports (except those that are part of a protocol) by dragging the name of a published port up or down in the sidebar.
 
 For published ports with numerical data types (integers, real numbers, 2D points, 3D points, and 4D points), you can modify the behavior of their input editors by right-clicking on the published port in the sidebar and selecting \menu{Edit Details...}. The Suggested Min and Suggested Max determine the range of values provided by the input editor's slider or spinbox (arrow buttons). The Suggested Step controls the amount by which each click on a spinbox button increments or decrements the value.
 
 ### Using a protocol for published ports
 
-To create a composition with a predetermined set of published ports defined by a protocol, go to the \menu{File} menu, select \menu{New Composition with Protocol}, and select the protocol you want. Typically, a protocol is used when running a Vuo composition inside another application, such as a VJ or video postproduction app. That application should instruct you about the protocol to select. 
+To create a composition with a predetermined set of published ports defined by a protocol, go to the \menu{File} menu, select \menu{New Composition from Template}, and select the protocol you want. Typically, a protocol is used when running a Vuo composition inside another application, such as a VJ or video postproduction app. That application should instruct you about the protocol to select.
 
 The published ports in a protocol appear in a tinted area of the published port sidebars, with the protocol name at the top. You can't rename or delete these published ports. However, you can add other published ports to the composition and rename or delete them as usual. 
 
@@ -1320,7 +1343,7 @@ You can run a composition by clicking the Run button. (Or go to \menu{Run > Run}
 
 You can stop a composition by clicking the Stop button. (Or go to \menu{Run > Stop}.) 
 
-If you start a composition that was created using \menu{New Composition with Protocol}, then extra functionality will be added to the composition to help you preview it. Its protocol published input ports will receive data and events, and its protocol published output ports will send their data and events to a preview window. For example, if you run a composition with the Image Filter protocol, then image and time data will be fed into the composition, and the composition's image output will be rendered to a window. 
+If you start a composition that was created using \menu{New Composition from Template}, then extra functionality will be added to the composition to help you preview it. Its protocol published input ports will receive data and events, and its protocol published output ports will send their data and events to a preview window. For example, if you run a composition with the Image Filter protocol, then image and time data will be fed into the composition, and the composition's image output will be rendered to a window.
 
 
 ### Firing an event manually
@@ -1366,7 +1389,7 @@ To remove an installed subcomposition, you can right-click on the subcomposition
 
 Vuo has [keyboard shortcuts](http://support.apple.com/kb/ht1343) for working with your composition and the Vuo Editor.
 
-In the keyboard shortcuts below, these symbols represent keys in macOS: 
+In the keyboard shortcuts below, these symbols represent keys in macOS:
 
 | Symbol | Definition |
 | ------:| ---------- |
@@ -1415,8 +1438,12 @@ In the keyboard shortcuts below, these symbols represent keys in macOS:
 | ⌘X | Cut |
 | ⌘Z | Undo |
 | ⇧⌘Z | Redo |
+| ⌘F | Find |
+| ⌘G | Find Next |
+| ⇧⌘G | Find Previous |
 | ⌫ | Delete |
-| ⌥ Drag | Duplicate selected nodes and cables. |
+| ⌥ Drag | \vtop{\hbox{\strut Duplicate the cable connected to the input port near the mouse cursor, or}\hbox{\strut  duplicate the selected nodes and cables.}} |
+| ⇧ Drag | Change the data-and-event cable being dragged to event-only. |
 | ↑↓←→ | Move nodes and cables around on the canvas. Hold ⇧ to move further. |
 | ↵ | Hover over a node title and press ↵ to edit it. |
 | ↵ | Select one or more nodes and press ↵ to edit their titles. |

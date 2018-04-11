@@ -15,6 +15,7 @@
 #include "VuoRuntime.h"
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <dlfcn.h>
@@ -34,11 +35,19 @@ static int compositionReadRunnerWritePipe[2];  ///< A pipe used by the runtime t
 static dispatch_queue_t VuoRunner_allCompositionWritePipesQueue;
 
 /**
- * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
+ * Get a reference to the main thread, so we can perform runtime thread assertions.
  */
 static void __attribute__((constructor)) VuoRunner_init()
 {
 	VuoApp_mainThread = (void *)pthread_self();
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// Calls _TSGetMainThread().
+	// https://b33p.net/kosada/node/12944
+	YieldToAnyThread();
+#pragma clang diagnostic pop
+
 	pipe(compositionReadRunnerWritePipe);
 	VuoRunner_allCompositionWritePipesQueue = dispatch_queue_create("org.vuo.runner.writePipes", NULL);
 }
@@ -636,7 +645,7 @@ void VuoRunner::startInternal(void)
 			ZMQTelemetryURL = "inproc://" + VuoFileUtilities::makeTmpFile("vuo-telemetry", "");
 
 			vuoInitInProcess(ZMQContext, ZMQControlURL.c_str(), ZMQTelemetryURL.c_str(), true, getpid(), -1, false, trialRestrictionsEnabled,
-							 sourceDir.c_str(), dylibHandle, NULL);
+							 sourceDir.c_str(), dylibHandle, NULL, false);
 		}
 		catch (std::runtime_error &e)
 		{
@@ -1162,10 +1171,11 @@ void VuoRunner::stop(void)
 						  try
 						  {
 							  int timeoutInSeconds = (isInCurrentProcess() ? -1 : 5);
-							  zmq_msg_t messages[2];
+							  zmq_msg_t messages[3];
 							  vuoInitMessageWithInt(&messages[0], timeoutInSeconds);
-							  vuoInitMessageWithBool(&messages[1], false);
-							  vuoControlRequestSend(VuoControlRequestCompositionStop,messages,2);
+							  vuoInitMessageWithBool(&messages[1], false); // isBeingReplaced
+							  vuoInitMessageWithBool(&messages[2], !isInCurrentProcess()); // isLastEverInProcess
+							  vuoControlRequestSend(VuoControlRequestCompositionStop, messages, 3);
 
 							  if (isInCurrentProcess() && isMainThread())
 							  {
@@ -1220,15 +1230,15 @@ void VuoRunner::stop(void)
 								  VUserLog("The composition couldn't stop because vuoFini() couldn't be found in '%s' : %s", dylibPath.c_str(), dlerror());
 								  return;
 							  }
-							  void *runtimePersistentState = vuoFini();
+							  void *runtimeState = vuoFini();
 
-							  VuoFiniRuntimePersistentStateType *vuoFiniRuntimePersistentState = (VuoFiniRuntimePersistentStateType *)dlsym(dylibHandle, "vuoFiniRuntimePersistentState");
-							  if (! vuoFiniRuntimePersistentState)
+							  VuoFiniRuntimeStateType *vuoFiniRuntimeState = (VuoFiniRuntimeStateType *)dlsym(dylibHandle, "vuoFiniRuntimeState");
+							  if (! vuoFiniRuntimeState)
 							  {
-								  VUserLog("The composition couldn't stop because vuoFiniRuntimePersistentState() couldn't be found in '%s' : %s", dylibPath.c_str(), dlerror());
+								  VUserLog("The composition couldn't stop because vuoFiniRuntimeState() couldn't be found in '%s' : %s", dylibPath.c_str(), dlerror());
 								  return;
 							  }
-							  vuoFiniRuntimePersistentState(runtimePersistentState);
+							  vuoFiniRuntimeState(runtimeState);
 						  }
 
 						  dlclose(dylibHandle);

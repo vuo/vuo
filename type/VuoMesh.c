@@ -278,6 +278,7 @@ void VuoMesh_free(void *value)
 {
 	VuoMesh m = (VuoMesh)value;
 
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 	for (unsigned int i = 0; i < m->submeshCount; ++i)
 	{
 		VuoSubmesh sm = m->submeshes[i];
@@ -288,10 +289,11 @@ void VuoMesh_free(void *value)
 		free(sm.textureCoordinates);
 		free(sm.elements);
 
-		VuoGlPool_release(VuoGlPool_ArrayBuffer, sm.glUpload.combinedBufferSize, sm.glUpload.combinedBuffer);
+		VuoGlPool_release(cgl_ctx, VuoGlPool_ArrayBuffer, sm.glUpload.combinedBufferSize, sm.glUpload.combinedBuffer);
 		if (sm.glUpload.elementBufferSize && sm.glUpload.elementBuffer)
-			VuoGlPool_release(VuoGlPool_ElementArrayBuffer, sm.glUpload.elementBufferSize, sm.glUpload.elementBuffer);
+			VuoGlPool_release(cgl_ctx, VuoGlPool_ElementArrayBuffer, sm.glUpload.elementBufferSize, sm.glUpload.elementBuffer);
 	}
+	});
 
 	free(m->submeshes);
 	free(m);
@@ -322,9 +324,7 @@ void VuoMesh_upload(VuoMesh mesh)
 	if (!mesh)
 		return;
 
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-
-	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
 	// Create a temporary Vertex Array Object, so we can bind the buffers in order to upload them.
 	GLuint vertexArray;
@@ -387,7 +387,7 @@ void VuoMesh_upload(VuoMesh mesh)
 
 		// Upload the combined buffer.
 		mesh->submeshes[i].glUpload.combinedBufferSize = singleBufferSize*bufferCount;
-		mesh->submeshes[i].glUpload.combinedBuffer = VuoGlPool_use(VuoGlPool_ArrayBuffer, mesh->submeshes[i].glUpload.combinedBufferSize);
+		mesh->submeshes[i].glUpload.combinedBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ArrayBuffer, mesh->submeshes[i].glUpload.combinedBufferSize);
 		VuoGlPool_retain(mesh->submeshes[i].glUpload.combinedBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->submeshes[i].glUpload.combinedBuffer);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, singleBufferSize * bufferCount, combinedData);
@@ -396,7 +396,7 @@ void VuoMesh_upload(VuoMesh mesh)
 
 		// Upload the Element Buffer and add it to the Vertex Array Object
 		mesh->submeshes[i].glUpload.elementBufferSize = sizeof(unsigned int)*meshItem.elementCount;
-		mesh->submeshes[i].glUpload.elementBuffer = VuoGlPool_use(VuoGlPool_ElementArrayBuffer, mesh->submeshes[i].glUpload.elementBufferSize);
+		mesh->submeshes[i].glUpload.elementBuffer = VuoGlPool_use(cgl_ctx, VuoGlPool_ElementArrayBuffer, mesh->submeshes[i].glUpload.elementBufferSize);
 		VuoGlPool_retain(mesh->submeshes[i].glUpload.elementBuffer);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->submeshes[i].glUpload.elementBuffer);
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned int) * meshItem.elementCount, meshItem.elements);
@@ -410,9 +410,7 @@ void VuoMesh_upload(VuoMesh mesh)
 	// Prepare for this mesh to be used on a different OpenGL context.
 	glFlushRenderAPPLE();
 
-	dispatch_semaphore_signal(VuoGlSemaphore);
-
-	VuoGlContext_disuse(cgl_ctx);
+	});
 }
 
 /**
@@ -1045,8 +1043,9 @@ unsigned long VuoSubmesh_getStride(const VuoSubmesh submesh)
 /**
  *	Pulls an element array from gl buffer.
  */
-VuoPoint4d *extractElements(CGLContextObj cgl_ctx, VuoSubmesh *submesh, unsigned int vertexCount, unsigned int bufferStride, unsigned int bufferIndex)
+VuoPoint4d *extractElements(CGLContextObj cgl_ctx, VuoSubmesh *submesh, unsigned int vertexCount, unsigned int bufferStrideInBytes, unsigned int bufferIndex)
 {
+	unsigned int bufferStrideInFloats = bufferStrideInBytes / sizeof(GLfloat);
 	GLfloat *feedback = (GLfloat *)malloc(submesh->glUpload.combinedBufferSize);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, submesh->glUpload.combinedBufferSize, feedback);
 
@@ -1056,10 +1055,10 @@ VuoPoint4d *extractElements(CGLContextObj cgl_ctx, VuoSubmesh *submesh, unsigned
 	{
 		elements[vertex] = (VuoPoint4d)
 			{
-				feedback[vertex*bufferStride + 0 + (bufferIndex*4)],
-				feedback[vertex*bufferStride + 1 + (bufferIndex*4)],
-				feedback[vertex*bufferStride + 2 + (bufferIndex*4)],
-				feedback[vertex*bufferStride + 3 + (bufferIndex*4)]
+				feedback[vertex*bufferStrideInFloats + 0 + (bufferIndex*4)],
+				feedback[vertex*bufferStrideInFloats + 1 + (bufferIndex*4)],
+				feedback[vertex*bufferStrideInFloats + 2 + (bufferIndex*4)],
+				feedback[vertex*bufferStrideInFloats + 3 + (bufferIndex*4)]
 			};
 	}
 	free(feedback);
@@ -1072,10 +1071,9 @@ VuoPoint4d *extractElements(CGLContextObj cgl_ctx, VuoSubmesh *submesh, unsigned
  */
 void VuoSubmeshMesh_download(VuoSubmesh *submesh)
 {
-	unsigned int vertexCount = submesh->vertexCount;
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
-	dispatch_semaphore_wait(VuoGlSemaphore, DISPATCH_TIME_FOREVER);
+	unsigned int vertexCount = submesh->vertexCount;
 
 	// Attach the input combinedBuffer for rendering.
 	glBindBuffer(GL_ARRAY_BUFFER, submesh->glUpload.combinedBuffer);
@@ -1101,9 +1099,9 @@ void VuoSubmeshMesh_download(VuoSubmesh *submesh)
 	if (!submesh->textureCoordinates && submesh->glUpload.textureCoordinateOffset)
 		submesh->textureCoordinates = extractElements(cgl_ctx, submesh, vertexCount, stride, bufferIndex++);
 
-	dispatch_semaphore_signal(VuoGlSemaphore);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	VuoGlContext_disuse(cgl_ctx);
+	});
 }
 
 /**

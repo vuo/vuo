@@ -8,34 +8,51 @@
  */
 
 {"portConfiguration" : [
+	/* empty list */
 	{
 		"firingPort" : "refresh",
 		"inputPortValues" : {
-			"list" : [{"x":1, "y":1}, {"x":4, "y":2}],
+			"list" : [],
 			"point" : {"x":0, "y":0}
 		},
 		"outputPortValues" : {
-			"sorted" : [{"x":1, "y":1}, {"x":4, "y":2}]
+			"sorted" : []
 		}
 	},
+
+	/* 1-item list */
 	{
 		"firingPort" : "refresh",
 		"inputPortValues" : {
-			"list" : [{"x":1, "y":1}, {"x":4, "y":2}],
-			"point" : {"x":5, "y":3}
-		},
-		"outputPortValues" : {
-			"sorted" : [{"x":4, "y":2}, {"x":1, "y":1}]
-		}
-	},
-	{
-		"firingPort" : "refresh",
-		"inputPortValues" : {
-			"list" : [{"x":-1, "y":-2}, {"x":4, "y":2}],
+			"list" : [{"x":1, "y":1}],
 			"point" : {"x":0, "y":0}
 		},
 		"outputPortValues" : {
-			"sorted" : [{"x":-1, "y":-2}, {"x":4, "y":2}]
+			"sorted" : [{"x":1, "y":1}]
+		}
+	},
+
+	/* points various distances and directions from the target */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list" : [{"x":0.3, "y":-0.1}, {"x":0.0, "y":-0.2}, {"x":2.1, "y":-0.1}, {"x":0.1, "y":1.2}, {"x":0.1, "y":-0.1}, {"x":0.2, "y":-0.1}],
+			"point" : {"x":0.1, "y":-0.1}
+		},
+		"outputPortValues" : {
+			"sorted" : [{"x":0.1, "y":-0.1}, {"x":0.2, "y":-0.1}, {"x":0.0, "y":-0.2}, {"x":0.3, "y":-0.1}, {"x":0.1, "y":1.2}, {"x":2.1, "y":-0.1}]
+		}
+	},
+
+	/* duplicate items in list */
+	{
+		"firingPort" : "refresh",
+		"inputPortValues" : {
+			"list" : [{"x":-200, "y":-200}, {"x":100, "y":100}, {"x":-200, "y":-200}],
+			"point" : {"x":10, "y":10}
+		},
+		"outputPortValues" : {
+			"sorted" : [{"x":100, "y":100}, {"x":-200, "y":-200}, {"x":-200, "y":-200}]
 		}
 	},
 ]}

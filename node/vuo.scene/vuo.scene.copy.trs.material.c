@@ -13,7 +13,7 @@
 VuoModuleMetadata({
 					 "title" : "Copy 3D Object (TRS + Material)",
 					 "keywords" : [
-						 "duplicate", "clone", "array", "instance", "instantiate", "populate", "replicate",
+						 "duplicate", "clone", "repeat", "replicate", "array", "instance", "instantiate", "populate",
 						 "shaders", "colors", "images",
 					 ],
 					 "version" : "1.0.0",

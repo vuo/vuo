@@ -40,6 +40,7 @@ typedef struct
 {
 	VuoScreenType type;
 	VuoInteger id;	///< NSScreenNumber
+	VuoInteger displayMask;	///< CGDisplayIDToOpenGLDisplayMask()
 	VuoText name;	///< e.g., `Color LCD` for a built-in MacBook Pro display
 
 	bool isRealized;	///< True if this VuoScreen refers to a specific screen by ID, and the following values are filled in.
@@ -76,7 +77,7 @@ void VuoScreen_release(VuoScreen value);
 static inline VuoScreen VuoScreen_makeFromName(VuoText name) __attribute__((const));
 static inline VuoScreen VuoScreen_makeFromName(VuoText name)
 {
-	VuoScreen s = {VuoScreenType_MatchName,0,name,false,{0,0},0,0,0,0};
+	VuoScreen s = {VuoScreenType_MatchName,-1,-1,name,false,{0,0},0,0,0,0};
 	return s;
 }
 

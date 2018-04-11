@@ -84,7 +84,7 @@ static inline VuoBox VuoBox_makeWithPoints(float xmin, float xmax, float ymin, f
 {
 	VuoBox box =
 	{
-		(VuoPoint3d){ (xmin+xmax)/2., (ymin+ymax)/2., (zmin+zmax)/2. },
+		(VuoPoint3d){ (xmin+xmax)/2.f, (ymin+ymax)/2.f, (zmin+zmax)/2.f },
 		(VuoPoint3d){ xmax-xmin, ymax-ymin, zmax-zmin }
 	};
 	return box;
@@ -269,9 +269,9 @@ static inline VuoPoint3d VuoPoint3d_spring(VuoReal timeSinceDrop, VuoPoint3d dro
 static inline VuoPoint3d VuoPoint3d_clamp(VuoPoint3d point, VuoReal limitA, VuoReal limitB)
 {
 	return (VuoPoint3d){
-		VuoReal_clamp(point.x, limitA, limitB),
-		VuoReal_clamp(point.y, limitA, limitB),
-		VuoReal_clamp(point.z, limitA, limitB)
+		(float)VuoReal_clamp(point.x, limitA, limitB),
+		(float)VuoReal_clamp(point.y, limitA, limitB),
+		(float)VuoReal_clamp(point.z, limitA, limitB)
 	};
 }
 
@@ -281,9 +281,9 @@ static inline VuoPoint3d VuoPoint3d_clamp(VuoPoint3d point, VuoReal limitA, VuoR
 static inline VuoPoint3d VuoPoint3d_clampn(VuoPoint3d point, VuoPoint3d limitA, VuoPoint3d limitB)
 {
 	return (VuoPoint3d){
-		VuoReal_clamp(point.x, limitA.x, limitB.x),
-		VuoReal_clamp(point.y, limitA.y, limitB.y),
-		VuoReal_clamp(point.z, limitA.z, limitB.z)
+		(float)VuoReal_clamp(point.x, limitA.x, limitB.x),
+		(float)VuoReal_clamp(point.y, limitA.y, limitB.y),
+		(float)VuoReal_clamp(point.z, limitA.z, limitB.z)
 	};
 }
 
@@ -299,9 +299,9 @@ static inline VuoPoint3d VuoPoint3d_clampn(VuoPoint3d point, VuoPoint3d limitA, 
 static inline VuoPoint3d VuoPoint3d_bezier3(VuoPoint3d p0, VuoPoint3d p1, VuoPoint3d p2, VuoPoint3d p3, VuoReal time)
 {
 	return (VuoPoint3d) {
-		VuoReal_bezier3(p0.x,p1.x,p2.x,p3.x,time),
-		VuoReal_bezier3(p0.y,p1.y,p2.y,p3.y,time),
-		VuoReal_bezier3(p0.z,p1.z,p2.z,p3.z,time)
+		(float)VuoReal_bezier3(p0.x,p1.x,p2.x,p3.x,time),
+		(float)VuoReal_bezier3(p0.y,p1.y,p2.y,p3.y,time),
+		(float)VuoReal_bezier3(p0.z,p1.z,p2.z,p3.z,time)
 	};
 }
 

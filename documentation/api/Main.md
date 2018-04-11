@@ -5,7 +5,7 @@ Vuo is a realtime visual programming environment designed to be both incredibly 
 Vuo comes with several resources for programmers: 
 
    - An SDK, which includes: 
-      - The Vuo framework (including nodes, compiler, renderer, and runner)
+      - The Vuo framework (including nodes, compiler, and runner)
       - The Vuo command-line tools
    - Source code for everything in the SDK
    - Example Qt projects for creating add-ons to Vuo

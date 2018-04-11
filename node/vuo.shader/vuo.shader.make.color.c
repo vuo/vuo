@@ -8,18 +8,16 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Color",
+					 "title" : "Make Lit Color Shader",
 					 "keywords" : [ "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert", "tone", "chroma" ],
 					 "version" : "2.0.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node" : {
 						  "exampleCompositions" : [ "CompareColorAndEdgeShaders.vuo" ]

@@ -1,0 +1,19 @@
+digraph G
+{
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="15,75" _started_eventThrottling="enqueue"];
+MakeDraggableCamera [type="vuo.scene.make.camera.drag" version="1.0.1" label="Make Draggable Camera|<refresh>refresh\l|<name>name\l|<modifierKey>modifierKey\l|<window>window\l|<fieldOfView>fieldOfView\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<reset>reset\l|<updatedCamera>updatedCamera\r" pos="540,330" _name="\"camera\"" _modifierKey="\"any\"" _fieldOfView="90.0" _distanceMin="0.1" _distanceMax="10.0" _updatedCamera_eventThrottling="drop"];
+MakeList5 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="469,146" fillcolor="green"];
+MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="499,191" fillcolor="green"];
+ReceiveMouseButtons [type="vuo.mouse.button" version="1.0.3" label="Receive Mouse Buttons|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<pressed>pressed\r|<released>released\r" pos="-45,270" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _pressed_eventThrottling="enqueue" _released_eventThrottling="enqueue"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-30,195" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderSceneToWindow [type="vuo.scene.render.window" version="2.3.0" label="Render Scene to Window|<refresh>refresh\l|<objects>objects\l|<cameraName>cameraName\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="540,135" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+ShareValue2 [type="vuo.data.share.VuoReal" version="1.0.0" label="Time|<refresh>refresh\l|<value>value\l|<sameValue>sameValue\r" pos="45,135" fillcolor="green"];
+
+MakeDraggableCamera:updatedCamera -> MakeList5:1;
+MakeList5:list -> RenderSceneToWindow:objects;
+MakeList8:list -> RenderSceneToWindow:setWindowProperties;
+RenderSceneToWindow:requestedFrame -> ShareValue2:value [style=invis];
+RenderSceneToWindow:showedWindow -> MakeDraggableCamera:window [style=invis];
+RenderSceneToWindow:showedWindow -> ReceiveMouseButtons:window [style=invis];
+RenderSceneToWindow:showedWindow -> ReceiveMouseMoves:window [style=invis];
+}

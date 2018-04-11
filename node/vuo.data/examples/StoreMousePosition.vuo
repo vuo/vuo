@@ -9,7 +9,7 @@
 
 digraph G
 {
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.1" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="157,352" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="enqueue"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="157,352" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="enqueue"];
 HoldValue2 [type="vuo.data.hold.VuoPoint2d" version="2.0.0" label="Hold Value|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="357,415" fillcolor="violet"];
 MakeList [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="533,206" _1="{\"r\":0.500008,\"g\":0.000000,\"b\":0.500008,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
 MakeList2 [type="vuo.list.make.2.VuoColor" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="535,380" _1="{\"r\":0.484215,\"g\":0.100465,\"b\":1.000000,\"a\":1.000000}" _2="{\"r\":0.000000,\"g\":0.000000,\"b\":0.000000,\"a\":0.000000}"];
@@ -20,7 +20,7 @@ MakeRadialGradientLayer2 [type="vuo.layer.make.gradient.radial" version="1.1.0" 
 ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.1" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="112,180" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
 RenderLayersToWindow [type="vuo.layer.render.window" version="2.2.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="983,111" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
 
-FirePeriodically:fired -> HoldValue2:refresh;
+FirePeriodically:fired -> HoldValue2:refresh [event=true];
 HoldValue2:heldValue -> MakeRadialGradientLayer2:layerCenter;
 MakeList2:list -> MakeRadialGradientLayer2:colors;
 MakeList4:list -> RenderLayersToWindow:layers;

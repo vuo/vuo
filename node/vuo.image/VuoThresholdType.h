@@ -26,11 +26,17 @@ typedef const struct VuoList_VuoThresholdType_struct { void *l; } * VuoList_VuoT
  * An enum defining different types of color masks.
  */
 typedef enum {
-	VuoThresholdType_Luminance,
+	VuoThresholdType_Rec601, // ITU-R Recommendation BT.601 (1982) — NTSC / CCIR
+	VuoThresholdType_Rec709, // ITU-R Recommendation BT.709 (1990) — HDTV
+	VuoThresholdType_Desaturate, // HSL: S=0
+	VuoThresholdType_RGBAverage,
+	VuoThresholdType_RGBMaximum,
+	VuoThresholdType_RGBMinimum,
 	VuoThresholdType_Red,
 	VuoThresholdType_Green,
 	VuoThresholdType_Blue,
-	VuoThresholdType_Alpha
+	VuoThresholdType_Alpha,
+	VuoThresholdType_RGB,
 } VuoThresholdType;
 
 VuoThresholdType VuoThresholdType_makeFromJson(struct json_object * js);

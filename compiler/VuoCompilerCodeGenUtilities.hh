@@ -133,6 +133,7 @@ public:
 
 	static void generateScheduleTriggerWorker(Module *module, BasicBlock *block, Value *queueValue, Value *contextValue, Value *workerFunctionValue,  int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionStateValue, int chainCount);
 	static void generateScheduleChainWorker(Module *module, BasicBlock *block, Value *queueValue, Value *contextValue, Value *workerFunctionValue, int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionStateValue, size_t chainIndex, vector<size_t> upstreamChainIndices);
+	static void generateGrantThreadsToChain(Module *module, BasicBlock *block, int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionStateValue, size_t chainIndex);
 	static void generateGrantThreadsToSubcomposition(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue, Value *chainIndexValue, Value *subcompositionIdentifierValue);
 	static void generateReturnThreadsForTriggerWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue);
 	static void generateReturnThreadsForChainWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue, Value *chainIndexValue);

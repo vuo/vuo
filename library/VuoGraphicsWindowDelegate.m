@@ -57,6 +57,18 @@ VuoModuleMetadata({
 }
 
 /**
+ * Constrains the window size to what Cocoa can properly render.
+ */
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
+{
+	NSRect contentRect = [_window contentRectForFrameRect:NSMakeRect(0,0,frameSize.width,frameSize.height)];
+	contentRect.size.width  = MAX(VuoGraphicsWindowMinSize, contentRect.size.width);
+	contentRect.size.height = MAX(VuoGraphicsWindowMinSize, contentRect.size.height);
+	NSRect frameRect = [_window frameRectForContentRect:contentRect];
+	return frameRect.size;
+}
+
+/**
  * Keeps track of whether the user has manually resized the window,
  * and fires the window-properties-changed callback.
  *

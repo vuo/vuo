@@ -73,8 +73,6 @@
 
 	/// GL_TEXTURE_RECTANGLEs from the movie
 	CVOpenGLTextureCacheRef textureCache;
-	/// Context for `textureCache`
-	VuoGlContext glContext;
 }
 
 /// Initialize new instance.

@@ -71,42 +71,57 @@ void VuoCompilerSpecializedNodeClass::initialize(void)
  *		"<generic node class name>.<type>.(...).<type>" (e.g. "vuo.dictionary.make.VuoText.VuoInteger").
  * @param compiler The compiler to use for looking up the generic node class and compiling the specialized node class.
  * @param llvmQueue Synchronizes access to LLVM's global context.
+ * @param knownModuleKeys Modules located on the compiler's search paths but not yet loaded, to be searched when the
+ *		generic node class being specialized has not yet been loaded.
  * @return The generated node class, or null if the generic node class is not found. If @a nodeClassName is fully specialized
  *		(doesn't contain any generic type names), then the returned node class has an LLVM module associated with it.
  *		Otherwise, the returned node class does not yet have an implementation.
  */
-VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(string nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue)
+VuoNodeClass * VuoCompilerSpecializedNodeClass::newNodeClass(const string &nodeClassName, VuoCompiler *compiler,
+															 dispatch_queue_t llvmQueue, const set<string> &knownModuleKeys)
 {
 	VuoNodeClass *makeListNodeClass = VuoCompilerMakeListNodeClass::newNodeClass(nodeClassName, compiler, llvmQueue);
 	if (makeListNodeClass)
 		return makeListNodeClass;
 
+	if (nodeClassName.find(".") == string::npos)
+		return NULL;
+
 
 	// Find the generic node class that the given node class should specialize
 
-	if (nodeClassName.find(".") == string::npos
-	 || VuoStringUtilities::endsWith(nodeClassName, ".framework"))
-		return NULL;
+	map<string, VuoCompilerNodeClass *> loadedNodeClasses = compiler->getNodeClasses();
+
+	VuoCompilerNodeClass *potentialGenericNodeClass = NULL;
+	vector<string> parts = VuoStringUtilities::split(nodeClassName, '.');
+	for (int j = parts.size() - 1; j >= 1; --j)
+	{
+		vector<string> firstParts(parts.begin(), parts.begin() + j);
+		string potentialGenericNodeClassName = VuoStringUtilities::join(firstParts, '.');
+
+		map<string, VuoCompilerNodeClass *>::iterator iter = loadedNodeClasses.find(potentialGenericNodeClassName);
+		if (iter != loadedNodeClasses.end())
+		{
+			potentialGenericNodeClass = iter->second;
+			break;
+		}
+		else if (knownModuleKeys.find(potentialGenericNodeClassName) != knownModuleKeys.end())
+		{
+			potentialGenericNodeClass = compiler->getNodeClass(potentialGenericNodeClassName);
+			break;
+		}
+	}
 
 	VuoCompilerNodeClass *genericNodeClass = NULL;
 	vector<string> genericTypeNames;
-
-	map<string, VuoCompilerNodeClass *> nodeClasses = compiler->getNodeClasses();
-	for (map<string, VuoCompilerNodeClass *>::const_iterator i = nodeClasses.begin(); i != nodeClasses.end(); ++i)
+	if (potentialGenericNodeClass)
 	{
-		VuoCompilerNodeClass *potentialGenericNodeClass = i->second;
-
-		if (! VuoStringUtilities::beginsWith(nodeClassName, potentialGenericNodeClass->getBase()->getClassName()))
-			continue;
-
 		vector<string> potentialGenericTypeNames = getGenericTypeNamesFromPorts(potentialGenericNodeClass);
 		string expectedGenericNodeClassName = extractGenericNodeClassName(nodeClassName, potentialGenericTypeNames.size());
-
 		if (expectedGenericNodeClassName == potentialGenericNodeClass->getBase()->getClassName())
 		{
 			genericNodeClass = potentialGenericNodeClass;
 			genericTypeNames = potentialGenericTypeNames;
-			break;
 		}
 	}
 

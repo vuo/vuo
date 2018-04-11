@@ -101,6 +101,9 @@ void VuoInputEditorPoint2d::setUpDialog(QDialog &dialog, json_object *originalVa
 			hasMinMax = false;
 
 		// "suggestedStep"
+		if (hasMinMax)
+			suggestedStep = VuoPoint2d_make((suggestedMax.x - suggestedMin.x)/10.,
+											(suggestedMax.y - suggestedMin.y)/10.);
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 			suggestedStep = VuoPoint2d_makeFromJson(suggestedStepValue);

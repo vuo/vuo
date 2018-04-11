@@ -90,7 +90,7 @@ static inline bool VuoRectangle_areEqual(const VuoRectangle a, const VuoRectangl
 static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height) __attribute__((const));
 static inline VuoRectangle VuoRectangle_makeTopLeft(float leftX, float topY, float width, float height)
 {
-	VuoRectangle r = {{leftX+width/2.,topY+height/2.},{width,height}};
+	VuoRectangle r = {{leftX+width/2.f,topY+height/2.f},{width,height}};
 	return r;
 }
 
@@ -253,8 +253,8 @@ static inline VuoPoint2d VuoPoint2d_spring(VuoReal timeSinceDrop, VuoPoint2d dro
 static inline VuoPoint2d VuoPoint2d_clamp(VuoPoint2d point, VuoReal limitA, VuoReal limitB)
 {
 	return (VuoPoint2d){
-		VuoReal_clamp(point.x, limitA, limitB),
-		VuoReal_clamp(point.y, limitA, limitB)
+		(float)VuoReal_clamp(point.x, limitA, limitB),
+		(float)VuoReal_clamp(point.y, limitA, limitB)
 	};
 }
 
@@ -264,8 +264,8 @@ static inline VuoPoint2d VuoPoint2d_clamp(VuoPoint2d point, VuoReal limitA, VuoR
 static inline VuoPoint2d VuoPoint2d_clampn(VuoPoint2d point, VuoPoint2d limitA, VuoPoint2d limitB)
 {
 	return (VuoPoint2d){
-		VuoReal_clamp(point.x, limitA.x, limitB.x),
-		VuoReal_clamp(point.y, limitA.y, limitB.y)
+		(float)VuoReal_clamp(point.x, limitA.x, limitB.x),
+		(float)VuoReal_clamp(point.y, limitA.y, limitB.y)
 	};
 }
 
@@ -281,8 +281,8 @@ static inline VuoPoint2d VuoPoint2d_clampn(VuoPoint2d point, VuoPoint2d limitA, 
 static inline VuoPoint2d VuoPoint2d_bezier3(VuoPoint2d p0, VuoPoint2d p1, VuoPoint2d p2, VuoPoint2d p3, VuoReal time)
 {
 	return (VuoPoint2d) {
-		VuoReal_bezier3(p0.x,p1.x,p2.x,p3.x,time),
-		VuoReal_bezier3(p0.y,p1.y,p2.y,p3.y,time)
+		(float)VuoReal_bezier3(p0.x,p1.x,p2.x,p3.x,time),
+		(float)VuoReal_bezier3(p0.y,p1.y,p2.y,p3.y,time)
 	};
 }
 

@@ -996,6 +996,7 @@ private slots:
 
 		// The subcomposition source file is in the Modules folder when the compiler is initialized.
 		// When any node class is loaded, the subcomposition gets compiled.
+		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
 		delete compiler;
 		compiler = initCompiler();
 		QVERIFY(! VuoFileUtilities::fileExists(compiledCompositionPath));
@@ -1065,6 +1066,7 @@ private slots:
 		VuoFileUtilities::copyFile(midOrigCompositionPath, midCopiedCompositionPath);
 		VuoFileUtilities::copyFile(inner1OrigCompositionPath, inner1CopiedCompositionPath);
 		VuoFileUtilities::copyFile(inner2OrigCompositionPath, inner2CopiedCompositionPath);
+		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
 		delete compiler;
 		compiler = initCompiler();
 		compiler->setLoadAllModules(false);
@@ -1106,8 +1108,9 @@ private slots:
 
 	void testErrors()
 	{
-		string copiedParseErrorPath = VuoFileUtilities::getUserModulesPath() + "/vuo.test.parseError.vuo";
-		string compiledParseErrorPath = VuoCompiler::getCachedModulesPath() + "/vuo.test.parseError.vuonode";
+		string parseErrorNodeClassName = "vuo.test.parseError";
+		string copiedParseErrorPath = VuoFileUtilities::getUserModulesPath() + "/" + parseErrorNodeClassName + ".vuo";
+		string compiledParseErrorPath = VuoCompiler::getCachedModulesPath() + "/" + parseErrorNodeClassName + ".vuonode";
 
 		// Try to install a subcomposition that can't be parsed.
 		VuoFileUtilities::writeStringToFile("", copiedParseErrorPath);
@@ -1122,8 +1125,7 @@ private slots:
 		VuoFileUtilities::writeStringToFile("", copiedParseErrorPath);
 		delete compiler;
 		compiler = initCompiler();
-		compiler->getNodeClasses();
-		map<string, VuoCompilerException> errors = compiler->flushErrorsLoadingModules();
+		map<string, VuoCompilerException> errors = compiler->checkForErrorsLoadingModules();
 		QVERIFY(errors.find(copiedParseErrorPath) != errors.end());
 		QVERIFY(! VuoFileUtilities::fileExists(compiledParseErrorPath));
 		VuoFileUtilities::deleteFile(copiedParseErrorPath);
@@ -1131,17 +1133,18 @@ private slots:
 
 		string lengthenEsAndDoublePath = getCompositionPath("LengthenEsAndDouble.vuo");
 		string lengthenEsAndDoubleAndAddKPath = getCompositionPath("LengthenEsAndDoubleAndAddK.vuo");
-		string copiedLengthenEsPath = VuoFileUtilities::getUserModulesPath() + "/vuo.test.lengthenEs.vuo";
-		string compiledLengthenEsPath = VuoCompiler::getCachedModulesPath() + "/vuo.test.lengthenEs.vuonode";
+		string lengthenEsNodeClassName = "vuo.test.lengthenEs";
+		string copiedLengthenEsPath = VuoFileUtilities::getUserModulesPath() + "/" + lengthenEsNodeClassName + ".vuo";
+		string compiledLengthenEsPath = VuoCompiler::getCachedModulesPath() + "/" + lengthenEsNodeClassName + ".vuonode";
 		string appendWithSpacesPath = getCompositionPath("AppendWithSpaces.vuo");
 
 		// Initialize a compiler when the Modules folder contains a subcomposition that contains an instance of itself.
 		copyIntoSubcompositionDir(appendWithSpacesPath);
 		VuoFileUtilities::copyFile(lengthenEsAndDoublePath, copiedLengthenEsPath);
+		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
 		delete compiler;
 		compiler = initCompiler();
-		compiler->getNodeClasses();
-		errors = compiler->flushErrorsLoadingModules();
+		errors = compiler->checkForErrorsLoadingModules();
 		QVERIFY(errors.find(copiedLengthenEsPath) != errors.end());
 		QVERIFY(VuoStringUtilities::beginsWith(errors[copiedLengthenEsPath].what(), "Subcomposition contains itself"));
 		QVERIFY(! VuoFileUtilities::fileExists(compiledLengthenEsPath));
@@ -1149,10 +1152,10 @@ private slots:
 		// Initialize a compiler when the Modules folder contains a subcomposition that indirectly contains an instance of itself.
 		copyIntoSubcompositionDir(lengthenEsAndDoublePath);
 		VuoFileUtilities::copyFile(lengthenEsAndDoubleAndAddKPath, copiedLengthenEsPath);
+		VuoCompiler::getSharedEnvironment()->compositionFilesAtSearchPath.erase(VuoFileUtilities::getUserModulesPath());
 		delete compiler;
 		compiler = initCompiler();
-		compiler->getNodeClasses();
-		errors = compiler->flushErrorsLoadingModules();
+		errors = compiler->checkForErrorsLoadingModules();
 		QVERIFY(errors.find(copiedLengthenEsPath) != errors.end());
 		QVERIFY(VuoStringUtilities::beginsWith(errors[copiedLengthenEsPath].what(), "Subcomposition contains itself"));
 		QVERIFY(! VuoFileUtilities::fileExists(compiledLengthenEsPath));

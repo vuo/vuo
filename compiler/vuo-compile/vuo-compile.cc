@@ -20,7 +20,13 @@
 
 void printHelp(char *argv0)
 {
-	printf("Usage: %s [options] file\n"
+	printf("Compiles a Vuo composition file into LLVM bitcode,\n"
+		   "or compiles C/C++/Objective-C/Objective-C++ source code into a Vuo node.\n"
+		   "\n"
+		   "Usage:\n"
+		   "  %s [options] composition.vuo      Compiles composition.vuo into LLVM bitcode (suitable for use with vuo-link).\n"
+		   "  %s [options] node.class.name.c    Compiles a node class into a Vuo node (suitable for placing in '~/Library/Application Support/Vuo/Modules').\n"
+		   "\n"
 		   "Options:\n"
 		   "  --help                       Display this information.\n"
 		   "  --header-search-path <dir>   Add the specified directory to the search path for include files. This option may be specified more than once. Only affects compiling .c files.\n"
@@ -28,7 +34,7 @@ void printHelp(char *argv0)
 		   "  --output <file>              Place the compiled code into <file>.\n"
 //		   "  --target                     Target the given architecture, vendor, and operating system (e.g. 'x86_64-apple-macosx10.8.0').\n"
 		   "  --verbose                    Output diagnostic information.\n",
-		   argv0);
+		   argv0, argv0);
 }
 
 int main (int argc, char * const argv[])

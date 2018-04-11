@@ -28,7 +28,6 @@ VuoModuleMetadata({
 					 ],
 					 "version" : "1.0.1",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoSceneObjectRenderer"
 					 ],
 					 "node": {
@@ -94,8 +93,6 @@ struct nodeInstanceData
 	VuoDispersion dispersion;
 	VuoDisplacement displacement;
 	VuoShader shader;
-
-	VuoGlContext glContext;
 	VuoSceneObjectRenderer sceneObjectRenderer;
 };
 
@@ -112,9 +109,7 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, linearShaderSource, NULL, NULL);
 	VuoRetain(instance->shader);
 
-	instance->glContext = VuoGlContext_use();
-
-	instance->sceneObjectRenderer = VuoSceneObjectRenderer_make(instance->glContext, instance->shader);
+	instance->sceneObjectRenderer = VuoSceneObjectRenderer_make(instance->shader);
 	VuoRetain(instance->sceneObjectRenderer);
 
 	return instance;
@@ -169,7 +164,7 @@ void nodeInstanceEvent
 		VuoRetain((*instance)->shader);
 
 		VuoRelease((*instance)->sceneObjectRenderer);
-		(*instance)->sceneObjectRenderer = VuoSceneObjectRenderer_make((*instance)->glContext, (*instance)->shader);
+		(*instance)->sceneObjectRenderer = VuoSceneObjectRenderer_make((*instance)->shader);
 		VuoRetain((*instance)->sceneObjectRenderer);
 	}
 
@@ -191,5 +186,4 @@ void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
 	VuoRelease((*instance)->sceneObjectRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

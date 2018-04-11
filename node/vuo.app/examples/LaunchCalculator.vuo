@@ -22,4 +22,5 @@ MakeList4:list -> RenderLayersToWindow:setWindowProperties;
 MakeList8:list -> RenderLayersToWindow:layers;
 MakeTextLayer:layer -> MakeList8:1;
 ReceiveKeyboardButtons:pressed -> LaunchApp:url;
+RenderLayersToWindow:showedWindow -> ReceiveKeyboardButtons:window [style=invis];
 }

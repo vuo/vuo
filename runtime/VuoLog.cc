@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <asl.h>
 #include <math.h>
+#include <dlfcn.h>
 
 #ifndef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
 	/// Avoid conflict between Cocoa and LLVM headers.
@@ -153,7 +154,7 @@ typedef struct {
 /// Data to be inserted into OS X crash reports.
 VuoCrashReport_infoType VuoCrashReport __attribute__((section("__DATA,__crash_info"))) = { 4, NULL, NULL, NULL, NULL, NULL, NULL };
 
-void VuoLog(const char *file, const unsigned int line, const char *function, const char *format, ...)
+void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...)
 {
 	va_list args;
 
@@ -218,12 +219,37 @@ void VuoLog(const char *file, const unsigned int line, const char *function, con
 
 	double time = VuoLogGetElapsedTime();
 
-	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4u  %41s \t%s\033[0m\n", getpid()%212+19, getpid(), time, formattedFile, line, formattedFunction ? formattedFunction : function, formattedString);
+	fprintf(stderr, "\033[38;5;%dm# pid=%d  t=%8.4fs %27s:%-4u  %41s \t%s\033[0m\n", getpid()%212+19, getpid(), time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
 
-	aslmsg msg = asl_new(ASL_TYPE_MSG);
-	asl_set(msg, ASL_KEY_READ_UID, "-1");
-	asl_log(NULL, msg, ASL_LEVEL_WARNING, "%s:%u  %s  %s", formattedFile, line, formattedFunction ? formattedFunction : function, formattedString);
-	asl_free(msg);
+
+	// Also send it to the macOS Console.
+	{
+		// Can't just call this directly because (1) it only exists on 10.12+,
+		// and (2) it relies on Apple-specific complier extensions that aren't available in Clang 3.2.
+		// os_log(OS_LOG_DEFAULT, "...", ...);
+
+		extern struct mach_header __dso_handle;
+		typedef void (*vuoMacOsLogInternalType)(void *dso, void *log, uint8_t type, const char *message, ...);
+		static vuoMacOsLogInternalType vuoMacOsLogInternal = NULL;
+		static void *vuoMacOsLogDefault = NULL;
+		static dispatch_once_t once = 0;
+		dispatch_once(&once, ^{
+			vuoMacOsLogInternal = (vuoMacOsLogInternalType)dlsym(RTLD_SELF, "_os_log_internal");
+			vuoMacOsLogDefault = dlsym(RTLD_SELF, "_os_log_default");
+		});
+
+		if (vuoMacOsLogInternal)
+			vuoMacOsLogInternal(&__dso_handle, vuoMacOsLogDefault, 0 /*OS_LOG_TYPE_DEFAULT*/, "%{public}27s:%-4u  %{public}41s  %{public}s", formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
+
+		else // For Mac OS X 10.11 and prior
+		{
+			aslmsg msg = asl_new(ASL_TYPE_MSG);
+			asl_set(msg, ASL_KEY_READ_UID, "-1");
+			asl_log(NULL, msg, ASL_LEVEL_WARNING, "%27s:%-4u  %41s  %s", formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
+			asl_free(msg);
+		}
+	}
+
 
 	static dispatch_once_t historyInitialized = 0;
 	dispatch_once(&historyInitialized, ^{
@@ -236,7 +262,7 @@ void VuoLog(const char *file, const unsigned int line, const char *function, con
 	// Keep the most recent messages in VuoLogHistory.
 	{
 		char *formattedPrefixedString;
-		asprintf(&formattedPrefixedString, "t=%8.4fs  %s:%u  %s  %s", time, formattedFile, line, formattedFunction ? formattedFunction : function, formattedString);
+		asprintf(&formattedPrefixedString, "t=%8.4fs  %s:%u  %s  %s", time, formattedFile, linenumber, formattedFunction ? formattedFunction : function, formattedString);
 		free(formattedString);
 		if (formattedFunction)
 			free(formattedFunction);

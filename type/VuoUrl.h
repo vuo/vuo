@@ -43,11 +43,22 @@ bool VuoUrl_areEqual(const VuoText a, const VuoText b);
 bool VuoUrl_isLessThan(const VuoText a, const VuoText b);
 
 bool VuoUrl_isRelativePath(const VuoUrl url);
-VuoUrl VuoUrl_normalize(const VuoText url, bool isSave);
+
+/**
+ * Bitwise flags modifying URL normalization behavior.
+ */
+enum VuoUrlNormalizeFlags {
+	VuoUrlNormalize_default           = 0x0, ///< Standard normalization (none of the below flags set).
+	VuoUrlNormalize_forSaving         = 0x1, ///< For exported apps: if set, relative file paths will be resolved to Desktop instead of the app resources folder.
+	VuoUrlNormalize_assumeHttp        = 0x2, ///< If the URL doesn't have an explicit scheme: if unset, the `file` scheme is added.  If set, the `http` scheme is added.
+};
+VuoUrl VuoUrl_normalize(const VuoText url, enum VuoUrlNormalizeFlags flags);
+
 VuoText VuoUrl_getPosixPath(const VuoUrl url);
 VuoText VuoUrl_escapePosixPath(const VuoText posixPath);
 bool VuoUrl_isBundle(const VuoUrl url);
 VuoUrl VuoUrl_appendFileExtension(const char *filename, const char** validExtensions, const unsigned int extensionsLength);
+VuoText VuoUrl_decodeRFC3986(const VuoUrl url);
 
 /// @{
 /**

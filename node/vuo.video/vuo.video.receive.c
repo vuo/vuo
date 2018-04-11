@@ -15,11 +15,11 @@ VuoModuleMetadata({
 					 "title" : "Receive Live Video",
 					  "keywords" : [
 						  "quicktime", "qt",
-						  "firewire", "1394", "usb", "iSight",
+						  "firewire", "1394", "usb", "iSight", "FaceTime HD",
 						  "iOS", "iPhone", "iPad", "Lightning",
 						  "camera", "capture", "streaming", "record"
 					  ],
-					 "version" : "1.0.2",
+					 "version" : "1.0.3",
 					 "dependencies" : [
 						 "VuoQTCapture"
 					 ],

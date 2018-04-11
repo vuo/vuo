@@ -8,3 +8,4 @@ The position of the arranged layers is based on the bounding rectangle around th
    - `Anchor` — The point within the arranged layers' bounding rectangle that should be fixed at `Position`.
    - `Position` — The point within the composite image where the arranged layers should be placed, in Vuo Coordinates.
    - `Spacing` — The distance between adjacent layers, in Vuo Coordinates.
+   - `Arranged Layer` — A parent layer containing the arranged layers as children. (`Arranged Layer` omits empty layers, for example if one of the `Layers` drawer ports doesn't have a cable connected.)

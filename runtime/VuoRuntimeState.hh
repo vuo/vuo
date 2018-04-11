@@ -60,10 +60,11 @@ private:
 public:
 	VuoRuntimePersistentState *persistentState;  ///< State preserved across live-coding reloads.
 
-	VuoRuntimeState(void *zmqContext, const char *controlUrl, const char *telemetryUrl, bool isPaused,
-					pid_t runnerPid, int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory, void *compositionBinaryHandle,
-					VuoRuntimePersistentState *persistentState);
+	VuoRuntimeState(void);
 	~VuoRuntimeState(void);
+	void init(void *zmqContext, const char *controlUrl, const char *telemetryUrl, bool isPaused,
+			  pid_t runnerPid, int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory, void *compositionBinaryHandle);
+	void fini(void);
 	void updateCompositionSymbols(void *compositionBinaryHandle);
 	bool isPaused(void);
 	bool isStopped(void);
@@ -74,7 +75,7 @@ public:
 	void startComposition(void);
 	void pauseComposition(void);
 	void unpauseComposition(void);
-	void stopCompositionAsOrderedByRunner(bool isBeingReplaced, int timeoutInSeconds);
+	void stopCompositionAsOrderedByRunner(bool isBeingReplaced, int timeoutInSeconds, bool isLastEverInProcess);
 	void stopCompositionAsOrderedByComposition(void);
 	void breakOutOfEventLoop(void);
 };

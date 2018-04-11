@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make 3D Object from Image",
-					 "keywords" : [ "quad", "rectangle", "plane", "4-gon", "4gon", "shape", "billboard", "sprite", "square",
+					 "keywords" : [ "quad", "rectangle", "plane", "4-gon", "4gon", "billboard", "sprite", "square",
 						 "projector",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert" ],

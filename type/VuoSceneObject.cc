@@ -7,6 +7,8 @@
  * For more information, see http://vuo.org/license.
  */
 
+#include <list>
+
 extern "C"
 {
 #include <stdio.h>
@@ -18,6 +20,7 @@ extern "C"
 #include "VuoList_VuoSceneObject.h"
 #include "VuoBoolean.h"
 #include "VuoFont.h"
+#include "VuoMeshUtility.h"
 
 /// @{
 #ifdef VUO_COMPILER
@@ -27,10 +30,12 @@ VuoModuleMetadata({
 					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
+						"csgjs",
 						"VuoBlendMode",
 						"VuoBoolean",
 						"VuoFont",
 						"VuoMesh",
+						"VuoMeshUtility",
 						"VuoPoint3d",
 						"VuoShader",
 						"VuoText",
@@ -480,46 +485,6 @@ bool VuoSceneObject_findWithType(VuoSceneObject so, VuoSceneObjectSubType typeTo
 }
 
 /**
- * Helper for @ref VuoSceneObject_apply.
- */
-static bool VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText nameToMatch, VuoSceneObject *foundCamera, float modelviewMatrix[16])
-{
-	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
-	float compositeModelviewMatrix[16];
-	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-
-	if ((so.type == VuoSceneObjectSubType_PerspectiveCamera
-	  || so.type == VuoSceneObjectSubType_StereoCamera
-	  || so.type == VuoSceneObjectSubType_OrthographicCamera
-	  || so.type == VuoSceneObjectSubType_FisheyeCamera)
-	  && (!nameToMatch || (so.name && nameToMatch && strstr(so.name, nameToMatch))))
-	{
-		*foundCamera = so;
-		so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
-		return true;
-	}
-
-	if (so.childObjects)
-	{
-		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
-		for (unsigned long i = 1; i <= childObjectCount; ++i)
-		{
-			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-			VuoSceneObject childCamera;
-			bool foundChildCamera = VuoSceneObject_findCameraInternal(childObject, nameToMatch, &childCamera, compositeModelviewMatrix);
-			if (foundChildCamera)
-			{
-				*foundCamera = childCamera;
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-/**
  * Performs a depth-first search of the scenegraph.
  *
  * Returns (via `foundCamera`) the first camera whose name contains `nameToMatch` (or, if `nameToMatch` is emptystring or NULL, just returns the first camera),
@@ -529,10 +494,23 @@ static bool VuoSceneObject_findCameraInternal(VuoSceneObject so, VuoText nameToM
  */
 bool VuoSceneObject_findCamera(VuoSceneObject so, VuoText nameToMatch, VuoSceneObject *foundCamera)
 {
-	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
+	__block bool didFindCamera = false;
+	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+		if ((currentObject->type == VuoSceneObjectSubType_PerspectiveCamera
+		  || currentObject->type == VuoSceneObjectSubType_StereoCamera
+		  || currentObject->type == VuoSceneObjectSubType_OrthographicCamera
+		  || currentObject->type == VuoSceneObjectSubType_FisheyeCamera)
+		  && (!nameToMatch || (currentObject->name && nameToMatch && strstr(currentObject->name, nameToMatch))))
+		{
+			*foundCamera = *currentObject;
+			foundCamera->transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			didFindCamera = true;
+			return false;
+		}
+		return true;
+	});
 
-	return VuoSceneObject_findCameraInternal(so, nameToMatch, foundCamera, localModelviewMatrix);
+	return didFindCamera;
 }
 
 /**
@@ -687,59 +665,6 @@ VuoSceneObject VuoSceneObject_makeSpotlight(VuoColor color, float brightness, Vu
 }
 
 /**
- * Helper for @ref VuoSceneObject_findLights.
- */
-static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, float modelviewMatrix[16], VuoList_VuoColor ambientColors, float *ambientBrightness, VuoList_VuoSceneObject pointLights, VuoList_VuoSceneObject spotLights)
-{
-	switch (so.type)
-	{
-		case VuoSceneObjectSubType_AmbientLight:
-			VuoListAppendValue_VuoColor(ambientColors, so.lightColor);
-			*ambientBrightness += so.lightBrightness;
-			return;
-		case VuoSceneObjectSubType_PointLight:
-		{
-			float localModelviewMatrix[16];
-			VuoTransform_getMatrix(so.transform, localModelviewMatrix);
-			float compositeModelviewMatrix[16];
-			VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-			so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
-
-			VuoListAppendValue_VuoSceneObject(pointLights, so);
-			return;
-		}
-		case VuoSceneObjectSubType_Spotlight:
-		{
-			float localModelviewMatrix[16];
-			VuoTransform_getMatrix(so.transform, localModelviewMatrix);
-			float compositeModelviewMatrix[16];
-			VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-			so.transform = VuoTransform_makeFromMatrix4x4(compositeModelviewMatrix);
-
-			VuoListAppendValue_VuoSceneObject(spotLights, so);
-			return;
-		}
-		default:
-			break;
-	}
-
-	if (so.childObjects)
-	{
-		float localModelviewMatrix[16];
-		VuoTransform_getMatrix(so.transform, localModelviewMatrix);
-		float compositeModelviewMatrix[16];
-		VuoTransform_multiplyMatrices4x4(localModelviewMatrix, modelviewMatrix, compositeModelviewMatrix);
-
-		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(so.childObjects);
-		for (unsigned long i = 1; i <= childObjectCount; ++i)
-		{
-			VuoSceneObject childObject = VuoListGetValue_VuoSceneObject(so.childObjects, i);
-			VuoSceneObject_findLightsRecursive(childObject, compositeModelviewMatrix, ambientColors, ambientBrightness, pointLights, spotLights);
-		}
-	}
-}
-
-/**
  * Finds and returns all the lights in the scene.
  *
  * If there are multiple ambient lights, returns the weighted (by alpha) average color and summed brightness.
@@ -748,17 +673,33 @@ static void VuoSceneObject_findLightsRecursive(VuoSceneObject so, float modelvie
  */
 void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float *ambientBrightness, VuoList_VuoSceneObject *pointLights, VuoList_VuoSceneObject *spotLights)
 {
-	VuoList_VuoColor ambientColors = VuoListCreate_VuoColor();
+	__block VuoList_VuoColor ambientColors = VuoListCreate_VuoColor();
 	VuoRetain(ambientColors);
 
 	*ambientBrightness = 0;
 	*pointLights = VuoListCreate_VuoSceneObject();
 	*spotLights = VuoListCreate_VuoSceneObject();
 
-	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(VuoTransform_makeIdentity(), localModelviewMatrix);
-
-	VuoSceneObject_findLightsRecursive(so, localModelviewMatrix, ambientColors, ambientBrightness, *pointLights, *spotLights);
+	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+		if (currentObject->type == VuoSceneObjectSubType_AmbientLight)
+		{
+			VuoListAppendValue_VuoColor(ambientColors, currentObject->lightColor);
+			*ambientBrightness += currentObject->lightBrightness;
+		}
+		else if (currentObject->type == VuoSceneObjectSubType_PointLight)
+		{
+			VuoSceneObject l = *currentObject;
+			l.transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			VuoListAppendValue_VuoSceneObject(*pointLights, l);
+		}
+		else if (currentObject->type == VuoSceneObjectSubType_Spotlight)
+		{
+			VuoSceneObject l = *currentObject;
+			l.transform = VuoTransform_makeFromMatrix4x4(modelviewMatrix);
+			VuoListAppendValue_VuoSceneObject(*spotLights, l);
+		}
+		return true;
+	});
 
 	if (!VuoListGetCount_VuoColor(ambientColors)
 			&& !VuoListGetCount_VuoSceneObject(*pointLights)
@@ -785,20 +726,58 @@ void VuoSceneObject_findLights(VuoSceneObject so, VuoColor *ambientColor, float 
 }
 
 /**
- * Applies @c function to @c object and its child objects,
- * without preserving changes to objects.
+ * State for visiting an object at its particular place in the hierarchy.
  */
-void VuoSceneObject_visit(const VuoSceneObject object, void (^function)(const VuoSceneObject currentObject))
+typedef struct
 {
-	function(object);
+	long objectCount;
+	const VuoSceneObject *objects;
+	float modelviewMatrix[16];
+} VuoSceneObject_treeState;
 
-	if (object.childObjects)
+/**
+ * Applies `function` to `object` and its child objects,
+ * without preserving changes to objects.
+ *
+ * If `function` returns false, visiting will stop immediately
+ * (possibly before all objects have been visited).
+ *
+ * The value `modelviewMatrix` (which `VuoSceneObject_visit` passes to `function`)
+ * is the cumulative transformation matrix (from `object` down to the `currentObject`).
+ */
+void VuoSceneObject_visit(const VuoSceneObject object, bool (^function)(const VuoSceneObject *currentObject, float modelviewMatrix[16]))
+{
+	VuoSceneObject_treeState rootState;
+	rootState.objectCount = 1;
+	rootState.objects = &object;
+	VuoTransform_getMatrix(VuoTransform_makeIdentity(), rootState.modelviewMatrix);
+
+	std::list<VuoSceneObject_treeState> objectsToVisit(1, rootState);
+	while (!objectsToVisit.empty())
 	{
-		unsigned long childObjectCount = VuoListGetCount_VuoSceneObject(object.childObjects);
-		for (unsigned long i = 1; i <= childObjectCount; ++i)
+		VuoSceneObject_treeState currentState = objectsToVisit.front();
+		objectsToVisit.pop_front();
+
+		for (long i = 0; i < currentState.objectCount; ++i)
 		{
-			VuoSceneObject o = VuoListGetValue_VuoSceneObject(object.childObjects, i);
-			VuoSceneObject_visit(o, function);
+			float localModelviewMatrix[16];
+			VuoTransform_getMatrix(currentState.objects[i].transform, localModelviewMatrix);
+			float compositeModelviewMatrix[16];
+			VuoTransform_multiplyMatrices4x4(localModelviewMatrix, currentState.modelviewMatrix, compositeModelviewMatrix);
+
+			if (!function(&currentState.objects[i], compositeModelviewMatrix))
+				return;
+
+			// Prepend this object's childObjects to the objectsToVisit queue.
+			long childObjectCount = VuoListGetCount_VuoSceneObject(currentState.objects[i].childObjects);
+			if (childObjectCount)
+			{
+				VuoSceneObject_treeState childState;
+				childState.objectCount = childObjectCount;
+				childState.objects = VuoListGetData_VuoSceneObject(currentState.objects[i].childObjects);
+				memcpy(childState.modelviewMatrix, compositeModelviewMatrix, sizeof(float[16]));
+				objectsToVisit.push_front(childState);
+			}
 		}
 	}
 }
@@ -906,56 +885,26 @@ VuoSceneObject VuoSceneObject_copy(const VuoSceneObject object)
 }
 
 /**
- * Returns the bounds of a sceneobject including its children.
- */
-static bool VuoSceneObject_boundsRecursive(const VuoSceneObject so, VuoBox *bounds, float matrix[16])
-{
-	// matrix parameter is the trickle down transformations
-	float localModelviewMatrix[16];
-	VuoTransform_getMatrix(so.transform, localModelviewMatrix);
-
-	float compositeModelviewMatrix[16];
-	VuoTransform_multiplyMatrices4x4(localModelviewMatrix, matrix, compositeModelviewMatrix);
-
-	bool foundBounds = VuoSceneObject_meshBounds(so, bounds, compositeModelviewMatrix);
-
-	if(so.childObjects != NULL)
-	{
-		for(int i = 0; i < VuoListGetCount_VuoSceneObject(so.childObjects); i++)
-		{
-			VuoBox childBounds;
-			bool childBoundsFound = VuoSceneObject_boundsRecursive(VuoListGetValue_VuoSceneObject(so.childObjects, i+1), &childBounds, compositeModelviewMatrix);
-
-			if(childBoundsFound)
-			{
-				*bounds = foundBounds ? VuoBox_encapsulate(*bounds, childBounds) : childBounds;
-				foundBounds = true;
-			}
-		}
-	}
-
-	return foundBounds;
-}
-
-/**
-  *	Get the axis aligned bounding box of this sceneobject and it's children (and it's children's children).
+  *	Get the axis aligned bounding box of this sceneobject and its children (and its children's children).
   */
 VuoBox VuoSceneObject_bounds(const VuoSceneObject so)
 {
-	VuoBox bounds;
+	__block bool haveGlobalBounds = false;
+	__block VuoBox globalBounds;
 
-	float identity[16] =
-	{
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1
-	};
+	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+		VuoBox bounds;
+		bool foundBounds = VuoSceneObject_meshBounds(*currentObject, &bounds, modelviewMatrix);
+		if (foundBounds)
+		{
+			globalBounds = haveGlobalBounds ? VuoBox_encapsulate(globalBounds, bounds) : bounds;
+			haveGlobalBounds = true;
+		}
+		return true;
+	});
 
-	bool success = VuoSceneObject_boundsRecursive(so, &bounds, identity);
-
-	if(success)
-		return bounds;
+	if (haveGlobalBounds)
+		return globalBounds;
 	else
 		return VuoBox_make( (VuoPoint3d){0,0,0}, (VuoPoint3d){0,0,0} );
 }
@@ -1395,9 +1344,10 @@ static VuoList_VuoText VuoSceneObject_findShaderNames(VuoSceneObject object)
 {
 	// Exploit json_object's set-containing-only-unique-items data structure.
 	__block json_object *names = json_object_new_object();
-	VuoSceneObject_visit(object, ^(const VuoSceneObject currentObject){
-							 if (currentObject.shader)
-								json_object_object_add(names, currentObject.shader->name, NULL);
+	VuoSceneObject_visit(object, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+							 if (currentObject->shader)
+								json_object_object_add(names, currentObject->shader->name, NULL);
+							 return true;
 						 });
 
 	VuoList_VuoText nameList = VuoListCreate_VuoText();
@@ -1614,4 +1564,386 @@ static void VuoSceneObject_dump_internal(const VuoSceneObject so, unsigned int l
 void VuoSceneObject_dump(const VuoSceneObject so)
 {
 	VuoSceneObject_dump_internal(so,0);
+}
+
+/**
+ * Combines all meshes (including child objects) together into a single mesh.
+ *
+ * Element assembly methods are expanded (e.g., triangle strips become individual triangles).
+ *
+ * If `so` contains multiple primitive types, a single mesh is created
+ * with a submesh for each expanded primitive type.
+ */
+VuoSceneObject VuoSceneObject_flatten(const VuoSceneObject so, bool calculateTangents)
+{
+	// Count the vertices.
+	__block unsigned long triangleVertexCount = 0;
+	__block unsigned long trianglePrimitiveCount = 0;
+	__block unsigned long lineVertexCount = 0;
+	__block unsigned long linePrimitiveCount = 0;
+	__block unsigned long pointVertexCount = 0;
+	__block unsigned long pointPrimitiveCount = 0;
+	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+		if (!currentObject->mesh)
+			return true;
+
+		for (unsigned int i = 0; i < currentObject->mesh->submeshCount; ++i)
+		{
+			VuoSubmesh submesh = currentObject->mesh->submeshes[i];
+			if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles
+			 || submesh.elementAssemblyMethod == VuoMesh_TriangleStrip
+			 || submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
+			{
+				triangleVertexCount += submesh.vertexCount;
+				trianglePrimitiveCount += VuoSubmesh_getSplitPrimitiveCount(submesh);
+			}
+			else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines
+				  || submesh.elementAssemblyMethod == VuoMesh_LineStrip)
+			{
+				lineVertexCount += submesh.vertexCount;
+				linePrimitiveCount += VuoSubmesh_getSplitPrimitiveCount(submesh);
+			}
+			else if (submesh.elementAssemblyMethod == VuoMesh_Points)
+			{
+				pointVertexCount += submesh.vertexCount;
+				pointPrimitiveCount += VuoSubmesh_getSplitPrimitiveCount(submesh);
+			}
+		}
+		return true;
+	});
+//	VLog("triangles: %ldv %ldp    lines: %ldv %ldp    points: %ldv %ldp", triangleVertexCount, trianglePrimitiveCount, lineVertexCount, linePrimitiveCount, pointVertexCount, pointPrimitiveCount);
+
+	VuoSubmesh triangleSubmesh;
+	VuoSubmesh lineSubmesh;
+	VuoSubmesh pointSubmesh;
+	int submeshCount = 0;
+	if (trianglePrimitiveCount)
+	{
+		triangleSubmesh = VuoSubmesh_make(triangleVertexCount, trianglePrimitiveCount * 3);
+		triangleSubmesh.elementAssemblyMethod = VuoMesh_IndividualTriangles;
+		++submeshCount;
+	}
+	else if (linePrimitiveCount)
+	{
+		lineSubmesh = VuoSubmesh_make(lineVertexCount, linePrimitiveCount * 2);
+		lineSubmesh.elementAssemblyMethod = VuoMesh_IndividualLines;
+		++submeshCount;
+	}
+	else if (pointPrimitiveCount)
+	{
+		pointSubmesh = VuoSubmesh_make(pointVertexCount, pointPrimitiveCount);
+		pointSubmesh.elementAssemblyMethod = VuoMesh_Points;
+		++submeshCount;
+	}
+	else
+		return VuoSceneObject_makeEmpty();
+
+
+	// Allocate the buffers.
+	__block unsigned long triangleVertexIndex = 0;
+	__block unsigned long triangleElementIndex  = 0;
+	__block unsigned long lineVertexIndex = 0;
+	__block unsigned long lineElementIndex  = 0;
+	__block unsigned long pointVertexIndex = 0;
+	__block unsigned long pointElementIndex  = 0;
+	VuoSceneObject_visit(so, ^(const VuoSceneObject *currentObject, float modelviewMatrix[16]){
+		if (!currentObject->mesh)
+			return true;
+
+		for (unsigned int i = 0; i < currentObject->mesh->submeshCount; ++i)
+		{
+			VuoSubmesh submesh = currentObject->mesh->submeshes[i];
+			if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles
+			 || submesh.elementAssemblyMethod == VuoMesh_TriangleStrip
+			 || submesh.elementAssemblyMethod == VuoMesh_TriangleFan)
+			{
+				unsigned long indexOffset = triangleVertexIndex;
+				for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+				{
+					VuoPoint3d p = (VuoPoint3d){submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z};
+					VuoPoint3d pt = VuoTransform_transformPoint((float*)modelviewMatrix, p);
+					triangleSubmesh.positions[triangleVertexIndex] = (VuoPoint4d){pt.x, pt.y, pt.z, 1};
+
+					if (submesh.normals)
+					{
+						VuoPoint3d r = (VuoPoint3d){submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z};
+						VuoPoint3d rt = VuoTransform_transformVector((float*)modelviewMatrix, r);
+						triangleSubmesh.normals[triangleVertexIndex] = (VuoPoint4d){rt.x, rt.y, rt.z, 1};
+					}
+
+					if (submesh.textureCoordinates)
+						triangleSubmesh.textureCoordinates[triangleVertexIndex] = submesh.textureCoordinates[n];
+
+					++triangleVertexIndex;
+				}
+
+				if (submesh.elementAssemblyMethod == VuoMesh_IndividualTriangles)
+					for (unsigned int n = 0; n < submesh.elementCount; ++n)
+						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n];
+				else if (submesh.elementAssemblyMethod != VuoMesh_TriangleStrip)
+				{
+					// Expand the triangle strip to individual triangles.
+					for (unsigned int n = 2; n < submesh.elementCount; ++n)
+					{
+						if (n%2 == 0)
+						{
+							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-2];
+							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-1];
+							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n  ];
+						}
+						else
+						{
+							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-1];
+							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-2];
+							triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n  ];
+						}
+					}
+				}
+				else if (submesh.elementAssemblyMethod != VuoMesh_TriangleFan)
+				{
+					// Expand the triangle fan to individual triangles.
+					for (unsigned int n = 2; n < submesh.elementCount; ++n)
+					{
+						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[0];
+						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n-1];
+						triangleSubmesh.elements[triangleElementIndex++] = indexOffset + submesh.elements[n  ];
+					}
+				}
+			}
+			else if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines
+				  || submesh.elementAssemblyMethod == VuoMesh_LineStrip)
+			{
+				unsigned long indexOffset = lineVertexIndex;
+				for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+				{
+					VuoPoint3d p = (VuoPoint3d){submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z};
+					VuoPoint3d pt = VuoTransform_transformPoint((float*)modelviewMatrix, p);
+					lineSubmesh.positions[lineVertexIndex] = (VuoPoint4d){pt.x, pt.y, pt.z, 1};
+
+					if (submesh.normals)
+					{
+						VuoPoint3d r = (VuoPoint3d){submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z};
+						VuoPoint3d rt = VuoTransform_transformVector((float*)modelviewMatrix, r);
+						lineSubmesh.normals[lineVertexIndex] = (VuoPoint4d){rt.x, rt.y, rt.z, 1};
+					}
+
+					if (submesh.textureCoordinates)
+						lineSubmesh.textureCoordinates[lineVertexIndex] = submesh.textureCoordinates[n];
+
+					++lineVertexIndex;
+				}
+
+				if (submesh.elementAssemblyMethod == VuoMesh_IndividualLines)
+					for (unsigned int n = 0; n < submesh.elementCount; ++n)
+						lineSubmesh.elements[lineElementIndex++] = indexOffset + submesh.elements[n];
+				else if (submesh.elementAssemblyMethod != VuoMesh_LineStrip)
+				{
+					// Expand the line strip to individual lines.
+					for (unsigned int n = 1; n < submesh.elementCount; ++n)
+					{
+						lineSubmesh.elements[lineElementIndex++] = indexOffset + submesh.elements[n-1];
+						lineSubmesh.elements[lineElementIndex++] = indexOffset + submesh.elements[n ];
+					}
+				}
+			}
+			else if (submesh.elementAssemblyMethod == VuoMesh_Points)
+			{
+				unsigned long indexOffset = pointVertexIndex;
+				for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+				{
+					VuoPoint3d p = (VuoPoint3d){submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z};
+					VuoPoint3d pt = VuoTransform_transformPoint((float*)modelviewMatrix, p);
+					pointSubmesh.positions[pointVertexIndex] = (VuoPoint4d){pt.x, pt.y, pt.z, 1};
+
+					if (submesh.normals)
+					{
+						VuoPoint3d r = (VuoPoint3d){submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z};
+						VuoPoint3d rt = VuoTransform_transformVector((float*)modelviewMatrix, r);
+						pointSubmesh.normals[pointVertexIndex] = (VuoPoint4d){rt.x, rt.y, rt.z, 1};
+					}
+
+					if (submesh.textureCoordinates)
+						pointSubmesh.textureCoordinates[pointVertexIndex] = submesh.textureCoordinates[n];
+
+					++pointVertexIndex;
+				}
+
+				for (unsigned int n = 0; n < submesh.elementCount; ++n)
+					pointSubmesh.elements[pointElementIndex++] = indexOffset + submesh.elements[n];
+			}
+		}
+		return true;
+	});
+
+
+	VuoMesh mesh = VuoMesh_make(submeshCount);
+	int submeshIndex = 0;
+	if (trianglePrimitiveCount)
+	{
+		if (calculateTangents)
+			VuoMeshUtility_calculateTangents(&triangleSubmesh);
+		mesh->submeshes[submeshIndex++] = triangleSubmesh;
+	}
+	else if (linePrimitiveCount)
+		mesh->submeshes[submeshIndex++] = lineSubmesh;
+	else if (pointPrimitiveCount)
+		mesh->submeshes[submeshIndex++] = pointSubmesh;
+
+	return VuoSceneObject_make(mesh, NULL, VuoTransform_makeIdentity(), NULL);
+}
+
+#define CSGJS_HEADER_ONLY
+#include "csgjs.cc"
+
+/**
+ * Converts a @ref VuoSceneObject to a `csgjs_model`.
+ */
+static csgjs_model VuoSceneObject_getCsgjsModel(const VuoSceneObject so)
+{
+	VuoSceneObject flat = VuoSceneObject_flatten(so, false);
+	if (!flat.mesh)
+		return csgjs_model();
+
+	VuoSceneObject_retain(flat);
+	VuoDefer(^{ VuoSceneObject_release(flat); });
+
+	if (flat.mesh->submeshes[0].elementAssemblyMethod != VuoMesh_IndividualTriangles)
+		return csgjs_model();
+
+	VuoSubmesh submesh = flat.mesh->submeshes[0];
+	csgjs_model cm;
+	for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+	{
+		csgjs_vertex v;
+		v.pos = csgjs_vector(submesh.positions[n].x, submesh.positions[n].y, submesh.positions[n].z);
+		if (submesh.normals)
+			v.normal = csgjs_vector(submesh.normals[n].x, submesh.normals[n].y, submesh.normals[n].z);
+		if (submesh.textureCoordinates)
+			v.uv = csgjs_vector(submesh.textureCoordinates[n].x, submesh.textureCoordinates[n].y, 0);
+		cm.vertices.push_back(v);
+	}
+	for (unsigned int n = 0; n < submesh.elementCount; ++n)
+		cm.indices.push_back(submesh.elements[n]);
+
+	return cm;
+}
+
+/**
+ * Converts a `csgjs_model` to a @ref VuoSceneObject.
+ */
+static VuoSceneObject VuoSceneObject_makeFromCsgjsModel(const csgjs_model &cm)
+{
+	VuoSubmesh submesh = VuoSubmesh_make(cm.vertices.size(), cm.indices.size());
+
+	const csgjs_vertex *vertex = &cm.vertices[0];
+	for (unsigned int n = 0; n < submesh.vertexCount; ++n)
+	{
+		submesh.positions[n] = (VuoPoint4d){vertex[n].pos.x,vertex[n].pos.y,vertex[n].pos.z,1};
+		submesh.normals[n] = (VuoPoint4d){vertex[n].normal.x,vertex[n].normal.y,vertex[n].normal.z,1};
+		submesh.textureCoordinates[n] = (VuoPoint4d){vertex[n].uv.x,vertex[n].uv.y,vertex[n].uv.z,1};
+	}
+
+	const int *index = &cm.indices[0];
+	for (unsigned int n = 0; n < submesh.elementCount; ++n)
+		submesh.elements[n] = index[n];
+
+	VuoMeshUtility_calculateTangents(&submesh);
+
+	VuoMesh mesh = VuoMesh_makeFromSingleSubmesh(submesh);
+	return VuoSceneObject_make(mesh, NULL, VuoTransform_makeIdentity(), NULL);
+}
+
+/**
+ * - quality 0 = epsilon 1
+ * - quality 1 = epsilon 0.00001
+ */
+static float convertQualityToEpsilon(float quality)
+{
+	return pow(10, -VuoReal_clamp(quality, 0, 1) * 5.);
+}
+
+/**
+ * Returns the union of `objects`.
+ */
+VuoSceneObject VuoSceneObject_union(VuoList_VuoSceneObject objects, float quality)
+{
+	float epsilon = convertQualityToEpsilon(quality);
+
+	unsigned long objectCount = VuoListGetCount_VuoSceneObject(objects);
+	if (objectCount == 0)
+		return VuoSceneObject_makeEmpty();
+	if (objectCount == 1)
+		return VuoListGetValue_VuoSceneObject(objects, 1);
+
+	dispatch_queue_t queue = dispatch_queue_create("org.vuo.sceneobject.union", DISPATCH_QUEUE_CONCURRENT);
+
+	csgjs_model *models = new csgjs_model[objectCount];
+	for (unsigned long i = 0; i < objectCount; ++i)
+		dispatch_async(queue, ^{
+			models[i] = VuoSceneObject_getCsgjsModel(VuoListGetValue_VuoSceneObject(objects, i+1));
+		});
+
+	dispatch_barrier_sync(queue, ^{});
+	dispatch_release(queue);
+
+	csgjs_model cu = models[0];
+	for (unsigned long i = 1; i < objectCount; ++i)
+		cu = csgjs_union(cu, models[i], epsilon);
+	delete[] models;
+	return VuoSceneObject_makeFromCsgjsModel(cu);
+}
+
+/**
+ * Returns the boolean difference of `a` minus `b`.
+ */
+VuoSceneObject VuoSceneObject_subtract(const VuoSceneObject a, const VuoSceneObject b, float quality)
+{
+	float epsilon = convertQualityToEpsilon(quality);
+
+	dispatch_semaphore_t finished = dispatch_semaphore_create(0);
+
+	__block csgjs_model ca;
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		ca = VuoSceneObject_getCsgjsModel(a);
+		dispatch_semaphore_signal(finished);
+	});
+
+	csgjs_model cb = VuoSceneObject_getCsgjsModel(b);
+
+	dispatch_semaphore_wait(finished, DISPATCH_TIME_FOREVER);
+	dispatch_release(finished);
+
+	csgjs_model d = csgjs_difference(ca, cb, epsilon);
+	return VuoSceneObject_makeFromCsgjsModel(d);
+}
+
+/**
+ * Returns the intersection of `objects`.
+ */
+VuoSceneObject VuoSceneObject_intersect(VuoList_VuoSceneObject objects, float quality)
+{
+	float epsilon = convertQualityToEpsilon(quality);
+
+	unsigned long objectCount = VuoListGetCount_VuoSceneObject(objects);
+	if (objectCount == 0)
+		return VuoSceneObject_makeEmpty();
+	if (objectCount == 1)
+		return VuoListGetValue_VuoSceneObject(objects, 1);
+
+	dispatch_queue_t queue = dispatch_queue_create("org.vuo.sceneobject.intersect", DISPATCH_QUEUE_CONCURRENT);
+
+	csgjs_model *models = new csgjs_model[objectCount];
+	for (unsigned long i = 0; i < objectCount; ++i)
+		dispatch_async(queue, ^{
+			models[i] = VuoSceneObject_getCsgjsModel(VuoListGetValue_VuoSceneObject(objects, i+1));
+		});
+
+	dispatch_barrier_sync(queue, ^{});
+	dispatch_release(queue);
+
+	csgjs_model ci = models[0];
+	for (unsigned long i = 1; i < objectCount; ++i)
+		ci = csgjs_intersection(ci, models[i], epsilon);
+	delete[] models;
+	return VuoSceneObject_makeFromCsgjsModel(ci);
 }

@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert Audio to Real List",
 					  "description": "Creates a list of real numbers using the audio sample values.",
-					  "version": "1.0.0"
+					  "version": "1.0.1"
 				 });
 
 void nodeEvent
@@ -21,9 +21,9 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoReal) reals
 )
 {
-	*reals = VuoListCreate_VuoReal();
 	unsigned long count = samples.sampleCount;
-
+	*reals = VuoListCreateWithCount_VuoReal(count, 0);
+	VuoReal *outputs = VuoListGetData_VuoReal(*reals);
 	for (unsigned long i = 0; i < count; ++i)
-		VuoListAppendValue_VuoReal(*reals, samples.samples[i]);
+		outputs[i] = samples.samples[i];
 }

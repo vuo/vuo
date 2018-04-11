@@ -44,13 +44,14 @@ public:
 	~VuoCompilerComposition(void);
 	static VuoCompilerComposition * newCompositionFromGraphvizDeclaration(const string &compositionGraphvizDeclaration, VuoCompiler *compiler);
 	VuoCompilerGraph * getCachedGraph(void);
-	void check(const set<string> &subcompositions = set<string>());
-	void checkForMissingNodeClasses(const set<string> &subcompositions = set<string>());
+	void check(void);
+	void checkForMissingNodeClasses(void);
 	void checkFeedback(set<VuoCompilerCable *> potentialCables = set<VuoCompilerCable *>());
 	void updateGenericPortTypes(void);
 	set< set<VuoCompilerPort *> > groupGenericPortsByType(bool useOriginalType);
 	set<VuoPort *> getConnectedGenericPorts(VuoPort *port);
 	void setUniqueGraphvizIdentifierForNode(VuoNode *node);
+	void clearGraphvizNodeIdentifierHistory();
 	VuoPort * findNearestUpstreamTriggerPort(VuoNode *node);
 	void setModule(Module *module);
 	string getGraphvizDeclaration(string header = "", string footer = "");

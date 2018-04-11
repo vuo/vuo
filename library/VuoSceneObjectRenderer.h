@@ -20,7 +20,7 @@ extern "C"
  */
 typedef void *VuoSceneObjectRenderer;
 
-VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoGlContext glContext, VuoShader shader);
+VuoSceneObjectRenderer VuoSceneObjectRenderer_make(VuoShader shader);
 VuoSceneObject VuoSceneObjectRenderer_draw(VuoSceneObjectRenderer sceneObjectRenderer, VuoSceneObject object);
 
 #ifdef __cplusplus

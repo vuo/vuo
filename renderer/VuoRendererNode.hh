@@ -106,6 +106,7 @@ public:
 
 	// Drawing configuration
 	static const qreal nodeTitleHeight;
+	static const qreal nodeHeaderYOffset;
 	static const qreal cornerRadius;
 
 protected:

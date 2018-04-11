@@ -108,6 +108,8 @@ void VuoInputEditorReal::setUpDialog(QDialog &dialog, json_object *originalValue
 			hasMinMax = false;
 
 		// "suggestedStep"
+		if (hasMinMax)
+			suggestedStep = (suggestedMax - suggestedMin)/10.;
 		json_object *suggestedStepValue = NULL;
 		if (json_object_object_get_ex(details, "suggestedStep", &suggestedStepValue))
 			suggestedStep = VuoReal_makeFromJson(suggestedStepValue);

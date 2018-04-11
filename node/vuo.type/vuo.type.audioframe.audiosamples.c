@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Convert Frame to Audio",
-					 "keywords" : [ ],
+					 "keywords" : [ "timestamp" ],
 					 "version" : "1.0.0"
 				 });
 

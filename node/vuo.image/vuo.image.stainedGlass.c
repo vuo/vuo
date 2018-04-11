@@ -110,19 +110,12 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Stained Glass Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
@@ -166,12 +159,10 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoColor  ((*instance)->shader, "borderColor", borderColor);
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "borderWidth", VuoReal_clamp(borderWidth, 0, 1) * gss*1.4);
 
-	*stainedGlassImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
+	*stainedGlassImage = VuoImageRenderer_render((*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

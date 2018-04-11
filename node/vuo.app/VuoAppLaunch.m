@@ -29,18 +29,21 @@ VuoModuleMetadata({
 /**
  * Launches the `.app` at `rawUrl`, or brings it to the foreground if it's already running.
  */
-void VuoAppLaunch_launch(VuoText rawUrl)
+void VuoAppLaunch_launch(VuoText rawUrl, bool activate)
 {
 	if (VuoText_isEmpty(rawUrl))
 		return;
 
-	VuoUrl normalizedUrl = VuoUrl_normalize(rawUrl, false);
+	VuoUrl normalizedUrl = VuoUrl_normalize(rawUrl, VuoUrlNormalize_default);
 	NSString *urlAsString = [[NSString alloc] initWithUTF8String:normalizedUrl];
 	NSURL *url = [[NSURL alloc] initWithString:urlAsString];
 	[urlAsString release];
 
 	NSError *error = nil;
-	NSRunningApplication *app = [[NSWorkspace sharedWorkspace] launchApplicationAtURL:url options:0 configuration:nil error:&error];
+	NSRunningApplication *app = [[NSWorkspace sharedWorkspace] launchApplicationAtURL:url
+																			  options:(activate ? 0 : NSWorkspaceLaunchWithoutActivation)
+																		configuration:nil
+																				error:&error];
 	if (! app)
 		VUserLog("Couldn't launch '%s': %s — %s", normalizedUrl,
 				 [[error localizedDescription] UTF8String],

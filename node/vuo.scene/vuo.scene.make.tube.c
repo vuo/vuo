@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					"title" : "Make Tube",
-					"keywords" : [ "3D", "pipe", "cylinder", "capsule", "barrel", "tubular" ],
+					"keywords" : [ "3D", "pipe", "cylinder", "capsule", "barrel", "tubular", "shape" ],
 					"version" : "1.0.0",
 					"genericTypes" : {
 						"VuoGenericType1" : {

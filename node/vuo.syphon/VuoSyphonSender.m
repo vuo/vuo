@@ -10,6 +10,7 @@
 #import "VuoSyphonSender.h"
 #include "VuoImageRenderer.h"
 #include <OpenGL/OpenGL.h>
+#include <OpenGL/CGLMacro.h>
 #include "VuoGlContext.h"
 #include "module.h"
 #include "node.h"
@@ -19,7 +20,7 @@ VuoModuleMetadata({
 					 "title" : "VuoSyphonSender",
 					 "dependencies" : [
 						 "AppKit.framework",
-						 "VuoGLContext"
+						 "VuoGlContext"
 					 ]
 				 });
 #endif
@@ -32,15 +33,16 @@ VuoModuleMetadata({
  * Creates the Syphon server.
  *
  * @param name The server name.
- * @param ctx The GL context to use when publishing frames.
  */
-- (void) initServerWithName:(NSString*)name context:(VuoGlContext*)ctx
+- (void) initServerWithName:(NSString*)name
 {
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
-					  VUOLOG_PROFILE_END(mainQueue);
-					  syphonServer = [[SyphonServer alloc] initWithName:name context:(CGLContextObj)ctx options:nil];
-				  });
+		VUOLOG_PROFILE_END(mainQueue);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			syphonServer = [[SyphonServer alloc] initWithName:name context:cgl_ctx options:nil];
+		});
+	});
 }
 
 /**
@@ -53,7 +55,11 @@ VuoModuleMetadata({
 		if (image->pixelsWide < 1 || image->pixelsHigh < 1)
 			return;
 
-		CGLLockContext(syphonServer.context);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			VuoShader_resetContext(cgl_ctx);
+
+			// Syphon draws its triangles backwards, so we have to temporarily turn off backface culling.
+			glDisable(GL_CULL_FACE);
 
 			[syphonServer publishFrameTexture:image->glTextureName
 						textureTarget:GL_TEXTURE_2D
@@ -61,7 +67,8 @@ VuoModuleMetadata({
 						textureDimensions:NSMakeSize(image->pixelsWide, image->pixelsHigh)
 						flipped:NO];
 
-		CGLUnlockContext(syphonServer.context);
+			glEnable(GL_CULL_FACE);
+		});
 	}
 }
 

@@ -99,8 +99,6 @@ public:
 			{
 				isStopping = true;
 
-				TestCompositionExecution::waitForImageTextCacheCleanup();
-
 				// runner->stop() has to be called asynchronously because it waits for this function to return.
 				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 								   runner->stop();
@@ -167,7 +165,7 @@ private slots:
 			valueForInputPortName["degreesFahrenheit"] = "32";
 			map<string, string> valueForOutputPortName;
 			valueForOutputPortName["degreesCelsius"] = "0";
-			PortConfiguration expected("", firingPortName, valueForInputPortName, valueForOutputPortName);
+			PortConfiguration expected(firingPortName, valueForInputPortName, valueForOutputPortName);
 			portConfigurations.front()->checkEqual(expected);
 		}
 
@@ -177,7 +175,7 @@ private slots:
 			valueForInputPortName["degreesFahrenheit"] = "212";
 			map<string, string> valueForOutputPortName;
 			valueForOutputPortName["degreesCelsius"] = "100";
-			PortConfiguration expected("", firingPortName, valueForInputPortName, valueForOutputPortName);
+			PortConfiguration expected(firingPortName, valueForInputPortName, valueForOutputPortName);
 			portConfigurations.back()->checkEqual(expected);
 		}
 	}

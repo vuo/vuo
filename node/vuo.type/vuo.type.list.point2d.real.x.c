@@ -12,7 +12,7 @@
 VuoModuleMetadata({
 					  "title": "Convert 2D Point List to Real List (X)",
 					  "description": "Creates a list of real numbers using the X coordinate of the input list of 2D points.",
-					  "version": "1.0.1"
+					  "version": "1.0.2"
 				 });
 
 void nodeEvent
@@ -21,8 +21,10 @@ void nodeEvent
 	VuoOutputData(VuoList_VuoReal) x
 )
 {
-	*x = VuoListCreate_VuoReal();
 	unsigned long count = VuoListGetCount_VuoPoint2d(point2d);
-	for (unsigned long i = 1; i <= count; ++i)
-		VuoListAppendValue_VuoReal(*x, VuoListGetValue_VuoPoint2d(point2d, i).x);
+	VuoPoint2d *inputs = VuoListGetData_VuoPoint2d(point2d);
+	*x = VuoListCreateWithCount_VuoReal(count, 0);
+	VuoReal *outputs = VuoListGetData_VuoReal(*x);
+	for (unsigned long i = 0; i < count; ++i)
+		outputs[i] = inputs[i].x;
 }

@@ -24,6 +24,13 @@ void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 static void __attribute__((constructor)) TestInputEditors_init(void)
 {
 	VuoApp_mainThread = (void *)pthread_self();
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// Calls _TSGetMainThread().
+	// https://b33p.net/kosada/node/12944
+	YieldToAnyThread();
+#pragma clang diagnostic pop
 }
 
 /**

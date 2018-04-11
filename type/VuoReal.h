@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "VuoInteger.h"
 #include <math.h>
 #include <stdbool.h>
 struct json_object;
@@ -35,8 +36,8 @@ VuoReal VuoReal_makeFromJson(struct json_object *js);
 struct json_object * VuoReal_getJson(const VuoReal value);
 char * VuoReal_getSummary(const VuoReal value);
 
-VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount);
-VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount);
+VuoReal VuoReal_min(VuoReal *terms, unsigned long termsCount, VuoInteger *outputPosition);
+VuoReal VuoReal_max(VuoReal *terms, unsigned long termsCount, VuoInteger *outputPosition);
 VuoReal VuoReal_average(VuoList_VuoReal values);
 
 VuoReal VuoReal_wrap(VuoReal value, VuoReal minimum, VuoReal maximum);

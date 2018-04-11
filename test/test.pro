@@ -32,6 +32,8 @@ SUBDIRS += \
 	test_TestEventDropping_node \
 	test_TestHeap \
 	test_TestImageFilters \
+	test_TestInputEditors \
+	test_TestModules \
 	test_TestNodes \
 	test_TestNodeExecutionOrder \
 	test_TestNodeExecutionOrder_node \
@@ -73,6 +75,9 @@ test_TestEventDropping.depends = test_TestCompositionExecution test_TestEventDro
 test_TestEventDropping_node.subdir = TestEventDropping/node-TestEventDropping
 test_TestEventDropping_node.depends =
 
+test_TestModules.subdir = TestModules
+test_TestModules.depends =
+
 test_TestNodes.subdir = TestNodes
 test_TestNodes.depends = test_TestCompositionExecution
 
@@ -92,7 +97,7 @@ test_TestImageFilters.subdir = TestImageFilters
 test_TestImageFilters.depends = test_TestCompositionExecution
 
 test_TestInputEditors.subdir = TestInputEditors
-test_TestInputEditors.depends = test_TestCompositionExecution
+test_TestInputEditors.depends =
 
 test_TestTypes.subdir = TestTypes
 test_TestTypes.depends = test_TestCompositionExecution

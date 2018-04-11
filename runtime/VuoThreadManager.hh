@@ -138,6 +138,8 @@ public:
 	void scheduleChainWorker(dispatch_queue_t queue, void *context, void (*function)(void *),
 							 int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, const char *compositionIdentifier,
 							 unsigned long chainIndex, unsigned long *upstreamChainIndices, int upstreamChainIndicesCount);
+	void grantThreadsToChain(int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, const char *compositionIdentifier,
+							 unsigned long chainIndex);
 	void grantThreadsToSubcomposition(unsigned long eventId, const char *compositionIdentifier, unsigned long chainIndex, const char *subcompositionIdentifier);
 	void returnThreadsForTriggerWorker(unsigned long eventId);
 	void returnThreadsForChainWorker(unsigned long eventId, const char *compositionIdentifier, unsigned long chainIndex);
@@ -150,6 +152,8 @@ void vuoScheduleTriggerWorker(VuoCompositionState *compositionState, dispatch_qu
 void vuoScheduleChainWorker(VuoCompositionState *compositionState, dispatch_queue_t queue, void *context, void (*function)(void *),
 							int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, unsigned long chainIndex,
 							unsigned long *upstreamChainIndices, int upstreamChainIndicesCount);
+void vuoGrantThreadsToChain(VuoCompositionState *compositionState,
+							int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, unsigned long chainIndex);
 void vuoGrantThreadsToSubcomposition(VuoCompositionState *compositionState, unsigned long eventId, unsigned long chainIndex,
 									 char *subcompositionIdentifier);
 void vuoReturnThreadsForTriggerWorker(VuoCompositionState *compositionState, unsigned long eventId);

@@ -11,13 +11,12 @@
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Image",
+					 "title" : "Make Lit Image Shader",
 					 "keywords" : [ "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						 "lighting", "lit", "lighted",
 						 "Blinn", "Phong", "Lambert" ],
 					 "version" : "3.0.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node" : {
 						  "exampleCompositions" : [ ]

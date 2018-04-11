@@ -41,6 +41,7 @@ bool VuoData_isLessThan(const VuoData valueA, const VuoData valueB);
 
 VuoData VuoData_make(VuoInteger size, unsigned char *data);
 VuoData VuoData_makeFromText(const VuoText text);
+char * VuoData_copyToString(const VuoData data);
 
 /**
  * Automatically generated function.

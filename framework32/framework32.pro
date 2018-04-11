@@ -3,6 +3,7 @@ CONFIG -= qt
 CONFIG += VuoPCH Vuo32 zmq
 
 include(../vuo.pri)
+include(../vuo-macosx-sdk.pri)
 
 FLAGS32 = -m32
 QMAKE_CFLAGS += $$FLAGS32
@@ -71,6 +72,7 @@ TYPE_AND_LIBRARY_SOURCES = \
 	$$ROOT/type/VuoPoint2d.c \
 	$$ROOT/type/VuoPoint3d.c \
 	$$ROOT/type/VuoReal.c \
+	$$ROOT/type/VuoScreen.c \
 	$$ROOT/type/VuoShader.cc \
 	$$ROOT/type/VuoText.c \
 	$$ROOT/type/VuoTransform.c \
@@ -82,13 +84,19 @@ TYPE_AND_LIBRARY_SOURCES = \
 	$$ROOT/type/list/VuoList_VuoPoint2d.cc \
 	$$ROOT/type/list/VuoList_VuoPoint3d.cc \
 	$$ROOT/type/list/VuoList_VuoReal.cc \
+	$$ROOT/type/list/VuoList_VuoScreen.cc \
 	$$ROOT/type/list/VuoList_VuoText.cc \
 	$$ROOT/runtime/VuoLog.cc \
+	$$ROOT/library/libmodule.c \
+	$$ROOT/library/VuoCglPixelFormat.c \
 	$$ROOT/library/VuoGlContext.cc \
 	$$ROOT/library/VuoGlPool.cc \
-	$$ROOT/library/VuoImageRenderer.cc
+	$$ROOT/library/VuoImageRenderer.cc \
+	$$ROOT/library/VuoPnpId.c \
+	$$ROOT/library/VuoScreenCommon.m
 TYPE_AND_LIBRARY_FLAGS = \
 	$$QMAKE_CFLAGS \
+	-isysroot $$QMAKE_MAC_SDK.macosx.path \
 	-I$$ROOT/library \
 	-I$$ROOT/library/shader \
 	-I$$ROOT/node \
@@ -137,6 +145,7 @@ linkVuoFramework.commands = \
 		$${ZMQ32_ROOT}/lib/libzmq.a \
 		-framework CoreFoundation \
 		-framework OpenGL \
+		-framework IOKit \
 		-framework IOSurface \
 		-framework CoreVideo \
 		-framework QuartzCore \

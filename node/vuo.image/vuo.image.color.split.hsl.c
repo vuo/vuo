@@ -51,8 +51,6 @@ static const char *fragmentShader = VUOSHADER_GLSL_SOURCE(120,
 
 struct nodeInstanceData
 {
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 	VuoShader shader;
 };
 
@@ -60,11 +58,6 @@ struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Split Image HSL Colors Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
@@ -95,23 +88,21 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){1,0,0,0});
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "alpha", !preserveOpacity);
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "colorHueImage", colorHueImage);
-	*hueImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	*hueImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){0,1,0,0});
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "colorHueImage", false);
-	*saturationImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	*saturationImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){0,0,1,0});
-	*lightnessImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	*lightnessImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "colorMask", (VuoPoint4d){0,0,0,1});
 	VuoShader_setUniform_VuoBoolean((*instance)->shader, "alpha", true);
-	*opacityImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	*opacityImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

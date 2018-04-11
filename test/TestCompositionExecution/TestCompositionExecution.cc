@@ -120,18 +120,6 @@ string TestCompositionExecution::wrapNodeInComposition(VuoCompilerNodeClass *nod
 }
 
 /**
- * Workaround to avoid false positives when checking VuoHeap for memory leaks.
- *
- * This function should be called just before stopping a composition. It gives VuoImageText a chance to clean its cache.
- */
-void TestCompositionExecution::waitForImageTextCacheCleanup(void)
-{
-	// https://b33p.net/kosada/node/9956, https://b33p.net/kosada/node/10374
-
-	usleep(USEC_PER_SEC * 2.1);  // A little more than 2 * VuoImageTextCache_timeout (the created images won't be old enough to purge during the first cleanup 1 second after starting).
-}
-
-/**
  * Prints the amount of memory dynamically allocated by the current process.
  */
 void TestCompositionExecution::printMemoryUsage(string label)

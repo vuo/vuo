@@ -12,7 +12,7 @@ digraph G
 Arrange3DObjectsInGrid [type="vuo.scene.arrange.grid" version="1.0.1" label="Arrange 3D Objects in Grid|<refresh>refresh\l|<objects>objects\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<depth>depth\l|<slices>slices\l|<griddedObject>griddedObject\r" pos="285,180" _scaleToFit="true" _center="[{\"x\":0,\"y\":0,\"z\":0}]" _width="2.000000" _height="0.500000" _rows="2" _depth="2.000000" _slices="1"];
 CountWithinRange [type="vuo.math.countWithinRange.VuoInteger" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="-240,-45" _increment="2" _decrement="1" _setCount="3" _minimum="3" _maximum="20" _wrapMode="\"wrap\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-480,30" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-480,-45" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="-480,-45" fillcolor="yellow" _seconds="1.000000" _fired_eventThrottling="drop"];
 MakeList13 [type="vuo.list.make.2.VuoInteger" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="12,56" _2="3"];
 MakeList28 [type="vuo.list.make.1.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="552,176" fillcolor="green"];
 MakeList30 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="572,221" fillcolor="green"];
@@ -37,7 +37,7 @@ FireOnStart:started -> MakeSphere4:refresh;
 FireOnStart:started -> MakeSphere5:refresh;
 FireOnStart:started -> MakeSphere6:refresh;
 FireOnStart:started -> MakeSphere7:refresh;
-FirePeriodically:fired -> CountWithinRange:increment;
+FirePeriodically:fired -> CountWithinRange:increment [event=true];
 MakeList13:list -> Multiply3:values;
 MakeList28:list -> RenderSceneToWindow:objects;
 MakeList30:list -> RenderSceneToWindow:setWindowProperties;

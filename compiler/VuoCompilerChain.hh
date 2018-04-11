@@ -20,17 +20,13 @@ private:
 	vector<VuoCompilerNode *> nodes;
 	bool lastNodeInLoop;
 
-	static Value * generateChainGroupsValue(Module *module, BasicBlock *block, Value *contextValue);
-
 public:
 	VuoCompilerChain(vector<VuoCompilerNode *> nodes, bool lastNodeInLoop);
-	static Value * generateMakeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue, const vector<VuoCompilerChain *> &chains, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream);
+	static Value * generateMakeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue);
 	static Value * generateCompositionStateValue(Module *module, BasicBlock *block, Value *contextValue);
 	static Value * generateEventIdValue(Module *module, BasicBlock *block, Value *contextValue);
 	static Function * getFreeContextFunction(Module *module);
 	Function * generateScheduleWorker(Module *module, BasicBlock *block, Value *compositionStateValue, Value *contextValue, string triggerIdentifier, int minThreadsNeeded, int maxThreadsNeeded, size_t chainIndex, vector<size_t> upstreamChainIndices);
-	void generateWaitForUpstreamChains(Module *module, BasicBlock *block, Value *contextValue, const vector<size_t> &chainIndices);
-	void generateCleanupForWorkerFunction(Module *module, BasicBlock *block, Value *contextValue, size_t chainIndex, bool hasDownstreamChains);
 	vector<VuoCompilerNode *> getNodes(void);
 	bool isLastNodeInLoop(void);
 };

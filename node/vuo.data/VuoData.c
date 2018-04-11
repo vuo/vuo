@@ -97,21 +97,18 @@ char *VuoData_getSummary(const VuoData value)
 /**
  * Returns a Binary Data structure with the specified values.
  *
- * `data` is copied.
+ * `data` becomes owned by the returned VuoData;
+ * it will be `free`d after the final @ref VuoRelease is called;
+ * it should not be modified after calling this function.
  */
 VuoData VuoData_make(VuoInteger size, unsigned char *data)
 {
 	VuoData value;
 	value.size = size;
+	value.data = (char *)data;
 
 	if (data)
-	{
-		value.data = (char *)malloc(size);
-		memcpy(value.data, data, size);
 		VuoRegister(value.data, free);
-	}
-	else
-		value.data = NULL;
 
 	return value;
 }
@@ -129,4 +126,17 @@ VuoData VuoData_makeFromText(const VuoText text)
 	memcpy(value.data, text, value.size);
 	VuoRegister(value.data, free);
 	return value;
+}
+
+/**
+ * Returns the string of characters stored in @a data, plus a trailing NULL.
+ *
+ * The string of characters is copied.
+ */
+char * VuoData_copyToString(const VuoData data)
+{
+	char *dataAsString = (char *)malloc(data.size + 1);
+	dataAsString[data.size] = 0;
+	memcpy(dataAsString, data.data, data.size);
+	return dataAsString;
 }

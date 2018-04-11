@@ -62,7 +62,7 @@ static void __attribute__((constructor)) compositionStateKey_init(void)
 
 /**
  * Stores @a compositionState in thread-local storage, making it available via a call to
- * @ref vuoGetCompositionStateFromThreadLocalStorage() on the same thread.
+ * @ref vuoCopyCompositionStateFromThreadLocalStorage() on the same thread.
  */
 void vuoAddCompositionStateToThreadLocalStorage(const struct VuoCompositionState *compositionState)
 {
@@ -73,7 +73,7 @@ void vuoAddCompositionStateToThreadLocalStorage(const struct VuoCompositionState
 
 /**
  * Removes the stored composition state (if any) in thread-local storage, making it no longer available
- * to @ref vuoGetCompositionStateFromThreadLocalStorage().
+ * to @ref vuoCopyCompositionStateFromThreadLocalStorage().
  */
 void vuoRemoveCompositionStateFromThreadLocalStorage(void)
 {
@@ -83,15 +83,12 @@ void vuoRemoveCompositionStateFromThreadLocalStorage(void)
 }
 
 /**
- * Retrieves a composition state previously stored by @ref vuoAddCompositionStateToThreadLocalStorage()
- * on the current thread.
+ * Retrieves a copy of a composition state previously stored by @ref vuoAddCompositionStateToThreadLocalStorage()
+ * on the current thread, or null if no composition state is found.
  *
- * The caller should not save the returned `VuoCompositionState` for later,
- * since it may be destroyed by the function that originally added it to thread-local storage.
- * Nor should the caller save any of the fields of the returned `VuoCompositionState`,
- * since they may be destroyed by another function or a live-coding reload.
+ * The returned `VuoCompositionState`'s `compositionIdentifier` field is null.
  */
-const void * vuoGetCompositionStateFromThreadLocalStorage(void)
+void * vuoCopyCompositionStateFromThreadLocalStorage(void)
 {
 	void *compositionState = pthread_getspecific(vuoCompositionStateKey);
 	if (! compositionState)
@@ -100,11 +97,12 @@ const void * vuoGetCompositionStateFromThreadLocalStorage(void)
 		if (!vuoRuntimeState)
 			vuoRuntimeState = (void **) dlsym(RTLD_DEFAULT, "vuoRuntimeState");
 		if (vuoRuntimeState && *vuoRuntimeState)
-		{
-			VUserLog("Couldn't find the composition state in thread-local state.");
-			VuoLog_backtrace();
-		}
+			VUserLog("Warning: Couldn't find the composition state in thread-local state.");
+		return NULL;
 	}
 
-	return compositionState;
+	struct VuoCompositionState *compositionStateCopy = (struct VuoCompositionState *)malloc(sizeof(struct VuoCompositionState));
+	compositionStateCopy->runtimeState = ((struct VuoCompositionState *)compositionState)->runtimeState;
+	compositionStateCopy->compositionIdentifier = NULL;
+	return compositionStateCopy;
 }

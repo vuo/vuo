@@ -7,8 +7,7 @@
  * For more information, see http://vuo.org/license.
  */
 
-// #include "module.h"
-// #include "/usr/include/time.h"
+#include "module.h"
 #include "VuoAvWriter.h"
 #include "VuoAvWriterObject.h"
 

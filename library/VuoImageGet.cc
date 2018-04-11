@@ -30,7 +30,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						 "VuoImage",
 						 "VuoUrlFetch",
-						 "FreeImage"
+						 "freeimage"
 					 ]
 				 });
 #endif
@@ -65,7 +65,7 @@ static void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message)
  */
 float VuoImage_getScaleFactor(const char *url)
 {
-	VuoText resolvedUrl = VuoUrl_normalize(url, false);
+	VuoText resolvedUrl = VuoUrl_normalize(url, VuoUrlNormalize_default);
 	if (!resolvedUrl)
 		return 1;
 	VuoLocal(resolvedUrl);

@@ -16,12 +16,12 @@
  */
 class VuoInputEditorSizingModeFactory : public VuoInputEditorFactory
 {
-   Q_OBJECT
-   Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorSizingMode.json")
-   Q_INTERFACES(VuoInputEditorFactory)
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorSizingMode.json")
+	Q_INTERFACES(VuoInputEditorFactory)
 
 public:
-   virtual VuoInputEditor * newInputEditor(void);
+	virtual VuoInputEditor * newInputEditor(void);
 };
 
 /**

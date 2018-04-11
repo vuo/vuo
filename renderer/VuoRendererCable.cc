@@ -54,6 +54,7 @@ VuoRendererCable::VuoRendererCable(VuoCable *baseCable)
 
 	floatingEndpointLoc = QPointF();
 	floatingEndpointPreviousToPort = NULL;
+	previouslyAlwaysEventOnly = false;
 	floatingEndpointAboveEventPort = false;
 	isHovered = false;
 
@@ -694,6 +695,24 @@ VuoPort * VuoRendererCable::getFloatingEndpointPreviousToPort()
 void VuoRendererCable::setFloatingEndpointPreviousToPort(VuoPort *port)
 {
 	this->floatingEndpointPreviousToPort = port;
+}
+
+/**
+ * Returns the boolean indicating whether the cable was in forced event-only
+ * mode before it was most recently disconnected by dragging.
+ */
+bool VuoRendererCable::getPreviouslyAlwaysEventOnly()
+{
+	return this->previouslyAlwaysEventOnly;
+}
+
+/**
+ * Sets the boolean indicating whether the cable was in forced event-only
+ * mode before it was most recently disconnected by dragging.
+ */
+void VuoRendererCable::setPreviouslyAlwaysEventOnly(bool eventOnly)
+{
+	this->previouslyAlwaysEventOnly = eventOnly;
 }
 
 /**

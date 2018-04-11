@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Convert Frame to Image",
-					 "keywords" : [ ],
+					 "keywords" : [ "timestamp" ],
 					 "version" : "1.0.0"
 				 });
 

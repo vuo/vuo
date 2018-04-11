@@ -1,0 +1,84 @@
+/**
+ * @file
+ * This composition generates the description image for the vuo.scene.intersect, subtract, and union nodes.
+ *
+ * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+Combine3DObjects2 [type="vuo.scene.combine" version="1.0.0" label="Combine 3D Objects|<refresh>refresh\l|<transform>transform\l|<childObjects>childObjects\l|<object>object\r" pos="660,225"];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-30,330" _started_eventThrottling="enqueue"];
+Intersect3DObjects3 [type="vuo.scene.intersect.VuoShader" version="1.0.0" label="Intersect 3D Objects|<refresh>refresh\l|<objects>objects\l|<material>material\l|<intersectedObject>intersectedObject\r" pos="435,750"];
+MakeCubeWithMaterials [type="vuo.scene.make.cube" version="1.0.1" label="Make Cube with Materials|<refresh>refresh\l|<transform>transform\l|<frontShader>frontShader\l|<leftShader>leftShader\l|<rightShader>rightShader\l|<backShader>backShader\l|<topShader>topShader\l|<bottomShader>bottomShader\l|<rows>rows\l|<columns>columns\l|<slices>slices\l|<cube>cube\r" pos="135,360" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.5,0.5,0.5]}" _rows="2" _columns="2" _slices="2"];
+MakeIcosphere2 [type="vuo.scene.make.icosphere.VuoShader" version="1.0.1" label="Make Icosphere|<refresh>refresh\l|<transform>transform\l|<material>material\l|<subdivisions>subdivisions\l|<object>object\r" pos="135,555" _transform="{\"translation\":[0,0,0],\"eulerRotation\":[0,0,0],\"scale\":[0.6600000262260437,0.6600000262260437,0.6600000262260437]}" _subdivisions="2"];
+MakeList15 [type="vuo.list.make.3.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="627,251"];
+MakeList16 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="823,236"];
+MakeList18 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="823,446"];
+MakeList19 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="402,761"];
+MakeList20 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="823,581"];
+MakeList22 [type="vuo.list.make.2.VuoSceneObject" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="402,881"];
+MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1062,251"];
+MakeTargetedOrthographicCamera [type="vuo.scene.make.camera.orthographic.target" version="1.0.0" label="Make Targeted Orthographic Camera|<refresh>refresh\l|<name>name\l|<position>position\l|<target>target\l|<upDirection>upDirection\l|<width>width\l|<distanceMin>distanceMin\l|<distanceMax>distanceMax\l|<object>object\r" pos="405,390" _name="\"camera\"" _position="{\"x\":0.30000001192092896,\"y\":0.30000001192092896,\"z\":1}" _target="{\"x\":0,\"y\":0,\"z\":0}" _upDirection="{\"x\":0.,\"y\":1.,\"z\":0.}" _width="2.0" _distanceMin="-10.0" _distanceMax="10.0"];
+RenderImageToWindow [type="vuo.image.render.window" version="3.3.0" label="Render Image to Window|<refresh>refresh\l|<image>image\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r" pos="1095,225" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
+RenderSceneToImage [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,225" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
+RenderSceneToImage2 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,435" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
+RenderSceneToImage3 [type="vuo.scene.render.image" version="1.1.0" label="Render Scene to Image|<refresh>refresh\l|<objects>objects\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<cameraName>cameraName\l|<image>image\r|<depthImage>depthImage\r" pos="885,570" _width="200" _height="150" _colorDepth="\"8bpc\"" _multisampling="\"8\""];
+SaveImage [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1185,315" _url="\"vuo.scene.subtract.png\"" _overwriteUrl="true" _format="\"PNG\""];
+SaveImage2 [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1185,420" _url="\"vuo.scene.intersect.png\"" _overwriteUrl="true" _format="\"PNG\""];
+SaveImage3 [type="vuo.image.save" version="1.0.2" label="Save Image|<refresh>refresh\l|<url>url\l|<saveImage>saveImage\l|<overwriteUrl>overwriteUrl\l|<format>format\l|<done>done\r" pos="1185,555" _url="\"vuo.scene.union.png\"" _overwriteUrl="true" _format="\"PNG\""];
+ShadeWithColor [type="vuo.shader.make.color" version="2.0.0" label="Make Lit Color Shader|<refresh>refresh\l|<color>color\l|<highlightColor>highlightColor\l|<shininess>shininess\l|<shader>shader\r" pos="-60,465" _color="{\"r\":0.42812237143516541,\"g\":0.57869839668273926,\"b\":0.9987335205078125,\"a\":1}" _highlightColor="{\"r\":1.,\"g\":1.,\"b\":1.,\"a\":1.}" _shininess="0.9"];
+Subtract3DObjects4 [type="vuo.scene.subtract.VuoShader" version="1.0.0" label="Subtract 3D Objects|<refresh>refresh\l|<a>a\l|<b>b\l|<material>material\l|<subtractedObject>subtractedObject\r" pos="450,585"];
+Transform3DObject [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="630,525" _transform="{\"translation\":[0,-0.30000001192092896,0],\"eulerRotation\":[0,0,0],\"scale\":[0.89999997615814209,0.89999997615814209,0.89999997615814209]}"];
+Transform3DObject2 [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="345,225" _transform="{\"translation\":[-0.34999999403953552,0.34999999403953552,0],\"eulerRotation\":[0,0,0],\"scale\":[0.89999997615814209,0.89999997615814209,0.89999997615814209]}"];
+Transform3DObject3 [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="375,315" _transform="{\"translation\":[0.34999999403953552,0.34999999403953552,0],\"eulerRotation\":[0,0,0],\"scale\":[0.89999997615814209,0.89999997615814209,0.89999997615814209]}"];
+Transform3DObject4 [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="630,690" _transform="{\"translation\":[0,-0.30000001192092896,0],\"eulerRotation\":[0,0,0],\"scale\":[0.89999997615814209,0.89999997615814209,0.89999997615814209]}"];
+Transform3DObject5 [type="vuo.scene.transform" version="1.0.0" label="Transform 3D Object|<refresh>refresh\l|<transform>transform\l|<object>object\l|<transformedObject>transformedObject\r" pos="630,810" _transform="{\"translation\":[0,-0.30000001192092896,0],\"eulerRotation\":[0,0,0],\"scale\":[0.89999997615814209,0.89999997615814209,0.89999997615814209]}"];
+Union3DObjects3 [type="vuo.scene.union.VuoShader" version="1.0.0" label="Union 3D Objects|<refresh>refresh\l|<objects>objects\l|<material>material\l|<unionedObject>unionedObject\r" pos="435,870"];
+
+Combine3DObjects2:object -> MakeList16:1;
+Combine3DObjects2:object -> MakeList18:1;
+Combine3DObjects2:object -> MakeList20:1;
+FireOnStart:started -> MakeCubeWithMaterials:refresh;
+FireOnStart:started -> MakeIcosphere2:refresh;
+FireOnStart:started -> MakeTargetedOrthographicCamera:refresh;
+FireOnStart:started -> ShadeWithColor:refresh;
+Intersect3DObjects3:intersectedObject -> Transform3DObject4:object;
+MakeCubeWithMaterials:cube -> MakeList19:1;
+MakeCubeWithMaterials:cube -> MakeList22:1;
+MakeCubeWithMaterials:cube -> Subtract3DObjects4:a;
+MakeCubeWithMaterials:cube -> Transform3DObject2:object;
+MakeIcosphere2:object -> MakeList19:2;
+MakeIcosphere2:object -> MakeList22:2;
+MakeIcosphere2:object -> Subtract3DObjects4:b;
+MakeIcosphere2:object -> Transform3DObject3:object;
+MakeList15:list -> Combine3DObjects2:childObjects;
+MakeList16:list -> RenderSceneToImage:objects;
+MakeList18:list -> RenderSceneToImage2:objects;
+MakeList19:list -> Intersect3DObjects3:objects;
+MakeList20:list -> RenderSceneToImage3:objects;
+MakeList22:list -> Union3DObjects3:objects;
+MakeList5:list -> RenderImageToWindow:setWindowProperties;
+MakeTargetedOrthographicCamera:object -> MakeList15:3;
+RenderSceneToImage2:image -> SaveImage2:saveImage;
+RenderSceneToImage3:image -> RenderImageToWindow:image;
+RenderSceneToImage3:image -> SaveImage3:saveImage;
+RenderSceneToImage:image -> SaveImage:saveImage;
+ShadeWithColor:shader -> Intersect3DObjects3:material;
+ShadeWithColor:shader -> MakeCubeWithMaterials:bottomShader;
+ShadeWithColor:shader -> MakeCubeWithMaterials:frontShader;
+ShadeWithColor:shader -> MakeCubeWithMaterials:rightShader;
+ShadeWithColor:shader -> MakeCubeWithMaterials:topShader;
+ShadeWithColor:shader -> MakeIcosphere2:material;
+ShadeWithColor:shader -> Subtract3DObjects4:material;
+ShadeWithColor:shader -> Union3DObjects3:material;
+Subtract3DObjects4:subtractedObject -> Transform3DObject:object;
+Transform3DObject2:transformedObject -> MakeList15:1;
+Transform3DObject3:transformedObject -> MakeList15:2;
+Transform3DObject4:transformedObject -> MakeList18:2;
+Transform3DObject5:transformedObject -> MakeList20:2;
+Transform3DObject:transformedObject -> MakeList16:2;
+Union3DObjects3:unionedObject -> Transform3DObject5:object;
+}

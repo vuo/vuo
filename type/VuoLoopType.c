@@ -19,7 +19,7 @@
 VuoModuleMetadata({
 					 "title" : "Loop Type",
 					 "description" : "Loop Enum.",
-					 "keywords" : [ "" ],
+					 "keywords" : [ ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
 						"VuoList_VuoLoopType"

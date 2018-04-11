@@ -46,21 +46,55 @@ lt_symlist_t lt_preloaded_symbols[] =
 	{ 0, 0}
 };
 
+dispatch_queue_t VuoCompilerGraphvizParser::graphvizQueue = dispatch_queue_create("org.vuo.compiler.graphviz", NULL);
+
 /**
- * Parse the .vuo file at @c path, using the node classes provided by the compiler.
+ * Parses the .vuo file at @a path, using the node classes provided by the compiler.
+ *
+ * @throw std::runtime_error Couldn't read the composition file.
+ * @throw VuoCompilerException Couldn't parse the composition.
  */
-VuoCompilerGraphvizParser * VuoCompilerGraphvizParser::newParserFromCompositionFile(string path, VuoCompiler *compiler)
+VuoCompilerGraphvizParser * VuoCompilerGraphvizParser::newParserFromCompositionFile(const string &path, VuoCompiler *compiler)
 {
 	string composition = VuoFileUtilities::readFileToString(path);
-	return new VuoCompilerGraphvizParser(composition, compiler);
+	return newParserFromCompositionString(composition, compiler);
 }
 
 /**
- * Parse a .vuo @c file, using the node classes provided by the compiler.
+ * Parses a .vuo-formatted string, using the node classes provided by the compiler.
+ *
+ * @throw VuoCompilerException Couldn't parse the composition.
  */
 VuoCompilerGraphvizParser * VuoCompilerGraphvizParser::newParserFromCompositionString(const string &composition, VuoCompiler *compiler)
 {
-	return new VuoCompilerGraphvizParser(composition, compiler);
+	if (dispatch_get_current_queue() == graphvizQueue)
+		return new VuoCompilerGraphvizParser(composition, compiler, false);
+	else
+	{
+		__block VuoCompilerGraphvizParser *parser;
+		dispatch_sync(graphvizQueue, ^{
+						  parser = new VuoCompilerGraphvizParser(composition, compiler, false);
+					  });
+		return parser;
+	}
+}
+
+/**
+ * Parses just the node class names from the .vuo file at @a path.
+ *
+ * @throw std::runtime_error Couldn't read the composition file.
+ * @throw VuoCompilerException Couldn't parse the composition.
+ */
+set<string> VuoCompilerGraphvizParser::getNodeClassNamesFromCompositionFile(const string &path, VuoCompiler *compiler)
+{
+	string composition = VuoFileUtilities::readFileToString(path);
+	VuoCompilerGraphvizParser parser(composition, compiler, true);
+
+	set<string> nodeClassNames;
+	for (map<string, VuoNodeClass *>::iterator i = parser.dummyNodeClassForName.begin(); i != parser.dummyNodeClassForName.end(); ++i)
+		nodeClassNames.insert(i->first);
+
+	return nodeClassNames;
 }
 
 static std::string VuoCompilerGraphvizParser_lastError;	///< The most recent error from Graphviz. Set this to emptystring before calling into Graphviz.
@@ -75,12 +109,13 @@ static int VuoCompilerGraphvizParser_error(char *message)
 }
 
 /**
- * Helper function for VuoCompilerGraphvizParser constructors.
- * Parse a .vuo @c file, using the node classes provided by the compiler.
+ * Parses a .vuo-formatted string, using the node classes provided by the compiler.
  *
  * @throw VuoCompilerException Couldn't parse the composition.
+ *
+ * @threadQueue{graphvizQueue}
  */
-VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAsString, VuoCompiler *compiler)
+VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAsString, VuoCompiler *compiler, bool nodeClassNamesOnly)
 {
 	this->compiler = compiler;
 	publishedInputNode = NULL;
@@ -108,20 +143,24 @@ VuoCompilerGraphvizParser::VuoCompilerGraphvizParser(const string &compositionAs
 	gvLayout(context, graph, "dot");  // without this, port names are NULL
 
 	makeDummyNodeClasses();
-	makeNodeClasses();
-	makeNodes();
-	makeCables();
-	makePublishedPorts();
-	setInputPortConstantValues();
-	setPublishedPortDetails();
-	setTriggerPortEventThrottling();
-	saveNodeDeclarations(compositionAsString);
+
+	if (! nodeClassNamesOnly)
+	{
+		makeNodeClasses();
+		makeNodes();
+		makeCables();
+		makePublishedPorts();
+		setInputPortConstantValues();
+		setPublishedPortDetails();
+		setTriggerPortEventThrottling();
+		saveNodeDeclarations(compositionAsString);
+
+		VuoComposition::parseHeader(compositionAsString, name, description, copyright);
+	}
 
 	gvFreeLayout(context, graph);
 	agclose(graph);
 	gvFreeContext(context);
-
-	VuoComposition::parseHeader(compositionAsString, name, description, copyright);
 }
 
 /**
@@ -240,7 +279,7 @@ void VuoCompilerGraphvizParser::makeNodes(void)
 		{
 			field_t *nodeInfoField = nodeInfo->fld[i];
 			if (! nodeInfoField->id)  // title, as opposed to a port
-				nodeTitle = nodeInfoField->lp->text;
+				nodeTitle = VuoStringUtilities::transcodeFromGraphvizIdentifier(nodeInfoField->lp->text);
 		}
 
 		VuoNodeClass *nodeClass = nodeClassForName[nodeClassName];

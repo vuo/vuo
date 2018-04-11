@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Find Pointables by ID",
-					  "keywords" : [ "controller", "motion", "finger", "tool", "filter" ],
+					  "keywords" : [ "controller", "motion", "finger", "tool", "filter", "search" ],
 					  "version" : "2.0.0",
 					  "node": {
 						  "exampleCompositions" : [ ]

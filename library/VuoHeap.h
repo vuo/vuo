@@ -43,7 +43,7 @@ void VuoHeap_report(void);
  * @return The updated reference count of @a heapPointer. This is 0 if @a heapPointer is not already being reference-counted, greater than 0 if it is, or -1 if @a heapPointer is null.
  */
 #define VuoRegister(heapPointer, deallocate) VuoRegisterF(heapPointer, deallocate, __FILE__, __LINE__, __func__, #heapPointer)
-int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, const char *file, unsigned int line, const char *func, const char *pointerName);
+int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, const char *file, unsigned int linenumber, const char *func, const char *pointerName);
 
 /**
  * @ingroup ReferenceCountingFunctions
@@ -56,7 +56,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
  * @return The updated reference count of @a heapPointer. This is 0 if @a heapPointer is not already being reference-counted, 1 if it is, or -1 if @a heapPointer is null.
  */
 #define VuoRegisterSingleton(heapPointer) VuoRegisterSingletonF(heapPointer, __FILE__, __LINE__, __func__, #heapPointer)
-int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned int line, const char *func, const char *pointerName);
+int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned int linenumber, const char *func, const char *pointerName);
 
 int VuoRetain(const void *heapPointer);
 

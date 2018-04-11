@@ -62,8 +62,6 @@ public:
 	}
 };
 
-#define STRINGIFY(...) #__VA_ARGS__
-
 
 /**
  * Tests the @c VuoRunner class.
@@ -248,7 +246,7 @@ private slots:
 
 	void testSetGlobalRootContext(void)
 	{
-		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false);
+		CGLPixelFormatObj pf = (CGLPixelFormatObj)VuoGlContext_makePlatformPixelFormat(true, false, -1);
 		CGLContextObj rootContext;
 		CGLError error = CGLCreateContext(pf, NULL, &rootContext);
 		if (error != kCGLNoError)
@@ -286,7 +284,7 @@ private slots:
 			VuoRunner::Port *timePort = runner->getPublishedInputPortWithName("Time");
 			QCOMPARE(timePort->getName().c_str(), "Time");
 			QCOMPARE(timePort->getType().c_str(), "VuoReal");
-			QCOMPARE(json_object_get_string(timePort->getDetails()), STRINGIFY({ "default": 0.0 }));
+			QCOMPARE(json_object_get_string(timePort->getDetails()), VUO_STRINGIFY({ "default": 0.0 }));
 		}
 
 		// A port with standard suggestions.
@@ -294,7 +292,7 @@ private slots:
 			VuoRunner::Port *phasePort = runner->getPublishedInputPortWithName("Phase");
 			QCOMPARE(phasePort->getName().c_str(), "Phase");
 			QCOMPARE(phasePort->getType().c_str(), "VuoReal");
-			QCOMPARE(json_object_get_string(phasePort->getDetails()), STRINGIFY({ "suggestedMin": 0, "suggestedMax": 1, "default": 0.0, "suggestedStep": 0.1 }));
+			QCOMPARE(json_object_get_string(phasePort->getDetails()), VUO_STRINGIFY({ "suggestedMin": 0, "suggestedMax": 1, "default": 0.0, "suggestedStep": 0.1 }));
 		}
 
 		// A port with an enum menu.
@@ -302,7 +300,7 @@ private slots:
 			VuoRunner::Port *wavePort = runner->getPublishedInputPortWithName("Wave");
 			QCOMPARE(wavePort->getName().c_str(), "Wave");
 			QCOMPARE(wavePort->getType().c_str(), "VuoWave");
-			QCOMPARE(json_object_get_string(wavePort->getDetails()), STRINGIFY({ "default": "sine", "menuItems": [ { "value": "sine", "name": "Sine" }, { "value": "triangle", "name": "Triangle" }, { "value": "sawtooth", "name": "Sawtooth" } ] }));
+			QCOMPARE(json_object_get_string(wavePort->getDetails()), VUO_STRINGIFY({ "default": "sine", "menuItems": [ { "value": "sine", "name": "Sine" }, { "value": "triangle", "name": "Triangle" }, { "value": "sawtooth", "name": "Sawtooth" } ] }));
 		}
 
 		runner->stop();

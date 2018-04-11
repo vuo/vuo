@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Cycle through List",
-					 "keywords" : [ "pick", "select", "choose", "count", "item", "element", "member", "index" ],
+					 "keywords" : [ "step", "pick", "select", "choose", "count", "item", "element", "member", "index" ],
 					 "version" : "1.1.0",
 					 "node": {
 						 "exampleCompositions": [ "CycleSeasons.vuo" ]

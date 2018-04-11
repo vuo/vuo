@@ -94,7 +94,7 @@ VuoModuleMetadata({
 	{
 		VuoText path = VuoText_makeFromCFString(file);
 		VuoRetain(path);
-		VuoUrl url = VuoUrl_normalize(path, false);
+		VuoUrl url = VuoUrl_normalize(path, VuoUrlNormalize_default);
 		VuoListAppendValue_VuoUrl(urls, url);
 		VuoRelease(path);
 	}

@@ -13,9 +13,6 @@
 /// @todo copied from VuoPopover
 const int VuoDialogForInputEditor::popoverArrowHalfWidth = 8; ///< Half the width (or exactly the height) of the popover's arrow.
 
-/// Creates a C string from raw text (saves having to doublequote-escape and/or use backslashes).
-#define STRINGIFY(...) QString(#__VA_ARGS__)
-
 /**
  * Initializes the appearance of the dialog.
  */
@@ -32,9 +29,17 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 	this->_isDark = isDark;
 	this->_showArrow = showArrow;
 
+	setStyleSheet(getStyleSheet(isDark));
+}
+
+/**
+ * Returns a Qt stylesheet that covers most UI widgets.
+ */
+QString VuoDialogForInputEditor::getStyleSheet(bool isDark)
+{
 	QString styleSheet = "* { " + VuoInputEditor::getDefaultFontCss() + " } ";
 	if (isDark)
-		styleSheet += STRINGIFY(
+		styleSheet += VUO_QSTRINGIFY(
 						  QCheckBox,
 						  QLabel {
 							  color: #cfcfcf;
@@ -119,7 +124,7 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 						  );
 
 	// Restyle spinboxes both in light and dark mode.
-	styleSheet += STRINGIFY(
+	styleSheet += VUO_QSTRINGIFY(
 		QDoubleSpinBox,
 		QSpinBox {
 			padding-right: -1px;
@@ -175,7 +180,7 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 	.arg(isDark ? "#3a3a3a" : "#c4c4c4");
 
 	if (!isDark)
-		styleSheet += STRINGIFY(
+		styleSheet += VUO_QSTRINGIFY(
 			QDoubleSpinBox,
 			QSpinBox {
 				border: 1px solid #c9c9c9;
@@ -183,8 +188,7 @@ VuoDialogForInputEditor::VuoDialogForInputEditor(bool isDark, bool showArrow)
 			}
 		);
 
-
-	setStyleSheet(styleSheet);
+	return styleSheet;
 }
 
 /**
@@ -293,4 +297,12 @@ bool VuoDialogForInputEditor::event(QEvent *e)
 	}
 
 	return QDialog::event(e);
+}
+
+/**
+ * Sets the boolean indicating whether or not to display an arrow.
+ */
+void VuoDialogForInputEditor::setShowArrow(bool show)
+{
+	this->_showArrow = show;
 }

@@ -42,16 +42,17 @@ VuoModuleMetadata({
  */
 VuoAnchor VuoAnchor_makeFromJson(json_object * js)
 {
-	VuoAnchor anchor = { VuoHorizontalAlignment_Center, VuoVerticalAlignment_Center };
 	json_object *o = NULL;
 
+	VuoHorizontalAlignment horizontal = VuoHorizontalAlignment_Center;
 	if (json_object_object_get_ex(js, "horizontalAlignment", &o))
-		anchor.horizontalAlignment = VuoHorizontalAlignment_makeFromJson(o);
+		horizontal = VuoHorizontalAlignment_makeFromJson(o);
 
+	VuoVerticalAlignment vertical = VuoVerticalAlignment_Center;
 	if (json_object_object_get_ex(js, "verticalAlignment", &o))
-		anchor.verticalAlignment = VuoVerticalAlignment_makeFromJson(o);
+		vertical = VuoVerticalAlignment_makeFromJson(o);
 
-	return anchor;
+	return VuoAnchor_make(horizontal, vertical);
 }
 
 /**
@@ -62,10 +63,10 @@ json_object * VuoAnchor_getJson(const VuoAnchor value)
 {
 	json_object *js = json_object_new_object();
 
-	json_object *horizontal = VuoHorizontalAlignment_getJson(value.horizontalAlignment);
+	json_object *horizontal = VuoHorizontalAlignment_getJson(VuoAnchor_getHorizontal(value));
 	json_object_object_add(js, "horizontalAlignment", horizontal);
 
-	json_object *vertical = VuoVerticalAlignment_getJson(value.verticalAlignment);
+	json_object *vertical = VuoVerticalAlignment_getJson(VuoAnchor_getVertical(value));
 	json_object_object_add(js, "verticalAlignment", vertical);
 
 	return js;
@@ -80,8 +81,8 @@ char * VuoAnchor_getSummary(const VuoAnchor value)
 	if(VuoAnchor_areEqual(value, VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Center)))
 		return strdup("Center");
 
-	char* h = VuoHorizontalAlignment_getSummary(value.horizontalAlignment);
-	char* v = VuoVerticalAlignment_getSummary(value.verticalAlignment);
+	char *h = VuoHorizontalAlignment_getSummary(VuoAnchor_getHorizontal(value));
+	char *v = VuoVerticalAlignment_getSummary(VuoAnchor_getVertical(value));
 
 	char* sum = (char*) malloc( sizeof(char) * (strlen(h) + strlen(v) + 2) );
 	sprintf(sum, "%s %s", v, h);
@@ -90,4 +91,22 @@ char * VuoAnchor_getSummary(const VuoAnchor value)
 	free(v);
 
 	return sum;
+}
+
+/**
+ * Returns a list of values that instances of this type can have.
+ */
+VuoList_VuoAnchor VuoAnchor_getAllowedValues(void)
+{
+	VuoList_VuoAnchor l = VuoListCreate_VuoAnchor();
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Left,   VuoVerticalAlignment_Top   ));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Top   ));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Right,  VuoVerticalAlignment_Top   ));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Left,   VuoVerticalAlignment_Center));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Center));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Right,  VuoVerticalAlignment_Center));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Left,   VuoVerticalAlignment_Bottom));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Bottom));
+	VuoListAppendValue_VuoAnchor(l, VuoAnchor_make(VuoHorizontalAlignment_Right,  VuoVerticalAlignment_Bottom));
+	return l;
 }

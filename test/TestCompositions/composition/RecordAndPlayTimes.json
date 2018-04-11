@@ -1,0 +1,348 @@
+/**
+ * @file
+ * Expected outputs for RecordAndPlayTimes.vuo.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{"portConfiguration" : [
+	/* Record */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 0,
+			"URL" : "RecordAndPlayTimes-recording1.txt",
+			"TimeEvent" : true,
+			"RecordEvent" : true,
+			"FinalizeEvent" : false,
+			"Time" : 1
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 1
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 2
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 2
+		}
+	},
+	/* Finalize */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"TimeEvent" : false,
+			"FinalizeEvent" : true
+		}
+	},
+	/* Play back same times as recorded */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 1,
+			"TimeEvent" : true,
+			"RecordEvent" : false,
+			"FinalizeEvent" : false,
+			"Time" : 1
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 1
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 2
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 2
+		}
+	},
+	/* Play back repeated time */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 2
+		},
+		"outputPortValues" : {
+		}
+	},
+	/* Play back in reverse */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 1
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 1
+		}
+	},
+	/* Play back different times than recorded */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 2.1
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 2
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 2.2
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 0.8
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 1.1
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 1
+		}
+	},
+	/* Play back ignoring Record event */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"RecordEvent" : true,
+			"Time" : 2.9
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 2
+		}
+	},
+	/* Record again */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 0,
+			"RecordEvent" : true,
+			"Time" : 3
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 3
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 3.5
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 3.5
+		}
+	},
+	/* Play back again */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 1,
+			"Time" : 3.5
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 3.5
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 1
+		},
+		"outputPortValues" : {
+		}
+	},
+	/* Record again, with different events for Record Value and Time */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 0,
+			"Time" : 4
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 4
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"TimeEvent" : true,
+			"RecordEvent" : false,
+			"Time" : 4.1
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"TimeEvent" : false,
+			"RecordEvent" : true,
+			"Time" : 5
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"TimeEvent" : true,
+			"RecordEvent" : false,
+			"Time" : 6
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 5
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 7
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"TimeEvent" : false,
+			"RecordEvent" : true,
+			"Time" : 8
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 9
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"TimeEvent" : true,
+			"RecordEvent" : false,
+			"Time" : 10
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 9
+		}
+	},
+	/* Play back again */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 1,
+			"TimeEvent" : true,
+			"Time" : 4
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 4
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 5
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 6
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 5
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 7
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 8
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 9
+		},
+		"outputPortValues" : {
+		}
+	},
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Time" : 10
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 9
+		}
+	},
+	/* Record to a different URL */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 0,
+			"URL" : "RecordAndPlayTimes-recording2.txt",
+			"RecordEvent" : true,
+			"Time" : 11
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 11
+		}
+	},
+	/* Play back from the second URL */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"Mode" : 1,
+			"Time" : 11
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 11
+		}
+	},
+	/* Play back from the first URL */
+	{
+		"firingPort" : "Time",
+		"inputPortValues" : {
+			"URL" : "RecordAndPlayTimes-recording1.txt",
+			"Mode" : 1,
+			"Time" : 11
+		},
+		"outputPortValues" : {
+			"PlayedValue" : 9
+		}
+	},
+]}

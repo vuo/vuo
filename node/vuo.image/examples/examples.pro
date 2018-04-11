@@ -6,10 +6,13 @@ EXAMPLE_SOURCES += \
 	BlendImages.vuo \
 	BlurMovie.vuo \
 	BulgeCheckerboard.vuo \
-   CapSaturation.vuo \
+	CapSaturation.vuo \
+	ColorMyWorld.vuo \
 	CompareDirectionalBlurs.vuo \
         CompareKaleidoscopes.vuo \
         CompareNoiseTypes.vuo \
+        CompareNoiseRangeModes.vuo \
+	CompareRippleTypes.vuo \
 	DisplayImage.vuo \
 	EnhanceBlue.vuo \
 	EnlargeMovie.vuo \
@@ -24,6 +27,8 @@ EXAMPLE_SOURCES += \
 	MoveLinearGradient.vuo \
 	MoveRadialGradient.vuo \
 	OffsetColors.vuo \
+	OutlineSeagulls.vuo \
+	PixellateImageRadially.vuo \
    PosterizeMovie.vuo \
 	RecolorMovie.vuo \
 	RenderTextImage.vuo \

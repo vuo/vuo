@@ -13,7 +13,6 @@ extern "C"
 #endif
 
 #include "node.h"
-#include "VuoGlContext.h"
 
 #include <stdint.h>
 
@@ -60,7 +59,6 @@ void VuoWindowOpenGl_enableTriggers
 void VuoWindowOpenGl_disableTriggers(VuoWindowOpenGl w);
 void VuoWindowOpenGl_redraw(VuoWindowOpenGl w);
 void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty properties);
-void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToExecute)(VuoGlContext glContext));
 void VuoWindowOpenGl_setAspectRatio(VuoWindowOpenGl w, unsigned int pixelsWide, unsigned int pixelsHigh);
 void VuoWindowOpenGl_unlockAspectRatio(VuoWindowOpenGl w);
 void VuoWindowOpenGl_close(VuoWindowOpenGl w);

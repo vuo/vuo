@@ -9,7 +9,6 @@
 
 #include "node.h"
 #include "VuoImageWrapMode.h"
-#include "VuoGlContext.h"
 #include "VuoGlPool.h"
 
 #include <OpenGL/OpenGL.h>
@@ -20,7 +19,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "mirror", "rotate", "clamp", "edge", "clip", "transparent", "tile" ],
 					 "version" : "2.0.1",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoGlPool",
 						 "OpenGL.framework"
 					 ],

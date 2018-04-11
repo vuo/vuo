@@ -13,7 +13,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Cone",
-					 "keywords" : [ "3D", "point", "hat", "wizard", "pyramid" ],
+					 "keywords" : [ "3D", "point", "hat", "wizard", "pyramid", "shape", "object" ],
 					 "version" : "1.0.1",
 					 "genericTypes" : {
 						"VuoGenericType1" : {

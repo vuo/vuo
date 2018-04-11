@@ -11,7 +11,11 @@
 
 VuoModuleMetadata({
 					 "title" : "Snap Value",
-					 "keywords" : [  "quantize", "grid", "approximate", "preset", "discrete", "integer", "nearby", "close", "round" ],
+					 "keywords" : [
+						 "quantize", "step", "grid", "approximate", "preset",
+						 "discrete", "integer", "nearby", "close", "round",
+						 "real", "number", "point",
+					 ],
 					 "version" : "1.0.0",
 					 "genericTypes" : {
 						 "VuoGenericType1" : {

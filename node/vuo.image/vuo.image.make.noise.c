@@ -23,15 +23,14 @@ VuoModuleMetadata({
 						  "fractal", "fractional Brownian noise", "fBm",
 						  "octaves", "persistence", "lacunarity",
 					  ],
-					  "version" : "1.1.0",
+					  "version" : "1.2.0",
 					  "node": {
-						  "exampleCompositions" : [ "ShowNoiseImage.vuo", "CompareNoiseTypes.vuo" ]
+						  "exampleCompositions" : [ "ShowNoiseImage.vuo", "CompareNoiseTypes.vuo",
+									    "CompareNoiseRangeModes.vuo" ]
 					  }
 				 });
 
-#define STRINGIFY(...) #__VA_ARGS__
-
-static const char *fragmentShaderSource = STRINGIFY(
+static const char *fragmentShaderSource = VUO_STRINGIFY(
 	uniform vec4 colorA;
 	uniform vec4 colorB;
 	uniform vec3 center;
@@ -127,28 +126,43 @@ static const char *fragmentShaderSource = STRINGIFY(
 				amplitude *= roughness;
 			}
 
+			float thisNoiseLevel =
+			\n#if RANGE_MODE == 0\n // None
+				(RESOLVE - range.x) / (range.y - range.x);
+			\n#elif RANGE_MODE == 1\n // Clamp
+				(clamp(RESOLVE, range.x, range.y) - range.x) / (range.y - range.x);
+			\n#elif RANGE_MODE == 2\n // Repeat
+				mod((RESOLVE - range.x) / (range.y - range.x), 1.);
+			\n#else\n // Mirrored Repeat
+//				1. - abs(mod((RESOLVE - range.x) / (range.y - range.x), 2.) - 1.); // triangle
+				.5 + sin( (RESOLVE - range.x - .5) / (range.y - range.x) * 3.141592 ) / 2.;
+			\n#endif\n
+
+			// If the edge is very sharp, soften it (reduce aliasing).
+			float fuzz = abs(dFdx(thisNoiseLevel)) + abs(dFdy(thisNoiseLevel));
+			thisNoiseLevel += fuzz/3.;
+
 	\n#if TILE == 1\n
-			noise += ((clamp(RESOLVE, range.x, range.y) - range.x) / (range.y - range.x)) * amplitudes[i];
+			noise += thisNoiseLevel * amplitudes[i];
 		}
 	\n#else\n
-		float noise = (clamp(RESOLVE, range.x, range.y) - range.x) / (range.y - range.x);
+		float noise = thisNoiseLevel;
 	\n#endif\n
 
-		gl_FragColor = mix(colorA, colorB, noise);
+		gl_FragColor = clamp(mix(colorA, colorB, noise), 0., 1.);
 	}
 );
 
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 
 	struct
 	{
 		VuoImageNoise type;
 		VuoGradientNoise grid;
 		VuoBoolean tile;
+		VuoImageWrapMode rangeMode;
 	} priorSettings;
 };
 
@@ -157,16 +171,12 @@ struct nodeInstanceData * nodeInstanceInit(void)
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
 
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
-
 	instance->shader = NULL;
 
 	instance->priorSettings.type = -1;
 	instance->priorSettings.grid = -1;
 	instance->priorSettings.tile = -1;
+	instance->priorSettings.rangeMode = -1;
 
 	return instance;
 }
@@ -188,6 +198,7 @@ void nodeInstanceEvent
 								"suggestedMin":{"minimum":0.0,"maximum":0.0},
 								"suggestedMax":{"minimum":1.0,"maximum":1.0},
 								"suggestedStep":{"minimum":0.1,"maximum":0.1}}) range,
+		VuoInputData(VuoImageWrapMode, {"default":"clamp"}) rangeMode,
 		VuoInputData(VuoInteger, {"default":1, "suggestedMin":1, "suggestedMax":4, "suggestedStep":1}) levels,
 		VuoInputData(VuoReal, {"default":0.5, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.1}) roughness,
 		VuoInputData(VuoReal, {"default":2.0, "suggestedMin":1.0, "suggestedMax":5.0, "suggestedStep":0.1}) spacing,
@@ -198,11 +209,12 @@ void nodeInstanceEvent
 {
 	if ((*instance)->priorSettings.type != type
 	 || (*instance)->priorSettings.grid != grid
-	 || (*instance)->priorSettings.tile != tile)
+	 || (*instance)->priorSettings.tile != tile
+	 || (*instance)->priorSettings.rangeMode != rangeMode)
 	{
 		VuoRelease((*instance)->shader);
 
-		char *sourceWithPrefix = VuoText_format("#version 120\n#define TYPE %d\n#define GRID %d\n#define TILE %lu\n\n%s", type, grid, tile, fragmentShaderSource);
+		char *sourceWithPrefix = VuoText_format("#version 120\n#define TYPE %d\n#define GRID %d\n#define TILE %lu\n#define RANGE_MODE %d\n\n%s", type, grid, tile, rangeMode, fragmentShaderSource);
 
 		(*instance)->shader = VuoShader_make("Noise Shader");
 		VuoShader_addSource((*instance)->shader, VuoMesh_IndividualTriangles, NULL, NULL, sourceWithPrefix);
@@ -211,6 +223,7 @@ void nodeInstanceEvent
 		(*instance)->priorSettings.type = type;
 		(*instance)->priorSettings.grid = grid;
 		(*instance)->priorSettings.tile = tile;
+		(*instance)->priorSettings.rangeMode = rangeMode;
 	}
 
 	bool rangeInverted = VuoRange_isInverted(range);
@@ -220,10 +233,7 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoPoint3d((*instance)->shader, "center", VuoPoint3d_make(center.x/2., center.y/2., time));
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "scale",  1./VuoReal_makeNonzero(scale));
 
-	VuoRange r = VuoRange_getOrderedRange(range);
-	// Limit sharpness to output resolution, to reduce aliasing.
-	r.minimum -= 2./MIN(width, height);
-	r.maximum += 2./MIN(width, height);
+	VuoRange r = VuoRange_makeNonzero(VuoRange_getOrderedRange(range));
 	VuoShader_setUniform_VuoPoint2d((*instance)->shader, "range",  (VuoPoint2d){r.minimum, r.maximum});
 
 	VuoShader_setUniform_VuoInteger((*instance)->shader, "levels", MAX(1, levels));
@@ -231,12 +241,10 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoReal   ((*instance)->shader, "spacing", spacing);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
+	*image = VuoImageRenderer_render((*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

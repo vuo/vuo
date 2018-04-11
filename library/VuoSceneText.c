@@ -59,8 +59,8 @@ static VuoMesh makeAnchoredQuad(VuoAnchor anchor)
 	elements[4] = 3;
 	elements[5] = 2;
 
-	float horizontal = anchor.horizontalAlignment == VuoHorizontalAlignment_Left ? .5f : (anchor.horizontalAlignment == VuoHorizontalAlignment_Right ? -.5f : 0.f);
-	float vertical = anchor.verticalAlignment == VuoVerticalAlignment_Top ? -.5f : (anchor.verticalAlignment == VuoVerticalAlignment_Bottom ? .5f : 0.f);
+	float horizontal = VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Left ? .5f : (VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Right ? -.5f : 0.f);
+	float vertical = VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Top ? -.5f : (VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Bottom ? .5f : 0.f);
 
 	for(int i = 0; i < vertexCount; i++)
 	{

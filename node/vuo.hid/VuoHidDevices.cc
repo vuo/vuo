@@ -15,6 +15,7 @@
 #include "VuoList_VuoHidControl.h"
 #include "VuoEventLoop.h"
 #include "VuoUsbVendor.h"
+#include "VuoApp.h"
 
 #include <dispatch/dispatch.h>
 #include <vector>
@@ -34,6 +35,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						 "CoreFoundation.framework",
 						 "IOKit.framework",
+						 "VuoApp",
 						 "VuoHidControl",
 						 "VuoHidDevice",
 						 "VuoHidUsage",
@@ -423,11 +425,13 @@ void VuoHid_use(void)
 		IOHIDManagerScheduleWithRunLoop(VuoHid_manager, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
 
 		// Wait for the HID Manager to invoke the callback with the existing devices.
+		VuoApp_executeOnMainThread(^{
 		while (!VuoHid_devicesChangedCalled)
 		{
 			VuoEventLoop_processEvent(VuoEventLoop_RunOnce);
 			usleep(USEC_PER_SEC / 10);
 		}
+		});
 		VuoHid_devicesChangedInitialized = true;
 	}
 }

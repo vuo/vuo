@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+GetRenderedLayerBounds [type="vuo.layer.bounds.rendered" version="1.0.0" label="Get Rendered Layer Bounds|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<layerName>layerName\l|<includeChildren>includeChildren\l|<center>center\r|<width>width\r|<height>height\r|<pixelsWide>pixelsWide\r|<pixelsHigh>pixelsHigh\r" pos="750,60" _layerName="\"layer\"" _includeChildren="true"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="255,45" _name="\"layer\"" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="447,56"];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="510,45" _width="1024" _height="1024" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<inputPosition>inputPosition\r|<inputWidth>inputWidth\r|<inputHeight>inputHeight\r|<inputRotation>inputRotation\r|<inputAnchor>inputAnchor\r" _inputPosition_type="VuoPoint2d" _inputPosition_suggestedMin="{\"x\":-1,\"y\":-1}" _inputPosition_suggestedMax="{\"x\":1,\"y\":1}" _inputPosition_suggestedStep="{\"x\":0.1,\"y\":0.1}" _inputPosition="{\"x\":0.0,\"y\":0.0}" _inputWidth_type="VuoReal" _inputWidth_suggestedMin="0.0" _inputWidth_suggestedMax="2.0" _inputWidth_suggestedStep="0.1" _inputWidth="1" _inputHeight_type="VuoReal" _inputHeight_suggestedMin="0.0" _inputHeight_suggestedMax="2.0" _inputHeight_suggestedStep="0.1" _inputHeight="1" _inputRotation_type="VuoReal" _inputRotation_suggestedMin="0.0" _inputRotation_suggestedMax="360.0" _inputRotation_suggestedStep="15.0" _inputRotation="0.0" _inputAnchor_type="VuoAnchor" _inputAnchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputCenter>outputCenter\l|<outputWidth>outputWidth\l|<outputHeight>outputHeight\l|<outputPixelsWide>outputPixelsWide\l|<outputPixelsHigh>outputPixelsHigh\l" _outputCenter_type="VuoPoint2d" _outputWidth_type="VuoReal" _outputHeight_type="VuoReal" _outputPixelsWide_type="VuoInteger" _outputPixelsHigh_type="VuoInteger"];
+
+GetRenderedLayerBounds:center -> PublishedOutputs:outputCenter;
+GetRenderedLayerBounds:height -> PublishedOutputs:outputHeight;
+GetRenderedLayerBounds:pixelsHigh -> PublishedOutputs:outputPixelsHigh;
+GetRenderedLayerBounds:pixelsWide -> PublishedOutputs:outputPixelsWide;
+GetRenderedLayerBounds:width -> PublishedOutputs:outputWidth;
+MakeColorLayer:layer -> MakeList3:1;
+MakeList3:list -> RenderLayersToImage:layers;
+PublishedInputs:inputAnchor -> MakeColorLayer:anchor;
+PublishedInputs:inputHeight -> MakeColorLayer:height;
+PublishedInputs:inputPosition -> MakeColorLayer:center;
+PublishedInputs:inputRotation -> MakeColorLayer:rotation;
+PublishedInputs:inputWidth -> MakeColorLayer:width;
+RenderLayersToImage:renderedLayers -> GetRenderedLayerBounds:renderedLayers;
+}

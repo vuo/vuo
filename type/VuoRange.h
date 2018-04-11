@@ -76,3 +76,14 @@ static inline VuoRange VuoRange_getOrderedRange(VuoRange range)
 	else
 		return range;
 }
+
+/**
+ * If the range is empty (minimum == maximum), increases the maximum.
+ */
+static inline VuoRange VuoRange_makeNonzero(VuoRange a) __attribute__((const));
+static inline VuoRange VuoRange_makeNonzero(VuoRange a)
+{
+	if (fabs(a.maximum - a.minimum) < FLT_EPSILON)
+		a.maximum = a.minimum + FLT_EPSILON;
+	return a;
+}

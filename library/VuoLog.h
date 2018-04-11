@@ -33,9 +33,9 @@ void VuoLog_backtrace(void);
  * Also stores the most recent 2 messages in the OS X CrashReporter data structure, to be included with crash reports.
  */
 #ifdef DOXYGEN
-void VuoLog(const char *file, const unsigned int line, const char *function, const char *format, ...);
+void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...);
 #else
-void VuoLog(const char *file, const unsigned int line, const char *function, const char *format, ...) __attribute__((format(printf, 4, 5)));
+void VuoLog(const char *file, const unsigned int linenumber, const char *function, const char *format, ...) __attribute__((format(printf, 4, 5)));
 #endif
 
 /**
@@ -140,7 +140,7 @@ void VuoLog_recordTime(const char *name, double time);
 
 #ifndef DOXYGEN
 // Executes the block passed to it (an adapter in order to use `__attribute__((cleanup(…)))` with C Blocks).
-static inline void VuoDeferCleanup(void (^*b)(void)) { (*b)(); }
+static inline void VuoDeferCleanup(void (^*b)(void)) { if (*b) (*b)(); }
 
 // Combines two strings into an identifier.
 #define VuoDeferMerge(a,b) a##b

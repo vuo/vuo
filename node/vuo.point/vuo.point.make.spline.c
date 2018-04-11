@@ -19,6 +19,7 @@ VuoModuleMetadata({
 						  "cardinal", // variable T, C=B=0
 						  "TCB", "Kochanek–Bartels",
 						  "keyframe",
+						  "list",
 					  ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {

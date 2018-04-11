@@ -9,9 +9,11 @@ QMAKE_CXXFLAGS += \
 	-I$$ROOT/node/vuo.data \
 	-I$$ROOT/node/vuo.image \
 	-I$$ROOT/node/vuo.layer \
+	-I$$ROOT/node/vuo.list \
 	-I$$ROOT/node/vuo.math \
 	-I$$ROOT/node/vuo.midi \
 	-I$$ROOT/node/vuo.scene \
+	-I$$ROOT/node/vuo.table \
 	-I$$ROOT/node/vuo.time \
 	-I$$ROOT/node/vuo.video \
 	-I$$ROOT/runtime \
@@ -32,6 +34,8 @@ QMAKE_LFLAGS += \
 	$$FFMPEG_ROOT/lib/libswresample.dylib \
 	$$FFMPEG_ROOT/lib/libswscale.dylib \
 	$$ROOT/framework/Vuo.framework/Modules/libfreeimage.dylib \
+	$${LIBXML2_ROOT}/lib/libxml2.a \
+	$${LIBCSV_ROOT}/lib/libcsv.dylib \
 	$$CURL_ROOT/lib/libcurl.a \
 	-lssl \
 	-lcrypto \
@@ -56,6 +60,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/runtime/libVuoEventLoop.bc \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
+	$$ROOT/library/csgjs.o \
 	$$ROOT/library/libVuoGlContext.dylib \
 	$$ROOT/library/libVuoGlPool.dylib \
 	$$ROOT/library/libVuoHeap.dylib \
@@ -80,6 +85,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoSceneText.o \
 	$$ROOT/library/VuoSceneRenderer.o \
 	$$ROOT/library/VuoScreenCommon.o \
+	$$ROOT/library/VuoTextHtml.o \
 	$$ROOT/library/VuoUrlFetch.o \
 	$$ROOT/library/VuoUrlParser.o \
 	$$ROOT/library/VuoWindow.o \
@@ -88,6 +94,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/libmodule.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
+	$$ROOT/type/VuoAnchor.o \
 	$$ROOT/type/VuoBlendMode.o \
 	$$ROOT/type/VuoColor.o \
 	$$ROOT/type/VuoCoordinateUnit.o \
@@ -101,8 +108,10 @@ QMAKE_LFLAGS += \
 	$$ROOT/node/vuo.layer/VuoLayer.o \
 	$$ROOT/node/vuo.midi/VuoMidiNote.o \
 	$$ROOT/node/vuo.noise/VuoGradientNoiseCommon.bc \
+	$$ROOT/node/vuo.table/VuoTable.o \
 	$$ROOT/node/vuo.time/VuoRelativeTime.o \
 	$$ROOT/node/vuo.time/VuoTime.o \
+	$$ROOT/node/vuo.time/VuoTimeFormat.o \
 	$$ROOT/node/vuo.time/VuoTimeUnit.o \
 	$$ROOT/node/vuo.video/VuoAvDecoder.o \
 	$$ROOT/node/vuo.video/VuoAvPlayerInterface.o \
@@ -113,6 +122,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/node/vuo.video/VuoVideoPlayer.o \
 	$$ROOT/type/VuoCursor.o \
 	$$ROOT/type/VuoDictionary_VuoText_VuoReal.o \
+	$$ROOT/type/VuoDictionary_VuoText_VuoText.o \
 	$$ROOT/type/VuoMesh.o \
 	$$ROOT/type/VuoMathExpressionList.o \
 	$$ROOT/type/VuoPoint2d.o \
@@ -123,17 +133,23 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/VuoScreen.o \
 	$$ROOT/type/VuoShader.o \
 	$$ROOT/type/VuoText.o \
+	$$ROOT/type/VuoTextComparison.o \
 	$$ROOT/type/VuoTransform.o \
 	$$ROOT/type/VuoTransform2d.o \
+	$$ROOT/type/VuoTree.o \
 	$$ROOT/type/VuoUrl.o \
+	$$ROOT/type/VuoVerticalAlignment.o \
+	$$ROOT/type/VuoHorizontalAlignment.o \
 	$$ROOT/type/VuoWindowProperty.o \
 	$$ROOT/type/VuoWindowReference.o \
+	$$ROOT/type/list/VuoList_VuoAnchor.o \
 	$$ROOT/type/list/VuoList_VuoAudioSamples.o \
 	$$ROOT/type/list/VuoList_VuoBoolean.o \
 	$$ROOT/type/list/VuoList_VuoBlendMode.o \
 	$$ROOT/type/list/VuoList_VuoColor.o \
 	$$ROOT/type/list/VuoList_VuoCoordinateUnit.o \
 	$$ROOT/type/list/VuoList_VuoCursor.o \
+	$$ROOT/type/list/VuoList_VuoData.o \
 	$$ROOT/type/list/VuoList_VuoImage.o \
 	$$ROOT/type/list/VuoList_VuoImageColorDepth.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
@@ -146,7 +162,11 @@ QMAKE_LFLAGS += \
 	$$ROOT/type/list/VuoList_VuoSceneObject.o \
 	$$ROOT/type/list/VuoList_VuoText.o \
 	$$ROOT/type/list/VuoList_VuoTime.o \
+	$$ROOT/type/list/VuoList_VuoTimeFormat.o \
 	$$ROOT/type/list/VuoList_VuoTimeUnit.o \
+	$$ROOT/type/list/VuoList_VuoTree.o \
+	$$ROOT/type/list/VuoList_VuoVerticalAlignment.o \
+	$$ROOT/type/list/VuoList_VuoHorizontalAlignment.o \
 	$$ROOT/type/list/VuoList_VuoWindowProperty.o \
 	$$QMAKE_LFLAGS $$LIBS $$QMAKE_LIBS \
 	-Wl,-rpath,$$ROOT/framework \

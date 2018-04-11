@@ -1,0 +1,68 @@
+/**
+ * @file
+ * Draws a series of dots arranged in a circle, with each dot moving independently toward and away from the center of the circle.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @license This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+digraph G
+{
+AllowFirstEvent [type="vuo.event.allowFirst" version="1.0.0" label="Allow First Event|<refresh>refresh\l|<event>event\l|<reset>reset\l|<firstEvent>firstEvent\r" pos="-225,-15"];
+CalculateList [type="vuo.math.calculate.list" version="1.0.0" label="Calculate List|<refresh>refresh\l|<expression>expression\l|<xValues>xValues\l|<values>values\l|<results>results\r" pos="255,75" fillcolor="violet" _expression="{\"expressions\":[\"Radius + Perturbation * perlin2d(I, Time)\"],\"inputVariables\":[\"I\",\"Perturbation\",\"Radius\",\"Time\"],\"outputVariables\":[\"result\"]}"];
+CalculateList2 [type="vuo.math.calculate.list" version="1.0.0" label="Calculate List|<refresh>refresh\l|<expression>expression\l|<xValues>xValues\l|<values>values\l|<results>results\r" pos="525,225" fillcolor="violet" _expression="{\"expressions\":[\"X * sin(I * 360 \\/ Count)\"],\"inputVariables\":[\"Count\",\"I\",\"X\"],\"outputVariables\":[\"result\"]}"];
+CalculateList3 [type="vuo.math.calculate.list" version="1.0.0" label="Calculate List|<refresh>refresh\l|<expression>expression\l|<xValues>xValues\l|<values>values\l|<results>results\r" pos="525,135" fillcolor="violet" _expression="{\"expressions\":[\"X * cos(I * 360 \\/ Count)\"],\"inputVariables\":[\"Count\",\"I\",\"X\"],\"outputVariables\":[\"result\"]}"];
+ConvertIntegerToRealNumber [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="570,270"];
+ConvertIntegerToRealNumber2 [type="vuo.type.integer.real" version="1.0.0" label="Convert Integer to Real Number|<refresh>refresh\l|<integer>integer\l|<real>real\r" pos="570,360"];
+CopyLayer [type="vuo.layer.copy.trs" version="2.0.1" label="Copy Layer|<refresh>refresh\l|<layer>layer\l|<translations>translations\l|<rotations>rotations\l|<scales>scales\l|<copies>copies\r" pos="960,150"];
+CountItemsInList2 [type="vuo.list.count.VuoReal" version="1.0.0" label="Count Items in List|<refresh>refresh\l|<list>list\l|<itemCount>itemCount\r" pos="165,255"];
+MakeDictionary5 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="300,270" fillcolor="violet"];
+MakeDictionary6 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="300,180" fillcolor="violet"];
+MakeDictionary7 [type="vuo.dictionary.make.VuoText.VuoReal" version="1.0.0" label="Make Dictionary|<refresh>refresh\l|<keys>keys\l|<values>values\l|<dictionary>dictionary\r" pos="30,120" fillcolor="violet"];
+MakeList11 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="472,266" fillcolor="violet"];
+MakeList12 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="300,270" fillcolor="violet" _1="\"Count\""];
+MakeList13 [type="vuo.list.make.1.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="300,180" fillcolor="violet" _1="\"Count\""];
+MakeList14 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="472,176" fillcolor="violet"];
+MakeList24 [type="vuo.list.make.1.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="866,191" _1="0"];
+MakeList25 [type="vuo.list.make.1.VuoPoint2d" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="927,206" _1="{\"x\":1,\"y\":1}"];
+MakeList26 [type="vuo.list.make.3.VuoReal" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="174,116" fillcolor="violet" _1="0.10000000000000001" _2="0.5"];
+MakeList27 [type="vuo.list.make.3.VuoText" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="30,120" fillcolor="violet" _1="\"Perturbation\"" _2="\"Radius\"" _3="\"Time\""];
+MakeList29 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1157,191" fillcolor="green"];
+MakeList34 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1137,161" fillcolor="green"];
+MakeOvalLayer [type="vuo.layer.make.oval" version="1.1.0" label="Make Oval Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<sharpness>sharpness\l|<layer>layer\r" pos="720,15" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="0.050000000000000003" _height="0.050000000000000003" _sharpness="0.80000000000000004"];
+MakePointsAlongLine4 [type="vuo.point.make.curve.VuoReal" version="1.0.0" label="Make Points along Line|<refresh>refresh\l|<startPosition>startPosition\l|<endPosition>endPosition\l|<curve>curve\l|<easing>easing\l|<numberOfPoints>numberOfPoints\l|<points>points\r" pos="-45,225" _endPosition="0" _curve="\"linear\"" _easing="\"in\"" _numberOfPoints="36"];
+MergeXYLists [type="vuo.point.merge.xy" version="1.0.0" label="Merge XY Lists|<refresh>refresh\l|<x>x\l|<y>y\l|<points>points\r" pos="690,180"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1185,150" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+
+AllowFirstEvent:firstEvent -> MakeOvalLayer:refresh;
+AllowFirstEvent:firstEvent -> MakePointsAlongLine4:refresh;
+CalculateList2:results -> MergeXYLists:y;
+CalculateList3:results -> MergeXYLists:x;
+CalculateList:results -> CalculateList2:xValues;
+CalculateList:results -> CalculateList3:xValues;
+ConvertIntegerToRealNumber2:real -> MakeList11:1;
+ConvertIntegerToRealNumber:real -> MakeList14:1;
+CopyLayer:copies -> MakeList34:1;
+CountItemsInList2:itemCount -> ConvertIntegerToRealNumber2:integer;
+CountItemsInList2:itemCount -> ConvertIntegerToRealNumber:integer;
+MakeDictionary5:dictionary -> CalculateList2:values;
+MakeDictionary6:dictionary -> CalculateList3:values;
+MakeDictionary7:dictionary -> CalculateList:values;
+MakeList11:list -> MakeDictionary5:values;
+MakeList12:list -> MakeDictionary5:keys;
+MakeList13:list -> MakeDictionary6:keys;
+MakeList14:list -> MakeDictionary6:values;
+MakeList24:list -> CopyLayer:rotations;
+MakeList25:list -> CopyLayer:scales;
+MakeList26:list -> MakeDictionary7:values;
+MakeList27:list -> MakeDictionary7:keys;
+MakeList29:list -> RenderLayersToWindow:setWindowProperties;
+MakeList34:list -> RenderLayersToWindow:layers;
+MakeOvalLayer:layer -> CopyLayer:layer;
+MakePointsAlongLine4:points -> CalculateList:xValues;
+MakePointsAlongLine4:points -> CountItemsInList2:list;
+MergeXYLists:points -> CopyLayer:translations;
+RenderLayersToWindow:requestedFrame -> AllowFirstEvent:event [style=invis];
+RenderLayersToWindow:requestedFrame -> MakeList26:3 [style=invis];
+}

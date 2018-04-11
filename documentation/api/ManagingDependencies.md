@@ -30,12 +30,12 @@ VuoModuleMetadata({
 					 "description" : "...",
 					 "keywords" : [ ... ],
 					 "version" : ... ,
-					 "dependencies" : [ "assimp", "icuuc", "AppKit.framework", "VuoUrl" ],
+					 "dependencies" : [ "assimp.a", "icuuc.dylib", "AppKit.framework", "VuoUrl" ],
 					 "node" : { ... }
 				 });
 @endcode
 
-Notice that the static and dynamic library names leave off the "lib" prefix, and the file extension is optional; `libassimp.a` becomes `assimp` or `assimp.a`, and `libicuuc.dylib` becomes `icuuc` or `icuuc.dylib`. The Vuo library module name leaves off the file extension; `VuoUrl.bc` becomes `VuoUrl`. The framework keeps its file extension.
+Notice that the static and dynamic library names leave off the "lib" prefix; `libassimp.a` becomes `assimp.a`, and `libicuuc.dylib` becomes `icuuc.dylib`. The Vuo library module name leaves off the file extension; `VuoUrl.bc` becomes `VuoUrl`. The framework keeps its file extension.
 
 
 

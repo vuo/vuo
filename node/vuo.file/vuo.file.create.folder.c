@@ -35,7 +35,7 @@ void nodeEvent
 	if (!createAtUrl || !createAtUrlEvent)
 		return;
 
-	VuoUrl folderUrl = VuoUrl_normalize(createAtUrl, false);
+	VuoUrl folderUrl = VuoUrl_normalize(createAtUrl, VuoUrlNormalize_default);
 	VuoRetain(folderUrl);
 	VuoText folderPath = VuoUrl_getPosixPath(folderUrl);
 	VuoRetain(folderPath);

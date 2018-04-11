@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoImageRenderer.h"
 #include <OpenGL/CGLMacro.h>
 #include <time.h>
@@ -20,7 +19,6 @@ VuoModuleMetadata({
 						 "Blinn", "Phong", "Lambert", "tone", "chroma" ],
 					 "version" : "2.1.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node" : {
 						  "exampleCompositions" : [ "AnimateConcentricCircles.vuo" ]
@@ -65,8 +63,6 @@ void main()													\
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 
 	VuoPoint2d mousePosition;
 	VuoPoint2d mouseClickedPostion;
@@ -81,9 +77,6 @@ struct nodeInstanceData * nodeInstanceInit(
 	VuoRegister(instance, free);
 
 	// Get GL context, ImageRenderer
-	instance->glContext = VuoGlContext_use();
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Shadertoy Fragment Shader");
 	VuoRetain(instance->shader);
@@ -266,12 +259,10 @@ void nodeInstanceEvent
 
 	VuoShader_setUniform_VuoPoint4d((*instance)->shader, "iDate", (VuoPoint4d) { tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, (tm.tm_hour * 60 * 60) + tm.tm_sec } );
 
-	*shaderImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, colorDepth);
+	*shaderImage = VuoImageRenderer_render((*instance)->shader, width, height, colorDepth);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

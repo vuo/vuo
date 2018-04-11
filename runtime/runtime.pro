@@ -93,20 +93,24 @@ runtime_cxx.commands = \
 		$$VUO_VERSION_DEFINES \
 		-I$$ROOT/base \
 		-c ${QMAKE_FILE_IN} \
-		-o ${QMAKE_FILE_OUT}
+		-o ${QMAKE_FILE_OUT} \
+	&& $$QMAKE_CC -Oz -c -o ${QMAKE_FILE_IN_BASE}.o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_cxx
 
 runtime_loader.input = RUNTIME_LOADER_SOURCES
 runtime_loader.output = ${QMAKE_FILE_IN_BASE}
-runtime_loader.depends = ${QMAKE_PCH_OUTPUT} $$ROOT/base/VuoTelemetry.o $$VUO_INFO_PLIST_GENERATED VuoEventLoop.o libVuoLog.bc
+runtime_loader.depends = ${QMAKE_PCH_OUTPUT} $$ROOT/base/VuoTelemetry.o $$VUO_INFO_PLIST_GENERATED VuoEventLoop.o
 runtime_loader.commands = \
 	$$QMAKE_CXX \
 		-Xclang -include-pch -Xclang pch/runtime/c++.pch \
 		$(CXXFLAGS) \	# Use $() here to get the variable at make-time because QMAKE_CXXFLAGS doesn't have platform-specific flags yet at this point in qmake-time.
 		-I$$ROOT/base \
+		-c ${QMAKE_FILE_IN} \
+		-o ${QMAKE_FILE_IN_BASE}.o \
+	&& $$QMAKE_CXX \
 		$$ROOT/base/VuoTelemetry.o \
 		VuoEventLoop.o \
-		libVuoLog.bc \
+		VuoLog.o \
 		$${ZMQ_ROOT}/lib/libzmq.a \
 		-lobjc \
 		-framework AppKit \
@@ -115,6 +119,6 @@ runtime_loader.commands = \
 		-Wl,-exported_symbol,_VuoApp_mainThread \
 		-Wl,-exported_symbol,_VuoApp_dylibPath \
 		$$QMAKE_LFLAGS \
-		${QMAKE_FILE_IN} \
+		${QMAKE_FILE_IN_BASE}.o \
 		-o ${QMAKE_FILE_OUT}
 QMAKE_EXTRA_COMPILERS += runtime_loader

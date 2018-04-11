@@ -157,10 +157,13 @@ private:
 	Function * generateTriggerWorkerFunction(VuoCompilerTriggerPort *trigger);
 	void generateAndScheduleChainWorkerFunctions(BasicBlock *schedulerBlock, Value *compositionStateValueInScheduler, Value *contextValueInScheduler, const vector<VuoCompilerChain *> &chainsToSchedule, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
 												const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
-												set<VuoCompilerChain *> &chainsScheduled, set<VuoCompilerNode *> &nodesScheduled);
+												set<VuoCompilerChain *> &chainsScheduled);
 	void generateAndScheduleChainWorkerFunction(BasicBlock *schedulerBlock, Value *compositionStateValueInScheduler, Value *contextValueInScheduler, VuoCompilerChain *chain, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
 												const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
-												set<VuoCompilerChain *> &chainsScheduled, set<VuoCompilerNode *> &nodesScheduled);
+												set<VuoCompilerChain *> &chainsScheduled);
+	void generateChainExecution(Function *function, BasicBlock *&block, Value *compositionStateValue, Value *contextValue, Value *eventIdValue, VuoCompilerChain *chain, VuoCompilerTriggerPort *trigger, const vector<VuoCompilerChain *> &allChains,
+								const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream, const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyUpstream,
+								set<VuoCompilerChain *> &chainsScheduled);
 	Function * generateNodeExecutionFunction(Module *module, VuoCompilerNode *node);
 	Function * generateNodeTransmissionFunction(Module *module, VuoCompilerNode *node);
 

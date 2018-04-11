@@ -133,6 +133,20 @@ typedef struct _VuoShader
 
 	bool isTransparent;	///< Is this shader meant to be a transparent overlay?  If true, @ref VuoSceneRenderer disables backface culling and depth buffer writing while rendering with this shader.  In the fragment shader, use `gl_FrontFacing` to discard backfaces or treat them differently, if desired.
 
+	/**
+	 * When enabled, the fragment shader's output alpha value is converted
+	 * into a percentage of sub-pixel samples to cover with the shader's output color.
+	 *
+	 * Since this also affects the depth buffer, it provides
+	 * a cheap form of order-independent transparency
+	 * ("cheap" because it results in only a few discrete levels of transparency:
+	 * 3 levels for 2x multisampling, 5 for 4x, and 9 for 8x,
+	 * and results in "screen door" dithering artifacts).
+	 *
+	 * This is only effective when multisampling is enabled (@see VuoSceneRenderer_renderToImage).
+	 */
+	bool useAlphaAsCoverage;
+
 	VuoImage colorBuffer;	///< The renderbuffer color texture captured for this shader (if any).
 	VuoImage depthBuffer;	///< The renderbuffer depth texture captured for this shader (if any).
 
@@ -169,7 +183,7 @@ VuoShader VuoShader_makeLitImageShader(VuoImage image, VuoReal alpha, VuoColor h
 VuoShader VuoShader_makeLitImageDetailsShader(VuoImage image, VuoReal alpha, VuoImage specularImage, VuoImage normalImage);
 
 VuoShader VuoShader_makeLinearGradientShader(void);
-void VuoShader_setLinearGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal noiseAmount);
+void VuoShader_setLinearGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoReal aspect, VuoReal noiseAmount);
 
 VuoShader VuoShader_makeRadialGradientShader(void);
 void VuoShader_setRadialGradientShaderValues(VuoShader shader, VuoList_VuoColor colors, VuoPoint2d center, VuoReal radius, VuoReal width, VuoReal height, VuoReal noiseAmount);
@@ -185,9 +199,10 @@ bool VuoShader_isTransformFeedback(VuoShader shader);
 unsigned int VuoShader_getExpectedOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode);
 bool VuoShader_getMayChangeOutputPrimitiveCount(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode);
 bool VuoShader_getAttributeLocations(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, int *positionLocation, int *normalLocation, int *tangentLocation, int *bitangentLocation, int *textureCoordinateLocation);
+
 bool VuoShader_activate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext, VuoGlProgram *outputProgram);
 void VuoShader_deactivate(VuoShader shader, const VuoMesh_ElementAssemblyMethod inputPrimitiveMode, VuoGlContext glContext);
-void VuoShader_cleanupContext(VuoGlContext glContext);
+void VuoShader_resetContext(VuoGlContext glContext);
 
 void VuoShader_setUniform_VuoImage  (VuoShader shader, const char *uniformIdentifier, const VuoImage   image);
 void VuoShader_setUniform_VuoBoolean(VuoShader shader, const char *uniformIdentifier, const VuoBoolean boolean);

@@ -175,20 +175,20 @@ private slots:
 		getLinesFromCommand(command, linesFromCommand);
 
 		bool isFirst = true;
-		foreach (string line, linesFromCommand)
+		foreach (string outputLine, linesFromCommand)
 		{
 			if (isFirst)
 			{
 				string expectedLine = VuoStringUtilities::endsWith(binaryPath, ".a") ?
 										  "Archive : " + binaryPath + "\n" :
 										  binaryPath + ":\n";
-				QCOMPARE(QString(line.c_str()), QString(expectedLine.c_str()));
+				QCOMPARE(QString(outputLine.c_str()), QString(expectedLine.c_str()));
 				isFirst = false;
 				continue;
 			}
 
 			foreach (string path, blacklistedLibraryPaths)
-				QVERIFY2(line.find(path) == string::npos, (binaryPath + " : " + line).c_str());
+				QVERIFY2(outputLine.find(path) == string::npos, (binaryPath + " : " + outputLine).c_str());
 		}
 		QVERIFY(! isFirst);
 	}
@@ -334,21 +334,21 @@ private slots:
 		vector<string> linesFromCommand;
 		getLinesFromCommand(command, linesFromCommand);
 
-		foreach (string line, linesFromCommand)
+		foreach (string outputLine, linesFromCommand)
 		{
 			// Ignore unknown load commands that are known to be harmless.
 			bool isWhitelisted = false;
 			for (map<string, set<string> >::iterator i = whitelistedLoadCommandsForPath.begin(); i != whitelistedLoadCommandsForPath.end(); ++i)
 				for (set<string>::iterator j = i->second.begin(); j != i->second.end(); ++j)
-					if (binaryPath.find(i->first) != string::npos && line.find(*j) != string::npos)
+					if (binaryPath.find(i->first) != string::npos && outputLine.find(*j) != string::npos)
 						isWhitelisted = true;
 			if (isWhitelisted)
 				continue;
 
-			QVERIFY2(line.find("Unknown") == string::npos, (binaryPath + " : " + line).c_str());
+			QVERIFY2(outputLine.find("Unknown") == string::npos, (binaryPath + " : " + outputLine).c_str());
 
 			foreach (string loadCommand, blacklistedLoadCommands)
-				QVERIFY2(line.find(loadCommand) == string::npos, (binaryPath + " : " + line).c_str());
+				QVERIFY2(outputLine.find(loadCommand) == string::npos, (binaryPath + " : " + outputLine).c_str());
 		}
 	}
 */

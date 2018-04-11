@@ -22,6 +22,7 @@ enum VuoControlRequest
 	 * Includes data message-parts:
 	 *		@arg @c int timeoutInSeconds;
 	 *		@arg @c bool isBeingReplaced;
+	 *		@arg @c bool isLastEverInProcess;
 	 */
 	VuoControlRequestCompositionStop,
 

@@ -26,10 +26,12 @@ LIBS += \
 	$$ROOT/node/vuo.midi/VuoMidiOutputDevice.o \
 	$$ROOT/node/vuo.midi/VuoMidiPitchBend.o \
 	$$ROOT/type/VuoInteger.o \
+	$$ROOT/type/VuoReal.o \
 	$$ROOT/type/VuoText.o \
 	$$ROOT/type/list/VuoList_VuoInteger.o \
 	$$ROOT/type/list/VuoList_VuoMidiInputDevice.o \
 	$$ROOT/type/list/VuoList_VuoMidiOutputDevice.o \
+	$$ROOT/type/list/VuoList_VuoReal.o \
 	-L$$RTMIDI_ROOT/lib -lRtMidi \
 	-framework CoreAudio \
 	-framework CoreMIDI

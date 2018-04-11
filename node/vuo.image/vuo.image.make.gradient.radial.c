@@ -17,6 +17,7 @@ VuoModuleMetadata({
 									 "circle", "oval", "ellipse", "rounded" ],
 					  "version" : "1.0.2",
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "MoveRadialGradient.vuo" ]
 					  }
 				 });
@@ -24,19 +25,12 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_makeRadialGradientShader();
 	VuoRetain(instance->shader);
@@ -59,12 +53,10 @@ void nodeInstanceEvent
 	VuoShader_setRadialGradientShaderValues((*instance)->shader, colors, center, radius, width, height, noiseAmount);
 
 	// Render.
-	*image = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, width, height, VuoImageColorDepth_8);
+	*image = VuoImageRenderer_render((*instance)->shader, width, height, VuoImageColorDepth_8);
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

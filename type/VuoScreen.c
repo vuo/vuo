@@ -44,7 +44,7 @@ VuoModuleMetadata({
  */
 VuoScreen VuoScreen_makeFromJson(json_object *js)
 {
-	VuoScreen value = {VuoScreenType_Active,-1,"",false,{0,0},0,0,0,0};
+	VuoScreen value = {VuoScreenType_Active,-1,-1,"",false,{0,0},0,0,0,0};
 	json_object *o = NULL;
 
 	if (json_object_object_get_ex(js, "type", &o))

@@ -6,6 +6,7 @@ EXAMPLE_SOURCES += \
 	PlayMovieWithSound.vuo \
 	RecordMovie.vuo \
 	ShowInstantReplay.vuo \
-	SkimMovie.vuo
+	SkimMovie.vuo \
+	StepMovie.vuo
 
 include(../../../example.pri)

@@ -8,35 +8,24 @@
  */
 
 #include "node.h"
+#include "VuoSort.h"
 
 VuoModuleMetadata({
 					  "title" : "Sort Points by Z Distance",
 					  "keywords" : [ "organize", "order", "nearest" ],
-					  "version" : "1.0.0",
+					  "version" : "1.0.1",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
 							  "compatibleTypes" : [ "VuoPoint3d", "VuoPoint4d" ]
 						  }
 					  },
+					  "dependencies" : [
+						  "VuoSort"
+					  ],
 					  "node": {
 						  "exampleCompositions" : [ ]
 					  }
 				  });
-
-typedef struct
-{
-	int index;
-	float value;
-} sortable_pointValue;
-
-
-static int compare (const void * a, const void * b)
-{
-	sortable_pointValue *x = (sortable_pointValue*)a;
-	sortable_pointValue *y = (sortable_pointValue*)b;
-
-	return (x->value - y->value);
-}
 
 void nodeEvent
 (
@@ -45,17 +34,17 @@ void nodeEvent
 		VuoOutputData(VuoList_VuoGenericType1) sorted
 )
 {
-	*sorted = VuoListCreate_VuoGenericType1();
+	VuoGenericType1 *points = VuoListGetData_VuoGenericType1(list);
+	unsigned long count = VuoListGetCount_VuoGenericType1(list);
 
-	int count = VuoListGetCount_VuoGenericType1(list);
+	VuoIndexedFloat *distances = (VuoIndexedFloat *)malloc(count * sizeof(VuoIndexedFloat));
+	for (unsigned long i = 0; i < count; ++i)
+		distances[i] = (VuoIndexedFloat){i, fabs(points[i].z - point.z)};
 
-	sortable_pointValue pointValues[count];
+	*sorted = VuoListCopy_VuoGenericType1(list);
+	VuoGenericType1 *sortedPoints = VuoListGetData_VuoGenericType1(*sorted);
 
-	for(int i = 0; i < count; i++)
-		pointValues[i] = (sortable_pointValue){i, fabs(VuoListGetValue_VuoGenericType1(list, i+1).z - point.z)};
+	VuoSort_sortArrayByOtherArray(sortedPoints, count, sizeof(VuoGenericType1), distances);
 
-	qsort (pointValues, count, sizeof(sortable_pointValue), compare);
-
-	for(int i = 0; i < count; i++)
-		VuoListAppendValue_VuoGenericType1(*sorted, VuoListGetValue_VuoGenericType1(list, pointValues[i].index+1) );
+	free(distances);
 }

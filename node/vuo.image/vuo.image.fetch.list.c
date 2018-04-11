@@ -22,6 +22,7 @@ VuoModuleMetadata({
 						 "bmp",
 						 "OpenEXR", "exr", "ilm",
 						 "hdr", "high", "dynamic", "range",
+						 "pct",
 						 "psd", "Photoshop",
 						 "raw", "cr2", "dng", "dcr", "nef", "raf", "mos", "kdc",
 						 "tiff",

@@ -27,7 +27,9 @@ void VuoGlContext_setGlobalRootContext(void *rootContext);
 
 VuoGlContext VuoGlContext_use(void);
 
-void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsigned int line, const char *func);
+void VuoGlContext_perform(void (^function)(CGLContextObj cgl_ctx));
+
+void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsigned int linenumber, const char *func);
 /**
  * Throws the specified @c VuoGlContext back in the pool.
  *
@@ -35,9 +37,9 @@ void VuoGlContext_disuseF(VuoGlContext glContext, const char *file, const unsign
  */
 #define VuoGlContext_disuse(glContext) VuoGlContext_disuseF(glContext, __FILE__, __LINE__, __func__)
 
-void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Core);
+void *VuoGlContext_makePlatformPixelFormat(bool hasDepthBuffer, bool openGL32Core, GLint displayMask);
 
-void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int line, const char *func);
+void _VGL(CGLContextObj cgl_ctx, const char *file, const unsigned int linenumber, const char *func);
 
 /**
  * If there's an OpenGL error, prints info about it.  Useful for debugging.

@@ -112,7 +112,6 @@ private slots:
 		}
 
 		VuoShader_deactivate(s, VuoMesh_IndividualTriangles, glContext);
-		VuoShader_cleanupContext(glContext);
 		VuoRelease(s);
 		VuoGlContext_disuse(glContext);
 	}

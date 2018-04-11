@@ -192,6 +192,7 @@ static VuoScreen VuoScreen_makeFromNSScreen(NSScreen *screen)
 	return (VuoScreen){
 		VuoScreenType_MatchId,
 		[screen deviceId],
+		CGDisplayIDToOpenGLDisplayMask([[[screen deviceDescription] objectForKey:@"NSScreenNumber"] longValue]),
 		VuoText_make([[screen deviceName] UTF8String]),
 		true,
 		VuoPoint2d_make(frame.origin.x, frame.origin.y),

@@ -11,7 +11,7 @@
 
 VuoModuleMetadata({
 					  "title" : "Make Points along Line",
-					  "keywords" : [ "math", "number", "shape", "ease", "easing", "linear", "quadratic", "cubic", "circular", "exponential", "logarithmic", "interpolate" ],
+					  "keywords" : [ "math", "number", "shape", "ease", "easing", "linear", "quadratic", "cubic", "circular", "exponential", "logarithmic", "interpolate", "list" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {

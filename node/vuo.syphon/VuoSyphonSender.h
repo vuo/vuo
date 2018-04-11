@@ -28,7 +28,7 @@
 
 @property(retain) SyphonServer *syphonServer;  ///< The Syphon server that publishes frames.
 
-- (void) initServerWithName:(NSString*)name context:(VuoGlContext*)ctx;
+- (void) initServerWithName:(NSString *)name;
 - (void) publishFrame:(VuoImage)image;
 - (void) setName:(NSString*)newName;
 - (void) stop;

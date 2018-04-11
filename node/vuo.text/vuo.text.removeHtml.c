@@ -18,7 +18,7 @@ VuoModuleMetadata({
 					  ],
 					  "version" : "1.0.0",
 					  "node": {
-						  "exampleCompositions" : [ ]
+						  "exampleCompositions" : [ "vuo-example://vuo.rss/DisplayRssItems.vuo" ]
 					  },
 					  "dependencies" : [
 						  "VuoTextHtml"

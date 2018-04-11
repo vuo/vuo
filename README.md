@@ -173,7 +173,7 @@ If you're running any version of macOS:
 
 Install libffi 3.0.11:
 
-    (cd /usr/local && git checkout d1319df Library/Formula/libffi.rb)
+    (cd /usr/local && git init && git checkout d1319df Library/Formula/libffi.rb)
     brew install libffi
 
 ### zlib
@@ -266,8 +266,8 @@ If you're running any version of macOS:
     curl -OL http://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-4.1.2.tar.gz
     tar zxf rtaudio-4.1.2.tar.gz
     cd rtaudio-4.1.2
-    curl -OL https://b33p.net/sites/default/files/rtaudio-modeluid.patch
-    patch < rtaudio-modeluid.patch
+    curl -OL https://b33p.net/sites/default/files/rtaudio-modeluid_0.patch
+    patch < rtaudio-modeluid_0.patch
     CXXFLAGS="-Oz -mmacosx-version-min=10.8 -DUNICODE" ./configure --prefix=/usr/local/Cellar/rtaudio/4.1.2 --disable-shared
     make -j9
     make install
@@ -309,6 +309,10 @@ If you're running any version of macOS:
     tar zxf assimp-3.2.0.tar.gz
     mv assimp-3.2 assimp-3.2.0
     cd assimp-3.2.0
+    # https://b33p.net/kosada/node/13345
+    # https://github.com/assimp/assimp/pull/1264
+    curl -OL https://patch-diff.githubusercontent.com/raw/assimp/assimp/pull/1264.patch
+    patch -p1 < 1264.patch
 
 If you're running macOS 10.9 or 10.10 or 10.11:
 
@@ -433,7 +437,52 @@ If you're running any version of macOS:
     curl -OL ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.2.tar.gz
     tar zxf libxml2-sources-2.9.2.tar.gz
     cd libxml2-2.9.2
-    CFLAGS="-Oz -mmacosx-version-min=10.8" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-output --without-pattern --without-push --without-reader --without-regexps --without-schemas --without-schematron --without-tree --without-valid --without-writer --without-xinclude --without-modules --without-lzma
+    CFLAGS="-Oz -mmacosx-version-min=10.8" ./configure --prefix=/usr/local/Cellar/libxml2/2.9.2 --with-xpath --with-sax1 --with-threads --disable-shared --enable-ipv6=no --without-debug --without-ftp --without-legacy --without-c14n --without-iconv --without-iso8859x --without-pattern --without-push --without-python --without-reader --without-regexps --without-schemas --without-schematron --without-valid --without-writer --without-xinclude --without-modules --without-lzma
+    make -j9
+    make install
+
+### libcsv
+
+    cd /tmp
+    curl -OL https://sourceforge.net/projects/libcsv/files/libcsv/libcsv-3.0.3/libcsv-3.0.3.tar.gz
+    tar zxf libcsv-3.0.3.tar.gz
+    cd libcsv-3.0.3
+    CFLAGS="-Oz -mmacosx-version-min=10.8" ./configure --prefix=/usr/local/Cellar/libcsv/3.0.3 --disable-static
+    make -j9
+    make install
+
+### gettext
+
+(Required for glib, below.)
+
+    cd /tmp
+    curl -OL http://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.1.tar.xz
+    brew install xz
+    tar xf gettext-0.19.8.1.tar.xz
+    cd gettext-0.19.8.1
+    CFLAGS="-Oz -mmacosx-version-min=10.8" ./configure --prefix=/usr/local/Cellar/gettext/0.19.8.1 --disable-java --disable-static --enable-shared --disable-c++ --disable-curses
+    make -j9
+    make install
+
+### glib
+
+(Required for liblqr, below.)
+
+    cd /tmp
+    curl -OL https://download.gnome.org/core/3.23/3.23.4/sources/glib-2.51.1.tar.xz
+    tar xf glib-2.51.1.tar.xz
+    cd glib-2.51.1
+    PATH="/usr/local/Cellar/gettext/0.19.8.1/bin:$PATH" CFLAGS="-Oz -mmacosx-version-min=10.8" CPPFLAGS="-I/usr/local/Cellar/gettext/0.19.8.1/include" LIBFFI_CFLAGS="-I/usr/local/Cellar/libffi/3.0.11/lib/libffi-3.0.11/include" LIBFFI_LIBS="/usr/local/Cellar/libffi/3.0.11/lib/libffi.a" LDFLAGS="/usr/local/Cellar/gettext/0.19.8.1/lib/libintl.dylib" ./configure --prefix=/usr/local/Cellar/glib/2.51.1 --without-pcre
+    make -j9
+    make install
+
+### liblqr
+
+    cd /tmp
+    curl -OL https://github.com/carlobaldassi/liblqr/archive/v0.4.2.tar.gz
+    tar zxf v0.4.2.tar.gz
+    cd liblqr-0.4.2
+    CFLAGS="-Oz -mmacosx-version-min=10.8 -I/usr/local/Cellar/glib/2.51.1/include/glib-2.0 -I/usr/local/Cellar/glib/2.51.1/lib/glib-2.0/include" GLIB_CFLAGS="-I/usr/local/Cellar/glib/2.51.1/include/glib-2.0" GLIB_LIBS="/usr/local/Cellar/glib/2.51.1/lib/libglib-2.0.dylib" ./configure --prefix=/usr/local/Cellar/liblqr/0.4.2
     make -j9
     make install
 
@@ -453,6 +502,17 @@ Create a symbolic link to ld64 133.3 in the same directory as Clang (to force Cl
     cd openssl-1.0.1g
     ./Configure --prefix=/usr/local/Cellar/openssl/1.0.1g --openssldir=/usr/local/etc/openssl no-zlib no-shared no-hw no-asm darwin64-x86_64-cc
     make CFLAG="-O0"
+    make install
+
+### WJElement (only needed for TestModules)
+
+    curl -OL https://github.com/netmail-open/wjelement/archive/v1.2.tar.gz
+    tar zxf v1.2.tar.gz
+    cd wjelement-1.2
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX='/usr/local/Cellar/wjelement/1.2'
+    make -j9
     make install
 
 
@@ -581,7 +641,7 @@ Set up the Vuo project.
             - Within the "Configure Project" page that re-appears:
                -  Check the "Desktop" checkbox to select it as the kit
       - Click the Configure Project button in the bottom-right corner
-      - Select the Projects tab in the grey bar on the left
+      - Select the Projects tab in the gray bar on the left
          - Select the Build & Run tab on top
             - Select the Build tab just beneath that
             - Select the "Debug" and "Release" build configurations in turn, and for each one: 
@@ -598,7 +658,7 @@ Set up the Vuo project.
                - Under the "switch" tab, check the "case or default" checkbox, and leave the rest as-is
                - Under the Alignment tab, check the "Align after assignments" checkbox, and leave the rest as-is
                - Click OK
-      - Click the Build button (the hammer icon near the bottom of the grey bar on the left)
+      - Click the Build button (the hammer icon near the bottom of the gray bar on the left)
 
 
 ## Build Vuo from the command line

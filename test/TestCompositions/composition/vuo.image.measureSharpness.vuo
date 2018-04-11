@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+MakeCheckerboardImage [type="vuo.image.make.checkerboard2" version="2.0.0" label="Make Checkerboard Image|<refresh>refresh\l|<upperLeftColor>upperLeftColor\l|<upperRightColor>upperRightColor\l|<squareSize>squareSize\l|<sharpness>sharpness\l|<angle>angle\l|<coverage>coverage\l|<center>center\l|<width>width\l|<height>height\l|<image>image\r" pos="30,-75" _squareSize="0.012500000000000001" _sharpness="1" _angle="0" _center="{\"x\":0,\"y\":0}" _width="640" _height="480"];
+MeasureSharpness [type="vuo.image.measureSharpness" version="1.0.0" label="Measure Sharpness|<refresh>refresh\l|<image>image\l|<contrastType>contrastType\l|<maximumSharpness>maximumSharpness\r|<averageSharpness>averageSharpness\r|<minimumSharpness>minimumSharpness\r" pos="405,-75" _contrastType="\"rec709\""];
+ResizeImage [type="vuo.image.resize" version="1.1.2" label="Resize Image|<refresh>refresh\l|<image>image\l|<sizingMode>sizingMode\l|<width>width\l|<height>height\l|<resizedImage>resizedImage\r" pos="240,-75" _sizingMode="\"fit\"" _width="160" _height="120"];
+SnapValue2 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="705,-75" _spacing="0.02" _center="0"];
+SnapValue3 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="705,15" _spacing="0.02" _center="0"];
+SnapValue4 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="705,105" _spacing="0.02" _center="0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<UpperLeftColor>UpperLeftColor\r|<UpperRightColor>UpperRightColor\r|<Coverage>Coverage\r" _UpperLeftColor_type="VuoColor" _UpperLeftColor="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _UpperRightColor_type="VuoColor" _UpperRightColor="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _Coverage_type="VuoPoint2d" _Coverage_suggestedMin="{\"x\":0.0,\"y\":0.0}" _Coverage_suggestedMax="{\"x\":1.0,\"y\":1.0}" _Coverage_suggestedStep="{\"x\":0.1,\"y\":0.1}" _Coverage="{\"x\":0.5,\"y\":0.5}"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<MaximumSharpness>MaximumSharpness\l|<AverageSharpness>AverageSharpness\l|<MinimumSharpness>MinimumSharpness\l" _MaximumSharpness_type="VuoReal" _AverageSharpness_type="VuoReal" _MinimumSharpness_type="VuoReal"];
+
+MakeCheckerboardImage:image -> ResizeImage:image;
+MeasureSharpness:averageSharpness -> SnapValue3:value;
+MeasureSharpness:maximumSharpness -> SnapValue2:value;
+MeasureSharpness:minimumSharpness -> SnapValue4:value;
+PublishedInputs:Coverage -> MakeCheckerboardImage:coverage;
+PublishedInputs:UpperLeftColor -> MakeCheckerboardImage:upperLeftColor;
+PublishedInputs:UpperRightColor -> MakeCheckerboardImage:upperRightColor;
+ResizeImage:resizedImage -> MeasureSharpness:image;
+SnapValue2:snappedValue -> PublishedOutputs:MaximumSharpness;
+SnapValue3:snappedValue -> PublishedOutputs:AverageSharpness;
+SnapValue4:snappedValue -> PublishedOutputs:MinimumSharpness;
+}

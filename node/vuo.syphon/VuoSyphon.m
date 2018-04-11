@@ -21,7 +21,6 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						"VuoSyphonServerDescription",
 						"VuoList_VuoSyphonServerDescription",
-						"VuoGlContext",
 						"VuoImageRenderer",
 						"VuoWindow",
 						"VuoSyphonListener",
@@ -136,17 +135,16 @@ void VuoSyphonServer_free(void *server);
  * Retain the returned @ref VuoSyphonServer, then later release it to stop serving.
  *
  * @param serverName The server name.
- * @param glContext The GL context to use when publishing frames.
  * @return The Syphon server.
  */
-VuoSyphonServer VuoSyphonServer_make(const char *serverName, VuoGlContext *glContext)
+VuoSyphonServer VuoSyphonServer_make(const char *serverName)
 {
 	if (!serverName)
 		return NULL;
 
 	VuoApp_init();
 	VuoSyphonSender *server = [[VuoSyphonSender alloc] init];
-	[server initServerWithName:[NSString stringWithUTF8String:serverName] context:glContext];
+	[server initServerWithName:[NSString stringWithUTF8String:serverName]];
 	VuoRegister(server, VuoSyphonServer_free);
 	return (VuoSyphonServer)server;
 }

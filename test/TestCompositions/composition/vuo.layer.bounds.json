@@ -1,0 +1,99 @@
+/**
+ * @file
+ * Expected outputs for the vuo.layer.bounds.rendered node.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ */
+
+{
+	"portConfiguration":
+	[
+		{
+			"firingPort":"inputPosition",
+			"inputPortValues": {
+				"inputPosition"	: { "x":0, "y":0 },
+				"inputAnchor"	: { "horizontalAlignment":"center", "verticalAlignment":"center" },
+				"inputWidth"	: 1,
+				"inputRotation"	: 0,
+				"inputHeight"	: 1
+			},
+			"outputPortValues": {
+				"outputCenter"	: { "x":0, "y":0 },
+				"outputWidth"	: 1,
+				"outputHeight"	: 1,
+				"outputPixelsWide" : 512,
+				"outputPixelsHigh" : 512
+			}
+		},
+		{
+			"firingPort":"inputPosition",
+			"inputPortValues": {
+				"inputPosition"	: { "x":0.5, "y":0.5 },
+				"inputAnchor"	: { "horizontalAlignment":"center", "verticalAlignment":"center" },
+				"inputWidth"	: 1,
+				"inputRotation"	: 0,
+				"inputHeight"	: 1
+			},
+			"outputPortValues": {
+				"outputCenter"	: { "x":0.5, "y":0.5 },
+				"outputWidth"	: 1,
+				"outputHeight"	: 1,
+				"outputPixelsWide" : 512,
+				"outputPixelsHigh" : 512
+			}
+		},
+		{
+			"firingPort":"inputPosition",
+			"inputPortValues": {
+				"inputPosition"	: { "x":0.5, "y":0.5 },
+				"inputAnchor"	: { "horizontalAlignment":"center", "verticalAlignment":"center" },
+				"inputWidth"	: 2,
+				"inputRotation"	: 0,
+				"inputHeight"	: 0.5
+			},
+			"outputPortValues": {
+				"outputCenter"	: { "x":0.5, "y":0.5 },
+				"outputWidth"	: 2,
+				"outputHeight"	: 0.5,
+				"outputPixelsWide" : 1024,
+				"outputPixelsHigh" : 256
+			}
+		},
+		{
+			"firingPort":"inputPosition",
+			"inputPortValues": {
+				"inputPosition"	: { "x":0, "y":0 },
+				"inputAnchor"	: { "horizontalAlignment":"left", "verticalAlignment":"center" },
+				"inputWidth"	: 1,
+				"inputRotation"	: 0,
+				"inputHeight"	: 1
+			},
+			"outputPortValues": {
+				"outputCenter"	: { "x":0.5, "y":0 },
+				"outputWidth"	: 1,
+				"outputHeight"	: 1,
+				"outputPixelsWide" : 512,
+				"outputPixelsHigh" : 512
+			}
+		},
+		{
+			"firingPort":"inputPosition",
+			"inputPortValues": {
+				"inputPosition"	: { "x":0, "y":0 },
+				"inputAnchor"	: { "horizontalAlignment":"left", "verticalAlignment":"bottom" },
+				"inputWidth"	: 1,
+				"inputRotation"	: 270,
+				"inputHeight"	: 1
+			},
+			"outputPortValues": {
+				"outputCenter"	: { "x":0.5, "y":-0.5 },
+				"outputWidth"	: 1,
+				"outputHeight"	: 1,
+				"outputPixelsWide" : 512,
+				"outputPixelsHigh" : 512
+			}
+		}
+	]
+}

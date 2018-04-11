@@ -79,13 +79,7 @@ static inline VuoImage VuoImage_watermark(VuoImage image)
 										   (double)textImage->pixelsHigh/image->pixelsHigh);
 		VuoShader_setUniform_VuoPoint2d(shader, "scale", scale);
 
-		VuoGlContext glContext = VuoGlContext_use();
-		VuoImageRenderer imageRenderer = VuoImageRenderer_make(glContext);
-		VuoRetain(imageRenderer);
-
-		watermarkedImage = VuoImageRenderer_draw(imageRenderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
-		VuoGlContext_disuse(glContext);
-		VuoRelease(imageRenderer);
+		watermarkedImage = VuoImageRenderer_render(shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 		VuoRelease(shader);
 	}
 

@@ -32,8 +32,6 @@ typedef struct
 {
 	VuoShader shader;
 	VuoShader discShader;
-	VuoGlContext context;
-	VuoImageRenderer imageRenderer;
 } VuoImageBlur_internal;
 
 /**
@@ -44,8 +42,6 @@ void VuoImageBlur_free(void *blur)
 	VuoImageBlur_internal *bi = (VuoImageBlur_internal *)blur;
 	VuoRelease(bi->shader);
 	VuoRelease(bi->discShader);
-	VuoRelease(bi->imageRenderer);
-	VuoGlContext_disuse(bi->context);
 }
 
 /**
@@ -377,11 +373,6 @@ VuoImageBlur VuoImageBlur_make(void)
 	VuoShader_addSource(bi->discShader, VuoMesh_IndividualTriangles, NULL, NULL, discFragmentShader);
 	VuoRetain(bi->discShader);
 
-	bi->context = VuoGlContext_use();
-
-	bi->imageRenderer = VuoImageRenderer_make(bi->context);
-	VuoRetain(bi->imageRenderer);
-
 	return (VuoImageBlur)bi;
 }
 
@@ -420,7 +411,7 @@ VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoImage mask, Vuo
 		VuoShader_setUniform_VuoReal   (bi->discShader, "radius",              radius);
 		VuoShader_setUniform_VuoReal   (bi->discShader, "quality",             VuoReal_clamp(quality, 0, 1));
 
-		VuoImage blurredImage = VuoImageRenderer_draw(bi->imageRenderer, bi->discShader, w, h, VuoImage_getColorDepth(image));
+		VuoImage blurredImage = VuoImageRenderer_render(bi->discShader, w, h, VuoImage_getColorDepth(image));
 		VuoImage_setWrapMode(blurredImage, VuoImage_getWrapMode(image));
 		return blurredImage;
 	}
@@ -440,7 +431,7 @@ VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoImage mask, Vuo
 		VuoShader_setUniform_VuoBoolean(bi->shader, "zoom",                false);
 
 		VuoShader_setUniform_VuoPoint2d(bi->shader, "direction",           (VuoPoint2d){1./image->pixelsWide, 0});
-		VuoImage horizontalPassImage = VuoImageRenderer_draw(bi->imageRenderer, bi->shader, w, h, VuoImage_getColorDepth(image));
+		VuoImage horizontalPassImage = VuoImageRenderer_render(bi->shader, w, h, VuoImage_getColorDepth(image));
 		VuoLocal(horizontalPassImage);
 
 		VuoImageWrapMode wrapMode = VuoImage_getWrapMode(image);
@@ -451,7 +442,7 @@ VuoImage VuoImageBlur_blur(VuoImageBlur blur, VuoImage image, VuoImage mask, Vuo
 
 		VuoShader_setUniform_VuoImage  (bi->shader, "texture",   horizontalPassImage);
 		VuoShader_setUniform_VuoPoint2d(bi->shader, "direction", (VuoPoint2d){0, 1.f/h});
-		VuoImage bothPassesImage = VuoImageRenderer_draw(bi->imageRenderer, bi->shader, w, h, VuoImage_getColorDepth(image));
+		VuoImage bothPassesImage = VuoImageRenderer_render(bi->shader, w, h, VuoImage_getColorDepth(image));
 
 		VuoImage_setWrapMode(bothPassesImage, wrapMode);
 
@@ -510,7 +501,7 @@ VuoImage VuoImageBlur_blurDirectionally(VuoImageBlur blur, VuoImage image, VuoIm
 			cos(angle*M_PI/180) / image->pixelsWide,
 			sin(angle*M_PI/180) / image->pixelsHigh,
 		});
-	VuoImage blurredImage = VuoImageRenderer_draw(bi->imageRenderer, bi->shader, w, h, VuoImage_getColorDepth(image));
+	VuoImage blurredImage = VuoImageRenderer_render(bi->shader, w, h, VuoImage_getColorDepth(image));
 
 	VuoImage_setWrapMode(blurredImage, VuoImage_getWrapMode(image));
 
@@ -557,7 +548,7 @@ VuoImage VuoImageBlur_blurRadially(VuoImageBlur blur, VuoImage image, VuoImage m
 	VuoShader_setUniform_VuoPoint2d(bi->shader, "center",              VuoShader_samplerCoordinatesFromVuoCoordinates(center, image));
 	VuoShader_setUniform_VuoPoint2d(bi->shader, "direction",           (VuoPoint2d){1./image->pixelsWide, 1.f/image->pixelsWide});
 
-	VuoImage blurredImage = VuoImageRenderer_draw(bi->imageRenderer, bi->shader, w, h, VuoImage_getColorDepth(image));
+	VuoImage blurredImage = VuoImageRenderer_render(bi->shader, w, h, VuoImage_getColorDepth(image));
 
 	VuoImage_setWrapMode(blurredImage, VuoImage_getWrapMode(image));
 

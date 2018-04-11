@@ -256,6 +256,81 @@ VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, V
 }
 
 /**
+ * Returns a format string. Some formats depend on @a locale, some don't.
+ */
+static char * VuoTime_stringForFormat(VuoTimeFormat format, locale_t locale)
+{
+	const char *dateFormatString   = nl_langinfo_l(D_FMT,      locale);
+	const char *time12FormatString = nl_langinfo_l(T_FMT_AMPM, locale);
+	const char *time24FormatString = nl_langinfo_l(T_FMT,      locale);
+
+	if (format == VuoTimeFormat_DateTimeShort12)
+		return VuoText_format("%s %s", dateFormatString, time12FormatString);
+	else if (format == VuoTimeFormat_DateTimeShort24)
+		return VuoText_format("%s %s", dateFormatString, time24FormatString);
+	else if (format == VuoTimeFormat_DateTimeMedium12)
+		return VuoText_format("%%b %%e, %%Y %s", time12FormatString);
+	else if (format == VuoTimeFormat_DateTimeMedium24)
+		return VuoText_format("%%b %%e, %%Y %s", time24FormatString);
+	else if (format == VuoTimeFormat_DateTimeLong12)
+		return VuoText_format("%%A, %%B %%e, %%Y %s", time12FormatString);
+	else if (format == VuoTimeFormat_DateTimeLong24)
+		return VuoText_format("%%A, %%B %%e, %%Y %s", time24FormatString);
+	else if (format == VuoTimeFormat_DateTimeSortable)
+		return strdup("%Y-%m-%d %H:%M:%SZ");
+	else if (format == VuoTimeFormat_DateShort)
+		return strdup(dateFormatString);
+	else if (format == VuoTimeFormat_DateMedium)
+		return strdup("%b %e, %Y");
+	else if (format == VuoTimeFormat_DateLong)
+		return strdup("%A, %B %e, %Y");
+	else if (format == VuoTimeFormat_Time12)
+		return strdup(time12FormatString);
+	else if (format == VuoTimeFormat_Time24)
+		return strdup(time24FormatString);
+	else
+		return NULL;
+}
+
+/**
+ * Creates a date-time from a string — trying to parse it with the first of @a formats;
+ * if that fails, trying the second of @a formats; and so on.
+ *
+ * This function only considers a format to have successfully parsed the string if the format
+ * applies to the entire string (not including trailing whitespace).
+ */
+static VuoTime VuoTime_makeFromFormats(const char *str, const char **formats, int numFormats)
+{
+	if (VuoText_isEmpty(str))
+		return NAN;
+
+	for (int i = 0; i < numFormats; ++i)
+	{
+		struct tm tm;
+		// Initialize tm, since strptime adds to (rather than replacing) tm's initial values (!!).
+		// "If time relative to today is desired, initialize the tm structure with today's date before passing it to strptime()."
+		bzero(&tm, sizeof(struct tm));
+
+		char *ret = strptime(str, formats[i], &tm);
+		if (ret)
+		{
+			for ( ; *ret != 0 && isspace(*ret); ++ret) {}
+			if (*ret != 0)
+				continue;
+
+			// If the format has a time and no date, set a year so `mktime` can calculate seconds from the Epoch.
+			if (tm.tm_year == 0)
+				tm.tm_year = 100;
+
+			time_t timeInt = mktime(&tm);
+			return timeInt - VuoUnixTimeOffset;
+		}
+	}
+
+	return NAN;
+}
+
+/**
  * Creates a date-time from an [RFC 822 date-time string](https://www.ietf.org/rfc/rfc0822.txt).
  *
  * @eg{Fri, 16 Oct 2015 06:42:34 -0400}
@@ -265,23 +340,66 @@ VuoTime VuoTime_makeFromRFC822(const char *rfc822)
 	if (VuoText_isEmpty(rfc822))
 		return NAN;
 
-	struct tm tm;
-	// Initialize tm, since strptime adds to (rather than replacing) tm's initial values (!!).
-	// "If time relative to today is desired, initialize the tm structure with today's date before passing it to strptime()."
-	bzero(&tm, sizeof(struct tm));
+	const int numFormats = 2;
+	const char *formats[numFormats] = {
+		"%a, %d %b %Y %T %z",
+		"%a, %d %b %Y %R %Z"  // `Tue, 12 Jan 2016 11:33 EST` (backup format, seen in https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss)
+	};
 
-	char *ret = strptime(rfc822, "%a, %d %b %Y %T %z", &tm);
-	if (!ret)
-	{
-		// Parsing failed; try a backup format seen in https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss
-		// `Tue, 12 Jan 2016 11:33 EST`
-		ret = strptime(rfc822, "%a, %d %b %Y %R %Z", &tm);
-		if (!ret)
-			return NAN;
-	}
+	return VuoTime_makeFromFormats(rfc822, formats, numFormats);
+}
 
-	time_t timeInt = mktime(&tm);
-	return timeInt - VuoUnixTimeOffset;
+/**
+ * In a `strftime`/`strptime` time format, changes 4-digit years to 2 digits.
+ */
+static char *VuoTime_changeTo2DigitYear(char *format)
+{
+	for (int i = 0; format[i] != 0; ++i)
+		if (format[i] == 'Y')
+			format[i] = 'y';
+	return format;
+}
+
+/**
+ * Creates a date-time from a string that may have any format of the `VuoTimeFormat` options,
+ * or of `VuoTimeFormat_DateTimeShort12`, `VuoTimeFormat_DateTimeShort24`, or `VuoTimeFormat_DateShort`
+ * with 2-digit years instead of 4-digit.
+ */
+VuoTime VuoTime_makeFromUnknownFormat(const char *str)
+{
+	CFLocaleRef localeCF = CFLocaleCopyCurrent();
+	VuoText localeID = VuoText_makeFromCFString(CFLocaleGetIdentifier(localeCF));
+	VuoRetain(localeID);
+	CFRelease(localeCF);
+	locale_t locale = newlocale(LC_ALL_MASK, localeID, NULL);
+
+	const int numFormats = 15;
+	char *formats[numFormats] = {
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeSortable, locale),
+		VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale)),
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort12, locale),
+		VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale)),
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeShort24, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeMedium12, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeMedium24, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeLong12, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_DateTimeLong24, locale),
+		VuoTime_changeTo2DigitYear(VuoTime_stringForFormat(VuoTimeFormat_DateShort, locale)),
+		VuoTime_stringForFormat(VuoTimeFormat_DateShort, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_DateMedium, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_DateLong, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_Time12, locale),
+		VuoTime_stringForFormat(VuoTimeFormat_Time24, locale)
+	};
+
+	VuoTime time = VuoTime_makeFromFormats(str, (const char **)formats, numFormats);
+
+	VuoRelease(localeID);
+	freelocale(locale);
+	for (int i = 0; i < numFormats; ++i)
+		free(formats[i]);
+
+	return time;
 }
 
 /**
@@ -517,6 +635,8 @@ VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format)
  */
 VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format, const VuoText localeIdentifier)
 {
+	VuoText output = NULL;
+
 	locale_t locale = newlocale(LC_ALL_MASK, localeIdentifier, NULL);
 	static dispatch_once_t loggedLocale = 0;
 	dispatch_once(&loggedLocale, ^{
@@ -524,37 +644,8 @@ VuoText VuoTime_formatWithLocale(const VuoTime time, const VuoTimeFormat format,
 		VUserLog("    C Locale: %s", querylocale(LC_ALL_MASK, locale));
 	});
 
-	const char *dateFormatString   = nl_langinfo_l(D_FMT,      locale);
-	const char *time12FormatString = nl_langinfo_l(T_FMT_AMPM, locale);
-	const char *time24FormatString = nl_langinfo_l(T_FMT,      locale);
-
-	VuoText output = NULL;
-	char *formatString = NULL;
-	if (format == VuoTimeFormat_DateTimeShort12)
-		formatString = VuoText_format("%s %s", dateFormatString, time12FormatString);
-	else if (format == VuoTimeFormat_DateTimeShort24)
-		formatString = VuoText_format("%s %s", dateFormatString, time24FormatString);
-	else if (format == VuoTimeFormat_DateTimeMedium12)
-		formatString = VuoText_format("%%b %%e, %%Y %s", time12FormatString);
-	else if (format == VuoTimeFormat_DateTimeMedium24)
-		formatString = VuoText_format("%%b %%e, %%Y %s", time24FormatString);
-	else if (format == VuoTimeFormat_DateTimeLong12)
-		formatString = VuoText_format("%%A, %%B %%e, %%Y %s", time12FormatString);
-	else if (format == VuoTimeFormat_DateTimeLong24)
-		formatString = VuoText_format("%%A, %%B %%e, %%Y %s", time24FormatString);
-	else if (format == VuoTimeFormat_DateTimeSortable)
-		formatString = strdup("%Y-%m-%d %H:%M:%SZ");
-	else if (format == VuoTimeFormat_DateShort)
-		formatString = strdup(dateFormatString);
-	else if (format == VuoTimeFormat_DateMedium)
-		formatString = strdup("%b %e, %Y");
-	else if (format == VuoTimeFormat_DateLong)
-		formatString = strdup("%A, %B %e, %Y");
-	else if (format == VuoTimeFormat_Time12)
-		formatString = strdup(time12FormatString);
-	else if (format == VuoTimeFormat_Time24)
-		formatString = strdup(time24FormatString);
-	else
+	char *formatString = VuoTime_stringForFormat(format, locale);
+	if (! formatString)
 		goto done;
 
 	time_t t = time + VuoUnixTimeOffset;

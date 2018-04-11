@@ -8,17 +8,17 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Wireframe",
+					 "title" : "Make Wireframe Shader",
 					 "keywords" : [ "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
-						 "outline", "edges", "lines", "skeletal" ],
-					 "version" : "1.0.0",
+						 "outline", "edges", "lines", "skeletal",
+						 "worldspace", "perspective", "screenspace",
+					 ],
+					 "version" : "1.1.0",
 					 "dependencies" : [
-						 "VuoGlContext"
 					 ],
 					 "node": {
 						 "exampleCompositions" : [ "SpinWireframeSphere.vuo" ]
@@ -31,41 +31,29 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs provided by VuoSceneRenderer
 	uniform mat4 modelviewMatrix;
 	attribute vec4 position;
-//	attribute vec4 textureCoordinate;
-
-	// Outputs to geometry shader
-//	varying vec2 textureCoordinateForGeometry;
 
 	void main()
 	{
 		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
-//		textureCoordinateForGeometry = textureCoordinate.xy;
 	}
 );
 
 static const char *geometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
-	// Inputs from vertex shader
-//	varying in vec2 textureCoordinateForGeometry[3];
-
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
-//	varying out vec2 geometryTextureCoordinate;
 
 	void main()
 	{
 		gl_Position = gl_PositionIn[0];
 		geometryDistanceFromEdge = vec3(1,0,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 
 		gl_Position = gl_PositionIn[1];
 		geometryDistanceFromEdge = vec3(0,1,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[1];
 		EmitVertex();
 
 		gl_Position = gl_PositionIn[2];
 		geometryDistanceFromEdge = vec3(0,0,1);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[2];
 		EmitVertex();
 
 		EndPrimitive();
@@ -77,12 +65,8 @@ static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform float aspectRatio;
 	uniform float primitiveHalfSize;
 
-	// Inputs from vertex shader
-//	varying in vec2 textureCoordinateForGeometry[1];
-
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
-//	varying out vec2 geometryTextureCoordinate;
 
 	void main()
 	{
@@ -90,29 +74,23 @@ static const char *pointGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 		gl_Position               = gl_PositionIn[0]       + vec4(-pointSize.x,  pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(1,0,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + vec4(-pointSize.x, -pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(0,1,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + vec4( pointSize.x, -pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(0,0,1);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		EndPrimitive();
 
 		gl_Position               = gl_PositionIn[0]       + vec4( pointSize.x, -pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(1,0,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + vec4( pointSize.x,  pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(0,1,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + vec4(-pointSize.x,  pointSize.y, 0, 0);
 		geometryDistanceFromEdge  = vec3(0,0,1);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		EndPrimitive();
 	}
@@ -126,12 +104,8 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	uniform vec3 cameraPosition;
 	uniform bool useFisheyeProjection;
 
-	// Inputs from vertex shader
-//	varying in vec2 textureCoordinateForGeometry[2];
-
 	// Outputs to fragment shader
 	varying out vec3 geometryDistanceFromEdge;
-//	varying out vec2 geometryTextureCoordinate;
 
 	void main()
 	{
@@ -149,35 +123,29 @@ static const char *lineGeometryShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 		gl_Position               = gl_PositionIn[1]       - perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(1,0,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[1];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       - perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,1,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[0]       + perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,0,1);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		EndPrimitive();
 
 		gl_Position               = gl_PositionIn[0]       + perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(1,0,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[0];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[1]       + perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,1,0);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[1];
 		EmitVertex();
 		gl_Position               = gl_PositionIn[1]       - perpendicularOffset;
 		geometryDistanceFromEdge  = vec3(0,0,1);
-//		geometryTextureCoordinate = textureCoordinateForGeometry[1];
 		EmitVertex();
 		EndPrimitive();
 	}
 );
 
-static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
+static const char *fragmentShaderSource = VUO_STRINGIFY(
 	// Inputs from ports
 	uniform vec4 frontLineColor;
 	uniform vec4 backLineColor;
@@ -187,7 +155,6 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 	// Inputs from geometry shader
 	varying vec3 geometryDistanceFromEdge;
-//	varying vec2 geometryTextureCoordinate;
 
 	void main()
 	{
@@ -196,19 +163,65 @@ static const char *fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 		// https://b33p.net/kosada/node/11256
 		gl_FragColor = frontLineColor;
 
-//		vec2 filterWidth = fwidth(geometryTextureCoordinate);
-//		float maximumFilterWidth = max(filterWidth.x, filterWidth.y) * 8;
+		vec3 filterWidth = fwidth(geometryDistanceFromEdge) / 2.;
 
-		float minimumDistanceFromEdge = min(geometryDistanceFromEdge.x, geometryDistanceFromEdge.z);
-		if (showThirdEdge)
-			minimumDistanceFromEdge = min(minimumDistanceFromEdge, geometryDistanceFromEdge.y);
+		\n#if SCREENSPACE == 1\n
 
-		if (minimumDistanceFromEdge > width+standoffWidth)
-			discard;
+			// So the width slider has a useful range for both screen-space and model-space.
+			float scaledWidth = width * 20.;
 
-//		float interiorness = smoothstep(width-maximumFilterWidth, width+maximumFilterWidth, minimumDistanceFromEdge);
-//		gl_FragColor = mix(gl_FrontFacing?frontLineColor:backLineColor, vec4(0,0,0,1), interiorness);
-		gl_FragColor = minimumDistanceFromEdge < width ? (gl_FrontFacing?frontLineColor:backLineColor) : vec4(0,0,0,1);
+			float swidth = (width + standoffWidth) * 20.;
+
+			vec3 smoothEdge         = smoothstep(filterWidth * (scaledWidth - 1.), filterWidth * (scaledWidth + 1.), geometryDistanceFromEdge);
+			vec3 smoothStandoffEdge = smoothstep(filterWidth * (swidth      - 1.), filterWidth * (swidth      + 1.), geometryDistanceFromEdge);
+
+			float minimumDistanceFromStandoffEdge = min(smoothStandoffEdge.x, smoothStandoffEdge.z);
+			if (showThirdEdge)
+				minimumDistanceFromStandoffEdge = min(minimumDistanceFromStandoffEdge, smoothStandoffEdge.y);
+			if (minimumDistanceFromStandoffEdge > .999)
+				discard;
+
+			float minimumDistanceFromSmoothEdge = min(smoothEdge.x, smoothEdge.z);
+			if (showThirdEdge)
+				minimumDistanceFromSmoothEdge = min(minimumDistanceFromSmoothEdge, smoothEdge.y);
+
+		\n#else\n // worldspace
+
+			float swidth = width+standoffWidth;
+			vec3 smoothEdge         = smoothstep( width - filterWidth,  width + filterWidth, geometryDistanceFromEdge);
+			vec3 smoothStandoffEdge = smoothstep(swidth - filterWidth, swidth + filterWidth, geometryDistanceFromEdge);
+
+			float minimumDistanceFromStandoffEdge = min(smoothStandoffEdge.x, smoothStandoffEdge.z);
+			if (showThirdEdge)
+				minimumDistanceFromStandoffEdge = min(minimumDistanceFromStandoffEdge, smoothStandoffEdge.y);
+			if (minimumDistanceFromStandoffEdge > .999)
+				discard;
+
+			float minimumDistanceFromSmoothEdge = min(smoothEdge.x, smoothEdge.z);
+			if (showThirdEdge)
+				minimumDistanceFromSmoothEdge = min(minimumDistanceFromSmoothEdge, smoothEdge.y);
+
+		\n#endif\n
+
+		// Branch to avoid antialiasing junk when either width or standoffWidth is entirely hidden.
+		vec4 color = gl_FrontFacing ? frontLineColor : backLineColor;
+		if (standoffWidth > 0.)
+		{
+			if (width > 0.)
+				gl_FragColor = mix(
+								   mix(color, vec4(0.,0.,0.,1.), minimumDistanceFromSmoothEdge),
+								   vec4(0.),
+								   minimumDistanceFromStandoffEdge);
+			else
+				gl_FragColor = mix(vec4(0.,0.,0.,1.), vec4(0.), minimumDistanceFromStandoffEdge);
+		}
+		else
+		{
+			if (width > 0.)
+				gl_FragColor = vec4(color.rgb, mix(color.a, 0., minimumDistanceFromSmoothEdge));
+			else
+				discard;
+		}
 	}
 );
 
@@ -219,18 +232,24 @@ void nodeEvent
 		VuoInputData(VuoReal, {"default":0.2, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.05}) width,
 		VuoInputData(VuoReal, {"default":0.1, "suggestedMin":0.0, "suggestedMax":1.0, "suggestedStep":0.05}) standoffWidth,
 		VuoInputData(VuoBoolean, {"default":true}) showThirdEdge,
+		VuoInputData(VuoBoolean, {"default":false}) uniformWidth,
 		VuoOutputData(VuoShader) shader
 )
 {
 	*shader = VuoShader_make("Wireframe Shader");
+	(*shader)->useAlphaAsCoverage = true;
 
-	VuoShader_addSource                      (*shader, VuoMesh_Points,              vertexShaderSource, pointGeometryShaderSource, fragmentShaderSource);
+	char *fragmentShaderSourceWithPrefix = VuoText_format("#version 120\n#define SCREENSPACE %d\n\n%s", uniformWidth ? 1 : 0, fragmentShaderSource);
+
+	VuoShader_addSource                      (*shader, VuoMesh_Points,              vertexShaderSource, pointGeometryShaderSource, fragmentShaderSourceWithPrefix);
 	VuoShader_setExpectedOutputPrimitiveCount(*shader, VuoMesh_Points, 2);
 
-	VuoShader_addSource                      (*shader, VuoMesh_IndividualLines,     vertexShaderSource, lineGeometryShaderSource,  fragmentShaderSource);
+	VuoShader_addSource                      (*shader, VuoMesh_IndividualLines,     vertexShaderSource, lineGeometryShaderSource,  fragmentShaderSourceWithPrefix);
 	VuoShader_setExpectedOutputPrimitiveCount(*shader, VuoMesh_IndividualLines, 2);
 
-	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSource, geometryShaderSource,      fragmentShaderSource);
+	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSource, geometryShaderSource,      fragmentShaderSourceWithPrefix);
+
+	free(fragmentShaderSourceWithPrefix);
 
 	VuoShader_setUniform_VuoColor(*shader, "frontLineColor", frontColor);
 	VuoShader_setUniform_VuoColor(*shader, "backLineColor", backColor);

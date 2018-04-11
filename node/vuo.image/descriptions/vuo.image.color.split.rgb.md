@@ -6,4 +6,4 @@ This node outputs a grayscale image for each of the red, green, and blue compone
 
 If `Preserve Opacity` is true, the input image's opacity (alpha channel) is copied to the `Red/Green/Blue Image` output images.  If `Preserve Opacity` is false, the `Red/Green/Blue Image` output images are fully opaque.
 
-The `Opacity Image` output is always fully opaque; its greyscale shades represent the opacity of the input image (lighter is more opaque; darker is more transparent).
+The `Opacity Image` output is always fully opaque; its grayscale shades represent the opacity of the input image (lighter is more opaque; darker is more transparent).

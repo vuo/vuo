@@ -27,18 +27,15 @@ typedef const struct VuoList_VuoAnchor_struct { void *l; } * VuoList_VuoAnchor;
 
 /**
  * Combination vertical + horizontal alignment.
+ *
+ * (VuoVerticalAlignment << 2) + VuoHorizontalAlignment
  */
-typedef struct
-{
-	VuoHorizontalAlignment horizontalAlignment;
-	VuoVerticalAlignment verticalAlignment;
-
-	char blah[42];	///< @todo https://b33p.net/kosada/node/4124
-} VuoAnchor;
+typedef int64_t VuoAnchor;
 
 VuoAnchor VuoAnchor_makeFromJson(struct json_object * js);
 struct json_object * VuoAnchor_getJson(const VuoAnchor value);
 char * VuoAnchor_getSummary(const VuoAnchor value);
+VuoList_VuoAnchor VuoAnchor_getAllowedValues(void);
 
 /**
  * Returns a VuoAnchor with horizontal and vertical alignments.
@@ -46,7 +43,34 @@ char * VuoAnchor_getSummary(const VuoAnchor value);
 static inline VuoAnchor VuoAnchor_make(VuoHorizontalAlignment horizontal, VuoVerticalAlignment vertical) __attribute__((const));
 static inline VuoAnchor VuoAnchor_make(VuoHorizontalAlignment horizontal, VuoVerticalAlignment vertical)
 {
-	return (VuoAnchor) { horizontal, vertical, "" };
+	return (vertical << 2) + horizontal;
+}
+
+/**
+ * Returns the horizontal component of a VuoAnchor.
+ */
+static inline VuoHorizontalAlignment VuoAnchor_getHorizontal(VuoAnchor anchor) __attribute__((const));
+static inline VuoHorizontalAlignment VuoAnchor_getHorizontal(VuoAnchor anchor)
+{
+	return (VuoHorizontalAlignment)(anchor & 0x3);
+}
+
+/**
+ * Returns the horizontal component of a VuoAnchor.
+ */
+static inline VuoVerticalAlignment VuoAnchor_getVertical(VuoAnchor anchor) __attribute__((const));
+static inline VuoVerticalAlignment VuoAnchor_getVertical(VuoAnchor anchor)
+{
+	return (VuoVerticalAlignment)((anchor >> 2) & 0x3);
+}
+
+/**
+ * Returns a VuoAnchor with both horizontal and vertical alignments centered.
+ */
+static inline VuoAnchor VuoAnchor_makeCentered(void) __attribute__((const));
+static inline VuoAnchor VuoAnchor_makeCentered(void)
+{
+	return VuoAnchor_make(VuoHorizontalAlignment_Center, VuoVerticalAlignment_Center);
 }
 
 /**
@@ -54,8 +78,17 @@ static inline VuoAnchor VuoAnchor_make(VuoHorizontalAlignment horizontal, VuoVer
  */
 static inline bool VuoAnchor_areEqual(const VuoAnchor value1, const VuoAnchor value2)
 {
-	return (value1.horizontalAlignment == value2.horizontalAlignment &&
-			value1.verticalAlignment == value2.verticalAlignment);
+	return VuoAnchor_getHorizontal(value1) == VuoAnchor_getHorizontal(value2)
+		&& VuoAnchor_getVertical(value1)   == VuoAnchor_getVertical(value2);
+}
+
+/**
+ * Returns true if the value1 is less than value2.
+ */
+static inline bool VuoAnchor_isLessThan(const VuoAnchor value1, const VuoAnchor value2)
+{
+	return VuoHorizontalAlignment_isLessThan(VuoAnchor_getHorizontal(value1), VuoAnchor_getHorizontal(value2))
+		&& VuoVerticalAlignment_isLessThan(VuoAnchor_getVertical(value1), VuoAnchor_getVertical(value2));
 }
 
 /**

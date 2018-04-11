@@ -33,10 +33,6 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 	if (!colors)
 		return image;
 
-	VuoGlContext glContext = VuoGlContext_use();
-	VuoImageRenderer imageRenderer = VuoImageRenderer_make(glContext);
-	VuoRetain(imageRenderer);
-
 	static const char * fragmentShaderSource = VUOSHADER_GLSL_SOURCE(120,
 
 		uniform float gradientCount;
@@ -96,12 +92,9 @@ VuoImage VuoImage_mapColors(VuoImage image, VuoList_VuoColor colors, VuoReal fil
 	VuoShader_setUniform_VuoReal (shader, "amount", filterOpacity);
 
 	// Render.
-	VuoImage mappedImage = VuoImageRenderer_draw(imageRenderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	VuoImage mappedImage = VuoImageRenderer_render(shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoRelease(shader);
-
-	VuoRelease(imageRenderer);
-	VuoGlContext_disuse(glContext);
 
 	return mappedImage;
 }

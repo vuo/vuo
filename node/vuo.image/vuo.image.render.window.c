@@ -24,7 +24,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "draw", "graphics", "display", "view", "screen", "full screen", "fullscreen" ],
 					 "version" : "3.3.0",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoSceneRenderer",
 						 "VuoWindow"
 					 ],
@@ -37,7 +36,6 @@ VuoModuleMetadata({
 
 struct nodeInstanceData
 {
-	VuoGlContext glContext;
 	VuoWindowOpenGl *window;
 	VuoSceneRenderer sceneRenderer;
 	bool aspectRatioOverridden;
@@ -50,7 +48,7 @@ void vuo_image_render_window_init(void *ctx, float backingScaleFactor)
 {
 	struct nodeInstanceData *context = ctx;
 
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, backingScaleFactor);
+	context->sceneRenderer = VuoSceneRenderer_make(backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 
 	// Since we're speciying VuoShader_makeImageShader() which doesn't use normals, we don't need to generate them.
@@ -73,7 +71,7 @@ void vuo_image_render_window_updateBacking(void *ctx, float backingScaleFactor)
 
 	dispatch_semaphore_wait(context->scenegraphSemaphore, DISPATCH_TIME_FOREVER);
 	VuoRelease(context->sceneRenderer);
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, backingScaleFactor);
+	context->sceneRenderer = VuoSceneRenderer_make(backingScaleFactor);
 	VuoRetain(context->sceneRenderer);
 	VuoSceneRenderer_setRootSceneObject(context->sceneRenderer, context->rootSceneObject);
 	dispatch_semaphore_signal(context->scenegraphSemaphore);
@@ -100,8 +98,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
-
-	context->glContext = VuoGlContext_use();
 
 	context->sceneRenderer = NULL;
 
@@ -192,5 +188,4 @@ void nodeInstanceFini
 	VuoRelease((*context)->sceneRenderer);
 	VuoSceneObject_release((*context)->rootSceneObject);
 	dispatch_release((*context)->scenegraphSemaphore);
-	VuoGlContext_disuse((*context)->glContext);
 }

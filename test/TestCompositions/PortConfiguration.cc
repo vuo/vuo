@@ -14,15 +14,16 @@
 #include <QtTest/QtTest>
 #pragma clang diagnostic pop
 
+#include <sstream>
 #include "PortConfiguration.hh"
 #include "TestCompositionExecution.hh"
 
 /**
  * Creates a PortConfiguration.
  */
-PortConfiguration::PortConfiguration(string itemName, string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName)
+PortConfiguration::PortConfiguration(string firingPortName, map<string, string> valueForInputPortName, map<string, string> valueForOutputPortName)
 {
-	this->itemName = itemName;
+	this->itemIndex = 0;
 	this->firingPortName = firingPortName;
 	this->valueForInputPortName = valueForInputPortName;
 	this->valueForOutputPortName = valueForOutputPortName;
@@ -33,7 +34,14 @@ PortConfiguration::PortConfiguration(string itemName, string firingPortName, map
  */
 string PortConfiguration::toString(void)
 {
+	if (! itemName.empty())
+		return itemName;
+
+	ostringstream oss;
+	oss << itemIndex;
+
 	string s;
+	s += oss.str() + ": ";
 	s += "firingPort=" + firingPortName + ", ";
 	s += "inputPortValues={ ";
 	for (map<string, string>::iterator i = valueForInputPortName.begin(); i != valueForInputPortName.end(); ++i)
@@ -80,7 +88,7 @@ void PortConfiguration::checkOutputValue(VuoRunner *runner, VuoRunner::Port *por
 	QVERIFY2(i != valueForOutputPortName.end(), ("Unexpected output port: " + port->getName() + " ( " + toString() + " )").c_str());
 	json_object *expectedValue = json_tokener_parse(i->second.c_str());
 
-	TestCompositionExecution::checkEqual((itemName.empty() ? toString() : "\"" + itemName + "\""), port->getType(), actualValue, expectedValue);
+	TestCompositionExecution::checkEqual(toString(), port->getType(), actualValue, expectedValue);
 
 	json_object_put(actualValue);
 
@@ -167,7 +175,10 @@ void PortConfiguration::readListFromJSONFile(string path, list<PortConfiguration
 		if (json_object_object_get_ex(portConfigurationObject, "outputPortValues", &outputPortValuesObject))
 			readValueForPortNameFromJSONObject(outputPortValuesObject, valueForOutputPort);
 
-		portConfigurations.push_back( new PortConfiguration(itemName, firingPortName, valueForInputPort, valueForOutputPort) );
+		PortConfiguration *p = new PortConfiguration(firingPortName, valueForInputPort, valueForOutputPort);
+		p->itemIndex = i;
+		p->itemName = itemName;
+		portConfigurations.push_back(p);
 	}
 
 	QVERIFY(! portConfigurations.empty());

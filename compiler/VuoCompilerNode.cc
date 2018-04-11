@@ -28,7 +28,7 @@
  * Creates a compiler detail for the specified @c baseNode.
  */
 VuoCompilerNode::VuoCompilerNode(VuoNode *baseNode)
-   : VuoBaseDetail<VuoNode>("VuoNode", baseNode)
+	: VuoBaseDetail<VuoNode>("VuoNode", baseNode)
 {
 	getBase()->setCompiler(this);
 

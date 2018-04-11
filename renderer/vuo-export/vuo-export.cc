@@ -267,7 +267,7 @@ int main (int argc, char * argv[])
 					outputPath = inputDir + inputFile + ".app";
 
 				// Ensure outputPath is an absolute POSIX path (since `exportApp()` expects one).
-				VuoUrl outputUrl = VuoUrl_normalize(outputPath.c_str(), true);
+				VuoUrl outputUrl = VuoUrl_normalize(outputPath.c_str(), VuoUrlNormalize_forSaving);
 				VuoLocal(outputUrl);
 				VuoText outputPathV = VuoUrl_getPosixPath(outputUrl);
 				VuoLocal(outputPathV);

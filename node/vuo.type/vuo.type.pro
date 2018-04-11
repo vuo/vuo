@@ -35,12 +35,23 @@ NODE_SOURCES += \
 	vuo.type.list.point3d.real.x.c \
 	vuo.type.list.point3d.real.y.c \
 	vuo.type.list.point3d.real.z.c \
+	vuo.type.list.point4d.real.x.c \
+	vuo.type.list.point4d.real.y.c \
+	vuo.type.list.point4d.real.z.c \
+	vuo.type.list.point4d.real.w.c \
 	vuo.type.list.real.integer.c \
 	vuo.type.list.real.point2d.x.c \
 	vuo.type.list.real.point2d.y.c \
+	vuo.type.list.real.point2d.xy.c \
 	vuo.type.list.real.point3d.x.c \
 	vuo.type.list.real.point3d.y.c \
 	vuo.type.list.real.point3d.z.c \
+	vuo.type.list.real.point3d.xyz.c \
+	vuo.type.list.real.point4d.x.c \
+	vuo.type.list.real.point4d.y.c \
+	vuo.type.list.real.point4d.z.c \
+	vuo.type.list.real.point4d.w.c \
+	vuo.type.list.real.point4d.xyzw.c \
 	vuo.type.list.real.text.c \
 	vuo.type.list.text.real.c \
 	vuo.type.point2d.point3d.xy.c \
@@ -70,6 +81,7 @@ NODE_SOURCES += \
 	vuo.type.real.point4d.x.c \
 	vuo.type.real.point4d.y.c \
 	vuo.type.real.point4d.z.c \
+	vuo.type.real.point4d.xyzw.c \
 	vuo.type.real.text.c \
 	vuo.type.rotate.point3d.transform.c \
 	vuo.type.rotate.real.transform2d.c \
@@ -91,6 +103,8 @@ NODE_SOURCES += \
 	vuo.type.videoframe.image.c \
 	vuo.type.videoframe.real.c
 
+GENERIC_NODE_SOURCES += \
+	vuo.type.tree.value.c
 
 NODE_INCLUDEPATH += \
 	../vuo.data \

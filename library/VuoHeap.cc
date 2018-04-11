@@ -52,6 +52,21 @@ void sendErrorWrapper(const char *message)
 		VUserLog("%s", message);
 }
 
+#ifdef VUOHEAP_TRACEALL
+/**
+ * Returns true if the current process is a composition, or false if Vuo Editor.
+ */
+static bool VuoHeap_isComposition(void)
+{
+	static bool isComposition = false;
+	static dispatch_once_t once = 0;
+	dispatch_once(&once, ^{
+		isComposition = dlsym(RTLD_DEFAULT, "vuoCompositionStateKey");
+	});
+	return isComposition;
+}
+#endif
+
 /**
  * An entry in the reference-counting table.
  */
@@ -221,12 +236,12 @@ void VuoHeap_report(void)
  * @param heapPointer A pointer to allocated memory on the heap.
  * @param deallocate The function to be used to deallocate the memory when the reference count gets back to its original value of 0.
  * @param file The name of the file in which VuoRegister() is called.
- * @param line The line in the file in which VuoRegister() is called.
+ * @param linenumber The line in the file in which VuoRegister() is called.
  * @param func The function in which VuoRegister() is called.
  * @param pointerName The stringified pointer variable name.
  * @return The updated reference count of @a heapPointer. This is 0 if @a heapPointer is not already being reference-counted, greater than 0 if it is, or -1 if @a heapPointer is null.
  */
-int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, const char *file, unsigned int line, const char *func, const char *pointerName)
+int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, const char *file, unsigned int linenumber, const char *func, const char *pointerName)
 {
 	if (! heapPointer)
 		return -1;
@@ -240,7 +255,9 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	{
 
 #ifdef VUOHEAP_TRACE
-#ifndef VUOHEAP_TRACEALL
+#ifdef VUOHEAP_TRACEALL
+		if (VuoHeap_isComposition())
+#else
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
@@ -254,7 +271,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 		if (! isAlreadyReferenceCounted)
 		{
 			updatedCount = 0;
-			(*referenceCounts)[heapPointer] = (VuoHeapEntry){updatedCount, deallocate, file, line, func, pointerName};
+			(*referenceCounts)[heapPointer] = (VuoHeapEntry){updatedCount, deallocate, file, linenumber, func, pointerName};
 		}
 		else
 			updatedCount = i->second.referenceCount;
@@ -265,7 +282,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, line, func, pointerName});
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
 		errorMessage << "VuoRegister was called more than once for " << heapPointer << " " << description;
 		free(description);
 		sendErrorWrapper(errorMessage.str().c_str());
@@ -278,7 +295,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
  * Instead of this function, you probably want to use VuoRegisterSingleton(). This function is used to implement
  * the VuoRegisterSingleton() macro.
  */
-int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned int line, const char *func, const char *pointerName)
+int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned int linenumber, const char *func, const char *pointerName)
 {
 	if (! heapPointer)
 		return -1;
@@ -291,7 +308,9 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	{
 
 #ifdef VUOHEAP_TRACE
-#ifndef VUOHEAP_TRACEALL
+#ifdef VUOHEAP_TRACEALL
+		if (VuoHeap_isComposition())
+#else
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
@@ -314,7 +333,7 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	if (isAlreadyReferenceCounted)
 	{
 		ostringstream errorMessage;
-		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, line, func, pointerName});
+		char *description = VuoHeap_makeDescription((VuoHeapEntry){0, NULL, file, linenumber, func, pointerName});
 		errorMessage << "VuoRegisterSingleton was called more than once for " << heapPointer << " " << description;
 		free(description);
 		sendErrorWrapper(errorMessage.str().c_str());
@@ -331,7 +350,7 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
  *
  * @deprecated Use @ref VuoRetain instead.
  */
-extern "C" int VuoRetainF(const void *heapPointer, const char *file, unsigned int line, const char *func)
+extern "C" int VuoRetainF(const void *heapPointer, const char *file, unsigned int linenumber, const char *func)
 {
 	return VuoRetain(heapPointer);
 }
@@ -359,7 +378,9 @@ int VuoRetain(const void *heapPointer)
 		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 
 #ifdef VUOHEAP_TRACE
-#ifndef VUOHEAP_TRACEALL
+#ifdef VUOHEAP_TRACEALL
+		if (VuoHeap_isComposition())
+#else
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
@@ -397,7 +418,7 @@ int VuoRetain(const void *heapPointer)
  *
  * @deprecated Use @ref VuoRelease instead.
  */
-extern "C" int VuoReleaseF(const void *heapPointer, const char *file, unsigned int line, const char *func)
+extern "C" int VuoReleaseF(const void *heapPointer, const char *file, unsigned int linenumber, const char *func)
 {
 	return VuoRelease(heapPointer);
 }
@@ -427,7 +448,9 @@ int VuoRelease(const void *heapPointer)
 		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
 
 #ifdef VUOHEAP_TRACE
-#ifndef VUOHEAP_TRACEALL
+#ifdef VUOHEAP_TRACEALL
+		if (VuoHeap_isComposition())
+#else
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{
@@ -462,7 +485,9 @@ int VuoRelease(const void *heapPointer)
 	if (updatedCount == 0)
 	{
 #ifdef VUOHEAP_TRACE
-#ifndef VUOHEAP_TRACEALL
+#ifdef VUOHEAP_TRACEALL
+		if (VuoHeap_isComposition())
+#else
 		if (VuoHeap_trace->find(heapPointer) != VuoHeap_trace->end())
 #endif
 		{

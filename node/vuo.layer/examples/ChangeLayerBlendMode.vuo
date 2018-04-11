@@ -13,7 +13,7 @@ AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align L
 ChangeLayerBlending [type="vuo.layer.blendMode" version="1.0.0" label="Change Layer Blending|<refresh>refresh\l|<layer>layer\l|<blendMode>blendMode\l|<blendedLayer>blendedLayer\r" pos="1170,255" fillcolor="violet"];
 CountWithinRange [type="vuo.math.countWithinRange.VuoReal" version="1.0.0" label="Count within Range|<refresh>refresh\l|<increment>increment\l|<decrement>decrement\l|<setCount>setCount\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<count>count\r" pos="435,225" _increment="1.000000" _decrement="1" _setCount="1.000000" _minimum="0.000000" _maximum="6.000000" _wrapMode="\"wrap\""];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="390,75" fillcolor="yellow" _started_eventThrottling="enqueue"];
-FirePeriodically [type="vuo.time.firePeriodically" version="1.0.2" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="270,195" fillcolor="yellow" _seconds="4.000000" _fired_eventThrottling="drop"];
+FirePeriodically [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="270,195" fillcolor="yellow" _seconds="4.000000" _fired_eventThrottling="drop"];
 GetImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="720,-75" _url="\"Sunset.jpg\""];
 GetImage2 [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="705,105" _url="\"Seagulls.jpg\""];
 GetItemFromList2 [type="vuo.list.get.VuoBlendMode" version="1.0.0" label="Get Item from List|<refresh>refresh\l|<list>list\l|<which>which\l|<item>item\r" pos="720,330"];
@@ -35,7 +35,7 @@ CountWithinRange:count -> Round:real;
 FireOnStart:started -> GetImage2:refresh;
 FireOnStart:started -> GetImage:refresh;
 FireOnStart:started -> GetItemFromList2:refresh;
-FirePeriodically:fired -> CountWithinRange:increment;
+FirePeriodically:fired -> CountWithinRange:increment [event=true];
 GetImage2:image -> MakeScaledLayer4:image;
 GetImage2:image -> MakeScaledLayer:image;
 GetImage:image -> MakeScaledLayer2:image;

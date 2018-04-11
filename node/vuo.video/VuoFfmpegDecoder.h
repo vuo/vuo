@@ -30,7 +30,7 @@ extern "C"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <avcodec.h>
 #include <avformat.h>
-#include <avutil.h>
+#include <libavutil/avutil.h>
 #include <swscale.h>
 #include <string.h>
 #include <libswresample/swresample.h>

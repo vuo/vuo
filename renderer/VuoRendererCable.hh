@@ -46,6 +46,8 @@ public:
 	bool yankZoneIncludes(QPointF scenePos);
 	VuoPort * getFloatingEndpointPreviousToPort();
 	void setFloatingEndpointPreviousToPort(VuoPort *port);
+	bool getPreviouslyAlwaysEventOnly();
+	void setPreviouslyAlwaysEventOnly(bool eventOnly);
 	void setHovered(bool hovered);
 	void updateGeometry(void);
 	void resetTimeLastEventPropagated();
@@ -74,6 +76,7 @@ private:
 
 	QPointF floatingEndpointLoc;
 	VuoPort *floatingEndpointPreviousToPort;
+	bool previouslyAlwaysEventOnly;
 	bool floatingEndpointAboveEventPort;
 	bool isHovered;
 	qint64 timeLastEventPropagated;

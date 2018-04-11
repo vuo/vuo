@@ -15,6 +15,7 @@ VuoModuleMetadata({
 					  "keywords" : [ "border", "surround", "encapsulate", "darken", "post-process", "circle", "oval", "soften", "fade", "edge", "old", "daguerreotype", "filter" ],
 					  "version" : "1.1.3",
 					  "node": {
+						  "isDeprecated": true,
 						  "exampleCompositions" : [ "VignetteMovie.vuo" ]
 					  }
 				 });
@@ -48,19 +49,12 @@ static const char * vignetteFragmentShader = VUOSHADER_GLSL_SOURCE(120,
 struct nodeInstanceData
 {
 	VuoShader shader;
-	VuoGlContext glContext;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData * nodeInstanceInit(void)
 {
 	struct nodeInstanceData * instance = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 	VuoRegister(instance, free);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Vignette Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, vignetteFragmentShader);
@@ -108,12 +102,10 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoColor((*instance)->shader, "edgeColor", color);
 	VuoShader_setUniform_VuoBoolean ((*instance)->shader, "replaceOpacity", replaceOpacity);
 
-	*vignettedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, w, h, VuoImage_getColorDepth(image));
+	*vignettedImage = VuoImageRenderer_render((*instance)->shader, w, h, VuoImage_getColorDepth(image));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

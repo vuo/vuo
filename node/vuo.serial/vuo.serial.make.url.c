@@ -29,7 +29,7 @@ void nodeEvent
 )
 {
 	device->matchType = VuoSerialDevice_MatchPath;
-	VuoUrl u = VuoUrl_normalize(url, false);
+	VuoUrl u = VuoUrl_normalize(url, VuoUrlNormalize_default);
 	VuoRetain(u);
 	device->path = VuoUrl_getPosixPath(u);
 	VuoRelease(u);

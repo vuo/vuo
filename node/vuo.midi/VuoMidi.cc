@@ -28,7 +28,7 @@ VuoModuleMetadata({
 						 "VuoMidiPitchBend",
 						 "VuoList_VuoMidiInputDevice",
 						 "VuoList_VuoMidiOutputDevice",
-						 "RtMidi",
+						 "rtmidi",
 						 "CoreAudio.framework",
 						 "CoreMIDI.framework"
 					 ]

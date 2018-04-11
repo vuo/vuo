@@ -23,6 +23,7 @@ void nodeEvent
 (
 		VuoInputData(VuoRenderedLayers) renderedLayers,
 		VuoInputData(VuoText) layerName,
+		VuoInputData(VuoBoolean, {"default":true}) includeChildren,
 		VuoOutputData(VuoPoint2d) center,
 		VuoOutputData(VuoReal) width,
 		VuoOutputData(VuoReal) height,
@@ -36,7 +37,7 @@ void nodeEvent
 	if (isLayerFound)
 	{
 		VuoPoint2d layerCorners[4];
-		VuoRenderedLayers_getTransformedLayer(renderedLayers, ancestorObjects, layer, center, layerCorners);
+		VuoRenderedLayers_getTransformedLayer(renderedLayers, ancestorObjects, layer, center, layerCorners, includeChildren);
 		VuoRectangle bounds = VuoRenderedLayers_getBoundingBox(layerCorners);
 		*width  = bounds.size.x;
 		*height = bounds.size.y;

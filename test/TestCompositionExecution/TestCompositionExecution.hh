@@ -31,7 +31,6 @@ public:
 	static void installSubcomposition(string compositionPath, string nodeClassName, VuoCompiler *compiler);
 	static void uninstallSubcomposition(string nodeClassName, VuoCompiler *compiler);
 	static string wrapNodeInComposition(VuoCompilerNodeClass *nodeClass, VuoCompiler *compiler);
-	static void waitForImageTextCacheCleanup(void);
 	static void printMemoryUsage(string label);
 	static void checkEqual(string itemName, string type, json_object *actualValue, json_object *expectedValue);
 

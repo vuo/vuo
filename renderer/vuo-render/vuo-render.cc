@@ -14,15 +14,20 @@
 
 void printHelp(char *argv0)
 {
-	printf("Usage: %s [options] file\n"
+	printf("Creates a visual representation of the specified Vuo composition source code or node class.\n"
+		   "\n"
+		   "Usage:\n"
+		   "  %s [options] composition.vuo    Renders composition.vuo's source code (i.e., what the composition looks like in Vuo Editor).\n"
+		   "  %s [options] node.class.name    Renders a single node class.\n"
+		   "\n"
 		   "Options:\n"
 		   "  --help                       Display this information.\n"
 		   "  --output <file>              Place the rendered image into <file>.\n"
-		   "  --output-format=<format>     <format> can be 'png' or 'pdf'.\n"
+		   "  --output-format=<format>     <format> can be 'png' or 'pdf'. The default is 'png'.\n"
 		   "  --draw-bounding-rects        Draws red bounding rectangles around items in the composition canvas.\n"
 		   "  --render-missing-as-present  Render missing node classes as though they were present.\n"
 		   "  --scale <factor>             Changes the resolution.  For example, to render a PNG at Retina resolution, use '2'.\n",
-		   argv0);
+		   argv0, argv0);
 }
 
 /**
@@ -94,7 +99,7 @@ int main (int argc, char * argv[])
 		else
 		{
 			if (! hasInputFile)
-				throw std::runtime_error("no input file");
+				throw std::runtime_error("no input composition file or node class name");
 			inputPath = argv[optind];
 
 			string inputDir, inputFile, inputExtension;

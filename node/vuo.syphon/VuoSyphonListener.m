@@ -21,7 +21,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						 "VuoSyphonServerNotifier",
 						 "AppKit.framework",
-						 "VuoGLContext"
+						 "VuoGlContext"
 					 ]
 				 });
 #endif
@@ -30,7 +30,7 @@ VuoModuleMetadata({
 static pthread_t VuoSyphonListener_mainThread = NULL;	///< A reference to the main thread
 
 /**
- * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
+ * Get a reference to the main thread, so we can perform runtime thread assertions.
  */
 static void __attribute__((constructor)) VuoSyphonListener_init()
 {
@@ -220,7 +220,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 	// Connect the client to the server.
 	void (^connect)(void) = ^{
 					  SyphonClient *s = [[SyphonClient alloc] initWithServerDescription:chosenServerDict options:nil newFrameHandler:^(SyphonClient *client) {
-									  CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+									  VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 									  SyphonImage *frame = [client newFrameImageForContext:cgl_ctx];
 
 									  if (frame.textureSize.width < 1 || frame.textureSize.height < 1)
@@ -234,7 +234,7 @@ void VuoSyphonListener_freeSyphonImageCallback(VuoImage image)
 									  callback(VuoImage_makeCopy(image, false));
 									  VuoRelease(image);
 
-									  VuoGlContext_disuse(cgl_ctx);
+									  });
 					  }];
 					  self.syphonClient = s;
 					  [s release];

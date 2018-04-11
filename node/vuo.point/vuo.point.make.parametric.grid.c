@@ -14,7 +14,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Parametric Grid Points",
-					 "keywords" : [ "math", "expression", "shape" ],
+					 "keywords" : [ "math", "expression", "shape", "list" ],
 					 "version" : "1.0.1",
 					 "dependencies" : [
 						 "VuoPointsParametric"

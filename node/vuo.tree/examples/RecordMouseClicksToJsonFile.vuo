@@ -1,0 +1,53 @@
+/**
+ * @file
+ * Records the location of each double-click and, when the Save button is pressed, saves them to a JSON-formatted file (similar to the `Record and Play Values` node).
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @license This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+AddToList2 [type="vuo.list.add.VuoLayer" version="1.0.0" label="Add to List|<refresh>refresh\l|<list>list\l|<position>position\l|<item>item\l|<modifiedList>modifiedList\r" pos="660,285" _position="\"beginning\""];
+ConvertTextToData [type="vuo.type.text.data" version="1.0.0" label="Convert Text to Data|<refresh>refresh\l|<text>text\l|<data>data\r" pos="1185,255"];
+Enqueue2 [type="vuo.list.enqueue.VuoTree" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="420,135" _maxItemCount="100"];
+Enqueue4 [type="vuo.list.enqueue.VuoLayer" version="1.0.0" label="Enqueue|<refresh>refresh\l|<maxItemCount>maxItemCount\l|<addItem>addItem\l|<clearList>clearList\l|<list>list\r" pos="420,285" _maxItemCount="100"];
+FormatTreeAsJSON [type="vuo.tree.format.json" version="1.0.0" label="Format Tree as JSON|<refresh>refresh\l|<tree>tree\l|<indent>indent\l|<json>json\r" pos="945,120" fillcolor="violet" _indent="true"];
+HoldList2 [type="vuo.data.hold.list.VuoTree" version="1.0.0" label="Hold List|<refresh>refresh\l|<initialValue>initialValue\l|<newValue>newValue\l|<heldValue>heldValue\r" pos="600,75"];
+MakeButton [type="vuo.ui.button.action" version="1.0.0" label="Make Button|<refresh>refresh\l|<renderedLayers>renderedLayers\l|<label>label\l|<font>font\l|<color>color\l|<icon>icon\l|<iconPosition>iconPosition\l|<center>center\l|<width>width\l|<height>height\l|<updatedLayer>updatedLayer\r|<pressed>pressed\r" pos="300,-120" _label="\"Save Double-Clicks\"" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _color="{\"r\":0.18336766958236694,\"g\":0.46413367986679077,\"b\":0.80923169851303101,\"a\":1}" _iconPosition="\"left\"" _center="{\"x\":0,\"y\":0.5}" _width="0.59999999999999998" _height="0.1" _updatedLayer_eventThrottling="enqueue" _pressed_eventThrottling="enqueue"];
+MakeList15 [type="vuo.list.make.0.VuoTree" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="572,86"];
+MakeList4 [type="vuo.list.make.0.VuoTree" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="227,191" fillcolor="violet"];
+MakeList8 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="812,326" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="240,285" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":18,\"underline\":false,\"color\":{\"r\":0.9920269250869751,\"g\":0.60579818487167358,\"b\":0.34412083029747009,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}"];
+MakeTree [type="vuo.tree.make" version="1.0.0" label="Make Tree|<refresh>refresh\l|<name>name\l|<attributes>attributes\l|<content>content\l|<children>children\l|<tree>tree\r" pos="255,135" fillcolor="violet" _name="\"click\""];
+MakeTree2 [type="vuo.tree.make" version="1.0.0" label="Make Tree|<refresh>refresh\l|<name>name\l|<attributes>attributes\l|<content>content\l|<children>children\l|<tree>tree\r" pos="795,120" fillcolor="violet" _name="\"clicks\""];
+ReceiveMouseClicks [type="vuo.mouse.click" version="1.0.2" label="Receive Mouse Clicks|<refresh>refresh\l|<window>window\l|<button>button\l|<modifierKey>modifierKey\l|<singleClicked>singleClicked\r|<doubleClicked>doubleClicked\r|<tripleClicked>tripleClicked\r" pos="-120,165" fillcolor="yellow" _button="\"left\"" _modifierKey="\"any\"" _singleClicked_eventThrottling="enqueue" _doubleClicked_eventThrottling="enqueue" _tripleClicked_eventThrottling="enqueue"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="840,285" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SaveData [type="vuo.data.save" version="1.0.0" label="Save Data|<refresh>refresh\l|<url>url\l|<saveData>saveData\l|<overwriteUrl>overwriteUrl\l|<done>done\r" pos="1245,120" _url="\"~\\/Desktop\\/MouseClicks.json\"" _overwriteUrl="false"];
+SummarizeValue3 [type="vuo.data.summarize.VuoPoint2d" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="345,270"];
+SummarizeValue4 [type="vuo.data.summarize.VuoPoint2d" version="1.0.1" label="Summarize Value|<refresh>refresh\l|<value>value\l|<summary>summary\r" pos="330,390"];
+
+AddToList2:modifiedList -> RenderLayersToWindow:layers;
+ConvertTextToData:data -> SaveData:saveData;
+Enqueue2:list -> HoldList2:newValue;
+Enqueue4:list -> AddToList2:list;
+FormatTreeAsJSON:json -> ConvertTextToData:text;
+HoldList2:heldValue -> MakeTree2:children;
+MakeButton:pressed -> HoldList2:refresh;
+MakeButton:updatedLayer -> AddToList2:item;
+MakeList15:list -> HoldList2:initialValue;
+MakeList4:list -> MakeTree:children;
+MakeList8:list -> RenderLayersToWindow:setWindowProperties;
+MakeTextLayer:layer -> Enqueue4:addItem;
+MakeTree2:tree -> FormatTreeAsJSON:tree;
+MakeTree:tree -> Enqueue2:addItem;
+ReceiveMouseClicks:doubleClicked -> MakeTextLayer:center;
+ReceiveMouseClicks:doubleClicked -> SummarizeValue3:value;
+ReceiveMouseClicks:doubleClicked -> SummarizeValue4:value;
+RenderLayersToWindow:renderedLayers -> MakeButton:renderedLayers [style=invis];
+RenderLayersToWindow:showedWindow -> ReceiveMouseClicks:window [style=invis];
+SummarizeValue3:summary -> MakeTree:content;
+SummarizeValue4:summary -> MakeTextLayer:text;
+}

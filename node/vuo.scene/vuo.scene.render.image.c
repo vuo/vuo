@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoSceneRenderer.h"
 #include "VuoMultisample.h"
 
@@ -22,7 +21,6 @@ VuoModuleMetadata({
 					 "keywords" : [ "draw", "object", "opengl", "scenegraph", "graphics" ],
 					 "version" : "1.1.0",
 					 "dependencies" : [
-						 "VuoGlContext",
 						 "VuoSceneRenderer"
 					 ],
 					 "node": {
@@ -34,16 +32,13 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoSceneRenderer *sceneRenderer;
-	VuoGlContext glContext;
 };
 
 struct nodeInstanceData *nodeInstanceInit(void)
 {
 	struct nodeInstanceData *context = (struct nodeInstanceData *)malloc(sizeof(struct nodeInstanceData));
 
-	context->glContext = VuoGlContext_use();
-
-	context->sceneRenderer = VuoSceneRenderer_make(context->glContext, 1);
+	context->sceneRenderer = VuoSceneRenderer_make(1);
 	VuoRetain(context->sceneRenderer);
 
 	VuoRegister(context, free);
@@ -77,5 +72,4 @@ void nodeInstanceFini
 )
 {
 	VuoRelease((*context)->sceneRenderer);
-	VuoGlContext_disuse((*context)->glContext);
 }

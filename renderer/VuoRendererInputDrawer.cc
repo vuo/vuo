@@ -96,7 +96,7 @@ qreal VuoRendererInputDrawer::getMaxDrawerChainedLabelWidth(void) const
 		if (port->isConstant())
 		{
 			QPainterPath outsetPath;
-			port->getPortConstantPath(VuoRendererPort::getPortRect(), QString::fromUtf8(port->getConstantAsStringToRender().c_str()),&outsetPath);
+			port->getPortConstantPath(VuoRendererPort::getPortRect(), QString::fromUtf8(port->getConstantAsTruncatedStringToRender().c_str()),&outsetPath);
 			labelWidth += outsetPath.boundingRect().width();
 		}
 

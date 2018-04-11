@@ -59,6 +59,7 @@ bool VuoTime_isTimeOfDayLessThan(const VuoTime valueA, const VuoTime valueB, con
 VuoTime VuoTime_getCurrent(void);
 VuoTime VuoTime_make(VuoInteger year, VuoInteger month, VuoInteger dayOfMonth, VuoInteger hour, VuoInteger minute, VuoReal second);
 VuoTime VuoTime_makeFromRFC822(const char *rfc822);
+VuoTime VuoTime_makeFromUnknownFormat(const char *str);
 bool VuoTime_getComponents(VuoTime time, VuoInteger *year, VuoInteger *dayOfYear, VuoInteger *month, VuoInteger *dayOfMonth, VuoInteger *week, VuoWeekday *dayOfWeek, VuoInteger *hour, VuoInteger *minute, VuoReal *second);
 VuoTime VuoTime_round(const VuoTime value, const VuoTimeUnit unit, const int roundingMethod);
 VuoText VuoTime_format(const VuoTime time, const VuoTimeFormat format);

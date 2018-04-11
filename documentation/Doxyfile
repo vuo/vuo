@@ -64,6 +64,7 @@ EXTENSION_MAPPING     += mm=C++
 EXCLUDE_PATTERNS      += moc_*.cc
 EXCLUDE_PATTERNS      += moc_*.cpp
 EXCLUDE_PATTERNS      += */library/VuoUrlParser.*
+EXCLUDE_PATTERNS      += */library/csgjs.cc
 EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.c*
 EXCLUDE_PATTERNS      += */node/vuo.*/vuo.*.vuonode+
 EXCLUDE_PATTERNS      += */node/vuo.*/descriptions/*
@@ -98,6 +99,7 @@ RECURSIVE              = YES
 EXCLUDE_SYMBOLS       += Q_DECLARE_METATYPE
 EXCLUDE_SYMBOLS       += main
 EXCLUDE_SYMBOLS       += VuoRunnerCocoa()
+EXCLUDE_SYMBOLS       += VuoImageRenderer_draw_internal
 PREDEFINED             = DOXYGEN
 EXAMPLE_PATH           = ../example
 EXAMPLE_PATH          += ../node

@@ -55,11 +55,8 @@ void nodeEvent
 														(VuoPoint3d){0,0,0},
 														(VuoPoint3d){1,1,1});
 
-		VuoListAppendValue_VuoSceneObject((*tiledLayer).sceneObject.childObjects,
-										  VuoSceneObject_make(
-											  layer.sceneObject.mesh,
-											  layer.sceneObject.shader,
-											  VuoTransform_composite(layer.sceneObject.transform, transform),
-											  layer.sceneObject.childObjects));
+		VuoSceneObject so = layer.sceneObject;
+		so.transform = VuoTransform_composite(layer.sceneObject.transform, transform);
+		VuoListAppendValue_VuoSceneObject((*tiledLayer).sceneObject.childObjects, so);
 	}
 }

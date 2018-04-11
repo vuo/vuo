@@ -15,7 +15,7 @@ VuoModuleMetadata({
 						 "iterate", "repeat", "multiple", "many", "foreach", "each", "loop", "while", "cycle" ],
 					 "version" : "1.0.0",
 					 "node": {
-						 "exampleCompositions" : [ "SpinPsychedelicCheckerboard.vuo" ]
+						 "exampleCompositions" : [ "vuo-example://vuo.table/PerformCoinFlipExperiment.vuo", "SpinPsychedelicCheckerboard.vuo" ]
 					 }
 				 });
 

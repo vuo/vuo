@@ -9,13 +9,12 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoVertexAttribute.h"
 
 #include <OpenGL/CGLMacro.h>
 
 VuoModuleMetadata({
-					 "title" : "Shade with Vertex Attribute",
+					 "title" : "Make Vertex Attribute Shader",
 					 "keywords" : [ "mesh", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						 "colors", "direction", "heading", "facing",
 						 "position", "location", "distance", "tangent", "bitangent", "texture coordinate"],
@@ -32,6 +31,7 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	// Inputs
 	uniform mat4 modelviewMatrix;
 	uniform int attr;
+	uniform int local;
 	attribute vec4 position;
 	attribute vec4 normal;
 	attribute vec4 tangent;
@@ -53,15 +53,15 @@ static const char *vertexShaderSource = VUOSHADER_GLSL_SOURCE(120,
 	void main()
 	{
 		if (attr == 1)
-			vertexColor = normalize(abs(mat4to3(modelviewMatrix) * normal.xyz));
+			vertexColor = normalize(abs(local > 0 ? normal.xyz : mat4to3(modelviewMatrix) * normal.xyz));
 		else if (attr == 2)
-			vertexColor = normalize(abs(mat4to3(modelviewMatrix) * tangent.xyz));
+			vertexColor = normalize(abs(local > 0 ? tangent.xyz : mat4to3(modelviewMatrix) * tangent.xyz));
 		else if (attr == 3)
-			vertexColor = normalize(abs(mat4to3(modelviewMatrix) * bitangent.xyz));
+			vertexColor = normalize(abs(local > 0 ? bitangent.xyz : mat4to3(modelviewMatrix) * bitangent.xyz));
 		else if (attr == 4 || attr == 5)
 			vertexColor = textureCoordinate.xyz;
 		else
-			vertexColor = abs(modelviewMatrix * position).xyz;
+			vertexColor = abs(local > 0 ? position : modelviewMatrix * position).xyz;
 
 		gl_Position = VuoGlsl_projectPosition(modelviewMatrix * position);
 	}
@@ -209,6 +209,10 @@ static const char *checkerboardFragmentShaderSourceForGeometry = VUOSHADER_GLSL_
 void nodeEvent
 (
 		VuoInputData(VuoVertexAttribute, {"default":"normal"}) attribute,
+		VuoInputData(VuoInteger, { "menuItems":{
+			"0":"World",
+			"1":"Local"
+		}, "default":0} ) coordinateSpace,
 		VuoInputData(VuoColor, {"default":{"r":1.0,"g":0.0,"b":0.0,"a":1.0}}) xColor,
 		VuoInputData(VuoColor, {"default":{"r":0.0,"g":1.0,"b":0.0,"a":1.0}}) yColor,
 		VuoInputData(VuoColor, {"default":{"r":0.0,"g":0.0,"b":1.0,"a":1.0}}) zColor,
@@ -218,7 +222,7 @@ void nodeEvent
 	const char *fs  = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSource            : fragmentShaderSource;
 	const char *fsg = (attribute == VuoVertexAttribute_TextureCoordinateChecker) ? checkerboardFragmentShaderSourceForGeometry : fragmentShaderSourceForGeometry;
 
-	*shader = VuoShader_make("Shade with Vertex Attribute");
+	*shader = VuoShader_make("Vertex Attribute Shader");
 
 	VuoShader_addSource                      (*shader, VuoMesh_Points,              vertexShaderSourceForGeometry, pointGeometryShaderSource, fsg);
 	VuoShader_setExpectedOutputPrimitiveCount(*shader, VuoMesh_Points, 2);
@@ -229,6 +233,7 @@ void nodeEvent
 	VuoShader_addSource                      (*shader, VuoMesh_IndividualTriangles, vertexShaderSource,            NULL,                      fs);
 
 	VuoShader_setUniform_VuoInteger(*shader, "attr", attribute);
+	VuoShader_setUniform_VuoInteger(*shader, "local", coordinateSpace);
 	VuoShader_setUniform_VuoColor(*shader, "xColor", xColor);
 	VuoShader_setUniform_VuoColor(*shader, "yColor", yColor);
 	if (attribute != VuoVertexAttribute_TextureCoordinateChecker

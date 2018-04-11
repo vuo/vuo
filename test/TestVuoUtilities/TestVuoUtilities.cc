@@ -54,6 +54,30 @@ private slots:
 		QCOMPARE(QString(actualExtension.c_str()), expectedExtension);
 	}
 
+	void testCanonicalPath_data()
+	{
+		QTest::addColumn< QString >("path");
+		QTest::addColumn< QString >("canonicalPath");
+
+		QTest::newRow("Empty path.") << "" << "";
+		QTest::newRow("Root directory.") << "/" << "/";
+		QTest::newRow("Absolute path, already canonical.") << "/path/to/file.ext" << "/path/to/file.ext";
+		QTest::newRow("Relative path, already canonical.") << "path/to/file.ext" << "path/to/file.ext";
+		QTest::newRow("Trailing file separator.") << "dir/" << "dir";
+		QTest::newRow("Doubled file separators.") << "//path//to//file//" << "/path/to/file";
+		QTest::newRow("Tripled file separators.") << "///path///to///file///" << "/path/to/file";
+	}
+	void testCanonicalPath()
+	{
+		QFETCH(QString, path);
+		QFETCH(QString, canonicalPath);
+
+		string actualCanonicalPath = path.toStdString();
+		VuoFileUtilities::canonicalizePath(actualCanonicalPath);
+
+		QCOMPARE(QString::fromStdString(actualCanonicalPath), canonicalPath);
+	}
+
 	void testStringEndsWith()
 	{
 		QVERIFY(VuoStringUtilities::endsWith("",""));

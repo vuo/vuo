@@ -17,8 +17,8 @@
 /// @{
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
-					 "title" : "Threshold Type",
-					 "description" : "VuoThreshold Type Enum.",
+					 "title" : "Brightness Type",
+					 "description" : "How to determine the brightness of a color",
 					 "keywords" : [ "mask", "color" ],
 					 "version" : "1.0.0",
 					 "dependencies" : [
@@ -38,9 +38,21 @@ VuoThresholdType VuoThresholdType_makeFromJson(json_object *js)
 	if (json_object_get_type(js) == json_type_string)
 		valueAsString = json_object_get_string(js);
 
-	VuoThresholdType value = VuoThresholdType_Luminance;
+	VuoThresholdType value = VuoThresholdType_Rec601;
 
-	if( !strcmp(valueAsString, "red"))
+	if (!strcmp(valueAsString, "rec709"))
+		value = VuoThresholdType_Rec709;
+	else if (!strcmp(valueAsString, "desaturate"))
+		value = VuoThresholdType_Desaturate;
+	else if (!strcmp(valueAsString, "rgb"))
+		value = VuoThresholdType_RGB;
+	else if (!strcmp(valueAsString, "rgb-average"))
+		value = VuoThresholdType_RGBAverage;
+	else if (!strcmp(valueAsString, "rgb-maximum"))
+		value = VuoThresholdType_RGBMaximum;
+	else if (!strcmp(valueAsString, "rgb-minimum"))
+		value = VuoThresholdType_RGBMinimum;
+	else if( !strcmp(valueAsString, "red"))
 		value = VuoThresholdType_Red;
 	else if( !strcmp(valueAsString, "green"))
 		value = VuoThresholdType_Green;
@@ -48,8 +60,6 @@ VuoThresholdType VuoThresholdType_makeFromJson(json_object *js)
 		value = VuoThresholdType_Blue;
 	else if(!strcmp(valueAsString, "alpha"))
 		value = VuoThresholdType_Alpha;
-	else
-		value = VuoThresholdType_Luminance;
 
 	return value;
 }
@@ -60,12 +70,32 @@ VuoThresholdType VuoThresholdType_makeFromJson(json_object *js)
  */
 json_object * VuoThresholdType_getJson(const VuoThresholdType value)
 {
-	char *valueAsString = "";
+	char *valueAsString;
 
 	switch (value)
 	{
-		case VuoThresholdType_Luminance:
-			valueAsString = "luminance";
+		case VuoThresholdType_Rec709:
+			valueAsString = "rec709";
+			break;
+
+		case VuoThresholdType_Desaturate:
+			valueAsString = "desaturate";
+			break;
+
+		case VuoThresholdType_RGB:
+			valueAsString = "rgb";
+			break;
+
+		case VuoThresholdType_RGBAverage:
+			valueAsString = "rgb-average";
+			break;
+
+		case VuoThresholdType_RGBMaximum:
+			valueAsString = "rgb-maximum";
+			break;
+
+		case VuoThresholdType_RGBMinimum:
+			valueAsString = "rgb-minimum";
 			break;
 
 		case VuoThresholdType_Red:
@@ -83,6 +113,9 @@ json_object * VuoThresholdType_getJson(const VuoThresholdType value)
 		case VuoThresholdType_Alpha:
 			valueAsString = "alpha";
 			break;
+
+		default:
+			valueAsString = "rec601";
 	}
 	return json_object_new_string(valueAsString);
 }
@@ -93,7 +126,13 @@ json_object * VuoThresholdType_getJson(const VuoThresholdType value)
 VuoList_VuoThresholdType VuoThresholdType_getAllowedValues(void)
 {
 	VuoList_VuoThresholdType l = VuoListCreate_VuoThresholdType();
-	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Luminance);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Rec601);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Rec709);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Desaturate);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_RGB);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_RGBAverage);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_RGBMaximum);
+	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_RGBMinimum);
 	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Red);
 	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Green);
 	VuoListAppendValue_VuoThresholdType(l, VuoThresholdType_Blue);
@@ -110,8 +149,32 @@ char * VuoThresholdType_getSummary(const VuoThresholdType value)
 
 	switch (value)
 	{
-		case VuoThresholdType_Luminance:
-			valueAsString = "Luminance";
+		case VuoThresholdType_Rec601:
+			valueAsString = "Perceptual (ITU Rec. 601 / NTSC CRT)";
+			break;
+
+		case VuoThresholdType_Rec709:
+			valueAsString = "Perceptual (ITU Rec. 709 / HDTV)";
+			break;
+
+		case VuoThresholdType_Desaturate:
+			valueAsString = "Desaturate (HSL)";
+			break;
+
+		case VuoThresholdType_RGB:
+			valueAsString = "Individual Components (RGB)";
+			break;
+
+		case VuoThresholdType_RGBAverage:
+			valueAsString = "Average Components (RGB)";
+			break;
+
+		case VuoThresholdType_RGBMaximum:
+			valueAsString = "Lightest Components (RGB)";
+			break;
+
+		case VuoThresholdType_RGBMinimum:
+			valueAsString = "Darkest Components (RGB)";
 			break;
 
 		case VuoThresholdType_Red:
@@ -127,7 +190,7 @@ char * VuoThresholdType_getSummary(const VuoThresholdType value)
 			break;
 
 		case VuoThresholdType_Alpha:
-			valueAsString = "Alpha";
+			valueAsString = "Opacity";
 			break;
 	}
 

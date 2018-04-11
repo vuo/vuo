@@ -66,8 +66,6 @@ VuoModuleMetadata({
 @property (retain) AVAssetWriterInput *assetWriterInput;	///< AVAssetWriterInput
 @property (retain) AVAssetWriterInputPixelBufferAdaptor *assetWriterInputPixelBufferAdaptor;	///< AVAssetWriterInputPixelBufferAdaptor
 @property (assign) VuoImageResize resize;	///< Shader for resizing images to fit the output movie size.
-@property (assign) VuoGlContext resizeContext;	///< OpenGL context for resizing images to fit the output movie size.
-@property (assign) VuoImageRenderer resizeImageRenderer;	///< Image renderer for resizing images to fit the output movie size.
 @end
 
 
@@ -94,17 +92,8 @@ VuoModuleMetadata({
 		_originalHeight = _priorHeight = frameInPixels.size.height;
 
 
-		// Set up resize shader.
-		{
-			_resize = VuoImageResize_make();
-			VuoRetain(_resize);
-
-			// Needs its own context since VuoImageRenderer changes the glViewport.
-			_resizeContext = VuoGlContext_use();
-
-			_resizeImageRenderer = VuoImageRenderer_make(_resizeContext);
-			VuoRetain(_resizeImageRenderer);
-		}
+		_resize = VuoImageResize_make();
+		VuoRetain(_resize);
 
 
 		NSError *e = nil;
@@ -282,7 +271,7 @@ static void VuoWindowRecorder_doNothingCallback(VuoImage imageToFree)
 					// Resize.
 					if (width != _originalWidth || height != _originalHeight)
 					{
-						VuoImage resizedImage = VuoImageResize_resize(image, _resize, _resizeImageRenderer, VuoSizingMode_Fit, _originalWidth, _originalHeight);
+						VuoImage resizedImage = VuoImageResize_resize(image, _resize, VuoSizingMode_Fit, _originalWidth, _originalHeight);
 						if (!resizedImage)
 						{
 							VUserLog("Error: Failed to resize image.");
@@ -353,8 +342,6 @@ static void VuoWindowRecorder_doNothingCallback(VuoImage imageToFree)
 				  });
 	dispatch_release(_queue);
 
-	VuoRelease(_resizeImageRenderer);
-	VuoGlContext_disuse(_resizeContext);
 	VuoRelease(_resize);
 
 	if (VuoIsDebugEnabled())

@@ -21,12 +21,12 @@ extern "C"
  */
 class VuoInputEditorFontFactory : public VuoInputEditorFactory
 {
-   Q_OBJECT
-   Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorFont.json")
-   Q_INTERFACES(VuoInputEditorFactory)
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "org.vuo.inputEditor" FILE "VuoInputEditorFont.json")
+	Q_INTERFACES(VuoInputEditorFactory)
 
 public:
-   virtual VuoInputEditor * newInputEditor(void);
+	virtual VuoInputEditor * newInputEditor(void);
 };
 
 /**

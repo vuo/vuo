@@ -359,24 +359,20 @@ vector<VuoThreadManager::Worker *> VuoThreadManager::dequeueWorkers(void)
 
 								  ThreadPool &triggerThreadPool = triggerThreadPools[w->eventId][w->compositionHash];
 
-								  bool haveAllUpstreamChainsClaimedThreads = true;
+								  bool haveAllUpstreamChainsCompleted = true;
 								  for (int i = 0; i < w->upstreamChainIndicesCount; ++i)
 								  {
 									  unsigned long index = w->upstreamChainIndices[i];
 
-									  map<unsigned long, int>::iterator iter1 = triggerThreadPool.workersClaimingThreads.find( index );
-									  if (iter1 == triggerThreadPool.workersClaimingThreads.end())
+									  set<unsigned long>::iterator iter = triggerThreadPool.workersCompleted.find( index );
+									  if (iter == triggerThreadPool.workersCompleted.end())
 									  {
-										  set<unsigned long>::iterator iter = triggerThreadPool.workersCompleted.find( index );
-										  if (iter == triggerThreadPool.workersCompleted.end())
-										  {
-											  haveAllUpstreamChainsClaimedThreads = false;
-											  break;
-										  }
+										  haveAllUpstreamChainsCompleted = false;
+										  break;
 									  }
 								  }
 
-								  if (haveAllUpstreamChainsClaimedThreads)
+								  if (haveAllUpstreamChainsCompleted)
 								  {
 									  int threadsClaimed;
 									  bool gotThreads = triggerThreadPool.tryClaimThreads(w->minThreadsNeeded, w->maxThreadsNeeded, w->chainIndex, threadsClaimed);
@@ -444,6 +440,8 @@ void VuoThreadManager::scheduleTriggerWorker(dispatch_queue_t queue, void *conte
 
 /**
  * Schedules a chain worker function to be called when enough threads are available from the thread pool.
+ *
+ * After this function is called, `vuoReturnThreadsForChainWorker()` should be called to return the threads to the thread pool.
  */
 void VuoThreadManager::scheduleChainWorker(dispatch_queue_t queue, void *context, void (*function)(void *),
 										   int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, const char *compositionIdentifier,
@@ -453,8 +451,30 @@ void VuoThreadManager::scheduleChainWorker(dispatch_queue_t queue, void *context
 	Worker *worker = new Worker(queue, context, function, minThreadsNeeded, maxThreadsNeeded, eventId, compositionHash, chainIndex, upstreamChainIndices, upstreamChainIndicesCount);
 
 	dispatch_sync(workersWaitingSync, ^{
-					   workersWaitingForThreads.enqueue(worker);
-				   });
+					  workersWaitingForThreads.enqueue(worker);
+				  });
+
+	dispatch_semaphore_signal(workersUpdated);
+}
+
+/**
+ * Allocates threads for use by a chain executed synchronously by the caller instead of scheduled with `vuoScheduleChainWorker()`.
+ *
+ * After this function is called, `vuoReturnThreadsForChainWorker()` should be called to return the threads to the thread pool.
+ */
+void VuoThreadManager::grantThreadsToChain(int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, const char *compositionIdentifier,
+										   unsigned long chainIndex)
+{
+	unsigned long compositionHash = VuoRuntimeUtilities::hash(compositionIdentifier);
+
+	dispatch_sync(threadPoolSync, ^{
+					  ThreadPool &triggerThreadPool = triggerThreadPools[eventId][compositionHash];
+					  int threadsClaimed;
+					  bool gotThreads = triggerThreadPool.tryClaimThreads(minThreadsNeeded, maxThreadsNeeded, chainIndex, threadsClaimed);
+					  if (! gotThreads) {
+						  throw std::logic_error("Not enough threads available in the thread pool to execute the chain.");
+					  }
+				  });
 
 	dispatch_semaphore_signal(workersUpdated);
 }
@@ -547,6 +567,18 @@ void vuoScheduleChainWorker(VuoCompositionState *compositionState, dispatch_queu
 	runtimeState->persistentState->threadManager->scheduleChainWorker(queue, context, function,
 																	  minThreadsNeeded, maxThreadsNeeded, eventId, compositionIdentifier,
 																	  chainIndex, upstreamChainIndices, upstreamChainIndicesCount);
+}
+
+/**
+ * C wrapper for VuoThreadManager::grantThreadsToChain().
+ */
+void vuoGrantThreadsToChain(VuoCompositionState *compositionState,
+							int minThreadsNeeded, int maxThreadsNeeded, unsigned long eventId, unsigned long chainIndex)
+{
+	VuoRuntimeState *runtimeState = (VuoRuntimeState *)compositionState->runtimeState;
+	const char *compositionIdentifier = compositionState->compositionIdentifier;
+	runtimeState->persistentState->threadManager->grantThreadsToChain(minThreadsNeeded, maxThreadsNeeded, eventId, compositionIdentifier,
+																	  chainIndex);
 }
 
 /**

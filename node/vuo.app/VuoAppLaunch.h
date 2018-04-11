@@ -9,4 +9,4 @@
 
 #include "VuoText.h"
 
-void VuoAppLaunch_launch(VuoText rawUrl);
+void VuoAppLaunch_launch(VuoText rawUrl, bool activate);

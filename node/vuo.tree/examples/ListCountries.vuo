@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Queries a web service that provides a list of countries, and displays their names one by one. Information about the web service is at [http://www.groupkt.com/post/c9b0ccb9/country-and-other-related-rest-webservices.htm](http://www.groupkt.com/post/c9b0ccb9/country-and-other-related-rest-webservices.htm).
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * @license This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+CycleThroughList5 [type="vuo.list.cycle.VuoTree" version="1.1.0" label="Cycle through List|<refresh>refresh\l|<list>list\l|<goForward>goForward\l|<goBackward>goBackward\l|<goToFirst>goToFirst\l|<wrapMode>wrapMode\l|<item>item\r|<position>position\r" pos="315,75" _wrapMode="\"wrap\""];
+FetchJSONTree [type="vuo.tree.fetch.json" version="1.0.0" label="Fetch JSON Tree|<refresh>refresh\l|<url>url\l|<tree>tree\r" pos="-120,75" fillcolor="violet" _url="\"http:\\/\\/services.groupkt.com\\/country\\/get\\/all\""];
+FindSubtreesUsingXPath [type="vuo.tree.find.xpath" version="1.0.0" label="Find Subtrees using XPath|<refresh>refresh\l|<tree>tree\l|<expression>expression\l|<foundTrees>foundTrees\r" pos="75,75" fillcolor="violet" _expression="\"\\/\\/name\""];
+FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-345,-45" fillcolor="yellow" _started_eventThrottling="enqueue"];
+FirePeriodically2 [type="vuo.time.firePeriodically2" version="2.0.0" label="Fire Periodically|<refresh>refresh\l|<seconds>seconds\l|<fired>fired\r" pos="90,180" fillcolor="yellow" _fired_eventThrottling="drop"];
+GetTreeContent4 [type="vuo.tree.get.content" version="1.0.0" label="Get Tree Content|<refresh>refresh\l|<tree>tree\l|<includeDescendants>includeDescendants\l|<content>content\r" pos="540,75" fillcolor="violet" _includeDescendants="false"];
+MakeList23 [type="vuo.list.make.0.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<list>list\r" pos="1112,101" fillcolor="green"];
+MakeList26 [type="vuo.list.make.1.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<list>list\r" pos="1092,71" fillcolor="green"];
+MakeTextLayer6 [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="930,60" _font="{\"fontName\":\"HelveticaNeue-Light\",\"pointSize\":28}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.0,\"y\":0.0}"];
+RenderLayersToWindow2 [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1140,60" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+SelectLatest4 [type="vuo.select.latest.2.VuoText" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="750,15" _option1="\"Downloading…\""];
+SelectLatest6 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="-60,180" _option2="1"];
+SpinOffEvent4 [type="vuo.event.spinOffEvent" version="1.0.0" label="Spin Off Event|<refresh>refresh\l|<spunOff>spunOff\r" pos="-360,15" fillcolor="yellow" _spunOff_eventThrottling="enqueue"];
+
+CycleThroughList5:item -> GetTreeContent4:tree;
+FetchJSONTree:tree -> FindSubtreesUsingXPath:tree;
+FindSubtreesUsingXPath:foundTrees -> CycleThroughList5:list;
+FindSubtreesUsingXPath:foundTrees -> SelectLatest6:option2 [event=true];
+FireOnStart:started -> SelectLatest4:option1;
+FireOnStart:started -> SelectLatest6:option1;
+FireOnStart:started -> SpinOffEvent4:refresh;
+FirePeriodically2:fired -> CycleThroughList5:goForward;
+GetTreeContent4:content -> SelectLatest4:option2;
+MakeList23:list -> RenderLayersToWindow2:setWindowProperties;
+MakeList26:list -> RenderLayersToWindow2:layers;
+MakeTextLayer6:layer -> MakeList26:1;
+SelectLatest4:latest -> MakeTextLayer6:text;
+SelectLatest6:latest -> FirePeriodically2:seconds;
+SpinOffEvent4:spunOff -> FetchJSONTree:refresh;
+}

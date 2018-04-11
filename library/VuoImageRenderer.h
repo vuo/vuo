@@ -18,15 +18,9 @@ extern "C"
 #include "VuoImage.h"
 #include "VuoImageColorDepth.h"
 
-/**
- * An object for rendering a VuoImage.
- */
-typedef void * VuoImageRenderer;
+VuoImage VuoImageRenderer_render(VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth);
 
-VuoImageRenderer VuoImageRenderer_make(VuoGlContext glContext);
-VuoImage VuoImageRenderer_draw(VuoImageRenderer imageRenderer, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth);
-
-unsigned long int VuoImageRenderer_draw_internal(VuoImageRenderer ir, VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture);
+unsigned long int VuoImageRenderer_draw_internal(VuoShader shader, unsigned int pixelsWide, unsigned int pixelsHigh, VuoImageColorDepth imageColorDepth, bool outputToIOSurface, bool outputToGlTextureRectangle, unsigned int outputToSpecificTexture);
 
 #ifdef __cplusplus
 }

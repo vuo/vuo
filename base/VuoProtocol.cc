@@ -179,8 +179,8 @@ string VuoProtocol::getTypeForOutputPort(string portName)
 bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 {
 	__block int charNum = 0;
-	bool (^getNextLine)(string &line) = ^(string &line){
-			line = "";
+	bool (^getNextLine)(string &linenumber) = ^(string &linenumber){
+			linenumber = "";
 			while (true)
 			{
 				char c = compositionAsString[charNum++];
@@ -188,22 +188,22 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 					break;
 				if (c == 0)
 					return false;
-				line += c;
+				linenumber += c;
 			}
 			return true;
 		};
 
 	// label="PublishedInputs|<image>image\r|<time>time\r"
-	string (^getLabel)(string line) = ^(string line){
+	string (^getLabel)(string linenumber) = ^(string linenumber){
 			string labelToken = "label=\"";
-			string::size_type labelLocation = line.find(labelToken);
+			string::size_type labelLocation = linenumber.find(labelToken);
 			if (labelLocation == string::npos)
 				return (string)"";
 
 			labelLocation += labelToken.length();
 			string label;
-			while (labelLocation < line.length() && line[labelLocation] != '"')
-				label += line[labelLocation++];
+			while (labelLocation < linenumber.length() && linenumber[labelLocation] != '"')
+				label += linenumber[labelLocation++];
 
 			return label;
 		};
@@ -226,16 +226,16 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 		};
 
 	// _image_type="VuoImage"
-	string (^getType)(string line, string portID) = ^(string line, string portID){
+	string (^getType)(string linenumber, string portID) = ^(string linenumber, string portID){
 			string typeToken = "_" + portID + "_type=\"";
-			string::size_type typeLocation = line.find(typeToken);
+			string::size_type typeLocation = linenumber.find(typeToken);
 			if (typeLocation == string::npos)
 				return (string)"";
 
 			typeLocation += typeToken.length();
 			string type;
-			while (typeLocation < line.length() && line[typeLocation] != '"')
-				type += line[typeLocation++];
+			while (typeLocation < linenumber.length() && linenumber[typeLocation] != '"')
+				type += linenumber[typeLocation++];
 
 			return type;
 		};
@@ -244,22 +244,22 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 	// portID => portType
 	map<string,string> publishedInputs;
 	map<string,string> publishedOutputs;
-	string line;
-	while (getNextLine(line))
+	string linenumber;
+	while (getNextLine(linenumber))
 	{
 		// PublishedInputs [type="vuo.in" label="PublishedInputs|<image>image\r|<time>time\r" _image="" _image_type="VuoImage" _time="" _time_type="VuoReal"];
 		// PublishedOutputs [type="vuo.out" label="PublishedOutputs|<outputImage>outputImage\l" _outputImage_type="VuoImage"];
 		bool isPublishedInputs = false;
 		bool isPublishedOutputs = false;
-		if (VuoStringUtilities::beginsWith(line, "PublishedInputs [type=\"vuo.in\" label=\"PublishedInputs|<"))
+		if (VuoStringUtilities::beginsWith(linenumber, "PublishedInputs [type=\"vuo.in\" label=\"PublishedInputs|<"))
 			isPublishedInputs = true;
-		else if (VuoStringUtilities::beginsWith(line, "PublishedOutputs [type=\"vuo.out\" label=\"PublishedOutputs|<"))
+		else if (VuoStringUtilities::beginsWith(linenumber, "PublishedOutputs [type=\"vuo.out\" label=\"PublishedOutputs|<"))
 			isPublishedOutputs = true;
 
 		if (!isPublishedInputs && !isPublishedOutputs)
 			continue;
 
-		string label = getLabel(line);
+		string label = getLabel(linenumber);
 		if (label == "")
 			return false;
 
@@ -267,9 +267,9 @@ bool VuoProtocol::isCompositionCompliant(string compositionAsString)
 		while (getNextPort(label, portID))
 		{
 			if (isPublishedInputs)
-				publishedInputs[portID] = getType(line, portID);
+				publishedInputs[portID] = getType(linenumber, portID);
 			else
-				publishedOutputs[portID] = getType(line, portID);
+				publishedOutputs[portID] = getType(linenumber, portID);
 		}
 
 	}

@@ -3,18 +3,13 @@ QMAKE_CLEAN = Makefile
 
 SUBDIRS += \
 	base \
-	base_vuo_debug \
 	compiler \
 	compiler_vuo_compile \
-	compiler_vuo_compile_for_framework \
-	compiler_vuo_link \
 	framework \
 	library \
 	library_shader \
 	node \
 	renderer \
-	renderer_vuo_export \
-	renderer_vuo_render \
 	runtime \
 	type \
 	type_input_editor \
@@ -29,19 +24,10 @@ include(./vuo.pri)
 cache()
 
 
-base_vuo_debug.subdir = base/vuo-debug
-base_vuo_debug.depends = framework
-
 compiler.depends = base
 
 compiler_vuo_compile.subdir = compiler/vuo-compile
 compiler_vuo_compile.depends = compiler
-
-compiler_vuo_compile_for_framework.subdir = compiler/vuo-compile-for-framework
-compiler_vuo_compile_for_framework.depends = framework
-
-compiler_vuo_link.subdir = compiler/vuo-link
-compiler_vuo_link.depends = framework
 
 framework.subdir = framework
 framework.depends = base compiler renderer runtime node type type_input_editor type_list library
@@ -51,12 +37,6 @@ library.depends = base library_shader type type_list
 node.depends = compiler_vuo_compile type type_list
 
 renderer.depends = base compiler
-
-renderer_vuo_export.subdir = renderer/vuo-export
-renderer_vuo_export.depends = framework
-
-renderer_vuo_render.subdir = renderer/vuo-render
-renderer_vuo_render.depends = framework
 
 runtime.depends = base
 
@@ -90,15 +70,16 @@ exists(editor) {
 
 # Provide "make go" for easily running the editor from the command line
 go.commands = @(cd "editor/VuoEditorApp/Vuo*.app/Contents/MacOS" ; ./Vuo* 2>&1 \
-	| grep --line-buffered -v "'QTextCursor::setPosition: Position .* out of range'" \
-	| grep --line-buffered -v "'^INVALID PARENT FOR INTERFACE'" \
-	| grep --line-buffered -v "'^QCoreTextFontDatabase: Failed to resolve family name for PostScript name'" \
-	| grep --line-buffered -v "'^libpng warning: iCCP: known incorrect sRGB profile'" \
+	| fgrep --line-buffered -v "'libpng warning: iCCP: known incorrect sRGB profile'" \
 	; true)
 QMAKE_EXTRA_TARGETS += go
 
-# Provide "make examples" so we don't need to rebuild all the examples during development
+# Provide "make cli" so we don't need to rebuild all the command-line tools during development
 DOLLAR = $
+cli.commands = (for i in base/vuo-debug compiler/vuo-compile-for-framework compiler/vuo-link renderer/vuo-export renderer/vuo-render; do (cd $${DOLLAR}$${DOLLAR}i && ([ -f Makefile ] || qmake) && make -j9); done)
+QMAKE_EXTRA_TARGETS += cli
+
+# Provide "make examples" so we don't need to rebuild all the examples during development
 examples.commands = (for i in example/runner/* example/node/* ; do (cd $${DOLLAR}$${DOLLAR}i && ([ -f Makefile ] || qmake) && make -j9); done)
 examples.commands += && (for i in node/vuo.*/examples ; do (cd $${DOLLAR}$${DOLLAR}i && ([ -f Makefile ] || qmake) && make -j9); done)
 QMAKE_EXTRA_TARGETS += examples

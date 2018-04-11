@@ -215,8 +215,9 @@ void VuoApp_fini(void)
 	if (!NSApp)
 		return;
 
-	const void *compositionState = vuoGetCompositionStateFromThreadLocalStorage();
+	void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
 	uint64_t compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
+	free(compositionState);
 
 	if (VuoApp_isMainThread())
 		VuoApp_finiWindows(compositionUid);
@@ -241,7 +242,7 @@ void VuoWindowText_destroy(VuoWindowText w);
  */
 VuoWindowText VuoWindowText_make(void)
 {
-	const void *compositionState = vuoGetCompositionStateFromThreadLocalStorage();
+	void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
 
 	__block VuoWindowTextInternal *window = NULL;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
@@ -254,6 +255,7 @@ VuoWindowText VuoWindowText_make(void)
 					  [window makeKeyAndOrderFront:NSApp];
 
 					  vuoRemoveCompositionStateFromThreadLocalStorage();
+					  free(compositionState);
 				   });
 	VuoRegister(window, VuoWindowText_destroy);
 	return (VuoWindowText *)window;
@@ -365,7 +367,7 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 )
 {
 	__block VuoGraphicsWindow *window = NULL;
-	const void *compositionState = vuoGetCompositionStateFromThreadLocalStorage();
+	void *compositionState = vuoCopyCompositionStateFromThreadLocalStorage();
 
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
@@ -382,6 +384,7 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 					  window.compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
 
 					  vuoRemoveCompositionStateFromThreadLocalStorage();
+					  free(compositionState);
 				  });
 	VuoRegister(window, VuoWindowOpenGl_destroy);
 	return (VuoWindowOpenGl *)window;
@@ -438,19 +441,6 @@ void VuoWindowOpenGl_setProperties(VuoWindowOpenGl w, VuoList_VuoWindowProperty 
 					  VUOLOG_PROFILE_END(mainQueue);
 					  [window setProperties:properties];
 				  });
-}
-
-/**
- * Executes the specifed block on the window's OpenGL context, then returns.
- * Ensures that nobody else is using the OpenGL context at that time
- * (by synchronizing with the window's @c drawQueue).
- *
- * @threadAny
- */
-void VuoWindowOpenGl_executeWithWindowContext(VuoWindowOpenGl w, void (^blockToExecute)(VuoGlContext glContext))
-{
-	VuoGraphicsWindow *window = (VuoGraphicsWindow *)w;
-	[window executeWithWindowContext:blockToExecute];
 }
 
 /**
@@ -529,9 +519,7 @@ void VuoWindowOpenGl_destroy(VuoWindowOpenGl vw)
  */
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
-	if ([super performKeyEquivalent:theEvent] == NO)
-		if ([[NSApp servicesMenu] performKeyEquivalent:theEvent] == NO)
-			[[theEvent window] sendEvent:theEvent];
+	[super performKeyEquivalent:theEvent];
 
 	// https://b33p.net/kosada/node/11966
 	// Always return YES, even if the event wasn't handled, to prevent the `NSBeep()`

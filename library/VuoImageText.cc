@@ -35,6 +35,7 @@ extern "C" {
 #include <utility>
 #include <map>
 #include <string>
+#include <vector>
 
 /**
  * A wrapper for @ref VuoFont, so it can be used as a std::map key.
@@ -116,6 +117,8 @@ static double VuoImageTextCache_timeout = 1.0;	///< Seconds an image can remain 
  */
 static void VuoImageTextCache_cleanup(void *blah)
 {
+	std::vector<VuoImage> imagesToRelease;
+
 	dispatch_semaphore_wait(VuoImageTextCache_semaphore, DISPATCH_TIME_FOREVER);
 	{
 		double now = VuoLogGetTime();
@@ -127,7 +130,7 @@ static void VuoImageTextCache_cleanup(void *blah)
 			if (now - lastUsed > VuoImageTextCache_timeout)
 			{
 				// VLog("\t\tpurging");
-				VuoRelease(item->second.first);
+				imagesToRelease.push_back(item->second.first);
 				VuoImageTextCache->erase(item++);
 			}
 			else
@@ -135,6 +138,9 @@ static void VuoImageTextCache_cleanup(void *blah)
 		}
 	}
 	dispatch_semaphore_signal(VuoImageTextCache_semaphore);
+
+	for (std::vector<VuoImage>::iterator item = imagesToRelease.begin(); item != imagesToRelease.end(); ++item)
+		VuoRelease(*item);
 }
 
 /**
@@ -157,8 +163,10 @@ static void VuoImageTextCache_init(void)
 
 /**
  * Destroys the cache.
+ *
+ * This is called by @ref VuoRuntimeState::stopCompositionAsOrderedByRunner.
  */
-static void __attribute__((destructor)) VuoImageTextCache_fini(void)
+extern "C" void __attribute__((destructor)) VuoImageTextCache_fini(void)
 {
 	if (! VuoImageTextCache_timer)
 		return;
@@ -178,6 +186,8 @@ static void __attribute__((destructor)) VuoImageTextCache_fini(void)
 	}
 
 	delete VuoImageTextCache;
+	dispatch_release(VuoImageTextCache_timer);
+	VuoImageTextCache_timer = NULL;
 }
 
 /**
@@ -228,12 +238,12 @@ static CFArrayRef VuoImageText_createCTLines(
 
 	for (CFIndex i = 0; i < lineCount; ++i)
 	{
-		CFStringRef line = (CFStringRef)CFArrayGetValueAtIndex(lines, i);
+		CFStringRef lineText = (CFStringRef)CFArrayGetValueAtIndex(lines, i);
 
 		CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName, kCTUnderlineStyleAttributeName, kCTKernAttributeName };
 		CFTypeRef values[] = { *ctFont, *cgColor, underlineNumber, kernNumber };
 		CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), NULL, NULL);
-		CFAttributedStringRef attributedLine = CFAttributedStringCreate(NULL, line, attr);
+		CFAttributedStringRef attributedLine = CFAttributedStringCreate(NULL, lineText, attr);
 		CFRelease(attr);
 		CFArrayAppendValue(attributedLines, attributedLine);
 
@@ -610,6 +620,19 @@ VuoImage VuoImage_makeText(VuoText text, VuoFont font, float backingScaleFactor)
 	if (image)
 	{
 		dispatch_semaphore_wait(VuoImageTextCache_semaphore, DISPATCH_TIME_FOREVER);
+
+		// Another thread might have added it to the cache since the check at the beginning of this function.
+		VuoImageTextCacheType::iterator it = VuoImageTextCache->find(descriptor);
+		if (it != VuoImageTextCache->end())
+		{
+//			VLog("This image is already in the cache; I'm destroying mine and returning the cached image.");
+			VuoLocal(image);
+
+			VuoImage cachedImage = it->second.first;
+			it->second.second = VuoLogGetTime();
+			dispatch_semaphore_signal(VuoImageTextCache_semaphore);
+			return cachedImage;
+		}
 
 		VuoRetain(image);
 		VuoImageTextCacheEntry e(image, VuoLogGetTime());

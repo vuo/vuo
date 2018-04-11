@@ -467,7 +467,7 @@ bool VuoVideoPlayer::GetVideoFrameAtSecond(double second, VuoVideoFrame* frame)
 
 	// if the seek target is ≥ duration seek to a little before the end timestamp and step.
 	// that way you usually end up with a valid frame to send.
-	if(target > duration - .5)
+	if(target > duration - .5 && playbackRate > 0)
 	{
 		seekSuccess = Seek(duration - .5);
 

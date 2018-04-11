@@ -9,4 +9,4 @@ This node is useful for performing the same (or similar) sequence of steps on ea
 
 If the `Fire` port's value is an empty list when it receives an event, no events are fired from `Process Item`. Instead, `Processed List` immediately fires a event with an empty list.
 
-If the `Fire` port receives an event while the node is still iterating through the list for the previous `Fire` event, then the later `Fire` event is ignored (dropped).
+If the `Fire` port receives an event while the node is still iterating through the list for the previous `Fire` event, then the later `Fire` event is ignored (dropped). To avoid having events ignored, you can modify your composition to limit the rate at which events hit this node.

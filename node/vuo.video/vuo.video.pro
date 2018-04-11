@@ -16,7 +16,8 @@ NODE_SOURCES += \
 	vuo.video.play.c \
 	vuo.video.receive.c \
 	vuo.video.save.c \
-	vuo.video.save2.c
+	vuo.video.save2.c \
+	vuo.video.step.c
 
 NODE_LIBRARY_SOURCES += \
 	VuoVideo.cc \
@@ -81,7 +82,6 @@ NODE_LIBRARY_INCLUDEPATH = \
 	$${FFMPEG_ROOT}/include \
 	$${FFMPEG_ROOT}/include/libavcodec \
 	$${FFMPEG_ROOT}/include/libavformat \
-	$${FFMPEG_ROOT}/include/libavutil \
 	$${FFMPEG_ROOT}/include/libswscale
 
 include(../../module.pri)

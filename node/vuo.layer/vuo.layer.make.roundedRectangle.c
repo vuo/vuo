@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Make Rounded Rectangle Layer",
-					 "keywords" : [ "capsule", "corners", "square", "button" ],
+					 "keywords" : [ "capsule", "corners", "square", "button", "shape" ],
 					 "version" : "1.1.0",
 					 "node": {
 						  "exampleCompositions" : [ "DrawShapes.vuo" ]

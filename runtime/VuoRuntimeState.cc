@@ -22,17 +22,36 @@
 #include "VuoThreadManager.hh"
 
 /**
- * Creates a runtime state instance, updates its references to symbols defined in the composition binary,
- * and opens a connection between it and the runner. Does not take ownership of @a persistentState.
+ * Returns a partially initialized runtime instance. @ref VuoRuntimeState::init() should be called to finish the job.
+ */
+VuoRuntimeState::VuoRuntimeState(void)
+{
+	persistentState = NULL;
+}
+
+/**
+ * Cleans up after the composition has stopped for the last time.
+ */
+VuoRuntimeState::~VuoRuntimeState(void)
+{
+	delete persistentState;
+}
+
+/**
+ * Initializes a runtime state instance, updates its references to symbols defined in the composition binary,
+ * and opens a connection between it and the runner.
  *
  * @throw std::runtime_error One of the symbols was not found in the composition binary.
  */
-VuoRuntimeState::VuoRuntimeState(void *zmqContext, const char *controlUrl, const char *telemetryUrl, bool isPaused,
-								 pid_t runnerPid, int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory,
-								 void *compositionBinaryHandle, VuoRuntimePersistentState *persistentState)
+void VuoRuntimeState::init(void *zmqContext, const char *controlUrl, const char *telemetryUrl, bool isPaused,
+						   pid_t runnerPid, int runnerPipe, bool continueIfRunnerDies, const char *workingDirectory,
+						   void *compositionBinaryHandle)
 {
-	this->persistentState = (persistentState ? persistentState : new VuoRuntimePersistentState(workingDirectory));
-	this->persistentState->runtimeState = this;
+	if (! persistentState)
+	{
+		persistentState = new VuoRuntimePersistentState(workingDirectory);
+		persistentState->runtimeState = this;
+	}
 
 	this->_isPaused = isPaused;
 	hasBeenUnpaused = false;
@@ -58,13 +77,13 @@ VuoRuntimeState::VuoRuntimeState(void *zmqContext, const char *controlUrl, const
 	vuoInstanceTriggerStop = NULL;
 
 	updateCompositionSymbols(compositionBinaryHandle);
-	this->persistentState->communicator->openConnection(zmqContext, controlUrl, telemetryUrl, runnerPipe);
+	persistentState->communicator->openConnection(zmqContext, controlUrl, telemetryUrl, runnerPipe);
 }
 
 /**
- * Destructor.
+ * Cleans up after the composition has stopped for a live-coding reload.
  */
-VuoRuntimeState::~VuoRuntimeState(void)
+void VuoRuntimeState::fini(void)
 {
 	vuoMemoryBarrier();
 	persistentState->communicator->stopSendingAndCleanUpHeartbeat();
@@ -81,8 +100,6 @@ VuoRuntimeState::~VuoRuntimeState(void)
 	persistentState->communicator->closeConnection();
 
 	dispatch_release(stopQueue);
-
-	persistentState->runtimeState = NULL;
 }
 
 /**
@@ -265,7 +282,7 @@ void VuoRuntimeState::unpauseComposition(void)
  * Stops the composition, either for a live-coding reload or permanently, as a result of a
  * stop message from the runner.
  */
-void VuoRuntimeState::stopCompositionAsOrderedByRunner(bool isBeingReplaced, int timeoutInSeconds)
+void VuoRuntimeState::stopCompositionAsOrderedByRunner(bool isBeingReplaced, int timeoutInSeconds, bool isLastEverInProcess)
 {
 	if (! isBeingReplaced)
 	{
@@ -284,6 +301,15 @@ void VuoRuntimeState::stopCompositionAsOrderedByRunner(bool isBeingReplaced, int
 
 		VuoCompositionState compositionState = { (void *)this, "" };
 		vuoAddCompositionStateToThreadLocalStorage(&compositionState);
+
+		// https://b33p.net/kosada/node/12912
+		if (isLastEverInProcess)
+		{
+			typedef void (*VuoImageTextCacheFiniType)(void);
+			VuoImageTextCacheFiniType vuoImageTextCacheFini = (VuoImageTextCacheFiniType) dlsym(RTLD_DEFAULT, "VuoImageTextCache_fini");
+			if (vuoImageTextCacheFini)
+				vuoImageTextCacheFini();
+		}
 
 		VuoHeap_report();
 

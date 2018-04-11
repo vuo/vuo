@@ -32,26 +32,6 @@ using namespace std;
 #include <ApplicationServices/ApplicationServices.h>
 
 
-/**
- * Work around apparent GL driver bug, wherein
- * attempting to simultaneously bind the same buffer
- * to multiple VAOs on separate contexts causes a crash.
- * (Try running CompareCameras.vuo without this.)
- *
- * Also, using VuoSceneObjectRenderer and VuoSceneRender simultaneously seems to lead to crashes,
- * so we also use this semaphore to serialize OpenGL Transform Feedback.
- * https://b33p.net/kosada/node/8498
- */
-dispatch_semaphore_t VuoGlSemaphore;
-/**
- * Initialize `VuoGlSemaphore`.
- */
-static void __attribute__((constructor)) VuoSceneRenderer_init()
-{
-	VuoGlSemaphore = dispatch_semaphore_create(1);
-}
-
-
 static map<VuoGlPoolType, map<unsigned long, vector<GLuint> > > VuoGlPool __attribute__((init_priority(101)));
 static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGlPool.
 
@@ -65,7 +45,7 @@ static dispatch_semaphore_t VuoGlPool_semaphore;	///< Serializes access to VuoGl
  *
  * @threadAnyGL
  */
-GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
+GLuint VuoGlPool_use(VuoGlContext glContext, VuoGlPoolType type, unsigned long size)
 {
 	GLuint name = 0;
 
@@ -79,7 +59,7 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
 		}
 		else
 		{
-			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
 
 			if (type == VuoGlPool_ArrayBuffer || type == VuoGlPool_ElementArrayBuffer)
 			{
@@ -92,8 +72,6 @@ GLuint VuoGlPool_use(VuoGlPoolType type, unsigned long size)
 			}
 			else
 				VUserLog("Unknown pool type %d.", type);
-
-			VuoGlContext_disuse(cgl_ctx);
 		}
 	}
 	dispatch_semaphore_signal(VuoGlPool_semaphore);
@@ -132,7 +110,7 @@ static void __attribute__((constructor)) VuoGlPool_referenceCountsInit(void)
 /**
  * Helper for @ref VuoGlPool_retain.
  */
-void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int line, const char *func)
+void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int linenumber, const char *func)
 {
 	if (glBufferName == 0)
 		return;
@@ -146,13 +124,13 @@ void VuoGlPool_retainF(GLuint glBufferName, const char *file, unsigned int line,
 		++VuoGlPool_referenceCounts[glBufferName];
 
 	dispatch_semaphore_signal(VuoGlPool_referenceCountsSemaphore);
-//	VuoLog(file, line, func, "VuoGlPool_retain(%d)", glBufferName);
+//	VuoLog(file, linenumber, func, "VuoGlPool_retain(%d)", glBufferName);
 }
 
 /**
  * Helper for @ref VuoGlPool_release.
  */
-void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int line, const char *func)
+void VuoGlPool_releaseF(VuoGlContext glContext, VuoGlPoolType type, unsigned long size, GLuint glBufferName, const char *file, unsigned int linenumber, const char *func)
 {
 	if (glBufferName == 0)
 		return;
@@ -161,7 +139,7 @@ void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferN
 
 	VuoGlPoolReferenceCounts::iterator it = VuoGlPool_referenceCounts.find(glBufferName);
 	if (it == VuoGlPool_referenceCounts.end())
-		VuoLog(file, line, func, "Error: VuoGlPool_release() was called with OpenGL Buffer Object %d, which was never retained.", glBufferName);
+		VuoLog(file, linenumber, func, "Error: VuoGlPool_release() was called with OpenGL Buffer Object %d, which was never retained.", glBufferName);
 	else
 	{
 		if (--VuoGlPool_referenceCounts[glBufferName] == 0)
@@ -169,7 +147,7 @@ void VuoGlPool_releaseF(VuoGlPoolType type, unsigned long size, GLuint glBufferN
 	}
 
 	dispatch_semaphore_signal(VuoGlPool_referenceCountsSemaphore);
-//	VuoLog(file, line, func, "VuoGlPool_release(%d)", glBufferName);
+//	VuoLog(file, linenumber, func, "VuoGlPool_release(%d)", glBufferName);
 }
 
 
@@ -338,7 +316,7 @@ unsigned long VuoGlTexture_getMaximumTextureBytes(VuoGlContext glContext)
 								  // See https://b33p.net/kosada/node/10791
 								  // See https://b33p.net/kosada/node/12030
 								  maximumTextureBytes = (textureMegabytes - 85) * 1048576UL * .9;
-								  VDebugLog("Texture : %ld MB", maximumTextureBytes / 1024 / 1024);
+								  VDebugLog("%ld MB", maximumTextureBytes / 1024 / 1024);
 								  break;
 							  }
 						  }
@@ -460,9 +438,9 @@ static void VuoGlTexurePool_disuse(GLenum internalformat, unsigned short width, 
 	if (internalformat == 0)
 	{
 		VUserLog("Error:  Can't recycle texture %d since we don't know its internalformat.  Deleting.", name);
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-		glDeleteTextures(1, &name);
-		VuoGlContext_disuse(cgl_ctx);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			glDeleteTextures(1, &name);
+		});
 		return;
 	}
 
@@ -629,33 +607,34 @@ static dispatch_semaphore_t VuoGlPool_canceledAndCompleted;	///< Signals when th
  */
 static void VuoGlPool_cleanup(void *blah)
 {
+	// Log VRAM use every 10 seconds.
+	static unsigned long cleanupCount = 0;
+	if ((++cleanupCount % (long)(10./cleanupInterval) == 0)
+	 && VuoIsDebugEnabled()
+	 && (VuoGlTexturePool_allocatedBytes > 0 || VuoGlTexturePool_allocatedBytesMax > 0))
+	{
+		__block unsigned long maximumTextureBytes;
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(cgl_ctx);
+		});
+
+		if (maximumTextureBytes > 0)
+			VUserLog("VRAM use: %5lu MB current (%3lu%% of system), %5lu MB max (%3lu%% of system)",
+				  VuoGlTexturePool_allocatedBytes/1024/1024,
+				  VuoGlTexturePool_allocatedBytes*100/maximumTextureBytes,
+				  VuoGlTexturePool_allocatedBytesMax/1024/1024,
+				  VuoGlTexturePool_allocatedBytesMax*100/maximumTextureBytes);
+		else
+			VUserLog("VRAM use: %5lu MB current, %5lu MB max",
+				  VuoGlTexturePool_allocatedBytes/1024/1024,
+				  VuoGlTexturePool_allocatedBytesMax/1024/1024);
+	}
+
+
+	vector<GLuint> texturesToDelete;
+
 	dispatch_semaphore_wait(VuoGlTexturePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
-		// Log VRAM use every 10 seconds.
-		static unsigned long cleanupCount = 0;
-		if ((++cleanupCount % (long)(10./cleanupInterval) == 0)
-		 && VuoIsDebugEnabled()
-		 && (VuoGlTexturePool_allocatedBytes > 0 || VuoGlTexturePool_allocatedBytesMax > 0))
-		{
-			unsigned long maximumTextureBytes;
-			{
-				VuoGlContext glContext = VuoGlContext_use();
-				maximumTextureBytes = VuoGlTexture_getMaximumTextureBytes(glContext);
-				VuoGlContext_disuse(glContext);
-			}
-
-			if (maximumTextureBytes > 0)
-				VUserLog("VRAM use: %5lu MB current (%3lu%% of system), %5lu MB max (%3lu%% of system)",
-					  VuoGlTexturePool_allocatedBytes/1024/1024,
-					  VuoGlTexturePool_allocatedBytes*100/maximumTextureBytes,
-					  VuoGlTexturePool_allocatedBytesMax/1024/1024,
-					  VuoGlTexturePool_allocatedBytesMax*100/maximumTextureBytes);
-			else
-				VUserLog("VRAM use: %5lu MB current, %5lu MB max",
-					  VuoGlTexturePool_allocatedBytes/1024/1024,
-					  VuoGlTexturePool_allocatedBytesMax/1024/1024);
-		}
-
 		double now = VuoLogGetTime();
 //		VLog("pool:");
 		for (VuoGlTexturePoolType::iterator internalformat = VuoGlTexturePool->begin(); internalformat != VuoGlTexturePool->end(); ++internalformat)
@@ -670,15 +649,12 @@ static void VuoGlPool_cleanup(void *blah)
 					if (textureCount)
 					{
 //						VLog("\t\t\tpurging %lu expired textures", textureCount);
-						CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
 						while (!dimensions->second.first.empty())
 						{
 							GLuint textureName = dimensions->second.first.front();
 							dimensions->second.first.pop();
-
-							glDeleteTextures(1, &textureName);
+							texturesToDelete.push_back(textureName);
 						}
-						VuoGlContext_disuse(cgl_ctx);
 					}
 
 					internalformat->second.erase(dimensions++);
@@ -689,6 +665,7 @@ static void VuoGlPool_cleanup(void *blah)
 		}
 	}
 	dispatch_semaphore_signal(VuoGlTexturePool_semaphore);
+
 
 	dispatch_semaphore_wait(VuoIoSurfacePool_semaphore, DISPATCH_TIME_FOREVER);
 	{
@@ -725,11 +702,7 @@ static void VuoGlPool_cleanup(void *blah)
 //					VLog("Purging expired IOSurface %d + GL Texture %d (%dx%d) — it's %gs old", IOSurfaceGetID(e.ioSurface), e.texture, poolQueue->first.first, poolQueue->first.second, now - e.lastUsedTime);
 
 					CFRelease(e.ioSurface);
-
-					CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
-					glDeleteTextures(1, &e.texture);
-					VuoGlContext_disuse(cgl_ctx);
-
+					texturesToDelete.push_back(e.texture);
 					poolIoSurfaceEntry = poolQueue->second.erase(poolIoSurfaceEntry);
 				}
 				else
@@ -738,6 +711,17 @@ static void VuoGlPool_cleanup(void *blah)
 		}
 	}
 	dispatch_semaphore_signal(VuoIoSurfacePool_semaphore);
+
+
+	// Delete textures after we've released the pool semaphores, to avoid deadlock, and to avoid hogging the shared GL context.
+	if (texturesToDelete.size())
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			for (vector<GLuint>::const_iterator i = texturesToDelete.begin(); i != texturesToDelete.end(); ++i)
+			{
+				GLuint t = *i;
+				glDeleteTextures(1, &t);
+			}
+		});
 }
 static void __attribute__((constructor)) VuoGlPool_init(void)
 {
@@ -968,6 +952,7 @@ __attribute__((constructor)) static void VuoGlShaderPool_init(void)
 
 #include "GPUNoiseLib.h"
 #include "VuoGlslAlpha.h"
+#include "VuoGlslBrightness.h"
 #include "VuoGlslProjection.h"
 #include "VuoGlslRandom.h"
 #include "deform.h"
@@ -1025,6 +1010,7 @@ GLuint VuoGlShader_use(VuoGlContext glContext, GLenum type, const char *source)
 
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "GPUNoiseLib",       GPUNoiseLib_glsl,       GPUNoiseLib_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslAlpha",      VuoGlslAlpha_glsl,      VuoGlslAlpha_glsl_len);
+		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslBrightness", VuoGlslBrightness_glsl, VuoGlslBrightness_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslProjection", VuoGlslProjection_glsl, VuoGlslProjection_glsl_len);
 		combinedSource = VuoGlShader_replaceInclude(combinedSource, "VuoGlslRandom",     VuoGlslRandom_glsl,     VuoGlslRandom_glsl_len);
 
@@ -1076,8 +1062,6 @@ typedef std::map<long, GLuint> VuoGlUniformMap;	///< A quick way to look up a un
  *
  * Do not call `glDeleteShaders()` on the returned program;
  * it's expected to persist throughout the lifetime of the process.
- *
- * Be sure to call @ref VuoGlProgram_lock() before you call `glUseProgram()`.
  */
 VuoGlProgram VuoGlProgram_use(VuoGlContext glContext, const char *description, GLuint vertexShaderName, GLuint geometryShaderName, GLuint fragmentShaderName, VuoMesh_ElementAssemblyMethod assemblyMethod, unsigned int expectedOutputPrimitiveCount)
 {
@@ -1223,52 +1207,6 @@ int VuoGlProgram_getUniformLocation(VuoGlProgram program, const char *uniformIde
 	return -1;
 }
 
-typedef map<GLuint, dispatch_semaphore_t> VuoGlProgramLocksType;	///< Type for VuoGlProgramLocks.
-static VuoGlProgramLocksType VuoGlProgramLocks;	///< A semaphore for each GL program.
-static dispatch_semaphore_t VuoGlProgramLocks_semaphore;	///< Serializes access to VuoGlProgramLocks.
-static void __attribute__((constructor)) VuoGlProgramLocks_init(void)
-{
-	VuoGlProgramLocks_semaphore = dispatch_semaphore_create(1);
-}
-
-/**
- * Waits for the process-wide lock for this GL program to become available, and claims it.
- */
-void VuoGlProgram_lock(GLuint programName)
-{
-	// Fetch (or create) the semaphore (but don't wait yet).
-	dispatch_semaphore_t programSemaphore;
-	{
-		dispatch_semaphore_wait(VuoGlProgramLocks_semaphore, DISPATCH_TIME_FOREVER);
-		VuoGlProgramLocksType::iterator it = VuoGlProgramLocks.find(programName);
-		if (it != VuoGlProgramLocks.end())
-			programSemaphore = it->second;
-		else
-		{
-			programSemaphore = dispatch_semaphore_create(1);
-			VuoGlProgramLocks[programName] = programSemaphore;
-		}
-		dispatch_semaphore_signal(VuoGlProgramLocks_semaphore);
-	}
-
-	// Now that we've released VuoGlProgramLocks_semaphore, we can wait.
-	dispatch_semaphore_wait(programSemaphore, DISPATCH_TIME_FOREVER);
-}
-
-/**
- * Releases the process-wide lock for this GL program.
- */
-void VuoGlProgram_unlock(GLuint programName)
-{
-	dispatch_semaphore_wait(VuoGlProgramLocks_semaphore, DISPATCH_TIME_FOREVER);
-	VuoGlProgramLocksType::iterator it = VuoGlProgramLocks.find(programName);
-	if (it != VuoGlProgramLocks.end())
-		dispatch_semaphore_signal(it->second);
-	else
-		VUserLog("Error: I don't know about GL Program %d.", programName);
-	dispatch_semaphore_signal(VuoGlProgramLocks_semaphore);
-}
-
 /// Helper for @ref VuoGl_stringForConstant.
 #define RETURN_STRING_IF_EQUAL(value) if (constant == value) return strdup(#value)
 
@@ -1315,6 +1253,7 @@ char *VuoGl_stringForConstant(GLenum constant)
 	RETURN_STRING_IF_EQUAL(GL_DEPTH_COMPONENT16);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_2D);
 	RETURN_STRING_IF_EQUAL(GL_TEXTURE_RECTANGLE_ARB);
+	RETURN_STRING_IF_EQUAL(GL_FLOAT);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_BYTE_3_3_2);
 	RETURN_STRING_IF_EQUAL(GL_UNSIGNED_SHORT);

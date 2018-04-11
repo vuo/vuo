@@ -27,7 +27,7 @@ VuoModuleMetadata({
 						 "VuoText",
 						 "VuoList_VuoPoint3d",
 						 "VuoMathExpressionParser",
-						 "muParser"
+						 "muparser"
 					 ]
 				 });
 #endif

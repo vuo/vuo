@@ -12,7 +12,7 @@
 
 VuoModuleMetadata({
 					 "title" : "Copy Layer (TRS)",
-					 "keywords" : [ "duplicate", "clone", "array", "instance", "instantiate", "populate" ],
+					 "keywords" : [ "duplicate", "clone", "repeat", "replicate", "array", "instance", "instantiate", "populate" ],
 					 "version" : "2.0.1",
 					 "node": {
 						  "exampleCompositions" : [ ]

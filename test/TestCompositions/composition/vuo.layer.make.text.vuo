@@ -1,0 +1,36 @@
+/**
+ * @file
+ * Test composition.
+ *
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
+ * This code may be modified and distributed under the terms of the MIT License.
+ * For more information, see http://vuo.org/license.
+ * @see This is a Vuo Composition source code file.  See http://vuo.org for further information.
+ */
+
+digraph G
+{
+GetImageWidth [type="vuo.image.get.width" version="1.0.0" label="Get Image Width|<refresh>refresh\l|<image>image\l|<width>width\r" pos="540,330"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="315,75" _color="{\"r\":0,\"g\":0,\"b\":0,\"a\":1}" _center="{\"x\":0.0,\"y\":0.0}" _rotation="0.0" _width="2.0" _height="2.0"];
+MakeList3 [type="vuo.list.make.2.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="478,176"];
+MakeTextImage [type="vuo.image.make.text" version="1.0.2" label="Make Text Image|<refresh>refresh\l|<text>text\l|<font>font\l|<image>image\r" pos="315,330" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="315,225" _font="{\"fontName\":\"HelveticaNeue-Thin\",\"pointSize\":24,\"underline\":false,\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1},\"alignment\":\"left\",\"characterSpacing\":1,\"lineSpacing\":1}" _center="{\"x\":0.0,\"y\":0.0}"];
+MeasureSharpness3 [type="vuo.image.measureSharpness" version="1.0.0" label="Measure Sharpness|<refresh>refresh\l|<image>image\l|<contrastType>contrastType\l|<maximumSharpness>maximumSharpness\r|<averageSharpness>averageSharpness\r|<minimumSharpness>minimumSharpness\r" pos="765,165" _contrastType="\"rec709\""];
+RenderLayersToImage [type="vuo.layer.render.image" version="1.2.0" label="Render Layers to Image|<refresh>refresh\l|<layers>layers\l|<width>width\l|<height>height\l|<colorDepth>colorDepth\l|<multisampling>multisampling\l|<image>image\r|<renderedLayers>renderedLayers\r" pos="540,165" _width="300" _height="50" _colorDepth="\"8bpc\"" _multisampling="\"off\""];
+SnapValue5 [type="vuo.math.snap.VuoReal" version="1.0.0" label="Snap Value|<refresh>refresh\l|<value>value\l|<spacing>spacing\l|<center>center\l|<snappedValue>snappedValue\r" pos="1035,180" _spacing="0.03" _center="0"];
+PublishedInputs [type="vuo.in" label="PublishedInputs|<Text>Text\r|<Anchor>Anchor\r" _Text_type="VuoText" _Text="\"Hello World!\"" _Anchor_type="VuoAnchor" _Anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}"];
+PublishedOutputs [type="vuo.out" label="PublishedOutputs|<Sharpness>Sharpness\l|<PixelsWide>PixelsWide\l" _Sharpness_type="VuoReal" _PixelsWide_type="VuoInteger"];
+
+GetImageWidth:width -> PublishedOutputs:PixelsWide;
+MakeColorLayer:layer -> MakeList3:1;
+MakeList3:list -> RenderLayersToImage:layers;
+MakeTextImage:image -> GetImageWidth:image;
+MakeTextLayer:layer -> MakeList3:2;
+MeasureSharpness3:averageSharpness -> SnapValue5:value;
+PublishedInputs:Anchor -> MakeTextLayer:anchor;
+PublishedInputs:Text -> MakeColorLayer:refresh;
+PublishedInputs:Text -> MakeTextImage:text;
+PublishedInputs:Text -> MakeTextLayer:text;
+RenderLayersToImage:image -> MeasureSharpness3:image;
+SnapValue5:snappedValue -> PublishedOutputs:Sharpness;
+}

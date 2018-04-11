@@ -15,7 +15,7 @@ VuoModuleMetadata({
 					 "keywords" : [ "frustum", "projection", "opengl", "scenegraph", "graphics",
 						 "trackball", "ViewCube", "gizmo",
 						 "navigate", "view", "browse",
-						 "pan", "dolly", "roll", "yaw", "pitch" ],
+						 "pan", "dolly", "roll", "yaw", "pitch", "orbit" ],
 					 "version" : "1.0.1",
 					 "dependencies" : [ "VuoMouse" ],
 					 "node": {

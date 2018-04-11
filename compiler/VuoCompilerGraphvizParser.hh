@@ -30,6 +30,7 @@ typedef struct Agraph_t graph_t; ///< Shorthand for @c Agraph_t.
 class VuoCompilerGraphvizParser
 {
 private:
+	static dispatch_queue_t graphvizQueue;  ///< Serializes calls to Graphviz parsing functions.
 	VuoCompiler *compiler;
 	graph_t *graph;
 	map<string, VuoNodeClass *> dummyNodeClassForName;
@@ -46,7 +47,7 @@ private:
 	string description;
 	string copyright;
 
-	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler);
+	VuoCompilerGraphvizParser(const string &composition, VuoCompiler *compiler, bool nodeClassNamesOnly);
 	void makeDummyNodeClasses(void);
 	void makeNodeClasses(void);
 	void makeNodes(void);
@@ -62,8 +63,9 @@ private:
 	static VuoType * inferTypeForPublishedPort(string name, const set<VuoCompilerPort *> &connectedPorts);
 
 public:
-	static VuoCompilerGraphvizParser * newParserFromCompositionFile(string path, VuoCompiler *compiler = NULL);
+	static VuoCompilerGraphvizParser * newParserFromCompositionFile(const std::string &path, VuoCompiler *compiler = NULL);
 	static VuoCompilerGraphvizParser * newParserFromCompositionString(const string &composition, VuoCompiler *compiler = NULL);
+	static set<std::string> getNodeClassNamesFromCompositionFile(const string &path, VuoCompiler *compiler);
 	vector<VuoNode *> getNodes(void);
 	vector<VuoCable *> getCables(void);
 	vector<VuoPublishedPort *> getPublishedInputPorts(void);

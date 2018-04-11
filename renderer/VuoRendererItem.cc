@@ -46,7 +46,7 @@ bool VuoRendererItem::getSnapToGrid()
 bool VuoRendererItem::getRenderActivity() const
 {
 	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
-	return (composition && composition->getRenderActivity());
+	return (composition && composition->getRenderNodeActivity());
 }
 
 /**

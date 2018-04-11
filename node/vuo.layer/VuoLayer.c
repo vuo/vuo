@@ -287,17 +287,14 @@ VuoLayer VuoLayer_makeRoundedRectangle(VuoText name, VuoColor color, VuoPoint2d 
 {
 	VuoLayer o;
 
-	// Adjust the rotation so the aspect is never less than 1 (since that isn't supported by the shader).
-	bool flipped = (width/height < 1);
-
 	// Since VuoShader_makeUnlitRoundedRectangleShader() produces a shader that fills half the size (to leave enough room for sharpness=0),
 	// make the layer twice the specified size.
 	o.sceneObject = VuoSceneObject_makeQuad(
-				VuoShader_makeUnlitRoundedRectangleShader(color, sharpness, roundness, (flipped ? height/width : width/height)),
+				VuoShader_makeUnlitRoundedRectangleShader(color, sharpness, roundness, width/height),
 				VuoPoint3d_make(center.x, center.y, 0),
-				VuoPoint3d_make(0, 0, rotation + (flipped ? 90 : 0)),
-				(flipped ? height : width ) * 2,
-				(flipped ? width  : height) * 2
+				VuoPoint3d_make(0, 0, rotation),
+				width  * 2,
+				height * 2
 				);
 	o.sceneObject.name = name;
 	return o;
@@ -319,7 +316,7 @@ VuoLayer VuoLayer_makeRoundedRectangle(VuoText name, VuoColor color, VuoPoint2d 
 VuoLayer VuoLayer_makeLinearGradient(VuoText name, VuoList_VuoColor colors, VuoPoint2d start, VuoPoint2d end, VuoPoint2d center, VuoReal rotation, VuoReal width, VuoReal height, VuoReal noiseAmount)
 {
 	VuoShader shader = VuoShader_makeLinearGradientShader();
-	VuoShader_setLinearGradientShaderValues(shader, colors, start, end, noiseAmount);
+	VuoShader_setLinearGradientShaderValues(shader, colors, start, end, 1, noiseAmount);
 	VuoLayer o;
 	o.sceneObject = VuoSceneObject_makeQuad(
 				shader,
@@ -415,7 +412,7 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
 	{
 		VuoImage image = VuoShader_getUniform_VuoImage(so.shader, "texture");
 		if (image && so.isRealSize)
-			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, so.transform.translation.x, so.transform.translation.y, viewportWidth, viewportHeight, backingScaleFactor, matrix);
+			VuoTransform_getBillboardMatrix(image->pixelsWide, image->pixelsHigh, image->scaleFactor, so.preservePhysicalSize, so.transform.translation.x, so.transform.translation.y, viewportWidth, viewportHeight, backingScaleFactor, so.mesh->submeshes[0].positions[0].x, matrix);
 		else
 			VuoTransform_getMatrix(so.transform, matrix);
 
@@ -447,8 +444,7 @@ static VuoRectangle VuoLayer_getBoundingRectangleWithSceneObject(VuoSceneObject 
  */
 VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewportWidth, VuoInteger viewportHeight, float backingScaleFactor)
 {
-	if( anchor.horizontalAlignment == VuoHorizontalAlignment_Center &&
-		anchor.verticalAlignment == VuoVerticalAlignment_Center )
+	if (VuoAnchor_areEqual(anchor, VuoAnchor_makeCentered()))
 		return child;
 
 	VuoTransform childTransform = child.sceneObject.transform;
@@ -460,14 +456,14 @@ VuoLayer VuoLayer_setAnchor(VuoLayer child, VuoAnchor anchor, VuoInteger viewpor
 	VuoPoint2d boundsCenter = rect.center;
 	VuoPoint3d parentTranslation = VuoPoint3d_make(childTranslation.x - boundsCenter.x, childTranslation.y - boundsCenter.y, 0);
 
-	if(anchor.horizontalAlignment == VuoHorizontalAlignment_Left)
+	if (VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Left)
 		boundsCenter.x += rect.size.x * .5f;
-	else if(anchor.horizontalAlignment == VuoHorizontalAlignment_Right)
+	else if (VuoAnchor_getHorizontal(anchor) == VuoHorizontalAlignment_Right)
 		boundsCenter.x -= rect.size.x * .5f;
 
-	if(anchor.verticalAlignment == VuoVerticalAlignment_Top)
+	if (VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Top)
 		boundsCenter.y -= rect.size.y * .5f;
-	else if(anchor.verticalAlignment == VuoVerticalAlignment_Bottom)
+	else if (VuoAnchor_getVertical(anchor) == VuoVerticalAlignment_Bottom)
 		boundsCenter.y += rect.size.y * .5f;
 
 	child.sceneObject.transform.translation = VuoPoint3d_make(boundsCenter.x, boundsCenter.y, 0);

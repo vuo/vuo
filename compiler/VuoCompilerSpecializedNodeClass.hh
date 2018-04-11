@@ -94,7 +94,7 @@ public:
 	virtual string createSpecializedNodeClassNameWithReplacement(string genericTypeName, string specializedTypeName);
 	string getDependencyName(void);
 
-	static VuoNodeClass * newNodeClass(string nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue);
+	static VuoNodeClass * newNodeClass(const std::string &nodeClassName, VuoCompiler *compiler, dispatch_queue_t llvmQueue, const set<string> &knownModuleKeys = set<string>());
 	static VuoCompilerNodeClass * getNodeClassForNode(VuoCompilerNodeClass *origNodeClass, VuoCompiler *compiler);
 	static void replaceGenericTypesWithBacking(string &nodeClassSource);
 };

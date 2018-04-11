@@ -23,6 +23,7 @@ VuoModuleMetadata({
 					 "dependencies" : [
 						"Carbon.framework",
 						"VuoInteger",
+						"VuoReal",
 						"VuoTextCase",
 						"VuoList_VuoInteger"
 					 ]
@@ -64,14 +65,12 @@ VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength, VuoTe
 	if (!subject)
 		return VuoText_make("");
 
-	VuoText valueWithReturn = VuoText_replace(subject, "\n", "⏎");
-
 	size_t length = VuoText_length(subject);
 	if (length <= maxLength)
-		return valueWithReturn;
+		return subject;
 	else
 	{
-		VuoText abbreviation = VuoText_substring(valueWithReturn, (where == VuoTextTruncation_End ? 1 : 1 + length - maxLength), maxLength);
+		VuoText abbreviation = VuoText_substring(subject, (where == VuoTextTruncation_End ? 1 : 1 + length - maxLength), maxLength);
 		VuoText ellipsis = VuoText_make("…");
 		VuoText summaryParts[2] = { abbreviation, ellipsis };
 		if (where == VuoTextTruncation_Beginning)
@@ -81,8 +80,6 @@ VuoText VuoText_truncateWithEllipsis(const VuoText subject, int maxLength, VuoTe
 		}
 		VuoText summaryWhole = VuoText_append(summaryParts, 2);
 
-		VuoRetain(valueWithReturn);
-		VuoRelease(valueWithReturn);
 		VuoRetain(abbreviation);
 		VuoRelease(abbreviation);
 		VuoRetain(ellipsis);
@@ -103,13 +100,21 @@ char * VuoText_getSummary(const VuoText value)
 	if (VuoText_isEmpty(value))
 		return strdup("<code>&#0;</code>");
 
-	VuoText truncatedText = VuoText_truncateWithEllipsis(value, 50, VuoTextTruncation_End);
-	VuoRetain(truncatedText);
-	VuoText escapedText = VuoText_replace(truncatedText, "<", "&lt;");
-	VuoRetain(escapedText);
-	VuoRelease(truncatedText);
-	char *summary = VuoText_format("<code>%s</code>", escapedText);
-	VuoRelease(escapedText);
+	VuoText truncatedText = VuoText_truncateWithEllipsis(value, 1024, VuoTextTruncation_End);
+
+	// VuoText_truncateWithEllipsis() may return the same string passed in.
+	// Only dealloc it if new text was actually created.
+	if (truncatedText != value)
+		VuoRetain(truncatedText);
+
+	VuoText escapedText = VuoText_replace(truncatedText, "&", "&amp;");
+	if (truncatedText != value)
+		VuoRelease(truncatedText);
+
+	VuoLocal(escapedText);
+	VuoText escapedText2 = VuoText_replace(escapedText, "<", "&lt;");
+	VuoLocal(escapedText2);
+	char *summary = VuoText_format("<code>%s</code>", escapedText2);
 	return summary;
 }
 
@@ -133,17 +138,25 @@ VuoText VuoText_make(const char * unquotedString)
  *
  * Use this, for example, to safely handle a string that's part of a network packet.
  *
- * This function scans up to `maxLength` bytes in `data`.
+ * If `data` ends with a NULL terminator, this function simply copies it into a new VuoText instance.
+ *
+ * If `data` does not end with a NULL terminator, this function scans up to `maxLength` bytes in `data`.
  * If it finds a NULL terminator, it returns text up to and including the NULL terminator.
  * If it doesn't find a NULL terminator, it returns `maxLength` characters followed by a NULL terminator.
  *
- * This function does not yet respect multi-byte UTF8 characters.
- * For now, only give it ASCII-7 input data.
+ * If `data` is in a multi-byte UTF8 character sequence when `maxLength` is reached,
+ * the sequence will be terminated partway, probably resulting in an invalid UTF8 sequence.
  */
 VuoText VuoText_makeWithMaxLength(const void *data, const size_t maxLength)
 {
 	char *text;
-	if (data)
+	if (data && ((char *)data)[maxLength-1] == 0)
+	{
+		// Faster than scanning through the array byte-by-byte.
+		text = (char *)calloc(1, maxLength);
+		memcpy(text, data, maxLength);
+	}
+	else if (data)
 	{
 		text = (char *)calloc(1, maxLength+1);
 		for (unsigned int i = 0; i < maxLength; ++i)
@@ -189,6 +202,67 @@ VuoText VuoText_makeFromCFString(const void *cfs)
 }
 
 /**
+ * @ref VuoText_isValidUtf8 is based on code by Bjoern Hoehrmann.
+ *
+ * Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+ * See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#define UTF8_ACCEPT 0	///< enough bytes have been read for a character
+#define UTF8_REJECT 1	///< the byte is not allowed to occur at its position
+
+/**
+ * The first part maps bytes to character classes, the second part encodes a deterministic finite automaton using these character classes as transitions.
+ */
+static const uint8_t utf8d[] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20..3f
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 40..5f
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 60..7f
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, // 80..9f
+  7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, // a0..bf
+  8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // c0..df
+  0xa,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x4,0x3,0x3, // e0..ef
+  0xb,0x6,0x6,0x6,0x5,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8, // f0..ff
+  0x0,0x1,0x2,0x3,0x5,0x8,0x7,0x1,0x1,0x1,0x4,0x6,0x1,0x1,0x1,0x1, // s0..s0
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1, // s1..s2
+  1,2,1,1,1,1,1,2,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1, // s3..s4
+  1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,3,1,1,1,1,1,1, // s5..s6
+  1,3,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // s7..s8
+};
+
+/**
+ * Returns true if `data` is valid UTF-8 text.
+ */
+static bool VuoText_isValidUtf8(const unsigned char *data, unsigned long size)
+{
+	// Faster than CFStringCreateFromExternalRepresentation.
+	uint32_t codepoint;
+	for (uint32_t pos = 0, state = 0; *data && pos++ < size; ++data)
+	{
+		uint32_t byte = *data;
+		uint32_t type = utf8d[byte];
+
+		codepoint = (state != UTF8_ACCEPT) ?
+		(byte & 0x3fu) | (codepoint << 6) :
+		(0xff >> type) & (byte);
+
+		state = utf8d[256 + state*16 + type];
+
+		if (state == UTF8_REJECT)
+			return false;
+	}
+
+	return true;
+}
+
+/**
  * Attempts to interpret `data` as UTF-8 text.
  *
  * Returns NULL if `data` is not valid UTF-8 text (e.g., if it contains byte 0xfe or 0xff).
@@ -200,41 +274,10 @@ VuoText VuoText_makeFromData(const unsigned char *data, const unsigned long size
 	if (!size || !data)
 		return NULL;
 
-	CFDataRef cfd = CFDataCreate(NULL, data, size);
-	if (!cfd)
+	if (!VuoText_isValidUtf8(data, size))
 		return NULL;
 
-	CFStringRef cfs = CFStringCreateFromExternalRepresentation(NULL, cfd, kCFStringEncodingUTF8);
-	if (!cfs)
-	{
-		CFRelease(cfd);
-		return NULL;
-	}
-
-	VuoText text = VuoText_makeFromCFString(cfs);
-	CFRelease(cfs);
-	CFRelease(cfd);
-
-	return text;
-}
-
-/**
- * Creates a new VuoText from a MacRoman-encoded string.
- */
-VuoText VuoText_makeFromMacRoman(const char *string)
-{
-	if (!string)
-		return NULL;
-
-	size_t len = strlen(string);
-	CFStringRef cf = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)string, len, kCFStringEncodingMacRoman, false);
-	if (!cf)
-		return NULL;
-
-	VuoText t = VuoText_makeFromCFString(cf);
-
-	CFRelease(cf);
-	return t;
+	return VuoText_makeWithMaxLength(data, size);
 }
 
 /**
@@ -274,6 +317,25 @@ VuoText VuoText_makeFromUtf32(const uint32_t* data, size_t size)
 }
 
 /**
+ * Creates a new VuoText from a MacRoman-encoded string.
+ */
+VuoText VuoText_makeFromMacRoman(const char *string)
+{
+	if (!string)
+		return NULL;
+
+	size_t len = strlen(string);
+	CFStringRef cf = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)string, len, kCFStringEncodingMacRoman, false);
+	if (!cf)
+		return NULL;
+
+	VuoText t = VuoText_makeFromCFString(cf);
+
+	CFRelease(cf);
+	return t;
+}
+
+/**
  * @ingroup VuoText
  * Returns the number of Unicode characters in the text.
  */
@@ -289,6 +351,17 @@ size_t VuoText_length(const VuoText text)
 	size_t length = CFStringGetLength(s);
 	CFRelease(s);
 	return length;
+}
+
+/**
+ * Returns the number of bytes in the text, not including the null terminator.
+ */
+size_t VuoText_byteCount(const VuoText text)
+{
+	if (! text)
+		return 0;
+
+	return strlen(text);
 }
 
 /**
@@ -329,11 +402,9 @@ bool VuoText_areEqual(const VuoText text1, const VuoText text2)
 }
 
 /**
- * @ingroup VuoText
- * Returns true if @a text1 is ordered before @a text2 in a case-sensitive lexicographic ordering (which treats
- * different UTF-8 encodings and Unicode character decompositions as equivalent).
+ * Helper for `VuoText_isLessThan*()`.
  */
-bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
+static bool isLessThan(const VuoText text1, const VuoText text2, CFStringCompareFlags flags)
 {
 	if (! text1 || ! text2)
 		return (! text1) && text2;
@@ -349,11 +420,97 @@ bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
 		return false;
 	}
 
-	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral | kCFCompareWidthInsensitive);
+	CFComparisonResult result = CFStringCompare(s1, s2, kCFCompareNonliteral | kCFCompareWidthInsensitive | flags);
 
 	CFRelease(s1);
 	CFRelease(s2);
 	return (result == kCFCompareLessThan);
+}
+
+/**
+ * @ingroup VuoText
+ * Returns true if @a text1 is ordered before @a text2 in a case-sensitive lexicographic ordering (which treats
+ * different UTF-8 encodings and Unicode character decompositions as equivalent).
+ */
+bool VuoText_isLessThan(const VuoText text1, const VuoText text2)
+{
+	return isLessThan(text1, text2, 0);
+}
+
+/**
+ * @ingroup VuoText
+ * Returns true if @a text1 is ordered before @a text2 in a case-insensitive lexicographic ordering (which treats
+ * different UTF-8 encodings and Unicode character decompositions as equivalent).
+ */
+bool VuoText_isLessThanCaseInsensitive(const VuoText text1, const VuoText text2)
+{
+	return isLessThan(text1, text2, kCFCompareCaseInsensitive);
+}
+
+/**
+ * @ingroup VuoText
+ * Returns true if the number in @a text1 is less than the number in @a text2.
+ */
+bool VuoText_isLessThanNumeric(const VuoText text1, const VuoText text2)
+{
+	VuoReal real1 = (text1 ? VuoReal_makeFromString(text1) : 0);
+	VuoReal real2 = (text2 ? VuoReal_makeFromString(text2) : 0);
+	return real1 < real2;
+}
+
+/**
+ * @ingroup VuoText
+ * Returns true if @a text1 matches @a text2 based on @a comparison.
+ *
+ * @a text1 is the subject of the comparison and @a text2 is the object. For example, if the comparison is
+ * "begins with", this function checks if @a text1 begins with @a text2.
+ */
+bool VuoText_compare(VuoText text1, VuoTextComparison comparison, VuoText text2)
+{
+	if (! comparison.isCaseSensitive)
+	{
+		text1 = VuoText_changeCase(text1, VuoTextCase_LowercaseAll);
+		text2 = VuoText_changeCase(text2, VuoTextCase_LowercaseAll);
+	}
+
+	bool match = false;
+	if (comparison.type == VuoTextComparison_Equals)
+	{
+		match = VuoText_areEqual(text1, text2);
+	}
+	else if (comparison.type == VuoTextComparison_Contains)
+	{
+		match = (VuoText_findFirstOccurrence(text1, text2, 1) > 0);
+	}
+	else if (comparison.type == VuoTextComparison_BeginsWith || comparison.type == VuoTextComparison_EndsWith)
+	{
+		size_t aLength = VuoText_length(text1);
+		size_t bLength = VuoText_length(text2);
+
+		if (bLength == 0)
+		{
+			match = true;
+		}
+		else
+		{
+			int startIndex = (comparison.type == VuoTextComparison_BeginsWith ? 1 : aLength - bLength + 1);
+			VuoText aSub = VuoText_substring(text1, startIndex, bLength);
+			match = VuoText_areEqual(aSub, text2);
+
+			VuoRetain(aSub);
+			VuoRelease(aSub);
+		}
+	}
+
+	if (! comparison.isCaseSensitive)
+	{
+		VuoRetain(text1);
+		VuoRelease(text1);
+		VuoRetain(text2);
+		VuoRelease(text2);
+	}
+
+	return match;
 }
 
 /**
@@ -719,7 +876,7 @@ VuoText VuoText_removeAt(const VuoText string, int startIndex, int length)
 
 	// if start is greater than original length or start + len is the whole array
 	if(startIndex > len || length < 1)
-		return VuoText_format("%s", string);
+		return VuoText_make(string);
 
 	VuoText left = VuoText_substring(string, 1, startIndex - 1);
 	VuoText right = VuoText_substring(string, startIndex + length, (len + 1) - startIndex);
@@ -727,7 +884,7 @@ VuoText VuoText_removeAt(const VuoText string, int startIndex, int length)
 	VuoLocal(left);
 	VuoLocal(right);
 
-	return VuoText_format("%s%s", left, right);
+	return VuoText_make(VuoText_format("%s%s", left, right));
 }
 
 /**
@@ -775,12 +932,40 @@ VuoText VuoText_trim(const VuoText text)
 }
 
 /**
+ * Returns true if all byte values in `text` are between 0 and 127.
+ */
+static bool VuoText_isASCII7(VuoText text)
+{
+	size_t len = strlen(text);
+	for (size_t i = 0; i < len; ++i)
+		if (((unsigned char *)text)[i] > 127)
+			return false;
+
+	return true;
+}
+
+/**
  * Returns a new string with the @c text characters cased in the @c textCase style.
  */
 VuoText VuoText_changeCase(const VuoText text, VuoTextCase textCase)
 {
 	if (!text)
 		return NULL;
+
+	// Optimized conversion for plain ASCII7 text.
+	if (VuoText_isASCII7(text))
+	{
+		if (textCase == VuoTextCase_LowercaseAll)
+		{
+			size_t len = strlen(text);
+			char *processedString = malloc(len + 1);
+			for (size_t i = 0; i < len; ++i)
+				processedString[i] = tolower(text[i]);
+			processedString[len] = 0;
+			VuoRegister(processedString, free);
+			return processedString;
+		}
+	}
 
 	CFMutableStringRef mutable_str = CFStringCreateMutable(NULL, 0);
 	CFStringAppendCString(mutable_str, text, kCFStringEncodingUTF8);
@@ -822,7 +1007,7 @@ VuoText VuoText_changeCase(const VuoText text, VuoTextCase textCase)
 			// http://stackoverflow.com/questions/15515128/capitalize-first-letter-of-every-sentence-in-nsstring
 			while(kCFStringTokenizerTokenNone != (tokenType = CFStringTokenizerAdvanceToNextToken(tokenizer)))
 			{
-			    CFRange tokenRange = CFStringTokenizerGetCurrentTokenRange(tokenizer);
+				CFRange tokenRange = CFStringTokenizerGetCurrentTokenRange(tokenizer);
 
 				if (tokenRange.location != kCFNotFound && tokenRange.length > 0)
 				{

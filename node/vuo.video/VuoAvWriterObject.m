@@ -474,7 +474,7 @@ static bool VuoAvWriterObject_isProResAvailable(void)
 	if(self.assetWriter)
 		[self finalizeRecording];
 
-  [super dealloc];
+	[super dealloc];
 }
 
 @end

@@ -194,14 +194,6 @@ void vuoInit(int argc, char **argv)
 		exit(0);
 	}
 
-	if (doAppInit)
-	{
-		typedef void (*vuoAppInitType)(void);
-		vuoAppInitType vuoAppInit = (vuoAppInitType) dlsym(RTLD_SELF, "VuoApp_init");
-		if (vuoAppInit)
-			vuoAppInit();
-	}
-
 	void *executableHandle = dlopen(rawExecutablePath, 0);
 	if (! executableHandle)
 	{
@@ -212,7 +204,7 @@ void vuoInit(int argc, char **argv)
 	}
 
 	vuoInitInProcess(NULL, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies, trialRestrictionsEnabled, "",
-					 executableHandle, NULL);
+					 executableHandle, NULL, doAppInit);
 
 	dlclose(executableHandle);
 
@@ -235,18 +227,24 @@ void vuoInit(int argc, char **argv)
  * @param trialRestrictionsEnabled If true, the composition should run in free-trial mode.
  * @param workingDirectory The directory that the composition should use to resolve relative paths.
  * @param compositionBinaryHandle The handle of the composition's dynamic library or executable returned by `dlopen()`.
- * @param runtimePersistentState If the composition is restarting for a live-coding reload, pass the value returned by the previous
+ * @param previousRuntimeState If the composition is restarting for a live-coding reload, pass the value returned by the previous
  *     call to @ref vuoFini(). Otherwise, pass null.
+ * @param doAppInit Should we call VuoApp_init()?
  */
 void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *telemetryURL, bool isPaused, pid_t runnerPid,
 					  int runnerPipe, bool continueIfRunnerDies, bool trialRestrictionsEnabled, const char *workingDirectory,
-					  void *compositionBinaryHandle, void *runtimePersistentState)
+					  void *compositionBinaryHandle, void *previousRuntimeState, bool doAppInit)
 {
+	runtimeState = (VuoRuntimeState *)previousRuntimeState;
+	if (! runtimeState)
+		runtimeState = new VuoRuntimeState();
+
+	vuoRuntimeState = (void *)runtimeState;
+
 	try
 	{
-		runtimeState = new VuoRuntimeState(ZMQContext, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies,
-										   workingDirectory, compositionBinaryHandle, (VuoRuntimePersistentState *)runtimePersistentState);
-		vuoRuntimeState = (void *)runtimeState;
+		runtimeState->init(ZMQContext, controlURL, telemetryURL, isPaused, runnerPid, runnerPipe, continueIfRunnerDies,
+						   workingDirectory, compositionBinaryHandle);
 	}
 	catch (std::runtime_error &e)
 	{
@@ -280,6 +278,14 @@ void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *tele
 		}
 	}
 
+	if (doAppInit)
+	{
+		typedef void (*vuoAppInitType)(void);
+		vuoAppInitType vuoAppInit = (vuoAppInitType) dlsym(RTLD_SELF, "VuoApp_init");
+		if (vuoAppInit)
+			vuoAppInit();
+	}
+
 	runtimeState->startComposition();
 
 	// If the composition had a pending call to vuoStopComposition() when it was stopped, call it again.
@@ -292,21 +298,20 @@ void vuoInitInProcess(void *ZMQContext, const char *controlURL, const char *tele
  *
  * Returns a data structure containing runtime state that should persist across a live-coding reload.
  * If this function is called for a live-coding reload, pass the return value to the next call to @ref vuoInitInProcess().
- * Otherwise, pass it to @ref vuoFiniRuntimePersistentState().
+ * Otherwise, pass it to @ref vuoFiniRuntimeState().
  */
 void * vuoFini(void)
 {
-	VuoRuntimePersistentState *persistentState = runtimeState->persistentState;
-	delete runtimeState;
-	return (void *)persistentState;
+	runtimeState->fini();
+	return (void *)runtimeState;
 }
 
 /**
  * Deallocates the return value of @ref vuoFini().
  */
-void vuoFiniRuntimePersistentState(void *runtimePersistentState)
+void vuoFiniRuntimeState(void *runtimeState)
 {
-	delete (VuoRuntimePersistentState *)runtimePersistentState;
+	delete (VuoRuntimeState *)runtimeState;
 }
 
 /**

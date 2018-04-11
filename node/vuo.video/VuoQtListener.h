@@ -12,7 +12,6 @@
 #endif
 #import <QTKit/QTkit.h>
 
-#include "VuoGlContext.h"
 #include "VuoVideoFrame.h"
 #include "VuoVideoInputDevice.h"
 
@@ -35,7 +34,6 @@
 	VuoVideoInputDevice 				desiredDevice;						///< The device the user has requested.
 	BOOL 								userWantsRunning;					///< Was startRunning called (without calling stopRunning)?
 	CVOpenGLTextureCacheRef 			textureCache;						///< GL_TEXTURE_RECTANGLEs from the video feed
-	VuoGlContext						glContext;							///< The OpenGL context to convert CVImageBufferRef to gl textures with.
 }
 
 /**

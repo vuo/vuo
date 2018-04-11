@@ -11,6 +11,7 @@
 #include <dispatch/dispatch.h>
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #include <objc/runtime.h>
 #include <objc/message.h>
 #include <pthread.h>
@@ -21,11 +22,18 @@
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 
 /**
- * Get a reference to the main thread, so we can perform runtime thread-sanity assertions.
+ * Get a reference to the main thread, so we can perform runtime thread assertions.
  */
 static void __attribute__((constructor)) VuoRuntimeMain_init(void)
 {
 	VuoApp_mainThread = (void *)pthread_self();
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	// Calls _TSGetMainThread().
+	// https://b33p.net/kosada/node/12944
+	YieldToAnyThread();
+#pragma clang diagnostic pop
 }
 
 /**

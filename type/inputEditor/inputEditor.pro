@@ -37,6 +37,7 @@ SUBDIRS += \
 	VuoInputEditorSizingMode \
 	VuoInputEditorSyphonServerDescription \
 	VuoInputEditorText \
+	VuoInputEditorTextComparison \
 	VuoInputEditorTransform \
 	VuoInputEditorTransform2d \
 	VuoInputEditorVideoInputDevice \
@@ -78,6 +79,7 @@ VuoInputEditorSerialDevice.depends = widget
 VuoInputEditorSizingMode.depends = widget
 VuoInputEditorSyphonServerDescription.depends = widget
 VuoInputEditorText.depends = widget
+VuoInputEditorTextComparison.depends = widget
 VuoInputEditorTransform.depends = widget
 VuoInputEditorTransform2d.depends = widget
 VuoInputEditorVideoInputDevice.depends = widget

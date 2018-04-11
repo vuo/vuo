@@ -54,9 +54,7 @@ struct nodeInstanceData
 {
 	VuoImageBlur blur;
 
-	VuoGlContext glContext;
 	VuoShader shader;
-	VuoImageRenderer imageRenderer;
 };
 
 struct nodeInstanceData *nodeInstanceInit(void)
@@ -66,11 +64,6 @@ struct nodeInstanceData *nodeInstanceInit(void)
 
 	instance->blur = VuoImageBlur_make();
 	VuoRetain(instance->blur);
-
-	instance->glContext = VuoGlContext_use();
-
-	instance->imageRenderer = VuoImageRenderer_make(instance->glContext);
-	VuoRetain(instance->imageRenderer);
 
 	instance->shader = VuoShader_make("Sharpen Image Shader");
 	VuoShader_addSource(instance->shader, VuoMesh_IndividualTriangles, NULL, NULL, fragmentShader);
@@ -102,13 +95,11 @@ void nodeInstanceEvent
 	VuoShader_setUniform_VuoImage((*instance)->shader, "blurredImage", blurredImage);
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "amount",       amount);
 	VuoShader_setUniform_VuoReal ((*instance)->shader, "threshold",    threshold);
-	*sharpenedImage = VuoImageRenderer_draw((*instance)->imageRenderer, (*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(blurredImage));
+	*sharpenedImage = VuoImageRenderer_render((*instance)->shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(blurredImage));
 }
 
 void nodeInstanceFini(VuoInstanceData(struct nodeInstanceData *) instance)
 {
 	VuoRelease((*instance)->blur);
 	VuoRelease((*instance)->shader);
-	VuoRelease((*instance)->imageRenderer);
-	VuoGlContext_disuse((*instance)->glContext);
 }

@@ -25,6 +25,8 @@
 #include "VuoCompilerDataClass.hh"
 #include "VuoCompilerInputEventPort.hh"
 #include "VuoCompilerEventPortClass.hh"
+#include "VuoCompilerInputDataClass.hh"
+#include "VuoCompilerInputEventPortClass.hh"
 #include "VuoCompilerNodeClass.hh"
 #include "VuoCompilerMakeListNodeClass.hh"
 #include "VuoCompilerNode.hh"
@@ -987,8 +989,12 @@ void VuoRendererPort::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	VuoPortClass::PortType type = getBase()->getClass()->getPortType();
 	bool isTriggerPort = (type == VuoPortClass::triggerPort);
 
-	qint64 timeOfLastActivity =		((! getRenderActivity())? VuoRendererItem::notTrackingActivity :
-									(isTriggerPort? timeLastEventFired :
+	VuoRendererComposition *composition = dynamic_cast<VuoRendererComposition *>(scene());
+	bool renderNodeActivity = composition && composition->getRenderNodeActivity();
+	bool renderPortActivity = composition && composition->getRenderPortActivity();
+
+	qint64 timeOfLastActivity =		((! renderNodeActivity)? VuoRendererItem::notTrackingActivity :
+									((isTriggerPort && renderPortActivity)? timeLastEventFired :
 									(getTypecastParentPort()? static_cast<VuoRendererTypecastPort *>(getTypecastParentPort())->getUncollapsedTypecastNode()->getTimeLastExecutionEnded() :
 									(renderedParentNode? renderedParentNode->getTimeLastExecutionEnded() :
 									VuoRendererItem::notTrackingActivity))));
@@ -1335,9 +1341,9 @@ bool VuoRendererPort::canConnectDirectlyWithSpecializationTo(VuoRendererPort *to
 /**
  * Returns the cable connecting this port to @c toPort, or NULL if not applicable.
  */
-VuoCable * VuoRendererPort::getCableConnectedTo(VuoRendererPort *toPort)
+VuoCable * VuoRendererPort::getCableConnectedTo(VuoRendererPort *toPort, bool includePublishedCables)
 {
-	vector<VuoCable *> cables = this->getBase()->getConnectedCables(false);
+	vector<VuoCable *> cables = this->getBase()->getConnectedCables(includePublishedCables);
 	for (vector<VuoCable *>::iterator cable = cables.begin(); cable != cables.end(); ++cable)
 		if ((*cable)->getToPort() == toPort->getBase())
 			return (*cable);
@@ -1361,7 +1367,8 @@ void VuoRendererPort::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
  */
 void VuoRendererPort::keyPressEvent(QKeyEvent *event)
 {
-	if (isConstant() && event->key() == Qt::Key_Return)
+	if (isConstant() &&
+		(event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter))
 	{
 		signaler->signalInputEditorRequested(this);
 	}
@@ -1490,7 +1497,8 @@ string VuoRendererPort::getConstantAsString(void) const
  */
 string VuoRendererPort::getConstantAsTruncatedStringToRender(void) const
 {
-	string fullString = getConstantAsStringToRender();
+	VuoText fullString = VuoText_make(getConstantAsStringToRender().c_str());
+	VuoLocal(fullString);
 
 	if (getDataType() && (getDataType()->getModuleKey() == "VuoColor"))
 		return "   ";
@@ -1500,14 +1508,11 @@ string VuoRendererPort::getConstantAsTruncatedStringToRender(void) const
 								   getDataType()->getModuleKey()=="VuoArtNetOutputDevice" ||
 								   VuoRendererComposition::hasURLType(getBase())));
 
-	VuoText t = VuoText_truncateWithEllipsis(fullString.c_str(), 30, truncateFromBeginning?
+	VuoText t = VuoText_truncateWithEllipsis(fullString, 30, truncateFromBeginning?
 												 VuoTextTruncation_Beginning :
 												 VuoTextTruncation_End);
-	VuoRetain(t);
-	string truncatedString = strdup(t);
-	VuoRelease(t);
-
-	return truncatedString;
+	VuoLocal(t);
+	return string(t);
 }
 
 /**
@@ -1555,6 +1560,22 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 		}
 		if (getDataType()->getModuleKey()=="VuoInteger")
 		{
+			// Retrieve the port's JSON details object.
+			json_object *details = NULL;
+			VuoCompilerInputEventPortClass *portClass = dynamic_cast<VuoCompilerInputEventPortClass *>(getBase()->getClass()->getCompiler());
+			if (portClass)
+				details = portClass->getDataClass()->getDetails();
+
+			// Case: Port type is named enum
+			json_object *menuItemsValue = NULL;
+			if (details && json_object_object_get_ex(details, "menuItems", &menuItemsValue))
+			{
+				json_object *value = NULL;
+				if (json_object_object_get_ex(menuItemsValue, getConstantAsString().c_str(), &value))
+					return VuoText_makeFromJson(value);
+			}
+
+			// Case: Port type is a regular VuoInteger
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
 			VuoInteger i = json_object_get_int64(js);
 			json_object_put(js);
@@ -2006,7 +2027,6 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			else if (strcmp(tempoRange, "allegro") == 0)
 				return strdup("120–180 BPM");
 		}
-
 		if (getDataType()->getModuleKey()=="VuoEdgeBlend")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -2039,7 +2059,6 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return blendSummary;
 		}
-
 		if (getDataType()->getModuleKey()=="VuoRange")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -2069,7 +2088,6 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return rangeSummary;
 		}
-
 		if (getDataType()->getModuleKey()=="VuoIntegerRange")
 		{
 			json_object *js = json_tokener_parse(getConstantAsString().c_str());
@@ -2099,7 +2117,6 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 
 			return rangeSummary;
 		}
-
 		if (getDataType()->getModuleKey() == "VuoAnchor")
 		{
 			json_object* js = json_tokener_parse(getConstantAsString().c_str());
@@ -2135,6 +2152,11 @@ string VuoRendererPort::getConstantAsStringToRender(void) const
 			sprintf(sum, "%s %s", v, h);
 
 			return sum;
+		}
+		if (getDataType()->getModuleKey() == "VuoTextComparison")
+		{
+			VuoTextComparison value = VuoTextComparison_makeFromString(getConstantAsString().c_str());
+			return VuoTextComparison_getSummary(value);
 		}
 	}
 
@@ -2404,4 +2426,6 @@ VuoRendererPort::~VuoRendererPort()
 {
 	foreach (QGraphicsItemAnimation *animation, animations)
 		animation->clear();
+
+	animations.clear();
 }

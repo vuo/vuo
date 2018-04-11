@@ -36,7 +36,6 @@ VuoModuleMetadata({
 typedef struct
 {
 	CVOpenGLTextureCacheRef textureCache;			///< A quick way to convert a CGPixelBuffer to an OpenGL texture.
-	CGLContextObj glContext;						///< textureCache's OpenGL context.
 	dispatch_queue_t queue;							///< Serializes access to glContext.
 	AVCaptureSession *session;						///< Manages capturing the screen.
 	VuoScreenCaptureDelegate *delegate;				///< Internal class invoked when a frame is captured.
@@ -67,8 +66,10 @@ static void VuoScreenCapture_freeCallback(VuoImage imageToFree)
 {
 	CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 
-	CVOpenGLTextureRef texture;
-	CVOpenGLTextureCacheCreateTextureFromImage(NULL, _sci->textureCache, pixelBuffer, NULL, &texture);
+	__block CVOpenGLTextureRef texture;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		CVOpenGLTextureCacheCreateTextureFromImage(NULL, _sci->textureCache, pixelBuffer, NULL, &texture);
+	});
 
 	VuoImage rectImage = VuoImage_makeClientOwnedGlTextureRectangle(
 				CVOpenGLTextureGetName(texture),
@@ -82,7 +83,9 @@ static void VuoScreenCapture_freeCallback(VuoImage imageToFree)
 	CVOpenGLTextureRelease(texture);
 	VuoRelease(rectImage);
 
-	CVOpenGLTextureCacheFlush(_sci->textureCache, 0);
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+		CVOpenGLTextureCacheFlush(_sci->textureCache, 0);
+	});
 }
 @end
 
@@ -104,11 +107,11 @@ void VuoScreenCapture_free(void *p)
 	[sci->delegate release];
 
 	if (sci->textureCache)
-		CVOpenGLTextureCacheRelease(sci->textureCache);
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			CVOpenGLTextureCacheRelease(sci->textureCache);
+		});
 
 	dispatch_release(sci->queue);
-
-	VuoGlContext_disuse(sci->glContext);
 }
 
 /**
@@ -168,9 +171,11 @@ VuoScreenCapture VuoScreenCapture_make(VuoScreen screen, VuoRectangle rectangle,
 				  });
 
 	{
-		sci->glContext = (CGLContextObj)VuoGlContext_use();
-		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false);
-		CVReturn ret = CVOpenGLTextureCacheCreate(NULL, NULL, sci->glContext, pf, NULL, &sci->textureCache);
+		CGLPixelFormatObj pf = VuoGlContext_makePlatformPixelFormat(false, false, -1);
+		__block CVReturn ret;
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
+			ret = CVOpenGLTextureCacheCreate(NULL, NULL, cgl_ctx, pf, NULL, &sci->textureCache);
+		});
 		CGLReleasePixelFormat(pf);
 
 		if (ret != kCVReturnSuccess)

@@ -9,7 +9,7 @@
 
 #pragma once
 
- #include "VuoSceneObject.h"
+#include "VuoSceneObject.h"
 
 /// @{
 typedef const struct VuoList_VuoSceneObjectType_struct { void *l; } * VuoList_VuoSceneObjectType;
@@ -29,11 +29,11 @@ typedef const struct VuoList_VuoSceneObjectType_struct { void *l; } * VuoList_Vu
  */
 typedef enum
 {
- 	VuoSceneObjectType_Any,
- 	VuoSceneObjectType_Group,
- 	VuoSceneObjectType_Mesh,
- 	VuoSceneObjectType_Camera,
- 	VuoSceneObjectType_Light
+	VuoSceneObjectType_Any,
+	VuoSceneObjectType_Group,
+	VuoSceneObjectType_Mesh,
+	VuoSceneObjectType_Camera,
+	VuoSceneObjectType_Light
 } VuoSceneObjectType;
 
 /**

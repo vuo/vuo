@@ -8,7 +8,6 @@
  */
 
 #include "node.h"
-#include "VuoGlContext.h"
 #include "VuoSyphon.h"
 #include <string.h>
 #include "string.h"
@@ -30,7 +29,6 @@ VuoModuleMetadata({
 struct nodeInstanceData
 {
 	VuoSyphonServer *syphonServer;
-	VuoGlContext *glContext;
 	VuoText serverName;
 };
 
@@ -52,9 +50,7 @@ struct nodeInstanceData * nodeInstanceInit
 	struct nodeInstanceData *context = (struct nodeInstanceData *)calloc(1,sizeof(struct nodeInstanceData));
 	VuoRegister(context, free);
 
-	context->glContext = VuoGlContext_use();
-
-	context->syphonServer = VuoSyphonServer_make(serverName, context->glContext);
+	context->syphonServer = VuoSyphonServer_make(serverName);
 	VuoRetain(context->syphonServer);
 
 	context->serverName = serverName;
@@ -84,6 +80,5 @@ void nodeInstanceFini
 )
 {
 	VuoRelease((*context)->syphonServer);
-	VuoGlContext_disuse((*context)->glContext);
 	VuoRelease((*context)->serverName);
 }

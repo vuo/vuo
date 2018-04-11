@@ -12,7 +12,6 @@
 #include <string>
 #include <map>
 #include "VuoImageBlend.h"
-#include "VuoImageRenderer.h"
 
 typedef struct json_object json_object;	///< JSON-C
 
@@ -92,8 +91,6 @@ class VuoMovieExporter
 	AVAssetWriterInputPixelBufferAdaptor *assetWriterInputPixelBufferAdaptor;
 	NSURL *outputMovieUrl;
 
-	VuoImageRenderer resizeImageRenderer;
-	VuoGlContext resizeContext;
 	void *resize;
 
 	VuoImageBlend blender;

@@ -10,10 +10,11 @@
 #pragma once
 
 #include "VuoInteger.h"
+#include <math.h>
+#include <float.h>
 #include "VuoPoint3d.h"
 #include "VuoPoint4d.h"
 #include "VuoTransform2d.h"
-
 #include <stdio.h>
 
 /**
@@ -61,13 +62,15 @@ typedef struct
 } VuoTransform;
 
 void VuoTransform_getMatrix(const VuoTransform value, float *matrix);
-void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, float *billboardMatrix);
+void VuoTransform_getBillboardMatrix(VuoInteger imageWidth, VuoInteger imageHeight, VuoReal imageScaleFactor, VuoBoolean preservePhysicalSize, VuoReal translationX, VuoReal translationY, VuoInteger viewportWidth, VuoInteger viewportHeight, VuoReal backingScaleFactor, VuoReal meshX, float *billboardMatrix);
 VuoPoint3d VuoTransform_getEuler(const VuoTransform transform);
 VuoPoint4d VuoTransform_getQuaternion(const VuoTransform transform);
 VuoPoint3d VuoTransform_getDirection(const VuoTransform transform);
 VuoTransform VuoTransform_makeIdentity(void);
 VuoTransform VuoTransform_makeEuler(VuoPoint3d translation, VuoPoint3d rotation, VuoPoint3d scale);
 VuoTransform VuoTransform_makeQuaternion(VuoPoint3d translation, VuoPoint4d rotation, VuoPoint3d scale);
+void VuoTransform_rotationMatrixFromQuaternion(const VuoPoint4d quaternion, float* matrix);
+void VuoTransform_rotationMatrixFromEuler(const VuoPoint3d euler, float* matrix);
 
 VuoTransform VuoTransform_makeFrom2d(VuoTransform2d transform2d);
 VuoTransform2d VuoTransform_get2d(VuoTransform transform);
@@ -135,6 +138,137 @@ static inline VuoPoint4d VuoTransform_quaternionFromVectors(VuoPoint3d from, Vuo
 	q.w = s / 2.f;
 
 	return q;
+}
+
+/**
+ * Create a unit quaternion from a rotation matrix (3x3).
+ * http://www.insomniacgames.com/converting-a-rotation-matrix-to-a-quaternion/
+ */
+static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float* rotation) __attribute__((const));
+static inline VuoPoint4d VuoTransform_quaternionFromMatrix(const float* rotation)
+{
+	float t;
+	VuoPoint4d q;
+
+	float m00 = rotation[0],
+		m01 = rotation[1],
+		m02 = rotation[2],
+		m10 = rotation[3],
+		m11 = rotation[4],
+		m12 = rotation[5],
+		m20 = rotation[6],
+		m21 = rotation[7],
+		m22 = rotation[8];
+
+	if (m22 < 0)
+	{
+		if (m00 > m11)
+		{
+			t = 1 + m00 - m11 - m22;
+			q = VuoPoint4d_make( t, m01+m10, m20+m02, m12-m21 );
+		}
+		else
+		{
+			t = 1 - m00 + m11 - m22;
+			q = VuoPoint4d_make( m01+m10, t, m12+m21, m20-m02 );
+		}
+	}
+	else
+	{
+		if (m00 < -m11)
+		{
+			t = 1 - m00 - m11 + m22;
+			q = VuoPoint4d_make( m20+m02, m12+m21, t, m01-m10 );
+		}
+		else
+		{
+			t = 1 + m00 + m11 + m22;
+			q = VuoPoint4d_make( m12-m21, m20-m02, m01-m10, t );
+		}
+	}
+
+	return VuoPoint4d_multiply(q, 0.5f / sqrt(t));
+}
+
+/**
+ * Convert an euler angle (radians) to a quaternion.
+ * https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+ */
+static inline VuoPoint4d VuoTransform_quaternionFromEuler(const VuoPoint3d euler) __attribute__((const));
+static inline VuoPoint4d VuoTransform_quaternionFromEuler(const VuoPoint3d euler)
+{
+	VuoPoint4d q;
+
+	double t0 = cos(euler.z * 0.5);
+	double t1 = sin(euler.z * 0.5);
+	double t2 = cos(euler.x * 0.5);
+	double t3 = sin(euler.x * 0.5);
+	double t4 = cos(euler.y * 0.5);
+	double t5 = sin(euler.y * 0.5);
+
+	q.w = t0 * t2 * t4 + t1 * t3 * t5;
+	q.x = t0 * t3 * t4 - t1 * t2 * t5;
+	q.y = t0 * t2 * t5 + t1 * t3 * t4;
+	q.z = t1 * t2 * t4 - t0 * t3 * t5;
+
+	return VuoPoint4d_normalize(q);
+}
+
+/**
+ * Convert a quaternion to an euler angle.
+ * https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+ */
+static inline VuoPoint3d VuoTransform_eulerFromQuaternion(const VuoPoint4d quaternion) __attribute__((const));
+static inline VuoPoint3d VuoTransform_eulerFromQuaternion(const VuoPoint4d quaternion)
+{
+	VuoPoint3d ea;
+
+	double ysqr = quaternion.y * quaternion.y;
+
+	// roll (x-axis rotation)
+	double t0 = + 2.0 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
+	double t1 = + 1.0 - 2.0 * (quaternion.x * quaternion.x + ysqr);
+	ea.x = atan2(t0, t1);
+
+	// pitch (y-axis rotation)
+	double t2 = +2.0 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
+	t2 = t2 > 1.0 ? 1.0 : t2;
+	t2 = t2 < -1.0 ? -1.0 : t2;
+	ea.y = asin(t2);
+
+	// yaw (z-axis rotation)
+	double t3 = +2.0 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
+	double t4 = +1.0 - 2.0 * (ysqr + quaternion.z * quaternion.z);
+	ea.z = atan2(t3, t4);
+
+	return ea;
+}
+
+/**
+ * Convert a rotation matrix (3x3) to an euler angle.
+ */
+static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float* matrix) __attribute__((const));
+static inline VuoPoint3d VuoTransform_eulerFromMatrix(const float* matrix)
+{
+	// "Euler Angle Conversion" by Ken Shoemake.  Graphics Gems IV, pp. 222–229.
+	VuoPoint3d ea;
+
+	double cy = sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+
+	if (cy > 16 * FLT_EPSILON)
+	{
+		ea.x = atan2f( matrix[5], matrix[8]);
+		ea.y = atan2f(-matrix[2], cy);
+		ea.z = atan2f( matrix[1], matrix[0]);
+	}
+	else
+	{
+		ea.x = atan2f(-matrix[7], matrix[4]);
+		ea.y = atan2f(-matrix[2], cy);
+		ea.z = 0;
+	}
+
+	return ea;
 }
 
 /**
@@ -239,6 +373,24 @@ static inline VuoPoint3d VuoTransform_transformPoint(const float *matrix, VuoPoi
 		point.x * matrix[0] + point.y * matrix[4] + point.z * matrix[ 8] + matrix[12],
 		point.x * matrix[1] + point.y * matrix[5] + point.z * matrix[ 9] + matrix[13],
 		point.x * matrix[2] + point.y * matrix[6] + point.z * matrix[10] + matrix[14]
+	};
+	return transformedPoint;
+}
+
+/**
+ * @ingroup VuoTransform
+ * Transforms `vector` using `matrix` (a column-major matrix of 16 values), and returns the new vector.
+ *
+ * Ignores the matrix's translation.  Useful for adjusting normals.
+ *
+ * @see VuoTransform_getMatrix
+ */
+static inline VuoPoint3d VuoTransform_transformVector(const float *matrix, VuoPoint3d point)
+{
+	VuoPoint3d transformedPoint = {
+		point.x * matrix[0] + point.y * matrix[4] + point.z * matrix[ 8],
+		point.x * matrix[1] + point.y * matrix[5] + point.z * matrix[ 9],
+		point.x * matrix[2] + point.y * matrix[6] + point.z * matrix[10]
 	};
 	return transformedPoint;
 }

@@ -65,9 +65,9 @@ void VuoImage_free(void *texture)
 //	VLog("Freeing image %p %s",t,VuoImage_getSummary(t));
 
 	// Detach the CPU memory from the GL texture before recycling.
-	if (t->cpuQueueInitialized)
+	if (t->cpuQueueInitialized && json_object_object_length(t->cpuData))
 	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+		VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 		glBindTexture(t->glTextureTarget, t->glTextureName);
 		GLenum format = GL_BGRA;
 		if (t->glInternalFormat == GL_DEPTH_COMPONENT)
@@ -76,7 +76,7 @@ void VuoImage_free(void *texture)
 //		VLog("glTexImage2D(%s, 0, %s, %ld, %ld, 0, %s, %s, NULL);", VuoGl_stringForConstant(t->glTextureTarget), VuoGl_stringForConstant(t->glInternalFormat), t->pixelsWide, t->pixelsHigh, VuoGl_stringForConstant(format), VuoGl_stringForConstant(type));
 		glTexImage2D(t->glTextureTarget, 0, t->glInternalFormat, t->pixelsWide, t->pixelsHigh, 0, format, type, NULL);
 		glBindTexture(t->glTextureTarget, 0);
-		VuoGlContext_disuse(cgl_ctx);
+		});
 	}
 
 	VuoGlTexture_release(t->glInternalFormat, t->pixelsWide, t->pixelsHigh, t->glTextureName, t->glTextureTarget);
@@ -270,14 +270,15 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
 		return NULL;
 	}
 
-	VuoGlContext glContext = VuoGlContext_use();
-	CGLContextObj cgl_ctx = (CGLContextObj)glContext;
+	__block GLenum internalformat;
+	__block GLuint glTextureName;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
-	GLenum internalformat = VuoImageColorDepth_getGlInternalFormat(format, colorDepth);
+	internalformat = VuoImageColorDepth_getGlInternalFormat(format, colorDepth);
 //	VLog("Using format=%s -> internalformat=%s", VuoGl_stringForConstant(format), VuoGl_stringForConstant(internalformat));
-	GLuint glTextureName = VuoGlTexturePool_use(glContext, internalformat, pixelsWide, pixelsHigh, format);
+	glTextureName = VuoGlTexturePool_use(cgl_ctx, internalformat, pixelsWide, pixelsHigh, format);
 	if (!glTextureName)
-		return NULL;
+		return;
 
 	int bytesPerPixel = VuoGlTexture_getChannelCount(format);
 
@@ -302,7 +303,7 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
 			VUserLog("	bytesPerPixel = %d",bytesPerPixel);
 			GLint leftoverBytes = bytesPerRow - bytesPerPixel*pixelsWide;
 			VUserLog("	leftoverBytes = %d",leftoverBytes);
-			return NULL;
+			return;
 		}
 	}
 
@@ -322,7 +323,9 @@ VuoImage VuoImage_makeFromBufferWithStride(const void *pixels, unsigned int form
 	glFlushRenderAPPLE();
 //	glFinish();
 
-	VuoGlContext_disuse(glContext);
+	});
+	if (!glTextureName)
+		return NULL;
 
 	VuoImage image = VuoImage_make(glTextureName, internalformat, pixelsWide, pixelsHigh);
 
@@ -449,14 +452,12 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 			if (pixelBufferSize > tamperEvidentSealLength)
 				strcpy((char *)pixels, tamperEvidentSeal);
 
-			CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
 			glBindTexture(image->glTextureTarget, image->glTextureName);
 //			VLog("glGetTexImage(%s, 0, %s, %s, …); on texture internalformat %s", VuoGl_stringForConstant(image->glTextureTarget), VuoGl_stringForConstant(actualFormat), VuoGl_stringForConstant(type), VuoGl_stringForConstant(image->glInternalFormat));
 			glGetTexImage(image->glTextureTarget, 0, actualFormat, type, (GLvoid *)pixels);
 			glBindTexture(image->glTextureTarget, 0);
-
-			VuoGlContext_disuse(cgl_ctx);
 
 			if (pixelBufferSize > tamperEvidentSealLength && strncmp((char *)pixels, tamperEvidentSeal, strlen(tamperEvidentSeal)) == 0)
 			{
@@ -469,6 +470,10 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
 				pixels = NULL;
 				return;
 			}
+
+			});
+			if (!pixels)
+				return;
 
 			json_object *cpuEntry = json_object_new_object();
 			json_object_object_add(cpuEntry, "buffer", json_object_new_int64((long long)pixels));
@@ -487,17 +492,17 @@ const unsigned char *VuoImage_getBuffer(VuoImage image, unsigned int requestedFo
  */
 VuoImageWrapMode VuoImage_getWrapMode(VuoImage image)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	__block GLint wrapModeGL;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
 	glBindTexture(image->glTextureTarget, image->glTextureName);
 
-	GLint wrapModeGL;
 	glGetTexParameteriv(image->glTextureTarget, GL_TEXTURE_WRAP_S, &wrapModeGL);
 	// Ignore GL_TEXTURE_WRAP_T since Vuo assumes it's the same as _S.
 
 	glBindTexture(image->glTextureTarget, 0);
 
-	VuoGlContext_disuse(cgl_ctx);
+	});
 
 	if (wrapModeGL == GL_CLAMP_TO_EDGE)
 		return VuoImageWrapMode_ClampEdge;
@@ -514,7 +519,7 @@ VuoImageWrapMode VuoImage_getWrapMode(VuoImage image)
  */
 void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 
 	glBindTexture(image->glTextureTarget, image->glTextureName);
 
@@ -535,7 +540,7 @@ void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
 	// since the VuoShader might immediately be used on another context.
 	glFlushRenderAPPLE();
 
-	VuoGlContext_disuse(cgl_ctx);
+	});
 }
 
 /**
@@ -543,9 +548,9 @@ void VuoImage_setWrapMode(VuoImage image, VuoImageWrapMode wrapMode)
  */
 static void VuoImage_deleteImage(VuoImage image)
 {
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 	glDeleteTextures(1, &image->glTextureName);
-	VuoGlContext_disuse(cgl_ctx);
+	});
 }
 
 /**
@@ -556,15 +561,10 @@ VuoImage VuoImage_makeColorImage(VuoColor color, unsigned int pixelsWide, unsign
 	if (!pixelsWide || !pixelsHigh)
 		return NULL;
 
-	VuoGlContext glContext = VuoGlContext_use();
-	VuoImageRenderer imageRenderer = VuoImageRenderer_make(glContext);
-	VuoRetain(imageRenderer);
 	VuoShader shader = VuoShader_makeUnlitColorShader(color);
 	VuoRetain(shader);
-	VuoImage image = VuoImageRenderer_draw(imageRenderer, shader, pixelsWide, pixelsHigh, VuoImageColorDepth_8);
+	VuoImage image = VuoImageRenderer_render(shader, pixelsWide, pixelsHigh, VuoImageColorDepth_8);
 	VuoRelease(shader);
-	VuoRelease(imageRenderer);
-	VuoGlContext_disuse(glContext);
 	return image;
 }
 
@@ -589,15 +589,9 @@ VuoImage VuoImage_makeCopy(VuoImage image, bool flip)
 	}
 	VuoRetain(shader);
 
-	VuoGlContext glContext = VuoGlContext_use();
-	VuoImageRenderer renderer = VuoImageRenderer_make(glContext);
-	VuoRetain(renderer);
-
-	VuoImage img = VuoImageRenderer_draw(renderer, shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
+	VuoImage img = VuoImageRenderer_render(shader, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image));
 
 	VuoRelease(shader);
-	VuoRelease(renderer);
-	VuoGlContext_disuse(glContext);
 
 	return img;
 }
@@ -609,19 +603,13 @@ VuoImage VuoImage_makeCopy(VuoImage image, bool flip)
  */
 VuoImage VuoImage_makeGlTextureRectangleCopy(VuoImage image)
 {
-	VuoGlContext glContext = VuoGlContext_use();
-	VuoImageRenderer renderer = VuoImageRenderer_make(glContext);
-	VuoRetain(renderer);
-
 	VuoShader frag = VuoShader_makeUnlitImageShader(image, 1);
 	VuoRetain(frag);
 
-	GLuint textureName = VuoImageRenderer_draw_internal(renderer, frag, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image), false, true, 0);
+	GLuint textureName = VuoImageRenderer_draw_internal(frag, image->pixelsWide, image->pixelsHigh, VuoImage_getColorDepth(image), false, true, 0);
 	VuoImage img = VuoImage_makeClientOwnedGlTextureRectangle(textureName, image->glInternalFormat, image->pixelsWide, image->pixelsHigh, VuoImage_deleteImage, NULL);
 
 	VuoRelease(frag);
-	VuoRelease(renderer);
-	VuoGlContext_disuse(glContext);
 
 	return img;
 }
@@ -837,7 +825,7 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 	}
 
 	unsigned int glTextureName;
-	unsigned int glInternalFormat = 0;
+	__block unsigned int glInternalFormat = 0;
 	unsigned long int pixelsWide;
 	unsigned long int pixelsHigh;
 	float scaleFactor = 1;
@@ -879,12 +867,9 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 //			VLog("Converting IOSurfaceID %d",surfID);
 
 			// Read the IOSurface into a GL_TEXTURE_RECTANGLE_ARB (the only texture type IOSurface supports).
-			IOSurfaceRef surf;
-			GLuint textureRect;
-			VuoGlContext glContext = VuoGlContext_use();
-			CGLContextObj cgl_ctx = (CGLContextObj)glContext;
-			{
-				{
+			__block IOSurfaceRef surf = NULL;
+			__block GLuint textureRect;
+			VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 					glGenTextures(1, &textureRect);
 					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, textureRect);
 
@@ -898,19 +883,21 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 					if (!surf)
 					{
 						VUserLog("Error: IOSurfaceLookup(%d) failed.", surfID);
-						return NULL;
+						return;
 					}
 					glInternalFormat = GL_RGBA;
 					CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, glInternalFormat, (GLsizei)pixelsWide, (GLsizei)pixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surf, 0);
 					if(err != kCGLNoError)
 					{
 						VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
-						return NULL;
+						surf = NULL;
+						return;
 					}
 					glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
-				}
-			}
-			glFlushRenderAPPLE();
+				glFlushRenderAPPLE();
+			});
+			if (!surf)
+				return NULL;
 
 			// Convert the GL_TEXTURE_RECTANGLE_ARB into GL_TEXTURE_2D.
 			VuoImage image2d;
@@ -921,15 +908,11 @@ VuoImage VuoImage_makeFromJson(json_object * js)
 				VuoShader shader = VuoShader_makeGlTextureRectangleShader(imageRect, 1);
 				VuoLocal(shader);
 
-				VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
-				VuoLocal(ir);
-				image2d = VuoImageRenderer_draw(ir, shader, pixelsWide, pixelsHigh, VuoImage_getColorDepth(imageRect));
+				image2d = VuoImageRenderer_render(shader, pixelsWide, pixelsHigh, VuoImage_getColorDepth(imageRect));
 			}
 
 			VuoIoSurfacePool_signal(surf);
 			CFRelease(surf);
-
-			VuoGlContext_disuse(glContext);
 
 			image2d->scaleFactor = scaleFactor;
 
@@ -983,7 +966,7 @@ GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *
 	if (!textureRect)
 		return 0;
 
-	CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, textureRect);
 
 	IOSurfaceRef *surf = outputIOSurface;
@@ -991,21 +974,20 @@ GLuint VuoImage_resolveInterprocessJsonUsingTextureProvider(struct json_object *
 	if (!*surf)
 	{
 		VUserLog("Error: IOSurfaceLookup(%d) failed.", surfID);
-		return 0;
+		return;
 	}
 
 	CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, (GLsizei)*outputPixelsWide, (GLsizei)*outputPixelsHigh, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, *surf, 0);
 	if(err != kCGLNoError)
 	{
 		VUserLog("Error in CGLTexImageIOSurface2D(): %s", CGLErrorString(err));
-		return 0;
+		return;
 	}
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 	glFlushRenderAPPLE();
+	});
 
-	VuoGlContext_disuse(cgl_ctx);
 	return textureRect;
-
 }
 
 /**
@@ -1039,9 +1021,8 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 
 	json_object * js = json_object_new_object();
 
-	VuoShader shader = NULL;
-	{
-		CGLContextObj cgl_ctx = (CGLContextObj)VuoGlContext_use();
+	__block VuoShader shader = NULL;
+	VuoGlContext_perform(^(CGLContextObj cgl_ctx){
 //		VLog("Creating an IOSurface from glTextureName %d on target %lu",value->glTextureName,value->glTextureTarget);
 
 		if (value->glTextureTarget == GL_TEXTURE_2D)
@@ -1050,10 +1031,7 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 			shader = VuoShader_makeGlTextureRectangleAlphaPassthruShader(value, false);
 		VuoRetain(shader);
 
-		VuoImageRenderer ir = VuoImageRenderer_make(cgl_ctx);
-		VuoRetain(ir);
-		IOSurfaceID surfID = VuoImageRenderer_draw_internal(ir, shader, value->pixelsWide, value->pixelsHigh, VuoImage_getColorDepth(value), true, true, 0);
-		VuoRelease(ir);
+		IOSurfaceID surfID = VuoImageRenderer_draw_internal(shader, value->pixelsWide, value->pixelsHigh, VuoImage_getColorDepth(value), true, true, 0);
 //		VLog("Created IOSurfaceID %d",surfID);
 
 		json_object * o = json_object_new_int(surfID);
@@ -1062,9 +1040,7 @@ json_object * VuoImage_getInterprocessJson(const VuoImage value)
 		// Ensure the command queue gets executed before we return,
 		// since the IOSurface might immediately be used on another context.
 		glFlushRenderAPPLE();
-
-		VuoGlContext_disuse(cgl_ctx);
-	}
+	});
 	{
 		json_object * o = json_object_new_int64(value->pixelsWide);
 		json_object_object_add(js, "pixelsWide", o);

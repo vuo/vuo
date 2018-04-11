@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Shade with Oval",
+					  "title" : "Make Oval Shader",
 					  "keywords" : [
 						  "texture", "paint", "draw", "opengl", "glsl", "scenegraph", "graphics",
 						  "point", "star", "circle", "rounded", "ellipse", "disc", "disk",

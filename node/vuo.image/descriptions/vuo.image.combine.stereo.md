@@ -14,8 +14,8 @@ Stereo types:
 - `Anaglyph: Amber / Blue` — Images are filtered by color, then combined to a single image.  The `Left` image is filtered through a red / green / gray mix, and `Right` is pure blue.  Also known as ColorCode 3-D.
 - `Anaglyph: Green / Magenta` — Images are filtered by color, then combined to a single image.  The `Left` image is filtered through a green color, and `Right` is a mix of red and blue.  Also known as Trioscopic.
 - `Vertical Stripe` — Pixels alternate by column between left and right image.  The left row is from the `Left` image.
-- `Horizontal Stripe` — Pixels alternate by row between left and right image.  The top row is from the `Left` image.
-- `Checkerboard` — Pixels alternate row and column between left and right image.  The top left pixel is the `Left` image.
+- `Horizontal Stripe` — Pixels alternate by row between left and right image.  The bottom row is from the `Left` image.
+- `Checkerboard` — Pixels alternate row and column between left and right image.  The bottom left pixel is the `Right` image.
 - `Blend` — Both images are blended together equally.  This is useful for visualizing differences between images.
 - `Difference` — Output is the difference in colors between each image.  This is useful for minimizing vertical alignment issues.
 - `Left Only` — The output will be the unaltered `Left` image.
