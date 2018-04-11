@@ -91,6 +91,9 @@ test_TestReferenceCounting_node.depends =
 test_TestImageFilters.subdir = TestImageFilters
 test_TestImageFilters.depends = test_TestCompositionExecution
 
+test_TestInputEditors.subdir = TestInputEditors
+test_TestInputEditors.depends = test_TestCompositionExecution
+
 test_TestTypes.subdir = TestTypes
 test_TestTypes.depends = test_TestCompositionExecution
 

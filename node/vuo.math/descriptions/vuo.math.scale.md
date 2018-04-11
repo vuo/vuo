@@ -3,6 +3,7 @@ Converts a number or point from one unit of measure to another.
    - `Value` — The number to scale.
    - `Start`, `End` — Two numbers in the same units as `Value`.
    - `Scaled Start`, `Scaled End` — Two corresponding numbers in the same units as `Scaled Value`.
+   - `Limit to Range` — Controls whether `Scaled Value` is clamped when it would have been less than `Scaled Start` or greater than `Scaled End`.
 
 Examples: 
 

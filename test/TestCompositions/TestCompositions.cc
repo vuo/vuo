@@ -2,7 +2,7 @@
  * @file
  * TestCompositions interface and implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -98,6 +98,8 @@ public:
 			if (empty)
 			{
 				isStopping = true;
+
+				TestCompositionExecution::waitForImageTextCacheCleanup();
 
 				// runner->stop() has to be called asynchronously because it waits for this function to return.
 				dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{

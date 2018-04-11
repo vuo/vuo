@@ -29,6 +29,8 @@ These nodes are based on the [OSC 1.0 specification](http://opensoundcontrol.org
 
 When receiving OSC values, the following type tags are supported: nil (`N`), true (`T`), false (`F`), float32 (`f`), float64/double (`d`), int32 (`i`), int64 (`h`), and OSC-string (`s`).
 
+When you use a `Get Message Values` node, Vuo converts the OSC data to each `Data` port's specialized type if possible.  For example, if a `Data` port is specialized to the Vuo type Real, then it can handle OSC data of type float64/double, float32, int64, int32, or string, converting it if necessary from an integer or text to a real number.
+
 When sending OSC values, the same data types, except nil, are supported.  When you use a `Make Message` node, Vuo chooses the OSC data type based on each generic `Data` port's specialized type, and the value of the corresponding `Type` port.  When the `Type` port is set to `(auto)`, Vuo uses the following mappings:
 
 Vuo Type | OSC Data Type

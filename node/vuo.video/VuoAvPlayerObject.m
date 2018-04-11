@@ -2,7 +2,7 @@
  * @file
  * VuoQtListener implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -20,11 +20,14 @@
 #include "VuoAvPlayerInterface.h"
 #include <Accelerate/Accelerate.h>
 #include "VuoWindow.h"
+#include "VuoOsStatus.h"
+#include "VuoApp.h"
 
 #ifdef VUO_COMPILER
 VuoModuleMetadata({
 					 "title" : "VuoAvPlayerObject",
 					 "dependencies" : [
+						"VuoApp",
 						"VuoImage",
 						"VuoWindow",
 						"AVFoundation.framework",
@@ -33,6 +36,7 @@ VuoModuleMetadata({
 						"CoreMedia.framework",
 						"VuoGLContext",
 						"Accelerate.framework",
+						"VuoOsStatus",
 
 						// @todo
 						"QuartzCore.framework",
@@ -48,6 +52,135 @@ const unsigned int AUDIO_BUFFER_SIZE = 16384;
 
 /// The number of preceeding frames to decode when playing video in reverse.
 const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
+
+
+/**
+ * Allows us to call methods on HapDecoderFrame without linking to the framework at compile-time
+ * (to enable running on OS X 10.8 and 10.9).
+ */
+@protocol VuoAvTrackHapFrame
+/// @{
+- (CMSampleBufferRef)allocCMSampleBufferFromRGBData;
+/// @}
+@end
+
+/**
+ * Allows us to call methods on AVPlayerItemHapDXTOutput without linking to the framework at compile-time
+ * (to enable running on OS X 10.8 and 10.9).
+ */
+@protocol VuoAvTrackHapOutput
+/// @{
+- (id)initWithHapAssetTrack:(AVAssetTrack *)track;
+- (void)setOutputAsRGB:(BOOL)rgb;
+- (void)setDestRGBPixelFormat:(OSType)pf;
+- (NSObject<VuoAvTrackHapFrame> *)allocFrameForTime:(CMTime)time;
+/// @}
+@end
+
+/**
+ * Decodes Hap frames if present; otherwise returns the frames as-is.
+ */
+@interface VuoAvTrackOutput : AVAssetReaderTrackOutput
+{
+	NSObject<VuoAvTrackHapOutput> *hapOutput;	///< If non-nil, this track contains Hap frames, and this object lets us decode them.
+}
+@end
+
+@implementation VuoAvTrackOutput
+
+- (id)initWithTrack:(AVAssetTrack *)track outputSettings:(NSDictionary *)settings
+{
+	bool isHap = false;
+	for (id formatDescription in track.formatDescriptions)
+	{
+		CMFormatDescriptionRef desc = (CMFormatDescriptionRef) formatDescription;
+		CMVideoCodecType codec = CMFormatDescriptionGetMediaSubType(desc);
+		if (codec == 'Hap1'
+		 || codec == 'Hap5'
+		 || codec == 'HapY'
+		 || codec == 'HapM')
+		{
+			isHap = true;
+			break;
+		}
+	}
+
+	if (self = [super initWithTrack:track outputSettings:(isHap ? nil : settings)])
+	{
+		if (isHap)
+		{
+			NSBundle *f = [NSBundle bundleWithPath:[[NSString stringWithUTF8String:VuoApp_getVuoFrameworkPath()]
+									stringByAppendingString:@"/Vuo.framework/Frameworks/HapInAVFoundation.framework"]];
+			if (!f)
+			{
+				VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but I can't find it.");
+				return nil;
+			}
+
+			if (![f isLoaded])
+			{
+				NSError *error;
+				bool status = [f loadAndReturnError:&error];
+				if (!status)
+				{
+					if ([[error domain] isEqualToString:NSCocoaErrorDomain]
+					 && [error code] == NSExecutableLinkError)
+					{
+						SInt32 macMinorVersion;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+						Gestalt(gestaltSystemVersionMinor, &macMinorVersion);
+#pragma clang diagnostic pop
+						if (macMinorVersion <= 9)
+						{
+							VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, which is only available on OS X 10.10 and later.");
+							return nil;
+						}
+					}
+
+					NSError *underlyingError = [[error userInfo] objectForKey:NSUnderlyingErrorKey];
+					if (underlyingError)
+						error = underlyingError;
+					VUserLog("Error: Playing this movie requires HapInAVFoundation.framework, but it wouldn't load: %s", [[error localizedDescription] UTF8String]);
+					return nil;
+				}
+			}
+
+			hapOutput = [[NSClassFromString(@"AVPlayerItemHapDXTOutput") alloc] initWithHapAssetTrack:track];
+			[hapOutput setOutputAsRGB:YES];
+			[hapOutput setDestRGBPixelFormat:kCVPixelFormatType_32BGRA];
+		}
+	}
+	return self;
+}
+
+- (CMSampleBufferRef)copyNextSampleBuffer
+{
+	CMSampleBufferRef buffer = [super copyNextSampleBuffer];
+
+	if (!hapOutput || !buffer)
+		return buffer;
+
+	VuoDefer(^{ CFRelease(buffer); });
+
+	CMTime time = CMSampleBufferGetPresentationTimeStamp(buffer);
+	if (CMTIME_IS_INVALID(time))
+		return nil;
+
+	NSObject<VuoAvTrackHapFrame> *hapFrame = [hapOutput allocFrameForTime:time];
+	CMSampleBufferRef decodedBuffer = [hapFrame allocCMSampleBufferFromRGBData];
+	[hapFrame release];
+	return decodedBuffer;
+}
+
+- (void)dealloc
+{
+	[hapOutput release];
+	[super dealloc];
+}
+
+@end
+
 
 @implementation VuoAvPlayerObject
 
@@ -148,9 +281,17 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 	[asset retain];
 
-	if (![asset isPlayable] || [asset hasProtectedContent] || ![asset isReadable])
+	// Movies using the Hap codec are not "playable" yet we can still play them.
+	bool isPlayable = true; //[asset isPlayable];
+
+	// "Currently, only Apple can 'make' protected content and applications that can play it."
+	// http://www.cocoabuilder.com/archive/cocoa/301980-avfoundation-authorization-for-playback-of-protected-content.html#301981
+	bool isProtected = [asset hasProtectedContent];
+
+	if (!isPlayable || isProtected || ![asset isReadable])
 	{
-		VUserLog("AvFoundation cannot play this asset.");
+		VUserLog("AvFoundation cannot play this asset (isPlayable=%d, hasProtectedContent=%d, isReadable=%d).",
+				 [asset isPlayable], [asset hasProtectedContent], [asset isReadable]);
 		isReady = false;
 		return false;
 	}
@@ -266,13 +407,15 @@ const unsigned int REVERSE_PLAYBACK_FRAME_ADVANCE = 10;
 
 		assetReader.timeRange = timeRange;
 
-		/// video settings
-		NSMutableDictionary * videoOutputSettings = [[[NSMutableDictionary alloc] init] autorelease];
-		[videoOutputSettings setObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
-		[videoOutputSettings setObject:[NSNumber numberWithBool:YES] forKey:(NSString*)kCVPixelBufferOpenGLCompatibilityKey];
+		NSDictionary *videoOutputSettings = @{
+			(NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
+			(NSString *)kCVPixelBufferOpenGLCompatibilityKey: @(YES),
+		};
 
-		assetReaderVideoTrackOutput = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:vidtrack
+		assetReaderVideoTrackOutput = [VuoAvTrackOutput assetReaderTrackOutputWithTrack:vidtrack
 			outputSettings:videoOutputSettings];
+		if (!assetReaderVideoTrackOutput)
+			return false;
 
 		if([assetReader canAddOutput:assetReaderVideoTrackOutput])
 		{

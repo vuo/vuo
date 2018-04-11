@@ -1,6 +1,6 @@
-Saves images and audio to a movie file.
+Saves video frames and audio frames to a movie file.
 
-The movie file is created and saving starts when the `Save Video Frame` port receives its first frame. As the `Save Video Frame` port continues receiving frames, and the `Save Audio Frame` port optionally receives audio, these are appended to the movie file in real time. Saving continues until the `Finalize` port receives an event or the composition stops.
+The movie file is created and saving starts when the `Save Video Frame` port receives its first frame. As the `Save Video Frame` port continues receiving frames, and the `Save Audio Frame` port optionally receives audio, these are appended to the movie file at their provided timestamps. Saving continues until the `Finalize` port receives an event or the composition stops.
 
 Certain characteristics of the movie are determined when saving starts, and can't be changed while saving is in progress. The width and height of the movie are determined by the first video frame received. Whether or not the movie has audio is determined within the first half second after the first video frame is received. If no audio is received during that time, then the movie won't have an audio track. The number of audio channels is determined by the first audio frame received.
 

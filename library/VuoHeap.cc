@@ -2,7 +2,7 @@
  * @file
  * VuoHeap implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -18,23 +18,14 @@
 #include <iomanip>
 using namespace std;
 #include "VuoLog.h"
+#include "VuoRuntime.h"
 
 //#define VUOHEAP_TRACE		// NOCOMMIT
 //#define VUOHEAP_TRACEALL	// NOCOMMIT
 static set<const void *> *VuoHeap_trace;	///< Heap pointers to trace.
 
 /**
- * How many callers have requested that termination be temporarily disabled.
- *
- * @see VuoEventLoop_mayBeTerminated
- *
- * This variable is in the VuoHeap dylib to ensure that each composition only has a single instance
- * (since the VuoEventLoop module may be loaded multiple times per composition).
- */
-int VuoEventLoop_terminationDisabledCount = 0;
-
-/**
- * Calls the sendError() function defined in VuoRuntime (without introducing a direct dependency on VuoRuntime).
+ * Calls the vuoSendError() function defined in the runtime (without introducing a direct dependency on the runtime).
  */
 void sendErrorWrapper(const char *message)
 {
@@ -43,12 +34,20 @@ void sendErrorWrapper(const char *message)
 	VuoLog_backtrace();
 #endif
 
-	typedef void (*sendErrorType)(const char *message);
-	sendErrorType sendError = (sendErrorType) dlsym(RTLD_SELF, "sendError");  // for running composition in separate process as executable or in current process
-	if (! sendError)
-		sendError = (sendErrorType) dlsym(RTLD_DEFAULT, "sendError");  // for running composition in separate process as dynamic libraries
-	if (sendError)
-		sendError(message);
+	VuoSendErrorType *vuoSendError = (VuoSendErrorType *) dlsym(RTLD_SELF, "vuoSendError");  // for running composition in separate process as executable or in current process
+	if (! vuoSendError)
+		vuoSendError = (VuoSendErrorType *) dlsym(RTLD_DEFAULT, "vuoSendError");  // for running composition in separate process as dynamic libraries
+
+	pthread_key_t *vuoCompositionStateKey = (pthread_key_t *) dlsym(RTLD_SELF, "vuoCompositionStateKey");
+	if (! vuoCompositionStateKey)
+		vuoCompositionStateKey = (pthread_key_t *) dlsym(RTLD_DEFAULT, "vuoCompositionStateKey");
+
+	void *compositionState = NULL;
+	if (vuoCompositionStateKey)
+		compositionState = pthread_getspecific(*vuoCompositionStateKey);
+
+	if (vuoSendError && compositionState)
+		vuoSendError((VuoCompositionState *)compositionState, message);
 	else
 		VUserLog("%s", message);
 }
@@ -69,7 +68,34 @@ typedef struct
 
 static map<const void *, VuoHeapEntry> *referenceCounts;  ///< The reference count for each pointer.
 static set<const void *> *singletons;  ///< Known singleton pointers.
-static dispatch_semaphore_t referenceCountsSemaphore = NULL;  ///< Synchronizes access to referenceCounts.
+static unsigned int *referenceCountsSemaphore = 0;  ///< Synchronizes access to referenceCounts.
+
+/**
+ * Waits for `referenceCountsSemaphore` to become available.
+ *
+ * Spinlocks are faster than dispatch semaphores when under contention, especially on macOS 10.12.
+ * https://b33p.net/kosada/node/12778
+ */
+static inline void VuoHeap_lock(void)
+{
+	while (1)
+	{
+		for (int i = 0; i < 10000; ++i)
+			if (__sync_bool_compare_and_swap(referenceCountsSemaphore, 0, 1))
+				return;
+
+		sched_yield();
+	}
+}
+
+/**
+ * Releases `referenceCountsSemaphore`.
+ */
+static inline void VuoHeap_unlock(void)
+{
+	__sync_synchronize();
+	*referenceCountsSemaphore = 0;
+}
 
 /**
  * If `pointer` refers to allocated memory, copies its first 16 printable characters into `summary`, followed by char 0.
@@ -129,7 +155,8 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 	referenceCounts = new map<const void *, VuoHeapEntry>;
 	singletons = new set<const void *>;
 	VuoHeap_trace = new set<const void *>;
-	referenceCountsSemaphore = dispatch_semaphore_create(1);
+	referenceCountsSemaphore = (unsigned int *)malloc(sizeof(unsigned int));
+	*referenceCountsSemaphore = 0;
 
 #if 0
 	// Periodically dump the referenceCounts table, to help find leaks.
@@ -138,7 +165,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 	dispatch_source_set_timer(timer, dispatch_walltime(NULL,0), NSEC_PER_SEC*dumpInterval, NSEC_PER_SEC*dumpInterval);
 	dispatch_source_set_event_handler(timer, ^{
 										  fprintf(stderr, "\n\n\n\n\nreferenceCounts:\n");
-										  dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+										  VuoHeap_lock();
 										  for (map<const void *, VuoHeapEntry>::iterator i = referenceCounts->begin(); i != referenceCounts->end(); ++i)
 										  {
 											  const void *heapPointer = i->first;
@@ -148,7 +175,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 											  fprintf(stderr, "\t% 3d refs to %p \"%s\", registered at %s\n", i->second.referenceCount, heapPointer, pointerSummary, description);
 											  free(description);
 										  }
-										  dispatch_semaphore_signal(referenceCountsSemaphore);
+										  VuoHeap_unlock();
 									  });
 	dispatch_resume(timer);
 #endif
@@ -160,7 +187,7 @@ static void __attribute__((constructor(101))) VuoHeap_init()
 void VuoHeap_report(void)
 {
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VuoHeap_lock();
 	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 
@@ -181,7 +208,7 @@ void VuoHeap_report(void)
 	}
 
 	}
-	dispatch_semaphore_signal(referenceCountsSemaphore);
+	VuoHeap_unlock();
 }
 
 /**
@@ -208,7 +235,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 	int updatedCount;
 
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VuoHeap_lock();
 	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 
@@ -233,7 +260,7 @@ int VuoRegisterF(const void *heapPointer, DeallocateFunctionType deallocate, con
 			updatedCount = i->second.referenceCount;
 
 	}
-	dispatch_semaphore_signal(referenceCountsSemaphore);
+	VuoHeap_unlock();
 
 	if (isAlreadyReferenceCounted)
 	{
@@ -259,7 +286,7 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 	bool isAlreadyReferenceCounted;
 
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VuoHeap_lock();
 	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 
@@ -282,7 +309,7 @@ int VuoRegisterSingletonF(const void *heapPointer, const char *file, unsigned in
 		if (! isAlreadyReferenceCounted)
 			singletons->insert(heapPointer);
 	}
-	dispatch_semaphore_signal(referenceCountsSemaphore);
+	VuoHeap_unlock();
 
 	if (isAlreadyReferenceCounted)
 	{
@@ -326,7 +353,7 @@ int VuoRetain(const void *heapPointer)
 	VuoHeapEntry entry;
 
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VuoHeap_lock();
 	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
@@ -348,7 +375,7 @@ int VuoRetain(const void *heapPointer)
 		entry = i->second;
 
 	}
-	dispatch_semaphore_signal(referenceCountsSemaphore);
+	VuoHeap_unlock();
 
 	if (updatedCount == -1 && !foundSingleton)
 	{
@@ -394,7 +421,7 @@ int VuoRelease(const void *heapPointer)
 	DeallocateFunctionType deallocate = NULL;
 
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VuoHeap_lock();
 	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 		map<const void *, VuoHeapEntry>::iterator i = referenceCounts->find(heapPointer);
@@ -430,7 +457,7 @@ int VuoRelease(const void *heapPointer)
 			foundSingleton = singletons->find(heapPointer) != singletons->end();
 
 	}
-	dispatch_semaphore_signal(referenceCountsSemaphore);
+	VuoHeap_unlock();
 
 	if (updatedCount == 0)
 	{
@@ -485,10 +512,10 @@ const char * VuoHeap_getDescription(const void *heapPointer)
 void VuoHeap_addTrace(const void *heapPointer)
 {
 	VUOLOG_PROFILE_BEGIN(referenceCountsSemaphore);
-	dispatch_semaphore_wait(referenceCountsSemaphore, DISPATCH_TIME_FOREVER);
+	VuoHeap_lock();
 	VUOLOG_PROFILE_END(referenceCountsSemaphore);
 	{
 		VuoHeap_trace->insert(heapPointer);
 	}
-	dispatch_semaphore_signal(referenceCountsSemaphore);
+	VuoHeap_unlock();
 }

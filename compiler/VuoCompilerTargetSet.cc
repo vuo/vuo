@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTargetSet implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -101,10 +101,16 @@ string VuoCompilerTargetSet::macVersionToString(MacVersion v)
 		case MacVersion_Any:
 			return "macOS (all versions)";
 		case MacVersion_10_7:
-			return "macOS 10.7";
+			return "OS X 10.7";
 		case MacVersion_10_8:
-			return "macOS 10.8";
+			return "OS X 10.8";
 		case MacVersion_10_9:
-			return "macOS 10.9";
+			return "OS X 10.9";
+		case MacVersion_10_10:
+			return "OS X 10.10";
+		case MacVersion_10_11:
+			return "OS X 10.11";
+		case MacVersion_10_12:
+			return "macOS 10.12";
 	}
 }

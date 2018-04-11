@@ -2,7 +2,7 @@
  * @file
  * VuoCompiler implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -1624,6 +1624,11 @@ void VuoCompiler::linkCompositionToCreateExecutable(string inputPath, string out
  * Turns a compiled composition into a dynamic library by
  * linking in all of its dependencies.
  *
+ * If you plan to run multiple compositions, or multiple instances of the same composition, in the same process
+ * (@ref VuoRunner::newCurrentProcessRunnerFromDynamicLibrary), @a optimization should be `Optimization_FastBuild`
+ * or `Optimization_FastBuildExistingCache`. This prevents conflicts between Objective-C classes (from nodes)
+ * being defined in multiple loaded dynamic libraries.
+ *
  * @param inputPath Path to the compiled composition (an LLVM bitcode file).
  * @param outputPath Path where the resulting dynamic library should be placed.
  * @param optimization Controls the time it takes to link the composition and the size and dependencies of the
@@ -1757,7 +1762,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 	}
 
 	// Get the Vuo runtime dependency.
-	string vuoRuntimePath;
+	set<string> vuoRuntimePaths;
 	{
 		set<Module *> modules;
 		set<string> libraries;
@@ -1766,7 +1771,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		set<string> dependencies;
 		dependencies.insert(getRuntimeDependency());
 		getLinkerInputs(dependencies, Optimization_FastBuild, modules, libraries, frameworks);
-		vuoRuntimePath = *libraries.begin();
+		vuoRuntimePaths = libraries;
 	}
 
 	// Link the composition.
@@ -1775,7 +1780,7 @@ void VuoCompiler::linkCompositionToCreateDynamicLibraries(string compiledComposi
 		set<string> libraries;
 
 		libraries.insert(compiledCompositionPath);
-		libraries.insert(vuoRuntimePath);
+		libraries.insert(vuoRuntimePaths.begin(), vuoRuntimePaths.end());
 		libraries.insert(tmpAlreadyLinkedResourcePaths.begin(), tmpAlreadyLinkedResourcePaths.end());
 		libraries.insert(dylibs.begin(), dylibs.end());
 		link(linkedCompositionPath, modules, libraries, frameworks, true);
@@ -2399,12 +2404,14 @@ void VuoCompiler::getCachedResourcesThreadUnsafe(bool shouldUseExistingCache)
 						cachedResources[i].insert(expectedResources[i].begin(), expectedResources[i].end());
 						isCacheUpToDate = true;
 					}
+					else
+						throw std::runtime_error("The cache file is being used by another process.");
 				}
 
 				if (isCacheUpToDate)
 					cachedResourceDylib[i] = cacheFilePaths[i];
 			}
-			catch (VuoCompilerException &e)
+			catch (exception &e)
 			{
 				VUserLog("Warning: Could not create the cache for the \"faster build\" optimization: %s", e.what());
 			}
@@ -3045,16 +3052,27 @@ void VuoCompiler::listNodeClasses(const string &format)
 
 /**
  * Returns the file names of bitcode dependencies needed by every linked Vuo composition.
+ *
+ * These dependencies are added to the cache (`libVuoResources.dylib`)
+ * and are thus only loaded once per process.
  */
 vector<string> VuoCompiler::getCoreVuoDependencies(void)
 {
 	vector<string> dependencies;
+	dependencies.push_back("VuoCompositionDiff.bc");
+	dependencies.push_back("VuoCompositionState.bc");
 	dependencies.push_back("VuoEventLoop.bc");
 	dependencies.push_back("VuoHeap");
 	dependencies.push_back("VuoLog.bc");
+	dependencies.push_back("VuoNodeRegistry.bc");
+	dependencies.push_back("VuoRuntimeCommunicator.bc");
 	dependencies.push_back("VuoRuntimeContext.bc");
-	dependencies.push_back("VuoRuntimeHelper.bc");
+	dependencies.push_back("VuoRuntimePersistentState.bc");
+	dependencies.push_back("VuoRuntimeState.bc");
+	dependencies.push_back("VuoRuntimeUtilities.bc");
 	dependencies.push_back("VuoTelemetry.bc");
+	dependencies.push_back("VuoThreadManager.bc");
+	dependencies.push_back("module.bc");
 	dependencies.push_back("zmq");
 	dependencies.push_back("json-c");
 	dependencies.push_back("objc");
@@ -3076,6 +3094,10 @@ string VuoCompiler::getRuntimeMainDependency(void)
 
 /**
  * Returns the file name of the Vuo runtime.
+ *
+ * This dependency is NOT added to the cache (`libVuoResources.dylib`)
+ * and is thus loaded individually for each composition within a process,
+ * giving each composition its own set of global/static variables defined in this dependency.
  */
 string VuoCompiler::getRuntimeDependency(void)
 {

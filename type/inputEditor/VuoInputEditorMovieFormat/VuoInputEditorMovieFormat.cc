@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorMovieFormat implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -235,12 +235,11 @@ json_object * VuoInputEditorMovieFormat::getAcceptedValue(void)
  */
 QString VuoInputEditorMovieFormat::convertToLineEditFormat(json_object *value)
 {
-	QString valueAsStringInDefaultLocale = json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN);
-	double realValue = QLocale(QLocale::C).toDouble(valueAsStringInDefaultLocale);
-	QString valueAsStringInUserLocale = QLocale::system().toString(realValue);
+	double realValue = VuoReal_makeFromJson(value);
+	QString valueAsStringInUserLocale = QLocale().toString(realValue);
 
 	if (qAbs(realValue) >= 1000.0)
-		valueAsStringInUserLocale.remove(QLocale::system().groupSeparator());
+		valueAsStringInUserLocale.remove(QLocale().groupSeparator());
 
 	return valueAsStringInUserLocale;
 }
@@ -253,38 +252,11 @@ json_object * VuoInputEditorMovieFormat::convertFromSubwidgetFormats(const QVari
 																	const QVariant &audioEncoding,
 																	const QString &audioQualityAsString)
 {
-	// Image Encoding
-	json_object *imageEncodingValue = (json_object *)imageEncoding.value<void *>();
-
-	// Audio Encoding
-	json_object *audioEncodingValue = (json_object *)audioEncoding.value<void *>();
-
-	// Image Quality
-	double imageQualityValue = QLocale::system().toDouble(imageQualityAsString);
-	QString imageQualityAsStringInDefaultLocale = QLocale(QLocale::C).toString(imageQualityValue);
-
-	if (qAbs(imageQualityValue) >= 1000.0)
-		imageQualityAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! imageQualityAsStringInDefaultLocale.isEmpty() && imageQualityAsStringInDefaultLocale[0] == '.')
-		imageQualityAsStringInDefaultLocale = "0" + imageQualityAsStringInDefaultLocale;
-
-	// Audio Quality
-	double audioQualityValue = QLocale::system().toDouble(audioQualityAsString);
-	QString audioQualityAsStringInDefaultLocale = QLocale(QLocale::C).toString(audioQualityValue);
-
-	if (qAbs(audioQualityValue) >= 1000.0)
-		audioQualityAsStringInDefaultLocale.remove(QLocale(QLocale::C).groupSeparator());
-
-	if (! audioQualityAsStringInDefaultLocale.isEmpty() && audioQualityAsStringInDefaultLocale[0] == '.')
-		audioQualityAsStringInDefaultLocale = "0" + audioQualityAsStringInDefaultLocale;
-
-	// VuoMovieFormat
 	VuoMovieFormat format;
-	format.imageEncoding = VuoMovieImageEncoding_makeFromJson(imageEncodingValue);
-	format.audioEncoding = VuoAudioEncoding_makeFromJson(audioEncodingValue);
-	format.imageQuality = VuoReal_makeFromString(imageQualityAsStringInDefaultLocale.toUtf8().constData());
-	format.audioQuality = VuoReal_makeFromString(audioQualityAsStringInDefaultLocale.toUtf8().constData());
+	format.imageEncoding = VuoMovieImageEncoding_makeFromJson((json_object *)imageEncoding.value<void *>());
+	format.audioEncoding = VuoAudioEncoding_makeFromJson((json_object *)audioEncoding.value<void *>());
+	format.imageQuality = QLocale().toDouble(imageQualityAsString);
+	format.audioQuality = QLocale().toDouble(audioQualityAsString);
 	return VuoMovieFormat_getJson(format);
 }
 
@@ -297,7 +269,7 @@ void VuoInputEditorMovieFormat::updateSliderValue(QString newLineEditText)
 	QObject *sender = QObject::sender();
 	qualityAttribute whichQualityAttribute = (sender == lineEditImageQuality? imageQuality : audioQuality);
 
-	double newLineEditValue = QLocale::system().toDouble(newLineEditText);
+	double newLineEditValue = QLocale().toDouble(newLineEditText);
 	int newSliderValue = lineEditValueToScaledSliderValue(newLineEditValue, whichQualityAttribute);
 
 	QSlider *targetSlider = (whichQualityAttribute == imageQuality? sliderImageQuality : sliderAudioQuality);
@@ -342,10 +314,10 @@ void VuoInputEditorMovieFormat::updateLineEditValue(int newSliderValue, qualityA
 	double newLineEditValue = sliderValueToScaledLineEditValue(newSliderValue, whichQualityAttribute);
 	QLineEdit *targetLineEdit = (whichQualityAttribute == imageQuality? lineEditImageQuality : lineEditAudioQuality);
 	const QString originalLineEditText = targetLineEdit->text();
-	QString newLineEditText = QLocale::system().toString(newLineEditValue, 'g');
+	QString newLineEditText = QLocale().toString(newLineEditValue, 'g');
 
 	if (qAbs(newLineEditValue) >= 1000.0)
-		newLineEditText.remove(QLocale::system().groupSeparator());
+		newLineEditText.remove(QLocale().groupSeparator());
 
 	if (originalLineEditText != newLineEditText)
 	{

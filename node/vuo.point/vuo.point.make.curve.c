@@ -1,8 +1,8 @@
 /**
  * @file
- * vuo.point.make.parametric node implementation.
+ * vuo.point.make.curve node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,8 +10,8 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					  "title" : "Make Points along Curve",
-					  "keywords" : [ "math", "number", "shape", "ease", "easing", "quadratic", "cubic", "circular", "exponential", "logarithmic" ],
+					  "title" : "Make Points along Line",
+					  "keywords" : [ "math", "number", "shape", "ease", "easing", "linear", "quadratic", "cubic", "circular", "exponential", "logarithmic", "interpolate" ],
 					  "version" : "1.0.0",
 					  "genericTypes" : {
 						  "VuoGenericType1" : {
@@ -27,7 +27,7 @@ void nodeEvent
 (
 		VuoInputData(VuoGenericType1) startPosition,
 		VuoInputData(VuoGenericType1, {"defaults":{"VuoReal":1., "VuoPoint2d":{"x":1.,"y":1.}, "VuoPoint3d":{"x":1.,"y":1.,"z":0.}}}) endPosition,
-		VuoInputData(VuoCurve, {"default":"quadratic"}) curve,
+		VuoInputData(VuoCurve, {"default":"linear"}) curve,
 		VuoInputData(VuoCurveEasing, {"default":"in"}) easing,
 		VuoInputData(VuoInteger, {"name":"Number of Points", "default":32}) numberOfPoints,
 		VuoOutputData(VuoList_VuoGenericType1) points

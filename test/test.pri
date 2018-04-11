@@ -43,9 +43,16 @@ QMAKE_LFLAGS += \
 	-framework Foundation \
 	-framework QuartzCore \
 	-framework AppKit \
+	$$ROOT/runtime/libVuoCompositionDiff.bc \
+	$$ROOT/runtime/libVuoCompositionState.bc \
+	$$ROOT/runtime/libVuoNodeRegistry.bc \
 	$$ROOT/runtime/libVuoRuntime.bc \
+	$$ROOT/runtime/libVuoRuntimeCommunicator.bc \
 	$$ROOT/runtime/libVuoRuntimeContext.bc \
-	$$ROOT/runtime/libVuoRuntimeHelper.bc \
+	$$ROOT/runtime/libVuoRuntimePersistentState.bc \
+	$$ROOT/runtime/libVuoRuntimeState.bc \
+	$$ROOT/runtime/libVuoRuntimeUtilities.bc \
+	$$ROOT/runtime/libVuoThreadManager.bc \
 	$$ROOT/runtime/libVuoEventLoop.bc \
 	$$ROOT/base/VuoCompositionStub.o \
 	$$ROOT/base/VuoTelemetry.o \
@@ -69,6 +76,8 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoMeshUtility.o \
 	$$ROOT/library/VuoMathExpressionParser.o \
 	$$ROOT/library/VuoOsStatus.o \
+	$$ROOT/library/VuoPnpId.o \
+	$$ROOT/library/VuoSceneText.o \
 	$$ROOT/library/VuoSceneRenderer.o \
 	$$ROOT/library/VuoScreenCommon.o \
 	$$ROOT/library/VuoUrlFetch.o \
@@ -76,6 +85,7 @@ QMAKE_LFLAGS += \
 	$$ROOT/library/VuoWindow.o \
 	$$ROOT/library/VuoWindowRecorder.o \
 	$$ROOT/library/VuoWindowTextInternal.o \
+	$$ROOT/library/libmodule.o \
 	$$ROOT/type/VuoAudioSamples.o \
 	$$ROOT/type/VuoBoolean.o \
 	$$ROOT/type/VuoBlendMode.o \

@@ -2,7 +2,7 @@
  * @file
  * TestVuoList implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -311,6 +311,57 @@ private slots:
 
 		QCOMPARE(VuoList_VuoText_areEqual(a,b), expectedEqual);
 		QCOMPARE(VuoList_VuoText_isLessThan(a,b), expectedALessThanB);
+	}
+
+	/**
+	 * https://b33p.net/kosada/node/12921
+	 */
+	void testSummary_data()
+	{
+		QTest::addColumn<VuoList_VuoText>("list");
+		QTest::addColumn<QString>("expectedSummary");
+
+		{
+			VuoList_VuoText shortList = VuoListCreate_VuoText();
+			VuoListAppendValue_VuoText(shortList, VuoText_make("one"));
+			VuoListAppendValue_VuoText(shortList, VuoText_make("two"));
+			QTest::newRow("short list") << shortList << "List containing 2 items: <ul><li><code>one</code></li><li><code>two</code></li></ul>";
+		}
+
+		{
+			VuoList_VuoText listWithLongItems = VuoListCreate_VuoText();
+			for (int i = 0; i < 10; ++i)
+				VuoListAppendValue_VuoText(listWithLongItems, VuoText_make("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris."));
+			// Should contain truncated versions of the first 7 items (which exceed the 400 character limit), followed by an ellipsis.
+			QTest::newRow("list with 10 long items") << listWithLongItems << "List containing 10 items: <ul><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li>…</li></ul>";
+		}
+
+		{
+			VuoList_VuoText listWithLongItems = VuoListCreate_VuoText();
+			for (int i = 0; i < 7; ++i)
+				VuoListAppendValue_VuoText(listWithLongItems, VuoText_make("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec interdum metus non quam scelerisque mollis. Etiam vehicula molestie pulvinar. Nulla mollis arcu ut felis luctus varius eget nec nibh. Pellentesque in justo vitae arcu tristique mollis nec vitae tellus. Maecenas convallis massa id vestibulum sollicitudin. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque ultrices non tellus sit amet auctor. Suspendisse cursus leo eu felis cursus ultrices. Cras consectetur efficitur ex, et efficitur leo blandit quis. Donec sit amet nisi sed libero sagittis lacinia. In ac tellus mauris."));
+			// If the above list has exactly 7 items, it should not have an ellipsis as its last item.
+			QTest::newRow("list with 7 long items") << listWithLongItems << "List containing 7 items: <ul><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li><li><code>Lorem ipsum dolor sit amet, consectetur adipiscing…</code></li></ul>";
+		}
+
+		{
+			VuoList_VuoText listWithManyItems = VuoListCreate_VuoText();
+			for (int i = 0; i < 100; ++i)
+				VuoListAppendValue_VuoText(listWithManyItems, VuoText_make("item"));
+			QTest::newRow("list with many items") << listWithManyItems << "List containing 100 items: <ul><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li><code>item</code></li><li>…</li></ul>";
+		}
+	}
+	void testSummary()
+	{
+		QFETCH(VuoList_VuoText, list);
+		QFETCH(QString, expectedSummary);
+
+//		if (QString(VuoList_VuoText_getSummary(list)) != expectedSummary)
+//		{
+//			VLog("actual:   %s",VuoList_VuoText_getSummary(list));
+//			VLog("expected: %s",expectedSummary.toUtf8().constData());
+//		}
+		QCOMPARE(QString(VuoList_VuoText_getSummary(list)), expectedSummary);
 	}
 };
 

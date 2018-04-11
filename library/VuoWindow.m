@@ -2,7 +2,7 @@
  * @file
  * VuoWindow implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,6 +11,7 @@
 #import "VuoWindowTextInternal.h"
 #import "VuoGraphicsWindow.h"
 #include "VuoEventLoop.h"
+#include "VuoCompositionState.h"
 #include "VuoApp.h"
 
 #include "module.h"
@@ -44,7 +45,7 @@ VuoModuleMetadata({
  */
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	VuoStopComposition();
+	VuoStopCurrentComposition();
 	return NSTerminateCancel;
 }
 
@@ -77,22 +78,9 @@ VuoModuleMetadata({
 	[mas appendAttributedString:[[[NSAttributedString new] initWithHTML:[@"<p>This composition may include software licensed under the following terms:</p>" dataUsingEncoding:NSUTF8StringEncoding] documentAttributes:nil] autorelease]];
 
 
-	// Find Vuo.framework.
-	char frameworkPath[PATH_MAX+1] = "";
-	for(unsigned int i=0; i<_dyld_image_count(); ++i)
-	{
-		const char *dylibPath = _dyld_get_image_name(i);
-		char *pos;
-		if ( (pos = strstr(dylibPath, "/Vuo.framework/")) )
-		{
-			strncpy(frameworkPath, dylibPath, pos-dylibPath);
-			break;
-		}
-	}
-
 	// Derive the path of "Licenses" directory.
 	char licensesPath[PATH_MAX+1];
-	strncpy(licensesPath, frameworkPath, PATH_MAX);
+	strncpy(licensesPath, VuoApp_getVuoFrameworkPath(), PATH_MAX);
 	strncat(licensesPath, "/Vuo.framework/Versions/" VUO_VERSION_STRING "/Documentation/Licenses", PATH_MAX);
 
 
@@ -204,20 +192,15 @@ void VuoApp_init(void)
  *
  * @threadMain
  */
-static void VuoApp_finiWindows(void)
+static void VuoApp_finiWindows(uint64_t compositionUid)
 {
 	// Stop any window recordings currently in progress.
 	// This prompts the user for the save destination,
 	// so make sure these complete before shutting the composition down.
 	SEL stopRecording = @selector(stopRecording);
 	for (NSWindow *window in [NSApp windows])
-		if ([window respondsToSelector:stopRecording])
+		if ([window respondsToSelector:stopRecording] && ((VuoGraphicsWindow *)window).compositionUid == compositionUid)
 			[window performSelector:stopRecording];
-
-	// Explicitly restore the standard mouse cursor,
-	// since occasionally the system doesn't do it automatically.
-	// https://b33p.net/kosada/node/10769
-	[[NSCursor arrowCursor] set];
 }
 
 /**
@@ -232,14 +215,17 @@ void VuoApp_fini(void)
 	if (!NSApp)
 		return;
 
+	const void *compositionState = vuoGetCompositionStateFromThreadLocalStorage();
+	uint64_t compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
+
 	if (VuoApp_isMainThread())
-		VuoApp_finiWindows();
+		VuoApp_finiWindows(compositionUid);
 	else
 	{
 		VUOLOG_PROFILE_BEGIN(mainQueue);
 		dispatch_sync(dispatch_get_main_queue(), ^{
 			VUOLOG_PROFILE_END(mainQueue);
-			VuoApp_finiWindows();
+			VuoApp_finiWindows(compositionUid);
 		});
 	}
 }
@@ -255,13 +241,19 @@ void VuoWindowText_destroy(VuoWindowText w);
  */
 VuoWindowText VuoWindowText_make(void)
 {
+	const void *compositionState = vuoGetCompositionStateFromThreadLocalStorage();
+
 	__block VuoWindowTextInternal *window = NULL;
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
+					  vuoAddCompositionStateToThreadLocalStorage(compositionState);
+
 					  VuoApp_init();
 					  window = [[VuoWindowTextInternal alloc] init];
 					  [window makeKeyAndOrderFront:NSApp];
+
+					  vuoRemoveCompositionStateFromThreadLocalStorage();
 				   });
 	VuoRegister(window, VuoWindowText_destroy);
 	return (VuoWindowText *)window;
@@ -373,9 +365,13 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 )
 {
 	__block VuoGraphicsWindow *window = NULL;
+	const void *compositionState = vuoGetCompositionStateFromThreadLocalStorage();
+
 	VUOLOG_PROFILE_BEGIN(mainQueue);
 	dispatch_sync(dispatch_get_main_queue(), ^{
 					  VUOLOG_PROFILE_END(mainQueue);
+					  vuoAddCompositionStateToThreadLocalStorage(compositionState);
+
 					  VuoApp_init();
 					  window = [[VuoGraphicsWindow alloc] initWithInitCallback:initCallback
 														 updateBackingCallback:updateBackingCallback
@@ -383,6 +379,9 @@ VuoWindowOpenGl VuoWindowOpenGl_make
 																  drawCallback:drawCallback
 																	  userData:context];
 					  [window makeKeyAndOrderFront:nil];
+					  window.compositionUid = vuoGetCompositionUniqueIdentifier(compositionState);
+
+					  vuoRemoveCompositionStateFromThreadLocalStorage();
 				  });
 	VuoRegister(window, VuoWindowOpenGl_destroy);
 	return (VuoWindowOpenGl *)window;

@@ -2,7 +2,7 @@
  * @file
  * PortConfiguration implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -15,6 +15,7 @@
 #pragma clang diagnostic pop
 
 #include "PortConfiguration.hh"
+#include "TestCompositionExecution.hh"
 
 /**
  * Creates a PortConfiguration.
@@ -79,107 +80,11 @@ void PortConfiguration::checkOutputValue(VuoRunner *runner, VuoRunner::Port *por
 	QVERIFY2(i != valueForOutputPortName.end(), ("Unexpected output port: " + port->getName() + " ( " + toString() + " )").c_str());
 	json_object *expectedValue = json_tokener_parse(i->second.c_str());
 
-	checkEqual(port->getType(), actualValue, expectedValue);
+	TestCompositionExecution::checkEqual((itemName.empty() ? toString() : "\"" + itemName + "\""), port->getType(), actualValue, expectedValue);
 
 	json_object_put(actualValue);
 
 	valueForOutputPortName.erase(i);
-}
-
-/**
- * Returns a string description of the specified JSON type.
- */
-const char *PortConfiguration::getJsonTypeDescription(enum json_type type)
-{
-	switch (type)
-	{
-		case json_type_null:	return "json_type_null";
-		case json_type_boolean:	return "json_type_boolean";
-		case json_type_double:	return "json_type_double";
-		case json_type_int:		return "json_type_int";
-		case json_type_object:	return "json_type_object";
-		case json_type_array:	return "json_type_array";
-		case json_type_string:	return "json_type_string";
-	}
-}
-
-/**
- * Checks that the port values are equal (or approximately equal, for doubles).
- */
-void PortConfiguration::checkEqual(string type, json_object *actualValue, json_object *expectedValue)
-{
-	enum json_type actualType = json_object_get_type(actualValue);
-	enum json_type expectedType = json_object_get_type(expectedValue);
-
-	string actualString = json_object_to_json_string_ext(actualValue, JSON_C_TO_STRING_PLAIN);
-	string expectedString = json_object_to_json_string_ext(expectedValue, JSON_C_TO_STRING_PLAIN);
-
-	string failMessage = (itemName.empty() ? toString() : "\"" + itemName + "\"") + " --- " + expectedString + " != " + actualString;
-
-//	VLog("type=%s expectedJson=%s actualJson=%s", type.c_str(), getJsonTypeDescription(expectedType), getJsonTypeDescription(actualType));
-	if (expectedType == json_type_object && actualType == json_type_object)
-	{
-		if (type == "VuoImage")
-		{
-			VuoImage expectedImage = VuoImage_makeFromJson(expectedValue);
-			VuoImage   actualImage = VuoImage_makeFromJson(actualValue);
-			QVERIFY2(VuoImage_areEqualWithinTolerance(actualImage, expectedImage, 1), failMessage.c_str());
-			return;
-		}
-		else if (type == "VuoColor")
-		{
-			VuoColor expected = VuoColor_makeFromJson(expectedValue);
-			VuoColor   actual = VuoColor_makeFromJson(actualValue);
-			QVERIFY2(VuoColor_areEqualWithinTolerance(actual, expected, 0.01), failMessage.c_str());
-			return;
-		}
-		else if (type == "VuoWindowReference")
-		{
-			// Since VuoWindowReference is a pointer, tests can't expect an exact value.
-			return;
-		}
-
-		json_object_object_foreach(expectedValue, expectedPort, expectedElement)
-		{
-			json_object *actualElement;
-			QVERIFY2(json_object_object_get_ex(actualValue, expectedPort, &actualElement), failMessage.c_str());
-		}
-		json_object_object_foreach(actualValue, actualPort, actualElement)
-		{
-			json_object *expectedElement;
-			QVERIFY2(json_object_object_get_ex(expectedValue, actualPort, &expectedElement), failMessage.c_str());
-
-			checkEqual("", actualElement, expectedElement);
-		}
-	}
-	else if (expectedType == json_type_array && actualType == json_type_array)
-	{
-		int actualElementCount = json_object_array_length(actualValue);
-		int expectedElementCount = json_object_array_length(expectedValue);
-		QVERIFY2(actualElementCount == expectedElementCount, failMessage.c_str());
-
-		for (int i = 0; i < expectedElementCount; ++i)
-		{
-			json_object *actualElement = json_object_array_get_idx(actualValue, i);
-			json_object *expectedElement = json_object_array_get_idx(expectedValue, i);
-			checkEqual("", actualElement, expectedElement);
-		}
-	}
-	else if ((expectedType == json_type_double && (actualType == json_type_double || actualType == json_type_int)) ||
-			 (actualType == json_type_double && (expectedType == json_type_double || expectedType == json_type_int)))
-	{
-		double actualDouble = json_object_get_double(actualValue);
-		double expectedDouble = json_object_get_double(expectedValue);
-		const double DELTA = 0.000001;
-		if (isnan(actualDouble) && isnan(expectedDouble))
-		{
-			// OK, since NaN was both expected and actually received.
-		}
-		else
-			QVERIFY2(fabs(actualDouble - expectedDouble) <= DELTA, failMessage.c_str());
-	}
-	else
-		QVERIFY2(actualString == expectedString, failMessage.c_str());
 }
 
 /**

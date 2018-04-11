@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -45,7 +45,7 @@ private:
 	static Value * generateTypeCastFromLoweredTypeToStruct(BasicBlock *block, Value *valueToCast, Type *typeToCastTo);
 	static void generateRetainOrReleaseCall(Module *module, BasicBlock *block, Value *argument, bool isRetain);
 
-	static Function * getNodeFunction(Module *module, string moduleKey, string functionName, bool hasCompositionIdentifierArg, bool hasInstanceDataArg, bool hasInstanceDataReturn, bool hasEventOnlyInputArgs,
+	static Function * getNodeFunction(Module *module, string moduleKey, string functionName, bool hasCompositionStateArg, bool hasInstanceDataArg, bool hasInstanceDataReturn, bool hasEventOnlyInputArgs,
 									  const vector<VuoPort *> &modelInputPorts, const vector<VuoPort *> &modelOutputPorts,
 									  const map<VuoPort *, json_object *> &detailsForPorts, const map<VuoPort *, string> &displayNamesForPorts,
 									  const map<VuoPort *, string> &defaultValuesForInputPorts, const map<VuoPort *, VuoPortClass::EventBlocking> &eventBlockingForInputPorts,
@@ -65,6 +65,7 @@ public:
 	static StructType * getDispatchObjectType(Module *module);
 	static StructType * getNodeContextType(Module *module);
 	static StructType * getPortContextType(Module *module);
+	static StructType * getCompositionStateType(Module *module);
 	static StructType * getJsonObjectType(Module *module);
 
 	static Value * generateCreateDispatchSemaphore(Module *module, BasicBlock *block, int initialValue=1);
@@ -120,16 +121,21 @@ public:
 	static void generateResetNodeContextEvents(Module *module, BasicBlock *block, Value *nodeContextValue);
 	static void generateFreeNodeContext(Module *module, BasicBlock *block, Value *nodeContextValue);
 
-	static Value * generateGetDataForPort(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *portIdentifierValue);
-	static Value * generateGetNodeSemaphoreForPort(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *portIdentifierValue);
-	static Value * generateGetNodeIndexForPort(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *portIdentifierValue);
-	static Value * generateGetTypeIndexForPort(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *portIdentifierValue);
+	static Value * generateCreateCompositionState(Module *module, BasicBlock *block, Value *runtimeStateValue, Value *compositionIdentifierValue);
+	static Value * generateGetCompositionStateRuntimeState(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static Value * generateGetCompositionStateCompositionIdentifier(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static void generateFreeCompositionState(Module *module, BasicBlock *block, Value *compositionStateValue);
 
-	static void generateScheduleTriggerWorker(Module *module, BasicBlock *block, Value *queueValue, Value *contextValue, Value *workerFunctionValue,  int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionIdentifierValue, int chainCount);
-	static void generateScheduleChainWorker(Module *module, BasicBlock *block, Value *queueValue, Value *contextValue, Value *workerFunctionValue, int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionIdentifierValue, size_t chainIndex, vector<size_t> upstreamChainIndices);
-	static void generateGrantThreadsToSubcomposition(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionIdentifierValue, Value *chainIndexValue, Value *subcompositionIdentifierValue);
-	static void generateReturnThreadsForTriggerWorker(Module *module, BasicBlock *block, Value *eventIdValue);
-	static void generateReturnThreadsForChainWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionIdentifierValue, Value *chainIndexValue);
+	static Value * generateGetDataForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
+	static Value * generateGetNodeSemaphoreForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
+	static Value * generateGetNodeIndexForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
+	static Value * generateGetTypeIndexForPort(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
+
+	static void generateScheduleTriggerWorker(Module *module, BasicBlock *block, Value *queueValue, Value *contextValue, Value *workerFunctionValue,  int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionStateValue, int chainCount);
+	static void generateScheduleChainWorker(Module *module, BasicBlock *block, Value *queueValue, Value *contextValue, Value *workerFunctionValue, int minThreadsNeeded, int maxThreadsNeeded, Value *eventIdValue, Value *compositionStateValue, size_t chainIndex, vector<size_t> upstreamChainIndices);
+	static void generateGrantThreadsToSubcomposition(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue, Value *chainIndexValue, Value *subcompositionIdentifierValue);
+	static void generateReturnThreadsForTriggerWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue);
+	static void generateReturnThreadsForChainWorker(Module *module, BasicBlock *block, Value *eventIdValue, Value *compositionStateValue, Value *chainIndexValue);
 
 	static void generateSetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, size_t elementIndex, Value *value);
 	static Value * generateGetArrayElement(Module *module, BasicBlock *block, Value *arrayValue, size_t elementIndex);
@@ -154,19 +160,31 @@ public:
 	static void generateNullCheck(Module *module, Function *function, Value *valueToCheck, BasicBlock *initialBlock, BasicBlock *&nullBlock, BasicBlock *&notNullBlock);
 	static Value * generateSerialization(Module *module, BasicBlock *block, Value *valueToSerialize, VuoCompilerConstantStringCache &constantStrings);
 	static void generateUnserialization(Module *module, BasicBlock *block, Value *stringToUnserialize, Value *destinationVariable, VuoCompilerConstantStringCache &constantStrings);
-	static ICmpInst * generateIsPausedComparison(Module *module, BasicBlock *block);
-	static ICmpInst * generateShouldSendDataTelemetryComparison(Module *module, BasicBlock *block, string portIdentifier, VuoCompilerConstantStringCache &constantStrings);
-	static void generateIsNodeBeingRemovedOrReplacedCheck(Module *module, Function *function, std::string nodeIdentifier, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantStringCache &constantStrings, Value *&replacementJsonValue);
-	static ICmpInst * generateIsNodeBeingAddedOrReplacedCheck(Module *module, Function *function, std::string nodeIdentifier, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantStringCache &constantStrings, Value *&replacementJsonValue);
+	static ICmpInst * generateIsPausedComparison(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static void generateSendNodeExecutionStarted(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIdentifierValue);
+	static void generateSendNodeExecutionFinished(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIdentifierValue);
+	static void generateSendInputPortsUpdated(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *receivedEventValue, Value *receivedDataValue, Value *portDataSummaryValue);
+	static void generateSendOutputPortsUpdated(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *sentDataValue, Value *portDataSummaryValue);
+	static void generateSendPublishedOutputPortsUpdated(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *sentDataValue, Value *portDataSummaryValue);
+	static void generateSendEventDropped(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue);
+	static ICmpInst * generateShouldSendDataTelemetryComparison(Module *module, BasicBlock *block, string portIdentifier, Value *compositionStateValue, VuoCompilerConstantStringCache &constantStrings);
+	static void generateIsNodeBeingRemovedOrReplacedCheck(Module *module, Function *function, std::string nodeIdentifier, Value *compositionStateValue, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantStringCache &constantStrings, Value *&replacementJsonValue);
+	static ICmpInst * generateIsNodeBeingAddedOrReplacedCheck(Module *module, Function *function, std::string nodeIdentifier, Value *compositionStateValue, BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock, VuoCompilerConstantStringCache &constantStrings, Value *&replacementJsonValue);
 	static ConstantInt * generateNoEventIdConstant(Module *module);
-	static Value * generateGetNodeContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue, size_t nodeIndex);
-	static Value * generateGetNodeContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeIndexValue);
-	static Value * generateGetCompositionContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue);
-	static void generateAddNodeMetadata(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *nodeIdentifierValue);
-	static void generateAddPortMetadata(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *portIdentifierValue, Value *portNameValue, size_t typeIndex, Value *initialValueValue);
-	static Value * generateCompositionContextInitHelper(Module *module, BasicBlock *block, Value *compositionIdentifierValue, bool isStatefulComposition, size_t publishedOutputPortCount, Function *createNodeContextsFunction, Function *destroyNodeContextFunction, Function *setPortValueFunction);
-	static void generateCompositionContextFiniHelper(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Function *destroyNodeContextFunction, Function *releasePortDataFunction);
-	static Value * getTriggerWorkersScheduledValue(Module *module, BasicBlock *block);
+	static Value * generateGetNodeContext(Module *module, BasicBlock *block, Value *compositionStateValue, size_t nodeIndex);
+	static Value * generateGetNodeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIndexValue);
+	static Value * generateGetCompositionContext(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static void generateAddNodeMetadata(Module *module, BasicBlock *block, Value *compositionStateValue, Value *nodeIdentifierValue);
+	static void generateAddPortMetadata(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *portNameValue, size_t typeIndex, Value *initialValueValue);
+	static Value * generateCompositionContextInitHelper(Module *module, BasicBlock *block, Value *compositionStateValue, bool isStatefulComposition, size_t publishedOutputPortCount, Function *createNodeContextsFunction, Function *destroyNodeContextFunction, Function *setPortValueFunction);
+	static void generateCompositionContextFiniHelper(Module *module, BasicBlock *block, Value *compositionStateValue, Function *destroyNodeContextFunction, Function *releasePortDataFunction);
+	static Value * getTriggerWorkersScheduledValue(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static Value * generateGetInputPortString(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *interprocessSerializationValue);
+	static Value * generateGetOutputPortString(Module *module, BasicBlock *block, Value *compositionStateValue, Value *portIdentifierValue, Value *interprocessSerializationValue);
+	static Value * generateRuntimeStateValue(Module *module, BasicBlock *block);
+	static Value * generateGetNextEventId(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static void generateAddCompositionStateToThreadLocalStorage(Module *module, BasicBlock *block, Value *compositionStateValue);
+	static void generateRemoveCompositionStateFromThreadLocalStorage(Module *module, BasicBlock *block);
 	static void generatePrint(Module *module, BasicBlock *block, string formatString, Value *value=NULL);
 	static void generatePrint(Module *module, BasicBlock *block, string formatString, const vector<Value *> &values);
 
@@ -207,23 +225,11 @@ public:
 	static Function * getWaitForNodeFunction(Module *module, string moduleKey);
 	static Function * getCompositionGetPortValueFunction(Module *module);
 	static Function * getGetPortValueFunction(Module *module);
-	static Function * getGetInputPortStringFunction(Module *module);
-	static Function * getGetOutputPortStringFunction(Module *module);
 	static Function * getSetInputPortValueFunction(Module *module);
 	static Function * getCompositionSetPortValueFunction(Module *module);
 	static Function * getGetPublishedInputPortValueFunction(Module *module);
 	static Function * getGetPublishedOutputPortValueFunction(Module *module);
 	static Function * getSetPublishedInputPortValueFunction(Module *module);
-	static Function * getSendNodeExecutionStartedFunction(Module *module);
-	static Function * getSendNodeExecutionFinishedFunction(Module *module);
-	static Function * getSendInputPortsUpdatedFunction(Module *module);
-	static Function * getSendOutputPortsUpdatedFunction(Module *module);
-	static Function * getSendPublishedOutputPortsUpdatedFunction(Module *module);
-	static Function * getSendEventDroppedFunction(Module *module);
-	static Function * getGetNextEventIdFunction(Module *module);
-
-	static GlobalVariable * getIsPausedVariable(Module *module);
-	static GlobalVariable * getTopLevelCompositionIdentifierVariable(Module *module);
 
 	static Type * getParameterTypeBeforeLowering(Function *function, Module *module, string typeName);
 	static Value * unlowerArgument(VuoCompilerType *unloweredVuoType, Function *function, int parameterIndex, Module *module, BasicBlock *block);

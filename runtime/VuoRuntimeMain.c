@@ -2,7 +2,7 @@
  * @file
  * VuoRuntimeMain implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -17,8 +17,6 @@
 
 #include "VuoRuntime.h"
 #include "VuoEventLoop.h"
-
-extern bool isStopped;
 
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 
@@ -39,7 +37,7 @@ int main(int argc, char **argv)
 	VuoEventLoop_installSignalHandlers();
 	VuoEventLoop_disableAppNap();
 
-	while (! isStopped)
+	while (! vuoIsCurrentCompositionStopped())
 		VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
 
 	vuoFini();

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerTargetSet interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This interface description may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -23,7 +23,10 @@ public:
 		MacVersion_Any,
 		MacVersion_10_7,
 		MacVersion_10_8,
-		MacVersion_10_9
+		MacVersion_10_9,
+		MacVersion_10_10,
+		MacVersion_10_11,
+		MacVersion_10_12,
 	};
 
 	VuoCompilerTargetSet(void);

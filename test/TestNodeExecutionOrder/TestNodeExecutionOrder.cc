@@ -2,7 +2,7 @@
  * @file
  * TestNodeExecutionOrder interface and implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -28,8 +28,7 @@ typedef map<string, set<sequence_t> > sequencesForTriggerMapping_t;  ///< Maps e
  * A runner delegate that executes a composition, triggering random events on the published input ports
  * and recording the output port values of all vuo.test.conductor nodes' nodeInfo ports.
  */
-class TestNodeExecutionOrderRunnerDelegate : public VuoRunnerDelegateAdapter
-// class TestNodeExecutionOrderRunnerDelegate : public TestRunnerDelegate   /// @todo https://b33p.net/kosada/node/6021
+class TestNodeExecutionOrderRunnerDelegate : public TestRunnerDelegate
 {
 private:
 	VuoRunner *runner;

@@ -37,7 +37,7 @@ Audio is encoded separately from video. Similarly to video encodings, audio enco
 
 The `Play Movie` node can read any of the [audio encodings supported by FFmpeg](http://www.ffmpeg.org/general.html#Audio-Codecs). The table below summarizes some of the audio encodings supported by this node set.
 
-Encoding       | Compression             | Supported by `Play Movie`? | Supported by `Save to Movie`?
+Encoding       | Compression             | Supported by `Play Movie`? | Supported by `Save Images/Frames to Movie`?
 ---------------|-------------------------|----------------------------|-----------------------------
 Linear PCM     | Lossless (uncompressed) | Yes                        | Yes
 Apple Lossless | Lossless                | Yes                        | No
@@ -45,3 +45,12 @@ AAC            | Lossy                   | Yes                        | Yes
 MP3            | Lossy                   | Yes                        | No
 
 To find out which video and audio encodings a movie file uses, you can open it in QuickTime Player and go to Window > Show Movie Inspector.
+
+### Saving movies
+
+Vuo provides 2 nodes for saving images and audio to movie files:
+
+   - `Save Images to Movie` — Useful for realtime recording.  Simply feed images (and optionally audio) to this node, and it records them in a movie file in realtime.  Each frame's timestamp is derived from the time at which the image or audio event arrives at this node.
+   - `Save Frames to Movie` — Useful for non-realtime exporting and rotoscoping.  This node lets you explicitly specify the timestamps for images and audio sample buffers.
+
+(See [Exporting a Movie](http://doc.vuo.org/latest/manual/exporting-compositions.xhtml#exporting-a-movie) for information on other ways to create movie files with Vuo.)

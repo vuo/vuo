@@ -77,6 +77,7 @@ TYPE_SOURCES += \
 	VuoVideoInputDevice.c
 
 NODE_LIBRARY_INCLUDEPATH = \
+	HapInAVFoundation.framework/Headers \
 	$${FFMPEG_ROOT}/include \
 	$${FFMPEG_ROOT}/include/libavcodec \
 	$${FFMPEG_ROOT}/include/libavformat \

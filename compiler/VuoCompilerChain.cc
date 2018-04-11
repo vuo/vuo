@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerChain implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -28,7 +28,7 @@ VuoCompilerChain::VuoCompilerChain(vector<VuoCompilerNode *> nodes, bool lastNod
  * The context contains an event ID and an array of dispatch groups.
  * Each dispatch group has a block count of 1.
  */
-Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block, Value *compositionIdentifierValue, Value *eventIdValue,
+Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block, Value *compositionStateValue, Value *eventIdValue,
 											  const vector<VuoCompilerChain *> &chains,
 											  const map<VuoCompilerChain *, vector<VuoCompilerChain *> > &chainsImmediatelyDownstream)
 {
@@ -76,15 +76,15 @@ Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block,
 
 	// size_t contextBytes = 2 * sizeof(void *);
 	// void **context = (void **)malloc(contextBytes);
-	// context[0] = (void *)compositionIdentifier;
+	// context[0] = (void *)compositionState;
 	// context[1] = (void *)eventIdPtr;
 	// context[2] = (void *)chainGroups;
 
 	ConstantInt *contextArrayLength = ConstantInt::get(module->getContext(), APInt(64, 3));
 	Value *contextValue = VuoCompilerCodeGenUtilities::generateMemoryAllocation(module, block, voidPointerType, contextArrayLength);
 
-	BitCastInst *compositionIdentifierAsVoidPointer = new BitCastInst(compositionIdentifierValue, voidPointerType, "", block);
-	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 0, compositionIdentifierAsVoidPointer);
+	BitCastInst *compositionStateAsVoidPointer = new BitCastInst(compositionStateValue, voidPointerType, "", block);
+	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 0, compositionStateAsVoidPointer);
 
 	BitCastInst *eventIdPtrValueAsVoidPointer = new BitCastInst(eventIdPtrValue, voidPointerType, "", block);
 	VuoCompilerCodeGenUtilities::generateSetArrayElement(module, block, contextValue, 1, eventIdPtrValueAsVoidPointer);
@@ -96,24 +96,27 @@ Value * VuoCompilerChain::generateMakeContext(Module *module, BasicBlock *block,
 
 	VuoCompilerCodeGenUtilities::generateRegisterCall(module, block, contextValue, getFreeContextFunction(module));
 
+	// VuoRetain(compositionState);
+
+	VuoCompilerCodeGenUtilities::generateRetainCall(module, block, compositionStateValue);
+
 	return new BitCastInst(contextValue, voidPointerType, "", block);
 }
 
 /**
  * Generates code that retrieves the composition identifier from the context argument of a chain worker function.
  */
-Value * VuoCompilerChain::generateCompositionIdentifierValue(Module *module, BasicBlock *block, Value *contextValue)
+Value * VuoCompilerChain::generateCompositionStateValue(Module *module, BasicBlock *block, Value *contextValue)
 {
-	Type *charPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+	Type *compositionStatePointerType = PointerType::get(VuoCompilerCodeGenUtilities::getCompositionStateType(module), 0);
 	Type *voidPointerType = contextValue->getType();
 	Type *voidPointerPointerType = PointerType::get(voidPointerType, 0);
 
-	// unsigned long *eventIdPtr = (unsigned long *)((void **)context)[0]);
-	// unsigned long eventId = *eventIdPtr;
+	// VuoCompositionState *compositionState = (VuoCompositionState *)((void **)context)[0]);
 
 	Value *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
-	Value *compositionIdentifierAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 0);
-	return new BitCastInst(compositionIdentifierAsVoidPointer, charPointerType, "", block);
+	Value *compositionStateAsVoidPointer = VuoCompilerCodeGenUtilities::generateGetArrayElement(module, block, contextValueAsVoidPointerArray, 0);
+	return new BitCastInst(compositionStateAsVoidPointer, compositionStatePointerType, "", block);
 }
 
 /**
@@ -158,6 +161,7 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 {
 	// void vuoFreeChainWorkerContext(void *context)
 	// {
+	//   VuoRelease(((void **)context)[0]);
 	//   free(((void **)context)[1]);
 	//   free(((void **)context)[2]);
 	//   free(context);
@@ -169,6 +173,7 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 	{
 		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		PointerType *voidPointerPointerType = PointerType::get(voidPointerType, 0);
+		ConstantInt *zeroValue = ConstantInt::get(module->getContext(), APInt(64, 0));
 		ConstantInt *oneValue = ConstantInt::get(module->getContext(), APInt(64, 1));
 		ConstantInt *twoValue = ConstantInt::get(module->getContext(), APInt(64, 2));
 
@@ -180,6 +185,10 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
 
 		Value *contextValue = function->arg_begin();
 		BitCastInst *contextValueAsVoidPointerArray = new BitCastInst(contextValue, voidPointerPointerType, "", block);
+
+		Value *compositionStateVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, zeroValue, "", block);
+		Value *compositionStateValue = new LoadInst(compositionStateVariable, "", block);
+		VuoCompilerCodeGenUtilities::generateReleaseCall(module, block, compositionStateValue);
 
 		Value *eventIdPtrVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, oneValue, "", block);
 		Value *chainGroupsVariable = GetElementPtrInst::Create(contextValueAsVoidPointerArray, twoValue, "", block);
@@ -201,7 +210,8 @@ Function * VuoCompilerChain::getFreeContextFunction(Module *module)
  *
  * @return The scheduled function. The caller is responsible for filling in the body of this function.
  */
-Function * VuoCompilerChain::generateScheduleWorker(Module *module, BasicBlock *block, Value *contextValue, string triggerIdentifier,
+Function * VuoCompilerChain::generateScheduleWorker(Module *module, BasicBlock *block, Value *compositionStateValue,
+													Value *contextValue, string triggerIdentifier,
 													int minThreadsNeeded, int maxThreadsNeeded, size_t chainIndex,
 													vector<size_t> upstreamChainIndices)
 {
@@ -216,12 +226,11 @@ Function * VuoCompilerChain::generateScheduleWorker(Module *module, BasicBlock *
 
 	Value *globalQueue = VuoCompilerCodeGenUtilities::generateGetGlobalDispatchQueue(module, block);
 
-	Value *compositionIdentifierValue = generateCompositionIdentifierValue(module, block, contextValue);
 	Value *eventIdValue = generateEventIdValue(module, block, contextValue);
 
 	VuoCompilerCodeGenUtilities::generateScheduleChainWorker(module, block, globalQueue, contextValue, workerFunction,
 															 minThreadsNeeded, maxThreadsNeeded,
-															 eventIdValue, compositionIdentifierValue, chainIndex, upstreamChainIndices);
+															 eventIdValue, compositionStateValue, chainIndex, upstreamChainIndices);
 
 	return workerFunction;
 }

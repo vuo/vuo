@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsWindow interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -46,6 +46,7 @@ extern dispatch_semaphore_t VuoGraphicsWindow_fullScreenTransitionSemaphore;
 @property(retain) NSString *titleBackup;              ///< The window's title (stored since it gets cleared when switching to fullscreen mode).
 @property NSUInteger styleMaskWhenWindowed;           ///< The window's style mask, prior to switching to full-screen.
 @property NSRect contentRectWhenWindowed;             ///< The position and size of the window's content area, prior to switching to full-screen.  In points (not pixels).
+@property uint64_t compositionUid;                    ///< The composition that contains this window.
 
 @property void *dragEntered;   ///< A VuoTriggerSet of callbacks invoked when a Finder drag first moves into the window.
 @property void *dragMovedTo;   ///< A VuoTriggerSet of callbacks invoked when a Finder drag moves around within the window.

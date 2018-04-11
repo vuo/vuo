@@ -2,14 +2,14 @@
  * @file
  * Composition used in Vuo Manual illustrations.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 digraph G
 {
-AllowChanges2 [type="vuo.event.allowChanges.VuoText" version="1.1.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="270,240" fillcolor="violet"];
+AllowChanges2 [type="vuo.event.allowChanges2.VuoText" version="2.0.0" label="Allow Changes|<refresh>refresh\l|<value>value\l|<changedValue>changedValue\r" pos="270,240" fillcolor="violet"];
 CutList2 [type="vuo.list.cut.VuoText" version="1.0.0" label="Cut List|<refresh>refresh\l|<list>list\l|<startPosition>startPosition\l|<itemCount>itemCount\l|<partialList>partialList\r" pos="105,75" _startPosition="4" _itemCount="3"];
 FetchImage [type="vuo.image.fetch" version="2.0.0" label="Fetch Image|<refresh>refresh\l|<url>url\l|<image>image\r" pos="465,240"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="-225,15" fillcolor="yellow" _started_eventThrottling="enqueue"];

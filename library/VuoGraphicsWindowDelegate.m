@@ -2,7 +2,7 @@
  * @file
  * VuoGraphicsWindowDelegate implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -48,8 +48,11 @@ VuoModuleMetadata({
  */
 - (void)windowWillClose:(NSNotification *)notification
 {
-	VuoApp_setMenu(_window.oldMenu);
-	_window.oldMenu = nil;
+	if (_window.oldMenu)
+	{
+		VuoApp_setMenu(_window.oldMenu);
+		_window.oldMenu = nil;
+	}
 	_window.isClosed = YES;
 }
 

@@ -2,7 +2,7 @@
  * @file
  * vuo.list.spread node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					"title" : "Spread List Items",
+					"title" : "Copy List Items",
 					"keywords" : [ "duplicate", "copy", "clone", "double", "replicate", "expand", "fill", "stretch" ],
 					"version" : "1.0.0",
 					"node": {

@@ -25,6 +25,7 @@ LIBS += \
 	$$ROOT/library/VuoApp.o \
 	$$ROOT/library/VuoImageRenderer.o \
 	$$ROOT/library/VuoOsStatus.o \
+	$$ROOT/library/libmodule.o \
 	$$ROOT/node/vuo.video/VuoQTCapture.o \
 	$$ROOT/node/vuo.video/VuoQtListener.o \
 	$$ROOT/node/vuo.video/VuoVideoInputDevice.o \

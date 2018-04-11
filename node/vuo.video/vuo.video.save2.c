@@ -2,14 +2,14 @@
  * @file
  * vuo.video.save node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
 
 #include "node.h"
 #include "VuoAvWriter.h"
-#include "VuoEventLoop.h"
+#include "VuoCompositionState.h"
 #include "VuoMovieFormat.h"
 #include "VuoImageResize.h"
 #include "../vuo.image/VuoSizingMode.h"
@@ -18,7 +18,7 @@
 #include <pthread.h>
 
 VuoModuleMetadata({
-					"title" : "Save to Movie",
+					"title" : "Save Frames to Movie",
 					"keywords" : [
 						"record", "screen capture", "screencast", "video", "fraps", "append", "write", "export"
 					],
@@ -202,7 +202,7 @@ void nodeInstanceEvent(
 				setWriterState(*instance, initSuccess ? VuoAvWriterState_Ready : VuoAvWriterState_Failed);
 
 				if (initSuccess)
-					VuoEventLoop_disableTermination();
+					VuoDisableTermination();
 			});
 		}
 
@@ -267,7 +267,7 @@ void nodeInstanceEvent(
 		reset(*instance);
 
 		if ((*instance)->writerState == VuoAvWriterState_Ready)
-			VuoEventLoop_enableTermination();
+			VuoEnableTermination();
 	}
 }
 
@@ -306,5 +306,5 @@ void nodeInstanceFini
 	VuoRelease( (*instance)->lastUrl );
 
 	if ((*instance)->writerState == VuoAvWriterState_Ready)
-		VuoEventLoop_enableTermination();
+		VuoEnableTermination();
 }

@@ -2,7 +2,7 @@
  * @file
  * VuoCompilerCodeGenUtilities implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -1316,10 +1316,108 @@ void VuoCompilerCodeGenUtilities::generateFreeNodeContext(Module *module, BasicB
 }
 
 /**
+ * Generates code that creates a `VuoCompositionState *` from the given `void *runtimeState` and `char *compositionIdentifier`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateCreateCompositionState(Module *module, BasicBlock *block, Value *runtimeStateValue, Value *compositionIdentifierValue)
+{
+	const char *functionName = "vuoCreateCompositionState";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *voidPointer = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+
+		vector<Type *> params;
+		params.push_back(voidPointer);
+		params.push_back(pointerToChar);
+
+		FunctionType *functionType = FunctionType::get(pointerToCompositionState, params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(runtimeStateValue);
+	args.push_back(compositionIdentifierValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates code that gets the `runtimeState` field of a `VuoCompositionState *`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetCompositionStateRuntimeState(Module *module, BasicBlock *block, Value *compositionStateValue)
+{
+	const char *functionName = "vuoGetCompositionStateRuntimeState";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *voidPointer = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+
+		FunctionType *functionType = FunctionType::get(voidPointer, params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates code that gets the `compositionIdentifier` field of a `VuoCompositionState *`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetCompositionStateCompositionIdentifier(Module *module, BasicBlock *block, Value *compositionStateValue)
+{
+	const char *functionName = "vuoGetCompositionStateCompositionIdentifier";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+
+		FunctionType *functionType = FunctionType::get(pointerToChar, params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates code that frees a `VuoCompositionState *` (but not its fields).
+ */
+void VuoCompilerCodeGenUtilities::generateFreeCompositionState(Module *module, BasicBlock *block, Value *compositionStateValue)
+{
+	const char *functionName = "vuoFreeCompositionState";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+
+		vector<Type *> params;
+		params.push_back(pointerToCompositionState);
+
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
  * Generates code that retrives the `data` field in a port's context, given the port's identifier.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetDataForPort(Module *module, BasicBlock *block,
-															Value *compositionIdentifierValue, Value *portIdentifierValue)
+															Value *compositionStateValue, Value *portIdentifierValue)
 {
 	const char *functionName = "vuoGetDataForPort";
 	Function *function = module->getFunction(functionName);
@@ -1329,7 +1427,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetDataForPort(Module *module, Basi
 		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> params;
-		params.push_back(pointerToCharType);
+		params.push_back(compositionStateValue->getType());
 		params.push_back(pointerToCharType);
 
 		FunctionType *functionType = FunctionType::get(voidPointerType, params, false);
@@ -1337,7 +1435,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetDataForPort(Module *module, Basi
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(portIdentifierValue);
 	return CallInst::Create(function, args, "", block);
 }
@@ -1346,7 +1444,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetDataForPort(Module *module, Basi
  * Generates code that retrives the `semaphore` field in a node's context, given the identifier of a port on the node.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(Module *module, BasicBlock *block,
-																	 Value *compositionIdentifierValue, Value *portIdentifierValue)
+																	 Value *compositionStateValue, Value *portIdentifierValue)
 {
 	const char *functionName = "vuoGetNodeSemaphoreForPort";
 	Function *function = module->getFunction(functionName);
@@ -1356,7 +1454,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(Module *mod
 		Type *dispatchSemaphoreType = getDispatchSemaphoreType(module);
 
 		vector<Type *> params;
-		params.push_back(pointerToCharType);
+		params.push_back(compositionStateValue->getType());
 		params.push_back(pointerToCharType);
 
 		FunctionType *functionType = FunctionType::get(dispatchSemaphoreType, params, false);
@@ -1364,7 +1462,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(Module *mod
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(portIdentifierValue);
 	return CallInst::Create(function, args, "", block);
 }
@@ -1373,7 +1471,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeSemaphoreForPort(Module *mod
  * Generates code that retrieves the index (in VuoCompilerBitcodeGenerator::orderedNodes) of a node, given the identifier of a port on the node.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(Module *module, BasicBlock *block,
-																 Value *compositionIdentifierValue, Value *portIdentifierValue)
+																 Value *compositionStateValue, Value *portIdentifierValue)
 {
 	const char *functionName = "vuoGetNodeIndexForPort";
 	Function *function = module->getFunction(functionName);
@@ -1383,7 +1481,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(Module *module,
 		Type *unsignedLongType = IntegerType::get(module->getContext(), 64);
 
 		vector<Type *> params;
-		params.push_back(pointerToCharType);
+		params.push_back(compositionStateValue->getType());
 		params.push_back(pointerToCharType);
 
 		FunctionType *functionType = FunctionType::get(unsignedLongType, params, false);
@@ -1391,7 +1489,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(Module *module,
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(portIdentifierValue);
 	return CallInst::Create(function, args, "", block);
 }
@@ -1400,7 +1498,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeIndexForPort(Module *module,
  * Generates code that retrieves the index (in VuoCompilerBitcodeGenerator::orderedTypes) of a port's type, given the port's identifier.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(Module *module, BasicBlock *block,
-																 Value *compositionIdentifierValue, Value *portIdentifierValue)
+																 Value *compositionStateValue, Value *portIdentifierValue)
 {
 	const char *functionName = "vuoGetTypeIndexForPort";
 	Function *function = module->getFunction(functionName);
@@ -1410,7 +1508,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(Module *module,
 		Type *unsignedLongType = IntegerType::get(module->getContext(), 64);
 
 		vector<Type *> params;
-		params.push_back(pointerToCharType);
+		params.push_back(compositionStateValue->getType());
 		params.push_back(pointerToCharType);
 
 		FunctionType *functionType = FunctionType::get(unsignedLongType, params, false);
@@ -1418,7 +1516,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(Module *module,
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(portIdentifierValue);
 	return CallInst::Create(function, args, "", block);
 }
@@ -1429,7 +1527,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetTypeIndexForPort(Module *module,
 void VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(Module *module, BasicBlock *block,
 																Value *queueValue, Value *contextValue, Value *workerFunctionValue,
 																int minThreadsNeeded, int maxThreadsNeeded,
-																Value *eventIdValue, Value *compositionIdentifierValue,
+																Value *eventIdValue, Value *compositionStateValue,
 																int chainCount)
 {
 	Type *intType = IntegerType::get(module->getContext(), 64);
@@ -1442,16 +1540,15 @@ void VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(Module *module, 
 		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		Type *workerFunctionType = workerFunctionValue->getType();
 		Type *eventIdType = generateNoEventIdConstant(module)->getType();
-		PointerType *charPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> params;
+		params.push_back(compositionStateValue->getType());
 		params.push_back(dispatchQueueType);
 		params.push_back(voidPointerType);
 		params.push_back(workerFunctionType);
 		params.push_back(intType);
 		params.push_back(intType);
 		params.push_back(eventIdType);
-		params.push_back(charPointerType);
 		params.push_back(intType);
 
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
@@ -1463,13 +1560,13 @@ void VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(Module *module, 
 	Value *chainCountValue = ConstantInt::get(intType, chainCount);
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(queueValue);
 	args.push_back(contextValue);
 	args.push_back(workerFunctionValue);
 	args.push_back(minThreadsNeededValue);
 	args.push_back(maxThreadsNeededValue);
 	args.push_back(eventIdValue);
-	args.push_back(compositionIdentifierValue);
 	args.push_back(chainCountValue);
 	CallInst::Create(function, args, "", block);
 }
@@ -1480,7 +1577,7 @@ void VuoCompilerCodeGenUtilities::generateScheduleTriggerWorker(Module *module, 
 void VuoCompilerCodeGenUtilities::generateScheduleChainWorker(Module *module, BasicBlock *block,
 															  Value *queueValue, Value *contextValue, Value *workerFunctionValue,
 															  int minThreadsNeeded, int maxThreadsNeeded,
-															  Value *eventIdValue, Value *compositionIdentifierValue,
+															  Value *eventIdValue, Value *compositionStateValue,
 															  size_t chainIndex, vector<size_t> upstreamChainIndices)
 {
 	Type *intType = IntegerType::get(module->getContext(), 64);
@@ -1493,17 +1590,16 @@ void VuoCompilerCodeGenUtilities::generateScheduleChainWorker(Module *module, Ba
 		Type *dispatchQueueType = getDispatchQueueType(module);
 		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		Type *workerFunctionType = workerFunctionValue->getType();
-		PointerType *charPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		PointerType *unsignedLongPointerType = PointerType::get(eventIdType, 0);
 
 		vector<Type *> params;
+		params.push_back(compositionStateValue->getType());
 		params.push_back(dispatchQueueType);
 		params.push_back(voidPointerType);
 		params.push_back(workerFunctionType);
 		params.push_back(intType);
 		params.push_back(intType);
 		params.push_back(eventIdType);
-		params.push_back(charPointerType);
 		params.push_back(eventIdType);
 		params.push_back(unsignedLongPointerType);
 		params.push_back(intType);
@@ -1525,13 +1621,13 @@ void VuoCompilerCodeGenUtilities::generateScheduleChainWorker(Module *module, Ba
 	}
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(queueValue);
 	args.push_back(contextValue);
 	args.push_back(workerFunctionValue);
 	args.push_back(minThreadsNeededValue);
 	args.push_back(maxThreadsNeededValue);
 	args.push_back(eventIdValue);
-	args.push_back(compositionIdentifierValue);
 	args.push_back(chainIndexValue);
 	args.push_back(upstreamChainIndicesValue);
 	args.push_back(upstreamChainIndicesCountValue);
@@ -1542,7 +1638,7 @@ void VuoCompilerCodeGenUtilities::generateScheduleChainWorker(Module *module, Ba
  * Generates a call to `vuoGrantThreadsToSubcomposition`.
  */
 void VuoCompilerCodeGenUtilities::generateGrantThreadsToSubcomposition(Module *module, BasicBlock *block,
-																	   Value *eventIdValue, Value *compositionIdentifierValue,
+																	   Value *eventIdValue, Value *compositionStateValue,
 																	   Value *chainIndexValue, Value *subcompositionIdentifierValue)
 {
 	const char *functionName = "vuoGrantThreadsToSubcomposition";
@@ -1553,8 +1649,8 @@ void VuoCompilerCodeGenUtilities::generateGrantThreadsToSubcomposition(Module *m
 		PointerType *charPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> params;
+		params.push_back(compositionStateValue->getType());
 		params.push_back(eventIdType);
-		params.push_back(charPointerType);
 		params.push_back(eventIdType);
 		params.push_back(charPointerType);
 
@@ -1563,8 +1659,8 @@ void VuoCompilerCodeGenUtilities::generateGrantThreadsToSubcomposition(Module *m
 	}
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(eventIdValue);
-	args.push_back(compositionIdentifierValue);
 	args.push_back(chainIndexValue);
 	args.push_back(subcompositionIdentifierValue);
 	CallInst::Create(function, args, "", block);
@@ -1574,7 +1670,7 @@ void VuoCompilerCodeGenUtilities::generateGrantThreadsToSubcomposition(Module *m
  * Generates a call to `vuoReturnThreadsForTriggerWorker`.
  */
 void VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(Module *module, BasicBlock *block,
-																		Value *eventIdValue)
+																		Value *eventIdValue, Value *compositionStateValue)
 {
 	const char *functionName = "vuoReturnThreadsForTriggerWorker";
 	Function *function = module->getFunction(functionName);
@@ -1583,6 +1679,7 @@ void VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(Module *
 		Type *eventIdType = generateNoEventIdConstant(module)->getType();
 
 		vector<Type *> params;
+		params.push_back(compositionStateValue->getType());
 		params.push_back(eventIdType);
 
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
@@ -1590,6 +1687,7 @@ void VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(Module *
 	}
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(eventIdValue);
 	CallInst::Create(function, args, "", block);
 }
@@ -1598,7 +1696,7 @@ void VuoCompilerCodeGenUtilities::generateReturnThreadsForTriggerWorker(Module *
  * Generates a call to `vuoReturnThreadsForChainWorker`.
  */
 void VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(Module *module, BasicBlock *block,
-																	  Value *eventIdValue, Value *compositionIdentifierValue,
+																	  Value *eventIdValue, Value *compositionStateValue,
 																	  Value *chainIndexValue)
 {
 	const char *functionName = "vuoReturnThreadsForChainWorker";
@@ -1606,11 +1704,10 @@ void VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(Module *mo
 	if (! function)
 	{
 		Type *eventIdType = generateNoEventIdConstant(module)->getType();
-		PointerType *charPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> params;
+		params.push_back(compositionStateValue->getType());
 		params.push_back(eventIdType);
-		params.push_back(charPointerType);
 		params.push_back(eventIdType);
 
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), params, false);
@@ -1618,8 +1715,8 @@ void VuoCompilerCodeGenUtilities::generateReturnThreadsForChainWorker(Module *mo
 	}
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(eventIdValue);
-	args.push_back(compositionIdentifierValue);
 	args.push_back(chainIndexValue);
 	CallInst::Create(function, args, "", block);
 }
@@ -2395,29 +2492,218 @@ void VuoCompilerCodeGenUtilities::generateUnserialization(Module *module, BasicB
 }
 
 /**
- * Generates code that gets the value of the @c isPaused global variable as a comparison value.
+ * Generates code that gets the return value of `vuoIsPaused()` as a comparison value.
  */
-ICmpInst * VuoCompilerCodeGenUtilities::generateIsPausedComparison(Module *module, BasicBlock *block)
+ICmpInst * VuoCompilerCodeGenUtilities::generateIsPausedComparison(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
-	GlobalVariable *isPausedVariable = getIsPausedVariable(module);
-	LoadInst *isPausedValue = new LoadInst(isPausedVariable, "", false, block);
-	Constant *zeroValue = ConstantInt::get(static_cast<PointerType *>(isPausedVariable->getType())->getElementType(), 0);
-	return new ICmpInst(*block, ICmpInst::ICMP_NE, isPausedValue, zeroValue, "");
+	Type *boolType = IntegerType::get(module->getContext(), 64);
+
+	const char *functionName = "vuoIsPaused";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		FunctionType *functionType = FunctionType::get(boolType, compositionStateValue->getType(), false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	CallInst *isPausedValue = CallInst::Create(function, compositionStateValue, "", block);
+	Constant *falseValue = ConstantInt::get(boolType, 0);
+	return new ICmpInst(*block, ICmpInst::ICMP_NE, isPausedValue, falseValue, "");
+}
+
+/**
+ * Generates a call to `vuoSendNodeExecutionStarted()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendNodeExecutionStarted(Module *module, BasicBlock *block,
+																   Value *compositionStateValue, Value *nodeIdentifierValue)
+{
+	const char *functionName = "vuoSendNodeExecutionStarted";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(nodeIdentifierValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSendNodeExecutionFinished()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendNodeExecutionFinished(Module *module, BasicBlock *block,
+																	Value *compositionStateValue, Value *nodeIdentifierValue)
+{
+	const char *functionName = "vuoSendNodeExecutionFinished";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(nodeIdentifierValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSendInputPortsUpdated()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendInputPortsUpdated(Module *module, BasicBlock *block,
+																Value *compositionStateValue, Value *portIdentifierValue,
+																Value *receivedEventValue, Value *receivedDataValue,
+																Value *portDataSummaryValue)
+{
+	const char *functionName = "vuoSendInputPortsUpdated";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(boolType);
+		functionParams.push_back(boolType);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	args.push_back(receivedEventValue);
+	args.push_back(receivedDataValue);
+	args.push_back(portDataSummaryValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSendOutputPortsUpdated()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendOutputPortsUpdated(Module *module, BasicBlock *block,
+																 Value *compositionStateValue, Value *portIdentifierValue,
+																 Value *sentDataValue, Value *portDataSummaryValue)
+{
+	const char *functionName = "vuoSendOutputPortsUpdated";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(boolType);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	args.push_back(sentDataValue);
+	args.push_back(portDataSummaryValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSendPublishedOutputPortsUpdated()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendPublishedOutputPortsUpdated(Module *module, BasicBlock *block,
+																		  Value *compositionStateValue, Value *portIdentifierValue,
+																		  Value *sentDataValue, Value *portDataSummaryValue)
+{
+	const char *functionName = "vuoSendPublishedOutputPortsUpdated";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(boolType);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	args.push_back(sentDataValue);
+	args.push_back(portDataSummaryValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoSendEventDropped()`.
+ */
+void VuoCompilerCodeGenUtilities::generateSendEventDropped(Module *module, BasicBlock *block,
+														   Value *compositionStateValue, Value *portIdentifierValue)
+{
+	const char *functionName = "vuoSendEventDropped";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	CallInst::Create(function, args, "", block);
 }
 
 /**
  * Generates code that gets the return value of the `vuoShouldSendPortDataTelemetry()` function as a comparison value.
  */
 ICmpInst * VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryComparison(Module *module, BasicBlock *block, string portIdentifier,
-																			  VuoCompilerConstantStringCache &constantStrings)
+																				  Value *compositionStateValue,
+																				  VuoCompilerConstantStringCache &constantStrings)
 {
-	PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
 	const char *functionName = "vuoShouldSendPortDataTelemetry";
 	Function *shouldSendTelemetryFunction = module->getFunction(functionName);
 	if (! shouldSendTelemetryFunction)
 	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
 		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(IntegerType::get(module->getContext(), 32), functionParams, false);
 		shouldSendTelemetryFunction = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
@@ -2425,7 +2711,11 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryCompariso
 
 	Constant *portIdentifierValue = constantStrings.get(module, portIdentifier);
 
-	CallInst *retValue = CallInst::Create(shouldSendTelemetryFunction, portIdentifierValue, "", block);
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	CallInst *retValue = CallInst::Create(shouldSendTelemetryFunction, args, "", block);
+
 	Constant *zeroValue = ConstantInt::get(retValue->getType(), 0);
 	return new ICmpInst(*block, ICmpInst::ICMP_NE, retValue, zeroValue, "");
 }
@@ -2435,6 +2725,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateShouldSendDataTelemetryCompariso
  * This function initializes @a trueBlock and @a falseBlock and sets them up to be the blocks executed depending on the return value.
  */
 void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier,
+																			Value *compositionStateValue,
 																			BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock,
 																			VuoCompilerConstantStringCache &constantStrings,
 																			Value *&replacementJsonValue)
@@ -2450,6 +2741,7 @@ void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Modu
 		PointerType *pointerToPointerToJsonObjectType = PointerType::get(pointerToJsonObjectType, 0);
 
 		vector<Type *> functionParams;
+		functionParams.push_back(compositionStateValue->getType());
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(pointerToPointerToJsonObjectType);
 		FunctionType *functionType = FunctionType::get(boolType, functionParams, false);
@@ -2462,6 +2754,7 @@ void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Modu
 	new StoreInst(ConstantPointerNull::get(pointerToJsonObjectType), replacementJsonVariable, false, initialBlock);
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(nodeIdentifierValue);
 	args.push_back(replacementJsonVariable);
 	CallInst *retValue = CallInst::Create(calledFunction, args, "", initialBlock);
@@ -2480,6 +2773,7 @@ void VuoCompilerCodeGenUtilities::generateIsNodeBeingRemovedOrReplacedCheck(Modu
  * This function initializes @a trueBlock and @a falseBlock and sets them up to be the blocks executed depending on the return value.
  */
 ICmpInst * VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(Module *module, Function *function, string nodeIdentifier,
+																				Value *compositionStateValue,
 																				BasicBlock *initialBlock, BasicBlock *&trueBlock, BasicBlock *&falseBlock,
 																				VuoCompilerConstantStringCache &constantStrings,
 																				Value *&replacementJsonValue)
@@ -2495,6 +2789,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(
 		PointerType *pointerToPointerToJsonObjectType = PointerType::get(pointerToJsonObjectType, 0);
 
 		vector<Type *> functionParams;
+		functionParams.push_back(compositionStateValue->getType());
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(pointerToPointerToJsonObjectType);
 		FunctionType *functionType = FunctionType::get(boolType, functionParams, false);
@@ -2507,6 +2802,7 @@ ICmpInst * VuoCompilerCodeGenUtilities::generateIsNodeBeingAddedOrReplacedCheck(
 	new StoreInst(ConstantPointerNull::get(pointerToJsonObjectType), replacementJsonVariable, false, initialBlock);
 
 	vector<Value *> args;
+	args.push_back(compositionStateValue);
 	args.push_back(nodeIdentifierValue);
 	args.push_back(replacementJsonVariable);
 	CallInst *retValue = CallInst::Create(calledFunction, args, "", initialBlock);
@@ -2534,36 +2830,35 @@ ConstantInt * VuoCompilerCodeGenUtilities::generateNoEventIdConstant(Module *mod
  * Generates a call to `vuoGetNodeContext()`.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetNodeContext(Module *module, BasicBlock *block,
-															Value *compositionIdentifierValue, size_t nodeIndex)
+															Value *compositionStateValue, size_t nodeIndex)
 {
 	IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
 	Value *nodeIndexValue = ConstantInt::get(unsignedLongType, nodeIndex);
-	return generateGetNodeContext(module, block, compositionIdentifierValue, nodeIndexValue);
+	return generateGetNodeContext(module, block, compositionStateValue, nodeIndexValue);
 }
 
 /**
  * Generates a call to `vuoGetNodeContext()`.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetNodeContext(Module *module, BasicBlock *block,
-															Value *compositionIdentifierValue, Value * nodeIndexValue)
+															Value *compositionStateValue, Value *nodeIndexValue)
 {
 	const char *functionName = "vuoGetNodeContext";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
 		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(compositionStateValue->getType());
 		functionParams.push_back(unsignedLongType);
 		FunctionType *functionType = FunctionType::get(pointerToNodeContextType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(nodeIndexValue);
 	return CallInst::Create(function, args, "", block);
 }
@@ -2572,23 +2867,22 @@ Value * VuoCompilerCodeGenUtilities::generateGetNodeContext(Module *module, Basi
  * Generates a call to `vuoGetCompositionContext()`.
  */
 Value * VuoCompilerCodeGenUtilities::generateGetCompositionContext(Module *module, BasicBlock *block,
-																   Value *compositionIdentifierValue)
+																   Value *compositionStateValue)
 {
 	const char *functionName = "vuoGetCompositionContext";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(compositionStateValue->getType());
 		FunctionType *functionType = FunctionType::get(pointerToNodeContextType, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	return CallInst::Create(function, args, "", block);
 }
 
@@ -2596,7 +2890,7 @@ Value * VuoCompilerCodeGenUtilities::generateGetCompositionContext(Module *modul
  * Generates a call to `vuoAddNodeMetadata()`.
  */
 void VuoCompilerCodeGenUtilities::generateAddNodeMetadata(Module *module, BasicBlock *block,
-														  Value *compositionIdentifierValue, Value *nodeIdentifierValue)
+														  Value *compositionStateValue, Value *nodeIdentifierValue)
 {
 	const char *functionName = "vuoAddNodeMetadata";
 	Function *function = module->getFunction(functionName);
@@ -2605,14 +2899,14 @@ void VuoCompilerCodeGenUtilities::generateAddNodeMetadata(Module *module, BasicB
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(compositionStateValue->getType());
 		functionParams.push_back(pointerToCharType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(nodeIdentifierValue);
 	CallInst::Create(function, args, "", block);
 }
@@ -2621,7 +2915,7 @@ void VuoCompilerCodeGenUtilities::generateAddNodeMetadata(Module *module, BasicB
  * Generates a call to `vuoAddPortMetadata()`.
  */
 void VuoCompilerCodeGenUtilities::generateAddPortMetadata(Module *module, BasicBlock *block,
-														  Value *compositionIdentifierValue, Value *portIdentifierValue,
+														  Value *compositionStateValue, Value *portIdentifierValue,
 														  Value *portNameValue, size_t typeIndex, Value *initialValueValue)
 {
 	IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
@@ -2633,7 +2927,7 @@ void VuoCompilerCodeGenUtilities::generateAddPortMetadata(Module *module, BasicB
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(compositionStateValue->getType());
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(unsignedLongType);
@@ -2645,7 +2939,7 @@ void VuoCompilerCodeGenUtilities::generateAddPortMetadata(Module *module, BasicB
 	Value *typeIndexValue = ConstantInt::get(unsignedLongType, typeIndex);
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(portIdentifierValue);
 	args.push_back(portNameValue);
 	args.push_back(typeIndexValue);
@@ -2656,7 +2950,7 @@ void VuoCompilerCodeGenUtilities::generateAddPortMetadata(Module *module, BasicB
 /**
  * Generates a call to `vuoCompositionContextInitHelper()`.
  */
-Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module *module, BasicBlock *block, Value *compositionIdentifierValue,
+Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module *module, BasicBlock *block, Value *compositionStateValue,
 																		  bool isStatefulComposition, size_t publishedOutputPortCount,
 																		  Function *createNodeContextsFunction, Function *destroyNodeContextFunction,
 																		  Function *setPortValueFunction)
@@ -2668,14 +2962,14 @@ Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *createNodeContextsFunctionType = PointerType::getUnqual(getCompositionCreateNodeContextsFunction(module)->getFunctionType());
 		PointerType *destroyNodeContextFunctionType = PointerType::getUnqual(getCompositionDestroyNodeContextFunction(module)->getFunctionType());
 		PointerType *setPortValueFunctionType = PointerType::getUnqual(getCompositionSetPortValueFunction(module)->getFunctionType());
 		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToChar);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(boolType);
 		functionParams.push_back(unsignedLongType);
 		functionParams.push_back(createNodeContextsFunctionType);
@@ -2689,7 +2983,7 @@ Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module
 	Value *publishedOutputPortCountValue = ConstantInt::get(unsignedLongType, publishedOutputPortCount);
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(isStatefulCompositionValue);
 	args.push_back(publishedOutputPortCountValue);
 	args.push_back(createNodeContextsFunction);
@@ -2701,20 +2995,19 @@ Value * VuoCompilerCodeGenUtilities::generateCompositionContextInitHelper(Module
 /**
  * Generates a call to `vuoCompositionContextFiniHelper()`.
  */
-void VuoCompilerCodeGenUtilities::generateCompositionContextFiniHelper(Module *module, BasicBlock *block,
-																	   Value *compositionIdentifierValue,
+void VuoCompilerCodeGenUtilities::generateCompositionContextFiniHelper(Module *module, BasicBlock *block, Value *compositionStateValue,
 																	   Function *destroyNodeContextFunction, Function *releasePortDataFunction)
 {
 	const char *functionName = "vuoCompositionContextFiniHelper";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
-		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *destroyNodeContextFunctionType = PointerType::getUnqual(getCompositionDestroyNodeContextFunction(module)->getFunctionType());
 		PointerType *releasePortDataFunctionType = PointerType::getUnqual(getCompositionReleasePortDataFunction(module)->getFunctionType());
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToChar);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(destroyNodeContextFunctionType);
 		functionParams.push_back(releasePortDataFunctionType);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
@@ -2722,23 +3015,171 @@ void VuoCompilerCodeGenUtilities::generateCompositionContextFiniHelper(Module *m
 	}
 
 	vector<Value *> args;
-	args.push_back(compositionIdentifierValue);
+	args.push_back(compositionStateValue);
 	args.push_back(destroyNodeContextFunction);
 	args.push_back(releasePortDataFunction);
 	CallInst::Create(function, args, "", block);
 }
 
 /**
- * Returns the value of `vuoTriggerWorkersScheduled`.
+ * Generates a call to `vuoGetTriggerWorkersScheduled()`.
  */
-Value * VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(Module *module, BasicBlock *block)
+Value * VuoCompilerCodeGenUtilities::getTriggerWorkersScheduledValue(Module *module, BasicBlock *block, Value *compositionStateValue)
 {
-	const char *variableName = "vuoTriggerWorkersScheduled";
+	const char *functionName = "vuoGetTriggerWorkersScheduled";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		Type *dispatchGroupType = getDispatchGroupType(module);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		FunctionType *functionType = FunctionType::get(dispatchGroupType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoGetInputPortString()`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetInputPortString(Module *module, BasicBlock *block, Value *compositionStateValue,
+																Value *portIdentifierValue, Value *interprocessSerializationValue)
+{
+	const char *functionName = "vuoGetInputPortString";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 32);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(boolType);
+		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	args.push_back(interprocessSerializationValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoGetOutputPortString()`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetOutputPortString(Module *module, BasicBlock *block, Value *compositionStateValue,
+																 Value *portIdentifierValue, Value *interprocessSerializationValue)
+{
+	const char *functionName = "vuoGetOutputPortString";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		IntegerType *boolType = IntegerType::get(module->getContext(), 32);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(boolType);
+		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	args.push_back(portIdentifierValue);
+	args.push_back(interprocessSerializationValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates code that gets the value of the `vuoRuntimeState` global variable.
+ */
+Value * VuoCompilerCodeGenUtilities::generateRuntimeStateValue(Module *module, BasicBlock *block)
+{
+	const char *variableName = "vuoRuntimeState";
 	GlobalVariable *variable = module->getNamedGlobal(variableName);
 	if (! variable)
-		variable = new GlobalVariable(*module,  getDispatchGroupType(module), false, GlobalValue::ExternalLinkage, 0, variableName);
+	{
+		PointerType *voidPointer = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		variable = new GlobalVariable(*module, voidPointer, false, GlobalValue::ExternalLinkage, 0, variableName);
+	}
 
 	return new LoadInst(variable, "", false, block);
+}
+
+/**
+ * Generates a call to `vuoGetNextEventId()`.
+ */
+Value * VuoCompilerCodeGenUtilities::generateGetNextEventId(Module *module, BasicBlock *block, Value *compositionStateValue)
+{
+	const char *functionName = "vuoGetNextEventId";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+		Type *eventIdType = IntegerType::get(module->getContext(), 64);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		FunctionType *functionType = FunctionType::get(eventIdType, functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	return CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoAddCompositionStateToThreadLocalStorage()`.
+ */
+void VuoCompilerCodeGenUtilities::generateAddCompositionStateToThreadLocalStorage(Module *module, BasicBlock *block,
+																				  Value *compositionStateValue)
+{
+	const char *functionName = "vuoAddCompositionStateToThreadLocalStorage";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+
+		vector<Type *> functionParams;
+		functionParams.push_back(pointerToCompositionState);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	args.push_back(compositionStateValue);
+	CallInst::Create(function, args, "", block);
+}
+
+/**
+ * Generates a call to `vuoRemoveCompositionStateFromThreadLocalStorage()`.
+ */
+void VuoCompilerCodeGenUtilities::generateRemoveCompositionStateFromThreadLocalStorage(Module *module, BasicBlock *block)
+{
+	const char *functionName = "vuoRemoveCompositionStateFromThreadLocalStorage";
+	Function *function = module->getFunction(functionName);
+	if (! function)
+	{
+		vector<Type *> functionParams;
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
+		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
+	}
+
+	vector<Value *> args;
+	CallInst::Create(function, args, "", block);
 }
 
 /**
@@ -2892,6 +3333,26 @@ StructType * VuoCompilerCodeGenUtilities::getPortContextType(Module *module)
 	}
 
 	return portContextType;
+}
+
+StructType * VuoCompilerCodeGenUtilities::getCompositionStateType(Module *module)
+{
+	StructType *compositionStateType = module->getTypeByName("struct.VuoCompositionState");
+	if (! compositionStateType)
+		compositionStateType = StructType::create(module->getContext(), "struct.VuoCompositionState");
+
+	if (compositionStateType->isOpaque())
+	{
+		PointerType *voidPointerType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+
+		vector<Type *> fields;
+		fields.push_back(voidPointerType);
+		fields.push_back(pointerToCharType);
+		compositionStateType->setBody(fields, false);
+	}
+
+	return compositionStateType;
 }
 
 StructType * VuoCompilerCodeGenUtilities::getGraphvizGraphType(Module *module)
@@ -3175,10 +3636,10 @@ Function * VuoCompilerCodeGenUtilities::getCompositionContextInitFunction(Module
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *pointerToNodeContextType = PointerType::get(getNodeContextType(module), 0);
 
-		FunctionType *functionType = FunctionType::get(pointerToNodeContextType, pointerToCharType, false);
+		FunctionType *functionType = FunctionType::get(pointerToNodeContextType, pointerToCompositionState, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
@@ -3192,9 +3653,9 @@ Function * VuoCompilerCodeGenUtilities::getCompositionContextFiniFunction(Module
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), pointerToCharType, false);
+		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), pointerToCompositionState, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
@@ -3209,12 +3670,12 @@ Function * VuoCompilerCodeGenUtilities::getCompositionCreateNodeContextsFunction
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
-		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
 		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToChar);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(unsignedLongType);
 		FunctionType *functionType = FunctionType::get(pointerToNodeContext, functionParams, false);
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
@@ -3252,11 +3713,12 @@ Function * VuoCompilerCodeGenUtilities::getCompositionDestroyNodeContextFunction
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *pointerToChar = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		PointerType *pointerToNodeContext = PointerType::get(getNodeContextType(module), 0);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToChar);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(pointerToChar);
 		functionParams.push_back(pointerToNodeContext);
 		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
@@ -3408,7 +3870,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeEventFunction(Module *module, str
 }
 
 Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string moduleKey, string functionName,
-														bool hasCompositionIdentifierArg, bool hasInstanceDataArg,
+														bool hasCompositionStateArg, bool hasInstanceDataArg,
 														bool hasInstanceDataReturn, bool hasEventOnlyInputArgs,
 														const vector<VuoPort *> &modelInputPorts, const vector<VuoPort *> &modelOutputPorts,
 														const map<VuoPort *, json_object *> &detailsForPorts,
@@ -3447,10 +3909,10 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 		Type *boolType = IntegerType::get(module->getContext(), 1);
 		size_t indexInEventFunction = 0;
 
-		if (hasCompositionIdentifierArg)
+		if (hasCompositionStateArg)
 		{
-			PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-			functionParams.push_back(pointerToCharType);
+			PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
+			functionParams.push_back(pointerToCompositionState);
 			indexInEventFunction++;
 		}
 
@@ -3479,7 +3941,7 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 				//
 				// This is a workaround for a bug where LLVM would sometimes give the node function body
 				// an invalid value for a "byval" struct argument. https://b33p.net/kosada/node/11386
-				if (! (hasCompositionIdentifierArg &&
+				if (! (hasCompositionStateArg &&
 					   type->getCompiler()->getType()->isStructTy() &&
 					   paramAttributes.hasAttribute(Attributes::ByVal)) )
 				{
@@ -3568,10 +4030,10 @@ Function * VuoCompilerCodeGenUtilities::getNodeFunction(Module *module, string m
 		BasicBlock *block = BasicBlock::Create(module->getContext(), "", function, 0);
 		Function::arg_iterator argIter = function->arg_begin();
 
-		if (hasCompositionIdentifierArg)
+		if (hasCompositionStateArg)
 		{
 			Value *arg = argIter++;
-			arg->setName("compositionIdentifier");
+			arg->setName("compositionState");
 		}
 
 		if (hasInstanceDataArg)
@@ -3791,12 +4253,12 @@ Function * VuoCompilerCodeGenUtilities::getWaitForNodeFunction(Module *module, s
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		IntegerType *unsignedLongType = IntegerType::get(module->getContext(), 64);
 		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(unsignedLongType);
 		functionParams.push_back(unsignedLongType);
 		functionParams.push_back(boolType);
@@ -3815,11 +4277,12 @@ Function * VuoCompilerCodeGenUtilities::getCompositionGetPortValueFunction(Modul
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		IntegerType *intType = IntegerType::get(module->getContext(), 32);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(intType);
 		functionParams.push_back(intType);
@@ -3838,11 +4301,12 @@ Function * VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(Modul
 	Function *function = module->getFunction(functionName.c_str());
 	if (! function)
 	{
+		PointerType *pointerToCompositionState = PointerType::get(getCompositionStateType(module), 0);
 		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
 		Type *boolType = IntegerType::get(module->getContext(), 32);
 
 		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
+		functionParams.push_back(pointerToCompositionState);
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(pointerToCharType);
 		functionParams.push_back(boolType);
@@ -3859,42 +4323,6 @@ Function * VuoCompilerCodeGenUtilities::getCompositionSetPortValueFunction(Modul
 Function * VuoCompilerCodeGenUtilities::getGetPortValueFunction(Module *module)
 {
 	const char *functionName = "vuoGetPortValue";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *intType = IntegerType::get(module->getContext(), 32);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(intType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetInputPortStringFunction(Module *module)
-{
-	const char *functionName = "getInputPortString";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *intType = IntegerType::get(module->getContext(), 32);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(intType);
-		FunctionType *functionType = FunctionType::get(pointerToCharType, functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetOutputPortStringFunction(Module *module)
-{
-	const char *functionName = "getOutputPortString";
 	Function *function = module->getFunction(functionName);
 	if (! function)
 	{
@@ -3978,154 +4406,6 @@ Function * VuoCompilerCodeGenUtilities::getSetPublishedInputPortValueFunction(Mo
 		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
 	}
 	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getSendNodeExecutionStartedFunction(Module *module)
-{
-	const char *functionName = "sendNodeExecutionStarted";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getSendNodeExecutionFinishedFunction(Module *module)
-{
-	const char *functionName = "sendNodeExecutionFinished";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getSendInputPortsUpdatedFunction(Module *module)
-{
-	const char *functionName = "sendInputPortsUpdated";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(boolType);
-		functionParams.push_back(boolType);
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getSendOutputPortsUpdatedFunction(Module *module)
-{
-	const char *functionName = "sendOutputPortsUpdated";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(boolType);
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getSendPublishedOutputPortsUpdatedFunction(Module *module)
-{
-	const char *functionName = "sendPublishedOutputPortsUpdated";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		IntegerType *boolType = IntegerType::get(module->getContext(), 1);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		functionParams.push_back(boolType);
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getSendEventDroppedFunction(Module *module)
-{
-	const char *functionName = "sendEventDropped";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-
-		vector<Type *> functionParams;
-		functionParams.push_back(pointerToCharType);
-		FunctionType *functionType = FunctionType::get(Type::getVoidTy(module->getContext()), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-
-Function * VuoCompilerCodeGenUtilities::getGetNextEventIdFunction(Module *module)
-{
-	const char *functionName = "vuoGetNextEventId";
-	Function *function = module->getFunction(functionName);
-	if (! function)
-	{
-		vector<Type *> functionParams;
-		FunctionType *functionType = FunctionType::get(IntegerType::get(module->getContext(), 64), functionParams, false);
-		function = Function::Create(functionType, GlobalValue::ExternalLinkage, functionName, module);
-	}
-	return function;
-}
-//@}
-
-//@{
-/**
- * Returns a GlobalVariable reference, generating code for the declaration if needed.
- */
-GlobalVariable * VuoCompilerCodeGenUtilities::getIsPausedVariable(Module *module)
-{
-	const char *variableName = "isPaused";
-	GlobalVariable *isPausedVariable = module->getNamedGlobal(variableName);
-	if (! isPausedVariable)
-	{
-		IntegerType *boolType = IntegerType::get(module->getContext(), 8);
-		isPausedVariable = new GlobalVariable(*module, boolType, false, GlobalValue::ExternalLinkage, 0, variableName);
-	}
-	return isPausedVariable;
-}
-
-GlobalVariable * VuoCompilerCodeGenUtilities::getTopLevelCompositionIdentifierVariable(Module *module)
-{
-	const char *variableName = "vuoTopLevelCompositionIdentifier";
-	GlobalVariable *variable = module->getNamedGlobal(variableName);
-	if (! variable)
-	{
-		PointerType *pointerToCharType = PointerType::get(IntegerType::get(module->getContext(), 8), 0);
-		variable = new GlobalVariable(*module, pointerToCharType, false, GlobalValue::ExternalLinkage, 0, variableName);
-	}
-	return variable;
 }
 //@}
 

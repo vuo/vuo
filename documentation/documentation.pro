@@ -23,42 +23,12 @@ OTHER_FILES += Doxyfile
 
 NODE_CLASS_IMAGES += \
 	../node/vuo.console/vuo.console.window.c \
-	../node/vuo.data/vuo.data.share.c \
-	../node/vuo.event/vuo.event.becameTrue.c \
-	../node/vuo.event/vuo.event.changed.c \
-	../node/vuo.event/vuo.event.spinOffEvent.c \
-	../node/vuo.event/vuo.event.fireOnStart.c \
 	../node/vuo.image/vuo.image.color.adjust.c \
 	../node/vuo.image/vuo.image.fetch.c \
-	../node/vuo.image/vuo.image.render.window.c \
-	../node/vuo.logic/vuo.logic.areAllTrue.c \
-	../node/vuo.logic/vuo.logic.isOneTrue.c \
-	../node/vuo.logic/vuo.logic.toggle.c \
-	../node/vuo.logic/vuo.logic.switch.c \
-	../node/vuo.math/vuo.math.add.c \
-	../node/vuo.list/vuo.list.build.c \
-	../node/vuo.list/vuo.list.cycle.c \
-	../node/vuo.list/vuo.list.enqueue.c \
-	../node/vuo.list/vuo.list.process.c \
 	../node/vuo.math/vuo.math.count.c \
-	../node/vuo.math/vuo.math.countWithinRange.c \
-	../node/vuo.math/vuo.math.divide.VuoInteger.c \
-	../node/vuo.math/vuo.math.isLessThan.c \
-	../node/vuo.math/vuo.math.limitToRange.c \
-	../node/vuo.math/vuo.math.subtract.c \
-	../node/vuo.motion/vuo.motion.wave.c \
 	../node/vuo.scene/vuo.scene.fetch.c \
 	../node/vuo.scene/vuo.scene.render.window.c \
-	../node/vuo.select/vuo.select.in.2.c \
-	../node/vuo.select/vuo.select.in.8.c \
-	../node/vuo.select/vuo.select.in.boolean.c \
-	../node/vuo.select/vuo.select.latest.2.c \
-	../node/vuo.select/vuo.select.out.2.c \
-	../node/vuo.select/vuo.select.out.boolean.event.c \
-	../node/vuo.time/vuo.time.firePeriodically.c \
-	../node/vuo.time/vuo.time.measureTime.c \
 	../node/vuo.video/vuo.video.save.c \
-	../node/vuo.video/vuo.video.decodeImage.c \
 	../node/vuo.video/vuo.video.play.c
 
 COMPOSITION_IMAGES += \

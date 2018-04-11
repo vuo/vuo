@@ -2,7 +2,7 @@
  * @file
  * VuoReal C type definition.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -150,12 +150,36 @@ static inline VuoReal VuoReal_spring(VuoReal timeSinceDrop, VuoReal dropPosition
 	return VuoReal_lerp(restingPosition, dropPosition, p);
 }
 
+#ifndef MIN
 /**
- * Limits @c value to values between @c min and @c max, inclusive.
+ * Returns the smaller of @c a and @c b.
  */
-static inline VuoReal VuoReal_clamp(VuoReal value, VuoReal min, VuoReal max)
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+
+#ifndef MAX
+/**
+ * Returns the larger of @c a and @c b.
+ */
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+
+/**
+ * Limits `value` to values between `limitA` and `limitB`, inclusive.
+ * The limits can be in either order: (min,max) or (max,min).
+ */
+static inline VuoReal VuoReal_clamp(VuoReal value, VuoReal limitA, VuoReal limitB)
 {
-	return fmin(fmax(value,min),max);
+	return MIN(MAX(value, MIN(limitA, limitB)), MAX(limitA,limitB));
+}
+
+/**
+ * Same as @ref VuoReal_clamp.
+ * Provided for generic type compatibility with other `_clampn` functions.
+ */
+static inline VuoReal VuoReal_clampn(VuoReal value, VuoReal limitA, VuoReal limitB)
+{
+	return VuoReal_clamp(value, limitA, limitB);
 }
 
 /**
@@ -181,6 +205,7 @@ static inline VuoReal VuoReal_snap(VuoReal a, VuoReal center, VuoReal snap)
 	return center + nonzeroSnap * (int)round( (a-center) / nonzeroSnap );
 }
 
+/// This type has _areEqual() and _isLessThan() functions.
 #define VuoReal_SUPPORTS_COMPARISON
 
 /**

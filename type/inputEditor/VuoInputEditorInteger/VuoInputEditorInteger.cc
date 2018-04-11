@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorInteger implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -188,7 +188,7 @@ void VuoInputEditorInteger::onSliderUpdate(int sliderValue)
  */
 void VuoInputEditorInteger::onSpinboxUpdate(QString spinboxValue)
 {
-	current = QLocale::system().toInt(spinboxValue);
+	current = QLocale().toInt(spinboxValue);
 
 	if(slider != NULL)
 	{

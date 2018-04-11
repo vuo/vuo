@@ -2,7 +2,7 @@
  * @file
  * vuo.video.get.audioframe node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -11,7 +11,7 @@
 #include "VuoAudioFrame.h"
 
 VuoModuleMetadata({
-					 "title" : "Get Audio Frame Values",
+					 "title" : "Get Frame Values (Audio)",
 					  "keywords" : [
 						  "timestamp"
 					  ],

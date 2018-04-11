@@ -2,7 +2,7 @@
  * @file
  * VuoUrl implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -454,8 +454,7 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 	// Case: The url contains a relative file path.
 	else
 	{
-		char currentWorkingDir[PATH_MAX+1];
-		getcwd(currentWorkingDir, PATH_MAX+1);
+		char *currentWorkingDir = VuoGetWorkingDirectory();
 
 		bool compositionIsExportedApp = false;
 
@@ -531,6 +530,8 @@ VuoUrl VuoUrl_normalize(const VuoText url, bool isSave)
 		resolvedUrl = (char *)malloc(strlen(VuoUrl_fileScheme) + strlen(escapedPath) + 1);
 		strcpy(resolvedUrl, VuoUrl_fileScheme);
 		strcat(resolvedUrl, escapedPath);
+
+		free(currentWorkingDir);
 	}
 
 	// Remove trailing slash, if any.

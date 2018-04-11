@@ -2,7 +2,7 @@
  * @file
  * vuo.list.spread.group node implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,7 +10,7 @@
 #include "node.h"
 
 VuoModuleMetadata({
-					"title" : "Spread List Item Groups",
+					"title" : "Copy List Item Groups",
 					"keywords" : [ "duplicate", "copy", "clone", "double", "replicate", "expand", "fill", "stretch",
 						"cycle", "stride"
 					],

@@ -2,7 +2,7 @@
  * @file
  * VuoMidiController C type definition.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -54,6 +54,8 @@ static inline VuoMidiController VuoMidiController_make(unsigned char channel, un
  */
 VuoMidiController VuoMidiController_makeFromString(const char *str);
 char * VuoMidiController_getString(const VuoMidiController value);
+void VuoMidiController_retain(VuoMidiController value);
+void VuoMidiController_release(VuoMidiController value);
 /// @}
 
 /**

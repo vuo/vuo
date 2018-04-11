@@ -2,7 +2,7 @@
  * @file
  * vuo.integer C type definition.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -139,9 +139,18 @@ static inline bool VuoInteger_isLessThan(const VuoInteger a, const VuoInteger b)
 /**
  * Limits `value` to values between `min` and `max`, inclusive.
  */
-static inline VuoInteger VuoInteger_clamp(VuoInteger value, VuoInteger min, VuoInteger max)
+static inline VuoInteger VuoInteger_clamp(VuoInteger value, VuoInteger limitA, VuoInteger limitB)
 {
-	return MIN(MAX(value,min),max);
+	return MIN(MAX(value, MIN(limitA, limitB)), MAX(limitA,limitB));
+}
+
+/**
+ * Same as @ref VuoInteger_clamp.
+ * Provided for generic type compatibility with other `_clampn` functions.
+ */
+static inline VuoInteger VuoInteger_clampn(VuoInteger value, VuoInteger limitA, VuoInteger limitB)
+{
+	return VuoInteger_clamp(value, limitA, limitB);
 }
 
 /// @{

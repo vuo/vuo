@@ -2,7 +2,7 @@
  * @file
  * TestControlAndTelemetry interface and implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the GNU Lesser General Public License (LGPL) version 2 or later.
  * For more information, see http://vuo.org/license.
  */
@@ -11,10 +11,12 @@
 
 #include <Vuo/Vuo.h>
 #include <sstream>
+#include <mach-o/dyld.h>
 
 
 // Be able to use these types in QTest::addColumn()
 Q_DECLARE_METATYPE(list<string>);
+Q_DECLARE_METATYPE(set<string>);
 Q_DECLARE_METATYPE(vector<VuoRunner::Port *>);
 
 
@@ -31,7 +33,9 @@ private:
 	/**
 	 * Builds the composition at @a compositionPath into an executable. Returns the executable file path.
 	 */
-	static string buildExecutableForNewProcess(VuoCompiler *compiler, const string &compositionPath, VuoCompilerComposition **composition = NULL)
+	static string buildExecutableForNewProcess(VuoCompiler *compiler, const string &compositionPath,
+											   VuoCompilerComposition **composition = NULL,
+											   VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild)
 	{
 		string dir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, dir, file, extension);
@@ -49,7 +53,7 @@ private:
 		{
 			compiler->compileComposition(compositionPath, bcPath);
 		}
-		compiler->linkCompositionToCreateExecutable(bcPath, exePath, VuoCompiler::Optimization_FastBuild);
+		compiler->linkCompositionToCreateExecutable(bcPath, exePath, optimization);
 		remove(bcPath.c_str());
 
 		return exePath;
@@ -58,17 +62,20 @@ private:
 	/**
 	 * Builds the composition at @a compositionPath into an executable. Returns a newly allocated `VuoRunner` for the executable.
 	 */
-	static VuoRunner * createRunnerInNewProcess(VuoCompiler *compiler, const string &compositionPath, VuoCompilerComposition **composition = NULL)
+	static VuoRunner * createRunnerInNewProcess(VuoCompiler *compiler, const string &compositionPath,
+												VuoCompilerComposition **composition = NULL,
+												VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild)
 	{
-		string exePath = buildExecutableForNewProcess(compiler, compositionPath, composition);
+		string exePath = buildExecutableForNewProcess(compiler, compositionPath, composition, optimization);
 		VuoRunner * runner = VuoRunner::newSeparateProcessRunnerFromExecutable(exePath, "", false, true);
 		runner->setDelegate(new TestRunnerDelegate());
 		return runner;
 	}
 
-	VuoRunner * createRunnerInNewProcess(const string &compositionPath, VuoCompilerComposition **composition = NULL)
+	VuoRunner * createRunnerInNewProcess(const string &compositionPath, VuoCompilerComposition **composition = NULL,
+										 VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild)
 	{
-		return createRunnerInNewProcess(compiler, compositionPath, composition);
+		return createRunnerInNewProcess(compiler, compositionPath, composition, optimization);
 	}
 
 	/**
@@ -106,7 +113,8 @@ private:
 	/**
 	 * Builds the composition at @a compositionPath into a dylib. Returns the dylib file path.
 	 */
-	string buildDylibForCurrentProcess(const string &compositionPath)
+	string buildDylibForCurrentProcess(const string &compositionPath,
+									   VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild)
 	{
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
@@ -114,7 +122,7 @@ private:
 		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
 
 		compiler->compileComposition(compositionPath, bcPath);
-		compiler->linkCompositionToCreateDynamicLibrary(bcPath, dylibPath, VuoCompiler::Optimization_FastBuild);
+		compiler->linkCompositionToCreateDynamicLibrary(bcPath, dylibPath, optimization);
 		remove(bcPath.c_str());
 
 		return dylibPath;
@@ -123,9 +131,10 @@ private:
 	/**
 	 * Builds the composition at @a compositionPath into a dylib. Returns a newly allocated `VuoRunner` for the dylib.
 	 */
-	VuoRunner * createRunnerInCurrentProcess(const string &compositionPath)
+	VuoRunner * createRunnerInCurrentProcess(const string &compositionPath,
+											 VuoCompiler::Optimization optimization = VuoCompiler::Optimization_FastBuild)
 	{
-		string dylibPath = buildDylibForCurrentProcess(compositionPath);
+		string dylibPath = buildDylibForCurrentProcess(compositionPath, optimization);
 
 		string compositionDir, file, extension;
 		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
@@ -133,6 +142,54 @@ private:
 		VuoRunner * runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(dylibPath, compositionDir, true);
 		// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 		return runner;
+	}
+
+	/**
+	 * Builds the composition at @a compositionPath into a dylib plus resource dylib for live coding. Returns a newly
+	 * allocated `VuoRunner` for the dylibs.
+	 */
+	VuoRunner * createRunnerForLiveCoding(const string &compositionPath, const string &resourceDylibSuffix,
+										  VuoCompilerComposition *&composition, string &bcPath, string &dylibPath,
+										  vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources)
+	{
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
+		bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+
+		VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
+		VuoComposition *baseComposition = new VuoComposition();
+		composition = new VuoCompilerComposition(baseComposition, parser);
+		delete parser;
+
+		compiler->compileComposition(composition, bcPath);
+		string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + resourceDylibSuffix, "dylib");
+		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+		remove(bcPath.c_str());
+
+		return VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, dir);
+	}
+
+	/**
+	 * Builds @a composition into a dylib plus resource dylib for live coding, and replaces the running composition with it.
+	 */
+	void replaceCompositionForLiveCoding(const string &compositionPath, const string &resourceDylibSuffix,
+										 VuoCompilerComposition *composition, VuoRunner *runner,
+										 const string &bcPath, const string &dylibPath,
+										 vector<string> &alreadyLinkedResourcePaths, set<string> &alreadyLinkedResources)
+	{
+		string dir, file, ext;
+		VuoFileUtilities::splitPath(compositionPath, dir, file, ext);
+
+		compiler->compileComposition(composition, bcPath);
+		string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + resourceDylibSuffix, "dylib");
+		compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
+		remove(bcPath.c_str());
+
+		string compositionGraphviz = composition->getGraphvizDeclaration();
+		string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler,
+																		  set<VuoCompilerComposition::NodeReplacement>());
+		runner->replaceComposition(dylibPath, "", compositionDiff);
 	}
 
 	/**
@@ -219,10 +276,12 @@ private slots:
 		QTest::addColumn<int>("testNum");
 
 		int testNum = 0;
-		QTest::newRow("New process, executable") << testNum++;
-		QTest::newRow("New process, dylib") << testNum++;
-		QTest::newRow("Current process, runOnMainThread()") << testNum++;
-		QTest::newRow("Current process, drainMainDispatchQueue()") << testNum++;
+		QTest::newRow("New process, executable, no cache") << testNum++;
+		QTest::newRow("New process, executable, cache") << testNum++;
+		QTest::newRow("New process, dylib, cache") << testNum++;
+		QTest::newRow("Current process, runOnMainThread(), no cache") << testNum++;
+		QTest::newRow("Current process, runOnMainThread(), cache") << testNum++;
+		QTest::newRow("Current process, drainMainDispatchQueue(), cache") << testNum++;
 		QTest::newRow("Error handling: New process, runOnMainThread()") << testNum++;
 		QTest::newRow("Error handling: Current process, runOnMainThread() on non-main thread") << testNum++;
 		QTest::newRow("Error handling: New process, non-existent executable") << testNum++;
@@ -238,11 +297,14 @@ private slots:
 		string nonExistentFile = "nonexistent";
 		QVERIFY(! VuoFileUtilities::fileExists(nonExistentFile));
 
-		if (testNum == 0)  // New process, executable
+		if (testNum == 0 || testNum == 1)  // New process, executable
 		{
+			VuoCompiler::Optimization optimization = (testNum == 0 ?
+														  VuoCompiler::Optimization_SmallBinary : VuoCompiler::Optimization_FastBuild);
+
 			WriteTimesToFileHelper helper;
 
-			VuoRunner *runner = createRunnerInNewProcess(compositionPath);
+			VuoRunner *runner = createRunnerInNewProcess(compositionPath, NULL, optimization);
 			double beforeStartTime = VuoTimeUtilities::getCurrentTimeInSeconds();
 			runner->start();
 			helper.waitUntilFileExists();
@@ -252,7 +314,7 @@ private slots:
 
 			helper.checkTimesInFile(beforeStartTime, afterStopTime);
 		}
-		else if (testNum == 1)  // New process, dylib
+		else if (testNum == 2)  // New process, dylib
 		{
 			WriteTimesToFileHelper helper;
 
@@ -266,11 +328,14 @@ private slots:
 
 			helper.checkTimesInFile(beforeStartTime, afterStopTime);
 		}
-		else if (testNum == 2)  // Current process, runOnMainThread()
+		else if (testNum == 3 || testNum == 4)  // Current process, runOnMainThread()
 		{
+			VuoCompiler::Optimization optimization = (testNum == 3 ?
+														  VuoCompiler::Optimization_SmallBinary : VuoCompiler::Optimization_FastBuild);
+
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
-			VuoRunner *runner = createRunnerInCurrentProcess(compositionPath);
+			VuoRunner *runner = createRunnerInCurrentProcess(compositionPath, optimization);
 			double beforeStartTime = VuoTimeUtilities::getCurrentTimeInSeconds();
 			runner->start();
 			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -284,7 +349,7 @@ private slots:
 			helper->checkTimesInFile(beforeStartTime, afterStopTime);
 			delete helper;
 		}
-		else if (testNum == 3)  // Current process, drainMainDispatchQueue()
+		else if (testNum == 5)  // Current process, drainMainDispatchQueue()
 		{
 			WriteTimesToFileHelper *helper = new WriteTimesToFileHelper;
 
@@ -306,7 +371,7 @@ private slots:
 			helper->checkTimesInFile(beforeStartTime, afterStopTime);
 			delete helper;
 		}
-		else if (testNum == 4)  // Error handling: New process, runOnMainThread()
+		else if (testNum == 6)  // Error handling: New process, runOnMainThread()
 		{
 			WriteTimesToFileHelper helper;
 
@@ -321,7 +386,7 @@ private slots:
 			runner->stop();
 			delete runner;
 		}
-		else if (testNum == 5)  // Error handling: Current process, runOnMainThread() on non-main thread
+		else if (testNum == 7)  // Error handling: Current process, runOnMainThread() on non-main thread
 		{
 			WriteTimesToFileHelper helper;
 
@@ -344,14 +409,14 @@ private slots:
 			runner->runOnMainThread();
 			delete runner;
 		}
-		else if (testNum == 6)  // Error handling: New process, non-existent executable
+		else if (testNum == 8)  // Error handling: New process, non-existent executable
 		{
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromExecutable(nonExistentFile, "", false, false);
 			runner->start();
 			runner->waitUntilStopped();
 			delete runner;
 		}
-		else if (testNum == 7)  // Error handling: New process, non-existent dylib
+		else if (testNum == 9)  // Error handling: New process, non-existent dylib
 		{
 			VuoRunner *runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(),
 																					  nonExistentFile, nonExistentFile,
@@ -360,7 +425,7 @@ private slots:
 			runner->waitUntilStopped();
 			delete runner;
 		}
-		else if (testNum == 8)  // Error handling: Current process, non-existent dylib
+		else if (testNum == 10)  // Error handling: Current process, non-existent dylib
 		{
 			VuoRunner *runner = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(nonExistentFile, "", false);
 			runner->start();
@@ -455,7 +520,7 @@ private slots:
 		}
 	}
 
-	void testRunningMultipleCompositionInstancesSimultaneously()
+	void testRunningMultipleSeparateProcessCompositionInstancesSimultaneously()
 	{
 		string compositionPath = getCompositionPath("Recur_Count.vuo");
 
@@ -465,8 +530,161 @@ private slots:
 		VuoRunner *runner2 = VuoCompiler::newSeparateProcessRunnerFromCompositionFile(compositionPath);
 		runner2->start();
 
+		QVERIFY(!runner1->lostContact);
+		QVERIFY(!runner2->lostContact);
+
 		runner2->stop();
 		runner1->stop();
+	}
+
+	void testRunningMultipleCurrentProcessDifferentCompositionInstancesSimultaneously()
+	{
+		VuoRunner *runner1 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(getCompositionPath("Recur_Count.vuo"));
+		runner1->start();
+
+		VuoRunner *runner2 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(getCompositionPath("Recur_Add_published.vuo"));
+		runner2->start();
+
+		QVERIFY(!runner1->lostContact);
+		QVERIFY(!runner2->lostContact);
+
+		runner2->stop();
+		runner1->stop();
+	}
+
+	void testRunningMultipleCurrentProcessSameCompositionInstancesSimultaneously()
+	{
+		string compositionPath = getCompositionPath("Recur_Count.vuo");
+
+		VuoRunner *runner1 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionPath);
+		runner1->start();
+
+		VuoRunner *runner2 = VuoCompiler::newCurrentProcessRunnerFromCompositionFile(compositionPath);
+		runner2->start();
+
+		QVERIFY(!runner1->lostContact);
+		QVERIFY(!runner2->lostContact);
+
+		runner2->stop();
+		runner1->stop();
+	}
+
+	/**
+	 * Make sure we can uniquify dylibs with short names.
+	 *
+	 * VDMX calls its files `dylib.dylib` (5-character filename, shorter than the mkstmps() `-XXXXXX`).
+	 * https://b33p.net/kosada/node/12917
+	 */
+	void testRunningMultipleCurrentProcessSameShortNameCompositionInstancesSimultaneously()
+	{
+		string compositionPath = getCompositionPath("Recur_Count.vuo");
+
+		string directory, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, directory, file, extension);
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true);
+
+		for (int i = 1; i <= 8; ++i)
+		{
+			string linkedCompositionPath = VuoFileUtilities::makeTmpDir("vdmx") + "/" + string("thedylib").substr(0,i) + ".dylib";
+			compiler->linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
+
+			VuoRunner *runner1 = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, directory);
+			runner1->start();
+
+			VuoRunner *runner2 = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, directory);
+			runner2->start();
+
+			QVERIFY(!runner1->lostContact);
+			QVERIFY(!runner2->lostContact);
+
+			runner2->stop();
+			runner1->stop();
+		}
+
+		remove(compiledCompositionPath.c_str());
+	}
+
+private:
+
+	class TestRunningMultipleRunnerDelegate : public TestRunnerDelegate
+	{
+	public:
+		map<string, string> publishedOutputData;
+
+		void receivedTelemetryPublishedOutputPortUpdated(VuoRunner::Port *port, bool sentData, string dataSummary)
+		{
+			publishedOutputData[port->getName()] = dataSummary;
+		}
+	};
+
+private slots:
+
+	void testRunningMultipleCurrentProcessSameDylibInstancesSimultaneously()
+	{
+		string compositionPath = getCompositionPath("PublishedCount.vuo");
+
+		string directory, file, extension;
+		VuoFileUtilities::splitPath(compositionPath, directory, file, extension);
+		string compiledCompositionPath = VuoFileUtilities::makeTmpFile(file, "bc");
+		compiler->compileComposition(compositionPath, compiledCompositionPath, true);
+		string linkedCompositionPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+		compiler->linkCompositionToCreateDynamicLibrary(compiledCompositionPath, linkedCompositionPath, VuoCompiler::Optimization_FastBuild);
+		remove(compiledCompositionPath.c_str());
+
+		VuoRunner *runner1 = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, directory);
+		VuoRunner *runner2 = VuoRunner::newCurrentProcessRunnerFromDynamicLibrary(linkedCompositionPath, directory);
+
+		TestRunningMultipleRunnerDelegate delegate1;
+		TestRunningMultipleRunnerDelegate delegate2;
+		runner1->setDelegate(&delegate1);
+		runner2->setDelegate(&delegate2);
+
+		runner1->start();
+		runner2->start();
+
+		// Ensure the compositions communicate with their respective runners independently.
+		{
+			runner1->pause();
+			QVERIFY(runner1->paused);
+			QVERIFY(!runner2->paused);
+
+			runner2->pause();
+			QVERIFY(runner1->paused);
+			QVERIFY(runner2->paused);
+
+			runner1->unpause();
+			QVERIFY(!runner1->paused);
+			QVERIFY(runner2->paused);
+
+			runner2->unpause();
+			QVERIFY(!runner1->paused);
+			QVERIFY(!runner2->paused);
+		}
+
+		// Ensure the compositions execute independently.
+		{
+			VuoRunner::Port *incrementPort1 = runner1->getPublishedInputPortWithName("Increment");
+			runner1->setPublishedInputPortValue(incrementPort1, VuoInteger_getJson(10));
+			runner1->firePublishedInputPortEvent();
+			runner1->waitForAnyPublishedOutputPortEvent();
+			QCOMPARE(delegate1.publishedOutputData.size(), (size_t)1);
+			QCOMPARE(QString::fromStdString(delegate1.publishedOutputData["Count"]), QString("11"));
+			QCOMPARE(delegate2.publishedOutputData.size(), (size_t)0);
+
+			VuoRunner::Port *incrementPort2 = runner2->getPublishedInputPortWithName("Increment");
+			runner2->setPublishedInputPortValue(incrementPort2, VuoInteger_getJson(100));
+			runner2->firePublishedInputPortEvent();
+			runner2->waitForAnyPublishedOutputPortEvent();
+			QCOMPARE(delegate2.publishedOutputData.size(), (size_t)1);
+			QCOMPARE(QString::fromStdString(delegate2.publishedOutputData["Count"]), QString("101"));
+			QCOMPARE(delegate1.publishedOutputData.size(), (size_t)1);
+		}
+
+		runner2->stop();
+		runner1->stop();
+
+		remove(linkedCompositionPath.c_str());
 	}
 
 	void testPausingAndUnpausingComposition()
@@ -1793,6 +2011,47 @@ private slots:
 		delete runner;
 	}
 
+	void testDisablingTermination_data()
+	{
+		QTest::addColumn<bool>("shouldDisable");
+
+		QTest::newRow("node delays without disabling termination") << false;
+		QTest::newRow("node delays and disables termination") << true;
+	}
+	void testDisablingTermination()
+	{
+		QFETCH(bool, shouldDisable);
+
+		string compositionPath = getCompositionPath("TemporarilyDisableTermination.vuo");
+
+		VuoRunner *runner = createRunnerInNewProcess(compositionPath);
+		runner->start();
+
+		VuoRunner::Port *shouldDelayPort = runner->getPublishedInputPortWithName("ShouldDelay");
+		runner->setPublishedInputPortValue(shouldDelayPort, VuoBoolean_getJson(true));
+		VuoRunner::Port *shouldDisablePort = runner->getPublishedInputPortWithName("ShouldDisable");
+		runner->setPublishedInputPortValue(shouldDisablePort, VuoBoolean_getJson(shouldDisable));
+		runner->firePublishedInputPortEvent();
+
+		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+		dispatch_async(queue, ^{
+						   runner->stop();
+					   });
+
+		// Wait until the runtime times out waiting for the node to finish executing.
+		usleep(6*USEC_PER_SEC);
+		QVERIFY(runner->isStopped() == ! shouldDisable);
+
+		if (shouldDisable)
+		{
+			// Wait until the node finishes executing and the composition stops.
+			usleep(2*USEC_PER_SEC);
+			QVERIFY(runner->isStopped());
+		}
+
+		delete runner;
+	}
+
 	void testReplacingCompositionWithoutCrashing_data()
 	{
 		QTest::addColumn< QString >("compositionFile");
@@ -1808,10 +2067,8 @@ private slots:
 
 		string compositionPath = getCompositionPath(compositionFile.toUtf8().constData());
 
-		string compositionDir, file, extension;
-		VuoFileUtilities::splitPath(compositionPath, compositionDir, file, extension);
-		string bcPath = VuoFileUtilities::makeTmpFile(file, "bc");
-		string dylibPath = VuoFileUtilities::makeTmpFile(file, "dylib");
+		string bcPath;
+		string dylibPath;
 		vector<string> alreadyLinkedResourcePaths;
 		set<string> alreadyLinkedResources;
 
@@ -1820,32 +2077,16 @@ private slots:
 
 		// Build and run the composition.
 		{
-			VuoCompilerGraphvizParser *parser = VuoCompilerGraphvizParser::newParserFromCompositionFile(compositionPath, compiler);
-			VuoComposition *baseComposition = new VuoComposition();
-			composition = new VuoCompilerComposition(baseComposition, parser);
-			delete parser;
-
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource0", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			runner = VuoRunner::newSeparateProcessRunnerFromDynamicLibrary(compiler->getCompositionLoaderPath(), dylibPath, resourceDylibPath, compositionDir);
+			runner = createRunnerForLiveCoding(compositionPath, "-resource0", composition, bcPath, dylibPath,
+											   alreadyLinkedResourcePaths, alreadyLinkedResources);
 			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
 			runner->start();
 		}
 
 		// Replace the composition with itself.
 		{
-			compiler->compileComposition(composition, bcPath);
-			string resourceDylibPath = VuoFileUtilities::makeTmpFile(file + "-resource1", "dylib");
-			compiler->linkCompositionToCreateDynamicLibraries(bcPath, dylibPath, resourceDylibPath, alreadyLinkedResourcePaths, alreadyLinkedResources);
-			remove(bcPath.c_str());
-
-			string compositionGraphviz = composition->getGraphvizDeclaration();
-			string compositionDiff = composition->diffAgainstOlderComposition(compositionGraphviz, compiler,
-																			  set<VuoCompilerComposition::NodeReplacement>());
-			runner->replaceComposition(dylibPath, "", compositionDiff);
+			replaceCompositionForLiveCoding(compositionPath, "-resource1", composition, runner, bcPath, dylibPath,
+											alreadyLinkedResourcePaths, alreadyLinkedResources);
 		}
 
 		runner->stop();
@@ -1855,6 +2096,155 @@ private slots:
 
 		delete runner;
 		delete composition;
+	}
+
+private:
+
+	class TestPreservingTelemetrySubscriptionsRunnerDelegate : public TestRunnerDelegate
+	{
+	public:
+		map<string, bool> outputPortsUpdated;
+
+		void receivedTelemetryOutputPortUpdated(string portIdentifier, bool sentData, string dataSummary)
+		{
+			outputPortsUpdated[portIdentifier] = sentData;
+		}
+	};
+
+private slots:
+
+	void testPreservingTelemetrySubscriptions_data()
+	{
+		QTest::addColumn< bool >("isSendingAllTelemetry");
+		QTest::addColumn< bool >("isSendingEventTelemetry");
+		QTest::addColumn< set<string> >("portsSendingDataTelemetry");
+
+		set<string> noPortDataTelemetry;
+
+		QTest::newRow("no telemetry") << false << false << noPortDataTelemetry;
+		QTest::newRow("all telemetry") << true << false << noPortDataTelemetry;
+		QTest::newRow("event telemetry") << false << true << noPortDataTelemetry;
+
+		{
+			set<string> portsSendingDataTelemetry;
+			portsSendingDataTelemetry.insert("Count1__count");
+			portsSendingDataTelemetry.insert("Count2__count");
+			QTest::newRow("port data telemetry") << false << false << portsSendingDataTelemetry;
+		}
+	}
+	void testPreservingTelemetrySubscriptions()
+	{
+		QFETCH(bool, isSendingAllTelemetry);
+		QFETCH(bool, isSendingEventTelemetry);
+		QFETCH(set<string>, portsSendingDataTelemetry);
+
+		string compositionPath = getCompositionPath("PublishedInputsAndNoTrigger.vuo");
+
+		string bcPath;
+		string dylibPath;
+		vector<string> alreadyLinkedResourcePaths;
+		set<string> alreadyLinkedResources;
+
+		VuoCompilerComposition *composition = NULL;
+		VuoRunner *runner = NULL;
+
+		// Build and run the composition.
+		{
+			runner = createRunnerForLiveCoding(compositionPath, "-resource0", composition, bcPath, dylibPath,
+											   alreadyLinkedResourcePaths, alreadyLinkedResources);
+			runner->start();
+		}
+
+		// Subscribe to telemetry.
+		{
+			if (isSendingAllTelemetry)
+				runner->subscribeToAllTelemetry();
+			if (isSendingEventTelemetry)
+				runner->subscribeToEventTelemetry();
+			for (set<string>::iterator i = portsSendingDataTelemetry.begin(); i != portsSendingDataTelemetry.end(); ++i)
+				runner->subscribeToInputPortTelemetry(*i);
+		}
+
+		// Replace the composition with itself.
+		{
+			replaceCompositionForLiveCoding(compositionPath, "-resource1", composition, runner, bcPath, dylibPath,
+											alreadyLinkedResourcePaths, alreadyLinkedResources);
+		}
+
+		// Fire an event into the composition and collect telemetry.
+		TestPreservingTelemetrySubscriptionsRunnerDelegate runnerDelegate;
+		{
+			runner->setDelegate(&runnerDelegate);
+			runner->firePublishedInputPortEvent();
+		}
+
+		runner->stop();
+
+		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
+			remove((*i).c_str());
+
+		delete runner;
+		delete composition;
+
+		// Check the telemetry collected.
+		{
+			{
+				map<string, bool>::iterator portIter = runnerDelegate.outputPortsUpdated.find("Add1__sum");
+				bool portIterFound = portIter != runnerDelegate.outputPortsUpdated.end();
+				QVERIFY(portIterFound == isSendingAllTelemetry || isSendingEventTelemetry);
+				if (portIterFound)
+					QVERIFY(portIter->second == isSendingAllTelemetry);
+			}
+
+			for (set<string>::iterator i = portsSendingDataTelemetry.begin(); i != portsSendingDataTelemetry.end(); ++i)
+			{
+				map<string, bool>::iterator portIter = runnerDelegate.outputPortsUpdated.find(*i);
+				QVERIFY(portIter != runnerDelegate.outputPortsUpdated.end());
+				QVERIFY(portIter->second == true);
+			}
+		}
+	}
+
+	void testPreservingFiniCallbacks()
+	{
+		const char *createdFile = "/tmp/vuo.test.finiCallbackCreatesFile";
+		remove(createdFile);
+
+		string compositionPath = getCompositionPath("FiniCallbackCreatesFile.vuo");
+
+		string bcPath;
+		string dylibPath;
+		vector<string> alreadyLinkedResourcePaths;
+		set<string> alreadyLinkedResources;
+
+		VuoCompilerComposition *composition = NULL;
+		VuoRunner *runner = NULL;
+
+		// Build and run the composition.
+		{
+			runner = createRunnerForLiveCoding(compositionPath, "-resource0", composition, bcPath, dylibPath,
+											   alreadyLinkedResourcePaths, alreadyLinkedResources);
+			// runner->setDelegate(new TestRunnerDelegate());  /// @todo https://b33p.net/kosada/node/6021
+			runner->start();
+		}
+
+		// Replace the composition with itself.
+		{
+			replaceCompositionForLiveCoding(compositionPath, "-resource1", composition, runner, bcPath, dylibPath,
+											alreadyLinkedResourcePaths, alreadyLinkedResources);
+		}
+
+		QVERIFY(! VuoFileUtilities::fileExists(createdFile));
+
+		runner->stop();
+
+		for (vector<string>::iterator i = alreadyLinkedResourcePaths.begin(); i != alreadyLinkedResourcePaths.end(); ++i)
+			remove((*i).c_str());
+
+		delete runner;
+		delete composition;
+
+		QVERIFY(VuoFileUtilities::fileExists(createdFile));
 	}
 
 	void testAddingResourcesToRunningComposition()

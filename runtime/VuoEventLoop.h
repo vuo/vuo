@@ -2,7 +2,7 @@
  * @file
  * VuoEventLoop interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -28,8 +28,6 @@ void VuoEventLoop_break(void);
 void VuoEventLoop_switchToAppMode(void);
 
 bool VuoEventLoop_mayBeTerminated(void);
-void VuoEventLoop_disableTermination(void);
-void VuoEventLoop_enableTermination(void);
 
 unsigned long VuoEventLoop_getDispatchStrictMask(void);
 void VuoEventLoop_installSignalHandlers(void);

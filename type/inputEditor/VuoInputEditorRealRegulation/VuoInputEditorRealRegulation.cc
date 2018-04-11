@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorRealRegulation implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -73,10 +73,10 @@ QList<QString> VuoInputEditorRealRegulation::convertToLineEditListFormat(json_ob
 
 	QList<QString> lineEditTexts;
 	lineEditTexts.append(reg.name);
-	lineEditTexts.append(QString::number(reg.minimumValue));
-	lineEditTexts.append(QString::number(reg.maximumValue));
-	lineEditTexts.append(QString::number(reg.defaultValue));
-	lineEditTexts.append(QString::number(reg.smoothDuration));
+	lineEditTexts.append(QLocale().toString(reg.minimumValue));
+	lineEditTexts.append(QLocale().toString(reg.maximumValue));
+	lineEditTexts.append(QLocale().toString(reg.defaultValue));
+	lineEditTexts.append(QLocale().toString(reg.smoothDuration));
 	return lineEditTexts;
 }
 
@@ -87,10 +87,10 @@ json_object * VuoInputEditorRealRegulation::convertFromLineEditListFormat(const 
 {
 	VuoRealRegulation reg = VuoRealRegulation_make(
 				VuoText_make(lineEditTexts[0].toUtf8().data()),
-				lineEditTexts[1].toDouble(),
-				lineEditTexts[2].toDouble(),
-				lineEditTexts[3].toDouble(),
-				lineEditTexts[4].toDouble());
+				QLocale().toDouble(lineEditTexts[1]),
+				QLocale().toDouble(lineEditTexts[2]),
+				QLocale().toDouble(lineEditTexts[3]),
+				QLocale().toDouble(lineEditTexts[4]));
 
 	json_object *value = VuoRealRegulation_getJson(reg);
 	VuoRealRegulation_retain(reg);

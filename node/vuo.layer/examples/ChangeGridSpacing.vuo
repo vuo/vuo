@@ -2,7 +2,7 @@
  * @file
  * Arranges layers in a grid, with the spacing between layers controlled by mouse movements.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -10,22 +10,21 @@
 digraph G
 {
 AlignLayerToWindow [type="vuo.layer.align.window" version="1.1.0" label="Align Layer to Window|<refresh>refresh\l|<window>window\l|<layer>layer\l|<horizontalAlignment>horizontalAlignment\l|<horizontalMargin>horizontalMargin\l|<verticalAlignment>verticalAlignment\l|<verticalMargin>verticalMargin\l|<alignedLayer>alignedLayer\r" pos="1304,-81" _horizontalAlignment="\"center\"" _horizontalMargin="0.000000" _verticalAlignment="\"bottom\"" _verticalMargin="0.150000"];
-ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.0.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="788,245" fillcolor="violet" _scaleToFit="false" _center="{\"x\":0.000000,\"y\":0.100000}" _columns="2" _rows="2"];
-Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.0" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="627,940"];
+ArrangeLayersInGrid [type="vuo.layer.arrange.grid" version="1.1.0" label="Arrange Layers in Grid|<refresh>refresh\l|<layers>layers\l|<scaleToFit>scaleToFit\l|<anchor>anchor\l|<center>center\l|<width>width\l|<columns>columns\l|<height>height\l|<rows>rows\l|<griddedLayer>griddedLayer\r" pos="788,245" fillcolor="violet" _scaleToFit="false" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.100000}" _columns="2" _rows="2"];
+Convert2DPointToReal [type="vuo.type.point2d.real.y" version="1.0.1" label="Convert 2D Point to Real|<refresh>refresh\l|<xy>xy\l|<y>y\r" pos="627,940"];
 FireOnStart [type="vuo.event.fireOnStart" version="1.0.0" label="Fire on Start|<refresh>refresh\l|<started>started\r" pos="33,74" fillcolor="yellow" _started_eventThrottling="enqueue"];
-LimitToRange2 [type="vuo.math.limitToRange.VuoReal" version="1.0.0" label="Limit to Range|<refresh>refresh\l|<value>value\l|<minimum>minimum\l|<maximum>maximum\l|<wrapMode>wrapMode\l|<limitedValue>limitedValue\r" pos="337,-190" _minimum="0.820000" _maximum="1.000000" _wrapMode="\"saturate\""];
-MakeColorLayer [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="332,138" _color="{\"r\":0.081773,\"g\":0.086488,\"b\":0.192920,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
-MakeColorLayer5 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="330,276" _color="{\"r\":0.174807,\"g\":0.154482,\"b\":0.409613,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
-MakeColorLayer6 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="327,418" _color="{\"r\":0.359579,\"g\":0.291279,\"b\":0.773342,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
-MakeColorLayer7 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="325,562" _color="{\"r\":0.470985,\"g\":0.428733,\"b\":0.924849,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
-MakeColorLayer8 [type="vuo.layer.make.color" version="1.1.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="820,100" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.100000}" _rotation="0.000000"];
-MakeList3 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="710,256" fillcolor="violet"];
-MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1081,246" fillcolor="green"];
-MakeList6 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1031,231" fillcolor="green"];
-MakeTextLayer [type="vuo.layer.make.text" version="1.0.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<center>center\l|<layer>layer\r" pos="1107,-88" _text="\"Move the mouse up and down to change the grid size.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}"];
-ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.2" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-103,-187" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
-RenderLayersToWindow [type="vuo.layer.render.window" version="2.3.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1127,220" fillcolor="green" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop"];
-Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<scaledValue>scaledValue\r" pos="153,-189" _start="-0.500000" _end="0.500000" _scaledStart="0.820000" _scaledEnd="1.000000"];
+MakeColorLayer [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="332,138" _color="{\"r\":0.081773,\"g\":0.086488,\"b\":0.192920,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeColorLayer5 [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="330,276" _color="{\"r\":0.174807,\"g\":0.154482,\"b\":0.409613,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeColorLayer6 [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="327,418" _color="{\"r\":0.359579,\"g\":0.291279,\"b\":0.773342,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeColorLayer7 [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="325,562" _color="{\"r\":0.470985,\"g\":0.428733,\"b\":0.924849,\"a\":1.000000}" _center="{\"x\":0.000000,\"y\":0.000000}" _rotation="0.000000" _width="0.400000" _height="0.400000"];
+MakeColorLayer8 [type="vuo.layer.make.color" version="1.2.0" label="Make Color Layer|<refresh>refresh\l|<name>name\l|<color>color\l|<anchor>anchor\l|<center>center\l|<rotation>rotation\l|<width>width\l|<height>height\l|<layer>layer\r" pos="820,100" _color="{\"r\":1,\"g\":1,\"b\":1,\"a\":1}" _center="{\"x\":0.000000,\"y\":0.100000}" _rotation="0.000000"];
+MakeList3 [type="vuo.list.make.4.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<4>4\l|<list>list\r" pos="719,256" fillcolor="violet"];
+MakeList5 [type="vuo.list.make.2.VuoWindowProperty" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<list>list\r" pos="1094,261" fillcolor="green"];
+MakeList6 [type="vuo.list.make.3.VuoLayer" version="2.0.0" label="Make List|<refresh>refresh\l|<1>1\l|<2>2\l|<3>3\l|<list>list\r" pos="1061,231" fillcolor="green"];
+MakeTextLayer [type="vuo.layer.make.text" version="1.1.0" label="Make Text Layer|<refresh>refresh\l|<text>text\l|<font>font\l|<anchor>anchor\l|<center>center\l|<layer>layer\r" pos="1107,-88" _text="\"Move the mouse up and down to change the grid size.\"" _font="{\"fontName\":\"HelveticaNeue\",\"pointSize\":28.000000,\"underline\":false,\"color\":{\"r\":1.000000,\"g\":1.000000,\"b\":1.000000,\"a\":1.000000},\"alignment\":\"left\",\"characterSpacing\":1.000000,\"lineSpacing\":1.000000}" _anchor="{\"horizontalAlignment\":\"center\",\"verticalAlignment\":\"center\"}" _center="{\"x\":0.000000,\"y\":0.000000}"];
+ReceiveMouseMoves [type="vuo.mouse.move" version="1.0.5" label="Receive Mouse Moves|<refresh>refresh\l|<window>window\l|<modifierKey>modifierKey\l|<movedTo>movedTo\r" pos="-103,-187" fillcolor="yellow" _modifierKey="\"any\"" _movedTo_eventThrottling="drop"];
+RenderLayersToWindow [type="vuo.layer.render.window" version="2.4.0" label="Render Layers to Window|<refresh>refresh\l|<layers>layers\l|<multisampling>multisampling\l|<setWindowProperties>setWindowProperties\l|<showedWindow>showedWindow\r|<requestedFrame>requestedFrame\r|<renderedLayers>renderedLayers\r" pos="1127,220" fillcolor="green" _multisampling="\"4\"" _showedWindow_eventThrottling="enqueue" _requestedFrame_eventThrottling="drop" _renderedLayers_eventThrottling="enqueue"];
+Scale [type="vuo.math.scale.VuoReal" version="2.0.0" label="Scale|<refresh>refresh\l|<value>value\l|<start>start\l|<end>end\l|<scaledStart>scaledStart\l|<scaledEnd>scaledEnd\l|<limitToRange>limitToRange\l|<scaledValue>scaledValue\r" pos="153,-189" _start="-0.500000" _end="0.500000" _scaledStart="0.820000" _scaledEnd="1.000000" _limitToRange="true"];
 SelectLatest2 [type="vuo.select.latest.2.VuoReal" version="1.0.0" label="Select Latest|<refresh>refresh\l|<option1>option1\l|<option2>option2\l|<latest>latest\r" pos="508,-94" _option2="1.000000"];
 
 AlignLayerToWindow:alignedLayer -> MakeList6:3;
@@ -38,7 +37,6 @@ FireOnStart:started -> MakeColorLayer8:refresh;
 FireOnStart:started -> MakeColorLayer:refresh;
 FireOnStart:started -> MakeTextLayer:refresh;
 FireOnStart:started -> SelectLatest2:option2;
-LimitToRange2:limitedValue -> SelectLatest2:option1;
 MakeColorLayer5:layer -> MakeList3:2;
 MakeColorLayer6:layer -> MakeList3:3;
 MakeColorLayer7:layer -> MakeList3:4;
@@ -51,7 +49,7 @@ MakeTextLayer:layer -> AlignLayerToWindow:layer;
 ReceiveMouseMoves:movedTo -> Convert2DPointToReal:xy;
 RenderLayersToWindow:showedWindow -> AlignLayerToWindow:window;
 RenderLayersToWindow:showedWindow -> ReceiveMouseMoves:window;
-Scale:scaledValue -> LimitToRange2:value;
+Scale:scaledValue -> SelectLatest2:option1;
 SelectLatest2:latest -> ArrangeLayersInGrid:height;
 SelectLatest2:latest -> ArrangeLayersInGrid:width;
 SelectLatest2:latest -> MakeColorLayer8:height;

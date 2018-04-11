@@ -2,7 +2,7 @@
  * @file
  * VuoCompositionLoader implementation.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -21,6 +21,7 @@ extern "C" {
 #include "VuoTelemetry.h"
 #include "VuoEventLoop.h"
 #include "VuoRuntime.h"
+#include "VuoCompositionState.h"
 
 void *ZMQLoaderControlContext = NULL;  ///< The context for initializing sockets to control the composition loader.
 void *ZMQLoaderControl = NULL;  ///< The socket for controlling the composition loader.
@@ -31,7 +32,7 @@ void *ZMQControlContext = NULL;  ///< The context for initializing sockets to co
 void *ZMQControl = NULL;  ///< The socket for controlling the composition.
 char *controlURL = NULL;  ///< The URL that the composition will use to initialize its control socket.
 char *telemetryURL = NULL;  ///< The URL that the composition will use to initialize its telemetry socket.
-bool *isStopped = NULL;  ///< True if the composition has stopped.
+
 bool isReplacing = false;  ///< True if the composition is in the process of being replaced.
 void *dylibHandle = NULL;  ///< A handle to the running composition.
 void **resourceDylibHandles = NULL;  ///< A list of handles to the running composition's resources.
@@ -49,6 +50,16 @@ void unloadResourceDylibs(void);
 
 void *VuoApp_mainThread = NULL;	///< A reference to the main thread
 char *VuoApp_dylibPath = NULL;	///< The path of the most recently loaded composition dylib.
+
+/**
+ * Placeholder until `vuoIsCurrentCompositionStopped` becomes available.
+ */
+static bool isStoppedInitially(void)
+{
+	return false;
+}
+
+VuoIsCurrentCompositionStoppedType *isStopped = isStoppedInitially;  ///< Reference to `vuoIsCurrentCompositionStopped()` once it becomes available.
 
 } // extern "C"
 
@@ -236,9 +247,10 @@ int main(int argc, char **argv)
 
 	// Wait until the composition is permanently stopped (not just temporarily stopped for replacing).
 	{
-		bool isStoppedInitially = false;
-		isStopped = &isStoppedInitially;
-		while (isReplacing || ! *isStopped)  // Check isReplacing first, since isStopped is invalid for part of the time that isReplacing is true.
+		// Before the composition has started for the first time, isStopped is an alias for isStoppedInitially, which returns false.
+		// While the composition is being replaced, isReplaced is true and isStopped is invalid for part of the time.
+		// While the composition is running (started and not yet stopped), isStopped returns false.
+		while (isReplacing || ! isStopped())
 			VuoEventLoop_processEvent(VuoEventLoop_WaitIndefinitely);
 	}
 
@@ -288,9 +300,9 @@ int main(int argc, char **argv)
 /**
  * Replaces the currently running composition (if any) with the given composition.
  *
- * This function takes ownership of @a updatedCompositionDiff and will free it on the next call.
+ * The runtime takes ownership of @a compositionDiff.
  */
-bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
+bool replaceComposition(const char *dylibPath, char *compositionDiff)
 {
 	// Store dylibPath for VuoApp_getName().
 	if (VuoApp_dylibPath)
@@ -299,40 +311,32 @@ bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 
 	isReplacing = true;
 
-	bool isStopRequestedByComposition = false;
-	char *serializedTelemetryState = NULL;
-	void *VuoCompositionFiniCallbackList = NULL;
+	void *runtimePersistentState = NULL;
 
-	// Serialize and stop the old composition (if any).
+	// Stop the old composition (if any).
 	if (dylibHandle)
 	{
-		char **compositionDiff = (char**)dlsym(dylibHandle, "compositionDiff");
-		if (! compositionDiff)
+		isStopped = NULL;
+
+		VuoCompositionState compositionState = { NULL, "" };
+		void **vuoRuntimeState = (void **)dlsym(dylibHandle, "vuoRuntimeState");
+		if (! vuoRuntimeState)
 		{
-			VUserLog("The composition couldn't be replaced because compositionDiff couldn't be found in the composition library : %s", dlerror());
+			VUserLog("The composition couldn't be replaced because vuoRuntimeState couldn't be found in '%s' : %s", dylibPath, dlerror());
 			return false;
 		}
-		free(*compositionDiff);
-		*compositionDiff = updatedCompositionDiff;
+		compositionState.runtimeState = *vuoRuntimeState;
+
+		typedef void (*vuoSetCompositionDiffType)(VuoCompositionState *, char *);
+		vuoSetCompositionDiffType vuoSetCompositionDiff = (vuoSetCompositionDiffType) dlsym(dylibHandle, "vuoSetCompositionDiff");
+		if (! vuoSetCompositionDiff)
+		{
+			VUserLog("The composition couldn't be replaced because vuoSetCompositionDiff() couldn't be found in the composition library : %s", dlerror());
+			return false;
+		}
+		vuoSetCompositionDiff(&compositionState, compositionDiff);
 
 		stopComposition();
-
-		bool *isStopRequested = (bool *)dlsym(dylibHandle, "isStopRequested");
-		if (! isStopRequested)
-		{
-			VUserLog("The composition couldn't be replaced because isStopRequested couldn't be found in the composition library : %s", dlerror());
-			return false;
-		}
-		isStopRequestedByComposition = *isStopRequested;
-
-		typedef char * (* vuoSerializePortsType)(void);
-		vuoSerializePortsType vuoSerializeTelemetryState = (vuoSerializePortsType) dlsym(dylibHandle, "vuoSerializeTelemetryState");
-		if (! vuoSerializeTelemetryState)
-		{
-			VUserLog("The composition couldn't be replaced because vuoSerializeTelemetryState() couldn't be found in the composition library : %s", dlerror());
-			return false;
-		}
-		serializedTelemetryState = vuoSerializeTelemetryState();
 
 		zmq_close(ZMQControl);
 		ZMQControl = NULL;
@@ -343,11 +347,7 @@ bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 			VUserLog("The composition couldn't be replaced because vuoFini() couldn't be found in the composition library : %s", dlerror());
 			return false;
 		}
-		vuoFini();
-
-		VuoCompositionFiniCallbackList = *((void **)dlsym(dylibHandle, "VuoCompositionFiniCallbackList"));
-
-		isStopped = NULL;
+		runtimePersistentState = vuoFini();
 
 		dlclose(dylibHandle);
 		dylibHandle = NULL;
@@ -380,35 +380,15 @@ bool replaceComposition(const char *dylibPath, char *updatedCompositionDiff)
 			return false;
 		}
 
-		isStopped = (bool *)dlsym(dylibHandle, "isStopped");
+		isStopped = (VuoIsCurrentCompositionStoppedType *)dlsym(dylibHandle, "vuoIsCurrentCompositionStopped");
 		if (! isStopped)
 		{
-			VUserLog("The composition couldn't be replaced because isStopped couldn't be found in '%s' : %s", dylibPath, dlerror());
+			VUserLog("The composition couldn't be replaced because vuoIsCurrentCompositionStopped() couldn't be found in '%s' : %s", dylibPath, dlerror());
 			return false;
 		}
 
-		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true, runnerPid, runnerPipe, continueIfRunnerDies, trialRestrictionsEnabled, VuoCompositionFiniCallbackList);
-	}
-
-	if (serializedTelemetryState)
-	{
-		typedef void (* vuoUnserializePortsType)(char *);
-		vuoUnserializePortsType vuoUnserializeTelemetryState = (vuoUnserializePortsType) dlsym(dylibHandle, "vuoUnserializeTelemetryState");
-		vuoUnserializeTelemetryState(serializedTelemetryState);
-		free(serializedTelemetryState);
-	}
-
-	// If the composition had a pending call to vuoStopComposition() when it was stopped, call it again.
-	if (isStopRequestedByComposition)
-	{
-		typedef void (*vuoStopCompositionType)(void);
-		vuoStopCompositionType vuoStopComposition = (vuoStopCompositionType) dlsym(dylibHandle, "vuoStopComposition");
-		if (! vuoStopComposition)
-		{
-			VUserLog("The composition couldn't be replaced because vuoStopComposition couldn't be found in '%s' : %s", dylibPath, dlerror());
-			return false;
-		}
-		vuoStopComposition();
+		vuoInitInProcess(ZMQControlContext, controlURL, telemetryURL, true, runnerPid, runnerPipe, continueIfRunnerDies,
+						 trialRestrictionsEnabled, "", dylibHandle, runtimePersistentState);
 	}
 
 	isReplacing = false;

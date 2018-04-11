@@ -2,7 +2,7 @@
  * @file
  * VuoInputEditorReal interface.
  *
- * @copyright Copyright © 2012–2016 Kosada Incorporated.
+ * @copyright Copyright © 2012–2017 Kosada Incorporated.
  * This code may be modified and distributed under the terms of the MIT License.
  * For more information, see http://vuo.org/license.
  */
@@ -57,6 +57,8 @@ protected:
 	void setUpDialog(QDialog &dialog, json_object *originalValue, json_object *details);
 	json_object * getAcceptedValue(void);
 	virtual bool supportsTabbingBetweenPorts(void) { return true; }		///< This editor does support tabbing between ports.
+	VuoDoubleSpinBox* spinbox; 	///< For use when both the suggestedMin and suggestedMax port annotation values are provided by the node class designer.
+friend class TestInputEditors;
 
 private:
 
@@ -71,7 +73,6 @@ private:
 
 	QCheckBox* checkbox;		///< Used to toggle between a user set value and "auto".
 	QSlider* slider; 			///< For use when both the suggestedMin and suggestedMax port annotation values are provided by the node class designer.
-	VuoDoubleSpinBox* spinbox; 	///< For use when both the suggestedMin and suggestedMax port annotation values are provided by the node class designer.
 
 	VuoDoubleSpinBox* initSpinBox(QDialog& dialog, double initialValue);
 	QSlider* initSlider(QDialog& dialog, double initialValue);
